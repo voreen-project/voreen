@@ -114,9 +114,6 @@ private:
     /// Time step of the volume
     const int timeStep_;
 
-    // Caches byte offset once having reached the first line to be read.
-    mutable size_t byteOffsetCache_;
-
     static const std::string loggerCat_;
 };
 

@@ -38,7 +38,6 @@ VolumeDiskPB::VolumeDiskPB(const std::string& magnitudeFilename, const tgt::svec
     , invertPosition_(false)
     , invertVelocity_(false)
     , timeStep_(timeStep)
-    , byteOffsetCache_(-1)
 {
     filenames_.push_back(magnitudeFilename);
 }
@@ -54,7 +53,6 @@ VolumeDiskPB::VolumeDiskPB(const std::string& velocityXFilename,
     , invertPosition_(invertPosition)
     , invertVelocity_(invertVelocity)
     , timeStep_(timeStep)
-    , byteOffsetCache_(-1)
 {
     filenames_.push_back(velocityXFilename);
     filenames_.push_back(velocityYFilename);
@@ -125,17 +123,10 @@ void VolumeDiskPB::readFile(const std::string& filename, VolumeRAM* volume, size
         throw VoreenException("File: \"" + filename + "\" could not be opened");
 
     // Seek required offset. This operation is quite expensive.
-    // Thus, we cache the offset once we found it.
-    if (byteOffsetCache_ == static_cast<size_t>(-1)) {
-        size_t timeStepOffset = brickDimensions.x*brickDimensions.z*timeStep_;
-        size_t xzOffset = brickOffset.x * brickOffset.z;
-        for (size_t i = 0; i < timeStepOffset + xzOffset; i++)
-            ifs.ignore(std::numeric_limits<std::streamsize>::max(), ifs.widen('\n'));
-
-        byteOffsetCache_ = ifs.tellg();
-    }
-    else
-        ifs.seekg(byteOffsetCache_);
+    size_t timeStepOffset = brickDimensions.x*brickDimensions.z*timeStep_;
+    size_t xzOffset = brickOffset.x * brickOffset.z;
+    for (size_t i = 0; i < timeStepOffset + xzOffset; i++)
+        ifs.ignore(std::numeric_limits<std::streamsize>::max(), ifs.widen('\n'));
 
     //TODO: checks
     std::string tmp;
