@@ -128,6 +128,7 @@ void VolumeDiskPB::readFile(const std::string& filename, VolumeRAM* volume, size
     // Seek required offset. This operation is quite expensive.
     const size_t timeStepOffset = brickDimensions.x*brickDimensions.z*timeStep_;
     const size_t xzOffset = brickOffset.x * brickOffset.z;
+
     for (size_t i = 0; i < timeStepOffset + xzOffset; i++)
         ifs.ignore(std::numeric_limits<std::streamsize>::max(), ifs.widen('\n'));
 
