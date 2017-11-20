@@ -85,7 +85,10 @@ VolumeRAM* VolumeDiskPB::loadVolume() const
 VolumeRAM* VolumeDiskPB::loadSlices(const size_t firstZSlice, const size_t lastZSlice) const
     throw (tgt::Exception)
 {
-    return loadBrick(tgt::svec3(0, 0, firstZSlice), tgt::svec3(dimensions_.x, dimensions_.y, lastZSlice + 1));
+    if (firstZSlice > lastZSlice)
+        throw VoreenException("last slice must be behind first slice");
+
+    return loadBrick(tgt::svec3(0, 0, firstZSlice), tgt::svec3(dimensions_.x, dimensions_.y, lastZSlice-firstZSlice+1));
 }
 
 VolumeRAM* VolumeDiskPB::loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const
@@ -123,26 +126,31 @@ void VolumeDiskPB::readFile(const std::string& filename, VolumeRAM* volume, size
         throw VoreenException("File: \"" + filename + "\" could not be opened");
 
     // Seek required offset. This operation is quite expensive.
-    size_t timeStepOffset = brickDimensions.x*brickDimensions.z*timeStep_;
-    size_t xzOffset = brickOffset.x * brickOffset.z;
+    const size_t timeStepOffset = brickDimensions.x*brickDimensions.z*timeStep_;
+    const size_t xzOffset = brickOffset.x * brickOffset.z;
     for (size_t i = 0; i < timeStepOffset + xzOffset; i++)
         ifs.ignore(std::numeric_limits<std::streamsize>::max(), ifs.widen('\n'));
 
     //TODO: checks
-    std::string tmp;
-    size_t numChannels = getNumChannels();
+    const size_t numChannels = getNumChannels();
     float* voxels = reinterpret_cast<float*>(volume->getData());
+    std::string tmp;
 
     for (size_t x = 0; x < brickDimensions.x; x++) {
-        for (size_t z = 0; z < brickDimensions.z; z++) {
 
-            // Seek required y offset.
-            for (size_t i = 0; i < brickOffset.y; i++)
-                ifs.ignore(std::numeric_limits<std::streamsize>::max(), ifs.widen('\t'));
+        // Seek required z offset.
+        for (size_t i = 0; i < brickOffset.z; i++)
+            ifs.ignore(std::numeric_limits<std::streamsize>::max(), ifs.widen('\n'));
+
+        for (size_t z = 0; z < brickDimensions.z; z++) {
 
             getline(ifs, tmp);
             std::stringstream line(tmp);
-            
+
+            // Seek required y offset.
+            for (size_t i = 0; i < brickOffset.y; i++)
+                line.ignore(std::numeric_limits<std::streamsize>::max(), line.widen('\t'));
+
             for (size_t y = 0; y < brickDimensions.y; y++) {
 
                 // retrieve

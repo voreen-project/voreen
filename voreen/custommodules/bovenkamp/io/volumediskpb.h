@@ -36,16 +36,21 @@ namespace voreen {
 class VRN_CORE_API VolumeDiskPB : public VolumeDisk {
 public:
     /**
-     * Constructor.
-     * @param volume The handle for the volume contained in a hdf5 file.
-     * @param channel The channel within the file volume this volumedisk should represent
+     * Constructor for magnitude volumes.
+     * @param magnitudeFilename Single filename pointing to a magnitude file.
+     * @param dimensions Dimensions of the volume
+     * @param timeStep Actual time step represented by this volume
      */
     VolumeDiskPB(const std::string& magnitudeFilename, const tgt::svec3& dimensions, int timeStep);
 
     /**
-    * Constructor.
-    * @param volume The handle for the volume contained in a hdf5 file.
-    * @param channel The channel within the file volume this volumedisk should represent
+    * Constructor for velocity volumes.
+    * @param velocityXFilename Filename pointing to the x component velocity file.
+    * @param velocityYFilename Filename pointing to the y component velocity file.
+    * @param velocityZFilename Filename pointing to the z component velocity file.
+    * @param invertPosition Vector holding invert flag for each position component
+    * @param invertVelocity Vector holding invert flag for each velocity component
+    * @param timeStep Actual time step represented by this volume
     */
     VolumeDiskPB(const std::string& velocityXFilename,
                  const std::string& velocityYFilename,
@@ -61,7 +66,7 @@ public:
     virtual ~VolumeDiskPB();
 
     /**
-     * Computes a hash string from the datastack properties: file name, volume location and channel.
+     * Computes a hash string from the following properties: file names and time step
      */
     virtual std::string getHash() const;
 
@@ -75,7 +80,7 @@ public:
         throw (tgt::Exception);
 
     /**
-     * Loads a set of consecutive z slices of the HDF5 channel/timestep from disk
+     * Loads a set of consecutive z slices of the PB files from disk
      * and returns them as VolumeRAM.
      * The caller is responsible for deleting the returned object.
      *
@@ -88,7 +93,7 @@ public:
         throw (tgt::Exception);
 
     /**
-     * Loads a brick of the HDF5 channel/timestep volume from disk and returns it as VolumeRAM.
+     * Loads a brick of the PB files from disk and returns it as VolumeRAM.
      * The caller is responsible for deleting the returned object.
      *
      * @param offset lower-left-front corner voxel of the brick to load
