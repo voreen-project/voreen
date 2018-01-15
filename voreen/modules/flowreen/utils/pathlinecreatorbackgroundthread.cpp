@@ -33,35 +33,55 @@
 
 namespace voreen {
 
-PathlineCreatorBackgroundThread::PathlineCreatorBackgroundThread(PathlineCreator* processor, int seedTime,
-    const VolumeList* flow, StreamlineList* output,
-    int maxNumPathlines, tgt::ivec2 streamlineLengthThreshold,
-    tgt::vec2 absoluteMagnitudeThreshold, PathlineCreator::FilterMode filterMode)
+PathlineCreatorBackgroundThread::PathlineCreatorBackgroundThread(PathlineCreator* processor,
+                                                                 int seedTime,
+                                                                 const VolumeList* flow,
+                                                                 StreamlineList* output,
+                                                                 size_t maxNumPathlines,
+                                                                 const tgt::ivec2& streamlineLengthThreshold,
+                                                                 const tgt::vec2& absoluteMagnitudeThreshold,
+                                                                 const tgt::IntBounds& roi,
+                                                                 PathlineCreator::IntegrationMethod integrationMethod,
+                                                                 PathlineCreator::FilterMode filterMode,
+                                                                 float temporalResolution,
+                                                                 float unitConversion)
     : ProcessorBackgroundThread<PathlineCreator>(processor)
     , rnd(std::bind(std::uniform_real_distribution<float>(0.f, 1.f), std::mt19937(seedTime)))
-    , flow_(flow), output_(output)
-    , maxNumPathlines_(maxNumPathlines), streamlineLengthThreshold_(tgt::svec2(streamlineLengthThreshold))
-    , absoluteMagnitudeThreshold_(absoluteMagnitudeThreshold), filterMode_(filterMode)
+    , flow_(flow)
+    , output_(output)
+    , maxNumPathlines_(maxNumPathlines)
+    , streamlineLengthThreshold_(tgt::svec2(streamlineLengthThreshold))
+    , absoluteMagnitudeThreshold_(absoluteMagnitudeThreshold)
+    , roi_(roi)
+    , integrationMethod_(integrationMethod)
+    , filterMode_(filterMode)
+    , temporalResolution_(temporalResolution)
+    , unitConversion_(unitConversion)
 {
     //progress is used to get Error-Messages
     setProgress("", 0.f);
 
     // Try to extract first timestep since it is needed for multiple purposes.
     tgtAssert(!flow->empty(), "No timestep passed");
-    firstTimeStepFlow_ = dynamic_cast<const VolumeRAM_3xFloat*>(flow->at(0)->getRepresentation<VolumeRAM>());
-    tgtAssert(firstTimeStepFlow_, "RAM representation of first time step not available");
+    referenceVolume_ = flow->at(0);
 }
 
 PathlineCreatorBackgroundThread::~PathlineCreatorBackgroundThread() {
 }
 
 void PathlineCreatorBackgroundThread::threadMain() {
+
     //--------------------- init seeds ---------------------------------------
+    const VolumeRAM_3xFloat* firstTimeStep = dynamic_cast<const VolumeRAM_3xFloat*>(referenceVolume_->getRepresentation<VolumeRAM>());
+
+    const tgt::svec3& llf = roi_.getLLF();
+    const tgt::svec3& urb = roi_.getURB();
+
     std::vector<tgt::vec3> validPositions;
-    for (size_t z = 0; z < firstTimeStepFlow_->getDimensions().z; z++) {
-        for (size_t y = 0; y < firstTimeStepFlow_->getDimensions().y; y++) {
-            for (size_t x = 0; x < firstTimeStepFlow_->getDimensions().x; x++) {
-                float len = tgt::length(firstTimeStepFlow_->voxel(x, y, z));
+    for (size_t z = llf.z; z < urb.z; z++) {
+        for (size_t y = llf.y; y < urb.y; y++) {
+            for (size_t x = llf.x; x < urb.x; x++) {
+                float len = tgt::length(firstTimeStep->voxel(x, y, z));
                 if (len >= absoluteMagnitudeThreshold_.x && len <= absoluteMagnitudeThreshold_.y)
                     validPositions.push_back(tgt::vec3(x, y, z));
             }
@@ -77,7 +97,7 @@ void PathlineCreatorBackgroundThread::threadMain() {
     std::unique_ptr<tgt::vec3[]> seedingPositions(new tgt::vec3[maxNumPathlines_]);
     for (size_t i = 0; i < maxNumPathlines_; ++i) {
         tgt::vec3 basePos = validPositions.at(static_cast<size_t>(rnd() * (validPositions.size() - 1)));
-        seedingPositions[i] = tgt::clamp(basePos + tgt::vec3(rnd(), rnd(), rnd()) - tgt::vec3(0.5f), tgt::vec3::zero, tgt::vec3(firstTimeStepFlow_->getDimensions()));
+        seedingPositions[i] = tgt::clamp(basePos + tgt::vec3(rnd(), rnd(), rnd()) - tgt::vec3(0.5f), tgt::vec3(llf), tgt::vec3(urb));
     }
     interruptionPoint();
     processor_->setProgress(0.2f);
@@ -93,7 +113,7 @@ void PathlineCreatorBackgroundThread::threadMain() {
         for (size_t j = 0; j < maxNumTries; j++) {
 
             // Retrieve velocity.
-            startElement.velocity_ = getVelocityAt(firstTimeStepFlow_, seedingPositions[i]);
+            startElement.velocity_ = getVelocityAt(firstTimeStep, seedingPositions[i]);
 
             // in case of flow at start being zero or with its magnitude not fitting
             // into the range defined by thresholds, the random position leads to no
@@ -109,8 +129,12 @@ void PathlineCreatorBackgroundThread::threadMain() {
         pathlines[i].addElementAtEnd(startElement);
     }
 
+    // From now on, we can't guarantee firstTimeStep not to be deleted by the memory manager.
+    firstTimeStep = nullptr;
+
+    // Main iteration.
     const float progressPerTimeStep = 0.8f / flow_->size();
-    for (size_t t = 0; t < flow_->size(); t++) {
+    for (size_t t = 1; t < flow_->size(); t++) {
 
         // Request volume for current time step.
         const VolumeRAM_3xFloat* volume = dynamic_cast<const VolumeRAM_3xFloat*>(flow_->at(t)->getRepresentation<VolumeRAM>());
@@ -124,8 +148,8 @@ void PathlineCreatorBackgroundThread::threadMain() {
             // Retrieved offset (shifted by 1 because of reversed loop on unsigned type.
             Streamline& pathline = pathlines[i - 1];
 
-            if (calculateRungeKuttaStep(volume, pathline)) {
-                if (pathline.getNumElements() >= streamlineLengthThreshold_.x ||
+            if (calculateIntegrationStep(volume, pathline)) {
+                if (pathline.getNumElements() >= streamlineLengthThreshold_.x &&
                     pathline.getNumElements() <= streamlineLengthThreshold_.y) {
 
                     //we have a valid streamline
@@ -151,14 +175,13 @@ void PathlineCreatorBackgroundThread::threadMain() {
 void PathlineCreatorBackgroundThread::reseedPosition(tgt::vec3* seedingPositions, size_t currentPosition)
 {
     tgt::vec3 randVec = tgt::vec3(rnd(), rnd(), rnd());
-    tgt::vec3 dimAsVec3 = tgt::vec3(firstTimeStepFlow_->getDimensions() - tgt::svec3::one);
 
     // Use a "die" to determine wether a completely new random position
     // will be taken or wether an exisiting one will be used.
     // When the probability for a new position is low, the seeding positions
     // seem be prone to cluster at single location.
     if ((rnd() < 0.5) || (currentPosition <= 1)) {
-        seedingPositions[currentPosition] = randVec * dimAsVec3;
+        seedingPositions[currentPosition] = tgt::vec3(roi_.getLLF()) + randVec * tgt::vec3(roi_.diagonal());
         return;
     }
 
@@ -168,32 +191,42 @@ void PathlineCreatorBackgroundThread::reseedPosition(tgt::vec3* seedingPositions
     // Use the position and add some random offset to it.
     size_t index = tgt::iround(rnd() * (currentPosition - 1));
     randVec *= rnd() * 9.f + 1.f;
-    seedingPositions[currentPosition] = tgt::clamp((seedingPositions[index] + randVec), tgt::vec3::zero, dimAsVec3);
+    seedingPositions[currentPosition] = tgt::clamp((seedingPositions[index] + randVec), tgt::vec3(roi_.getLLF()), tgt::vec3(roi_.getURB()));
 }
 
-bool PathlineCreatorBackgroundThread::calculateRungeKuttaStep(const VolumeRAM_3xFloat* volume, Streamline& pathline) {
+bool PathlineCreatorBackgroundThread::calculateIntegrationStep(const VolumeRAM_3xFloat* volume, Streamline& pathline) {
 
-    const tgt::vec3 dimAsVec3 = tgt::vec3(firstTimeStepFlow_->getDimensions() - tgt::svec3::one);
-    const float h = 0.5f; //stepwidth;
+    // Step size.
+    const float h = unitConversion_ * temporalResolution_;
 
     tgt::vec3 r = pathline.getLastElement().position_;
-    tgt::vec3 velR = pathline.getLastElement().velocity_;
+    tgt::vec3 velR =  pathline.getLastElement().velocity_;
 
     //no magnitude
     if (velR == tgt::vec3::zero)
         return true;
 
-    tgt::vec3 k1 = tgt::normalize(velR) * h; //v != zero
-    tgt::vec3 k2 = getVelocityAt(volume, r + (k1 / 2.0f));
-    if (k2 != tgt::vec3::zero) k2 = tgt::normalize(k2) * h;
-    tgt::vec3 k3 = getVelocityAt(volume, r + (k2 / 2.0f));
-    if (k3 != tgt::vec3::zero) k3 = tgt::normalize(k3) * h;
-    tgt::vec3 k4 = getVelocityAt(volume, r + k3);
-    if (k4 != tgt::vec3::zero) k4 = tgt::normalize(k4) * h;
-    r += ((k1 / 6.0f) + (k2 / 3.0f) + (k3 / 3.0f) + (k4 / 6.0f));
+    tgt::vec3 rPhysical = referenceVolume_->getVoxelToPhysicalMatrix() * r;
+    switch (integrationMethod_) {
+    case PathlineCreator::RUNGE_KUTTA:
+    {
+        tgt::vec3 k1 = velR * h; //v != zero
+        tgt::vec3 k2 = getVelocityAt(volume, rPhysical + (k1 / 2.0f)) * h;
+        tgt::vec3 k3 = getVelocityAt(volume, rPhysical + (k2 / 2.0f)) * h;
+        tgt::vec3 k4 = getVelocityAt(volume, rPhysical + k3) * h;
+        r = referenceVolume_->getPhysicalToVoxelMatrix() * (rPhysical + ((k1 / 6.0f) + (k2 / 3.0f) + (k3 / 3.0f) + (k4 / 6.0f)));
+        break;
+    }
+    case PathlineCreator::EULER:
+        r = referenceVolume_->getPhysicalToVoxelMatrix() * (rPhysical + velR * h);
+        break;
+    default:
+        tgtAssert(false, "Unknown integration method");
+        return true;
+    }
 
     //is new r valid?
-    if ((r != tgt::clamp(r, tgt::vec3::zero, dimAsVec3)) || r == pathline.getLastElement().position_) // in case of no progress on streamline in this direction...
+    if ((r != tgt::clamp(r, tgt::vec3(roi_.getLLF()), tgt::vec3(roi_.getURB()))) || r == pathline.getLastElement().position_)
         return true;
 
     velR = getVelocityAt(volume, r);
@@ -209,8 +242,8 @@ bool PathlineCreatorBackgroundThread::calculateRungeKuttaStep(const VolumeRAM_3x
 }
 
 tgt::vec3 PathlineCreatorBackgroundThread::getVelocityAt(const VolumeRAM_3xFloat* volume, const tgt::vec3& pos) const {
-    return (filterMode_ == PathlineCreator::NEAREST ? volume->getVoxelNearest(pos, 0, true)
-        : volume->getVoxelLinear(pos, 0, true));
+    return (filterMode_ == PathlineCreator::NEAREST ? volume->getVoxelNearest(pos, 0, false)
+        : volume->getVoxelLinear(pos, 0, false));
 }
 
 }   // namespace

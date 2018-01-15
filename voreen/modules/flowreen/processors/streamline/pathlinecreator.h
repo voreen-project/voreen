@@ -33,14 +33,13 @@
 #include "voreen/core/properties/intproperty.h"
 #include "voreen/core/properties/buttonproperty.h"
 #include "voreen/core/properties/progressproperty.h"
+#include "voreen/core/properties/boundingboxproperty.h"
 #include "voreen/core/properties/numeric/intervalproperty.h"
 
 #include "voreen/core/ports/volumeport.h"
 #include "../../ports/streamlinelistport.h"
 
 #include "voreen/core/datastructures/volume/volumeatomic.h"
-
-#include <random>
 
 namespace voreen {
 
@@ -91,7 +90,7 @@ protected:
     //  Callbacks
     //------------------
     /** Adjusts the threshold property values on inport changes. */
-    //void volumePortHasChanged();
+    void volumeListPortHasChanged();
     /** Adjusts the relative threshold according to the absolute one. */
     void adjustRelativeThreshold();
     /** Generates new default seeds on button press. */
@@ -99,7 +98,7 @@ protected:
     /** Starts a new calculation on button press. */
     void calculatePathlinesOnChange();
     /** PathlineSettings have been changed. */
-    void streamlineSettingsHaveBeenChanged();
+    void pathlineSettingsHaveBeenChanged();
     /** PathlineBundleSettings have been changed. */
     void streamlineBundleSettingsHaveBeenChanged();
     /** The toggle for bundle detection has actually been toggled. */
@@ -109,6 +108,12 @@ protected:
     //  Members
     //------------------
 private:
+
+    enum IntegrationMethod {
+        RUNGE_KUTTA,
+        EULER,
+    };
+
     enum FilterMode {
         NEAREST,
         LINEAR
@@ -124,24 +129,28 @@ private:
     ButtonProperty calculatePathlinesProp_;
     BoolProperty autoGenerateProp_;
     BoolProperty waitForThreadFinishedProp_;
-    ProgressProperty progressProp_;                         ///< used for feedback in application mode
+    ProgressProperty progressProp_;                             ///< used for feedback in application mode
 
     //streamline settings
-    IntProperty maxNumPathlinesProp_;                     ///< maximal number of streamlines
+    IntProperty maxNumPathlinesProp_;                           ///< maximal number of streamlines
     IntIntervalProperty streamlineLengthThresholdProp_;         ///< streamline length must be in this interval
     FloatIntervalProperty absoluteMagnitudeThresholdProp_;      ///< only magnitudes in this intervall are used
     FloatIntervalProperty relativeMagnitudeThresholdProp_;      ///< debug output
-    OptionProperty<FilterMode> filterModeProp_;             ///< filtering inside the dataset
+    IntBoundingBoxProperty roiProp_;                            ///< region of interest the algorithm is limited to use
+    OptionProperty<IntegrationMethod> integrationMethodProp_;   ///< determines integration method used by background thread
+    OptionProperty<FilterMode> filterModeProp_;                 ///< filtering inside the dataset
+    FloatProperty temporalResolutionProp_;                      ///< time 'between' two time steps
+    FloatProperty unitConversionProp_;                          ///< factor for proper dimension handling
 
     //streamline bundle settings
-    BoolProperty detectPathlineBundlesProp_;              ///< determines if bundles shall be detected
-    ProgressProperty bundleDetectionProgressProp_;          ///< progress bar for the bundle-detection thread
-    FloatProperty maxAverageDistanceThresholdProp_;         ///< distance threshold for the bundle algorithm
-    FloatProperty minNumPathlinesPerBundleProp_;          ///< bundle must contain more than this percentage of streamlines
-    IntProperty resampleSizeProp_;                          ///< streamlines are resampled to this value
+    BoolProperty detectPathlineBundlesProp_;                    ///< determines if bundles shall be detected
+    ProgressProperty bundleDetectionProgressProp_;              ///< progress bar for the bundle-detection thread
+    FloatProperty maxAverageDistanceThresholdProp_;             ///< distance threshold for the bundle algorithm
+    FloatProperty minNumPathlinesPerBundleProp_;                ///< bundle must contain more than this percentage of streamlines
+    IntProperty resampleSizeProp_;                              ///< streamlines are resampled to this value
 
     //seed points
-    IntProperty seedTimeProp_;          ///< time used to init the rand calcualtion
+    IntProperty seedTimeProp_;          ///< time used to init the rand calculation
     ButtonProperty resetSeedProp_;      ///< resets the seedTimeProp_;
 
     //ports
@@ -151,7 +160,6 @@ private:
     //background thread
     ProcessorBackgroundThread<PathlineCreator>* backgroundThread_;///< thread used to calcualte the streamlines
     StreamlineList* streamlineListThreadOutput_;                    ///< thread stores calcualtion here
-    VolumeRAM_3xFloat* referenceVolume_;
     DirtyFlag dirtyFlag_;                                           ///< flag holding which data should be recalculated
     bool backgroundThreadIsPathlineCreator_;                      ///< determines whether the active background thread is the streamlinecreator
 };

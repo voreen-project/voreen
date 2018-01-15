@@ -48,7 +48,11 @@ PathlineCreator::PathlineCreator()
     , streamlineLengthThresholdProp_("streamlineLengthThresholdProp", "Threshold of Pathline Length: ", tgt::ivec2(10, 100), 2, 1000)
     , absoluteMagnitudeThresholdProp_("absoluteMagnitudeThreshold", "Threshold of Magnitude (absolute)", tgt::vec2(0.0f, 1000.0f), 0.0f, 9999.99f)
     , relativeMagnitudeThresholdProp_("relativeMagnitudeThreshold", "Threshold of Magnitude (relative)", tgt::vec2(0.0f, 100.0f), 0.0f, 100.0f, Processor::VALID)
+    , roiProp_("roiProp", "Region of Interest")  
+    , integrationMethodProp_("integrationMethod", "Integration Method")
     , filterModeProp_("filterModeProp","Filtering:",Processor::INVALID_RESULT,false,Property::LOD_DEVELOPMENT)
+    , temporalResolutionProp_("temporalResolutionProp", "Temporal Resolution (ms)", 3.1f, 0.1, 100)
+    , unitConversionProp_("unitConversionProp", "Unit Conversion factor (to mm)", 10.0f, 0.01f, 100.0f)
     // streamlinebundle config
     , detectPathlineBundlesProp_("generateTubesProp", "Detect Pathline Bundles", false)
     , bundleDetectionProgressProp_("detectBundlesProgressProp", "Progress:")
@@ -66,7 +70,7 @@ PathlineCreator::PathlineCreator()
     , backgroundThreadIsPathlineCreator_(false)
 {
     //add ports
-    //volInport_.onNewData(MemberFunctionCallback<PathlineCreator>(this,&PathlineCreator::volumePortHasChanged));
+    volInport_.onNewData(MemberFunctionCallback<PathlineCreator>(this,&PathlineCreator::volumeListPortHasChanged));
     static_cast<Observable<PortObserver>*>(&volInport_)->addObserver(static_cast<PortObserver*>(this));
     addPort(volInport_);
     addPort(streamlineOutport_);
@@ -80,24 +84,38 @@ PathlineCreator::PathlineCreator()
         addProgressBar(&progressProp_);
         //streamlines
     addProperty(maxNumPathlinesProp_);
-        maxNumPathlinesProp_.onChange(MemberFunctionCallback<PathlineCreator>(this,&PathlineCreator::streamlineSettingsHaveBeenChanged));
-        maxNumPathlinesProp_.setGroupID("streamline");
+        maxNumPathlinesProp_.onChange(MemberFunctionCallback<PathlineCreator>(this,&PathlineCreator::pathlineSettingsHaveBeenChanged));
+        maxNumPathlinesProp_.setGroupID("pathline");
     addProperty(streamlineLengthThresholdProp_);
-        streamlineLengthThresholdProp_.onChange(MemberFunctionCallback<PathlineCreator>(this,&PathlineCreator::streamlineSettingsHaveBeenChanged));
-        streamlineLengthThresholdProp_.setGroupID("streamline");
+        streamlineLengthThresholdProp_.onChange(MemberFunctionCallback<PathlineCreator>(this,&PathlineCreator::pathlineSettingsHaveBeenChanged));
+        streamlineLengthThresholdProp_.setGroupID("pathline");
     addProperty(absoluteMagnitudeThresholdProp_);
-        absoluteMagnitudeThresholdProp_.onChange(MemberFunctionCallback<PathlineCreator>(this,&PathlineCreator::streamlineSettingsHaveBeenChanged));
+        absoluteMagnitudeThresholdProp_.onChange(MemberFunctionCallback<PathlineCreator>(this,&PathlineCreator::pathlineSettingsHaveBeenChanged));
         absoluteMagnitudeThresholdProp_.onChange(MemberFunctionCallback<PathlineCreator>(this,&PathlineCreator::adjustRelativeThreshold));
-        absoluteMagnitudeThresholdProp_.setGroupID("streamline");
+        absoluteMagnitudeThresholdProp_.setGroupID("pathline");
     addProperty(relativeMagnitudeThresholdProp_);
         relativeMagnitudeThresholdProp_.setReadOnlyFlag(true);
-        relativeMagnitudeThresholdProp_.setGroupID("streamline");
+        relativeMagnitudeThresholdProp_.setGroupID("pathline");
+    addProperty(roiProp_);
+        roiProp_.onChange(MemberFunctionCallback<PathlineCreator>(this, &PathlineCreator::pathlineSettingsHaveBeenChanged));
+        roiProp_.setGroupID("pathline");
+    addProperty(integrationMethodProp_);
+        integrationMethodProp_.onChange(MemberFunctionCallback<PathlineCreator>(this, &PathlineCreator::pathlineSettingsHaveBeenChanged));
+        integrationMethodProp_.addOption("runge-kutta", "Runge-Kutta", RUNGE_KUTTA);
+        integrationMethodProp_.addOption("euler", "Euler", EULER);
+        integrationMethodProp_.setGroupID("pathline");
     addProperty(filterModeProp_);
         filterModeProp_.addOption("linear","Linear",LINEAR);
         filterModeProp_.addOption("nearest","Nearest",NEAREST);
-        filterModeProp_.setGroupID("streamline");
-        filterModeProp_.onChange(MemberFunctionCallback<PathlineCreator>(this,&PathlineCreator::streamlineSettingsHaveBeenChanged));
-    setPropertyGroupGuiName("streamline", "Pathline Settings");
+        filterModeProp_.setGroupID("pathline");
+        filterModeProp_.onChange(MemberFunctionCallback<PathlineCreator>(this,&PathlineCreator::pathlineSettingsHaveBeenChanged));
+    addProperty(temporalResolutionProp_);
+        temporalResolutionProp_.onChange(MemberFunctionCallback<PathlineCreator>(this,&PathlineCreator::pathlineSettingsHaveBeenChanged));
+        temporalResolutionProp_.setGroupID("pathline");
+    addProperty(unitConversionProp_);
+        unitConversionProp_.onChange(MemberFunctionCallback<PathlineCreator>(this,&PathlineCreator::pathlineSettingsHaveBeenChanged));
+        unitConversionProp_.setGroupID("pathline");
+    setPropertyGroupGuiName("pathline", "Pathline Settings");
         //streamline bundles
     addProperty(detectPathlineBundlesProp_);
         detectPathlineBundlesProp_.onChange(MemberFunctionCallback<PathlineCreator>(this, &PathlineCreator::generateBundlesHasBeenChanged));
@@ -117,7 +135,7 @@ PathlineCreator::PathlineCreator()
         //seed
     addProperty(seedTimeProp_);
         //seedTimeProp_.setReadOnlyFlag(true);
-        seedTimeProp_.onChange(MemberFunctionCallback<PathlineCreator>(this,&PathlineCreator::streamlineSettingsHaveBeenChanged));
+        seedTimeProp_.onChange(MemberFunctionCallback<PathlineCreator>(this,&PathlineCreator::pathlineSettingsHaveBeenChanged));
         seedTimeProp_.setGroupID("seed");
     addProperty(resetSeedProp_);
         resetSeedProp_.onChange(MemberFunctionCallback<PathlineCreator>(this,&PathlineCreator::resetSeedsOnChange));
@@ -202,7 +220,11 @@ void PathlineCreator::process() {
                     maxNumPathlinesProp_.get(),
                     streamlineLengthThresholdProp_.get(),
                     absoluteMagnitudeThresholdProp_.get(),
-                    filterModeProp_.getValue()
+                    roiProp_.get(),
+                    integrationMethodProp_.getValue(),
+                    filterModeProp_.getValue(),
+                    temporalResolutionProp_.get() / 1000.0f,
+                    unitConversionProp_.get()
                     );
         break;
     }
@@ -269,6 +291,35 @@ void PathlineCreator::stopBackgroundThread() {
 //          Callbacks
 //---------------------------------------------------------------------------
 
+void PathlineCreator::volumeListPortHasChanged() {
+    stopBackgroundThread();
+    if(autoGenerateProp_.get()) dirtyFlag_ = PATHLINES;
+
+    const VolumeList* volumes = volInport_.getData();
+    if(!volumes || volumes->empty())
+        return; // TODO: default values / not ready
+
+    const VolumeBase* reference = volumes->at(0);
+
+    roiProp_.setMinValue(tgt::ivec3::zero);
+    roiProp_.setMaxValue(tgt::ivec3(reference->getDimensions()) - tgt::ivec3::one);
+
+    // TODO: gain more detailed information for whole time series
+    /*
+    VolumeMinMaxMagnitude* data = reference->getDerivedData<VolumeMinMaxMagnitude>();
+    absoluteMagnitudeThresholdProp_.setMinValue(data->getMinMagnitude());
+    absoluteMagnitudeThresholdProp_.setMaxValue(data->getMaxMagnitude());
+    */
+    absoluteMagnitudeThresholdProp_.setMinValue(0.0f);
+    absoluteMagnitudeThresholdProp_.setMaxValue(200.0f);
+
+    tgt::vec3 length = reference->getSpacing() * tgt::vec3(reference->getDimensions());
+    maxAverageDistanceThresholdProp_.setMaxValue(sqrtf(length.x*length.x + length.y*length.y + length.z*length.z));
+
+    // Invalidate processor
+    invalidate();
+}
+
 void PathlineCreator::adjustRelativeThreshold() {
     //adjust read only property
     tgt::vec2 range(absoluteMagnitudeThresholdProp_.getMinValue(), absoluteMagnitudeThresholdProp_.getMaxValue());
@@ -287,7 +338,7 @@ void PathlineCreator::resetSeedsOnChange() {
         dirtyFlag_ = PATHLINES;
 }
 
-void PathlineCreator::streamlineSettingsHaveBeenChanged() {
+void PathlineCreator::pathlineSettingsHaveBeenChanged() {
     if(autoGenerateProp_.get())
         dirtyFlag_ = PATHLINES;
 }

@@ -43,10 +43,20 @@ namespace voreen {
     */
     class VRN_CORE_API PathlineCreatorBackgroundThread : public ProcessorBackgroundThread<PathlineCreator> {
     public:
+
         /** Constructor */
-        PathlineCreatorBackgroundThread(PathlineCreator* processor, int seedTime, const VolumeList* flow, StreamlineList* output,
-            int maxNumPathlines, tgt::ivec2 streamlineLengthThreshold, tgt::vec2 absoluteMagnitudeThreshold,
-            PathlineCreator::FilterMode filterMode);
+        PathlineCreatorBackgroundThread(PathlineCreator* processor,
+                                        int seedTime,
+                                        const VolumeList* flow,
+                                        StreamlineList* output,
+                                        size_t maxNumPathlines,
+                                        const tgt::ivec2& streamlineLengthThreshold,
+                                        const tgt::vec2& absoluteMagnitudeThreshold,
+                                        const tgt::IntBounds& roi,
+                                        PathlineCreator::IntegrationMethod integrationMethod,
+                                        PathlineCreator::FilterMode filterMode,
+                                        float temporalResolution,
+                                        float unitConversion);
         /** Destructor */
         virtual ~PathlineCreatorBackgroundThread();
     protected:
@@ -58,9 +68,9 @@ namespace voreen {
         //-----------------
         /** Used to redefine a seed point. */
         void reseedPosition(tgt::vec3* seedingPositions, size_t currentPosition);
-        /** Calculates one single Runge-Kutta step and returns true, if there is no need to continue. */
-        bool calculateRungeKuttaStep(const VolumeRAM_3xFloat* volume, Streamline& pathline);
-        /** Returns the velocity in the selected filter mode. */
+        /** Performs one single integration step of the selected method and returns true, if there is no need to continue. */
+        bool calculateIntegrationStep(const VolumeRAM_3xFloat* volume, Streamline& pathline);
+        /** Returns the velocity in the selected filter mode at pos, given in voxel space. */
         tgt::vec3 getVelocityAt(const VolumeRAM_3xFloat* volume, const tgt::vec3& pos) const;
 
     private:
@@ -69,13 +79,17 @@ namespace voreen {
         //-----------
         std::function<float()> rnd;
         //derived from properties
-        const VolumeRAM_3xFloat* firstTimeStepFlow_;
+        const VolumeBase* referenceVolume_;
         const VolumeList* flow_;               ///< input flow
         StreamlineList* output_;               ///< output, which will be used by the processor
         size_t maxNumPathlines_;                ///< maximal number of streamlines
-        tgt::svec2 streamlineLengthThreshold_; ///< streamline length must be in this interval
-        tgt::vec2 absoluteMagnitudeThreshold_; ///< only magnitudes in this intervall are used
+        tgt::svec2 streamlineLengthThreshold_;  ///< streamline length must be in this interval
+        tgt::vec2 absoluteMagnitudeThreshold_;  ///< only magnitudes in this intervall are used
+        tgt::IntBounds roi_;                    ///< Region of Interest to operate on
+        PathlineCreator::IntegrationMethod integrationMethod_; ///< integration method
         PathlineCreator::FilterMode filterMode_; ///< filtering inside the volume
+        float temporalResolution_;              ///< Temporal resolution (assumed to be constant)
+        float unitConversion_;                  ///< constant for converting in voreens mm
     };
 
 }   // namespace
