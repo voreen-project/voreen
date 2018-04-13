@@ -1,0 +1,53 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_RegionGrowing" group="Segmentation">
+    <filterlist>
+      <filter name="ConfidenceConnectedImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Seed" argumenttype="AddSeedType"/>
+          <argument name="NumberOfIterations" argumenttype="Int" defaultValue="1" minValue="0" maxValue="1000"/>
+          <argument name="ReplaceValue" argumenttype="PixelType"/>
+          <argument name="Multiplier" argumenttype="Float" defaultValue="1.0f" minValue="1.0f" maxValue="1000.0f"/>
+          <argument name="InitialNeighborhoodRadius" argumenttype="Int" defaultValue="1" minValue="0" maxValue="1000"/>
+        </arguments>
+      </filter>
+      <filter name="ConnectedThresholdImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Seed" argumenttype="AddSeedType"/>
+          <argument name="ReplaceValue" argumenttype="PixelType"/>
+          <argument name="Upper" argumenttype="PixelType"/>
+          <argument name="Lower" argumenttype="PixelType"/>      
+        </arguments>
+      </filter>
+      <filter name="IsolatedConnectedImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Seed1" argumenttype="AddSeedType"/>
+          <argument name="Seed2" argumenttype="AddSeedType"/>
+          <argument name="ReplaceValue" argumenttype="PixelType"/>
+          <argument name="IsolatedValueTolerance" argumenttype="PixelType"/>
+          <argument name="Upper" argumenttype="PixelType"/>
+          <argument name="Lower" argumenttype="PixelType"/>
+          <argument name="FindUpperThreshold" argumenttype="Bool" defaultValue="false"/>
+        </arguments>
+      </filter>
+      <filter name="NeighborhoodConnectedImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Seed" argumenttype="AddSeedType"/>
+          <argument name="ReplaceValue" argumenttype="PixelType"/>
+          <argument name="Upper" argumenttype="PixelType"/>
+          <argument name="Lower" argumenttype="PixelType"/>
+          <argument name="Radius" argumenttype="SizeType" defaultValue="(1)" minValue="(0)" maxValue="(1000)"/>
+        </arguments>
+      </filter>
+      <filter name="VectorConfidenceConnectedImageFilter" enabled="false" description="Headerfile not correct! -> Errors">
+        <arguments>
+          <argument name="Seed" argumenttype="AddSeedType"/>
+          <argument name="NumberOfIterations" argumenttype="Int" defaultValue="1" minValue="0" maxValue="1000"/>
+          <argument name="ReplaceValue" argumenttype="PixelType"/>
+          <argument name="Multiplier" argumenttype="Float" defaultValue="1.0f" minValue="1.0f" maxValue="1000.0f"/>
+          <argument name="InitialNeighborhoodRadius" argumenttype="Int" defaultValue="1" minValue="0" maxValue="1000"/>
+        </arguments>
+      </filter>  
+    </filterlist>
+  </ITK_Module>
+</VoreenData>

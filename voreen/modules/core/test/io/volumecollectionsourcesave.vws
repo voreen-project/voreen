@@ -1,0 +1,147 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="17">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="VolumeListSave" ref="ref2" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-621" y="-293" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.39459455" />
+            </MetaData>
+            <Processors>
+                <Processor type="VolumeListSource" name="VolumeListSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-705" y="-402" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeURLList" name="volumeURLList">
+                            <VolumeURLs>
+                                <url value="input/walnut_uint16.vvd" />
+                                <url value="input/cow.vvd" />
+                                <url value="input/nucleon.vvd" />
+                            </VolumeURLs>
+                            <Selection>
+                                <entry url="input/cow.vvd" value="true" />
+                                <entry url="input/nucleon.vvd" value="true" />
+                                <entry url="input/walnut_uint16.vvd" value="true" />
+                            </Selection>
+                        </Property>
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumecollection" direction="0" portID="volumecollection" guiName="VolumeList Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeListSave" name="CollectionSave Basename" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-806" y="-244" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="baseName" name="baseName" value="series" />
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="fileNameHDF5" name="fileNameHDF5">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="folderNameVVD" name="folderNameVVD">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output" />
+                                    <item value="/data/dominik/git/voreen-testdata/voreen-testdata/output" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="outputFormat" name="outputFormat" value="vvd" />
+                        <Property mapKey="progress" name="progress" />
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="useOriginFileNames_" name="useOriginFileNames_" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="VolumeList Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeListSave" name="CollectionSave Filename" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-609" y="-245" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="baseName" name="baseName" value="volume_" />
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="fileNameHDF5" name="fileNameHDF5">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="folderNameVVD" name="folderNameVVD">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output" />
+                                    <item value="/data/dominik/git/voreen-testdata/voreen-testdata/output" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="outputFormat" name="outputFormat" value="vvd" />
+                        <Property mapKey="progress" name="progress" />
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="useOriginFileNames_" name="useOriginFileNames_" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="VolumeList Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="volumecollection">
+                        <Processor type="VolumeListSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeListSave" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumecollection">
+                        <Processor type="VolumeListSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeListSave" ref="ref2" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

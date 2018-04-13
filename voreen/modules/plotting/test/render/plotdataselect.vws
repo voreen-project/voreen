@@ -1,0 +1,362 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" GlobalDescription="">
+        <ProcessorNetwork version="13">
+            <MetaData>
+                <MetaItem name="ProcessorSelection" type="SelectionMetaData::Processor">
+                    <values>
+                        <item type="ScatterPlot" ref="ref3" />
+                    </values>
+                </MetaItem>
+            </MetaData>
+            <Processors>
+                <Processor type="PlotFunctionSource" name="PlotFunctionSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="30" y="-350" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="Calculate" />
+                        <Property name="Expression Format" value="full" />
+                        <Property name="expressionNameInput_" value="f" />
+                        <Property name="functionInput_" value="exp(sin(x))*exp(cos(y))-exp(sin(x*y))+exp(cos(x*y))" />
+                        <Property name="maxLength" value="200" />
+                        <Property name="selfDescription" value="" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="PlotFunctionOutPort">
+                            <Properties />
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="PlotFunctionDiscret" name="PlotFunctionDiscret" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="30" y="-257" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="DimensionsList_" value="1 Column" />
+                        <Property name="NumberofCalculations" value="4489" />
+                        <Property name="Steps_" value="0.15000001" />
+                        <Property name="leftInterval_" value="-5" />
+                        <Property name="rightInterval_" value="5" />
+                        <Property name="startDiscretization_" />
+                    </Properties>
+                    <Inports>
+                        <Port name="PlotPort.PlotFunction.InPort">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="PlotData.OutPort">
+                            <Properties />
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers />
+                    <ResetList>
+                        <Interval>
+                            <item>
+                                <First value="-5" />
+                                <Second value="5" />
+                            </item>
+                            <item>
+                                <First value="-5" />
+                                <Second value="5" />
+                            </item>
+                        </Interval>
+                        <Stepwidth>
+                            <item value="0.15000000596046448" />
+                            <item value="0.15000000596046448" />
+                        </Stepwidth>
+                        <Columns>
+                            <First value="2" />
+                            <Second value="1" />
+                        </Columns>
+                    </ResetList>
+                </Processor>
+                <Processor type="PlotDataSelect" name="PlotDataSelect" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="43" y="-161" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="71" y="310" width="280" height="379" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="Data-Column Color">
+                            <value x="0.94117647" y="0.94117647" z="0.94117647" w="1" />
+                        </Property>
+                        <Property name="Key-Column Color">
+                            <value x="0.78431374" y="0.78431374" z="0.78431374" w="1" />
+                        </Property>
+                        <Property name="Max Column Width" value="0" />
+                        <Property name="PlotPredicateVector" />
+                        <Property name="columnorder" value="false" />
+                        <Property name="filter" value="false" />
+                        <Property name="newKeyColumnCount" value="2" />
+                        <Property name="select" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="PlotData.InPort">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="PlotData.OutPort">
+                            <Properties />
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers />
+                    <resetList>
+                        <item KeyColumnCount="2" DataColumnCount="1">
+                            <LabelVector />
+                            <PredicateVector>
+                                <item>
+                                    <First value="2" />
+                                    <Second type="PlotPredicateNotBetween">
+                                        <lowerThreshold isValue="true" isTag="false" isHighlighted="false" value="0" />
+                                        <upperThreshold isValue="true" isTag="false" isHighlighted="false" value="4" />
+                                    </Second>
+                                </item>
+                            </PredicateVector>
+                            <SelectedRows />
+                            <ProjectionVector>
+                                <item value="0" />
+                                <item value="1" />
+                                <item value="2" />
+                            </ProjectionVector>
+                        </item>
+                    </resetList>
+                </Processor>
+                <Processor type="ScatterPlot" name="ScatterPlot 4" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="48" y="-66" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="false" x="183" y="183" width="256" height="160" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="axesWidth" value="1.5" />
+                        <Property name="camera" adjustProjectionToViewport="true" projectionMode="1" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="50" fovy="45">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="547" y="340" />
+                            </MetaData>
+                            <position x="-0.76376277" y="0.60484731" z="0.22544666" />
+                            <focus x="0" y="0" z="0" />
+                            <upVector x="0" y="0" z="1" />
+                        </Property>
+                        <Property name="enablePicking" value="true" />
+                        <Property name="enterExitEvent" lod="1" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="fileProp" noPathSet="true" value="" />
+                        <Property name="highlight" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="highlightAdditive" lod="1" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="highlightColor">
+                            <value x="1" y="0.89999998" z="0.80000001" w="1" />
+                        </Property>
+                        <Property name="label" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property name="labelAdditive" lod="1" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property name="lighting" value="true" />
+                        <Property name="marginBottom" value="50" />
+                        <Property name="marginLeft" value="60" />
+                        <Property name="marginRight" value="100" />
+                        <Property name="marginTop" value="50" />
+                        <Property name="mousePositionUpdate" lod="1" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="orthographicCamera" value="true" />
+                        <Property name="pLVPC" value="true" />
+                        <Property name="plotDataTable">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="553" y="276" />
+                            </MetaData>
+                        </Property>
+                        <Property name="plotEntitiesProperty" guiName="Scatter Data" entities="3" xCI="0" yCI="1" loadStrategy="0">
+                            <colorMap name="Visifire 1">
+                                <colors>
+                                    <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                    <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                    <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                    <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                    <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                    <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                    <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                    <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                    <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                    <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                    <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                    <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                    <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                    <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                    <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                </colors>
+                            </colorMap>
+                            <plotEntitySettingsVector>
+                                <plotEntitySettings entity="3" mainColumnIndex="2" candleTopColumnIndex="0" candleBottomColumnIndex="0" stickTopColumnIndex="0" stickBottomColumnIndex="0" optionalCI="2" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="2" maxGlyphSize="6" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                    <secondColor x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                </plotEntitySettings>
+                            </plotEntitySettingsVector>
+                        </Property>
+                        <Property name="plotLabel" value="" />
+                        <Property name="plotLabelColor">
+                            <value x="0" y="0" z="1" w="1" />
+                        </Property>
+                        <Property name="plotLabelSize" value="18" />
+                        <Property name="renderAxes" value="true" />
+                        <Property name="renderLegend" value="true" />
+                        <Property name="renderMousePosition" value="true" />
+                        <Property name="renderScales" value="true" />
+                        <Property name="renderXHelperLines" value="true" />
+                        <Property name="renderYHelperLines" value="true" />
+                        <Property name="renderZHelperLines" value="true" />
+                        <Property name="selectionPlaneColor">
+                            <value x="0.40000001" y="0.40000001" z="0.40000001" w="0.40000001" />
+                        </Property>
+                        <Property name="selectionProperty" threeDimensional="true">
+                            <values />
+                        </Property>
+                        <Property name="updateFile" />
+                        <Property name="xLabel" value="x axis" />
+                        <Property name="xLabelOption" value="user" />
+                        <Property name="xScaleStep" value="40" />
+                        <Property name="yLabel" value="y axis" />
+                        <Property name="yLabelOption" value="user" />
+                        <Property name="yScaleStep" value="40" />
+                        <Property name="zLabel" value="z axis" />
+                        <Property name="zLabelOption" value="user" />
+                        <Property name="zScaleStep" value="40" />
+                        <Property name="zoom" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property name="zoomAdditive" lod="1" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="1" shareEvents="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport">
+                            <Properties>
+                                <Property name="outport.renderSizeReceive" id="ref6">
+                                    <value x="500" y="400" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers>
+                        <Handler name="cameraHandler">
+                            <Properties>
+                                <Property name="cameraHandler.adjustCamera" value="bigsizechange" />
+                                <Property name="cameraHandler.interactionMetaphor" value="trackball" />
+                                <Property name="cameraHandler.moveBackward" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveDown" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveForward" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveLeft" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveRight" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveUp" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.resetTrackballCenter" />
+                                <Property name="cameraHandler.rotate" lod="1" enabled="false" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.shift" lod="1" enabled="false" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property name="cameraHandler.shiftTrackballCenter" value="scenecenter" />
+                                <Property name="cameraHandler.wheelZoom" lod="1" enabled="false" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.zoom" lod="1" enabled="false" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                        <Handler name="plotCameraHandler">
+                            <Properties>
+                                <Property name="plotCameraHandler.rotate" lod="1" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+                <Processor type="Canvas" name="Canvas" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="50" y="25" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="40" y="124" width="500" height="400" />
+                        <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
+                            <value x="40" y="124" />
+                        </MetaItem>
+                        <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
+                            <value x="500" y="400" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize">
+                            <value x="500" y="400" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" noPathSet="false" value="output/canvas.jpg" />
+                        <Property name="showCursor" value="true" />
+                        <Property name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input">
+                            <Properties>
+                                <Property name="image.input.renderSizeOrigin" id="ref5">
+                                    <value x="500" y="400" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="PlotFunctionOutPort">
+                        <Processor type="PlotFunctionSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="PlotPort.PlotFunction.InPort">
+                        <Processor type="PlotFunctionDiscret" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="PlotData.OutPort">
+                        <Processor type="PlotFunctionDiscret" ref="ref1" />
+                    </Outport>
+                    <Inport name="PlotData.InPort">
+                        <Processor type="PlotDataSelect" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="PlotData.OutPort">
+                        <Processor type="PlotDataSelect" ref="ref2" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="ScatterPlot" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="ScatterPlot" ref="ref3" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref4" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks>
+                <PropertyLink>
+                    <SourceProperty ref="ref5" />
+                    <DestinationProperty ref="ref6" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+            </PropertyLinks>
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

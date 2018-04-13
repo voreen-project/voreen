@@ -1,0 +1,968 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="17">
+            <MetaData>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="LinePlot" ref="ref0" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="Zoom" type="ZoomMetaData">
+                    <transform.row0 x="0.85330522060394287" y="0" z="0" />
+                    <transform.row1 x="0" y="0.85330522060394287" z="0" />
+                    <transform.row2 x="-326.860565185546875" y="398.080902099609375" z="1" />
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="340.9609375" y="-289" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.07114089" />
+            </MetaData>
+            <Processors>
+                <Processor type="LinePlot" name="LinePlot" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="292" y="-148" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="false" x="58" y="58" width="256" height="140" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="axesWidth" name="axesWidth" value="1" />
+                        <Property mapKey="descreteStep" name="descreteStep" value="50" tracking="false" />
+                        <Property mapKey="enablePicking" name="enablePicking" value="true" />
+                        <Property mapKey="enterExitEvent" name="enterExitEvent" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="fileProp" name="fileProp">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="highlight" name="highlight" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="highlightAdditive" name="highlightAdditive" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="highlightColor" name="highlightColor">
+                            <value x="1" y="0.89999998" z="0.80000001" w="1" />
+                        </Property>
+                        <Property mapKey="label" name="label" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="labelAdditive" name="labelAdditive" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="lineWidth" name="lineWidth" value="1.60000002" />
+                        <Property mapKey="logXAxes" name="logXAxes" value="false" />
+                        <Property mapKey="logYAxes" name="logYAxes" value="false" />
+                        <Property mapKey="marginBottom" name="marginBottom" value="50" />
+                        <Property mapKey="marginLeft" name="marginLeft" value="60" />
+                        <Property mapKey="marginRight" name="marginRight" value="100" />
+                        <Property mapKey="marginTop" name="marginTop" value="50" />
+                        <Property mapKey="mousePositionUpdate" name="mousePositionUpdate" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="pLVPC" name="pLVPC" value="true" />
+                        <Property mapKey="plotDataTable" name="plotDataTable">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="-1276" y="4" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="0" y="0" />
+                            </MetaData>
+                        </Property>
+                        <Property mapKey="plotEntitiesProperty" name="plotEntitiesProperty" guiName="Line Selection" entities="0" xCI="0" yCI="-1" loadStrategy="0">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="-886" y="488" />
+                            </MetaData>
+                            <colorMap name="Visifire 1">
+                                <colors>
+                                    <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                    <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                    <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                    <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                    <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                    <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                    <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                    <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                    <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                    <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                    <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                    <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                    <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                    <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                    <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                </colors>
+                            </colorMap>
+                            <plotEntitySettingsVector>
+                                <plotEntitySettings entity="0" mainColumnIndex="2" candleTopColumnIndex="2" candleBottomColumnIndex="2" stickTopColumnIndex="2" stickBottomColumnIndex="2" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                    <secondColor x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="3" candleTopColumnIndex="3" candleBottomColumnIndex="3" stickTopColumnIndex="3" stickBottomColumnIndex="3" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                    <secondColor x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="4" candleTopColumnIndex="4" candleBottomColumnIndex="4" stickTopColumnIndex="4" stickBottomColumnIndex="4" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                    <secondColor x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="5" candleTopColumnIndex="5" candleBottomColumnIndex="5" stickTopColumnIndex="5" stickBottomColumnIndex="5" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                    <secondColor x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="6" candleTopColumnIndex="6" candleBottomColumnIndex="6" stickTopColumnIndex="6" stickBottomColumnIndex="6" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                    <secondColor x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="7" candleTopColumnIndex="7" candleBottomColumnIndex="7" stickTopColumnIndex="7" stickBottomColumnIndex="7" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                    <secondColor x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="8" candleTopColumnIndex="8" candleBottomColumnIndex="8" stickTopColumnIndex="8" stickBottomColumnIndex="8" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                    <secondColor x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="9" candleTopColumnIndex="9" candleBottomColumnIndex="9" stickTopColumnIndex="9" stickBottomColumnIndex="9" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0" y="0.5546875" z="0.5546875" w="1" />
+                                    <secondColor x="0" y="0.5546875" z="0.5546875" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="10" candleTopColumnIndex="10" candleBottomColumnIndex="10" stickTopColumnIndex="10" stickBottomColumnIndex="10" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.54296875" y="0.7265625" z="0" w="1" />
+                                    <secondColor x="0.54296875" y="0.7265625" z="0" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="11" candleTopColumnIndex="11" candleBottomColumnIndex="11" stickTopColumnIndex="11" stickBottomColumnIndex="11" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                    <secondColor x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="12" candleTopColumnIndex="12" candleBottomColumnIndex="12" stickTopColumnIndex="12" stickBottomColumnIndex="12" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                    <secondColor x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="13" candleTopColumnIndex="13" candleBottomColumnIndex="13" stickTopColumnIndex="13" stickBottomColumnIndex="13" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                    <secondColor x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="14" candleTopColumnIndex="14" candleBottomColumnIndex="14" stickTopColumnIndex="14" stickBottomColumnIndex="14" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                    <secondColor x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="15" candleTopColumnIndex="15" candleBottomColumnIndex="15" stickTopColumnIndex="15" stickBottomColumnIndex="15" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.796875" y="0.3984375" z="0" w="1" />
+                                    <secondColor x="0.796875" y="0.3984375" z="0" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="16" candleTopColumnIndex="16" candleBottomColumnIndex="16" stickTopColumnIndex="16" stickBottomColumnIndex="16" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                    <secondColor x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="17" candleTopColumnIndex="17" candleBottomColumnIndex="17" stickTopColumnIndex="17" stickBottomColumnIndex="17" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.57871628" y="0.52558136" z="0.84375" w="1" />
+                                    <secondColor x="0.57871628" y="0.52558136" z="0.84375" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="18" candleTopColumnIndex="18" candleBottomColumnIndex="18" stickTopColumnIndex="18" stickBottomColumnIndex="18" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.92135596" y="0.99609375" z="0.43589526" w="1" />
+                                    <secondColor x="0.92135596" y="0.99609375" z="0.43589526" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="19" candleTopColumnIndex="19" candleBottomColumnIndex="19" stickTopColumnIndex="19" stickBottomColumnIndex="19" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.85546875" y="0.7428844" z="0.53497314" w="1" />
+                                    <secondColor x="0.85546875" y="0.7428844" z="0.53497314" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="21" candleTopColumnIndex="21" candleBottomColumnIndex="21" stickTopColumnIndex="21" stickBottomColumnIndex="21" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.5810951" y="0.828125" z="0.5674057" w="1" />
+                                    <secondColor x="0.5810951" y="0.828125" z="0.5674057" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="22" candleTopColumnIndex="22" candleBottomColumnIndex="22" stickTopColumnIndex="22" stickBottomColumnIndex="22" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.69921875" y="0.28887939" z="0.67359322" w="1" />
+                                    <secondColor x="0.69921875" y="0.28887939" z="0.67359322" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="23" candleTopColumnIndex="23" candleBottomColumnIndex="23" stickTopColumnIndex="23" stickBottomColumnIndex="23" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.47472632" y="0.54384404" z="0.88671875" w="1" />
+                                    <secondColor x="0.47472632" y="0.54384404" z="0.88671875" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="24" candleTopColumnIndex="24" candleBottomColumnIndex="24" stickTopColumnIndex="24" stickBottomColumnIndex="24" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.58718181" y="0.56496435" z="0.96875" w="1" />
+                                    <secondColor x="0.58718181" y="0.56496435" z="0.96875" w="1" />
+                                </plotEntitySettings>
+                            </plotEntitySettingsVector>
+                        </Property>
+                        <Property mapKey="plotLabel" name="plotLabel" value="" />
+                        <Property mapKey="plotLabelColor" name="plotLabelColor">
+                            <value x="0" y="0" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="plotLabelSize" name="plotLabelSize" value="18" />
+                        <Property mapKey="pointSize" name="pointSize" value="9" />
+                        <Property mapKey="renderAxes" name="renderAxes" value="true" />
+                        <Property mapKey="renderLineLabel" name="renderLineLabel" value="true" />
+                        <Property mapKey="renderMousePosition" name="renderMousePosition" value="true" />
+                        <Property mapKey="renderScales" name="renderScales" value="true" />
+                        <Property mapKey="renderXHelperLines" name="renderXHelperLines" value="true" />
+                        <Property mapKey="renderYHelperLines" name="renderYHelperLines" value="true" />
+                        <Property mapKey="selectionPlaneColor" name="selectionPlaneColor">
+                            <value x="0.40000001" y="0.40000001" z="0.40000001" w="0.40000001" />
+                        </Property>
+                        <Property mapKey="selectionProperty" name="selectionProperty" threeDimensional="false">
+                            <values>
+                                <item highlight="false" renderLabel="false" zoomTo="true">
+                                    <selection isTablePositionFlag="false">
+                                        <tablePosition x="-1" y="-1" />
+                                        <selection>
+                                            <item>
+                                                <First value="0" />
+                                                <Second type="PlotPredicateBetweenOrEqual">
+                                                    <lowerThreshold isValue="true" isTag="false" isHighlighted="false" value="0" />
+                                                    <upperThreshold isValue="true" isTag="false" isHighlighted="false" value="7" />
+                                                </Second>
+                                            </item>
+                                        </selection>
+                                    </selection>
+                                </item>
+                                <item highlight="true" renderLabel="false" zoomTo="false">
+                                    <selection isTablePositionFlag="false">
+                                        <tablePosition x="-1" y="-1" />
+                                        <selection>
+                                            <item>
+                                                <First value="-1" />
+                                                <Second type="PlotPredicateBetweenOrEqual">
+                                                    <lowerThreshold isValue="true" isTag="false" isHighlighted="false" value="6.73563239393390489" />
+                                                    <upperThreshold isValue="true" isTag="false" isHighlighted="false" value="7" />
+                                                </Second>
+                                            </item>
+                                            <item>
+                                                <First value="-2" />
+                                                <Second type="PlotPredicateBetweenOrEqual">
+                                                    <lowerThreshold isValue="true" isTag="false" isHighlighted="false" value="-5346.68781170150396065" />
+                                                    <upperThreshold isValue="true" isTag="false" isHighlighted="false" value="112273.36608627150417306" />
+                                                </Second>
+                                            </item>
+                                        </selection>
+                                    </selection>
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="updateFile" name="updateFile" />
+                        <Property mapKey="xLabel" name="xLabel" value="x axis" />
+                        <Property mapKey="xLabelOption" name="xLabelOption" value="user" />
+                        <Property mapKey="xScaleStep" name="xScaleStep" value="40" />
+                        <Property mapKey="yLabel" name="yLabel" value="y axis" />
+                        <Property mapKey="yLabelOption" name="yLabelOption" value="user" />
+                        <Property mapKey="yScaleStep" name="yScaleStep" value="40" />
+                        <Property mapKey="zoom" name="zoom" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property mapKey="zoomAdditive" name="zoomAdditive" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="1" shareEvents="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="outport" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref8">
+                                    <value x="769" y="521" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="PlotDataSource" name="PlotDataSource" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="189" y="-587" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="Separator" name="Separator" value=";" />
+                        <Property mapKey="constantOrder" name="constantOrder" value="true" />
+                        <Property mapKey="countKeyColumn" name="countKeyColumn" value="1" tracking="false" />
+                        <Property mapKey="countLine" name="countLine" value="1" tracking="false" />
+                        <Property mapKey="inputFile" name="inputFile">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/plotting/data_fmo.csv" />
+                                    <item value="../../voreen-testdata/voreen-testdata/input/plotting/data_fmo.csv" />
+                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/input/plotting/data_fmo.csv" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="recalculate" name="recalculate" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="PlotDataOutPort" direction="0" portID="PlotDataOutPort" guiName="" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="292" y="-51" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="44" y="119" width="769" height="521" />
+                        <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
+                            <value x="44" y="119" />
+                        </MetaItem>
+                        <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
+                            <value x="769" y="521" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="769" y="521" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/canvas.jpg" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/canvas.jpg" />
+                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/canvas.jpg" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref7">
+                                    <value x="769" y="521" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="PlotDataMerge" name="PlotDataMerge" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="205" y="-381" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="false" x="1024" y="47" width="844" height="758" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="Data-Column Color" name="Data-Column Color">
+                            <value x="0.94117647" y="0.94117647" z="0.94117647" w="1" />
+                        </Property>
+                        <Property mapKey="Ignore Columnlabels" name="Ignore Columnlabels" value="true" />
+                        <Property mapKey="Key-Column Color" name="Key-Column Color">
+                            <value x="0.78431374" y="0.78431374" z="0.78431374" w="1" />
+                        </Property>
+                        <Property mapKey="Max Column Width" name="Max Column Width" value="0" />
+                        <Property mapKey="swap" name="swap" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="PlotData.InPortFirst" direction="1" portID="PlotData.InPortFirst" guiName="" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="PlotData.InPortSecond" direction="1" portID="PlotData.InPortSecond" guiName="" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="PlotData.OutPort" direction="0" portID="PlotData.OutPort" guiName="" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="PlotDataSource" name="PlotDataSource 2" id="ref6">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="347" y="-585" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="Separator" name="Separator" value=";" />
+                        <Property mapKey="constantOrder" name="constantOrder" value="true" />
+                        <Property mapKey="countKeyColumn" name="countKeyColumn" value="1" tracking="false" />
+                        <Property mapKey="countLine" name="countLine" value="1" tracking="false" />
+                        <Property mapKey="inputFile" name="inputFile">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/plotting/data_lineplot.csv" />
+                                    <item value="../../voreen-testdata/voreen-testdata/input/plotting/data_lineplot.csv" />
+                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/input/plotting/data_lineplot.csv" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="recalculate" name="recalculate" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="PlotDataOutPort" direction="0" portID="PlotDataOutPort" guiName="" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="PlotDataMerge" name="PlotDataMerge 2" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="364" y="-379" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="false" x="0" y="0" width="591" height="694" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="Data-Column Color" name="Data-Column Color">
+                            <value x="0.94117647" y="0.94117647" z="0.94117647" w="1" />
+                        </Property>
+                        <Property mapKey="Ignore Columnlabels" name="Ignore Columnlabels" value="true" />
+                        <Property mapKey="Key-Column Color" name="Key-Column Color">
+                            <value x="0.78431374" y="0.78431374" z="0.78431374" w="1" />
+                        </Property>
+                        <Property mapKey="Max Column Width" name="Max Column Width" value="0" />
+                        <Property mapKey="swap" name="swap" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="PlotData.InPortFirst" direction="1" portID="PlotData.InPortFirst" guiName="" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="PlotData.InPortSecond" direction="1" portID="PlotData.InPortSecond" guiName="" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="PlotData.OutPort" direction="0" portID="PlotData.OutPort" guiName="" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="PlotDataMerge" name="PlotDataMerge 3" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="280" y="-252" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="false" x="1286" y="10" width="768" height="765" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="Data-Column Color" name="Data-Column Color">
+                            <value x="0.94117647" y="0.94117647" z="0.94117647" w="1" />
+                        </Property>
+                        <Property mapKey="Ignore Columnlabels" name="Ignore Columnlabels" value="true" />
+                        <Property mapKey="Key-Column Color" name="Key-Column Color">
+                            <value x="0.78431374" y="0.78431374" z="0.78431374" w="1" />
+                        </Property>
+                        <Property mapKey="Max Column Width" name="Max Column Width" value="0" />
+                        <Property mapKey="swap" name="swap" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="PlotData.InPortFirst" direction="1" portID="PlotData.InPortFirst" guiName="" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="PlotData.InPortSecond" direction="1" portID="PlotData.InPortSecond" guiName="" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="PlotData.OutPort" direction="0" portID="PlotData.OutPort" guiName="" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="LinePlot" ref="ref0" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="PlotDataOutPort">
+                        <Processor type="PlotDataSource" ref="ref2" />
+                    </Outport>
+                    <Inport name="PlotData.InPortFirst">
+                        <Processor type="PlotDataMerge" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="PlotDataOutPort">
+                        <Processor type="PlotDataSource" ref="ref2" />
+                    </Outport>
+                    <Inport name="PlotData.InPortFirst">
+                        <Processor type="PlotDataMerge" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="PlotData.OutPort">
+                        <Processor type="PlotDataMerge" ref="ref3" />
+                    </Outport>
+                    <Inport name="PlotData.InPortFirst">
+                        <Processor type="PlotDataMerge" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="PlotDataOutPort">
+                        <Processor type="PlotDataSource" ref="ref6" />
+                    </Outport>
+                    <Inport name="PlotData.InPortSecond">
+                        <Processor type="PlotDataMerge" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="PlotDataOutPort">
+                        <Processor type="PlotDataSource" ref="ref6" />
+                    </Outport>
+                    <Inport name="PlotData.InPortSecond">
+                        <Processor type="PlotDataMerge" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="PlotData.OutPort">
+                        <Processor type="PlotDataMerge" ref="ref4" />
+                    </Outport>
+                    <Inport name="PlotData.InPortSecond">
+                        <Processor type="PlotDataMerge" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="PlotData.OutPort">
+                        <Processor type="PlotDataMerge" ref="ref5" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="LinePlot" ref="ref0" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks>
+                <PropertyLink>
+                    <SourceProperty ref="ref7" />
+                    <DestinationProperty ref="ref8" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+            </PropertyLinks>
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="Canvas::Canvas">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

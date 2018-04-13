@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_ImageCompare" group="Filtering">
+    <filterlist>
+      <filter name="AbsoluteValueDifferenceImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports> 
+      </filter>
+      <filter name="CheckerBoardImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2" filterTemplate="false"/>
+        </inports>
+        <outports>
+          <port name="OutputImage" filterTemplate="false"/>
+        </outports>
+      </filter>
+      <filter name="SimilarityIndexImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <arguments>
+          <argument name="SimilarityIndex" argumenttype="Float" inputArgument="false"/>
+        </arguments>
+      </filter>
+      <filter name="SquaredDifferenceImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+    </filterlist>
+  </ITK_Module>
+</VoreenData>

@@ -1,0 +1,7 @@
+# list of core files and directories that should be included in the windows binary distribution
+# for dynamic linking
+
+# binaries
+bin/Release/tgt.dll:./
+bin/Release/voreen_core.dll:./
+bin/Release/voreen_qt.dll:./

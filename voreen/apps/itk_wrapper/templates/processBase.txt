@@ -1,0 +1,8 @@
+§TEMPLATED§
+void §FILTERNAME§ITK::§METHODNAME§() {
+    const VolumeBase* inputHandle§NUMBER§ = inport§NUMBER§_.getData();
+    const VolumeRAM* inputVolume§NUMBER§ = inputHandle§NUMBER§->getRepresentation<VolumeRAM>();
+
+§VOLUMETYPECASES§
+
+}

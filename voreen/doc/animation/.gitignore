@@ -1,0 +1,8 @@
+#ignore generated files
+*.aux
+*.bbl
+*.blg
+*.log
+*.tps
+*.toc
+*.backup

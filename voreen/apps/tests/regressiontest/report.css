@@ -1,0 +1,97 @@
+
+img {
+    width: 150px;
+    margin: 0px -3px;
+    padding: 0px;
+    border: 1px solid black;
+}
+
+th { font-size: .9em; }
+
+.success { color: green;     }
+.failure { color: red;       }
+/*.ignored { color: gold;      } */
+.ignored { color: lightgray; }
+.error   { color: red;       }
+.skipped { color: lightgray; }
+
+.success-bg { background-color: lightgreen; }
+.failure-bg { background-color: orangered;  }
+/*.ignored-bg { background-color: gold;       } */
+.ignored-bg { background-color: lightgray;  }
+.error-bg   { background-color: red;        }
+.skipped-bg { background-color: lightgray;  }
+
+.title {
+    font-size: 2.0em;
+    font-weight: bold;
+}
+.statistics {
+    font-size: 1.1em;
+    margin: 2px;
+}
+.date {
+    font-size: 1.1em;
+    margin: 3px 2px;
+}
+
+
+.overviewModuleContainer {
+    margin: 20px 2px;
+}
+.overviewModuleHead {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: mediumblue;
+    margin-bottom: -4px;
+}
+.overviewGroupContainer {
+    padding-left: 10px;
+    margin: 12px 4px;
+}
+.overviewGroupHead {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+.overviewTable {
+    margin-left: 16px;
+}
+.overviewTable td {
+    padding: 1px 3px;
+}
+
+.detailsContainer {
+    width: 800px;
+    border: 1px solid black;
+    margin: 20px 0px;
+}
+.detailsTitle {
+    font-size: 1.3em;
+    font-weight: bold;
+    padding: 3px 5px;
+    border-bottom: 1px solid lightgray;
+}
+/*.detailsBody {
+    padding: 2px;
+}*/
+.detailsListingContainer {
+    margin: 10px 5px 10px;
+}
+.detailsListingTitle {
+    font-size: 1.1em;
+    font-weight: bold;
+    margin: 3px;
+}
+.detailsListingTable td {
+    padding: 1px 4px;
+    /*text-align: center; */
+}
+.detailsErrorMessage {
+    color: red;
+    font-weight: bold;
+    margin: 4px;
+}
+.detailsLogContainer {
+    padding: 1px 4px 3px;
+    border-top: 1px solid darkgray;
+}

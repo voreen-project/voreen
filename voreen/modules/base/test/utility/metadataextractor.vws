@@ -1,0 +1,81 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" GlobalDescription="">
+        <ProcessorNetwork version="11">
+            <MetaData>
+                <MetaItem name="ProcessorSelection" type="SelectionMetaData::Processor">
+                    <values>
+                        <item type="MetaDataExtractor" ref="ref1" />
+                    </values>
+                </MetaItem>
+            </MetaData>
+            <Processors>
+                <Processor type="VolumeSource" name="VolumeSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-34" y="-120" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="volumeURL" url="input/walnut_uint16.vvd?preferredReader=VvdVolumeReader" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="MetaDataExtractor" name="MetaDataExtractor" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-46" y="-23" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="dumpButton" />
+                        <Property name="expression">
+                            <value>
+                                <![CDATA[Bits per Voxel: {volBitsPerVoxel}
+Number of Voxels: {volNumVoxels}
+Offset: {Offset}
+RealWorldMapping: {RealWorldMapping}
+Spacing: {Spacing}
+Volume Dimensions: {volDimensions}
+Volume Memory Size: {volMemSize}]]>
+                            </value>
+                        </Property>
+                        <Property name="updateButton" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="TextSave" name="TextSave" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-28" y="73" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="continousSave" value="false" />
+                        <Property name="file" value="output/metadata.txt" />
+                        <Property name="save" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="volume.inport">
+                        <Processor type="MetaDataExtractor" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="text">
+                        <Processor type="MetaDataExtractor" ref="ref1" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="TextSave" ref="ref2" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+            <PropertyStateCollections />
+            <PropertyStateFileReferences />
+            <PropertyStateDirectoryReferences />
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

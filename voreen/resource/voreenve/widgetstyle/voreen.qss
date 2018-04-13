@@ -1,0 +1,201 @@
+/**********************************************************************
+ *                                                                    *
+ * Voreen - The Volume Rendering Engine                               *
+ *                                                                    *
+ * Copyright (C) 2005-2009 Visualization and Computer Graphics Group, *
+ * Department of Computer Science, University of Muenster, Germany.   *
+ * <http://viscg.uni-muenster.de>                                     *
+ *                                                                    *
+ * This file is part of the Voreen software package. Voreen is free   *
+ * software: you can redistribute it and/or modify it under the terms *
+ * of the GNU General Public License version 2 as published by the    *
+ * Free Software Foundation.                                          *
+ *                                                                    *
+ * Voreen is distributed in the hope that it will be useful,          *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the       *
+ * GNU General Public License for more details.                       *
+ *                                                                    *
+ * You should have received a copy of the GNU General Public License  *
+ * in the file "LICENSE.txt" along with this program.                 *
+ * If not, see <http://www.gnu.org/licenses/>.                        *
+ *                                                                    *
+ * The authors reserve all rights not expressly granted herein. For   *
+ * non-commercial academic use see the license exception specified in *
+ * the file "LICENSE-academic.txt". To get information about          *
+ * commercial licensing please contact the authors.                   *
+ *                                                                    *
+ **********************************************************************/
+
+
+/*****************/
+/* toolbar style */
+/*****************/
+
+QToolBar {
+    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                    stop:0 #777777, stop:1 black);
+    spacing: 3px;
+    border: 4px;
+    border-color: black;
+}
+
+QLabel#toolBarLabel {
+    color : white;
+}
+
+QToolButton {
+    background: none;
+}
+
+QToolBar::handle {
+    image: url(:/voreenve/widgetstyle/toolbarhandle.png);
+}
+
+QToolBar::separator {
+    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                    stop:1 #777777, stop:0 #aaaaaa);
+    width: 1px;
+    height: 1px;
+}
+
+/**************/
+/* menu style */
+/**************/
+
+QMenuBar {
+    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                      stop:0 #777777, stop:1 black);
+/*  background-image: url(:/voreenve/widgetstyle/highlight-menu.png);
+    background-repeat: repeat-x; */
+}
+
+QMenuBar::item {
+    color: white;
+        background-color: transparent;
+}
+
+QMenuBar::item:selected {
+    color: white;
+    background-color: darkgray;
+}
+
+QMenuBar::item:pressed {
+    color: black;
+    background-color: darkgray;
+}
+
+QMenu {
+    color: black;
+    background-color: darkgray;
+    border: 1px solid black;
+}
+
+QMenu::separator {
+    background: black;
+    width: 1px;
+    height: 1px;
+}
+
+QMenu::item:selected {
+   background-color: rgba(100, 100, 100, 150);
+}
+
+/*******************/
+/* scrollbar style */
+/*******************/
+
+QScrollBar:horizontal {
+    height: 16px;
+    border: 1px solid darkgray;
+    margin: 0px 17px 0px 17px;
+    background: darkgray;
+}
+
+QScrollBar::handle:horizontal {
+    min-width: 16px;
+    border-radius: 4px;
+    border: 1px solid darkgray;
+    background: rgb(50,50,50);
+}
+
+QScrollBar::add-line:horizontal {
+    width: 16px;
+    subcontrol-position: right;
+    subcontrol-origin: margin;
+    border-radius: 4px;
+    border: 1px solid darkgray;
+    background-image: url(:/voreenve/widgetstyle/scrollbar.png);
+}
+
+QScrollBar::sub-line:horizontal {
+    width: 16px;
+    subcontrol-position: left;
+    subcontrol-origin: margin;
+    border-radius: 4px;
+    border: 1px solid darkgray;
+    background-image: url(:/voreenve/widgetstyle/scrollbar.png);
+}
+
+QScrollBar:vertical {
+    width: 16px;
+    border: 1px solid darkgray;
+    margin: 17px 0px 17px 0px;
+    background: darkgray;
+}
+
+QScrollBar::handle:vertical {
+    min-height: 16px;
+    border-radius: 4px;
+    border: 1px solid darkgray;
+    background: rgb(50,50,50);
+}
+
+QScrollBar::add-line:vertical {
+    height: 16px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+    border-radius: 4px;
+    border: 1px solid darkgray;
+    background-image: url(:/voreenve/widgetstyle/scrollbar.png);
+}
+
+QScrollBar::sub-line:vertical {
+    height: 16px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+    border-radius: 4px;
+    border: 1px solid darkgray;
+    background-image: url(:/voreenve/widgetstyle/scrollbar.png);
+}
+
+
+/********************/
+/* dockwidget style */
+/********************/
+
+QDockWidget {
+    color: white;
+    titlebar-close-icon: url(:/voreenve/widgetstyle/closebutton.png);
+    titlebar-normal-icon: url(:/voreenve/widgetstyle/undockbutton.png);
+}
+
+QDockWidget::title {
+    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                      stop:0 #777777, stop:1 black);
+    background-image: url(:/voreenve/widgetstyle/highlight-dockwidget.png);
+ }
+
+ QDockWidget::close-button, QDockWidget::float-button {
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 0px;
+ }
+
+ QDockWidget::close-button:hover, QDockWidget::float-button:hover {
+    background: gray;
+ }
+
+ QDockWidget::close-button:pressed, QDockWidget::float-button:pressed {
+    padding: 1px -1px -1px 1px;
+ }

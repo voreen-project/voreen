@@ -1,0 +1,8 @@
+NRRD0001
+content: nucleon
+dimension: 3
+type: uchar
+sizes: 41 41 41
+spacings: 1 1 1
+datafile: ./nucleon.raw
+encoding: raw

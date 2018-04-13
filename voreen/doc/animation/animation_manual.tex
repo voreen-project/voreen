@@ -1,0 +1,35 @@
+\documentclass[a4paper]{article}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                        Include packages here                                   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[pdftex]{graphicx}   %<< for graphics
+\usepackage{xspace}             %<< to have empty space after \Voreen macro
+\usepackage{tabularx,calc}      %<< for tables
+\usepackage{multirow}           %<< combine table cells
+\usepackage{cprotect}           %<< use verb in caption
+\usepackage{wrapfig}            %<< use figures inside of text
+\usepackage{url}                %<< make url's
+\usepackage{subfig}
+
+\usepackage[inner=2.5cm,outer=2.5cm,top=2 cm,bottom=2 cm, includeheadfoot]{geometry}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                        General defines                                         %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\Voreen}{\textsc{Voreen}\xspace}            %<< The name of the commercial Voreen version
+\newcommand{\workspace}{\textsc{template workspace}\xspace}    %<< The name of the pre-defined workspaces
+\newcommand{\workspaces}{\textsc{template workspaces}\xspace}  %<< The name of the pre-defined workspaces
+\newcommand{\Workspace}{\textsc{Template workspace}\xspace}    %<< The name of the pre-defined workspaces
+\newcommand{\Workspaces}{\textsc{Template workspaces}\xspace}  %<< The name of the pre-defined workspaces
+
+\graphicspath{{title/}{animation/}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                        The document itself                                     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+   %create the title page
+   \input{title/title}
+   \newpage
+   %input the different sections
+   \input{animation/animation}
+\end{document}

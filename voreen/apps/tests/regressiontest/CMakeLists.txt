@@ -1,0 +1,21 @@
+PROJECT(regressiontest)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.0 FATAL_ERROR)
+INCLUDE(../../../cmake/commonconf.cmake)
+
+MESSAGE(STATUS "Configuring RegressionTest Application")
+
+SET(VRN_REGRESSIONTEST_SOURCES
+    regressiontest.cpp    
+    reportgenerators.cpp
+)
+
+SET(VRN_REGRESSIONTEST_HEADERS   
+    reportgenerators.h
+)
+
+ADD_EXECUTABLE(regressiontest 
+    ${VRN_REGRESSIONTEST_SOURCES} ${VRN_REGRESSIONTEST_HEADERS} 
+) 
+ADD_DEFINITIONS(${VRN_DEFINITIONS} ${VRN_MODULE_DEFINITIONS})
+INCLUDE_DIRECTORIES(${VRN_INCLUDE_DIRECTORIES})
+TARGET_LINK_LIBRARIES(regressiontest tgt voreen_core ${VRN_EXTERNAL_LIBRARIES})

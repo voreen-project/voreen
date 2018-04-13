@@ -1,0 +1,365 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" GlobalDescription="">
+        <ProcessorNetwork version="11">
+            <MetaData>
+                <MetaItem name="ProcessorSelection" type="SelectionMetaData::Processor">
+                    <values>
+                        <item type="Canvas" ref="ref12" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="Zoom" type="ZoomMetaData">
+                    <transform.row0 x="0.39586272835731506" y="0" z="0" />
+                    <transform.row1 x="0" y="0.39586272835731506" z="0" />
+                    <transform.row2 x="454.56414794921875" y="-64.12194061279296875" z="1" />
+                </MetaItem>
+            </MetaData>
+            <Processors>
+                <Processor type="Canvas" name="full bloom" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-831" y="268" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="403" y="228" width="300" height="300" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize">
+                            <value x="300" y="300" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" value="output/full_bloom.png" />
+                        <Property name="showCursor" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageThreshold" name="ImageThreshold" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-570" y="0" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="enable" value="true" />
+                        <Property name="lowerMaskColor">
+                            <value x="0" y="0" z="0" w="0" />
+                        </Property>
+                        <Property name="lowerThreshold" value="0" />
+                        <Property name="upperMaskColor">
+                            <value x="0" y="0" z="0" w="0" />
+                        </Property>
+                        <Property name="upperThreshold" value="1" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Compositor" name="Compositor" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-819" y="96" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="addDepth" value="false" />
+                        <Property name="blendMode" value="add" />
+                        <Property name="weightFirst" value="1" />
+                        <Property name="weightSecond" value="1" />
+                        <Property name="weightingFactor" value="0" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Gaussian" name="Gaussian" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-577" y="116" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="blurAlpha" value="true" />
+                        <Property name="blurBlue" value="true" />
+                        <Property name="blurDepth" value="false" />
+                        <Property name="blurGreen" value="true" />
+                        <Property name="blurRed" value="true" />
+                        <Property name="enable" value="true" />
+                        <Property name="sigma" value="10" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageSource" name="ImageSource" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-265" y="-299" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="clearButton" />
+                        <Property name="imageFile" value="input/images/walnut.png" />
+                        <Property name="imageSize">
+                            <value x="512" y="512" />
+                        </Property>
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="moderate bloom" id="ref11">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-308" y="379" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="458" y="485" width="300" height="300" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize">
+                            <value x="300" y="300" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" value="output/moderate_bloom.png" />
+                        <Property name="showCursor" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Gaussian" name="Gaussian 2" id="ref10">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-216" y="132" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="blurAlpha" value="true" />
+                        <Property name="blurBlue" value="true" />
+                        <Property name="blurDepth" value="false" />
+                        <Property name="blurGreen" value="true" />
+                        <Property name="blurRed" value="true" />
+                        <Property name="enable" value="true" />
+                        <Property name="sigma" value="5.82999992" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageThreshold" name="ImageThreshold 2" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-234" y="46" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="enable" value="true" />
+                        <Property name="lowerMaskColor">
+                            <value x="0" y="0" z="0" w="0" />
+                        </Property>
+                        <Property name="lowerThreshold" value="0.44" />
+                        <Property name="upperMaskColor">
+                            <value x="0" y="0" z="0" w="0" />
+                        </Property>
+                        <Property name="upperThreshold" value="1" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Compositor" name="Compositor 2" id="ref7">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-318" y="228" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="addDepth" value="false" />
+                        <Property name="blendMode" value="add" />
+                        <Property name="weightFirst" value="1" />
+                        <Property name="weightSecond" value="0.75999999" />
+                        <Property name="weightingFactor" value="0" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="gaussian and threshold disabled, full add" id="ref12">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="36" y="369" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="866" y="273" width="300" height="300" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize">
+                            <value x="300" y="300" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" value="output/gaussian_and_threshold_disabled.png" />
+                        <Property name="showCursor" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Compositor" name="Compositor 3" id="ref8">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="44" y="268" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="addDepth" value="false" />
+                        <Property name="blendMode" value="add" />
+                        <Property name="weightFirst" value="1" />
+                        <Property name="weightSecond" value="1" />
+                        <Property name="weightingFactor" value="0" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageThreshold" name="ImageThreshold 3" id="ref6">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="64" y="34" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="enable" value="false" />
+                        <Property name="lowerMaskColor">
+                            <value x="0" y="0" z="0" w="0" />
+                        </Property>
+                        <Property name="lowerThreshold" value="0.49000001" />
+                        <Property name="upperMaskColor">
+                            <value x="0" y="0" z="0" w="0" />
+                        </Property>
+                        <Property name="upperThreshold" value="1" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Gaussian" name="Gaussian 3" id="ref13">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="86" y="148" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="blurAlpha" value="true" />
+                        <Property name="blurBlue" value="true" />
+                        <Property name="blurDepth" value="false" />
+                        <Property name="blurGreen" value="true" />
+                        <Property name="blurRed" value="true" />
+                        <Property name="enable" value="false" />
+                        <Property name="sigma" value="5.82999992" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Image Control" id="ref9">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-980" y="92" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="38" y="384" width="300" height="300" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize">
+                            <value x="300" y="300" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" value="output/image_control.png" />
+                        <Property name="showCursor" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="ImageThreshold" ref="ref0" />
+                    </Outport>
+                    <Inport name="image.inport">
+                        <Processor type="Gaussian" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="Compositor" ref="ref2" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="Gaussian" ref="ref1" />
+                    </Outport>
+                    <Inport name="image.inport1">
+                        <Processor type="Compositor" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref4" />
+                    </Outport>
+                    <Inport name="image.inport">
+                        <Processor type="ImageThreshold" ref="ref0" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref4" />
+                    </Outport>
+                    <Inport name="image.inport">
+                        <Processor type="ImageThreshold" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref4" />
+                    </Outport>
+                    <Inport name="image.inport">
+                        <Processor type="ImageThreshold" ref="ref6" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref4" />
+                    </Outport>
+                    <Inport name="image.inport0">
+                        <Processor type="Compositor" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref4" />
+                    </Outport>
+                    <Inport name="image.inport0">
+                        <Processor type="Compositor" ref="ref7" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref4" />
+                    </Outport>
+                    <Inport name="image.inport0">
+                        <Processor type="Compositor" ref="ref8" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref4" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref9" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="Gaussian" ref="ref10" />
+                    </Outport>
+                    <Inport name="image.inport1">
+                        <Processor type="Compositor" ref="ref7" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="ImageThreshold" ref="ref5" />
+                    </Outport>
+                    <Inport name="image.inport">
+                        <Processor type="Gaussian" ref="ref10" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="Compositor" ref="ref7" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref11" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="Compositor" ref="ref8" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref12" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="ImageThreshold" ref="ref6" />
+                    </Outport>
+                    <Inport name="image.inport">
+                        <Processor type="Gaussian" ref="ref13" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="Gaussian" ref="ref13" />
+                    </Outport>
+                    <Inport name="image.inport1">
+                        <Processor type="Compositor" ref="ref8" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+            <PropertyStateCollections />
+            <PropertyStateFileReferences />
+            <PropertyStateDirectoryReferences />
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

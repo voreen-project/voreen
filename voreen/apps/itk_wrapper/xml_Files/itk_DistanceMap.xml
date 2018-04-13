@@ -1,0 +1,100 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_DistanceMap" group="Filtering">
+    <filterlist>
+      <filter name="ApproximateSignedDistanceMapImageFilter" enabled="false" description="Headerfile missing!">
+        <arguments>
+          <argument name="InsideValue" argumenttype="PixelType"/>
+          <argument name="OutsideValue" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+      <filter name="ContourDirectedMeanDistanceImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <arguments>
+          <argument name="ContourDirectedMeanDistance" argumenttype="Float" inputArgument="false"/>
+        </arguments>
+      </filter>
+      <filter name="ContourMeanDistanceImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <arguments>
+          <argument name="MeanDistance" argumenttype="Float" inputArgument="false"/>
+        </arguments>
+      </filter>
+      <filter name="DanielssonDistanceMapImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage"/>
+        </inports>
+        <outports>
+	  <port name="DistanceMap"/>
+          <port name="VoronoiMap" filterTemplate="false"/>
+        </outports>
+        <arguments>
+          <argument name="InputIsBinary" argumenttype="Bool" defaultValue ="false"/>
+          <argument name="SquaredDistance" argumenttype="Bool" defaultValue ="false"/>
+          <argument name="UseImageSpacing" argumenttype="Bool" defaultValue ="false"/>
+        </arguments>
+      </filter>
+      <filter name="DirectedHausdorffDistanceImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <arguments>
+          <argument name="DirectedHausdorffDistance" argumenttype="Float" inputArgument="false"/>
+          <argument name="AverageHausdorffDistance" argumenttype="Float" inputArgument="false"/>
+        </arguments>
+      </filter>
+      <filter name="FastChamferDistanceImageFiler" enabled="false" description="Needs NarrowBand">
+      </filter>
+      <filter name="HausdorffDistanceImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <arguments>
+          <argument name="HausdorffDistance" argumenttype="Float" inputArgument="false"/>
+          <argument name="AverageHausdorffDistance" argumenttype="Float" inputArgument="false"/>
+        </arguments>
+      </filter>
+      <filter name="IsoContourDistanceMImageFilter" enabled="false" description="Needs Isocontour.">
+      </filter>
+      <filter name="SignedDanielssonDistanceMapImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage"/>
+        </inports>
+        <outports>
+	  <port name="DistanceMap"/>
+          <port name="VoronoiMap" filterTemplate="false"/>
+        </outports>
+        <arguments>
+          <argument name="InsideIsPositive" argumenttype="Bool" defaultValue ="false"/>
+          <argument name="SquaredDistance" argumenttype="Bool" defaultValue ="false"/>
+          <argument name="UseImageSpacing" argumenttype="Bool" defaultValue ="false"/>
+        </arguments>
+      </filter>
+      <filter name="SignedMaurerDistanceMapImageFilter" enabled="false" description="Linking error!">
+        <inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="IntegerScalar"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="InsideIsPositive" argumenttype="Bool" defaultValue ="false"/>
+          <argument name="SquaredDistance" argumenttype="Bool" defaultValue ="false"/>
+          <argument name="UseImageSpacing" argumenttype="Bool" defaultValue ="false"/>
+        </arguments>
+      </filter>
+    </filterlist>
+  </ITK_Module>
+</VoreenData>

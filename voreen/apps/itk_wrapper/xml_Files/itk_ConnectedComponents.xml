@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_ConnectedComponents" group="Segmentation">
+    <filterlist>
+      <filter name="ConnectedComponentImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="IntegerScalar"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+          <argument name="ObjectCount" argumenttype="Int" inputArgument="false" />
+        </arguments>
+      </filter>
+      <filter name="HardConnectedComponentImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="ObjectSeed" argumenttype="SetSeedType"/>
+        </arguments>
+      </filter>
+      <filter name="RelabelComponentImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="NumberOfObjects" argumenttype="Int" inputArgument="false" />
+          <argument name="OriginalNumberOfObjects" argumenttype="Int" inputArgument="false" />
+          <argument name="MinimumObjectSize" argumenttype="Int" defaultValue="0" minValue="0" maxValue="INT_MAX" />
+        </arguments>
+      </filter>
+      <filter name="ScalarConnectedComponentImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="IntegerScalar"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="DistanceThreshold" argumenttype="PixelType" minValue ="0.001f" />
+        </arguments>
+      </filter>
+      <filter name="ThresholdMaximumConnectedComponentsImageFilter">
+        <arguments>
+          <argument name="MinimumObjectSizeInPixels" argumenttype="Int" defaultValue="0" minValue="0" maxValue="INT_MAX"/>
+          <argument name="InsideValue" argumenttype="PixelType"/>
+          <argument name="OutsideValue" argumenttype="PixelType"/>
+          <argument name="UpperBoundary" argumenttype="PixelType"/>
+          <argument name="ThresholdValue" argumenttype="PixelType" inputArgument="false"/>
+          <argument name="NumberOfObjects" argumenttype="Int" inputArgument="false" />
+        </arguments>
+      </filter>
+      <filter name="VectorConnectedComponentImageFilter" enabled="false" description="Headerfile not correct! -> Errors">
+        <inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="IntegerScalar"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="DistanceThreshold" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+    </filterlist>
+  </ITK_Module>
+</VoreenData>

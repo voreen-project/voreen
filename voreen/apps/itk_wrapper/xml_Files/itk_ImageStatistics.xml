@@ -1,0 +1,81 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_ImageStatistics" group="Filtering">
+    <filterlist>
+      <filter name="AccumulateImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="AccumulateDimension" argumenttype="Int" defaultValue="1" minValue="1" maxValue="10"/>
+        </arguments>
+      </filter>
+      <filter name="AdaptiveHistogramEqualizationImageFilter" codeState ="STABLE">
+        <inports>
+	 <port name="InputImage"/>
+	</inports>
+        <outports>
+	 <port name="OutputImage" filterTemplate="false"/>
+	</outports>
+        <arguments>
+          <argument name="Alpha" argumenttype="Float" defaultValue="0.0f" minValue="0.0f" maxValue="1.0f"/>
+          <argument name="Beta" argumenttype="Float" defaultValue="0.0f" minValue="0.0f" maxValue="1.0f"/>
+        </arguments>
+      </filter>
+      <filter name="BinaryProjectionImageFilter" enabled="false" description="Produces 2d-output!">
+        <arguments>
+          <argument name="BackgroundValue" argumenttype="PixelType"/>
+          <argument name="ForegroundValue" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+      <filter name="GetAverageSliceImageFilter">
+        <arguments>
+          <argument name="AveragedOutDimension" argumenttype="Int" defaultValue="0" minValue="0" maxValue="1"/>
+        </arguments>
+      </filter>
+      <filter name="LabelStatisticsImageFilter" enabled="false" description="Necessary? (Needs a label map)">
+        <inports>
+          <port name="InputImage"/>
+          <port name="LabelImage"/>
+        </inports>
+        <arguments>
+          <argument name="Minimum" argumenttype="PixelType" inputArgument="false"/>
+          <argument name="Maximum" argumenttype="PixelType" inputArgument="false"/>
+          <argument name="Mean" argumenttype="Float" inputArgument="false"/>
+          <argument name="Sigma" argumenttype="Float" inputArgument="false"/>
+          <argument name="Sum" argumenttype="Float" inputArgument="false"/>
+          <argument name="Median" argumenttype="Float" inputArgument="false"/>
+          <argument name="Variance" argumenttype="Float" inputArgument="false"/>
+        </arguments>
+      </filter>
+      <filter name="MaximumProjectionImageFilter" enabled="false" description="Produces 2d-output!">
+      </filter>
+      <filter name="MeanProjectionImageFilter" enabled="false" description="Produces 2d-output!">
+      </filter>
+      <filter name="MedianProjectionImageFilter" enabled="false" description="Produces 2d-output!">
+      </filter>
+      <filter name="MinimumMaximumImageFilter" codeState ="STABLE">
+        <inports>
+	  <port name="InputImage"/>
+	</inports>
+        <arguments>
+          <argument name="Minimum" argumenttype="PixelType" inputArgument="false"/>
+          <argument name="Maximum" argumenttype="PixelType" inputArgument="false"/>
+        </arguments>
+      </filter>
+      <filter name="MinimumProjectionImageFilter" enabled="false" description="Produces 2d-output!">
+      </filter>
+      <filter name="StatisticsImageFilter" enabled="false" description="Linking error!">
+        <inports>
+	  <port name="InputImage"/>
+	</inports>
+        <arguments>
+          <argument name="Minimum" argumenttype="PixelType" inputArgument="false"/>
+          <argument name="Maximum" argumenttype="PixelType" inputArgument="false"/>
+          <argument name="Mean" argumenttype="Float" inputArgument="false"/>
+          <argument name="Sigma" argumenttype="Float" inputArgument="false"/>
+          <argument name="Sum" argumenttype="Float" inputArgument="false"/>
+        </arguments>
+      </filter>
+      <filter name="SumProjectionImageFilter" enabled="false" description="Produces 2d-output!">
+      </filter>
+    </filterlist>
+  </ITK_Module>
+</VoreenData>

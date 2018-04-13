@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_AntiAlias" group="Filtering">
+    <filterlist>
+      <filter name="AntiAliasBinaryImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="RealScalar"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="RMSChange" argumenttype="Float" defaultValue="0.07f" minValue="0.0f" maxValue="1.0f" />
+          <argument name="NumberOfIterations" argumenttype="Int" defaultValue="100" minValue="1" maxValue="65535" />
+        </arguments>
+      </filter>
+    </filterlist>
+  </ITK_Module>
+</VoreenData>
