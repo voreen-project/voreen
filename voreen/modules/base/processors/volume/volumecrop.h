@@ -33,6 +33,7 @@
 #include "voreen/core/properties/boolproperty.h"
 #include "voreen/core/properties/buttonproperty.h"
 #include "voreen/core/properties/boundingboxproperty.h"
+#include "voreen/core/ports/geometryport.h"
 
 namespace voreen {
 
@@ -51,11 +52,12 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Crops the input volume by axis-aligned clipping planes. Both the min and max value of each dimension are included in the cropped volume.");
+        setDescription("Crops the input volume by axis-aligned clipping planes. Both the min and max value of each dimension are included in the cropped volume. Optionally, a bounding box (in world coordinates) can be supplied via a Geometry port that will then be used to automatically set dimensions.");
     }
 
     virtual void process();
     virtual void adjustPropertiesToInput();
+    virtual bool isReady() const;
 
 private:
     /// Crops the input volume according to the property values
@@ -66,6 +68,7 @@ private:
 
 
     VolumePort inport_;
+    GeometryPort boundingBoxPort_;
     VolumePort outport_;
 
     IntBoundingBoxProperty clipRegion_;
