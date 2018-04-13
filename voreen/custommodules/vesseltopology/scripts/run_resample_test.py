@@ -16,10 +16,12 @@ def update_workspace_and_gui():
 def run_test(parameters, output_folder):
     voreen.setPropertyValue("SegmentationValidation", "autoExport", False)
 
+    asyncprocessors = ["Resample", "ResampleAndTransform", "ResampleAndTransformInverse"]
+    for p in asyncprocessors:
+        voreen.setPropertyValue(p, "synchronousComputation", True)
+
     update_workspace_and_gui()
 
-    if os.path.isfile(output_file_path):
-        os.remove(output_file_path)
 
     update_workspace_and_gui()
 
@@ -33,10 +35,13 @@ def run_test(parameters, output_folder):
         approx_remaining = approx_total - elapsed
         print("[{}/{}, {:5.1f}s / {:5.1f}s -- {:5.1f}s] Starting rotation={:7.5f}".format(i, iterations, elapsed, approx_total, approx_remaining, rotation))
 
+        output_file_path = output_folder + "/rot{:7.5f}.csv".format(rotation)
+        if os.path.isfile(output_file_path):
+            os.remove(output_file_path)
 
         voreen.setPropertyValue("RotationParameters", "rotationAngle", rotation)
         voreen.setPropertyValue("VolumeInputSwitch", "inputselect", 1)
-        voreen.setPropertyValue("SegmentationValidation", "statExportFile", output_folder + "/rot{:7.5f}.csv".format(rotation))
+        voreen.setPropertyValue("SegmentationValidation", "exportfile", output_file_path)
         voreen.setPropertyValue("SegmentationValidation", "autoExport", True)
 
         voreen.repaint()
@@ -44,9 +49,12 @@ def run_test(parameters, output_folder):
     end = time.time()
 
     voreenqt.processEvents()
-    voreen.setPropertyValue("SegmentationValidation", "statExportFile", "")
+    voreen.setPropertyValue("SegmentationValidation", "exportfile", "")
     voreen.setPropertyValue("SegmentationValidation", "autoExport", False)
     voreen.setPropertyValue("VolumeInputSwitch", "inputselect", 2)
+
+    for p in asyncprocessors:
+        voreen.setPropertyValue(p, "synchronousComputation", False)
 
     print("Finished conf {} in {:5.1f}s\n".format(parameters, end-start))
 
@@ -78,8 +86,10 @@ def run_tests():
     voreen.setPropertyValue("RotationParameters", "transformationType", "rotation")
 
     configurations = [
-            (1),
+            (1, 2, 3, 4),
             ]
 
     for configuration in configurations:
         run_test(configuration, output_folder)
+
+run_tests()

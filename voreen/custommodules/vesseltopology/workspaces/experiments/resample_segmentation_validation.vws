@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="VolumeResampleTransformation" ref="ref3" />
+                        <item type="VolumeResampleTransformation" ref="ref1" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -19,7 +19,7 @@
             <Processors>
                 <Processor type="VolumeResampleTransformation" name="ResampleAndTransform" id="ref0">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="159" y="-947" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="157" y="-947" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="aspacingHandling" name="aspacingHandling" value="multiply" id="ref30" />
@@ -27,9 +27,9 @@
                         <Property mapKey="filteringMode" name="filteringMode" value="nearest" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="outputDimensions" name="outputDimensions">
-                            <value x="322" y="362" z="428" />
+                            <value x="322" y="272" z="428" />
                         </Property>
-                        <Property mapKey="outputSizeMB" name="outputSizeMB" value="47.6 MB" />
+                        <Property mapKey="outputSizeMB" name="outputSizeMB" value="35.7 MB" />
                         <Property mapKey="outputSpacing" name="outputSpacing" tracking="false" id="ref24">
                             <value x="0.5" y="0.5" z="0.5" />
                         </Property>
@@ -45,12 +45,12 @@
                         <Property mapKey="outsideVolumeHandling" name="outsideVolumeHandling" value="constant_value" />
                         <Property mapKey="outsideVolumeValue" name="outsideVolumeValue" value="0" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 536 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
-                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="transformMatrix" name="transformMatrix" id="ref23">
-                            <value.row0 x="0.985584795" y="-0.169182345" z="0" w="0" />
-                            <value.row1 x="0.169182345" y="0.985584795" z="0" w="0" />
+                            <value.row0 x="0.000796274" y="-0.999999702" z="0" w="0" />
+                            <value.row1 x="0.999999702" y="0.000796274" z="0" w="0" />
                             <value.row2 x="0" y="0" z="1" w="0" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
@@ -81,7 +81,7 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="enableProcessing" name="enableProcessing" value="false" />
-                        <Property mapKey="rotationAngle" name="rotationAngle" value="0.170000002" />
+                        <Property mapKey="rotationAngle" name="rotationAngle" value="1.570000052" />
                         <Property mapKey="rotationAxis" name="rotationAxis">
                             <value x="0" y="0" z="1" />
                         </Property>
@@ -90,8 +90,8 @@
                         </Property>
                         <Property mapKey="sourceCoordinateSystem" name="sourceCoordinateSystem" value="volume-coordinates" />
                         <Property mapKey="transformMatrix" name="transformMatrix" id="ref22">
-                            <value.row0 x="0.985584795" y="-0.169182345" z="0" w="0" />
-                            <value.row1 x="0.169182345" y="0.985584795" z="0" w="0" />
+                            <value.row0 x="0.000796274" y="-0.999999702" z="0" w="0" />
+                            <value.row1 x="0.999999702" y="0.000796274" z="0" w="0" />
                             <value.row2 x="0" y="0" z="1" w="0" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
@@ -202,7 +202,7 @@
                 </Processor>
                 <Processor type="VolumeResampleTransformation" name="Resample" id="ref3">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-155" y="-942" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-155" y="-937" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="aspacingHandling" name="aspacingHandling" value="multiply" id="ref29" />
@@ -228,9 +228,9 @@
                         <Property mapKey="outsideVolumeHandling" name="outsideVolumeHandling" value="constant_value" />
                         <Property mapKey="outsideVolumeValue" name="outsideVolumeValue" value="0" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 504 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
-                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="transformMatrix" name="transformMatrix">
                             <value.row0 x="1" y="0" z="0" w="0" />
                             <value.row1 x="0" y="1" z="0" w="0" />
@@ -268,9 +268,9 @@
                         <Property mapKey="filteringMode" name="filteringMode" value="nearest" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="outputDimensions" name="outputDimensions">
-                            <value x="380" y="413" z="429" />
+                            <value x="274" y="324" z="429" />
                         </Property>
-                        <Property mapKey="outputSizeMB" name="outputSizeMB" value="64.2 MB" />
+                        <Property mapKey="outputSizeMB" name="outputSizeMB" value="36.3 MB" />
                         <Property mapKey="outputSpacing" name="outputSpacing" tracking="false">
                             <value x="0.016000001" y="0.016000001" z="0.00800704" />
                         </Property>
@@ -286,12 +286,12 @@
                         <Property mapKey="outsideVolumeHandling" name="outsideVolumeHandling" value="constant_value" />
                         <Property mapKey="outsideVolumeValue" name="outsideVolumeValue" value="0" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 397 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
-                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="transformMatrix" name="transformMatrix" id="ref26">
-                            <value.row0 x="0.985584736" y="0.16918233" z="0" w="0" />
-                            <value.row1 x="-0.16918233" y="0.985584676" z="0" w="0" />
+                            <value.row0 x="0.000796274" y="0.999999702" z="0" w="0" />
+                            <value.row1 x="-0.999999642" y="0.000796274" z="0" w="0" />
                             <value.row2 x="0" y="0" z="1" w="0" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
@@ -321,26 +321,26 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-70" y="-507" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="accuracy" name="accuracy" value="0.998111069" />
-                        <Property mapKey="accuracyBackground" name="accuracyBackground" value="0.999046504" />
-                        <Property mapKey="accuracyForeground" name="accuracyForeground" value="0.873894215" />
+                        <Property mapKey="accuracy" name="accuracy" value="0.997965813" />
+                        <Property mapKey="accuracyBackground" name="accuracyBackground" value="0.998975217" />
+                        <Property mapKey="accuracyForeground" name="accuracyForeground" value="0.863992453" />
                         <Property mapKey="autoCompute" name="autoCompute" value="true" />
                         <Property mapKey="autoExport" name="autoExport" value="false" />
                         <Property mapKey="computeButton" name="computeButton" />
-                        <Property mapKey="diceIndex" name="diceIndex" value="0.873667598" />
+                        <Property mapKey="diceIndex" name="diceIndex" value="0.863986254" />
                         <Property mapKey="exportbutton" name="exportbutton" />
                         <Property mapKey="exportfile" name="exportfile" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
-                        <Property mapKey="falseNegative" name="falseNegative" value="35010" />
-                        <Property mapKey="falsePositive" name="falsePositive" value="35154" />
-                        <Property mapKey="jaccardIndex" name="jaccardIndex" value="0.77567476" />
-                        <Property mapKey="sensitivity" name="sensitivity" value="0.873894215" />
-                        <Property mapKey="sizeReference" name="sizeReference" value="277624" />
+                        <Property mapKey="falseNegative" name="falseNegative" value="37778" />
+                        <Property mapKey="falsePositive" name="falsePositive" value="37782" />
+                        <Property mapKey="jaccardIndex" name="jaccardIndex" value="0.760542035" />
+                        <Property mapKey="sensitivity" name="sensitivity" value="0.863992453" />
+                        <Property mapKey="sizeReference" name="sizeReference" value="277764" />
                         <Property mapKey="sizeSegmentation" name="sizeSegmentation" value="277768" />
-                        <Property mapKey="specificity" name="specificity" value="0.999046504" />
-                        <Property mapKey="trueNegative" name="trueNegative" value="36832379" />
-                        <Property mapKey="truePositive" name="truePositive" value="242614" />
+                        <Property mapKey="specificity" name="specificity" value="0.998975217" />
+                        <Property mapKey="trueNegative" name="trueNegative" value="36829611" />
+                        <Property mapKey="truePositive" name="truePositive" value="239986" />
                     </Properties>
                     <Inports>
                         <Port name="segmentation.in" direction="1" portID="segmentation.in" guiName="Segmentation Volume" allowMultipleConnections="false" invalidationLevel="1">
@@ -371,12 +371,12 @@
                         <Property mapKey="button" name="button" />
                         <Property mapKey="clearCache" name="clearCache" />
                         <Property mapKey="clipRegion">
-                            <bounds.llf x="56" y="47" z="2" />
-                            <bounds.urb x="326" y="367" z="428" />
+                            <bounds.llf x="3" y="2" z="2" />
+                            <bounds.urb x="273" y="322" z="428" />
                             <minValue x="0" y="0" z="0" />
-                            <maxValue x="379" y="412" z="428" />
+                            <maxValue x="273" y="323" z="428" />
                             <minRange x="0" y="0" z="0" />
-                            <maxRange x="380" y="413" z="429" />
+                            <maxRange x="274" y="324" z="429" />
                             <stepping x="1" y="1" z="1" />
                         </Property>
                         <Property mapKey="clipRegionMatchesCroppedRegion" name="clipRegionMatchesCroppedRegion" value="true" />
@@ -837,17 +837,17 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="1272.00012207" minValue="0.025440002" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="1277.088134766" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.009493143">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="1272.00012207" minValue="0.025440002" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="1277.088134766" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.009493124">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="2.00340271" y="1.669806004" z="10.476089478" />
-                            <focus x="1.06400013" y="1.264000058" z="-0.008007646" />
-                            <upVector x="-0.036681231" y="0.998700619" z="-0.035380132" />
+                            <position x="0.353666425" y="2.233201504" z="10.45717144" />
+                            <focus x="1.06400013" y="1.264000177" z="-0.008007646" />
+                            <upVector x="0.070479952" y="0.993689716" z="-0.087254159" />
                             <trackball moveCenter="false">
-                                <center x="1.06400013" y="1.264000058" z="-0.008007646" />
+                                <center x="1.06400013" y="1.264000177" z="-0.008007646" />
                             </trackball>
-                            <sceneLLF x="-1.104000092" y="-1.30400002" z="-1.7175107" />
+                            <sceneLLF x="-1.104000092" y="-1.304000139" z="-1.7175107" />
                             <sceneURB x="3.232000351" y="3.832000256" z="1.701495409" />
                         </Property>
                         <Property mapKey="composeShader" name="composeShader">
@@ -887,7 +887,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin">
-                                    <value x="793" y="502" />
+                                    <value x="491" y="338" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -897,7 +897,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.output.renderSizeReceive" name="image.output.renderSizeReceive" id="ref28">
-                                    <value x="793" y="502" />
+                                    <value x="491" y="338" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -977,18 +977,18 @@
                 <Processor type="Canvas" name="Canvas" id="ref20">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="439" y="-144" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-1064" y="474" width="793" height="502" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="249" y="609" width="491" height="338" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-1064" y="474" />
+                            <value x="249" y="609" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="793" y="502" />
+                            <value x="491" y="338" />
                         </MetaItem>
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize">
-                            <value x="793" y="502" />
+                            <value x="491" y="338" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
@@ -1002,7 +1002,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref27">
-                                    <value x="793" y="502" />
+                                    <value x="491" y="338" />
                                 </Property>
                             </Properties>
                         </Port>
