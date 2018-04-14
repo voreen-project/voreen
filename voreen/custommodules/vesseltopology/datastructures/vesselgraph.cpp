@@ -27,8 +27,6 @@
 #include <functional>
 #include <numeric>
 
-#include "../ext/miniball/Seb.h"
-
 #include <tgt/logmanager.h>
 
 namespace voreen {
@@ -82,10 +80,6 @@ void VesselSkeletonVoxel::deserialize(Deserializer& s) {
     s.deserialize("volume", volume_);
 }
 
-// NodeSphere ------------------------------------------------------------------------------
-bool NodeSphere::contains(tgt::vec3 p) const {
-    return tgt::distanceSq(pos_, p) <= radius_*radius_;
-}
 
 // VesselGraphNode -------------------------------------------------------------------------
 VesselGraphNode::VesselGraphNode(VesselGraph& graph, size_t id, const tgt::vec3& position, std::vector<tgt::vec3> voxels, bool isAtSampleBorder)
@@ -170,12 +164,6 @@ float VesselGraphNode::estimatedRadius() const {
         }
     }
     return max_rad_of_connected_edges;
-}
-NodeSphere VesselGraphNode::getEnclosingSphere(float minRadius) const {
-    return NodeSphere {
-        pos_,
-            minRadius,
-    };
 }
 void VesselGraphNode::serialize(Serializer& s) const {
     s.serialize("id", id_);

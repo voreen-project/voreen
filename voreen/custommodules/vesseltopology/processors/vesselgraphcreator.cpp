@@ -586,7 +586,7 @@ struct IdVolumeFinalizer {
         , size_(volume.size_)
     {
         tgtAssert(volume.numTotalVoxels_ == tgt::hmul(size_), "Incomplete IdVolumeInitializer");
-        vol_.floodFromLabels(progress, 10000);
+        vol_.floodFromLabels(progress, std::numeric_limits<size_t>::max());
     }
 
     bool containsPoint(const tgt::svec3& p) const {
@@ -648,70 +648,6 @@ static void finalizeIdVolumes(HDF5FileVolume& branchIds, const HDF5FileVolume& h
 struct UnfinishedRegions {
     std::unique_ptr<HDF5FileVolume> holeIds;
     std::map<uint32_t, tgt::SBounds> regions;
-
-    /*
-    void floodRegion(uint32_t regionId, HDF5FileVolume& branchIds, ProgressReporter& progress) {
-        auto bounds = regions.at(regionId);
-
-        tgt::svec3 llf = bounds.getLLF();
-        tgt::svec3 urb = bounds.getURB();
-
-        // Expand region in order to provide initial labels for flooding
-        llf.x = llf.x>0 ? llf.x-1 : 0;
-        llf.y = llf.y>0 ? llf.y-1 : 0;
-        llf.z = llf.z>0 ? llf.z-1 : 0;
-
-        // urb for TemplateBounds<size_t> is just the maximum position, but we need the first index that is outside the box
-        //                               |
-        //                              \|/
-        urb.x = std::min<size_t>(urb.x+1+1, branchIds.getDimensions().x);
-        urb.y = std::min<size_t>(urb.y+1+1, branchIds.getDimensions().y);
-        urb.z = std::min<size_t>(urb.z+1+1, branchIds.getDimensions().z);
-
-        tgt::svec3 offset = llf;
-        tgt::svec3 dim = urb - llf;
-
-        IdVolumeInitializationReader reader(branchIds, *holeIds, offset, dim, regionId);
-        IdVolume idVol(reader);
-
-        idVol.floodFromLabels(progress, 1000);
-
-        IdVolumeReader idReader(idVol);
-
-        for(size_t z=0; z < dim.z; ++z) {
-            idReader.advance();
-            tgt::svec3 sliceOffset(offset.xy(), offset.z+z);
-            tgt::svec3 sliceDim(dim.xy(), 1);
-
-            std::unique_ptr<VolumeRAM_UInt32> branchSlice(dynamic_cast<VolumeRAM_UInt32*>(branchIds.loadBrick(sliceOffset, sliceDim)));
-            std::unique_ptr<VolumeRAM_UInt32> holeSlice(dynamic_cast<VolumeRAM_UInt32*>(holeIds->loadBrick(sliceOffset, sliceDim)));
-            tgtAssert(branchSlice, "Invalid volume format");
-            tgtAssert(holeSlice, "Invalid volume format");
-
-            for(size_t y=0; y < dim.y; ++y) {
-                for(size_t x=0; x < dim.x; ++x) {
-                    if(holeSlice->voxel(x,y,0) == regionId) {
-                        uint32_t floodedId = idReader.getId(tgt::svec3(x,y,z));
-                        tgtAssert(floodedId != IdVolume::BACKGROUND_VALUE, "flooded label is background");
-                        if(floodedId != IdVolume::UNLABELED_FOREGROUND_VALUE) {
-                            branchSlice->voxel(x,y,0) = floodedId;
-                        }
-                    }
-                }
-            }
-            branchIds.writeBrick(branchSlice.get(), sliceOffset);
-        }
-    }
-
-    void floodAllRegions(HDF5FileVolume& branchIds, ProgressReporter& progress) {
-        TaskTimeLogger _("Flood remaining unlabled regions", tgt::Info);
-        size_t i=0;
-        for(auto& kv : regions) {
-            SubtaskProgressReporter sp(progress, tgt::vec2(i, i+1)/static_cast<float>(regions.size()));
-            floodRegion(kv.first, branchIds, sp);
-        }
-    }
-    */
 
     void floodAllRegions(HDF5FileVolume& branchIds, ProgressReporter& progress) {
         TaskTimeLogger _("Flood remaining unlabled regions", tgt::Info);
@@ -900,7 +836,7 @@ std::unique_ptr<VesselGraph> refineVesselGraph(VesselGraphCreatorInput& input, c
     addFixedForegroundPointsToMask(input.fixedForegroundPoints, mask);
 
     // Skeletonize new mask
-    mask.skeletonize<VolumeMask::IMPROVED_NO_LINE_PRESERVATION>(1000, subtaskReporters.get<1>());
+    mask.skeletonize<VolumeMask::IMPROVED_NO_LINE_PRESERVATION>(std::numeric_limits<size_t>::max(), subtaskReporters.get<1>());
 
     return createGraphFromMask(input, std::move(mask), generatedSkeletons, subtaskReporters.get<2>());
 }
@@ -912,7 +848,7 @@ std::unique_ptr<VesselGraph> createInitialVesselGraph(VesselGraphCreatorInput& i
 
     VolumeMask mask(input.segmentation, input.sampleMask, NoFixedForeground(), input.binarizationThresholdSegmentationNormalized, subtaskReporters.get<0>());
     addFixedForegroundPointsToMask(input.fixedForegroundPoints, mask);
-    mask.skeletonize<VolumeMask::IMPROVED>(1000, subtaskReporters.get<1>());
+    mask.skeletonize<VolumeMask::IMPROVED>(std::numeric_limits<size_t>::max(), subtaskReporters.get<1>());
 
     return createGraphFromMask(input, std::move(mask), generatedSkeletons, subtaskReporters.get<2>());
 }

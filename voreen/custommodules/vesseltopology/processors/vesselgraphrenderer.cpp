@@ -48,7 +48,6 @@ VesselGraphRenderer::VesselGraphRenderer()
     , enabled_("enabled", "Enabled", true)
     , shader_("shader", "Shader", "vesselgraphrenderer.frag", "vesselgraphrenderer.vert")
     , activeEdgeShader_("activeEdgeShader", "Active Edge Shader", "vesselgraphrenderer.frag", "vesselgraphrenderer_activeedge.vert")
-    , renderEnclosingSpheres_("renderEnclosingSpheres", "Render Enclosing Spheres", false)
     , nodeRadiusMultiplier_("nodeRadiusMultiplier_", "Node Radius Multiplier", 0.5, 0, 10)
     , edgeCrossSectionMultiplier_("edgeCrossSectionMultiplier_", "Edge Cross Section Multiplier", 0.3, 0, 10)
     , nodeDegreeTF_("nodeDegreeTf", "Node Degree", [] (const VesselGraphNode& node) {
@@ -84,7 +83,6 @@ VesselGraphRenderer::VesselGraphRenderer()
     ADD_EDGE_PROPERTY(RELATIVE_BULGE_SIZE, RelativeBulgeSize, "Relative Bulge Size")
 
     addProperty(enabled_);
-    addProperty(renderEnclosingSpheres_);
     addProperty(nodeRadiusMultiplier_);
     addProperty(edgeCrossSectionMultiplier_);
     addProperty(nodeDegreeTF_.getProperty());
@@ -209,19 +207,9 @@ void VesselGraphRenderer::render() {
     setLightingUniforms(*shader);
 
     for(const VesselGraphNode& node : graph->getNodes()) {
-        tgt::vec3 pos;
-        float radius;
-        if(renderEnclosingSpheres_.get()) {
-            auto sphere = node.getEnclosingSphere(nodeRadius);
-            pos = sphere.pos_;
-            radius = sphere.radius_;
-        } else {
-            pos = node.pos_;
-            radius = nodeRadius;
-        }
         MatStack.pushMatrix();
-        MatStack.translate(pos);
-        MatStack.scale(tgt::vec3(radius));
+        MatStack.translate(node.pos_);
+        MatStack.scale(tgt::vec3(nodeRadius));
         // set matrix stack uniforms
         shader->setUniform("modelViewMatrixStack_", MatStack.getModelViewMatrix());
         shader->setUniform("modelViewProjectionMatrixStack_", MatStack.getProjectionMatrix() * MatStack.getModelViewMatrix());

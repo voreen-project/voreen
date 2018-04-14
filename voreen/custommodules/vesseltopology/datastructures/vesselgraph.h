@@ -78,13 +78,6 @@ private:
     VesselSkeletonVoxel();
 };
 
-
-struct NodeSphere {
-    tgt::vec3 pos_;
-    float radius_;
-
-    bool contains(tgt::vec3 p) const;
-};
 // A node within the vessel graph.
 // It stores its position, references to edges as well as all voxels that define this node.
 struct VesselGraphNode : public Serializable {
@@ -100,7 +93,6 @@ struct VesselGraphNode : public Serializable {
     size_t getID() const;
 
     float estimatedRadius() const;
-    NodeSphere getEnclosingSphere(float minRadius = 0.0f) const;
 
     size_t id_;
     std::vector<size_t> edges_;
