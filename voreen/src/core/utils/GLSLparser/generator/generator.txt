@@ -1,0 +1,42 @@
+#include "voreen/core/utils/GLSLparser/generator/glslgrammar.h"
+#include "voreen/core/utils/GLSLparser/generator/parsertable.h"
+
+#include <fstream>
+#include <iostream>
+
+using namespace voreen;
+using namespace voreen::glslparser;
+
+void main() {
+    GLSLGrammar g;
+
+    // Print the grammar
+    //
+    std::ofstream ofs("D:\\tmp\\grammar.txt");
+    ofs << "Terminals:\n";
+    std::set<GrammarSymbol*> terms = g.getTerminals();
+    for (std::set<GrammarSymbol*>::const_iterator it = terms.begin(); it != terms.end(); ++it)
+        ofs << "ID " << (*it)->getSymbolID() << ":\t" << (*it)->toString() << "\n";
+
+    ofs << "\nProductions:\n";
+    std::vector<Production> productions = g.getProductions();
+    for (size_t i = 0; i < productions.size(); ++i)
+        ofs << "ID  " << productions[i].getProductionID() << ":\t" << productions[i].toString() << "\n";
+    ofs.close();
+
+    ParserTable* table = g.createParserTable(true);
+    if (table != 0) {
+        table->htmlOutput("D:\\tmp\\table.html");
+
+        std::ofstream ofs("D:\\tmp\\code.cpp");
+        table->generateActionCode(ofs, "stateID", "symbolID");
+        ofs << "\n";
+        table->generateGotoCode(ofs, "stateID", "symbolID");
+        ofs << "\n";
+        table->generateProductionsCode(ofs, "productionID");
+        ofs << "\n";
+        table->generateSymbolsCode(ofs, "symbolID");
+        ofs.close();
+    }
+    delete table;
+}

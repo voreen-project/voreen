@@ -1,0 +1,137 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" GlobalDescription="">
+        <ProcessorNetwork version="11">
+            <Processors>
+                <Processor type="ImageThreshold" name="ImageThreshold" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-563" y="-140" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="enable" value="false" />
+                        <Property name="lowerMaskColor">
+                            <value x="0" y="0" z="0" w="0" />
+                        </Property>
+                        <Property name="lowerThreshold" value="0.44999999" />
+                        <Property name="upperMaskColor">
+                            <value x="1" y="0" z="0" w="1" />
+                        </Property>
+                        <Property name="upperThreshold" value="0.64999998" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageSource" name="ImageSource" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-487" y="-262" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="clearButton" />
+                        <Property name="imageFile" value="input/images/5042-nh.png" />
+                        <Property name="imageSize">
+                            <value x="512" y="512" />
+                        </Property>
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-554" y="-44" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="306" y="88" width="400" height="400" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" id="ref5">
+                            <value x="400" y="400" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" value="output/disabled.png" />
+                        <Property name="showCursor" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageThreshold" name="ImageThreshold 2" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-422" y="-140" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="enable" value="true" />
+                        <Property name="lowerMaskColor">
+                            <value x="0" y="0" z="0" w="0" />
+                        </Property>
+                        <Property name="lowerThreshold" value="0.44999999" />
+                        <Property name="upperMaskColor">
+                            <value x="1" y="0" z="0" w="1" />
+                        </Property>
+                        <Property name="upperThreshold" value="0.64999998" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas 2" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-407" y="-44" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="349" y="365" width="400" height="400" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" id="ref6">
+                            <value x="400" y="400" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" value="output/thresholded.png" />
+                        <Property name="showCursor" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="ImageThreshold" ref="ref0" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref2" />
+                    </Outport>
+                    <Inport name="image.inport">
+                        <Processor type="ImageThreshold" ref="ref0" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref2" />
+                    </Outport>
+                    <Inport name="image.inport">
+                        <Processor type="ImageThreshold" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="ImageThreshold" ref="ref3" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref4" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref5" />
+                    <DestinationProperty type="IntVec2Property" ref="ref6" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref6" />
+                    <DestinationProperty type="IntVec2Property" ref="ref5" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+            </PropertyLinks>
+            <PropertyStateCollections />
+            <PropertyStateFileReferences />
+            <PropertyStateDirectoryReferences />
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

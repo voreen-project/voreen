@@ -1,0 +1,44 @@
+﻿This package contains the V^3, the Versatile Volume Viewer.
+Copyright (c) 2003-2006 by Stefan Roettger.
+
+The volume viewer is licensed under the terms of the GPL (see
+http://www.gnu.org/copyleft/ for more information on the license).
+Any commercial use of the code or parts of it requires the explicit
+permission of the author! The source code is distributed with
+ABSOLUTELY NO WARRANTY!
+
+The author's contact address is:
+
+   mailto:stefan@stereofx.org
+   http://stereofx.org
+
+In order to compile the viewer under Linux simply type "build.sh" in a
+shell. The viewer requires OpenGL and the GLUT library to be installed.
+
+Under Windows either use the supplied Visual C++ project files
+or use cygwin in the following way:
+
+1. Download cygwin from http://cygwin.com
+2. Run the installer program and make sure to select "Devel"
+3. After the installation finishes, download the V^3 to somewhere useful
+4. Unzip the V^3 package
+5. Double-click the cygwin icon to get a bash session
+6. In bash, type: "cd viewer" and "build.sh"
+
+Volume datasets can be viewed by first converting the raw data to the
+PVM format using the "raw2pvm" command line tool. PVM files can be
+converted back to raw data with the complementary "pvm2raw" tool which
+also prints information about the volume data. As an example PVM
+dataset the famous Bucky Ball is contained within the package. In
+order to view this dataset just type "v3 Bucky.pvm" on the console.
+
+For best performance an NVIDIA GeForceFX or GeForce 4 is recommended.
+On platforms without such a graphics accelerator the cross-section
+viewer "pvmplay" can be used alternatively.
+
+The V^3 package also contains the tools "pvminfo" and "pvm2pvm" which
+amend a volume with additional information and quantize a 16 bit
+volume to 8 bit using a non-linear mapping.
+
+Have fun,
+Stefan

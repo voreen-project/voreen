@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_AnisotropicSmoothing" group="Filtering">
+    <filterlist>
+      <filter name="CurvatureAnisotropicDiffusionImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="RealScalar"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>		
+        <arguments>
+          <argument name="NumberOfIterations" argumenttype="Int" defaultValue="1" minValue="1" maxValue="1000"/>
+          <argument name="TimeStep" argumenttype="Float" defaultValue="0.0625f" minValue="0.0f" maxValue="2.0f"/>
+          <argument name="ConductanceParameter" argumenttype="Float" defaultValue="0.1f" minValue="0.0f" maxValue="10.0f"/>
+        </arguments>
+      </filter>
+      <filter name="GradientAnisotropicDiffusionImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="RealScalar"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="NumberOfIterations" argumenttype="Int" defaultValue="1" minValue="1" maxValue="1000"/>
+          <argument name="TimeStep" argumenttype="Float" defaultValue="0.0625f" minValue="0.0f" maxValue="2.0f"/>
+          <argument name="ConductanceParameter" argumenttype="Float" defaultValue="0.1f" minValue="0.0f" maxValue="10.0f"/>
+        </arguments>
+      </filter>
+      <filter name="VectorCurvatureAnisotropicDiffusionImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="RealVector"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="NumberOfIterations" argumenttype="Int" defaultValue="1" minValue="1" maxValue="1000"/>
+          <argument name="TimeStep" argumenttype="Float" defaultValue="0.0625f" minValue="0.0f" maxValue="2.0f"/>
+          <argument name="ConductanceParameter" argumenttype="Float" defaultValue="0.1f" minValue="0.0f" maxValue="10.0f"/>
+        </arguments>
+      </filter>
+      <filter name="VectorGradientAnisotropicDiffusionImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="RealVector"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="NumberOfIterations" argumenttype="Int" defaultValue="1" minValue="1" maxValue="1000"/>
+          <argument name="TimeStep" argumenttype="Float" defaultValue="0.0625f" minValue="0.0f" maxValue="2.0f"/>
+          <argument name="ConductanceParameter" argumenttype="Float" defaultValue="0.1f" minValue="0.0f" maxValue="10.0f"/>
+        </arguments>
+      </filter>
+    </filterlist>
+  </ITK_Module>
+</VoreenData>

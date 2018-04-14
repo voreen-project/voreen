@@ -1,0 +1,10 @@
+#############################################
+# VoreenVE startup parameters
+# Copy this file to 'voreenve.cfg' and edit.
+#############################################
+
+#logLevel=debug
+#fileLogging=false
+#logFile=voreenve-log.html
+
+#useStylesheet=false

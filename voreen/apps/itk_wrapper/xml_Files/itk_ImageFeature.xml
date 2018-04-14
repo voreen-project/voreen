@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_ImageFeature" group="Filtering">
+    <filterlist>
+      <filter name="BilateralImageFilter" enabled="false" description="Linking error!">
+        <arguments>
+          <argument name="DomainSigma" argumenttype="Float" defaultValue="0.1f" minValue="0.0f" maxValue="1.0f"/>
+          <argument name="RangeSigma" argumenttype="Float" defaultValue="0.1f" minValue="0.0f" maxValue="1.0f"/>
+          <argument name="FilterDimensionality" argumenttype="Int" defaultValue="3" minValue="1" maxValue="10"/>
+          <argument name="Radius" argumenttype="SizeType" defaultValue="(1)" minValue="(1)" maxValue="(3)"/>
+          <argument name="AutomaticKernelSize" argumenttype="Bool" defaultValue="false"/>
+        </arguments>
+      </filter>
+      <filter name="CannyEdgeDetectionImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="LowerThreshold" argumenttype="PixelType"/>
+          <argument name="UpperThreshold" argumenttype="PixelType"/>
+          <!-- <argument name="OutsideValue" argumenttype="PixelType"/> -->
+          <argument name="Variance" argumenttype="ArrayType" defaultValue="(0.1f)" minValue="(0.0f)" maxValue="(0.99f)"/>
+          <argument name="MaximumError" argumenttype="ArrayType" defaultValue="(0.1f)" minValue="(0.0f)" maxValue="(0.99f)"/>
+        </arguments>
+      </filter>
+      <filter name="DerivativeImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage"/>
+        </inports>
+        <outports>
+          <port name="OutputImage">
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+          </port>
+        </outports>
+        <arguments>
+          <argument name="UseImageSpacing" argumenttype="Bool" defaultValue="false"/>
+          <argument name="Direction" argumenttype="Int" defaultValue="0" minValue="0" maxValue="2"/>
+          <argument name="Order" argumenttype="Int" defaultValue="1" minValue="0" maxValue="255"/>
+        </arguments>
+      </filter>
+      <filter name="HessianRecursiveGaussianImageFilter" enabled="false" description="Output is Hessian Matrix!">
+	<inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="RealScalar"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage" filterTemplate="false"/>
+        </outports>
+        <arguments>
+          <argument name="NormalizeAcrossScale" argumenttype="Bool" defaultValue="false"/>
+          <argument name="Sigma" argumenttype="Float" defaultValue="0.1f" minValue="0.0f" maxValue="1.0f"/>
+        </arguments>
+      </filter>
+      <filter name="LaplacianImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="UseImageSpacing" argumenttype="Bool" defaultValue="true"/>
+        </arguments>
+      </filter>
+      <filter name="LaplacianRecursiveGaussianImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="NormalizeAcrossScale" argumenttype="Bool" defaultValue="false"/>
+          <argument name="Sigma" argumenttype="Float" defaultValue="0.1f" minValue="0.0f" maxValue="1.0f"/>
+        </arguments>
+      </filter>
+      <filter name="LaplacianSharpeningImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="UseImageSpacing" argumenttype="Bool" defaultValue="true"/>
+        </arguments>
+      </filter>
+      <filter name="SimpleContourExtractorImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="InputBackgroundValue" argumenttype="PixelType"/>
+          <argument name="InputForegroundValue" argumenttype="PixelType"/>
+          <argument name="OutputBackgroundValue" argumenttype="PixelType"/>
+          <argument name="OutputForegroundValue" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+      <filter name="SobelEdgeDetectionImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="ZeroCrossingBasedEdgeDetectionImageFilter" >
+        <inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="MaximumError" argumenttype="PixelType"/>
+          <argument name="Variance" argumenttype="PixelType"/>
+          <argument name="BackgroundValue" argumenttype="PixelType"/>
+          <argument name="ForegroundValue" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+      <filter name="ZeroCrossingImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="BackgroundValue" argumenttype="PixelType"/>
+          <argument name="ForegroundValue" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+    </filterlist>
+  </ITK_Module>
+</VoreenData>

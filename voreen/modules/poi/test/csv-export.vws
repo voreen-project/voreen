@@ -1,0 +1,195 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="17">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="POICSVExport" ref="ref2" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="0" y="0" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1" />
+            </MetaData>
+            <Processors>
+                <Processor type="POISource" name="POISource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-227" y="-252" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="autoLoad" name="autoLoad" value="true" />
+                        <Property mapKey="fileProp" name="fileProp">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/poi/points.vpoi" />
+                                    <item value="../../voreen-testdata/voreen-testdata/input/poi/points.vpoi" />
+                                    <item value="C:/voreen-testdata/voreen-testdata/input/poi/points.vpoi" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="loadButton" name="loadButton" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="POI Outport" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="POIStorage" name="POIStorage" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-232" y="-107" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="activePoint" name="activePoint" value="-1" />
+                        <Property mapKey="addGroup" name="addGroup" />
+                        <Property mapKey="clearButton" name="clearButton" />
+                        <Property mapKey="groupColor" name="groupColor">
+                            <value x="0.48627451" y="0.11764706" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="groupEnabled" name="groupEnabled" value="true" />
+                        <Property mapKey="groupName" name="groupName" value="Group two" />
+                        <Property mapKey="groupSelector" name="groupSelector" columnCount="1" selectedRow="-1">
+                            <columnLabels>
+                                <item value="Column 0" />
+                            </columnLabels>
+                            <values>
+                                <item>
+                                    <item value="First Group" />
+                                </item>
+                                <item>
+                                    <item value="Group two" />
+                                </item>
+                                <item>
+                                    <item value="Disabled Group" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="mouseOverPoint" name="mouseOverPoint" value="-1" />
+                        <Property mapKey="removeActivePoint" name="removeActivePoint" />
+                        <Property mapKey="removeGroup" name="removeGroup" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="POI inport" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="POI outport" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports>
+                        <Port name="cpPort" direction="0" portID="cpPort" guiName="Coprocessors" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </CoProcessorOutports>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="POICSVExport" name="POICSVExport" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-217" y="93" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="autoSave" name="autoSave" value="true" />
+                        <Property mapKey="fileProp" name="fileProp">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/out.csv" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/out.csv" />
+                                    <item value="C:/voreen-testdata/voreen-testdata/output/out.csv" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="saveButton" name="saveButton" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="POI Inport" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="volumeINport" direction="1" portID="volumeINport" guiName="Volume port" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="VolumeSource" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-108" y="-112" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_medium.vvd?preferredReader=VvdVolumeReader" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="POISource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="POIStorage" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="POIStorage" ref="ref1" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="POICSVExport" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref3" />
+                    </Outport>
+                    <Inport name="volumeINport">
+                        <Processor type="POICSVExport" ref="ref2" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

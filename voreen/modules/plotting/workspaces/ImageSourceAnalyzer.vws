@@ -1,0 +1,483 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2">
+        <VolumeContainer>
+            <VolumeHandles />
+        </VolumeContainer>
+        <ScriptManagerLinking>
+            <pythonFunctionScriptMap />
+        </ScriptManagerLinking>
+        <ProcessorNetwork version="6">
+            <MetaData>
+                <MetaItem name="ProcessorSelection" type="SelectionMetaData::Processor">
+                    <values>
+                        <item type="LinePlot" ref="ref5" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="Zoom" type="ZoomMetaData">
+                    <transform.row0 x="0.70870554447174072" y="0" z="0" />
+                    <transform.row1 x="0" y="0.70870554447174072" z="0" />
+                    <transform.row2 x="-69.411155700683594" y="116.87979888916016" z="1" />
+                </MetaItem>
+            </MetaData>
+            <Processors>
+                <Processor type="ImageSource" name="ImageSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-68" y="-573" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="clearButton" />
+                        <Property name="imageFile" value="../../../resource/textures/inferior2.png" />
+                        <Property name="imageSize" tracking="true">
+                            <value x="128" y="128" />
+                        </Property>
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-489" y="68" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="290" y="586" width="510" height="456" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" tracking="true">
+                            <value x="510" y="456" />
+                        </Property>
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="LinePlot" name="LinePlot" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-221" y="-423" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="axesWidth" value="1" tracking="true" />
+                        <Property name="descreteStep" value="50" tracking="true" />
+                        <Property name="enablePicking" value="true" />
+                        <Property name="enterExitEvent" lod="1" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="highlight" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="label" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property name="lineWidth" value="2" tracking="true" />
+                        <Property name="logXAxes" value="false" />
+                        <Property name="logYAxes" value="false" />
+                        <Property name="marginBottom" value="50" tracking="true" />
+                        <Property name="marginLeft" value="60" tracking="true" />
+                        <Property name="marginRight" value="100" tracking="true" />
+                        <Property name="marginTop" value="50" tracking="true" />
+                        <Property name="mousePositionUpdate" lod="1" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="plotDataTable" />
+                        <Property name="plotEntitiesProperty" guiName="Line Selection" entities="0" xCI="1" yCI="-1">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="788" y="454" />
+                            </MetaData>
+                            <colorMap name="Visifire 1">
+                                <colors>
+                                    <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                    <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                    <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                    <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                    <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                    <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                    <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                    <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                    <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                    <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                    <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                    <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                    <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                    <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                    <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                </colors>
+                            </colorMap>
+                            <plotEntitySettingsVector>
+                                <plotEntitySettings entity="0" mainColumnIndex="2" candleTopColumnIndex="2" candleBottomColumnIndex="2" stickTopColumnIndex="2" stickBottomColumnIndex="2" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                    <secondColor x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="3" candleTopColumnIndex="3" candleBottomColumnIndex="3" stickTopColumnIndex="3" stickBottomColumnIndex="3" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                    <secondColor x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="4" candleTopColumnIndex="4" candleBottomColumnIndex="4" stickTopColumnIndex="4" stickBottomColumnIndex="4" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                    <secondColor x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                </plotEntitySettings>
+                            </plotEntitySettingsVector>
+                        </Property>
+                        <Property name="plotLabel" value="" />
+                        <Property name="pointSize" value="2" tracking="true" />
+                        <Property name="renderAxes" value="true" />
+                        <Property name="renderLineLabel" value="true" />
+                        <Property name="renderMousePosition" value="true" />
+                        <Property name="renderScales" value="true" />
+                        <Property name="renderXHelperLines" value="true" />
+                        <Property name="renderYHelperLines" value="true" />
+                        <Property name="selectionPlaneColor" tracking="true">
+                            <value x="0.40000001" y="0.40000001" z="0.40000001" w="0.40000001" />
+                        </Property>
+                        <Property name="selectionProperty">
+                            <values />
+                        </Property>
+                        <Property name="unhighlight" lod="1" enabled="true" mouseAction="14" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="unlabel" lod="1" enabled="true" mouseAction="14" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property name="unzoom" lod="1" enabled="true" mouseAction="14" mouseButtons="4" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property name="xLabel" value="x axis" />
+                        <Property name="xScaleStep" value="40" tracking="true" />
+                        <Property name="yLabel" value="y axis" />
+                        <Property name="yScaleStep" value="40" tracking="true" />
+                        <Property name="zoom" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="LinePlot" name="LinePlot 2" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="88" y="-398" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="axesWidth" value="1" tracking="true" />
+                        <Property name="descreteStep" value="50" tracking="true" />
+                        <Property name="enablePicking" value="true" />
+                        <Property name="enterExitEvent" lod="1" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="highlight" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="label" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property name="lineWidth" value="2" tracking="true" />
+                        <Property name="logXAxes" value="false" />
+                        <Property name="logYAxes" value="false" />
+                        <Property name="marginBottom" value="50" tracking="true" />
+                        <Property name="marginLeft" value="60" tracking="true" />
+                        <Property name="marginRight" value="100" tracking="true" />
+                        <Property name="marginTop" value="50" tracking="true" />
+                        <Property name="mousePositionUpdate" lod="1" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="plotDataTable" />
+                        <Property name="plotEntitiesProperty" guiName="Line Selection" entities="0" xCI="0" yCI="-1">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="788" y="454" />
+                            </MetaData>
+                            <colorMap name="Visifire 1">
+                                <colors>
+                                    <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                    <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                    <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                    <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                    <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                    <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                    <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                    <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                    <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                    <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                    <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                    <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                    <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                    <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                    <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                </colors>
+                            </colorMap>
+                            <plotEntitySettingsVector>
+                                <plotEntitySettings entity="0" mainColumnIndex="1" candleTopColumnIndex="1" candleBottomColumnIndex="1" stickTopColumnIndex="1" stickBottomColumnIndex="1" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="1" y="0" z="0" w="1" />
+                                    <secondColor x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="3" candleTopColumnIndex="1" candleBottomColumnIndex="1" stickTopColumnIndex="1" stickBottomColumnIndex="1" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0" y="0" z="1" w="1" />
+                                    <secondColor x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                </plotEntitySettings>
+                                <plotEntitySettings entity="0" mainColumnIndex="2" candleTopColumnIndex="1" candleBottomColumnIndex="1" stickTopColumnIndex="1" stickBottomColumnIndex="1" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0" y="1" z="0" w="1" />
+                                    <secondColor x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                </plotEntitySettings>
+                            </plotEntitySettingsVector>
+                        </Property>
+                        <Property name="plotLabel" value="" />
+                        <Property name="pointSize" value="2" tracking="true" />
+                        <Property name="renderAxes" value="true" />
+                        <Property name="renderLineLabel" value="true" />
+                        <Property name="renderMousePosition" value="true" />
+                        <Property name="renderScales" value="true" />
+                        <Property name="renderXHelperLines" value="true" />
+                        <Property name="renderYHelperLines" value="true" />
+                        <Property name="selectionPlaneColor" tracking="true">
+                            <value x="0.40000001" y="0.40000001" z="0.40000001" w="0.40000001" />
+                        </Property>
+                        <Property name="selectionProperty">
+                            <values />
+                        </Property>
+                        <Property name="unhighlight" lod="1" enabled="true" mouseAction="14" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="unlabel" lod="1" enabled="true" mouseAction="14" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property name="unzoom" lod="1" enabled="true" mouseAction="14" mouseButtons="4" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property name="xLabel" value="x axis" />
+                        <Property name="xScaleStep" value="40" tracking="true" />
+                        <Property name="yLabel" value="y axis" />
+                        <Property name="yScaleStep" value="40" tracking="true" />
+                        <Property name="zoom" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas 2" id="ref6">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="246" y="76" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="850" y="640" width="408" height="332" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" tracking="true">
+                            <value x="408" y="332" />
+                        </Property>
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageAnalyzer" name="ImageAnalyzer" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-77" y="-317" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="266" y="78" width="386" height="490" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="Bytes Per Pixel" value="8" tracking="false" />
+                        <Property name="Height" value="128" tracking="false" />
+                        <Property name="Width" value="128" tracking="false" />
+                        <Property name="allOutPutZeroOne" value="true" />
+                        <Property name="calculatestep" value="1" tracking="false" />
+                        <Property name="compute" />
+                        <Property name="histogramSteps" value="256" tracking="false" />
+                        <Property name="interActionModeAction" value="oldValue" />
+                        <Property name="maxAlpha" value="1" tracking="true" />
+                        <Property name="maxBlue" value="1" tracking="true" />
+                        <Property name="maxC" value="0" tracking="true" />
+                        <Property name="maxDepth" value="0.50000006" tracking="true" />
+                        <Property name="maxGreen" value="1" tracking="true" />
+                        <Property name="maxGrey" value="0.97899997" tracking="true" />
+                        <Property name="maxH" value="0" tracking="false" />
+                        <Property name="maxK" value="1" tracking="true" />
+                        <Property name="maxLuminance" value="1" tracking="true" />
+                        <Property name="maxM" value="0" tracking="true" />
+                        <Property name="maxRed" value="1" tracking="true" />
+                        <Property name="maxS" value="0" tracking="false" />
+                        <Property name="maxV" value="1" tracking="false" />
+                        <Property name="maxY" value="0" tracking="true" />
+                        <Property name="medianAlpha" value="1" tracking="true" />
+                        <Property name="medianBlue" value="1" tracking="true" />
+                        <Property name="medianC_" value="0" tracking="true" />
+                        <Property name="medianDepth_" value="0.49803922" tracking="true" />
+                        <Property name="medianGreen" value="1" tracking="true" />
+                        <Property name="medianGrey" value="0.97647059" tracking="true" />
+                        <Property name="medianH_" value="0" tracking="true" />
+                        <Property name="medianK_" value="0" tracking="true" />
+                        <Property name="medianLuminance" value="1" tracking="true" />
+                        <Property name="medianM_" value="0" tracking="true" />
+                        <Property name="medianRed" value="1" tracking="true" />
+                        <Property name="medianS_" value="0" tracking="true" />
+                        <Property name="medianV_" value="1" tracking="true" />
+                        <Property name="medianY_" value="0" tracking="true" />
+                        <Property name="minAlpha" value="1" tracking="true" />
+                        <Property name="minBlue" value="0" tracking="true" />
+                        <Property name="minC" value="0" tracking="true" />
+                        <Property name="minDepth" value="0" tracking="true" />
+                        <Property name="minGreen" value="0" tracking="true" />
+                        <Property name="minGrey" value="0" tracking="true" />
+                        <Property name="minH" value="0" tracking="false" />
+                        <Property name="minK" value="0" tracking="true" />
+                        <Property name="minLuminance" value="0" tracking="true" />
+                        <Property name="minM" value="0" tracking="true" />
+                        <Property name="minRed" value="0" tracking="true" />
+                        <Property name="minS" value="0" tracking="false" />
+                        <Property name="minV" value="0" tracking="false" />
+                        <Property name="minY" value="0" tracking="true" />
+                        <Property name="stepperchannel" value="65536" tracking="false" />
+                        <Property name="toHistAlpha" value="true" />
+                        <Property name="toHistBlue" value="true" />
+                        <Property name="toHistC" value="true" />
+                        <Property name="toHistDepth" value="true" />
+                        <Property name="toHistGreen" value="true" />
+                        <Property name="toHistGrey" value="true" />
+                        <Property name="toHistH" value="true" />
+                        <Property name="toHistK" value="true" />
+                        <Property name="toHistLuminance" value="true" />
+                        <Property name="toHistM" value="true" />
+                        <Property name="toHistRed" value="true" />
+                        <Property name="toHistS" value="true" />
+                        <Property name="toHistV" value="true" />
+                        <Property name="toHistY" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas 3" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="254" y="-447" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="725" y="105" width="180" height="160" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" tracking="true">
+                            <value x="180" y="160" />
+                        </Property>
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="ImageAnalyzer" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="LinePlot" ref="ref3" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="LinePlot" ref="ref5" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref6" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="PlotData.outport">
+                        <Processor type="ImageAnalyzer" ref="ref1" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="LinePlot" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="PlotDatahistogram.outport">
+                        <Processor type="ImageAnalyzer" ref="ref1" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="LinePlot" ref="ref5" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

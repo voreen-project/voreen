@@ -1,0 +1,180 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" GlobalDescription="">
+        <ProcessorNetwork version="14">
+            <MetaData>
+                <MetaItem name="ProcessorSelection" type="SelectionMetaData::Processor">
+                    <values>
+                        <item type="VolumeDecomposer" ref="ref4" />
+                        <item type="VolumeDecomposer" ref="ref1" />
+                    </values>
+                </MetaItem>
+            </MetaData>
+            <Processors>
+                <Processor type="VolumeSource" name="VolumeSource Walnut" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-654" y="-244" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_medium.vvd?preferredReader=VvdVolumeReader" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeDecomposer" name="VolumeDecomposer" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-648" y="-139" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="convertMultiChannelToGrayscale" name="convertMultiChannelToGrayscale" value="false" />
+                        <Property mapKey="endSlice" name="endSlice" value="52" />
+                        <Property mapKey="startSlice" name="startSlice" value="40" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volume.in" direction="1" portID="volume.in" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="imagesequence.out" direction="0" portID="imagesequence.out" guiName="ImageSequence Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageSequenceSave" name="ImageSequenceSave" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-650" y="-35" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="basename" name="basename" value="walnut" />
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="outputDirectory" name="outputDirectory" noPathSet="false" value="output" />
+                        <Property mapKey="save" name="save" />
+                    </Properties>
+                    <Inports>
+                        <Port name="imagesequence.input" direction="1" portID="imagesequence.input" guiName="ImageSequence Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageSequenceSave" name="ImageSequenceSave 2" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-421" y="-34" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="basename" name="basename" value="head-rgb" />
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="outputDirectory" name="outputDirectory" noPathSet="false" value="output" />
+                        <Property mapKey="save" name="save" />
+                    </Properties>
+                    <Inports>
+                        <Port name="imagesequence.input" direction="1" portID="imagesequence.input" guiName="ImageSequence Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="VolumeSource RGB" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-412" y="-244" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="input/rgb/visiblefemale-head-rgb.dat?preferredReader=DatVolumeReader&amp;timeframe=0" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeDecomposer" name="VolumeDecomposer 2" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-418" y="-138" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="convertMultiChannelToGrayscale" name="convertMultiChannelToGrayscale" value="false" />
+                        <Property mapKey="endSlice" name="endSlice" value="52" />
+                        <Property mapKey="startSlice" name="startSlice" value="40" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volume.in" direction="1" portID="volume.in" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="imagesequence.out" direction="0" portID="imagesequence.out" guiName="ImageSequence Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="volume.in">
+                        <Processor type="VolumeDecomposer" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="imagesequence.out">
+                        <Processor type="VolumeDecomposer" ref="ref1" />
+                    </Outport>
+                    <Inport name="imagesequence.input">
+                        <Processor type="ImageSequenceSave" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref3" />
+                    </Outport>
+                    <Inport name="volume.in">
+                        <Processor type="VolumeDecomposer" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="imagesequence.out">
+                        <Processor type="VolumeDecomposer" ref="ref4" />
+                    </Outport>
+                    <Inport name="imagesequence.input">
+                        <Processor type="ImageSequenceSave" ref="ref5" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

@@ -1,0 +1,174 @@
+template<§TEMPLATES§>
+void §FILTERNAME§ITK::§FIRSTLOWFILTERNAME§§METHODTYPE§ITK() {
+§VOXELPROPERTY§
+§ENABLEPROCESSOR§
+§ITKIMAGETYPEDEF§
+
+    typedef  T  PixelType;
+
+§ITKPOINTER§
+
+    if(structuringElement_.get() == "binaryBall"){
+        shape_.setVisibleFlag(false);
+        typedef itk::BinaryBallStructuringElement < PixelType, 3 > KernelType;
+        typedef itk::§FILTERNAME§<§ITKIMAGETYPES§, KernelType> FilterType;
+        typename FilterType::Pointer filter = FilterType::New();
+
+§FILTERINPUTSET§
+§FILTERATTRIBUTESET§
+        KernelType structuringElement;
+        typename KernelType::SizeType radius;
+        radius[0] = radius_.get().x;
+        radius[1] = radius_.get().y;
+        radius[2] = radius_.get().z;
+        structuringElement.SetRadius(radius);
+        structuringElement.CreateStructuringElement();
+        filter->SetKernel(structuringElement);
+
+        observe(filter.GetPointer());
+
+        try
+        {
+            filter->Update();
+        }
+        catch (itk::ExceptionObject &e)
+        {
+            LERROR(e);
+        }
+
+§OUTPUTSET§
+    }
+
+    else if(structuringElement_.get() == "binaryCross"){
+        shape_.setVisibleFlag(false);
+        typedef itk::BinaryCrossStructuringElement < PixelType, 3 > KernelType;
+        typedef itk::§FILTERNAME§<§ITKIMAGETYPES§, KernelType> FilterType;
+        typename FilterType::Pointer filter = FilterType::New();
+
+§FILTERINPUTSET§
+§FILTERATTRIBUTESET§
+        KernelType structuringElement;
+        typename KernelType::SizeType radius;
+        radius[0] = radius_.get().x;
+        radius[1] = radius_.get().y;
+        radius[2] = radius_.get().z;
+        structuringElement.SetRadius(radius);
+        structuringElement.CreateStructuringElement();
+        filter->SetKernel(structuringElement);
+
+        observe(filter.GetPointer());
+
+        try
+        {
+            filter->Update();
+        }
+        catch (itk::ExceptionObject &e)
+        {
+            LERROR(e);
+        }
+
+§OUTPUTSET§
+    }
+
+    else if(structuringElement_.get() == "flat"){
+        shape_.setVisibleFlag(true);
+        typedef itk::FlatStructuringElement < 3 > KernelType;
+        typename KernelType::SizeType radius;
+        radius[0] = radius_.get().x;
+        radius[1] = radius_.get().y;
+        radius[2] = radius_.get().z;
+
+        if(shape_.get() == "box"){
+            KernelType structuringElement = KernelType::Box(radius);
+            typedef itk::§FILTERNAME§<§ITKIMAGETYPES§, KernelType> FilterType;
+            typename FilterType::Pointer filter = FilterType::New();
+
+§FILTERINPUTSET§
+§FILTERATTRIBUTESET§
+            filter->SetKernel(structuringElement);
+
+            observe(filter.GetPointer());
+
+            try
+            {
+                filter->Update();
+            }
+            catch (itk::ExceptionObject &e)
+            {
+                LERROR(e);
+            }
+
+§OUTPUTSET§
+        }
+
+        else if(shape_.get() == "ball"){
+            KernelType structuringElement = KernelType::Ball(radius);
+            typedef itk::§FILTERNAME§<§ITKIMAGETYPES§, KernelType> FilterType;
+            typename FilterType::Pointer filter = FilterType::New();
+
+§FILTERINPUTSET§
+§FILTERATTRIBUTESET§
+            filter->SetKernel(structuringElement);
+
+            observe(filter.GetPointer());
+
+            try
+            {
+                filter->Update();
+            }
+            catch (itk::ExceptionObject &e)
+            {
+                LERROR(e);
+            }
+
+§OUTPUTSET§
+        }
+
+        else if(shape_.get() == "cross"){
+            KernelType structuringElement = KernelType::Cross(radius);
+            typedef itk::§FILTERNAME§<§ITKIMAGETYPES§, KernelType> FilterType;
+            typename FilterType::Pointer filter = FilterType::New();
+
+§FILTERINPUTSET§
+§FILTERATTRIBUTESET§
+            filter->SetKernel(structuringElement);
+
+
+            observe(filter.GetPointer());
+
+            try
+            {
+                filter->Update();
+            }
+            catch (itk::ExceptionObject &e)
+            {
+                LERROR(e);
+            }
+
+§OUTPUTSET§
+        }
+        else if(shape_.get() == "annulus"){
+            KernelType structuringElement = KernelType::Annulus(radius);
+            typedef itk::§FILTERNAME§<§ITKIMAGETYPES§, KernelType> FilterType;
+            typename FilterType::Pointer filter = FilterType::New();
+
+§FILTERINPUTSET§
+§FILTERATTRIBUTESET§
+            filter->SetKernel(structuringElement);
+
+
+            observe(filter.GetPointer());
+
+            try
+            {
+                filter->Update();
+            }
+            catch (itk::ExceptionObject &e)
+            {
+                LERROR(e);
+            }
+
+§OUTPUTSET§
+        }
+    }
+}

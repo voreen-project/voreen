@@ -1,0 +1,74 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>2.&nbsp;Getting Started</title><link rel="stylesheet" type="text/css" href="style.css"><meta name="generator" content="DocBook XSL Stylesheets V1.76.1-RC2"><link rel="home" href="index.html" title="Voreen ITK-Wrapper Manual"><link rel="up" href="index.html" title="Voreen ITK-Wrapper Manual"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.&nbsp;Getting Started</th></tr></table><hr></div><div class="sect1" title="2.&nbsp;Getting Started"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d5e21"></a>2.&nbsp;Getting Started</h2></div></div></div>
+    
+      
+
+    
+      <p>The ITK-Wrapper is located in
+    "<code class="filename">apps/itk_wrapper</code>" in the voreen directory. It
+    contains:</p>
+
+    
+      <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+        
+            <p>a Qt-project-file "<code class="filename">itk_wrapper.pro</code>"</p>
+      
+         </li><li class="listitem">
+        
+            <p>the ITK-Wrapper <code class="filename">.cpp</code>- an
+        <code class="filename">.h</code>- files "<code class="filename">itk_wrapper</code>",
+        "<code class="filename">baseclasses</code>" and
+        "<code class="filename">template</code>"</p>
+      
+         </li><li class="listitem">
+        
+            <p>the <code class="filename">xml_Files</code> directory, containing the XML
+        files where the ITK filter-definitions are stored</p>
+      
+         </li><li class="listitem">
+        
+            <p>the <code class="filename">template</code> directory, with the general
+        template text files for the Voreen processor generation</p>
+      
+         </li><li class="listitem">
+        
+            <p>the <code class="filename">specialFilters</code> folder storing filters
+        that cannot be generated automatically</p>
+      
+         </li></ul></div>
+
+    
+      <p>By default all XML files in the directory
+    <code class="filename">xml_Files</code> are processed by the wrapper, generating
+    all predefined filters. Additionally It is possible to use only a specific
+    set of XML files. An example on the actual use of this option can be found
+    in the main method of <code class="filename">itk_wrapper.cpp</code>. The generated
+    Voreen processors are copied to
+    "<code class="filename">module/itk_generated/processors</code>" in the voreen
+    directory .</p>
+
+    
+      <p>Apart from the processor files the wrapper generates the files
+    <code class="filename">itk_generatedmodule.cpp</code>,
+    <code class="filename">itk_generated_core.pri</code> and the
+    <code class="filename">itk_generated_module.xml</code>.</p>
+
+    
+      <p>In order to use the generated ITK processors the
+    <code class="filename">itk_generated</code> module needs to be included. The
+    following line has to be added to the Voreen config.txt:</p>
+
+    
+      <pre class="programlisting">VRN_MODULES += itk_generated</pre>
+
+    
+      <p>
+         <span class="bold"><strong>Note:</strong></span>
+    
+         <code class="filename">itk_generated</code> module depends on
+    <code class="filename">itk</code> module. Thus activation of the itk module in the
+    <code class="filename">config.txt</code> is mandatory for using the itk_generated
+    module.</p>
+  
+   </div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left">&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;</td></tr><tr><td width="40%" align="left" valign="top">&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;</td></tr></table></div></body></html>

@@ -1,0 +1,1100 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="17">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="Canvas" ref="ref14" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-290.84332275" y="-15.58089256" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.77017409" />
+            </MetaData>
+            <Processors>
+                <Processor type="ImageSource" name="ImageSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-778" y="-344" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clearButton" name="clearButton" />
+                        <Property mapKey="imageFile" name="imageFile">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/images/nucleon_background.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/input/images/nucleon_background.png" />
+                                    <item value="C:/voreen-testdata/voreen-testdata/input/images/nucleon_background.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="imageSize" name="imageSize">
+                            <value x="321" y="319" />
+                        </Property>
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="image.out" direction="0" portID="image.out" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas abc" id="ref10">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-822" y="31" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="79" y="111" width="683" height="236" />
+                        <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
+                            <value x="51" y="172" />
+                        </MetaItem>
+                        <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
+                            <value x="683" y="236" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="79" y="111" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="683" y="236" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="683" y="236" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/tripleview_abc.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/tripleview_abc.png" />
+                                    <item value="C:/voreen-testdata/voreen-testdata/output/tripleview_abc.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref17">
+                                    <value x="683" y="236" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageSource" name="ImageSource 2" id="ref8">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-392" y="-345" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clearButton" name="clearButton" />
+                        <Property mapKey="imageFile" name="imageFile">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/images/walnut.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/input/images/walnut.png" />
+                                    <item value="C:/voreen-testdata/voreen-testdata/input/images/walnut.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="imageSize" name="imageSize">
+                            <value x="512" y="512" />
+                        </Property>
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="image.out" direction="0" portID="image.out" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageSource" name="ImageSource 3" id="ref9">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-41" y="-341" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clearButton" name="clearButton" />
+                        <Property mapKey="imageFile" name="imageFile">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/images/5042-ds.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/input/images/5042-ds.png" />
+                                    <item value="C:/voreen-testdata/voreen-testdata/input/images/5042-ds.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="imageSize" name="imageSize">
+                            <value x="512" y="512" />
+                        </Property>
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="image.out" direction="0" portID="image.out" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="TripleView" name="TripleView abc" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-828" y="-61" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="configuration" name="configuration" value="abc" />
+                        <Property mapKey="gridColor" name="gridColor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="maximizeOnDoubleClick" name="maximizeOnDoubleClick" value="true" />
+                        <Property mapKey="maximized" name="maximized" value="0" />
+                        <Property mapKey="mouseEvent.maximize" name="mouseEvent.maximize" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="showGrid" name="showGrid" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport1" direction="1" portID="inport1" guiName="Image1 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport1.renderSizeOrigin" name="inport1.renderSizeOrigin">
+                                    <value x="227" y="236" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                        <Port name="inport2" direction="1" portID="inport2" guiName="Image2 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport2.renderSizeOrigin" name="inport2.renderSizeOrigin">
+                                    <value x="227" y="236" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                        <Port name="inport3" direction="1" portID="inport3" guiName="Image3 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport3.renderSizeOrigin" name="inport3.renderSizeOrigin">
+                                    <value x="227" y="236" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref18">
+                                    <value x="683" y="236" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="TripleView" name="TripleView aBc" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-510" y="-64" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="configuration" name="configuration" value="Bac" />
+                        <Property mapKey="gridColor" name="gridColor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="maximizeOnDoubleClick" name="maximizeOnDoubleClick" value="true" />
+                        <Property mapKey="maximized" name="maximized" value="0" />
+                        <Property mapKey="mouseEvent.maximize" name="mouseEvent.maximize" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="showGrid" name="showGrid" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport1" direction="1" portID="inport1" guiName="Image1 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport1.renderSizeOrigin" name="inport1.renderSizeOrigin">
+                                    <value x="133" y="118" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                        <Port name="inport2" direction="1" portID="inport2" guiName="Image2 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport2.renderSizeOrigin" name="inport2.renderSizeOrigin">
+                                    <value x="266" y="236" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                        <Port name="inport3" direction="1" portID="inport3" guiName="Image3 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport3.renderSizeOrigin" name="inport3.renderSizeOrigin">
+                                    <value x="133" y="118" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref20">
+                                    <value x="400" y="236" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas aBc" id="ref11">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-504" y="33" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="235" y="364" width="400" height="236" />
+                        <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
+                            <value x="51" y="172" />
+                        </MetaItem>
+                        <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
+                            <value x="683" y="236" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="235" y="364" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="400" y="236" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="400" y="236" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/tripleview_B_a_c.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/tripleview_B_a_c.png" />
+                                    <item value="C:/voreen-testdata/voreen-testdata/output/tripleview_B_a_c.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref19">
+                                    <value x="400" y="236" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="TripleView" name="TripleView Abc" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-677" y="-64" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="configuration" name="configuration" value="Abc" />
+                        <Property mapKey="gridColor" name="gridColor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="maximizeOnDoubleClick" name="maximizeOnDoubleClick" value="true" />
+                        <Property mapKey="maximized" name="maximized" value="0" />
+                        <Property mapKey="mouseEvent.maximize" name="mouseEvent.maximize" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="showGrid" name="showGrid" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport1" direction="1" portID="inport1" guiName="Image1 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport1.renderSizeOrigin" name="inport1.renderSizeOrigin">
+                                    <value x="266" y="236" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                        <Port name="inport2" direction="1" portID="inport2" guiName="Image2 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport2.renderSizeOrigin" name="inport2.renderSizeOrigin">
+                                    <value x="133" y="118" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                        <Port name="inport3" direction="1" portID="inport3" guiName="Image3 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport3.renderSizeOrigin" name="inport3.renderSizeOrigin">
+                                    <value x="133" y="118" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref22">
+                                    <value x="400" y="236" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas Abc" id="ref12">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-670" y="31" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="140" y="256" width="400" height="236" />
+                        <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
+                            <value x="51" y="172" />
+                        </MetaItem>
+                        <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
+                            <value x="683" y="236" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="140" y="256" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="400" y="236" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="400" y="236" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/tripleview_A_b_c.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/tripleview_A_b_c.png" />
+                                    <item value="C:/voreen-testdata/voreen-testdata/output/tripleview_A_b_c.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref21">
+                                    <value x="400" y="236" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="TripleView" name="TripleView abC" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-342" y="-64" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="configuration" name="configuration" value="Cab" />
+                        <Property mapKey="gridColor" name="gridColor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="maximizeOnDoubleClick" name="maximizeOnDoubleClick" value="true" />
+                        <Property mapKey="maximized" name="maximized" value="0" />
+                        <Property mapKey="mouseEvent.maximize" name="mouseEvent.maximize" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="showGrid" name="showGrid" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport1" direction="1" portID="inport1" guiName="Image1 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport1.renderSizeOrigin" name="inport1.renderSizeOrigin">
+                                    <value x="133" y="118" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                        <Port name="inport2" direction="1" portID="inport2" guiName="Image2 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport2.renderSizeOrigin" name="inport2.renderSizeOrigin">
+                                    <value x="133" y="118" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                        <Port name="inport3" direction="1" portID="inport3" guiName="Image3 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport3.renderSizeOrigin" name="inport3.renderSizeOrigin">
+                                    <value x="266" y="236" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref24">
+                                    <value x="400" y="236" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas abC" id="ref13">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-335" y="33" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="322" y="472" width="400" height="236" />
+                        <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
+                            <value x="51" y="172" />
+                        </MetaItem>
+                        <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
+                            <value x="683" y="236" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="322" y="472" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="400" y="236" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="400" y="236" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/tripleview_C_a_b.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/tripleview_C_a_b.png" />
+                                    <item value="C:/voreen-testdata/voreen-testdata/output/tripleview_C_a_b.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref23">
+                                    <value x="400" y="236" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="TripleView" name="TripleView C" id="ref7">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="93" y="-61" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="configuration" name="configuration" value="abc" />
+                        <Property mapKey="gridColor" name="gridColor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="maximizeOnDoubleClick" name="maximizeOnDoubleClick" value="true" />
+                        <Property mapKey="maximized" name="maximized" value="3" />
+                        <Property mapKey="mouseEvent.maximize" name="mouseEvent.maximize" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="showGrid" name="showGrid" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport1" direction="1" portID="inport1" guiName="Image1 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport1.renderSizeOrigin" name="inport1.renderSizeOrigin">
+                                    <value x="85" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                        <Port name="inport2" direction="1" portID="inport2" guiName="Image2 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport2.renderSizeOrigin" name="inport2.renderSizeOrigin">
+                                    <value x="85" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                        <Port name="inport3" direction="1" portID="inport3" guiName="Image3 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport3.renderSizeOrigin" name="inport3.renderSizeOrigin">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref26">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas C" id="ref14">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="93" y="32" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="686" y="751" width="256" height="256" />
+                        <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
+                            <value x="51" y="172" />
+                        </MetaItem>
+                        <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
+                            <value x="683" y="236" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="686" y="751" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="256" y="256" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="256" y="256" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/tripleview_c.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/tripleview_c.png" />
+                                    <item value="C:/voreen-testdata/voreen-testdata/output/tripleview_c.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref25">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="TripleView" name="TripleView B" id="ref6">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-46" y="-64" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="configuration" name="configuration" value="abc" />
+                        <Property mapKey="gridColor" name="gridColor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="maximizeOnDoubleClick" name="maximizeOnDoubleClick" value="true" />
+                        <Property mapKey="maximized" name="maximized" value="2" />
+                        <Property mapKey="mouseEvent.maximize" name="mouseEvent.maximize" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="showGrid" name="showGrid" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport1" direction="1" portID="inport1" guiName="Image1 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport1.renderSizeOrigin" name="inport1.renderSizeOrigin">
+                                    <value x="85" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                        <Port name="inport2" direction="1" portID="inport2" guiName="Image2 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport2.renderSizeOrigin" name="inport2.renderSizeOrigin">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                        <Port name="inport3" direction="1" portID="inport3" guiName="Image3 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport3.renderSizeOrigin" name="inport3.renderSizeOrigin">
+                                    <value x="85" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref28">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas B" id="ref15">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-47" y="31" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="595" y="661" width="256" height="256" />
+                        <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
+                            <value x="51" y="172" />
+                        </MetaItem>
+                        <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
+                            <value x="683" y="236" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="595" y="661" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="256" y="256" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="256" y="256" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/tripleview_b.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/tripleview_b.png" />
+                                    <item value="C:/voreen-testdata/voreen-testdata/output/tripleview_b.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref27">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="TripleView" name="TripleView A" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-191" y="-64" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="configuration" name="configuration" value="abc" />
+                        <Property mapKey="gridColor" name="gridColor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="maximizeOnDoubleClick" name="maximizeOnDoubleClick" value="true" />
+                        <Property mapKey="maximized" name="maximized" value="1" />
+                        <Property mapKey="mouseEvent.maximize" name="mouseEvent.maximize" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="showGrid" name="showGrid" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport1" direction="1" portID="inport1" guiName="Image1 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport1.renderSizeOrigin" name="inport1.renderSizeOrigin">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                        <Port name="inport2" direction="1" portID="inport2" guiName="Image2 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport2.renderSizeOrigin" name="inport2.renderSizeOrigin">
+                                    <value x="85" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                        <Port name="inport3" direction="1" portID="inport3" guiName="Image3 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport3.renderSizeOrigin" name="inport3.renderSizeOrigin">
+                                    <value x="85" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref30">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas A" id="ref16">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-189" y="32" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="501" y="580" width="256" height="256" />
+                        <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
+                            <value x="51" y="172" />
+                        </MetaItem>
+                        <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
+                            <value x="683" y="236" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="501" y="580" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="256" y="256" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="256" y="256" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/tripleview_a.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/tripleview_a.png" />
+                                    <item value="C:/voreen-testdata/voreen-testdata/output/tripleview_a.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref29">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport1">
+                        <Processor type="TripleView" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport1">
+                        <Processor type="TripleView" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport1">
+                        <Processor type="TripleView" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport1">
+                        <Processor type="TripleView" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport1">
+                        <Processor type="TripleView" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport1">
+                        <Processor type="TripleView" ref="ref6" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport1">
+                        <Processor type="TripleView" ref="ref7" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref8" />
+                    </Outport>
+                    <Inport name="inport2">
+                        <Processor type="TripleView" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref8" />
+                    </Outport>
+                    <Inport name="inport2">
+                        <Processor type="TripleView" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref8" />
+                    </Outport>
+                    <Inport name="inport2">
+                        <Processor type="TripleView" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref8" />
+                    </Outport>
+                    <Inport name="inport2">
+                        <Processor type="TripleView" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref8" />
+                    </Outport>
+                    <Inport name="inport2">
+                        <Processor type="TripleView" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref8" />
+                    </Outport>
+                    <Inport name="inport2">
+                        <Processor type="TripleView" ref="ref6" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref8" />
+                    </Outport>
+                    <Inport name="inport2">
+                        <Processor type="TripleView" ref="ref7" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref9" />
+                    </Outport>
+                    <Inport name="inport3">
+                        <Processor type="TripleView" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref9" />
+                    </Outport>
+                    <Inport name="inport3">
+                        <Processor type="TripleView" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref9" />
+                    </Outport>
+                    <Inport name="inport3">
+                        <Processor type="TripleView" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref9" />
+                    </Outport>
+                    <Inport name="inport3">
+                        <Processor type="TripleView" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref9" />
+                    </Outport>
+                    <Inport name="inport3">
+                        <Processor type="TripleView" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref9" />
+                    </Outport>
+                    <Inport name="inport3">
+                        <Processor type="TripleView" ref="ref6" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref9" />
+                    </Outport>
+                    <Inport name="inport3">
+                        <Processor type="TripleView" ref="ref7" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="TripleView" ref="ref1" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref10" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="TripleView" ref="ref3" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref11" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="TripleView" ref="ref2" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref12" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="TripleView" ref="ref4" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref13" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="TripleView" ref="ref7" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref14" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="TripleView" ref="ref6" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref15" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="TripleView" ref="ref5" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref16" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks>
+                <PropertyLink>
+                    <SourceProperty ref="ref17" />
+                    <DestinationProperty ref="ref18" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref19" />
+                    <DestinationProperty ref="ref20" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref21" />
+                    <DestinationProperty ref="ref22" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref23" />
+                    <DestinationProperty ref="ref24" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref25" />
+                    <DestinationProperty ref="ref26" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref27" />
+                    <DestinationProperty ref="ref28" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref29" />
+                    <DestinationProperty ref="ref30" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+            </PropertyLinks>
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="Canvas::Canvas abc">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

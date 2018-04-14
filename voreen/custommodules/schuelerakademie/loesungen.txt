@@ -1,0 +1,143 @@
+    //blaues Dreieck
+    glBegin(GL_TRIANGLES);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(-1.f,-1.f,0.f);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(1.f,-1.f,0.f);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(0.f,1.f,0.f);
+    glEnd();
+
+    //blaues Viereck
+    glBegin(GL_QUADS);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(-1.f,-1.f,0.f);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(1.f,-1.f,0.f);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(1.f,1.f,0.f);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(-1.f,1.f,0.f);
+    glEnd();
+    
+    //bunter Würfel
+    glBegin(GL_QUADS);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(-1.f,-1.f,-1.f);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(-1.f,1.f,-1.f);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(1.f,1.f,-1.f);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(1.f,-1.f,-1.f);
+
+        glColor4f(1.f,1.f,0.f,1.f); glVertex3f(1.f,-1.f,1.f);
+        glColor4f(1.f,1.f,0.f,1.f); glVertex3f(1.f,1.f,1.f);
+        glColor4f(1.f,1.f,0.f,1.f); glVertex3f(-1.f,1.f,1.f);
+        glColor4f(1.f,1.f,0.f,1.f); glVertex3f(-1.f,-1.f,1.f);
+
+        glColor4f(1.f,0.f,0.f,1.f); glVertex3f(1.f,-1.f,-1.f);
+        glColor4f(1.f,0.f,0.f,1.f); glVertex3f(1.f,1.f,-1.f);
+        glColor4f(1.f,0.f,0.f,1.f); glVertex3f(1.f,1.f,1.f);
+        glColor4f(1.f,0.f,0.f,1.f); glVertex3f(1.f,-1.f,1.f);
+
+        glColor4f(0.f,1.f,1.f,1.f); glVertex3f(-1.f,-1.f,-1.f);
+        glColor4f(0.f,1.f,1.f,1.f); glVertex3f(-1.f,1.f,-1.f);
+        glColor4f(0.f,1.f,1.f,1.f); glVertex3f(-1.f,1.f,1.f);
+        glColor4f(0.f,1.f,1.f,1.f); glVertex3f(-1.f,-1.f,1.f);
+
+        glColor4f(0.f,1.f,0.f,1.f); glVertex3f(1.f,1.f,1.f);
+        glColor4f(0.f,1.f,0.f,1.f); glVertex3f(-1.f,1.f,1.f);
+        glColor4f(0.f,1.f,0.f,1.f); glVertex3f(-1.f,1.f,-1.f);
+        glColor4f(0.f,1.f,0.f,1.f); glVertex3f(1.f,1.f,-1.f);
+
+        glColor4f(1.f,0.f,1.f,1.f); glVertex3f(1.f,-1.f,1.f);
+        glColor4f(1.f,0.f,1.f,1.f); glVertex3f(-1.f,-1.f,1.f);
+        glColor4f(1.f,0.f,1.f,1.f); glVertex3f(-1.f,-1.f,-1.f);
+        glColor4f(1.f,0.f,1.f,1.f); glVertex3f(1.f,-1.f,-1.f);
+    glEnd();
+    
+    //richtiger bunter Würfel
+        glBegin(GL_QUADS);
+        glColor4f(0.f,0.f,0.f,1.f); glVertex3f(-1.f,-1.f,-1.f);
+        glColor4f(0.f,1.f,0.f,1.f); glVertex3f(-1.f,1.f,-1.f);
+        glColor4f(1.f,1.f,0.f,1.f); glVertex3f(1.f,1.f,-1.f);
+        glColor4f(1.f,0.f,0.f,1.f); glVertex3f(1.f,-1.f,-1.f);
+
+        glColor4f(1.f,0.f,1.f,1.f); glVertex3f(1.f,-1.f,1.f);
+        glColor4f(1.f,1.f,1.f,1.f); glVertex3f(1.f,1.f,1.f);
+        glColor4f(0.f,1.f,1.f,1.f); glVertex3f(-1.f,1.f,1.f);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(-1.f,-1.f,1.f);
+
+        glColor4f(1.f,0.f,0.f,1.f); glVertex3f(1.f,-1.f,-1.f);
+        glColor4f(1.f,1.f,0.f,1.f); glVertex3f(1.f,1.f,-1.f);
+        glColor4f(1.f,1.f,1.f,1.f); glVertex3f(1.f,1.f,1.f);
+        glColor4f(1.f,0.f,1.f,1.f); glVertex3f(1.f,-1.f,1.f);
+
+        glColor4f(0.f,0.f,0.f,1.f); glVertex3f(-1.f,-1.f,-1.f);
+        glColor4f(0.f,1.f,0.f,1.f); glVertex3f(-1.f,1.f,-1.f);
+        glColor4f(0.f,1.f,1.f,1.f); glVertex3f(-1.f,1.f,1.f);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(-1.f,-1.f,1.f);
+
+        glColor4f(1.f,1.f,1.f,1.f); glVertex3f(1.f,1.f,1.f);
+        glColor4f(0.f,1.f,1.f,1.f); glVertex3f(-1.f,1.f,1.f);
+        glColor4f(0.f,1.f,0.f,1.f); glVertex3f(-1.f,1.f,-1.f);
+        glColor4f(1.f,1.f,0.f,1.f); glVertex3f(1.f,1.f,-1.f);
+
+        glColor4f(1.f,0.f,1.f,1.f); glVertex3f(1.f,-1.f,1.f);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(-1.f,-1.f,1.f);
+        glColor4f(0.f,0.f,0.f,1.f); glVertex3f(-1.f,-1.f,-1.f);
+        glColor4f(1.f,0.f,0.f,1.f); glVertex3f(1.f,-1.f,-1.f);
+    glEnd();
+    
+    //fertig
+    glBegin(GL_QUADS);
+        glColor4f(0.f,0.f,0.f,1.f); glVertex3f(llf.x,llf.y,llf.z);
+        glColor4f(0.f,1.f,0.f,1.f); glVertex3f(llf.x,urb.y,llf.z);
+        glColor4f(1.f,1.f,0.f,1.f); glVertex3f(urb.x,urb.y,llf.z);
+        glColor4f(1.f,0.f,0.f,1.f); glVertex3f(urb.x,llf.y,llf.z);
+
+        glColor4f(1.f,0.f,1.f,1.f); glVertex3f(urb.x,llf.y,urb.z);
+        glColor4f(1.f,1.f,1.f,1.f); glVertex3f(urb.x,urb.y,urb.z);
+        glColor4f(0.f,1.f,1.f,1.f); glVertex3f(llf.x,urb.y,urb.z);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(llf.x,llf.y,urb.z);
+
+        glColor4f(1.f,0.f,0.f,1.f); glVertex3f(urb.x,llf.y,llf.z);
+        glColor4f(1.f,1.f,0.f,1.f); glVertex3f(urb.x,urb.y,llf.z);
+        glColor4f(1.f,1.f,1.f,1.f); glVertex3f(urb.x,urb.y,urb.z);
+        glColor4f(1.f,0.f,1.f,1.f); glVertex3f(urb.x,llf.y,urb.z);
+
+        glColor4f(0.f,0.f,0.f,1.f); glVertex3f(llf.x,llf.y,llf.z);
+        glColor4f(0.f,1.f,0.f,1.f); glVertex3f(llf.x,urb.y,llf.z);
+        glColor4f(0.f,1.f,1.f,1.f); glVertex3f(llf.x,urb.y,urb.z);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(llf.x,llf.y,urb.z);
+
+        glColor4f(1.f,1.f,1.f,1.f); glVertex3f(urb.x,urb.y,urb.z);
+        glColor4f(0.f,1.f,1.f,1.f); glVertex3f(llf.x,urb.y,urb.z);
+        glColor4f(0.f,1.f,0.f,1.f); glVertex3f(llf.x,urb.y,llf.z);
+        glColor4f(1.f,1.f,0.f,1.f); glVertex3f(urb.x,urb.y,llf.z);
+
+        glColor4f(1.f,0.f,1.f,1.f); glVertex3f(urb.x,llf.y,urb.z);
+        glColor4f(0.f,0.f,1.f,1.f); glVertex3f(llf.x,llf.y,urb.z);
+        glColor4f(0.f,0.f,0.f,1.f); glVertex3f(llf.x,llf.y,llf.z);
+        glColor4f(1.f,0.f,0.f,1.f); glVertex3f(urb.x,llf.y,llf.z);
+    glEnd();
+
+    
+        //---------------------------
+        //hier der wichtige Teil!!!!!
+        //---------------------------
+        float intensitaet = voxel.a;
+
+        vec4 color = vec4(0,0,0,0);
+        if(intensitaet >= 0.9)
+            color = vec4(intensitaet,intensitaet,intensitaet,intensitaet);
+
+        //---------------------------
+        //           Ende!!!!!
+        //---------------------------
+        
+        
+        //---------------------------
+        //hier der wichtige Teil!!!!!
+        //---------------------------
+        float intensitaet = voxel.a;
+
+        vec4 color = vec4(0,0,0,0);
+        if(intensitaet >= 0.9) {
+            intensitaet = (intensitaet - 0.5)*2.0;
+            color = vec4(1-intensitaet,1-intensitaet,1-intensitaet,intensitaet);
+        }
+        //---------------------------
+        //           Ende!!!!!
+        //---------------------------
+        

@@ -1,0 +1,63 @@
+#include "voreen/core/plotting/plotfunctiongrammar.h"
+#include "voreen/core/utils/GLSLparser/generator/parsertable.h"
+
+#include <fstream>
+#include <iostream>
+
+using namespace voreen;
+using namespace voreen::glslparser;
+
+
+
+
+
+
+/////////////////////////////////////FUNCTION FOR THE PARSERGENERATOR///////////////////
+//
+//       DO NOT DELETE THE LINE AFTER THIS UNTIL THE PARSER IS READY
+//
+////////////////////////////////////////////////////////////////////////////////////////
+
+void FunctionLibrary::createPlotFunctionParser() {
+    glslparser::PlotFunctionGrammar g;
+
+    // Print the grammar
+    //
+    std::ofstream ofs("c:\\temp\\grammar.txt");
+    ofs << "Terminals:\n";
+    std::set<glslparser::GrammarSymbol*> terms = g.getTerminals();
+    for (std::set<glslparser::GrammarSymbol*>::const_iterator it = terms.begin(); it != terms.end(); ++it)
+        ofs << "ID " << (*it)->getSymbolID() << ":\t" << (*it)->toString() << "\n";
+
+    ofs << "\nProductions:\n";
+    std::vector<glslparser::Production> productions = g.getProductions();
+    for (size_t i = 0; i < productions.size(); ++i)
+        ofs << "ID  " << productions[i].getProductionID() << ":\t" << productions[i].toString() << "\n";
+    ofs.close();
+
+    glslparser::ParserTable* table = g.createParserTable(true);
+    if (table != 0) {
+        table->htmlOutput("c:\\temp\\table.html");
+
+        std::ofstream ofs("c:\\temp\\code.cpp");
+        table->generateActionCode(ofs, "stateID", "symbolID", "PlotFunctionParser");
+        ofs << "\n";
+        table->generateGotoCode(ofs, "stateID", "symbolID", "PlotFunctionParser");
+        ofs << "\n";
+        table->generateProductionsCode(ofs, "productionID", "PlotFunctionParser");
+        ofs << "\n";
+        table->generateSymbolsCode(ofs, "symbolID", "PlotFunctionParser");
+        ofs.close();
+    }
+    delete table;
+}
+
+
+
+/////////////////////////////////////FUNCTION FOR THE PARSERGENERATOR///////////////////
+//
+//       DO NOT DELETE THE LINE AFTER THIS UNTIL THE PARSER IS READY
+//
+////////////////////////////////////////////////////////////////////////////////////////
+    /// for generator the parsertables not for normal use
+    static void createPlotFunctionParser();

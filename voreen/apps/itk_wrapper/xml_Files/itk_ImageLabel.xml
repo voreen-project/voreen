@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_ImageLabel" group="Filtering">
+    <filterlist>
+      <filter name="BinaryContourImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+          <argument name="BackgroundValue" argumenttype="PixelType"/>
+          <argument name="ForegroundValue" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+      <filter name="LabelContourImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+          <argument name="BackgroundValue" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+    </filterlist>
+  </ITK_Module>
+</VoreenData>

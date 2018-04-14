@@ -1,0 +1,130 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="18">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="VolumeResampleTransformation" ref="ref1" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="98.999992371" y="-126.499992371" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="2" />
+            </MetaData>
+            <Processors>
+                <Processor type="VolumeResampleTransformation" name="VolumeResampleTransformation" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-16" y="-98" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="aspacingHandling" name="aspacingHandling" value="multiply" />
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="false" />
+                        <Property mapKey="filteringMode" name="filteringMode" value="nearest" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="outputDimensions" name="outputDimensions">
+                            <value x="6800" y="8050" z="21400" />
+                        </Property>
+                        <Property mapKey="outputSizeMB" name="outputSizeMB" value="1091 GB" />
+                        <Property mapKey="outputSpacing" name="outputSpacing" tracking="false">
+                            <value x="0.02" y="0.02" z="0.01" />
+                        </Property>
+                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../nosnapshot/scalingtestdata/scaled_spacing_1091gb.h5" />
+                                    <item value="../../../nosnapshot/scalingtestdata/scaled_spacing_1091gb.h5" />
+                                    <item value="/home/dominik/nosnapshot/scalingtestdata/scaled_spacing_1091gb.h5" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="outsideVolumeHandling" name="outsideVolumeHandling" value="clamp" />
+                        <Property mapKey="outsideVolumeValue" name="outsideVolumeValue" value="0" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 37:28.602 min" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
+                        <Property mapKey="transformMatrix" name="transformMatrix">
+                            <value.row0 x="1" y="0" z="0" w="0" />
+                            <value.row1 x="0" y="1" z="0" w="0" />
+                            <value.row2 x="0" y="0" z="1" w="0" />
+                            <value.row3 x="0" y="0" z="0" w="1" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="volumehandle.output" direction="0" portID="volumehandle.output" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="VolumeSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="37" y="-190" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="">
+                                <path noPathSet="false">
+                                    <paths>
+                                        <item value="../sciebo/lymphgefaessdaten/segmentation_control.vvd" />
+                                        <item value="../../../sciebo/lymphgefaessdaten/segmentation_control.vvd" />
+                                        <item value="/home/dominik/sciebo/lymphgefaessdaten/segmentation_control.vvd" />
+                                    </paths>
+                                </path>
+                                <searchParameters />
+                            </urls>
+                        </Property>
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeResampleTransformation" ref="ref1" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

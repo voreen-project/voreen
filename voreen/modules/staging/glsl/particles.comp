@@ -1,0 +1,75 @@
+/***********************************************************************************
+ *                                                                                 *
+ * Voreen - The Volume Rendering Engine                                            *
+ *                                                                                 *
+ * Copyright (C) 2005-2014 University of Muenster, Germany.                        *
+ * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * For a list of authors please refer to the file "CREDITS.txt".                   *
+ *                                                                                 *
+ * This file is part of the Voreen software package. Voreen is free software:      *
+ * you can redistribute it and/or modify it under the terms of the GNU General     *
+ * Public License version 2 as published by the Free Software Foundation.          *
+ *                                                                                 *
+ * Voreen is distributed in the hope that it will be useful, but WITHOUT ANY       *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR   *
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.      *
+ *                                                                                 *
+ * You should have received a copy of the GNU General Public License in the file   *
+ * "LICENSE.txt" along with this file. If not, see <http://www.gnu.org/licenses/>. *
+ *                                                                                 *
+ * For non-commercial academic use see the license exception specified in the file *
+ * "LICENSE-academic.txt". To get information about commercial licensing please    *
+ * contact the authors.                                                            *
+ *                                                                                 *
+ ***********************************************************************************/
+
+#extension GL_ARB_compute_shader : enable
+#extension GL_ARB_shader_storage_buffer_object : enable
+
+uniform float time_;
+
+struct data {
+    vec4 pos;   // colors
+    vec4 vel;   // colors
+    vec4 col;   // colors
+};
+
+layout( std140, binding=2 ) buffer Particles {
+    data Data[];      // array of structures
+};
+
+layout( local_size_x = 128,  local_size_y = 1, local_size_z = 1 ) in;
+
+vec3 bounceSphere(vec3 p, vec3 v, vec4 s ) {
+    vec3 n = normalize( p - s.xyz );
+    return reflect(v, n);
+}
+
+bool isInsideSphere( vec3 p, vec4 s ) {
+    float r = length(p - s.xyz);
+    return (r < s.w);
+}
+
+
+void main() {
+    const float  dt      = 0.03;
+    vec4 sphere = vec4(vec2(sin(time_), cos(time_)), sin(time_) * cos(time_), 0.5);
+
+    uint  gid = gl_GlobalInvocationID.x;    // the .y and .z are both 1 in this case
+
+    vec3 p  = Data[gid].pos.xyz;
+    vec3 v  = Data[gid].vel.xyz;
+
+    vec3 g = time_ * normalize(sphere.xyz - p);
+    vec3 pp = p + v*dt + .5*dt*dt*g;
+    vec3 vp = v + g*dt;
+
+    if(isInsideSphere(pp, sphere)) {
+        vp = bounceSphere(p, v, sphere);
+        pp = p + vp*dt + .5*dt*dt*g;
+    }
+
+    Data[gid].pos = vec4(pp, 1.0);
+    Data[gid].vel.xyz = vp;
+    Data[gid].col = vec4(0.4 * sin(4.0 * time_) + 0.6, 1.0 - 0.4 * length(p), p.x * p.y, 1.0);
+}

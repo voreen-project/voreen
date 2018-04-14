@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Processors>
+		<item>SegmentationValidation</item>
+		<item>VolumeInformation</item>
+    </Processors>
+</VoreenData>

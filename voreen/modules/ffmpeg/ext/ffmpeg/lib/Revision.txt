@@ -1,0 +1,1 @@
+ffmpeg rev: 1.0.1, DLLs and libs taken from ffmpeg.zeranoe.com

@@ -1,0 +1,256 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" GlobalDescription="">
+        <ProcessorNetwork version="11">
+            <Processors>
+                <Processor type="VolumeSource" name="VolumeSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-681" y="-298" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="volumeURL" url="input/synth/shapes.vvd?preferredReader=VvdVolumeReader" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ConnectedComponents3D" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-1127" y="-62" />
+                    </MetaData>
+                    <name>
+                        <![CDATA[ConnectedComponents3D:
+Disabled]]>
+                    </name>
+                    <Properties>
+                        <Property name="binarizeOutput" value="false" />
+                        <Property name="connectivity" value="18-neighborhood" />
+                        <Property name="enabled" value="false" />
+                        <Property name="maxComponents" value="65535" />
+                        <Property name="minComponentSize" value="1" />
+                        <Property name="sorting" value="none" />
+                        <Property name="stretchLabels" value="false" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSave" name="VolumeSave" id="ref6">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-1086" y="56" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="continousSave" value="false" />
+                        <Property name="outputFilename" value="output/disabled.vvd" />
+                        <Property name="save" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ConnectedComponents3D" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-717" y="-64" />
+                    </MetaData>
+                    <name>
+                        <![CDATA[ConnectedComponents3D:
+Binarized]]>
+                    </name>
+                    <Properties>
+                        <Property name="binarizeOutput" value="true" />
+                        <Property name="connectivity" value="18-neighborhood" />
+                        <Property name="enabled" value="true" />
+                        <Property name="maxComponents" value="65535" />
+                        <Property name="minComponentSize" value="1" />
+                        <Property name="sorting" value="none" />
+                        <Property name="stretchLabels" value="false" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSave" name="VolumeSave 3" id="ref7">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-680" y="57" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="continousSave" value="false" />
+                        <Property name="outputFilename" value="output/binarized.vvd" />
+                        <Property name="save" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ConnectedComponents3D" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-513" y="-65" />
+                    </MetaData>
+                    <name>
+                        <![CDATA[ConnectedComponents3D:
+Stretched]]>
+                    </name>
+                    <Properties>
+                        <Property name="binarizeOutput" value="false" />
+                        <Property name="connectivity" value="18-neighborhood" />
+                        <Property name="enabled" value="true" />
+                        <Property name="maxComponents" value="65535" />
+                        <Property name="minComponentSize" value="1" />
+                        <Property name="sorting" value="none" />
+                        <Property name="stretchLabels" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSave" name="VolumeSave 4" id="ref8">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-477" y="63" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="continousSave" value="false" />
+                        <Property name="outputFilename" value="output/stretched.vvd" />
+                        <Property name="save" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ConnectedComponents3D" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-311" y="-65" />
+                    </MetaData>
+                    <name>
+                        <![CDATA[ConnectedComponents3D:
+Sorted, Stretched]]>
+                    </name>
+                    <Properties>
+                        <Property name="binarizeOutput" value="false" />
+                        <Property name="connectivity" value="18-neighborhood" />
+                        <Property name="enabled" value="true" />
+                        <Property name="maxComponents" value="65535" />
+                        <Property name="minComponentSize" value="1" />
+                        <Property name="sorting" value="increasing" />
+                        <Property name="stretchLabels" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSave" name="VolumeSave 5" id="ref9">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-275" y="63" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="continousSave" value="false" />
+                        <Property name="outputFilename" value="output/sorted-stretched.vvd" />
+                        <Property name="save" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ConnectedComponents3D" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-918" y="-64" />
+                    </MetaData>
+                    <name>
+                        <![CDATA[ConnectedComponents3D:
+Unstretched]]>
+                    </name>
+                    <Properties>
+                        <Property name="binarizeOutput" value="false" />
+                        <Property name="connectivity" value="18-neighborhood" />
+                        <Property name="enabled" value="true" />
+                        <Property name="maxComponents" value="65535" />
+                        <Property name="minComponentSize" value="1" />
+                        <Property name="sorting" value="none" />
+                        <Property name="stretchLabels" value="false" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSave" name="VolumeSave 2" id="ref10">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-882" y="58" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="continousSave" value="false" />
+                        <Property name="outputFilename" value="output/unstretched.vvd" />
+                        <Property name="save" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="ConnectedComponents3D" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="ConnectedComponents3D" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="ConnectedComponents3D" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="ConnectedComponents3D" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="ConnectedComponents3D" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="ConnectedComponents3D" ref="ref1" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeSave" ref="ref6" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="ConnectedComponents3D" ref="ref2" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeSave" ref="ref7" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="ConnectedComponents3D" ref="ref3" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeSave" ref="ref8" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="ConnectedComponents3D" ref="ref4" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeSave" ref="ref9" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="ConnectedComponents3D" ref="ref5" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeSave" ref="ref10" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+            <PropertyStateCollections />
+            <PropertyStateFileReferences />
+            <PropertyStateDirectoryReferences />
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

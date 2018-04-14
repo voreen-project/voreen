@@ -1,0 +1,181 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="17">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="PatchTrainingDataExtractor" ref="ref1" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-55.55903625" y="-163.50230408" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.62996054" />
+            </MetaData>
+            <Processors>
+                <Processor type="PatchTrainingDataExtractor" name="PatchTrainingDataExtractor" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-177" y="-62" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="2dcosinetransform" name="2dcosinetransform" value="false" />
+                        <Property mapKey="2drawpatches" name="2drawpatches" value="false" />
+                        <Property mapKey="cosinetransform" name="cosinetransform" value="false" />
+                        <Property mapKey="filteredpatches" name="filteredpatches" value="true" />
+                        <Property mapKey="foregroundmodulus" name="foregroundmodulus" value="2" />
+                        <Property mapKey="includemean" name="includemean" value="false" />
+                        <Property mapKey="includestddv" name="includestddv" value="false" />
+                        <Property mapKey="normalize" name="normalize" value="true" />
+                        <Property mapKey="numsamples" name="numsamples" value="500000" />
+                        <Property mapKey="outputFilename" name="outputFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../../../../trainingSwap/training.h5" />
+                                    <item value="custommodules/nucleusdetection/workspaces/../../../../../trainingSwap/training.h5" />
+                                    <item value="/home/thomas/voreen-development/voreen/custommodules/nucleusdetection/workspaces/../../../../../trainingSwap/training.h5" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="progressProperty" name="progressProperty" />
+                        <Property mapKey="rawpatches" name="rawpatches" value="false" />
+                        <Property mapKey="train" name="train" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="volumelabels.input" direction="1" portID="volumelabels.input" guiName="Label Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="volumelist.input" direction="1" portID="volumelist.input" guiName="Filter Kernel List Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="PatchListReader" name="PatchListReader" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="77" y="-331" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="inputFilename" name="inputFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../../../../BigData/KMeans Filters/downsampling4/256-filters.h5" />
+                                    <item value="../../BigData/KMeans Filters/downsampling4/256-filters.h5" />
+                                    <item value="/home/thomas/BigData/KMeans Filters/downsampling4/256-filters.h5" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="load" name="load" />
+                        <Property mapKey="normalize" name="normalize" value="true" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumelist.output" direction="0" portID="volumelist.output" guiName="Volume List Outport" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeListSource" name="VolumeListSource" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-304" y="-334" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeURLList" name="volumeURLList" previewsVisible="true">
+                            <VolumeURLs>
+                                <url value="hdf5://../../../../../BigData/DataSets/Data_Ausschnitt1/no_downsampling/volume/Ausschnitt1kleinerEmbryo1A__Channel2.h5?channel=0&amp;path=/volume&amp;preferredReader=HDF5VolumeReader" />
+                            </VolumeURLs>
+                            <Selection>
+                                <entry url="hdf5://../../../../../BigData/DataSets/Data_Ausschnitt1/no_downsampling/volume/Ausschnitt1kleinerEmbryo1A__Channel2.h5?channel=0&amp;path=/volume&amp;preferredReader=HDF5VolumeReader" value="true" />
+                            </Selection>
+                        </Property>
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumecollection" direction="0" portID="volumecollection" guiName="VolumeList Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeListSource" name="VolumeListSource 2" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-139" y="-330" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeURLList" name="volumeURLList" previewsVisible="true">
+                            <VolumeURLs>
+                                <url value="../../../../../BigData/DataSets/Data_Ausschnitt1/no_downsampling/labels/segmentation_corrected_new3.vvd" />
+                            </VolumeURLs>
+                            <Selection>
+                                <entry url="../../../../../BigData/DataSets/Data_Ausschnitt1/no_downsampling/labels/segmentation_corrected_new3.vvd" value="true" />
+                            </Selection>
+                        </Property>
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumecollection" direction="0" portID="volumecollection" guiName="VolumeList Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="volumelist.output">
+                        <Processor type="PatchListReader" ref="ref0" />
+                    </Outport>
+                    <Inport name="volumelist.input">
+                        <Processor type="PatchTrainingDataExtractor" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumecollection">
+                        <Processor type="VolumeListSource" ref="ref2" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="PatchTrainingDataExtractor" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumecollection">
+                        <Processor type="VolumeListSource" ref="ref3" />
+                    </Outport>
+                    <Inport name="volumelabels.input">
+                        <Processor type="PatchTrainingDataExtractor" ref="ref1" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

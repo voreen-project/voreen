@@ -1,0 +1,60 @@
+\section{Installation and Configuration}
+The following sections will be concerned with the installation and configuration of \Voreen.
+
+\subsection{System Requirements}
+\begin{tabularx}{\textwidth}{|l|p{2cm}|p{2cm}|X|} \hline
+\multicolumn{4}{|p{\textwidth-2\tabcolsep}|}{\large{\vspace*{0.0mm}\textbf{Software}}} \\ \hline
+\multicolumn{4}{|p{\textwidth-2\tabcolsep}|}{
+\Voreen has been tested on \verb|Windows 7| and \verb|Windows 8|. We recommend to use either one of these versions. 
+\Voreen might also work on older versions of \verb|Windows|. However, we do not maintain those platforms.} \\ \hline
+\multicolumn{4}{|p{\textwidth-2\tabcolsep}|}{\large{\vspace*{0.0mm}\textbf{Hardware}}} \\ \hline
+
+Component & Minimal & Optimal & Remark \\ \hline
+Processor & Dual Core  & Intel i7 & The loading of large data sets utilizes multi-threading, therefore processors with multiple cores reduce loading times.\\
+ & & & \\
+Hard Drive & 100~MB & 1~TB (SSD)& \small{The installation of \Voreen needs at least 100~MB. Since \Voreen uses its own data format, loaded data sets have to be converted and stored on disk for faster access.} \\
+ & & & \\
+Main Memory & 4~GB & $\geq$ 16~GB & More main memory reduces disk accesses and results in faster performances.\\
+ & & & \\
+Graphics Card & NVIDIA or AMD/ATI & GTX~780 or {HD~7990} & \Voreen has been tested on several currently available NVIDIA and AMD cards. \\ \hline
+\end{tabularx}
+
+\subsection{Installation of \Voreen}
+Copy and unzip the \Voreen folder. Inside the main folder is a \verb|voreenbiology.exe| file. Double clicking the executable will start \Voreen. 
+\newpage
+\subsection{Configuration of \Voreen}
+\label{section:configuration}
+When \Voreen is started for the first time, it is necessary to configure a few general settings related to the memory management. By selecting \verb|Settings| $\rightarrow$ \verb|General~Settings| a new window will pop up. After restarting the application, the settings will be saved. 
+The `\verb|Reset|' button in the lower left corner resets all settings back to default.\\
+\\
+\begin{minipage}[h]{\textwidth}
+	\begingroup
+	\parfillskip=0pt
+	\begin{minipage}[h]{0.58\textwidth}
+		\textbf{Volume Cache:} The maximum amount of disk memory used for caching transformed volume data. 
+		The selected GB size plus the `\verb|Octree Cache|' size should not exceed the available disk memory of the selected `\verb|Cache Directory|'. 
+		The value should be much less than the `\verb|Octree Cache|' size.
+		
+		\textbf{Octree Cache}: The maximum amount of disk memory used for caching created \emph{volume octree} data structures. 
+		This size should be as large as possible. Loading a cached data set, {i.e.}, octree, is much faster than creating a new data structure.
+		 
+		\textbf{Cache Directory:} Select the path to a folder on the hard drive to cache important data. 
+		The selected cache directory should have enough free memory. 
+		Using a \emph{solid state disk (SSD)} for the cache directory has a positive impact on the loading and rendering times.
+		 
+		\textbf{CPU RAM Limit} Determines the maximum amount of main memory used by \Voreen for the octree handling. 
+		Larger values result in faster performance. \textbf{Note:} Since Windows, other applications, and other parts of \Voreen also use the available main memory, 
+		this value should be at least less than 4~GB of the build in main memory.
+		  
+		\textbf{Reset Window Settings} This button resets the graphical user interface back to default after an application restart. 
+	\end{minipage}
+	\hfill
+	\begin{minipage}[h]{0.38\textwidth}
+		\includegraphics[width=\textwidth]{images/general_settings.png}
+	\end{minipage}
+	\par\endgroup
+\end{minipage}
+\newpage
+
+
+
