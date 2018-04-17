@@ -14,11 +14,15 @@ def update_workspace_and_gui():
     voreenqt.processEvents()
 
 def run_test(parameters, output_folder):
+    (axis_x, axis_y, axis_z,) = parameters #unpack parameters
+    axis = (axis_x, axis_y, axis_z)
     voreen.setPropertyValue("SegmentationValidation", "autoExport", False)
 
     asyncprocessors = ["Resample", "ResampleAndTransform", "ResampleAndTransformInverse"]
     for p in asyncprocessors:
         voreen.setPropertyValue(p, "synchronousComputation", True)
+
+    voreen.setPropertyValue("RotationParameters", "rotationAxis", axis)
 
     update_workspace_and_gui()
 
@@ -26,8 +30,10 @@ def run_test(parameters, output_folder):
     update_workspace_and_gui()
 
     start = time.time()
-    for i in range(iterations):
-        rotation = i*2*math.pi/iterations
+    #for i in range(iterations):
+    #    rotation = i*2*math.pi/iterations
+    for i in range(628):
+        rotation = i*0.01
         elapsed = time.time() - start
         approx_total = 0
         if i > 0:
@@ -35,7 +41,7 @@ def run_test(parameters, output_folder):
         approx_remaining = approx_total - elapsed
         print("[{}/{}, {:5.1f}s / {:5.1f}s -- {:5.1f}s] Starting rotation={:7.5f}".format(i, iterations, elapsed, approx_total, approx_remaining, rotation))
 
-        output_file_path = output_folder + "/rot{:7.5f}.csv".format(rotation)
+        output_file_path = output_folder + "/rot{:7.5f}_ax{}_{}_{}.csv".format(rotation, axis_x, axis_y, axis_z)
         if os.path.isfile(output_file_path):
             os.remove(output_file_path)
 
@@ -86,7 +92,10 @@ def run_tests():
     voreen.setPropertyValue("RotationParameters", "transformationType", "rotation")
 
     configurations = [
-            (1, 2, 3, 4),
+            (1, 0, 0),
+            (0, 1, 0),
+            (0, 0, 1),
+            (1, 1, 1),
             ]
 
     for configuration in configurations:
