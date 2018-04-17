@@ -30,7 +30,7 @@
 
 class QPushButton;
 class QCheckBox;
-class QLabel;
+class QVBoxLayout;
 
 namespace voreen {
 
@@ -40,6 +40,7 @@ class FileDialogPropertyWidget : public QPropertyWidget {
     Q_OBJECT
 public:
     FileDialogPropertyWidget(FileDialogProperty* prop, QWidget* parent = 0);
+    virtual ~FileDialogPropertyWidget();
 
 public slots:
     void setProperty();
@@ -51,6 +52,7 @@ protected:
     FileDialogProperty* property_; 
     QPushButton* openFileDialogBtn_;
     QCheckBox* fileWatchCheckBox_;
+    QVBoxLayout* mainLayout_;
 
 protected slots:
     virtual void updateFromPropertySlot();

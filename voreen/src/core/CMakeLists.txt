@@ -221,6 +221,7 @@ SET(VRN_CORE_SOURCES
     properties/stringproperty.cpp
     properties/stringexpressionproperty.cpp
     properties/templateproperty.cpp
+    properties/temppathproperty.cpp
     properties/vectorproperty.cpp
     properties/voxeltypeproperty.cpp
     properties/volumeinfoproperty.cpp
@@ -573,6 +574,7 @@ SET(VRN_CORE_HEADERS
     ../../include/voreen/core/properties/stringproperty.h
     ../../include/voreen/core/properties/templateproperty.h
     ../../include/voreen/core/properties/templatepropertycondition.h
+    ../../include/voreen/core/properties/temppathproperty.h
     ../../include/voreen/core/properties/vectorproperty.h
     ../../include/voreen/core/properties/volumeinfoproperty.h
     ../../include/voreen/core/properties/volumeurlproperty.h

@@ -47,12 +47,12 @@ FileDialogPropertyWidget::FileDialogPropertyWidget(FileDialogProperty* prop, QWi
 {
     updateButtonText(prop->get());
 
-    QVBoxLayout* mainLayout = new QVBoxLayout();
-    layout_->addLayout(mainLayout);
+    mainLayout_ = new QVBoxLayout();
+    layout_->addLayout(mainLayout_);
 
     QHBoxLayout* buttonLayout = new QHBoxLayout();
+    mainLayout_->addLayout(buttonLayout);
     buttonLayout->addWidget(openFileDialogBtn_);
-    mainLayout->addLayout(buttonLayout);
 
     // Add button for file dialog.
     connect(openFileDialogBtn_, SIGNAL(clicked(void)), this, SLOT(setProperty(void)));
@@ -68,8 +68,11 @@ FileDialogPropertyWidget::FileDialogPropertyWidget(FileDialogProperty* prop, QWi
             connect(fileWatchCheckBox_, SIGNAL(clicked(bool)), this, SLOT(changeFileWatchOption(bool)));
         else
             fileWatchCheckBox_->setEnabled(false);
-        mainLayout->addWidget(fileWatchCheckBox_);
-    }    
+        mainLayout_->addWidget(fileWatchCheckBox_);
+    }
+}
+
+FileDialogPropertyWidget::~FileDialogPropertyWidget() {
 }
 
 void FileDialogPropertyWidget::setProperty() {
@@ -157,6 +160,9 @@ void FileDialogPropertyWidget::updateButtonText(const std::string& filename) {
 
 void FileDialogPropertyWidget::updateFromPropertySlot() {
     updateButtonText(property_->get());
+
+    if (fileWatchCheckBox_)
+        fileWatchCheckBox_->setChecked(property_->isFileWatchEnabled());
 }
 
 } // namespace

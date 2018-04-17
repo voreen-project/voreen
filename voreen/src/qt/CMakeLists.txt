@@ -194,6 +194,7 @@ SET(VRN_QT_SOURCES
     widgets/property/shaderpropertywidget.cpp
     widgets/property/stringexpressionpropertywidget.cpp
     widgets/property/stringpropertywidget.cpp
+    widgets/property/temppathpropertywidget.cpp
     widgets/property/grouppropertywidget.cpp
     widgets/property/vecpropertywidget.cpp
     widgets/property/voxeltypepropertywidget.cpp
@@ -404,6 +405,7 @@ SET(VRN_QT_HEADERS
     ../../include/voreen/qt/widgets/property/shaderpropertywidget.h
     ../../include/voreen/qt/widgets/property/stringexpressionpropertywidget.h
     ../../include/voreen/qt/widgets/property/stringpropertywidget.h
+    ../../include/voreen/qt/widgets/property/temppathpropertywidget.h
     ../../include/voreen/qt/widgets/property/grouppropertywidget.h
     ../../include/voreen/qt/widgets/property/voxeltypepropertywidget.h
     ../../include/voreen/qt/widgets/property/volumeinfopropertywidget.h
@@ -624,7 +626,7 @@ ENDIF()
 # The tool will be executed right after voreen_qt has been build, since 
 # the binary will be scanned for Qt dependencies by the tool.
 IF(WIN32)
-    UNSET(WINDEPLOYQT_EXE) #Old path might not longer exist.
+    UNSET(WINDEPLOYQT_EXE CACHE) #Old path might not longer exist.
     FIND_PROGRAM(WINDEPLOYQT_EXE windeployqt PATHS ${Qt5_DIR}/../../../bin/)
     IF(NOT WINDEPLOYQT_EXE)
         MESSAGE(FATAL_ERROR "Unable to find windeployqt.exe")
