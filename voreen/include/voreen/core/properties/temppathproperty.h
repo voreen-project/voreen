@@ -51,6 +51,8 @@ public:
 
 protected:
 
+    void generateAndUseNewTmpPath();
+
     bool useGeneratedPath_;
 };
 

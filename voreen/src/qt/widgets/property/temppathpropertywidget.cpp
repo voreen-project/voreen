@@ -40,7 +40,7 @@ TempPathPropertyWidget::TempPathPropertyWidget(TempPathProperty* prop, QWidget* 
     , useGeneratedPathCheckBox_(nullptr)
 {
     openFileDialogBtn_->setDisabled(prop->getUseGeneratedPath());
-    useGeneratedPathCheckBox_ = new QCheckBox(tr("Use Generated Path"), this);
+    useGeneratedPathCheckBox_ = new QCheckBox(tr("Generate and Use Temporary Path"), this);
     useGeneratedPathCheckBox_->setChecked(prop->getUseGeneratedPath());
     connect(useGeneratedPathCheckBox_, SIGNAL(clicked(bool)), this, SLOT(changeUseGeneratedPathOption(bool)));
 

@@ -50,7 +50,7 @@ Property* TempPathProperty::create() const {
 void TempPathProperty::setUseGeneratedPath(bool use) {
     useGeneratedPath_ = use;
     if (useGeneratedPath_ && VoreenApplication::app()) {
-        set(VoreenApplication::app()->getUniqueTmpFilePath(fileFilter_));
+        generateAndUseNewTmpPath();
     }
     updateWidgets();
 }
@@ -67,6 +67,14 @@ void TempPathProperty::serialize(Serializer& s) const {
 void TempPathProperty::deserialize(Deserializer& s) {
     FileDialogProperty::deserialize(s);
     s.deserialize("useGeneratedPath", useGeneratedPath_);
+    if(useGeneratedPath_) {
+        generateAndUseNewTmpPath();
+    }
+}
+
+void TempPathProperty::generateAndUseNewTmpPath() {
+    tgtAssert(VoreenApplication::app(), "No voreen application");
+    set(VoreenApplication::app()->getUniqueTmpFilePath(fileFilter_));
 }
 
 }   // namespace
