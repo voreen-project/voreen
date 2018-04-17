@@ -70,13 +70,7 @@ public:
 // macro to implement isCompatible in templates:
 #define IS_COMPATIBLE \
 bool isCompatible(const VolumeBase* volume) const { \
-    const VolumeRAM* v = volume->getRepresentation<VolumeRAM>(); \
-    if(!v) \
-        return false; \
-    const VolumeAtomic<T>* va = dynamic_cast<const VolumeAtomic<T>*>(v); \
-    if(!va) \
-        return false; \
-    return true; \
+    return VolumeAtomic<T>(tgt::svec3(1)).getFormat() == volume->getFormat();\
 }
 
 //Unary: -----------------------------------------------------------------
