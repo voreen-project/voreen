@@ -32,6 +32,7 @@
 #include "voreen/core/properties/intproperty.h"
 #include "voreen/core/properties/boolproperty.h"
 #include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/temppathproperty.h"
 #include "voreen/core/properties/filedialogproperty.h"
 #include "voreen/core/properties/buttonproperty.h"
 #include "voreen/core/properties/progressproperty.h"
@@ -131,7 +132,7 @@ private:
     VolumePort outport_;
 
     // General properties
-    FileDialogProperty outputVolumeFilePath_;
+    TempPathProperty outputVolumeFilePath_;
     BoolProperty writeComponentStatFile_;
     FileDialogProperty componentStatFilePath_;
     IntProperty outputVolumeDeflateLevel_;
