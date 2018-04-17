@@ -66,7 +66,7 @@ void TempPathProperty::serialize(Serializer& s) const {
 
 void TempPathProperty::deserialize(Deserializer& s) {
     FileDialogProperty::deserialize(s);
-    s.deserialize("useGeneratedPath", useGeneratedPath_);
+    s.optionalDeserialize("useGeneratedPath", useGeneratedPath_, true);
     if(useGeneratedPath_) {
         generateAndUseNewTmpPath();
     }
