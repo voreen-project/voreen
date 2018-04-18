@@ -120,6 +120,7 @@ SET(MOD_CORE_HEADERS
     #Ports
     ${MOD_DIR}/ports/ensembledatasetport.h
     ${MOD_DIR}/ports/fieldplotdataport.h
+    ${MOD_DIR}/ports/similaritydataport.h
 
     #Conditions
     ${MOD_DIR}/ports/conditions/portconditionensemble.h
