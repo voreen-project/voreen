@@ -45,17 +45,32 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeEndEdgesRecursively
 
 static std::vector<const VesselGraphEdge*> findDeletable(const VesselGraphNode& node, VesselGraphNormalization::RemovableEdgeCheck isRemovableEdge) {
     std::vector<const VesselGraphEdge*> potentially_deletable;
-    if(node.getEdges().size() <= 2) {
-        //We cannot delete any edges without changing the topology:
-        // => return empty vector
+    const auto& edges = node.getEdges();
+    if(edges.size() <= 2) {
+        if(node.isAtSampleBorder_ && edges.size() == 1) {
+            const auto& the_edge = edges[0].get();
+            const auto& the_other_node = the_edge.getOtherNode(node);
+
+            if(!the_edge.isLoop()
+                    && !the_other_node.isAtSampleBorder_
+                    && the_other_node.isEndNode()
+                    && isRemovableEdge(the_edge)) {
+                // The edge reaches from the sample border up to a single node in the volume that is not connected to anything else.
+                // => It may be deletable
+                //
+                // In any other cases we cannot delete any edges without changing the topology.
+                potentially_deletable.push_back(&the_edge);
+            }
+        }
         return potentially_deletable;
     }
-    for(auto edge : node.getEdges()) {
+
+    for(auto edge : edges) {
         if(isRemovableEdge(edge.get()) && edge.get().isEndStanding()) {
             potentially_deletable.push_back(&edge.get());
         }
     }
-    size_t num_kept = node.getEdges().size() - potentially_deletable.size();
+    size_t num_kept = edges.size() - potentially_deletable.size();
     if(num_kept >= 2) {
         return potentially_deletable; // We are deleting all candidates, as we retain >= 2 nodes anyways
     } if(num_kept == 1) {
