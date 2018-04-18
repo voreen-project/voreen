@@ -1,0 +1,340 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="15">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="ImageSequenceSource" ref="ref0" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="257.5" y="-189.5" />
+                </MetaItem>
+            </MetaData>
+            <Processors>
+                <Processor type="ImageSequenceSource" name="ImageSequenceSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="165" y="-341" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clearSequence" name="clearSequence" />
+                        <Property mapKey="imageDirectory" name="imageDirectory">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/images/sequence" />
+                                    <item value="../../tjtest/voreen-testdata/input/images/sequence" />
+                                    <item value="D:/voreen_/tjtest/voreen-testdata/input/images/sequence" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="numImages" name="numImages" value="3" />
+                        <Property mapKey="reloadSequence" name="reloadSequence" />
+                        <Property mapKey="showProgressBar" name="showProgressBar" value="false" />
+                        <Property mapKey="textureFiltering" name="textureFiltering" value="true" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="imagesequence.out" direction="0" portID="imagesequence.out" guiName="ImageSequence Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageSelector" name="ImageSelector" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="51" y="-197" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="imageID" name="imageID" value="0" />
+                        <Property mapKey="imageSize" name="imageSize">
+                            <value x="512" y="512" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="imagesequence.in" direction="1" portID="imagesequence.in" guiName="ImageSequence Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.out" direction="0" portID="image.out" guiName="image.out" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers>
+                        <Handler name="wheelHandler.imageCycling">
+                            <Properties>
+                                <Property mapKey="wheelHandler.imageCycling" name="wheelHandler.imageCycling" enabled="true" mouseAction="23" mouseButtons="98" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+                <Processor type="Canvas" name="Canvas" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="56" y="-98" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="140" y="144" width="256" height="256" />
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="140" y="144" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="256" y="256" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="256" y="256" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/image1.png" />
+                                    <item value="../../tjtest/voreen-testdata/output/image1.png" />
+                                    <item value="D:/voreen_/tjtest/voreen-testdata/output/image1.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageSelector" name="ImageSelector 2" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="185" y="-199" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="imageID" name="imageID" value="1" />
+                        <Property mapKey="imageSize" name="imageSize">
+                            <value x="512" y="512" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="imagesequence.in" direction="1" portID="imagesequence.in" guiName="ImageSequence Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.out" direction="0" portID="image.out" guiName="image.out" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers>
+                        <Handler name="wheelHandler.imageCycling">
+                            <Properties>
+                                <Property mapKey="wheelHandler.imageCycling" name="wheelHandler.imageCycling" enabled="true" mouseAction="23" mouseButtons="98" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+                <Processor type="ImageSelector" name="ImageSelector 3" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="342" y="-198" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="imageID" name="imageID" value="2" />
+                        <Property mapKey="imageSize" name="imageSize">
+                            <value x="321" y="319" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="imagesequence.in" direction="1" portID="imagesequence.in" guiName="ImageSequence Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.out" direction="0" portID="image.out" guiName="image.out" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers>
+                        <Handler name="wheelHandler.imageCycling">
+                            <Properties>
+                                <Property mapKey="wheelHandler.imageCycling" name="wheelHandler.imageCycling" enabled="true" mouseAction="23" mouseButtons="98" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+                <Processor type="Canvas" name="Canvas 2" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="196" y="-100" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="201" y="220" width="256" height="256" />
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="201" y="220" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="256" y="256" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="256" y="256" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/image2.png" />
+                                    <item value="../../tjtest/voreen-testdata/output/image2.png" />
+                                    <item value="D:/voreen_/tjtest/voreen-testdata/output/image2.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas 3" id="ref6">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="353" y="-99" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="260" y="312" width="256" height="256" />
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="260" y="312" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="256" y="256" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="256" y="256" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/image3.png" />
+                                    <item value="../../tjtest/voreen-testdata/output/image3.png" />
+                                    <item value="D:/voreen_/tjtest/voreen-testdata/output/image3.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="imagesequence.out">
+                        <Processor type="ImageSequenceSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="imagesequence.in">
+                        <Processor type="ImageSelector" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="imagesequence.out">
+                        <Processor type="ImageSequenceSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="imagesequence.in">
+                        <Processor type="ImageSelector" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="imagesequence.out">
+                        <Processor type="ImageSequenceSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="imagesequence.in">
+                        <Processor type="ImageSelector" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSelector" ref="ref1" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSelector" ref="ref2" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSelector" ref="ref3" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref6" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="Canvas::Canvas">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

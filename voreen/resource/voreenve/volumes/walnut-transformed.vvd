@@ -1,0 +1,292 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Volumes>
+        <Volume>
+            <RawData filename="walnut-transformed.raw" format="uint16" x="130" y="73" z="128" />
+            <MetaData>
+                <MetaItem name="Offset" type="Vec3MetaData">
+                    <value x="-0.99999994" y="-0.55813891" z="-0.98837352" />
+                </MetaItem>
+                <MetaItem name="Spacing" type="Vec3MetaData">
+                    <value x="0.01538461" y="0.01529148" z="0.01544334" />
+                </MetaItem>
+            </MetaData>
+            <DerivedData>
+                <DerivedItem type="VolumePreview" height="64" prevData="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFysm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AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==" />
+                <DerivedItem type="VolumeMinMax" min="0" max="0.28789195" minNorm="0" maxNorm="0.28789195" />
+                <DerivedItem type="VolumeHash" hash="ede68654931980d862a356897f28d94b" />
+                <DerivedItem>
+                    <histogram>
+                        <minValues>
+                            <item value="0" />
+                        </minValues>
+                        <maxValues>
+                            <item value="0.28789195" />
+                        </maxValues>
+                        <bucketCounts>
+                            <item value="256" />
+                        </bucketCounts>
+                        <buckets>
+                            <item value="613459" />
+                            <item value="24050" />
+                            <item value="45881" />
+                            <item value="63080" />
+                            <item value="68466" />
+                            <item value="54220" />
+                            <item value="36168" />
+                            <item value="26112" />
+                            <item value="18699" />
+                            <item value="13545" />
+                            <item value="10747" />
+                            <item value="8805" />
+                            <item value="7890" />
+                            <item value="7431" />
+                            <item value="7059" />
+                            <item value="6428" />
+                            <item value="5545" />
+                            <item value="4858" />
+                            <item value="4076" />
+                            <item value="3633" />
+                            <item value="3189" />
+                            <item value="2873" />
+                            <item value="2647" />
+                            <item value="2498" />
+                            <item value="2316" />
+                            <item value="2404" />
+                            <item value="2204" />
+                            <item value="2159" />
+                            <item value="2154" />
+                            <item value="1894" />
+                            <item value="1953" />
+                            <item value="1862" />
+                            <item value="1756" />
+                            <item value="1664" />
+                            <item value="1671" />
+                            <item value="1582" />
+                            <item value="1541" />
+                            <item value="1481" />
+                            <item value="1443" />
+                            <item value="1384" />
+                            <item value="1348" />
+                            <item value="1332" />
+                            <item value="1304" />
+                            <item value="1264" />
+                            <item value="1275" />
+                            <item value="1286" />
+                            <item value="1230" />
+                            <item value="1218" />
+                            <item value="1250" />
+                            <item value="1132" />
+                            <item value="1173" />
+                            <item value="1142" />
+                            <item value="1153" />
+                            <item value="1138" />
+                            <item value="1095" />
+                            <item value="1072" />
+                            <item value="1043" />
+                            <item value="1118" />
+                            <item value="1089" />
+                            <item value="1061" />
+                            <item value="1093" />
+                            <item value="1035" />
+                            <item value="1050" />
+                            <item value="1016" />
+                            <item value="961" />
+                            <item value="1025" />
+                            <item value="1003" />
+                            <item value="990" />
+                            <item value="1005" />
+                            <item value="979" />
+                            <item value="1003" />
+                            <item value="1008" />
+                            <item value="958" />
+                            <item value="953" />
+                            <item value="964" />
+                            <item value="1039" />
+                            <item value="994" />
+                            <item value="1023" />
+                            <item value="1087" />
+                            <item value="1146" />
+                            <item value="1175" />
+                            <item value="1227" />
+                            <item value="1250" />
+                            <item value="1482" />
+                            <item value="1656" />
+                            <item value="2062" />
+                            <item value="2710" />
+                            <item value="3522" />
+                            <item value="4464" />
+                            <item value="5113" />
+                            <item value="5412" />
+                            <item value="4655" />
+                            <item value="3791" />
+                            <item value="2637" />
+                            <item value="1785" />
+                            <item value="1214" />
+                            <item value="904" />
+                            <item value="804" />
+                            <item value="769" />
+                            <item value="759" />
+                            <item value="764" />
+                            <item value="762" />
+                            <item value="743" />
+                            <item value="738" />
+                            <item value="788" />
+                            <item value="779" />
+                            <item value="802" />
+                            <item value="883" />
+                            <item value="901" />
+                            <item value="966" />
+                            <item value="1125" />
+                            <item value="1160" />
+                            <item value="1313" />
+                            <item value="1427" />
+                            <item value="1617" />
+                            <item value="1927" />
+                            <item value="2046" />
+                            <item value="2403" />
+                            <item value="2478" />
+                            <item value="2550" />
+                            <item value="2495" />
+                            <item value="2498" />
+                            <item value="2246" />
+                            <item value="1987" />
+                            <item value="1941" />
+                            <item value="1884" />
+                            <item value="1680" />
+                            <item value="1479" />
+                            <item value="1408" />
+                            <item value="1239" />
+                            <item value="1091" />
+                            <item value="957" />
+                            <item value="807" />
+                            <item value="714" />
+                            <item value="613" />
+                            <item value="518" />
+                            <item value="472" />
+                            <item value="406" />
+                            <item value="340" />
+                            <item value="217" />
+                            <item value="207" />
+                            <item value="148" />
+                            <item value="96" />
+                            <item value="70" />
+                            <item value="59" />
+                            <item value="35" />
+                            <item value="40" />
+                            <item value="21" />
+                            <item value="19" />
+                            <item value="19" />
+                            <item value="12" />
+                            <item value="12" />
+                            <item value="9" />
+                            <item value="6" />
+                            <item value="16" />
+                            <item value="14" />
+                            <item value="12" />
+                            <item value="9" />
+                            <item value="9" />
+                            <item value="13" />
+                            <item value="9" />
+                            <item value="9" />
+                            <item value="10" />
+                            <item value="8" />
+                            <item value="9" />
+                            <item value="4" />
+                            <item value="6" />
+                            <item value="12" />
+                            <item value="13" />
+                            <item value="4" />
+                            <item value="6" />
+                            <item value="9" />
+                            <item value="6" />
+                            <item value="6" />
+                            <item value="3" />
+                            <item value="8" />
+                            <item value="10" />
+                            <item value="4" />
+                            <item value="8" />
+                            <item value="2" />
+                            <item value="4" />
+                            <item value="3" />
+                            <item value="4" />
+                            <item value="9" />
+                            <item value="10" />
+                            <item value="7" />
+                            <item value="12" />
+                            <item value="7" />
+                            <item value="10" />
+                            <item value="8" />
+                            <item value="11" />
+                            <item value="3" />
+                            <item value="9" />
+                            <item value="13" />
+                            <item value="9" />
+                            <item value="11" />
+                            <item value="9" />
+                            <item value="6" />
+                            <item value="5" />
+                            <item value="13" />
+                            <item value="6" />
+                            <item value="7" />
+                            <item value="3" />
+                            <item value="5" />
+                            <item value="11" />
+                            <item value="5" />
+                            <item value="8" />
+                            <item value="5" />
+                            <item value="4" />
+                            <item value="7" />
+                            <item value="5" />
+                            <item value="7" />
+                            <item value="4" />
+                            <item value="3" />
+                            <item value="3" />
+                            <item value="3" />
+                            <item value="8" />
+                            <item value="9" />
+                            <item value="6" />
+                            <item value="5" />
+                            <item value="1" />
+                            <item value="5" />
+                            <item value="3" />
+                            <item value="2" />
+                            <item value="0" />
+                            <item value="1" />
+                            <item value="3" />
+                            <item value="3" />
+                            <item value="1" />
+                            <item value="0" />
+                            <item value="0" />
+                            <item value="2" />
+                            <item value="0" />
+                            <item value="1" />
+                            <item value="1" />
+                            <item value="0" />
+                            <item value="0" />
+                            <item value="2" />
+                            <item value="1" />
+                            <item value="2" />
+                            <item value="1" />
+                            <item value="1" />
+                            <item value="0" />
+                            <item value="1" />
+                            <item value="0" />
+                            <item value="2" />
+                            <item value="0" />
+                            <item value="0" />
+                            <item value="0" />
+                            <item value="0" />
+                            <item value="0" />
+                            <item value="0" />
+                            <item value="0" />
+                            <item value="1" />
+                            <item value="0" />
+                            <item value="0" />
+                        </buckets>
+                    </histogram>
+                </DerivedItem>
+            </DerivedData>
+        </Volume>
+    </Volumes>
+</VoreenData>

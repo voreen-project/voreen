@@ -1,0 +1,35 @@
+Terminals:
+ID 8:	true
+ID 6:	"
+ID 7:	'
+ID 5:	,
+ID 3:	=
+ID 4:	@
+ID 14:	CHARACTER
+ID 12:	FLOATCONST
+ID 10:	IDENTIFIER
+ID 11:	INTCONST
+ID 13:	STRING
+ID 1:	[
+ID 2:	]
+ID 9:	false
+
+Productions:
+ID  0:	[$START$] ::= [annotation]
+ID  1:	[annotation] ::= [tag-list]
+ID  12:	[single-value] ::= true
+ID  13:	[single-value] ::= false
+ID  14:	[single-value] ::= INTCONST
+ID  15:	[single-value] ::= FLOATCONST
+ID  16:	[single-value] ::= " STRING "
+ID  17:	[single-value] ::= ' CHARACTER '
+ID  5:	[tag] ::= [tag-assignment] [ [value-list] ]
+ID  6:	[tag] ::= [tag-assignment] [single-value]
+ID  7:	[tag-assignment] ::= [tag-name] =
+ID  8:	[tag-assignment] ::= [tag-assignment] [tag-name] =
+ID  2:	[tag-list] ::= [tag]
+ID  3:	[tag-list] ::= [tag-list] [tag]
+ID  4:	[tag-list] ::= [tag-list] , [tag]
+ID  9:	[tag-name] ::= @ IDENTIFIER
+ID  10:	[value-list] ::= [single-value]
+ID  11:	[value-list] ::= [value-list] , [single-value]

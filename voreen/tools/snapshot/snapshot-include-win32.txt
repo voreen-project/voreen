@@ -1,0 +1,16 @@
+# list of files and directories that should be included in the snapshot source release for win32
+
+# ext
+ext/boost
+ext/glew
+ext/freeglut
+
+# modules
+modules/devil/ext
+modules/ffmpeg/ext
+modules/gdcm/ext/readme.txt
+modules/hdf5/ext
+modules/itk/ext/readme.txt
+modules/python/ext
+modules/tiff/ext
+modules/zip/ext

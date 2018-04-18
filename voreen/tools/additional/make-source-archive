@@ -1,0 +1,75 @@
+#!/bin/sh
+# Script for generating zip and tar.gz archives for the source distribution.
+
+function usage() {
+    echo "Usage: $0 <win|unix> <svn-revision>"
+}
+
+if [ "$2" == "" ]; then
+  usage
+  exit 1
+fi
+REV=$2
+
+if [ "$1" == "win" ]; then
+  echo "Creating Windows source archive..."
+  mkdir -p dist || exit 1
+  cd dist || exit 1
+ 
+  # create nice subdir name as symlink in temporary directory
+  DISTDIR=$PWD
+  LINK=voreen-$REV
+  rm -f /tmp/$LINK
+  ln -s $DISTDIR/../.. /tmp/$LINK || exit 1
+  OUT=$DISTDIR/voreen-src-$REV.zip
+  rm -f $OUT
+
+  cat > exclude.lst <<EOF
+*/.svn/*
+*/tools/dist/*
+EOF
+  cd /tmp || exit 1
+  zip -rX $OUT $LINK -x@$DISTDIR/exclude.lst
+  rm -f $DISTDIR/exclude.lst
+  rm -f $LINK
+  echo Written to $OUT
+
+elif [ "$1" == "unix" ]; then
+  echo "Creating unix source tarball..."
+  mkdir -p dist || exit 1
+  cd dist || exit 1
+  DISTDIR=$PWD
+
+  # create nice subdir name as symlink in temporary directory
+  LINK=voreen-$REV
+  rm -f /tmp/$LINK
+  ln -s $DISTDIR/../.. /tmp/$LINK || exit 1
+  OUT=$DISTDIR/voreen-src-$REV.tar.gz
+  rm -f $OUT
+
+  # Skip libs that are usually already there on unix
+  cat > exclude.lst <<EOF
+*/.svn
+*/tools/dist
+*/ext/freetype
+*/ext/ftgl
+*/ext/glew
+*/ext/glut
+*/ext/il
+*/ext/jpeg
+*/ext/openssl
+*/ext/python
+*/ext/tiff
+*/ext/ziparchive
+*/ext/zlib
+EOF
+  cd /tmp || exit 1
+  tar -czf $OUT $LINK --owner root --group root --dereference -X $DISTDIR/exclude.lst
+  rm -f $DISTDIR/exclude.lst
+  rm -f $LINK
+  echo Writen to $OUT
+
+else
+  usage
+  exit 1
+fi

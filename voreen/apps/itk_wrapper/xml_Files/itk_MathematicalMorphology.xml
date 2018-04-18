@@ -1,0 +1,205 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_MathematicalMorphology" group="Filtering">
+    <filterlist>
+      <filter name="BasicDilateImageFilter" codeState ="STABLE">
+       <arguments>
+         <argument name ="Kernel" argumenttype="KernelType"/>
+        </arguments>
+      </filter>
+      <filter name="BasicErodeImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name ="Kernel" argumenttype="KernelType"/>
+        </arguments>
+      </filter>
+      <filter name="BlackTopHatImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name ="Kernel" argumenttype="KernelType"/>
+        </arguments>
+      </filter>
+      <filter name="ClosingByReconstructionImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name ="Kernel" argumenttype="KernelType"/>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+          <argument name="PreserveIntensities" argumenttype="Bool" defaultValue="false"/>
+        </arguments>
+      </filter>
+      <filter name="DoubleThresholdImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="InsideValue" argumenttype="PixelType"/>
+          <argument name="OutsideValue" argumenttype="PixelType"/>
+          <argument name="Threshold1" argumenttype="PixelType"/>
+          <argument name="Threshold2" argumenttype="PixelType"/>
+          <argument name="Threshold3" argumenttype="PixelType"/>
+          <argument name="Threshold4" argumenttype="PixelType"/>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+        </arguments>
+      </filter>
+      <filter name="GrayscaleConnectedClosingImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+          <argument name="Seed" argumenttype="SetSeedType" />
+        </arguments>
+      </filter>
+      <filter name="GrayscaleConnectedOpeningImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+          <argument name="Seed" argumenttype="SetSeedType"/>
+        </arguments>
+      </filter>
+      <filter name="GrayscaleDilateImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Kernel" argumenttype="KernelType"/>
+          <argument name="Algorithm" argumenttype="Int" defaultValue="0" minValue="0" maxValue="1"/>
+          <argument name="Boundary" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+      <filter name="GrayscaleErodeImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name ="Kernel" argumenttype="KernelType"/>  
+          <argument name="Algorithm" argumenttype="Int" defaultValue="0" minValue="0" maxValue="1"/>
+          <argument name="Boundary" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+      <filter name="GrayscaleFillholeImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+        </arguments>
+      </filter>
+      <filter name="GrayscaleFunctionDilateImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Kernel" argumenttype="KernelType"/>
+        </arguments>
+      </filter>
+      <filter name="GrayscaleFunctionErodeImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Kernel" argumenttype="KernelType"/>
+        </arguments>
+      </filter>
+      <filter name="GrayscaleGeodesicDilateImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="MarkerImage" nameIsSetter="true"/>
+          <port name="MaskImage" nameIsSetter="true" filterTemplate="false"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+	<arguments>
+          <argument name="RunOneIteration" argumenttype="Bool" defaultValue="false"/>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+        </arguments>
+      </filter>
+      <filter name="GrayscaleGeodesicErodeImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="MarkerImage" nameIsSetter="true"/>
+          <port name="MaskImage" nameIsSetter="true" filterTemplate="false"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="RunOneIteration" argumenttype="Bool" defaultValue="false"/>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+        </arguments>
+      </filter>
+      <filter name="GrayscaleGrindPeakImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+        </arguments>
+      </filter>
+      <filter name="GrayscaleMorphologicalClosingImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Kernel" argumenttype="KernelType"/>  
+          <argument name="Algorithm" argumenttype="Int" defaultValue="0" minValue="0" maxValue="1"/>
+        </arguments>
+      </filter>
+      <filter name="GrayscaleMorphologicalOpeningImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Kernel" argumenttype="KernelType"/>  
+          <argument name="Algorithm" argumenttype="Int" defaultValue="0" minValue="0" maxValue="2"/>
+        </arguments>
+      </filter>
+      <filter name="HConcaveImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+          <argument name="Height" argumenttype="PixelType"/>
+        </arguments>
+      </filter>  
+      <filter name="HConvexImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+          <argument name="Height" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+      <filter name="HMaximaImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+          <argument name="Height" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+      <filter name="HMinimaImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+          <argument name="Height" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+      <filter name="MorphologicalGradientImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Kernel" argumenttype="KernelType"/>
+          <argument name="Algorithm" argumenttype="Int" defaultValue="0" minValue="0" maxValue="1"/>
+        </arguments>
+      </filter>
+      <filter name="MovingHistogramDilateImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Kernel" argumenttype="KernelType"/>
+        </arguments>
+      </filter>
+      <filter name="MovingHistogramErodeImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Kernel" argumenttype="KernelType"/>
+        </arguments>
+      </filter>
+      <filter name="MovingHistogramMorphologicalGradientImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Kernel" argumenttype="KernelType"/>
+        </arguments>
+      </filter>
+      <filter name="OpeningByReconstructionImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Kernel" argumenttype="KernelType"/>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+          <argument name="PreserveIntensities" argumenttype="Bool" defaultValue="false"/>
+        </arguments>
+      </filter>
+      <filter name="ReconstructionByDilationImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="MarkerImage" nameIsSetter="true"/>
+          <port name="MaskImage" nameIsSetter="true" filterTemplate="false"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+        </arguments>
+      </filter>
+      <filter name="ReconstructionByErosionImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="MarkerImage" nameIsSetter="true"/>
+          <port name="MaskImage" nameIsSetter="true" filterTemplate="false"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/>
+        </arguments>
+      </filter>
+      <filter name="WhiteTopHatImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Kernel" argumenttype="KernelType"/>
+        </arguments>
+      </filter>
+    </filterlist>
+  </ITK_Module>
+</VoreenData>

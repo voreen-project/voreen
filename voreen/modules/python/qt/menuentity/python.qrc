@@ -1,0 +1,6 @@
+<!DOCTYPE RCC><RCC version="1.0">
+  <qresource prefix="/modules/python/" >
+    <file>python.png</file>
+    <file>python_2.png</file>
+  </qresource>
+</RCC>

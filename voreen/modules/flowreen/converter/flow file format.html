@@ -1,0 +1,227 @@
+<html>
+<head>
+	<title>Flowreen - .flow file format</title>
+	<style type="text/css">
+	<!--
+		/*table {border-style: solid; border-width: 1px; border-color: #000000}*/
+		td {vertical-align: top;}
+		td.gray {background-color: #DFDFDF;}
+	-->
+	</style>
+</head>
+
+<body>
+	<p align="right">27th October 2009<br>M&uuml;nster, Germany<br><br>Dirk Feldmann<br>dirk.feldmann at uni-muenster.de</p>
+	<h1>.flow file format</h1>
+	
+	<h2>Abstract</h2>
+	<p>In order to keep track of meta-data about a dataset containing flow data, the .flow file format has
+	been introduced for the <em>Flowreen module</em> within <em>Voreen</em>.<br>
+	.flow files consist basically of raw flow data stored as little endian single precision floating point values (floats) and
+	an additional header. This document describes the structure of those files and how to read and write them.</p>
+	
+	<h2>File Format description</h2>
+	<p>The stored data are usually linearized 2D or 3D arrays of floats. The dimension is denoted within the header.
+	The files are (currently) designed to only contain floats and a single timestep of the flow, if it is not stationary
+	and time-dependent.<br>
+	If the flow data already exist in a .raw file, it is sufficient to add a header in order to make them accessible
+	in the <emph>Voreen</emph> engine.<br>
+	The structure of a .flow file in version 2 (current version on creation of this document) is as follows:</p>
+	<table border="1">
+		<tr>
+			<td>file header (37 bytes)</td>
+		</tr>
+		<tr>
+			<td>file content (n bytes of raw data)</td>
+		</tr>
+	</table>
+	<p>The structure of the header for file version 2 in detail is as follows:</p>
+	<table border="1">
+		<tr>
+			<td>start offset (byte)</td>
+			<td>0 (0x00)</td>
+			<td>11 (0x0B)</td>
+			<td>15 (0x0E)</td>
+			<td>19 (0x13)</td>
+			<td>20 (0x14)</td>
+			<td>21 (0x15)</td>
+			<td>25 (0x19)</td>
+			<td>29 (0x1C)</td>
+			<td>33 (0x21)</td>
+		</tr>
+		<tr>
+			<td>purpose</td>
+			<td><b>magic number</b></td>
+			<td><b>file version</b></td>
+			<td><b>dimensions of flow</b></td>
+			<td><b>array linearization order</b></td>
+			<td><b>slice reversal</b></td>
+			<td><b>extent in x-direction</b></td>
+			<td><b>extent in y-direction</b></td>
+			<td><b>extent in z-direction</b></td>
+			<td><b>data size</b> (in bytes)</td>
+		</tr>
+		<tr>
+			<td>size (in bytes)</td>
+			<td>11</td>
+			<td>4</td>
+			<td>4</td>
+			<td>1</td>
+			<td>1</td>
+			<td>4</td>
+			<td>4</td>
+			<td>4</td>
+			<td>4</td>
+		</tr>
+		<tr>
+			<td>data type (C/C++)</td>
+			<td>string (zero-terminated char array)</td>
+			<td>int</td>
+			<td>unsigned int</td>
+			<td>char</td>
+			<td>char</td>
+			<td>unsinged int</td>
+			<td>unsigned int</td>
+			<td>unsigned int</td>
+			<td>unsinged int</td>
+		</tr>
+		<tr>
+			<td>valid values</td>
+			<td>zero-terminated string &quot;VOREENFLOW\0&quot; (without quotation marks)</td>
+			<td>2</td>
+			<td>currently {1, 2, 3}</td>
+			<td>0 - 5 (explanation see below)</td>
+			<td>char {'x' | 'y' | 'z' | '\0'} or numerical value {0x78, 0x79, 0x7A, 0x00}</td>
+			<td>unsigned int value > 0</td>
+			<td>unsigned int value > 0</td>
+			<td>unsigned int value > 0</td>
+			<td>unsinged int value > 0</td>
+		</tr>
+	</table>
+	<p>An example of a valid header in little endian byte order would be (HEX values, char values in brackets)</p>
+	<table border="1">
+			<tr>
+			<td><b>magic number</b></td>
+			<td><b>file version</b></td>
+			<td><b>dimensions of flow</b></td>
+			<td><b>array linearization order</b></td>
+			<td><b>slice reversal</b></td>
+			<td><b>extent in x-direction</b></td>
+			<td><b>extent in y-direction</b></td>
+			<td><b>extent in z-direction</b></td>
+			<td><b>data size in bytes</b></td>
+		</tr>
+		<tr>
+			<td>56 4F 52 45 45 4E 46 4C 4F 57 00 (VOREENFLOW\0)</td>
+			<td>02 00 00 00</td>
+			<td>03 00 00 00</td>
+			<td>01</td>
+			<td>78 (z)</td>
+			<td>80 00 00 00</td>
+			<td>80 00 00 00</td>
+			<td>20 00 00 00</td>
+			<td>00 00 20 00</td>
+		</tr>
+	</table>
+	<p>The described three-dimensional flow has a bounding box of 128x128x32 (X x Y x Z), the 3D array is linearized
+in XZY order (see below) and the order of the z-slices would be reversed when the file is loaded. The size of the data
+results from the size of the bounding volume times the size of one float (usually 4 bytes on x86 machines): 
+128 x 128 x 32 x 4 = 2097152 = 0x200000 bytes.</p>
+	<h2>Details on Header Fields</h2>
+	<table border="1">
+		<tr>
+			<td rowspan="2" class="gray"><h3>magic number</h3></td>
+			<td colspan="2">&nbsp;</td>
+		</tr>
+		<tr>
+			<td><b>description</b></td>
+			<td>The magic number identifies the file format. It must be excatly of the value described above.</td>
+		</tr>
+		<tr><td colspan="3">&nbsp;</td></tr>
+		<tr>
+			<td rowspan="2" class="gray"><h3>file version</h3></td>
+			<td colspan="2">&nbsp;</td>
+		</tr>
+		<tr>
+			<td><b>description</b></td>
+			<td>Indicates the version of this file to assist the file reader. File version 2 is the latest one.
+			In file version 1, the header field <i>slice reversal</i> was missing.</td>
+		</tr>
+		<tr><td colspan="3">&nbsp;</td></tr>
+		<tr>
+			<td rowspan="2" class="gray"><h3>dimensions of flow</h3></td>
+			<td colspan="2">&nbsp;</td>
+		</tr>
+		<tr>
+			<td><b>description</b></td>
+			<td>Indicates the number of dimensions of the flow data. This value is usually 3, maybe 2. Note that
+			the current version of the flow file reader in <em>Voreen</em> can only deal with 3D flows! This
+			field has been primarily introduced for future extensions.</td>
+		</tr>
+		<tr><td colspan="3">&nbsp;</td></tr>
+		<tr>
+			<td rowspan="2" class="gray"><h3>array linearization order</h3></td>
+			<td colspan="2">&nbsp;</td>
+		</tr>
+		<tr>
+			<td><b>description</b></td>
+			<td>Indicates in what order the formerly 3D array has been linearized. There are six possibilities for
+			linearization a 3D array:
+			<ul>
+				<li>XYZ (code 1)</li>
+				<li>XZY (code 0)</li>
+				<li>YXZ (code 2)</li>
+				<li>YZX (code 3)</li>
+				<li>ZXY (code 4)</li>
+				<li>ZYX (code 5)</li>
+			</ul>
+			For instance, code 0 (XZY) means, that the former volumetric data were conceptually slices in the XZ plane whereas the 
+			x-axis is the first and the z-axis the second one, and that the slices where stacked in positive z-direction.<br>
+			<i>Note: there is currently no case covering the linearization of 2D arrays for 2D flows!</i><br>
+			<i>Note: the codes for XYZ and XZY are &quote;swapped&quote; for historical reasons :).</i>
+			</td>
+		</tr>
+		<tr><td colspan="3">&nbsp;</td></tr>
+		<tr>
+			<td rowspan="2" class="gray"><h3>slice reversal</h3></td>
+			<td colspan="2">&nbsp;</td>
+		</tr>
+		<tr>
+			<td><b>description</b></td>
+			<td>It may be useful or necessary to reverse the conceptual slices along a certain direction of an 3D array.
+			This can be achieved by setting the concerned axis in the slice reversal field. For instance, if the orignal
+			array was in order of XYZ, the xy-slices will be reversed on loading the volume into <em>Voreen</em> if the
+			slice reversal field is set to 'z'. Any other of the allowed values is possible, too, depending on the actual
+			data.<br>
+			Slice reversal will be omitted if the field contains the NULL-charactor (0x00).
+			<i>Note: currently only the slice along one axis can be reversed, for it is sufficient in many cases.</i>
+			</td>
+		</tr>
+		<tr><td colspan="3">&nbsp;</td></tr>
+		<tr>
+			<td rowspan="2" class="gray"><h3>extent in {x|y|z}-direction</h3></td>
+			<td colspan="2">&nbsp;</td>
+		</tr>
+		<tr>
+			<td><b>description</b></td>
+			<td>Indicates the extension of the volume's bounding box in x-, y- and z-direction. This is usually the number
+			of elements in the 3D array.
+			</td>
+		</tr>
+		<tr><td colspan="3">&nbsp;</td></tr>
+		<tr>
+			<td rowspan="2" class="gray"><h3>data size</h3></td>
+			<td colspan="2">&nbsp;</td>
+		</tr>
+		<tr>
+			<td><b>description</b></td>
+			<td>Indicates the size of the pending raw data in bytes. For the data are considered to be single precesion floats,
+			the number of bytes is usually the size of one float times number the elements of the data array. This number 
+			is intended to be use for integrity checks and detection of corrupt files. Furthermore, a .flow file reader then
+			knows how many bytes should be left for reading.
+			</td>
+		</tr>
+	</table>
+	<p>&nbsp;</p>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" GlobalDescription="">
+        <ProcessorNetwork version="13">
+            <MetaData>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-252" y="102" />
+                </MetaItem>
+            </MetaData>
+            <Processors>
+                <Processor type="GeometrySource" name="PointListSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-314" y="-47" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="clearGeometry" />
+                        <Property name="geometryFile" noPathSet="false" value="input/geometry/cow-skeleton-pointlist-world.vge" />
+                        <Property name="geometryType" value="geometry" />
+                        <Property name="loadGeometry" />
+                        <Property name="skipItems" value="0" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="geometry.pointlist">
+                            <Properties>
+                                <Property name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="GeometryTransformation" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-430" y="80" />
+                    </MetaData>
+                    <name>
+                        <![CDATA[GeometryTransformation
+disabled]]>
+                    </name>
+                    <Properties>
+                        <Property name="enableProcessing" value="false" />
+                        <Property name="transformMatrix">
+                            <value.row0 x="2" y="0" z="0" w="-1" />
+                            <value.row1 x="0" y="2" z="0" w="0.5" />
+                            <value.row2 x="0" y="0" z="2" w="2" />
+                            <value.row3 x="0" y="0" z="0" w="1" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="geometry.input">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="geometry.output">
+                            <Properties>
+                                <Property name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="GeometryTransformation" name="GeometryTransformation" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-244" y="80" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="enableProcessing" value="true" />
+                        <Property name="transformMatrix">
+                            <value.row0 x="2" y="0" z="0" w="-1" />
+                            <value.row1 x="0" y="2" z="0" w="0.5" />
+                            <value.row2 x="0" y="0" z="2" w="2" />
+                            <value.row3 x="0" y="0" z="0" w="1" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="geometry.input">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="geometry.output">
+                            <Properties>
+                                <Property name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="GeometrySave" name="GeometrySave" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-401" y="191" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="continousSave" value="false" />
+                        <Property name="file" noPathSet="false" value="output/disabled.vge" />
+                        <Property name="save" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="GeometrySave" name="GeometrySave 2" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-221" y="191" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="continousSave" value="false" />
+                        <Property name="file" noPathSet="false" value="output/transformed.vge" />
+                        <Property name="save" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="geometry.pointlist">
+                        <Processor type="GeometrySource" ref="ref0" />
+                    </Outport>
+                    <Inport name="geometry.input">
+                        <Processor type="GeometryTransformation" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="geometry.pointlist">
+                        <Processor type="GeometrySource" ref="ref0" />
+                    </Outport>
+                    <Inport name="geometry.input">
+                        <Processor type="GeometryTransformation" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="geometry.output">
+                        <Processor type="GeometryTransformation" ref="ref1" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="GeometrySave" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="geometry.output">
+                        <Processor type="GeometryTransformation" ref="ref2" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="GeometrySave" ref="ref4" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

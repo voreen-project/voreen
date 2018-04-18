@@ -1,0 +1,38 @@
+# list of core files and directories that should be included in the windows binary distribution
+
+# root
+Changelog.txt
+CREDITS.txt
+LICENSE.txt
+LICENSE-academic.txt
+
+# binaries
+bin/Release/voreenve.exe:./
+
+# shaders
+glsl/*
+
+# data
+data/fonts
+data/networks/
+data/misc
+data/scripts/*
+data/snapshots/
+data/textures
+data/transferfuncs
+data/volumes/*
+data/workspaces/*
+data/workspaces/tools
+
+# documentation
+doc/*
+doc/gettingstarted
+doc/animation
+
+# module xml file
+src/core/coremodule.xml:modules/core
+
+# licenses
+ext/glew/license.txt:licenses/glew
+ext/tinyxml/license.txt:licenses/tinyxml
+ext/tinyobj/license.txt:licenses/tinyobj

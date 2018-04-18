@@ -1,0 +1,24 @@
+The Voreen software package is Copyright (C) 2005-2015 University of Muenster, Germany,
+Visualization and Computer Graphics Group, Department of Computer Science.
+
+You may use, distribute and copy the Voreen software package under the terms
+of the GNU General Public License version 2, see the file "LICENSE.txt".
+
+In addition, as a special exception, the copyright holders of Voreen give you
+permission to copy and distribute a work based on the Voreen software package in
+object code or executable form without the requirement to accompany it with the
+source code, provided that you meet all of these conditions:
+
+a) You use Voreen in an academic environment for research or teaching purposes
+   and distribute it without any monetary gain.
+
+b) You acknowledge the use of Voreen and its authors in your software and the
+   accompanying documentation as well as in any related publication.
+
+If you are unsure if these conditions apply to you, please contact the authors.
+
+Note that people who make modified versions of Voreen are not obligated to grant
+this special exception for their modified versions; it is their choice whether
+to do so. The GNU General Public License gives permission to release a modified
+version without this exception; this exception also makes it possible to release
+a modified version which carries forward this exception.

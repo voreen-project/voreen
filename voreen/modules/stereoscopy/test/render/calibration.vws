@@ -1,0 +1,166 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="17">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-364" y="-3.5" />
+                </MetaItem>
+            </MetaData>
+            <Processors>
+                <Processor type="Background" name="Background" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-473" y="107" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="angle" name="angle" value="60" />
+                        <Property mapKey="backgroundModeAsString" name="backgroundModeAsString" value="gradient" />
+                        <Property mapKey="blendMode" name="blendMode" value="alpha-blending" />
+                        <Property mapKey="color1" name="color1">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="color2" name="color2">
+                            <value x="0.39215699" y="0.39215699" z="0.39215699" w="1" />
+                        </Property>
+                        <Property mapKey="repeat" name="repeat" value="1" />
+                        <Property mapKey="shader.program" name="shader.program" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                        </Property>
+                        <Property mapKey="texture" name="texture">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../tjvoreen/voreen/resource/workspaces" />
+                                    <item value="../../tjvoreen/voreen/resource/workspaces" />
+                                    <item value="D:/voreen_/gitolite/tjvoreen/voreen/resource/workspaces" />
+                                </paths>
+                            </paths>
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.output" direction="0" portID="image.output" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="StereoCanvas" name="StereoCanvas" id="ref1">
+                    <MetaData>
+                        <MetaItem name="AutoStereoscopicFrustum" type="BoolMetaData" value="false" />
+                        <MetaItem name="EyePosition" type="IntMetaData" value="0" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-477" y="207" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="442" y="232" width="512" height="256" />
+                        <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
+                            <value x="321" y="307" />
+                        </MetaItem>
+                        <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
+                            <value x="512" y="256" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="442" y="232" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="512" y="256" />
+                        </MetaItem>
+                        <MetaItem name="preferedNoFullscreenCanvasPosition" type="IVec2MetaData">
+                            <value x="321" y="307" />
+                        </MetaItem>
+                        <MetaItem name="preferedNoFullscreenCanvasSize" type="IVec2MetaData">
+                            <value x="283" y="273" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="anaglyphModeProp" name="anaglyphModeProp" value="redcyan" />
+                        <Property mapKey="autostereoscopicModeProp" name="autostereoscopicModeProp" value="vertical" />
+                        <Property mapKey="calibrateDisplay" name="calibrateDisplay" value="true" />
+                        <Property mapKey="cameraProp" name="cameraProp" projectionMode="2" maxValue="512.5" minValue="0.05" frustLeft="-0.05947748" frustRight="0.0233652" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="514.54998779" fovy="45.00000381" eyeMode="2" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.03151364" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="631" y="342" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <position x="-0.0650683" y="-0.28962356" z="6.80296326" />
+                            <focus x="0.50090057" y="0.01103212" z="0.03908828" />
+                            <upVector x="-0.0244704" y="0.9988032" z="0.04234943" />
+                            <trackball moveCenter="false">
+                                <center x="0.02499998" y="0.02499998" z="0.02499998" />
+                            </trackball>
+                            <sceneLLF x="-1" y="-1" z="-1" />
+                            <sceneURB x="1.04999995" y="1.04999995" z="1.04999995" />
+                        </Property>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="512" y="256" />
+                        </Property>
+                        <Property mapKey="eyeInvertProp" name="eyeInvertProp" value="false" />
+                        <Property mapKey="eyeSeparationProp" name="eyeSeparationProp" value="6.5" />
+                        <Property mapKey="focalLengthProp" name="focalLengthProp" value="60" />
+                        <Property mapKey="focalWidthProp" name="focalWidthProp" value="45" />
+                        <Property mapKey="mouseEvent.move" name="mouseEvent.move" enabled="true" mouseAction="103" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="relativeFocalLengthProp" name="relativeFocalLengthProp" value="0.5" />
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/calibration.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/calibration.png" />
+                                    <item value="D:/voreen_/gitolite/voreen-testdata/voreen-testdata/output/calibration.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                        <Property mapKey="stereoAxisModeProp" name="stereoAxisModeProp" value="onAxis" />
+                        <Property mapKey="stereoModeProp" name="stereoModeProp" value="splitscreen" />
+                        <Property mapKey="useRealWorldFrustum" name="useRealWorldFrustum" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="image.output">
+                        <Processor type="Background" ref="ref0" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="StereoCanvas" ref="ref1" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="StereoCanvas::StereoCanvas">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

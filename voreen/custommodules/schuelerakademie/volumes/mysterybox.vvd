@@ -1,0 +1,307 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Volumes>
+        <Volume>
+            <RawData filename="mysterybox.raw" format="uint8" x="256" y="256" z="256" />
+            <MetaData>
+                <MetaItem name="Offset" type="Vec3MetaData">
+                    <value x="-1" y="-1" z="-1" />
+                </MetaItem>
+                <MetaItem name="Spacing" type="Vec3MetaData">
+                    <value x="0.0078125" y="0.0078125" z="0.0078125" />
+                </MetaItem>
+            </MetaData>
+            <DerivedData>
+                <DerivedItem type="VolumeHash" hash="17c321698edfa88077c7cb549b3f4396" />
+                <DerivedItem type="VolumeMinMax">
+                    <minValues>
+                        <channel value="0" />
+                    </minValues>
+                    <maxValues>
+                        <channel value="1" />
+                    </maxValues>
+                    <minNormValues>
+                        <channel value="0" />
+                    </minNormValues>
+                    <maxNormValues>
+                        <channel value="1" />
+                    </maxNormValues>
+                </DerivedItem>
+                <DerivedItem type="VolumePreview" height="64" prevData="ACAuO0RMVFtiaG9zeHyBhYmMj5KVl5qcnp+hoqOjpKSkpKOjoqGgn52bmZaUkY6Lh4N+enZxa2ZfWFFJQDQnFCAtOURNVV1jam90en6Dh4uPkpWYm56goqOlp6ipqaqqqqqpqainpqSjoZ+cmpeUkY2JhYF8d3JsZmBZUUg/MyUuOURNVl1la3F3fIGGio6SlZmcn6Kkp6iqrK2ur7CxsbGxsLCvrq2rqaelo6CempeUkIyIg355dG5oYVpSST8zO0RNVl5lbHJ4fYOIjJGVmJygoqaoq62vsbKztba3t7e3t7e2tbSzsrCurKmnpKGempaTjoqFgHt1b2liWlJJPkRNVl5lbXN5f4SJjpOXm5+ipqmsrrGztbe4uru8vb2+vr69vLu7ubi2tLKwraqnpKCdmZWQjIeCfHZwaWJaUkhMVV1lbXN5f4WKj5SZnaGlqKyvsbS3ubu9v8DBwsPDxMTEw8LCwb++vLq4trOwraqno5+blpKNiIJ9d3BpYVlQVF1lbHN5gIaLkJaan6Onqq6xtbe6vb/Bw8TGx8jJycrKysnIyMfFxMLAvru5trOwrKiloJyYk46Ig312cGhhWFtja3J5f4aLkZaboKSorLCzt7q9wMLEx8jKzM3Oz8/Q0M/Pzs3My8rIxsTBvry5trKuqqainZiUjoiDfHZvZ19ianF4f4WLkZaboaWprbK2ubzAwsXIyszO0NHT09TV1dXV1dTT0tDPzcvJx8TBvrq3s7Csp6KemZSOiIJ8dG1laG93fYSKkJaboaWqrrK2ur7BxMfKzc/S1NXX2Nna2tvb2tra2djW1NPRzszJxsPAvLm1sayoo56Yk42HgXpza290fIOJj5aboaWqr7O3u7/Dx8rNz9LU19nb3N7e3+Dg4ODg397d29rY1tTRzsvIxcG9uraxraiinpiTjIZ/eHFzeoGIjpSaoKWqr7O4vMHEyMvP0tTX2tze4OHj5OTl5ubl5eTj4uDf3dvZ1tPQzcrGwr66trGtp6Kdl5GLhH12eH6GjJOZn6SprrO4vcHFyc3Q09fZ3N/h4+Xn6Onq6uvr6urp6Ofm5OLg3tvY1dLOy8fDvrq2saynoZuVkImCe3yDipGXnaOorbK3vMHFyc3R1djb3uHk5ujq7O3u7+/v7+/v7u7s6+nn5eLg3dnW08/Lx8O+urWwq6agmpSNh3+Bh46Vm6GnrLK2u8HFyc3S1dnc4OPm6Ovt7+/v7+/v7+/v7+/v7+/u7Orn5OHe29fTz8vHw765tK+ppJ6YkouEhYuSmJ+lqrC2ur/Eyc3S1dnd4eTn6u3v7+/v7+/v7+/v7+/v7+/v7+/u6+nm4t/b19TPy8fCvbiyraeinJWPiImPlZyiqK6zub7DyM3R1dnd4eXo6+7v7+/v7+/v7+/v7+/v7+/v7+/v7+/t6ubj39vX08/KxcG7trGrpZ+ZkouMkpmgpqyxt7zBx8vQ1dnd4eXp7O/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+7q5+Pf29fSzsnEv7q0rqiinJWPj5WcoqmvtbrAxMrP09jc4eXp7O/v7+/v7+/v7/T+///////17+/v7+/v7+/v7urn497a1tHNx8K9t7Gspp+ZkpKYn6assbe9wsfN0tfb4OTo7O/v7+/v7+/v/f//////////////8+/v7+/v7+/u6ubi3dnUz8rFwLq1r6iinJWVm6KorrS6wMXKz9TZ3uPn6+/v7+/v7+/8////////////////////7+/v7+/v7+3p5eDc19LNyMO9t7GrpZ+Xl56kq7G3vcLIzdLX3OHm6u7v7+/v7+/////////////////////////z7+/v7+/v7Ojj39rVz8rFv7q0rqehmpqgp62zub/Eys/U2t/k6O3v7+/v7+////////////////////////////Pv7+/v7+/q5uHc19LNx8K8trCqo5ycoqivtbvBx8zS19zh5uvv7+/v7+/////////////////////////////////v7+/v7ejk3tnUz8rEvriyrKWenqOqsbe9w8jO1Nne4+jt7+/v7+/8////////////////////////////////7+/v7+/q5uDb1tHLxsC6tK2noJ+lrLK4v8TK0NXb4OXq7+/v7+/v/////////////////////////////////+/v7+/v7Oji3djTzcfCu7avqaKhp62zusDGzNHX3OHn7O/v7+/v/f/////////////////////////////////v7+/v7+7p5N/Z1M7Jw723sKqjoqiutbvBx83T2N7j6O3v7+/v7///////////////////////////////////9e/v7+/v6uXg29XQysS+uLKrpKOpr7a8wsjO09ne5Onu7+/v7/T////////////////////////////////////v7+/v7+zm4dzW0MvFv7mzrKWjqbC3vcPJz9Ta3+Tq7+/v7+/+////////////////////////////////////7+/v7+/s5+Lc19HMxsC6s62mpKqxt73Dyc/V2uDl6u/v7+/v/////////////////////////////////////+/v7+/v7eji3dfSzMbAurSup6Sqsbe+xMrQ1dvg5uvv7+/v7//////////////////////////////////////07+/v7+3o497Y0s3Hwbu0rqekqrG3vsTK0NXb4Obr7+/v7+//////////////////////////////////////9O/v7+/u6OPe2NLNx8G7tK6npKqxt77Eys/V2uDl6u/v7+/v//////////////////////////////////////Hv7+/v7eji3dfSzcfBu7Sup6OpsLe9w8nP1drg5erv7+/v7//////////////////////////////////////v7+/v7+3o4t3X0szGwLqzraajqbC2vMLIztTa3+Tp7u/v7+/1////////////////////////////////////7+/v7+/s5+Lc19HLxb+5s62moqivtbvCyM3T2d7j6O7v7+/v7////////////////////////////////////+/v7+/v6+bg29bQy8W+uLKspaGnrrS7wcfM0tjd4ufs7+/v7+////////////////////////////////////Pv7+/v7+rk4NrVz8nEvrexqqSgpq2zub/Fy9DW2+Dm6+/v7+/v8//////////////////////////////////v7+/v7+3o497Z087Iwry2sKmjn6Srsri+xMrP1Nrf5Onu7+/v7+//////////////////////////////////7+/v7+/s5uLc19LMx8G7ta6ooZ2jqbC2vMLIzdPY3eLn7O/v7+/v7////////////////////////////////+/v7+/u6uTg2tXQysW/ubOspp+boaeutLrAxsvR1tvg5eru7+/v7+/z////////////////////////////7+/v7+/v7Ofi3djTzsjDvbexq6SdmZ+lrLK4vsTJztTZ3uLn6+/v7+/v7/P/////////////////////////7+/v7+/v7unk4NvW0czGwbu1r6iim5aco6mwtrvBx8zR1tvg5Ont7+/v7+/v8///////////////////////7+/v7+/v7+vm4t3Z1M/JxL65sqymn5mUmqCnrbO5vsTJztPY3eHm6u7v7+/v7+/v/P/////////////////z7+/v7+/v7+zo5N/a1tHMx8G8trCqpJ2WkZeepKqwtrzBxsvQ1dne4ubq7u/v7+/v7+/v9f////////////Pv7+/v7+/v7+zo5ODc19LOycS+ubOtp6GalI6UmqGnrbO5vsPIzdLW29/j5+ru7+/v7+/v7+/v7+/09PHv7+/v7+/v7+/v7+zp5eHd2dTPysbBu7awqqSel5CLkZeepKqwtrrAxcrO09fb3+Pn6u3v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+zo5eHd2dXQzMfCvbiyraehmpSNh42UmqCnrLK3vMHGy8/T19vf4+bp7O/v7+/v7+/v7+/v7+/v7+/v7+/v7uvo5OHd2dXRzcjEv7q1r6mjnpeRioOJkJado6ius7m9wsfLz9TX297i5ejq7e/v7+/v7+/v7+/v7+/v7+/u7Onm5ODd2dXSzcnEwLu2saymoJqUjYZ+hYyTmZ+lqrC1ur7Dx8vP09fa3eDj5ujq7O7v7+/v7+/v7+/v7+3s6ufk4t/c2dXRzcnFwby3sq2nopyWj4mCeoGIjpWboKassba6vsPHy8/S1tnc3+Hk5ujp6uzs7e3u7e3s6+ro5uTi4N3a19TQzcnFwb24s66oo56YkouEfXZ8g4qQlpyip6yxtrq+w8fKztHU19rc3uDi5OXm5+jo6Ojo5+bk4+Lg3dvZ1tLPzMjEwb24s66ppJ+ZlI2Hf3lxd36FjJKYnaKorbG2ur7CxcnNz9LV19nb3d/g4eLi4+Pi4uLg4N7c2tjW1NHOysfEwLy4s6+qpaCalY+Igntza3J5gIeNk5ieo6itsbW5vcHEx8rNz9LU1tjZ29zc3d7e3d3c29rZ19XT0c/MycbCv7u3s66qpaCblpCKhH12bmZsdHuCiI6UmZ6ip6ywtLi7v8LFyMrNz9HT1NXW19fY2NfX19bV09LQzszJx8TBvbq2sq6ppaCblpGLhX53cGhfZm51fIKIjpSYnqKnq6+ytrq9wMPFx8rLzc7Q0NHS0tLS0tHQz87MysjGxMG+u7i1sa2opKCblpGLhX95cWpiWGBob3Z9g4iOk5idoaaprbG0t7q9v8LExsfJysvMzM3NzczLy8nIx8XDwb68ubayr6yno5+alpGLhoB5cmtkW1FZYWlwd32DiI2Tl5ugpKerrrG1t7q8vsDCw8TFxsbHx8fGxcXEwsG/vbu5trOwrammop6ZlZCLhYB5c2xlXVRJUVpiaXB2fIKHjJGVmp6ipaisr7G0tri6u72+v8DAwcHBwL++vry7ube1srCtqqejoJyYlI+KhX95c21lXlVMQEhSWmJpcHZ8gYaLkJSYnJ+ipqirrrCytLa3uLm6uru7u7q5uLe2tbOxr6yqp6ShnpqWko2IhH55cmxlXlZNQzQ/SVJaYWhvdHp/hImNkpWZnJ+ipaeqrK2vsLKzs7S0tLSzs7KxsK6sq6impKGempeUj4uHgn13cWtlXlZORDknMz9JUllhZ21zeH2Ch4uPkpWZnJ+ho6WnqaqrrK2urq6ura2sqqmopqSin52al5SRjYmEf3t2cGpkXVVNRDktFCUzPkhQWF9la3F2e3+EiIuPkpWXmpyeoKKjpKWmp6enp6ampaSjoZ+dm5mWlJCNioaCfXlzbmhiW1RMQzktHQ==" />
+                <DerivedItem type="VolumeHistogramIntensity">
+                    <histograms>
+                        <channel>
+                            <minValues>
+                                <item value="0" />
+                            </minValues>
+                            <maxValues>
+                                <item value="1" />
+                            </maxValues>
+                            <bucketCounts>
+                                <item value="256" />
+                            </bucketCounts>
+                            <buckets>
+                                <item value="2115042" />
+                                <item value="9708" />
+                                <item value="9774" />
+                                <item value="10232" />
+                                <item value="10070" />
+                                <item value="10920" />
+                                <item value="11048" />
+                                <item value="11664" />
+                                <item value="11724" />
+                                <item value="12800" />
+                                <item value="12724" />
+                                <item value="13248" />
+                                <item value="13532" />
+                                <item value="14056" />
+                                <item value="14622" />
+                                <item value="15530" />
+                                <item value="15542" />
+                                <item value="16574" />
+                                <item value="17132" />
+                                <item value="17392" />
+                                <item value="18284" />
+                                <item value="18615" />
+                                <item value="19376" />
+                                <item value="20184" />
+                                <item value="20744" />
+                                <item value="21452" />
+                                <item value="21784" />
+                                <item value="22528" />
+                                <item value="23028" />
+                                <item value="23928" />
+                                <item value="24460" />
+                                <item value="25480" />
+                                <item value="25996" />
+                                <item value="27192" />
+                                <item value="26840" />
+                                <item value="28784" />
+                                <item value="28640" />
+                                <item value="30304" />
+                                <item value="31076" />
+                                <item value="32248" />
+                                <item value="33524" />
+                                <item value="34808" />
+                                <item value="36280" />
+                                <item value="37468" />
+                                <item value="38232" />
+                                <item value="39404" />
+                                <item value="42036" />
+                                <item value="42400" />
+                                <item value="42828" />
+                                <item value="44172" />
+                                <item value="45552" />
+                                <item value="45480" />
+                                <item value="47220" />
+                                <item value="48004" />
+                                <item value="49756" />
+                                <item value="49748" />
+                                <item value="51840" />
+                                <item value="51916" />
+                                <item value="53356" />
+                                <item value="54364" />
+                                <item value="55052" />
+                                <item value="55200" />
+                                <item value="57864" />
+                                <item value="57560" />
+                                <item value="57844" />
+                                <item value="59360" />
+                                <item value="60284" />
+                                <item value="60484" />
+                                <item value="61284" />
+                                <item value="62728" />
+                                <item value="64852" />
+                                <item value="62544" />
+                                <item value="64496" />
+                                <item value="66024" />
+                                <item value="66596" />
+                                <item value="64752" />
+                                <item value="69720" />
+                                <item value="68380" />
+                                <item value="69468" />
+                                <item value="70000" />
+                                <item value="71284" />
+                                <item value="70644" />
+                                <item value="71324" />
+                                <item value="74076" />
+                                <item value="73836" />
+                                <item value="72896" />
+                                <item value="75708" />
+                                <item value="76648" />
+                                <item value="75648" />
+                                <item value="75488" />
+                                <item value="78524" />
+                                <item value="78152" />
+                                <item value="78648" />
+                                <item value="79128" />
+                                <item value="80516" />
+                                <item value="80948" />
+                                <item value="80784" />
+                                <item value="81632" />
+                                <item value="82232" />
+                                <item value="84416" />
+                                <item value="83900" />
+                                <item value="85496" />
+                                <item value="84168" />
+                                <item value="84684" />
+                                <item value="87344" />
+                                <item value="85852" />
+                                <item value="86356" />
+                                <item value="88868" />
+                                <item value="88712" />
+                                <item value="88116" />
+                                <item value="89448" />
+                                <item value="89920" />
+                                <item value="89324" />
+                                <item value="90464" />
+                                <item value="91224" />
+                                <item value="91992" />
+                                <item value="92204" />
+                                <item value="92420" />
+                                <item value="93880" />
+                                <item value="93884" />
+                                <item value="92520" />
+                                <item value="95204" />
+                                <item value="95460" />
+                                <item value="94588" />
+                                <item value="96380" />
+                                <item value="95292" />
+                                <item value="96444" />
+                                <item value="96583" />
+                                <item value="94628" />
+                                <item value="94520" />
+                                <item value="94272" />
+                                <item value="93000" />
+                                <item value="93324" />
+                                <item value="91412" />
+                                <item value="90600" />
+                                <item value="91380" />
+                                <item value="90264" />
+                                <item value="88436" />
+                                <item value="89288" />
+                                <item value="89036" />
+                                <item value="88532" />
+                                <item value="86964" />
+                                <item value="88856" />
+                                <item value="85584" />
+                                <item value="87064" />
+                                <item value="86980" />
+                                <item value="84376" />
+                                <item value="85748" />
+                                <item value="85320" />
+                                <item value="85572" />
+                                <item value="83076" />
+                                <item value="83884" />
+                                <item value="83320" />
+                                <item value="82740" />
+                                <item value="82240" />
+                                <item value="79944" />
+                                <item value="81556" />
+                                <item value="80092" />
+                                <item value="78468" />
+                                <item value="79336" />
+                                <item value="78376" />
+                                <item value="76060" />
+                                <item value="77360" />
+                                <item value="74548" />
+                                <item value="76912" />
+                                <item value="73908" />
+                                <item value="73488" />
+                                <item value="73732" />
+                                <item value="71748" />
+                                <item value="72228" />
+                                <item value="69636" />
+                                <item value="71404" />
+                                <item value="68564" />
+                                <item value="69176" />
+                                <item value="68568" />
+                                <item value="66952" />
+                                <item value="67104" />
+                                <item value="65844" />
+                                <item value="64956" />
+                                <item value="65048" />
+                                <item value="63716" />
+                                <item value="64476" />
+                                <item value="62192" />
+                                <item value="63344" />
+                                <item value="60548" />
+                                <item value="61472" />
+                                <item value="58784" />
+                                <item value="61276" />
+                                <item value="58044" />
+                                <item value="59068" />
+                                <item value="57912" />
+                                <item value="57224" />
+                                <item value="56864" />
+                                <item value="55816" />
+                                <item value="54584" />
+                                <item value="54888" />
+                                <item value="53308" />
+                                <item value="55656" />
+                                <item value="51664" />
+                                <item value="52020" />
+                                <item value="51456" />
+                                <item value="51976" />
+                                <item value="49284" />
+                                <item value="49944" />
+                                <item value="49828" />
+                                <item value="49580" />
+                                <item value="48432" />
+                                <item value="46788" />
+                                <item value="48296" />
+                                <item value="45212" />
+                                <item value="45900" />
+                                <item value="46320" />
+                                <item value="44100" />
+                                <item value="44564" />
+                                <item value="43844" />
+                                <item value="42752" />
+                                <item value="42096" />
+                                <item value="42752" />
+                                <item value="41596" />
+                                <item value="40032" />
+                                <item value="40528" />
+                                <item value="40556" />
+                                <item value="39140" />
+                                <item value="38988" />
+                                <item value="38840" />
+                                <item value="37408" />
+                                <item value="37872" />
+                                <item value="35996" />
+                                <item value="37832" />
+                                <item value="1056608" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                                <item value="0" />
+                            </buckets>
+                        </channel>
+                    </histograms>
+                </DerivedItem>
+            </DerivedData>
+        </Volume>
+    </Volumes>
+</VoreenData>

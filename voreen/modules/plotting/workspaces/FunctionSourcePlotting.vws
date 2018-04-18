@@ -1,0 +1,146 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2">
+        <VolumeContainer>
+            <VolumeHandles />
+        </VolumeContainer>
+        <ScriptManagerLinking>
+            <pythonFunctionScriptMap />
+        </ScriptManagerLinking>
+        <ProcessorNetwork version="6">
+            <MetaData>
+                <MetaItem name="ProcessorSelection" type="SelectionMetaData::Processor">
+                    <values>
+                        <item type="LinePlot" ref="ref0" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="Zoom" type="ZoomMetaData">
+                    <transform.row0 x="1.4174113273620605" y="0" z="0" />
+                    <transform.row1 x="0" y="1.4174113273620605" z="0" />
+                    <transform.row2 x="41.273918151855469" y="22.724315643310547" z="1" />
+                </MetaItem>
+            </MetaData>
+            <Processors>
+                <Processor type="LinePlot" name="LinePlot" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="9" y="-61" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="axesWidth" value="1" />
+                        <Property name="descreteStep" value="50" />
+                        <Property name="enablePicking" value="true" />
+                        <Property name="enterExitEvent" lod="1" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="highlight" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="highlightColor">
+                            <value x="1" y="0.89999998" z="0.80000001" w="1" />
+                        </Property>
+                        <Property name="label" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property name="lineWidth" value="2" />
+                        <Property name="logXAxes" value="false" />
+                        <Property name="logYAxes" value="false" />
+                        <Property name="marginBottom" value="50" />
+                        <Property name="marginLeft" value="60" />
+                        <Property name="marginRight" value="100" />
+                        <Property name="marginTop" value="50" />
+                        <Property name="mousePositionUpdate" lod="1" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="plotDataTable" />
+                        <Property name="plotEntitiesProperty" guiName="Line Selection" entities="0" xCI="0" yCI="-1">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="-886" y="488" />
+                            </MetaData>
+                            <colorMap name="Visifire 1">
+                                <colors>
+                                    <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                    <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                    <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                    <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                    <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                    <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                    <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                    <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                    <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                    <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                    <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                    <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                    <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                    <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                    <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                </colors>
+                            </colorMap>
+                            <plotEntitySettingsVector />
+                        </Property>
+                        <Property name="plotLabel" value="" />
+                        <Property name="pointSize" value="1.85000002" />
+                        <Property name="renderAxes" value="true" />
+                        <Property name="renderLineLabel" value="false" />
+                        <Property name="renderMousePosition" value="true" />
+                        <Property name="renderScales" value="true" />
+                        <Property name="renderXHelperLines" value="true" />
+                        <Property name="renderYHelperLines" value="false" />
+                        <Property name="selectionPlaneColor">
+                            <value x="0.40000001" y="0.40000001" z="0.40000001" w="0.40000001" />
+                        </Property>
+                        <Property name="selectionProperty">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="-812" y="597" />
+                            </MetaData>
+                            <values />
+                        </Property>
+                        <Property name="unhighlight" lod="1" enabled="true" mouseAction="15" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="unlabel" lod="1" enabled="true" mouseAction="15" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property name="unzoom" lod="1" enabled="true" mouseAction="15" mouseButtons="4" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property name="xLabel" value="x axis" />
+                        <Property name="xScaleStep" value="40" />
+                        <Property name="yLabel" value="y axis" />
+                        <Property name="yScaleStep" value="43" />
+                        <Property name="zoom" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-4" y="111" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="192" y="636" width="256" height="256" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize">
+                            <value x="256" y="256" />
+                        </Property>
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="PlotFunctionSource" name="PlotFunctionSource" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="37" y="-236" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="Calculate" />
+                        <Property name="functionInput_" value="5*x" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="LinePlot" ref="ref0" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="PlotFunctionOutPort">
+                        <Processor type="PlotFunctionSource" ref="ref2" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="LinePlot" ref="ref0" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

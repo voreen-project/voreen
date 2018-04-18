@@ -1,0 +1,183 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="17">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="Canvas" ref="ref1" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="25" y="-85" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="2.58461547" />
+            </MetaData>
+            <Processors>
+                <Processor type="Pong" name="Pong" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-25" y="-115" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="ballSize" name="ballSize" value="0.05" />
+                        <Property mapKey="color" name="color">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="computerOpponent1" name="computerOpponent1" value="false" />
+                        <Property mapKey="computerOpponent2" name="computerOpponent2" value="false" />
+                        <Property mapKey="crazyMode" name="crazyMode" value="false" />
+                        <Property mapKey="opacity" name="opacity" value="1" />
+                        <Property mapKey="paddleAutoSpeed" name="paddleAutoSpeed" value="5" />
+                        <Property mapKey="paddleHeight" name="paddleHeight" value="0.2" />
+                        <Property mapKey="paddleWidth" name="paddleWidth" value="0.04" />
+                        <Property mapKey="randomFac" name="randomFac" value="1" />
+                        <Property mapKey="resetGame" name="resetGame" />
+                        <Property mapKey="shader.program" name="shader.program">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="0" y="0" width="700" height="700" />
+                            </MetaData>
+                            <components>
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                            </components>
+                        </Property>
+                        <Property mapKey="speedFac" name="speedFac" value="2" />
+                        <Property mapKey="xmasMode" name="xmasMode" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.in" direction="1" portID="image.in" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.in.renderSizeOrigin" name="image.in.renderSizeOrigin">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.out" direction="0" portID="image.out" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="image.out.renderSizeReceive" name="image.out.renderSizeReceive" id="ref4">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageSource" name="ImageSource" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-29" y="-215" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clearButton" name="clearButton" />
+                        <Property mapKey="imageFile" name="imageFile">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/images/walnut.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/input/images/walnut.png" />
+                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/input/images/walnut.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="imageSize" name="imageSize">
+                            <value x="512" y="512" />
+                        </Property>
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="image.out" direction="0" portID="image.out" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-25" y="-15" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="90" y="240" width="256" height="256" />
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="88" y="240" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="256" y="256" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="256" y="256" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/pong.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/pong.png" />
+                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/pong.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref3">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="Pong" ref="ref0" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref2" />
+                    </Outport>
+                    <Inport name="image.in">
+                        <Processor type="Pong" ref="ref0" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks>
+                <PropertyLink>
+                    <SourceProperty ref="ref3" />
+                    <DestinationProperty ref="ref4" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+            </PropertyLinks>
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="Canvas::Canvas">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

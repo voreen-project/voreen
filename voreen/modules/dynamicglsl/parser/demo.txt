@@ -1,0 +1,36 @@
+#include "modules/dynamicglsl/parser/glslprogram.h"
+
+#include <iostream>
+
+using voreen;
+using voreen::glslparser;
+
+void testGLSL(const std::string& fileName) {
+    std::cout << "Parsing...\n";
+
+    GLSLProgram glsl(fileName);
+    glsl.setShaderHeader("#define SAMPLER2D_TYPE sampler2D\n");
+    if (glsl.parse()) {
+        const std::vector<GLSLVariableSymbol*>& uniforms = glsl.getUniformDeclarations();
+        for (size_t i = 0; i < uniforms.size(); ++i) {
+            std::cout << "uniform '" << uniforms[i]->getID() << "':\n";
+            std::cout << "  internal type = '" << uniforms[i]->getInternalType() << "', ";
+            std::cout << ", number of internals = '" << uniforms[i]->getNumInternalElements() << "\n";
+            std::cout << "  annotations:\n";
+            const std::vector<GLSLAnnotation*>& annotations = uniforms[i]->getAnnotations();
+            for (size_t j = 0; j < annotations.size(); ++j) {
+                std::cout << "    lable = " << annotations[j]->getName();
+                std::cout << ", value = " << annotations[j]->getValueString() << "\n";
+            }
+            std::cout << "\n";
+        }
+    } else
+        std::cout << glsl.getLog().str();
+}
+
+void main() {
+    //std::string fileName = "D:\\voreen\\src\\core\\vis\\glsl\\pp_binary.frag";
+    std::string fileName = "D:\\voreen\\src\\core\\vis\\glsl\\rc_simple.frag";
+    
+    testGLSL(fileName);
+}

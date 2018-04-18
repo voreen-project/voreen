@@ -1,0 +1,475 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" GlobalDescription="">
+        <ProcessorNetwork version="13">
+            <MetaData>
+                <MetaItem name="ProcessorSelection" type="SelectionMetaData::Processor">
+                    <values>
+                        <item type="SurfacePlot" ref="ref2" />
+                    </values>
+                </MetaItem>
+            </MetaData>
+            <Processors>
+                <Processor type="PlotDataSource" name="PlotDataSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-223" y="-217" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="Separator" value=";" />
+                        <Property name="constantOrder" value="false" />
+                        <Property name="countKeyColumn" value="1" />
+                        <Property name="countLine" value="1" />
+                        <Property name="inputFile" noPathSet="false" value="input/plotting/data_sincos.csv" />
+                        <Property name="recalculate" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="PlotDataOutPort">
+                            <Properties />
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="SurfacePlot" name="SurfacePlot" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-286" y="-108" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="false" x="33" y="33" width="256" height="140" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="axesWidth" value="1.5" />
+                        <Property name="camera" adjustProjectionToViewport="true" projectionMode="1" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="50" fovy="45" id="ref7">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="2147" y="368" />
+                            </MetaData>
+                            <position x="-0.80363709" y="0.36264667" z="0.47186309" />
+                            <focus x="0" y="0" z="0" />
+                            <upVector x="0" y="0" z="1" />
+                        </Property>
+                        <Property name="descreteStep" value="50" tracking="false" />
+                        <Property name="enablePicking" value="true" />
+                        <Property name="enterExitEvent" lod="1" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="fileProp" noPathSet="true" value="" />
+                        <Property name="highlight" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="highlightAdditive" lod="1" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="highlightColor">
+                            <value x="1" y="0.89999998" z="0.80000001" w="1" />
+                        </Property>
+                        <Property name="label" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property name="labelAdditive" lod="1" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property name="mousePositionUpdate" lod="1" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="orthographicCamera" value="true" />
+                        <Property name="pLVPC" value="true" />
+                        <Property name="plotDataTable">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="310" y="417" />
+                            </MetaData>
+                        </Property>
+                        <Property name="plotEntitiesProperty" guiName="Surface Data" entities="2" xCI="0" yCI="1" loadStrategy="0">
+                            <colorMap name="Visifire 1">
+                                <colors>
+                                    <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                    <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                    <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                    <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                    <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                    <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                    <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                    <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                    <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                    <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                    <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                    <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                    <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                    <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                    <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                </colors>
+                            </colorMap>
+                            <plotEntitySettingsVector>
+                                <plotEntitySettings entity="2" mainColumnIndex="2" candleTopColumnIndex="0" candleBottomColumnIndex="0" stickTopColumnIndex="0" stickBottomColumnIndex="0" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                    <secondColor x="0" y="0" z="0" w="1" />
+                                </plotEntitySettings>
+                            </plotEntitySettingsVector>
+                        </Property>
+                        <Property name="plotLabel" value="Surface 1" />
+                        <Property name="plotLabelColor">
+                            <value x="0" y="0" z="0" w="1" />
+                        </Property>
+                        <Property name="plotLabelSize" value="15" />
+                        <Property name="renderAxes" value="true" />
+                        <Property name="renderLegend" value="false" />
+                        <Property name="renderMousePosition" value="true" />
+                        <Property name="renderScales" value="true" />
+                        <Property name="renderXHelperLines" value="true" />
+                        <Property name="renderYHelperLines" value="true" />
+                        <Property name="renderZHelperLines" value="true" />
+                        <Property name="selectionPlaneColor">
+                            <value x="0.40000001" y="0.40000001" z="0.40000001" w="0.40000001" />
+                        </Property>
+                        <Property name="selectionProperty" threeDimensional="true" id="ref6">
+                            <values />
+                        </Property>
+                        <Property name="updateFile" />
+                        <Property name="xLabel" value="x axis" />
+                        <Property name="xLabelOption" value="user" />
+                        <Property name="xScaleStep" value="70" />
+                        <Property name="yLabel" value="y axis" />
+                        <Property name="yLabelOption" value="user" />
+                        <Property name="yScaleStep" value="70" />
+                        <Property name="zLabel" value="z axis" />
+                        <Property name="zLabelOption" value="user" />
+                        <Property name="zScaleStep" value="70" />
+                        <Property name="zoom" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property name="zoomAdditive" lod="1" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="1" shareEvents="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport">
+                            <Properties>
+                                <Property name="outport.renderSizeReceive" id="ref12">
+                                    <value x="772" y="601" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers>
+                        <Handler name="cameraHandler">
+                            <Properties>
+                                <Property name="cameraHandler.adjustCamera" value="bigsizechange" />
+                                <Property name="cameraHandler.interactionMetaphor" value="trackball" />
+                                <Property name="cameraHandler.moveBackward" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveDown" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveForward" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveLeft" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveRight" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveUp" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.resetTrackballCenter" />
+                                <Property name="cameraHandler.rotate" lod="1" enabled="false" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.shift" lod="1" enabled="false" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property name="cameraHandler.shiftTrackballCenter" value="scenecenter" />
+                                <Property name="cameraHandler.wheelZoom" lod="1" enabled="false" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.zoom" lod="1" enabled="false" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                        <Handler name="plotCameraHandler">
+                            <Properties>
+                                <Property name="plotCameraHandler.rotate" lod="1" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+                <Processor type="Canvas" name="Canvas" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-285" y="0" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="53" y="97" width="772" height="601" />
+                        <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
+                            <value x="99" y="136" />
+                        </MetaItem>
+                        <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
+                            <value x="772" y="601" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" id="ref9">
+                            <value x="772" y="601" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" noPathSet="false" value="output/canvas.jpg" />
+                        <Property name="showCursor" value="true" />
+                        <Property name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input">
+                            <Properties>
+                                <Property name="image.input.renderSizeOrigin" id="ref11">
+                                    <value x="772" y="601" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="SurfacePlot" name="SurfacePlot 2" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-128" y="-107" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="false" x="33" y="33" width="256" height="140" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="axesWidth" value="1.5" />
+                        <Property name="camera" adjustProjectionToViewport="true" projectionMode="1" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="50" fovy="45" id="ref8">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="-1049" y="342" />
+                            </MetaData>
+                            <position x="-0.80363709" y="0.36264667" z="0.47186309" />
+                            <focus x="0" y="0" z="0" />
+                            <upVector x="0" y="0" z="1" />
+                        </Property>
+                        <Property name="descreteStep" value="32" tracking="false" />
+                        <Property name="enablePicking" value="true" />
+                        <Property name="enterExitEvent" lod="1" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="fileProp" noPathSet="true" value="" />
+                        <Property name="highlight" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="highlightAdditive" lod="1" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="highlightColor">
+                            <value x="1" y="0.89999998" z="0.80000001" w="1" />
+                        </Property>
+                        <Property name="label" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property name="labelAdditive" lod="1" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property name="mousePositionUpdate" lod="1" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property name="orthographicCamera" value="true" />
+                        <Property name="pLVPC" value="true" />
+                        <Property name="plotDataTable">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="310" y="417" />
+                            </MetaData>
+                        </Property>
+                        <Property name="plotEntitiesProperty" guiName="Surface Data" entities="2" xCI="0" yCI="1" loadStrategy="0">
+                            <colorMap name="Visifire 1">
+                                <colors>
+                                    <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                    <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                    <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                    <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                    <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                    <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                    <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                    <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                    <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                    <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                    <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                    <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                    <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                    <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                    <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                </colors>
+                            </colorMap>
+                            <plotEntitySettingsVector>
+                                <plotEntitySettings entity="2" mainColumnIndex="2" candleTopColumnIndex="0" candleBottomColumnIndex="0" stickTopColumnIndex="0" stickBottomColumnIndex="0" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="true" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
+                                    <colorMap name="Visifire 1">
+                                        <colors>
+                                            <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                            <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                            <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                            <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                            <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                            <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                            <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                            <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                            <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                            <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                            <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                            <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                            <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                            <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                        </colors>
+                                    </colorMap>
+                                    <firstColor x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                    <secondColor x="0" y="0" z="0" w="1" />
+                                </plotEntitySettings>
+                            </plotEntitySettingsVector>
+                        </Property>
+                        <Property name="plotLabel" value="Surface 2" />
+                        <Property name="plotLabelColor">
+                            <value x="0" y="0" z="0" w="1" />
+                        </Property>
+                        <Property name="plotLabelSize" value="14" />
+                        <Property name="renderAxes" value="false" />
+                        <Property name="renderLegend" value="false" />
+                        <Property name="renderMousePosition" value="false" />
+                        <Property name="renderScales" value="false" />
+                        <Property name="renderXHelperLines" value="false" />
+                        <Property name="renderYHelperLines" value="false" />
+                        <Property name="renderZHelperLines" value="false" />
+                        <Property name="selectionPlaneColor">
+                            <value x="0.40000001" y="0.40000001" z="0.40000001" w="0.40000001" />
+                        </Property>
+                        <Property name="selectionProperty" threeDimensional="true" id="ref5">
+                            <values />
+                        </Property>
+                        <Property name="updateFile" />
+                        <Property name="xLabel" value="x axis" />
+                        <Property name="xLabelOption" value="user" />
+                        <Property name="xScaleStep" value="40" />
+                        <Property name="yLabel" value="y axis" />
+                        <Property name="yLabelOption" value="user" />
+                        <Property name="yScaleStep" value="40" />
+                        <Property name="zLabel" value="z axis" />
+                        <Property name="zLabelOption" value="user" />
+                        <Property name="zScaleStep" value="40" />
+                        <Property name="zoom" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property name="zoomAdditive" lod="1" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="1" shareEvents="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport">
+                            <Properties>
+                                <Property name="outport.renderSizeReceive" id="ref14">
+                                    <value x="772" y="601" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers>
+                        <Handler name="cameraHandler">
+                            <Properties>
+                                <Property name="cameraHandler.adjustCamera" value="bigsizechange" />
+                                <Property name="cameraHandler.interactionMetaphor" value="trackball" />
+                                <Property name="cameraHandler.moveBackward" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveDown" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveForward" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveLeft" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveRight" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveUp" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.resetTrackballCenter" />
+                                <Property name="cameraHandler.rotate" lod="1" enabled="false" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.shift" lod="1" enabled="false" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property name="cameraHandler.shiftTrackballCenter" value="scenecenter" />
+                                <Property name="cameraHandler.wheelZoom" lod="1" enabled="false" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.zoom" lod="1" enabled="false" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                        <Handler name="plotCameraHandler">
+                            <Properties>
+                                <Property name="plotCameraHandler.rotate" lod="1" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+                <Processor type="Canvas" name="Canvas 2" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-126" y="0" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="156" y="218" width="772" height="601" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" id="ref10">
+                            <value x="772" y="601" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" noPathSet="false" value="output/canvas2.jpg" />
+                        <Property name="showCursor" value="true" />
+                        <Property name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input">
+                            <Properties>
+                                <Property name="image.input.renderSizeOrigin" id="ref13">
+                                    <value x="772" y="601" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="PlotDataOutPort">
+                        <Processor type="PlotDataSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="SurfacePlot" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="PlotDataOutPort">
+                        <Processor type="PlotDataSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="SurfacePlot" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="SurfacePlot" ref="ref1" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="SurfacePlot" ref="ref2" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref4" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks>
+                <PropertyLink>
+                    <SourceProperty ref="ref5" />
+                    <DestinationProperty ref="ref6" />
+                    <Evaluator type="LinkEvaluatorPlotSelection" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref7" />
+                    <DestinationProperty type="CameraProperty" ref="ref8" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref8" />
+                    <DestinationProperty type="CameraProperty" ref="ref7" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref6" />
+                    <DestinationProperty ref="ref5" />
+                    <Evaluator type="LinkEvaluatorPlotSelection" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref9" />
+                    <DestinationProperty type="IntVec2Property" ref="ref10" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref10" />
+                    <DestinationProperty type="IntVec2Property" ref="ref9" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref11" />
+                    <DestinationProperty ref="ref12" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref13" />
+                    <DestinationProperty ref="ref14" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+            </PropertyLinks>
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

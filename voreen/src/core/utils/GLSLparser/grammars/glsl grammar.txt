@@ -1,0 +1,315 @@
+Terminals:
+ID 45:	?
+ID 147:	FIELD-SELECTION
+ID 144:	FLOATCONSTANT
+ID 142:	IDENTIFIER
+ID 145:	INTCONSTANT
+ID 149:	LEADING-ANNOTATION
+ID 148:	NATIVE-TYPE
+ID 150:	TRAILING-ANNOTATION
+ID 143:	TYPE-NAME
+ID 146:	UINTCONSTANT
+ID 24:	[
+ID 25:	]
+ID 43:	^
+ID 21:	^=
+ID 11:	^^
+ID 46:	attribute
+ID 71:	break
+ID 68:	case
+ID 53:	centroid
+ID 47:	const
+ID 72:	continue
+ID 69:	default
+ID 73:	discard
+ID 63:	do
+ID 64:	else
+ID 76:	false
+ID 56:	flat
+ID 65:	for
+ID 60:	highp
+ID 66:	if
+ID 48:	in
+ID 49:	inout
+ID 54:	invariant
+ID 55:	layout
+ID 59:	lowp
+ID 61:	mediump
+ID 58:	noperspective
+ID 50:	out
+ID 62:	precision
+ID 35:	!
+ID 8:	!=
+ID 41:	%
+ID 18:	%=
+ID 44:	&
+ID 9:	&&
+ID 19:	&=
+ID 22:	(
+ID 23:	)
+ID 39:	*
+ID 16:	*=
+ID 38:	+
+ID 3:	++
+ID 14:	+=
+ID 31:	,
+ID 36:	-
+ID 4:	--
+ID 17:	-=
+ID 30:	.
+ID 40:	/
+ID 15:	/=
+ID 32:	:
+ID 33:	;
+ID 28:	<
+ID 1:	<<
+ID 12:	<<=
+ID 5:	<=
+ID 34:	=
+ID 7:	==
+ID 29:	>
+ID 6:	>=
+ID 2:	>>
+ID 13:	>>=
+ID 74:	return
+ID 57:	smooth
+ID 75:	struct
+ID 70:	switch
+ID 77:	true
+ID 51:	uniform
+ID 52:	varying
+ID 78:	void
+ID 67:	while
+ID 26:	{
+ID 42:	|
+ID 20:	|=
+ID 10:	||
+ID 27:	}
+ID 37:	~
+ID 151:	RESERVED-KEYWORD
+
+Productions:
+ID  0:	[$START$] ::= [program]
+ID  86:	[additive-expression] ::= [multiplicative-expression]
+ID  87:	[additive-expression] ::= [additive-expression] + [multiplicative-expression]
+ID  88:	[additive-expression] ::= [additive-expression] - [multiplicative-expression]
+ID  100:	[and-expression] ::= [equality-expression]
+ID  101:	[and-expression] ::= [and-expression] & [equality-expression]
+ID  114:	[assignment-expression] ::= [conditional-expression]
+ID  115:	[assignment-expression] ::= [unary-expression] = [assignment-expression]
+ID  116:	[assignment-expression] ::= [unary-expression] *= [assignment-expression]
+ID  117:	[assignment-expression] ::= [unary-expression] /= [assignment-expression]
+ID  118:	[assignment-expression] ::= [unary-expression] %= [assignment-expression]
+ID  119:	[assignment-expression] ::= [unary-expression] += [assignment-expression]
+ID  120:	[assignment-expression] ::= [unary-expression] -= [assignment-expression]
+ID  121:	[assignment-expression] ::= [unary-expression] <<= [assignment-expression]
+ID  122:	[assignment-expression] ::= [unary-expression] >>= [assignment-expression]
+ID  123:	[assignment-expression] ::= [unary-expression] &= [assignment-expression]
+ID  124:	[assignment-expression] ::= [unary-expression] ^= [assignment-expression]
+ID  125:	[assignment-expression] ::= [unary-expression] |= [assignment-expression]
+ID  35:	[case-label] ::= case [expression] :
+ID  36:	[case-label] ::= default :
+ID  17:	[compound-statement] ::= { }
+ID  18:	[compound-statement] ::= { [statement-list] }
+ID  23:	[compound-statement-no-new-scope] ::= { }
+ID  24:	[compound-statement-no-new-scope] ::= { [statement-list] }
+ID  31:	[condition] ::= [expression]
+ID  32:	[condition] ::= [fully-specified-type] IDENTIFIER = [initializer]
+ID  112:	[conditional-expression] ::= [logical-or-expression]
+ID  113:	[conditional-expression] ::= [logical-or-expression] ? [expression] : [assignment-expression]
+ID  128:	[constant-expression] ::= [conditional-expression]
+ID  132:	[declaration] ::= [function-prototype] ;
+ID  133:	[declaration] ::= [init-declarator-list] ;
+ID  134:	[declaration] ::= precision [precision-qualifier] [type-specifier-no-prec] ;
+ID  135:	[declaration] ::= [type-qualifier] IDENTIFIER { [struct-declaration-list] } ;
+ID  136:	[declaration] ::= [type-qualifier] IDENTIFIER { [struct-declaration-list] } IDENTIFIER ;
+ID  137:	[declaration] ::= [type-qualifier] IDENTIFIER { [struct-declaration-list] } IDENTIFIER [ ] ;
+ID  138:	[declaration] ::= [type-qualifier] IDENTIFIER { [struct-declaration-list] } IDENTIFIER [ [constant-expression] ] ;
+ID  139:	[declaration] ::= [type-qualifier] ;
+ID  19:	[declaration-statement] ::= [declaration]
+ID  20:	[declaration-statement] ::= [enhanced-declaration]
+ID  129:	[enhanced-declaration] ::= LEADING-ANNOTATION [declaration]
+ID  130:	[enhanced-declaration] ::= [declaration] TRAILING-ANNOTATION
+ID  131:	[enhanced-declaration] ::= LEADING-ANNOTATION [declaration] TRAILING-ANNOTATION
+ID  97:	[equality-expression] ::= [relational-expression]
+ID  98:	[equality-expression] ::= [equality-expression] == [relational-expression]
+ID  99:	[equality-expression] ::= [equality-expression] != [relational-expression]
+ID  102:	[exclusive-or-expression] ::= [and-expression]
+ID  103:	[exclusive-or-expression] ::= [exclusive-or-expression] ^ [and-expression]
+ID  126:	[expression] ::= [assignment-expression]
+ID  127:	[expression] ::= [expression] , [assignment-expression]
+ID  27:	[expression-statement] ::= ;
+ID  28:	[expression-statement] ::= [expression] ;
+ID  4:	[external-declaration] ::= [function-definition]
+ID  5:	[external-declaration] ::= [declaration]
+ID  6:	[external-declaration] ::= [enhanced-declaration]
+ID  40:	[for-init-statement] ::= [expression-statement]
+ID  41:	[for-init-statement] ::= [declaration-statement]
+ID  42:	[for-rest-statement] ::= ;
+ID  43:	[for-rest-statement] ::= [condition] ;
+ID  44:	[for-rest-statement] ::= ; [expression]
+ID  45:	[for-rest-statement] ::= [condition] ; [expression]
+ID  173:	[fully-specified-type] ::= [type-specifier]
+ID  174:	[fully-specified-type] ::= [type-qualifier] [type-specifier]
+ID  67:	[function-call-generic] ::= [function-call-header] void )
+ID  68:	[function-call-generic] ::= [function-call-header] )
+ID  69:	[function-call-generic] ::= [function-call-header-with-parameters] )
+ID  72:	[function-call-header] ::= [type-specifier] (
+ID  73:	[function-call-header] ::= IDENTIFIER (
+ID  74:	[function-call-header] ::= FIELD-SELECTION (
+ID  70:	[function-call-header-with-parameters] ::= [function-call-header] [assignment-expression]
+ID  71:	[function-call-header-with-parameters] ::= [function-call-header-with-parameters] , [assignment-expression]
+ID  65:	[function-call-or-method] ::= [function-call-generic]
+ID  66:	[function-call-or-method] ::= [postfix-expression] . [function-call-generic]
+ID  7:	[function-definition] ::= [function-prototype] [compound-statement-no-new-scope]
+ID  144:	[function-header] ::= [fully-specified-type] IDENTIFIER (
+ID  142:	[function-header-with-parameters] ::= [function-header] [parameter-declaration]
+ID  143:	[function-header-with-parameters] ::= [function-header-with-parameters] , [parameter-declaration]
+ID  140:	[function-prototype] ::= [function-header] )
+ID  141:	[function-prototype] ::= [function-header-with-parameters] )
+ID  104:	[inclusive-or-expression] ::= [exclusive-or-expression]
+ID  105:	[inclusive-or-expression] ::= [inclusive-or-expression] | [exclusive-or-expression]
+ID  159:	[init-declarator-list] ::= [single-declaration]
+ID  160:	[init-declarator-list] ::= [init-declarator-list] , IDENTIFIER
+ID  161:	[init-declarator-list] ::= [init-declarator-list] , IDENTIFIER [ ]
+ID  162:	[init-declarator-list] ::= [init-declarator-list] , IDENTIFIER [ [constant-expression] ]
+ID  163:	[init-declarator-list] ::= [init-declarator-list] , IDENTIFIER [ ] = [initializer]
+ID  164:	[init-declarator-list] ::= [init-declarator-list] , IDENTIFIER [ [constant-expression] ] = [initializer]
+ID  165:	[init-declarator-list] ::= [init-declarator-list] , IDENTIFIER = [initializer]
+ID  223:	[initializer] ::= [assignment-expression]
+ID  64:	[integer-expression] ::= [expression]
+ID  175:	[interpolation-qualifier] ::= smooth
+ID  176:	[interpolation-qualifier] ::= flat
+ID  177:	[interpolation-qualifier] ::= noperspective
+ID  37:	[iteration-statement] ::= while ( [condition] ) [statement-no-new-scope]
+ID  38:	[iteration-statement] ::= do [statement] while ( [expression] ) ;
+ID  39:	[iteration-statement] ::= for ( [for-init-statement] [for-rest-statement] ) [statement-no-new-scope]
+ID  46:	[jump-statement] ::= continue ;
+ID  47:	[jump-statement] ::= break ;
+ID  48:	[jump-statement] ::= return ;
+ID  49:	[jump-statement] ::= return [expression] ;
+ID  50:	[jump-statement] ::= discard ;
+ID  178:	[layout-qualifier] ::= layout ( [layout-qualifier-id-list] )
+ID  179:	[layout-qualifier-id-list] ::= IDENTIFIER
+ID  180:	[layout-qualifier-id-list] ::= IDENTIFIER = INTCONSTANT
+ID  181:	[layout-qualifier-id-list] ::= [layout-qualifier-id-list] , IDENTIFIER
+ID  182:	[layout-qualifier-id-list] ::= [layout-qualifier-id-list] , IDENTIFIER = INTCONSTANT
+ID  106:	[logical-and-expression] ::= [inclusive-or-expression]
+ID  107:	[logical-and-expression] ::= [logical-and-expression] && [inclusive-or-expression]
+ID  110:	[logical-or-expression] ::= [logical-xor-expression]
+ID  111:	[logical-or-expression] ::= [logical-or-expression] || [logical-xor-expression]
+ID  108:	[logical-xor-expression] ::= [logical-and-expression]
+ID  109:	[logical-xor-expression] ::= [logical-xor-expression] ^^ [logical-and-expression]
+ID  82:	[multiplicative-expression] ::= [unary-expression]
+ID  83:	[multiplicative-expression] ::= [multiplicative-expression] * [unary-expression]
+ID  84:	[multiplicative-expression] ::= [multiplicative-expression] / [unary-expression]
+ID  85:	[multiplicative-expression] ::= [multiplicative-expression] % [unary-expression]
+ID  147:	[parameter-declaration] ::= const [parameter-declarator]
+ID  148:	[parameter-declaration] ::= const [parameter-qualifier] [parameter-declarator]
+ID  149:	[parameter-declaration] ::= [parameter-declarator]
+ID  150:	[parameter-declaration] ::= [parameter-qualifier] [parameter-declarator]
+ID  151:	[parameter-declaration] ::= const [parameter-type-specifier]
+ID  152:	[parameter-declaration] ::= const [parameter-qualifier] [parameter-type-specifier]
+ID  153:	[parameter-declaration] ::= [parameter-type-specifier]
+ID  154:	[parameter-declaration] ::= [parameter-qualifier] [parameter-type-specifier]
+ID  145:	[parameter-declarator] ::= [type-specifier] IDENTIFIER
+ID  146:	[parameter-declarator] ::= [type-specifier] IDENTIFIER [ [constant-expression] ]
+ID  155:	[parameter-qualifier] ::= in
+ID  156:	[parameter-qualifier] ::= out
+ID  157:	[parameter-qualifier] ::= inout
+ID  158:	[parameter-type-specifier] ::= [type-specifier]
+ID  58:	[postfix-expression] ::= [primary-expression]
+ID  59:	[postfix-expression] ::= [postfix-expression] [ [integer-expression] ]
+ID  60:	[postfix-expression] ::= [function-call-or-method]
+ID  61:	[postfix-expression] ::= [postfix-expression] . FIELD-SELECTION
+ID  62:	[postfix-expression] ::= [postfix-expression] ++
+ID  63:	[postfix-expression] ::= [postfix-expression] --
+ID  202:	[precision-qualifier] ::= highp
+ID  203:	[precision-qualifier] ::= mediump
+ID  204:	[precision-qualifier] ::= lowp
+ID  51:	[primary-expression] ::= IDENTIFIER
+ID  52:	[primary-expression] ::= INTCONSTANT
+ID  53:	[primary-expression] ::= UINTCONSTANT
+ID  54:	[primary-expression] ::= FLOATCONSTANT
+ID  55:	[primary-expression] ::= false
+ID  56:	[primary-expression] ::= true
+ID  57:	[primary-expression] ::= ( [expression] )
+ID  1:	[program] ::= [translation-unit]
+ID  92:	[relational-expression] ::= [shift-expression]
+ID  93:	[relational-expression] ::= [relational-expression] < [shift-expression]
+ID  94:	[relational-expression] ::= [relational-expression] > [shift-expression]
+ID  95:	[relational-expression] ::= [relational-expression] <= [shift-expression]
+ID  96:	[relational-expression] ::= [relational-expression] >= [shift-expression]
+ID  29:	[selection-statement] ::= if ( [expression] ) [statement]
+ID  30:	[selection-statement] ::= if ( [expression] ) [statement] else [statement]
+ID  89:	[shift-expression] ::= [additive-expression]
+ID  90:	[shift-expression] ::= [shift-expression] << [additive-expression]
+ID  91:	[shift-expression] ::= [shift-expression] >> [additive-expression]
+ID  10:	[simple-statement] ::= [declaration-statement]
+ID  11:	[simple-statement] ::= [expression-statement]
+ID  12:	[simple-statement] ::= [selection-statement]
+ID  13:	[simple-statement] ::= [switch-statement]
+ID  14:	[simple-statement] ::= [case-label]
+ID  15:	[simple-statement] ::= [iteration-statement]
+ID  16:	[simple-statement] ::= [jump-statement]
+ID  166:	[single-declaration] ::= [fully-specified-type]
+ID  167:	[single-declaration] ::= [fully-specified-type] IDENTIFIER
+ID  168:	[single-declaration] ::= [fully-specified-type] IDENTIFIER [ ]
+ID  169:	[single-declaration] ::= [fully-specified-type] IDENTIFIER [ [constant-expression] ]
+ID  170:	[single-declaration] ::= [fully-specified-type] IDENTIFIER [ ] = [initializer]
+ID  171:	[single-declaration] ::= [fully-specified-type] IDENTIFIER [ [constant-expression] ] = [initializer]
+ID  172:	[single-declaration] ::= [fully-specified-type] IDENTIFIER = [initializer]
+ID  8:	[statement] ::= [compound-statement]
+ID  9:	[statement] ::= [simple-statement]
+ID  25:	[statement-list] ::= [statement]
+ID  26:	[statement-list] ::= [statement-list] [statement]
+ID  21:	[statement-no-new-scope] ::= [compound-statement-no-new-scope]
+ID  22:	[statement-no-new-scope] ::= [simple-statement]
+ID  191:	[storage-qualifier] ::= const
+ID  192:	[storage-qualifier] ::= attribute
+ID  193:	[storage-qualifier] ::= varying
+ID  194:	[storage-qualifier] ::= centroid varying
+ID  195:	[storage-qualifier] ::= in
+ID  196:	[storage-qualifier] ::= out
+ID  197:	[storage-qualifier] ::= centroid in
+ID  198:	[storage-qualifier] ::= centroid out
+ID  199:	[storage-qualifier] ::= uniform
+ID  216:	[struct-declaration] ::= [type-specifier] [struct-declarator-list] ;
+ID  217:	[struct-declaration] ::= [type-qualifier] [type-specifier] [struct-declarator-list] ;
+ID  214:	[struct-declaration-list] ::= [struct-declaration]
+ID  215:	[struct-declaration-list] ::= [struct-declaration-list] [struct-declaration]
+ID  220:	[struct-declarator] ::= IDENTIFIER
+ID  221:	[struct-declarator] ::= IDENTIFIER [ ]
+ID  222:	[struct-declarator] ::= IDENTIFIER [ [constant-expression] ]
+ID  218:	[struct-declarator-list] ::= [struct-declarator]
+ID  219:	[struct-declarator-list] ::= [struct-declarator-list] , [struct-declarator]
+ID  212:	[struct-specifier] ::= struct IDENTIFIER { [struct-declaration-list] }
+ID  213:	[struct-specifier] ::= struct { [struct-declaration-list] }
+ID  33:	[switch-statement] ::= switch ( [expression] ) { [statement-list] }
+ID  34:	[switch-statement] ::= switch ( [expression] ) { }
+ID  2:	[translation-unit] ::= [external-declaration]
+ID  3:	[translation-unit] ::= [translation-unit] [external-declaration]
+ID  183:	[type-qualifier] ::= [storage-qualifier]
+ID  184:	[type-qualifier] ::= [layout-qualifier]
+ID  185:	[type-qualifier] ::= [layout-qualifier] [storage-qualifier]
+ID  186:	[type-qualifier] ::= [interpolation-qualifier] [storage-qualifier]
+ID  187:	[type-qualifier] ::= [interpolation-qualifier]
+ID  188:	[type-qualifier] ::= invariant [storage-qualifier]
+ID  189:	[type-qualifier] ::= invariant [interpolation-qualifier] [storage-qualifier]
+ID  190:	[type-qualifier] ::= invariant
+ID  200:	[type-specifier] ::= [type-specifier-no-prec]
+ID  201:	[type-specifier] ::= [precision-qualifier] [type-specifier-no-prec]
+ID  205:	[type-specifier-no-prec] ::= [type-specifier-nonarray]
+ID  206:	[type-specifier-no-prec] ::= [type-specifier-nonarray] [ ]
+ID  207:	[type-specifier-no-prec] ::= [type-specifier-nonarray] [ [constant-expression] ]
+ID  208:	[type-specifier-nonarray] ::= void
+ID  209:	[type-specifier-nonarray] ::= NATIVE-TYPE
+ID  210:	[type-specifier-nonarray] ::= [struct-specifier]
+ID  211:	[type-specifier-nonarray] ::= TYPE-NAME
+ID  75:	[unary-expression] ::= [postfix-expression]
+ID  76:	[unary-expression] ::= ++ [unary-expression]
+ID  77:	[unary-expression] ::= -- [unary-expression]
+ID  78:	[unary-expression] ::= + [unary-expression]
+ID  79:	[unary-expression] ::= - [unary-expression]
+ID  80:	[unary-expression] ::= ! [unary-expression]
+ID  81:	[unary-expression] ::= ~ [unary-expression]

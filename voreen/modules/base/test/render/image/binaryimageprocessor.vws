@@ -1,0 +1,127 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" GlobalDescription="">
+        <ProcessorNetwork version="11">
+            <MetaData>
+                <MetaItem name="ProcessorSelection" type="SelectionMetaData::Processor">
+                    <values>
+                        <item type="BinaryImageProcessor" ref="ref1" />
+                    </values>
+                </MetaItem>
+            </MetaData>
+            <Processors>
+                <Processor type="ImageSource" name="ImageSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="76" y="-284" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="clearButton" />
+                        <Property name="imageFile" noPathSet="false" value="input/images/nucleon.png" />
+                        <Property name="imageSize">
+                            <value x="321" y="319" />
+                        </Property>
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="141" y="-69" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="157" y="401" width="321" height="319" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize">
+                            <value x="321" y="319" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" noPathSet="false" value="output/blended.png" />
+                        <Property name="showCursor" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageSource" name="ImageSource 2" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="205" y="-284" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="clearButton" />
+                        <Property name="imageFile" noPathSet="false" value="input/images/2720-ds.png" />
+                        <Property name="imageSize">
+                            <value x="512" y="512" />
+                        </Property>
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="BinaryImageProcessor" name="BinaryImageProcessor" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="112" y="-172" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="shader.program" fragmentModified="true" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="980" y="0" width="700" height="700" />
+                            </MetaData>
+                            <fragmentSource>
+                                <![CDATA[#include "modules/mod_sampler2d.frag"
+
+uniform sampler2D colorTex0_;
+uniform sampler2D depthTex0_;
+uniform TextureParameters texParams0_;
+uniform sampler2D colorTex1_;
+uniform sampler2D depthTex1_;
+uniform TextureParameters texParams1_;
+
+void main() {
+    vec2 p = gl_FragCoord.xy * screenDimRCP_;
+    vec4 color0 = textureLookup2Dnormalized(colorTex0_, texParams0_, p);
+    float depth0 = textureLookup2Dnormalized(depthTex0_, texParams0_, p).z;
+    vec4 color1 = textureLookup2Dnormalized(colorTex1_, texParams1_, p);
+    float depth1 = textureLookup2Dnormalized(depthTex1_, texParams1_, p).z;
+    if (color0.a > 0.0) {
+        FragData0 = mix(color0, color1, 0.35);
+        gl_FragDepth = depth0;
+    }
+    else {
+        FragData0 = color1;
+        gl_FragDepth = depth1;
+    }
+   // FragData0 = mix(color0, color1, 0.5);
+   // gl_FragDepth = min(depth0, depth1);
+}]]>
+                            </fragmentSource>
+                        </Property>
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="image.inport0">
+                        <Processor type="BinaryImageProcessor" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref2" />
+                    </Outport>
+                    <Inport name="image.inport1">
+                        <Processor type="BinaryImageProcessor" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="BinaryImageProcessor" ref="ref1" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref3" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>
