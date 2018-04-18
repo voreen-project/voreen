@@ -510,8 +510,8 @@ float VesselGraphEdge::getEffectiveLength() const {
 }
 
 float VesselGraphEdge::getRelativeBulgeSize() const {
-    float node_contributed_length = getNode1().estimatedRadius() + getNode2().estimatedRadius();
-    return std::max(1.0f,(getLength() / node_contributed_length)) - 1;
+    float edge_length_contributed_length = std::max(getNode1().estimatedRadius(), getNode2().estimatedRadius());
+    return std::max(0.0f,(getLength() / edge_length_contributed_length) - 1);
 }
 
 bool VesselGraphEdge::isLoop() const {
