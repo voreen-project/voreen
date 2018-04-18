@@ -77,6 +77,7 @@ SET(MOD_CORE_SOURCES
     #Ports
     ${MOD_DIR}/ports/ensembledatasetport.cpp
     ${MOD_DIR}/ports/fieldplotdataport.cpp
+    ${MOD_DIR}/ports/similaritydataport.cpp
 
     #Conditions
     ${MOD_DIR}/ports/conditions/portconditionensemble.cpp
