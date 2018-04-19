@@ -28,6 +28,7 @@
 #include "voreen/core/network/networkevaluator.h"
 #include "voreen/core/network/workspace.h"
 #include "voreen/core/network/processornetwork.h"
+#include "voreen/core/utils/commandlineparser.h"
 
 #include "voreen/core/datastructures/volume/volume.h"
 
@@ -726,8 +727,22 @@ struct GlobalFixture {
     tgt::Stopwatch testTimeWatch;
 
     GlobalFixture() {
-        app = new VoreenApplication("octreetest", "octreetest", "octreetest", 0, 0);
+        app = new VoreenApplication("octreetest", "octreetest", "octreetest",
+                                    boost::unit_test::framework::master_test_suite().argc,
+                                    boost::unit_test::framework::master_test_suite().argv
+        );
+
+        // Look for test data directory (some tests may require the path)
+        CommandLineParser* cmdParser = app->getCommandLineParser();
+        std::string testdataDir;
+        cmdParser->addOption<std::string>("datadir,d", testdataDir, CommandLineParser::AdditionalOption,
+                                          "Test data base directory (contains sub directories 'input' and 'reference').");
         app->initialize();
+
+        if(tgt::FileSystem::dirExists(testdataDir))
+            app->setTestDataPath(testdataDir);
+        else
+            LERROR("testdata directory does not exist, some tests may not run as expected");
 
         LINFO("Creating test data...");
         tgt::Stopwatch watch; watch.start();
@@ -735,6 +750,11 @@ struct GlobalFixture {
         // temporary path for disk volumes
         std::string tmpPath = VoreenApplication::app()->getTemporaryPath();
         tgtAssert(tgt::FileSystem::dirExists(tmpPath), "temp path does not exist");
+
+        std::string octreePath = tgt::FileSystem::cleanupPath(VoreenApplication::app()->getTemporaryPath("octree-test"));
+        if(!tgt::FileSystem::createDirectoryRecursive(octreePath))
+            LERROR("Could not create octree-test directory");
+
         VvdVolumeWriter vvdWriter;
 
         // create noise volume
@@ -2885,13 +2905,6 @@ BOOST_AUTO_TEST_SUITE(OctreeConstruction_OmeTiff);
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OmeTiff_Pollen_Optimized_Brick16) {
     std::string testDataPath = VoreenApplication::app()->getTestDataPath();
-    if (testDataPath.empty())
-        testDataPath = "D:/voreen-testdata/voreen-testdata";
-
-    if (!tgt::FileSystem::dirExists(testDataPath)) {
-        LWARNING("Test data path not set or does not exist: " + testDataPath);
-        return;
-    }
 
     VolumeSerializerPopulator serializerPop;
     std::vector<const VolumeBase*> channelVolumes;
@@ -3156,13 +3169,6 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_NPOT_OptimizedTree_Dim125_
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OmeTiff_Pollen_Optimized_Brick16_MultiThreaded) {
     std::string testDataPath = VoreenApplication::app()->getTestDataPath();
-    if (testDataPath.empty())
-        testDataPath = "D:/voreen-testdata/voreen-testdata";
-
-    if (!tgt::FileSystem::dirExists(testDataPath)) {
-        LWARNING("Test data path not set or does not exist: " + testDataPath);
-        return;
-    }
 
     VolumeSerializerPopulator serializerPop;
     std::vector<const VolumeBase*> channelVolumes;
@@ -3363,13 +3369,6 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_NPOT_OptimizedTree_Dim125_
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OmeTiff_Pollen_Optimized_Brick16_MultiThreaded_DiskPool) {
     std::string testDataPath = VoreenApplication::app()->getTestDataPath();
-    if (testDataPath.empty())
-        testDataPath = "D:/voreen-testdata/voreen-testdata";
-
-    if (!tgt::FileSystem::dirExists(testDataPath)) {
-        LWARNING("Test data path not set or does not exist: " + testDataPath);
-        return;
-    }
 
     VolumeSerializerPopulator serializerPop;
     std::vector<const VolumeBase*> channelVolumes;
@@ -3434,10 +3433,7 @@ BOOST_AUTO_TEST_CASE(OctreeSerialization_CompleteTree_Dim128_Brick16) {
 
     // serialize octree
     std::string octreePath = tgt::FileSystem::cleanupPath(VoreenApplication::app()->getTemporaryPath("octree-test"));
-    if (!tgt::FileSystem::dirExists(octreePath))
-        tgt::FileSystem::createDirectoryRecursive(octreePath);
-    else
-        tgt::FileSystem::clearDirectory(octreePath);
+    tgt::FileSystem::clearDirectory(octreePath);
 
     XmlSerializer serializer(octreePath);
     serializer.serialize("Octree", &octreeBrick16);
@@ -3464,10 +3460,7 @@ BOOST_AUTO_TEST_CASE(OctreeSerialization_OptimizedTree_Dim128_Brick16) {
 
     // serialize octree
     std::string octreePath = tgt::FileSystem::cleanupPath(VoreenApplication::app()->getTemporaryPath("octree-test"));
-    if (!tgt::FileSystem::dirExists(octreePath))
-        tgt::FileSystem::createDirectoryRecursive(octreePath);
-    else
-        tgt::FileSystem::clearDirectory(octreePath);
+    tgt::FileSystem::clearDirectory(octreePath);
 
     XmlSerializer serializer(octreePath);
     serializer.serialize("Octree", &octreeBrick16);
@@ -3499,10 +3492,7 @@ BOOST_AUTO_TEST_CASE(OctreeSerialization_TripleChannel_OptimizedTree_Dim128_Bric
 
     // serialize octree
     std::string octreePath = tgt::FileSystem::cleanupPath(VoreenApplication::app()->getTemporaryPath("octree-test"));
-    if (!tgt::FileSystem::dirExists(octreePath))
-        tgt::FileSystem::createDirectoryRecursive(octreePath);
-    else
-        tgt::FileSystem::clearDirectory(octreePath);
+    tgt::FileSystem::clearDirectory(octreePath);
 
     XmlSerializer serializer(octreePath);
     serializer.serialize("Octree", &octree);
