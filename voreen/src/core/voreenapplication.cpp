@@ -269,7 +269,8 @@ VoreenApplication::VoreenApplication(const std::string& binaryName, const std::s
     , initialized_(false)
     , initializedGL_(false)
     , networkEvaluationRequired_(false)
-    , uuidGenerator_()
+    , mersenneTwister_()
+    , uuidGenerator_(mersenneTwister_)
 {
     id_ = guiName;
     guiName_ = guiName;
