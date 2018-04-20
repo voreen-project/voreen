@@ -58,6 +58,7 @@ public:
     //  Access
     //----------------
     const std::vector<std::vector<float>>& getData() const;
+    const tgt::ivec3 getDimensions() const;
 
 private:
 
