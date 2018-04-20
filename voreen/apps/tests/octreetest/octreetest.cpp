@@ -2908,9 +2908,9 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OmeTiff_Pollen_Optimized_Brick16) {
 
     VolumeSerializerPopulator serializerPop;
     std::vector<const VolumeBase*> channelVolumes;
-    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5d/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=0&timestep=0")));
-    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5d/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=1&timestep=0")));
-    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5d/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=2&timestep=0")));
+    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5D/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=0&timestep=0")));
+    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5D/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=1&timestep=0")));
+    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5D/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=2&timestep=0")));
     tgt::svec3 volumeDim = channelVolumes.front()->getDimensions();
     const size_t numVoxels = channelVolumes.front()->getNumVoxels();
     const size_t numChannels = channelVolumes.size();
@@ -3172,9 +3172,9 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OmeTiff_Pollen_Optimized_Brick16_MultiTh
 
     VolumeSerializerPopulator serializerPop;
     std::vector<const VolumeBase*> channelVolumes;
-    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5d/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=0&timestep=0")));
-    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5d/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=1&timestep=0")));
-    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5d/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=2&timestep=0")));
+    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5D/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=0&timestep=0")));
+    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5D/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=1&timestep=0")));
+    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5D/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=2&timestep=0")));
     tgt::svec3 volumeDim = channelVolumes.front()->getDimensions();
     const size_t numVoxels = channelVolumes.front()->getNumVoxels();
     const size_t numChannels = channelVolumes.size();
@@ -3372,9 +3372,9 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OmeTiff_Pollen_Optimized_Brick16_MultiTh
 
     VolumeSerializerPopulator serializerPop;
     std::vector<const VolumeBase*> channelVolumes;
-    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5d/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=0&timestep=0")));
-    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5d/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=1&timestep=0")));
-    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5d/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=2&timestep=0")));
+    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5D/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=0&timestep=0")));
+    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5D/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=1&timestep=0")));
+    channelVolumes.push_back(serializerPop.getVolumeSerializer()->read(VolumeURL(testDataPath + "/input/ome/pollen-5D/pollen_ztl1024_15-19-26_PMT - PMT [447-55] _C0.ome.tif?channel=2&timestep=0")));
     tgt::svec3 volumeDim = channelVolumes.front()->getDimensions();
     const size_t numVoxels = channelVolumes.front()->getNumVoxels();
     const size_t numChannels = channelVolumes.size();
