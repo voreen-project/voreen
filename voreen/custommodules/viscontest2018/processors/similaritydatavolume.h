@@ -79,6 +79,7 @@ protected:
     void initSimilarityVolume();
     float calculateVariance(const std::vector<float> voxelData);
     float calculateMinMaxDiff(const std::vector<float> voxelData);
+    const std::vector<float> applyGroupLogic(const std::vector<float> rawVoxelData);
 
 protected:
 
@@ -92,6 +93,9 @@ protected:
 
     VolumeBase* similarityVolume_;
     VolumeRAM_Float* similarityVolumeRepresentation_;
+
+    StringListProperty group1_;
+    StringListProperty group2_;
 
     static const std::string loggerCat_;
 };

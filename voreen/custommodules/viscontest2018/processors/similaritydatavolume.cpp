@@ -44,6 +44,8 @@ SimilartyDataVolume::SimilartyDataVolume()
     , similarityVolume_(nullptr)
     , similarityVolumeRepresentation_(nullptr)
     , similarityMethod_("similarityMethod", "Similarity Method")
+    , group1_("similartyDataVolumeGroup1", "Group 1")
+    , group2_("similartyDataVolumeGroup2", "Group 2")
 {
     // Ports
     addPort(inport_);
@@ -55,6 +57,10 @@ SimilartyDataVolume::SimilartyDataVolume()
     similarityMethod_.addOption("variance", "Variance");
     similarityMethod_.addOption("minmax", "Min/Max Comparison");
     similarityMethod_.select("variance");
+
+    addProperty(group1_);
+    addProperty(group2_);
+
 
 }
 
@@ -70,6 +76,11 @@ void SimilartyDataVolume::onInportChange() {
     }
     memset(similarityVolumeRepresentation_->voxel(), 0, similarityVolumeRepresentation_->getNumBytes());
     similarityVolume_ = new Volume(similarityVolumeRepresentation_, tgt::vec3::one, tgt::vec3::zero);
+
+    for(std::string runName: inport_.getData()->getRuns()) {
+        group1_.addRow(runName);
+        group2_.addRow(runName);
+    }
 }
 
 SimilartyDataVolume::~SimilartyDataVolume() {
@@ -111,6 +122,7 @@ void SimilartyDataVolume::initSimilarityVolume() {
             for(size_t x = 0; x < static_cast<size_t>(dimensions.x); x++) {
                 size_t index = x + (y + z * dimensions.z) * dimensions.x;
                 const std::vector<float> voxelData = similarityData[index];
+
                 float similarityVoxelValue = 0;
                 if(similarityMethod_.get() == "variance") {
                     similarityVoxelValue = calculateVariance(voxelData);
@@ -124,6 +136,39 @@ void SimilartyDataVolume::initSimilarityVolume() {
     }
 
     outport_.setData(similarityVolume_);
+}
+
+const std::vector<float> SimilartyDataVolume::applyGroupLogic(const std::vector<float> rawVoxelData) {
+    std::vector<float> modifiedVoxelData = rawVoxelData;
+    // compare two groups
+    if(!group1_.getSelectedRowIndices().empty() && !group2_.getSelectedRowIndices().empty()) {
+        modifiedVoxelData.clear();
+        float group1Avg;
+        float group2Avg;
+
+        Statistics statistics(true);
+        for(int selectedIndex : group1_.getSelectedRowIndices()) {
+            statistics.addSample(rawVoxelData.at(selectedIndex));
+        }
+        group1Avg = statistics.getMean();
+
+        statistics.reset();
+        for(int selectedIndex : group2_.getSelectedRowIndices()) {
+            statistics.addSample(rawVoxelData.at(selectedIndex));
+        }
+        group2Avg = statistics.getMean();
+
+        modifiedVoxelData.push_back(group1Avg);
+        modifiedVoxelData.push_back(group2Avg);
+    }
+    // normal run filtering
+    else if(!group1_.getSelectedRowIndices().empty() > 0) {
+        modifiedVoxelData.clear();
+        for(int selectedIndex : group1_.getSelectedRowIndices()) {
+            modifiedVoxelData.push_back(rawVoxelData.at(selectedIndex));
+        }
+    }
+    return modifiedVoxelData;
 }
 
 float SimilartyDataVolume::calculateVariance(const std::vector<float> voxelData) {

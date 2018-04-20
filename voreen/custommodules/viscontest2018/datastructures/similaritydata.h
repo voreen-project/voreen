@@ -59,6 +59,7 @@ public:
     //----------------
     const std::vector<std::vector<float>>& getData() const;
     const tgt::ivec3 getDimensions() const;
+    const std::vector<std::string> getRuns() const;
 
 private:
 
