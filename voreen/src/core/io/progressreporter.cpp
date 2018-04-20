@@ -101,4 +101,28 @@ std::string SubtaskProgressReporter::getProgressMessage() const {
     return parent_.getProgressMessage();
 }
 
+ThreadedTaskProgressReporter::ThreadedTaskProgressReporter(ProgressReporter& parent, size_t totalNumberOfSteps)
+    : parent_(parent)
+    , mutex_()
+    , totalNumberOfSteps_(totalNumberOfSteps)
+    , step_(0)
+{
+    parent_.setProgress(0);
+}
+
+bool ThreadedTaskProgressReporter::reportStepDone() {
+    boost::lock_guard<boost::mutex> lock(mutex_);
+
+    ++step_;
+    tgtAssert(step_ <= totalNumberOfSteps_, "Invalid step");
+
+    try {
+        parent_.setProgress(static_cast<float>(step_)/totalNumberOfSteps_);
+    } catch(boost::thread_interrupted& e) {
+        return true;
+    }
+
+    return false;
+}
+
 }
