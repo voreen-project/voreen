@@ -36,7 +36,7 @@
 #include "processors/volumeintensityfilter.h"
 #include "processors/probabilityvolumecreator.h"
 #include "processors/similaritydatasource.h"
-#include "processors/similaritydataviewer.h"
+#include "processors/similaritydatavolume.h"
 #include "processors/waveheightextractor.h"
 
 #include "io/fieldplotsave.h"

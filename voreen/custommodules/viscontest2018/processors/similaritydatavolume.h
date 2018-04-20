@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_SIMILARITYDATAVIEWER_H
-#define VRN_SIMILARITYDATAVIEWER_H
+#ifndef VRN_SIMILARITYDATAVOLUME_H
+#define VRN_SIMILARITYDATAVOLUME_H
 
 #include "voreen/core/processors/renderprocessor.h"
 

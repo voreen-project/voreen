@@ -23,7 +23,7 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "similaritydataviewer.h"
+#include "similaritydatavolume.h"
 
 #include "tgt/immediatemode/immediatemode.h"
 #include "voreen/core/voreenapplication.h"
@@ -34,10 +34,7 @@
 
 
 namespace voreen {
-
-static int PIXEL_BRUSH_ENABLE_DISTANCE = 3;
-static const tgt::vec2 NO_SELECTION(-2.0f); // needs to be any value not inside range [-1, 1]
-
+    
 const std::string SimilartyDataVolume::loggerCat_("voreen.viscontest2018.SimilartyDataVolume");
 
 SimilartyDataVolume::SimilartyDataVolume()
@@ -68,7 +65,7 @@ void SimilartyDataVolume::onInportChange() {
     try {
         similarityVolumeRepresentation_ = new VolumeRAM_Float(tgt::svec3(dimensions.x, dimensions.y, dimensions.z));
     } catch(std::bad_alloc e) {
-        LERRORC("voreen.similaritydataviewer", "Failed to allocate similarity volume data memory");
+        LERRORC("voreen.similaritydatavolume", "Failed to allocate similarity volume data memory");
         throw;
     }
     memset(similarityVolumeRepresentation_->voxel(), 0, similarityVolumeRepresentation_->getNumBytes());
