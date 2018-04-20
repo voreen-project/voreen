@@ -20,13 +20,13 @@
                 <Processor type="Canvas" name="Canvas" id="ref1">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="586" y="-260" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-1920" y="0" width="1406" height="1132" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="0" y="-260" width="1438" height="1029" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-1920" y="0" />
+                            <value x="0" y="-260" />
                         </MetaItem>
                         <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
-                            <value x="1406" y="1132" />
+                            <value x="1438" y="1029" />
                         </MetaItem>
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
@@ -37,15 +37,15 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-1722" y="80" />
+                            <value x="300" y="352" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="1428" y="953" />
+                            <value x="915" y="728" />
                         </MetaItem>
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize">
-                            <value x="1406" y="1132" />
+                            <value x="1438" y="1029" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
@@ -59,7 +59,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref15">
-                                    <value x="1406" y="1132" />
+                                    <value x="1438" y="1029" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -124,7 +124,7 @@
                         <Property mapKey="binarizationThresholdSegmentation" name="binarizationThresholdSegmentation" value="0.5" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
-                        <Property mapKey="minBulgeSize" name="minBulgeSize" guiName="Minimum Bulge Size (controls Shape of Vessels)" value="2" />
+                        <Property mapKey="minBulgeSize" name="minBulgeSize" guiName="Minimum Bulge Size (controls Shape of Vessels)" value="3" />
                         <Property mapKey="minElongation" name="minElongation" value="0" />
                         <Property mapKey="minVoxelLength" name="minVoxelLength" value="0" />
                         <Property mapKey="numRefinementIterations" name="numRefinementIterations" guiName="Refinement Iterations (should be at least 1)" value="1" />
@@ -235,7 +235,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin">
-                                    <value x="1406" y="1132" />
+                                    <value x="1438" y="1029" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -245,7 +245,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.output.renderSizeReceive" name="image.output.renderSizeReceive" id="ref16">
-                                    <value x="1406" y="1132" />
+                                    <value x="1438" y="1029" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -689,7 +689,6 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="nodeRadiusMultiplier_" name="nodeRadiusMultiplier_" value="0.370000005" />
-                        <Property mapKey="renderEnclosingSpheres" name="renderEnclosingSpheres" value="false" />
                         <Property mapKey="shader" name="shader">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" width="700" height="700" />
@@ -855,8 +854,8 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="../../../../../../home/dominik/git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/random_workspaces/../git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../nosnapshot/graphtest_compressed.vvg" />
-                                    <item value="../../../home/dominik/git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/random_workspaces/../git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../nosnapshot/graphtest_compressed.vvg" />
-                                    <item value="/home/dominik/git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/random_workspaces/../git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../nosnapshot/graphtest_compressed.vvg" />
+                                    <item value="custommodules/vesseltopology/workspaces/../../../../../../home/dominik/git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/random_workspaces/../git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../nosnapshot/graphtest_compressed.vvg" />
+                                    <item value="/data/dominik/git/voreen-vesselnetworkanalysis/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/random_workspaces/../git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../nosnapshot/graphtest_compressed.vvg" />
                                 </paths>
                             </paths>
                         </Property>
@@ -884,8 +883,8 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="../../../../../../home/dominik/git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/random_workspaces/../../../tmp/nodes.csv" />
-                                    <item value="../../../home/dominik/git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/random_workspaces/../../../tmp/nodes.csv" />
-                                    <item value="/home/dominik/git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/random_workspaces/../../../tmp/nodes.csv" />
+                                    <item value="custommodules/vesseltopology/workspaces/../../../../../../home/dominik/git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/random_workspaces/../../../tmp/nodes.csv" />
+                                    <item value="/data/dominik/git/voreen-vesselnetworkanalysis/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/random_workspaces/../../../tmp/nodes.csv" />
                                 </paths>
                             </paths>
                         </Property>
@@ -895,8 +894,8 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="../../../../../../home/dominik/git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/random_workspaces/../../../tmp/segments.csv" />
-                                    <item value="../../../home/dominik/git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/random_workspaces/../../../tmp/segments.csv" />
-                                    <item value="/home/dominik/git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/random_workspaces/../../../tmp/segments.csv" />
+                                    <item value="custommodules/vesseltopology/workspaces/../../../../../../home/dominik/git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/random_workspaces/../../../tmp/segments.csv" />
+                                    <item value="/data/dominik/git/voreen-vesselnetworkanalysis/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/git/voreen0/voreen/custommodules/vesseltopology/workspaces/../../../../../../home/dominik/random_workspaces/../../../tmp/segments.csv" />
                                 </paths>
                             </paths>
                         </Property>
@@ -918,14 +917,8 @@
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
                         <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
-                            <urls protocol="">
-                                <path noPathSet="false">
-                                    <paths>
-                                        <item value="../../../../../../nosnapshot/bin.tif" />
-                                        <item value="../../../nosnapshot/bin.tif" />
-                                        <item value="/nosnapshot/bin.tif" />
-                                    </paths>
-                                </path>
+                            <urls protocol="" absolute="false">
+                                <path noPathSet="true" />
                                 <searchParameters />
                             </urls>
                         </Property>
@@ -960,12 +953,12 @@
                         <Property mapKey="minVoxelVolume" name="minVoxelVolume" value="0" />
                         <Property mapKey="neighbourhoodMode" name="neighbourhoodMode" value="n6" />
                         <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
-                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="1" fileWatchEnabled="false">
+                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="1" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../nosnapshot/tmp/cca.h5" />
-                                    <item value="../../../nosnapshot/tmp/cca.h5" />
-                                    <item value="/nosnapshot/tmp/cca.h5" />
+                                    <item value="../../../data/tmp/ba4be2a1-2b09-444e-a368-f81825a6168c/e72a1ff5-e416-48ff-99ef-02f7fadabaf7HDF5 (*.h5)" />
+                                    <item value="data/tmp/ba4be2a1-2b09-444e-a368-f81825a6168c/e72a1ff5-e416-48ff-99ef-02f7fadabaf7HDF5 (*.h5)" />
+                                    <item value="/data/dominik/git/voreen-vesselnetworkanalysis/voreen/data/tmp/ba4be2a1-2b09-444e-a368-f81825a6168c/e72a1ff5-e416-48ff-99ef-02f7fadabaf7HDF5 (*.h5)" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1013,12 +1006,12 @@
                         <Property mapKey="minVoxelVolume" name="minVoxelVolume" value="0" />
                         <Property mapKey="neighbourhoodMode" name="neighbourhoodMode" value="n6" />
                         <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
-                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="1" fileWatchEnabled="false">
+                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="1" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../nosnapshot/tmp/cca2.h5" />
-                                    <item value="../../../nosnapshot/tmp/cca2.h5" />
-                                    <item value="/nosnapshot/tmp/cca2.h5" />
+                                    <item value="../../../data/tmp/ba4be2a1-2b09-444e-a368-f81825a6168c/aae408f5-52e6-4f1c-9894-417c59aa50ccHDF5 (*.h5)" />
+                                    <item value="data/tmp/ba4be2a1-2b09-444e-a368-f81825a6168c/aae408f5-52e6-4f1c-9894-417c59aa50ccHDF5 (*.h5)" />
+                                    <item value="/data/dominik/git/voreen-vesselnetworkanalysis/voreen/data/tmp/ba4be2a1-2b09-444e-a368-f81825a6168c/aae408f5-52e6-4f1c-9894-417c59aa50ccHDF5 (*.h5)" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1063,12 +1056,12 @@
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="objectVoxelThreshold" name="objectVoxelThreshold" value="62" />
                         <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
-                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="1" fileWatchEnabled="false">
+                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="1" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../nosnapshot/tmp/binarymedian.h5" />
-                                    <item value="../../../nosnapshot/tmp/binarymedian.h5" />
-                                    <item value="/nosnapshot/tmp/binarymedian.h5" />
+                                    <item value="../../../data/tmp/ba4be2a1-2b09-444e-a368-f81825a6168c/318cf86b-7a79-4a1c-aea4-6dea0788c7a3HDF5 (*.h5)" />
+                                    <item value="data/tmp/ba4be2a1-2b09-444e-a368-f81825a6168c/318cf86b-7a79-4a1c-aea4-6dea0788c7a3HDF5 (*.h5)" />
+                                    <item value="/data/dominik/git/voreen-vesselnetworkanalysis/voreen/data/tmp/ba4be2a1-2b09-444e-a368-f81825a6168c/318cf86b-7a79-4a1c-aea4-6dea0788c7a3HDF5 (*.h5)" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1320,15 +1313,15 @@
             <GroupMembership>
                 <value key="BinaryMedian.extentx">
                     <First value="Parameters" />
-                    <Second value="1" />
+                    <Second value="2" />
                 </value>
                 <value key="BinaryMedian.extenty">
                     <First value="Parameters" />
-                    <Second value="2" />
+                    <Second value="3" />
                 </value>
                 <value key="BinaryMedian.extentz">
                     <First value="Parameters" />
-                    <Second value="3" />
+                    <Second value="4" />
                 </value>
                 <value key="BinaryMedian.progressDisplay">
                     <First value="Processing" />
@@ -1336,7 +1329,7 @@
                 </value>
                 <value key="BinaryMedian.useUniformExtent">
                     <First value="Parameters" />
-                    <Second value="0" />
+                    <Second value="1" />
                 </value>
                 <value key="ConnectedComponentAnalysis 2.progressDisplay">
                     <First value="Processing" />
