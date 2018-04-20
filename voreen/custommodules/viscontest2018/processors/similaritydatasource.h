@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2015 University of Muenster, Germany.                        *
+ * Copyright (C) 2005-2017 University of Muenster, Germany.                        *
  * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -23,62 +23,67 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "viscontest2018module.h"
+#ifndef VRN_SIMILARITYDATASOURCE_H
+#define VRN_SIMILARITYDATASOURCE_H
 
-#include "processors/ensembledatasource.h"
-#include "processors/ensemblefilter.h"
-#include "processors/ensemblevolumeextractor.h"
-#include "processors/ensemblesimilarityplot.h"
-#include "processors/fieldparallelplotcreator.h"
-#include "processors/fieldparallelplotviewer.h"
-#include "processors/fieldparallelplothistogram.h"
-#include "processors/mdsplot.h"
-#include "processors/volumeintensityfilter.h"
-#include "processors/probabilityvolumecreator.h"
-#include "processors/similaritydatasource.h"
-#include "processors/waveheightextractor.h"
+#include "voreen/core/processors/processor.h"
 
-#include "io/fieldplotsave.h"
-#include "io/fieldplotsource.h"
-#include "io/vtivolumereader.h"
+#include "voreen/core/io/volumeserializerpopulator.h"
+#include "voreen/core/ports/genericport.h"
+#include "voreen/core/properties/buttonproperty.h"
+#include "voreen/core/properties/filedialogproperty.h"
+#include "voreen/core/properties/progressproperty.h"
+#include "voreen/core/properties/intproperty.h"
 
-#include "properties/link/viscontest2018linkevaluatorid.h"
+#include "../properties/stringlistproperty.h"
+
+#include "../ports/similaritydataport.h"
 
 namespace voreen {
 
-VisContest2018Module::VisContest2018Module(const std::string& modulePath)
-    : VoreenModule(modulePath)
-{
-    setID("VisContest2018");
-    setGuiName("VisContest2018");
+/**
+ * Loads multiple volumes and provides them
+ * as VolumeList through its outport.
+ */
+class VRN_CORE_API SimilarityDataSource : public Processor {
 
-    addShaderPath(getModulePath("glsl"));
+    static const std::string SCALAR_FIELD_NAME;
+    static const std::string SIMULATED_TIME_NAME;
 
-    // Processors
-    registerProcessor(new EnsembleDataSource());
-    registerProcessor(new EnsembleFilter);
-    registerProcessor(new SimilarityDataSource());
+public:
+    SimilarityDataSource();
+    virtual ~SimilarityDataSource();
+    virtual Processor* create() const;
 
-    // Plotting
-    registerProcessor(new FieldParallelPlotCreator());
-    registerProcessor(new EnsembleSimilarityPlot());
-    registerProcessor(new FieldParallelPlotViewer());
-    registerProcessor(new FieldParallelPlotHistogram());
-    registerProcessor(new MDSPlot());
-    registerProcessor(new VolumeIntensityFilter());
-    registerProcessor(new ProbabilityVolumeCreator());
+    virtual std::string getClassName() const  { return "SimilarityDataSource";    }
+    virtual std::string getCategory() const   { return "Input";                 }
+    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
+    virtual bool usesExpensiveComputation() const { return true;  }
 
-    // IO
-    registerProcessor(new FieldPlotSave());
-    registerProcessor(new FieldPlotSource());
-    registerVolumeReader(new VTIVolumeReader());
-    
-    // Properties
-    registerSerializableType(new LinkEvaluatorIntListId());
+protected:
+    virtual void setDescriptions() {
+        setDescription("Loads multiple volumes and provides them as VolumeList.");
+    }
 
-    // Misc
-    registerProcessor(new WaveHeightExtractor());
-    registerProcessor(new EnsembleVolumeExtractor());
-}
+    void process();
+    virtual void initialize();
+
+    void clearSimilarityData();
+    void buildSimilarityData();
+
+    VolumeSerializerPopulator populator_;
+
+    FileDialogProperty similarityPath_;
+    ButtonProperty loadSimilarityDataButton_;
+    StringListProperty loadedChannels_;
+    IntProperty selectedTimeStep_;
+
+    /// The structure of the ensemble data.
+    SimilarityDataPort outport_;
+
+    static const std::string loggerCat_;
+};
 
 } // namespace
+
+#endif
