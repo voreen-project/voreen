@@ -35,7 +35,7 @@
 #include "voreen/core/properties/progressproperty.h"
 #include "voreen/core/properties/intproperty.h"
 
-#include "../properties/stringlistproperty.h"
+#include "voreen/core/properties/optionproperty.h"
 
 #include "../ports/similaritydataport.h"
 
@@ -75,7 +75,7 @@ protected:
 
     FileDialogProperty similarityPath_;
     ButtonProperty loadSimilarityDataButton_;
-    StringListProperty loadedChannels_;
+    StringOptionProperty loadedChannels_;
     IntProperty selectedTimeStep_;
 
     /// The structure of the ensemble data.

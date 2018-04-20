@@ -44,7 +44,7 @@ SimilarityDataSource::SimilarityDataSource()
     , similarityPath_("ensemblepath", "Ensemble Path", "Select Ensemble root folder", "", "", FileDialogProperty::DIRECTORY)
     , loadSimilarityDataButton_("loadDataset", "Load Similarity Data")
     , outport_(Port::OUTPORT, "similaritydata", "SimilarityData Output", false)
-    , loadedChannels_("loadedChannels", "Loaded Channels")
+    , loadedChannels_("loadedChannels", "Selected Channel")
     , selectedTimeStep_("selectedTimeStep", "Selected time step", 0)
 {
     addPort(outport_);
@@ -96,7 +96,7 @@ void SimilarityDataSource::buildSimilarityData() {
     for(const std::string& channelName : channels) {
         std::string channelPath = similarityPath_.get() + "/" + channelName;
         std::vector<std::string> timeStepNames = tgt::FileSystem::readDirectory(channelPath, true, false);
-        loadedChannels_.addRow(channelName);
+        loadedChannels_.addOption(channelName, channelName);
         numTimeSteps = std::max(numTimeSteps, static_cast<int>(timeStepNames.size()));
     }
 
