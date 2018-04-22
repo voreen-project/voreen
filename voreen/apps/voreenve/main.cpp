@@ -124,12 +124,6 @@ int main(int argc, char** argv) {
     }
 #endif
 
-#ifndef VRN_SHARED_LIBS
-    // init Qt resources, if voreen_qt has been built as static lib
-    Q_INIT_RESOURCE(vrn_qt);
-    Q_INIT_RESOURCE(voreenve);
-#endif
-
     // create and show mainwindow
     if (showSplash)
         splash->updateProgressMessage("Creating main window...",0.30f);
