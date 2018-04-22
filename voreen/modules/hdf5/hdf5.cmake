@@ -35,10 +35,11 @@ IF(WIN32)
 
 ELSEIF(UNIX)
 
-    SET(VRN_PREFER_HDF5_18 ON CACHE BOOL "Determines if the older HDF5 1.8 version should be prefered, if available. If disabled, cmake will look for the most recent version.")
+    SET(VRN_USE_HDF5_VERSION "1.8" CACHE STRING "HDF5 version")
+    SET_PROPERTY(CACHE VRN_USE_HDF5_VERSION PROPERTY STRINGS "1.8" "1.10")
 
     SET(HDF5_FOUND FALSE)
-    IF(VRN_PREFER_HDF5_18)
+    IF(${VRN_USE_HDF5_VERSION} MATCHES "1.8")
     
         MESSAGE(STATUS "Trying to find HDF5 libraries (in between versions 1.8.13 and 1.10.0) with C++ support...")
 
@@ -93,8 +94,10 @@ ELSEIF(UNIX)
     
     IF(HDF5_FOUND)
         MESSAGE(STATUS "Found HDF5 version ${HDF5_VERSION}")
-        IF(VRN_PREFER_HDF5_18 AND NOT HDF5_VERSION VERSION_LESS 1.10.0)
-            MESSAGE(WARNING "Could not find HDF5 1.8, using more recent version instead.")
+        IF(${VRN_USE_HDF5_VERSION} MATCHES "1.8" AND NOT HDF5_VERSION VERSION_LESS 1.10.0)
+            MESSAGE(FATAL_ERROR "Could not find HDF5 1.8, but more recent version instead.")
+        ELSEIF(${VRN_USE_HDF5_VERSION} MATCHES "1.10" AND HDF5_VERSION VERSION_LESS 1.10.0)
+            MESSAGE(FATAL_ERROR "Could not find HDF5 1.10, but less recent version instead.")
         ENDIF()
 
         SET(MOD_INCLUDE_DIRECTORIES ${HDF5_INCLUDE_DIRS})
