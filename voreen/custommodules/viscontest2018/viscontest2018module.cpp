@@ -35,6 +35,8 @@
 #include "processors/mdsplot.h"
 #include "processors/volumeintensityfilter.h"
 #include "processors/probabilityvolumecreator.h"
+#include "processors/similaritydatasource.h"
+#include "processors/similaritydatavolume.h"
 #include "processors/waveheightextractor.h"
 
 #include "io/fieldplotsave.h"
@@ -57,6 +59,8 @@ VisContest2018Module::VisContest2018Module(const std::string& modulePath)
     // Processors
     registerProcessor(new EnsembleDataSource());
     registerProcessor(new EnsembleFilter);
+    registerProcessor(new SimilarityDataSource());
+    registerProcessor(new SimilartyDataVolume());
 
     // Plotting
     registerProcessor(new FieldParallelPlotCreator());

@@ -42,4 +42,12 @@ const std::vector<std::vector<float>>& SimilarityData::getData() const {
     return data_;
 }
 
+const tgt::ivec3 SimilarityData::getDimensions() const {
+    return tgt::ivec3();
+}
+
+const std::vector<std::string> SimilarityData::getRuns() const {
+    return std::vector<std::string>();
+}
+
 }   // namespace

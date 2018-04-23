@@ -23,54 +23,32 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_SIMILARITYDATA_H
-#define VRN_SIMILARITYDATA_H
+#ifndef VRN_SIMILARITYDATAPORT_H
+#define VRN_SIMILARITYDATAPORT_H
 
-#include "voreen/core/voreencoreapi.h"
+#include "voreen/core/ports/genericport.h"
 
-#include "voreen/core/datastructures/volume/volumeatomic.h"
-#include "voreen/core/datastructures/volume/volumelist.h"
-#include "voreen/core/io/serialization/serializable.h"
-#include "voreen/core/io/serialization/xmlserializer.h"
-#include "voreen/core/io/serialization/xmldeserializer.h"
-#include "voreen/core/ports/port.h"
-
-#include "tgt/vector.h"
-
-#include <map>
+#include "../datastructures/similaritydata.h"
 
 namespace voreen {
 
 /**
- * Datastructure used to represent the actual field data in a
+ * Port containing a Field Plot.
+ *
+ * @see SimilarityData
  */
-class VRN_CORE_API SimilarityData : public DataInvalidationObservable {
+class SimilarityDataPort : public GenericPort<SimilarityData> {
 public:
+    SimilarityDataPort(PortDirection direction, const std::string& id, const std::string& guiName = "",
+                              bool allowMultipleConnections = false, Processor::InvalidationLevel invalidationLevel = Processor::INVALID_RESULT);
 
-    /** Constructor */
-    explicit SimilarityData();
-    /** Destructor */
-    ~SimilarityData();
-
-public:
-
-    //----------------
-    //  Access
-    //----------------
-    const std::vector<std::vector<float>>& getData() const;
-    const tgt::ivec3 getDimensions() const;
-    const std::vector<std::string> getRuns() const;
-
-private:
-
-    //----------------
-    //  Members
-    //----------------
-
-    std::vector<std::vector<float>> data_;
-
+    virtual std::string getClassName() const;
+    virtual Port* create(PortDirection direction, const std::string& id, const std::string& guiName = "") const;
+    virtual tgt::col3 getColorHint() const;
+    virtual std::string getContentDescription() const;
+    virtual std::string getContentDescriptionHTML() const;
 };
 
-}   // namespace
+} // namespace voreen
 
-#endif //VRN_SIMILARITYDATA_H
+#endif //VRN_SIMILARITYDATAPORT_H

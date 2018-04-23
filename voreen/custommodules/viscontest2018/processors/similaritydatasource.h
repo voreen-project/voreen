@@ -23,54 +23,67 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_SIMILARITYDATA_H
-#define VRN_SIMILARITYDATA_H
+#ifndef VRN_SIMILARITYDATASOURCE_H
+#define VRN_SIMILARITYDATASOURCE_H
 
-#include "voreen/core/voreencoreapi.h"
+#include "voreen/core/processors/processor.h"
 
-#include "voreen/core/datastructures/volume/volumeatomic.h"
-#include "voreen/core/datastructures/volume/volumelist.h"
-#include "voreen/core/io/serialization/serializable.h"
-#include "voreen/core/io/serialization/xmlserializer.h"
-#include "voreen/core/io/serialization/xmldeserializer.h"
-#include "voreen/core/ports/port.h"
+#include "voreen/core/io/volumeserializerpopulator.h"
+#include "voreen/core/ports/genericport.h"
+#include "voreen/core/properties/buttonproperty.h"
+#include "voreen/core/properties/filedialogproperty.h"
+#include "voreen/core/properties/progressproperty.h"
+#include "voreen/core/properties/intproperty.h"
 
-#include "tgt/vector.h"
+#include "voreen/core/properties/optionproperty.h"
 
-#include <map>
+#include "../ports/similaritydataport.h"
 
 namespace voreen {
 
 /**
- * Datastructure used to represent the actual field data in a
+ * Loads multiple volumes and provides them
+ * as VolumeList through its outport.
  */
-class VRN_CORE_API SimilarityData : public DataInvalidationObservable {
-public:
+class VRN_CORE_API SimilarityDataSource : public Processor {
 
-    /** Constructor */
-    explicit SimilarityData();
-    /** Destructor */
-    ~SimilarityData();
+    static const std::string SCALAR_FIELD_NAME;
+    static const std::string SIMULATED_TIME_NAME;
 
 public:
+    SimilarityDataSource();
+    virtual ~SimilarityDataSource();
+    virtual Processor* create() const;
 
-    //----------------
-    //  Access
-    //----------------
-    const std::vector<std::vector<float>>& getData() const;
-    const tgt::ivec3 getDimensions() const;
-    const std::vector<std::string> getRuns() const;
+    virtual std::string getClassName() const  { return "SimilarityDataSource";    }
+    virtual std::string getCategory() const   { return "Input";                 }
+    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
+    virtual bool usesExpensiveComputation() const { return true;  }
 
-private:
+protected:
+    virtual void setDescriptions() {
+        setDescription("Loads multiple volumes and provides them as VolumeList.");
+    }
 
-    //----------------
-    //  Members
-    //----------------
+    void process();
+    virtual void initialize();
 
-    std::vector<std::vector<float>> data_;
+    void clearSimilarityData();
+    void buildSimilarityData();
 
+    VolumeSerializerPopulator populator_;
+
+    FileDialogProperty similarityPath_;
+    ButtonProperty loadSimilarityDataButton_;
+    StringOptionProperty loadedChannels_;
+    IntProperty selectedTimeStep_;
+
+    /// The structure of the ensemble data.
+    SimilarityDataPort outport_;
+
+    static const std::string loggerCat_;
 };
 
-}   // namespace
+} // namespace
 
-#endif //VRN_SIMILARITYDATA_H
+#endif
