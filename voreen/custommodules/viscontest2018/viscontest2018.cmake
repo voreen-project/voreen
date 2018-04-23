@@ -56,6 +56,7 @@ SET(MOD_CORE_SOURCES
     #IO
     ${MOD_DIR}/io/fieldplotsave.cpp
     ${MOD_DIR}/io/fieldplotsource.cpp
+    ${MOD_DIR}/io/similaritydatasave.cpp
     ${MOD_DIR}/io/vtivolumereader.cpp
     
     #Processors
@@ -98,6 +99,7 @@ SET(MOD_CORE_HEADERS
     #IO
     ${MOD_DIR}/io/fieldplotsave.h
     ${MOD_DIR}/io/fieldplotsource.h
+    ${MOD_DIR}/io/similaritydatasave.h
     ${MOD_DIR}/io/vtivolumereader.h
 
     #Processors

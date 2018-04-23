@@ -39,6 +39,7 @@
 
 #include "io/fieldplotsave.h"
 #include "io/fieldplotsource.h"
+#include "io/similaritydatasave.h"
 #include "io/vtivolumereader.h"
 
 #include "properties/link/viscontest2018linkevaluatorid.h"
@@ -69,6 +70,7 @@ VisContest2018Module::VisContest2018Module(const std::string& modulePath)
     // IO
     registerProcessor(new FieldPlotSave());
     registerProcessor(new FieldPlotSource());
+    registerProcessor(new SimilarityDataSave());
     registerVolumeReader(new VTIVolumeReader());
     
     // Properties
