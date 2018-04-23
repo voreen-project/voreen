@@ -77,9 +77,9 @@ protected:
 
     void onInportChange();
     void initSimilarityVolume();
-    float calculateVariance(const std::vector<float> voxelData);
-    float calculateMinMaxDiff(const std::vector<float> voxelData);
-    const std::vector<float> applyGroupLogic(const std::vector<float> rawVoxelData);
+    float calculateVariance(const std::vector<float>& voxelData);
+    float calculateMinMaxDiff(const std::vector<float>& voxelData);
+    const std::vector<float> applyGroupLogic(const std::vector<float>& rawVoxelData);
 
 protected:
 

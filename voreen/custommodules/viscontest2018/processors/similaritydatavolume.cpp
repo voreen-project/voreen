@@ -115,12 +115,12 @@ void SimilartyDataVolume::initSimilarityVolume() {
     if(!inport_.hasData()) return;
 
     const std::vector<std::vector<float>>& similarityData = inport_.getData()->getData();
-    tgt::ivec3 dimensions = inport_.getData()->getDimensions();
+    tgt::svec3 dimensions = inport_.getData()->getDimensions();
 
-    for(size_t z = 0; z < static_cast<size_t>(dimensions.z); z++) {
-        for(size_t y = 0; y < static_cast<size_t>(dimensions.y); y++) {
-            for(size_t x = 0; x < static_cast<size_t>(dimensions.x); x++) {
-                size_t index = x + (y + z * dimensions.z) * dimensions.x;
+    for(size_t z = 0; z < dimensions.z; z++) {
+        for(size_t y = 0; y < dimensions.y; y++) {
+            for(size_t x = 0; x < dimensions.x; x++) {
+                size_t index = VolumeRAM_Float::calcPos(dimensions, x, y, z);
                 const std::vector<float> voxelData = similarityData[index];
 
                 float similarityVoxelValue = 0;
@@ -138,7 +138,7 @@ void SimilartyDataVolume::initSimilarityVolume() {
     outport_.setData(similarityVolume_);
 }
 
-const std::vector<float> SimilartyDataVolume::applyGroupLogic(const std::vector<float> rawVoxelData) {
+const std::vector<float> SimilartyDataVolume::applyGroupLogic(const std::vector<float>& rawVoxelData) {
     std::vector<float> modifiedVoxelData = rawVoxelData;
     // compare two groups
     if(!group1_.getSelectedRowIndices().empty() && !group2_.getSelectedRowIndices().empty()) {
@@ -171,7 +171,7 @@ const std::vector<float> SimilartyDataVolume::applyGroupLogic(const std::vector<
     return modifiedVoxelData;
 }
 
-float SimilartyDataVolume::calculateVariance(const std::vector<float> voxelData) {
+float SimilartyDataVolume::calculateVariance(const std::vector<float>& voxelData) {
     Statistics statistics(true);
 
     for(float voxelRunValue : voxelData) {
@@ -181,7 +181,7 @@ float SimilartyDataVolume::calculateVariance(const std::vector<float> voxelData)
     return statistics.getVariance();
 }
 
-float SimilartyDataVolume::calculateMinMaxDiff(const std::vector<float> voxelData) {
+float SimilartyDataVolume::calculateMinMaxDiff(const std::vector<float>& voxelData) {
     float min = std::numeric_limits<float>::max();
     float max = std::numeric_limits<float>::lowest();
 
