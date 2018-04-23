@@ -739,10 +739,16 @@ struct GlobalFixture {
                                           "Test data base directory (contains sub directories 'input' and 'reference').");
         app->initialize();
 
-        if(tgt::FileSystem::dirExists(testdataDir))
-            app->setTestDataPath(testdataDir);
-        else
-            LERROR("testdata directory does not exist, some tests may not run as expected");
+        if(testdataDir.empty())
+            LWARNING("Test data directory not specified, some tests may not run as expected");
+        else {
+            LINFO("Test data directory set to: " << testdataDir);
+
+            if (tgt::FileSystem::dirExists(testdataDir))
+                app->setTestDataPath(testdataDir);
+            else
+                LERROR("Test data directory '" << testdataDir << "' does not exist, some tests may not run as expected");
+        }
 
         LINFO("Creating test data...");
         tgt::Stopwatch watch; watch.start();
