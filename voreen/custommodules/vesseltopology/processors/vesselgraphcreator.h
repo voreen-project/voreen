@@ -32,6 +32,7 @@
 #include "voreen/core/properties/intproperty.h"
 #include "voreen/core/properties/boolproperty.h"
 #include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/stringproperty.h"
 #include "voreen/core/properties/filedialogproperty.h"
 #include "voreen/core/properties/buttonproperty.h"
 #include "voreen/core/properties/progressproperty.h"
@@ -142,6 +143,9 @@ private:
     IntProperty minVoxelLength_;
     FloatProperty minElongation_;
     FloatProperty minBulgeSize_;
+
+    // Info
+    StringProperty tmpStorageSizeInfo_;
 
     static const std::string loggerCat_;
 };

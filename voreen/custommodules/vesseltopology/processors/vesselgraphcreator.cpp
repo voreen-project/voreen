@@ -34,6 +34,7 @@
 #include "voreen/core/datastructures/geometry/pointlistgeometry.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 #include "voreen/core/datastructures/callback/lambdacallback.h"
+#include "voreen/core/utils/stringutils.h"
 
 #include "modules/hdf5/io/hdf5volumereader.h"
 #include "modules/hdf5/io/hdf5volumewriter.h"
@@ -71,6 +72,7 @@ VesselGraphCreator::VesselGraphCreator()
     , minElongation_("minElongation", "Minimum Elongation", 0, 0, 5)
     , minBulgeSize_("minBulgeSize", "Minimum Bulge Size", 0, 0, 10)
     , binarizationThresholdSegmentation_("binarizationThresholdSegmentation", "Binarization Threshold (Segmentation)", 0.5f, 0.0f, 1.0f, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_ADVANCED)
+    , tmpStorageSizeInfo_("tmpStorageSizeInfo", "Required temporary storage (estimated)", "")
 {
     addPort(segmentedVolumeInport_);
     addPort(sampleMaskInport_);
@@ -93,6 +95,11 @@ VesselGraphCreator::VesselGraphCreator()
         addProperty(binarizationThresholdSegmentation_);
             binarizationThresholdSegmentation_.setGroupID("binarization");
     setPropertyGroupGuiName("binarization", "Binarization");
+
+        addProperty(tmpStorageSizeInfo_);
+            tmpStorageSizeInfo_.setReadOnlyFlag(true);
+            tmpStorageSizeInfo_.setGroupID("info");
+    setPropertyGroupGuiName("info", "Information");
 }
 
 VesselGraphCreator::~VesselGraphCreator() {
@@ -972,6 +979,8 @@ void VesselGraphCreator::adjustPropertiesToInput() {
         if(minMaxWereEqual) {
             binarizationThresholdSegmentation_.set((binarizationThresholdSegmentation_.getMinValue() + binarizationThresholdSegmentation_.getMaxValue())*0.5f);
         }
+
+        tmpStorageSizeInfo_.set(formatMemorySize(segmentation->getNumVoxels()/8*2 /*2 bits per voxel */));
     }
 }
 
