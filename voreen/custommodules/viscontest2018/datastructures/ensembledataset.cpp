@@ -38,6 +38,7 @@ EnsembleDataset::EnsembleDataset()
     , minTimeStepDuration_(std::numeric_limits<float>::max())
     , startTime_(std::numeric_limits<float>::max())
     , endTime_(0.0f)
+    , commonTimeInterval_(endTime_, startTime_)
     , dimensions_(tgt::svec3::zero)
     , spacing_(tgt::vec3::zero)
     , roi_()
@@ -151,6 +152,13 @@ void EnsembleDataset::addRun(const Run& run) {
 
         startTime_ = std::min(startTime_, run.timeSteps_[t].time_);
         endTime_   = std::max(endTime_,   run.timeSteps_[t].time_+run.timeSteps_[t].duration_);
+        commonTimeInterval_.x = std::max(commonTimeInterval_.x, run.timeSteps_[t].time_);
+        commonTimeInterval_.y = std::min(commonTimeInterval_.y, run.timeSteps_[t].time_+run.timeSteps_[t].duration_);
+    }
+
+    if(commonTimeInterval_.x > commonTimeInterval_.y) {
+        LWARNINGC("voreen.EnsembleDataSet", "The time interval of the currently added Run " << run.name_ << " does not overlap with the prior interval");
+        commonTimeInterval_ = tgt::vec2::zero;
     }
 
     runs_.push_back(run);
@@ -190,6 +198,10 @@ float EnsembleDataset::getEndTime() const {
 
 float EnsembleDataset::getMaxTotalDuration() const {
     return getEndTime() - getStartTime();
+}
+
+const tgt::vec2& EnsembleDataset::getCommonTimeInterval() const {
+    return commonTimeInterval_;
 }
 
 const tgt::svec3& EnsembleDataset::getDimensions() const {

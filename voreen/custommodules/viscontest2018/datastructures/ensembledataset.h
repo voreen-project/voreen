@@ -84,6 +84,7 @@ public:
     float getStartTime() const;
     float getEndTime() const;
     float getMaxTotalDuration() const;
+    const tgt::vec2& getCommonTimeInterval() const;
 
     const tgt::vec2& getValueRange(const std::string& channel) const;
 
@@ -127,6 +128,7 @@ private:
     float maxTimeStepDuration_;
     float startTime_;
     float endTime_;
+    tgt::vec2 commonTimeInterval_;
 
     tgt::svec3 dimensions_;
     tgt::vec3 spacing_;

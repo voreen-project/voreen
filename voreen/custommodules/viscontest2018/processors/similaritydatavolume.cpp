@@ -69,6 +69,8 @@ SimilarityDataVolumeCreatorInput SimilartyDataVolume::prepareComputeInput() {
 
     const EnsembleDataset& input = *inputPtr;
 
+    // TODO: check if selected time is simulated in each selected run.
+
     tgt::ivec3 newDims = tgt::vec3(input.getDimensions()) * resampleFactor_.get();
     VolumeRAM_Float* volumeData = new VolumeRAM_Float(newDims, true);
 
@@ -109,6 +111,14 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
 
                 std::vector<float> samples(input.dataset.getRuns().size());
                 for(size_t r = 0; r<input.dataset.getRuns().size(); r++) {
+
+                    // Filter unused runs to save time.
+                    if(std::find(group1_.getSelectedRowIndices().begin(), group1_.getSelectedRowIndices().end(), r)
+                       == group1_.getSelectedRowIndices().end() && group2_.getSelectedRowIndices().end() ==
+                       std::find(group2_.getSelectedRowIndices().begin(), group2_.getSelectedRowIndices().end(), r)
+                       )
+                        continue;
+
                     const EnsembleDataset::Run& run = input.dataset.getRuns()[r];
 
                     size_t t = input.dataset.pickTimeStep(r, input.time);
