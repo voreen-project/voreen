@@ -193,6 +193,14 @@ int8_t OCTANT_VOXEL_INDEX [8][7] {
 namespace voreen {
 
 const std::string VolumeMask::loggerCat_("voreen.vesseltopology.volumemask");
+
+VolumeMask::VolumeMask(VolumeMask&& other)
+    : data_(std::move(other.data_))
+    , spacing_(other.spacing_)
+    , surfaceFile_(std::move(other.surfaceFile_))
+{
+}
+
 VolumeMask::~VolumeMask() {
     tgt::FileSystem::deleteFile(surfaceFile_.filename_);
 }

@@ -779,6 +779,10 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorInput& input,
     const std::string segOnlyCriticalTmpPath = VoreenApplication::app()->getUniqueTmpFilePath(".h5");
 
     auto segmentationWithAndWithoutCriticalVoxels = splitSegmentationCriticalVoxels(segNoCriticalTmpPath, segOnlyCriticalTmpPath, *protograph, SkeletonClassReader(skeleton), input.segmentation, input.binarizationThresholdSegmentationNormalized, subtaskReporters.get<2>());
+    {
+        // Drop VolumeMask and thus free the used non-volatile storage space.
+        VolumeMask _dump(std::move(skeleton));
+    }
     std::unique_ptr<HDF5FileVolume> segNoCriticalVoxelsHDF5 = std::move(segmentationWithAndWithoutCriticalVoxels.first);
     std::unique_ptr<HDF5FileVolume> segOnlyCriticalVoxelsHDF5 = std::move(segmentationWithAndWithoutCriticalVoxels.second);
 

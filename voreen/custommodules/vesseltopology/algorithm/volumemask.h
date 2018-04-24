@@ -105,6 +105,7 @@ public:
 
     template<class F>
     VolumeMask(const VolumeBase& vol, const VolumeBase* sampleMask, F&& fixedForegroundReader, float binarizationThresholdNormalized, ProgressReporter& progress);
+    VolumeMask(VolumeMask&& other);
     ~VolumeMask();
 
     void set(const tgt::svec3& pos, Value val);
