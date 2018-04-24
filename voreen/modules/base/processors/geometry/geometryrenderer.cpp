@@ -306,6 +306,8 @@ void GeometryRenderer::render(ShaderProperty& shaderProp) {
             prog->setUniform("plane_", tgt::vec4(normalize(planeNormal_.get()), planeDistance_.get()));
         else // set to zero to prevent undefined behavior
             prog->setUniform("plane_", tgt::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+        prog->setIgnoreUnsetUniform("headPointerImage_"); // Disable warning for uniform that is already set in GeometryProcessor.
     }
 
     LGL_ERROR;
