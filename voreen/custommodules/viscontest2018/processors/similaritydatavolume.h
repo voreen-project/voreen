@@ -26,35 +26,35 @@
 #ifndef VRN_SIMILARITYDATAVOLUME_H
 #define VRN_SIMILARITYDATAVOLUME_H
 
-#include "voreen/core/processors/renderprocessor.h"
-
-#include "voreen/core/io/volumeserializerpopulator.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
 
 #include "voreen/core/ports/volumeport.h"
 
-#include "voreen/core/properties/boolproperty.h"
-#include "voreen/core/properties/buttonproperty.h"
-#include "voreen/core/properties/filedialogproperty.h"
 #include "voreen/core/properties/floatproperty.h"
-#include "voreen/core/properties/intproperty.h"
 #include "voreen/core/properties/optionproperty.h"
-#include "voreen/core/properties/progressproperty.h"
-#include "voreen/core/properties/shaderproperty.h"
-#include "voreen/core/properties/numeric/intervalproperty.h"
-#include "voreen/core/properties/transfunc/1d/1dkeys/transfunc1dkeysproperty.h"
 
-#include "../datastructures/similaritydata.h"
 #include "../ports/ensembledatasetport.h"
-#include "../ports/similaritydataport.h"
 #include "../properties/stringlistproperty.h"
 
 namespace voreen {
 
+
+struct SimilarityDataVolumeCreatorInput {
+    const EnsembleDataset& dataset;
+    VolumeRAM_Float* volumeData;
+    std::string channel;
+    float resampleFactor;
+    float time;
+};
+
+struct SimilarityDataVolumeCreatorOutput {
+    VolumeBase* volume;
+};
+
 /**
  *
  */
-class VRN_CORE_API SimilartyDataVolume : public RenderProcessor {
-
+class VRN_CORE_API SimilartyDataVolume : public AsyncComputeProcessor<SimilarityDataVolumeCreatorInput, SimilarityDataVolumeCreatorOutput>  {
 public:
     SimilartyDataVolume();
     virtual ~SimilartyDataVolume();
@@ -66,20 +66,14 @@ public:
 
 protected:
 
-    virtual void onEvent(tgt::Event* e);
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
 
-    virtual void initialize();
-    virtual void deinitialize();
-
-    virtual void process();
-
-    virtual bool isReady() const;
-
-    void onInportChange();
-    void initSimilarityVolume();
-    float calculateVariance(const std::vector<float>& voxelData);
-    float calculateMinMaxDiff(const std::vector<float>& voxelData);
-    const std::vector<float> applyGroupLogic(const std::vector<float>& rawVoxelData);
+    void adjustToEnsemble();
+    float calculateVariance(const std::vector<float>& voxelData) const;
+    float calculateMinMaxDiff(const std::vector<float>& voxelData) const;
+    const std::vector<float> applyGroupLogic(const std::vector<float>& rawVoxelData) const;
 
 protected:
 
@@ -87,12 +81,14 @@ protected:
         setDescription("");
     }
 
-    SimilarityDataPort inport_;
+    EnsembleDatasetPort inport_;
     VolumePort outport_;
-    StringOptionProperty similarityMethod_;
 
-    VolumeBase* similarityVolume_;
-    VolumeRAM_Float* similarityVolumeRepresentation_;
+    FloatProperty resampleFactor_;
+    FloatProperty time_;
+
+    StringOptionProperty similarityMethod_;
+    StringOptionProperty selectedChannel_;
 
     StringListProperty group1_;
     StringListProperty group2_;

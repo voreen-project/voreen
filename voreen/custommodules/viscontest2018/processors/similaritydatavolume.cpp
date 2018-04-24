@@ -25,120 +25,153 @@
 
 #include "similaritydatavolume.h"
 
-#include "tgt/immediatemode/immediatemode.h"
-#include "voreen/core/voreenapplication.h"
-
 #include "voreen/core/utils/statistics.h"
-
-#include "../ports/conditions/portconditionensemble.h"
-
 
 namespace voreen {
     
 const std::string SimilartyDataVolume::loggerCat_("voreen.viscontest2018.SimilartyDataVolume");
 
 SimilartyDataVolume::SimilartyDataVolume()
-    : RenderProcessor()
+    : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
     , inport_(Port::INPORT, "ensembleinport", "Ensemble Data Input")
     , outport_(Port::OUTPORT, "volumehandle.volumehandle", "Volume Output")
-    , similarityVolume_(nullptr)
-    , similarityVolumeRepresentation_(nullptr)
+    , resampleFactor_("resampleFactor", "Resample Factor", 1.0f, 0.1f, 1.0f)
+    , time_("time", "Time", 0.0f, 0.0f, 1000000.0f)
     , similarityMethod_("similarityMethod", "Similarity Method")
+    , selectedChannel_("selectedChannel", "Selected Channel")
     , group1_("similartyDataVolumeGroup1", "Group 1")
     , group2_("similartyDataVolumeGroup2", "Group 2")
 {
     // Ports
     addPort(inport_);
-
+    ON_CHANGE(inport_, SimilartyDataVolume, adjustToEnsemble);
     addPort(outport_);
-    ON_CHANGE(outport_, SimilartyDataVolume, onInportChange);
 
+    addProperty(resampleFactor_);
+    addProperty(time_);
     addProperty(similarityMethod_);
     similarityMethod_.addOption("variance", "Variance");
     similarityMethod_.addOption("minmax", "Min/Max Comparison");
     similarityMethod_.select("variance");
+    addProperty(selectedChannel_);
 
     addProperty(group1_);
     addProperty(group2_);
-
-
-}
-
-void SimilartyDataVolume::onInportChange() {
-    if(!inport_.hasData()) return;
-
-    tgt::ivec3 dimensions = inport_.getData()->getDimensions();
-    try {
-        similarityVolumeRepresentation_ = new VolumeRAM_Float(tgt::svec3(dimensions.x, dimensions.y, dimensions.z));
-    } catch(std::bad_alloc e) {
-        LERRORC("voreen.similaritydatavolume", "Failed to allocate similarity volume data memory");
-        throw;
-    }
-    memset(similarityVolumeRepresentation_->voxel(), 0, similarityVolumeRepresentation_->getNumBytes());
-    similarityVolume_ = new Volume(similarityVolumeRepresentation_, tgt::vec3::one, tgt::vec3::zero);
-
-    for(std::string runName: inport_.getData()->getRuns()) {
-        group1_.addRow(runName);
-        group2_.addRow(runName);
-    }
 }
 
 SimilartyDataVolume::~SimilartyDataVolume() {
+}
+
+SimilarityDataVolumeCreatorInput SimilartyDataVolume::prepareComputeInput() {
+    const EnsembleDataset* inputPtr = inport_.getData();
+    if (!inputPtr)
+        throw InvalidInputException("No input", InvalidInputException::S_WARNING);
+
+    const EnsembleDataset& input = *inputPtr;
+
+    tgt::ivec3 newDims = tgt::vec3(input.getDimensions()) * resampleFactor_.get();
+    VolumeRAM_Float* volumeData = new VolumeRAM_Float(newDims, true);
+
+    return SimilarityDataVolumeCreatorInput{
+            input,
+            volumeData,
+            selectedChannel_.get(),
+            resampleFactor_.get(),
+            time_.get()
+    };
+}
+
+SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVolumeCreatorInput input, ProgressReporter& progress) const {
+
+    progress.setProgress(0.0f);
+
+    const std::string& channel = input.channel;
+
+    tgt::vec3 ratio(1.0f / input.resampleFactor);
+    tgt::ivec3 newDims = input.volumeData->getDimensions();
+
+    float progressIncrement = 1.0f / newDims.z;
+
+    tgt::vec3 d_a = tgt::vec3(newDims - tgt::ivec3::one) / 2.0f;
+    tgt::vec3 d_b = tgt::vec3(input.dataset.getDimensions() - tgt::svec3::one) / 2.0f;
+
+    tgt::ivec3 pos = tgt::ivec3::zero; // iteration variable
+    tgt::vec3 nearest; // stores the new position of the target volume
+
+    for (pos.z = 0; pos.z < newDims.z; ++pos.z) {
+        nearest.z = (static_cast<float>(pos.z) - d_a.z) * ratio.z + d_b.z;
+
+        for (pos.y = 0; pos.y < newDims.y; ++pos.y) {
+            nearest.y = (static_cast<float>(pos.y) - d_a.y) * ratio.y + d_b.y;
+
+            for (pos.x = 0; pos.x < newDims.x; ++pos.x) {
+                nearest.x = (static_cast<float>(pos.x) - d_a.x) * ratio.x + d_b.x;
+
+                std::vector<float> samples(input.dataset.getRuns().size());
+                for(size_t r = 0; r<input.dataset.getRuns().size(); r++) {
+                    const EnsembleDataset::Run& run = input.dataset.getRuns()[r];
+
+                    size_t t = input.dataset.pickTimeStep(r, input.time);
+                    const VolumeBase* volume = run.timeSteps_[t].channels_.at(channel);
+                    const VolumeRAM_Float* volumeData = dynamic_cast<const VolumeRAM_Float*>(volume->getRepresentation<VolumeRAM>());
+
+                    samples[r] = input.dataset.pickSample(volumeData, volume->getSpacing(), nearest);
+                }
+
+                // Apply group logic.
+                samples = applyGroupLogic(samples);
+
+                // Apply similarity method.
+                if(similarityMethod_.get() == "variance") {
+                    input.volumeData->voxel(pos) = calculateVariance(samples);
+                }
+                else if(similarityMethod_.get() == "minmax") {
+                    input.volumeData->voxel(pos) = calculateMinMaxDiff(samples);
+                }
+            }
+        }
+
+        // Update progress.
+        progress.setProgress(std::min(progress.getProgress() + progressIncrement, 1.0f));
+    }
+
+    progress.setProgress(1.0f);
+
+    Volume* volume = new Volume(input.volumeData, input.dataset.getSpacing(), tgt::vec3::zero);
+    return SimilarityDataVolumeCreatorOutput{volume};
+}
+
+void SimilartyDataVolume::processComputeOutput(SimilarityDataVolumeCreatorOutput output) {
+    outport_.setData(output.volume, true);
+}
+
+void SimilartyDataVolume::adjustToEnsemble() {
+    if(!inport_.hasData()) return;
+
+    const EnsembleDataset* ensemble = inport_.getData();
+
+    group1_.reset();
+    group2_.reset();
+    for(const EnsembleDataset::Run& run : ensemble->getRuns()) {
+        group1_.addRow(run.name_);
+        group2_.addRow(run.name_);
+    }
+
+    selectedChannel_.setOptions(std::deque<Option<std::string>>());
+    for(const std::string& channel : ensemble->getCommonChannels()) {
+        selectedChannel_.addOption(channel, channel);
+    }
+
+    time_.setMinValue(ensemble->getStartTime());
+    time_.setMaxValue(ensemble->getEndTime());
+    time_.set(ensemble->getStartTime());
 }
 
 Processor* SimilartyDataVolume::create() const {
     return new SimilartyDataVolume();
 }
 
-void SimilartyDataVolume::initialize() {
-    RenderProcessor::initialize();
-}
-
-void SimilartyDataVolume::deinitialize() {
-
-    RenderProcessor::deinitialize();
-}
-
-bool SimilartyDataVolume::isReady() const {
-    return inport_.isReady();
-}
-
-void SimilartyDataVolume::process() {
-    // TODO
-}
-
-void SimilartyDataVolume::onEvent(tgt::Event *e) {
-    Processor::onEvent(e);
-}
-
-void SimilartyDataVolume::initSimilarityVolume() {
-    if(!inport_.hasData()) return;
-
-    const std::vector<std::vector<float>>& similarityData = inport_.getData()->getData();
-    tgt::svec3 dimensions = inport_.getData()->getDimensions();
-
-    for(size_t z = 0; z < dimensions.z; z++) {
-        for(size_t y = 0; y < dimensions.y; y++) {
-            for(size_t x = 0; x < dimensions.x; x++) {
-                size_t index = VolumeRAM_Float::calcPos(dimensions, x, y, z);
-                const std::vector<float> voxelData = similarityData[index];
-
-                float similarityVoxelValue = 0;
-                if(similarityMethod_.get() == "variance") {
-                    similarityVoxelValue = calculateVariance(voxelData);
-                }
-                else if(similarityMethod_.get() == "minmax") {
-                    similarityVoxelValue = calculateMinMaxDiff(voxelData);
-                }
-                similarityVolumeRepresentation_->voxel()[index] = similarityVoxelValue;
-            }
-        }
-    }
-
-    outport_.setData(similarityVolume_);
-}
-
-const std::vector<float> SimilartyDataVolume::applyGroupLogic(const std::vector<float>& rawVoxelData) {
+const std::vector<float> SimilartyDataVolume::applyGroupLogic(const std::vector<float>& rawVoxelData) const {
     std::vector<float> modifiedVoxelData = rawVoxelData;
     // compare two groups
     if(!group1_.getSelectedRowIndices().empty() && !group2_.getSelectedRowIndices().empty()) {
@@ -162,7 +195,7 @@ const std::vector<float> SimilartyDataVolume::applyGroupLogic(const std::vector<
         modifiedVoxelData.push_back(group2Avg);
     }
     // normal run filtering
-    else if(!group1_.getSelectedRowIndices().empty() > 0) {
+    else if(!group1_.getSelectedRowIndices().empty()) {
         modifiedVoxelData.clear();
         for(int selectedIndex : group1_.getSelectedRowIndices()) {
             modifiedVoxelData.push_back(rawVoxelData.at(selectedIndex));
@@ -171,7 +204,7 @@ const std::vector<float> SimilartyDataVolume::applyGroupLogic(const std::vector<
     return modifiedVoxelData;
 }
 
-float SimilartyDataVolume::calculateVariance(const std::vector<float>& voxelData) {
+float SimilartyDataVolume::calculateVariance(const std::vector<float>& voxelData) const {
     Statistics statistics(true);
 
     for(float voxelRunValue : voxelData) {
@@ -181,7 +214,7 @@ float SimilartyDataVolume::calculateVariance(const std::vector<float>& voxelData
     return statistics.getVariance();
 }
 
-float SimilartyDataVolume::calculateMinMaxDiff(const std::vector<float>& voxelData) {
+float SimilartyDataVolume::calculateMinMaxDiff(const std::vector<float>& voxelData) const{
     float min = std::numeric_limits<float>::max();
     float max = std::numeric_limits<float>::lowest();
 
