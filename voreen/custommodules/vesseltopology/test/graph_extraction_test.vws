@@ -1,15 +1,10 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="false" GlobalDescription="">
-        <ProcessorNetwork version="18">
+        <ProcessorNetwork version="19">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
-                </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="VesselGraphSave" ref="ref8" />
-                    </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="407" y="30" />
@@ -29,7 +24,7 @@
                                     <paths>
                                         <item value="input/cow.vvd" />
                                         <item value="../../voreen-testdata/voreen-testdata/input/cow.vvd" />
-                                        <item value="/home/dominik/git/voreen-testdata/voreen-testdata/input/cow.vvd" />
+                                        <item value="/git/voreen-testdata/voreen-testdata/input/cow.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters />
@@ -57,8 +52,8 @@
                         <Property mapKey="graphFilePath" name="graphFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/cow_graph_it0.vvg.gz" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/cow_graph_it0.vvg.gz" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cow_graph_it0.vvg.gz" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cow_graph_it0.vvg.gz" />
                                     <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/cow_graph_it0.vvg.gz" />
                                 </paths>
                             </paths>
@@ -84,9 +79,6 @@
                         <Property mapKey="binarizationThresholdSegmentation" name="binarizationThresholdSegmentation" value="0.5" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
-                        <Property mapKey="maxVesselRadiusX" name="maxVesselRadiusX" value="16" />
-                        <Property mapKey="maxVesselRadiusY" name="maxVesselRadiusY" value="16" />
-                        <Property mapKey="maxVesselRadiusZ" name="maxVesselRadiusZ" value="16" />
                         <Property mapKey="minBulgeSize" name="minBulgeSize" value="1" />
                         <Property mapKey="minElongation" name="minElongation" value="0" />
                         <Property mapKey="minVoxelLength" name="minVoxelLength" value="0" />
@@ -95,6 +87,7 @@
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                        <Property mapKey="tmpStorageSizeInfo" name="tmpStorageSizeInfo" value="34.7 kB" />
                     </Properties>
                     <Inports>
                         <Port name="vesselgraphcreator.fixedForegroundPointInport" direction="1" portID="vesselgraphcreator.fixedForegroundPointInport" guiName="Fixed Foreground Points" allowMultipleConnections="false" invalidationLevel="1">
@@ -152,7 +145,7 @@
                                 <paths>
                                     <item value="output/cow_graph_it1.vvg.gz" />
                                     <item value="../../voreen-testdata/voreen-testdata/output/cow_graph_it1.vvg.gz" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/cow_graph_it1.vvg.gz" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/cow_graph_it1.vvg.gz" />
                                 </paths>
                             </paths>
                         </Property>
@@ -177,10 +170,7 @@
                         <Property mapKey="binarizationThresholdSegmentation" name="binarizationThresholdSegmentation" value="0.5" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
-                        <Property mapKey="maxVesselRadiusX" name="maxVesselRadiusX" value="16" />
-                        <Property mapKey="maxVesselRadiusY" name="maxVesselRadiusY" value="16" />
-                        <Property mapKey="maxVesselRadiusZ" name="maxVesselRadiusZ" value="16" />
-                        <Property mapKey="minBulgeSize" name="minBulgeSize" value="1" />
+                        <Property mapKey="minBulgeSize" name="minBulgeSize" value="1.5" />
                         <Property mapKey="minElongation" name="minElongation" value="0" />
                         <Property mapKey="minVoxelLength" name="minVoxelLength" value="0" />
                         <Property mapKey="numRefinementIterations" name="numRefinementIterations" value="1" />
@@ -188,6 +178,7 @@
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                        <Property mapKey="tmpStorageSizeInfo" name="tmpStorageSizeInfo" value="34.7 kB" />
                     </Properties>
                     <Inports>
                         <Port name="vesselgraphcreator.fixedForegroundPointInport" direction="1" portID="vesselgraphcreator.fixedForegroundPointInport" guiName="Fixed Foreground Points" allowMultipleConnections="false" invalidationLevel="1">
@@ -242,9 +233,6 @@
                         <Property mapKey="binarizationThresholdSegmentation" name="binarizationThresholdSegmentation" value="0.5" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
-                        <Property mapKey="maxVesselRadiusX" name="maxVesselRadiusX" value="17" />
-                        <Property mapKey="maxVesselRadiusY" name="maxVesselRadiusY" value="17" />
-                        <Property mapKey="maxVesselRadiusZ" name="maxVesselRadiusZ" value="17" />
                         <Property mapKey="minBulgeSize" name="minBulgeSize" value="1" />
                         <Property mapKey="minElongation" name="minElongation" value="0" />
                         <Property mapKey="minVoxelLength" name="minVoxelLength" value="0" />
@@ -253,6 +241,7 @@
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                        <Property mapKey="tmpStorageSizeInfo" name="tmpStorageSizeInfo" value="4 MB" />
                     </Properties>
                     <Inports>
                         <Port name="vesselgraphcreator.fixedForegroundPointInport" direction="1" portID="vesselgraphcreator.fixedForegroundPointInport" guiName="Fixed Foreground Points" allowMultipleConnections="false" invalidationLevel="1">
@@ -310,7 +299,7 @@
                                 <paths>
                                     <item value="output/aneurism_graph_it1.vvg.gz" />
                                     <item value="../../voreen-testdata/voreen-testdata/output/aneurism_graph_it1.vvg.gz" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/aneurism_graph_it1.vvg.gz" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/aneurism_graph_it1.vvg.gz" />
                                 </paths>
                             </paths>
                         </Property>
@@ -335,10 +324,7 @@
                         <Property mapKey="binarizationThresholdSegmentation" name="binarizationThresholdSegmentation" value="0.5" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
-                        <Property mapKey="maxVesselRadiusX" name="maxVesselRadiusX" value="17" />
-                        <Property mapKey="maxVesselRadiusY" name="maxVesselRadiusY" value="17" />
-                        <Property mapKey="maxVesselRadiusZ" name="maxVesselRadiusZ" value="17" />
-                        <Property mapKey="minBulgeSize" name="minBulgeSize" value="1" />
+                        <Property mapKey="minBulgeSize" name="minBulgeSize" value="1.5" />
                         <Property mapKey="minElongation" name="minElongation" value="0" />
                         <Property mapKey="minVoxelLength" name="minVoxelLength" value="0" />
                         <Property mapKey="numRefinementIterations" name="numRefinementIterations" value="1" />
@@ -346,6 +332,7 @@
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                        <Property mapKey="tmpStorageSizeInfo" name="tmpStorageSizeInfo" value="4 MB" />
                     </Properties>
                     <Inports>
                         <Port name="vesselgraphcreator.fixedForegroundPointInport" direction="1" portID="vesselgraphcreator.fixedForegroundPointInport" guiName="Fixed Foreground Points" allowMultipleConnections="false" invalidationLevel="1">
@@ -401,8 +388,8 @@
                         <Property mapKey="graphFilePath" name="graphFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/aneurism_graph_it0.vvg.gz" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/aneurism_graph_it0.vvg.gz" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/aneurism_graph_it0.vvg.gz" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/aneurism_graph_it0.vvg.gz" />
                                     <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/aneurism_graph_it0.vvg.gz" />
                                 </paths>
                             </paths>
@@ -432,7 +419,7 @@
                                     <paths>
                                         <item value="input/hdf5/aneurism_binary.h5" />
                                         <item value="../../voreen-testdata/voreen-testdata/input/hdf5/aneurism_binary.h5" />
-                                        <item value="/home/dominik/git/voreen-testdata/voreen-testdata/input/hdf5/aneurism_binary.h5" />
+                                        <item value="/git/voreen-testdata/voreen-testdata/input/hdf5/aneurism_binary.h5" />
                                     </paths>
                                 </path>
                                 <searchParameters>
