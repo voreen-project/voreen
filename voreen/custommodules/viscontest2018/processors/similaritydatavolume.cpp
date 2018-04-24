@@ -74,12 +74,22 @@ SimilarityDataVolumeCreatorInput SimilartyDataVolume::prepareComputeInput() {
     tgt::ivec3 newDims = tgt::vec3(input.getDimensions()) * resampleFactor_.get();
     VolumeRAM_Float* volumeData = new VolumeRAM_Float(newDims, true);
 
+    std::string runGroup1;
+    for(int index : group1_.getSelectedRowIndices())
+        runGroup1 += input.getRuns()[index].name_ + " ";
+
+    std::string runGroup2;
+    for(int index : group2_.getSelectedRowIndices())
+        runGroup2 += input.getRuns()[index].name_ + " ";
+
     return SimilarityDataVolumeCreatorInput{
             input,
             volumeData,
-            selectedChannel_.get(),
             resampleFactor_.get(),
-            time_.get()
+            time_.get(),
+            runGroup1,
+            runGroup2,
+            selectedChannel_.get()
     };
 }
 
@@ -92,7 +102,7 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
     tgt::vec3 ratio(1.0f / input.resampleFactor);
     tgt::ivec3 newDims = input.volumeData->getDimensions();
 
-    float progressIncrement = 1.0f / newDims.z;
+    float progressIncrement = 0.95f / newDims.z;
 
     tgt::vec3 d_a = tgt::vec3(newDims - tgt::ivec3::one) / 2.0f;
     tgt::vec3 d_b = tgt::vec3(input.dataset.getDimensions() - tgt::svec3::one) / 2.0f;
@@ -148,6 +158,10 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
     progress.setProgress(1.0f);
 
     Volume* volume = new Volume(input.volumeData, input.dataset.getSpacing(), tgt::vec3::zero);
+    volume->getMetaDataContainer().addMetaData("time", new FloatMetaData(input.time));
+    volume->getMetaDataContainer().addMetaData("channel", new StringMetaData(channel));
+    volume->getMetaDataContainer().addMetaData("group1", new StringMetaData(input.runGroup1));
+    volume->getMetaDataContainer().addMetaData("group2", new StringMetaData(input.runGroup2));
     return SimilarityDataVolumeCreatorOutput{volume};
 }
 
@@ -182,36 +196,28 @@ Processor* SimilartyDataVolume::create() const {
 }
 
 const std::vector<float> SimilartyDataVolume::applyGroupLogic(const std::vector<float>& rawVoxelData) const {
-    std::vector<float> modifiedVoxelData = rawVoxelData;
+    std::vector<float> modifiedVoxelData;
     // compare two groups
     if(!group1_.getSelectedRowIndices().empty() && !group2_.getSelectedRowIndices().empty()) {
-        modifiedVoxelData.clear();
-        float group1Avg;
-        float group2Avg;
-
-        Statistics statistics(true);
+        Statistics statistics(false);
         for(int selectedIndex : group1_.getSelectedRowIndices()) {
             statistics.addSample(rawVoxelData.at(selectedIndex));
         }
-        group1Avg = statistics.getMean();
+        modifiedVoxelData.push_back(statistics.getMean());
 
         statistics.reset();
         for(int selectedIndex : group2_.getSelectedRowIndices()) {
             statistics.addSample(rawVoxelData.at(selectedIndex));
         }
-        group2Avg = statistics.getMean();
-
-        modifiedVoxelData.push_back(group1Avg);
-        modifiedVoxelData.push_back(group2Avg);
+        modifiedVoxelData.push_back(statistics.getMean());
     }
     // normal run filtering
     else if(!group1_.getSelectedRowIndices().empty()) {
-        modifiedVoxelData.clear();
         for(int selectedIndex : group1_.getSelectedRowIndices()) {
             modifiedVoxelData.push_back(rawVoxelData.at(selectedIndex));
         }
     }
-    return modifiedVoxelData;
+    return rawVoxelData;
 }
 
 float SimilartyDataVolume::calculateVariance(const std::vector<float>& voxelData) const {

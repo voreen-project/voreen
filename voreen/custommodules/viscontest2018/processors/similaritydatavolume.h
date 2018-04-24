@@ -42,9 +42,11 @@ namespace voreen {
 struct SimilarityDataVolumeCreatorInput {
     const EnsembleDataset& dataset;
     VolumeRAM_Float* volumeData;
-    std::string channel;
     float resampleFactor;
     float time;
+    std::string runGroup1;
+    std::string runGroup2;
+    std::string channel;
 };
 
 struct SimilarityDataVolumeCreatorOutput {
