@@ -152,9 +152,10 @@ void EnsembleDataset::addRun(const Run& run) {
 
         startTime_ = std::min(startTime_, run.timeSteps_[t].time_);
         endTime_   = std::max(endTime_,   run.timeSteps_[t].time_+run.timeSteps_[t].duration_);
-        commonTimeInterval_.x = std::max(commonTimeInterval_.x, run.timeSteps_[t].time_);
-        commonTimeInterval_.y = std::min(commonTimeInterval_.y, run.timeSteps_[t].time_+run.timeSteps_[t].duration_);
     }
+
+    commonTimeInterval_.x = std::max(commonTimeInterval_.x, run.timeSteps_.front().time_);
+    commonTimeInterval_.y = std::min(commonTimeInterval_.y, run.timeSteps_.back().time_+run.timeSteps_.back().duration_);
 
     if(commonTimeInterval_.x > commonTimeInterval_.y) {
         LWARNINGC("voreen.EnsembleDataSet", "The time interval of the currently added Run " << run.name_ << " does not overlap with the prior interval");

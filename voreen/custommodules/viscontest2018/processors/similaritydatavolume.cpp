@@ -71,8 +71,9 @@ SimilarityDataVolumeCreatorInput SimilartyDataVolume::prepareComputeInput() {
 
     // TODO: check if selected time is simulated in each selected run.
 
-    tgt::ivec3 newDims = tgt::vec3(input.getDimensions()) * resampleFactor_.get();
+    tgt::ivec3 newDims = tgt::vec3(input.getRoi().diagonal() + tgt::ivec3::one) * resampleFactor_.get();
     VolumeRAM_Float* volumeData = new VolumeRAM_Float(newDims, true);
+    memset(volumeData->getData(), 0, volumeData->getNumBytes());
 
     std::string runGroup1;
     for(int index : group1_.getSelectedRowIndices())
@@ -98,26 +99,20 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
     progress.setProgress(0.0f);
 
     const std::string& channel = input.channel;
+    const tgt::IntBounds& roi = input.dataset.getRoi();
 
     tgt::vec3 ratio(1.0f / input.resampleFactor);
     tgt::ivec3 newDims = input.volumeData->getDimensions();
 
     float progressIncrement = 0.95f / newDims.z;
 
-    tgt::vec3 d_a = tgt::vec3(newDims - tgt::ivec3::one) / 2.0f;
-    tgt::vec3 d_b = tgt::vec3(input.dataset.getDimensions() - tgt::svec3::one) / 2.0f;
-
     tgt::ivec3 pos = tgt::ivec3::zero; // iteration variable
-    tgt::vec3 nearest; // stores the new position of the target volume
-
     for (pos.z = 0; pos.z < newDims.z; ++pos.z) {
-        nearest.z = (static_cast<float>(pos.z) - d_a.z) * ratio.z + d_b.z;
-
         for (pos.y = 0; pos.y < newDims.y; ++pos.y) {
-            nearest.y = (static_cast<float>(pos.y) - d_a.y) * ratio.y + d_b.y;
-
             for (pos.x = 0; pos.x < newDims.x; ++pos.x) {
-                nearest.x = (static_cast<float>(pos.x) - d_a.x) * ratio.x + d_b.x;
+
+                tgt::vec3 nearest = roi.getLLF();
+                nearest += tgt::vec3(pos) * ratio;
 
                 std::vector<float> samples(input.dataset.getRuns().size());
                 for(size_t r = 0; r<input.dataset.getRuns().size(); r++) {
@@ -210,12 +205,14 @@ const std::vector<float> SimilartyDataVolume::applyGroupLogic(const std::vector<
             statistics.addSample(rawVoxelData.at(selectedIndex));
         }
         modifiedVoxelData.push_back(statistics.getMean());
+        return modifiedVoxelData;
     }
     // normal run filtering
     else if(!group1_.getSelectedRowIndices().empty()) {
         for(int selectedIndex : group1_.getSelectedRowIndices()) {
             modifiedVoxelData.push_back(rawVoxelData.at(selectedIndex));
         }
+        return modifiedVoxelData;
     }
     return rawVoxelData;
 }
