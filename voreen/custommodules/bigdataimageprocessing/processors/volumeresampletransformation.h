@@ -257,7 +257,7 @@ namespace {
             tgt::vec3 wc = pos - tgt::vec3(tgt::ifloor(pos));
             tgt::vec3 wf = tgt::vec3(1.0f) - wc;
             tgt::ivec3 f(tgt::floor(pos));
-            tgt::ivec3 c(tgt::iceil(pos));
+            tgt::ivec3 c = f + tgt::ivec3::one;
             float val = 0;
             val += wf.x * wf.y * wf.z * outsideVolumeHandler_.get(input, tgt::ivec3(f.x, f.y, f.z));
             val += wc.x * wf.y * wf.z * outsideVolumeHandler_.get(input, tgt::ivec3(c.x, f.y, f.z));
