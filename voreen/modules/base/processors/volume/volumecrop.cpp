@@ -40,6 +40,7 @@ const std::string VolumeCrop::loggerCat_("voreen.base.VolumeCrop");
 VolumeCrop::VolumeCrop()
     : CachingVolumeProcessor()
     , inport_(Port::INPORT, "volumehandle.input", "Volume Input")
+    , boundingBoxPort_(Port::INPORT, "boundingbox.input", "Boundingbox Input (optional)")
     , outport_(Port::OUTPORT, "volumehandle.output", "Volume Output", false)
     , clipRegion_("clipRegion", "Clip Region", tgt::IntBounds(tgt::ivec3::zero, tgt::ivec3::one), tgt::ivec3::zero, tgt::ivec3::one, tgt::ivec3::one)
     , continuousCropping_("continuousCropping", "Continuous Cropping", false)
@@ -51,6 +52,7 @@ VolumeCrop::VolumeCrop()
     , isCropped_(false)
 {
     addPort(inport_);
+    addPort(boundingBoxPort_);
     addPort(outport_);
 
     button_.onChange(MemberFunctionCallback<VolumeCrop>(this, &VolumeCrop::crop));
@@ -101,6 +103,11 @@ void VolumeCrop::process() {
         crop();
 }
 
+bool VolumeCrop::isReady() const {
+    return isInitialized() && inport_.isReady() && outport_.isReady();
+}
+
+
 void VolumeCrop::crop() {
     if (!inport_.hasData())
         return;
@@ -127,6 +134,23 @@ void VolumeCrop::adjustPropertiesToInput() {
         tgt::ivec3 dim = tgt::ivec3(inport_.getData()->getDimensions());
 
         clipRegion_.setMaxValue(dim-tgt::ivec3::one);
+        clipRegion_.setMinRange(tgt::ivec3::zero);
+        clipRegion_.setMaxRange(dim);
+
+        if(boundingBoxPort_.hasData()) {
+            std::unique_ptr<Geometry> geom = boundingBoxPort_.getData()->clone();
+            geom->transform(inport_.getData()->getWorldToVoxelMatrix());
+
+            // Geometry is now in voxel space of the input volume
+            tgt::Bounds bounds = geom->getBoundingBox();
+            clipRegion_.set(tgt::IntBounds(
+                        tgt::max(tgt::ivec3::zero, tgt::ivec3(tgt::round(bounds.getLLF()))),
+                        tgt::min(dim-tgt::ivec3::one, tgt::ivec3(tgt::round(bounds.getURB())))
+                        ));
+            clipRegion_.setReadOnlyFlag(true);
+        } else {
+            clipRegion_.setReadOnlyFlag(false);
+        }
     }
 }
 

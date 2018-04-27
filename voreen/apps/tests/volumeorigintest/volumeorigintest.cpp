@@ -352,7 +352,7 @@ void testSerialization() {
     std::string url = "dicom://path/to/file.dat?param1=value1&param2=value2";
     VolumeURL origin(url);
 
-    std::string baseDir = VoreenApplication::app()->getBasePath(); // Forces conversion from absolute in relative path during deserialization.
+    std::string baseDir = tgt::FileSystem::absolutePath(VoreenApplication::app()->getProgramPath()); // Forces conversion from absolute in relative path during deserialization.
 
     XmlSerializer serializer(baseDir);
     serializer.serialize("origin", origin);
@@ -376,7 +376,7 @@ void testSerializationSpecialChars() {
     origin.addSearchParameter("key2", "value?a b&c\\d/e=");
     origin.addSearchParameter("key3", "value3");
 
-    std::string baseDir = VoreenApplication::app()->getBasePath(); // Forces conversion from absolute in relative path during deserialization.
+    std::string baseDir = tgt::FileSystem::absolutePath(VoreenApplication::app()->getProgramPath()); // Forces conversion from absolute in relative path during deserialization.
 
     XmlSerializer serializer(baseDir);
     serializer.serialize("origin", origin);

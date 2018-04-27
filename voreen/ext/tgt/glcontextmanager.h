@@ -50,12 +50,13 @@ namespace tgt {
 class TGT_API GLContextManager : public Singleton<GLContextManager>{
     friend class Singleton<GLContextManager>;
 public:
-    // Convinient
+    // Convenient
     bool hasActiveContext() const;
     bool isContextActive(GLContextBase* context) const;
     bool isMainContextActive() const;
     void activateMainContext();
     GLContextBase* getMainContext() const;
+    const std::string& getDebugName(GLContextBase* context) const;
 
     // Context registration
     void registerContext(GLContextBase* context, const std::string& title);
@@ -88,7 +89,7 @@ private:
 * it hasn't been removed during lifetime.
 *
 * In case no context is passed, the Main context will be taken.
-* @note: Also flushes the pipeline within the old context without stalling.
+* @note: Also flushes the pipeline within the old context without stalling if possible.
 */
 class TGT_API GLContextStateGuard {
     static const int SYNC_PASS_TIMEOUT;
@@ -101,6 +102,8 @@ private:
 
 /**
  * In case the guard is bound to a condition, you should use GLConditionalContextStateGuard.
+ * This also can be useful when a guard needs to be placed in an environment,
+ * where its possible that no GLContextManager is available (e.g. in tests).
  */
 class TGT_API GLConditionalContextStateGuard {
 public:

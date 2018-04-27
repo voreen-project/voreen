@@ -743,6 +743,11 @@ private:
     void readFromValue(const rapidjson::Value& val, uint32_t& data) {
         readUint(val, data);
     }
+#ifdef __APPLE__
+    void readFromValue(const rapidjson::Value& val, unsigned long& data) {
+        readUint(val, data);
+    }
+#endif
     void readFromValue(const rapidjson::Value& val, uint64_t& data) {
         readUint(val, data);
     }

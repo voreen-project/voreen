@@ -171,6 +171,9 @@ CameraInteractionHandler::~CameraInteractionHandler() {
     delete fpNavi_;
     delete timerEventHandler_;
     delete motionTimer_;
+
+    // Reset quality.
+    QualityMode.requestQualityMode(VoreenQualityMode::RQ_DEFAULT, this);
 }
 
 // handle multi touch event

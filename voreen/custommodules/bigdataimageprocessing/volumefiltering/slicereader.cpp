@@ -162,8 +162,7 @@ VolumeSliceReader::~VolumeSliceReader() {
 }
 
 void VolumeSliceReader::advance() {
-    ++currentZPos_;
-    currentSlice_.reset(currentZPos_ >= 0 && currentZPos_ < getSignedDimensions().z ? volume_.getSlice(currentZPos_) : nullptr);
+    seek(currentZPos_+1);
 }
 
 void VolumeSliceReader::seek(int z) {
@@ -198,6 +197,61 @@ std::string VolumeSliceReader::getBaseType() const {
     return volume_.getBaseType();
 }
 size_t VolumeSliceReader::getNumChannels() const {
+    return numChannels_;
+}
+
+// HDF5VolumeSliceReader --------------------------------------------------------------------------
+
+HDF5VolumeSliceReader::HDF5VolumeSliceReader(const HDF5FileVolume& volume)
+    : SliceReader(tgt::ivec3(volume.getDimensions()))
+    , volume_(volume)
+    , dimensions_(volume_.getDimensions())
+    , currentZPos_(std::numeric_limits<int>::max()) // Not initialized, yet
+    , currentSlice_(nullptr)
+    , numChannels_(volume.getNumberOfChannels())
+{
+    tgtAssert(numChannels_ == 1, "Multichannel volume is not supported by HDF5VolumeSliceReader");
+}
+
+HDF5VolumeSliceReader::~HDF5VolumeSliceReader() {
+}
+
+void HDF5VolumeSliceReader::advance() {
+    seek(currentZPos_+1);
+}
+
+void HDF5VolumeSliceReader::seek(int z) {
+    if(currentZPos_ == z) {
+        return;
+    }
+    currentZPos_ = z;
+    currentSlice_.reset(currentZPos_ >= 0 && currentZPos_ < getSignedDimensions().z ? volume_.loadSlices(currentZPos_, currentZPos_) : nullptr);
+}
+
+int HDF5VolumeSliceReader::getCurrentZPos() const {
+    return currentZPos_;
+}
+
+const tgt::svec3& HDF5VolumeSliceReader::getDimensions() const {
+    return dimensions_;
+}
+
+float HDF5VolumeSliceReader::getVoxelNormalized(const tgt::ivec3& xyz, size_t channel) const {
+    tgtAssert(currentSlice_, "No slice");
+    tgtAssert(xyz.z == currentZPos_, "invalid z pos");
+    tgtAssert(channel < getNumChannels(), "Invalid channel");
+    return currentSlice_->getVoxelNormalized(tgt::svec3(xyz.x, xyz.y, 0), channel);
+}
+
+const VolumeRAM* HDF5VolumeSliceReader::getCurrentSlice() const {
+    tgtAssert(currentSlice_, "no slice");
+    return currentSlice_.get();
+}
+
+std::string HDF5VolumeSliceReader::getBaseType() const {
+    return volume_.getBaseType();
+}
+size_t HDF5VolumeSliceReader::getNumChannels() const {
     return numChannels_;
 }
 

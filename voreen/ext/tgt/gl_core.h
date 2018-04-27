@@ -26,6 +26,7 @@
 #define __gltypes_h_
 #define __gl_ATI_h_
 
+
 #include "tgt/types.h"
 
 #ifndef APIENTRY

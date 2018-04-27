@@ -31,6 +31,7 @@
 #include <string>
 #include <array>
 #include <memory>
+#include <boost/thread.hpp>
 
 namespace voreen {
 
@@ -123,6 +124,10 @@ protected:
     tgt::vec2 subtaskProgressRange_;
 };
 
+/**
+ * A collection of progress reporters with a static size n.
+ * The range of progress is devided equally amoung the n subreporters.
+ */
 template<uint8_t n>
 struct SubtaskProgressReporterCollection {
     SubtaskProgressReporterCollection(ProgressReporter& parent)
@@ -140,6 +145,27 @@ struct SubtaskProgressReporterCollection {
     }
 
     std::array<std::unique_ptr<SubtaskProgressReporter>, n> reporters_;
+};
+
+/**
+ * An abstraction over ProgressReporter that offers less functionality (and thus is not
+ * directly derived from it), but can safely be used from multiple threads at a time.
+ *
+ * Provide the total number of computation steps that need to be done in the constructor and
+ * call reportStepDone from the worker threads once one of the step is finished.
+ *
+ * Do not call reportStepDone more often than totalNumberOfSteps!
+ */
+struct ThreadedTaskProgressReporter {
+    ThreadedTaskProgressReporter(ProgressReporter& parent, size_t totalNumberOfSteps);
+
+    // Returns true if the execution was interrupted, and further computations should be canceled.
+    bool reportStepDone();
+
+    ProgressReporter& parent_;
+    boost::mutex mutex_;
+    size_t totalNumberOfSteps_;
+    size_t step_;
 };
 
 

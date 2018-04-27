@@ -111,7 +111,6 @@ void DynamicCLProcessor::initialize() {
 }
 
 void DynamicCLProcessor::deinitialize() {
-
     OpenCLProcessor::deinitialize();
 
     openclProp_.deinitialize();
@@ -126,9 +125,9 @@ void DynamicCLProcessor::initializeCL() {
 }
 
 void DynamicCLProcessor::deinitializeCL() {
+    clearSharedTextures();
     clearTransferFunctions();
     clearVolumeRepresentations();
-    clearSharedTextures();
 
     // Reset pointers.
     opencl_ = nullptr;
@@ -652,7 +651,6 @@ void DynamicCLProcessor::serialize(Serializer& s) const {
 }
 
 void DynamicCLProcessor::deserialize(Deserializer& s) {
-
     const bool usePointerContentSerialization = s.getUsePointerContentSerialization();
     try {
         std::vector<Property*> clVec;
@@ -671,7 +669,7 @@ void DynamicCLProcessor::deserialize(Deserializer& s) {
     parseProgram();
     OpenCLProcessor::deserialize(s);
 
-    // Tell the initialization procesure we have deserialized data.
+    // Tell the initialization procedure we have deserialized data.
     wasDeserialized_ = true;
 }
 
@@ -717,16 +715,25 @@ void DynamicCLProcessor::parseArguments(const std::string& programSource) {
     // parse actual arguments
     bool done = false;
     std::vector<std::string> tmpArgs;
+    std::set<std::string> names;
 
     while(!done) {
         size_t argEnd = args.find(",");
         if(argEnd == std::string::npos) {
             done = true,
-            argEnd = args.size();
+            argEnd = args.find_last_not_of(' ')+1;
         }
 
         std::string curArg = args.substr(0, argEnd);
         curArg = curArg.substr(args.find_first_not_of(' '), args.find_last_not_of(' ') + 1);
+
+        std::string name = curArg.substr(curArg.find_last_of(' ')+1);
+
+        // Check for duplicates.
+        if(names.find(name) != names.end()) {
+            throw VoreenException("Found duplicate argument name: " + name);
+        }
+        names.insert(name);
 
         tmpArgs.push_back(curArg);
         if(!done)
@@ -734,8 +741,8 @@ void DynamicCLProcessor::parseArguments(const std::string& programSource) {
     }
 
     if(tmpArgs.size() != curArgs_.size()) {
-        LWARNING("Number of annotations is not equal to number of kernel arguments.");
-        throw VoreenException();
+        //LWARNING("Number of annotations is not equal to number of kernel arguments.");
+        throw VoreenException("Number of annotations is not equal to number of kernel arguments.");
     }
     else {
         for(size_t i = 0; i < curArgs_.size(); i++)
@@ -892,30 +899,14 @@ void DynamicCLProcessor::refreshPortsAndProperties() {
 
         if(curArg.att_ == INPORT) {
             Port* p = getPort(curArg.values_["name"]);
-            if(p && p->isInport())
-                continue;
-            else if(p) {
-                deinitializePort(p);
-                removePort(p);
-                dynamicPorts_.erase(std::find(dynamicPorts_.begin(), dynamicPorts_.end(), p));
-                portArgMap_.erase(p);
-                delete p;
-            }
-
-            addNewInport(curArg);
+            tgtAssert(!p || !p->isOutport(), "Port was expected to be inport");
+            if(!p)
+                addNewInport(curArg);
         } else if(curArg.att_ == OUTPORT) {
             Port* p = getPort(curArg.values_["name"]);
-            if(p && p->isOutport())
-                continue;
-            else if(p) {
-                deinitializePort(p);
-                removePort(p);
-                dynamicPorts_.erase(std::find(dynamicPorts_.begin(), dynamicPorts_.end(), p));
-                portArgMap_.erase(p);
-                delete p;
-            }
-
-            addNewOutport(curArg);
+            tgtAssert(!p || p->isOutport(), "Port was expected to be outport");
+            if(!p)
+                addNewOutport(curArg);
         } else if(curArg.att_ == PROPERTY) {
             Property* p = getProperty(curArg.values_["name"]);
             if(p)
@@ -932,6 +923,7 @@ void DynamicCLProcessor::refreshPortsAndProperties() {
 
 void DynamicCLProcessor::removeObsoletePortsAndProperties() {
 
+    // Handle properties.
     std::vector<Property*> obsoleteProperties;
 
     for(Property* p : dynamicProperties_) {
@@ -946,12 +938,18 @@ void DynamicCLProcessor::removeObsoletePortsAndProperties() {
         if(!found)
             obsoleteProperties.push_back(p);
     }
-    for(size_t i = 0; i < obsoleteProperties.size(); i++) {
-        Property* p = obsoleteProperties.at(i);
-        removeProperty(p);
-        dynamicProperties_.erase(std::find(dynamicProperties_.begin(), dynamicProperties_.end(), p));
+
+    if (!obsoleteProperties.empty()) {
+        for (Property* p : obsoleteProperties) {
+            removeProperty(p);
+            dynamicProperties_.erase(std::find(dynamicProperties_.begin(), dynamicProperties_.end(), p));
+            delete p;
+        }
+
+        notifyPropertiesChanged();
     }
 
+    // Handle ports.
     std::vector<Port*> obsoletePorts;
 
     for(Port* p : dynamicPorts_) {
@@ -967,23 +965,22 @@ void DynamicCLProcessor::removeObsoletePortsAndProperties() {
         if(!found)
             obsoletePorts.push_back(p);
     }
-    for(size_t i = 0; i < obsoletePorts.size(); i++) {
-        Port* p = obsoletePorts.at(i);
-        deinitializePort(p);
-        removePort(p);
-        portArgMap_.erase(p);
-        dynamicPorts_.erase(std::find(dynamicPorts_.begin(), dynamicPorts_.end(), p));
+
+    if (!obsoletePorts.empty()) {
+
+        for (size_t i = 0; i < obsoletePorts.size(); i++) {
+            Port* p = obsoletePorts.at(i);
+            deinitializePort(p);
+            removePort(p);
+            portArgMap_.erase(p);
+            dynamicPorts_.erase(std::find(dynamicPorts_.begin(), dynamicPorts_.end(), p));
+        }
+
+        notifyPortsChanged();
+
+        for (size_t i = 0; i < obsoletePorts.size(); i++)
+            delete obsoletePorts.at(i);
     }
-
-    // inform the observers that ports and properties might have changed
-    notifyPortsChanged();
-    notifyPropertiesChanged();
-
-    for(size_t i = 0; i < obsoleteProperties.size(); i++)
-        delete obsoleteProperties.at(i);
-
-    for(size_t i = 0; i < obsoletePorts.size(); i++)
-        delete obsoletePorts.at(i);
 }
 
 void DynamicCLProcessor::addNewInport(ArgInfo& arg) {
@@ -1099,8 +1096,12 @@ Property* DynamicCLProcessor::generateNewProperty(ArgInfo& arg) {
     }
 
     // Keep track about generated properties.
-    if(p)
+    if (p) {
+        // If the property has been added after the initialization of the processor, it needs to be initialized explicitly.
+        if (isInitialized())
+            p->initialize();
         dynamicProperties_.push_back(p);
+    }
 
     return p;
 }
@@ -1232,8 +1233,8 @@ void DynamicCLProcessor::updateProperty(Property* p, ArgInfo& arg) {
     }
 
     if(handleAsNew) {
-        dynamicProperties_.erase(std::find(dynamicProperties_.begin(), dynamicProperties_.end(), p));
         removeProperty(p);
+        dynamicProperties_.erase(std::find(dynamicProperties_.begin(), dynamicProperties_.end(), p));
         delete p;
         addProperty(generateNewProperty(arg));
     }

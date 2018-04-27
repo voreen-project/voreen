@@ -42,9 +42,8 @@ SET(VRN_CUSTOM_MODULEDIR        ${VRN_HOME}/custommodules
 ####################################################################################################
 #  Options
 ####################################################################################################
-SET(VRN_BINARY_OUTPUT_DIR       ${VRN_HOME}/bin
+SET(VRN_BINARY_OUTPUT_DIR       ${CMAKE_BINARY_DIR}/bin
     CACHE PATH "Directory where binary files (apps and libraries) are put in" )
-OPTION(VRN_SHARED_LIBS          "Build shared libraries?"                                       ON )
 IF (UNIX)
 	OPTION(VRN_PRECOMPILED_HEADER   "Use pre-compiled headers?"                                 OFF)
 ELSE()

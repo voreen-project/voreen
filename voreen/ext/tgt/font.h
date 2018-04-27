@@ -35,10 +35,7 @@
 #include "fontmanager.h"
 
 
-
 namespace tgt {
-
-class FontManager;
 
 /**
  * The maximal font size where Text is rendered at native resolution
@@ -181,8 +178,6 @@ public:
      */
     tgt::vec2 getSize(const tgt::vec3& pos, const std::string& text, const tgt::ivec2 screensize);
 
-protected:
-
 private:
     struct CharacterVertex{
         vec2 pos;
@@ -201,7 +196,6 @@ private:
     tgt::vec2     padding_;
     float         lineWidth_;
     tgt::vec4     color_;
-
 
     GLuint vao_;
     GLuint vbo_;

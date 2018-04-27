@@ -40,8 +40,6 @@
 #include "tgt/vector.h"
 #include "tgt/gpucapabilities.h"
 #include "tgt/logmanager.h"
-#include "tgt/immediatemode/immediatemode.h"
-#include "voreen/core/utils/glsl.h"
 
 #include <math.h>
 #include <QMouseEvent>
@@ -60,11 +58,8 @@
 #include <sstream>
 #include <iomanip>
 
-#include "tgt/glcontextmanager.h"
-
 using namespace std;
 using tgt::Texture;
-
 
 
 namespace voreen {
@@ -174,16 +169,15 @@ RenderTargetViewer::RenderTargetViewer()
 
     //create rendering canvas
     canvas_ = new tgt::QtCanvas("RenderTargetViewer", tgt::ivec2(10, 10), tgt::GLCanvas::RGBADD, 0);
-    canvas_->setMouseTracking(true);
-    RenderTargetViewerPainter* painter = new RenderTargetViewerPainter(canvas_, this);
-    mouseIsInside_ = canvas_->underMouse();
-
-    // Create layout.
     QHBoxLayout* mainLayout = new QHBoxLayout();
     mainLayout->addWidget(canvas_);
     setLayout(mainLayout);
 
+    RenderTargetViewerPainter* painter = new RenderTargetViewerPainter(canvas_, this);
+    canvas_->setMouseTracking(true);
     canvas_->init();
+
+    mouseIsInside_ = canvas_->underMouse();
 }
 
 RenderTargetViewer::~RenderTargetViewer() {

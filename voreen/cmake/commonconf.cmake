@@ -82,20 +82,9 @@ ENDIF()
 LIST(APPEND VRN_COMMON_INCLUDE_DIRECTORIES "${VRN_HOME}" "${VRN_HOME}/include" "${VRN_HOME}/ext")
 LIST(APPEND VRN_COMMON_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}) 
 
-# shared/static libs
-IF(VRN_SHARED_LIBS)
-    SET(BUILD_SHARED_LIBS TRUE)
-    LIST(APPEND VRN_DEFINITIONS "-DVRN_SHARED_LIBS")
-    MESSAGE(STATUS "Build Type: Shared Libraries")
-ELSE()
-    SET(BUILD_SHARED_LIBS FALSE)
-    MESSAGE(STATUS "Build Type: Static Libraries")
-
-    IF(UNIX)
-        # this fixes a problem with static linking and boost threads for unix builds in newer CMake versions
-        set(CMAKE_CXX_FLAGS "-pthread ${CMAKE_CXX_FLAGS}")
-    ENDIF()
-ENDIF()
+# Configure shared library-build, static builds are no longer supported
+SET(BUILD_SHARED_LIBS TRUE)
+LIST(APPEND VRN_DEFINITIONS "-DVRN_SHARED_LIBS")
 
 # print pch status
 IF(VRN_PRECOMPILED_HEADER)
@@ -137,15 +126,13 @@ IF(VRN_MSVC)
     # disable warning on std::copy call with unchecked parameters
     LIST(APPEND VRN_DEFINITIONS -D_SCL_SECURE_NO_WARNINGS)
     
-    IF(VRN_SHARED_LIBS)
-        # Linking against Windows DLLs requires explicit instantiation of templates
-        LIST(APPEND VRN_DEFINITIONS -DDLL_TEMPLATE_INST)
+    # Linking against Windows DLLs requires explicit instantiation of templates
+    LIST(APPEND VRN_DEFINITIONS -DDLL_TEMPLATE_INST)
 
-        IF(NOT VRN_GENERATE_MANIFEST)
-            # Do not embed manifest into binaries in debug mode (slows down incremental linking)
-            SET(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /MANIFEST:NO")
-            SET(CMAKE_EXE_LINKER_FLAGS_DEBUG    "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /MANIFEST:NO")
-        ENDIF()
+    IF(NOT VRN_GENERATE_MANIFEST)
+        # Do not embed manifest into binaries in debug mode (slows down incremental linking)
+        SET(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /MANIFEST:NO")
+        SET(CMAKE_EXE_LINKER_FLAGS_DEBUG    "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /MANIFEST:NO")
     ENDIF()
 
     # set RAM usage to 1000% for PCH (only update on win64 or problems with opencl)
@@ -276,7 +263,11 @@ ELSEIF(UNIX)
     #set(CMAKE_CXX_FLAGS_DEBUG "-O1 ${CMAKE_CXX_FLAGS_DEBUG}")
 
     # add linker flags to look for libraries in the executable directory to avoid problems with moving Voreen after compiling
+    IF(APPLE)
+    set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,'$ORIGIN' ")
+    ELSE()
     set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath='$ORIGIN' ")
+    ENDIF()
 
     # Warning switches are compiler dependent:
 

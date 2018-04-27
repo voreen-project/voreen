@@ -47,6 +47,7 @@
 #include "voreen/core/properties/transfunc/1d/1dgaussian/transfunc1dgaussianproperty.h"
 #include "voreen/core/properties/transfunc/2d/2dprimitives/transfunc2dprimitivesproperty.h"
 #include "voreen/core/properties/transfunc/transfunctypeproperty.h"
+#include "voreen/core/properties/temppathproperty.h"
 #include "voreen/core/properties/vectorproperty.h"
 #include "voreen/core/properties/volumeurllistproperty.h"
 #include "voreen/core/properties/volumeurlproperty.h"
@@ -86,6 +87,7 @@
 #include "voreen/qt/widgets/property/transfunc/1d/1dkeys/transfunc1dkeyspropertywidget.h"
 #include "voreen/qt/widgets/property/transfunc/1d/1dgaussian/transfunc1dgaussianpropertywidget.h"
 #include "voreen/qt/widgets/property/transfunc/2d/2dprimitives/transfunc2dprimitivespropertywidget.h"
+#include "voreen/qt/widgets/property/temppathpropertywidget.h"
 #include "voreen/qt/widgets/property/volumeinfopropertywidget.h"
 #include "voreen/qt/widgets/property/volumeurllistpropertywidget.h"
 #include "voreen/qt/widgets/property/volumeurlpropertywidget.h"
@@ -206,6 +208,9 @@ PropertyWidget* CorePropertyWidgetFactory::createAssociatedWidget(Property* prop
 
     if (typeid(*prop) == typeid(TransFunc2DPrimitivesProperty))
         return new TransFunc2DPrimitivesPropertyWidget(static_cast<TransFunc2DPrimitivesProperty*>(prop), 0);
+
+    if (typeid(*prop) == typeid(TempPathProperty))
+        return new TempPathPropertyWidget(static_cast<TempPathProperty*>(prop), 0);
 
     if (typeid(*prop) == typeid(VolumeInfoProperty))
         return new VolumeInfoPropertyWidget(static_cast<VolumeInfoProperty*>(prop), 0);

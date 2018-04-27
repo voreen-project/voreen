@@ -26,24 +26,15 @@
 #ifndef VRN_VOREENQTAPI_H
 #define VRN_VOREENQTAPI_H
 
-#ifdef VRN_SHARED_LIBS
+#ifdef WIN32
     #ifdef VRN_QT_BUILD_DLL
         // building library -> export symbols
-        #ifdef WIN32
-            #define VRN_QT_API __declspec(dllexport)
-        #else
-            #define VRN_QT_API
-        #endif
+        #define VRN_QT_API __declspec(dllexport)
     #else
         // including library -> import symbols
-        #ifdef WIN32
-            #define VRN_QT_API __declspec(dllimport)
-        #else
-            #define VRN_QT_API
-        #endif
+        #define VRN_QT_API __declspec(dllimport)
     #endif
 #else
-    // building/including static library -> do nothing
     #define VRN_QT_API
 #endif
 

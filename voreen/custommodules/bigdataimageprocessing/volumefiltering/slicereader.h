@@ -77,9 +77,9 @@ public:
 
     int getZExtent() const;
 
+    VolumeRAM* const& getSlice(int dz) const;
 protected:
     VolumeRAM*& getSlice(int dz);
-    VolumeRAM* const& getSlice(int dz) const;
 
     std::unique_ptr<SliceReader> base_;
     std::vector<VolumeRAM*> slices_;
@@ -104,6 +104,29 @@ public:
 protected:
 
     const VolumeBase& volume_;
+    tgt::svec3 dimensions_;
+    int currentZPos_;
+    std::unique_ptr<VolumeRAM> currentSlice_;
+    size_t numChannels_; // cache, because getting it from volume can be veeeeeeeery slow
+};
+
+class HDF5VolumeSliceReader : public SliceReader {
+public:
+    HDF5VolumeSliceReader(const HDF5FileVolume& volume);
+
+    virtual ~HDF5VolumeSliceReader();
+    void advance();
+    void seek(int z);
+    int getCurrentZPos() const;
+    const tgt::svec3& getDimensions() const;
+    const VolumeRAM* getCurrentSlice() const;
+    std::string getBaseType() const;
+    float getVoxelNormalized(const tgt::ivec3& xyz, size_t channel = 0) const;
+    size_t getNumChannels() const;
+
+protected:
+
+    const HDF5FileVolume& volume_;
     tgt::svec3 dimensions_;
     int currentZPos_;
     std::unique_ptr<VolumeRAM> currentSlice_;

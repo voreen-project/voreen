@@ -103,7 +103,7 @@ public:
     virtual std::string getClassName() const { return "VoreenApplication"; }
 
     /// Do not use!
-    virtual VoreenApplication* create() const { return 0; }
+    virtual VoreenApplication* create() const { return nullptr; }
 
     /// Returns the name of the application binary.
     const std::string& getBinaryName() const;
@@ -506,6 +506,20 @@ public:
     std::string getProgramPath() const;
 
     /**
+    * Constructs an unique absolute file path within the specified directory
+    *
+    * @param root directory the unique path should be generated for
+    * @param suffix is guaranteed to be the suffix of the generated file name
+    *
+    * Note that currently the implementation tries its best to avoid racing conditions,
+    * and is guaranteed to generate a unique path for all calls within the same voreen
+    * process, but (because it just returns a path and does not create the file) cannot
+    * guarantee that (e.g.) the returned file path does not point to a file that has since
+    * been created by another process.
+    */
+    std::string getUniqueFilePath(const std::string& root, const std::string& suffix = "") const;
+
+    /**
      * Constructs an absolute path consisting of the cache directory
      * (getUserDataPath("cache")) and the given filename.
      */
@@ -552,14 +566,14 @@ public:
      * Constructs an unique absolute file path within the voreen temporary directory
      *
      * @param suffix is guaranteed to be the suffix of the generated file name
-     *
-     * Note that currently the implementation tries its best to avoid racing conditions,
-     * and is guaranteed to generate a unique path for all calls within the same voreen
-     * process, but (because it just returns a path and does not create the file) cannot
-     * guarantee that (e.g.) the returned file path does not point to a file that has since
-     * been created by another process.
+     * @see getUniqueFilePath
      */
-    std::string getUniqueTmpFilePath(const std::string& suffix = "");
+    std::string getUniqueTmpFilePath(const std::string& suffix = "") const;
+
+    /**
+     * Removed all temporary data created by the currently running voreen application.
+     */
+    void cleanTemporaryData();
 
     /**
      * Returns the test data directory. If not set, an empty string is returned.
@@ -652,6 +666,7 @@ private:
     void initLogging(std::string& htmlLogFile);
 
     void logLevelChanged();
+    void tempDataPathChanged();
 
     static VoreenApplication* app_;
 
@@ -721,8 +736,13 @@ private:
     //BoolProperty loadLastWorkspaceOnStartup_;   //< if true, the last loaded workspace should be restored
     BoolProperty showStartupWizard_; //< if true, shows the startup wizard, else creates an empty workspace
 
-    //Generator for uuids
-    boost::uuids::random_generator uuidGenerator_;
+    // Mersenne twister pseudo-random number generator for initialization of uuidGenerator to avoid valgrind uninitialized value messages
+    boost::mt19937 mersenneTwister_;
+    // Generator for uuids (mutable, since ()-operator is non-const)
+    mutable boost::uuids::random_generator uuidGenerator_;
+
+    // The tempDataPath for this particular instance of Voreen
+    std::string tempDataPathInstance_;
 
     bool initialized_;
     bool initializedGL_;

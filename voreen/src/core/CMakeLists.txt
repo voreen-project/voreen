@@ -221,6 +221,7 @@ SET(VRN_CORE_SOURCES
     properties/stringproperty.cpp
     properties/stringexpressionproperty.cpp
     properties/templateproperty.cpp
+    properties/temppathproperty.cpp
     properties/vectorproperty.cpp
     properties/voxeltypeproperty.cpp
     properties/volumeinfoproperty.cpp
@@ -573,6 +574,7 @@ SET(VRN_CORE_HEADERS
     ../../include/voreen/core/properties/stringproperty.h
     ../../include/voreen/core/properties/templateproperty.h
     ../../include/voreen/core/properties/templatepropertycondition.h
+    ../../include/voreen/core/properties/temppathproperty.h
     ../../include/voreen/core/properties/vectorproperty.h
     ../../include/voreen/core/properties/volumeinfoproperty.h
     ../../include/voreen/core/properties/volumeurlproperty.h
@@ -753,7 +755,7 @@ ADD_LIBRARY(voreen_core
     ${VRN_CORE_SOURCES} ${VRN_CORE_HEADERS}
 )
 ADD_DEFINITIONS(${VRN_DEFINITIONS} ${VRN_MODULE_DEFINITIONS})
-IF(VRN_SHARED_LIBS AND MSVC)
+IF(MSVC)
     ADD_DEFINITIONS("-DVRN_CORE_BUILD_DLL")
 ENDIF()
 INCLUDE_DIRECTORIES(${VRN_INCLUDE_DIRECTORIES})
@@ -777,5 +779,6 @@ ENDIF()
 IF(VRN_ADD_INSTALL_TARGET)
     INSTALL(TARGETS voreen_core
         RUNTIME DESTINATION .
+		LIBRARY DESTINATION .
     )
 ENDIF()

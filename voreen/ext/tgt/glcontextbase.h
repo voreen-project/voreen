@@ -45,7 +45,7 @@ protected:
     /**
      * Makes "this" the current OpenGL context.
      * Called by the GLContextManager.
-     * @note It's strongly recommended to avoid calling elsewhere, except you now what you are doing!
+     * @note It's strongly recommended to avoid calling elsewhere, except you know what you are doing!
      */
 
     virtual void activate() = 0;

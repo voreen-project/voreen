@@ -40,7 +40,7 @@ public:
     LightSourceProperty();
 
     LightSourceProperty(const std::string& id, const std::string& guiText, const tgt::vec4& value,
-                  const tgt::vec4& minimum = tgt::vec4(-10000.0f), const tgt::vec4& maximum = tgt::vec4(10000.0f),
+                  const tgt::vec4& minimum = tgt::vec4(-10000000.0f), const tgt::vec4& maximum = tgt::vec4(10000000.0f),
                   int invalidationLevel=Processor::INVALID_RESULT, Property::LevelOfDetail lod = Property::LOD_DEFAULT);
 
     virtual Property* create() const {

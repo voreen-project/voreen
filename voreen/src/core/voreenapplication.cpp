@@ -249,13 +249,9 @@ VoreenApplication::VoreenApplication(const std::string& binaryName, const std::s
     , resetCachePath_("resetCachePath", "Reset Cache Path" , Processor::INVALID_RESULT, Property::LOD_APPLICATION)
     , deleteCache_("deleteCache", "Delete Cache", Processor::INVALID_RESULT, Property::LOD_APPLICATION)
     , determineCpuRamLimitAutomatically_("automaticRamLimit", "Determine Volume CPU RAM Limit automatically (recommended)", true)
-#if defined(WIN32) && !defined(_WIN64) //< 32 bit windows build
-    , cpuRamLimit_("cpuRamLimit", "Volume CPU RAM Limit (MB)", 1000, std::min(512, static_cast<int>(MemoryInfo::getTotalPhysicalMemory() / (1024 * 1024))),
-            MemoryInfo::getTotalPhysicalMemory() ? (static_cast<int>(MemoryInfo::getTotalPhysicalMemory() / (1024 * 1024))) : 3000, Processor::INVALID_RESULT, NumericProperty<int>::STATIC, Property::LOD_APPLICATION)
-#else // assume 64 bit build, set maximum to 128 GB minus some overhead (operating system, other Voreen stuff etc.)
+    // set maximum to 128 GB minus some overhead (operating system, other Voreen stuff etc.)
     , cpuRamLimit_("cpuRamLimit", "Volume CPU RAM Limit (MB)", 4000, std::min(1000, static_cast<int>(MemoryInfo::getTotalPhysicalMemory() / (1024 * 1024))),
             MemoryInfo::getTotalPhysicalMemory() ? (static_cast<int>(MemoryInfo::getTotalPhysicalMemory() / (1024 * 1024))) : 120000, Processor::INVALID_RESULT, NumericProperty<int>::STATIC, Property::LOD_APPLICATION)
-#endif
     , determineGpuMemoryLimitAutomatically_("automaticGpuMemoryLimit", "Determine Volume GPU Texture Memory Limit automatically (recommended)", true)
     , gpuMemoryLimit_("gpuMemoryLimit", "Volume GPU Texture Memory Limit (MB)", 1000, 100, 4000,
             Processor::INVALID_RESULT, NumericProperty<int>::DYNAMIC, Property::LOD_APPLICATION)
@@ -273,7 +269,8 @@ VoreenApplication::VoreenApplication(const std::string& binaryName, const std::s
     , initialized_(false)
     , initializedGL_(false)
     , networkEvaluationRequired_(false)
-    , uuidGenerator_()
+    , mersenneTwister_()
+    , uuidGenerator_(mersenneTwister_)
 {
     id_ = guiName;
     guiName_ = guiName;
@@ -387,6 +384,7 @@ VoreenApplication::VoreenApplication(const std::string& binaryName, const std::s
 
     //  temporary data properties
     addProperty(tempDataPath_);
+    tempDataPath_.onChange(MemberFunctionCallback<VoreenApplication>(this, &VoreenApplication::tempDataPathChanged));
     tempDataPath_.setGroupID("tempData");
     setPropertyGroupGuiName("tempData", "Temporary Data");
 
@@ -604,9 +602,6 @@ void VoreenApplication::initialize() {
         userDataPath_ = tgt::FileSystem::cleanupPath(getBasePath("data"));
 //#endif
 
-    // Now the user data path being initialized, set default temp path.
-    tempDataPath_.set(getUserDataPath("tmp"));
-
     //
     // Execute command line parser
     //
@@ -666,7 +661,6 @@ void VoreenApplication::initialize() {
     LINFO("Program path:    " << tgt::FileSystem::dirName(programPath));
     LINFO("User data path:  " << getUserDataPath() << (getDeploymentMode() ? " (Deployment mode)" : " (Developer mode)"));
 
-
     // Show total system main memory
     LINFO("Total physical CPU RAM: " << MemoryInfo::getTotalPhysicalMemory()  / (1024 * 1024) << " MB");
 
@@ -691,6 +685,10 @@ void VoreenApplication::initialize() {
     // load settings
     initApplicationSettings();
     loadApplicationSettings();
+
+    // We need to set a proper initial tmp path.
+    if(tempDataPath_.get().empty())
+        tempDataPath_.set(getUserDataPath("tmp"));
 
     // initialize the file watch system
     VoreenFileWatcher::init();
@@ -748,25 +746,6 @@ void VoreenApplication::initialize() {
         useDoubleBuffering_ = db;
     }
 
-    // Check for temporary directory
-    std::string tempDir = getTemporaryPath();
-    if (!FileSys.dirExists(tempDir)) {
-        LWARNING("Temporary directory (" << tempDir << ") does not exist, trying to create it...");
-        if (!FileSys.createDirectoryRecursive(tempDir)) {
-            throw VoreenException("Failed to create temporary directory");
-        }
-        else
-            LINFO("Created temporary directory: " << tempDir);
-    }
-
-    // try to write to temporary directory (we can assume it exists)
-    if (!FileSys.createDirectory(getTemporaryPath("writetest"))) {
-        throw VoreenException("Failed to write to temporary directory");
-    }
-    else {
-        FileSys.deleteDirectory(getTemporaryPath("writetest"));
-    }
-
     // initialize modules
     LINFO("Initializing modules");
     for (size_t i=0; i<modules_.size(); i++) {
@@ -800,13 +779,16 @@ void VoreenApplication::initialize() {
 }
 
 void VoreenApplication::deinitialize() {
-    cleanCache();
 
     if (!initialized_)
         throw VoreenException("Application not initialized");
 
     if (initializedGL_)
         throw VoreenException("OpenGL deinitialization not performed. Call deinitializeGL() before deinitialization!");
+
+    // Clean cache and temp files.
+    cleanCache();
+    cleanTemporaryData();
 
     delete schedulingTimer_;
     schedulingTimer_ = 0;
@@ -1117,6 +1099,16 @@ std::string VoreenApplication::getBasePath(const std::string& filename) const {
     return tgt::FileSystem::cleanupPath(basePath_ + (filename.empty() ? "" : "/" + filename));
 }
 
+std::string VoreenApplication::getUniqueFilePath(const std::string& root, const std::string& suffix) const {
+    std::string outputPath = "";
+    do {
+        boost::uuids::uuid u = uuidGenerator_();
+        std::string name = boost::lexical_cast<std::string>(u) + suffix;
+        outputPath = tgt::FileSystem::cleanupPath(root + "/" + name);
+    } while (tgt::FileSystem::fileExists(outputPath) || tgt::FileSystem::dirExists(outputPath));
+    return outputPath;
+}
+
 std::string VoreenApplication::getCachePath(const std::string& filename) const {
     std::string cacheBasePath;
 
@@ -1194,9 +1186,26 @@ std::string VoreenApplication::getModulePath(const std::string& moduleName) cons
 }
 
 std::string VoreenApplication::getTemporaryPath(const std::string& filename) const {
-    std::string tempBasePath;
+    return tgt::FileSystem::cleanupPath(tempDataPathInstance_ + (filename.empty() ? "" : "/" + filename));
+}
 
-    // use property value, if set and directory does exist
+std::string VoreenApplication::getUniqueTmpFilePath(const std::string& suffix) const {
+    return getUniqueFilePath(tempDataPathInstance_, suffix);
+}
+
+void VoreenApplication::cleanTemporaryData() {
+    if(FileSys.dirExists(tempDataPathInstance_)) {
+        FileSys.deleteDirectoryRecursive(tempDataPathInstance_);
+    }
+}
+
+void VoreenApplication::tempDataPathChanged() {
+
+    // Delete old temporary data.
+    cleanTemporaryData();
+
+    // Use property value, if possible.
+    std::string tempBasePath;
     if (!tempDataPath_.get().empty()) {
         tempBasePath = tempDataPath_.get();
         if (!tgt::FileSystem::dirExists(tempBasePath)) {
@@ -1204,21 +1213,28 @@ std::string VoreenApplication::getTemporaryPath(const std::string& filename) con
             tempBasePath = "";
         }
     }
-    // otherwise use user data path
+    // Otherwise use user data path.
     if (tempBasePath.empty())
         tempBasePath = getUserDataPath("tmp");
 
-    return tgt::FileSystem::cleanupPath(tempBasePath + (filename.empty() ? "" : "/" + filename));
-}
+    tempDataPathInstance_ = getUniqueFilePath(tempBasePath);
 
-std::string VoreenApplication::getUniqueTmpFilePath(const std::string& suffix) {
-    std::string outputPath = "";
-    do {
-        boost::uuids::uuid u = uuidGenerator_();
-        std::string name = boost::lexical_cast<std::string>(u) + suffix;
-        outputPath = getTemporaryPath(name);
-    } while(tgt::FileSystem::fileExists(outputPath) || tgt::FileSystem::dirExists(outputPath));
-    return outputPath;
+    // Check for temporary directory.
+    if (!FileSys.dirExists(tempDataPathInstance_)) {
+        if (!FileSys.createDirectoryRecursive(tempDataPathInstance_)) {
+            throw VoreenException("Failed to create temporary directory");
+        }
+        else
+            LINFO("Created temporary directory: " << tempDataPathInstance_);
+    }
+
+    // try to write to temporary directory (we can assume it exists)
+    if (!FileSys.createDirectory(tempDataPathInstance_ + "/writetest")) {
+        throw VoreenException("Failed to write to temporary directory");
+    }
+    else {
+        FileSys.deleteDirectory(tempDataPathInstance_ + "/writetest");
+    }
 }
 
 std::string VoreenApplication::getTestDataPath() const {

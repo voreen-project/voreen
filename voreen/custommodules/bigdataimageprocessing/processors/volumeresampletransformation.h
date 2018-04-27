@@ -196,14 +196,23 @@ void VolumeResampleTransformation::resample(const VolumeBase& inputVol, std::uni
 
     const VolumeRAM* input = inputVol.getRepresentation<VolumeRAM>();
     tgtAssert(input, "Could not create volumeram");
-    for(size_t z=0; z<outputDim.z; ++z) {
-        progress.setProgress(static_cast<float>(z)/outputDim.z);
 
-        std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(baseType, tgt::svec3(outputDim.xy(), 1)));
+    ThreadedTaskProgressReporter parallelProgress(progress, outputDim.z);
 
+    bool aborted = false;
 #ifdef VRN_MODULE_OPENMP
         #pragma omp parallel for
 #endif
+    for(size_t z=0; z<outputDim.z; ++z) {
+
+#ifdef VRN_MODULE_OPENMP
+        if(aborted) {
+            continue;
+        }
+#endif
+
+        std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(baseType, tgt::svec3(outputDim.xy(), 1)));
+
         for (long y = 0; y<static_cast<long>(outputDim.y); ++y) { // MSVC requires y to be signed.
             for(size_t x=0; x<outputDim.x; ++x) {
                 tgt::vec4 outputVoxelPos(x,y,z,1);
@@ -215,6 +224,21 @@ void VolumeResampleTransformation::resample(const VolumeBase& inputVol, std::uni
             }
         }
         output->writeSlices(outputSlice.get(), z);
+
+        if(parallelProgress.reportStepDone()) {
+#ifdef VRN_MODULE_OPENMP
+            #pragma omp critical
+            {
+                aborted = true;
+            }
+#else
+            aborted = true;
+            break;
+#endif
+        }
+    }
+    if(aborted) {
+        throw boost::thread_interrupted();
     }
 }
 

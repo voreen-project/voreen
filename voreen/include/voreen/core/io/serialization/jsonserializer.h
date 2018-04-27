@@ -599,6 +599,11 @@ private:
     rapidjson::Value serializeToValue(const uint32_t& data) {
         return serializeJsonScalarToValue(data);
     }
+#ifdef __APPLE__
+    rapidjson::Value serializeToValue(const unsigned long& data) {
+        return serializeJsonScalarToValue(static_cast<uint64_t>(data));
+    }
+#endif
     rapidjson::Value serializeToValue(const uint64_t& data) {
         return serializeJsonScalarToValue(data);
     }

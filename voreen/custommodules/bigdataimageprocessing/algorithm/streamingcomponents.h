@@ -49,7 +49,7 @@ class StreamingComponents {
 public:
     typedef std::function<bool(const VolumeRAM* vol, tgt::svec3 pos)> getBinVoxel;
     typedef std::function<bool(const MetaData&)> componentConstraintTest;
-    typedef std::function<void(int id, const MetaData&)> ComponentCompletionCallback;
+    typedef std::function<void(uint32_t id, const MetaData&)> ComponentCompletionCallback;
 
     StreamingComponentsStats cca(const VolumeBase& input, HDF5FileVolume& output, ComponentCompletionCallback writeMetaData, getBinVoxel isOne, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress) const;
 private:

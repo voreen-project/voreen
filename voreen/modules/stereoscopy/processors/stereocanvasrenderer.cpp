@@ -82,10 +82,12 @@ StereoCanvasRenderer::StereoCanvasRenderer()
     , fullScreenVertexArrayObjectID_(0)
     , fullScreenVertexBufferObjectID_(0)
 {
+    /*
     // private ports are not added here but in initialize() to avoid context problems
-    /*addPrivateRenderPort(tmpPort_);
+    addPrivateRenderPort(tmpPort_);
     addPrivateRenderPort(sideBySidePort_);
-    addPrivateRenderPort(finalPort_);*/
+    addPrivateRenderPort(finalPort_);
+    */
 
     //event handler for splitscreen
     addEventProperty(mouseMoveEventProp_);
@@ -157,8 +159,7 @@ StereoCanvasRenderer::~StereoCanvasRenderer() {
 
 void StereoCanvasRenderer::initialize() {
     CanvasRenderer::initialize();
-    // create geometry for fullscreen triangle
-    //processorinittest don't create a canvas
+
     tgt::GLConditionalContextStateGuard guard(canvas_ != nullptr, canvas_);
 
     // port settings (normal render port added by CanvasRenderer) ----------------
@@ -174,6 +175,7 @@ void StereoCanvasRenderer::initialize() {
     adjustRenderOutportSizes();
     // ------- finished port settings
 
+    // create geometry for fullscreen triangle
     glGenVertexArrays(1, &fullScreenVertexArrayObjectID_);
     glGenBuffers(1, &fullScreenVertexBufferObjectID_);
     float defaultFullScreenBuffer[] = {
@@ -234,7 +236,6 @@ void StereoCanvasRenderer::deinitialize() {
     tgt::Camera* cam = const_cast<tgt::Camera*>(&cameraProp_.get());
     cam->setProjectionMode(previousCameraProjectionMode_);
 
-    //call super function
     CanvasRenderer::deinitialize();
 }
 
@@ -433,7 +434,7 @@ const tgt::Texture* StereoCanvasRenderer::getImageDepthTexture() const{
 }
 
 tgt::Texture* StereoCanvasRenderer::getImageDepthTexture() {
-   return const_cast<tgt::Texture*>(static_cast<const StereoCanvasRenderer*>(this)->getImageDepthTexture());
+    return const_cast<tgt::Texture*>(static_cast<const StereoCanvasRenderer*>(this)->getImageDepthTexture());
 }
 
 bool StereoCanvasRenderer::renderToImage(const std::string &filename) {

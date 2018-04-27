@@ -266,7 +266,7 @@ void Processor::removePort(Port* port) {
             << "has not been deinitialized");
     }
 
-    port->setProcessor(nullptr);
+    //port->setProcessor(nullptr); // As per contract, we are only allowed to set the owner once.
     CoProcessorPort* cpp = dynamic_cast<CoProcessorPort*>(port);
     if (port->isOutport()) {
         if (cpp)

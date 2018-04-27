@@ -242,23 +242,24 @@ std::string TransFuncBase::getShaderDefines(const std::string& defineName) const
     //  real world mapping helper
     //--------------------------------------
 float TransFuncBase::realWorldToNormalized(float rw, const tgt::vec2& domain) {
-    tgtAssert(domain.x < domain.y, "invalid transfer function domain");
+    tgtAssert(domain.x <= domain.y, "invalid transfer function domain");
     if (rw < domain.x)
         return 0.f;
     else if (rw > domain.y)
         return 1.f;
+    else if(domain.x == domain.y)
+        return 0.f;
     else {
-        if (domain.y <= domain.x) { //< handle invalid domain gracefully in release mode
+        if (domain.y < domain.x) { //< handle invalid domain gracefully in release mode
             LERROR("Invalid transfer function domain:" << domain);
             return 1.f;
         }
-        else
-            return (rw - domain.x) / (domain.y - domain.x);
+        return (rw - domain.x) / (domain.y - domain.x);
     }
 }
 
 float TransFuncBase::normalizedToRealWorld(float n, const tgt::vec2& domain) {
-    tgtAssert(domain.x < domain.y, "invalid domain");
+    tgtAssert(domain.x <= domain.y, "invalid domain");
     return domain.x + (domain.y - domain.x) * n;
 }
 

@@ -55,7 +55,10 @@ public:
     tgt::Texture* getColorTexture() { return colorTex_; }
     tgt::Texture* getDepthTexture() { return depthTex_; }
 
-    //Get the color at position pos. This method activates the RenderTarget!
+    /** 
+     * Get the color at the specified position.
+     * This method activates the target, reads the color and will deactivate the target.
+     */
     tgt::vec4 getColorAtPos(tgt::ivec2 pos);
 
     tgt::ivec2 getSize() const;

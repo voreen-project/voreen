@@ -32,6 +32,7 @@
 #include "voreen/core/properties/intproperty.h"
 #include "voreen/core/properties/boolproperty.h"
 #include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/temppathproperty.h"
 #include "voreen/core/properties/filedialogproperty.h"
 #include "voreen/core/properties/buttonproperty.h"
 #include "voreen/core/properties/progressproperty.h"
@@ -58,7 +59,7 @@ public:
     tgt::TemplateBounds<size_t> bounds_;
 };
 
-typedef CSVWriter<int, size_t, float, float, float, float, float, float> CCAWriterType;
+typedef CSVWriter<uint32_t, size_t, float, float, float, float, float, float> CCAWriterType;
 
 enum CCANeighbourhoodMode {
     N_6 = 2,
@@ -68,7 +69,7 @@ enum CCANeighbourhoodMode {
 
 struct CCAComputeInput {
     std::unique_ptr<CCAWriterType> statWriter;
-    std::function<void(int id, const CCANodeMetaData&)> writeMetaData;
+    std::function<void(int uint32_t, const CCANodeMetaData&)> writeMetaData;
     const VolumeBase& inputVolume;
     std::unique_ptr<HDF5FileVolume> outputVolume;
     CCANeighbourhoodMode neighbourhoodMode;
@@ -123,7 +124,7 @@ protected:
     virtual void adjustPropertiesToInput();
 
     template<int ADJACENCY>
-    StreamingComponentsStats runCCA(const VolumeBase& input, HDF5FileVolume& output, std::function<void(int id, const CCANodeMetaData&)> writeMetaData, ProgressReporter& progressReporter) const;
+    StreamingComponentsStats runCCA(const VolumeBase& input, HDF5FileVolume& output, std::function<void(uint32_t id, const CCANodeMetaData&)> writeMetaData, ProgressReporter& progressReporter) const;
 
 private:
     // Ports
@@ -131,7 +132,7 @@ private:
     VolumePort outport_;
 
     // General properties
-    FileDialogProperty outputVolumeFilePath_;
+    TempPathProperty outputVolumeFilePath_;
     BoolProperty writeComponentStatFile_;
     FileDialogProperty componentStatFilePath_;
     IntProperty outputVolumeDeflateLevel_;
@@ -147,7 +148,7 @@ private:
 };
 
 template<int ADJACENCY>
-StreamingComponentsStats ConnectedComponentAnalysis::runCCA(const VolumeBase& input, HDF5FileVolume& output, std::function<void(int id, const CCANodeMetaData&)> writeMetaData, ProgressReporter& progressReporter) const {
+StreamingComponentsStats ConnectedComponentAnalysis::runCCA(const VolumeBase& input, HDF5FileVolume& output, std::function<void(uint32_t id, const CCANodeMetaData&)> writeMetaData, ProgressReporter& progressReporter) const {
     StreamingComponents<ADJACENCY, CCANodeMetaData> sc;
     std::function<bool(const VolumeRAM* vol, tgt::svec3 pos)> isOne;
 

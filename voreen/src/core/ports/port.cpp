@@ -98,7 +98,7 @@ const std::vector<PortCondition*> Port::getConditions() const {
 }
 
 void Port::setProcessor(Processor* p) {
-    tgtAssert(!processor_ || !p, "Processor already set!");
+    tgtAssert(!processor_, "Processor already set!");
     processor_ = p;
 }
 

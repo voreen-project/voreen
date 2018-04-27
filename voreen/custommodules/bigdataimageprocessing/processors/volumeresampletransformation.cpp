@@ -315,7 +315,7 @@ tgt::Bounds VolumeResampleTransformation::getPhysicalOutputBounds(const VolumeBa
 }
 tgt::ivec3 VolumeResampleTransformation::getOutputDimensions(const VolumeBase& input) const {
     tgt::Bounds outputPhysicalBB = getPhysicalOutputBounds(input);
-    return tgt::iceil(outputPhysicalBB.diagonal()/getCurrentSpacing());
+    return tgt::iceil(outputPhysicalBB.diagonal()/getCurrentSpacing()) + tgt::ivec3::one;
 }
 tgt::vec3 VolumeResampleTransformation::getOutputOffset(const VolumeBase& input) const {
     tgt::Bounds outputPhysicalBB = getPhysicalOutputBounds(input);

@@ -70,13 +70,7 @@ public:
 // macro to implement isCompatible in templates:
 #define IS_COMPATIBLE \
 bool isCompatible(const VolumeBase* volume) const { \
-    const VolumeRAM* v = volume->getRepresentation<VolumeRAM>(); \
-    if(!v) \
-        return false; \
-    const VolumeAtomic<T>* va = dynamic_cast<const VolumeAtomic<T>*>(v); \
-    if(!va) \
-        return false; \
-    return true; \
+    return VolumeAtomic<T>(tgt::svec3(1)).getFormat() == volume->getFormat();\
 }
 
 //Unary: -----------------------------------------------------------------
@@ -225,9 +219,9 @@ void UniversalBinaryVolumeOperatorGeneric<BASE_TYPE>::addInstance(BASE_TYPE* ins
  * may be null.
  */
 #define VRN_FOR_EACH_VOXEL_WITH_PROGRESS(INDEX, POS, SIZE, PROGRESS) \
-    for (tgt::svec3 (INDEX) = (POS); (INDEX).z < (SIZE).z; ++(INDEX).z, PROGRESS ? PROGRESS->setProgress(static_cast<float>(INDEX.z) / static_cast<float>(SIZE.z)) : void(0)) \
-        for ((INDEX).y = (POS).y; (INDEX).y < (SIZE).y; ++(INDEX).y)\
-            for ((INDEX).x = (POS).x; (INDEX).x < (SIZE).x; ++(INDEX).x)
+    for (tgt::svec3 INDEX = (POS); INDEX.z < (SIZE).z; ++INDEX.z, PROGRESS ? PROGRESS->setProgress(static_cast<float>(INDEX.z) / static_cast<float>(SIZE.z)) : void(0)) \
+        for (INDEX.y = (POS).y; INDEX.y < (SIZE).y; ++INDEX.y)\
+            for (INDEX.x = (POS).x; INDEX.x < (SIZE).x; ++INDEX.x)
 
 /**
  * Variation of VRN_FOR_EACH_VOXEL that updates a progress reporter
@@ -241,9 +235,9 @@ void UniversalBinaryVolumeOperatorGeneric<BASE_TYPE>::addInstance(BASE_TYPE* ins
  * The PROGRESS parameter may be null.
  */
 #define VRN_FOR_EACH_VOXEL_WITH_PROGRESS_SUB_TASK(INDEX, POS, SIZE, PROGRESS, PROGRESS_OFFSET, PROGRESS_SCALE) \
-    for (tgt::svec3 (INDEX) = (POS); (INDEX).z < (SIZE).z; ++(INDEX).z, PROGRESS ? PROGRESS->setProgress(PROGRESS_OFFSET + ((static_cast<float>(INDEX.z) / static_cast<float>(SIZE.z))*PROGRESS_SCALE)) : void(0)) \
-        for ((INDEX).y = (POS).y; (INDEX).y < (SIZE).y; ++(INDEX).y)\
-            for ((INDEX).x = (POS).x; (INDEX).x < (SIZE).x; ++(INDEX).x)
+    for (tgt::svec3 INDEX = (POS); INDEX.z < (SIZE).z; ++INDEX.z, PROGRESS ? PROGRESS->setProgress(PROGRESS_OFFSET + ((static_cast<float>(INDEX.z) / static_cast<float>(SIZE.z))*PROGRESS_SCALE)) : void(0)) \
+        for (INDEX.y = (POS).y; INDEX.y < (SIZE).y; ++INDEX.y)\
+            for (INDEX.x = (POS).x; INDEX.x < (SIZE).x; ++INDEX.x)
 
 } // namespace
 

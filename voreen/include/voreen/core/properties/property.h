@@ -103,6 +103,33 @@ public:
     virtual ~Property();
 
     /**
+    * Override this method for performing initializations
+    * of the property. It is usually called by the owning Processor's
+    * initialize() function.
+    *
+    * @note All OpenGL initializations must be done here,
+    *       instead of the constructor! Time-consuming operations
+    *       should also happen here.
+    *
+    * @throw tgt::Exception if the initialization failed
+    */
+    virtual void initialize();
+
+    /**
+    * Override this method for performing deinitializations
+    * of the property.
+    *
+    * @note All OpenGL deinitializations must be done here,
+    *       instead of the destructor!
+    *
+    * @throw tgt::Exception if the deinitialization failed
+    */
+    virtual void deinitialize();
+
+    /// returns true if the property has been initialized and false if it has not been initialized yet or has already been deinitialized
+    virtual bool isInitialized() const;
+
+    /**
      * Resets the property to its default value.
      *
      * This method is expected to be re-implemented by each concrete subclass.
@@ -345,33 +372,6 @@ public:
     void blockCallbacks(bool block);
 
 protected:
-
-    /**
-     * Override this method for performing initializations
-     * of the property. It is usually called by the owning Processor's
-     * initialize() function.
-     *
-     * @note All OpenGL initializations must be done here,
-     *       instead of the constructor! Time-consuming operations
-     *       should also happen here.
-     *
-     * @throw tgt::Exception if the initialization failed
-     */
-    virtual void initialize();
-
-    /**
-     * Override this method for performing deinitializations
-     * of the property.
-     *
-     * @note All OpenGL deinitializations must be done here,
-     *       instead of the destructor!
-     *
-     * @throw tgt::Exception if the deinitialization failed
-     */
-    virtual void deinitialize();
-
-    /// returns true if the property has been initialized and false if it has not been initialized yet or has already been deinitialized
-    virtual bool isInitialized() const;
 
     /**
      * Invalidates the owner with the InvalidationLevel set in the constructor

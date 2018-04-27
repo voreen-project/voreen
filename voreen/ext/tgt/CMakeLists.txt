@@ -88,7 +88,7 @@ ENDIF()
 ################################################################################
 ADD_LIBRARY(tgt ${TGT_SOURCES} ${TGT_HEADERS})
 ADD_DEFINITIONS(${VRN_DEFINITIONS} ${VRN_MODULE_DEFINITIONS})
-IF(VRN_SHARED_LIBS AND MSVC)
+IF(MSVC)
     ADD_DEFINITIONS("-DTGT_BUILD_DLL")
 ENDIF()
 INCLUDE_DIRECTORIES(${VRN_INCLUDE_DIRECTORIES})
@@ -105,8 +105,9 @@ ENDIF()
 # deployment
 ################################################################################
 IF(VRN_ADD_INSTALL_TARGET)
-    INSTALL(TARGETS tgt 
+    INSTALL(TARGETS tgt
         RUNTIME DESTINATION .
+        LIBRARY DESTINATION .
     )
 ENDIF()
 

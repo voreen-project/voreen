@@ -194,6 +194,7 @@ SET(VRN_QT_SOURCES
     widgets/property/shaderpropertywidget.cpp
     widgets/property/stringexpressionpropertywidget.cpp
     widgets/property/stringpropertywidget.cpp
+    widgets/property/temppathpropertywidget.cpp
     widgets/property/grouppropertywidget.cpp
     widgets/property/vecpropertywidget.cpp
     widgets/property/voxeltypepropertywidget.cpp
@@ -404,6 +405,7 @@ SET(VRN_QT_HEADERS
     ../../include/voreen/qt/widgets/property/shaderpropertywidget.h
     ../../include/voreen/qt/widgets/property/stringexpressionpropertywidget.h
     ../../include/voreen/qt/widgets/property/stringpropertywidget.h
+    ../../include/voreen/qt/widgets/property/temppathpropertywidget.h
     ../../include/voreen/qt/widgets/property/grouppropertywidget.h
     ../../include/voreen/qt/widgets/property/voxeltypepropertywidget.h
     ../../include/voreen/qt/widgets/property/volumeinfopropertywidget.h
@@ -509,8 +511,8 @@ SET(VRN_QT_HEADERS_NONMOC
 
 IF(APPLE)
     # add apple specific source files
-    LIST(APPEND VRN_QT_SOURCES ../../ext/tgt/qt/maccorecontext.mm)
-    LIST(APPEND VRN_QT_HEADERS_NONMOC ../../ext/tgt/qt/maccorecontext.h)
+    #LIST(APPEND VRN_QT_SOURCES ../../ext/tgt/qt/maccorecontext.mm)
+    #LIST(APPEND VRN_QT_HEADERS_NONMOC ../../ext/tgt/qt/maccorecontext.h)
 
     # we need to link against cocoa
     FIND_LIBRARY(COCOA_LIB Cocoa)
@@ -595,7 +597,7 @@ ADD_LIBRARY(voreen_qt
     ${VRN_QT_RESOURCES_RCC} 
     ${VRN_QT_FORMS_HEADERS}) 
 ADD_DEFINITIONS(${VRN_DEFINITIONS} ${VRN_MODULE_DEFINITIONS})
-IF(VRN_SHARED_LIBS AND MSVC)
+IF(MSVC)
     ADD_DEFINITIONS("-DVRN_QT_BUILD_DLL")
 ENDIF()
 INCLUDE_DIRECTORIES(${VRN_INCLUDE_DIRECTORIES})
@@ -624,7 +626,7 @@ ENDIF()
 # The tool will be executed right after voreen_qt has been build, since 
 # the binary will be scanned for Qt dependencies by the tool.
 IF(WIN32)
-    UNSET(WINDEPLOYQT_EXE) #Old path might not longer exist.
+    UNSET(WINDEPLOYQT_EXE CACHE) #Old path might not longer exist.
     FIND_PROGRAM(WINDEPLOYQT_EXE windeployqt PATHS ${Qt5_DIR}/../../../bin/)
     IF(NOT WINDEPLOYQT_EXE)
         MESSAGE(FATAL_ERROR "Unable to find windeployqt.exe")
@@ -652,6 +654,7 @@ ENDIF()
 IF(VRN_ADD_INSTALL_TARGET)
     INSTALL(TARGETS voreen_qt
         RUNTIME DESTINATION .
+        LIBRARY DESTINATION .
     )
     
     # Execute the windeployqt tool again for the actual deployment, in particular building the INSTALL target.

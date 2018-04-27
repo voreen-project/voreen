@@ -178,12 +178,6 @@ int main(int argc, char** argv) {
     vapp.setStyleSheet(styleSheet);
 #endif
 
-#ifndef VRN_SHARED_LIBS
-    // init Qt resources, if voreen_qt has been built as static lib
-    Q_INIT_RESOURCE(vrn_qt);
-    Q_INIT_RESOURCE(voreenbiology);
-#endif
-
     // create and show mainwindow
     if (showSplash)
         splash->updateProgressMessage("Creating main window...",0.30);

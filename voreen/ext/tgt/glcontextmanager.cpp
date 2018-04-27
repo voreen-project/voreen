@@ -156,6 +156,11 @@ void GLContextManager::activateMainContext() {
     mainContext_->activate();
 }
 
+const std::string& GLContextManager::getDebugName(GLContextBase* context) const {
+    tgtAssert(isRegisteredContext(context), "Context was not registered");
+    return registered_.at(context);
+}
+
 ///////////////////////////////////////////////////////////
 //
 // ContextStateGuard
@@ -199,7 +204,7 @@ GLConditionalContextStateGuard::GLConditionalContextStateGuard(bool condition, G
     : guard_(nullptr)
 {
     if (condition)
-        guard_.reset(new GLContextStateGuard(context ? context : tgt::GLContextManager::getRef().getMainContext()));
+        guard_.reset(new GLContextStateGuard(context ? context : GLContextMgr.getMainContext()));
 }
 
 } // namespace

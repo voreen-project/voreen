@@ -26,25 +26,17 @@
 #ifndef VRN_VOREENCOREAPI_H
 #define VRN_VOREENCOREAPI_H
 
-#ifdef VRN_SHARED_LIBS
+#ifdef WIN32
     #ifdef VRN_CORE_BUILD_DLL
         // building library -> export symbols
-        #ifdef WIN32
-            #define VRN_CORE_API __declspec(dllexport)
-        #else
-            #define VRN_CORE_API
-        #endif
+        #define VRN_CORE_API __declspec(dllexport)
     #else
         // including library -> import symbols
-        #ifdef WIN32
-            #define VRN_CORE_API __declspec(dllimport)
-        #else
-            #define VRN_CORE_API
-        #endif
+        #define VRN_CORE_API __declspec(dllimport)
     #endif
 #else
-    // building/including static library -> do nothing
     #define VRN_CORE_API
 #endif
+
 
 #endif // VRN_VOREENCOREAPI_H

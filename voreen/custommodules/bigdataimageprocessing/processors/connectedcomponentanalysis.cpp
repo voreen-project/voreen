@@ -181,13 +181,13 @@ CCAComputeInput ConnectedComponentAnalysis::prepareComputeInput() {
 
         // Workaround (see above) pass the pointer to the statwriter into the lambda.
         CCAWriterType* statWriterPtr = statWriter.get();
-        writeMetaData = [statWriterPtr] (int id, const CCANodeMetaData& m) {
+        writeMetaData = [statWriterPtr] (uint32_t id, const CCANodeMetaData& m) {
             tgt::vec3 llf = m.bounds_.getLLF();
             tgt::vec3 urb = m.bounds_.getURB();
             statWriterPtr->write(id, m.volume_, llf.x, llf.y, llf.z, urb.x, urb.y, urb.z);
         };
     } else {
-        writeMetaData = [] (int, const CCANodeMetaData&) {};
+        writeMetaData = [] (uint32_t, const CCANodeMetaData&) {};
     }
 
     const tgt::svec3 dim = inputVolume.getDimensions();
@@ -283,7 +283,7 @@ void ConnectedComponentAnalysis::adjustPropertiesToInput() {
 
     binarizationThreshold_.setMinValue(mm->getMin());
     binarizationThreshold_.setMaxValue(mm->getMax());
-    binarizationThreshold_.adaptDecimalsToRange(2);
+    binarizationThreshold_.adaptDecimalsToRange(4);
 
     // Volumes without an a RWM are expected to have normalized max and min values (and normalized values in general).
     tgtAssert(input->hasMetaData("RealWorldMapping") || mm->getMin() == mm->getMinNormalized() && mm->getMax() == mm->getMaxNormalized(), "Missing RealWorldMapping or invalid VolumeMinMax");

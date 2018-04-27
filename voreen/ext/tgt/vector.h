@@ -25,7 +25,7 @@
 #ifndef TGT_VECTOR_H
 #define TGT_VECTOR_H
 
-#ifndef WIN32
+#ifdef __linux__
 // Add a .debug_gdb_scripts section within the binary with information for gdb.
 // When gdb is started at the root of the repository it should now find the script(s),
 // execute it and thus be able to print vectors in a compact manner.

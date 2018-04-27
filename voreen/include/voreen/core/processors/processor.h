@@ -74,7 +74,7 @@ class VRN_CORE_API Processor : public PropertyOwner, public tgt::EventListener,
     friend class ProcessorFactory;
     friend class Port;
     friend class ProcessorWidget;
-    template <class T> friend class ProcessorBackgroundThread;
+    template<typename T> friend class ProcessorBackgroundThread;
 
 public:
     /**

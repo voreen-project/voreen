@@ -108,8 +108,10 @@ class TemplateBounds {
     /**
     *   Returns the volume of this box
     */
-    float volume() const {
-        return std::abs((llf_.x - urb_.x) * (llf_.y - urb_.y) * (llf_.z - urb_.z));
+    T volume() const {
+        T vol = (urb_.x - llf_.x) * (urb_.y - llf_.y) * (urb_.z - llf_.z);
+        tgtAssert(vol >= 0, "Invalid bounds volume");
+        return vol;
     }
 
     /**
@@ -125,8 +127,7 @@ class TemplateBounds {
     /**
     *   Returns true if point is contained in this box
     */
-    bool containsPoint(const tgt::Vector& p)
-    {
+    bool containsPoint(const typename tgt::Vector3<T>& p) const {
         return ( (p.x >= llf_.x) && (p.y >= llf_.y) && (p.z >= llf_.z)
                     && (p.x <= urb_.x) && (p.y <= urb_.y) && (p.z <= urb_.z) );
     }
@@ -135,7 +136,7 @@ class TemplateBounds {
     *   Returns true if b is contained in this box
     *   Box has to be defined!
     */
-    bool containsVolume(const TemplateBounds& b) {
+    bool containsVolume(const TemplateBounds& b) const {
         return ( containsPoint(b.llf_) && containsPoint(b.urb_) );
     }
 
@@ -316,6 +317,7 @@ std::ostream& operator<< (std::ostream& o, const TemplateBounds<T>& b) {
 
 typedef TemplateBounds<float> Bounds;
 typedef TemplateBounds<int> IntBounds;
+typedef TemplateBounds<size_t> SBounds;
 
 template<typename T>
 class TGT_API HasTemplateBounds {

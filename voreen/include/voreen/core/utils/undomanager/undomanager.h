@@ -39,7 +39,7 @@ namespace voreen {
 class VRN_CORE_API UndoElement {
 public:
     UndoElement() {};
-    ~UndoElement() {};
+    virtual ~UndoElement() {};
 
     virtual void undo() {};
 };
@@ -66,7 +66,7 @@ template class TGT_API tgt::Singleton<UndoManager>;
 class VRN_CORE_API UndoManager : public tgt::Singleton<UndoManager> {
 public:
     UndoManager() {};
-    ~UndoManager() {};
+    virtual ~UndoManager() {};
 
     void addUndoElement(UndoElement elem);
 

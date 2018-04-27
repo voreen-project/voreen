@@ -84,9 +84,10 @@
 // property link evaluators
 #include "voreen/core/properties/link/linkevaluatorboolinvert.h"
 #include "voreen/core/properties/link/linkevaluatorboundingbox.h"
+#include "voreen/core/properties/link/linkevaluatorcolorswitch.h"
 #include "voreen/core/properties/link/linkevaluatorid.h"
 #include "voreen/core/properties/link/linkevaluatorinterval.h"
-#include "voreen/core/properties/link/linkevaluatorcolorswitch.h"
+#include "voreen/core/properties/link/linkevaluatormatrixinvert.h"
 #include "voreen/core/ports/renderport.h"
 
 // geometry
@@ -354,6 +355,9 @@ CoreModule::CoreModule(const std::string& modulePath)
     registerSerializableType(new LinkEvaluatorVec3IVec3IdNormalized());
     registerSerializableType(new LinkEvaluatorVec4IVec4IdNormalized());
 
+    //registerSerializableType(new LinkEvaluatorMat2Invert());
+    registerSerializableType(new LinkEvaluatorMat3Invert());
+    registerSerializableType(new LinkEvaluatorMat4Invert());
 
     //Links between scalars and vectors
 

@@ -28,6 +28,10 @@
 #include "tgt/glcanvas.h"
 #include "voreen/qt/voreenqtapi.h"
 
+#ifdef __APPLE__
+#define __gl3_h_
+#endif
+
 #include <QOpenGLWidget>
 #include <QSurfaceFormat>
 

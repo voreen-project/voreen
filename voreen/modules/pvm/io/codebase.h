@@ -123,8 +123,9 @@ inline double fsqr(const double x) {
 #undef fsqrt
 #define fsqrt(x) sqrt((double)(x))
 
-#undef fsin
-#define fsin(x) sin((double)(x))
+// Name clash in boost's datetime headers
+//#undef fsin
+//#define fsin(x) sin((double)(x))
 #undef fcos
 #define fcos(x) cos((double)(x))
 #undef ftan

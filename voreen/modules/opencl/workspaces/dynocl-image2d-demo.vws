@@ -72,9 +72,7 @@
                                         <item value="C:/voreen-development/voreen/resource/voreenve/volumes/nucleon.vvd" />
                                     </paths>
                                 </path>
-                                <searchParameters>
-                                    <value key="preferredReader" value="VvdVolumeReader" />
-                                </searchParameters>
+                                <searchParameters />
                             </urls>
                         </Property>
                     </Properties>
@@ -100,9 +98,9 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="721" y="372" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="6.525189877" y="3.850679398" z="-7.242524147" />
-                            <focus x="0.011738907" y="-0.030043066" z="-0.005544385" />
-                            <upVector x="0.024472715" y="-0.890027463" z="-0.455249697" />
+                            <position x="5.772012234" y="4.803693295" z="-7.312205791" />
+                            <focus x="0.01247812" y="-0.028815011" z="-0.009225992" />
+                            <upVector x="0.024712702" y="-0.842549801" z="-0.538051248" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
                             </trackball>
@@ -159,43 +157,6 @@
                             </Properties>
                         </Handler>
                     </InteractionHandlers>
-                </Processor>
-                <Processor type="CubeProxyGeometry" name="MeshProxyGeometry" id="ref1">
-                    <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-434" y="-171" />
-                    </MetaData>
-                    <Properties>
-                        <Property mapKey="clipRegion">
-                            <bounds.llf x="0" y="0" z="0" />
-                            <bounds.urb x="40" y="40" z="40" />
-                            <minValue x="0" y="0" z="0" />
-                            <maxValue x="40" y="40" z="40" />
-                            <minRange x="0" y="0" z="0" />
-                            <maxRange x="2147483647" y="2147483647" z="2147483647" />
-                            <stepping x="1" y="1" z="1" />
-                        </Property>
-                        <Property mapKey="resetClipPlanes" name="resetClipPlanes" />
-                        <Property mapKey="useClipping" name="useClipping" value="true" />
-                    </Properties>
-                    <Inports>
-                        <Port name="volumehandle.volumehandle" direction="1" portID="volumehandle.volumehandle" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
-                            <Properties>
-                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
-                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
-                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
-                            </Properties>
-                        </Port>
-                    </Inports>
-                    <Outports>
-                        <Port name="proxygeometry.geometry" direction="0" portID="proxygeometry.geometry" guiName="Proxy Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
-                            <Properties>
-                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
-                            </Properties>
-                        </Port>
-                    </Outports>
-                    <CoProcessorInports />
-                    <CoProcessorOutports />
-                    <InteractionHandlers />
                 </Processor>
                 <Processor type="Canvas" name="Canvas 2" id="ref5">
                     <MetaData>
@@ -302,7 +263,7 @@ __kernel void standardKernel( read_only image2d_t inCol, //$ first color inport 
                     </PriorityProperty>
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-433" y="22" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="471" y="381" width="800" height="480" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="517" y="386" width="800" height="480" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="test" name="test" value="0.5" />
@@ -345,6 +306,121 @@ __kernel void standardKernel( read_only image2d_t inCol, //$ first color inport 
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
+                <Processor type="OptimizedProxyGeometry" name="OptimizedProxyGeometry" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-447" y="-170" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clipRegion">
+                            <bounds.llf x="0" y="0" z="0" />
+                            <bounds.urb x="40" y="40" z="40" />
+                            <minValue x="0" y="0" z="0" />
+                            <maxValue x="40" y="40" z="40" />
+                            <minRange x="0" y="0" z="0" />
+                            <maxRange x="2147483647" y="2147483647" z="2147483647" />
+                            <stepping x="1" y="1" z="1" />
+                        </Property>
+                        <Property mapKey="modeString" name="modeString" value="boundingbox" />
+                        <Property mapKey="resetClipPlanes" name="resetClipPlanes" />
+                        <Property mapKey="resolution" name="resolution" value="32" />
+                        <Property mapKey="resolutionMode" name="resolutionMode" value="subdivide" />
+                        <Property mapKey="resolutionvoxel" name="resolutionvoxel" value="1" />
+                        <Property mapKey="threshold" name="threshold" value="1" />
+                        <Property mapKey="transferfunction" name="transferfunction" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="transferfunction2" name="transferfunction2" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="transferfunction3" name="transferfunction3" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="transferfunction4" name="transferfunction4" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="useClipping" name="useClipping" value="false" />
+                        <Property mapKey="waitForOptimization" name="waitForOptimization" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.volumehandle" direction="1" portID="volumehandle.volumehandle" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="proxygeometry.geometry" direction="0" portID="proxygeometry.geometry" guiName="Proxy Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
             </Processors>
             <Connections>
                 <Connection>
@@ -352,7 +428,7 @@ __kernel void standardKernel( read_only image2d_t inCol, //$ first color inport 
                         <Processor type="VolumeSource" ref="ref0" />
                     </Outport>
                     <Inport name="volumehandle.volumehandle">
-                        <Processor type="CubeProxyGeometry" ref="ref1" />
+                        <Processor type="OptimizedProxyGeometry" ref="ref1" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -372,14 +448,6 @@ __kernel void standardKernel( read_only image2d_t inCol, //$ first color inport 
                     </Inport>
                 </Connection>
                 <Connection>
-                    <Outport name="proxygeometry.geometry">
-                        <Processor type="CubeProxyGeometry" ref="ref1" />
-                    </Outport>
-                    <Inport name="proxgeometry.geometry">
-                        <Processor type="MeshEntryExitPoints" ref="ref2" />
-                    </Inport>
-                </Connection>
-                <Connection>
                     <Outport name="outCol">
                         <Processor type="DynamicCLProcessor" ref="ref3" />
                     </Outport>
@@ -393,6 +461,14 @@ __kernel void standardKernel( read_only image2d_t inCol, //$ first color inport 
                     </Outport>
                     <Inport name="image.input">
                         <Processor type="Canvas" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="proxygeometry.geometry">
+                        <Processor type="OptimizedProxyGeometry" ref="ref1" />
+                    </Outport>
+                    <Inport name="proxgeometry.geometry">
+                        <Processor type="MeshEntryExitPoints" ref="ref2" />
                     </Inport>
                 </Connection>
             </Connections>

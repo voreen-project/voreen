@@ -87,26 +87,22 @@
 /**
  * This is needed for .dll or .so support respectively
  */
-#ifdef VRN_SHARED_LIBS
-    #ifdef TGT_BUILD_DLL
-        // building library -> export symbols
-        #ifdef WIN32
-            #define TGT_API __declspec(dllexport)
-        #else
-            #define TGT_API
-        #endif
+#ifdef TGT_BUILD_DLL
+    // building library -> export symbols
+    #ifdef WIN32
+        #define TGT_API __declspec(dllexport)
     #else
-        // including library -> import symbols
-        #ifdef WIN32
-            #define TGT_API __declspec(dllimport)
-        #else
-            #define TGT_API
-        #endif
+        #define TGT_API
     #endif
 #else
-    // building/including static library -> do nothing
-    #define TGT_API
+    // including library -> import symbols
+    #ifdef WIN32
+        #define TGT_API __declspec(dllimport)
+    #else
+        #define TGT_API
+    #endif
 #endif
+
 
 /**
  * With this macro you can get rid of annoying "unused parameter" warnings

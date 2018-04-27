@@ -25,17 +25,18 @@
 #include "tgt/tgt_gl.h"
 
 #include "tgt/logmanager.h"
+#include "tgt/glcontextmanager.h"
 
 #include <math.h>
 
 namespace tgt {
 
 static void printGlDebugLog(int line, const char* file) {
-#ifdef VRN_DEBUG
+#ifdef TGT_DEBUG
     if(GpuCaps.isExtensionSupported("KHR_debug")) {
-        std::ostringstream locationInfo, loggerCat;
-        locationInfo << " File: " << file << "@" << line;
+        std::ostringstream loggerCat, locationInfo;
         loggerCat << "gl-error:" << file << ':' << line;
+        locationInfo << " File: " << file << "@" << line;
 
         while(true) {
             GLint msgLength;
@@ -61,10 +62,10 @@ static void printGlDebugLog(int line, const char* file) {
                     loglevel = tgt::Debug;
                     break;
                 case GL_DEBUG_SEVERITY_LOW:
-                    loglevel = tgt::Info;
+                    loglevel = tgt::Debug;
                     break;
                 case GL_DEBUG_SEVERITY_MEDIUM:
-                    loglevel = tgt::Warning;
+                    loglevel = tgt::Debug;
                     break;
                 case GL_DEBUG_SEVERITY_HIGH:
                     loglevel = tgt::Error;
@@ -81,22 +82,22 @@ static void printGlDebugLog(int line, const char* file) {
 }
 
 GLenum _lGLError(int line, const char* file) {
-    GLenum err = glGetError();
 
-    if (err != GL_NO_ERROR) {
-        const GLubyte* exp = gluErrorString(err);
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        const GLubyte* exp = gluErrorString(error);
 
-        std::ostringstream tmp1, tmp2, loggerCat;
-        tmp2 << " File: " << file << "@" << line;
-        tmp1 << (exp ? (const char*) exp : "unknown");
+        std::ostringstream msg, info, loggerCat;
+        info << " File: " << file << "@" << line;
+        msg << (exp ? (const char*)exp : "unknown");
         loggerCat << "gl-error:" << file << ':' << line;
 
-        LogMgr.log(loggerCat.str(), tgt::Error, tmp1.str(), tmp2.str());
+        LogMgr.log(loggerCat.str(), tgt::Error, msg.str(), info.str());
     }
 
     printGlDebugLog(line, file);
 
-    return err;
+    return error;
 }
 
 // GLU code taken from Mesa3D http://www.mesa3d.org

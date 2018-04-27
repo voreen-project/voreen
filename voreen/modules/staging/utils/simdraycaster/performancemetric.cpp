@@ -38,7 +38,7 @@
 #endif
 #include <Windows.h>
 #endif 
-#ifdef __linux__
+#ifdef UNIX
 #include <sys/time.h>
 #endif
 
@@ -50,7 +50,7 @@ double PerformanceMetric::getHighPrecisionTimer(){
     QueryPerformanceCounter(&counter);
     QueryPerformanceFrequency(&freq);
     return (double)counter.QuadPart/(double)freq.QuadPart;
-#elif __linux__
+#elif UNIX
     // start using CLOCK_MONOTONIC
     struct timeval tv;
     gettimeofday(&tv, NULL);

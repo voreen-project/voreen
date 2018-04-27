@@ -38,6 +38,7 @@
 #include "tgt/shadermanager.h"
 #include "tgt/matrixstack.h"
 #include "tgt/fontmanager.h"
+#include "tgt/framebufferobject.h"
 
 #include <algorithm>
 #include <sstream>
@@ -94,10 +95,7 @@ else{
 }
 }
 
-
 static const float POINT_TO_PX = 1.15; // choosen to be close to old font rendering
-
-#define GLERR {GLuint err = glGetError(); if (err != GL_NO_ERROR) {__debugbreak();}};
 
 Font::Font(const std::string& fontName, int size, float lineWidth, TextAlignment textAlignment)
     : fontName_(fontName)
@@ -174,12 +172,11 @@ float Font::getLineHeight(){
 }
 
 void Font::render(const tgt::vec3 pos, const std::string& text, const tgt::ivec2 screensize) {
-    if (text == "")
+    if (text.empty())
         return;
 
     if (screensize.x <= 0 || screensize.y <= 0)
         return;
-
 
     // store blend status to reset it afterwards
     tgt::vec3 realpos = tgt::round(pos);
@@ -237,7 +234,6 @@ void Font::render(const tgt::vec3 pos, const std::string& text, const tgt::ivec2
     float offsety = 0;
 
     if (top){
-
         offsety = -getLineHeight()*(layout.size())-padding_.y+info.ascentDescent.x;
     }else if(middle){
         offsety = +(info.ascentDescent.x)/2-getLineHeight()*(layout.size()-1)/2.0f;
@@ -311,8 +307,6 @@ tgt::vec2 Font::getSize(const tgt::vec3& pos, const std::string& text, const tgt
         lineWidth = screensize.x-pos.x;
     }
 
-
-
     std::vector<FontManager::codepoint_t> textUCS32 = decodeUTF8(reinterpret_cast<const unsigned char*>(text.c_str()));
     FntMgr.requestCharset(fontName_, static_cast<int>(getEffektiveFontSize(1.0f*fontSize_)*POINT_TO_PX), textUCS32);
     FontManager::FontInfo info = FntMgr.getFontInfo(fontName_, static_cast<int>(getEffektiveFontSize(1.0f*fontSize_)*POINT_TO_PX));
@@ -373,56 +367,56 @@ void Font::addVerticesFromLineBuffer(float xoffset, float yoffset, float scale, 
     for(size_t i = 0; i != line.line_.size(); i++){
         FontManager::codepoint_t c = line.line_[i];
 
-        if ((c >= 32 && c < 128) || true) {
-            stbtt_aligned_quad q;
-            stbtt_GetPackedQuad(&chars[c], info.width, info.height, 0, &x, &y, &q, 1);
+        //if (c < 32 || c >= 128) continue; // TODO: necessary?
 
-            CharacterVertex vertex;
+        stbtt_aligned_quad q;
+        stbtt_GetPackedQuad(&chars[c], info.width, info.height, 0, &x, &y, &q, 1);
 
-            // First Triangle
-            vertex.pos.x = q.x0;
-            vertex.pos.y = q.y1;
-            vertex.coord.x = q.s0;
-            vertex.coord.y = q.t1;
-            vertex.pos = scale*vertex.pos+vec2(xoffset, yoffset);
-            verts.push_back(vertex);
+        CharacterVertex vertex;
 
-            vertex.pos.x = q.x1;
-            vertex.pos.y = q.y0;
-            vertex.coord.x = q.s1;
-            vertex.coord.y = q.t0;
-            vertex.pos = scale*vertex.pos+vec2(xoffset, yoffset);
-            verts.push_back(vertex);
+        // First Triangle
+        vertex.pos.x = q.x0;
+        vertex.pos.y = q.y1;
+        vertex.coord.x = q.s0;
+        vertex.coord.y = q.t1;
+        vertex.pos = scale*vertex.pos+vec2(xoffset, yoffset);
+        verts.push_back(vertex);
 
-            vertex.pos.x = q.x0;
-            vertex.pos.y = q.y0;
-            vertex.coord.x = q.s0;
-            vertex.coord.y = q.t0;
-            vertex.pos = scale*vertex.pos+vec2(xoffset, yoffset);
-            verts.push_back(vertex);
+        vertex.pos.x = q.x1;
+        vertex.pos.y = q.y0;
+        vertex.coord.x = q.s1;
+        vertex.coord.y = q.t0;
+        vertex.pos = scale*vertex.pos+vec2(xoffset, yoffset);
+        verts.push_back(vertex);
 
-            // Second Triangle
-            vertex.pos.x = q.x0;
-            vertex.pos.y = q.y1;
-            vertex.coord.x = q.s0;
-            vertex.coord.y = q.t1;
-            vertex.pos = scale*vertex.pos+vec2(xoffset, yoffset);
-            verts.push_back(vertex);
+        vertex.pos.x = q.x0;
+        vertex.pos.y = q.y0;
+        vertex.coord.x = q.s0;
+        vertex.coord.y = q.t0;
+        vertex.pos = scale*vertex.pos+vec2(xoffset, yoffset);
+        verts.push_back(vertex);
 
-            vertex.pos.x = q.x1;
-            vertex.pos.y = q.y0;
-            vertex.coord.x = q.s1;
-            vertex.coord.y = q.t0;
-            vertex.pos = scale*vertex.pos+vec2(xoffset, yoffset);
-            verts.push_back(vertex);
+        // Second Triangle
+        vertex.pos.x = q.x0;
+        vertex.pos.y = q.y1;
+        vertex.coord.x = q.s0;
+        vertex.coord.y = q.t1;
+        vertex.pos = scale*vertex.pos+vec2(xoffset, yoffset);
+        verts.push_back(vertex);
 
-            vertex.pos.x = q.x1;
-            vertex.pos.y = q.y1;
-            vertex.coord.x = q.s1;
-            vertex.coord.y = q.t1;
-            vertex.pos = scale*vertex.pos+vec2(xoffset, yoffset);
-            verts.push_back(vertex);
-        }
+        vertex.pos.x = q.x1;
+        vertex.pos.y = q.y0;
+        vertex.coord.x = q.s1;
+        vertex.coord.y = q.t0;
+        vertex.pos = scale*vertex.pos+vec2(xoffset, yoffset);
+        verts.push_back(vertex);
+
+        vertex.pos.x = q.x1;
+        vertex.pos.y = q.y1;
+        vertex.coord.x = q.s1;
+        vertex.coord.y = q.t1;
+        vertex.pos = scale*vertex.pos+vec2(xoffset, yoffset);
+        verts.push_back(vertex);
     }
 }
 
@@ -437,18 +431,22 @@ tgt::vec2 Font::getSizeFromLayout(std::vector<LineBuffer>& layout){
 
 Texture* Font::renderToTexture(const std::string& text)
 {
+    // Restore state afterwards.
+    GLFramebufferObjectGuard guard;
     GLint oldViewport[4];
     glGetIntegerv( GL_VIEWPORT, oldViewport );
-    GLint oldFbo;
     float oldLinewidth = getLineWidth();
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFbo);
-    TextAlignment ta = getTextAlignment();
+    
+    TextAlignment alignment = getTextAlignment();
     //tgt::vec4 color = getFontColor();
     setTextAlignment(TopLeft);
     //setFontColor(tgt::vec4::one);
     setLineWidth(0);
+
     tgt::ivec2 size = tgt::ceil(getSize(tgt::vec3::zero, text, tgt::ivec2(4096, 4096)))+tgt::vec2(1, 1);
     Texture *tex = new Texture(tgt::ivec3(size, 1), GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
+
+    // Create fbo.
     GLuint fbo;
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -461,27 +459,28 @@ Texture* Font::renderToTexture(const std::string& text)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex->getId(), 0);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    //-------------------------
+    //Attach depth buffer to FBO.
     GLuint depth_rb;
     glGenRenderbuffers(1, &depth_rb);
     glBindRenderbuffer(GL_RENDERBUFFER, depth_rb);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, size.x, size.y);
-    //-------------------------
-    //Attach depth buffer to FBO
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rb);
     GLuint err = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     GLenum buffers[1] = {GL_COLOR_ATTACHMENT0};
     glDrawBuffers(1, buffers);
-    tgtAssert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "tgt::Font::renderToTexture: Framebuffer not complete!");
+    tgtAssert(FramebufferObject::isComplete(), "tgt::Font::renderToTexture: Framebuffer not complete!");
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glViewport(0, 0, size.x, size.y);
     render(tgt::vec3::zero, text, size);
-
-
-    glBindFramebuffer(GL_FRAMEBUFFER, oldFbo);
     glDeleteFramebuffers(1, &fbo);
+    glDeleteRenderbuffers(1, &depth_rb);
+
+    // Restore state.
     glViewport(oldViewport[0], oldViewport[1], oldViewport[2], oldViewport[3]);
-    setTextAlignment(ta);
+    setTextAlignment(alignment);
     //setFontColor(color);
     setLineWidth(oldLinewidth);
     return tex;

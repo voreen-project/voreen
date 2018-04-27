@@ -37,9 +37,11 @@ struct TransFuncParameters {
 
 float realWorldToTexture(TransFuncParameters tf, float v) {
     if(v <= tf.domainLower_.x)
-       return 0.0;
+        return 0.0;
     else if(v >= tf.domainUpper_.x)
-       return 1.0;
+        return 1.0;
+    else if(tf.domainUpper_.x == tf.domainLower_.x)
+        return 0.0;
     else
         return (v - tf.domainLower_.x) / (tf.domainUpper_.x - tf.domainLower_.x);
 }
@@ -48,11 +50,13 @@ vec2 realWorldToTexture(TransFuncParameters tf, vec2 v) {
     float x = realWorldToTexture(tf, v.x);
 
     if(v.y <= tf.domainLower_.y)
-       return vec2(x, 0.0);
+        return vec2(x, 0.0);
     else if(v.y >= tf.domainUpper_.y)
-       return vec2(x, 1.0);
+        return vec2(x, 1.0);
+    else if(tf.domainUpper_.y == tf.domainLower_.y)
+        return vec2(x, 0.0);
     else
-       return vec2(x, (v.y - tf.domainLower_.y) / (tf.domainUpper_.y - tf.domainLower_.y));
+        return vec2(x, (v.y - tf.domainLower_.y) / (tf.domainUpper_.y - tf.domainLower_.y));
 }
 
 vec4 applyTF(TransFuncParameters transfunc, sampler1D tex, float intensity) {

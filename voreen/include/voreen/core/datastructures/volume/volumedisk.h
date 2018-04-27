@@ -100,7 +100,6 @@ protected:
     const size_t numChannels_;
     const size_t bytesPerVoxel_;
 
-
     static const std::string loggerCat_;
 };
 

@@ -59,7 +59,7 @@ void StereoCanvasRendererWidget::initialize() {
     }
 
     // Create canvas, request stereo rendering.
-    canvasWidget_ = new tgt::QtCanvas("Stereo Canvas", tgt::ivec2(getSize().x, getSize().y), tgt::GLCanvas::RGBADDQ, this, 0);
+    canvasWidget_ = new tgt::QtCanvas(canvasRenderer->getGuiName(), tgt::ivec2(getSize().x, getSize().y), tgt::GLCanvas::RGBADDQ, this, 0);
     if(!canvasWidget_->format().stereo()) { // Check, if request was successful.
         OptionProperty<StereoCanvasRenderer::StereoMode>* prop = dynamic_cast<OptionProperty<StereoCanvasRenderer::StereoMode>* >(canvasRenderer->getProperty("stereoModeProp"));
         tgtAssert(prop, "No stereoModeProp found");
@@ -68,16 +68,15 @@ void StereoCanvasRendererWidget::initialize() {
             LERRORC("voreen.qt.StereoCanvasRendererWidget", "Option \"quadbuffer\" does not exist!");
         }
     }
-    VoreenApplicationQt::qtApp()->sendTouchEventsTo(canvasWidget_);
-    canvasWidget_->setMinimumSize(64, 64);
-    canvasWidget_->setMouseTracking(true); // for receiving mouse move events without a pressed button
-
     QGridLayout* layout = new QGridLayout;
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(canvasWidget_, 0, 0);
     setLayout(layout);
 
     VoreenPainter* painter = new VoreenPainter(canvasWidget_, evaluator, canvasRenderer); //sets the painter to canvas widget
+    VoreenApplicationQt::qtApp()->sendTouchEventsTo(canvasWidget_);
+    canvasWidget_->setMinimumSize(64, 64);
+    canvasWidget_->setMouseTracking(true); // for receiving mouse move events without a pressed button
     canvasWidget_->init();
 
     canvasRenderer->setCanvas(canvasWidget_);

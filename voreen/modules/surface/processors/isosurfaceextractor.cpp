@@ -635,10 +635,18 @@ void IsosurfaceExtractor::process() {
         const VolumeMinMax* mm = invol->getDerivedData<VolumeMinMax>();
         tgtAssert(mm, "No VolumeMinMax");
 
+        bool minAndMaxWereEqual = isoValueProp_.getMinValue() == isoValueProp_.getMaxValue();
+
         // Find proper values for isoValueProp_
         isoValueProp_.setMinValue(mm->getMin());
         isoValueProp_.setMaxValue(mm->getMax());
         isoValueProp_.adaptDecimalsToRange(2);
+
+        // Restore and interesting surface if we e.g. set a zero surface by accident previously
+        if(minAndMaxWereEqual) {
+            isoValueProp_.set((isoValueProp_.getMinValue() + isoValueProp_.getMaxValue())*0.5f);
+        }
+
 
         /*
         float targetStepping = range/100;
