@@ -166,6 +166,7 @@ MDSPlot::MDSPlot()
         ON_CHANGE(renderedChannel_, MDSPlot, outputEigenValues);
         renderedChannel_.setGroupID("rendering");
     addProperty(renderedRuns_);
+        ON_CHANGE(renderedRuns_, MDSPlot, renderedChannelsChanged);
         renderedRuns_.setGroupID("rendering");
     setPropertyGroupGuiName("rendering", "Rendering");
 
@@ -262,7 +263,7 @@ void MDSPlot::renderingPass(bool picking) {
     switch(numDimensions_.get()) {
     case 1:
     {
-        for(int runIdx : renderedRuns_.getSelectedRowIndices()) {
+        for(int runIdx : renderingOrder_) {
 
             size_t runOffset = 0;
             for (int i = 0; i < runIdx; i++)
@@ -291,7 +292,7 @@ void MDSPlot::renderingPass(bool picking) {
     }
     case 2:
     {
-        for (int runIdx : renderedRuns_.getSelectedRowIndices()) {
+        for (int runIdx : renderingOrder_) {
 
             size_t runOffset = 0;
             for (int i = 0; i < runIdx; i++)
@@ -322,7 +323,7 @@ void MDSPlot::renderingPass(bool picking) {
         MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
         MatStack.loadMatrix(camera_.get().getViewMatrix());
 
-        for (int runIdx : renderedRuns_.getSelectedRowIndices()) {
+        for (int runIdx : renderingOrder_) {
 
             size_t runOffset = 0;
             for (int i = 0; i < runIdx; i++)
@@ -422,19 +423,28 @@ void MDSPlot::mouseClickEvent(tgt::MouseEvent* e) {
     size_t numRuns = runs.size();
     int r = static_cast<int>(std::round(texel.r * numRuns));
 
-    // Calculate time step index.
-    size_t numTimeSteps = runs[r].timeSteps_.size();
-    int t = static_cast<size_t>(std::round(texel.g * numTimeSteps));
+    // Right-click selection changes rendering order.
+    if (e->button() & tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
+        renderingOrder_.erase(std::find(renderingOrder_.begin(), renderingOrder_.end(), r));
+        renderingOrder_.push_front(r);
+        invalidate();
+    }
+    // Left-click performs time step selection.
+    else {
+        // Calculate time step index.
+        size_t numTimeSteps = runs[r].timeSteps_.size();
+        int t = static_cast<size_t>(std::round(texel.g * numTimeSteps));
 
-    // Update selection.
-    std::vector<int> run;
-    run.push_back(r);
-    selectedRuns_.setSelectedRowIndices(run);
+        // Update selection.
+        std::vector<int> run;
+        run.push_back(r);
+        selectedRuns_.setSelectedRowIndices(run);
 
-    const EnsembleDataset::TimeStep& timeStep = runs[r].timeSteps_[tgt::clamp<size_t>(t, 0, numTimeSteps - 1)];
-    float lower = std::floor(timeStep.time_ * 100.0f) / 100.0f;
-    float upper = std::ceil((timeStep.time_+timeStep.duration_) * 100.0f) / 100.0f;
-    selectedTimeSteps_.set(tgt::vec2(lower, upper));
+        const EnsembleDataset::TimeStep& timeStep = runs[r].timeSteps_[tgt::clamp<size_t>(t, 0, numTimeSteps - 1)];
+        float lower = std::floor(timeStep.time_ * 100.0f) / 100.0f;
+        float upper = std::ceil((timeStep.time_+timeStep.duration_) * 100.0f) / 100.0f;
+        selectedTimeSteps_.set(tgt::vec2(lower, upper));
+    }
 
     e->accept();
 }
@@ -485,7 +495,7 @@ void MDSPlot::onEvent(tgt::Event* e) {
 
 void MDSPlot::adjustToEnsemble() {
 
-    ensembleHash_ = "";
+    ensembleHash_.clear();
     mdsData_.clear();
     renderedChannel_.setOptions(std::deque<Option<std::string>>());
     renderedRuns_.reset();
@@ -530,7 +540,7 @@ void MDSPlot::adjustToEnsemble() {
 void MDSPlot::calculate() {
 
     calculateButton_.setReadOnlyFlag(true);
-    ensembleHash_ = "";
+    ensembleHash_.clear();
     mdsData_.clear();
 
     setProgress(0.0f);
@@ -807,6 +817,9 @@ void MDSPlot::save() {
     }
 }
 
+void MDSPlot::renderedChannelsChanged() {
+    renderingOrder_ = std::deque<int>(renderedRuns_.getSelectedRowIndices().begin(), renderedRuns_.getSelectedRowIndices().end());
+}
 
 void MDSPlot::load() {
     if (loadFileDialog_.get().empty()) {

@@ -147,6 +147,9 @@ protected:
     /// Sphere geometry for timestep selection.
     GlMeshGeometryUInt16Simple sphere_;
 
+    // Rendering order.
+    std::deque<int> renderingOrder_;
+
 private:
 
     void mouseClickEvent(tgt::MouseEvent* e);
@@ -155,7 +158,9 @@ private:
     tgt::vec3 getColor(size_t runIdx, size_t timeStepIdx, bool picking) const;
     DMMatrix calculateDistanceMatrixFromField(const std::string& channel);
     MDSData computeFromDM(const DMMatrix& matrix, float epsilon = -1.0f);
+
     void outputEigenValues();
+    void renderedChannelsChanged();
     void save();
     void load();
 };
