@@ -39,6 +39,9 @@ SimilartyDataVolume::SimilartyDataVolume()
     , time_("time", "Time", 0.0f, 0.0f, 1000000.0f)
     , similarityMethod_("similarityMethod", "Similarity Method")
     , selectedChannel_("selectedChannel", "Selected Channel")
+    , comparisonMethod_("comparisonMethod", "Comparison Method")
+    , groupBehaviour_("groupBehaviour", "Group behaviour")
+    , singleRunSelection_("singleRunSelection", "Compare run ...")
     , group1_("similartyDataVolumeGroup1", "Group 1")
     , group2_("similartyDataVolumeGroup2", "Group 2")
 {
@@ -55,11 +58,52 @@ SimilartyDataVolume::SimilartyDataVolume()
     similarityMethod_.select("variance");
     addProperty(selectedChannel_);
 
+    addProperty(comparisonMethod_);
+    comparisonMethod_.addOption("selection", "Compare selection");
+    comparisonMethod_.addOption("oneToGroup", "Compare one to group");
+    comparisonMethod_.addOption("groupToGroup", "Compare group to group");
+    ON_CHANGE(comparisonMethod_, SimilartyDataVolume, onComparisonMethodChange);
+    onComparisonMethodChange();
+
+    addProperty(singleRunSelection_);
     addProperty(group1_);
     addProperty(group2_);
+
+    addProperty(groupBehaviour_);
+    groupBehaviour_.addOption("groupAvg", "Compare group average");
+    groupBehaviour_.addOption("groupMin", "Compare group min value");
+    groupBehaviour_.addOption("groupMax", "Compare group max value");
+
 }
 
 SimilartyDataVolume::~SimilartyDataVolume() {
+}
+
+void SimilartyDataVolume::onComparisonMethodChange() {
+    if(comparisonMethod_.getKey() == "selection") {
+        group1_.setVisibleFlag(true);
+        group1_.setGuiName("Run selection");
+        group2_.setVisibleFlag(false);
+        group2_.setGuiName("Selection");
+        groupBehaviour_.setVisibleFlag(false);
+        singleRunSelection_.setVisibleFlag(false);
+    }
+    else if(comparisonMethod_.getKey() == "oneToGroup") {
+        group1_.setVisibleFlag(false);
+        group1_.setGuiName("Compare one run ...");
+        group2_.setVisibleFlag(true);
+        group2_.setGuiName("... to group of runs");
+        groupBehaviour_.setVisibleFlag(true);
+        singleRunSelection_.setVisibleFlag(true);
+    }
+    else if(comparisonMethod_.getKey() == "groupToGroup") {
+        group1_.setVisibleFlag(true);
+        group1_.setGuiName("Select group of runs");
+        group2_.setVisibleFlag(true);
+        group2_.setGuiName("Select other group of runs");
+        groupBehaviour_.setVisibleFlag(true);
+        singleRunSelection_.setVisibleFlag(false);
+    }
 }
 
 SimilarityDataVolumeCreatorInput SimilartyDataVolume::prepareComputeInput() {
@@ -70,6 +114,8 @@ SimilarityDataVolumeCreatorInput SimilartyDataVolume::prepareComputeInput() {
     const EnsembleDataset& input = *inputPtr;
 
     // TODO: check if selected time is simulated in each selected run.
+
+    isReadyToCompute();
 
     tgt::ivec3 newDims = tgt::vec3(input.getRoi().diagonal() + tgt::ivec3::one) * resampleFactor_.get();
     VolumeRAM_Float* volumeData = new VolumeRAM_Float(newDims, true);
@@ -174,6 +220,7 @@ void SimilartyDataVolume::adjustToEnsemble() {
     for(const EnsembleDataset::Run& run : ensemble->getRuns()) {
         group1_.addRow(run.name_);
         group2_.addRow(run.name_);
+        singleRunSelection_.addOption(run.name_, run.name_);
     }
 
     selectedChannel_.setOptions(std::deque<Option<std::string>>());
@@ -192,28 +239,79 @@ Processor* SimilartyDataVolume::create() const {
 
 const std::vector<float> SimilartyDataVolume::applyGroupLogic(const std::vector<float>& rawVoxelData) const {
     std::vector<float> modifiedVoxelData;
-    // compare two groups
-    if(!group1_.getSelectedRowIndices().empty() && !group2_.getSelectedRowIndices().empty()) {
-        Statistics statistics(false);
-        for(int selectedIndex : group1_.getSelectedRowIndices()) {
-            statistics.addSample(rawVoxelData.at(selectedIndex));
-        }
-        modifiedVoxelData.push_back(statistics.getMean());
-
-        statistics.reset();
-        for(int selectedIndex : group2_.getSelectedRowIndices()) {
-            statistics.addSample(rawVoxelData.at(selectedIndex));
-        }
-        modifiedVoxelData.push_back(statistics.getMean());
-        return modifiedVoxelData;
-    }
-    // normal run filtering
-    else if(!group1_.getSelectedRowIndices().empty()) {
+    if(comparisonMethod_.getKey() == "selection") {
         for(int selectedIndex : group1_.getSelectedRowIndices()) {
             modifiedVoxelData.push_back(rawVoxelData.at(selectedIndex));
         }
         return modifiedVoxelData;
     }
+    else if(comparisonMethod_.getKey() == "oneToGroup") {
+        modifiedVoxelData.push_back(rawVoxelData.at(singleRunSelection_.getSelectedIndex()));
+        if(groupBehaviour_.getKey() == "groupAvg") {
+            Statistics statistics(false);
+            for(int selectedIndex : group2_.getSelectedRowIndices()) {
+                statistics.addSample(rawVoxelData.at(selectedIndex));
+            }
+            modifiedVoxelData.push_back(statistics.getMean());
+        }
+        else if(groupBehaviour_.getKey() == "groupMin") {
+            float minValue = std::numeric_limits<float>::max();
+            for(int selectedIndex : group2_.getSelectedRowIndices()) {
+                minValue = std::min(minValue, rawVoxelData.at(selectedIndex));
+            }
+            modifiedVoxelData.push_back(minValue);
+        }
+        else if(groupBehaviour_.getKey() == "groupMax") {
+            float maxValue = std::numeric_limits<float>::lowest();
+            for(int selectedIndex : group2_.getSelectedRowIndices()) {
+                maxValue = std::max(maxValue, rawVoxelData.at(selectedIndex));
+            }
+            modifiedVoxelData.push_back(maxValue);
+        }
+        return modifiedVoxelData;
+    }
+    else if(comparisonMethod_.getKey() == "groupToGroup") {
+        if(groupBehaviour_.getKey() == "groupAvg") {
+            Statistics statistics(false);
+            for(int selectedIndex : group1_.getSelectedRowIndices()) {
+                statistics.addSample(rawVoxelData.at(selectedIndex));
+            }
+            modifiedVoxelData.push_back(statistics.getMean());
+            statistics.reset();
+            for(int selectedIndex : group2_.getSelectedRowIndices()) {
+                statistics.addSample(rawVoxelData.at(selectedIndex));
+            }
+            modifiedVoxelData.push_back(statistics.getMean());
+        }
+        else if(groupBehaviour_.getKey() == "groupMin") {
+            float minValue = std::numeric_limits<float>::max();
+            for(int selectedIndex : group1_.getSelectedRowIndices()) {
+                minValue = std::min(minValue, rawVoxelData.at(selectedIndex));
+            }
+            modifiedVoxelData.push_back(minValue);
+
+            minValue = std::numeric_limits<float>::max();
+            for(int selectedIndex : group2_.getSelectedRowIndices()) {
+                minValue = std::min(minValue, rawVoxelData.at(selectedIndex));
+            }
+            modifiedVoxelData.push_back(minValue);
+        }
+        else if(groupBehaviour_.getKey() == "groupMax") {
+            float maxValue = std::numeric_limits<float>::lowest();
+            for(int selectedIndex : group1_.getSelectedRowIndices()) {
+                maxValue = std::max(maxValue, rawVoxelData.at(selectedIndex));
+            }
+            modifiedVoxelData.push_back(maxValue);
+
+            maxValue = std::numeric_limits<float>::lowest();
+            for(int selectedIndex : group2_.getSelectedRowIndices()) {
+                maxValue = std::max(maxValue, rawVoxelData.at(selectedIndex));
+            }
+            modifiedVoxelData.push_back(maxValue);
+        }
+        return modifiedVoxelData;
+    }
+
     return rawVoxelData;
 }
 
@@ -237,6 +335,35 @@ float SimilartyDataVolume::calculateMinMaxDiff(const std::vector<float>& voxelDa
     }
 
     return std::abs(min - max);
+}
+
+bool SimilartyDataVolume::isReadyToCompute() const {
+    if(comparisonMethod_.getKey() == "selection") {
+        if(group1_.getSelectedRowIndices().size() == 0) {
+            throw InvalidInputException("No selection", InvalidInputException::S_WARNING);
+        }
+        if(group1_.getSelectedRowIndices().size() == 1) {
+            throw InvalidInputException("Select at least two runs", InvalidInputException::S_WARNING);
+        }
+    }
+    else if(comparisonMethod_.getKey() == "oneToGroup") {
+        if(singleRunSelection_.getSelectedIndex() < 0) {
+            throw InvalidInputException("No run selected", InvalidInputException::S_WARNING);
+        }
+        if(group2_.getSelectedRowIndices().size() == 0) {
+            throw InvalidInputException("No group selected", InvalidInputException::S_WARNING);
+        }
+    }
+    else if(comparisonMethod_.getKey() == "groupToGroup") {
+        if(group1_.getSelectedRowIndices().size() == 0) {
+            throw InvalidInputException("Group 1 is empty", InvalidInputException::S_WARNING);
+        }
+        if(group2_.getSelectedRowIndices().size() == 0) {
+            throw InvalidInputException("Group 2 is empty", InvalidInputException::S_WARNING);
+        }
+    }
+
+    return true;
 }
 
 } // namespace voreen

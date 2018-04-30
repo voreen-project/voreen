@@ -73,9 +73,11 @@ protected:
     virtual void processComputeOutput(ComputeOutput output);
 
     void adjustToEnsemble();
+    void onComparisonMethodChange();
     float calculateVariance(const std::vector<float>& voxelData) const;
     float calculateMinMaxDiff(const std::vector<float>& voxelData) const;
     const std::vector<float> applyGroupLogic(const std::vector<float>& rawVoxelData) const;
+    bool isReadyToCompute() const;
 
 protected:
 
@@ -91,7 +93,10 @@ protected:
 
     StringOptionProperty similarityMethod_;
     StringOptionProperty selectedChannel_;
+    StringOptionProperty comparisonMethod_;
+    StringOptionProperty groupBehaviour_;
 
+    StringOptionProperty singleRunSelection_;
     StringListProperty group1_;
     StringListProperty group2_;
 
