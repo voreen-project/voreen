@@ -299,6 +299,7 @@ void GeometryRenderer::render(ShaderProperty& shaderProp) {
             //prog->setUniform("lightSource_.attenuation_", tgt::vec3(1.f, 0.f, 0.f));
             prog->setUniform("shininess_", materialShininess_.get());
         }
+        prog->setIgnoreUnsetUniform("headPointerImage_"); // Disable warning for uniform that is already set in GeometryProcessor.
         prog->setIgnoreUniformLocationError(false);
 
         prog->setUniform("enableClipping_", enableClipping_.get());
@@ -307,7 +308,6 @@ void GeometryRenderer::render(ShaderProperty& shaderProp) {
         else // set to zero to prevent undefined behavior
             prog->setUniform("plane_", tgt::vec4(0.0f, 0.0f, 0.0f, 0.0f));
 
-        prog->setIgnoreUnsetUniform("headPointerImage_"); // Disable warning for uniform that is already set in GeometryProcessor.
     }
 
     LGL_ERROR;
