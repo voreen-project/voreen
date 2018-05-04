@@ -51,7 +51,7 @@ namespace munkres {
 namespace voreen {
 
 template<class T>
-float Matching<T>::someMeasure() const {
+float Matching<T>::matchRatio() const {
     float num_matches = matches_.size();
     float num_not_matched1 = non_matched1_.size();
     float num_not_matched2 = non_matched2_.size();
@@ -60,6 +60,10 @@ float Matching<T>::someMeasure() const {
     return measure;
 };
 
+template<class T>
+bool Matching<T>::hasContent() const {
+    return !(matches_.empty() && non_matched1_.empty() && non_matched2_.empty());
+};
 
 const std::string VesselGraphComparison::loggerCat_("voreen.vesselgraphrenderer");
 
@@ -70,6 +74,7 @@ VesselGraphComparison::VesselGraphComparison()
     //, plotOutport_(Port::OUTPORT, "plot.output", "Plot Data Output", false,  Processor::VALID)
     , enabled_("enabled", "Enabled", true)
     , matchingAlgorithm_("matchingAlgorithm", "Matching Algorithm")
+    , renderMode_("renderMode", "Render Matches")
     , statExportFile_("statExportFile", "Stat Export File", "Export File Path", "", "*.csv", FileDialogProperty::SAVE_FILE)
     , datasetIdentifier_("datasetIdentifier", "Dataset identifier", "")
     , nodeMatchRatio_("nodeMatchRatio", "Node Match Ratio", 0.0f, 0.0f, 1.0f)
@@ -77,6 +82,7 @@ VesselGraphComparison::VesselGraphComparison()
     , lengthSimilarity_("lengthSimilarity", "Length Similarity", 0.0f, 0.0f, 1.0f)
     , crossRadius_("crossRadius", "Cross Radius", 0.0f, 0.0f, 1.0f)
     , lastEdgeMatching_(nullptr)
+    , lastNodeMatching_(nullptr)
 {
 
     addPort(inport1_);
@@ -86,10 +92,16 @@ VesselGraphComparison::VesselGraphComparison()
     addProperty(enabled_);
     addProperty(matchingAlgorithm_);
         matchingAlgorithm_.addOption("mutualNN", "Mutual NN", MUTUAL_NN);
+        matchingAlgorithm_.addOption("hungarianNodes", "Bipartite Graph Matching", HUNGARIAN_NODES);
         matchingAlgorithm_.addOption("hungarianEdges", "Hungarian on Edges", HUNGARIAN_EDGES);
         matchingAlgorithm_.addOption("hungarianEdgesQuantilThreshold", "Hungarian on Edges with Quantil Threshold", HUNGARIAN_EDGES_QUANTIL_THRESHOLD);
         matchingAlgorithm_.addOption("lap", "Fast Matching with Quantil Threshold", LAP);
         matchingAlgorithm_.selectByValue(LAP);
+    addProperty(renderMode_);
+        renderMode_.addOption("none", "None", NONE);
+        renderMode_.addOption("nodes", "Nodes", NODES);
+        renderMode_.addOption("edges", "Edges", EDGES);
+        renderMode_.selectByValue(EDGES);
     addProperty(statExportFile_);
     addProperty(datasetIdentifier_);
     addProperty(nodeMatchRatio_);
@@ -108,6 +120,7 @@ VesselGraphComparison::~VesselGraphComparison() {
 
 void VesselGraphComparison::process() {
     lastEdgeMatching_.reset(nullptr);
+    lastNodeMatching_.reset(nullptr);
     if(!enabled_.get()) {
         return;
     }
@@ -248,7 +261,9 @@ float compareMatches(const std::vector<std::pair<const VesselGraphEdge*, const V
         } else if(!e1valid && !e2valid) {
             sum += 0;
         } else {
-            tgtAssert(false, "Matched valid and invalid edge");
+            //tgtAssert(false, "Matched valid and invalid edge");
+            //This might be okay in some cases, depending on the matching method.
+            sum += 0;
         }
     }
     return sum/matches.size();
@@ -277,6 +292,23 @@ struct SimpleEdgeDistance {
             }
         }
 
+        float relative_property_error = this->relative_property_error(e1, e2);
+        tgtAssert(0 <= relative_property_error && relative_property_error < 1, "invalid relative property error");
+        return node_distance_plus_eps / (1.0f - relative_property_error);
+    }
+
+    float relative_property_error(const VesselGraphEdge& e1, const VesselGraphEdge& e2) const {
+        bool e1valid = e1.hasValidData();
+        bool e2valid = e2.hasValidData();
+        if(!e1valid || !e2valid) {
+            if(e1valid == e2valid) {
+                //Both do not have valid data => we can match them
+                return 0;
+            } else {
+                return 1;
+            }
+        }
+
         const std::array<float, 13> properties = {
            RelativeError::compare<LengthProperty>(e1, e2),
            RelativeError::compare<DistanceProperty>(e1, e2),
@@ -293,12 +325,9 @@ struct SimpleEdgeDistance {
            RelativeError::compare<RoundnessStdProperty>(e1, e2)
         };
 
-
         const float num_properties = properties.size();
         float property_sum = std::accumulate(properties.begin(), properties.end(), 0.0f);
-        float relative_property_error = property_sum/num_properties;
-        tgtAssert(0 <= relative_property_error && relative_property_error < 1, "invalid relative property error");
-        return node_distance_plus_eps / (1.0f - relative_property_error);
+        return property_sum/num_properties;
     }
 };
 
@@ -403,8 +432,9 @@ const VesselGraphEdge* findBestEdgeMatch(
 
     const VesselGraphEdge* best_match = nullptr;
     float smallest_edge_prop_diff = std::numeric_limits<float>::max();
+    SimpleEdgeDistance distance;
     for(const auto& candidate : edge_candidates) {
-        float edge_prop_diff = std::abs(candidate->getLength() - edge.getLength());
+        float edge_prop_diff = distance.relative_property_error(edge, *candidate);
         if(edge_prop_diff < smallest_edge_prop_diff) {
             smallest_edge_prop_diff = edge_prop_diff;
             best_match = candidate;
@@ -457,6 +487,184 @@ Matching<VesselGraphEdge> VesselGraphComparison::matchEdgesViaNodes(const Vessel
 
     return output;
 }
+
+struct PropertyErrorCost {
+    static float cost(const VesselGraphEdge* e1, const VesselGraphEdge* e2) {
+        return SimpleEdgeDistance().relative_property_error(*e1, *e2);
+    }
+};
+
+static void writeMatToFile(munkres::Matrix<float>& mat, std::string filename) {
+    std::ofstream fout(filename);
+    for(size_t j=0; j<mat.rows(); ++j) {
+        fout << j << "|\t";
+        for(size_t i=0; i<mat.columns(); ++i) {
+            fout << i << ":" << mat(i, j) << "\t";
+        }
+        fout << std::endl;
+    }
+}
+
+template<typename Distance, typename Element>
+static Matching<Element> munkresMatch(const std::vector<const Element*> e1, const std::vector<const Element*> e2, float deletion_or_addition_cost) {
+
+    const size_t s1 = e1.size();
+    const size_t s2 = e2.size();
+
+    if(s1 == 0 && s2 == 0) {
+        // No elements to match => return empty matching
+        return Matching<Element>();
+    }
+
+    munkres::Matrix<float> dist_mat(s1+s2, s2+s1);
+
+    //  O-------s1--------|-----s2------O
+    //  |                 |C            |
+    //  |        CC       |  C          |
+    //  |       C  C      |    C        |
+    //  s2      C         |      C      |
+    //  |       C  C      |        C    |
+    //  |        CC       |          C  |
+    //  |                 |            C|
+    //  ------------------|--------------
+    //  |C                |             |
+    //  |  C              |     00      |
+    //  |    C            |    0  0     |
+    //  |      C          |    0  0     |
+    //  s1       C        |    0  0     |
+    //  |          C      |     00      |
+    //  |            C    |             |
+    //  |              C  |             |
+    //  |                C|             |
+    //  0-----------------|-------------O
+
+    SimpleEdgeDistance distance;
+    {
+        size_t index1 = 0;
+        for(const Element* elm1 : e1) {
+            size_t index2 = 0;
+            for(const Element* elm2 : e2) {
+                dist_mat(index1, index2) = Distance::cost(elm1, elm2);
+                ++index2;
+            }
+            ++index1;
+        }
+    }
+
+    //const size_t infinity_cost = std::numeric_limits<float>::infinity();
+    //infinity gets replaced by maximum cost in matrix
+    const size_t infinity_cost = 1e10f;
+    if(!std::isfinite(deletion_or_addition_cost)) {
+        deletion_or_addition_cost = infinity_cost*0.5f;
+    }
+
+    // fill lower left tile
+    for(size_t j=0; j<s1; ++j) {
+        for(size_t i=0; i<s1; ++i) {
+            dist_mat(i, j+s2) = infinity_cost;
+        }
+        // set deletion/addition cost along diagonal
+        dist_mat(j, j+s2) = deletion_or_addition_cost;
+    }
+
+    // fill upper right tile
+    for(size_t j=0; j<s2; ++j) {
+        for(size_t i=0; i<s2; ++i) {
+            dist_mat(i+s1, j) = infinity_cost;
+        }
+        // set deletion/addition cost along diagonal
+        dist_mat(j+s1, j) = deletion_or_addition_cost;
+    }
+
+    // fill bottom right tile
+    for(size_t j=0; j<s1; ++j) {
+        for(size_t i=0; i<s2; ++i) {
+            dist_mat(i+s1, j+s2) = 0;
+        }
+    }
+
+    writeMatToFile(dist_mat, "/home/dominik/nosnapshot/tmp/weights.txt");
+    munkres::Munkres<float> solver;
+    solver.solve(dist_mat);
+    writeMatToFile(dist_mat, "/home/dominik/nosnapshot/tmp/solved.txt");
+
+    Matching<Element> output;
+
+    {
+        size_t i1=0;
+        for(const Element* elm1 : e1) {
+            size_t i2 = 0;
+            for(const Element* elm2 : e2) {
+                if(dist_mat(i1, i2) == 0.0f) {
+                    output.matches_.push_back(std::make_pair(elm1, elm2));
+                    break;
+                }
+                ++i2;
+            }
+            ++i1;
+        }
+    }
+
+    {
+        size_t i=0;
+        // Find non-matched elements in bottom left tile
+        for(const Element* elm : e1) {
+            if(dist_mat(i, i+s2) == 0.0f) {
+                output.non_matched1_.push_back(elm);
+            }
+            ++i;
+        }
+    }
+
+    {
+        size_t i=0;
+        // Find non-matched elements in top right tile
+        for(const Element* elm : e2) {
+            if(dist_mat(i+s1, i) == 0.0f) {
+                output.non_matched2_.push_back(elm);
+            }
+            ++i;
+        }
+    }
+
+    size_t num_other_entries = 0;
+    for(size_t j=0; j < s1+s2; ++j) {
+        for(size_t i=0; i < s1+s2; ++i) {
+            if((i>= s1 ^ j>=s2) && dist_mat(i,j) == 0.0f) {
+                ++num_other_entries;
+            }
+        }
+    }
+
+    tgtAssert(num_other_entries == output.non_matched1_.size() + output.non_matched2_.size(), "Edge Matching failed");
+    tgtAssert(output.matches_.size() + output.non_matched1_.size() == e1.size(), "Edge Matching failed");
+    tgtAssert(output.matches_.size() + output.non_matched2_.size() == e2.size(), "Edge Matching failed");
+
+    return output;
+}
+
+struct NodeModificationCost {
+    static float cost(const VesselGraphNode* n1, const VesselGraphNode* n2) {
+        const float deletion_or_addition_cost = 1.0f;
+        auto matching = munkresMatch<PropertyErrorCost>(n1->getEdgesAsPtrs(), n2->getEdgesAsPtrs(), deletion_or_addition_cost);
+
+        float edge_matching_error;
+        if(!matching.hasContent()) {
+            edge_matching_error = 0;
+        } else if(matching.matches_.empty()) {
+            edge_matching_error = 1;
+        } else {
+            auto prop_error_sum = 0;
+            for(auto& match : matching.matches_) {
+                prop_error_sum += PropertyErrorCost::cost(match.first, match.second);
+            }
+            auto avg_property_error = prop_error_sum/matching.matches_.size();
+            edge_matching_error = avg_property_error*(1.0f - matching.matchRatio());
+        }
+        tgtAssert(0.0f <= edge_matching_error && edge_matching_error <= 1.0f, "Invalid edge matching error");
+        return tgt::distance(n1->pos_, n2->pos_) / (1-edge_matching_error);
+    }
+};
 
 // Munkres version (slow)
 template<class D>
@@ -640,13 +848,35 @@ float quantilThreshold(const VesselGraph& g1, const VesselGraph& g2, D distanceF
 void VesselGraphComparison::compare(const VesselGraph& g1, const VesselGraph& g2) {
     // 1. step: match nodes
     Matching<VesselGraphNode> node_matching = matchNodesMutualNN(g1, g2);
-    nodeMatchRatio_.set(node_matching.someMeasure());
 
     // 2. step: match edges? difficulties: we have multigraphs!
     Matching<VesselGraphEdge> edge_matching;
     switch(matchingAlgorithm_.getValue()) {
         case MUTUAL_NN:
             edge_matching = matchEdgesViaNodes(g1, g2, node_matching);
+            break;
+        case HUNGARIAN_NODES:
+            {
+                std::vector<const VesselGraphNode*> n1, n2;
+                for(const auto& node : g1.getNodes()) {
+                    n1.push_back(&node);
+                }
+                for(const auto& node : g2.getNodes()) {
+                    n2.push_back(&node);
+                }
+                node_matching = munkresMatch<NodeModificationCost>(n1, n2, std::numeric_limits<float>::infinity() /* TODO we might want to consider other values */);
+
+                for(const auto& match: node_matching.matches_) {
+                    for(const auto& n1: node_matching.non_matched1_) {
+                        tgtAssert(match.first != n1, "Invalid node matching");
+                    }
+                    for(const auto& n2: node_matching.non_matched2_) {
+                        tgtAssert(match.second != n2, "Invalid node matching");
+                    }
+                }
+
+                edge_matching = matchEdgesViaNodes(g1, g2, node_matching);
+            }
             break;
         case HUNGARIAN_EDGES:
             edge_matching = matchEdgesViaHungarianAlgorithm(g1, g2, SimpleEdgeDistance());
@@ -666,10 +896,11 @@ void VesselGraphComparison::compare(const VesselGraph& g1, const VesselGraph& g2
         default:
             tgtAssert(false, "Invalid matching algorithm");
     }
-    edgeMatchRatio_.set(edge_matching.someMeasure());
+    nodeMatchRatio_.set(node_matching.matchRatio());
+    edgeMatchRatio_.set(edge_matching.matchRatio());
 
     // 3. step: Compute measure based on properties of matches
-    lengthSimilarity_.set(edge_matching.someMeasure()*(1.0f-compareMatches<LengthProperty, RelativeError>(edge_matching.matches_)));
+    lengthSimilarity_.set(edge_matching.matchRatio()*(1.0f-compareMatches<LengthProperty, RelativeError>(edge_matching.matches_)));
 
     const std::string statExportFileName = statExportFile_.get();
 
@@ -713,8 +944,8 @@ void VesselGraphComparison::compare(const VesselGraph& g1, const VesselGraph& g2
             }
             writer.write(
                       datasetIdentifier_.get()
-                    , node_matching.someMeasure()
-                    , edge_matching.someMeasure()
+                    , node_matching.matchRatio()
+                    , edge_matching.matchRatio()
                     , compareMatches<LengthProperty, AbsoluteError>(edge_matching.matches_)
                     , compareMatches<LengthProperty, RelativeError>(edge_matching.matches_)
                     , compareMatches<LengthProperty, ExpSimilarity>(edge_matching.matches_)
@@ -762,6 +993,7 @@ void VesselGraphComparison::compare(const VesselGraph& g1, const VesselGraph& g2
     }
 
     lastEdgeMatching_.reset(new Matching<VesselGraphEdge>(std::move(edge_matching)));
+    lastNodeMatching_.reset(new Matching<VesselGraphNode>(std::move(node_matching)));
 
     //putPlotMatchingData<LengthProperty, RelativeError>(plotOutport_, g1, g2);
 }
@@ -784,7 +1016,7 @@ void renderEdgeCenters(const std::vector<const VesselGraphEdge*> edges, float r1
     }
 }
 
-void renderMatches(const std::vector<std::pair<const VesselGraphEdge*, const VesselGraphEdge*>> matches) {
+void renderEdgeMatches(const std::vector<std::pair<const VesselGraphEdge*, const VesselGraphEdge*>> matches) {
     for(auto match : matches) {
         const VesselGraphEdge* edge1 = match.first;
         const VesselGraphEdge* edge2 = match.second;
@@ -800,21 +1032,78 @@ void renderMatches(const std::vector<std::pair<const VesselGraphEdge*, const Ves
     }
 }
 
-void VesselGraphComparison::render() {
-    if(!lastEdgeMatching_) {
-        return;
+void renderNodes(const std::vector<const VesselGraphNode*> nodes, float r1, float r2) {
+    for(auto node : nodes) {
+        tgtAssert(node, "no node");
+        tgt::vec3 center = node->pos_;
+
+        for(int dim = 0; dim < 3; ++dim) {
+            tgt::vec3 pos1 = center;
+            pos1[dim] += r1;
+            tgt::vec3 pos2 = center;
+            pos2[dim] -= r2;
+
+            IMode.vertex(pos1);
+            IMode.vertex(pos2);
+        }
+
     }
-    float radiusbase = crossRadius_.get();
-    glLineWidth(3.0f);
-    const Matching<VesselGraphEdge>& matching = *lastEdgeMatching_;
-    IMode.begin(tgt::ImmediateMode::LINES);
-    IMode.color(tgt::vec4(0.5f,0,0,1));
-    renderEdgeCenters(matching.non_matched1_, radiusbase*0.8, radiusbase*1.2);
-    IMode.color(tgt::vec4(0,0,0.5f,1));
-    renderEdgeCenters(matching.non_matched2_, radiusbase*1.2, radiusbase*0.8);
-    renderMatches(matching.matches_);
-    IMode.color(tgt::vec4(1));
-    IMode.end();
-    glLineWidth(1.0f);
+}
+
+void renderNodeMatches(const std::vector<std::pair<const VesselGraphNode*, const VesselGraphNode*>> matches) {
+    for(auto match : matches) {
+        tgt::vec3 center1 = match.first->pos_;
+        tgt::vec3 center2 = match.second->pos_;
+
+        IMode.color(tgt::vec4(1,0,0,1));
+        IMode.vertex(center1);
+        IMode.color(tgt::vec4(0,0,1,1));
+        IMode.vertex(center2);
+    }
+}
+
+void VesselGraphComparison::render() {
+    switch(renderMode_.getValue()) {
+        case EDGES:
+            {
+                if(!lastEdgeMatching_) {
+                    return;
+                }
+                float radiusbase = crossRadius_.get();
+                glLineWidth(3.0f);
+                const Matching<VesselGraphEdge>& matching = *lastEdgeMatching_;
+                IMode.begin(tgt::ImmediateMode::LINES);
+                IMode.color(tgt::vec4(0.5f,0,0,1));
+                renderEdgeCenters(matching.non_matched1_, radiusbase*0.8, radiusbase*1.2);
+                IMode.color(tgt::vec4(0,0,0.5f,1));
+                renderEdgeCenters(matching.non_matched2_, radiusbase*1.2, radiusbase*0.8);
+                renderEdgeMatches(matching.matches_);
+                IMode.color(tgt::vec4(1));
+                IMode.end();
+                glLineWidth(1.0f);
+            }
+            break;
+        case NODES:
+            {
+                if(!lastNodeMatching_) {
+                    return;
+                }
+                float radiusbase = crossRadius_.get();
+                glLineWidth(3.0f);
+                const Matching<VesselGraphNode>& matching = *lastNodeMatching_;
+                IMode.begin(tgt::ImmediateMode::LINES);
+                IMode.color(tgt::vec4(0.5f,0,0,1));
+                renderNodes(matching.non_matched1_, radiusbase*0.8, radiusbase*1.2);
+                IMode.color(tgt::vec4(0,0,0.5f,1));
+                renderNodes(matching.non_matched2_, radiusbase*1.2, radiusbase*0.8);
+                renderNodeMatches(matching.matches_);
+                IMode.color(tgt::vec4(1));
+                IMode.end();
+                glLineWidth(1.0f);
+            }
+            break;
+        case NONE:
+            break;
+    }
 }
 } // namespace voreen

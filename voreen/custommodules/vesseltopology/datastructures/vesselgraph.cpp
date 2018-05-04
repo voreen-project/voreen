@@ -139,6 +139,15 @@ std::vector<std::reference_wrapper<const VesselGraphEdge>> VesselGraphNode::getE
     }
     return edgerefs;
 }
+
+std::vector<const VesselGraphEdge*> VesselGraphNode::getEdgesAsPtrs() const {
+    std::vector<const VesselGraphEdge*> edgerefs;
+    for(size_t i : edges_) {
+        edgerefs.push_back(&graph_->getEdge(i));
+    }
+    return edgerefs;
+}
+
 std::vector<const VesselGraphNode*> VesselGraphNode::getNeighbors() const {
     std::vector<const VesselGraphNode*> neighbor_refs;
     for(size_t i : edges_) {

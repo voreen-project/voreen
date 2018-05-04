@@ -87,6 +87,7 @@ struct VesselGraphNode : public Serializable {
     void operator=(VesselGraphNode&&);
 
     std::vector<std::reference_wrapper<const VesselGraphEdge>> getEdges() const;
+    std::vector<const VesselGraphEdge*> getEdgesAsPtrs() const; //All pointers guaranteed to be non-null
     std::vector<const VesselGraphNode*> getNeighbors() const;
     int getDegree() const;
     bool isEndNode() const;
