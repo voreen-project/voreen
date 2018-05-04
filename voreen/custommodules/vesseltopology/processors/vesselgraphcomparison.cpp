@@ -555,7 +555,7 @@ static Matching<Element> munkresMatch(const std::vector<const Element*> e1, cons
     //infinity gets replaced by maximum cost in matrix
     const size_t infinity_cost = 1e10f;
     if(!std::isfinite(deletion_or_addition_cost)) {
-        deletion_or_addition_cost = infinity_cost*0.5f;
+        deletion_or_addition_cost = 1e3f;
     }
 
     // fill lower left tile
