@@ -39,13 +39,17 @@
 #include "voreen/core/voreenapplication.h"
 #include "voreen/core/utils/glsl.h"
 
+#include "modules/plotting/utils/plotlibrary/plotlibrary.h"
+#include "modules/plotting/utils/plotlibrary/plotlibraryopengl.h"
+
 #include "../ports/conditions/portconditionensemble.h"
 #include "../utils/ensemblehash.h"
 #include "../utils/utils.h"
 
 namespace voreen {
 
-static int PIXEL_BRUSH_ENABLE_DISTANCE = 3;
+static const int PIXEL_BRUSH_ENABLE_DISTANCE = 3;
+static const tgt::ivec2 MARGINS(50);
 static const tgt::vec2 NO_SELECTION(-2.0f); // needs to be any value not inside range [-1, 1]
 
 const std::string FieldParallelPlotViewer::loggerCat_("voreen.viscontest2018.FieldParallelPlotViewer");
@@ -54,8 +58,9 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
     : RenderProcessor()
     , plotDataInport_(Port::INPORT, "plotdatainport", "Field Plot Data Input")
     , ensembleInport_(Port::INPORT, "ensembleinport", "Ensemble Data Input")
-    , outport_(Port::OUTPORT, "", "Image Output", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
+    , outport_(Port::OUTPORT, "imageOutport", "Image Output", false, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
     , volumeOutport_(Port::OUTPORT, "volumehandle.volumehandle", "Volume Output")
+    , privatePort_(Port::OUTPORT, "image.tmp", "image.tmp", false)
     , transferFunc_("transferFunction", "Transfer Function for Plot")
     , renderedChannel_("channel", "Rendered Channel")
     , renderedRuns_("renderedRuns", "Rendered Runs")
@@ -64,7 +69,7 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
     , timeInterval_("timeInterval", "Selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
     , selectedRuns_("selectedRuns", "Selected Runs")
     , hasLogarithmicDensity_("logarithmicDensity", "Logarithmic Density", true, Processor::VALID)
-    , plotShader_("shaderprop", "Shader:", "fieldplot.frag", "passthrough.vert", "", Processor::INVALID_PROGRAM, Property::LOD_DEBUG)
+    , plotShader_("shaderprop", "Plot Shader", "fieldplot.frag", "passthrough.vert", "", Processor::INVALID_PROGRAM, Property::LOD_DEBUG)
     , timeStepPosition_(0.0f)
     , viewPortWidth_(0.0f)
     , requirePlotDataUpdate_(false)
@@ -72,6 +77,7 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
     , consistent_(false)
     , plotData_(nullptr)
     // UI
+    , plotLib_(new PlotLibraryOpenGl())
     , selectionStart_(NO_SELECTION)
     , selectionEnd_(NO_SELECTION)
     , isSelectionMode_(false)
@@ -83,6 +89,7 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
         ON_CHANGE_LAMBDA(ensembleInport_, [this] { requireConsistencyCheck_ = true; });
     addPort(outport_);
     addPort(volumeOutport_);
+    addPrivateRenderPort(privatePort_);
 
     // Properties
     addProperty(transferFunc_);
@@ -135,7 +142,7 @@ void FieldParallelPlotViewer::deinitialize() {
 }
 
 std::string FieldParallelPlotViewer::generateHeader(const tgt::GpuCapabilities::GlVersion* version) {
-    std::string header = RenderProcessor::generateHeader();
+    std::string header = RenderProcessor::generateHeader(version);
 
     header += "#define NUM_RUNS " + (ensembleInport_.hasData() ? std::to_string(ensembleInport_.getData()->getRuns().size()) : "0") + "\n";
     header += transferFunc_.get()->getShaderDefines();
@@ -286,14 +293,17 @@ void FieldParallelPlotViewer::applyThreshold(VolumeRAM_Float* volume) {
 
 void FieldParallelPlotViewer::mouseEvent(tgt::MouseEvent* e) {
 
-    float positionX = (e->x() / static_cast<float>(e->viewport().x)) * 2.0f - 1.0f;
-    float positionY = ((e->y() / static_cast<float>(e->viewport().y)) * 2.0f - 1.0f) * -1.0f;
+    int ex = tgt::clamp(e->x(), MARGINS.x, e->viewport().x - MARGINS.x);
+    int ey = tgt::clamp(e->y(), MARGINS.y, e->viewport().y - MARGINS.y);
+
+    float mx = mapRange(ex, 0, e->viewport().x, -1.0f,  1.0f);
+    float my = mapRange(ey, 0, e->viewport().y,  1.0f, -1.0f);
 
     switch (e->action()) {
     case tgt::MouseEvent::PRESSED:
-        if (selectionStart_ == NO_SELECTION || selectionEnd_ == NO_SELECTION) {
+        if ((selectionStart_ == NO_SELECTION || selectionEnd_ == NO_SELECTION) && ex == e->x() && ey == e->y()) {
             isSelectionMode_ = true;
-            selectionStart_ = tgt::vec2(positionX, positionY);
+            selectionStart_ = tgt::vec2(mx, my);
         }
         else {
             selectionStart_ = NO_SELECTION;
@@ -303,7 +313,7 @@ void FieldParallelPlotViewer::mouseEvent(tgt::MouseEvent* e) {
         break;
     case tgt::MouseEvent::MOTION:
         if (isSelectionMode_) {
-            selectionEnd_ = tgt::vec2(positionX, positionY);
+            selectionEnd_ = tgt::vec2(mx, my);
         }
         break;
     case tgt::MouseEvent::RELEASED:
@@ -338,7 +348,7 @@ bool FieldParallelPlotViewer::isReady() const {
     return plotDataInport_.isReady() && ensembleInport_.isReady();
 }
 
-void FieldParallelPlotViewer::process() {
+void FieldParallelPlotViewer::beforeProcess() {
 
     if (requireConsistencyCheck_) {
         consistent_ = checkConsistency();
@@ -346,23 +356,33 @@ void FieldParallelPlotViewer::process() {
             VoreenApplication::app()->showMessageBox("Mismatching data", "The plot was probably not generated by the ensemble dataset passed to the FieldParallelPlotViewer", true);
     }
 
+    if(consistent_ && requirePlotDataUpdate_)
+        updatePlotData();
+}
+
+void FieldParallelPlotViewer::process() {
     if (!consistent_)
         return;
 
-    if(requirePlotDataUpdate_)
-        updatePlotData();
+    // Perform the actual rendering by embedding the rendered
+    // plot inside a coordinate system generated by the plot library
+    renderPlot();
+    renderAxes();
+}
 
-    outport_.activateTarget();
-    outport_.clearTarget();
+void FieldParallelPlotViewer::renderPlot() {
+
+    if(privatePort_.getSize() != outport_.getSize())
+        privatePort_.resize(outport_.getSize());
+
+    privatePort_.activateTarget();
+    privatePort_.clearTarget();
 
     MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
     MatStack.loadIdentity();
 
     MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
     MatStack.loadIdentity();
-
-    /////////////////////////////////////////
-    // draw plot
 
     tgt::Shader* shader = plotShader_.getShader();
     shader->activate();
@@ -397,146 +417,189 @@ void FieldParallelPlotViewer::process() {
 
     shader->deactivate();
 
-    /////////////////////////////////////////
-    // draw selection
+    IMode.color(tgt::vec4::one);
+    tgt::TextureUnit::setZeroUnit();
+    privatePort_.deactivateTarget();
+}
 
+void FieldParallelPlotViewer::renderAxes() {
+
+    outport_.activateTarget();
+    outport_.clearTarget();
+
+    // Set Plot status.
+    plotLib_->setWindowSize(outport_.getSize());
+    plotLib_->setAxesWidth(1.0f);
+    plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
+    plotLib_->setLineWidth(1.0f);
+    plotLib_->setMaxGlyphSize(1.0f);
+    plotLib_->setMarginBottom(MARGINS.y);
+    plotLib_->setMarginTop(MARGINS.y);
+    plotLib_->setMarginLeft(MARGINS.x);
+    plotLib_->setMarginRight(MARGINS.x);
+    plotLib_->setMinimumScaleStep(32, PlotLibrary::X_AXIS);
+    plotLib_->setMinimumScaleStep(32, PlotLibrary::Y_AXIS);
+    tgt::vec2 valueRange = ensembleInport_.getData()->getValueRange(renderedChannel_.get());
+    plotLib_->setDomain(Interval<plot_t>(timeInterval_.getMinValue(), timeInterval_.getMaxValue()), PlotLibrary::X_AXIS);
+    plotLib_->setDomain(Interval<plot_t>(valueRange.x, valueRange.y), PlotLibrary::Y_AXIS);
+
+    if (plotLib_->setRenderStatus()) {
+        plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
+        plotLib_->renderAxes();
+        plotLib_->setDrawingColor(tgt::Color(0, 0, 0, .5f));
+        plotLib_->setFontSize(10);
+        plotLib_->setFontColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
+        plotLib_->renderAxisScales(PlotLibrary::X_AXIS, false);
+        plotLib_->renderAxisScales(PlotLibrary::Y_AXIS, false);
+        plotLib_->setFontSize(12);
+        plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "time");
+        plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "value");
+    }
+    plotLib_->resetRenderStatus();
+
+    // Plot data
+    float xMinMarginNDC = mapRange(MARGINS.x, 0, outport_.getSize().x, -1.0f, 1.0f);
+    float xMaxMarginNDC = mapRange(outport_.getSize().x-MARGINS.x, 0, outport_.getSize().x, -1.0f, 1.0f);
+    float yMinMarginNDC = mapRange(MARGINS.y, 0, outport_.getSize().y, -1.0f, 1.0f);
+    float yMaxMarginNDC = mapRange(outport_.getSize().y-MARGINS.y, 0, outport_.getSize().y, -1.0f, 1.0f);
+
+    tgt::TextureUnit::setZeroUnit();
+    tgt::Texture* texture = privatePort_.getColorTexture();
+    if(texture) {
+        texture->enable();
+        texture->bind();
+    }
+
+    IMode.begin(tgt::ImmediateMode::QUADS);
+        IMode.texcoord(0.0f, 0.0f); IMode.vertex(xMinMarginNDC, yMinMarginNDC);
+        IMode.texcoord(1.0f, 0.0f); IMode.vertex(xMaxMarginNDC, yMinMarginNDC);
+        IMode.texcoord(1.0f, 1.0f); IMode.vertex(xMaxMarginNDC, yMaxMarginNDC);
+        IMode.texcoord(0.0f, 1.0f); IMode.vertex(xMinMarginNDC, yMaxMarginNDC);
+    IMode.end();
+
+    if(texture)
+        texture->disable();
+
+    ////////////////////////////////
+    /// Draw selection.
+
+    // draw run quad
     if(selectionStart_ != NO_SELECTION && selectionEnd_ != NO_SELECTION) {
-        // draw run quad
+
         glDepthFunc(GL_ALWAYS);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_BLEND);
         IMode.color(1.0f, 1.0f, 1.0f, 0.2f);
         IMode.begin(tgt::ImmediateMode::QUADS);
-        IMode.vertex(selectionStart_.x, selectionStart_.y);
-        IMode.vertex(selectionEnd_.x, selectionStart_.y);
-        IMode.vertex(selectionEnd_.x, selectionEnd_.y);
-        IMode.vertex(selectionStart_.x, selectionEnd_.y);
+            IMode.vertex(selectionStart_.x, selectionStart_.y);
+            IMode.vertex(selectionEnd_.x, selectionStart_.y);
+            IMode.vertex(selectionEnd_.x, selectionEnd_.y);
+            IMode.vertex(selectionStart_.x, selectionEnd_.y);
         IMode.end();
-        glLineWidth(1.0f);
         glDisable(GL_BLEND);
         glDepthFunc(GL_LESS);
         glBlendFunc(GL_ONE, GL_ZERO);
-
     }
 
+    // draw time lines.
     float startTime = ensembleInport_.getData()->getStartTime();
     float endTime = ensembleInport_.getData()->getEndTime();
-    float duration = endTime - startTime;
     if(timeInterval_.get().x != startTime || timeInterval_.get().y != endTime) {
-        tgt::vec2 timeBounds(-1, 1);
-        timeBounds.x = timeInterval_.get().x / duration * 2.0f - 1.0f;
-        timeBounds.y = timeInterval_.get().y / duration * 2.0f - 1.0f;
+        tgt::vec2 timeBounds = mapRange(timeInterval_.get(), tgt::vec2(startTime), tgt::vec2(endTime), -tgt::vec2::one, tgt::vec2::one);
+
+        // Apply margins
+        timeBounds *= ((outport_.getSize().x - 2.0f*MARGINS.x) / outport_.getSize().x);
 
         // draw time min and max lines
         glDepthFunc(GL_ALWAYS);
         IMode.color(1.0f, 1.0f, 1.0f, 1.0f);
         IMode.begin(tgt::ImmediateMode::LINES);
-        IMode.vertex(timeBounds.x, -1);
-        IMode.vertex(timeBounds.x, 1);
-        IMode.vertex(timeBounds.y, 1);
-        IMode.vertex(timeBounds.y, -1);
+            IMode.vertex(timeBounds.x, yMinMarginNDC);
+            IMode.vertex(timeBounds.x, yMaxMarginNDC);
+            IMode.vertex(timeBounds.y, yMaxMarginNDC);
+            IMode.vertex(timeBounds.y, yMinMarginNDC);
         IMode.end();
         glLineWidth(1.0f);
         glDepthFunc(GL_LESS);
     }
 
-    /////////////////////////////////////////
-
-    IMode.color(tgt::vec4::one);
-
-    tgt::TextureUnit::setZeroUnit();
+    // Reset state.
+    IMode.color(1.0f, 1.0f, 1.0f, 1.0f);
     outport_.deactivateTarget();
     LGL_ERROR;
-
 }
 
 void FieldParallelPlotViewer::updateSelection() {
 
     bool selecting = selectionStart_ != NO_SELECTION && selectionEnd_ != NO_SELECTION;
 
-    float minX = std::min(selectionStart_.x, selectionEnd_.x) + 1;
-    float maxX = std::max(selectionStart_.x, selectionEnd_.x) + 1;
-    float minY = std::min(selectionStart_.y, selectionEnd_.y) + 1;
-    float maxY = std::max(selectionStart_.y, selectionEnd_.y) + 1;
+    tgt::vec2 selectionX = tgt::vec2(std::min(selectionStart_.x, selectionEnd_.x), std::max(selectionStart_.x, selectionEnd_.x));
+    tgt::vec2 selectionY = tgt::vec2(std::min(selectionStart_.y, selectionEnd_.y), std::max(selectionStart_.y, selectionEnd_.y));
+
+    // Map to whole canvas size.
+    selectionX = selectionX * (outport_.getSize().x / (outport_.getSize().x - 2.0f*MARGINS.x));
+    selectionY = selectionY * (outport_.getSize().y / (outport_.getSize().y - 2.0f*MARGINS.y));
 
     /**
      * update run selection
      */
-    size_t width = plotData_->getDimensions().x;
-    size_t height = plotData_->getDimensions().y;
+    int width  = static_cast<int>(plotData_->getDimensions().x);
+    int height = static_cast<int>(plotData_->getDimensions().y);
 
-    size_t selectedMinPixelX;
-    size_t selectedMaxPixelX;
-    size_t selectedMinPixelY;
-    size_t selectedMaxPixelY;
+    tgt::ivec2 selectedPixelX(0, width);
+    tgt::ivec2 selectedPixelY(0, height);
 
     if(selecting) {
-        selectedMinPixelX = static_cast<size_t>(width * minX / 2.0f);
-        selectedMaxPixelX = static_cast<size_t>(width * maxX / 2.0f);
-        selectedMinPixelY = static_cast<size_t>(height * minY / 2.0f);
-        selectedMaxPixelY = static_cast<size_t>(height * maxY / 2.0f);
+        selectedPixelX = tgt::ivec2(mapRange(selectionX, -tgt::vec2::one, tgt::vec2::one, tgt::vec2::zero, tgt::vec2(width)));
+        selectedPixelY = tgt::ivec2(mapRange(selectionY, -tgt::vec2::one, tgt::vec2::one, tgt::vec2::zero, tgt::vec2(height)));
+
+        const VolumeRAM_Float* slices = dynamic_cast<const VolumeRAM_Float*>(channelSlices_->getRepresentation<VolumeRAM>());
+        tgtAssert(slices, "slices null");
+
+        std::vector<int> relevantRuns;
+        for (int run : renderedRuns_.getSelectedRowIndices()) {
+            bool isRelevant = false;
+            for (int y = selectedPixelY.x; y < selectedPixelY.y; y++) {
+                for (int x = selectedPixelX.x; x < selectedPixelX.y; x++) {
+                    // We assume that a value from 0.0f means no data has been set
+                    // which might include some rare cases with ranges including negative numbers
+                    // were we generate a false negative. For now, we leave it that way.
+                    if (slices->voxel(x, y, run) != 0.0f) {
+                        relevantRuns.push_back(run);
+                        isRelevant = true;
+                        break;
+                    }
+                }
+                if (isRelevant) break;
+            }
+        }
+
+        selectedRuns_.setSelectedRowIndices(relevantRuns);
     }
     else {
-        selectedMinPixelX = 0;
-        selectedMaxPixelX = plotData_->getDimensions().x;
-        selectedMinPixelY = 0;
-        selectedMaxPixelY = plotData_->getDimensions().y;
+        selectedRuns_.setSelectedRowIndices(renderedRuns_.get());
     }
-
-    const VolumeRAM_Float* slices = dynamic_cast<const VolumeRAM_Float*>(channelSlices_->getRepresentation<VolumeRAM>());
-    tgtAssert(slices, "slices null");
-
-    std::vector<int> relevantRuns;
-    for(int run : renderedRuns_.getSelectedRowIndices()) {
-        bool isRelevant = false;
-        for(size_t y = selectedMinPixelY; y < selectedMaxPixelY; y++) {
-            for(size_t x = selectedMinPixelX; x < selectedMaxPixelX; x++) {
-                // We assume that a value from 0.0f means no data has been set
-                // which might include some rare cases with ranges including negative numbers
-                // were we generate a false negative. For now, we leave it that way.
-                if(slices->voxel(x,y,run) != 0.0f) {
-                    relevantRuns.push_back(run);
-                    isRelevant = true;
-                    break;
-                }
-            }
-            if(isRelevant) break;
-        }
-    }
-
-    selectedRuns_.setSelectedRowIndices(relevantRuns);
 
     /**
      * update time selection
      */
-
     float startTime = ensembleInport_.getData()->getStartTime();
     float endTime = ensembleInport_.getData()->getEndTime();
-    float duration = endTime - startTime;
 
-    float selectedMinTime;
-    float selectedMaxTime;
-
+    tgt::vec2 selectedTime(startTime, endTime);
     if(selecting) {
-        selectedMinTime = startTime + duration * minX / 2.0f;
-        selectedMaxTime = startTime + duration * maxX / 2.0f;
+        selectedTime = mapRange(selectionX, -tgt::vec2::one, tgt::vec2::one, tgt::vec2(startTime), tgt::vec2(endTime));
     }
-    else {
-        selectedMinTime = startTime;
-        selectedMaxTime = endTime;
-    }
-
-    timeInterval_.set(tgt::vec2(selectedMinTime, selectedMaxTime));
+    timeInterval_.set(selectedTime);
 
     /**
      * update volume transfer function
      */
     if (selecting)
-        volumeTransferFunc_.get()->setThreshold(mapRange(selectedMinPixelY, size_t(0), slices->getDimensions().y, 0.0f, 1.0f), mapRange(selectedMaxPixelY, size_t(0), slices->getDimensions().y, 0.0f, 1.0f));
+        volumeTransferFunc_.get()->setThreshold(mapRange(selectionY, -tgt::vec2::one, tgt::vec2::one, tgt::vec2::zero, tgt::vec2::one));
     else
         volumeTransferFunc_.get()->setThreshold(0.0f, 1.0f);
     volumeTransferFunc_.invalidate();
 }
-
 
 } // namespace voreen
