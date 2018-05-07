@@ -349,6 +349,7 @@ bool FieldParallelPlotViewer::isReady() const {
 }
 
 void FieldParallelPlotViewer::beforeProcess() {
+    RenderProcessor::beforeProcess();
 
     if (requireConsistencyCheck_) {
         consistent_ = checkConsistency();

@@ -44,7 +44,7 @@ FieldParallelPlotHistogram::FieldParallelPlotHistogram()
         , outport_(Port::OUTPORT, "", "Histogram Image Output", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
         , outportPlot_(Port::OUTPORT, "plotOutport", "Plot Outport")
         , valueRange_("valueRange", "Value Range", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
-        , selectedRange_(-1.0f, 1.0f)
+        , selectedRange_(NO_SELECTION)
         , volumeHistogramIntensity_(nullptr)
         , isSelectionMode_(false)
 {
