@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="false" GlobalDescription="A basic network for a simple volume ray-casting application.">
-        <ProcessorNetwork version="18">
+        <ProcessorNetwork version="19">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
@@ -40,6 +40,11 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="channel" name="channel" value="" />
+                        <Property mapKey="logarithmicDensity" name="logarithmicDensity" value="true" />
+                        <Property mapKey="renderedRuns" name="renderedRuns">
+                            <selectedRow />
+                            <values />
+                        </Property>
                         <Property mapKey="selectedRuns" name="selectedRuns">
                             <selectedRow />
                             <values />
@@ -49,8 +54,8 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="0" y="-25" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="fieldplot.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="fieldplot.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="timeInterval" minValue="0" maxValue="0" minRange="0" maxRange="2147483648" stepping="0.01">
@@ -74,8 +79,23 @@
                                 </Keys>
                             </TransferFunction>
                         </Property>
-                        <Property mapKey="valueRange" minValue="0" maxValue="0" minRange="0" maxRange="2147483648" stepping="0.01" id="ref13">
+                        <Property mapKey="valueRange" minValue="0" maxValue="0" minRange="0" maxRange="2147483648" stepping="0.01" id="ref9">
                             <value x="0" y="0" />
+                        </Property>
+                        <Property mapKey="volumeTransferFunction" name="volumeTransferFunction" domainFittingStrategy="1" computeHistogram="true">
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
                         </Property>
                     </Properties>
                     <Inports>
@@ -87,12 +107,12 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="" direction="0" portID="" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="imageOutport" direction="0" portID="imageOutport" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
-                                <Property mapKey=".renderSizeReceive" name=".renderSizeReceive" id="ref7">
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="imageOutport.renderSizeReceive" name="imageOutport.renderSizeReceive" id="ref11">
                                     <value x="256" y="128" />
                                 </Property>
-                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
                         </Port>
                         <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
@@ -110,7 +130,7 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-269" y="-135" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="valueRange" minValue="0" maxValue="0" minRange="0" maxRange="2147483648" stepping="0.01" id="ref12">
+                        <Property mapKey="valueRange" minValue="0" maxValue="0" minRange="0" maxRange="2147483648" stepping="0.01" id="ref8">
                             <value x="0" y="0" />
                         </Property>
                     </Properties>
@@ -124,12 +144,12 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="" direction="0" portID="" guiName="Histogram Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="outport" direction="0" portID="outport" guiName="Histogram Image Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
-                                <Property mapKey=".renderSizeReceive" name=".renderSizeReceive" id="ref9">
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref13">
                                     <value x="256" y="128" />
                                 </Property>
-                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
                         </Port>
                         <Port name="plotOutport" direction="0" portID="plotOutport" guiName="Plot Outport" allowMultipleConnections="true" invalidationLevel="1">
@@ -151,8 +171,14 @@
                             <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="loadDataset" name="loadDataset" />
-                        <Property mapKey="loadedRuns" name="loadedRuns">
-                            <selectedRow />
+                        <Property mapKey="loadedRuns" name="loadedRuns" columnCount="5" selectedRow="-1">
+                            <columnLabels>
+                                <item value="Name" />
+                                <item value="Num Time Steps" />
+                                <item value="Start Time" />
+                                <item value="End Time" />
+                                <item value="Duration" />
+                            </columnLabels>
                             <values />
                         </Property>
                         <Property mapKey="runProgress" name="runProgress" />
@@ -190,14 +216,14 @@
                     <Inports>
                         <Port name="inport1" direction="1" portID="inport1" guiName="Image1 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
-                                <Property mapKey="inport1.renderSizeOrigin" name="inport1.renderSizeOrigin" id="ref6">
+                                <Property mapKey="inport1.renderSizeOrigin" name="inport1.renderSizeOrigin" id="ref12">
                                     <value x="256" y="128" />
                                 </Property>
                             </Properties>
                         </Port>
                         <Port name="inport2" direction="1" portID="inport2" guiName="Image2 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
-                                <Property mapKey="inport2.renderSizeOrigin" name="inport2.renderSizeOrigin" id="ref8">
+                                <Property mapKey="inport2.renderSizeOrigin" name="inport2.renderSizeOrigin" id="ref10">
                                     <value x="256" y="128" />
                                 </Property>
                             </Properties>
@@ -207,7 +233,7 @@
                         <Port name="outport" direction="0" portID="outport" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
-                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref11">
+                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref7">
                                     <value x="256" y="256" />
                                 </Property>
                             </Properties>
@@ -244,7 +270,7 @@
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
-                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref10">
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref6">
                                     <value x="256" y="256" />
                                 </Property>
                             </Properties>
@@ -266,10 +292,10 @@
                     </Inport>
                 </Connection>
                 <Connection>
-                    <Outport name="">
+                    <Outport name="imageOutport">
                         <Processor type="FieldParallelPlotViewer" ref="ref1" />
                     </Outport>
-                    <Inport name="inport1">
+                    <Inport name="inport2">
                         <Processor type="Splitter" ref="ref2" />
                     </Inport>
                 </Connection>
@@ -282,10 +308,10 @@
                     </Inport>
                 </Connection>
                 <Connection>
-                    <Outport name="">
+                    <Outport name="outport">
                         <Processor type="FieldParallelPlotHistogram" ref="ref3" />
                     </Outport>
-                    <Inport name="inport2">
+                    <Inport name="inport1">
                         <Processor type="Splitter" ref="ref2" />
                     </Inport>
                 </Connection>
@@ -316,7 +342,7 @@
                 <PropertyLink>
                     <SourceProperty ref="ref8" />
                     <DestinationProperty ref="ref9" />
-                    <Evaluator type="LinkEvaluatorRenderSize" />
+                    <Evaluator type="LinkEvaluatorFloatIntervalId" />
                 </PropertyLink>
                 <PropertyLink>
                     <SourceProperty ref="ref10" />
@@ -326,7 +352,7 @@
                 <PropertyLink>
                     <SourceProperty ref="ref12" />
                     <DestinationProperty ref="ref13" />
-                    <Evaluator type="LinkEvaluatorFloatIntervalId" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
                 </PropertyLink>
             </PropertyLinks>
         </ProcessorNetwork>

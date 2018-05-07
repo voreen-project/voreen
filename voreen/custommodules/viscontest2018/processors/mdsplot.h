@@ -47,6 +47,7 @@
 namespace voreen {
 
 class CameraInteractionHandler;
+class PlotLibrary;
 
 class VRN_CORE_API MDSPlot : public RenderProcessor {
     typedef std::vector<std::vector<float>> DMMatrix;
@@ -120,6 +121,7 @@ protected:
 
     CameraProperty camera_;
     CameraInteractionHandler* cameraHandler_;
+    std::unique_ptr<PlotLibrary> plotLib_;
     /*
     tgt::ivec2 grabAnchorPosition_;
     bool interaction_;
@@ -129,8 +131,11 @@ protected:
     /// Inport for the ensemble data structure.
     EnsembleDatasetPort ensembleInport_;
 
-    /// The ensemble data.
+    /// The whole output.
     RenderPort outport_;
+
+    /// Actual plot.
+    RenderPort privatePort_;
 
     /// Used for picking in the plot.
     RenderPort pickingBuffer_;
@@ -147,13 +152,14 @@ protected:
     /// Sphere geometry for timestep selection.
     GlMeshGeometryUInt16Simple sphere_;
 
-    // Rendering order.
+    /// Rendering order.
     std::deque<int> renderingOrder_;
 
 private:
 
     void mouseClickEvent(tgt::MouseEvent* e);
     void renderingPass(bool picking);
+    void renderAxes();
     void drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, const tgt::vec3& position) const;
     tgt::vec3 getColor(size_t runIdx, size_t timeStepIdx, bool picking) const;
     DMMatrix calculateDistanceMatrixFromField(const std::string& channel);

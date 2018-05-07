@@ -296,12 +296,16 @@ void FieldParallelPlotViewer::mouseEvent(tgt::MouseEvent* e) {
     int ex = tgt::clamp(e->x(), MARGINS.x, e->viewport().x - MARGINS.x);
     int ey = tgt::clamp(e->y(), MARGINS.y, e->viewport().y - MARGINS.y);
 
+    // Ignore if outside area, hold last selection.
+    if(ex == e->x() && ey == e->y())
+        return;
+
     float mx = mapRange(ex, 0, e->viewport().x, -1.0f,  1.0f);
     float my = mapRange(ey, 0, e->viewport().y,  1.0f, -1.0f);
 
     switch (e->action()) {
     case tgt::MouseEvent::PRESSED:
-        if ((selectionStart_ == NO_SELECTION || selectionEnd_ == NO_SELECTION) && ex == e->x() && ey == e->y()) {
+        if (selectionStart_ == NO_SELECTION || selectionEnd_ == NO_SELECTION) {
             isSelectionMode_ = true;
             selectionStart_ = tgt::vec2(mx, my);
         }
