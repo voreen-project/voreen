@@ -73,6 +73,8 @@ protected:
     virtual void processComputeOutput(ComputeOutput output);
 
     void adjustToEnsemble();
+    void updateProperties();
+    tgt::vec3 getSpacing() const;
     void onComparisonMethodChange();
     float calculateVariance(const std::vector<float>& voxelData) const;
     float calculateMinMaxDiff(const std::vector<float>& voxelData) const;

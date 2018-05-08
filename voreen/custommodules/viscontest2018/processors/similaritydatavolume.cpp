@@ -62,12 +62,17 @@ SimilartyDataVolume::SimilartyDataVolume()
     comparisonMethod_.addOption("selection", "Compare selection");
     comparisonMethod_.addOption("oneToGroup", "Compare one to group");
     comparisonMethod_.addOption("groupToGroup", "Compare group to group");
+    comparisonMethod_.addOption("oneToItself", "Compare one to itself");
     ON_CHANGE(comparisonMethod_, SimilartyDataVolume, onComparisonMethodChange);
     onComparisonMethodChange();
 
     addProperty(singleRunSelection_);
     addProperty(group1_);
     addProperty(group2_);
+
+//    ON_CHANGE(singleRunSelection_, SimilartyDataVolume, updateProperties);
+//    ON_CHANGE(group1_, SimilartyDataVolume, updateProperties);
+//    ON_CHANGE(group2_, SimilartyDataVolume, updateProperties);
 
     addProperty(groupBehaviour_);
     groupBehaviour_.addOption("groupAvg", "Compare group average");
@@ -103,6 +108,14 @@ void SimilartyDataVolume::onComparisonMethodChange() {
         group2_.setGuiName("Select other group of runs");
         groupBehaviour_.setVisibleFlag(true);
         singleRunSelection_.setVisibleFlag(false);
+    }
+    else if(comparisonMethod_.getKey() == "oneToItself") {
+        group1_.setVisibleFlag(false);
+        group1_.setGuiName("Compare one run ...");
+        group2_.setVisibleFlag(false);
+        group2_.setGuiName("... to group of runs");
+        groupBehaviour_.setVisibleFlag(false);
+        singleRunSelection_.setVisibleFlag(true);
     }
 }
 
@@ -164,19 +177,35 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
                 for(size_t r = 0; r<input.dataset.getRuns().size(); r++) {
 
                     // Filter unused runs to save time.
-                    if(std::find(group1_.getSelectedRowIndices().begin(), group1_.getSelectedRowIndices().end(), r)
-                       == group1_.getSelectedRowIndices().end() && group2_.getSelectedRowIndices().end() ==
-                       std::find(group2_.getSelectedRowIndices().begin(), group2_.getSelectedRowIndices().end(), r)
-                       )
-                        continue;
-
+//                    if(std::find(group1_.getSelectedRowIndices().begin(), group1_.getSelectedRowIndices().end(), r)
+//                       == group1_.getSelectedRowIndices().end() && group2_.getSelectedRowIndices().end() ==
+//                       std::find(group2_.getSelectedRowIndices().begin(), group2_.getSelectedRowIndices().end(), r)
+//                       )
+//                        continue;
                     const EnsembleDataset::Run& run = input.dataset.getRuns()[r];
 
-                    size_t t = input.dataset.pickTimeStep(r, input.time);
-                    const VolumeBase* volume = run.timeSteps_[t].channels_.at(channel);
-                    const VolumeRAM_Float* volumeData = dynamic_cast<const VolumeRAM_Float*>(volume->getRepresentation<VolumeRAM>());
+                    if(comparisonMethod_.get() == "oneToItself") {
+                        if(r != singleRunSelection_.getSelectedIndex()) continue;
 
-                    samples[r] = input.dataset.pickSample(volumeData, volume->getSpacing(), nearest);
+                        samples.resize(2);
+                        size_t t = input.dataset.pickTimeStep(r, input.time);
+                        const VolumeBase* volume = run.timeSteps_[t].channels_.at(channel);
+                        const VolumeRAM_Float* volumeData = dynamic_cast<const VolumeRAM_Float*>(volume->getRepresentation<VolumeRAM>());
+
+                        const VolumeBase* volumeStart = run.timeSteps_[0].channels_.at(channel);
+                        const VolumeRAM_Float* volumeDataStart = dynamic_cast<const VolumeRAM_Float*>(volumeStart->getRepresentation<VolumeRAM>());
+
+                        samples[r] = input.dataset.pickSample(volumeData, volume->getSpacing(), nearest);
+                        samples[r+1] = input.dataset.pickSample(volumeDataStart, volumeStart->getSpacing(), nearest);
+                        break;
+                    }
+                    else {
+                        size_t t = input.dataset.pickTimeStep(r, input.time);
+                        const VolumeBase* volume = run.timeSteps_[t].channels_.at(channel);
+                        const VolumeRAM_Float* volumeData = dynamic_cast<const VolumeRAM_Float*>(volume->getRepresentation<VolumeRAM>());
+
+                        samples[r] = input.dataset.pickSample(volumeData, volume->getSpacing(), nearest);
+                    }
                 }
 
                 // Apply group logic.
@@ -201,13 +230,74 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
     Volume* volume = new Volume(input.volumeData, input.dataset.getSpacing(), tgt::vec3::zero);
     volume->getMetaDataContainer().addMetaData("time", new FloatMetaData(input.time));
     volume->getMetaDataContainer().addMetaData("channel", new StringMetaData(channel));
-    volume->getMetaDataContainer().addMetaData("group1", new StringMetaData(input.runGroup1));
-    volume->getMetaDataContainer().addMetaData("group2", new StringMetaData(input.runGroup2));
+    std::string group1string = comparisonMethod_.getKey() == "oneToGroup" ? singleRunSelection_.get() : input.runGroup1;
+    std::string group2string = comparisonMethod_.getKey() == "selection" ? "" : input.runGroup2;
+    volume->getMetaDataContainer().addMetaData("group1", new StringMetaData(group1string));
+    volume->getMetaDataContainer().addMetaData("group2", new StringMetaData(group2string));
     return SimilarityDataVolumeCreatorOutput{volume};
 }
 
 void SimilartyDataVolume::processComputeOutput(SimilarityDataVolumeCreatorOutput output) {
     outport_.setData(output.volume, true);
+}
+
+void SimilartyDataVolume::updateProperties() {
+    tgt::vec2 timeSpan(0, std::numeric_limits<float>::max());
+
+    std::vector<int> runIndices;
+    if(comparisonMethod_.getKey() == "selection") {
+        runIndices = group1_.getSelectedRowIndices();
+    }
+    else if(comparisonMethod_.getKey() == "oneToGroup") {
+        runIndices = group2_.getSelectedRowIndices();
+        runIndices.push_back(singleRunSelection_.getSelectedIndex());
+    }
+    else if(comparisonMethod_.getKey() == "groupToGroup") {
+        runIndices = group1_.getSelectedRowIndices();
+        for(int index : group2_.getSelectedRowIndices()) {
+            runIndices.push_back(index);
+        }
+    }
+    for(int index : runIndices) {
+        EnsembleDataset::Run run = inport_.getData()->getRuns().at(index);
+        EnsembleDataset::TimeStep firstTimeStep = run.timeSteps_.front();
+        EnsembleDataset::TimeStep lastTimeStep = run.timeSteps_.back();
+        timeSpan.x = std::max(timeSpan.x, firstTimeStep.time_);
+        timeSpan.y = std::min(timeSpan.y, lastTimeStep.time_);
+    }
+
+    time_.setMinValue(timeSpan.x);
+    time_.setMaxValue(timeSpan.y);
+}
+
+tgt::vec3 SimilartyDataVolume::getSpacing() const {
+
+    tgt::vec3 commonSpacing(std::numeric_limits<float>::max());
+
+    std::vector<int> runIndices;
+    if(comparisonMethod_.getKey() == "selection") {
+        runIndices = group1_.getSelectedRowIndices();
+    }
+    else if(comparisonMethod_.getKey() == "oneToGroup") {
+        runIndices = group2_.getSelectedRowIndices();
+        runIndices.push_back(singleRunSelection_.getSelectedIndex());
+    }
+    else if(comparisonMethod_.getKey() == "groupToGroup") {
+        runIndices = group1_.getSelectedRowIndices();
+        for(int index : group2_.getSelectedRowIndices()) {
+            runIndices.push_back(index);
+        }
+    }
+    for(int index : runIndices) {
+        EnsembleDataset::Run run = inport_.getData()->getRuns().at(index);
+        const VolumeBase* firstVolume = run.timeSteps_.front().channels_.begin()->second;
+        tgt::vec3 spacing = firstVolume->getSpacing();
+        commonSpacing.x = std::min(commonSpacing.x, spacing.x);
+        commonSpacing.y = std::min(commonSpacing.y, spacing.y);
+        commonSpacing.z = std::min(commonSpacing.z, spacing.z);
+    }
+
+    return commonSpacing;
 }
 
 void SimilartyDataVolume::adjustToEnsemble() {
@@ -217,12 +307,15 @@ void SimilartyDataVolume::adjustToEnsemble() {
 
     group1_.reset();
     group2_.reset();
+    singleRunSelection_.reset();
+    singleRunSelection_.setOptions(std::deque<Option<std::string>>());
     for(const EnsembleDataset::Run& run : ensemble->getRuns()) {
         group1_.addRow(run.name_);
         group2_.addRow(run.name_);
         singleRunSelection_.addOption(run.name_, run.name_);
     }
 
+    selectedChannel_.reset();
     selectedChannel_.setOptions(std::deque<Option<std::string>>());
     for(const std::string& channel : ensemble->getCommonChannels()) {
         selectedChannel_.addOption(channel, channel);
