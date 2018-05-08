@@ -32,8 +32,14 @@
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/utils/glsl.h"
 
+#include "modules/plotting/utils/plotlibrary/plotlibrary.h"
+#include "modules/plotting/utils/plotlibrary/plotlibraryopengl.h"
+
+#include "../utils/utils.h"
+
 namespace voreen {
 
+static const tgt::ivec2 MARGINS(50);
 static const tgt::vec2 NO_SELECTION(-1.0f, 1.0f);
 
 const std::string FieldParallelPlotHistogram::loggerCat_("voreen.viscontest2018.FieldParallelPlotHistogram");
@@ -42,15 +48,15 @@ FieldParallelPlotHistogram::FieldParallelPlotHistogram()
         : RenderProcessor()
         , inportVolume_(Port::INPORT, "fpp.histogram.data.volume", "Field Plot Volume Input")
         , outport_(Port::OUTPORT, "outport", "Histogram Image Output", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
-        , outportPlot_(Port::OUTPORT, "plotOutport", "Plot Outport")
         , valueRange_("valueRange", "Value Range", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
         , selectedRange_(NO_SELECTION)
         , volumeHistogramIntensity_(nullptr)
+        , data_(nullptr)
+        , plotLib_(new PlotLibraryOpenGl())
         , isSelectionMode_(false)
 {
     addPort(inportVolume_);
     addPort(outport_);
-    addPort(outportPlot_);
 
     addProperty(valueRange_);
 
@@ -65,6 +71,25 @@ Processor* FieldParallelPlotHistogram::create() const {
     return new FieldParallelPlotHistogram();
 }
 
+void FieldParallelPlotHistogram::initialize() {
+    RenderProcessor::initialize();
+
+    plotLib_->setDimension(PlotLibrary::TWO);
+    plotLib_->setBarWidth(1.0);
+    plotLib_->setBarGroupingMode(PlotLibrary::GROUPED);
+    plotLib_->setAxesWidth(1.0f);
+    plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
+    plotLib_->setLineWidth(1.0f);
+    plotLib_->setMaxGlyphSize(1.0f);
+    plotLib_->setMarginBottom(MARGINS.y);
+    plotLib_->setMarginTop(MARGINS.y);
+    plotLib_->setMarginLeft(MARGINS.x);
+    plotLib_->setMarginRight(MARGINS.x);
+    plotLib_->setMinimumScaleStep(32, PlotLibrary::X_AXIS);
+    plotLib_->setMinimumScaleStep(32, PlotLibrary::Y_AXIS);
+    plotLib_->setLogarithmicAxis(true, PlotLibrary::Y_AXIS);
+}
+
 void FieldParallelPlotHistogram::initHistogram() {
     if(!inportVolume_.hasData()) return;
 
@@ -74,22 +99,18 @@ void FieldParallelPlotHistogram::initHistogram() {
     valueRange_.setMaxValue(volume->max());
     valueRange_.set(tgt::vec2(volume->min(), volume->max()));
 
-    volumeHistogramIntensity_.reset(static_cast<VolumeHistogramIntensity*>(VolumeHistogramIntensity().createFrom(inportVolume_.getData())));
+    volumeHistogramIntensity_.reset(dynamic_cast<VolumeHistogramIntensity*>(VolumeHistogramIntensity().createFrom(inportVolume_.getData())));
 
-
-    int bucketCount = volumeHistogramIntensity_->getBucketCount();
-
-    PlotData* plotPortData = new PlotData(1,1);
-    plotPortData->setColumnLabel(0,"Index");
-    plotPortData->setColumnLabel(1,"Frequency");
-    for (int i = 0; i<bucketCount; i++) {
+    data_.reset(new PlotData(1, 1));
+    data_->setColumnLabel(0,"Index");
+    data_->setColumnLabel(1,"Frequency");
+    for (int i = 0; i<volumeHistogramIntensity_->getBucketCount(); i++) {
         float value = volumeHistogramIntensity_->getLogNormalized(i);
-        std::vector<PlotCellValue> cells(0);
-        cells.push_back((PlotCellValue(i)));
-        cells.push_back((PlotCellValue(value)));
-        plotPortData->insert(cells);
+        std::vector<PlotCellValue> cells;
+        cells.push_back(PlotCellValue(i));
+        cells.push_back(PlotCellValue(value));
+        data_->insert(cells);
     }
-    outportPlot_.setData(plotPortData, true);
 
     invalidate();
 }
@@ -99,7 +120,7 @@ bool FieldParallelPlotHistogram::isReady() const {
         setNotReadyErrorMessage("Inport volume is not set.");
         return false;
     }
-    if(!outport_.isReady() && !outportPlot_.isReady()) {
+    if(!outport_.isReady()) {
         setNotReadyErrorMessage("No outport connected.");
         return false;
     }
@@ -110,39 +131,50 @@ void FieldParallelPlotHistogram::process() {
     outport_.activateTarget();
     outport_.clearTarget();
 
-    drawHistogram();
+    // Recalculate margins.
+    margins_.first  = mapRange(tgt::vec2(MARGINS), tgt::vec2::zero, tgt::vec2(outport_.getSize()), -tgt::vec2::one, tgt::vec2::one);
+    margins_.second = mapRange(tgt::vec2(outport_.getSize()-MARGINS), tgt::vec2::zero, tgt::vec2(outport_.getSize()), -tgt::vec2::one, tgt::vec2::one);
 
-    outport_.deactivateTarget();
-}
+    // Set Plot status.
+    plotLib_->setWindowSize(outport_.getSize());
+    plotLib_->setDomain(Interval<plot_t>(valueRange_.getMinValue(), valueRange_.getMaxValue()), PlotLibrary::X_AXIS);
+    plotLib_->setDomain(Interval<plot_t>(volumeHistogramIntensity_->getHistogram().getMinValue(), volumeHistogramIntensity_->getHistogram().getMaxValue()), PlotLibrary::Y_AXIS);
 
-void FieldParallelPlotHistogram::drawHistogram() {
-    if(!inportVolume_.hasData()) return;
-
-    float y_offset = -1.0f;
-    float globalWidth = 2.0f;
-    float globalHeight = 2.0f;
-
-    float height_factor = globalHeight;
-    float width = globalWidth / static_cast<float>(volumeHistogramIntensity_->getBucketCount());
+    if (plotLib_->setRenderStatus()) {
+        plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
+        plotLib_->renderAxes();
+        plotLib_->setDrawingColor(tgt::Color(0, 0, 0, .5f));
+        plotLib_->setFontSize(10);
+        plotLib_->setFontColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
+        plotLib_->renderAxisScales(PlotLibrary::X_AXIS, false);
+        plotLib_->renderAxisScales(PlotLibrary::Y_AXIS, false);
+        plotLib_->setFontSize(12);
+        plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "Index");
+        plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "log. Frequency");
+    }
+    plotLib_->resetRenderStatus();
 
     // draw buckets
     IMode.begin(IMode.QUADS);
     IMode.color(0.0f, 0.6f, 1.0f, 1.0f);
+    float width = (margins_.second.x - margins_.first.x) / volumeHistogramIntensity_->getBucketCount();
     for (int i = 0; i<volumeHistogramIntensity_->getBucketCount(); i++){
+        float x = margins_.first.x + i * width;
+        float y = margins_.first.y;
 
         float value = volumeHistogramIntensity_->getLogNormalized(i);
-        float x = (i * width) - 1;
-        float y_max = y_offset + value * height_factor; 
+        float height = (margins_.second.y - margins_.first.y) * value;
 
-        IMode.vertex(x, y_offset);
-        IMode.vertex(x+width, y_offset);
-        IMode.vertex(x+width, y_max);
-        IMode.vertex(x, y_max);
+        IMode.vertex(x, y);
+        IMode.vertex(x+width, y);
+        IMode.vertex(x+width, y+height);
+        IMode.vertex(x, y+height);
     }
     IMode.end();
 
     // draw selection
     if(selectedRange_ != NO_SELECTION && selectedRange_.x != selectedRange_.y) {
+
         glDepthFunc(GL_ALWAYS);
         IMode.color(1.0f, 1.0f, 1.0f, 0.5f);
         glLineWidth(1.0f);
@@ -150,13 +182,10 @@ void FieldParallelPlotHistogram::drawHistogram() {
         glEnable(GL_BLEND);
 
         IMode.begin(tgt::ImmediateMode::QUADS);
-            float xPos = selectedRange_.x;
-            float xPosMax = selectedRange_.y;
-            float yPos = -1.0f;
-            IMode.vertex(xPos, 1.0f);
-            IMode.vertex(xPosMax, 1.0f);
-            IMode.vertex(xPosMax, -1.0f);
-            IMode.vertex(xPos, -1.0f);
+        IMode.vertex(selectedRange_.x, margins_.second.y);
+        IMode.vertex(selectedRange_.y, margins_.second.y);
+        IMode.vertex(selectedRange_.y, margins_.first.y);
+        IMode.vertex(selectedRange_.x, margins_.first.y);
         IMode.end();
 
         glLineWidth(1.0f);
@@ -166,46 +195,56 @@ void FieldParallelPlotHistogram::drawHistogram() {
     }
 
     IMode.color(tgt::vec4::one);
+    outport_.deactivateTarget();
 }
 
 void FieldParallelPlotHistogram::updateSelectedValues() {
 
-    const tgt::vec2& valueRange = tgt::vec2(valueRange_.getMinValue(), valueRange_.getMaxValue());
+    if(selectedRange_ == NO_SELECTION) {
+        valueRange_.set(tgt::vec2(valueRange_.getMinValue(), valueRange_.getMaxValue()));
+    }
+    else {
+        tgt::vec2 value = mapRange(selectedRange_,
+                                   tgt::vec2(margins_.first.x),
+                                   tgt::vec2(margins_.second.x),
+                                   tgt::vec2(valueRange_.getMinValue()),
+                                   tgt::vec2(valueRange_.getMaxValue())
+        );
 
-    float xValue = ((selectedRange_.x + 1.0f) / 2.0f) * (valueRange.y - valueRange.x) + valueRange.x;
-    float yValue = ((selectedRange_.y + 1.0f) / 2.0f) * (valueRange.y - valueRange.x) + valueRange.x;
+        float lower = std::min(value.x, value.y);
+        float upper = std::max(value.x, value.y);
 
-    float lower = std::min(xValue, yValue);
-    float upper = std::max(xValue, yValue);
-
-    valueRange_.set(tgt::vec2(lower, upper));
+        valueRange_.set(tgt::vec2(lower, upper));
+    }
 }
 
 void FieldParallelPlotHistogram::mouseEvent(tgt::MouseEvent* e) {
 
-    viewPortWidth_ = static_cast<float>(e->viewport().x);
+    int ex = tgt::clamp(e->x(), MARGINS.x, e->viewport().x-MARGINS.x);
+    int ey = tgt::clamp(e->y(), MARGINS.y, e->viewport().y-MARGINS.y);
 
-    int x = tgt::clamp(e->x(), 0, e->viewport().x);
-    float mousePosition = (x / viewPortWidth_) * 2.0f - 1.0f;
+    float mx = mapRange(ex, 0, e->viewport().x, -1.0f,  1.0f);
 
     switch (e->action()) {
     case tgt::MouseEvent::PRESSED:
+        // TODO: test
+        if(ex != e->x() || ey != e->y())
+            break;
+
         if (selectedRange_ == NO_SELECTION) {
             isSelectionMode_ = true;
-            selectedRange_.x = mousePosition;
-            selectedRange_.y = mousePosition;
+            selectedRange_.x = mx;
+            selectedRange_.y = mx;
         }
         else {
             selectedRange_ = NO_SELECTION;
+            updateSelectedValues();
         }
         break;
     case tgt::MouseEvent::MOTION:
         if (isSelectionMode_) {
-            selectedRange_.y = mousePosition;
+            selectedRange_.y = mx;
         }
-        break;
-    case tgt::MouseEvent::EXIT:
-        selectedRange_.y = tgt::clamp(selectedRange_.y, -1.0f, 1.0f);
         break;
     case tgt::MouseEvent::RELEASED:
         if (selectedRange_.x == selectedRange_.y) {

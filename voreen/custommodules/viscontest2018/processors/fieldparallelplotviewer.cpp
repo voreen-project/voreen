@@ -296,7 +296,7 @@ void FieldParallelPlotViewer::mouseEvent(tgt::MouseEvent* e) {
     int ex = tgt::clamp(e->x(), MARGINS.x, e->viewport().x - MARGINS.x);
     int ey = tgt::clamp(e->y(), MARGINS.y, e->viewport().y - MARGINS.y);
 
-    // Ignore if outside area, hold last selection.
+    // TODO: optimize
     if(ex != e->x() || ey != e->y())
         return;
 

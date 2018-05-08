@@ -39,6 +39,8 @@
 
 namespace voreen {
 
+class PlotLibrary;
+
 /**
  *
  */
@@ -55,6 +57,7 @@ public:
 
 protected:
     virtual void process();
+    virtual void initialize();
     virtual void onEvent(tgt::Event* e);
     virtual bool isReady() const;
 
@@ -63,21 +66,19 @@ protected:
 protected:
 
     void initHistogram();
-    void drawHistogram();
     void updateSelectedValues();
     void mouseEvent(tgt::MouseEvent* e);
 
     VolumePort inportVolume_;
     RenderPort outport_;
 
-    PlotPort outportPlot_;
-
     FloatIntervalProperty valueRange_;
 
     std::unique_ptr<VolumeHistogramIntensity> volumeHistogramIntensity_;
+    std::unique_ptr<PlotData> data_;
 
-    float viewPortWidth_;
-
+    std::unique_ptr<PlotLibrary> plotLib_;
+    std::pair<tgt::vec2, tgt::vec2> margins_;
     tgt::vec2 selectedRange_;
     bool isSelectionMode_;
 };
