@@ -40,11 +40,10 @@ namespace voreen {
  */
 template<typename T, typename S>
 S mapRange(const T& valA, const T& minA, const T& maxA, const S& minB, const S& maxB) {
-    tgtAssert(valA >= minA && valA <= maxA, "value out of range");
-    return minB + (maxB - minB) * (valA - minA) / (maxA - minA);
+    //tgtAssert(valA >= minA && valA <= maxA, "value out of range"); // value may lay outside intentionally!
+    // Cast in receiver type.
+    return S(minB + (maxB - minB) * (valA - minA) / (maxA - minA));
 }
-
-class EnsembleDataset;
 
 class VRN_CORE_API TimeStepMapper {
 public:

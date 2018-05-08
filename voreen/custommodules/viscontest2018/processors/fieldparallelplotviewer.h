@@ -49,6 +49,8 @@
 
 namespace voreen {
 
+class PlotLibrary;
+
 /**
  *
  */
@@ -70,6 +72,7 @@ protected:
     virtual void initialize();
     virtual void deinitialize();
 
+    virtual void beforeProcess();
     virtual void process();
 
     virtual bool isReady() const;
@@ -78,6 +81,9 @@ protected:
     virtual bool rebuildShader();
 
 protected:
+
+    void renderPlot();
+    void renderAxes();
 
     void switchChannel();
     void loadPlotData();
@@ -97,6 +103,7 @@ protected:
     EnsembleDatasetPort ensembleInport_;
     RenderPort outport_;
     VolumePort volumeOutport_;
+    RenderPort privatePort_;
 
     TransFunc1DKeysProperty transferFunc_;
     OptionProperty<std::string> renderedChannel_;
@@ -123,6 +130,7 @@ protected:
     bool consistent_;
 
     // UI
+    std::unique_ptr<PlotLibrary> plotLib_;
     tgt::vec2 selectionStart_;
     tgt::vec2 selectionEnd_;
     bool isSelectionMode_;

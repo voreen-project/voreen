@@ -37,6 +37,8 @@
 
 #include "modules/plotting/datastructures/plotcell.h"
 #include "modules/plotting/datastructures/plotdata.h"
+#include "modules/plotting/utils/plotlibrary/plotlibrary.h"
+#include "modules/plotting/utils/plotlibrary/plotlibraryopengl.h"
 
 #include "tgt/immediatemode/immediatemode.h"
 #include "tgt/texture.h"
@@ -49,13 +51,13 @@ namespace voreen {
 
 static const int MAX_NUM_DIMENSIONS = 3;
 static const int GRAB_ENABLE_DISTANCE = 0;
+static const tgt::ivec2 MARGINS(50);
 static const float EIGENVALUE_RELATIVE_THRESHOLD = 0.01f;
 static const tgt::vec3 FIRST_TIME_STEP_COLOR = tgt::vec3(1.0f, 0.0f, 0.0f);
 static const tgt::vec3 LAST_TIME_STEP_COLOR = tgt::vec3::one;
 static const tgt::vec3 MIN_DURATION_COLOR = tgt::vec3(1.0f, 0.0f, 0.0f);
 static const tgt::vec3 MAX_DURATION_COLOR = tgt::vec3(0.0f, 0.0f, 1.0f);
 static const tgt::vec3 FADE_OUT_COLOR = tgt::vec3::one;
-static const float SCALING_FACTOR = 0.95f;
 
 void MDSPlot::MDSData::serialize(Serializer& s) const {
     s.serialize("nVectors", nVectors_);
@@ -71,6 +73,7 @@ MDSPlot::MDSPlot()
     : RenderProcessor()
     , ensembleInport_(Port::INPORT, "ensembledatastructurein", "Ensemble Datastructure Input", false)
     , outport_(Port::OUTPORT, "outport", "Outport", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
+    , privatePort_(Port::OUTPORT, "image.tmp", "image.tmp", false)
     , pickingBuffer_(Port::OUTPORT, "picking", "Picking", false)
     , eigenValueOutport_(Port::OUTPORT, "eigenvalueOutport", "Eigenvalues", false)
     , calculateButton_("calculate", "Calculate")
@@ -94,6 +97,7 @@ MDSPlot::MDSPlot()
                       "MDS Plot data (*.mds)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , camera_("camera", "Camera", tgt::Camera(tgt::vec3(0.0f, 0.0f, 3.5f), tgt::vec3(0.0f, 0.0f, 0.0f), tgt::vec3(0.0f, 1.0f, 0.0f)))
     , cameraHandler_(nullptr)
+    , plotLib_(new PlotLibraryOpenGl())
     /*
     , grabAnchorPosition_(tgt::ivec2::zero)
     , interaction_(false)
@@ -105,6 +109,7 @@ MDSPlot::MDSPlot()
     addPort(ensembleInport_);
     addPort(outport_);
     addPort(eigenValueOutport_);
+    addPrivateRenderPort(privatePort_);
     addPrivateRenderPort(pickingBuffer_);
 
     // Calculation
@@ -214,27 +219,138 @@ void MDSPlot::deinitialize() {
 
 void MDSPlot::process() {
 
-    // Resize picking buffer accordingly.
+    // Resize frame buffers accordingly.
     if(pickingBuffer_.getSize() != outport_.getSize())
         pickingBuffer_.resize(outport_.getSize());
+
+    if(privatePort_.getSize() != outport_.getSize())
+        privatePort_.resize(outport_.getSize());
 
     // Render picking pass.
     pickingBuffer_.activateTarget();
     pickingBuffer_.clearTarget();
-    glLineWidth(5.0f);
+    glLineWidth(7.0f);
     renderingPass(true);
     pickingBuffer_.deactivateTarget();
 
     // Draw the runs in new parameter space.
-    outport_.activateTarget();
-    outport_.clearTarget();
-    glLineWidth(3.0f);
-    renderingPass(false);
-    outport_.deactivateTarget();
+    bool threeDimensional = numDimensions_.get() == 3;
+    if(threeDimensional) {
+        outport_.activateTarget();
+        outport_.clearTarget();
+
+        glLineWidth(3.0f);
+        renderingPass(false);
+
+        outport_.deactivateTarget();
+    }
+    else {
+        privatePort_.activateTarget();
+        privatePort_.clearTarget(); // TODO: may change clear color to..?
+
+        glLineWidth(3.0f);
+        renderingPass(false);
+
+        privatePort_.deactivateTarget();
+
+        // Draw axes.
+        renderAxes();
+    }
 
     // Restore state.
     glLineWidth(1.0f);
     IMode.color(tgt::col4::one);
+}
+
+void MDSPlot::renderAxes() {
+
+    outport_.activateTarget();
+    outport_.clearTarget();
+
+    // Set Plot status.
+    plotLib_->setWindowSize(outport_.getSize());
+    plotLib_->setAxesWidth(1.0f);
+    plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
+    plotLib_->setLineWidth(1.0f);
+    plotLib_->setMaxGlyphSize(1.0f);
+    plotLib_->setMarginBottom(MARGINS.y);
+    plotLib_->setMarginTop(MARGINS.y);
+    plotLib_->setMarginLeft(MARGINS.x);
+    plotLib_->setMarginRight(MARGINS.x);
+    plotLib_->setMinimumScaleStep(32, PlotLibrary::X_AXIS);
+    plotLib_->setMinimumScaleStep(32, PlotLibrary::Y_AXIS);
+    plotLib_->setMinimumScaleStep(32, PlotLibrary::Z_AXIS);
+    if(numDimensions_.get() == 1)
+        plotLib_->setDomain(Interval<plot_t>(ensembleInport_.getData()->getStartTime(), ensembleInport_.getData()->getEndTime()), PlotLibrary::X_AXIS);
+    else
+        plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::X_AXIS);
+    plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::Y_AXIS);
+    if(numDimensions_.get() == 3) {
+        plotLib_->setDimension(PlotLibrary::THREE);
+        plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::Z_AXIS);
+    } else
+        plotLib_->setDimension(PlotLibrary::TWO);
+
+    if (plotLib_->setRenderStatus()) {
+        plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
+        plotLib_->renderAxes();
+        plotLib_->setDrawingColor(tgt::Color(0, 0, 0, .5f));
+        plotLib_->setFontSize(12);
+
+        switch(numDimensions_.get()) {
+        case 1:
+            plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "time");
+            if(principalComponent_.get() == 1)
+                plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "1th PC");
+            else if(principalComponent_.get() == 2)
+                plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "2nd PC");
+            else
+                plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "3rd PC");
+
+            plotLib_->setDrawingColor(tgt::Color(0, 0, 0, .5f));
+            plotLib_->setFontSize(10);
+            plotLib_->setFontColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
+            plotLib_->renderAxisScales(PlotLibrary::X_AXIS, false);
+            plotLib_->setFontSize(12);
+            break;
+        case 3:
+            plotLib_->renderAxisLabel(PlotLibrary::Z_AXIS, "3rd PC");
+            // Fallthrough
+        case 2:
+            plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "1th PC");
+            plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "2nd PC");
+            break;
+        }
+    }
+    plotLib_->resetRenderStatus();
+
+    // Plot data
+    float xMinMarginNDC = mapRange(MARGINS.x, 0, outport_.getSize().x, -1.0f, 1.0f);
+    float xMaxMarginNDC = mapRange(outport_.getSize().x-MARGINS.x, 0, outport_.getSize().x, -1.0f, 1.0f);
+    float yMinMarginNDC = mapRange(MARGINS.y, 0, outport_.getSize().y, -1.0f, 1.0f);
+    float yMaxMarginNDC = mapRange(outport_.getSize().y-MARGINS.y, 0, outport_.getSize().y, -1.0f, 1.0f);
+
+    tgt::TextureUnit::setZeroUnit();
+    tgt::Texture* texture = privatePort_.getColorTexture();
+    if(texture) {
+        texture->enable();
+        texture->bind();
+    }
+
+    IMode.begin(tgt::ImmediateMode::QUADS);
+        IMode.texcoord(0.0f, 0.0f); IMode.vertex(xMinMarginNDC, yMinMarginNDC);
+        IMode.texcoord(1.0f, 0.0f); IMode.vertex(xMaxMarginNDC, yMinMarginNDC);
+        IMode.texcoord(1.0f, 1.0f); IMode.vertex(xMaxMarginNDC, yMaxMarginNDC);
+        IMode.texcoord(0.0f, 1.0f); IMode.vertex(xMinMarginNDC, yMaxMarginNDC);
+    IMode.end();
+
+    if(texture)
+        texture->disable();
+
+    // Reset state.
+    IMode.color(1.0f, 1.0f, 1.0f, 1.0f);
+    outport_.deactivateTarget();
+    LGL_ERROR;
 }
 
 bool MDSPlot::isReady() const {
@@ -277,7 +393,7 @@ void MDSPlot::renderingPass(bool picking) {
             for(size_t j=0; j<numTimeSteps; j++) {
                 float t = mapRange(run.timeSteps_[j].time_, dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
                 IMode.color(getColor(runIdx, j, picking));
-                IMode.vertex(tgt::vec2(t, mdsData.nVectors_[j+runOffset][eigenValueIdx]) * SCALING_FACTOR);
+                IMode.vertex(tgt::vec2(t, mdsData.nVectors_[j+runOffset][eigenValueIdx]));
             }
             IMode.end();
 
@@ -285,7 +401,7 @@ void MDSPlot::renderingPass(bool picking) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
                 float x = mapRange(run.timeSteps_[selectedTimeStep].time_, dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
                 tgt::vec3 position(x, mdsData.nVectors_[runOffset+selectedTimeStep][eigenValueIdx], 0.0f);
-                drawTimeStepSelection(runIdx, selectedTimeStep, position*SCALING_FACTOR);
+                drawTimeStepSelection(runIdx, selectedTimeStep, position);
             }
         }
         break;
@@ -303,14 +419,14 @@ void MDSPlot::renderingPass(bool picking) {
             IMode.begin(tgt::ImmediateMode::LINE_STRIP);
             for(size_t j=0; j<numTimeSteps; j++) {
                 IMode.color(getColor(runIdx, j, picking));
-                IMode.vertex(tgt::vec2(mdsData.nVectors_[j+runOffset][0], mdsData.nVectors_[j+runOffset][1]) * SCALING_FACTOR);
+                IMode.vertex(tgt::vec2(mdsData.nVectors_[j+runOffset][0], mdsData.nVectors_[j+runOffset][1]));
             }
             IMode.end();
 
             if(!picking && numTimeSteps > 0) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
                 tgt::vec3 position(mdsData.nVectors_[runOffset+selectedTimeStep][0], mdsData.nVectors_[runOffset+selectedTimeStep][1], 0.0f);
-                drawTimeStepSelection(runIdx, selectedTimeStep, position*SCALING_FACTOR);
+                drawTimeStepSelection(runIdx, selectedTimeStep, position);
             }
         }
         break;
@@ -411,12 +527,25 @@ void MDSPlot::mouseClickEvent(tgt::MouseEvent* e) {
 
     RenderTarget* target = pickingBuffer_.getRenderTarget();
 
-    int x = e->x() * target->getSize().x / e->viewport().x;
-    int y = e->y() * target->getSize().y / e->viewport().y;
+    int x = tgt::clamp(e->x(), MARGINS.x, e->viewport().x-MARGINS.x);
+    int y = tgt::clamp(e->y(), MARGINS.y, e->viewport().y-MARGINS.y);
 
-    tgt::vec4 texel = target->getColorAtPos(tgt::ivec2(x, target->getSize().y - y - 1));
-    if(texel.xyz() == tgt::vec3::zero)
+    // Not inside margins.
+    if(x != e->x() || y != e->y())
+        return;
+
+    // Handle margins.
+    tgt::ivec2 pixel;
+    if(numDimensions_.get() < 3)
+        pixel = tgt::ivec2(mapRange(tgt::vec2(x, y), tgt::vec2(MARGINS), tgt::vec2(outport_.getSize()-MARGINS), tgt::vec2::zero, tgt::vec2(target->getSize())));
+    else
+        pixel = mapRange(tgt::ivec2(x, y), tgt::ivec2::zero, outport_.getSize(), tgt::ivec2::zero, target->getSize());
+
+    tgt::vec4 texel = target->getColorAtPos(tgt::ivec2(pixel.x, target->getSize().y - pixel.y - 1));
+    if(texel.xyz() == tgt::vec3::zero) {
+        e->accept();
         return; // No hit - preserve last selection.
+    }
 
     // Calculate run index.
     const std::vector<EnsembleDataset::Run>& runs = ensembleInport_.getData()->getRuns();
@@ -433,7 +562,7 @@ void MDSPlot::mouseClickEvent(tgt::MouseEvent* e) {
     else {
         // Calculate time step index.
         size_t numTimeSteps = runs[r].timeSteps_.size();
-        int t = static_cast<size_t>(std::round(texel.g * numTimeSteps));
+        size_t t = static_cast<size_t>(std::round(texel.g * numTimeSteps));
 
         // Update selection.
         std::vector<int> run;
