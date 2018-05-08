@@ -98,47 +98,103 @@ H5::DataSpace createDataSpace(tgt::svec3 volumeDimensions, size_t numberOfChanne
  * Create an array attribute at the given location and write values to it.
  */
 template<typename T>
-void writeArrayAttribute(const H5::H5Location& loc, const H5std_string& name, const T* values, hsize_t numberOfValues);
+void writeArrayAttribute(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& loc,
+#else
+        const H5::H5Location& loc,
+#endif
+        const H5std_string& name, const T* values, hsize_t numberOfValues);
+
 
 /**
  * Create a vec3 attribute at the given location and write vec to it.
  */
 template<typename T>
-void writeVec3Attribute(const H5::H5Location& loc, const H5std_string& name, const tgt::Vector3<T>& vec);
+void writeVec3Attribute(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& loc,
+#else
+        const H5::H5Location& loc,
+#endif
+        const H5std_string& name, const tgt::Vector3<T>& vec);
+
 
 /**
  * Create a scalar attribute at the given location and write scalar to it.
  */
 template<typename T>
-void writeScalarAttribute(const H5::H5Location& loc, const H5std_string& name, const T scalar);
+void writeScalarAttribute(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& loc,
+#else
+        const H5::H5Location& loc,
+#endif
+        const H5std_string& name, const T scalar);
+
 
 /**
  * Create a string attribute at the given location and write str to it.
  */
-void writeStringAttribute(const H5::H5Location& loc, const H5std_string& name, const H5std_string& str);
+void writeStringAttribute(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& loc,
+#else
+        const H5::H5Location& loc,
+#endif
+        const H5std_string& name, const H5std_string& str);
+
 
 /**
  * Read an array attribute with the given name from the given location.
  */
 template<typename T>
-void readArrayAttribute(const H5::H5Location& loc, const H5std_string& name, T* values, hsize_t numValues);
+void readArrayAttribute(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& loc,
+#else
+        const H5::H5Location& loc,
+#endif
+        const H5std_string& name, T* values, hsize_t numValues);
+
 
 /**
  * Read a vec3 attribute with the given name from the given location.
  */
 template<typename T>
-tgt::Vector3<T> readVec3Attribute(const H5::H5Location& loc, const H5std_string name);
+tgt::Vector3<T> readVec3Attribute(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& loc,
+#else
+        const H5::H5Location& loc,
+#endif
+        const H5std_string name);
+
 
 /**
  * Read a scalar attribute with the given name from the given location.
  */
 template<typename T>
-T readScalarAttribute(const H5::H5Location& loc, const H5std_string name);
+T readScalarAttribute(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& loc,
+#else
+        const H5::H5Location& loc,
+#endif
+        const H5std_string name);
+
 
 /**
  * Read a string attribute with the given name from the given location.
  */
-H5std_string readStringAttribute(const H5::H5Location& loc, const H5std_string name);
+H5std_string readStringAttribute(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& loc,
+#else
+        const H5::H5Location& loc,
+#endif
+        const H5std_string name);
+
 
 /**
  * Convert HDF5 style vector to tgt vector.
@@ -187,7 +243,14 @@ void vec4TgtToHDF5(const tgt::svec4& vec, hsize_t dimensions[4]);
 
 // ====== Implementation of template functions =================================================================
 template<typename T>
-void writeArrayAttribute(const H5::H5Location& loc, const H5std_string& name, const T* values, hsize_t numberOfValues) {
+void writeArrayAttribute(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& loc,
+#else
+        const H5::H5Location& loc,
+#endif
+        const H5std_string& name, const T* values, hsize_t numberOfValues) {
+
     boost::lock_guard<boost::recursive_mutex> lock(hdf5libMutex);
     // Create Attribute
     const H5::DataSpace dataspace(1, &numberOfValues);
@@ -197,7 +260,14 @@ void writeArrayAttribute(const H5::H5Location& loc, const H5std_string& name, co
 }
 
 template<typename T>
-void writeVec3Attribute(const H5::H5Location& loc, const H5std_string& name, const tgt::Vector3<T>& vec) {
+void writeVec3Attribute(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& loc,
+#else
+        const H5::H5Location& loc,
+#endif
+        const H5std_string& name, const tgt::Vector3<T>& vec) {
+
     // Convert tgt vector to hdf style
     T h5vec[3];
     vec3TgtToHDF5(vec, h5vec);
@@ -207,13 +277,27 @@ void writeVec3Attribute(const H5::H5Location& loc, const H5std_string& name, con
 }
 
 template<typename T>
-void writeScalarAttribute(const H5::H5Location& loc, const H5std_string& name, const T scalar) {
+void writeScalarAttribute(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& loc,
+#else
+        const H5::H5Location& loc,
+#endif
+        const H5std_string& name, const T scalar) {
+
     //Write the attribute
     writeArrayAttribute(loc, name, &scalar, 1);
 }
 
 template<typename T>
-void readArrayAttribute(const H5::H5Location& loc, const H5std_string& name, T* values, hsize_t numValues) {
+void readArrayAttribute(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& loc,
+#else
+        const H5::H5Location& loc,
+#endif
+        const H5std_string& name, T* values, hsize_t numValues) {
+
     boost::lock_guard<boost::recursive_mutex> lock(hdf5libMutex);
     // Try to open element size attribute.
     H5::Attribute attr = loc.openAttribute(name);
@@ -234,14 +318,28 @@ void readArrayAttribute(const H5::H5Location& loc, const H5std_string& name, T* 
 }
 
 template<typename T>
-tgt::Vector3<T> readVec3Attribute(const H5::H5Location& loc, const H5std_string name) {
+tgt::Vector3<T> readVec3Attribute(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& loc,
+#else
+        const H5::H5Location& loc,
+#endif
+        const H5std_string name) {
+
     T values[3];
     readArrayAttribute(loc, name, values, 3);
     return vec3HDF5ToTgt(values);
 }
 
 template<typename T>
-T readScalarAttribute(const H5::H5Location& loc, const H5std_string name) {
+T readScalarAttribute(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& loc,
+#else
+        const H5::H5Location& loc,
+#endif
+        const H5std_string name) {
+
     T value;
     readArrayAttribute(loc, name, &value, 1);
     return value;
