@@ -494,17 +494,6 @@ struct PropertyErrorCost {
     }
 };
 
-static void writeMatToFile(munkres::Matrix<float>& mat, std::string filename) {
-    std::ofstream fout(filename);
-    for(size_t j=0; j<mat.rows(); ++j) {
-        fout << j << "|\t";
-        for(size_t i=0; i<mat.columns(); ++i) {
-            fout << i << ":" << mat(i, j) << "\t";
-        }
-        fout << std::endl;
-    }
-}
-
 template<typename Distance, typename Element>
 static Matching<Element> munkresMatch(const std::vector<const Element*> e1, const std::vector<const Element*> e2, float deletion_or_addition_cost) {
 
@@ -583,10 +572,8 @@ static Matching<Element> munkresMatch(const std::vector<const Element*> e1, cons
         }
     }
 
-    writeMatToFile(dist_mat, "/home/dominik/nosnapshot/tmp/weights.txt");
     munkres::Munkres<float> solver;
     solver.solve(dist_mat);
-    writeMatToFile(dist_mat, "/home/dominik/nosnapshot/tmp/solved.txt");
 
     Matching<Element> output;
 

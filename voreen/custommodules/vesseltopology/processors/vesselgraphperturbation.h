@@ -60,6 +60,8 @@ protected:
         // Not from Netmets
         MOVE_NODES, // move node positions
         CHANGE_PROPERTIES, // move node positions
+
+        COMBINED, // Combines all other perturbations
     };
 
     virtual void process();

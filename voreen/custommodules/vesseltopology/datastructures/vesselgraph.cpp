@@ -26,8 +26,9 @@
 #include "vesselgraph.h"
 #include <functional>
 #include <numeric>
+#include "voreen/core/voreenapplication.h"
 
-#include <tgt/logmanager.h>
+#include "tgt/logmanager.h"
 
 namespace voreen {
 
@@ -157,6 +158,10 @@ std::vector<const VesselGraphNode*> VesselGraphNode::getNeighbors() const {
         }
     }
     return neighbor_refs;
+}
+
+boost::uuids::uuid VesselGraphEdge::getUUID() const {
+    return identifier_;
 }
 
 size_t VesselGraphNode::getID() const {
@@ -327,7 +332,7 @@ void VesselGraphEdgePathProperties::deserialize(Deserializer& s) {
     s.deserialize("roundnessStdDeviation", roundnessStdDeviation_);
 }
 
-VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, size_t id, size_t node1ID, size_t node2ID, const std::vector<VesselSkeletonVoxel>&& voxels)
+VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, size_t id, size_t node1ID, size_t node2ID, const std::vector<VesselSkeletonVoxel>&& voxels, boost::uuids::uuid identifier)
     : graph_(&graph)
     , id_(id)
     , node1_(node1ID)
@@ -335,6 +340,7 @@ VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, size_t id, size_t node1ID, 
     , distance_(std::numeric_limits<float>::quiet_NaN())
     , pathProps_() //Invalid until initialized
     , voxels_(voxels)
+    , identifier_(identifier)
 {
     VesselGraphNode& node1 = getNode1();
     VesselGraphNode& node2 = getNode2();
@@ -345,7 +351,11 @@ VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, size_t id, size_t node1ID, 
     pathProps_ = VesselGraphEdgePathProperties::fromPath(node1, node2, voxels_);
 }
 
-VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, size_t id, size_t node1ID, size_t node2ID, VesselGraphEdgePathProperties pathProps)
+VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, size_t id, size_t node1ID, size_t node2ID, const std::vector<VesselSkeletonVoxel>&& voxels)
+    : VesselGraphEdge(graph, id, node1ID, node2ID, std::move(voxels), VoreenApplication::app()->getUUID())
+{
+}
+VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, size_t id, size_t node1ID, size_t node2ID, VesselGraphEdgePathProperties pathProps, boost::uuids::uuid identifier)
     : graph_(&graph)
     , id_(id)
     , node1_(node1ID)
@@ -353,11 +363,16 @@ VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, size_t id, size_t node1ID, 
     , distance_(std::numeric_limits<float>::quiet_NaN())
     , pathProps_(pathProps)
     , voxels_()
+    , identifier_(identifier)
 {
     VesselGraphNode& node1 = getNode1();
     VesselGraphNode& node2 = getNode2();
     // Compute distance
     distance_ = tgt::distance(node1.pos_, node2.pos_);
+}
+VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, size_t id, size_t node1ID, size_t node2ID, VesselGraphEdgePathProperties pathProps)
+    : VesselGraphEdge(graph, id, node1ID, node2ID, pathProps, VoreenApplication::app()->getUUID())
+{
 }
 
 VesselGraphEdge::VesselGraphEdge(VesselGraphEdge&& other)
@@ -368,6 +383,7 @@ VesselGraphEdge::VesselGraphEdge(VesselGraphEdge&& other)
     , distance_(other.distance_)
     , pathProps_(other.pathProps_)
     , voxels_(std::move(other.voxels_))
+    , identifier_(std::move(other.identifier_))
 {
 }
 
@@ -612,7 +628,7 @@ VesselGraph::VesselGraph(const VesselGraph& original)
 
     for(auto& edge: original.edges_) {
         std::vector<VesselSkeletonVoxel> voxels(edge.getVoxels());
-        insertEdge(edge.getNodeID1(), edge.getNodeID2(), std::move(voxels));
+        insertEdge(edge.getNodeID1(), edge.getNodeID2(), std::move(voxels), edge.getUUID());
     }
 }
 
@@ -644,33 +660,44 @@ size_t VesselGraph::insertNode(const tgt::vec3& position, const std::vector<tgt:
     return edgeID;
 }
 
+
 size_t VesselGraph::insertEdge(size_t node1, size_t node2, const std::vector<VesselSkeletonVoxel>&& voxels) {
+    return insertEdge(node1, node2, std::move(voxels), VoreenApplication::app()->getUUID());
+}
+size_t VesselGraph::insertEdge(size_t node1, size_t node2, const std::vector<VesselSkeletonVoxel>&& voxels, boost::uuids::uuid uuid) {
     tgtAssert(node1 < nodes_.size(), "Edge references nonexistent node");
     tgtAssert(node2 < nodes_.size(), "Edge references nonexistent node");
     VesselGraphNode& n1 = nodes_.at(node1);
     VesselGraphNode& n2 = nodes_.at(node2);
 
     size_t edgeID = edges_.size();
-    edges_.emplace_back(*this, edgeID, node1, node2, std::move(voxels));
+    edges_.emplace_back(*this, edgeID, node1, node2, std::move(voxels), uuid);
 
     n1.edges_.push_back(edgeID);
     n2.edges_.push_back(edgeID);
     return edgeID;
 }
 
-size_t VesselGraph::insertEdge(size_t node1, size_t node2, const VesselGraphEdge& path_definition) {
+size_t VesselGraph::insertEdge(size_t node1, size_t node2, const VesselGraphEdge& path_definition, boost::uuids::uuid uuid) {
     std::vector<VesselSkeletonVoxel> voxels(path_definition.getVoxels().begin(), path_definition.getVoxels().end());
-    return insertEdge(node1, node2, std::move(voxels));
+    return insertEdge(node1, node2, std::move(voxels), uuid);
+}
+
+size_t VesselGraph::insertEdge(size_t node1, size_t node2, const VesselGraphEdge& path_definition) {
+    return insertEdge(node1, node2, path_definition, VoreenApplication::app()->getUUID());
 }
 
 size_t VesselGraph::insertEdge(size_t node1, size_t node2, VesselGraphEdgePathProperties pathProperties) {
+    return insertEdge(node1, node2, pathProperties, VoreenApplication::app()->getUUID());
+}
+size_t VesselGraph::insertEdge(size_t node1, size_t node2, VesselGraphEdgePathProperties pathProperties, boost::uuids::uuid uuid) {
     tgtAssert(node1 < nodes_.size(), "Edge references nonexistent node");
     tgtAssert(node2 < nodes_.size(), "Edge references nonexistent node");
     VesselGraphNode& n1 = nodes_.at(node1);
     VesselGraphNode& n2 = nodes_.at(node2);
 
     size_t edgeID = edges_.size();
-    edges_.emplace_back(*this, edgeID, node1, node2, pathProperties);
+    edges_.emplace_back(*this, edgeID, node1, node2, pathProperties, uuid);
 
     n1.edges_.push_back(edgeID);
     n2.edges_.push_back(edgeID);
