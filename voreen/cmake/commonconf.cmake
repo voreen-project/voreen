@@ -165,7 +165,7 @@ IF(VRN_MSVC)
         MESSAGE(STATUS "Windows deployment build:")
 
         MESSAGE(STATUS "* Adding install target")
-        SET(VRN_ADD_INSTALL_TARGET TRUE)
+        SET(VRN_ADD_INSTALL_TARGET ON)
         MESSAGE(STATUS "* Install directory (CMAKE_INSTALL_PREFIX): ${CMAKE_INSTALL_PREFIX}")
         
         IF(NOT ${VRN_BINARY_OUTPUT_DIR} STREQUAL ${VRN_HOME}/bin)
@@ -238,10 +238,10 @@ ELSEIF(UNIX)
 
     IF(VRN_DEPLOYMENT)
         LIST(APPEND VRN_DEFINITIONS "-DVRN_DEPLOYMENT")
-        MESSAGE("Unix deployment build")
+        MESSAGE(STATUS "Unix deployment build")
         
         MESSAGE(STATUS "* Adding install target")
-        SET(VRN_ADD_INSTALL_TARGET TRUE)
+        SET(VRN_ADD_INSTALL_TARGET ON)
         MESSAGE(STATUS "* Install directory (CMAKE_INSTALL_PREFIX): ${CMAKE_INSTALL_PREFIX}")
     ENDIF()
 

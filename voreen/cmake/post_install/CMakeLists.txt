@@ -1,5 +1,7 @@
 # This file contains cmake code that will be executed at the very end of the cmake script processing,
 # especially after the install target has finished it's execution.
+# Due to technical limitations of CMake, we are forced to include the whole directory for that purpose
+# which will guarantee the desired order of execution.
 
 # Execute deployment script for linux at the very end, because everything has to be copied properly before.
 IF(UNIX AND VRN_DEPLOYMENT)

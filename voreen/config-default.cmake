@@ -13,6 +13,7 @@
 
 # Main Projects (enabled by default)
 OPTION(VRN_BUILD_LIB_TGT        "Build tgt library?"                                            ON )
+OPTION(VRN_BUILD_LIB_EFSW       "Build efsw library?"                                           ON )
 OPTION(VRN_BUILD_LIB_VOREENCORE "Build voreen_core library?"                                    ON )
 OPTION(VRN_BUILD_LIB_VOREENQT   "Build voreen_qt library?"                                      ON )
 OPTION(VRN_BUILD_VOREENVE       "Build VoreenVE application?"                                   ON )
@@ -50,7 +51,7 @@ ELSE()
 	OPTION(VRN_PRECOMPILED_HEADER   "Use pre-compiled headers?"                                 ON )
 ENDIF()
 OPTION(VRN_ADD_INSTALL_TARGET   "Add install target for creating a binary distribution?"        OFF)
-OPTION(VRN_DEPLOYMENT           "Settings/install target for deployment"                        OFF)
+OPTION(VRN_DEPLOYMENT           "Triggers a deployment build on Windows and Linux"              OFF)
 OPTION(VRN_GROUP_SOURCE_FILES   "Group source files by sub directory?"                          ON )
 OPTION(VRN_OPENGL_COMPATIBILITY_PROFILE "Force the use of OpenGL's compatibility profile and include modules which are not core profile compatible"    OFF)
 SET(VRN_OPENGL_CONTEXT_MAJOR_VERSION "3" CACHE STRING 
