@@ -38,6 +38,7 @@
 #include "voreen/core/io/serialization/serializablefactory.h"
 
 #include <string>
+#include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include "tgt/logmanager.h"
 #include "tgt/event/eventlistener.h"
@@ -504,6 +505,11 @@ public:
      * Returns the path, where the program binary is executed.
      */
     std::string getProgramPath() const;
+
+    /**
+     * Generate a (for this application!) universally unique identifier (UUID)
+     */
+    boost::uuids::uuid getUUID() const;
 
     /**
     * Constructs an unique absolute file path within the specified directory

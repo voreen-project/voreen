@@ -1099,11 +1099,14 @@ std::string VoreenApplication::getBasePath(const std::string& filename) const {
     return tgt::FileSystem::cleanupPath(basePath_ + (filename.empty() ? "" : "/" + filename));
 }
 
+boost::uuids::uuid VoreenApplication::getUUID() const {
+    return uuidGenerator_();
+}
+
 std::string VoreenApplication::getUniqueFilePath(const std::string& root, const std::string& suffix) const {
     std::string outputPath = "";
     do {
-        boost::uuids::uuid u = uuidGenerator_();
-        std::string name = boost::lexical_cast<std::string>(u) + suffix;
+        std::string name = boost::lexical_cast<std::string>(getUUID()) + suffix;
         outputPath = tgt::FileSystem::cleanupPath(root + "/" + name);
     } while (tgt::FileSystem::fileExists(outputPath) || tgt::FileSystem::dirExists(outputPath));
     return outputPath;
