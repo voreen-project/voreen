@@ -50,6 +50,7 @@ ELSE()
 	OPTION(VRN_PRECOMPILED_HEADER   "Use pre-compiled headers?"                                 ON )
 ENDIF()
 OPTION(VRN_ADD_INSTALL_TARGET   "Add install target for creating a binary distribution?"        OFF)
+OPTION(VRN_DEPLOYMENT           "Settings/install target for deployment"                        OFF)
 OPTION(VRN_GROUP_SOURCE_FILES   "Group source files by sub directory?"                          ON )
 OPTION(VRN_OPENGL_COMPATIBILITY_PROFILE "Force the use of OpenGL's compatibility profile and include modules which are not core profile compatible"    OFF)
 SET(VRN_OPENGL_CONTEXT_MAJOR_VERSION "3" CACHE STRING 
@@ -69,9 +70,6 @@ IF(WIN32)
     OPTION(VRN_GENERATE_MANIFEST    "Generate manifest in Visual Studio debug builds?"          OFF)
     OPTION(VRN_DISABLE_ZERO_CHECK   
         "Do not generate ZERO_CHECK target (might cause unnecessary PCH re-compilations)"       ON )
-
-    OPTION(VRN_DEPLOYMENT   "Settings/install target for deployment"                           OFF)
-    MARK_AS_ADVANCED(VRN_DEPLOYMENT)
 ENDIF()
 
 ####################################################################################################

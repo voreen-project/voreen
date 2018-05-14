@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=VoreenVE
+Comment=Volume Rendering Engine
+Exec=voreenve
+Icon=voreenve
+Categories=Science;
