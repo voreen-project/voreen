@@ -86,8 +86,6 @@
     #include "CoreFoundation/CFBundle.h"
 #endif
 
-//#define VRN_DEPLOYMENT
-
 using std::string;
 
 namespace {
@@ -201,6 +199,8 @@ namespace voreen {
 // define static members
 VoreenApplication* VoreenApplication::app_ = 0;
 const std::string VoreenApplication::loggerCat_ = "voreen.VoreenApplication";
+
+static const std::string VOREEN_LOCK_NAME = "voreen_lock";
 
 void VoreenApplication::printAsciiLogo() const {
 #ifdef WIN32
@@ -689,6 +689,9 @@ void VoreenApplication::initialize() {
     // We need to set a proper initial tmp path.
     if(tempDataPath_.get().empty())
         tempDataPath_.set(getUserDataPath("tmp"));
+
+    // Clear old temporary data from other instances.
+    cleanOrphanedTemporaryData();
 
     // initialize the file watch system
     VoreenFileWatcher::init();
@@ -1197,15 +1200,52 @@ std::string VoreenApplication::getUniqueTmpFilePath(const std::string& suffix) c
 }
 
 void VoreenApplication::cleanTemporaryData() {
-    if(FileSys.dirExists(tempDataPathInstance_)) {
-        FileSys.deleteDirectoryRecursive(tempDataPathInstance_);
+    if(tgt::FileSystem::dirExists(tempDataPathInstance_)) {
+        tempDataPathLock_.reset(nullptr);
+        if (tgt::FileSystem::deleteDirectoryRecursive(tempDataPathInstance_)) {
+            LINFO("Successfully removed temporary data");
+        }
+        else {
+            LWARNING("Failed to delete temporary data");
+        }
+    }
+}
+
+void VoreenApplication::cleanOrphanedTemporaryData() {
+    for (const std::string& dir : tgt::FileSystem::listSubDirectories(tempDataPath_.get())) {
+        std::string dirPath = tgt::FileSystem::cleanupPath(tempDataPath_.get() + "/" + dir);
+
+        // Skip current instance.
+        if (dirPath == tempDataPathInstance_)
+            continue;
+
+        for (const std::string& file : tgt::FileSystem::listFiles(dirPath)) {
+            if (file == VOREEN_LOCK_NAME) {
+                // Figure out if the instance is still running.
+                std::string filePath = tgt::FileSystem::cleanupPath(dirPath + "/" + file);
+                try {
+                    if(boost::interprocess::file_lock(filePath.c_str()).try_lock()) {
+                        if (tgt::FileSystem::deleteDirectoryRecursive(dirPath)) {
+                            LINFO("Successfully removed temporary data of instance: " << dir);
+                            break;
+                        }
+                    }
+                }
+                catch (const boost::interprocess::interprocess_exception&) {
+                }
+                LWARNING("Failed to delete temporary data of instance " << dir);
+                break;
+            }
+        }
     }
 }
 
 void VoreenApplication::tempDataPathChanged() {
 
-    // Delete old temporary data.
-    cleanTemporaryData();
+    // Do NOT delete old temporary data, since it might be still in use.
+    //cleanTemporaryData();
+    // But DO release the lock.
+    tempDataPathLock_.reset(nullptr);
 
     // Use property value, if possible.
     std::string tempBasePath;
@@ -1220,11 +1260,15 @@ void VoreenApplication::tempDataPathChanged() {
     if (tempBasePath.empty())
         tempBasePath = getUserDataPath("tmp");
 
+    // Update property.
+    tempDataPath_.set(tempBasePath);
+
+    // Set temporary data path for this instance.
     tempDataPathInstance_ = getUniqueFilePath(tempBasePath);
 
     // Check for temporary directory.
-    if (!FileSys.dirExists(tempDataPathInstance_)) {
-        if (!FileSys.createDirectoryRecursive(tempDataPathInstance_)) {
+    if (!tgt::FileSystem::dirExists(tempDataPathInstance_)) {
+        if (!tgt::FileSystem::createDirectoryRecursive(tempDataPathInstance_)) {
             throw VoreenException("Failed to create temporary directory");
         }
         else
@@ -1232,11 +1276,20 @@ void VoreenApplication::tempDataPathChanged() {
     }
 
     // try to write to temporary directory (we can assume it exists)
-    if (!FileSys.createDirectory(tempDataPathInstance_ + "/writetest")) {
+    std::string file_lock = tgt::FileSystem::cleanupPath(tempDataPathInstance_ + "/" + VOREEN_LOCK_NAME);
+    std::ifstream fs;
+    fs.open(file_lock, std::fstream::in | std::fstream::out | std::fstream::trunc);
+    if (!fs.is_open()) {
         throw VoreenException("Failed to write to temporary directory");
     }
-    else {
-        FileSys.deleteDirectory(tempDataPathInstance_ + "/writetest");
+    fs.close();
+
+    // We can assume the directory exists, so create a file lock inside.
+    try {
+        tempDataPathLock_.reset(new boost::interprocess::file_lock(file_lock.c_str()));
+    }
+    catch (const boost::interprocess::interprocess_exception& exception) {
+        throw VoreenException(std::string("Failed to create file lock: ") + exception.what());
     }
 }
 
