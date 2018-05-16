@@ -1212,14 +1212,16 @@ void VoreenApplication::cleanTemporaryData() {
 }
 
 void VoreenApplication::cleanOrphanedTemporaryData() {
-    for (const std::string& dir : tgt::FileSystem::listSubDirectories(tempDataPath_.get())) {
+    std::vector<std::string> directories = tgt::FileSystem::listSubDirectories(tempDataPath_.get());
+    for (const std::string& dir : directories) {
         std::string dirPath = tgt::FileSystem::cleanupPath(tempDataPath_.get() + "/" + dir);
 
         // Skip current instance.
         if (dirPath == tempDataPathInstance_)
             continue;
 
-        for (const std::string& file : tgt::FileSystem::listFiles(dirPath)) {
+        std::vector<std::string> files = tgt::FileSystem::listFiles(dirPath);
+        for (const std::string& file : files) {
             if (file == VOREEN_LOCK_NAME) {
                 // Figure out if the instance is still running.
                 std::string filePath = tgt::FileSystem::cleanupPath(dirPath + "/" + file);
@@ -1227,13 +1229,17 @@ void VoreenApplication::cleanOrphanedTemporaryData() {
                     if(boost::interprocess::file_lock(filePath.c_str()).try_lock()) {
                         if (tgt::FileSystem::deleteDirectoryRecursive(dirPath)) {
                             LINFO("Successfully removed temporary data of instance: " << dir);
-                            break;
+                        }
+                        else {
+                            LWARNING("Failed to delete temporary data of instance " << dir);
                         }
                     }
                 }
                 catch (const boost::interprocess::interprocess_exception&) {
+                    // Ignore silently.
                 }
-                LWARNING("Failed to delete temporary data of instance " << dir);
+
+                // Go to next directory.
                 break;
             }
         }
@@ -1287,6 +1293,7 @@ void VoreenApplication::tempDataPathChanged() {
     // We can assume the directory exists, so create a file lock inside.
     try {
         tempDataPathLock_.reset(new boost::interprocess::file_lock(file_lock.c_str()));
+        tempDataPathLock_->lock();
     }
     catch (const boost::interprocess::interprocess_exception& exception) {
         throw VoreenException(std::string("Failed to create file lock: ") + exception.what());
