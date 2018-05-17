@@ -25,6 +25,8 @@
 
 #include "vesselgraphnormalization.h"
 
+#include "voreen/core/voreenapplication.h"
+
 #include "tgt/assert.h"
 
 #include <unordered_map>
@@ -155,7 +157,7 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeEndEdges(const Vess
             new_node_ids[&node2] = new_node2_id;
         }
         std::vector<VesselSkeletonVoxel> new_voxels(edge.getVoxels());
-        output->insertEdge(new_node1_id, new_node2_id, std::move(new_voxels));
+        output->insertEdge(new_node1_id, new_node2_id, std::move(new_voxels), edge.getUUID());
     }
     for(const VesselGraphNode& node : input.getNodes()) {
         if(node.getDegree() == 0) {
@@ -317,7 +319,7 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeAllEdges(const Vess
         }
 
         //TODO: check order of voxels and nodes do they have to be swapped?
-        output->insertEdge(future_node_id1, future_node_id2, std::move(voxels));
+        output->insertEdge(future_node_id1, future_node_id2, std::move(voxels), new_edge->getUUID());
     }
 
     return removeDregree2Nodes(*output);
@@ -400,6 +402,15 @@ struct FutureEdge {
             return this;
         }
     }
+
+    VesselGraphEdgeUUID getUUID() const {
+        if(edges_.size() == 1) {
+            return edges_[0]->getUUID();
+        } else {
+            return VoreenApplication::app()->generateUUID();
+        }
+    }
+
     std::deque<const VesselGraphEdge*> edges_; // Ordered so that they form a line
                                                // (but skeleton lines within can be in any direction!
                                                // See collectVoxels()!
@@ -438,8 +449,7 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeDregree2Nodes(const
 
             future_edge_1->merge(*future_edge_2);
         } else {
-            std::vector<tgt::vec3> voxels(node.voxels_); //copy node voxels
-            size_t node_id = output->insertNode(node.pos_, std::move(voxels), node.isAtSampleBorder_);
+            size_t node_id = output->insertNode(node);
             new_node_ids.insert({&node, node_id});
         }
     }
@@ -458,8 +468,7 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeDregree2Nodes(const
             // we have to have detected a circle: add a single node for the edge:
             tgtAssert(future_edge.begin_ && future_edge.begin_ == future_edge.end_, "Non circle without nodes");
             const VesselGraphNode* circle_node = future_edge.begin_;
-            std::vector<tgt::vec3> voxels(circle_node->voxels_);
-            size_t circle_node_id = output->insertNode(circle_node->pos_, std::move(voxels), circle_node->isAtSampleBorder_);
+            size_t circle_node_id = output->insertNode(*circle_node);
             node_id_begin = circle_node_id;
             node_id_end = circle_node_id;
         } else {
@@ -478,7 +487,8 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeDregree2Nodes(const
         tgtAssert(node_id_end != NODE_NOT_FOUND, "Invalid node_id_begin");
 
         std::vector<VesselSkeletonVoxel> voxels = future_edge.collectVoxels();
-        output->insertEdge(node_id_begin, node_id_end, std::move(voxels));
+        size_t inserted_edge = output->insertEdge(node_id_begin, node_id_end, std::move(voxels), future_edge.getUUID());
+        tgtAssert(output->getEdge(inserted_edge).getLength() > 0, "Invalid edge length");
     }
 
 

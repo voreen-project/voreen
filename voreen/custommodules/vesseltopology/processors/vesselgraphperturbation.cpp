@@ -28,6 +28,7 @@
 #include "../algorithm/vesselgraphnormalization.h"
 
 #include <unordered_set>
+#include <set>
 #include <unordered_map>
 
 namespace voreen {
@@ -212,12 +213,54 @@ static std::vector<const VesselGraphEdge*> draw_edges(const std::vector<const Ve
     return draw_n(std::move(remainig_edge_refs), std::floor(percentage*edges.size()), random_engine);
 }
 
-static std::vector<const VesselGraphNode*> draw_nodes_if(const std::vector<VesselGraphNode>& nodes, float percentage, std::function<bool(const VesselGraphNode&)> viable, random_engine_type random_engine) {
+static std::vector<const VesselGraphEdge*> select_edges_by_uuid(const VesselGraph& graph, const std::set<VesselGraphEdgeUUID>& uuids) {
+    std::vector<const VesselGraphEdge*> result;
+    for(const auto& edge : graph.getEdges()) {
+        if(uuids.count(edge.getUUID()) > 0) {
+            result.push_back(&edge);
+        }
+    }
+    std::sort(result.begin(), result.end(), [] (const VesselGraphEdge* e1, const VesselGraphEdge* e2) {
+            return e1->getUUID() < e2->getUUID();
+            });
+    return result;
+}
+
+static std::vector<const VesselGraphNode*> select_nodes_by_uuid(const VesselGraph& graph, const std::set<VesselGraphNodeUUID>& uuids) {
+    std::vector<const VesselGraphNode*> result;
+    for(const auto& node : graph.getNodes()) {
+        if(uuids.count(node.getUUID()) > 0) {
+            result.push_back(&node);
+        }
+    }
+    std::sort(result.begin(), result.end(), [] (const VesselGraphNode* e1, const VesselGraphNode* e2) {
+            return e1->getID() < e2->getID();
+            });
+    return result;
+}
+
+static std::set<VesselGraphEdgeUUID> get_edge_uuids(const VesselGraph& graph) {
+    std::set<VesselGraphEdgeUUID> result;
+    for(const auto& edge : graph.getEdges()) {
+        result.insert(edge.getUUID());
+    }
+    return result;
+}
+
+static std::set<VesselGraphEdgeUUID> get_node_uuids(const VesselGraph& graph) {
+    std::set<VesselGraphNodeUUID> result;
+    for(const auto& node : graph.getNodes()) {
+        result.insert(node.getUUID());
+    }
+    return result;
+}
+
+static std::vector<const VesselGraphNode*> draw_nodes_if(const std::vector<const VesselGraphNode*>& nodes, float percentage, std::function<bool(const VesselGraphNode&)> viable, random_engine_type random_engine) {
 
     std::vector <const VesselGraphNode*> viable_nodes;
     for(auto& node: nodes) {
-        if(viable(node)) {
-            viable_nodes.push_back(&node);
+        if(viable(*node)) {
+            viable_nodes.push_back(node);
         }
     }
     return draw_n(std::move(viable_nodes), std::floor(percentage*viable_nodes.size()), random_engine);
@@ -237,13 +280,14 @@ static tgt::vec3 generate_random_direction(random_engine_type& random_engine) {
 }
 
 
-static std::unique_ptr<VesselGraph> addEdges(const VesselGraph& input, float amount, random_engine_type random_engine) {
+static std::unique_ptr<VesselGraph> addEdgesToNodesWithUUIDs(const VesselGraph& input, const std::set<VesselGraphNodeUUID>& uuids, float amount, random_engine_type random_engine) {
     EdgeGenerator edgeGenerator(input);
     std::unique_ptr<VesselGraph> output(new VesselGraph(input));
 
     //Find pairs of nodes that are both connected to one other node:
     std::vector<std::pair<const VesselGraphNode*, const VesselGraphNode*>> pairs;
-    for(auto& node : output->getNodes()) {
+    for(auto& node_ptr : select_nodes_by_uuid(input, uuids)) {
+        const VesselGraphNode& node = *node_ptr;
         for(auto& b1: node.getEdges()) {
             for(auto& b2: node.getEdges()) {
                 if(&b1 == &b2 || b1.get().isLoop() || b2.get().isLoop()) {
@@ -273,7 +317,9 @@ static std::unique_ptr<VesselGraph> addEdges(const VesselGraph& input, float amo
     }
     return output;
 }
-
+static std::unique_ptr<VesselGraph> addEdges(const VesselGraph& input, float amount, random_engine_type random_engine) {
+    return addEdgesToNodesWithUUIDs(input, get_node_uuids(input), amount, random_engine);
+}
 struct NodeSplitEdgeConfiguration {
     size_t node1_id;
     size_t node2_id;
@@ -284,9 +330,9 @@ struct NodeSplitEdgeConfiguration {
     }
 };
 
-static std::unique_ptr<VesselGraph> splitNodes(const VesselGraph& input, float amount, random_engine_type random_engine) {
+static std::unique_ptr<VesselGraph> splitNodesWithUUIDs(const VesselGraph& input, const std::set<VesselGraphNodeUUID>& uuids, float amount, random_engine_type random_engine) {
 
-    auto nodes_to_split = draw_nodes_if(input.getNodes(), amount, [] (const VesselGraphNode& n) {
+    auto nodes_to_split = draw_nodes_if(select_nodes_by_uuid(input, uuids), amount, [] (const VesselGraphNode& n) {
             return n.getDegree() > 2;
             }, random_engine);
 
@@ -332,7 +378,7 @@ static std::unique_ptr<VesselGraph> splitNodes(const VesselGraph& input, float a
                     }
                 }
             } else {
-                // The edge is NOT a loop, so we know getNodeID1() == getNodeID2().
+                // The edge is NOT a loop, so we know getNodeID1() != getNodeID2().
                 // Thus, the edge is only connected to this node once, and we search for the node id that
                 // matches the id of the node to be split.
                 if(edgeconf.node1_id == node.getID()) {
@@ -355,10 +401,15 @@ static std::unique_ptr<VesselGraph> splitNodes(const VesselGraph& input, float a
             node1_id = edge.getNodeID1();
             node2_id = edge.getNodeID2();
         }
+        tgtAssert(edge.getLength() > 0, "Invalid edge length");
         std::vector<VesselSkeletonVoxel> path(edge.getVoxels());
-        output->insertEdge(node1_id, node2_id, std::move(path));
+        output->insertEdge(node1_id, node2_id, std::move(path), edge.getUUID());
     }
+
     return VesselGraphNormalization::removeDregree2Nodes(*output);
+}
+static std::unique_ptr<VesselGraph> splitNodes(const VesselGraph& input, float amount, random_engine_type random_engine) {
+    return splitNodesWithUUIDs(input, get_node_uuids(input), amount, random_engine);
 }
 
 struct ContinuousPathPos {
@@ -415,7 +466,13 @@ struct ContinuousPathPos {
 };
 
 
-static std::unique_ptr<VesselGraph> subdivideGivenEdges(const VesselGraph& input, const std::vector<const VesselGraphEdge*>& input_edges, float amount, random_engine_type random_engine) {
+static std::unique_ptr<VesselGraph> subdivideEdgesWithUUIDs(const VesselGraph& input, const std::set<VesselGraphEdgeUUID>& allowed_uuids, float amount, random_engine_type random_engine) {
+    std::vector<const VesselGraphEdge*> input_edges;
+    for(const auto& edge : select_edges_by_uuid(input, allowed_uuids)) {
+        if(edge->getVoxels().size() >= 2) {
+            input_edges.push_back(edge);
+        }
+    }
     std::vector<const VesselGraphEdge*> edges_to_subdivide = draw_edges(input_edges, amount, random_engine);
     std::unordered_set<const VesselGraphEdge*> edges_to_subdivide_lookup(edges_to_subdivide.begin(), edges_to_subdivide.end());
 
@@ -492,20 +549,14 @@ static std::unique_ptr<VesselGraph> subdivideGivenEdges(const VesselGraph& input
 }
 
 static std::unique_ptr<VesselGraph> subdivideEdges(const VesselGraph& input, float amount, random_engine_type random_engine) {
-    std::vector<const VesselGraphEdge*> input_edges;
-    for(const auto& edge : input.getEdges()) {
-        if(edge.getVoxels().size() >= 2) {
-            input_edges.push_back(&edge);
-        }
-    }
-    return subdivideGivenEdges(input, input_edges, amount, random_engine);
+    return subdivideEdgesWithUUIDs(input, get_edge_uuids(input), amount, random_engine);
 }
 
-static std::unique_ptr<VesselGraph> splitEdges(const VesselGraph& input, float amount, random_engine_type random_engine) {
+static std::unique_ptr<VesselGraph> splitEdgesWithUUIDs(const VesselGraph& input, const std::set<VesselGraphEdgeUUID>& allowed_uuids, float amount, random_engine_type random_engine) {
     std::vector<const VesselGraphEdge*> input_edges;
-    for(const auto& edge : input.getEdges()) {
-        if(edge.getVoxels().size() >= 2) {
-            input_edges.push_back(&edge);
+    for(const auto& edge : select_edges_by_uuid(input, allowed_uuids)) {
+        if(edge->getVoxels().size() >= 2) {
+            input_edges.push_back(edge);
         }
     }
     std::vector<const VesselGraphEdge*> edges_to_split = draw_edges(input_edges, amount, random_engine);
@@ -575,6 +626,9 @@ static std::unique_ptr<VesselGraph> splitEdges(const VesselGraph& input, float a
     }
     return output;
 }
+static std::unique_ptr<VesselGraph> splitEdges(const VesselGraph& input, float amount, random_engine_type random_engine) {
+    return splitEdgesWithUUIDs(input, get_edge_uuids(input), amount, random_engine);
+}
 
 static std::unique_ptr<VesselGraph> moveNodes(const VesselGraph& input, float amount, random_engine_type random_engine) {
     float length_sum = 0;
@@ -598,7 +652,7 @@ static std::unique_ptr<VesselGraph> moveNodes(const VesselGraph& input, float am
             voxels.push_back(v + shift);
         }
 
-        output->insertNode(node.pos_+ shift, std::move(voxels), node.isAtSampleBorder_);
+        output->insertNode(node.pos_+ shift, std::move(voxels), node.isAtSampleBorder_, node.getUUID());
     }
 
     for(auto& edge : input.getEdges()) {
@@ -628,41 +682,65 @@ static std::unique_ptr<VesselGraph> changeProperties(const VesselGraph& input, f
     return output;
 }
 
-static bool hasValidData(const VesselGraph& graph) {
+static void assertValidData(const VesselGraph& graph) {
     for(auto& edge : graph.getEdges()) {
-        if(edge.getLength() == 0) {
-            return false;
-        }
+        tgtAssert(edge.getLength() > 0, "Invalid edge length");
     }
 
     for(auto& edge : graph.getEdges()) {
         if(edge.hasValidData()) {
-            return true;
+            return;
         }
     }
-    return false;
+    tgtAssert(false, "No edge has valid data");
+}
+
+static void assertIDsPresent(const VesselGraph& graph, const std::set<VesselGraphEdgeUUID>& edge_uuids, const std::set<VesselGraphNodeUUID>& node_uuids) {
+    for(auto& edge : graph.getEdges()) {
+        if(edge_uuids.count(edge.getUUID()) > 0) {
+            goto edges_valid;
+        }
+    }
+    tgtAssert(false, "No edge known uuid");
+edges_valid:
+
+    for(auto& node : graph.getNodes()) {
+        if(node_uuids.count(node.getUUID()) > 0) {
+            goto nodes_valid;
+        }
+    }
+    tgtAssert(false, "No node known uuid");
+nodes_valid:
+    ;
 }
 
 static std::unique_ptr<VesselGraph> perturbCombined(const VesselGraph& input, float amount, random_engine_type random_engine) {
-    tgtAssert(hasValidData(input), "Invalid edge data");
+    assertValidData(input);
+    auto original_edge_uuids = get_edge_uuids(input);
+    auto original_node_uuids = get_node_uuids(input);
 
     auto g1 = moveNodes(input, amount, random_engine);
-    tgtAssert(hasValidData(*g1), "Invalid edge data");
+    assertValidData(*g1);
+    assertIDsPresent(*g1, original_edge_uuids, original_node_uuids);
 
-    auto g2 = splitNodes(*g1, amount, random_engine);
-    tgtAssert(hasValidData(*g2), "Invalid edge data");
+    auto g2 = splitNodesWithUUIDs(*g1, original_node_uuids, amount, random_engine);
+    assertValidData(*g2);
+    assertIDsPresent(*g2, original_edge_uuids, original_node_uuids);
 
-    auto g3 = addEdges(*g2, amount, random_engine);
-    tgtAssert(hasValidData(*g3), "Invalid edge data");
+    auto g3 = addEdgesToNodesWithUUIDs(*g2, original_node_uuids, amount, random_engine);
+    assertValidData(*g3);
+    assertIDsPresent(*g3, original_edge_uuids, original_node_uuids);
 
-    auto g4 = subdivideEdges(*g3, amount, random_engine);
-    tgtAssert(hasValidData(*g4), "Invalid edge data");
+    auto g4 = subdivideEdgesWithUUIDs(*g3, original_edge_uuids, amount/2 /* we have to divide the edges up 50/50 between the 4th and 5th perturbation*/, random_engine);
+    assertValidData(*g4);
+    assertIDsPresent(*g4, original_edge_uuids, original_node_uuids);
 
-    auto g5 = splitEdges(*g4, amount, random_engine);
-    tgtAssert(hasValidData(*g5), "Invalid edge data");
+    auto g5 = splitEdgesWithUUIDs(*g4, original_edge_uuids, amount, random_engine);
+    assertValidData(*g5);
+    assertIDsPresent(*g5, original_edge_uuids, original_node_uuids);
 
     auto g6 = changeProperties(*g5, amount, random_engine);
-    tgtAssert(hasValidData(*g6), "Invalid edge data");
+    assertValidData(*g6);
 
     return g6;
 }

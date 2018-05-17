@@ -18,7 +18,7 @@ def run_test(parameters, output_folder):
     axis = (axis_x, axis_y, axis_z)
     voreen.setPropertyValue("SegmentationValidation", "autoExport", False)
 
-    asyncprocessors = ["Resample", "ResampleAndTransform", "ResampleAndTransformInverse"]
+    asyncprocessors = ["Resample", "ResampleAndTransform", "ResampleAndTransformInverse", "ConnectedComponentAnalysis", "ConnectedComponentAnalysis 2"]
     for p in asyncprocessors:
         voreen.setPropertyValue(p, "synchronousComputation", True)
 
@@ -30,10 +30,10 @@ def run_test(parameters, output_folder):
     update_workspace_and_gui()
 
     start = time.time()
-    #for i in range(iterations):
-    #    rotation = i*2*math.pi/iterations
-    for i in range(628):
-        rotation = i*0.01
+    for i in range(iterations):
+        rotation = i*2*math.pi/iterations
+    #for i in range(628):
+    #    rotation = i*0.01
         elapsed = time.time() - start
         approx_total = 0
         if i > 0:
