@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ######################################################################
 #                                                                    #
@@ -41,8 +41,8 @@ echo ""
 echo "* ---------------------------------------------------"
 echo "*  Executing deployment tool ...                     "
 echo "* ---------------------------------------------------"
-chmod a+x $DEPLOYMENT_TOOL
-./$DEPLOYMENT_TOOL ./tmp/usr/share/applications/voreenve.desktop -appimage -bundle-non-qt-libs -extra-plugins=iconengines/libqsvgicon.so
+# The arch sometimes fails to detect. We are not planning to distribute binaries for other arches anyway
+ARCH="x86_64" ./$DEPLOYMENT_TOOL ./tmp/usr/share/applications/voreenve.desktop -appimage -bundle-non-qt-libs -extra-plugins=iconengines/libqsvgicon.so
 
 # Copy resources.
 echo ""
