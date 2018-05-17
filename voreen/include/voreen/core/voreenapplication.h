@@ -511,7 +511,7 @@ public:
     /**
      * Generate a (for this application!) universally unique identifier (UUID)
      */
-    boost::uuids::uuid getUUID() const;
+    boost::uuids::uuid generateUUID() const;
 
     /**
     * Constructs an unique absolute file path within the specified directory
