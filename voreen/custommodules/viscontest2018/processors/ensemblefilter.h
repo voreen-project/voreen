@@ -34,6 +34,7 @@ namespace voreen {
 
 class Filter {
 public:
+    virtual ~Filter() {}
     virtual Property& getProperty() = 0;
     virtual EnsembleDataset* applyFilter(const EnsembleDataset* ensemble) = 0;
     virtual void adjustToEnsemble(const EnsembleDataset* ensemble) = 0;

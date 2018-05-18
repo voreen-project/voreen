@@ -640,7 +640,7 @@ void MDSPlot::adjustToEnsemble() {
     numSeedPoints_.setMaxValue(tgt::lengthSq(dataset->getRoi().diagonal()));
     numSeedPoints_.set(32768);
 
-    numEigenvalues_.setMinValue(numDimensions_.get());
+    numEigenvalues_.setMinValue(MAX_NUM_DIMENSIONS);
     numEigenvalues_.setMaxValue(dataset->getTotalNumTimeSteps());
 
     renderedChannel_.blockCallbacks(true);
