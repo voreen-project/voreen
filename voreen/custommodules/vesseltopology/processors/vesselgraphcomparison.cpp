@@ -497,6 +497,12 @@ struct PropertyErrorCost {
     }
 };
 
+struct GeromeErrorCost {
+    static float cost(const VesselGraphEdge* e1, const VesselGraphEdge* e2) {
+        return SimpleEdgeDistance().distance(*e1, *e2);
+    }
+};
+
 template<typename Distance, typename Element>
 static std::pair<Matching<Element>, float> munkresMatch(const std::vector<const Element*> e1, const std::vector<const Element*> e2, float deletion_or_addition_cost) {
 
@@ -643,7 +649,8 @@ struct NodeModificationCost {
         const float deletion_or_addition_cost = 1.0f;
         Matching<VesselGraphEdge> _matching;
         float edge_match_cost;
-        std::tie(_matching, edge_match_cost) = munkresMatch<PropertyErrorCost>(n1->getEdgesAsPtrs(), n2->getEdgesAsPtrs(), deletion_or_addition_cost);
+        std::tie(_matching, edge_match_cost) = munkresMatch<GeromeErrorCost>(n1->getEdgesAsPtrs(), n2->getEdgesAsPtrs(), deletion_or_addition_cost);
+        return edge_match_cost;
 
         /*
         float edge_matching_error;
@@ -661,7 +668,7 @@ struct NodeModificationCost {
         }
         tgtAssert(0.0f <= edge_matching_error && edge_matching_error <= 1.0f, "Invalid edge matching error");
         */
-        return tgt::distance(n1->pos_, n2->pos_) + edge_match_cost;
+        //return tgt::distance(n1->pos_, n2->pos_) + edge_match_cost;
     }
 };
 
