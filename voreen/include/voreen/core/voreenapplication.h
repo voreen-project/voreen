@@ -38,7 +38,10 @@
 #include "voreen/core/io/serialization/serializablefactory.h"
 
 #include <string>
+#include <boost/interprocess/sync/file_lock.hpp>
+#include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
+
 #include "tgt/logmanager.h"
 #include "tgt/event/eventlistener.h"
 #include "tgt/event/eventhandler.h"
@@ -506,6 +509,11 @@ public:
     std::string getProgramPath() const;
 
     /**
+     * Generate a (for this application!) universally unique identifier (UUID)
+     */
+    boost::uuids::uuid generateUUID() const;
+
+    /**
     * Constructs an unique absolute file path within the specified directory
     *
     * @param root directory the unique path should be generated for
@@ -574,6 +582,11 @@ public:
      * Removed all temporary data created by the currently running voreen application.
      */
     void cleanTemporaryData();
+
+    /**
+     * Removed all temporary data created by other voreen instances having terminated unexpectedly.
+     */
+    void cleanOrphanedTemporaryData();
 
     /**
      * Returns the test data directory. If not set, an empty string is returned.
@@ -743,6 +756,9 @@ private:
 
     // The tempDataPath for this particular instance of Voreen
     std::string tempDataPathInstance_;
+
+    // This lock will be hold the whole application lifecycle.
+    std::unique_ptr<boost::interprocess::file_lock> tempDataPathLock_;
 
     bool initialized_;
     bool initializedGL_;

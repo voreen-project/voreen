@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="VolumeResampleTransformation" ref="ref1" />
+                        <item type="VolumeTransformation" ref="ref24" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -22,35 +22,35 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="157" y="-947" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="aspacingHandling" name="aspacingHandling" value="multiply" id="ref30" />
+                        <Property mapKey="aspacingHandling" name="aspacingHandling" value="multiply" id="ref33" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
-                        <Property mapKey="filteringMode" name="filteringMode" value="nearest" />
+                        <Property mapKey="filteringMode" name="filteringMode" value="linear" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="outputDimensions" name="outputDimensions">
-                            <value x="322" y="272" z="428" />
+                            <value x="273" y="323" z="429" />
                         </Property>
-                        <Property mapKey="outputSizeMB" name="outputSizeMB" value="35.7 MB" />
-                        <Property mapKey="outputSpacing" name="outputSpacing" tracking="false" id="ref24">
+                        <Property mapKey="outputSizeMB" name="outputSizeMB" value="36.1 MB" />
+                        <Property mapKey="outputSpacing" name="outputSpacing" tracking="false" id="ref27">
                             <value x="0.5" y="0.5" z="0.5" />
                         </Property>
-                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="1" fileWatchEnabled="false">
+                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="1" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../../nosnapshot/tmp/resample1.h5" />
-                                    <item value="../../../nosnapshot/tmp/resample1.h5" />
-                                    <item value="/nosnapshot/tmp/resample1.h5" />
+                                    <item value="../../../../../../../nosnapshot/tmp/voreentmp/c58960d9-4cac-4036-ad2e-1aef26946dae/fced3dbe-eec8-4979-aefd-686432f00d6cHDF5 (*.h5)" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/c58960d9-4cac-4036-ad2e-1aef26946dae/fced3dbe-eec8-4979-aefd-686432f00d6cHDF5 (*.h5)" />
+                                    <item value="/nosnapshot/tmp/voreentmp/c58960d9-4cac-4036-ad2e-1aef26946dae/fced3dbe-eec8-4979-aefd-686432f00d6cHDF5 (*.h5)" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="outsideVolumeHandling" name="outsideVolumeHandling" value="constant_value" />
                         <Property mapKey="outsideVolumeValue" name="outsideVolumeValue" value="0" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 536 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 2.175 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
-                        <Property mapKey="transformMatrix" name="transformMatrix" id="ref23">
-                            <value.row0 x="0.000796274" y="-0.999999702" z="0" w="0" />
-                            <value.row1 x="0.999999702" y="0.000796274" z="0" w="0" />
+                        <Property mapKey="transformMatrix" name="transformMatrix" id="ref26">
+                            <value.row0 x="1" y="0" z="0" w="0" />
+                            <value.row1 x="0" y="1" z="0" w="0" />
                             <value.row2 x="0" y="0" z="1" w="0" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
@@ -75,23 +75,23 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeTransformation" name="RotationParameters">
+                <Processor type="VolumeTransformation" name="RotationParameters" id="ref24">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="403" y="-963" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="380" y="-958" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="enableProcessing" name="enableProcessing" value="false" />
-                        <Property mapKey="rotationAngle" name="rotationAngle" value="1.570000052" />
+                        <Property mapKey="rotationAngle" name="rotationAngle" value="0" />
                         <Property mapKey="rotationAxis" name="rotationAxis">
-                            <value x="0" y="0" z="1" />
+                            <value x="1" y="0" z="0" />
                         </Property>
                         <Property mapKey="rotationReferencePoint" name="rotationReferencePoint">
                             <value x="0" y="0" z="0" />
                         </Property>
                         <Property mapKey="sourceCoordinateSystem" name="sourceCoordinateSystem" value="volume-coordinates" />
-                        <Property mapKey="transformMatrix" name="transformMatrix" id="ref22">
-                            <value.row0 x="0.000796274" y="-0.999999702" z="0" w="0" />
-                            <value.row1 x="0.999999702" y="0.000796274" z="0" w="0" />
+                        <Property mapKey="transformMatrix" name="transformMatrix" id="ref25">
+                            <value.row0 x="1" y="0" z="0" w="0" />
+                            <value.row1 x="0" y="1" z="0" w="0" />
                             <value.row2 x="0" y="0" z="1" w="0" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
@@ -123,7 +123,7 @@
                 </Processor>
                 <Processor type="VolumeInputSwitch" name="VolumeInputSwitch" id="ref2">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="20" y="-1114" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="19" y="-1115" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="inputselect" name="inputselect" value="1" />
@@ -171,7 +171,7 @@
                 </Processor>
                 <Processor type="VolumeSource" name="VolumeSource" id="ref7">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-15" y="-1206" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-18" y="-1202" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
@@ -202,33 +202,33 @@
                 </Processor>
                 <Processor type="VolumeResampleTransformation" name="Resample" id="ref3">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-155" y="-937" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-156" y="-937" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="aspacingHandling" name="aspacingHandling" value="multiply" id="ref29" />
+                        <Property mapKey="aspacingHandling" name="aspacingHandling" value="multiply" id="ref32" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
-                        <Property mapKey="filteringMode" name="filteringMode" value="nearest" />
+                        <Property mapKey="filteringMode" name="filteringMode" value="linear" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="outputDimensions" name="outputDimensions">
-                            <value x="272" y="322" z="428" />
+                            <value x="273" y="323" z="429" />
                         </Property>
-                        <Property mapKey="outputSizeMB" name="outputSizeMB" value="35.7 MB" />
-                        <Property mapKey="outputSpacing" name="outputSpacing" tracking="false" id="ref25">
+                        <Property mapKey="outputSizeMB" name="outputSizeMB" value="36.1 MB" />
+                        <Property mapKey="outputSpacing" name="outputSpacing" tracking="false" id="ref28">
                             <value x="0.5" y="0.5" z="0.5" />
                         </Property>
-                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="1" fileWatchEnabled="false">
+                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="1" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../../nosnapshot/tmp/resample2.h5" />
-                                    <item value="../../../nosnapshot/tmp/resample2.h5" />
-                                    <item value="/nosnapshot/tmp/resample2.h5" />
+                                    <item value="../../../../../../../nosnapshot/tmp/voreentmp/c58960d9-4cac-4036-ad2e-1aef26946dae/a76fbfb4-5989-4acc-8232-260830730951HDF5 (*.h5)" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/c58960d9-4cac-4036-ad2e-1aef26946dae/a76fbfb4-5989-4acc-8232-260830730951HDF5 (*.h5)" />
+                                    <item value="/nosnapshot/tmp/voreentmp/c58960d9-4cac-4036-ad2e-1aef26946dae/a76fbfb4-5989-4acc-8232-260830730951HDF5 (*.h5)" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="outsideVolumeHandling" name="outsideVolumeHandling" value="constant_value" />
                         <Property mapKey="outsideVolumeValue" name="outsideVolumeValue" value="0" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 504 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 1.395 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="transformMatrix" name="transformMatrix">
@@ -265,33 +265,33 @@
                     <Properties>
                         <Property mapKey="aspacingHandling" name="aspacingHandling" value="keep" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
-                        <Property mapKey="filteringMode" name="filteringMode" value="nearest" />
+                        <Property mapKey="filteringMode" name="filteringMode" value="linear" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="outputDimensions" name="outputDimensions">
-                            <value x="274" y="324" z="429" />
+                            <value x="275" y="325" z="431" />
                         </Property>
-                        <Property mapKey="outputSizeMB" name="outputSizeMB" value="36.3 MB" />
+                        <Property mapKey="outputSizeMB" name="outputSizeMB" value="36.7 MB" />
                         <Property mapKey="outputSpacing" name="outputSpacing" tracking="false">
                             <value x="0.016000001" y="0.016000001" z="0.00800704" />
                         </Property>
-                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="1" fileWatchEnabled="false">
+                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="1" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../../nosnapshot/tmp/resample3.h5" />
-                                    <item value="../../../nosnapshot/tmp/resample3.h5" />
-                                    <item value="/nosnapshot/tmp/resample3.h5" />
+                                    <item value="../../../../../../../nosnapshot/tmp/voreentmp/c58960d9-4cac-4036-ad2e-1aef26946dae/c9a0dd18-d945-4bfe-8921-ced29a4068d2HDF5 (*.h5)" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/c58960d9-4cac-4036-ad2e-1aef26946dae/c9a0dd18-d945-4bfe-8921-ced29a4068d2HDF5 (*.h5)" />
+                                    <item value="/nosnapshot/tmp/voreentmp/c58960d9-4cac-4036-ad2e-1aef26946dae/c9a0dd18-d945-4bfe-8921-ced29a4068d2HDF5 (*.h5)" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="outsideVolumeHandling" name="outsideVolumeHandling" value="constant_value" />
                         <Property mapKey="outsideVolumeValue" name="outsideVolumeValue" value="0" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 397 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 1.770 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
-                        <Property mapKey="transformMatrix" name="transformMatrix" id="ref26">
-                            <value.row0 x="0.000796274" y="0.999999702" z="0" w="0" />
-                            <value.row1 x="-0.999999642" y="0.000796274" z="0" w="0" />
+                        <Property mapKey="transformMatrix" name="transformMatrix" id="ref29">
+                            <value.row0 x="1" y="0" z="0" w="0" />
+                            <value.row1 x="0" y="1" z="0" w="0" />
                             <value.row2 x="0" y="0" z="1" w="0" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
@@ -316,31 +316,31 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="SegmentationValidation" name="SegmentationValidation" id="ref10">
+                <Processor type="SegmentationValidation" name="SegmentationValidation" id="ref21">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-70" y="-507" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-60" y="-447" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="accuracy" name="accuracy" value="0.997965813" />
-                        <Property mapKey="accuracyBackground" name="accuracyBackground" value="0.998975217" />
-                        <Property mapKey="accuracyForeground" name="accuracyForeground" value="0.863992453" />
+                        <Property mapKey="accuracy" name="accuracy" value="1" />
+                        <Property mapKey="accuracyBackground" name="accuracyBackground" value="1" />
+                        <Property mapKey="accuracyForeground" name="accuracyForeground" value="1" />
                         <Property mapKey="autoCompute" name="autoCompute" value="true" />
                         <Property mapKey="autoExport" name="autoExport" value="false" />
                         <Property mapKey="computeButton" name="computeButton" />
-                        <Property mapKey="diceIndex" name="diceIndex" value="0.863986254" />
+                        <Property mapKey="diceIndex" name="diceIndex" value="1" />
                         <Property mapKey="exportbutton" name="exportbutton" />
                         <Property mapKey="exportfile" name="exportfile" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
-                        <Property mapKey="falseNegative" name="falseNegative" value="37778" />
-                        <Property mapKey="falsePositive" name="falsePositive" value="37782" />
-                        <Property mapKey="jaccardIndex" name="jaccardIndex" value="0.760542035" />
-                        <Property mapKey="sensitivity" name="sensitivity" value="0.863992453" />
-                        <Property mapKey="sizeReference" name="sizeReference" value="277764" />
-                        <Property mapKey="sizeSegmentation" name="sizeSegmentation" value="277768" />
-                        <Property mapKey="specificity" name="specificity" value="0.998975217" />
-                        <Property mapKey="trueNegative" name="trueNegative" value="36829611" />
-                        <Property mapKey="truePositive" name="truePositive" value="239986" />
+                        <Property mapKey="falseNegative" name="falseNegative" value="0" />
+                        <Property mapKey="falsePositive" name="falsePositive" value="0" />
+                        <Property mapKey="jaccardIndex" name="jaccardIndex" value="1" />
+                        <Property mapKey="sensitivity" name="sensitivity" value="1" />
+                        <Property mapKey="sizeReference" name="sizeReference" value="206096" />
+                        <Property mapKey="sizeSegmentation" name="sizeSegmentation" value="206096" />
+                        <Property mapKey="specificity" name="specificity" value="1" />
+                        <Property mapKey="trueNegative" name="trueNegative" value="36939061" />
+                        <Property mapKey="truePositive" name="truePositive" value="206096" />
                     </Properties>
                     <Inports>
                         <Port name="segmentation.in" direction="1" portID="segmentation.in" guiName="Segmentation Volume" allowMultipleConnections="false" invalidationLevel="1">
@@ -365,18 +365,18 @@
                 </Processor>
                 <Processor type="VolumeCrop" name="VolumeCrop" id="ref9">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="57" y="-651" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="88" y="-657" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="button" name="button" />
                         <Property mapKey="clearCache" name="clearCache" />
                         <Property mapKey="clipRegion">
-                            <bounds.llf x="3" y="2" z="2" />
-                            <bounds.urb x="273" y="322" z="428" />
+                            <bounds.llf x="2" y="2" z="2" />
+                            <bounds.urb x="272" y="322" z="428" />
                             <minValue x="0" y="0" z="0" />
-                            <maxValue x="273" y="323" z="428" />
+                            <maxValue x="274" y="324" z="430" />
                             <minRange x="0" y="0" z="0" />
-                            <maxRange x="274" y="324" z="429" />
+                            <maxRange x="275" y="325" z="431" />
                             <stepping x="1" y="1" z="1" />
                         </Property>
                         <Property mapKey="clipRegionMatchesCroppedRegion" name="clipRegionMatchesCroppedRegion" value="true" />
@@ -527,7 +527,7 @@
                 </Processor>
                 <Processor type="VolumeCrop" name="VolumeCrop 2" id="ref8">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-108" y="-652" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-133" y="-652" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="button" name="button" />
@@ -536,9 +536,9 @@
                             <bounds.llf x="1" y="1" z="1" />
                             <bounds.urb x="271" y="321" z="427" />
                             <minValue x="0" y="0" z="0" />
-                            <maxValue x="271" y="321" z="427" />
+                            <maxValue x="272" y="322" z="428" />
                             <minRange x="0" y="0" z="0" />
-                            <maxRange x="272" y="322" z="428" />
+                            <maxRange x="273" y="323" z="429" />
                             <stepping x="1" y="1" z="1" />
                         </Property>
                         <Property mapKey="clipRegionMatchesCroppedRegion" name="clipRegionMatchesCroppedRegion" value="true" />
@@ -572,9 +572,9 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="IsosurfaceExtractor" name="IsosurfaceExtractor" id="ref14">
+                <Processor type="IsosurfaceExtractor" name="IsosurfaceExtractor" id="ref13">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-384" y="-432" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-385" y="-432" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="MarchingCubesProcessingMode" name="MarchingCubesProcessingMode" value="gpu" />
@@ -627,9 +627,9 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="IsosurfaceExtractor" name="IsosurfaceExtractor 2" id="ref11">
+                <Processor type="IsosurfaceExtractor" name="IsosurfaceExtractor 2" id="ref15">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="292" y="-368" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="272" y="-402" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="MarchingCubesProcessingMode" name="MarchingCubesProcessingMode" value="gpu" />
@@ -643,7 +643,7 @@
                             </components>
                         </Property>
                         <Property mapKey="enabledProp" name="enabledProp" value="true" />
-                        <Property mapKey="isoValueProp" name="isoValueProp" value="0.239999995" />
+                        <Property mapKey="isoValueProp" name="isoValueProp" value="0.540000021" />
                         <Property mapKey="marchingCubesShaderProp" name="marchingCubesShaderProp">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
@@ -682,7 +682,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="GeometryRenderer" name="GeometryRenderer" id="ref16">
+                <Processor type="GeometryRenderer" name="GeometryRenderer" id="ref14">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-353" y="-312" />
                     </MetaData>
@@ -756,7 +756,7 @@
                     </CoProcessorOutports>
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="GeometryRenderer" name="GeometryRenderer 2" id="ref17">
+                <Processor type="GeometryRenderer" name="GeometryRenderer 2" id="ref16">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="180" y="-247" />
                     </MetaData>
@@ -830,24 +830,24 @@
                     </CoProcessorOutports>
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="GeometryProcessor" name="GeometryProcessor" id="ref18">
+                <Processor type="GeometryProcessor" name="GeometryProcessor" id="ref17">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="431" y="-284" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="1272.00012207" minValue="0.025440002" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="1277.088134766" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.009493124">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="1284.00012207" minValue="0.025680002" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="1289.136108398" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.011594174">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.353666425" y="2.233201504" z="10.45717144" />
-                            <focus x="1.06400013" y="1.264000177" z="-0.008007646" />
-                            <upVector x="0.070479952" y="0.993689716" z="-0.087254159" />
+                            <position x="-0.199684501" y="2.085804701" z="8.396654129" />
+                            <focus x="1.06400013" y="1.264000058" z="-0.008007646" />
+                            <upVector x="0.295950055" y="-0.945340335" z="0.13691327" />
                             <trackball moveCenter="false">
-                                <center x="1.06400013" y="1.264000177" z="-0.008007646" />
+                                <center x="1.06400013" y="1.264000058" z="-0.008007646" />
                             </trackball>
-                            <sceneLLF x="-1.104000092" y="-1.304000139" z="-1.7175107" />
+                            <sceneLLF x="-1.104000092" y="-1.304000258" z="-1.7175107" />
                             <sceneURB x="3.232000351" y="3.832000256" z="1.701495409" />
                         </Property>
                         <Property mapKey="composeShader" name="composeShader">
@@ -887,7 +887,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin">
-                                    <value x="491" y="338" />
+                                    <value x="1127" y="832" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -896,8 +896,8 @@
                         <Port name="image.output" direction="0" portID="image.output" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
-                                <Property mapKey="image.output.renderSizeReceive" name="image.output.renderSizeReceive" id="ref28">
-                                    <value x="491" y="338" />
+                                <Property mapKey="image.output.renderSizeReceive" name="image.output.renderSizeReceive" id="ref31">
+                                    <value x="1127" y="832" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -928,7 +928,7 @@
                         </Handler>
                     </InteractionHandlers>
                 </Processor>
-                <Processor type="Background" name="Background" id="ref19">
+                <Processor type="Background" name="Background" id="ref18">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="445" y="-203" />
                     </MetaData>
@@ -974,21 +974,21 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="Canvas" name="Canvas" id="ref20">
+                <Processor type="Canvas" name="Canvas" id="ref19">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="439" y="-144" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="249" y="609" width="491" height="338" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="443" y="-147" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-1292" y="143" width="1127" height="832" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="249" y="609" />
+                            <value x="-1292" y="143" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="491" y="338" />
+                            <value x="1127" y="832" />
                         </MetaItem>
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize">
-                            <value x="491" y="338" />
+                            <value x="1127" y="832" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
@@ -1001,8 +1001,8 @@
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
-                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref27">
-                                    <value x="491" y="338" />
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref30">
+                                    <value x="1127" y="832" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -1012,7 +1012,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="BoundingBoxRenderer" name="BoundingBoxRenderer" id="ref15">
+                <Processor type="BoundingBoxRenderer" name="BoundingBoxRenderer" id="ref22">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-372" y="-240" />
                     </MetaData>
@@ -1057,7 +1057,7 @@
                     </CoProcessorOutports>
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="BoundingBoxRenderer" name="BoundingBoxRenderer 2" id="ref12">
+                <Processor type="BoundingBoxRenderer" name="BoundingBoxRenderer 2" id="ref23">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="247" y="-184" />
                     </MetaData>
@@ -1102,7 +1102,7 @@
                     </CoProcessorOutports>
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="GeometryRenderer" name="GeometryRenderer 3" id="ref21">
+                <Processor type="GeometryRenderer" name="GeometryRenderer 3" id="ref20">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-488" y="-596" />
                     </MetaData>
@@ -1276,7 +1276,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="GeometryRenderer" name="GeometryRenderer 4" id="ref13">
+                <Processor type="GeometryRenderer" name="GeometryRenderer 4" id="ref11">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-483" y="-541" />
                     </MetaData>
@@ -1348,6 +1348,112 @@
                             </Properties>
                         </Port>
                     </CoProcessorOutports>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ConnectedComponentAnalysis" name="ConnectedComponentAnalysis" id="ref12">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-200" y="-560" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="applyLabeling" name="applyLabeling" value="false" />
+                        <Property mapKey="binarizationThreshold" name="binarizationThreshold" value="0.5" />
+                        <Property mapKey="componentStatFilePath" name="componentStatFilePath" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
+                        <Property mapKey="invertBinarization" name="invertBinarization" value="false" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="minBoundsDiagonal" name="minBoundsDiagonal" value="0" />
+                        <Property mapKey="minBoundsDiagonalRelative" name="minBoundsDiagonalRelative" value="0" />
+                        <Property mapKey="minVoxelVolume" name="minVoxelVolume" value="0" />
+                        <Property mapKey="neighbourhoodMode" name="neighbourhoodMode" value="n6" />
+                        <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
+                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../../../../../../nosnapshot/tmp/voreentmp/c58960d9-4cac-4036-ad2e-1aef26946dae/81c041f3-483e-477d-9475-d108280de2a9HDF5 (*.h5)" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/c58960d9-4cac-4036-ad2e-1aef26946dae/81c041f3-483e-477d-9475-d108280de2a9HDF5 (*.h5)" />
+                                    <item value="/nosnapshot/tmp/voreentmp/c58960d9-4cac-4036-ad2e-1aef26946dae/81c041f3-483e-477d-9475-d108280de2a9HDF5 (*.h5)" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 1.117 sec" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
+                        <Property mapKey="writeComponentStatFile" name="writeComponentStatFile" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="connectedcomponentanalysis.inport" direction="1" portID="connectedcomponentanalysis.inport" guiName="Binary Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="connectedcomponentanalysis.outport" direction="0" portID="connectedcomponentanalysis.outport" guiName="Label Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ConnectedComponentAnalysis" name="ConnectedComponentAnalysis 2" id="ref10">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="28" y="-565" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="applyLabeling" name="applyLabeling" value="false" />
+                        <Property mapKey="binarizationThreshold" name="binarizationThreshold" value="0.5" />
+                        <Property mapKey="componentStatFilePath" name="componentStatFilePath" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
+                        <Property mapKey="invertBinarization" name="invertBinarization" value="false" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="minBoundsDiagonal" name="minBoundsDiagonal" value="0" />
+                        <Property mapKey="minBoundsDiagonalRelative" name="minBoundsDiagonalRelative" value="0" />
+                        <Property mapKey="minVoxelVolume" name="minVoxelVolume" value="0" />
+                        <Property mapKey="neighbourhoodMode" name="neighbourhoodMode" value="n6" />
+                        <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
+                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../../../../../../nosnapshot/tmp/voreentmp/c58960d9-4cac-4036-ad2e-1aef26946dae/92e8f8c3-0985-4c0d-8e38-92cbbf365409HDF5 (*.h5)" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/c58960d9-4cac-4036-ad2e-1aef26946dae/92e8f8c3-0985-4c0d-8e38-92cbbf365409HDF5 (*.h5)" />
+                                    <item value="/nosnapshot/tmp/voreentmp/c58960d9-4cac-4036-ad2e-1aef26946dae/92e8f8c3-0985-4c0d-8e38-92cbbf365409HDF5 (*.h5)" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 694 ms" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
+                        <Property mapKey="writeComponentStatFile" name="writeComponentStatFile" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="connectedcomponentanalysis.inport" direction="1" portID="connectedcomponentanalysis.inport" guiName="Binary Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="connectedcomponentanalysis.outport" direction="0" portID="connectedcomponentanalysis.outport" guiName="Label Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
             </Processors>
@@ -1428,24 +1534,8 @@
                     <Outport name="volumehandle.output">
                         <Processor type="VolumeCrop" ref="ref9" />
                     </Outport>
-                    <Inport name="segmentation.reference">
-                        <Processor type="SegmentationValidation" ref="ref10" />
-                    </Inport>
-                </Connection>
-                <Connection>
-                    <Outport name="volumehandle.output">
-                        <Processor type="VolumeCrop" ref="ref9" />
-                    </Outport>
-                    <Inport name="isosurfaceextractor.inport">
-                        <Processor type="IsosurfaceExtractor" ref="ref11" />
-                    </Inport>
-                </Connection>
-                <Connection>
-                    <Outport name="volumehandle.output">
-                        <Processor type="VolumeCrop" ref="ref9" />
-                    </Outport>
-                    <Inport name="volume">
-                        <Processor type="BoundingBoxRenderer" ref="ref12" />
+                    <Inport name="connectedcomponentanalysis.inport">
+                        <Processor type="ConnectedComponentAnalysis" ref="ref10" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -1469,63 +1559,47 @@
                         <Processor type="OptimizedProxyGeometry" ref="ref4" />
                     </Outport>
                     <Inport name="inport.geometry">
-                        <Processor type="GeometryRenderer" ref="ref13" />
+                        <Processor type="GeometryRenderer" ref="ref11" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="volumehandle.output">
                         <Processor type="VolumeCrop" ref="ref8" />
                     </Outport>
-                    <Inport name="segmentation.in">
-                        <Processor type="SegmentationValidation" ref="ref10" />
-                    </Inport>
-                </Connection>
-                <Connection>
-                    <Outport name="volumehandle.output">
-                        <Processor type="VolumeCrop" ref="ref8" />
-                    </Outport>
-                    <Inport name="isosurfaceextractor.inport">
-                        <Processor type="IsosurfaceExtractor" ref="ref14" />
-                    </Inport>
-                </Connection>
-                <Connection>
-                    <Outport name="volumehandle.output">
-                        <Processor type="VolumeCrop" ref="ref8" />
-                    </Outport>
-                    <Inport name="volume">
-                        <Processor type="BoundingBoxRenderer" ref="ref15" />
+                    <Inport name="connectedcomponentanalysis.inport">
+                        <Processor type="ConnectedComponentAnalysis" ref="ref12" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="isosurfaceextractor.outport">
-                        <Processor type="IsosurfaceExtractor" ref="ref14" />
+                        <Processor type="IsosurfaceExtractor" ref="ref13" />
+                    </Outport>
+                    <Inport name="inport.geometry">
+                        <Processor type="GeometryRenderer" ref="ref14" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="isosurfaceextractor.outport">
+                        <Processor type="IsosurfaceExtractor" ref="ref15" />
                     </Outport>
                     <Inport name="inport.geometry">
                         <Processor type="GeometryRenderer" ref="ref16" />
                     </Inport>
                 </Connection>
                 <Connection>
-                    <Outport name="isosurfaceextractor.outport">
-                        <Processor type="IsosurfaceExtractor" ref="ref11" />
+                    <Outport name="image.output">
+                        <Processor type="GeometryProcessor" ref="ref17" />
                     </Outport>
-                    <Inport name="inport.geometry">
-                        <Processor type="GeometryRenderer" ref="ref17" />
+                    <Inport name="image.input">
+                        <Processor type="Background" ref="ref18" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="image.output">
-                        <Processor type="GeometryProcessor" ref="ref18" />
+                        <Processor type="Background" ref="ref18" />
                     </Outport>
                     <Inport name="image.input">
-                        <Processor type="Background" ref="ref19" />
-                    </Inport>
-                </Connection>
-                <Connection>
-                    <Outport name="image.output">
-                        <Processor type="Background" ref="ref19" />
-                    </Outport>
-                    <Inport name="image.input">
-                        <Processor type="Canvas" ref="ref20" />
+                        <Processor type="Canvas" ref="ref19" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -1533,49 +1607,97 @@
                         <Processor type="IsosurfaceExtractor" ref="ref6" />
                     </Outport>
                     <Inport name="inport.geometry">
-                        <Processor type="GeometryRenderer" ref="ref21" />
+                        <Processor type="GeometryRenderer" ref="ref20" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="connectedcomponentanalysis.outport">
+                        <Processor type="ConnectedComponentAnalysis" ref="ref12" />
+                    </Outport>
+                    <Inport name="segmentation.in">
+                        <Processor type="SegmentationValidation" ref="ref21" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="connectedcomponentanalysis.outport">
+                        <Processor type="ConnectedComponentAnalysis" ref="ref12" />
+                    </Outport>
+                    <Inport name="isosurfaceextractor.inport">
+                        <Processor type="IsosurfaceExtractor" ref="ref13" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="connectedcomponentanalysis.outport">
+                        <Processor type="ConnectedComponentAnalysis" ref="ref12" />
+                    </Outport>
+                    <Inport name="volume">
+                        <Processor type="BoundingBoxRenderer" ref="ref22" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="connectedcomponentanalysis.outport">
+                        <Processor type="ConnectedComponentAnalysis" ref="ref10" />
+                    </Outport>
+                    <Inport name="segmentation.reference">
+                        <Processor type="SegmentationValidation" ref="ref21" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="connectedcomponentanalysis.outport">
+                        <Processor type="ConnectedComponentAnalysis" ref="ref10" />
+                    </Outport>
+                    <Inport name="isosurfaceextractor.inport">
+                        <Processor type="IsosurfaceExtractor" ref="ref15" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="connectedcomponentanalysis.outport">
+                        <Processor type="ConnectedComponentAnalysis" ref="ref10" />
+                    </Outport>
+                    <Inport name="volume">
+                        <Processor type="BoundingBoxRenderer" ref="ref23" />
                     </Inport>
                 </Connection>
             </Connections>
             <CoProcessorConnections>
                 <CoProcessorConnection>
                     <Outport name="coprocessor.geometryrenderer">
+                        <Processor type="GeometryRenderer" ref="ref14" />
+                    </Outport>
+                    <Inport name="coprocessor.geometryrenderers">
+                        <Processor type="GeometryProcessor" ref="ref17" />
+                    </Inport>
+                </CoProcessorConnection>
+                <CoProcessorConnection>
+                    <Outport name="coprocessor.geometryrenderer">
                         <Processor type="GeometryRenderer" ref="ref16" />
                     </Outport>
                     <Inport name="coprocessor.geometryrenderers">
-                        <Processor type="GeometryProcessor" ref="ref18" />
+                        <Processor type="GeometryProcessor" ref="ref17" />
                     </Inport>
                 </CoProcessorConnection>
                 <CoProcessorConnection>
                     <Outport name="coprocessor.geometryrenderer">
-                        <Processor type="GeometryRenderer" ref="ref17" />
+                        <Processor type="BoundingBoxRenderer" ref="ref22" />
                     </Outport>
                     <Inport name="coprocessor.geometryrenderers">
-                        <Processor type="GeometryProcessor" ref="ref18" />
+                        <Processor type="GeometryProcessor" ref="ref17" />
                     </Inport>
                 </CoProcessorConnection>
                 <CoProcessorConnection>
                     <Outport name="coprocessor.geometryrenderer">
-                        <Processor type="BoundingBoxRenderer" ref="ref15" />
+                        <Processor type="BoundingBoxRenderer" ref="ref23" />
                     </Outport>
                     <Inport name="coprocessor.geometryrenderers">
-                        <Processor type="GeometryProcessor" ref="ref18" />
+                        <Processor type="GeometryProcessor" ref="ref17" />
                     </Inport>
                 </CoProcessorConnection>
                 <CoProcessorConnection>
                     <Outport name="coprocessor.geometryrenderer">
-                        <Processor type="BoundingBoxRenderer" ref="ref12" />
+                        <Processor type="GeometryRenderer" ref="ref20" />
                     </Outport>
                     <Inport name="coprocessor.geometryrenderers">
-                        <Processor type="GeometryProcessor" ref="ref18" />
-                    </Inport>
-                </CoProcessorConnection>
-                <CoProcessorConnection>
-                    <Outport name="coprocessor.geometryrenderer">
-                        <Processor type="GeometryRenderer" ref="ref21" />
-                    </Outport>
-                    <Inport name="coprocessor.geometryrenderers">
-                        <Processor type="GeometryProcessor" ref="ref18" />
+                        <Processor type="GeometryProcessor" ref="ref17" />
                     </Inport>
                 </CoProcessorConnection>
                 <CoProcessorConnection>
@@ -1583,57 +1705,57 @@
                         <Processor type="BoundingBoxRenderer" ref="ref5" />
                     </Outport>
                     <Inport name="coprocessor.geometryrenderers">
-                        <Processor type="GeometryProcessor" ref="ref18" />
+                        <Processor type="GeometryProcessor" ref="ref17" />
                     </Inport>
                 </CoProcessorConnection>
                 <CoProcessorConnection>
                     <Outport name="coprocessor.geometryrenderer">
-                        <Processor type="GeometryRenderer" ref="ref13" />
+                        <Processor type="GeometryRenderer" ref="ref11" />
                     </Outport>
                     <Inport name="coprocessor.geometryrenderers">
-                        <Processor type="GeometryProcessor" ref="ref18" />
+                        <Processor type="GeometryProcessor" ref="ref17" />
                     </Inport>
                 </CoProcessorConnection>
             </CoProcessorConnections>
             <PropertyLinks>
                 <PropertyLink>
-                    <SourceProperty type="FloatMat4Property" ref="ref22" />
-                    <DestinationProperty type="FloatMat4Property" ref="ref23" />
+                    <SourceProperty type="FloatMat4Property" ref="ref25" />
+                    <DestinationProperty type="FloatMat4Property" ref="ref26" />
                     <Evaluator type="LinkEvaluatorMat4Id" />
                 </PropertyLink>
                 <PropertyLink>
-                    <SourceProperty type="FloatVec3Property" ref="ref24" />
-                    <DestinationProperty type="FloatVec3Property" ref="ref25" />
+                    <SourceProperty type="FloatVec3Property" ref="ref27" />
+                    <DestinationProperty type="FloatVec3Property" ref="ref28" />
                     <Evaluator type="LinkEvaluatorVec3Id" />
                 </PropertyLink>
                 <PropertyLink>
-                    <SourceProperty type="FloatVec3Property" ref="ref25" />
-                    <DestinationProperty type="FloatVec3Property" ref="ref24" />
+                    <SourceProperty type="FloatVec3Property" ref="ref28" />
+                    <DestinationProperty type="FloatVec3Property" ref="ref27" />
                     <Evaluator type="LinkEvaluatorVec3Id" />
                 </PropertyLink>
                 <PropertyLink>
-                    <SourceProperty type="FloatMat4Property" ref="ref23" />
+                    <SourceProperty type="FloatMat4Property" ref="ref26" />
+                    <DestinationProperty type="FloatMat4Property" ref="ref29" />
+                    <Evaluator type="LinkEvaluatorMat4Invert" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="FloatMat4Property" ref="ref29" />
                     <DestinationProperty type="FloatMat4Property" ref="ref26" />
                     <Evaluator type="LinkEvaluatorMat4Invert" />
                 </PropertyLink>
                 <PropertyLink>
-                    <SourceProperty type="FloatMat4Property" ref="ref26" />
-                    <DestinationProperty type="FloatMat4Property" ref="ref23" />
-                    <Evaluator type="LinkEvaluatorMat4Invert" />
-                </PropertyLink>
-                <PropertyLink>
-                    <SourceProperty ref="ref27" />
-                    <DestinationProperty ref="ref28" />
+                    <SourceProperty ref="ref30" />
+                    <DestinationProperty ref="ref31" />
                     <Evaluator type="LinkEvaluatorRenderSize" />
                 </PropertyLink>
                 <PropertyLink>
-                    <SourceProperty ref="ref29" />
-                    <DestinationProperty ref="ref30" />
+                    <SourceProperty ref="ref32" />
+                    <DestinationProperty ref="ref33" />
                     <Evaluator type="LinkEvaluatorStringId" />
                 </PropertyLink>
                 <PropertyLink>
-                    <SourceProperty ref="ref30" />
-                    <DestinationProperty ref="ref29" />
+                    <SourceProperty ref="ref33" />
+                    <DestinationProperty ref="ref32" />
                     <Evaluator type="LinkEvaluatorStringId" />
                 </PropertyLink>
             </PropertyLinks>

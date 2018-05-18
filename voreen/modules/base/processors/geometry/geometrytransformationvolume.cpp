@@ -52,9 +52,9 @@ GeometryTransformationVolume::GeometryTransformationVolume()
     enableProcessing_.onChange(MemberFunctionCallback<GeometryTransformationVolume>(this, &GeometryTransformationVolume::forceUpdate));
 
     sourceCoordinateSystem_.addOption("voxel-coordinates", "Voxel Coordinates");
+    sourceCoordinateSystem_.addOption("volume-coordinates", "Volume Coordinates");
     sourceCoordinateSystem_.addOption("world-coordinates", "World Coordinates");
-    /*sourceCoordinateSystem_.push_back("volume-coordinates", "Volume Coordinates");
-    sourceCoordinateSystem_.push_back("texture-coordinates", "Texture Coordinates");*/
+    sourceCoordinateSystem_.addOption("texture-coordinates", "Texture Coordinates");
     sourceCoordinateSystem_.onChange(MemberFunctionCallback<GeometryTransformationVolume>(this, &GeometryTransformationVolume::forceUpdate));
     addProperty(sourceCoordinateSystem_);
 
@@ -104,36 +104,48 @@ void GeometryTransformationVolume::process() {
     if (targetCoordinateSystem_.isSelected("voxel-coordinates")) {
         if (sourceCoordinateSystem_.isSelected("voxel-coordinates")) {
             // voxel to voxel coordinates (no transformation necessary)
-        }
-        else if (sourceCoordinateSystem_.isSelected("world-coordinates")) {
+        } else if (sourceCoordinateSystem_.isSelected("volume-coordinates")) {
+            transformation = volumeHandle->getPhysicalToVoxelMatrix();
+        } else if (sourceCoordinateSystem_.isSelected("world-coordinates")) {
             transformation = volumeHandle->getWorldToVoxelMatrix();
+        } else if (sourceCoordinateSystem_.isSelected("texture-coordinates")) {
+            transformation = volumeHandle->getTextureToVoxelMatrix();
         }
     }
     // volume coordinates
     else if (targetCoordinateSystem_.isSelected("volume-coordinates")) {
         if (sourceCoordinateSystem_.isSelected("voxel-coordinates")) {
             transformation = volumeHandle->getVoxelToPhysicalMatrix();
-        }
-        else if (sourceCoordinateSystem_.isSelected("world-coordinates")) {
+        } else if (sourceCoordinateSystem_.isSelected("volume-coordinates")) {
+            // No transformation necessary
+        } else if (sourceCoordinateSystem_.isSelected("world-coordinates")) {
             transformation = volumeHandle->getWorldToPhysicalMatrix();
+        } else if (sourceCoordinateSystem_.isSelected("texture-coordinates")) {
+            transformation = volumeHandle->getTextureToPhysicalMatrix();
         }
     }
     // world coordinates
     else if (targetCoordinateSystem_.isSelected("world-coordinates")) {
         if (sourceCoordinateSystem_.isSelected("voxel-coordinates")) {
             transformation = volumeHandle->getVoxelToWorldMatrix();
-        }
-        else if (sourceCoordinateSystem_.isSelected("world-coordinates")) {
+        } else if (sourceCoordinateSystem_.isSelected("volume-coordinates")) {
+            transformation = volumeHandle->getPhysicalToWorldMatrix();
+        } else if (sourceCoordinateSystem_.isSelected("world-coordinates")) {
             // world to world coordinates (no transformation necessary)
+        } else if (sourceCoordinateSystem_.isSelected("texture-coordinates")) {
+            transformation = volumeHandle->getTextureToWorldMatrix();
         }
     }
     // texture coordinates: [0:1.0]^3
     else if (targetCoordinateSystem_.isSelected("texture-coordinates")) {
         if (sourceCoordinateSystem_.isSelected("voxel-coordinates")) {
             transformation = volumeHandle->getVoxelToTextureMatrix();
-        }
-        else if (sourceCoordinateSystem_.isSelected("world-coordinates")) {
+        } else if (sourceCoordinateSystem_.isSelected("volume-coordinates")) {
+            transformation = volumeHandle->getPhysicalToTextureMatrix();
+        } else if (sourceCoordinateSystem_.isSelected("world-coordinates")) {
             transformation = volumeHandle->getWorldToTextureMatrix();
+        } else if (sourceCoordinateSystem_.isSelected("texture-coordinates")) {
+            // no transformation necessary
         }
     }
 

@@ -185,5 +185,10 @@ IF(WIN32)
             DESTINATION .
             CONFIGURATIONS Release
         )
-    ENDIF()
+    ENDIF()    
 ENDIF()
+
+################################################################################
+# Deployment
+################################################################################
+ADD_SUBDIRECTORY(cmake/post_install)

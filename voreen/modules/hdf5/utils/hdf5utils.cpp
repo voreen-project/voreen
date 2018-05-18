@@ -188,7 +188,14 @@ H5::DataSpace createDataSpace(tgt::svec3 volumeDimensions, size_t numberOfChanne
     }
 }
 
-void writeStringAttribute(const H5::H5Location& loc, const H5std_string& name, const H5std_string& str) {
+void writeStringAttribute(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& loc,
+#else
+        const H5::H5Location& loc,
+#endif
+        const H5std_string& name, const H5std_string& str) {
+
     boost::lock_guard<boost::recursive_mutex> lock(hdf5libMutex);
     // Create Attribute
     static const H5::DataSpace dataspace(H5S_SCALAR);
@@ -200,7 +207,14 @@ void writeStringAttribute(const H5::H5Location& loc, const H5std_string& name, c
     attribute.write(strDataType, str);
 }
 
-H5std_string readStringAttribute(const H5::H5Location& loc, const H5std_string name) {
+H5std_string readStringAttribute(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& loc,
+#else
+        const H5::H5Location& loc,
+#endif
+        const H5std_string name) {
+
     boost::lock_guard<boost::recursive_mutex> lock(hdf5libMutex);
     // Try to open element size attribute.
     H5::Attribute attr = loc.openAttribute(name);

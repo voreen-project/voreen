@@ -46,7 +46,8 @@ struct Matching {
     std::vector<const T*> non_matched1_;
     std::vector<const T*> non_matched2_;
 
-    float someMeasure() const;
+    float matchRatio() const;
+    bool hasContent() const;
 };
 
 class VesselGraphComparison : public GeometryRendererBase {
@@ -74,6 +75,8 @@ protected:
     Matching<VesselGraphNode> matchNodesMutualNN(const VesselGraph& g1, const VesselGraph& g2) const;
     Matching<VesselGraphEdge> matchEdgesViaNodes(const VesselGraph& g1, const VesselGraph& g2, const Matching<VesselGraphNode>& node_matching) const;
 
+    Matching<VesselGraphEdge> matchEdgesViaBipartiteGraphMatching(const VesselGraph& g1, const VesselGraph& g2) const;
+
     template<class D>
     Matching<VesselGraphEdge> matchEdgesViaHungarianAlgorithm(const VesselGraph& g1, const VesselGraph& g2, D distance) const;
 
@@ -82,9 +85,16 @@ protected:
 
     enum MatchingAlgorithm {
         MUTUAL_NN,
+        HUNGARIAN_NODES,
         HUNGARIAN_EDGES,
         HUNGARIAN_EDGES_QUANTIL_THRESHOLD,
         LAP
+    };
+
+    enum MatchRenderMode {
+        NODES,
+        EDGES,
+        NONE,
     };
 
     // ports
@@ -95,15 +105,18 @@ protected:
     // properties
     BoolProperty enabled_;
     OptionProperty<MatchingAlgorithm> matchingAlgorithm_;
+    OptionProperty<MatchRenderMode> renderMode_;
     FileDialogProperty statExportFile_;
     StringProperty datasetIdentifier_;
     FloatProperty nodeMatchRatio_;
     FloatProperty edgeMatchRatio_;
     FloatProperty lengthSimilarity_;
+    FloatProperty nodeMatchingCost_;
 
     // (Non-)Match Rendering
     FloatProperty crossRadius_;
     std::unique_ptr<Matching<VesselGraphEdge>> lastEdgeMatching_;
+    std::unique_ptr<Matching<VesselGraphNode>> lastNodeMatching_;
 
     static const std::string loggerCat_;
 };

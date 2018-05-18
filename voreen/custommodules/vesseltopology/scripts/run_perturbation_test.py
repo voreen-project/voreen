@@ -8,7 +8,7 @@ import time
 
 # --- configuration ---
 iterations = 100
-output_folder_base = "~/nosnapshot/perturbation_results"
+output_folder_base = "~/nosnapshot/perturbation_results_bgm"
 
 def update_workspace_and_gui():
     voreen.invalidateProcessors()

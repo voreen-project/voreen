@@ -33,7 +33,7 @@
 #include "voreen/core/properties/vectorproperty.h"
 #include "voreen/core/properties/matrixproperty.h"
 #include "voreen/core/properties/stringproperty.h"
-#include "voreen/core/properties/filedialogproperty.h"
+#include "voreen/core/properties/temppathproperty.h"
 #include "voreen/core/datastructures/meta/realworldmappingmetadata.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
 
@@ -173,7 +173,7 @@ private:
     OptionProperty<OutsideVolumeHandling> outsideVolumeHandling_;
     FloatProperty outsideVolumeValue_; //Only visible if CONSTANT_VALUE is selected
 
-    FileDialogProperty outputVolumeFilePath_;
+    TempPathProperty outputVolumeFilePath_;
 
     /// Read-only properties displaying the data size of the resampled volume in MB/voxels
     IntVec3Property outputDimensions_;
@@ -257,7 +257,7 @@ namespace {
             tgt::vec3 wc = pos - tgt::vec3(tgt::ifloor(pos));
             tgt::vec3 wf = tgt::vec3(1.0f) - wc;
             tgt::ivec3 f(tgt::floor(pos));
-            tgt::ivec3 c(tgt::iceil(pos));
+            tgt::ivec3 c = f + tgt::ivec3::one;
             float val = 0;
             val += wf.x * wf.y * wf.z * outsideVolumeHandler_.get(input, tgt::ivec3(f.x, f.y, f.z));
             val += wc.x * wf.y * wf.z * outsideVolumeHandler_.get(input, tgt::ivec3(c.x, f.y, f.z));

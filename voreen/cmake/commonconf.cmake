@@ -84,7 +84,6 @@ LIST(APPEND VRN_COMMON_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_C
 
 # Configure shared library-build, static builds are no longer supported
 SET(BUILD_SHARED_LIBS TRUE)
-LIST(APPEND VRN_DEFINITIONS "-DVRN_SHARED_LIBS")
 
 # print pch status
 IF(VRN_PRECOMPILED_HEADER)
@@ -166,7 +165,7 @@ IF(VRN_MSVC)
         MESSAGE(STATUS "Windows deployment build:")
 
         MESSAGE(STATUS "* Adding install target")
-        SET(VRN_ADD_INSTALL_TARGET TRUE)
+        SET(VRN_ADD_INSTALL_TARGET ON)
         MESSAGE(STATUS "* Install directory (CMAKE_INSTALL_PREFIX): ${CMAKE_INSTALL_PREFIX}")
         
         IF(NOT ${VRN_BINARY_OUTPUT_DIR} STREQUAL ${VRN_HOME}/bin)
@@ -238,8 +237,12 @@ ELSEIF(UNIX)
     LIST(APPEND VRN_DEFINITIONS "-D__STDC_CONSTANT_MACROS")
 
     IF(VRN_DEPLOYMENT)
-        MESSAGE("Unix deployment build")
         LIST(APPEND VRN_DEFINITIONS "-DVRN_DEPLOYMENT")
+        MESSAGE(STATUS "Unix deployment build")
+        
+        MESSAGE(STATUS "* Adding install target")
+        SET(VRN_ADD_INSTALL_TARGET ON)
+        MESSAGE(STATUS "* Install directory (CMAKE_INSTALL_PREFIX): ${CMAKE_INSTALL_PREFIX}")
     ENDIF()
 
     # hardcode Voreen base path, if binary output dir has been modified
@@ -264,13 +267,12 @@ ELSEIF(UNIX)
 
     # add linker flags to look for libraries in the executable directory to avoid problems with moving Voreen after compiling
     IF(APPLE)
-    set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,'$ORIGIN' ")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,'$ORIGIN' ")
     ELSE()
-    set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath='$ORIGIN' ")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath='$ORIGIN' ")
     ENDIF()
 
     # Warning switches are compiler dependent:
-
     IF(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         # disable warnings
         set(CMAKE_CXX_FLAGS "-Wno-unused-function ${CMAKE_CXX_FLAGS}")
@@ -577,6 +579,7 @@ SET(VRN_INCLUDE_DIRECTORIES ${VRN_MODULE_INCLUDE_DIRECTORIES} ${VRN_COMMON_INCLU
 
 # define framework and module install files (note: DLLs are installed by CMakeLists.txt in root dir)
 IF (VRN_ADD_INSTALL_TARGET)
+
     # framework install files
     if(VRN_BUILD_LIB_VOREENCORE)
         INCLUDE(${VRN_HOME}/cmake/installcore.cmake)

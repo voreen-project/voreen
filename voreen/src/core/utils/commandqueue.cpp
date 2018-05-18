@@ -42,24 +42,38 @@ CommandQueue::~CommandQueue() {
 }
 
 void CommandQueue::execute() {
-    boost::lock_guard<boost::recursive_mutex> lock(mutex_);
 
-    if (!commands_.empty()) {
+    Callback* callback = nullptr;
+    {
+        boost::lock_guard<boost::recursive_mutex> lock(mutex_);
 
-        // Execute callback.
-        Callback* callback = commands_.front().second.get();
-        callback->exec();
+        if (commands_.empty())
+            return;
+
+        callback = commands_.front().second.release();
         commands_.pop_front();
     }
+    tgtAssert(callback, "Callback was null");
+
+    // Execute callback without holding lock to prevent deadlock.
+    callback->exec();
 }
 
 void CommandQueue::executeAll() {
     boost::lock_guard<boost::recursive_mutex> lock(mutex_);
 
     while (!commands_.empty()) {
-        Callback* callback = commands_.front().second.get();
-        callback->exec();
+        Callback* callback = commands_.front().second.release();
         commands_.pop_front();
+
+        // Execute callback without holding lock to prevent deadlock.
+        mutex_.unlock();
+
+        tgtAssert(callback, "Callback was null");
+        callback->exec();
+
+        // Lock mutex again for next iteration.
+        mutex_.lock();
     }
 }
 

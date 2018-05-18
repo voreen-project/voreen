@@ -1270,7 +1270,14 @@ static bool compareH5Attribute(const H5::Attribute& a1, const H5::Attribute& a2,
  * @param report Output parameter for error descriptions.
  * @returns Whether the two objects can be considered the same.
  */
-static bool compareH5Location(const H5::H5Location& l1, const H5::H5Location& l2, const std::string& path, std::string& report) {
+static bool compareH5Location(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::H5Object& l1, const H5::H5Object& l2,
+#else
+        const H5::H5Location& l1, const H5::H5Location& l2,
+#endif
+        const std::string& path, std::string& report) {
+
     if(l1.getNumAttrs() != l2.getNumAttrs()) {
         report = "Number of attributes at /" + path + " differ (" + std::to_string(l1.getNumAttrs()) + "!=" + std::to_string(l2.getNumAttrs()) + ")";
         return false;
@@ -1332,7 +1339,14 @@ static bool compareH5DataSet(const H5::DataSet& d1, const H5::DataSet& d2, const
  * @param report Output parameter for error descriptions.
  * @returns Whether the two objects can be considered the same.
  */
-static bool compareH5CommonFG(const H5::CommonFG& g1, const H5::CommonFG& g2, const std::string& path, std::string& report) {
+static bool compareH5CommonFG(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::Group& g1, const H5::Group& g2,
+#else
+        const H5::CommonFG& g1, const H5::CommonFG& g2,
+#endif
+        const std::string& path, std::string& report) {
+
     if(g1.getNumObjs() != g2.getNumObjs()) {
         report = "Number of objects at /" + path + " differ (" + std::to_string(g1.getNumObjs()) + "!=" + std::to_string(g2.getNumObjs()) + ")";
         return false;

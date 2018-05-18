@@ -21,8 +21,10 @@ pch_ve.h.gch
 pch_qt.h.gch
 
 moc_*.cxx
+moc_*.cxx_parameters
 vrn_qt.qrc.depends
 voreenve.qrc.depends
+*.cbp
 
 apps/voreenve/__/
 

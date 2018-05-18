@@ -65,7 +65,13 @@ static void collectVolume(const H5::DataSet& dataSet, const std::string& fileNam
     }
 }
 /// Extract any possible volumes from the CommonFG and add them to urls
-static void collectVolumes(const H5::CommonFG& fg, const std::string& fileName, const std::string& pathInFile, std::vector<voreen::VolumeURL>& urls) {
+static void collectVolumes(
+#if H5_VERSION_GE(1, 10, 1)
+        const H5::Group& fg,
+#else
+        const H5::CommonFG& fg,
+#endif
+        const std::string& fileName, const std::string& pathInFile, std::vector<voreen::VolumeURL>& urls) {
     for(hsize_t i=0; i<fg.getNumObjs(); ++i) {
         H5O_type_t type = fg.childObjType(i);
         switch(type) {

@@ -35,6 +35,7 @@
 #include "voreen/core/io/serialization/serializer.h"
 #include "voreen/core/io/serialization/deserializer.h"
 
+#include <boost/uuid/uuid.hpp>
 #include <functional>
 
 namespace voreen {
@@ -47,6 +48,10 @@ namespace voreen {
 struct VesselGraphNode;
 struct VesselGraphEdge;
 class VesselGraph;
+
+
+typedef boost::uuids::uuid VesselGraphEdgeUUID;
+typedef boost::uuids::uuid VesselGraphNodeUUID;
 
 // A single voxel in a branch in the vessel graph
 struct VesselSkeletonVoxel : public Serializable {
@@ -81,20 +86,23 @@ private:
 // A node within the vessel graph.
 // It stores its position, references to edges as well as all voxels that define this node.
 struct VesselGraphNode : public Serializable {
-    VesselGraphNode(VesselGraph& graph, size_t id, const tgt::vec3& position, std::vector<tgt::vec3> voxels, bool isAtSampleBorder);
+    VesselGraphNode(VesselGraph& graph, size_t id, const tgt::vec3& position, std::vector<tgt::vec3> voxels, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
 
     VesselGraphNode(VesselGraphNode&&);
     void operator=(VesselGraphNode&&);
 
     std::vector<std::reference_wrapper<const VesselGraphEdge>> getEdges() const;
+    std::vector<const VesselGraphEdge*> getEdgesAsPtrs() const; //All pointers guaranteed to be non-null
     std::vector<const VesselGraphNode*> getNeighbors() const;
     int getDegree() const;
     bool isEndNode() const;
     size_t getID() const;
+    VesselGraphNodeUUID getUUID() const;
 
     float estimatedRadius() const;
 
     size_t id_;
+    VesselGraphNodeUUID uuid_;
     std::vector<size_t> edges_;
     tgt::vec3 pos_;
     std::vector<tgt::vec3> voxels_;
@@ -147,9 +155,10 @@ struct VesselGraphEdgePathProperties : public Serializable {
 // axis of the branch.
 struct VesselGraphEdge : public Serializable {
     // Construct an edge implicitly. All properties will be calculated from the voxels
-    VesselGraphEdge(VesselGraph& graph, size_t id, size_t node1ID, size_t node2ID, const std::vector<VesselSkeletonVoxel>&& voxels);
+    VesselGraphEdge(VesselGraph& graph, size_t id, size_t node1ID, size_t node2ID, const std::vector<VesselSkeletonVoxel>&& voxels, VesselGraphEdgeUUID uuid);
+
     // Construct an edge excplitily, all properties must be given. The path will be a straight line between two nodes
-    VesselGraphEdge(VesselGraph& graph, size_t id, size_t node1ID, size_t node2ID, VesselGraphEdgePathProperties pathProps);
+    VesselGraphEdge(VesselGraph& graph, size_t id, size_t node1ID, size_t node2ID, VesselGraphEdgePathProperties pathProps, VesselGraphEdgeUUID uuid);
 
     // Move constructor
     VesselGraphEdge(VesselGraphEdge&& other);
@@ -200,7 +209,11 @@ struct VesselGraphEdge : public Serializable {
     size_t getNodeID2() const;
 
 
+    // Returns the identifier for edges within the graph
     size_t getID() const;
+
+    // Returns the globally unique identifier
+    VesselGraphEdgeUUID getUUID() const;
 
     bool isEndStanding() const;
     size_t getNumValidVoxels() const;
@@ -209,12 +222,14 @@ struct VesselGraphEdge : public Serializable {
     virtual void deserialize(Deserializer& s);
 
 private:
-    size_t id_;
+    size_t id_; //within the graph
     size_t node1_;
     size_t node2_;
 
     float distance_; //cached in order to avoid expensive lookups and distance calculation
     VesselGraphEdgePathProperties pathProps_;
+
+    VesselGraphEdgeUUID uuid_; //globally
 
     //NOTE: the path in voxels (geometrically) starts at node1_ and ends in node2_.
     std::vector<VesselSkeletonVoxel> voxels_;
@@ -256,13 +271,17 @@ public:
     size_t insertNode(const VesselGraphNode& base);
     // Insert a new node into the graph and construct it from the given parameters
     size_t insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>&& voxels, bool isAtSampleBorder);
+    size_t insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>&& voxels, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
 
     // Insert a new edge by deriving its properties from the provided path
     size_t insertEdge(size_t node1, size_t node2, const std::vector<VesselSkeletonVoxel>&& path);
+    size_t insertEdge(size_t node1, size_t node2, const std::vector<VesselSkeletonVoxel>&& path, VesselGraphEdgeUUID uuid);
     // Insert a new edge by deriving its properties from the path of the provided edge
     size_t insertEdge(size_t node1, size_t node2, const VesselGraphEdge& path_definition);
+    size_t insertEdge(size_t node1, size_t node2, const VesselGraphEdge& path_definition, VesselGraphEdgeUUID uuid);
     // Insert a new edge by providing predetermined pathProperties. The path itself will be a straight line between two nodes.
     size_t insertEdge(size_t node1, size_t node2, VesselGraphEdgePathProperties pathProperties);
+    size_t insertEdge(size_t node1, size_t node2, VesselGraphEdgePathProperties pathProperties, VesselGraphEdgeUUID uuid);
 
     const VesselGraphNode& getNode(size_t i) const;
     const VesselGraphEdge& getEdge(size_t i) const;

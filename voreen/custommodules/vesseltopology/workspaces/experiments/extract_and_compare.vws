@@ -1,18 +1,18 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="false" GlobalDescription="">
-        <ProcessorNetwork version="18">
+        <ProcessorNetwork version="19">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="VesselGraphRenderer" ref="ref19" />
+                        <item type="VesselGraphComparison" ref="ref5" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-46" y="87" />
+                    <value x="-5" y="293" />
                 </MetaItem>
                 <MetaItem name="ZoomFactor" type="FloatMetaData" value="1" />
             </MetaData>
@@ -58,16 +58,17 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="binarizationThresholdSegmentation" name="binarizationThresholdSegmentation" value="0.5" />
-                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="false" />
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="minBulgeSize" name="minBulgeSize" value="1" />
                         <Property mapKey="minElongation" name="minElongation" value="0" />
                         <Property mapKey="minVoxelLength" name="minVoxelLength" value="0" />
                         <Property mapKey="numRefinementIterations" name="numRefinementIterations" value="1" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 8.744 sec" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 12.587 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
+                        <Property mapKey="tmpStorageSizeInfo" name="tmpStorageSizeInfo" value="1.1 MB" />
                     </Properties>
                     <Inports>
                         <Port name="vesselgraphcreator.fixedForegroundPointInport" direction="1" portID="vesselgraphcreator.fixedForegroundPointInport" guiName="Fixed Foreground Points" allowMultipleConnections="false" invalidationLevel="1">
@@ -124,8 +125,8 @@
                         <Property mapKey="nodeExportFilePath" name="nodeExportFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
-                        <Property mapKey="numEdges" name="numEdges" value="108" />
-                        <Property mapKey="numNodes" name="numNodes" value="162" />
+                        <Property mapKey="numEdges" name="numEdges" value="131" />
+                        <Property mapKey="numNodes" name="numNodes" value="185" />
                         <Property mapKey="segmentExportFilePath" name="segmentExportFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -142,7 +143,7 @@
                 </Processor>
                 <Processor type="VesselGraphRenderer" name="VesselGraphRenderer" id="ref4">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-79" y="182" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-80" y="182" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="activeEdgeColor" name="activeEdgeColor">
@@ -155,8 +156,8 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="vesselgraphrenderer.frag" modified="false" />
                                 <item shaderType="0" originalFilename="vesselgraphrenderer_activeedge.vert" modified="false" />
+                                <item shaderType="1" originalFilename="vesselgraphrenderer.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="edgeAvgCrossSectionTF" name="edgeAvgCrossSectionTF" domainFittingStrategy="1" computeHistogram="true">
@@ -502,14 +503,13 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="nodeRadiusMultiplier_" name="nodeRadiusMultiplier_" value="0.300000012" />
-                        <Property mapKey="renderEnclosingSpheres" name="renderEnclosingSpheres" value="false" />
                         <Property mapKey="shader" name="shader">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="vesselgraphrenderer.frag" modified="false" />
                                 <item shaderType="0" originalFilename="vesselgraphrenderer.vert" modified="false" />
+                                <item shaderType="1" originalFilename="vesselgraphrenderer.frag" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -536,26 +536,26 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="729.997375488" minValue="0.014599947" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="732.917358398" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.027516192" id="ref20">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="729.997375488" minValue="0.014599947" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="732.917358398" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.027794136" id="ref20">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.775783122" y="2.881036282" z="-2.693935156" />
-                            <focus x="0.678438425" y="0.682501078" z="0.152416587" />
+                            <position x="0.775783122" y="2.88916111" z="-2.693934917" />
+                            <focus x="0.678438425" y="0.690626025" z="0.152416587" />
                             <upVector x="0.56880337" y="-0.62712568" z="-0.532142997" />
                             <trackball moveCenter="false">
-                                <center x="0.678438425" y="0.682501078" z="0.152416587" />
+                                <center x="0.678438425" y="0.690626025" z="0.152416587" />
                             </trackball>
                             <sceneLLF x="-0.27218774" y="-0.520000458" z="-1.307578206" />
-                            <sceneURB x="1.62906456" y="1.885002613" z="1.61241138" />
+                            <sceneURB x="1.62906456" y="1.901252508" z="1.61241138" />
                         </Property>
                         <Property mapKey="composeShader" name="composeShader">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="forceAdaptToScene" name="forceAdaptToScene" />
@@ -567,8 +567,8 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="oit_addimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="oit_addimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="oirBlendShader" name="oirBlendShader">
@@ -576,8 +576,8 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="oit_blend.frag" modified="false" />
                                 <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="oit_blend.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="renderGeometries" name="renderGeometries" value="true" />
@@ -649,8 +649,8 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false">
@@ -676,10 +676,10 @@
                 <Processor type="Canvas" name="Canvas" id="ref11">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="59" y="561" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-1625" y="53" width="1601" height="992" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-1595" y="34" width="1601" height="992" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-1625" y="53" />
+                            <value x="-1595" y="34" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1601" y="992" />
@@ -718,11 +718,12 @@
                     <Properties>
                         <Property mapKey="crossRadius" name="crossRadius" value="0.039999999" />
                         <Property mapKey="datasetIdentifier" name="datasetIdentifier" value="" />
-                        <Property mapKey="edgeMatchRatio" name="edgeMatchRatio" value="0.921568632" />
+                        <Property mapKey="edgeMatchRatio" name="edgeMatchRatio" value="0.599118948" />
                         <Property mapKey="enabled" name="enabled" value="true" />
-                        <Property mapKey="lengthSimilarity" name="lengthSimilarity" value="0.908492744" />
-                        <Property mapKey="matchingAlgorithm" name="matchingAlgorithm" value="lap" />
-                        <Property mapKey="nodeMatchRatio" name="nodeMatchRatio" value="0.961538434" />
+                        <Property mapKey="lengthSimilarity" name="lengthSimilarity" value="0.587684333" />
+                        <Property mapKey="matchingAlgorithm" name="matchingAlgorithm" value="hungarianNodes" />
+                        <Property mapKey="nodeMatchRatio" name="nodeMatchRatio" value="0.895522416" />
+                        <Property mapKey="renderMode" name="renderMode" value="edges" />
                         <Property mapKey="statExportFile" name="statExportFile" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -761,8 +762,8 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="vesselgraphrenderer.frag" modified="false" />
                                 <item shaderType="0" originalFilename="vesselgraphrenderer_activeedge.vert" modified="false" />
+                                <item shaderType="1" originalFilename="vesselgraphrenderer.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="edgeAvgCrossSectionTF" name="edgeAvgCrossSectionTF" domainFittingStrategy="1" computeHistogram="true">
@@ -1108,14 +1109,13 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="nodeRadiusMultiplier_" name="nodeRadiusMultiplier_" value="0.300000012" />
-                        <Property mapKey="renderEnclosingSpheres" name="renderEnclosingSpheres" value="false" />
                         <Property mapKey="shader" name="shader">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="vesselgraphrenderer.frag" modified="false" />
                                 <item shaderType="0" originalFilename="vesselgraphrenderer.vert" modified="false" />
+                                <item shaderType="1" originalFilename="vesselgraphrenderer.frag" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -1189,15 +1189,15 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="729.997375488" minValue="0.014599947" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="732.917358398" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.027516192" id="ref21">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="729.997375488" minValue="0.014599947" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="732.917358398" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.027794136" id="ref21">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.775783122" y="2.881036282" z="-2.693935156" />
-                            <focus x="0.678438425" y="0.682501078" z="0.152416587" />
+                            <position x="0.775783122" y="2.88916111" z="-2.693934917" />
+                            <focus x="0.678438425" y="0.690626025" z="0.152416587" />
                             <upVector x="0.56880337" y="-0.62712568" z="-0.532142997" />
                             <trackball moveCenter="false">
-                                <center x="0.678438425" y="0.682501078" z="0.152416587" />
+                                <center x="0.678438425" y="0.690626025" z="0.152416587" />
                             </trackball>
                             <sceneLLF x="-0.27218774" y="-0.520000458" z="-1.307578206" />
                             <sceneURB x="1.62906456" y="1.885002613" z="1.61241138" />
@@ -1207,8 +1207,8 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="forceAdaptToScene" name="forceAdaptToScene" />
@@ -1220,8 +1220,8 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="oit_addimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="oit_addimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="oirBlendShader" name="oirBlendShader">
@@ -1229,8 +1229,8 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="oit_blend.frag" modified="false" />
                                 <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="oit_blend.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="renderGeometries" name="renderGeometries" value="true" />
@@ -1330,7 +1330,7 @@
                         <Property mapKey="sliceIndex" name="sliceIndex" value="102" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
-                            <value x="-1" y="-1" z="-1" />
+                            <value x="34" y="42" z="102" />
                         </Property>
                         <Property mapKey="textureMode" name="textureMode" value="2d-texture" />
                         <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true">
@@ -1450,7 +1450,7 @@
                 <Processor type="Canvas" name="Canvas 2" id="ref13">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-340" y="8" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="304" y="293" width="233" height="277" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="false" x="304" y="293" width="233" height="277" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
                             <value x="304" y="293" />

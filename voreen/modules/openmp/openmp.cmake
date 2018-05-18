@@ -3,9 +3,14 @@
 if(WIN32)
     LIST(APPEND MOD_DEFINITIONS /openmp)
 ELSEIF(UNIX)
-    set(CMAKE_CXX_FLAGS "-fopenmp ${CMAKE_CXX_FLAGS}")
-    #LIST(APPEND CMAKE_CXX_FLAGS -fopenmp)
-    SET(MOD_LIBRARIES -lgomp)
+    FIND_PACKAGE(OpenMP)
+    IF(OpenMP_FOUND)
+        MESSAGE(STATUS "- Found OpenMP")
+        SET(CMAKE_CXX_FLAGS "${OpenMP_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
+        SET(MOD_LIBRARIES ${OpenMP_CXX_LIB_NAMES})
+    ELSE()
+        MESSAGE(FATAL_ERROR "Could not find OpenMP")
+    ENDIF()
 ENDIF()
 
 ################################################################################
