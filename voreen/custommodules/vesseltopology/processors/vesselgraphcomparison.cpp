@@ -641,9 +641,11 @@ static std::pair<Matching<Element>, float> munkresMatch(const std::vector<const 
 struct NodeModificationCost {
     static float cost(const VesselGraphNode* n1, const VesselGraphNode* n2) {
         const float deletion_or_addition_cost = 1.0f;
-        Matching<VesselGraphEdge> matching;
-        std::tie(matching, std::ignore) = munkresMatch<PropertyErrorCost>(n1->getEdgesAsPtrs(), n2->getEdgesAsPtrs(), deletion_or_addition_cost);
+        Matching<VesselGraphEdge> _matching;
+        float edge_match_cost;
+        std::tie(_matching, edge_match_cost) = munkresMatch<PropertyErrorCost>(n1->getEdgesAsPtrs(), n2->getEdgesAsPtrs(), deletion_or_addition_cost);
 
+        /*
         float edge_matching_error;
         if(!matching.hasContent()) {
             edge_matching_error = 0;
@@ -658,7 +660,8 @@ struct NodeModificationCost {
             edge_matching_error = avg_property_error*(1.0f - matching.matchRatio());
         }
         tgtAssert(0.0f <= edge_matching_error && edge_matching_error <= 1.0f, "Invalid edge matching error");
-        return tgt::distance(n1->pos_, n2->pos_) / (1-edge_matching_error);
+        */
+        return tgt::distance(n1->pos_, n2->pos_) + edge_match_cost;
     }
 };
 
