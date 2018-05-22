@@ -155,8 +155,8 @@ VolumeBase* HDF5VolumeReader::read(const VolumeURL& origin) {
     Vec3MetaData* spacingMetaData = dynamic_cast<Vec3MetaData*>(metaData.getMetaData(VolumeBase::META_DATA_NAME_SPACING));
     if (spacing.get()) {
         vol->setSpacing(*spacing);
-        if (spacingMetaData && spacingMetaData->getValue() != *spacing) 
-            LWARNING("Spacing has been stored explicitly and differs from value stored in MetaDataContainer. Taking explicit one.");
+        if (spacingMetaData && spacingMetaData->getValue() != *spacing)
+            LWARNING("Spacing has been stored explicitly (" << *spacing << ") and differs from value stored in MetaDataContainer (" << spacingMetaData->getValue() << "). Taking explicit one.");
         metaData.removeMetaData(VolumeBase::META_DATA_NAME_SPACING);
     }
     else if (!spacingMetaData)
@@ -166,7 +166,7 @@ VolumeBase* HDF5VolumeReader::read(const VolumeURL& origin) {
     if (offset.get()) {
         vol->setOffset(*offset);
         if (offsetMetaData && offsetMetaData->getValue() != *offset)
-            LWARNING("Offset has been stored explicitly and differs from value stored in MetaDataContainer. Taking explicit one.");
+            LWARNING("Offset has been stored explicitly (" << *offset << ") and differs from value stored in MetaDataContainer (" << offsetMetaData->getValue() << "). Taking explicit one.");
         metaData.removeMetaData(VolumeBase::META_DATA_NAME_OFFSET);
     }
     else if (!offsetMetaData)
@@ -176,7 +176,7 @@ VolumeBase* HDF5VolumeReader::read(const VolumeURL& origin) {
     if (physicalToWorldTransformation.get()) {
         vol->setPhysicalToWorldMatrix(*physicalToWorldTransformation);
         if (physicalToWorldTransformationMetaData && physicalToWorldTransformationMetaData->getValue() != *physicalToWorldTransformation)
-            LWARNING("Transformation has been stored explicitly and differs from value stored in MetaDataContainer. Taking explicit one.");
+            LWARNING("Offset has been stored explicitly (" << *physicalToWorldTransformation << ") and differs from value stored in MetaDataContainer (" << physicalToWorldTransformationMetaData->getValue() << "). Taking explicit one.");
         metaData.removeMetaData(VolumeBase::META_DATA_NAME_TRANSFORMATION);
     }
     else if (!physicalToWorldTransformationMetaData)
