@@ -121,6 +121,7 @@ public:
      * Reads the Json document from the given input stream after an optional Json preprocessor is applied.
      *
      * @param stream the input stream
+     * @param compressed whether or not the input stream should be expected to be gzip compressed
      *
      * @throws XmlSerializationFormatException if the Json document is incorrect formatted.
      * @throws XmlSerializationVersionMismatchException if the Json document serialization version
@@ -128,7 +129,7 @@ public:
      * @throws XmlSerializationReferenceResolvingException if there are references in
      *     the Json document which cannot be resolved.
      */
-    void read(std::istream& stream);
+    void read(std::istream& stream, bool compressed=false);
 
 
     /// ----------------------------------------------------------------------------
@@ -726,7 +727,7 @@ private:
 
     void readFromValue(const rapidjson::Value& val, bool& data) {
         if(!val.IsBool()) {
-            throw SerializationException("Not a bool");
+            throw SerializationNoSuchDataException("Not a bool");
         } else {
             data = val.GetBool();
         }
@@ -823,7 +824,7 @@ private:
 
     void readFromValue(const rapidjson::Value& val, std::string& data) {
         if(!val.IsString()) {
-            throw SerializationException("Not a string");
+            throw SerializationNoSuchDataException("Not a string");
         } else {
             data = val.GetString();
         }
@@ -864,10 +865,10 @@ private:
 
     const rapidjson::Value& getFromValue(const rapidjson::Value& node, const std::string& key) {
         if(!node.IsObject()) {
-            throw SerializationException("Node is not an object.");
+            throw SerializationNoSuchDataException("Node is not an object.");
         }
         if(!node.HasMember(key.c_str())) {
-            throw SerializationException("Node does not have key \"" + key + "\".");
+            throw SerializationNoSuchDataException("Node does not have key \"" + key + "\".");
         }
         return node[key.c_str()];
     }
@@ -891,7 +892,7 @@ namespace voreen {
 template<class T>
 void JsonDeserializer::readInt(const rapidjson::Value& val, T& data) {
     if(!val.IsInt()) {
-        throw SerializationException("Not an int");
+        throw SerializationNoSuchDataException("Not an int");
     } else {
         data = static_cast<T>(val.GetInt());
     }
@@ -899,7 +900,7 @@ void JsonDeserializer::readInt(const rapidjson::Value& val, T& data) {
 template<class T>
 void JsonDeserializer::readUint(const rapidjson::Value& val, T& data) {
     if(!val.IsUint()) {
-        throw SerializationException("Not an int");
+        throw SerializationNoSuchDataException("Not an int");
     } else {
         data = static_cast<T>(val.GetUint());
     }
@@ -908,7 +909,7 @@ void JsonDeserializer::readUint(const rapidjson::Value& val, T& data) {
 template<class T>
 void JsonDeserializer::readFloat(const rapidjson::Value& val, T& data) {
     if(!val.IsDouble()) {
-        throw SerializationException("Not a float");
+        throw SerializationNoSuchDataException("Not a float");
     } else {
         data = static_cast<T>(val.GetDouble());
     }
@@ -917,7 +918,7 @@ void JsonDeserializer::readFloat(const rapidjson::Value& val, T& data) {
 template<class T>
 void JsonDeserializer::readTgtVector(const rapidjson::Value& val, T& data) {
     if(!val.IsArray()) {
-        throw SerializationException("Not an array");
+        throw SerializationNoSuchDataException("Not an array");
     }
     if(val.Size() != data.size) {
         throw SerializationException("Invalid array size");
@@ -930,7 +931,7 @@ void JsonDeserializer::readTgtVector(const rapidjson::Value& val, T& data) {
 template<class T>
 void JsonDeserializer::readTgtMatrix(const rapidjson::Value& val, T& data) {
     if(!val.IsArray()) {
-        throw SerializationException("Not an array");
+        throw SerializationNoSuchDataException("Not an array");
     } if(val.Size() != data.cols) {
         throw SerializationException("Invalid array size");
     }
@@ -1016,7 +1017,7 @@ void JsonDeserializer::readFromValue(const rapidjson::Value& val, std::map<T, U,
 template<class T>
 void JsonDeserializer::readFromValueIntoBackInserter(const rapidjson::Value& val, T& collection) {
     if(!val.IsArray()) {
-        throw SerializationException("Value is not an Array.");
+        throw SerializationNoSuchDataException("Value is not an Array.");
     }
 
     for (rapidjson::Value::ConstValueIterator itr = val.Begin(); itr != val.End(); ++itr) {
@@ -1033,7 +1034,7 @@ template<class T>
 void JsonDeserializer::readFromValueIntoMap(const rapidjson::Value& val, T& map, const std::string& valueKey, const std::string& keyKey) {
 
     if(!val.IsArray()) {
-        throw SerializationException("Value is not an Array.");
+        throw SerializationNoSuchDataException("Value is not an Array.");
     }
 
     for (rapidjson::Value::ConstValueIterator itr = val.Begin(); itr != val.End(); ++itr) {
@@ -1043,8 +1044,8 @@ void JsonDeserializer::readFromValueIntoMap(const rapidjson::Value& val, T& map,
         typename T::mapped_type value;
 
         TemporaryNodeChanger nodeChanger(*this, element);
-        Deserializer(*this).deserialize(valueKey, key);
-        Deserializer(*this).deserialize(keyKey, value);
+        Deserializer(*this).deserialize(keyKey, key);
+        Deserializer(*this).deserialize(valueKey, value);
 
         map[key] = value;
     }

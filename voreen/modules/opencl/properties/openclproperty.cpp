@@ -50,7 +50,7 @@ void OpenCLSource::deserialize(Deserializer& s) {
         s.deserialize("programFilenamePaths",tmp);
         programFilename_ = tmp.getPath();
     }
-    catch (XmlSerializationNoSuchDataException) {
+    catch (SerializationNoSuchDataException) {
         s.removeLastError();
         //LINFO("trying old deserialization");
         //old deserialization

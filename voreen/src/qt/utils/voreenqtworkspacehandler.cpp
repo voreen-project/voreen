@@ -407,20 +407,20 @@ bool VoreenQtWorkspaceHandler::checkForReadOnly(const std::string& wsFilepath) {
     TiXmlElement* root = document.RootElement();
     // Is there no root element?
     if (!root)
-        throw XmlSerializationFormatException(std::string("No root node found."));
+        throw SerializationFormatException(std::string("No root node found."));
 
     // Has root node incorrect name?
     if (root->ValueStr() != XmlSerializationConstants::ROOTNODE) {
-        throw XmlSerializationFormatException("XML root node name is '" + root->ValueStr()
+        throw SerializationFormatException("XML root node name is '" + root->ValueStr()
                                               + "' instead of '" + XmlSerializationConstants::ROOTNODE + "'.");
     }
     const std::string* version = root->Attribute(XmlSerializationConstants::VERSIONATTRIBUTE);
     // Is serialization version not set?
     if (!version)
-        throw XmlSerializationFormatException("XML root node has no version attribute.");
+        throw SerializationFormatException("XML root node has no version attribute.");
     // Does XmlSerializer and XmlDeserializer version not match the XML document version?
     if (*version != XmlSerializationConstants::VERSION) {
-        throw XmlSerializationVersionMismatchException("XML document has version " + *version
+        throw SerializationVersionMismatchException("XML document has version " + *version
                                                         + " instead of " + XmlSerializationConstants::VERSION + ".");
     }
     // deserialize readonly from workspace

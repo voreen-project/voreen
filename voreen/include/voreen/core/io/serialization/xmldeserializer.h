@@ -129,10 +129,10 @@ public:
      * @param stream the input stream
      * @param xmlProcessor XML preprocessor
      *
-     * @throws XmlSerializationFormatException if the XML document is incorrect formatted.
-     * @throws XmlSerializationVersionMismatchException if the XML document serialization version
+     * @throws SerializationFormatException if the XML document is incorrect formatted.
+     * @throws SerializationVersionMismatchException if the XML document serialization version
      *     does not match with the serialization version of this class.
-     * @throws XmlSerializationReferenceResolvingException if there are references in
+     * @throws SerializationReferenceResolvingException if there are references in
      *     the XML document which cannot be resolved.
      */
     void read(std::istream& stream, XmlProcessor* xmlProcessor = 0);
@@ -154,9 +154,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, bool& data);
 
@@ -166,9 +166,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, char& data);
 
@@ -178,9 +178,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, signed char& data);
 
@@ -190,9 +190,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, unsigned char& data);
 
@@ -202,9 +202,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, uint16_t& data);
 
@@ -214,9 +214,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, int16_t& data);
 
@@ -226,9 +226,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, uint32_t& data);
 
@@ -238,9 +238,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, int32_t& data);
 
@@ -252,9 +252,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, long unsigned int& data);
 #endif
@@ -265,9 +265,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, uint64_t& data);
 
@@ -277,9 +277,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, int64_t& data);
 
@@ -289,9 +289,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, float& data);
 
@@ -301,9 +301,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, double& data);
 
@@ -313,9 +313,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, long double& data);
 
@@ -325,9 +325,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, std::string& data);
 
@@ -337,9 +337,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::vec2& data);
 
@@ -349,9 +349,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::vec3& data);
 
@@ -361,9 +361,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::vec4& data);
 
@@ -373,9 +373,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::dvec2& data);
 
@@ -385,9 +385,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::dvec3& data);
 
@@ -397,9 +397,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::dvec4& data);
 
@@ -409,9 +409,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::ivec2& data);
 
@@ -421,9 +421,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::ivec3& data);
 
@@ -433,9 +433,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::ivec4& data);
 
@@ -445,9 +445,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::col3& data);
 
@@ -457,9 +457,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::col4& data);
 
@@ -469,9 +469,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::mat2& data);
 
@@ -481,9 +481,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::mat3& data);
 
@@ -493,9 +493,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::mat4& data);
 
@@ -505,9 +505,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::Matrix2d& data);
 
@@ -517,9 +517,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::Matrix3d& data);
 
@@ -529,9 +529,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, tgt::Matrix4d& data);
 
@@ -541,9 +541,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     template<typename T>
     void deserialize(const std::string& key, tgt::TemplateBounds<T>& data);
@@ -557,9 +557,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized @c Serializable realization
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     void deserialize(const std::string& key, Serializable& data);
 
@@ -571,9 +571,9 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized pointer reference
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -588,10 +588,10 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized pair
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
@@ -614,10 +614,10 @@ public:
      * @param collection variable to store deserialized data collection
      * @param itemKey XML node key for each XML child node
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
@@ -639,10 +639,10 @@ public:
      * @param collection variable to store deserialized data collection
      * @param itemKey XML node key for each XML child node
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
@@ -666,10 +666,10 @@ public:
      * @param valueKey XML node key for each value node
      * @param keyKey key for each XML key node or attribute
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
@@ -693,7 +693,7 @@ private:
      * @param element XML element containing the id attribute
      * @param address the address
      *
-     * @throws XmlSerializationDuplicateIdException if id already exists
+     * @throws SerializationDuplicateIdException if id already exists
      */
     inline void addReferenceAddress(TiXmlElement* element, void* address);
 
@@ -728,7 +728,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -744,7 +744,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -760,7 +760,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -776,7 +776,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -792,7 +792,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -808,7 +808,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -824,7 +824,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -840,7 +840,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -856,7 +856,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -872,7 +872,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -888,7 +888,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -904,7 +904,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -920,7 +920,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -936,7 +936,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -952,7 +952,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -968,7 +968,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -984,7 +984,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -1000,7 +1000,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -1016,7 +1016,7 @@ private:
      *
      * @return pointer to allocated memory
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -1032,7 +1032,7 @@ private:
      *
      * @return pointer to allocated memory or @c null in case of memory was not allocatable
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -1048,7 +1048,7 @@ private:
      *
      * @return pointer to allocated memory or @c null in case of memory was not allocatable
      *
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -1084,10 +1084,10 @@ private:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -1102,9 +1102,9 @@ private:
      * @param vector variable to store deserialized vector
      * @param isColor flag determine if given vector is a color
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
      */
     template<class T>
     inline void deserializeTgtVector(const std::string& key, T& vector, const bool& isColor = false);
@@ -1120,10 +1120,10 @@ private:
      * @param data variable to store deserialized data
      * @param markVisited if @c true the XML node with given @c nodeKey is marked as visited
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
@@ -1146,7 +1146,7 @@ private:
      *
      * @returns the next XML element with given @c key as name
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
      */
     TiXmlElement* getNextXmlElement(const std::string& key);
 
@@ -1266,7 +1266,7 @@ inline void XmlDeserializer::addReferenceAddress(TiXmlElement* element, void* ad
 
     // Does id already exists?
     if (idAddressMap_.find(*id) != idAddressMap_.end())
-        raise(XmlSerializationDuplicateIdException("Multiple XML nodes share the id attribute '" + *id + "'"));
+        raise(SerializationDuplicateIdException("Multiple XML nodes share the id attribute '" + *id + "'"));
 
     // If there are unresolved references to this id, resolve them...
     UnresolvedReferenceMapType::iterator idIterator = unresolvedReferenceMap_.find(*id);
@@ -1316,7 +1316,7 @@ inline T* XmlDeserializer::allocateMemory(const std::string* type) {
                 data = dynamic_cast<T*>(serializable);
             }
             catch (std::exception& e) {
-                raise(XmlSerializationMemoryAllocationException("Object of type '" + *type + "' could not be created: " + std::string(e.what())));
+                raise(SerializationMemoryAllocationException("Object of type '" + *type + "' could not be created: " + std::string(e.what())));
             }
             // Was factory capable of instance creation?
             if (data)
@@ -1368,9 +1368,9 @@ template<class T> inline T* XmlDeserializer::allocateMemory(AbstractSerializable
     else {
         // Raise exception since we cannot allocate memory for abstract classes without a factory...
         if (type)
-            raise(XmlSerializationMemoryAllocationException("Object of type '" + *type + "' could not be created (no matching factory)."));
+            raise(SerializationMemoryAllocationException("Object of type '" + *type + "' could not be created (no matching factory)."));
         else
-            raise(XmlSerializationMemoryAllocationException("Object of type '" + std::string(typeid(T).name()) + "' could not be created (no matching factory)."));
+            raise(SerializationMemoryAllocationException("Object of type '" + std::string(typeid(T).name()) + "' could not be created (no matching factory)."));
         return 0;
     }
 }
@@ -1468,13 +1468,13 @@ inline void XmlDeserializer::deserializeSimpleTypes(const std::string& key, T& d
     if (useAttributes_) {
         value = element->Attribute(key);
         if (!value)
-            raise(XmlSerializationNoSuchDataException("No attribute with key '" + key + "' found."));
+            raise(SerializationNoSuchDataException("No attribute with key '" + key + "' found."));
     }
     else {
         // Is there no value attribute in XML element?
         value = element->Attribute(XmlSerializationConstants::VALUEATTRIBUTE);
         if (!value)
-            raise(XmlSerializationFormatException("XML node '" + key + "' does not contain value attribute."));
+            raise(SerializationFormatException("XML node '" + key + "' does not contain value attribute."));
     }
 
     convertStringToData(*value, data);
@@ -1514,9 +1514,9 @@ inline void XmlDeserializer::deserializeSimpleTypes(const std::string& key, std:
         if (!element->FirstChild() || element->FirstChild()->Type() != TiXmlElement::TINYXML_TEXT) {
             // Deserialize from XML attributes?
             if (useAttributes_)
-                raise(XmlSerializationNoSuchDataException("Neither a '" + key + "' attribute nor text content data exists."));
+                raise(SerializationNoSuchDataException("Neither a '" + key + "' attribute nor text content data exists."));
             else
-                raise(XmlSerializationFormatException("XML node '" + key + "' neither has a value attribute nor contains text data."));
+                raise(SerializationFormatException("XML node '" + key + "' neither has a value attribute nor contains text data."));
         }
 
         data = element->FirstChild()->ToText()->ValueStr();
@@ -1549,7 +1549,7 @@ inline void XmlDeserializer::deserializeTgtVector(const std::string& key, T& vec
 
     // Is there no x attribute?
     if (!x)
-        raise(XmlSerializationFormatException("Xml node '" + key + "' has no x-attribute."));
+        raise(SerializationFormatException("Xml node '" + key + "' has no x-attribute."));
 
     if (isColor) {
         // ATTENTION: The string to int to type conversion is mandatory,
@@ -1566,7 +1566,7 @@ inline void XmlDeserializer::deserializeTgtVector(const std::string& key, T& vec
     if (vector.size >= 2) {
         // Is there no y attribute?
         if (!y)
-            raise(XmlSerializationFormatException("Xml node '" + key + "' has no y-attribute."));
+            raise(SerializationFormatException("Xml node '" + key + "' has no y-attribute."));
 
         if (isColor) {
             // ATTENTION: The string to int to type conversion is mandatory,
@@ -1584,7 +1584,7 @@ inline void XmlDeserializer::deserializeTgtVector(const std::string& key, T& vec
     if (vector.size >= 3) {
         // Is there no z attribute?
         if (!z)
-            raise(XmlSerializationFormatException("Xml node '" + key + "' has no z-attribute."));
+            raise(SerializationFormatException("Xml node '" + key + "' has no z-attribute."));
 
         if (isColor) {
             // ATTENTION: The string to int to type conversion is mandatory,
@@ -1602,7 +1602,7 @@ inline void XmlDeserializer::deserializeTgtVector(const std::string& key, T& vec
     if ((int)vector.size >= 4) {
         // Is there no w attribute?
         if (!w)
-            raise(XmlSerializationFormatException("Xml node '" + key + "' has no w-attribute."));
+            raise(SerializationFormatException("Xml node '" + key + "' has no w-attribute."));
 
         if (isColor) {
             // ATTENTION: The string to int to type conversion is mandatory,
@@ -1651,12 +1651,12 @@ inline void XmlDeserializer::deserializeCollectionConstIteratorItems(const std::
 
                 collection.insert(collection.end(), std::move(item));
             }
-            catch (XmlSerializationMemoryAllocationException&) {
+            catch (SerializationMemoryAllocationException&) {
                 // Just ignore items for which no memory was allocatable...
             }
         }
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         // There are just no more collection items, just ignore the exception...
         removeLastError();
     }
@@ -1688,10 +1688,10 @@ inline void XmlDeserializer::deserializeCollection(const std::string& key, T& co
     try {
         getNextXmlElement(itemKey);
         // Collection is too small for storing all serialized values. Log it, but do not treat as error.
-        //addError(XmlSerializationMemoryAllocationException("Not enough allocated items in collection."));
+        //addError(SerializationMemoryAllocationException("Not enough allocated items in collection."));
         LWARNING("Not enough allocated items in collection with key: " << key);
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         removeLastError();
     }
 
@@ -1726,7 +1726,7 @@ inline void XmlDeserializer::deserializeMap(const std::string& key,
                 else
                     Deserializer(*this).deserialize(keyKey, key);
             }
-            catch (XmlSerializationMemoryAllocationException&) {
+            catch (SerializationMemoryAllocationException&) {
                 memoryAllocationExceptionCatched = true;
             }
 
@@ -1734,7 +1734,7 @@ inline void XmlDeserializer::deserializeMap(const std::string& key,
             if (usePointerContentSerialization_) {
                 if (map.find(key) == map.end()) {
                     // There is no map item with deserialized key. Log it, but do not treat it as error.
-                    //addError(XmlSerializationMemoryAllocationException("No allocated map item with key '" + convertDataToString(key) + "'."));
+                    //addError(SerializationMemoryAllocationException("No allocated map item with key '" + convertDataToString(key) + "'."));
                     LWARNING("No allocated map item with key '" << convertDataToString(key) << "'.");
                     getNextXmlElement(valueKey);
                     continue;
@@ -1758,7 +1758,7 @@ inline void XmlDeserializer::deserializeMap(const std::string& key,
                     else
                         Deserializer(*this).deserialize(valueKey, value);
                 }
-                catch (XmlSerializationMemoryAllocationException&) {
+                catch (SerializationMemoryAllocationException&) {
                     memoryAllocationExceptionCatched = true;
                 }
             }
@@ -1767,7 +1767,7 @@ inline void XmlDeserializer::deserializeMap(const std::string& key,
                 map[key] = value;
         }
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         // There are just no more collection items, just ignore the exception...
         removeLastError();
     }

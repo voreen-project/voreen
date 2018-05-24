@@ -84,12 +84,12 @@ void XmlSerializer::checkAttributeKey(const std::string& key) {
         || key == XmlSerializationConstants::REFERENCEATTRIBUTE
         || key == XmlSerializationConstants::TYPEATTRIBUTE)
     {
-        raise(XmlSerializationAttributeNamingException("'" + key + "' is a reserved XML attribute name."));
+        raise(SerializationAttributeNamingException("'" + key + "' is a reserved XML attribute name."));
     }
 
     // Does key already exists?
     if (node_->ToElement()->Attribute(key))
-        raise(XmlSerializationAttributeNamingException("XML attribute with name '" + key + "' already exists."));
+        raise(SerializationAttributeNamingException("XML attribute with name '" + key + "' already exists."));
 }
 
 void XmlSerializer::moveAttributeToFront(const std::string& key, TiXmlElement* element) {

@@ -293,7 +293,7 @@ void NumericProperty<T>::deserialize(Deserializer& s) {
             s.deserialize("maxValue", maxValue_);
         }
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         s.removeLastError();
     }
 
@@ -308,7 +308,7 @@ void NumericProperty<T>::deserialize(Deserializer& s) {
     try {
         s.deserialize("tracking", tracking_);
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         s.removeLastError();
     }
 }

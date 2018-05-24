@@ -204,17 +204,24 @@ void JsonDeserializer::deserialize(const std::string& key, Serializable& data) {
     deserializeFromMember(key, data);
 }
 
-void JsonDeserializer::read(std::istream& stream)
+void JsonDeserializer::read(std::istream& stream, bool compressed)
 {
     using namespace boost::iostreams;
 
     // Prepare gzip compressing stream
-    filtering_istream decompressingStream;
-    decompressingStream.push(gzip_decompressor());
-    decompressingStream.push(stream);
 
     documentBuffer_.clear();
-    std::copy(std::istream_iterator<char>(decompressingStream), std::istream_iterator<char>(), std::back_inserter(documentBuffer_));
+
+    if(compressed) {
+        filtering_istream decompressingStream;
+        decompressingStream.push(gzip_decompressor());
+        decompressingStream.push(stream);
+
+        std::copy(std::istream_iterator<char>(decompressingStream), std::istream_iterator<char>(), std::back_inserter(documentBuffer_));
+    } else {
+        std::copy(std::istream_iterator<char>(stream), std::istream_iterator<char>(), std::back_inserter(documentBuffer_));
+    }
+
     documentBuffer_.push_back(0); //append string-terminating zero byte.
     rapidjson::ParseResult parse_result = document_.ParseInsitu<rapidjson::kParseNanAndInfFlag>(documentBuffer_.data());
 

@@ -57,7 +57,7 @@ void VesselGraphSource::process() {
     JsonDeserializer deserializer;
     try {
         std::fstream f(path, std::ios::in);
-        deserializer.read(f);
+        deserializer.read(f, true);
         deserializer.deserialize("graph", *output);
 
     } catch(SerializationException e) {

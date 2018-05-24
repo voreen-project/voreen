@@ -125,9 +125,9 @@ public:
      * @param key the Json node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a Json node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple Json nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a Json node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple Json nodes share same id attribute
      */
     template<typename T>
     void deserialize(const std::string& key, T& data);
@@ -138,9 +138,9 @@ public:
      * @param key the Json node key
      * @param data variable to store deserialized data
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a Json node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple Json nodes share same id attribute
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a Json node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple Json nodes share same id attribute
      */
     template<typename T>
     void deserialize(const std::string& key, tgt::TemplateBounds<T>& data);
@@ -153,9 +153,9 @@ public:
      * @param key the Json node key
      * @param data variable to store deserialized pointer reference
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a Json node is incorrect formatted.
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a Json node is incorrect formatted.
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      */
     template<class T>
@@ -170,10 +170,10 @@ public:
      * @param key the Json node key
      * @param data variable to store deserialized pair
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a Json node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple Json nodes share same id attribute
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a Json node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple Json nodes share same id attribute
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
@@ -192,10 +192,10 @@ public:
      * @param data variable to store deserialized data vector
      * @param itemKey Json node key for each Json child node
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a Json node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple Json nodes share same id attribute
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a Json node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple Json nodes share same id attribute
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
@@ -214,10 +214,10 @@ public:
      * @param data variable to store deserialized data vector
      * @param itemKey Json node key for each Json child node
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a Json node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple Json nodes share same id attribute
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a Json node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple Json nodes share same id attribute
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
@@ -236,10 +236,10 @@ public:
      * @param data variable to store deserialized data vector
      * @param itemKey Json node key for each Json child node
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a Json node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple Json nodes share same id attribute
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a Json node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple Json nodes share same id attribute
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
@@ -260,13 +260,13 @@ public:
      * @param data variable to store deserialized data set
      * @param itemKey Json node key for each Json child node
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a Json node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple Json nodes share same id attribute
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a Json node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple Json nodes share same id attribute
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      *         or if there are not enough allocate items if pointer content serialization is enabled
-     * @throws XmlSerializationInvalidOperationException
+     * @throws SerializationInvalidOperationException
      *         if pointer content serialization is enabled,
      *         because of possible hash problems on deserialization
      */
@@ -289,10 +289,10 @@ public:
      * @param valueKey Json node key for each value node
      * @param keyKey key for each Json key node or attribute
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a Json node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple Json nodes share same id attribute
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a Json node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple Json nodes share same id attribute
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
@@ -397,10 +397,10 @@ private:
      * @param collection variable to store deserialized data collection
      * @param itemKey XML node key for each XML child node
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
@@ -422,10 +422,10 @@ private:
      * @param collection variable to store deserialized data collection
      * @param itemKey XML node key for each XML child node
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
@@ -449,10 +449,10 @@ private:
      * @param valueKey XML node key for each value node
      * @param keyKey key for each XML key node or attribute
      *
-     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
-     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
-     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
-     * @throws XmlSerializationMemoryAllocationException
+     * @throws SerializationNoSuchDataException if no data with the given key can be found.
+     * @throws SerializationFormatException if a XML node is incorrect formatted.
+     * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute
+     * @throws SerializationMemoryAllocationException
      *         in case of trying to allocate memory for an @c AbstractSerializable
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
@@ -499,7 +499,7 @@ void Deserializer::optionalDeserialize(const std::string& key, T& data, const T&
     try {
         deserialize(key, data);
     }
-    catch (XmlSerializationNoSuchDataException e) {
+    catch (SerializationNoSuchDataException e) {
         data = defaultValue;
         removeLastError();
     }
@@ -547,7 +547,7 @@ void Deserializer::deserialize(const std::string& key, std::list<T>& data, const
 template<class T, class C>
 void Deserializer::deserialize(const std::string& key, std::set<T, C>& data, const std::string& itemKey) {
     if(getUsePointerContentSerialization()) {
-        raise(XmlSerializationInvalidOperationException("Set deserialization using pointer content is not permitted."));
+        raise(SerializationInvalidOperationException("Set deserialization using pointer content is not permitted."));
     }
     deserializeCollectionConstIteratorItems(key, data, itemKey);
 }

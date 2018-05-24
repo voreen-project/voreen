@@ -592,7 +592,7 @@ void Workspace::deserialize(Deserializer& s) {
     try {
         s.deserialize("readonly", readOnly_);
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         s.removeLastError();
         readOnly_ = false;
     }
@@ -603,7 +603,7 @@ void Workspace::deserialize(Deserializer& s) {
     // Deserialize animation if present...
     try {
         s.deserialize("Animation", animation_);
-    } catch (XmlSerializationNoSuchDataException&) {
+    } catch (SerializationNoSuchDataException&) {
         s.removeLastError();
     }
 
@@ -631,7 +631,7 @@ void Workspace::deserialize(Deserializer& s) {
     try {
         s.deserialize("ApplicationModeConfig", applicationModeConfig_);
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         s.removeLastError();
         applicationModeConfig_.clearGroups();
     }
@@ -639,7 +639,7 @@ void Workspace::deserialize(Deserializer& s) {
     try {
         s.deserialize("GlobalDescription", description_);
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         s.removeLastError();
         description_ = "";
     }

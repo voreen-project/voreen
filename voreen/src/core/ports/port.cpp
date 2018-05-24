@@ -551,7 +551,7 @@ void Port::deserialize(Deserializer& s) {
             s.deserialize("invalidationLevel", level);
             invalidationLevel_ = static_cast<Processor::InvalidationLevel>(level);
         }
-        catch (XmlSerializationNoSuchDataException&) {
+        catch (SerializationNoSuchDataException&) {
             s.removeLastError();
         }
     }
@@ -559,7 +559,7 @@ void Port::deserialize(Deserializer& s) {
     try {
         s.deserialize("guiName", guiName_);
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         s.removeLastError();
     }
 

@@ -123,6 +123,7 @@ void runTest(const TestFunctionPointer& testFunction, const std::string& testNam
 /**
  * Tests serialization and deserialization of simple data types and pointers to simple data types.
  */
+template<typename SerializerType, typename DeserializerType>
 void testSimpleData() {
     bool b = true;
     char c = 'j';
@@ -145,7 +146,7 @@ void testSimpleData() {
     std::stringstream stream;
 
     try {
-        XmlSerializer s;
+        SerializerType s;
         s.serialize("b", b);
         s.serialize("c", c);
         s.serialize("ss", ss);
@@ -185,7 +186,7 @@ void testSimpleData() {
     std::string dstrn = "";
     std::string dstrr = "";
 
-    XmlDeserializer ds;
+    DeserializerType ds;
     ds.read(stream);
     ds.deserialize("b", b);
     ds.deserialize("c", c);
@@ -226,6 +227,7 @@ void testSimpleData() {
 /**
  * Tests serialization and deserialization of tgt types.
  */
+template<typename SerializerType, typename DeserializerType>
 void testTgtData() {
     tgt::vec2 v2(1.0f, 2.0f);
     tgt::vec3 v3(3.0f, 4.0f, 5.0f);
@@ -237,7 +239,7 @@ void testTgtData() {
 
     std::stringstream stream;
 
-    XmlSerializer s;
+    SerializerType s;
     s.serialize("v2", v2);
     s.serialize("v3", v3);
     s.serialize("v4", v4);
@@ -255,7 +257,7 @@ void testTgtData() {
     iv3 = tgt::ivec3(0, 0, 0);
     iv4 = tgt::ivec4(0, 0, 0, 0);
 
-    XmlDeserializer d;
+    DeserializerType d;
     d.read(stream);
     d.deserialize("v2", v2);
     d.deserialize("v3", v3);
@@ -289,13 +291,14 @@ void testTgtData() {
  * Helper function which test serialization and deserialization of a variable and pointer
  * with different serialization and deserialization order.
  */
+template<typename SerializerType, typename DeserializerType>
 void testPtrVarOrder(const bool& varFirstAtSerialization, const bool& varFirstAtDeserialization) {
     int i = 1;
     int* ip = &i;
 
     std::stringstream stream;
 
-    XmlSerializer s;
+    SerializerType s;
     if (varFirstAtSerialization) {
         s.serialize("i", i);
         s.serialize("ip", ip);
@@ -310,7 +313,7 @@ void testPtrVarOrder(const bool& varFirstAtSerialization, const bool& varFirstAt
     i = 0;
     ip = 0;
 
-    XmlDeserializer d;
+    DeserializerType d;
     d.read(stream);
     if (varFirstAtDeserialization) {
         d.deserialize("i", i);
@@ -331,8 +334,9 @@ void testPtrVarOrder(const bool& varFirstAtSerialization, const bool& varFirstAt
  * secondly a pointer is serialized and afterwards first the variable and
  * secondly the pointer is deserialized.
  */
+template<typename SerializerType, typename DeserializerType>
 void testVarPtrVarPtrOrder() {
-    testPtrVarOrder(true, true);
+    testPtrVarOrder<SerializerType, DeserializerType>(true, true);
 }
 
 /**
@@ -340,8 +344,9 @@ void testVarPtrVarPtrOrder() {
  * secondly a pointer is serialized and afterwards first the pointer and
  * secondly the variable is deserialized.
  */
+template<typename SerializerType, typename DeserializerType>
 void testVarPtrPtrVarOrder() {
-    testPtrVarOrder(true, false);
+    testPtrVarOrder<SerializerType, DeserializerType>(true, false);
 }
 
 /**
@@ -349,8 +354,9 @@ void testVarPtrPtrVarOrder() {
  * secondly a variable is serialized and afterwards first the variable and
  * secondly the pointer is deserialized.
  */
+template<typename SerializerType, typename DeserializerType>
 void testPtrVarVarPtrOrder() {
-    testPtrVarOrder(false, true);
+    testPtrVarOrder<SerializerType, DeserializerType>(false, true);
 }
 
 /**
@@ -358,8 +364,9 @@ void testPtrVarVarPtrOrder() {
  * secondly a variable is serialized and afterwards first the pointer and
  * secondly the variable is deserialized.
  */
+template<typename SerializerType, typename DeserializerType>
 void testPtrVarPtrVarOrder() {
-    testPtrVarOrder(false, false);
+    testPtrVarOrder<SerializerType, DeserializerType>(false, false);
 }
 
 /**
@@ -434,6 +441,7 @@ public:
  * Tests serialization and deserialization of user defined data classes which realizes
  * the @c Serializable interface.
  */
+template<typename SerializerType, typename DeserializerType>
 void testUserDefinedData() {
     UserDefinedData d;
     d.data = 1;
@@ -448,7 +456,7 @@ void testUserDefinedData() {
     std::stringstream stream;
 
     try {
-        XmlSerializer s;
+        SerializerType s;
         s.serialize("d", d);
         s.serialize("dp", dp);
         s.serialize("dp2", dp2);
@@ -468,7 +476,7 @@ void testUserDefinedData() {
     dc.data.data = 0;
     dc.datap = 0;
 
-    XmlDeserializer de;
+    DeserializerType de;
     de.read(stream);
     de.deserialize("d", d);
     de.deserialize("dp", dp);
@@ -493,6 +501,7 @@ void testUserDefinedData() {
 /**
  * Tests serialization and deserialization of STL sequence containrs like @c std::vector.
  */
+template<typename SerializerType, typename DeserializerType>
 void testSequenceContainers() {
     std::vector<int> v;
     v.push_back(1);
@@ -535,7 +544,7 @@ void testSequenceContainers() {
 
     std::stringstream stream;
 
-    XmlSerializer s;
+    SerializerType s;
     Serializer serializer(s);
     serializer.serialize("v", v);
     serializer.serialize("vec_uint8", vec_uint8);
@@ -550,6 +559,16 @@ void testSequenceContainers() {
     // Reset all variables to default values...
     v.clear();
     test(v.size() == 0, "vector v is not empty");
+
+    vec_uint8.clear();
+    test(vec_uint8.size() == 0, "vector vec_uint8 is not empty");
+    vec_int8.clear();
+    test(vec_int8.size() == 0, "vector vec_int8 is not empty");
+    vec_uint16.clear();
+    test(vec_uint16.size() == 0, "vector vec_uint16 is not empty");
+    vec_uint64.clear();
+    test(vec_uint64.size() == 0, "vector vec_uint64 is not empty");
+
     numbers.clear();
     test(numbers.size() == 0, "vector numbers is not empty");
     deque.clear();
@@ -557,7 +576,7 @@ void testSequenceContainers() {
     list.clear();
     test(list.size() == 0, "list is not empty");
 
-    XmlDeserializer d;
+    DeserializerType d;
     d.read(stream);
     Deserializer deserializer(d);
     deserializer.deserialize("v", v);
@@ -614,6 +633,7 @@ void testSequenceContainers() {
 /**
  * Tests serialization and deserialization of STL sequence containers with 'useAttributes' enabled
  */
+template<typename SerializerType, typename DeserializerType>
 void testSequenceContainersUseAttributes() {
     std::vector<int> v;
     v.push_back(1);
@@ -656,7 +676,7 @@ void testSequenceContainersUseAttributes() {
 
     std::stringstream stream;
 
-    XmlSerializer s;
+    SerializerType s;
     s.setUseAttributes(true);
     Serializer serializer(s);
     serializer.serialize("v", v);
@@ -672,6 +692,16 @@ void testSequenceContainersUseAttributes() {
     // Reset all variables to default values...
     v.clear();
     test(v.size() == 0, "vector v is not empty");
+
+    vec_uint8.clear();
+    test(vec_uint8.size() == 0, "vector vec_uint8 is not empty");
+    vec_int8.clear();
+    test(vec_int8.size() == 0, "vector vec_int8 is not empty");
+    vec_uint16.clear();
+    test(vec_uint16.size() == 0, "vector vec_uint16 is not empty");
+    vec_uint64.clear();
+    test(vec_uint64.size() == 0, "vector vec_uint64 is not empty");
+
     numbers.clear();
     test(numbers.size() == 0, "vector numbers is not empty");
     deque.clear();
@@ -679,7 +709,7 @@ void testSequenceContainersUseAttributes() {
     list.clear();
     test(list.size() == 0, "list is not empty");
 
-    XmlDeserializer d;
+    DeserializerType d;
     d.setUseAttributes(true);
     d.read(stream);
     Deserializer deserializer(d);
@@ -737,6 +767,7 @@ void testSequenceContainersUseAttributes() {
 /**
  * Tests serialization and deserialization of a @c std::set.
  */
+template<typename SerializerType, typename DeserializerType>
 void testSet() {
     const int SETELEMENTCOUNT = 5;
 
@@ -746,7 +777,7 @@ void testSet() {
 
     std::stringstream stream;
 
-    XmlSerializer s;
+    SerializerType s;
     Serializer serializer(s);
     serializer.serialize("set", set);
     s.write(stream);
@@ -755,7 +786,7 @@ void testSet() {
     set.clear();
     test(set.size() == 0, "set is not empty");
 
-    XmlDeserializer d;
+    DeserializerType d;
     d.read(stream);
     Deserializer deserializer(d);
     deserializer.deserialize("set", set);
@@ -780,6 +811,7 @@ void testSet() {
 /**
  * Tests serialization and deserialization of a @c std::map.
  */
+template<typename SerializerType, typename DeserializerType>
 void testMap() {
     std::map<int, std::string> m;
     m[1] = "one";
@@ -788,7 +820,7 @@ void testMap() {
 
     std::stringstream stream;
 
-    XmlSerializer s;
+    SerializerType s;
     Serializer serializer(s);
     serializer.serialize("m", m);
     s.write(stream);
@@ -797,7 +829,7 @@ void testMap() {
     m.clear();
     test(m.size() == 0, "map is not empty");
 
-    XmlDeserializer d;
+    DeserializerType d;
     d.read(stream);
     Deserializer deserializer(d);
     deserializer.deserialize("m", m);
@@ -812,6 +844,7 @@ void testMap() {
  * Tests serialization and deserialization of cascaded STL containers
  * like @c std::vector or @c std::map.
  */
+template<typename SerializerType, typename DeserializerType>
 void testComplexSTL() {
     std::map<int, std::string> m1, m2, m3;
     m2[1] = "one";
@@ -825,7 +858,7 @@ void testComplexSTL() {
 
     std::stringstream stream;
 
-    XmlSerializer s;
+    SerializerType s;
     Serializer serializer(s);
     serializer.serialize("v", v);
     s.write(stream);
@@ -834,7 +867,7 @@ void testComplexSTL() {
     v.clear();
     test(v.size() == 0, "vector is not empty");
 
-    XmlDeserializer d;
+    DeserializerType d;
     d.read(stream);
     Deserializer deserializer(d);
     deserializer.deserialize("v", v);
@@ -943,6 +976,7 @@ public:
 /**
  * Tests serialization and deserialization of polymorphic classes.
  */
+template<typename SerializerType, typename DeserializerType>
 void testPolymorphism() {
     Parent p;
     p.pdata = 1;
@@ -964,7 +998,7 @@ void testPolymorphism() {
     std::stringstream stream;
 
     try {
-        XmlSerializer s;
+        SerializerType s;
         s.registerFactory(&factory);
         Serializer serializer(s);
         serializer.serialize("p", p);
@@ -992,7 +1026,7 @@ void testPolymorphism() {
     child1 = 0;
     child2 = 0;
 
-    XmlDeserializer d;
+    DeserializerType d;
     d.registerFactory(&factory);
     d.read(stream);
     Deserializer deserializer(d);
@@ -1059,6 +1093,7 @@ public:
 /**
  * Tests serialization and deserialization of graph with a cycle.
  */
+template<typename SerializerType, typename DeserializerType>
 void testCycle() {
     Node node1;
     Node node2;
@@ -1072,7 +1107,7 @@ void testCycle() {
 
     std::stringstream stream;
 
-    XmlSerializer s;
+    SerializerType s;
     Serializer serializer(s);
     serializer.serialize("tree", node1);
     s.write(stream);
@@ -1086,7 +1121,7 @@ void testCycle() {
     node1.successor = 0;
     node1.predecessor = 0;
 
-    XmlDeserializer d;
+    DeserializerType d;
     d.read(stream);
     Deserializer deserializer(d);
     deserializer.deserialize("tree", node1);
@@ -1165,6 +1200,7 @@ class AbstractFactory : public SerializableFactory {
 /**
  * Tests serialization and deserialization of pointers to abstract classes.
  */
+template<typename SerializerType, typename DeserializerType>
 void testIAbstractSerializable() {
     Abstract* a = new Specific();
     dynamic_cast<Specific*>(a)->i = 1;
@@ -1173,7 +1209,7 @@ void testIAbstractSerializable() {
 
     AbstractFactory factory;
 
-    XmlSerializer s;
+    SerializerType s;
     s.registerFactory(&factory);
     Serializer serializer(s);
     serializer.serialize("Abstract", a);
@@ -1183,7 +1219,7 @@ void testIAbstractSerializable() {
     delete a;
     a = 0;
 
-    XmlDeserializer d;
+    DeserializerType d;
     d.registerFactory(&factory);
     d.read(stream);
     Deserializer deserializer(d);
@@ -1201,12 +1237,13 @@ void testIAbstractSerializable() {
  * Tests that direct deseralization of a pointer to an abstract class leads to
  * a @c XMLSerializationMemoryAllocationException.
  */
+template<typename SerializerType, typename DeserializerType>
 void testMemoryAllocationException() {
     Abstract* a = new Specific();
 
     std::stringstream stream;
 
-    XmlSerializer s;
+    SerializerType s;
     Serializer serializer(s);
     serializer.serialize("Abstract", a);
     s.write(stream);
@@ -1215,7 +1252,7 @@ void testMemoryAllocationException() {
     delete a;
     a = 0;
 
-    XmlDeserializer d;
+    DeserializerType d;
     d.read(stream);
     try {
         Deserializer deserializer(d);
@@ -1223,28 +1260,29 @@ void testMemoryAllocationException() {
         delete a;
         test(false, "No exception raised on abstract class memory allocation try");
     }
-    catch (XmlSerializationMemoryAllocationException&) {
+    catch (SerializationMemoryAllocationException&) {
     }
 }
 
 /**
  * Tests that deserialization of not serialized data attempt
- * leads to an @c XmlSerializationNoSuchDataException.
+ * leads to an @c SerializationNoSuchDataException.
  */
+template<typename SerializerType, typename DeserializerType>
 void testNoSuchDataException() {
     std::stringstream stream;
 
-    XmlSerializer s;
+    SerializerType s;
     s.write(stream);
 
-    XmlDeserializer d;
+    DeserializerType d;
     d.read(stream);
     int i;
     try {
         d.deserialize("NotExistentKey", i);
         test(false, "No exception on deserialization of not existent key");
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
     }
 }
 
@@ -1256,6 +1294,7 @@ void testNoSuchDataException() {
  *            you have to consider changing the test every time
  *            the implementation details have changed.
  */
+template<typename SerializerType, typename DeserializerType>
 void testUseAttributes() {
     int i = 1;
     std::string str = "short string";
@@ -1275,7 +1314,7 @@ void testUseAttributes() {
 
     std::stringstream stream;
 
-    XmlSerializer s;
+    SerializerType s;
     s.setUseAttributes(true);
     Serializer serializer(s);
     serializer.serialize("i", i);
@@ -1300,7 +1339,7 @@ void testUseAttributes() {
     test(m.size() == 0, "m not empty");
     test(vv.size() == 0, "vv not empty");
 
-    XmlDeserializer d;
+    DeserializerType d;
     d.setUseAttributes(true);
     d.read(stream);
     Deserializer deserializer(d);
@@ -1337,6 +1376,7 @@ void testUseAttributes() {
  *            you have to consider changing the test every time
  *            the implementation details have changed.
  */
+template<typename SerializerType, typename DeserializerType>
 void testUsePointerContentSerialization() {
     int i = 1;
     int* ip = &i;
@@ -1347,7 +1387,7 @@ void testUsePointerContentSerialization() {
 
     std::stringstream stream;
 
-    XmlSerializer s;
+    SerializerType s;
     s.setUsePointerContentSerialization(true);
     Serializer serializer(s);
     serializer.serialize("i", i);
@@ -1374,7 +1414,7 @@ void testUsePointerContentSerialization() {
     std::map<std::string, int*> am;
     am["three"] = new int(0);
 
-    XmlDeserializer d;
+    DeserializerType d;
     d.read(stream);
     Deserializer deserializer(d);
     deserializer.setUsePointerContentSerialization(true);
@@ -1415,6 +1455,7 @@ void testUsePointerContentSerialization() {
 /**
  * Tests serialization and deserialization of @c AbstractSerializable null pointers.
  */
+template<typename SerializerType, typename DeserializerType>
 void testBugAbstractSerializableNullPointerSerialization() {
     Abstract* a = 0;
 
@@ -1422,14 +1463,14 @@ void testBugAbstractSerializableNullPointerSerialization() {
 
     AbstractFactory factory;
 
-    XmlSerializer s;
+    SerializerType s;
     s.setUseAttributes(true);
     s.registerFactory(&factory);
     Serializer serializer(s);
     serializer.serialize("Abstract", a);
     s.write(stream);
 
-    XmlDeserializer d;
+    DeserializerType d;
     d.setUseAttributes(true);
     d.registerFactory(&factory);
     d.read(stream);
@@ -1437,9 +1478,128 @@ void testBugAbstractSerializableNullPointerSerialization() {
         Deserializer deserializer(d);
         deserializer.deserialize("Abstract", a);
     }
-    catch (XmlSerializationMemoryAllocationException&) {
+    catch (SerializationMemoryAllocationException&) {
         test(false, "bug occured, since memory allocation exception is thrown for 0 pointer");
     }
+}
+
+void runXmlTests() {
+    // Testing simple data serialization...
+    runTest(testSimpleData<XmlSerializer, XmlDeserializer>, "simple data serialization");
+    runTest(testTgtData<XmlSerializer, XmlDeserializer>, "tgt data serialization");
+
+    // Testing different ordered pointer/variable serialization...
+    runTest(testVarPtrVarPtrOrder<XmlSerializer, XmlDeserializer>, "var/ptr serialization var/ptr deserialization");
+    runTest(testVarPtrPtrVarOrder<XmlSerializer, XmlDeserializer>, "var/ptr serialization ptr/var deserialization");
+    runTest(testPtrVarVarPtrOrder<XmlSerializer, XmlDeserializer>, "ptr/var serialization var/ptr deserialization");
+    runTest(testPtrVarPtrVarOrder<XmlSerializer, XmlDeserializer>, "ptr/var serialization ptr/var deserialization");
+
+    // Testing user defined data serialization...
+    runTest(testUserDefinedData<XmlSerializer, XmlDeserializer>, "user defined data serialization");
+
+    // Testing STL sequence containers, like std::vector, serialization...
+    runTest(testSequenceContainers<XmlSerializer, XmlDeserializer>, "STL sequence containers, like std::vector, serialization");
+
+    // Testing STL sequence containers, like std::vector, serialization...
+    runTest(testSequenceContainersUseAttributes<XmlSerializer, XmlDeserializer>, "STL sequence containers with 'useAttributes'");
+
+    // Testing std::map serialization...
+    runTest(testMap<XmlSerializer, XmlDeserializer>, "std::map serialization");
+
+    // Testing std::set serialization...
+    runTest(testSet<XmlSerializer, XmlDeserializer>, "std::set serialization");
+
+    // Testing complex STL container serialization...
+    runTest(testComplexSTL<XmlSerializer, XmlDeserializer>, "complex STL container serialization");
+
+    // Testing polymorphic user definded data serialization...
+    runTest(testPolymorphism<XmlSerializer, XmlDeserializer>, "polymorphic user definded data serialization");
+
+    // Testing cycle serialization...
+    runTest(testCycle<XmlSerializer, XmlDeserializer>, "cycle serialization");
+
+    // Testing serialization using AbstractSerializable...
+    runTest(testIAbstractSerializable<XmlSerializer, XmlDeserializer>, "serialization using AbstractSerializable");
+
+    // Testing memory allocation exception...
+    runTest(testMemoryAllocationException<XmlSerializer, XmlDeserializer>, "exception when deserializing pointer to abstract class");
+
+    // Testing no such data exception...
+    runTest(testNoSuchDataException<XmlSerializer, XmlDeserializer>, "no such data exception when deserializing not existent key");
+
+    // Testing use of XML attributes for serialization...
+    runTest(testUseAttributes<XmlSerializer, XmlDeserializer>, "serialization using XML attributes");
+
+    // Testing use of pointer content serialization...
+    runTest(testUsePointerContentSerialization<XmlSerializer, XmlDeserializer>, "serialization using pointer content serialiaztion");
+
+    // Testing functionality of bug fixes...
+    runTest(testBugAbstractSerializableNullPointerSerialization<XmlSerializer, XmlDeserializer>, "bug fix (serialization of AbstractSerializable 0 pointer)");
+}
+
+void runJsonTests() {
+    // Testing simple data serialization...
+    // runTest(testSimpleData<JsonSerializer, JsonDeserializer>, "simple data serialization");
+    // Ptr data not supported (yet)
+    runTest(testTgtData<JsonSerializer, JsonDeserializer>, "tgt data serialization");
+
+    // Testing different ordered pointer/variable serialization...
+    // runTest(testVarPtrVarPtrOrder<JsonSerializer, JsonDeserializer>, "var/ptr serialization var/ptr deserialization");
+    // runTest(testVarPtrPtrVarOrder<JsonSerializer, JsonDeserializer>, "var/ptr serialization ptr/var deserialization");
+    // runTest(testPtrVarVarPtrOrder<JsonSerializer, JsonDeserializer>, "ptr/var serialization var/ptr deserialization");
+    // runTest(testPtrVarPtrVarOrder<JsonSerializer, JsonDeserializer>, "ptr/var serialization ptr/var deserialization");
+    // Ptr data not supported (yet)
+
+    // Testing user defined data serialization...
+    // runTest(testUserDefinedData<JsonSerializer, JsonDeserializer>, "user defined data serialization");
+    // Ptr data not supported (yet)
+
+    // Testing STL sequence containers, like std::vector, serialization...
+    runTest(testSequenceContainers<JsonSerializer, JsonDeserializer>, "STL sequence containers, like std::vector, serialization");
+
+    // Testing STL sequence containers, like std::vector, serialization...
+    // runTest(testSequenceContainersUseAttributes<JsonSerializer, JsonDeserializer>, "STL sequence containers with 'useAttributes'");
+    // Attributes do not make sense for json
+
+    // Testing std::map serialization...
+    runTest(testMap<JsonSerializer, JsonDeserializer>, "std::map serialization");
+
+    // Testing std::set serialization...
+    runTest(testSet<JsonSerializer, JsonDeserializer>, "std::set serialization");
+
+    // Testing complex STL container serialization...
+    runTest(testComplexSTL<JsonSerializer, JsonDeserializer>, "complex STL container serialization");
+
+    // Testing polymorphic user definded data serialization...
+    //runTest(testPolymorphism<JsonSerializer, JsonDeserializer>, "polymorphic user definded data serialization");
+    // (De)serialization of abstract types not supported by json(de)serializer
+
+    // Testing cycle serialization...
+    // runTest(testCycle<JsonSerializer, JsonDeserializer>, "cycle serialization");
+    // Ptr data not supported (yet)
+
+    // Testing serialization using AbstractSerializable...
+    //runTest(testIAbstractSerializable<JsonSerializer, JsonDeserializer>, "serialization using AbstractSerializable");
+    // (De)serialization of abstract types not supported by json(de)serializer
+
+    // Testing memory allocation exception...
+    // runTest(testMemoryAllocationException<JsonSerializer, JsonDeserializer>, "exception when deserializing pointer to abstract class");
+    // Ptr data not supported (yet)
+
+    // Testing no such data exception...
+    runTest(testNoSuchDataException<JsonSerializer, JsonDeserializer>, "no such data exception when deserializing not existent key");
+
+    // Testing use of XML attributes for serialization...
+    // runTest(testUseAttributes<JsonSerializer, JsonDeserializer>, "serialization using XML attributes");
+    // Attributes do not make sense for json
+
+    // Testing use of pointer content serialization...
+    // runTest(testUsePointerContentSerialization<JsonSerializer, JsonDeserializer>, "serialization using pointer content serialiaztion");
+    // Attributes do not make sense for json
+
+    // Testing functionality of bug fixes...
+    //runTest(testBugAbstractSerializableNullPointerSerialization<JsonSerializer, JsonDeserializer>, "bug fix (serialization of AbstractSerializable 0 pointer)");
+    // (De)serialization of abstract types not supported by json(de)serializer
 }
 
 /**
@@ -1450,57 +1610,11 @@ int main(int argc, char** argv) {
     app.initialize();
     std::cout << "voreen_core Serializer test application started..." << std::endl << std::endl;
 
-    // Testing simple data serialization...
-    runTest(testSimpleData, "simple data serialization");
-    runTest(testTgtData, "tgt data serialization");
+    std::cout << "Running Json Serialization tests" << std::endl;
+    runJsonTests();
 
-    // Testing different ordered pointer/variable serialization...
-    runTest(testVarPtrVarPtrOrder, "var/ptr serialization var/ptr deserialization");
-    runTest(testVarPtrPtrVarOrder, "var/ptr serialization ptr/var deserialization");
-    runTest(testPtrVarVarPtrOrder, "ptr/var serialization var/ptr deserialization");
-    runTest(testPtrVarPtrVarOrder, "ptr/var serialization ptr/var deserialization");
-
-    // Testing user defined data serialization...
-    runTest(testUserDefinedData, "user defined data serialization");
-
-    // Testing STL sequence containers, like std::vector, serialization...
-    runTest(testSequenceContainers, "STL sequence containers, like std::vector, serialization");
-
-    // Testing STL sequence containers, like std::vector, serialization...
-    runTest(testSequenceContainersUseAttributes, "STL sequence containers with 'useAttributes'");
-
-    // Testing std::map serialization...
-    runTest(testMap, "std::map serialization");
-
-    // Testing std::set serialization...
-    runTest(testSet, "std::set serialization");
-
-    // Testing complex STL container serialization...
-    runTest(testComplexSTL, "complex STL container serialization");
-
-    // Testing polymorphic user definded data serialization...
-    runTest(testPolymorphism, "polymorphic user definded data serialization");
-
-    // Testing cycle serialization...
-    runTest(testCycle, "cycle serialization");
-
-    // Testing serialization using AbstractSerializable...
-    runTest(testIAbstractSerializable, "serialization using AbstractSerializable");
-
-    // Testing memory allocation exception...
-    runTest(testMemoryAllocationException, "exception when deserializing pointer to abstract class");
-
-    // Testing no such data exception...
-    runTest(testNoSuchDataException, "no such data exception when deserializing not existent key");
-
-    // Testing use of XML attributes for serialization...
-    runTest(testUseAttributes, "serialization using XML attributes");
-
-    // Testing use of pointer content serialization...
-    runTest(testUsePointerContentSerialization, "serialization using pointer content serialiaztion");
-
-    // Testing functionality of bug fixes...
-    runTest(testBugAbstractSerializableNullPointerSerialization, "bug fix (serialization of AbstractSerializable 0 pointer)");
+    std::cout << std::endl << "Running Xml Serialization tests" << std::endl;
+    runXmlTests();
 
     std::cout << std::endl << "voreen_core Serializer test application finished..." << std::endl;
     std::cout << std::endl << "---" << std::endl;

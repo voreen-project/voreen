@@ -72,7 +72,7 @@ void VesselGraphSave::saveCurrentGraph() {
     try {
         std::fstream f(path, std::ios::out);
 
-        serializer.write(f, prettyJson_.get());
+        serializer.write(f, prettyJson_.get(), true);
     } catch(...) {
         LERROR("Could not save graph " << path);
         return;

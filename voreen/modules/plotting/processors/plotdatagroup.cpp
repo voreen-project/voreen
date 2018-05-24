@@ -128,7 +128,7 @@ void PlotDataGroup::deserialize(Deserializer &s) {
     try {
         s.deserialize("ResetList",resetList_);
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         // superfluous or missing XML data item, just ignore
         s.removeLastError();
     }

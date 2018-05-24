@@ -63,7 +63,7 @@ void Argument::deserialize(Deserializer& s) {
         s.deserialize("name", name_);
         s.deserialize("argumenttype", type_);
     }
-    catch (XmlSerializationNoSuchDataException e) {
+    catch (SerializationNoSuchDataException e) {
     }
     s.optionalDeserialize<bool>("inputArgument", inputArgument_, true);
 
@@ -73,7 +73,7 @@ void Argument::deserialize(Deserializer& s) {
             try {
                 s.deserialize("defaultValue", defaultValue_);
             }
-            catch (XmlSerializationNoSuchDataException e) {
+            catch (SerializationNoSuchDataException e) {
             }
         }
         if (type_ != "Bool") {
@@ -81,7 +81,7 @@ void Argument::deserialize(Deserializer& s) {
                 s.deserialize("minValue", minValue_);
                 s.deserialize("maxValue", maxValue_);
             }
-            catch (XmlSerializationNoSuchDataException e) {
+            catch (SerializationNoSuchDataException e) {
             }
         }
     }
@@ -354,7 +354,7 @@ void Ports::deserialize(Deserializer& s) {
     try {
         s.deserialize("possibleTypes", possibleTypes_, "type");
     }
-    catch (XmlSerializationNoSuchDataException e) {
+    catch (SerializationNoSuchDataException e) {
     }
 }
 
@@ -481,17 +481,17 @@ void Filter::deserialize(Deserializer& s) {
     try {
         s.deserialize("inports", inports_, "port");
     }
-    catch (XmlSerializationNoSuchDataException e) {
+    catch (SerializationNoSuchDataException e) {
     }
     try {
         s.deserialize("outports", outports_, "port");
     }
-    catch (XmlSerializationNoSuchDataException e) {
+    catch (SerializationNoSuchDataException e) {
     }
     try {
         s.deserialize("arguments", arguments_, "argument");
     }
-    catch (XmlSerializationNoSuchDataException e) {
+    catch (SerializationNoSuchDataException e) {
     }
 }
 

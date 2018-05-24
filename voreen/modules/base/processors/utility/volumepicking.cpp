@@ -111,7 +111,7 @@ void VolumePicking::deserialize(Deserializer& d) {
     try {
         d.deserialize("pickedPositions", pickedPositions_);
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         d.removeLastError();
     }
 }

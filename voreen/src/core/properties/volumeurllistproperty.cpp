@@ -353,7 +353,7 @@ void VolumeURLListProperty::deserialize(Deserializer& s) {
         value_ = urlList;
         selectionMap_ = selectMap;
     }
-    catch(XmlSerializationNoSuchDataException) {
+    catch(SerializationNoSuchDataException) {
         s.removeLastError();
     
         //LINFO("trying old deserialization");

@@ -398,7 +398,7 @@ void MultiView::deserialize(Deserializer& s) {
     try {
         s.deserialize("PortNames", portNameOrder_, "PortName");
         s.deserialize("ProcNames", procNameOrder_, "ProcName");
-    } catch (XmlSerializationNoSuchDataException) {
+    } catch (SerializationNoSuchDataException) {
         s.removeLastError();
     }
 

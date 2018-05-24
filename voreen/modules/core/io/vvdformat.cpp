@@ -311,7 +311,7 @@ void VvdObject::deserialize(Deserializer& s) {
     try {
         s.deserialize("DerivedData", derivedData_, "DerivedItem");
     }
-    catch (XmlSerializationNoSuchDataException& /*e*/) {
+    catch (SerializationNoSuchDataException& /*e*/) {
         s.removeLastError();
     }
 }

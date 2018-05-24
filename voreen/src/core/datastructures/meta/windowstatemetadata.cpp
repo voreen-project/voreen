@@ -87,25 +87,25 @@ void WindowStateMetaData::deserialize(Deserializer& s) {
     s.deserialize("visible", visible_);
     try {
         s.deserialize("x", x_);
-    } catch (XmlSerializationNoSuchDataException&) {
+    } catch (SerializationNoSuchDataException&) {
         // x position was not serialized so just ignore...
         s.removeLastError();
     }
     try {
         s.deserialize("y", y_);
-    } catch (XmlSerializationNoSuchDataException&) {
+    } catch (SerializationNoSuchDataException&) {
         // y position was not serialized so just ignore...
         s.removeLastError();
     }
     try {
         s.deserialize("width", width_);
-    } catch (XmlSerializationNoSuchDataException&) {
+    } catch (SerializationNoSuchDataException&) {
         // width was not serialized so just ignore...
         s.removeLastError();
     }
     try {
         s.deserialize("height", height_);
-    } catch (XmlSerializationNoSuchDataException&) {
+    } catch (SerializationNoSuchDataException&) {
         // height was not serialized so just ignore...
         s.removeLastError();
     }

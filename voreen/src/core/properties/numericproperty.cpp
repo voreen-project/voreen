@@ -141,7 +141,7 @@ namespace voreen {
 //    try {
 //        s.deserialize("tracking", tracking_);
 //    }
-//    catch (XmlSerializationNoSuchDataException&) {
+//    catch (SerializationNoSuchDataException&) {
 //        s.removeLastError();
 //    }
 //}

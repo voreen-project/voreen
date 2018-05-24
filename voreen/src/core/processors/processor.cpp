@@ -569,7 +569,7 @@ void Processor::deserialize(Deserializer& s) {
     try {
         s.deserialize("Inports", inportMap, "Port", "name");
     }
-    catch (XmlSerializationNoSuchDataException& /*e*/){
+    catch (SerializationNoSuchDataException& /*e*/){
         // port key missing => just ignore
         s.removeLastError();
     }
@@ -581,7 +581,7 @@ void Processor::deserialize(Deserializer& s) {
     try {
         s.deserialize("Outports", outportMap, "Port", "name");
     }
-    catch (XmlSerializationNoSuchDataException& /*e*/){
+    catch (SerializationNoSuchDataException& /*e*/){
         // port key missing => just ignore
         s.removeLastError();
     }
@@ -593,7 +593,7 @@ void Processor::deserialize(Deserializer& s) {
     try {
         s.deserialize("CoProcessorInports", coProcessorInportMap, "Port", "name");
     }
-    catch (XmlSerializationNoSuchDataException& /*e*/){
+    catch (SerializationNoSuchDataException& /*e*/){
         // port key missing => just ignore
         s.removeLastError();
     }
@@ -605,7 +605,7 @@ void Processor::deserialize(Deserializer& s) {
     try {
         s.deserialize("CoProcessorOutports", coProcessorOutportMap, "Port", "name");
     }
-    catch (XmlSerializationNoSuchDataException& /*e*/){
+    catch (SerializationNoSuchDataException& /*e*/){
         // port key missing => just ignore
         s.removeLastError();
     }
@@ -619,7 +619,7 @@ void Processor::deserialize(Deserializer& s) {
     try {
         s.deserialize("InteractionHandlers", handlerMap, "Handler", "name");
     }
-    catch (XmlSerializationNoSuchDataException& /*e*/){
+    catch (SerializationNoSuchDataException& /*e*/){
         // interaction handler key missing => just ignore
         s.removeLastError();
     }

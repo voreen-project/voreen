@@ -159,7 +159,7 @@ void PlotDataFitFunction::deserialize(Deserializer &s) {
     try {
         s.deserialize("Fittingvalues",fittingValues_);
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         // superfluous or missing XML data item, just ignore
         s.removeLastError();
     }

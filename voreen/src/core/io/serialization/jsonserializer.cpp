@@ -225,28 +225,33 @@ rapidjson::Value JsonSerializer::serializeToValue(const Serializable& data) {
     return val;
 }
 
-void JsonSerializer::write(std::ostream& stream, bool pretty) {
+void JsonSerializer::write(std::ostream& stream, bool pretty, bool compressed) {
     using namespace boost::iostreams;
 
     resolveUnresolvedReferences();
 
-    // Prepare gzip compressing stream
-    filtering_ostream compressingStream;
-    compressingStream.push(gzip_compressor(
-                gzip_params(
-                    gzip::best_compression
-                    )
-                ));
-    compressingStream.push(stream);
 
     // Wrap compressing stream for rapidjson
-    rapidjson::OStreamWrapper sb(compressingStream);
+    std::unique_ptr<rapidjson::OStreamWrapper> sb;
+    if(compressed) {
+        // Prepare gzip compressing stream
+        filtering_ostream compressingStream;
+        compressingStream.push(gzip_compressor(
+                    gzip_params(
+                        gzip::best_compression
+                        )
+                    ));
+        compressingStream.push(stream);
+        sb.reset(new rapidjson::OStreamWrapper(compressingStream));
+    } else {
+        sb.reset(new rapidjson::OStreamWrapper(stream));
+    }
 
     if(pretty) {
-        rapidjson::PrettyWriter<rapidjson::OStreamWrapper, rapidjson::UTF8<>, rapidjson::UTF8<>, rapidjson::CrtAllocator, rapidjson::kWriteNanAndInfFlag> writer(sb);
+        rapidjson::PrettyWriter<rapidjson::OStreamWrapper, rapidjson::UTF8<>, rapidjson::UTF8<>, rapidjson::CrtAllocator, rapidjson::kWriteNanAndInfFlag> writer(*sb);
         document_.Accept(writer);
     } else {
-        rapidjson::Writer<rapidjson::OStreamWrapper, rapidjson::UTF8<>, rapidjson::UTF8<>, rapidjson::CrtAllocator, rapidjson::kWriteNanAndInfFlag> writer(sb);
+        rapidjson::Writer<rapidjson::OStreamWrapper, rapidjson::UTF8<>, rapidjson::UTF8<>, rapidjson::CrtAllocator, rapidjson::kWriteNanAndInfFlag> writer(*sb);
         document_.Accept(writer);
     }
 }

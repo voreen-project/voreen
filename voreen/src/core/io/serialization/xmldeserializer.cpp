@@ -74,7 +74,7 @@ void XmlDeserializer::deserialize(const std::string& key, bool& data) {
     else if (boolValue == "false" || boolValue == "0")
         data = false;
     else
-        raise(XmlSerializationFormatException("XML node with key '" + key + "' contains unknown bool value."));
+        raise(SerializationFormatException("XML node with key '" + key + "' contains unknown bool value."));
 }
 
 void XmlDeserializer::deserialize(const std::string& key, char& data) {
@@ -252,7 +252,7 @@ TiXmlElement* XmlDeserializer::getNextXmlElement(const std::string& key) {
         element = element->NextSiblingElement(key);
     }
 
-    raise(XmlSerializationNoSuchDataException("No further XML node with key '" + key + "' found."));
+    raise(SerializationNoSuchDataException("No further XML node with key '" + key + "' found."));
     return 0;
 }
 
@@ -306,21 +306,21 @@ void XmlDeserializer::read(std::istream& stream, XmlProcessor* xmlProcessor) {
 
     // Is there no root element?
     if (!root)
-        raise(XmlSerializationFormatException(std::string("No root node found.")));
+        raise(SerializationFormatException(std::string("No root node found.")));
 
     // Has root node incorrect name?
     if (root->ValueStr() != XmlSerializationConstants::ROOTNODE) {
-        raise(XmlSerializationFormatException("XML root node name is '" + root->ValueStr()
+        raise(SerializationFormatException("XML root node name is '" + root->ValueStr()
             + "' instead of '" + XmlSerializationConstants::ROOTNODE + "'."));
     }
 
     const std::string* version = root->Attribute(XmlSerializationConstants::VERSIONATTRIBUTE);
     // Is serialization version not set?
     if (!version)
-        raise(XmlSerializationFormatException("XML root node has no version attribute."));
+        raise(SerializationFormatException("XML root node has no version attribute."));
     // Does XmlSerializer and XmlDeserializer version not match the XML document version?
     if (*version != XmlSerializationConstants::VERSION) {
-        raise(XmlSerializationVersionMismatchException("XML document has version " + *version
+        raise(SerializationVersionMismatchException("XML document has version " + *version
             + " instead of " + XmlSerializationConstants::VERSION + "."));
     }
 
@@ -336,7 +336,7 @@ void XmlDeserializer::read(std::istream& stream, XmlProcessor* xmlProcessor) {
         for (ReferenceIdListType::iterator it = unresolvableReferences.begin(); it != unresolvableReferences.end(); ++it)
             idStream << (idStream.str().empty() ? "" : ", ") << "'" << *it << "'";
 
-        raise(XmlSerializationReferenceResolvingException(
+        raise(SerializationReferenceResolvingException(
             "XML document contains the following unresolvable references: " + idStream.str() + "."));
     }
 }

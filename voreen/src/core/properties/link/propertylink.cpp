@@ -207,7 +207,7 @@ void PropertyLink::deserialize(Deserializer& s) {
                 addOn += dest_->getOwner()->getID() + "::";
             addOn += dest_->getGuiName() + "'";
         }
-        s.raise(XmlSerializationMemoryAllocationException("Property link could not be established. " + addOn));
+        s.raise(SerializationMemoryAllocationException("Property link could not be established. " + addOn));
     }
 
     src_->registerLink(this);

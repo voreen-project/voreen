@@ -241,7 +241,7 @@ void Property::deserialize(Deserializer& s) {
         s.deserialize("guiName", temp);
         guiName_ = temp;
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         s.removeLastError();
     }
 

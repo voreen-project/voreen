@@ -150,7 +150,7 @@ public:
      * @param key the XML node key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     void serialize(const std::string& key, const bool& data);
@@ -161,7 +161,7 @@ public:
      * @param key the XML node key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     void serialize(const std::string& key, const char& data);
@@ -172,7 +172,7 @@ public:
      * @param key the XML node key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     void serialize(const std::string& key, const signed char& data);
@@ -183,7 +183,7 @@ public:
      * @param key the XML node key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     void serialize(const std::string& key, const unsigned char& data);
@@ -194,7 +194,7 @@ public:
      * @param key the XML node key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     void serialize(const std::string& key, const uint16_t& data);
@@ -205,7 +205,7 @@ public:
      * @param key the XML node key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     void serialize(const std::string& key, const int16_t& data);
@@ -216,7 +216,7 @@ public:
      * @param key the XML node key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     void serialize(const std::string& key, const uint32_t& data);
@@ -227,7 +227,7 @@ public:
      * @param key the XML node key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     void serialize(const std::string& key, const int32_t& data);
@@ -240,7 +240,7 @@ public:
      * @param key the XML node key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     void serialize(const std::string& key, const long unsigned int& data);
@@ -252,7 +252,7 @@ public:
      * @param key the XML node key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     void serialize(const std::string& key, const uint64_t& data);
@@ -263,7 +263,7 @@ public:
      * @param key the XML node key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     void serialize(const std::string& key, const int64_t& data);
@@ -274,7 +274,7 @@ public:
      * @param key the XML node key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     void serialize(const std::string& key, const float& data);
@@ -285,7 +285,7 @@ public:
      * @param key the XML node key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     void serialize(const std::string& key, const double& data);
@@ -296,7 +296,7 @@ public:
      * @param key the XML node key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     void serialize(const std::string& key, const long double& data);
@@ -307,7 +307,7 @@ public:
      * @param key the XML node key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     void serialize(const std::string& key, const std::string& data);
@@ -457,7 +457,7 @@ public:
      * @param key the XML node key
      * @param data the @c Serializable realization
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if @c serialize method of given @c Serializable raises this exception
      */
     void serialize(const std::string& key, const Serializable& data);
@@ -491,7 +491,7 @@ public:
      * @param key the XML node key
      * @param data the pair to serialize
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if serialization of pair items raises this exception
      */
     template<class S, class T>
@@ -509,7 +509,7 @@ public:
      * @param collection the data collection
      * @param itemKey XML node key for each XML child node
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if serialization of collection items raises this exception
      */
     template<class T>
@@ -529,7 +529,7 @@ public:
      * @param valueKey XML node key for each value node
      * @param keyKey key for each XML key node or attribute
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if serialization of @c key/value pair items raises the exception
      */
     template<class T>
@@ -570,7 +570,7 @@ private:
      *
      * @param key the XML attrubte key
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     void checkAttributeKey(const std::string& key);
@@ -596,7 +596,7 @@ private:
      * @param key the XML node key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     template<class T>
@@ -624,7 +624,7 @@ private:
      * @param key the XML attribute key
      * @param data the data
      *
-     * @throws XmlSerializationAttributeNamingException
+     * @throws SerializationAttributeNamingException
      *     if primitive data is serialized as XML attributes and key is reserved or not unique
      */
     template<class T>
