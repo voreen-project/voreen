@@ -8,6 +8,11 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="SingleVolumeRaycaster" ref="ref11" />
+                    </values>
+                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="485.005950928" y="-95.788673401" />
                 </MetaItem>
@@ -100,11 +105,11 @@
                 </Processor>
                 <Processor type="ConnectedComponentAnalysis" name="Cavity Filling" id="ref2">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="641" y="-321" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="638" y="-318" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLabeling" name="applyLabeling" value="false" />
-                        <Property mapKey="binarizationThreshold" name="binarizationThreshold" value="0.0001" />
+                        <Property mapKey="binarizationThreshold" name="binarizationThreshold" value="12.5" />
                         <Property mapKey="componentStatFilePath" name="componentStatFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -112,21 +117,21 @@
                         <Property mapKey="invertBinarization" name="invertBinarization" value="true" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="minBoundsDiagonal" name="minBoundsDiagonal" value="0" />
-                        <Property mapKey="minBoundsDiagonalRelative" name="minBoundsDiagonalRelative" value="0" />
-                        <Property mapKey="minVoxelVolume" name="minVoxelVolume" value="2000" />
+                        <Property mapKey="minBoundsDiagonalRelative" name="minBoundsDiagonalRelative" value="0.137999997" />
+                        <Property mapKey="minVoxelVolume" name="minVoxelVolume" value="0" />
                         <Property mapKey="neighbourhoodMode" name="neighbourhoodMode" value="n6" />
                         <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/a1545928-1195-40b9-b3c4-78f837012afbHDF5 (*.h5)" />
-                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/a1545928-1195-40b9-b3c4-78f837012afbHDF5 (*.h5)" />
-                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/a1545928-1195-40b9-b3c4-78f837012afbHDF5 (*.h5)" />
+                                    <item value="../../../../../../nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/a1545928-1195-40b9-b3c4-78f837012afbHDF5 (*.h5)" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/a1545928-1195-40b9-b3c4-78f837012afbHDF5 (*.h5)" />
+                                    <item value="/nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/a1545928-1195-40b9-b3c4-78f837012afbHDF5 (*.h5)" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 1.086 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="writeComponentStatFile" name="writeComponentStatFile" value="false" />
@@ -153,7 +158,7 @@
                 </Processor>
                 <Processor type="ConnectedComponentAnalysis" name="Small Object Removal" id="ref3">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="617" y="-231" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="614" y="-227" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLabeling" name="applyLabeling" value="false" />
@@ -165,21 +170,21 @@
                         <Property mapKey="invertBinarization" name="invertBinarization" value="true" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="minBoundsDiagonal" name="minBoundsDiagonal" value="0" />
-                        <Property mapKey="minBoundsDiagonalRelative" name="minBoundsDiagonalRelative" value="0" />
-                        <Property mapKey="minVoxelVolume" name="minVoxelVolume" value="2000" />
+                        <Property mapKey="minBoundsDiagonalRelative" name="minBoundsDiagonalRelative" value="0.200000003" />
+                        <Property mapKey="minVoxelVolume" name="minVoxelVolume" value="0" />
                         <Property mapKey="neighbourhoodMode" name="neighbourhoodMode" value="n6" />
                         <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901HDF5 (*.h5)" />
-                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901HDF5 (*.h5)" />
-                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901HDF5 (*.h5)" />
+                                    <item value="../../../../../../nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901HDF5 (*.h5)" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901HDF5 (*.h5)" />
+                                    <item value="/nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901HDF5 (*.h5)" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Stopped" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 993 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="writeComponentStatFile" name="writeComponentStatFile" value="false" />
@@ -261,7 +266,7 @@
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
-                                    <value x="0" y="1" />
+                                    <value x="0" y="255" />
                                 </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
@@ -360,13 +365,13 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="217" y="-328" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.0078125" frustLeft="-0.003236043" frustRight="0.003236043" frustBottom="-0.003236043" frustTop="0.003236043" frustNear="0.0078125" frustFar="502" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.04153851" id="ref13">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.0078125" frustLeft="-0.003236043" frustRight="0.003236043" frustBottom="-0.003236043" frustTop="0.003236043" frustNear="0.0078125" frustFar="502" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.036200367" id="ref13">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-0.161684975" y="-2.400047541" z="0.1670046" />
+                            <position x="-2.707790136" y="0.200002015" z="-0.359444052" />
                             <focus x="-0.00390625" y="-0.00390625" z="-0.00390625" />
-                            <upVector x="0.03294728" y="-0.951569378" z="0.305663764" />
+                            <upVector x="-0.955933094" y="-0.293571264" z="0.002808112" />
                             <trackball moveCenter="false">
                                 <center x="-0.00390625" y="-0.00390625" z="-0.00390625" />
                             </trackball>
@@ -430,18 +435,18 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLightAttenuation" name="applyLightAttenuation" value="false" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.0078125" frustLeft="-0.003236043" frustRight="0.003236043" frustBottom="-0.003236043" frustTop="0.003236043" frustNear="0.0078125" frustFar="502" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.04153851" id="ref14">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.0078125" frustLeft="-0.003236043" frustRight="0.003236043" frustBottom="-0.003236043" frustTop="0.003236043" frustNear="0.0078125" frustFar="502" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.036200367" id="ref14">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-0.161684975" y="-2.400047541" z="0.1670046" />
+                            <position x="-2.707790136" y="0.200002015" z="-0.359444052" />
                             <focus x="-0.00390625" y="-0.00390625" z="-0.00390625" />
-                            <upVector x="0.03294728" y="-0.951569378" z="0.305663764" />
+                            <upVector x="-0.955933094" y="-0.293571264" z="0.002808112" />
                             <trackball moveCenter="false">
                                 <center x="-0.00390625" y="-0.00390625" z="-0.00390625" />
                             </trackball>
-                            <sceneLLF x="-0.71144551" y="-0.234101698" z="-0.077000007" />
-                            <sceneURB x="-0.405629486" y="0.203794315" z="0.075000003" />
+                            <sceneLLF x="-1.00390625" y="-1.00390625" z="-1.00390625" />
+                            <sceneURB x="0.99609375" y="0.99609375" z="0.99609375" />
                         </Property>
                         <Property mapKey="channelShift1" name="channelShift1">
                             <value x="0" y="0" z="0" />
@@ -528,7 +533,7 @@
                         <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="10">
                             <value x="-7.978469849" y="-0.857930064" z="5.969113827" w="1" />
                             <Center x="-0.00390625" y="-0.00390625" z="-0.00390625" />
-                            <LightPos x="-9.515658379" y="2.494799376" z="1.79671979" w="1" />
+                            <LightPos x="-6.111982822" y="3.608554363" z="7.044288158" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -644,7 +649,7 @@
                         </Property>
                         <Property mapKey="transFuncGaussian1" name="transFuncGaussian1" domainFittingStrategy="1" computeHistogram="true">
                             <TransferFunction type="TransFuncGaussian" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
-                                <texDimensions x="1024" y="1" z="1" />
+                                <texDimensions x="256" y="1" z="1" />
                                 <domain x="0" y="1" />
                                 <threshold x="0" y="1" />
                                 <Curves>
@@ -847,16 +852,16 @@
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="false" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="maxSmoothingKernelSize" name="maxSmoothingKernelSize">
-                            <value x="173" y="173" z="173" />
+                            <value x="147" y="147" z="147" />
                         </Property>
                         <Property mapKey="maxStandardDeviationVec" name="maxStandardDeviationVec">
-                            <value x="28.718500137" y="28.718500137" z="28.718500137" />
+                            <value x="24.319999695" y="24.319999695" z="24.319999695" />
                         </Property>
                         <Property mapKey="minSmoothingKernelSize" name="minSmoothingKernelSize">
-                            <value x="7" y="7" z="7" />
+                            <value x="11" y="11" z="11" />
                         </Property>
                         <Property mapKey="minStandardDeviationVec" name="minStandardDeviationVec">
-                            <value x="1" y="1" z="1" />
+                            <value x="1.611999989" y="1.611999989" z="1.611999989" />
                         </Property>
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
@@ -871,7 +876,7 @@
                         <Property mapKey="scaleSpaceSteps" name="scaleSpaceSteps" value="5" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="vesselRadiusRangeRW" minValue="0.0078125" maxValue="2" minRange="0" maxRange="2147483648" stepping="0.01">
-                            <value x="0.0078125" y="0.224363282" />
+                            <value x="0.01259375" y="0.189999998" />
                         </Property>
                     </Properties>
                     <Inports>
@@ -896,17 +901,17 @@
                 </Processor>
                 <Processor type="SingleVolumeRaycaster" name="Original Volume" id="ref8">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="82" y="7" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="83" y="5" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLightAttenuation" name="applyLightAttenuation" value="false" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.0078125" frustLeft="-0.003236043" frustRight="0.003236043" frustBottom="-0.003236043" frustTop="0.003236043" frustNear="0.0078125" frustFar="502" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.04153851" id="ref15">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.0078125" frustLeft="-0.003236043" frustRight="0.003236043" frustBottom="-0.003236043" frustTop="0.003236043" frustNear="0.0078125" frustFar="502" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.036200367" id="ref15">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-0.161684975" y="-2.400047541" z="0.1670046" />
+                            <position x="-2.707790136" y="0.200002015" z="-0.359444052" />
                             <focus x="-0.00390625" y="-0.00390625" z="-0.00390625" />
-                            <upVector x="0.03294728" y="-0.951569378" z="0.305663764" />
+                            <upVector x="-0.955933094" y="-0.293571264" z="0.002808112" />
                             <trackball moveCenter="false">
                                 <center x="-0.00390625" y="-0.00390625" z="-0.00390625" />
                             </trackball>
@@ -998,7 +1003,7 @@
                         <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="10">
                             <value x="-7.978469849" y="-0.857930064" z="5.969113827" w="1" />
                             <Center x="-0.00390625" y="-0.00390625" z="-0.00390625" />
-                            <LightPos x="-9.515658379" y="2.494799376" z="1.79671979" w="1" />
+                            <LightPos x="-6.111982822" y="3.608554363" z="7.044288158" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -1113,6 +1118,9 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transFuncGaussian1" name="transFuncGaussian1" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
                             <TransferFunction type="TransFuncGaussian" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="256" y="1" z="1" />
                                 <domain x="0" y="255" />
@@ -1125,6 +1133,9 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transFuncGaussian2" name="transFuncGaussian2" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
                             <TransferFunction type="TransFuncGaussian" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
                                 <domain x="0" y="1" />
@@ -1137,6 +1148,9 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transFuncGaussian3" name="transFuncGaussian3" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
                             <TransferFunction type="TransFuncGaussian" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
                                 <domain x="0" y="1" />
@@ -1149,6 +1163,9 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transFuncGaussian4" name="transFuncGaussian4" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
                             <TransferFunction type="TransFuncGaussian" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
                                 <domain x="0" y="1" />
@@ -1165,7 +1182,7 @@
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
-                                    <value x="0" y="1" />
+                                    <value x="0" y="255" />
                                 </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="2" filter="0" dataType="5121" gammaValue="1">
@@ -1174,46 +1191,10 @@
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
-                                        <colorL r="0" g="0" b="127" a="0" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.041666001" split="false">
-                                        <colorL r="0" g="0" b="191" a="10" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.125" split="false">
-                                        <colorL r="0" g="0" b="255" a="31" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.208333001" split="false">
-                                        <colorL r="0" g="85" b="255" a="53" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.291666001" split="false">
-                                        <colorL r="0" g="170" b="255" a="74" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.375" split="false">
-                                        <colorL r="0" g="255" b="255" a="95" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.458332986" split="false">
-                                        <colorL r="85" g="255" b="170" a="116" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.541665971" split="false">
-                                        <colorL r="170" g="255" b="85" a="138" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.625" split="false">
-                                        <colorL r="255" g="255" b="0" a="159" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.708333015" split="false">
-                                        <colorL r="255" g="170" b="0" a="180" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.791665971" split="false">
-                                        <colorL r="255" g="85" b="0" a="201" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.875" split="false">
-                                        <colorL r="255" g="0" b="0" a="223" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.958333015" split="false">
-                                        <colorL r="191" g="0" b="0" a="244" />
+                                        <colorL r="0" g="0" b="0" a="0" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="1" split="false">
-                                        <colorL r="127" g="0" b="0" a="255" />
+                                        <colorL r="255" g="255" b="255" a="255" />
                                     </key>
                                 </Keys>
                             </TransferFunction>
@@ -1362,22 +1343,22 @@
                 </Processor>
                 <Processor type="SingleVolumeRaycaster" name="Vesselness Volume" id="ref11">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="371" y="7" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="372" y="5" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLightAttenuation" name="applyLightAttenuation" value="false" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.0078125" frustLeft="-0.003236043" frustRight="0.003236043" frustBottom="-0.003236043" frustTop="0.003236043" frustNear="0.0078125" frustFar="502" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.04153851" id="ref18">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.0078125" frustLeft="-0.003236043" frustRight="0.003236043" frustBottom="-0.003236043" frustTop="0.003236043" frustNear="0.0078125" frustFar="502" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.036200367" id="ref18">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-0.161684975" y="-2.400047541" z="0.1670046" />
+                            <position x="-2.707790136" y="0.200002015" z="-0.359444052" />
                             <focus x="-0.00390625" y="-0.00390625" z="-0.00390625" />
-                            <upVector x="0.03294728" y="-0.951569378" z="0.305663764" />
+                            <upVector x="-0.955933094" y="-0.293571264" z="0.002808112" />
                             <trackball moveCenter="false">
                                 <center x="-0.00390625" y="-0.00390625" z="-0.00390625" />
                             </trackball>
-                            <sceneLLF x="-0.71144551" y="-0.234101698" z="-0.077000007" />
-                            <sceneURB x="-0.405629486" y="0.203794315" z="0.075000003" />
+                            <sceneLLF x="-1.00390625" y="-1.00390625" z="-1.00390625" />
+                            <sceneURB x="0.99609375" y="0.99609375" z="0.99609375" />
                         </Property>
                         <Property mapKey="channelShift1" name="channelShift1">
                             <value x="0" y="0" z="0" />
@@ -1464,7 +1445,7 @@
                         <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="10">
                             <value x="-7.978469849" y="-0.857930064" z="5.969113827" w="1" />
                             <Center x="-0.00390625" y="-0.00390625" z="-0.00390625" />
-                            <LightPos x="-9.515658379" y="2.494799376" z="1.79671979" w="1" />
+                            <LightPos x="-6.111982822" y="3.608554363" z="7.044288158" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -1535,7 +1516,7 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <TransferFunction type="TransFuncIntensityGradient" alphaMode="1" filter="1" dataType="5126">
-                                <texDimensions x="256" y="256" z="1" />
+                                <texDimensions x="1024" y="1024" z="1" />
                                 <gammaValues x="1" y="1" />
                                 <domains x="0" y="1" z="0" w="1" />
                                 <thresholds x="0" y="1" z="0" w="1" />
@@ -1579,9 +1560,12 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transFuncGaussian1" name="transFuncGaussian1" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
                             <TransferFunction type="TransFuncGaussian" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
-                                <texDimensions x="1024" y="1" z="1" />
-                                <domain x="0" y="1" />
+                                <texDimensions x="4096" y="1" z="1" />
+                                <domain x="0" y="255" />
                                 <threshold x="0" y="1" />
                                 <Curves>
                                     <curve type="TransFuncMappingCurve" intensity="0.5" width="0.01" baseValue="0" split="false" unicolor="true" active="true">
@@ -1591,6 +1575,9 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transFuncGaussian2" name="transFuncGaussian2" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
                             <TransferFunction type="TransFuncGaussian" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
                                 <domain x="0" y="1" />
@@ -1603,6 +1590,9 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transFuncGaussian3" name="transFuncGaussian3" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
                             <TransferFunction type="TransFuncGaussian" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
                                 <domain x="0" y="1" />
@@ -1615,6 +1605,9 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transFuncGaussian4" name="transFuncGaussian4" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
                             <TransferFunction type="TransFuncGaussian" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
                                 <domain x="0" y="1" />
@@ -1629,57 +1622,21 @@
                         <Property mapKey="transFuncType" name="transFuncType" value="1D Keys Color Map" />
                         <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="601" y="362" width="718" height="459" />
                                 <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
-                                    <value x="0" y="1" />
+                                    <value x="0" y="93.774124146" />
                                 </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="2" filter="0" dataType="5121" gammaValue="1">
-                                <texDimensions x="256" y="1" z="1" />
-                                <domain x="0" y="1" />
-                                <threshold x="0" y="1" />
+                                <texDimensions x="4096" y="1" z="1" />
+                                <domain x="0" y="93.774124146" />
+                                <threshold x="0.127967075" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
-                                        <colorL r="0" g="0" b="127" a="0" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.041666001" split="false">
-                                        <colorL r="0" g="0" b="191" a="10" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.125" split="false">
-                                        <colorL r="0" g="0" b="255" a="31" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.208333001" split="false">
-                                        <colorL r="0" g="85" b="255" a="53" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.291666001" split="false">
-                                        <colorL r="0" g="170" b="255" a="74" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.375" split="false">
-                                        <colorL r="0" g="255" b="255" a="95" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.458332986" split="false">
-                                        <colorL r="85" g="255" b="170" a="116" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.541665971" split="false">
-                                        <colorL r="170" g="255" b="85" a="138" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.625" split="false">
-                                        <colorL r="255" g="255" b="0" a="159" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.708333015" split="false">
-                                        <colorL r="255" g="170" b="0" a="180" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.791665971" split="false">
-                                        <colorL r="255" g="85" b="0" a="201" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.875" split="false">
-                                        <colorL r="255" g="0" b="0" a="223" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.958333015" split="false">
-                                        <colorL r="191" g="0" b="0" a="244" />
+                                        <colorL r="0" g="0" b="0" a="0" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="1" split="false">
-                                        <colorL r="127" g="0" b="0" a="255" />
+                                        <colorL r="255" g="255" b="255" a="255" />
                                     </key>
                                 </Keys>
                             </TransferFunction>
@@ -1777,32 +1734,32 @@
                 </Processor>
                 <Processor type="BinaryMedian" name="BinaryMedian" id="ref4">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="651" y="-123" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="651" y="-116" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="binarizationThreshold" name="binarizationThreshold" value="0.5" />
-                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="false" />
-                        <Property mapKey="extentx" name="extentx" value="3" />
-                        <Property mapKey="extenty" name="extenty" value="3" />
-                        <Property mapKey="extentz" name="extentz" value="3" />
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
+                        <Property mapKey="extentx" name="extentx" value="1" />
+                        <Property mapKey="extenty" name="extenty" value="1" />
+                        <Property mapKey="extentz" name="extentz" value="1" />
                         <Property mapKey="forceMedian" name="forceMedian" value="true" />
-                        <Property mapKey="kernelSizeDisplay" name="kernelSizeDisplay" value="7x7x7" />
+                        <Property mapKey="kernelSizeDisplay" name="kernelSizeDisplay" value="3x3x3" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
-                        <Property mapKey="objectVoxelThreshold" name="objectVoxelThreshold" value="171" />
+                        <Property mapKey="objectVoxelThreshold" name="objectVoxelThreshold" value="13" />
                         <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/6919ceca-add4-40e0-ab4b-a1f58809f080HDF5 (*.h5)" />
-                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/6919ceca-add4-40e0-ab4b-a1f58809f080HDF5 (*.h5)" />
-                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/6919ceca-add4-40e0-ab4b-a1f58809f080HDF5 (*.h5)" />
+                                    <item value="../../../../../../nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/6919ceca-add4-40e0-ab4b-a1f58809f080HDF5 (*.h5)" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/6919ceca-add4-40e0-ab4b-a1f58809f080HDF5 (*.h5)" />
+                                    <item value="/nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/6919ceca-add4-40e0-ab4b-a1f58809f080HDF5 (*.h5)" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="outsideVolumeValue" name="outsideVolumeValue" value="0" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="samplingStrategyType" name="samplingStrategyType" value="clamp" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Stopped" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 2.882 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="useUniformExtent" name="useUniformExtent" value="true" />

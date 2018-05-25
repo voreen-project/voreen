@@ -724,7 +724,7 @@ namespace voreen {
 const std::string VesselnessExtractor::loggerCat_("voreen.vesseltopology.vesselnessextractor");
 
 VesselnessExtractor::VesselnessExtractor()
-    : LargeDataProcessor()
+    : AsyncComputeProcessor()
     , inport_(Port::INPORT, "volumehandle.input", "Volume Input")
     , outport_(Port::OUTPORT, "volumehandle.output", "Volume Output", false)
     , outputVolumeFilePath_("outputVolumeFilePath", "Output Volume", "Path", "", "HDF5 (*.h5)", FileDialogProperty::SAVE_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT)
@@ -734,9 +734,6 @@ VesselnessExtractor::VesselnessExtractor()
     , maxStandardDeviationVec_("maxStandardDeviationVec", "Used Max Standard Deviation (voxel)", tgt::vec3::zero, tgt::vec3::zero, tgt::vec3(std::numeric_limits<float>::max()))
     , minSmoothingKernelSize_("minSmoothingKernelSize", "Min Smoothing Kernel Size", tgt::ivec3::zero, tgt::ivec3::zero, tgt::ivec3(std::numeric_limits<int>::max()))
     , maxSmoothingKernelSize_("maxSmoothingKernelSize", "Max Smoothing Kernel Size", tgt::ivec3::zero, tgt::ivec3::zero, tgt::ivec3(std::numeric_limits<int>::max()))
-    , blobRejectorWeight_("blobRejectorWeight", "Blob rejector weight", 0.5, 0.01, 100)
-    , planeRejectorWeight_("planeblobRejectorWeight", "Plane rejector weight", 0.5, 0.01, 100)
-    , intensityThreshold_("intensityThreshold", "Intensity Threshold", 0.5, 0.00000000000001, 1.0)
 {
     addPort(inport_);
     addPort(outport_);
@@ -764,6 +761,10 @@ VesselnessExtractor::VesselnessExtractor()
     //addProperty(intensityThreshold_);
         //intensityThreshold_.adaptDecimalsToRange(5);
 }
+
+const static float BLOB_REJECTOR_WEIGHT = 0.5;
+const static float PLANE_REJECTOR_WEIGHT = 0.5;
+const static float INTENSITY_THRESHOLD = 0.5;
 
 VesselnessExtractor::~VesselnessExtractor() {}
 
@@ -807,30 +808,23 @@ static void voxelwiseMax(SliceReader& reader, HDF5FileVolume& file, ProgressRepo
     }
 }
 
-std::unique_ptr<SliceReader> VesselnessExtractor::buildStack(const tgt::vec3& standardDeviationVec, const std::string& baseType) {
-    tgtAssert(inport_.getData(), "No volume");
-
+static std::unique_ptr<SliceReader> buildStack(const VolumeBase& input, const tgt::vec3& standardDeviationVec, const std::string& baseType) {
     tgt::ivec3 dirVesselnessExtent = tgt::ivec3::one;
 
-    return VolumeFilterStackBuilder(*inport_.getData())
-        .addLayer(std::unique_ptr<VolumeFilter>(new VesselnessFeatureExtractor(planeRejectorWeight_.get(), blobRejectorWeight_.get(), intensityThreshold_.get(), suitableExtent(standardDeviationVec), standardDeviationVec, SamplingStrategy<float>::MIRROR, baseType)))
+    return VolumeFilterStackBuilder(input)
+        .addLayer(std::unique_ptr<VolumeFilter>(new VesselnessFeatureExtractor(PLANE_REJECTOR_WEIGHT, BLOB_REJECTOR_WEIGHT, INTENSITY_THRESHOLD, suitableExtent(standardDeviationVec), standardDeviationVec, SamplingStrategy<float>::MIRROR, baseType)))
         .addLayer(std::unique_ptr<VolumeFilter>(new VesselnessFinalizer(dirVesselnessExtent, SamplingStrategy<ParallelFilterValue4D>::MIRROR, baseType)))
         .build(0);
 }
-tgt::vec3 VesselnessExtractor::getStandardDeviationForStep(int step) const {
-    float alpha = static_cast<float>(step)/(scaleSpaceSteps_.get()-1);
-    return minStandardDeviationVec_.get()*(1.0f - alpha) + maxStandardDeviationVec_.get()*alpha;
-}
 
-void VesselnessExtractor::process() {
+VesselnessExtractorInput VesselnessExtractor::prepareComputeInput() {
     const VolumeBase* inputVol = inport_.getData();
     if(!inputVol) {
-        return;
+        throw InvalidInputException("No input", InvalidInputException::S_WARNING);
     }
 
     if(outputVolumeFilePath_.get().empty()) {
-        LWARNING("No output volume file path");
-        return;
+        throw InvalidInputException("No volume file path specified!", InvalidInputException::S_ERROR);
     }
 
     // Close the volume output file
@@ -846,55 +840,53 @@ void VesselnessExtractor::process() {
     try {
         output = HDF5FileVolume::createVolume(outputVolumeFilePath_.get(), volumeLocation, baseType, inputVol->getDimensions(), numChannels, truncateFile, deflateLevel, tgt::svec3(inputVol->getDimensions().xy(), 1), false); //May throw IOException
     } catch(tgt::IOException& e) {
-        std::string error = std::string("Could not create output volume:\n\n") + e.what();
-        VoreenApplication::app()->showMessageBox("Could not create output volume.",
-                error, true);
-        LERROR(error);
-        return;
+        throw InvalidInputException("Could not create output volume.", InvalidInputException::S_ERROR);
     }
     tgtAssert(output, "no output volume");
-
-    ProgressReporter& reporter = getProgressReporter();
-    const float stepProgressDelta = 1.0f/scaleSpaceSteps_.get();
-
-    reporter.setProgressRange(tgt::vec2(0.0, stepProgressDelta));
-
-    auto t_start = std::chrono::high_resolution_clock::now();
-
-    // Write first slice to volume
-    {
-        std::unique_ptr<SliceReader> reader = buildStack(minStandardDeviationVec_.get(), baseType);
-
-        try {
-            writeSlicesToHDF5File(*reader, *output, &reporter);
-        } catch(ProcessingInterruptedException&) {
-            return;
-        }
-    }
-
-    // Now build max with the following scale space steps
-    for(int step=1; step < scaleSpaceSteps_.get(); ++step) {
-        std::unique_ptr<SliceReader> reader = buildStack(getStandardDeviationForStep(step), baseType);
-
-        reporter.setProgressRange(tgt::vec2(stepProgressDelta*step, stepProgressDelta*(step+1)));
-        try {
-            voxelwiseMax(*reader, *output, &reporter);
-        } catch(ProcessingInterruptedException&) {
-            return;
-        }
-    }
-    auto t_end = std::chrono::high_resolution_clock::now();
-    std::cout << "Time elapsed: " << std::chrono::duration<double>(t_end-t_start).count() << "s\n";
 
     if(inputVol->hasMetaData("RealWorldMapping")) {
         output->writeRealWorldMapping(inputVol->getRealWorldMapping());
     }
     output->writeOffset(inputVol->getOffset());
     output->writeSpacing(inputVol->getSpacing());
-    output.reset(nullptr); // destroy the volume and thus close the file
 
+    return VesselnessExtractorInput(
+            *inputVol,
+            std::move(output),
+            scaleSpaceSteps_.get(),
+            minStandardDeviationVec_.get(),
+            maxStandardDeviationVec_.get(),
+            baseType
+            );
+}
 
-    const VolumeBase* vol = HDF5VolumeReader().read(outputVolumeFilePath_.get())->at(0);
+VesselnessExtractorOutput VesselnessExtractor::compute(VesselnessExtractorInput input, ProgressReporter& progressReporter) const {
+
+    const float stepProgressDelta = 1.0f/scaleSpaceSteps_.get();
+
+    progressReporter.setProgressRange(tgt::vec2(0.0, stepProgressDelta));
+
+    // Write first slices to volume
+    {
+        std::unique_ptr<SliceReader> reader = buildStack(input.input, input.minStandardDeviationVec, input.baseType);
+
+        writeSlicesToHDF5File(*reader, *input.output, &progressReporter);
+    }
+
+    // Now build max with the following scale space steps
+    for(int step=1; step < input.scaleSpaceSteps; ++step) {
+        std::unique_ptr<SliceReader> reader = buildStack(input.input, input.getStandardDeviationForStep(step), input.baseType);
+
+        progressReporter.setProgressRange(tgt::vec2(stepProgressDelta*step, stepProgressDelta*(step+1)));
+
+        voxelwiseMax(*reader, *input.output, &progressReporter);
+    }
+
+    return input.output->getFileName();
+}
+
+void VesselnessExtractor::processComputeOutput(VesselnessExtractorOutput output) {
+    const VolumeBase* vol = HDF5VolumeReader().read(output)->at(0);
     outport_.setData(vol);
 }
 

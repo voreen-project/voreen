@@ -1,7 +1,7 @@
 #ifndef VRN_VESSELNESS_EXTRACTOR_H
 #define VRN_VESSELNESS_EXTRACTOR_H
 
-#include "custommodules/bigdataimageprocessing/processors/largedataprocessor.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
 
 #include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/intproperty.h"
@@ -18,10 +18,54 @@
 
 namespace voreen {
 
+struct VesselnessExtractorInput {
+    const VolumeBase& input;
+    std::unique_ptr<HDF5FileVolume> output;
+    int scaleSpaceSteps;
+    tgt::vec3 minStandardDeviationVec;
+    tgt::vec3 maxStandardDeviationVec;
+    std::string baseType;
+
+    VesselnessExtractorInput(
+              const VolumeBase& input
+            , std::unique_ptr<HDF5FileVolume>&& output
+            , int scaleSpaceSteps
+            , tgt::vec3 minStandardDeviationVec
+            , tgt::vec3 maxStandardDeviationVec
+            , std::string baseType
+            )
+        : input(input)
+        , output(std::move(output))
+        , scaleSpaceSteps(scaleSpaceSteps)
+        , minStandardDeviationVec(minStandardDeviationVec)
+        , maxStandardDeviationVec(maxStandardDeviationVec)
+        , baseType(baseType)
+    {
+    }
+
+    VesselnessExtractorInput(const VesselnessExtractorInput&) = delete;
+    VesselnessExtractorInput(VesselnessExtractorInput&& old)
+        : input(old.input)
+        , output(std::move(old.output))
+        , scaleSpaceSteps(old.scaleSpaceSteps)
+        , minStandardDeviationVec(old.minStandardDeviationVec)
+        , maxStandardDeviationVec(old.maxStandardDeviationVec)
+        , baseType(old.baseType)
+    {
+    }
+
+    tgt::vec3 getStandardDeviationForStep(int step) const {
+        float alpha = static_cast<float>(step)/(scaleSpaceSteps-1);
+        return minStandardDeviationVec*(1.0f - alpha) + maxStandardDeviationVec*alpha;
+    }
+};
+
+typedef std::string VesselnessExtractorOutput;
+
 // Used to extract "vesselness"-features from input volumes.
 // Currently live switching between vesselness measures is not supported,
 // so that only directional uniformity aware Sato-vesselness can be extracted.
-class VesselnessExtractor : public LargeDataProcessor {
+class VesselnessExtractor : public AsyncComputeProcessor<VesselnessExtractorInput, VesselnessExtractorOutput> {
 public:
     VesselnessExtractor();
     virtual ~VesselnessExtractor();
@@ -40,12 +84,12 @@ protected:
     virtual bool isReady() const;
     virtual bool isEndProcessor() const       { return true; }
 
-    virtual void process();
+    virtual VesselnessExtractorInput prepareComputeInput();
+    virtual VesselnessExtractorOutput compute(VesselnessExtractorInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(VesselnessExtractorOutput output);
+
     virtual void adjustPropertiesToInput();
     void updateSmoothingProperties();
-
-    std::unique_ptr<SliceReader> buildStack(const tgt::vec3& standardDeviationVec, const std::string& baseType);
-    tgt::vec3 getStandardDeviationForStep(int step) const;
 
 private:
     VolumePort inport_;
@@ -58,9 +102,6 @@ private:
     FloatVec3Property maxStandardDeviationVec_;
     IntVec3Property minSmoothingKernelSize_;
     IntVec3Property maxSmoothingKernelSize_;
-    FloatProperty blobRejectorWeight_;
-    FloatProperty planeRejectorWeight_;
-    FloatProperty intensityThreshold_;
     // TODO: Optionproperty<?> vesselType (>, <, egal)
 
     static const std::string loggerCat_;
