@@ -88,6 +88,7 @@
 #include "voreen/core/properties/link/linkevaluatorid.h"
 #include "voreen/core/properties/link/linkevaluatorinterval.h"
 #include "voreen/core/properties/link/linkevaluatormatrixinvert.h"
+#include "voreen/core/properties/link/linkevaluatortransferfunctionproperties.h"
 #include "voreen/core/ports/renderport.h"
 
 // geometry
@@ -358,6 +359,12 @@ CoreModule::CoreModule(const std::string& modulePath)
     //registerSerializableType(new LinkEvaluatorMat2Invert());
     registerSerializableType(new LinkEvaluatorMat3Invert());
     registerSerializableType(new LinkEvaluatorMat4Invert());
+
+    registerSerializableType(new LinkEvaluatorTransFunc1DThresholdMin());
+    registerSerializableType(new LinkEvaluatorTransFunc1DThresholdMax());
+    registerSerializableType(new LinkEvaluatorTransFunc1DDomainMin());
+    registerSerializableType(new LinkEvaluatorTransFunc1DDomainMax());
+    registerSerializableType(new LinkEvaluatorTransFunc1DGamma());
 
     //Links between scalars and vectors
 

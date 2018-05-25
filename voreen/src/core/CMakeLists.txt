@@ -232,6 +232,7 @@ SET(VRN_CORE_SOURCES
     properties/link/linkevaluatorboolinvert.cpp
     properties/link/linkevaluatorhelper.cpp
     properties/link/linkevaluatorid.cpp
+    properties/link/linkevaluatortransferfunctionproperties.cpp
     properties/link/propertylink.cpp
         #color
     properties/color/colorswitchproperty.cpp
@@ -584,6 +585,7 @@ SET(VRN_CORE_HEADERS
     ../../include/voreen/core/properties/link/linkevaluatorboolinvert.h
     ../../include/voreen/core/properties/link/linkevaluatorhelper.h
     ../../include/voreen/core/properties/link/linkevaluatorid.h
+    ../../include/voreen/core/properties/link/linkevaluatortransferfunctionproperties.h
     ../../include/voreen/core/properties/link/linkevaluatoridgeneric.h
     ../../include/voreen/core/properties/link/linkevaluatorinterval.h
     ../../include/voreen/core/properties/link/linkevaluatorboundingbox.h

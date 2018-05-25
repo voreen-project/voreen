@@ -10,7 +10,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="SingleVolumeRaycaster" ref="ref11" />
+                        <item type="ConnectedComponentAnalysis" ref="ref2" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -68,10 +68,10 @@
                 <Processor type="Canvas" name="Canvas" id="ref1">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="382" y="407" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-1791" y="58" width="1479" height="1062" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-1667" y="66" width="1479" height="1062" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-1791" y="58" />
+                            <value x="-1667" y="66" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1479" y="1062" />
@@ -109,7 +109,7 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLabeling" name="applyLabeling" value="false" />
-                        <Property mapKey="binarizationThreshold" name="binarizationThreshold" value="12.5" />
+                        <Property mapKey="binarizationThreshold" name="binarizationThreshold" value="0" id="ref23" />
                         <Property mapKey="componentStatFilePath" name="componentStatFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -124,9 +124,9 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/a1545928-1195-40b9-b3c4-78f837012afbHDF5 (*.h5)" />
-                                    <item value="../../../nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/a1545928-1195-40b9-b3c4-78f837012afbHDF5 (*.h5)" />
-                                    <item value="/nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/a1545928-1195-40b9-b3c4-78f837012afbHDF5 (*.h5)" />
+                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/e72a1ff5-e416-48ff-99ef-02f7fadabaf7/aae408f5-52e6-4f1c-9894-417c59aa50ccHDF5 (*.h5)" />
+                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/e72a1ff5-e416-48ff-99ef-02f7fadabaf7/aae408f5-52e6-4f1c-9894-417c59aa50ccHDF5 (*.h5)" />
+                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/e72a1ff5-e416-48ff-99ef-02f7fadabaf7/aae408f5-52e6-4f1c-9894-417c59aa50ccHDF5 (*.h5)" />
                                 </paths>
                             </paths>
                         </Property>
@@ -177,9 +177,9 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901HDF5 (*.h5)" />
-                                    <item value="../../../nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901HDF5 (*.h5)" />
-                                    <item value="/nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901HDF5 (*.h5)" />
+                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/e72a1ff5-e416-48ff-99ef-02f7fadabaf7/318cf86b-7a79-4a1c-aea4-6dea0788c7a3HDF5 (*.h5)" />
+                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/e72a1ff5-e416-48ff-99ef-02f7fadabaf7/318cf86b-7a79-4a1c-aea4-6dea0788c7a3HDF5 (*.h5)" />
+                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/e72a1ff5-e416-48ff-99ef-02f7fadabaf7/318cf86b-7a79-4a1c-aea4-6dea0788c7a3HDF5 (*.h5)" />
                                 </paths>
                             </paths>
                         </Property>
@@ -224,9 +224,7 @@
                                         <item value="/git/voreen-testdata/voreen-testdata/input/aneurism.vvd" />
                                     </paths>
                                 </path>
-                                <searchParameters>
-                                    <value key="preferredReader" value="VvdVolumeReader" />
-                                </searchParameters>
+                                <searchParameters />
                             </urls>
                         </Property>
                     </Properties>
@@ -874,7 +872,9 @@
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="scaleSpaceSteps" name="scaleSpaceSteps" value="5" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="vesselRadiusRangeRW" minValue="0.0078125" maxValue="2" minRange="0" maxRange="2147483648" stepping="0.01">
                             <value x="0.01259375" y="0.189999998" />
                         </Property>
@@ -1620,9 +1620,9 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transFuncType" name="transFuncType" value="1D Keys Color Map" />
-                        <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true">
+                        <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true" id="ref22">
                             <MetaData>
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="601" y="362" width="718" height="459" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="true" x="-1262" y="438" width="718" height="459" />
                                 <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
                                     <value x="0" y="93.774124146" />
                                 </MetaItem>
@@ -1630,7 +1630,7 @@
                             <TransferFunction type="TransFuncIntensity" alphaMode="2" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
                                 <domain x="0" y="93.774124146" />
-                                <threshold x="0.127967075" y="1" />
+                                <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
                                         <colorL r="0" g="0" b="0" a="0" />
@@ -1750,9 +1750,9 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/6919ceca-add4-40e0-ab4b-a1f58809f080HDF5 (*.h5)" />
-                                    <item value="../../../nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/6919ceca-add4-40e0-ab4b-a1f58809f080HDF5 (*.h5)" />
-                                    <item value="/nosnapshot/tmp/voreentmp/c4a84b47-1acd-4930-9f6d-008c10782dfe/6919ceca-add4-40e0-ab4b-a1f58809f080HDF5 (*.h5)" />
+                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/e72a1ff5-e416-48ff-99ef-02f7fadabaf7/4c9fdea7-ba0c-45cc-8f66-240980c37d5cHDF5 (*.h5)" />
+                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/e72a1ff5-e416-48ff-99ef-02f7fadabaf7/4c9fdea7-ba0c-45cc-8f66-240980c37d5cHDF5 (*.h5)" />
+                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/e72a1ff5-e416-48ff-99ef-02f7fadabaf7/4c9fdea7-ba0c-45cc-8f66-240980c37d5cHDF5 (*.h5)" />
                                 </paths>
                             </paths>
                         </Property>
@@ -2013,6 +2013,16 @@
                     <SourceProperty ref="ref19" />
                     <DestinationProperty ref="ref21" />
                     <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="TransFunc1DKeysProperty" ref="ref22" />
+                    <DestinationProperty type="FloatProperty" ref="ref23" />
+                    <Evaluator type="LinkEvaluatorTransFunc1DThresholdMin" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="FloatProperty" ref="ref23" />
+                    <DestinationProperty type="TransFunc1DKeysProperty" ref="ref22" />
+                    <Evaluator type="LinkEvaluatorTransFunc1DThresholdMin" />
                 </PropertyLink>
             </PropertyLinks>
         </ProcessorNetwork>
