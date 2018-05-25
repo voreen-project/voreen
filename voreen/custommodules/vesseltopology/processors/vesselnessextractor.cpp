@@ -159,7 +159,7 @@ static SeparableKernel::KernelFunc gaussSecondDerivative(float stdev) {
 }
 //Is also suitable for second derivative etc.
 static tgt::ivec3 suitableExtent(tgt::vec3 stddev) {
-    return tgt::ivec3(4.0f*stddev);
+    return tgt::ivec3(tgt::round(3.0f*stddev));
 }
 
 
@@ -728,10 +728,10 @@ VesselnessExtractor::VesselnessExtractor()
     , inport_(Port::INPORT, "volumehandle.input", "Volume Input")
     , outport_(Port::OUTPORT, "volumehandle.output", "Volume Output", false)
     , outputVolumeFilePath_("outputVolumeFilePath", "Output Volume", "Path", "", "HDF5 (*.h5)", FileDialogProperty::SAVE_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT)
-    , medianStandardDeviationRange_("medianStandardDeviationRange", "Median Standard Deviation Range", 1.0, 0.5, 50)
+    , vesselRadiusRangeRW_("vesselRadiusRangeRW", "Vessel Radius (mm)", 1.0, 0.001, 500)
     , scaleSpaceSteps_("scaleSpaceSteps", "Scale Space Steps", 5, 1, 10)
-    , minStandardDeviationVec_("minStandardDeviationVec", "Used Min Standard Deviation", tgt::vec3::zero, tgt::vec3::zero, tgt::vec3(std::numeric_limits<float>::max()))
-    , maxStandardDeviationVec_("maxStandardDeviationVec", "Used Max Standard Deviation", tgt::vec3::zero, tgt::vec3::zero, tgt::vec3(std::numeric_limits<float>::max()))
+    , minStandardDeviationVec_("minStandardDeviationVec", "Used Min Standard Deviation (voxel)", tgt::vec3::zero, tgt::vec3::zero, tgt::vec3(std::numeric_limits<float>::max()))
+    , maxStandardDeviationVec_("maxStandardDeviationVec", "Used Max Standard Deviation (voxel)", tgt::vec3::zero, tgt::vec3::zero, tgt::vec3(std::numeric_limits<float>::max()))
     , minSmoothingKernelSize_("minSmoothingKernelSize", "Min Smoothing Kernel Size", tgt::ivec3::zero, tgt::ivec3::zero, tgt::ivec3(std::numeric_limits<int>::max()))
     , maxSmoothingKernelSize_("maxSmoothingKernelSize", "Max Smoothing Kernel Size", tgt::ivec3::zero, tgt::ivec3::zero, tgt::ivec3(std::numeric_limits<int>::max()))
     , blobRejectorWeight_("blobRejectorWeight", "Blob rejector weight", 0.5, 0.01, 100)
@@ -743,8 +743,9 @@ VesselnessExtractor::VesselnessExtractor()
 
     addProperty(outputVolumeFilePath_);
 
-    addProperty(medianStandardDeviationRange_);
-        ON_CHANGE(medianStandardDeviationRange_, VesselnessExtractor, updateSmoothingProperties);
+    addProperty(vesselRadiusRangeRW_);
+        ON_CHANGE(vesselRadiusRangeRW_, VesselnessExtractor, updateSmoothingProperties);
+
     addProperty(scaleSpaceSteps_);
 
     addProperty(minStandardDeviationVec_);
@@ -899,6 +900,13 @@ void VesselnessExtractor::process() {
 
 void VesselnessExtractor::adjustPropertiesToInput() {
     updateSmoothingProperties();
+
+    const VolumeBase* inputVol = inport_.getData();
+    if(!inputVol) {
+        return;
+    }
+    vesselRadiusRangeRW_.setMinValue(tgt::min(inputVol->getSpacing()));
+    vesselRadiusRangeRW_.setMaxValue(tgt::min(inputVol->getBoundingBox(false).getBoundingBox().diagonal()));
 }
 
 void VesselnessExtractor::updateSmoothingProperties() {
@@ -910,8 +918,8 @@ void VesselnessExtractor::updateSmoothingProperties() {
         maxSmoothingKernelSize_.reset();
         return;
     }
-    minStandardDeviationVec_.set(medianStandardDeviationRange_.get().x/getRelativeSpacing(inputVol->getSpacing()));
-    maxStandardDeviationVec_.set(medianStandardDeviationRange_.get().y/getRelativeSpacing(inputVol->getSpacing()));
+    minStandardDeviationVec_.set(vesselRadiusRangeRW_.get().x/inputVol->getSpacing());
+    maxStandardDeviationVec_.set(vesselRadiusRangeRW_.get().y/inputVol->getSpacing());
 
     tgt::ivec3 minSize = 2*suitableExtent(minStandardDeviationVec_.get()) + tgt::ivec3::one;
     tgt::ivec3 maxSize = 2*suitableExtent(maxStandardDeviationVec_.get()) + tgt::ivec3::one;

@@ -52,7 +52,7 @@ private:
     VolumePort outport_;
 
     FileDialogProperty outputVolumeFilePath_;
-    FloatIntervalProperty medianStandardDeviationRange_;
+    FloatIntervalProperty vesselRadiusRangeRW_;
     IntProperty scaleSpaceSteps_;
     FloatVec3Property minStandardDeviationVec_;
     FloatVec3Property maxStandardDeviationVec_;
