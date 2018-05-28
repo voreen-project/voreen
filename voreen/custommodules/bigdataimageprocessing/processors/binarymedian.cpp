@@ -52,6 +52,7 @@ BinaryMedian::BinaryMedian()
     : AsyncComputeProcessor<BinaryMedianInput, BinaryMedianOutput>()
     , inport_(Port::INPORT, "connectedcomponentanalysis.inport", "Binary Volume Input")
     , outport_(Port::OUTPORT, "connectedcomponentanalysis.outport", "Label Volume Output", false, Processor::VALID)
+    , enabled_("enabled", "Enabled", true)
     , outputVolumeFilePath_("outputVolumeFilePath", "Output Volume", "Path", "", "HDF5 (*.h5)", FileDialogProperty::SAVE_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , outputVolumeDeflateLevel_("outputVolumeDeflateLevel", "Deflate Level", 1, 0, 9, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEFAULT)
     , binarizationThreshold_("binarizationThreshold", "Threshold", 0.5f, 0.0f, std::numeric_limits<float>::max(), Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_ADVANCED)
@@ -71,6 +72,8 @@ BinaryMedian::BinaryMedian()
                     }));
     addPort(outport_);
 
+        addProperty(enabled_);
+            enabled_.setGroupID("output");
         addProperty(outputVolumeFilePath_);
             outputVolumeFilePath_.setGroupID("output");
         addProperty(outputVolumeDeflateLevel_);
@@ -183,6 +186,12 @@ bool BinaryMedian::isReady() const {
 }
 
 BinaryMedianInput BinaryMedian::prepareComputeInput() {
+    if(!enabled_.get()) {
+        return BinaryMedianInput(
+                nullptr,
+                nullptr
+                );
+    }
     if(!inport_.hasData()) {
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
     }
@@ -246,6 +255,9 @@ BinaryMedianInput BinaryMedian::prepareComputeInput() {
     );
 }
 BinaryMedianOutput BinaryMedian::compute(BinaryMedianInput input, ProgressReporter& progressReporter) const {
+    if(!enabled_.get()) {
+        return { "" };
+    }
     tgtAssert(input.sliceReader, "No sliceReader");
     tgtAssert(input.outputVolume, "No outputVolume");
 
@@ -257,10 +269,14 @@ BinaryMedianOutput BinaryMedian::compute(BinaryMedianInput input, ProgressReport
     //outputVolume will be destroyed and thus closed now.
 }
 void BinaryMedian::processComputeOutput(BinaryMedianOutput output) {
-    // outputVolume has been destroyed and thus closed by now.
-    // So we can open it again (and use HDF5VolumeReader's implementation to read all the metadata with the file)
-    const VolumeBase* vol = HDF5VolumeReader().read(output.outputVolumeFilePath)->at(0);
-    outport_.setData(vol);
+    if(!enabled_.get()) {
+        outport_.setData(inport_.getData(), false);
+    } else {
+        // outputVolume has been destroyed and thus closed by now.
+        // So we can open it again (and use HDF5VolumeReader's implementation to read all the metadata with the file)
+        const VolumeBase* vol = HDF5VolumeReader().read(output.outputVolumeFilePath)->at(0);
+        outport_.setData(vol);
+    }
 }
 
 void BinaryMedian::adjustPropertiesToInput() {
