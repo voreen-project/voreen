@@ -32,6 +32,8 @@
 
 namespace voreen {
 
+const std::string FileDialogProperty::loggerCat_("voreen.FileDialogProperty");
+
 FileDialogProperty::FileDialogProperty(const std::string& id, const std::string& guiText,
                                const std::string& dialogCaption, const std::string& directory,
                                const std::string& fileFilter, FileDialogProperty::FileMode fileMode,
@@ -99,6 +101,14 @@ void FileDialogProperty::setFileMode(FileMode mode) {
 void FileDialogProperty::set(const std::string& value) {
     if (get() == value)
         return;
+
+    std::string parentDir = tgt::FileSystem::parentDir(value);
+    if (!parentDir.empty() && !tgt::FileSystem::dirExists(parentDir)) {
+        LWARNING("Parent directory of " << tgt::FileSystem::fileName(value) << " does not exist. Resetting path.");
+        setFileWatchEnabled(false);
+        StringProperty::set("");
+        return;
+    }
 
     // Determine if set was called recursively.
     // We only want to modify the file watch on the first recursion level.

@@ -162,8 +162,8 @@ void VoreenFileWatcher::MetaFileWatchListener::handleFileAction(efsw::WatchID wa
     // Enqueue file action.
     if (VoreenApplication::app()) {
         for (VoreenFileWatchListener* listener : listeners_) {
-            if (listener->fileNames_.find(filename) != listener->fileNames_.end() ||
-                listener->dirNames_.find(dir) != listener->dirNames_.end())
+            std::string path = tgt::FileSystem::cleanupPath(dir + "/" + filename);
+            if (listener->isWatching(path))
             {
                 tgtAssert(listener->isFileWatchEnabled(), "File Watch Callback called unintentionally");
 
@@ -193,101 +193,130 @@ VoreenFileWatchListener::~VoreenFileWatchListener() {
         VoreenApplication::app()->getCommandQueue()->removeAll(this);
 }
 
-void VoreenFileWatchListener::addWatch(std::string path) {
+void VoreenFileWatchListener::addWatch(const std::string& path) {
 
     // Ignore empty paths.
     if (path.empty())
         return;
 
-    // Convert to absolute path.
-    path = tgt::FileSystem::cleanupPath(tgt::FileSystem::absolutePath(path));
+    // Retrieve parent dir.
+    std::string parentDir = tgt::FileSystem::parentDir(path);
+    if (parentDir.empty() && VoreenApplication::app())
+        parentDir = VoreenApplication::app()->getBasePath();
 
-    // If path has been added already, increase counter.
-    if(paths_.find(path) != paths_.end()) {
-        paths_[path]++;
-        return;
+    if(!tgt::FileSystem::dirExists(parentDir))
+        LERRORC("VoreenFileWatchListener", "Parent directory of '"<< path << "' does not exist. File watching will not work properly.");
+
+    // Get actual file or folder name (also works for directories).
+    std::string name = tgt::FileSystem::fileName(path);
+
+    // Convert to absolute path.
+    parentDir = tgt::FileSystem::cleanupPath(tgt::FileSystem::absolutePath(parentDir));
+    std::string absolutePath = tgt::FileSystem::cleanupPath(parentDir + "/" + name);
+    if (absolutePath != path) {
+        // Overwrite old (identical) path, if set already.
+        absolutePaths_[path] = absolutePath;
     }
 
-    // First occurence of this path.
-    paths_[path] = 1;
+    // Insert path (may occur multiple times).
+    watchedPaths_.insert(std::make_pair(parentDir, name));
 
-    std::string dirName = tgt::FileSystem::dirName(path);
-    if (dirName == path) // watching a directory
-        dirNames_.insert(path);
-    else // watching a file
-        fileNames_.insert(std::make_pair(tgt::FileSystem::fileName(path), dirName));
+    // If parent directory is already being watched, skip request.
+    if (watchedPaths_.count(parentDir) > 1)
+        return;
 
     if (isFileWatchEnabled() && VoreenFileWatcher::isInited())
-        VoreenFileWatcher::getRef().requestAddWatch(this, dirName);
+        VoreenFileWatcher::getRef().requestAddWatch(this, parentDir);
 }
 
-void VoreenFileWatchListener::removeWatch(std::string path) {
+void VoreenFileWatchListener::removeWatch(const std::string& path) {
 
     // Ignore empty paths.
     if (path.empty())
         return;
 
-    // Convert to absolute path.
-    path = tgt::FileSystem::cleanupPath(tgt::FileSystem::absolutePath(path));
-    tgtAssert(paths_.find(path) != paths_.end(), "path has not been registered");
+    // Retrieve parent dir.
+    std::string parentDir = getParentDir(path);
 
-    // Decrease path counter.
-    paths_[path]--;
+    // Get actual file or folder name (also works for directories).
+    std::string name = tgt::FileSystem::fileName(path);
 
-    // If the path is being watched more than once, don't remove the watch.
-    if(paths_[path] > 0)
-        return;
-
-    std::string dirName = tgt::FileSystem::dirName(path);
-    if (dirName == path) // watching a directory
-        dirNames_.erase(path);
-    else { // watching a file
-        std::string fileName = tgt::FileSystem::fileName(path);
-        auto range = fileNames_.equal_range(fileName);
-        for (auto iter = range.first; iter != range.second; iter++) {
-            if (iter->second == dirName) {
-                fileNames_.erase(iter);
+    // Check, if path is being watched.
+    auto range = watchedPaths_.equal_range(parentDir);
+    bool found = false, single = false;
+    for (auto iter = range.first; iter != range.second; iter++) {
+        if (iter->second == name) {
+            if (!found) {
+                found = true;
+                single = true;
+            }
+            else {
+                single = false;
                 break;
             }
         }
     }
 
-    // Finally erase path.
-    paths_.erase(path);
-
-    if (isFileWatchEnabled() && VoreenFileWatcher::isInited()) {
-
-        // Check if any other path contains the same directory and
-        // if so, skip the actual removal request.
-        for (const auto& path : paths_) {
-            if (tgt::FileSystem::dirName(path.first) == dirName)
-                return;
-        }
-
-        VoreenFileWatcher::getRef().requestRemoveWatch(this, dirName);
+    if (!found) {
+        LERRORC("VoreenFileWatchListener", "Path '" << path << "' is not being watched.");
+        return;
     }
+
+    if (single)
+        absolutePaths_.erase(path);
+
+    // If parent directory is still being watched due to another contained file, skip request.
+    if (watchedPaths_.count(parentDir) != 0)
+        return;
+
+    if (isFileWatchEnabled() && VoreenFileWatcher::isInited())
+        VoreenFileWatcher::getRef().requestRemoveWatch(this, parentDir);
 }
 
 void VoreenFileWatchListener::removeAllWatches() {
     if (VoreenFileWatcher::isInited())
         VoreenFileWatcher::getRef().requestRemoveAllWatches(this);
 
-    fileNames_.clear();
-    dirNames_.clear();
-    paths_.clear();
+    absolutePaths_.clear();
+    watchedPaths_.clear();
 }
 
-bool VoreenFileWatchListener::isWatching(std::string path) const {
-    path = tgt::FileSystem::cleanupPath(tgt::FileSystem::absolutePath(path));
-    return paths_.find(path) != paths_.end();
+bool VoreenFileWatchListener::isWatching(const std::string& path) const {
+
+    // Fast check for parent directory.
+    std::string parentDir = getParentDir(path);
+    if (watchedPaths_.find(parentDir) == watchedPaths_.end())
+        return false;
+
+    // Get actual file or folder name (also works for directories).
+    std::string name = tgt::FileSystem::fileName(path);
+
+    auto range = watchedPaths_.equal_range(parentDir);
+    for (auto iter = range.first; iter != range.second; iter++) {
+        if (iter->second == name) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+std::string VoreenFileWatchListener::getParentDir(std::string path) const {
+    auto iter = absolutePaths_.find(path);
+    if (iter != absolutePaths_.end())
+        path = iter->second;
+    std::string parentDir = tgt::FileSystem::parentDir(path);
+    if (parentDir.empty() && VoreenApplication::app())
+        parentDir = VoreenApplication::app()->getBasePath();
+    return parentDir;
 }
 
 std::vector<std::string> VoreenFileWatchListener::getWatches() const {
-    std::vector<std::string> result;
-    result.reserve(paths_.size());
-    for(const auto& path : paths_)
-        result.push_back(path.first);
-    return result;
+    std::set<std::string> result;
+    for (const auto& path : watchedPaths_) {
+        result.insert(tgt::FileSystem::cleanupPath(path.first + "/" + path.second));
+    }
+    return std::vector<std::string>(result.begin(), result.end());
 }
 
 VoreenFileWatchListener::WatchMode VoreenFileWatchListener::getWatchMode() const {
@@ -308,9 +337,9 @@ void VoreenFileWatchListener::setFileWatchEnabled(bool enabled) {
     // When toggling file watching either remove or (re-)add listeners.
     if (VoreenFileWatcher::isInited()) {
         if (enabled) {
-            for (const auto& path : paths_) {
-                std::string dirName = tgt::FileSystem::dirName(path.first);
-                VoreenFileWatcher::getRef().requestAddWatch(this, dirName);
+            for (const auto& path : watchedPaths_) {
+                std::string parentDir = path.first;
+                VoreenFileWatcher::getRef().requestAddWatch(this, parentDir);
             }
         }
         else

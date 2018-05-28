@@ -80,6 +80,9 @@ protected:
     FileMode fileMode_;
     std::string fileFilter_;
     bool recursiveSet_;
+
+private:
+    static const std::string loggerCat_;
 };
 
 }   // namespace

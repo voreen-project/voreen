@@ -121,10 +121,6 @@ string findBasePath(const string& path) {
     return p;
 }
 
-string findDataPath(const string& basePath) {
-    return basePath + "/data";
-}
-
 #ifdef __APPLE__
 string findAppBundleResourcesPath() {
     CFBundleRef bundle;
@@ -365,8 +361,6 @@ VoreenApplication::VoreenApplication(const std::string& binaryName, const std::s
     logLevel_.setDefaultValue("info");
     addProperty(logLevel_);
     addProperty(enableHTMLLogging_);
-    htmlLogFile_.set(binaryName_ + "-log.html");
-    htmlLogFile_.setDefaultValue(binaryName_ + "-log.html");
     addProperty(htmlLogFile_);
 
     logLevel_.onChange(MemberFunctionCallback<VoreenApplication>(this, &VoreenApplication::logLevelChanged));
@@ -646,6 +640,11 @@ void VoreenApplication::initialize() {
     // tgt initialization
     //
     tgt::init(tgt::InitFeature::ALL, tgt::Info);
+
+    // Init logging.
+    // Setting properties needs to be done here, since the base path must already be set.
+    htmlLogFile_.set(binaryName_ + "-log.html");
+    htmlLogFile_.setDefaultValue(binaryName_ + "-log.html");
 
     std::string absLogPath;
     initLogging(absLogPath);
