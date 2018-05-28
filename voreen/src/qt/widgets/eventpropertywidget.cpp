@@ -90,13 +90,17 @@ void EventPropertyWidget::createMouseWidgets() {
     connect(modifierWidget_, SIGNAL(modifierChanged(Qt::KeyboardModifiers)), this, SLOT(modifierChanged(Qt::KeyboardModifiers)));
     layout_->addWidget(modifierWidget_);
 
+    std::string suffix = "";
+    if(property_->getMouseAction() == tgt::MouseEvent::DOUBLECLICK) {
+        suffix = " (Doubleclick)";
+    }
     buttonBox_ = new QComboBox;
-    buttonBox_->addItem("Left mouse button");
-    buttonBox_->addItem("Middle mouse button");
-    buttonBox_->addItem("Right mouse button");
-    buttonBox_->addItem("Mouse wheel");
-    buttonBox_->addItem("Any mouse button");
-    buttonBox_->addItem("No mouse button");
+    buttonBox_->addItem(("Left mouse button" + suffix).c_str());
+    buttonBox_->addItem(("Middle mouse button" + suffix).c_str());
+    buttonBox_->addItem(("Right mouse button" + suffix).c_str());
+    buttonBox_->addItem(("Mouse wheel" + suffix).c_str());
+    buttonBox_->addItem(("Any mouse button" + suffix).c_str());
+    buttonBox_->addItem(("No mouse button" + suffix).c_str());
     switch (property_->getMouseButtons()) {
         case tgt::MouseEvent::MOUSE_BUTTON_LEFT:
             buttonBox_->setCurrentIndex(0);
