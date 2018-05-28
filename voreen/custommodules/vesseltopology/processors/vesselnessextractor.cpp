@@ -899,6 +899,7 @@ void VesselnessExtractor::adjustPropertiesToInput() {
     }
     vesselRadiusRangeRW_.setMinValue(tgt::min(inputVol->getSpacing()));
     vesselRadiusRangeRW_.setMaxValue(tgt::min(inputVol->getBoundingBox(false).getBoundingBox().diagonal()));
+    vesselRadiusRangeRW_.adaptDecimalsToRange(3);
 }
 
 void VesselnessExtractor::updateSmoothingProperties() {

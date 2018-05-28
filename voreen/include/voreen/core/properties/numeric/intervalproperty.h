@@ -93,9 +93,20 @@ public:
      */
     void setMaxRange(TYPE value);
 
+    /**
+     * Sets the property's minimum increase/decrease,
+     * which should be used in GUI widgets representing
+     * the property, e.g., a spin box.
+     */
     void setStepping(TYPE value);
-
     TYPE getStepping() const;
+
+    /**
+     * Sets the number of decimals that should be
+     * displayed by a GUI representation of the property.
+     */
+    void setNumDecimals(int numDecimals);
+    int getNumDecimals() const;
 
     /**
      * Get the internal tgt::Interval
@@ -119,6 +130,7 @@ private:
     tgt::Interval<TYPE> interval_;
     tgt::Interval<TYPE> defaultValue_;
     TYPE stepping_;
+    int numDecimals_;
 
 };
 
@@ -180,6 +192,35 @@ public:
     virtual Property* create() const{
         return new FloatIntervalProperty();
     }
+
+    /*
+     * Adapt stepping and numDecimals to the current range (max - min),
+     * so that numSignificantDecimals decimals will be adjustable.
+     */
+    void adaptDecimalsToRange(size_t numSignificantDecimals) {
+        const float range = getMaxValue() - getMinValue();
+        if(range <= 0) {
+            return;
+        }
+        // We can only omit digits behind the period, digits has to be >= 0.
+        int digits = std::max(0, tgt::iround(-log10(range)) + static_cast<int>(numSignificantDecimals));
+        setNumDecimals(digits);
+        setStepping(pow(10.0f, -digits));
+
+        // Hack: If we set min or max to a very specific value before,
+        // the GUI representation might be slightly off, because it is
+        // affected by the stepping, but the actual min/max values are not.
+        // So now that we have set the stepping appropriately, we force
+        // an update by changing min/max around and back to their original
+        // values.
+        float min = getMinValue();
+        float max = getMaxValue();
+        setMaxValue(std::numeric_limits<float>::lowest());
+        setMinValue(std::numeric_limits<float>::max());
+        setMinValue(min);
+        setMaxValue(max);
+    }
+
 };
 
 template<typename TYPE>
@@ -212,9 +253,10 @@ IntervalProperty<TYPE>::IntervalProperty(const std::string& id, const std::strin
                     int invalidationLevel, Property::LevelOfDetail lod)
     : TemplateProperty<tgt::Vector2<TYPE> >(id, guiText, tgt::Vector2<TYPE>(value), invalidationLevel, lod)
     , interval_(tgt::Vector2<TYPE>(value), minValue, maxValue, minRange, maxRange)
+    , defaultValue_(interval_)
+    , stepping_(1)
+    , numDecimals_(2)
 {
-    defaultValue_ = interval_;
-    stepping_ = 1;
     //this->addValidation(IntervalPropertyValidation<TYPE>(this));
 }
 
@@ -224,17 +266,20 @@ IntervalProperty<TYPE>::IntervalProperty(const std::string& id, const std::strin
                     int invalidationLevel, Property::LevelOfDetail lod)
     : TemplateProperty<tgt::Vector2<TYPE> >(id, guiText, value, invalidationLevel, lod)
     , interval_(value, minValue, maxValue, minRange, maxRange)
+    , defaultValue_(interval_)
+    , stepping_(1)
+    , numDecimals_(2)
 {
-    defaultValue_ = interval_;
-    stepping_ = 1;
 //    this->addValidation(IntervalPropertyValidation<TYPE>(this));
 }
 
 template<typename TYPE>
 IntervalProperty<TYPE>::IntervalProperty()
     : TemplateProperty<tgt::Vector2<TYPE> > ()
+    , defaultValue_(interval_)
+    , stepping_(1)
+    , numDecimals_(2)
 {
-    defaultValue_ = interval_;
     //this->addValidation(IntervalPropertyValidation<TYPE>(this));
 }
 
@@ -382,6 +427,18 @@ void IntervalProperty<TYPE>::setStepping(TYPE stepping){
 template<typename TYPE>
 TYPE IntervalProperty<TYPE>::getStepping() const{
     return stepping_;
+}
+
+template<typename TYPE>
+void IntervalProperty<TYPE>::setNumDecimals(int numDecimals) {
+    tgtAssert(numDecimals <= 64 && numDecimals >= 0, "Invalid number of decimals");
+    numDecimals_ = numDecimals;
+    this->updateWidgets();
+}
+
+template<typename TYPE>
+int IntervalProperty<TYPE>::getNumDecimals() const {
+    return numDecimals_;
 }
 
 template<typename TYPE>
