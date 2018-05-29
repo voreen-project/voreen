@@ -71,6 +71,11 @@ public:
      */
     VolumeAtomic(VolumeAtomic<T>&& other);
 
+    /**
+     * Move assignment.
+     */
+    VolumeAtomic<T>& operator=(VolumeAtomic<T>&& other);
+
     /// Deletes the \a data_ array
     virtual ~VolumeAtomic();
 
@@ -362,6 +367,19 @@ VolumeAtomic<T>::VolumeAtomic(VolumeAtomic<T>&& other)
     : VolumeAtomic(other.data_, other.dimensions_)
 {
     other.data_ = nullptr;
+}
+
+template<typename T>
+VolumeAtomic<T>& VolumeAtomic<T>::operator=(VolumeAtomic<T>&& other) {
+    // This looks quite funky, but is actually safe:
+
+    // Destruct the current object, but keep the memory.
+    this->~VolumeAtomic();
+
+    // Call the move constructor on the memory region of the current object.
+    new(this) VolumeAtomic(std::move(other));
+
+    return *this;
 }
 
 template<class T>
