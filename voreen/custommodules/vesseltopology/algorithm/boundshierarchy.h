@@ -180,6 +180,9 @@ const Bounds& BoundsHierarchyNode<T,V>::getBounds() const {
             return inner.bounds;
         case BoundsHierarchyNodeType::LEAF:
             return leaf.bounds;
+        default:
+            tgtAssert(false, "Unknown type");
+            return leaf.bounds;
     }
 }
 

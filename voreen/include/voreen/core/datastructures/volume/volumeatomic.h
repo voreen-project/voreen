@@ -344,7 +344,7 @@ VolumeAtomic<T>::VolumeAtomic(const tgt::svec3& dimensions, bool allocMem)
         try {
             data_ = new T[numVoxels_];
         }
-        catch (std::bad_alloc) {
+        catch (std::bad_alloc&) {
             LERROR("Failed to allocate memory: bad allocation");
             throw; // throw it to the caller
         }
@@ -395,7 +395,10 @@ VolumeAtomic<T>* VolumeAtomic<T>::clone() const {
     }
 
     // copy over the voxel data
-    memcpy(newVolume->data_, data_, getNumBytes());
+    T* dst = newVolume->data_;
+    const T* src = data_;
+    size_t len = getNumVoxels();
+    std::copy(src, src+len, dst);
 
     return newVolume;
 }
@@ -437,21 +440,21 @@ VolumeAtomic<T>* VolumeAtomic<T>::getSubVolume(tgt::svec3 dimensions, tgt::svec3
     T* data = reinterpret_cast<T*>(newVolume->getData());
 
     // determine parameters
-    size_t voxelSize = static_cast<size_t>(getBytesPerVoxel());
     tgt::svec3 dataDims = getDimensions();
     size_t initialStartPos = (offset.z * dataDims.x * dataDims.y)+(offset.y * dataDims.x) + offset.x;
 
-    // per row
-    size_t dataSize = dimensions.x*voxelSize;
 
-    // memcpy each row for every slice to form sub volume
+    // copy each row for every slice to form sub volume
     size_t volumePos;
     size_t subVolumePos;
     for (size_t i=0; i < dimensions.z; i++) {
         for (size_t j=0; j < dimensions.y; j++) {
             volumePos = (j*dataDims.x) + (i*dataDims.x*dataDims.y);
             subVolumePos = (j*dimensions.x) + (i*dimensions.x*dimensions.y);
-            memcpy(data + subVolumePos, (data_ + volumePos + initialStartPos), dataSize);
+            T* dst = data + subVolumePos;
+            const T* src = data_ + volumePos + initialStartPos;
+            size_t len = dimensions.x;
+            std::copy(src, src+len, dst);
         }
     }
 
@@ -710,7 +713,7 @@ float VolumeAtomic<T>::minMagnitude() const {
 
 template<class T>
 void VolumeAtomic<T>::clear() {
-    memset(data_, 0, getNumBytes());
+    std::fill(data_, data_+getNumVoxels(), T(0.0f));
     invalidate();
 }
 
@@ -743,17 +746,18 @@ void* VolumeAtomic<T>::getBrickData(const tgt::svec3& offset, const tgt::svec3& 
     // determine parameters
     tgt::svec3 dataDims = getDimensions();
     size_t initialStartPos = (offset.z * dataDims.x * dataDims.y)+(offset.y * dataDims.x) + offset.x;
-    // per row
-    size_t rowSizeInBytes = dimensions.x*static_cast<size_t>(getBytesPerVoxel());
 
-    // memcpy each row for every slice to form sub volume
+    // copy each row for every slice to form sub volume
     size_t volumePos;
     size_t bufferPos;
     for (size_t z=0; z < dimensions.z; z++) {
         for (size_t y=0; y < dimensions.y; y++) {
             volumePos = (y*dataDims.x) + (z*dataDims.x*dataDims.y);
             bufferPos = (y*dimensions.x) + (z*dimensions.x*dimensions.y);
-            memcpy((data + bufferPos), (data_ + volumePos + initialStartPos), rowSizeInBytes);
+            T* dst = data + bufferPos;
+            const T* src = data_ + volumePos + initialStartPos;
+            size_t len = dimensions.x;
+            std::copy(src, src+len, dst);
         }
     }
 
@@ -775,7 +779,10 @@ void* VolumeAtomic<T>::getSliceData(const size_t firstSlice, const size_t lastSl
     //determine parameters
     size_t initialStartPos = dataDims.x * dataDims.y * firstSlice;
     //copy data
-    memcpy(data,data_ + initialStartPos, bufferSize*getBytesPerVoxel());
+    T* dst = data;
+    const T* src = data_ + initialStartPos;
+    size_t len = bufferSize;
+    std::copy(src, src+len, dst);
 
     return reinterpret_cast<void*>(data);
 }
