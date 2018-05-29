@@ -241,7 +241,7 @@ bool deserializeSettings(PropertyOwner* po, const std::string& filename) {
             po->deserialize(deserializer);
             stream.close();
         }
-        catch (XmlSerializationNoSuchDataException) {
+        catch (SerializationNoSuchDataException) {
             // no data present => ignore
             xmlDeserializer.removeLastError();
             return false;

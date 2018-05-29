@@ -51,7 +51,7 @@ using tgt::TextureUnit;
 namespace voreen {
 
 MultiVolumeGeometryRaycaster::MultiVolumeGeometryRaycaster()
-    : VolumeRaycaster()
+    : VolumeRaycaster(true, true)
     , volumeInport2_(Port::INPORT, "volume2", "Volume2 Input", false, Processor::INVALID_PROGRAM)
     , volumeInport3_(Port::INPORT, "volume3", "Volume3 Input", false, Processor::INVALID_PROGRAM)
     , volumeInport4_(Port::INPORT, "volume4", "Volume4 Input", false, Processor::INVALID_PROGRAM)

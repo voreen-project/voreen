@@ -123,7 +123,7 @@ void VolumeURL::deserialize(Deserializer& s) {
             path_ = tgt::FileSystem::relativePath(path_, tgt::FileSystem::dirName(s.getDocumentPath()));
 
         return; // We are done here.
-    } catch(XmlSerializationNoSuchDataException&) {
+    } catch(SerializationNoSuchDataException&) {
         s.removeLastError();
     }
 
@@ -135,7 +135,7 @@ void VolumeURL::deserialize(Deserializer& s) {
         parseURL(url, protocol_, path_, searchParameterMap_);
         found = true;
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         s.removeLastError();
     }
 
@@ -147,12 +147,12 @@ void VolumeURL::deserialize(Deserializer& s) {
             parseURL(url, protocol_, path_, searchParameterMap_);
             found = true;
         }
-        catch (XmlSerializationNoSuchDataException&) {
+        catch (SerializationNoSuchDataException&) {
             s.removeLastError();
         }
     }
     if (!found)
-        throw XmlSerializationNoSuchDataException("VolumeURL: neither attribute 'filename' nor attribute 'url' found");
+        throw SerializationNoSuchDataException("VolumeURL: neither attribute 'filename' nor attribute 'url' found");
 
     std::string basePath = tgt::FileSystem::dirName(s.getDocumentPath());
     if (!basePath.empty()) {

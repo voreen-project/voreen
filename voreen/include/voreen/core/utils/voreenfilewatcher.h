@@ -154,14 +154,21 @@ public:
     /**
      * Adds a path to be watched for changes.
      * Empty paths will be ignored.
+     * Path may be watched already.
+     *
+     * Note that the file or directory itself does not need to exist
+     * when function is called, but the containing directory does.
+     * This is necessary since the path needs to be resolved
+     * to it's absolute variant.
      */
-    void addWatch(std::string path);
+    void addWatch(const std::string& path);
 
     /**
      * Removes a path.
      * Empty paths will be ignored.
+     * Path must be watched already.
      */
-    void removeWatch(std::string path);
+    void removeWatch(const std::string& path);
 
     /**
      * Removes all watches.
@@ -171,10 +178,13 @@ public:
     /**
      * Determines, if the specified path is currently being watched.
      */
-    bool isWatching(std::string path) const;
+    bool isWatching(const std::string& path) const;
 
     /**
      * Returns the currently watched paths.
+     *
+     * Note that even if a path is being watched multiple times
+     * it will only be contained once in the returned vector.
      */
     std::vector<std::string> getWatches() const;
 
@@ -184,15 +194,15 @@ public:
     WatchMode getWatchMode() const;
 
     /**
-    * Determines if file watch can be disabled/enabled.
-    * This is true, if mode set to OPTION_ON or OPTIONAL_OFF.
-    */
+     * Determines if file watch can be disabled/enabled.
+     * This is true, if mode set to OPTION_ON or OPTIONAL_OFF.
+     */
     bool isFileWatchEditable() const;
 
     /**
-    * Sets the file watch policy.
-    * If watch mode is ALWAYS_ON or ALWAYS_OFF, this has no effect.
-    */
+     * Sets the file watch policy.
+     * If watch mode is ALWAYS_ON or ALWAYS_OFF, this has no effect.
+     */
     void setFileWatchEnabled(bool enabled);
     bool isFileWatchEnabled() const;
 
@@ -213,9 +223,10 @@ public:
 
 private:
 
-    std::map<std::string, int> paths_; ///< maps all watched paths to their count
-    std::set<std::string> dirNames_; ///< contains all directory watches
-    std::multimap<std::string, std::string> fileNames_; ///< contains all file watches mapped to their directory
+    std::string getParentDir(std::string path) const;
+
+    std::map<std::string, std::string> absolutePaths_;      ///< Maps incoming path to it's absolute parent path
+    std::multimap<std::string, std::string> watchedPaths_;  ///< Maps parent directories to contained watches
 
     bool fileWatchEnabled_;
     WatchMode watchMode_; ///< Watch mode

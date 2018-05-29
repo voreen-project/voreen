@@ -659,7 +659,7 @@ void DynamicCLProcessor::deserialize(Deserializer& s) {
         // deserialize property
         s.setUsePointerContentSerialization(true);
         s.deserialize("PriorityProperty", clVec, "Property");
-    } catch (XmlSerializationNoSuchDataException) {
+    } catch (SerializationNoSuchDataException) {
         s.removeLastError();
     }
     s.setUsePointerContentSerialization(usePointerContentSerialization);

@@ -88,7 +88,7 @@ void SeedpointGenerator::deserialize(Deserializer& d) {
     try {
         d.deserialize("seedPoints", seedPoints_);
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         d.removeLastError();
     }
 }

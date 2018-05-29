@@ -137,51 +137,51 @@ void TextBoxMetaData::deserialize(Deserializer& s) {
     userType_ = static_cast<NWEBaseGraphicsItemUserTypes>(tmp);
     try {
         s.deserialize("caption", caption_);
-    } catch (XmlSerializationNoSuchDataException&) {
+    } catch (SerializationNoSuchDataException&) {
         // caption was not serialized so just ignore...
         s.removeLastError();
     }
     try {
         s.deserialize("captionFontSize", captionFontSize_);
-    } catch (XmlSerializationNoSuchDataException&) {
+    } catch (SerializationNoSuchDataException&) {
         // captionFontSize was not serialized so just ignore...
         s.removeLastError();
         captionFontSize_ = 9;
     }
     try {
         s.deserialize("content", content_);
-    } catch (XmlSerializationNoSuchDataException&) {
+    } catch (SerializationNoSuchDataException&) {
         // content was not serialized so just ignore...
         s.removeLastError();
     }
     try {
         s.deserialize("contentFontSize", contentFontSize_);
-    } catch (XmlSerializationNoSuchDataException&) {
+    } catch (SerializationNoSuchDataException&) {
         // contentFontSize was not serialized so just ignore...
         s.removeLastError();
         contentFontSize_ = 6;
     }
     try {
         s.deserialize("x", x_);
-    } catch (XmlSerializationNoSuchDataException&) {
+    } catch (SerializationNoSuchDataException&) {
         // x position was not serialized so just ignore...
         s.removeLastError();
     }
     try {
         s.deserialize("y", y_);
-    } catch (XmlSerializationNoSuchDataException&) {
+    } catch (SerializationNoSuchDataException&) {
         // y position was not serialized so just ignore...
         s.removeLastError();
     }
     try {
         s.deserialize("width", width_);
-    } catch (XmlSerializationNoSuchDataException&) {
+    } catch (SerializationNoSuchDataException&) {
         // width was not serialized so just ignore...
         s.removeLastError();
     }
     try {
         s.deserialize("height", height_);
-    } catch (XmlSerializationNoSuchDataException&) {
+    } catch (SerializationNoSuchDataException&) {
         // height was not serialized so just ignore...
         s.removeLastError();
     }
@@ -189,7 +189,7 @@ void TextBoxMetaData::deserialize(Deserializer& s) {
         std::string tmp;
         s.deserialize("fontColor", tmp);
         fontColor_ = QColor(tmp.c_str());
-    } catch (XmlSerializationNoSuchDataException&) {
+    } catch (SerializationNoSuchDataException&) {
         // font color was not serialized so just ignore...
         s.removeLastError();
     }
@@ -197,13 +197,13 @@ void TextBoxMetaData::deserialize(Deserializer& s) {
         std::string tmp;
         s.deserialize("baseColor", tmp);
         baseColor_ = QColor(tmp.c_str());
-    } catch (XmlSerializationNoSuchDataException&) {
+    } catch (SerializationNoSuchDataException&) {
         // base color was not serialized so just ignore...
         s.removeLastError();
     }
      try {
         s.deserialize("showCaption", showCaption_);
-    } catch (XmlSerializationNoSuchDataException&) {
+    } catch (SerializationNoSuchDataException&) {
         // show caption was not serialized so just ignore...
         s.removeLastError();
     }

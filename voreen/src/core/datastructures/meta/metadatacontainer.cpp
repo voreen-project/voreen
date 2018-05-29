@@ -97,7 +97,7 @@ void MetaDataContainer::deserialize(Deserializer& s) {
     try {
         s.deserialize("MetaData", metaData_, "MetaItem", "name");
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         // There were no meta data during serialization, so we can just ignore the exception...
         s.removeLastError();
     }

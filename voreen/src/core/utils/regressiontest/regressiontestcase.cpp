@@ -85,12 +85,12 @@ void RegressionTestCaseConfiguration::deserialize(Deserializer& s) {
         try {
             s.deserialize("enabled", enabled_);
         }
-        catch (XmlSerializationNoSuchDataException& /*e*/) {}
+        catch (SerializationNoSuchDataException& /*e*/) {}
 
         try {
             s.deserialize("ignored", ignored_);
         }
-        catch (XmlSerializationNoSuchDataException& /*e*/) {}
+        catch (SerializationNoSuchDataException& /*e*/) {}
 
         try {
             s.deserialize("timeout", timeout_);
@@ -99,7 +99,7 @@ void RegressionTestCaseConfiguration::deserialize(Deserializer& s) {
                 timeout_ = 0;
             }
         }
-        catch (XmlSerializationNoSuchDataException& /*e*/) {}
+        catch (SerializationNoSuchDataException& /*e*/) {}
 
         try {
             s.deserialize("pixelDiffTolerance", pixelDiffTolerance_);
@@ -108,7 +108,7 @@ void RegressionTestCaseConfiguration::deserialize(Deserializer& s) {
                 pixelDiffTolerance_ = tgt::clamp(pixelDiffTolerance_, 0.f, 1.f);
             }
         }
-        catch (XmlSerializationNoSuchDataException& /*e*/) {}
+        catch (SerializationNoSuchDataException& /*e*/) {}
 
         try {
             s.deserialize("maxErrorPixels", maxErrorPixels_);
@@ -117,7 +117,7 @@ void RegressionTestCaseConfiguration::deserialize(Deserializer& s) {
                 maxErrorPixels_ = 0;
             }
         }
-        catch (XmlSerializationNoSuchDataException& /*e*/) {}
+        catch (SerializationNoSuchDataException& /*e*/) {}
 
         try {
             s.deserialize("pixelSearchNeighborhood", pixelSearchNeighborhood_);
@@ -126,7 +126,7 @@ void RegressionTestCaseConfiguration::deserialize(Deserializer& s) {
                 pixelSearchNeighborhood_ = 0;
             }
         }
-        catch (XmlSerializationNoSuchDataException& /*e*/) {}
+        catch (SerializationNoSuchDataException& /*e*/) {}
 
         try {
             s.deserialize("voxelDiffTolerance", voxelDiffTolerance_);
@@ -135,7 +135,7 @@ void RegressionTestCaseConfiguration::deserialize(Deserializer& s) {
                 voxelDiffTolerance_ = tgt::clamp(voxelDiffTolerance_, 0.f, 1.f);
             }
         }
-        catch (XmlSerializationNoSuchDataException& /*e*/) {}
+        catch (SerializationNoSuchDataException& /*e*/) {}
 
         try {
             s.deserialize("maxErrorVoxels", maxErrorVoxels_);
@@ -144,7 +144,7 @@ void RegressionTestCaseConfiguration::deserialize(Deserializer& s) {
                 maxErrorVoxels_ = 0;
             }
         }
-        catch (XmlSerializationNoSuchDataException& /*e*/) {}
+        catch (SerializationNoSuchDataException& /*e*/) {}
 
         try {
             s.deserialize("geometryDiffTolerance", geometryDiffTolerance_);
@@ -153,10 +153,10 @@ void RegressionTestCaseConfiguration::deserialize(Deserializer& s) {
                 geometryDiffTolerance_ = 0.f;
             }
         }
-        catch (XmlSerializationNoSuchDataException& /*e*/) {}
+        catch (SerializationNoSuchDataException& /*e*/) {}
 
     }
-    catch (XmlSerializationException& e) {
+    catch (SerializationException& e) {
         LERRORC("regressiontest.RegressionTestCaseConfiguration", "Deserialization failed: " << e.what());
     }
 }

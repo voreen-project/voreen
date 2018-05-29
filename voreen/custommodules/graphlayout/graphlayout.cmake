@@ -3,7 +3,6 @@
 # Core module resources 
 ################################################################################
 SET(MOD_CORE_MODULECLASS GraphLayoutModule)
-SET(MOD_REQUIRE_OPENGL_COMPATIBILITY_PROFILE ON)
 
 IF(NOT VRN_MODULE_PLOTTING)
     MESSAGE(FATAL_ERROR "GraphLayout Module requires Plotting Module")

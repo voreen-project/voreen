@@ -50,145 +50,126 @@ public:
 //----------------------------------------------------------------------------
 
 /**
- * Base class of all serialization exceptions concerning reading and writing XML.
- *
- * @note You should rather raise a derived exception,
- *       which is more specific to the error that occured,
- *       than a @c XmlSerializationException.
+ * A @c SerializationInvalidOperationException is raised in case of a method-call in an
+ * invalid, respectively unsupported way.
  *
  * @see SerializationException
  */
-class XmlSerializationException : public SerializationException {
+class SerializationInvalidOperationException : public SerializationException {
 public:
     /**
      * @see SerializationException::SerializationException
      */
-    XmlSerializationException(const std::string& what = "") : SerializationException(what) {}
+    SerializationInvalidOperationException(const std::string& what = "") : SerializationException(what) {}
 };
 
 //----------------------------------------------------------------------------
 
 /**
- * A @c XmlSerializationInvalidOperationException is raised in case of a method-call in an
- * invalid, respectively unsupported way.
+ * A @c SerializationFormatException is raised when XML nodes does not fulfill expected format.
  *
- * @see XmlSerializationException
+ * @see SerializationException
  */
-class XmlSerializationInvalidOperationException : public XmlSerializationException {
+class SerializationFormatException : public SerializationException {
 public:
     /**
-     * @see XmlSerializationException::XmlSerializationException
+     * @see SerializationException::SerializationException
      */
-    XmlSerializationInvalidOperationException(const std::string& what = "") : XmlSerializationException(what) {}
+    SerializationFormatException(const std::string& what = "") : SerializationException(what) {}
 };
 
 //----------------------------------------------------------------------------
 
 /**
- * A @c XmlSerializationFormatException is raised when XML nodes does not fulfill expected format.
- *
- * @see XmlSerializationException
- */
-class XmlSerializationFormatException : public XmlSerializationException {
-public:
-    /**
-     * @see XmlSerializationException::XmlSerializationException
-     */
-    XmlSerializationFormatException(const std::string& what = "") : XmlSerializationException(what) {}
-};
-
-//----------------------------------------------------------------------------
-
-/**
- * A @c XmlSerializationVersionMismatchException is raised in case of a version mismatch among
+ * A @c SerializationVersionMismatchException is raised in case of a version mismatch among
  * the XML document and the used @c XmlSerializer or @c XmlDeserializer.
  *
- * @see XmlSerializationException
+ * @see SerializationException
  */
-class XmlSerializationVersionMismatchException : public XmlSerializationException {
+class SerializationVersionMismatchException : public SerializationException {
 public:
     /**
-     * @see XmlSerializationException::XmlSerializationException
+     * @see SerializationException::SerializationException
      */
-    XmlSerializationVersionMismatchException(const std::string& what = "") : XmlSerializationException(what) {}
+    SerializationVersionMismatchException(const std::string& what = "") : SerializationException(what) {}
 };
 
 //----------------------------------------------------------------------------
 
 /**
- * A @c XmlSerializationNoSuchDataException is raised in case of searching for a XML node
+ * A @c SerializationNoSuchDataException is raised in case of searching for a XML node
  * by key that does not exists.
  *
- * @see XmlSerializationException
+ * @see SerializationException
  */
-class XmlSerializationNoSuchDataException : public XmlSerializationException {
+class SerializationNoSuchDataException : public SerializationException {
 public:
     /**
-     * @see XmlSerializationException::XmlSerializationException
+     * @see SerializationException::SerializationException
      */
-    XmlSerializationNoSuchDataException(const std::string& what = "") : XmlSerializationException(what) {}
+    SerializationNoSuchDataException(const std::string& what = "") : SerializationException(what) {}
 };
 
 //----------------------------------------------------------------------------
 
 /**
- * A @c XmlSerializationDuplicateIdException is raised in case of multiple XML nodes
+ * A @c SerializationDuplicateIdException is raised in case of multiple XML nodes
  * share the same id attribute.
  *
- * @see XmlSerializationException
+ * @see SerializationException
  */
-class XmlSerializationDuplicateIdException : public XmlSerializationException {
+class SerializationDuplicateIdException : public SerializationException {
 public:
     /**
-     * @see XmlSerializationException::XmlSerializationException
+     * @see SerializationException::SerializationException
      */
-    XmlSerializationDuplicateIdException(const std::string& what = "") : XmlSerializationException(what) {}
+    SerializationDuplicateIdException(const std::string& what = "") : SerializationException(what) {}
 };
 
 //----------------------------------------------------------------------------
 
 /**
- * A @c XmlSerializationAttributeNamingException is raised in case of multiple XML attributes
+ * A @c SerializationAttributeNamingException is raised in case of multiple XML attributes
  * sharing the same name or using a reserved attribute name.
  *
- * @see XmlSerializationException
+ * @see SerializationException
  */
-class XmlSerializationAttributeNamingException : public XmlSerializationException {
+class SerializationAttributeNamingException : public SerializationException {
 public:
     /**
-     * @see XmlSerializationException::XmlSerializationException
+     * @see SerializationException::SerializationException
      */
-    XmlSerializationAttributeNamingException(const std::string& what = "") : XmlSerializationException(what) {}
+    SerializationAttributeNamingException(const std::string& what = "") : SerializationException(what) {}
 };
 
 //----------------------------------------------------------------------------
 
 /**
- * A @c XmlSerializationReferenceResolvingException is raised in case of problems
+ * A @c SerializationReferenceResolvingException is raised in case of problems
  * concerning the reference resolving process.
  *
- * @see XmlSerializationException
+ * @see SerializationException
  */
-class XmlSerializationReferenceResolvingException : public XmlSerializationException {
+class SerializationReferenceResolvingException : public SerializationException {
 public:
     /**
-     * @see XmlSerializationException::XmlSerializationException
+     * @see SerializationException::SerializationException
      */
-    XmlSerializationReferenceResolvingException(const std::string& what = "")
-        : XmlSerializationException(what) {}
+    SerializationReferenceResolvingException(const std::string& what = "")
+        : SerializationException(what) {}
 };
 
 //----------------------------------------------------------------------------
 
 /**
- * A @c XmlSerializationMemoryAllocationException is raised in case of trying to allocate memory
+ * A @c SerializationMemoryAllocationException is raised in case of trying to allocate memory
  * for an @c AbstractSerializable.
  *
- * @see XmlSerializationException
+ * @see SerializationException
  */
-class XmlSerializationMemoryAllocationException : public XmlSerializationException {
+class SerializationMemoryAllocationException : public SerializationException {
 public:
-    XmlSerializationMemoryAllocationException(const std::string& what = "") : XmlSerializationException(what) {}
+    SerializationMemoryAllocationException(const std::string& what = "") : SerializationException(what) {}
 };
 
 } // namespace

@@ -209,7 +209,7 @@ void VolumeURLProperty::deserialize(Deserializer& s) {
         value_ = tmp.getURL();
         addWatch(tmp.getPath());
     }
-    catch(XmlSerializationNoSuchDataException) {
+    catch(SerializationNoSuchDataException) {
         s.removeLastError();
         //LINFO("trying old deserialization");
         //old deserialization

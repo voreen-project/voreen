@@ -67,7 +67,7 @@ public:
      * @attention All pointer references to primitive data which are serialized
      *            using XML attributes cannot be resolved. Furthermore using the
      *            same key for different values leads to a
-     *            @c XmlSerializationAttributeNamingException.
+     *            @c SerializationAttributeNamingException.
      *
      * @param useAttributes if @c true serialize primitive data as XML attributes,
      *                      otherwise as XML nodes

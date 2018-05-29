@@ -73,7 +73,7 @@ static std::vector<unsigned char> base64Decode(const std::string& input) {
     const char padCharacter = '=';
 
     if (input.length() % 4) //Sanity check
-        throw XmlSerializationFormatException("Non-Valid base64!");
+        throw SerializationFormatException("Non-Valid base64!");
 
     size_t padding = 0;
     if (input.length()) {
@@ -111,10 +111,10 @@ static std::vector<unsigned char> base64Decode(const std::string& input) {
                         decodedBytes.push_back((temp >> 10) & 0x000000FF);
                         return decodedBytes;
                     default:
-                        throw XmlSerializationFormatException("Invalid Padding in Base 64!");
+                        throw SerializationFormatException("Invalid Padding in Base 64!");
                 }
             }  else
-                throw XmlSerializationFormatException("Non-Valid Character in Base 64!");
+                throw SerializationFormatException("Non-Valid Character in Base 64!");
             cursor++;
         }
         decodedBytes.push_back((temp >> 16) & 0x000000FF);
@@ -131,7 +131,7 @@ void Deserializer::deserializeBinaryBlob(const std::string& key, unsigned char* 
     std::vector<unsigned char> dataVec = base64Decode(tmp);
 
     if(dataVec.size() != reservedMemory)
-        throw XmlSerializationFormatException("Json node with key '" + key + "' contains a binary blob for which unsufficient memory has been reserved.");
+        throw SerializationFormatException("Json node with key '" + key + "' contains a binary blob for which unsufficient memory has been reserved.");
     else {
         //std::copy(inputBuffer, inputBuffer + dataVec.size(), dataVec.begin()); //doesn't work
         memcpy(inputBuffer, &dataVec[0], reservedMemory);

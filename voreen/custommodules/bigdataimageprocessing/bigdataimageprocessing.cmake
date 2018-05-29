@@ -12,7 +12,6 @@ ENDIF()
 SET(MOD_CORE_MODULECLASS BigDataImageProcessingModule)
 
 SET(MOD_CORE_SOURCES
-    ${MOD_DIR}/processors/largedataprocessor.cpp
     ${MOD_DIR}/processors/connectedcomponentanalysis.cpp
     ${MOD_DIR}/processors/segmentationquantification.cpp
     ${MOD_DIR}/processors/volumebricksource.cpp
@@ -33,7 +32,6 @@ IF(VRN_MODULE_PLOTTING)
     )
 ENDIF()
 SET(MOD_CORE_HEADERS
-    ${MOD_DIR}/processors/largedataprocessor.h
     ${MOD_DIR}/processors/connectedcomponentanalysis.h
     ${MOD_DIR}/processors/segmentationquantification.h
     ${MOD_DIR}/processors/volumebricksource.h

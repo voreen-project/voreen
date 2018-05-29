@@ -317,7 +317,7 @@ void RegionOfInterest2D::RegionOfInterestGeometry::deserialize(Deserializer& s) 
         s.deserialize("layer", layer_);
         s.deserialize("trafoMatrix", transformMatrix_);
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         // superfluous or missing XML data item, just ignore
         s.removeLastError();
     }
@@ -987,7 +987,7 @@ void RegionOfInterest2D::deserialize(Deserializer& s) {
         clearROIs();
         s.deserialize("RegionsOfInterest", regionsOfInterest_, "Region");
     }
-    catch (XmlSerializationNoSuchDataException) {
+    catch (SerializationNoSuchDataException) {
         // just no ROI data present => ignore
         s.removeLastError();
     }

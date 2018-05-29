@@ -195,7 +195,7 @@ void EventPropertyBase::deserialize(Deserializer& s) {
         enabled_ = enabled;
         shareEvents_ = shareEvents;
     }
-    catch (XmlSerializationNoSuchDataException& /*e*/) {
+    catch (SerializationNoSuchDataException& /*e*/) {
         s.removeLastError();
     }
 
@@ -207,7 +207,7 @@ void EventPropertyBase::deserialize(Deserializer& s) {
         mouseAction_ = static_cast<tgt::MouseEvent::MouseAction>(mouseAction);
         mouseButtons_ = static_cast<tgt::MouseEvent::MouseButtons>(mouseButtons);
     }
-    catch (XmlSerializationNoSuchDataException& /*e*/) {
+    catch (SerializationNoSuchDataException& /*e*/) {
         s.removeLastError();
     }
 
@@ -216,7 +216,7 @@ void EventPropertyBase::deserialize(Deserializer& s) {
         s.deserialize("keyCode", keyCode);
         keyCode_ = static_cast<tgt::KeyEvent::KeyCode>(keyCode);
     }
-    catch (XmlSerializationNoSuchDataException& /*e*/) {
+    catch (SerializationNoSuchDataException& /*e*/) {
         s.removeLastError();
     }
 
@@ -225,7 +225,7 @@ void EventPropertyBase::deserialize(Deserializer& s) {
         s.deserialize("modifier", modifier);
         modifier_ = static_cast<tgt::Event::Modifier>(modifier);
     }
-    catch (XmlSerializationNoSuchDataException& /*e*/) {
+    catch (SerializationNoSuchDataException& /*e*/) {
         s.removeLastError();
     }
 

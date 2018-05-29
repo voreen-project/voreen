@@ -126,8 +126,9 @@ public:
      *
      * @param stream the output stream
      * @param pretty formats stream with newlines, if set to true
+     * @param compressed whether or not the output should be be gzip compressed
      */
-    void write(std::ostream& stream, bool pretty);
+    void write(std::ostream& stream, bool pretty=false, bool compressed=false);
 
 
     /// ----------------------------------------------------------------------------

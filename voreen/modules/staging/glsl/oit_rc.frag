@@ -139,8 +139,8 @@ vec4 rayTraversal(in float exitDepth, in vec4 inColor) {
                 color.rgb = APPLY_SHADING_1(voxel1.xyz, texToPhysical(ray1.pos_, volumeStruct1_), ray1.lightPositionPhysical_, ray1.cameraPositionPhysical_, color.rgb, color.rgb, vec3(1.0,1.0,1.0));
 
                 result = RC_APPLY_COMPOSITING1(result, voxel.x, color, worldPos_, voxel1.xyz, curDepth_, samplingStepSize_, tDepth, 0, 0, 0);
-                //result1 = RC_APPLY_COMPOSITING_2(result1, color, worldPos_, voxel1.xyz, curDepth_, samplingStepSize_, tDepth);
-                //result2 = RC_APPLY_COMPOSITING_3(result2, color, worldPos_, voxel1.xyz, curDepth_, samplingStepSize_, tDepth);
+                //result1 = RC_APPLY_COMPOSITING2(result1, color, worldPos_, voxel1.xyz, curDepth_, samplingStepSize_, tDepth);
+                //result2 = RC_APPLY_COMPOSITING3(result2, color, worldPos_, voxel1.xyz, curDepth_, samplingStepSize_, tDepth);
             }
             ray1.lastIntensity_ = voxel1.a;
             ray1.pos_ += ray1.dir_;
@@ -172,9 +172,9 @@ vec4 rayTraversal(in float exitDepth, in vec4 inColor) {
                 // apply shading
                 color2.rgb = APPLY_SHADING_2(voxel2.xyz, texToPhysical(ray2.pos_, volumeStruct2_), ray2.lightPositionPhysical_, ray2.cameraPositionPhysical_, color2.rgb, color2.rgb, vec3(1.0,1.0,1.0));
 
-                result = RC_APPLY_COMPOSITING_1(result, voxel.a, color2, worldPos_, voxel2.xyz, curDepth_, samplingStepSize_, tDepth, 0, 0, 0);
-                //result1 = RC_APPLY_COMPOSITING_2(result1, color2, worldPos_, voxel2.xyz, curDepth_, samplingStepSize_, tDepth);
-                //result2 = RC_APPLY_COMPOSITING_3(result2, color2, worldPos_, voxel2.xyz, curDepth_, samplingStepSize_, tDepth);
+                result = RC_APPLY_COMPOSITING1(result, voxel2.a, color2, worldPos_, voxel2.xyz, curDepth_, samplingStepSize_, tDepth, 0, 0, 0);
+                //result1 = RC_APPLY_COMPOSITING2(result1, color2, worldPos_, voxel2.xyz, curDepth_, samplingStepSize_, tDepth);
+                //result2 = RC_APPLY_COMPOSITING3(result2, color2, worldPos_, voxel2.xyz, curDepth_, samplingStepSize_, tDepth);
             }
             ray2.lastIntensity_ = voxel2.a;
             ray2.pos_ += ray2.dir_;
@@ -206,9 +206,9 @@ vec4 rayTraversal(in float exitDepth, in vec4 inColor) {
                 // apply shading
                 color3.rgb = APPLY_SHADING_3(voxel3.xyz, texToPhysical(ray3.pos_, volumeStruct3_), ray3.lightPositionPhysical_, ray3.cameraPositionPhysical_, color3.rgb, color3.rgb, vec3(1.0,1.0,1.0));
 
-                result = RC_APPLY_COMPOSITING_1(result, voxel.a, color3, worldPos_, voxel3.xyz, curDepth_, samplingStepSize_, tDepth, 0, 0, 0);
-                //result1 = RC_APPLY_COMPOSITING_2(result1, color3, worldPos_, voxel3.xyz, curDepth_, samplingStepSize_, tDepth);
-                //result2 = RC_APPLY_COMPOSITING_3(result2, color3, worldPos_, voxel3.xyz, curDepth_, samplingStepSize_, tDepth);
+                result = RC_APPLY_COMPOSITING1(result, voxel3.a, color3, worldPos_, voxel3.xyz, curDepth_, samplingStepSize_, tDepth, 0, 0, 0);
+                //result1 = RC_APPLY_COMPOSITING2(result1, color3, worldPos_, voxel3.xyz, curDepth_, samplingStepSize_, tDepth);
+                //result2 = RC_APPLY_COMPOSITING3(result2, color3, worldPos_, voxel3.xyz, curDepth_, samplingStepSize_, tDepth);
             }
             ray3.lastIntensity_ = voxel3.a;
             ray3.pos_ += ray3.dir_;
@@ -240,9 +240,9 @@ vec4 rayTraversal(in float exitDepth, in vec4 inColor) {
                 // apply shading
                 color4.rgb = APPLY_SHADING_4(voxel4.xyz, texToPhysical(ray4.pos_, volumeStruct4_), ray4.lightPositionPhysical_, ray4.cameraPositionPhysical_, color4.rgb, color4.rgb, vec3(1.0,1.0,1.0));
 
-                result = RC_APPLY_COMPOSITING_1(result, voxel.a, color4, worldPos_, voxel4.xyz, curDepth_, samplingStepSize_, tDepth, 0, 0, 0);
-                //result1 = RC_APPLY_COMPOSITING_2(result1, color4, worldPos_, voxel4.xyz, curDepth_, samplingStepSize_, tDepth);
-                //result2 = RC_APPLY_COMPOSITING_3(result2, color4, worldPos_, voxel4.xyz, curDepth_, samplingStepSize_, tDepth);
+                result = RC_APPLY_COMPOSITING1(result, voxel4.a, color4, worldPos_, voxel4.xyz, curDepth_, samplingStepSize_, tDepth, 0, 0, 0);
+                //result1 = RC_APPLY_COMPOSITING2(result1, color4, worldPos_, voxel4.xyz, curDepth_, samplingStepSize_, tDepth);
+                //result2 = RC_APPLY_COMPOSITING3(result2, color4, worldPos_, voxel4.xyz, curDepth_, samplingStepSize_, tDepth);
             }
             ray4.lastIntensity_ = voxel4.a;
             ray4.pos_ += ray4.dir_;

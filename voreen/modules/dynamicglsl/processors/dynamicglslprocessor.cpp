@@ -720,7 +720,7 @@ void DynamicGLSLProcessor::deserialize(Deserializer& s) {
     try {
         shader_->deserialize(s);
     }
-    catch (XmlSerializationNoSuchDataException) {
+    catch (SerializationNoSuchDataException) {
         // just no shader data present => ignore
         s.removeLastError();
     }

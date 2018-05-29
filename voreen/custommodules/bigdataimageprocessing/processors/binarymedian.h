@@ -104,6 +104,7 @@ private:
     OptionProperty<SamplingStrategyType> samplingStrategyType_;
     IntProperty outsideVolumeValue_;
 
+    BoolProperty enabled_;
     BoolProperty useUniformExtent_;
     IntProperty extentX_;
     IntProperty extentY_;

@@ -89,7 +89,7 @@ void TransFuncPropertyBase::deserialize(Deserializer& s) {
         s.deserialize("domainFittingStrategy", fittingStrategy);
         domainFittingStrategy_ = (DomainAutoFittingStrategy)fittingStrategy;
     }
-    catch (XmlSerializationNoSuchDataException&) {
+    catch (SerializationNoSuchDataException&) {
         s.removeLastError();
     }
 

@@ -82,7 +82,7 @@ void NetworkSerializer::process(TiXmlDocument& document) {
 
     switch (version) {
         case -1:
-            throw XmlSerializationFormatException("Could not determine network format version!");
+            throw SerializationFormatException("Could not determine network format version!");
 
         // Fall through to the newest version.
         // Omit break statements in all case blocks except the last.
@@ -123,7 +123,7 @@ void NetworkSerializer::process(TiXmlDocument& document) {
         default:
             std::stringstream msg;
             msg << "Unsupported network format version '" << version << "'.";
-            throw XmlSerializationFormatException(msg.str());
+            throw SerializationFormatException(msg.str());
     }
 }
 

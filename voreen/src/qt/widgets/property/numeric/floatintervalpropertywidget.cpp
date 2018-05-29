@@ -72,6 +72,7 @@ FloatIntervalPropertyWidget::~FloatIntervalPropertyWidget() {
 void FloatIntervalPropertyWidget::updateFromPropertySlot() {
     if (property_ != 0) {
         minWidget_->blockSignals(true);
+        minWidget_->setDecimals(property_->getNumDecimals());
         minWidget_->setMinValue(property_->getMinValue());
         minWidget_->setMaxValue(property_->getMaxValue());
         minWidget_->setValue(property_->get().x);
@@ -79,6 +80,7 @@ void FloatIntervalPropertyWidget::updateFromPropertySlot() {
         minWidget_->blockSignals(false);
 
         maxWidget_->blockSignals(true);
+        maxWidget_->setDecimals(property_->getNumDecimals());
         maxWidget_->setMinValue(property_->getMinValue());
         maxWidget_->setMaxValue(property_->getMaxValue());
         maxWidget_->setValue(property_->get().y);

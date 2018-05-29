@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2016 University of Muenster, Germany.                        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
  * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -23,66 +23,39 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "vesselgraphsave.h"
+#include "lz4slicevolume.h"
 
-#include "voreen/core/io/serialization/jsonserializer.h"
+#include <fstream>
 
 namespace voreen {
 
-const std::string VesselGraphSave::loggerCat_("voreen.vesseltoplogy.vesselgraphsave");
+const static std::string METADATA_ROOT_NODE_STRING = "metadata";
 
-
-VesselGraphSave::VesselGraphSave()
-    : Processor()
-    , inport_(Port::INPORT, "graph.input", "Graph Input", false, Processor::INVALID_RESULT)
-    , graphFilePath_("graphFilePath", "Voreen Vessel Graph File", "Voreen Vessel Graph File", "", "*.vvg.gz", FileDialogProperty::SAVE_FILE)
-    , saveButton_("save", "Save")
-    , continousSave_("continousSave", "Save on inport change", false)
-    , prettyJson_("prettyJson", "Prettify Json", false)
+LZ4SliceVolumeMetadata::LZ4SliceVolumeMetadata(tgt::svec3 dimensions)
+    : dimensions_(dimensions)
 {
-    addPort(inport_);
-
-    addProperty(graphFilePath_);
-    addProperty(saveButton_);
-        ON_CHANGE(saveButton_, VesselGraphSave, saveCurrentGraph);
-    addProperty(continousSave_);
-    addProperty(prettyJson_);
 }
 
-VesselGraphSave::~VesselGraphSave() {
+LZ4SliceVolumeMetadata::LZ4SliceVolumeMetadata(const std::string& xmlfile)
+    : dimensions_(tgt::svec3::one)
+{
+    XmlDeserializer ds;
+    std::ifstream filestream(xmlfile);
+    ds.read(filestream);
+    ds.deserialize(METADATA_ROOT_NODE_STRING, *this);
 }
 
-void VesselGraphSave::saveCurrentGraph() {
-    const std::string path = graphFilePath_.get();
-    if(path.empty()) {
-        return;
-    }
-    const VesselGraph* input = inport_.getData();
-    if(!input) {
-        return;
-    }
-
-    JsonSerializer serializer;
-    try {
-        serializer.serialize("graph", *input);
-    } catch(SerializationException s) {
-        LERROR("Could not serialize graph: " << s.what());
-        return;
-    }
-    try {
-        std::fstream f(path, std::ios::out);
-
-        serializer.write(f, prettyJson_.get(), true);
-    } catch(...) {
-        LERROR("Could not save graph " << path);
-        return;
-    }
-    LINFO("Saved graph to " << path << ".");
+void LZ4SliceVolumeMetadata::serialize(Serializer& s) const {
+    s.serialize("dimensions", dimensions_);
+}
+void LZ4SliceVolumeMetadata::deserialize(Deserializer& s) {
+    s.deserialize("dimensions", dimensions_);
 }
 
-void VesselGraphSave::process() {
-    if(inport_.hasChanged() && continousSave_.get()) {
-        saveCurrentGraph();
-    }
+void LZ4SliceVolumeMetadata::save(const std::string& xmlfile) const {
+    XmlSerializer ser;
+    std::ofstream filestream(xmlfile);
+    ser.serialize(METADATA_ROOT_NODE_STRING, *this);
 }
-} // namespace voreen
+
+}
