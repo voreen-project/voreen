@@ -97,7 +97,13 @@ void VolumeThinning::process() {
     auto t_start = std::chrono::high_resolution_clock::now();
     SubtaskProgressReporterCollection<2> subtaskReporters(*this);
 
-    VolumeMask m(invol, sampleMask, NoFixedForeground(), invol.getRealWorldMapping().realWorldToNormalized(binarizationThreshold_.get()), subtaskReporters.get<0>());
+    float binarizationThreshold = invol.getRealWorldMapping().realWorldToNormalized(binarizationThreshold_.get());
+    VolumeMask m(
+            std::move(binarizeVolume(invol, invol.getRealWorldMapping().realWorldToNormalized(binarizationThreshold_.get()))),
+            std::move(sampleMask ? boost::optional<LZ4SliceVolume<uint8_t>>(binarizeVolume(*sampleMask, 0.5)) : boost::none),
+            invol.getSpacing(),
+            NoFixedForeground(),
+            subtaskReporters.get<0>());
     switch(thinningAlgorithm_.getValue()) {
         case VolumeMask::MA:
             m.skeletonize<VolumeMask::MA>(maxSteps_.get(), subtaskReporters.get<1>());

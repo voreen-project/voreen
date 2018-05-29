@@ -34,6 +34,7 @@
 #include "tgt/vector.h"
 #include "tgt/filesystem.h"
 #include "../util/tasktimelogger.h"
+#include "../datastructures/lz4slicevolume.h"
 #include "surface.h"
 
 #include <boost/iostreams/device/mapped_file.hpp>
@@ -104,7 +105,7 @@ public:
     };
 
     template<class F>
-    VolumeMask(const VolumeBase& vol, const VolumeBase* sampleMask, F&& fixedForegroundReader, float binarizationThresholdNormalized, ProgressReporter& progress);
+    VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, tgt::vec3 spacing, F&& fixedForegroundReader, ProgressReporter& progress);
     VolumeMask(VolumeMask&& other);
     ~VolumeMask();
 
@@ -215,41 +216,38 @@ private:
 
 
 template<class F>
-VolumeMask::VolumeMask(const VolumeBase& vol, const VolumeBase* sampleMask, F&& fixedForegroundReader, float binarizationThresholdNormalized, ProgressReporter& progress)
+VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, tgt::vec3 spacing, F&& fixedForegroundReader, ProgressReporter& progress)
     : data_(nullptr)
     , surfaceFile_("", 0)
     , numOriginalForegroundVoxels_(0)
-    , spacing_(vol.getSpacing())
+    , spacing_(spacing)
 {
     TaskTimeLogger _("Create VolumeMask", tgt::Info);
     SubtaskProgressReporterCollection<2> subtaskReporters(progress);
-    tgtAssert(!sampleMask || vol.getDimensions() == sampleMask->getDimensions(), "Sample mask dimension mismatch");
 
     VolumeMaskStorageInitializer initializer(VoreenApplication::app()->getUniqueTmpFilePath());
 
     tgt::svec3 dimensions = vol.getDimensions();
-    tgtAssert(!sampleMask || vol.getDimensions() == sampleMask->getDimensions(), "Sample mask dimension mismatch");
+    tgtAssert(!sampleMask || dimensions == sampleMask->getDimensions(), "Sample mask dimension mismatch");
 
     // Initialize volumetric data (data_)
     for(size_t z = 0; z<dimensions.z; ++z) {
         subtaskReporters.get<0>().setProgress(static_cast<float>(z)/dimensions.z);
-        std::unique_ptr<const VolumeRAM> volSlice(vol.getSlice(z));
-        std::unique_ptr<const VolumeRAM> maskSlice(sampleMask ? sampleMask->getSlice(z) : nullptr);
+        auto volSlice = vol.loadSlice(z);
+        boost::optional<VolumeAtomic<uint8_t>> sampleMaskSlice = sampleMask ? boost::optional<VolumeAtomic<uint8_t>>(sampleMask->loadSlice(z)) : boost::none;
         fixedForegroundReader.advance();
         for(size_t y = 0; y<dimensions.y; ++y) {
             for(size_t x = 0; x<dimensions.x; ++x) {
                 const tgt::svec3 p(x,y,z);
                 const tgt::svec3 slicePos(x,y,0);
                 Value val;
-                if(maskSlice && maskSlice->getVoxelNormalized(slicePos) == 0) {
+                if(sampleMaskSlice && sampleMaskSlice->voxel(slicePos) == 0) {
                     val = VolumeMask::OUTSIDE_VOLUME;
-                } else if(volSlice->getVoxelNormalized(slicePos) >= binarizationThresholdNormalized) {
-                    if(fixedForegroundReader.isForeground(x, y)) {
-                        val = VolumeMask::FIXED_OBJECT;
-                    } else {
-                        val = VolumeMask::OBJECT;
-                        ++numOriginalForegroundVoxels_;
-                    }
+                } else if(fixedForegroundReader.isForeground(x, y)) {
+                    val = VolumeMask::FIXED_OBJECT;
+                } else if(volSlice.getVoxelNormalized(slicePos) > 0) {
+                    val = VolumeMask::OBJECT;
+                    ++numOriginalForegroundVoxels_;
                 } else {
                     val = VolumeMask::BACKGROUND;
                 }

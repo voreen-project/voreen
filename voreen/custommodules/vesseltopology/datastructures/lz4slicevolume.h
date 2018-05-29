@@ -26,6 +26,7 @@
 #pragma once
 
 #include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/datastructures/volume/volumebase.h"
 
 #include "voreen/core/io/serialization/serializable.h"
 #include "voreen/core/io/serialization/xmldeserializer.h"
@@ -35,6 +36,7 @@
 #include "tgt/vector.h"
 
 #include <lz4.h>
+#include <boost/optional.hpp>
 
 namespace voreen {
 
@@ -42,13 +44,14 @@ class LZ4SliceVolumeMetadata : public Serializable {
 public:
     LZ4SliceVolumeMetadata(tgt::svec3 dimensions);
     LZ4SliceVolumeMetadata(const std::string& xmlfile);
+    LZ4SliceVolumeMetadata(const LZ4SliceVolumeMetadata&) = default;
 
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
 
     void save(const std::string& xmlfile) const;
 
-    tgt::svec4 dimensions_;
+    tgt::svec3 dimensions_;
 };
 
 template<typename Voxel>
@@ -60,21 +63,22 @@ class LZ4SliceVolume;
 template<typename Voxel>
 class LZ4WriteableSlice {
 public:
-    VolumeAtomic<Voxel>& operator*() { return *slice_; }
-    VolumeAtomic<Voxel>* operator->() { return slice_; }
+    VolumeAtomic<Voxel>& operator*() { return slice_; }
+    VolumeAtomic<Voxel>* operator->() { return &slice_; }
 
     LZ4WriteableSlice(LZ4WriteableSlice&& other)
         : volume_(other.volume_)
-        , sliceNum_(other.sliceNum)
+        , sliceNum_(other.sliceNum_)
         , slice_(std::move(other.slice_))
     {
     }
     ~LZ4WriteableSlice();
 
 private:
-    LZ4WriteableSlice(LZ4SliceVolume<Voxel>& volume, size_t sliceNum);
+    LZ4WriteableSlice(LZ4SliceVolume<Voxel>& volume, size_t sliceNum, VolumeAtomic<Voxel>&& slice);
 
     friend class LZ4SliceVolume<Voxel>;
+    friend class LZ4SliceVolumeBuilder<Voxel>;
     LZ4SliceVolume<Voxel>& volume_; //MUST live longer than this object
     size_t sliceNum_;
     VolumeAtomic<Voxel> slice_;
@@ -87,22 +91,65 @@ public:
 
     LZ4SliceVolume(LZ4SliceVolume&& other);
 
+    LZ4SliceVolume<Voxel>& operator=(LZ4SliceVolume<Voxel>&& other);
+    //LZ4SliceVolume(const LZ4SliceVolume& other) = delete; //Disable
+
     VolumeAtomic<Voxel> loadSlice(size_t sliceNumber) const;
     void writeSlice(const VolumeAtomic<Voxel>& slice, size_t sliceNumber);
     LZ4WriteableSlice<Voxel> getWritableSlice(size_t sliceNumber);
 
+    tgt::svec3 getDimensions() const;
+    size_t getNumSlices() const;
+
 private:
     friend class LZ4SliceVolumeBuilder<Voxel>;
     LZ4SliceVolume(std::string filePath, LZ4SliceVolumeMetadata metadata);
-    LZ4SliceVolume(const LZ4SliceVolume& other); //Disable
 
     std::string getSliceFilePath(size_t sliceNum) const;
     tgt::svec3 getSliceDimensions() const;
     size_t getSliceMemorySize() const;
-    size_t getNumSlices() const;
 
     LZ4SliceVolumeMetadata metadata_;
     std::string filePath_;
+};
+
+/*
+template<typename Voxel>
+class LZ4SliceVolumeSliceCacher {
+public:
+    LZ4SliceVolumeSliceCacher(LZ4SliceVolume<Voxel>& volume);
+
+    const VolumeAtomic<Voxel>& loadSlice(size_t sliceNumber) const;
+private:
+    LZ4SliceVolume<Voxel>& volume_;
+    std::unique_ptr<VolumeAtomic<Voxel>> slice_;
+    size_t sliceNum_;
+};
+*/
+
+template<typename Voxel, uint64_t neighborhoodExtent>
+class LZ4SliceVolumeReader {
+    const static uint64_t neighborhoodSize = 2*neighborhoodExtent+1;
+    static int sliceStorageIndextoSlicePosOffset(int sliceIndex) {
+        return sliceIndex - neighborhoodExtent;
+    }
+    static int slicePosOffsetToSliceStorageIndex(int slicePosOffset) {
+        return slicePosOffset + neighborhoodExtent;
+    }
+public:
+    LZ4SliceVolumeReader(const LZ4SliceVolume<Voxel>& volume);
+
+    const boost::optional<VolumeAtomic<Voxel>>& getSlice(int sliceNumber) const;
+    boost::optional<Voxel> getVoxel(tgt::ivec3 pos) const;
+
+    void seek(size_t sliceNumber);
+    void advance();
+private:
+    boost::optional<VolumeAtomic<Voxel>> loadSliceFromVolume(size_t sliceNumber) const;
+
+    const LZ4SliceVolume<Voxel>& volume_;
+    std::array<boost::optional<VolumeAtomic<Voxel>>, neighborhoodSize> slices_;
+    size_t pos_;
 };
 
 template<typename Voxel>
@@ -123,16 +170,16 @@ private:
 /// LZ4WritableSlice -----------------------------------------------------------
 
 template<typename Voxel>
-LZ4WriteableSlice<Voxel>::LZ4WriteableSlice(LZ4SliceVolume<Voxel>& volume, size_t sliceNum)
+LZ4WriteableSlice<Voxel>::LZ4WriteableSlice(LZ4SliceVolume<Voxel>& volume, size_t sliceNum, VolumeAtomic<Voxel>&& slice)
     : volume_(volume)
     , sliceNum_(sliceNum)
-    , slice_(volume_.loadSlice(sliceNum_))
+    , slice_(std::move(slice))
 {
 }
 
 template<typename Voxel>
 LZ4WriteableSlice<Voxel>::~LZ4WriteableSlice() {
-    volume_.writeSlice(slice_);
+    volume_.writeSlice(slice_, sliceNum_);
 }
 
 /// LZ4SliceVolume -------------------------------------------------------------
@@ -166,7 +213,17 @@ LZ4SliceVolume<Voxel>::LZ4SliceVolume(LZ4SliceVolume<Voxel>&& other)
     : filePath_(other.filePath_)
     , metadata_(std::move(other.metadata_))
 {
-    other.filePath = "";
+    other.filePath_ = "";
+}
+
+template<typename Voxel>
+LZ4SliceVolume<Voxel>& LZ4SliceVolume<Voxel>::operator=(LZ4SliceVolume<Voxel>&& other) {
+    // Destruct the current object, but keep the memory.
+    this->~LZ4SliceVolume();
+    // Call the move constructor on the memory region of the current object.
+    new(this) LZ4SliceVolume(std::move(other));
+
+    return *this;
 }
 
 template<typename Voxel>
@@ -177,38 +234,29 @@ LZ4SliceVolume<Voxel>::LZ4SliceVolume(std::string filePath, LZ4SliceVolumeMetada
 }
 
 template<typename Voxel>
-LZ4SliceVolume<Voxel>::LZ4SliceVolume(const LZ4SliceVolume&)
-{
-    tgtAssert(false, "Tried to copy LZ4SliceVolume");
-}
-
-template<typename Voxel>
 VolumeAtomic<Voxel> LZ4SliceVolume<Voxel>::loadSlice(size_t sliceNumber) const {
-    std::ifstream compressedFile(getSliceName(filePath_, sliceNumber), std::ifstream::binary);
+    std::ifstream compressedFile(getSliceFilePath(sliceNumber), std::ifstream::binary);
 
     const size_t sliceMemorySize = getSliceMemorySize();
 
-#ifdef VRN_DEBUG
-    //Get compressed file size for buffer
     compressedFile.seekg(0,compressedFile.end);
     size_t compressedFileSize = compressedFile.tellg();
     compressedFile.clear(); //?
     compressedFile.seekg(0, std::ios::beg);
 
     tgtAssert(compressedFileSize < sliceMemorySize, "Invalid slice memory size");
-#endif
 
     //Read file into buffer (sliceMemorySize is larger than it needs to be, but this way we do not need to check the actual file size)
-    std::unique_ptr<char[]> compressedBuffer(new char[sliceMemorySize]);
+    std::unique_ptr<char[]> compressedBuffer(new char[compressedFileSize]);
     compressedFile.read(compressedBuffer.get(), sliceMemorySize); //TODO check if this is valid (because sliceMemorySize may be larger than the file
     compressedFile.close();
 
     // Decompress buffer
     std::unique_ptr<char[]> decompressedBuffer(new char[sliceMemorySize]);
-    size_t bytesDecompressed = LZ4_decompress_fast(compressedBuffer.get(), decompressedBuffer.get(), sliceMemorySize);
+    size_t bytesDecompressed = LZ4_decompress_safe(compressedBuffer.get(), decompressedBuffer.get(), compressedFileSize, sliceMemorySize);
     tgtAssert(bytesDecompressed == sliceMemorySize, "Invalid memory size (resulting in memory corruption!)");
 
-    return VolumeAtomic<Voxel>(decompressedBuffer.release(), getSliceDimensions());
+    return VolumeAtomic<Voxel>(reinterpret_cast<unsigned char*>(decompressedBuffer.release()), getSliceDimensions());
 }
 
 template<typename Voxel>
@@ -228,7 +276,73 @@ void LZ4SliceVolume<Voxel>::writeSlice(const VolumeAtomic<Voxel>& slice, size_t 
 
 template<typename Voxel>
 LZ4WriteableSlice<Voxel> LZ4SliceVolume<Voxel>::getWritableSlice(size_t sliceNumber) {
-    return LZ4WriteableSlice<Voxel>(*this, sliceNumber);
+    return LZ4WriteableSlice<Voxel>(*this, sliceNumber, loadSlice(sliceNumber));
+}
+
+template<typename Voxel>
+tgt::svec3 LZ4SliceVolume<Voxel>::getDimensions() const {
+    return metadata_.dimensions_;
+}
+
+LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized);
+
+/// LZ4SliceVolumeReader --------------------------------------------------
+
+template<typename Voxel, uint64_t neighborhoodExtent>
+LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::LZ4SliceVolumeReader(const LZ4SliceVolume<Voxel>& volume)
+    : volume_(volume)
+    , slices_()
+    , pos_(-1)
+{
+    std::fill(slices_.begin(), slices_.end(), boost::none);
+}
+
+template<typename Voxel, uint64_t neighborhoodExtent>
+void LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::seek(size_t newPos) {
+    if(pos_ != newPos) {
+        pos_ = newPos;
+
+        for(size_t i=0; i<neighborhoodSize; ++i) {
+            auto pos = pos_+slicePosOffsetToSliceStorageIndex(i);
+            slices_[i] = std::move(loadSliceFromVolume(pos));
+        }
+    }
+}
+
+template<typename Voxel, uint64_t neighborhoodExtent>
+void LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::advance() {
+    ++pos_;
+
+    for(size_t i=1; i<neighborhoodSize; ++i) {
+        std::swap(slices_[i-1], slices_[i]);
+    }
+    slices_[neighborhoodSize-1] = loadSliceFromVolume(pos_ + neighborhoodExtent);
+}
+
+template<typename Voxel, uint64_t neighborhoodExtent>
+const boost::optional<VolumeAtomic<Voxel>>& LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::getSlice(int sliceNumber) const {
+    int sliceStorageIndex = slicePosOffsetToSliceStorageIndex(sliceNumber - pos_);
+    tgtAssert(0 <= sliceStorageIndex && sliceStorageIndex < neighborhoodSize, "Invalid slice number");
+    return slices_[sliceStorageIndex];
+}
+
+template<typename Voxel, uint64_t neighborhoodExtent>
+boost::optional<Voxel> LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::getVoxel(tgt::ivec3 pos) const {
+    const auto& slice = getSlice(pos.z);
+    if(slice) {
+        return slice->voxel(pos.x, pos.y, 0);
+    } else {
+        return boost::none;
+    }
+}
+
+template<typename Voxel, uint64_t neighborhoodExtent>
+boost::optional<VolumeAtomic<Voxel>> LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::loadSliceFromVolume(size_t sliceNumber) const {
+    if(0 <= sliceNumber && sliceNumber < volume_.getNumSlices()) {
+        return volume_.loadSlice(sliceNumber);
+    } else {
+        return boost::none;
+    }
 }
 
 /// LZ4SliceVolumeBuilder ------------------------------------------------------
@@ -251,14 +365,14 @@ template<typename Voxel>
 LZ4WriteableSlice<Voxel> LZ4SliceVolumeBuilder<Voxel>::getNextWritableSlice() {
     tgtAssert(numSlicesPushed_ < volumeInConstruction_.getNumSlices(), "Cannot push more slices");
     ++numSlicesPushed_;
-    return volumeInConstruction_.getWritableSlice(numSlicesPushed_-1);
+    return LZ4WriteableSlice<Voxel>(volumeInConstruction_, numSlicesPushed_-1, VolumeAtomic<Voxel>(tgt::svec3(volumeInConstruction_.getDimensions().xy(), 1)));
 }
 
 template<typename Voxel>
 LZ4SliceVolume<Voxel> LZ4SliceVolumeBuilder<Voxel>::finalize(LZ4SliceVolumeBuilder<Voxel>&& builder) {
     auto tmp = std::move(builder);
-    tmp.volumeInConstruction_.metadata_.save();
-    return tmp.volumeInConstruction_;
+    tmp.volumeInConstruction_.metadata_.save(tmp.volumeInConstruction_.filePath_);
+    return std::move(tmp.volumeInConstruction_);
 }
 
 

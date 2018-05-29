@@ -23,6 +23,7 @@
  *                                                                                 *
  ***********************************************************************************/
 
+#include "../datastructures/lz4slicevolume.h"
 #include "vesselgraphcreator.h"
 
 #include "voreen/core/datastructures/volume/volume.h"
@@ -112,6 +113,32 @@ bool VesselGraphCreator::isReady() const {
     return isInitialized() && segmentedVolumeInport_.isReady() &&
         (graphOutport_.isReady() || nodeOutport_.isReady() || edgeOutport_.isReady() || generatedSkeletonsOutport_.isReady());
 }
+
+struct VesselGraphCreatorProcessedInput {
+    VesselGraphCreatorProcessedInput(VesselGraphCreatorInput& input)
+        : segmentation(binarizeVolume(input.segmentation, input.binarizationThresholdSegmentationNormalized))
+        , sampleMask(input.sampleMask ?
+                boost::optional<LZ4SliceVolume<uint8_t>>(binarizeVolume(*input.sampleMask, input.binarizationThresholdSegmentationNormalized))
+                : boost::none)
+        , metadata(input.segmentation)
+        , fixedForegroundPoints(std::move(input.fixedForegroundPoints))
+        , numRefinementIterations(input.numRefinementIterations)
+        , minVoxelLength(input.minVoxelLength)
+        , minElongation(input.minElongation)
+        , minBulgeSize(input.minBulgeSize)
+    {
+    }
+
+    LZ4SliceVolume<uint8_t> segmentation;
+    boost::optional<LZ4SliceVolume<uint8_t>> sampleMask;
+    const VolumeBase& metadata;
+
+    std::vector<tgt::vec3> fixedForegroundPoints;
+    int numRefinementIterations;
+    int minVoxelLength;
+    float minElongation;
+    float minBulgeSize;
+};
 
 struct SparseBinaryVolume {
     size_t linearPos(const tgt::svec3& pos) {
@@ -315,12 +342,12 @@ struct ClosestSkeletonVoxelsAdaptor : public EdgeVoxelRefResultSetBase {
     }
 };
 
-static std::pair<std::unique_ptr<HDF5FileVolume>, std::unique_ptr<HDF5FileVolume>> splitSegmentationCriticalVoxels(const std::string& tmpPathNoCritical, const std::string& tmpPathOnlyCritical, const ProtoVesselGraph& graph, SkeletonClassReader&& skeletonClassReader, const VolumeBase& segmentation, const float segmentationBinarizationThreshold, ProgressReporter& progress) {
+static std::pair<std::unique_ptr<HDF5FileVolume>, std::unique_ptr<HDF5FileVolume>> splitSegmentationCriticalVoxels(const std::string& tmpPathNoCritical, const std::string& tmpPathOnlyCritical, const ProtoVesselGraph& graph, SkeletonClassReader&& skeletonClassReader, const VesselGraphCreatorProcessedInput& input, ProgressReporter& progress) {
     TaskTimeLogger _("Split segmentation wrt critical voxels", tgt::Info);
-    const auto rwToVoxel = segmentation.getWorldToVoxelMatrix();
-    const auto voxelToRw = segmentation.getVoxelToWorldMatrix();
-    const auto dimensions = segmentation.getDimensions();
-    const float criticalVoxelDistDiff = 1.001f*tgt::length(segmentation.getSpacing());
+    //const auto rwToVoxel = input.metadata.getWorldToVoxelMatrix();
+    const auto voxelToRw = input.metadata.getVoxelToWorldMatrix();
+    const auto dimensions = input.metadata.getDimensions();
+    const float criticalVoxelDistDiff = 1.001f*tgt::length(input.metadata.getSpacing());
 
     const std::string format = "uint8";
     const tgt::svec3 slicedim(dimensions.xy(), 1);
@@ -328,14 +355,14 @@ static std::pair<std::unique_ptr<HDF5FileVolume>, std::unique_ptr<HDF5FileVolume
     std::unique_ptr<HDF5FileVolume> onlyCriticalVoxels = HDF5FileVolume::createVolume(tmpPathOnlyCritical, HDF5VolumeWriter::VOLUME_DATASET_NAME, format, dimensions, 1, true, 1, slicedim, false);
     std::unique_ptr<HDF5FileVolume> noCriticalVoxels = HDF5FileVolume::createVolume(tmpPathNoCritical, HDF5VolumeWriter::VOLUME_DATASET_NAME, format, dimensions, 1, true, 1, slicedim, false);
 
-    onlyCriticalVoxels->writeOffset(segmentation.getOffset());
-    noCriticalVoxels->writeOffset(segmentation.getOffset());
+    onlyCriticalVoxels->writeOffset(input.metadata.getOffset());
+    noCriticalVoxels->writeOffset(input.metadata.getOffset());
 
-    onlyCriticalVoxels->writeSpacing(segmentation.getSpacing());
-    noCriticalVoxels->writeSpacing(segmentation.getSpacing());
+    onlyCriticalVoxels->writeSpacing(input.metadata.getSpacing());
+    noCriticalVoxels->writeSpacing(input.metadata.getSpacing());
 
-    onlyCriticalVoxels->writePhysicalToWorldTransformation(segmentation.getPhysicalToWorldMatrix());
-    noCriticalVoxels->writePhysicalToWorldTransformation(segmentation.getPhysicalToWorldMatrix());
+    onlyCriticalVoxels->writePhysicalToWorldTransformation(input.metadata.getPhysicalToWorldMatrix());
+    noCriticalVoxels->writePhysicalToWorldTransformation(input.metadata.getPhysicalToWorldMatrix());
 
     KDTreeBuilder<EdgeVoxelRef> finderBuilder;
 
@@ -349,7 +376,7 @@ static std::pair<std::unique_ptr<HDF5FileVolume>, std::unique_ptr<HDF5FileVolume
 
     for(size_t z = 0; z<dimensions.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dimensions.z);
-        std::unique_ptr<const VolumeRAM> slice(segmentation.getSlice(z));
+        auto slice = input.segmentation.loadSlice(z);
         std::unique_ptr<VolumeRAM> outputSliceOnlyCV(VolumeFactory().create(format, slicedim));
         std::unique_ptr<VolumeRAM> outputSliceNoCV(VolumeFactory().create(format, slicedim));
 
@@ -357,7 +384,7 @@ static std::pair<std::unique_ptr<HDF5FileVolume>, std::unique_ptr<HDF5FileVolume
         for(size_t y = 0; y<dimensions.y; ++y) {
             for(size_t x = 0; x<dimensions.x; ++x) {
                 const tgt::svec3 p(x,y,0);
-                if(slice->getVoxelNormalized(p) >= segmentationBinarizationThreshold) {
+                if(slice.voxel(p) > 0) {
                     tgt::ivec3 ipos(x,y,z);
                     tgt::vec3 rwpos = transform(voxelToRw, ipos);
 
@@ -736,10 +763,10 @@ static UnfinishedRegions collectUnfinishedRegions(const VolumeBase& input, const
     };
 }
 
-static void addClippedOffRegionsToCritical(HDF5FileVolume& criticalVoxels, const HDF5FileVolume& ccaVolume, const ProtoVesselGraph& graph, size_t numComponents, const VolumeBase& segmentation, float segmentationBinarizationThreshold, ProgressReporter& progress) {
+static void addClippedOffRegionsToCritical(HDF5FileVolume& criticalVoxels, const HDF5FileVolume& ccaVolume, const ProtoVesselGraph& graph, size_t numComponents, const LZ4SliceVolume<uint8_t>& segmentation, ProgressReporter& progress) {
     TaskTimeLogger _("Add clipped off regions to critical voxels", tgt::Info);
 
-    BranchIdVolumeReader ccaReader(ccaVolume, graph, numComponents, segmentation, segmentationBinarizationThreshold);
+    BranchIdVolumeReader ccaReader(ccaVolume, graph, numComponents, segmentation);
     auto dim = criticalVoxels.getDimensions();
 
     for(size_t z = 0; z < dim.z; ++z) {
@@ -765,12 +792,13 @@ static void addClippedOffRegionsToCritical(HDF5FileVolume& criticalVoxels, const
     progress.setProgress(1.0f);
 }
 
-std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorInput& input, VolumeMask&& skeleton, VolumeList& generatedSkeletons, ProgressReporter& progress) {
+
+std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInput& input, VolumeMask&& skeleton, VolumeList& generatedSkeletons, ProgressReporter& progress) {
     SubtaskProgressReporterCollection<8> subtaskReporters(progress);
 
     // Create new protograph
     std::unique_ptr<MetaDataCollector> mdc = cca(NeighborCountVoxelClassifier(skeleton), subtaskReporters.get<0>());
-    std::unique_ptr<ProtoVesselGraph> protograph = mdc->createProtoVesselGraph(input.segmentation.getDimensions(), input.segmentation.getVoxelToWorldMatrix(), input.sampleMask, subtaskReporters.get<1>());
+    std::unique_ptr<ProtoVesselGraph> protograph = mdc->createProtoVesselGraph(input.metadata.getDimensions(), input.metadata.getVoxelToWorldMatrix(), input.sampleMask, subtaskReporters.get<1>());
 
 
     // Create an assignment edge <-> vessel component
@@ -778,7 +806,7 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorInput& input,
     const std::string segNoCriticalTmpPath = VoreenApplication::app()->getUniqueTmpFilePath(".h5");
     const std::string segOnlyCriticalTmpPath = VoreenApplication::app()->getUniqueTmpFilePath(".h5");
 
-    auto segmentationWithAndWithoutCriticalVoxels = splitSegmentationCriticalVoxels(segNoCriticalTmpPath, segOnlyCriticalTmpPath, *protograph, SkeletonClassReader(skeleton), input.segmentation, input.binarizationThresholdSegmentationNormalized, subtaskReporters.get<2>());
+    auto segmentationWithAndWithoutCriticalVoxels = splitSegmentationCriticalVoxels(segNoCriticalTmpPath, segOnlyCriticalTmpPath, *protograph, SkeletonClassReader(skeleton), input, subtaskReporters.get<2>());
     {
         // Drop VolumeMask and thus free the used non-volatile storage space.
         VolumeMask _dump(std::move(skeleton));
@@ -797,7 +825,7 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorInput& input,
     // 4. Find unlabeled regions
     //
     // Add cut off unlabeled regions to the critical voxels (i.e., unlabeled regions) to allow flooding from valid edge label regions later
-    addClippedOffRegionsToCritical(*segOnlyCriticalVoxelsHDF5, *branchIdSegmentation, *protograph, numComponents, input.segmentation, input.binarizationThresholdSegmentationNormalized, subtaskReporters.get<4>());
+    addClippedOffRegionsToCritical(*segOnlyCriticalVoxelsHDF5, *branchIdSegmentation, *protograph, numComponents, input.segmentation, subtaskReporters.get<4>());
     segOnlyCriticalVoxelsHDF5.reset(nullptr); //drop hdf5 vol
     std::unique_ptr<VolumeBase> segOnlyCriticalVoxels(HDF5VolumeReader().read(segOnlyCriticalTmpPath)->at(0)); //reopen hdf5vol as VolumeBase
     const std::string ccaOnlyCriticalTmpPath = VoreenApplication::app()->getUniqueTmpFilePath(".h5");
@@ -807,10 +835,10 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorInput& input,
     unfinishedRegions.floodAllRegions(*branchIdSegmentation, subtaskReporters.get<6>());
 
     //  6. Create a reader that reads edge ids from the underlying segmentation
-    BranchIdVolumeReader ccaReader(*branchIdSegmentation, *protograph, numComponents, input.segmentation, input.binarizationThresholdSegmentationNormalized);
+    BranchIdVolumeReader ccaReader(*branchIdSegmentation, *protograph, numComponents, input.segmentation);
 
     //  7. Create better VesselGraph from protograph and and the edge-id-segmentation
-    auto output = protograph->createVesselGraph(ccaReader, input.sampleMask, subtaskReporters.get<7>());
+    auto output = protograph->createVesselGraph(ccaReader, input.sampleMask, input.metadata, subtaskReporters.get<7>());
 
 
 #ifdef VRN_DEBUG
@@ -827,7 +855,7 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorInput& input,
     return output;
 }
 
-std::unique_ptr<VesselGraph> refineVesselGraph(VesselGraphCreatorInput& input, const VesselGraph& prevGraph, VolumeList& generatedSkeletons, ProgressReporter& progress) {
+std::unique_ptr<VesselGraph> refineVesselGraph(VesselGraphCreatorProcessedInput& input, const VesselGraph& prevGraph, VolumeList& generatedSkeletons, ProgressReporter& progress) {
     TaskTimeLogger _("Refinement iteration", tgt::Info);
 
     SubtaskProgressReporterCollection<3> subtaskReporters(progress);
@@ -839,11 +867,11 @@ std::unique_ptr<VesselGraph> refineVesselGraph(VesselGraphCreatorInput& input, c
     };
     std::unique_ptr<VesselGraph> normalizedGraph = VesselGraphNormalization::removeEndEdgesRecursively(prevGraph, isEdgeDeletable);
 
-    tgt::mat4 rwToVoxel = input.segmentation.getWorldToVoxelMatrix();
+    tgt::mat4 rwToVoxel = input.metadata.getWorldToVoxelMatrix();
 
     // Create new voxelmask
-    auto fixedForegroundMaskOnlyEndvoxels = GraphNodeVoxelReader::create<EndNodeVoxelExtractor>(*normalizedGraph, rwToVoxel, input.segmentation.getDimensions());
-    VolumeMask mask(input.segmentation, input.sampleMask, fixedForegroundMaskOnlyEndvoxels, input.binarizationThresholdSegmentationNormalized, subtaskReporters.get<0>());
+    auto fixedForegroundMaskOnlyEndvoxels = GraphNodeVoxelReader::create<EndNodeVoxelExtractor>(*normalizedGraph, rwToVoxel, input.metadata.getDimensions());
+    VolumeMask mask(input.segmentation, input.sampleMask, input.metadata.getSpacing(), fixedForegroundMaskOnlyEndvoxels, subtaskReporters.get<0>());
     addFixedForegroundPointsToMask(input.fixedForegroundPoints, mask);
 
     // Skeletonize new mask
@@ -852,12 +880,12 @@ std::unique_ptr<VesselGraph> refineVesselGraph(VesselGraphCreatorInput& input, c
     return createGraphFromMask(input, std::move(mask), generatedSkeletons, subtaskReporters.get<2>());
 }
 
-std::unique_ptr<VesselGraph> createInitialVesselGraph(VesselGraphCreatorInput& input, VolumeList& generatedSkeletons, ProgressReporter& progress) {
+std::unique_ptr<VesselGraph> createInitialVesselGraph(VesselGraphCreatorProcessedInput& input, VolumeList& generatedSkeletons, ProgressReporter& progress) {
     TaskTimeLogger _("Create initial VesselGraph", tgt::Info);
     SubtaskProgressReporterCollection<3> subtaskReporters(progress);
     progress.setProgress(0.0f);
 
-    VolumeMask mask(input.segmentation, input.sampleMask, NoFixedForeground(), input.binarizationThresholdSegmentationNormalized, subtaskReporters.get<0>());
+    VolumeMask mask(input.segmentation, input.sampleMask, input.metadata.getSpacing(), NoFixedForeground(), subtaskReporters.get<0>());
     addFixedForegroundPointsToMask(input.fixedForegroundPoints, mask);
     mask.skeletonize<VolumeMask::IMPROVED>(std::numeric_limits<size_t>::max(), subtaskReporters.get<1>());
 
@@ -925,12 +953,15 @@ VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput inp
     TaskTimeLogger _("Extract VesselGraph (total)", tgt::Info);
     float progressPerIteration = 1.0f/(input.numRefinementIterations+1);
     SubtaskProgressReporter initialProgress(progressReporter, tgt::vec2(0, progressPerIteration));
+
+    VesselGraphCreatorProcessedInput processedInput(input);
+
     std::unique_ptr<VolumeList> generatedSkeletons(new VolumeContainer());
-    std::unique_ptr<VesselGraph> graph = createInitialVesselGraph(input, *generatedSkeletons, initialProgress);
+    std::unique_ptr<VesselGraph> graph = createInitialVesselGraph(processedInput, *generatedSkeletons, initialProgress);
     for(int i=0; i < input.numRefinementIterations; ++i) {
         SubtaskProgressReporter refinementProgress(progressReporter, progressPerIteration*tgt::vec2(i+1, i+2));
         try {
-            graph = refineVesselGraph(input, *graph, *generatedSkeletons, refinementProgress);
+            graph = refineVesselGraph(processedInput, *graph, *generatedSkeletons, refinementProgress);
         } catch(tgt::IOException e) {
             LERROR("Could not create hdf5 output volume for branchIdSegmentation.");
             std::cout << e.what() << std::endl;

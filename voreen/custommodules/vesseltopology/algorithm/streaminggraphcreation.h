@@ -33,6 +33,7 @@
 
 #include "../datastructures/vesselgraph.h"
 #include "../datastructures/protovesselgraph.h"
+#include "../datastructures/lz4slicevolume.h"
 #include "../algorithm/volumemask.h"
 #include "../util/tasktimelogger.h"
 #include "../util/kdtreebuilder.h"
@@ -518,7 +519,7 @@ struct MetaDataCollector {
     template<class S>
     std::unique_ptr<VesselGraph> createVesselGraph(S& segmentedVolumeReader, const VolumeBase* sampleMask, ProgressReporter& progress);
 
-    std::unique_ptr<ProtoVesselGraph> createProtoVesselGraph(tgt::svec3 dimensions, const tgt::mat4& toRwMatrix, const VolumeBase* sampleMask, ProgressReporter& progress);
+    std::unique_ptr<ProtoVesselGraph> createProtoVesselGraph(tgt::svec3 dimensions, const tgt::mat4& toRwMatrix, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress);
 
     std::vector<tgt::svec3> endPoints_;
     std::vector<RegularSequence> regularSequences_;
@@ -681,27 +682,9 @@ static float surfaceDistanceSq(const tgt::vec3& skeletonVoxel, const tgt::vec3 s
     //return tgt::lengthSq(fromTo);
 }
 
-static bool isAtSampleBorder(const VolumeRAM* sampleMaskRAM, const tgt::svec3& p, const tgt::svec3& volumedim) {
-    bool atVolumeBorder = p.x == 0             || p.y == 0             || p.z == 0
-                       || p.x >= volumedim.x-1 || p.y >= volumedim.y-1 || p.z >= volumedim.z-1;
-    if(atVolumeBorder) {
-        return true;
-    }
-    if(sampleMaskRAM) {
-        // Notice that !atVolumeBorder implies that all p + d(x/y/z) are valid voxel coordinates!
-        for(int dz = -1; dz <= 1; ++dz) {
-            for(int dy = -1; dy <= 1; ++dy) {
-                for(int dx = -1; dx <= 1; ++dx) {
-                    if(sampleMaskRAM->getVoxelNormalized(tgt::svec3(p.x+dx, p.y+dy, p.z+dz)) == 0) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    } else {
-        return false;
-    }
+static bool isAtSampleBorder(const tgt::svec3& p, const tgt::svec3& volumedim) {
+    return p.x == 0             || p.y == 0             || p.z == 0
+        || p.x >= volumedim.x-1 || p.y >= volumedim.y-1 || p.z >= volumedim.z-1;
 }
 
 struct VoxelKDElement {
@@ -803,7 +786,7 @@ std::unique_ptr<VesselGraph> MetaDataCollector::createVesselGraph(S& segmentedVo
         std::vector<tgt::vec3> voxels;
         tgt::vec3 rwpos = transform(toRWMatrix, p);
         voxels.push_back(rwpos);
-        size_t id = graph->insertNode(rwpos, std::move(voxels), isAtSampleBorder(sampleMaskRAM, p, dimensions));
+        size_t id = graph->insertNode(rwpos, std::move(voxels), isAtSampleBorder(p, dimensions));
         finderBuilder.push(VesselSkeletonVoxelRef(rwpos, nullptr, UNDEFINED_COMPONENT_ID));
         nodeVoxelTreeBuilder.push(VoxelKDElement(tgt::ivec3(p),id));
     }
@@ -818,7 +801,7 @@ std::unique_ptr<VesselGraph> MetaDataCollector::createVesselGraph(S& segmentedVo
             rwBrachVoxels.push_back(rwpos);
             ++numVoxels;
             finderBuilder.push(VesselSkeletonVoxelRef(rwpos, nullptr, UNDEFINED_COMPONENT_ID));
-            junctionAtSampleBorder |= isAtSampleBorder(sampleMaskRAM, p, dimensions);
+            junctionAtSampleBorder |= isAtSampleBorder(p, dimensions);
         }
         size_t id = graph->insertNode(sum/static_cast<float>(numVoxels), std::move(rwBrachVoxels), junctionAtSampleBorder);
         for(const auto& p : branchPoint) {
@@ -956,7 +939,7 @@ std::unique_ptr<VesselGraph> MetaDataCollector::createVesselGraph(S& segmentedVo
                 voxels.push_back(leftTransformed);
                 voxels.push_back(rightTransformed);
                 tgt::vec3 center = (leftTransformed + rightTransformed)*0.5f;
-                size_t newNode = graph->insertNode(center, std::move(voxels), isAtSampleBorder(sampleMaskRAM, tgt::svec3(leftEnd), dimensions) || isAtSampleBorder(sampleMaskRAM, tgt::svec3(rightEnd), dimensions));
+                size_t newNode = graph->insertNode(center, std::move(voxels), isAtSampleBorder(tgt::svec3(leftEnd), dimensions) || isAtSampleBorder(tgt::svec3(rightEnd), dimensions));
                 leftEndNode = newNode;
                 rightEndNode = newNode;
             } else {

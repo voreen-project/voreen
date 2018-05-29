@@ -29,6 +29,7 @@
 #include "tgt/matrix.h"
 #include "tgt/memory.h"
 #include "../util/kdtreebuilder.h"
+#include "../datastructures/lz4slicevolume.h"
 #include "voreen/core/datastructures/volume/volume.h"
 #include "custommodules/bigdataimageprocessing/volumefiltering/slicereader.h"
 #include "vesselgraph.h"
@@ -187,7 +188,7 @@ struct ProtoVesselGraph {
     uint64_t insertNode(std::vector<tgt::svec3>&& voxels, bool atSampleBorder);
     uint64_t insertEdge(size_t node1, size_t node2, std::vector<tgt::svec3>&& voxels);
 
-    std::unique_ptr<VesselGraph> createVesselGraph(BranchIdVolumeReader& segmentedVolumeReader, const VolumeBase* sampleMask, ProgressReporter& progress);
+    std::unique_ptr<VesselGraph> createVesselGraph(BranchIdVolumeReader& segmentedVolumeReader, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, const VolumeBase& metadata, ProgressReporter& progress);
 
     std::vector<ProtoVesselGraphNode> nodes_;
     std::vector<ProtoVesselGraphEdge> edges_;
@@ -197,12 +198,10 @@ struct ProtoVesselGraph {
 
 struct BranchIdVolumeReader {
     static const uint64_t INVALID_EDGE_ID;
-    BranchIdVolumeReader(const HDF5FileVolume& ccaVolume, const ProtoVesselGraph& graph, size_t numComponents, const VolumeBase& segmentation, float segmentationBinarizationThreshold)
+    BranchIdVolumeReader(const HDF5FileVolume& ccaVolume, const ProtoVesselGraph& graph, size_t numComponents, const LZ4SliceVolume<uint8_t>& segmentation)
         : branchIdReader_(ccaVolume)
-        , segmentationReader_(tgt::make_unique<VolumeSliceReader>(segmentation), 1)
-        , segmentationVolume_(segmentation)
+        , segmentationReader_(segmentation)
         , ccaToEdgeIdTable_(numComponents+1, INVALID_EDGE_ID)
-        , segmentationBinarizationThreshold_(segmentationBinarizationThreshold)
     {
         tgtAssert(ccaVolume.getBaseType() == "uint32", "Invalid volume format");
         tgtAssert(ccaVolume.getNumberOfChannels() == 1, "Invalid volume format");
@@ -255,17 +254,21 @@ struct BranchIdVolumeReader {
         branchIdReader_.advance();
         segmentationReader_.advance();
     }
+    /*
     tgt::svec3 getDimensions() const {
         return segmentationVolume_.getDimensions();
     }
+    */
     bool isValidEdgeId(uint64_t id) const {
         return id != INVALID_EDGE_ID;
     }
 
     bool isObject(const tgt::ivec3& pos) const {
-        return segmentationReader_.getVoxelNormalized(pos) >= segmentationBinarizationThreshold_;
+        auto voxel = segmentationReader_.getVoxel(pos);
+        return voxel && *voxel > 0;
     }
 
+    /*
     tgt::vec3 getSpacing() const {
         return segmentationVolume_.getSpacing();
     }
@@ -273,12 +276,12 @@ struct BranchIdVolumeReader {
     tgt::mat4 getVoxelToWorldMatrix() const {
         return segmentationVolume_.getVoxelToWorldMatrix();
     }
+    */
 
     HDF5VolumeSliceReader branchIdReader_;
-    CachingSliceReader segmentationReader_;
-    const VolumeBase& segmentationVolume_;
+    LZ4SliceVolumeReader<uint8_t, 1> segmentationReader_;
+    //const VolumeBase& segmentationVolume_;
     std::vector<uint64_t> ccaToEdgeIdTable_;
-    float segmentationBinarizationThreshold_;
 };
 
 }

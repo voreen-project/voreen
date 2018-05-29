@@ -84,6 +84,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/algorithm/volumemask.cpp
     ${MOD_DIR}/datastructures/vesselgraph.cpp
     ${MOD_DIR}/datastructures/protovesselgraph.cpp
+    ${MOD_DIR}/datastructures/lz4slicevolume.cpp
     ${MOD_DIR}/ports/vesselgraphport.cpp
     ${MOD_DIR}/processors/appropriatespacinglinker.cpp
     ${MOD_DIR}/processors/aortasegmentation.cpp

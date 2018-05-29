@@ -320,33 +320,35 @@ void MetaDataCollector::collect(BranchData&& data) {
     data.voxels_->collectVoxels(v);
     branchPoints_.push_back(v);
 }
-std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt::svec3 dimensions, const tgt::mat4& toRwMatrix, const VolumeBase* sampleMask, ProgressReporter& progress) {
+std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt::svec3 dimensions, const tgt::mat4& toRwMatrix, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress) {
     TaskTimeLogger _("Create Protograph", tgt::Info);
     std::unique_ptr<ProtoVesselGraph> graph(new ProtoVesselGraph(toRwMatrix));
 
-    // For now get RAM representation for volume mask.
-    // One may consider switching to a slice based approach later, but that may get complicated.
-    const VolumeRAM* sampleMaskRAM = sampleMask ? sampleMask->getRepresentation<VolumeRAM>() : nullptr;
-    tgtAssert(!sampleMaskRAM || sampleMaskRAM->getDimensions() == dimensions, "Invalid sampleMask dimensions");
+
+    std::vector<std::pair<tgt::svec3, uint64_t>> nodeVoxelMap;
 
     KDTreeBuilder<VoxelKDElement> nodeVoxelTreeBuilder;
     // Insert nodes
     for(const auto& p : endPoints_) {
         std::vector<tgt::svec3> voxels;
         voxels.push_back(p);
-        uint64_t id = graph->insertNode(std::move(voxels), isAtSampleBorder(sampleMaskRAM, p, dimensions));
+        uint64_t id = graph->insertNode(std::move(voxels), isAtSampleBorder(p, dimensions));
         nodeVoxelTreeBuilder.push(VoxelKDElement(tgt::ivec3(p),id));
+        nodeVoxelMap.push_back(std::make_pair(p, id));
     }
     for(const auto& branchPoint : branchPoints_) {
         bool junctionAtSampleBorder = false;
         std::vector<tgt::svec3> voxels;
         for(const auto& p : branchPoint) {
             voxels.push_back(p);
-            junctionAtSampleBorder |= isAtSampleBorder(sampleMaskRAM, p, dimensions);
+            junctionAtSampleBorder |= isAtSampleBorder(p, dimensions);
         }
         uint64_t id = graph->insertNode(std::move(voxels), junctionAtSampleBorder);
         for(const auto& p : branchPoint) {
             nodeVoxelTreeBuilder.push(VoxelKDElement(tgt::ivec3(p),id));
+        }
+        for(const auto& p : branchPoint) {
+            nodeVoxelMap.push_back(std::make_pair(p, id));
         }
     }
 
@@ -379,7 +381,11 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
                 std::vector<tgt::svec3> voxels;
                 voxels.push_back(tgt::svec3(leftEnd));
                 voxels.push_back(tgt::svec3(rightEnd));
-                uint64_t newNode = graph->insertNode(std::move(voxels), isAtSampleBorder(sampleMaskRAM, tgt::svec3(leftEnd), dimensions) || isAtSampleBorder(sampleMaskRAM, tgt::svec3(rightEnd), dimensions));
+                uint64_t newNode = graph->insertNode(std::move(voxels), isAtSampleBorder(tgt::svec3(leftEnd), dimensions) || isAtSampleBorder(tgt::svec3(rightEnd), dimensions));
+
+                nodeVoxelMap.push_back(std::make_pair(leftEnd, newNode));
+                nodeVoxelMap.push_back(std::make_pair(rightEnd, newNode));
+
                 leftEndNode = newNode;
                 rightEndNode = newNode;
             } else {
@@ -394,6 +400,32 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
         std::vector<tgt::svec3> voxels(regularSequence.voxels_);
 
         graph->insertEdge(leftEndNode, rightEndNode, std::move(voxels));
+    }
+
+    // Correct sample mask border information if sampleMask is present
+    if(sampleMask) {
+        LZ4SliceVolumeReader<uint8_t, 1> sampleMaskReader(*sampleMask);
+        std::sort(nodeVoxelMap.begin(), nodeVoxelMap.end(), [] (const std::pair<tgt::svec3, uint64_t>& n1, const std::pair<tgt::svec3, uint64_t>& n2) {
+                return n1.first.z < n2.first.z;
+                });
+        for(const auto& pair: nodeVoxelMap) {
+            const tgt::svec3& p = pair.first;
+            const uint64_t id = pair.second;
+
+            sampleMaskReader.seek(p.z);
+
+            for(int dz = -1; dz <= 1; ++dz) {
+                for(int dy = -1; dy <= 1; ++dy) {
+                    for(int dx = -1; dx <= 1; ++dx) {
+                        if(sampleMaskReader.getSlice(p.z+dz)->voxel(tgt::svec3(p.x+dx, p.y+dy, 0)) == 0) {
+                            graph->nodes_.at(id).atSampleBorder_ = true;
+                            goto sample_mask_search_done;
+                        }
+                    }
+                }
+            }
+            sample_mask_search_done: ;
+        }
     }
 
     // Create edges from end voxels directly connected to branchPoints

@@ -24,6 +24,7 @@
  ***********************************************************************************/
 
 #include "lz4slicevolume.h"
+#include "voreen/core/voreenapplication.h"
 
 #include <fstream>
 
@@ -56,6 +57,31 @@ void LZ4SliceVolumeMetadata::save(const std::string& xmlfile) const {
     XmlSerializer ser;
     std::ofstream filestream(xmlfile);
     ser.serialize(METADATA_ROOT_NODE_STRING, *this);
+}
+
+LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized) {
+    const auto dimensions = volume.getDimensions();
+
+    LZ4SliceVolumeBuilder<uint8_t> builder(VoreenApplication::app()->getUniqueTmpFilePath(".lz4vol"), LZ4SliceVolumeMetadata(dimensions));
+
+    for(size_t z = 0; z<dimensions.z; ++z) {
+        //progress.setProgress(static_cast<float>(z)/dimensions.z);
+
+        std::unique_ptr<const VolumeRAM> inSlice(volume.getSlice(z));
+        auto outSlice(builder.getNextWritableSlice());
+
+        for(size_t y = 0; y<dimensions.y; ++y) {
+            for(size_t x = 0; x<dimensions.x; ++x) {
+                if(inSlice->getVoxelNormalized(x,y,0) > binarizationThresholdSegmentationNormalized) {
+                    outSlice->voxel(x,y,0) = 1;
+                } else {
+                    outSlice->voxel(x,y,0) = 0;
+                }
+            }
+        }
+    }
+
+    return LZ4SliceVolumeBuilder<uint8_t>::finalize(std::move(builder));
 }
 
 }
