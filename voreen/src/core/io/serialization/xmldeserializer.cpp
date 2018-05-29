@@ -172,6 +172,18 @@ void XmlDeserializer::deserialize(const std::string& key, tgt::ivec4& data) {
     deserializeTgtVector(key, data);
 }
 
+void XmlDeserializer::deserialize(const std::string& key, tgt::svec2& data) {
+    deserializeTgtVector(key, data);
+}
+
+void XmlDeserializer::deserialize(const std::string& key, tgt::svec3& data) {
+    deserializeTgtVector(key, data);
+}
+
+void XmlDeserializer::deserialize(const std::string& key, tgt::svec4& data) {
+    deserializeTgtVector(key, data);
+}
+
 void XmlDeserializer::deserialize(const std::string& key, tgt::col3& data) {
     deserializeTgtVector(key, data, true);
 }

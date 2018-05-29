@@ -164,6 +164,18 @@ void JsonSerializer::serialize(const std::string& key, const tgt::ivec4& data) {
     serializeTgtVector(key, data);
 }
 
+void JsonSerializer::serialize(const std::string& key, const tgt::svec2& data) {
+    serializeTgtVector(key, data);
+}
+
+void JsonSerializer::serialize(const std::string& key, const tgt::svec3& data) {
+    serializeTgtVector(key, data);
+}
+
+void JsonSerializer::serialize(const std::string& key, const tgt::svec4& data) {
+    serializeTgtVector(key, data);
+}
+
 void JsonSerializer::serialize(const std::string& key, const tgt::col3& data) {
     serializeTgtVector(key, data);
 }

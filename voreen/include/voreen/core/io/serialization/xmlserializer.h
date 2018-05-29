@@ -390,6 +390,30 @@ public:
      * @param key the XML node key
      * @param data the data
      */
+    void serialize(const std::string& key, const tgt::svec2& data);
+
+    /**
+     * Serializes the given @c key/data pair.
+     *
+     * @param key the XML node key
+     * @param data the data
+     */
+    void serialize(const std::string& key, const tgt::svec3& data);
+
+    /**
+     * Serializes the given @c key/data pair.
+     *
+     * @param key the XML node key
+     * @param data the data
+     */
+    void serialize(const std::string& key, const tgt::svec4& data);
+
+    /**
+     * Serializes the given @c key/data pair.
+     *
+     * @param key the XML node key
+     * @param data the data
+     */
     void serialize(const std::string& key, const tgt::col3& data);
 
     /**
