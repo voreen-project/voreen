@@ -81,7 +81,7 @@ LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizat
         }
     }
 
-    return LZ4SliceVolumeBuilder<uint8_t>::finalize(std::move(builder));
+    return (std::move(builder)).finalize();
 }
 
 }

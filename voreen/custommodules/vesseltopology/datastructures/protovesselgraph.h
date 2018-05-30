@@ -198,13 +198,11 @@ struct ProtoVesselGraph {
 
 struct BranchIdVolumeReader {
     static const uint64_t INVALID_EDGE_ID;
-    BranchIdVolumeReader(const HDF5FileVolume& ccaVolume, const ProtoVesselGraph& graph, size_t numComponents, const LZ4SliceVolume<uint8_t>& segmentation)
+    BranchIdVolumeReader(const LZ4SliceVolume<uint32_t>& ccaVolume, const ProtoVesselGraph& graph, size_t numComponents, const LZ4SliceVolume<uint8_t>& segmentation)
         : branchIdReader_(ccaVolume)
         , segmentationReader_(segmentation)
         , ccaToEdgeIdTable_(numComponents+1, INVALID_EDGE_ID)
     {
-        tgtAssert(ccaVolume.getBaseType() == "uint32", "Invalid volume format");
-        tgtAssert(ccaVolume.getNumberOfChannels() == 1, "Invalid volume format");
         branchIdReader_.seek(-1);
         segmentationReader_.seek(-1);
 
@@ -221,7 +219,7 @@ struct BranchIdVolumeReader {
                 return p1.second.z < p2.second.z;
                 });
 
-        HDF5VolumeSliceReader reader(ccaVolume);
+        LZ4SliceVolumeReader<uint32_t,0> reader(ccaVolume);
         reader.seek(0);
         for(auto& pair : query_positions) {
             tgt::svec3& p = pair.second;
@@ -233,17 +231,16 @@ struct BranchIdVolumeReader {
             while(p.z > reader.getCurrentZPos()) {
                 reader.advance();
             }
-            auto slice = dynamic_cast<const VolumeRAM_UInt32*>(reader.getCurrentSlice());
-            tgtAssert(slice, "Invalid volume format");
-            uint32_t ccaindex = slice->voxel(p.x, p.y, 0);
+            auto ccaindex = reader.getVoxelRelative(p.xy(), 0);
+            tgtAssert(ccaindex, "Read invalid voxel");
 
-            ccaToEdgeIdTable_[ccaindex] = pair.first;
+            ccaToEdgeIdTable_[*ccaindex] = pair.first;
         }
     }
     uint32_t getCCAId(const tgt::ivec2& pos) const {
-        auto slice = dynamic_cast<const VolumeRAM_UInt32*>(branchIdReader_.getCurrentSlice());
-        tgtAssert(slice, "Invalid slice type");
-        return slice->voxel(pos.x, pos.y, 0);
+        auto voxel = branchIdReader_.getVoxelRelative(pos, 0);
+        tgtAssert(voxel, "Read invalid voxel");
+        return *voxel;
     }
 
     uint64_t getEdgeId(const tgt::ivec2& xypos) const {
@@ -278,7 +275,7 @@ struct BranchIdVolumeReader {
     }
     */
 
-    HDF5VolumeSliceReader branchIdReader_;
+    LZ4SliceVolumeReader<uint32_t, 0> branchIdReader_;
     LZ4SliceVolumeReader<uint8_t, 1> segmentationReader_;
     //const VolumeBase& segmentationVolume_;
     std::vector<uint64_t> ccaToEdgeIdTable_;

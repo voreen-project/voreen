@@ -88,17 +88,10 @@ private:
 
 
 struct IdVolumeInitializationReader {
-    IdVolumeInitializationReader(const HDF5FileVolume& branchIds, const HDF5FileVolume& holeIds)
+    IdVolumeInitializationReader(const LZ4SliceVolume<uint32_t>& branchIds, const LZ4SliceVolume<uint32_t>& holeIds)
         : holeIds_(holeIds)
         , branchIds_(branchIds)
-        , holeIdSlices_({nullptr, nullptr, nullptr})
-        , branchIdSlices_({nullptr, nullptr, nullptr})
-        , z_(-1)
     {
-        tgtAssert(holeIds.getDimensions() == branchIds.getDimensions(), "Invalid volume dimensions");
-        tgtAssert(holeIds.getBaseType() == "uint32", "Invalid volume format");
-        tgtAssert(branchIds.getBaseType() == "uint32", "Invalid volume format");
-
         seek(-1);
     }
 
@@ -112,65 +105,35 @@ struct IdVolumeInitializationReader {
     }
 
     uint32_t getBranchId(const tgt::ivec3& pos) const {
-        int sid = pos.z-z_+ 1;
-        tgtAssert(0 <= sid && sid < 3, "invalid z pos");
-        return branchIdSlices_[sid]->voxel(tgt::svec3(pos.xy(), 0));
+        auto id = branchIds_.getVoxel(pos);
+        tgtAssert(id, "Invalid voxel pos");
+        return *id;
     }
 
     uint32_t getHoleId(const tgt::ivec3& pos) const {
-        int sid = pos.z-z_+ 1;
-        tgtAssert(0 <= sid && sid < 3, "invalid z pos");
-        return holeIdSlices_[sid]->voxel(tgt::svec3(pos.xy(), 0));
+        auto id = holeIds_.getVoxel(pos);
+        tgtAssert(id, "Invalid voxel pos");
+        return *id;
     }
 
     void seek(int z) {
-        z_ = z;
-
-        holeIdSlices_[0].reset(loadSlice(z_-1, holeIds_));
-        holeIdSlices_[1].reset(loadSlice(z_  , holeIds_));
-        holeIdSlices_[2].reset(loadSlice(z_+1, holeIds_));
-
-        branchIdSlices_[0].reset(loadSlice(z_-1, branchIds_));
-        branchIdSlices_[1].reset(loadSlice(z_  , branchIds_));
-        branchIdSlices_[2].reset(loadSlice(z_+1, branchIds_));
+        branchIds_.seek(z);
+        holeIds_.seek(z);
     }
 
     void advance() {
-        ++z_;
-        std::swap(holeIdSlices_[1], holeIdSlices_[0]);
-        std::swap(holeIdSlices_[2], holeIdSlices_[1]);
-
-        std::swap(branchIdSlices_[1], branchIdSlices_[0]);
-        std::swap(branchIdSlices_[2], branchIdSlices_[1]);
-
-        holeIdSlices_[2].reset(loadSlice(z_+1, holeIds_));
-        branchIdSlices_[2].reset(loadSlice(z_+1, branchIds_));
+        branchIds_.advance();
+        holeIds_.advance();
     }
 
     tgt::svec3 getDimensions() const {
-        return holeIds_.getDimensions();
+        return holeIds_.getVolume().getDimensions();
     }
 
 private:
-    VolumeRAM_UInt32* loadSlice(int z, const HDF5FileVolume& source) {
-        auto dim = getDimensions();
-        if(0 <= z && z < dim.z) {
-            tgt::svec3 sliceSize(dim.xy(), 1);
-            tgt::svec3 sliceOffset(0,0,z);
-            auto slice = dynamic_cast<VolumeRAM_UInt32*>(source.loadBrick(sliceOffset, sliceSize));
 
-            tgtAssert(slice, "Invalid holeIdVolume format");
-            return slice;
-        } else {
-            return nullptr;
-        }
-    }
-
-    const HDF5FileVolume& holeIds_;
-    const HDF5FileVolume& branchIds_;
-    std::array<std::unique_ptr<VolumeRAM_UInt32>, 3> holeIdSlices_;
-    std::array<std::unique_ptr<VolumeRAM_UInt32>, 3> branchIdSlices_;
-    int z_;
+    LZ4SliceVolumeReader<uint32_t, 1> holeIds_;
+    LZ4SliceVolumeReader<uint32_t, 1> branchIds_;
 };
 
 struct IdVolumeReader {

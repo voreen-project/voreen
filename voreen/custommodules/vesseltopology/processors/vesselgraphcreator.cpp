@@ -342,7 +342,7 @@ struct ClosestSkeletonVoxelsAdaptor : public EdgeVoxelRefResultSetBase {
     }
 };
 
-static std::pair<std::unique_ptr<HDF5FileVolume>, std::unique_ptr<HDF5FileVolume>> splitSegmentationCriticalVoxels(const std::string& tmpPathNoCritical, const std::string& tmpPathOnlyCritical, const ProtoVesselGraph& graph, SkeletonClassReader&& skeletonClassReader, const VesselGraphCreatorProcessedInput& input, ProgressReporter& progress) {
+static std::pair<LZ4SliceVolume<uint8_t>, LZ4SliceVolume<uint8_t>> splitSegmentationCriticalVoxels(const std::string& tmpPathNoCritical, const std::string& tmpPathOnlyCritical, const ProtoVesselGraph& graph, SkeletonClassReader&& skeletonClassReader, const VesselGraphCreatorProcessedInput& input, ProgressReporter& progress) {
     TaskTimeLogger _("Split segmentation wrt critical voxels", tgt::Info);
     //const auto rwToVoxel = input.metadata.getWorldToVoxelMatrix();
     const auto voxelToRw = input.metadata.getVoxelToWorldMatrix();
@@ -351,18 +351,6 @@ static std::pair<std::unique_ptr<HDF5FileVolume>, std::unique_ptr<HDF5FileVolume
 
     const std::string format = "uint8";
     const tgt::svec3 slicedim(dimensions.xy(), 1);
-
-    std::unique_ptr<HDF5FileVolume> onlyCriticalVoxels = HDF5FileVolume::createVolume(tmpPathOnlyCritical, HDF5VolumeWriter::VOLUME_DATASET_NAME, format, dimensions, 1, true, 1, slicedim, false);
-    std::unique_ptr<HDF5FileVolume> noCriticalVoxels = HDF5FileVolume::createVolume(tmpPathNoCritical, HDF5VolumeWriter::VOLUME_DATASET_NAME, format, dimensions, 1, true, 1, slicedim, false);
-
-    onlyCriticalVoxels->writeOffset(input.metadata.getOffset());
-    noCriticalVoxels->writeOffset(input.metadata.getOffset());
-
-    onlyCriticalVoxels->writeSpacing(input.metadata.getSpacing());
-    noCriticalVoxels->writeSpacing(input.metadata.getSpacing());
-
-    onlyCriticalVoxels->writePhysicalToWorldTransformation(input.metadata.getPhysicalToWorldMatrix());
-    noCriticalVoxels->writePhysicalToWorldTransformation(input.metadata.getPhysicalToWorldMatrix());
 
     KDTreeBuilder<EdgeVoxelRef> finderBuilder;
 
@@ -374,11 +362,15 @@ static std::pair<std::unique_ptr<HDF5FileVolume>, std::unique_ptr<HDF5FileVolume
 
     KDTreeVoxelFinder<EdgeVoxelRef> finder(std::move(finderBuilder));
 
+    LZ4SliceVolumeBuilder<uint8_t> onlyCriticalVoxels(tmpPathOnlyCritical, LZ4SliceVolumeMetadata(dimensions));
+    LZ4SliceVolumeBuilder<uint8_t> noCriticalVoxels(tmpPathNoCritical, LZ4SliceVolumeMetadata(dimensions));
+
     for(size_t z = 0; z<dimensions.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dimensions.z);
         auto slice = input.segmentation.loadSlice(z);
-        std::unique_ptr<VolumeRAM> outputSliceOnlyCV(VolumeFactory().create(format, slicedim));
-        std::unique_ptr<VolumeRAM> outputSliceNoCV(VolumeFactory().create(format, slicedim));
+
+        auto outputSliceOnlyCV = onlyCriticalVoxels.getNextWritableSlice();
+        auto outputSliceNoCV = noCriticalVoxels.getNextWritableSlice();
 
         skeletonClassReader.advance();
         for(size_t y = 0; y<dimensions.y; ++y) {
@@ -436,24 +428,24 @@ static std::pair<std::unique_ptr<HDF5FileVolume>, std::unique_ptr<HDF5FileVolume
 
 
                     if(skeletonClassReader.getClass(tgt::ivec2(x, y)) != 2 && isCritical) {
-                        outputSliceNoCV->setVoxelNormalized(0, p);
-                        outputSliceOnlyCV->setVoxelNormalized(1, p);
+                        outputSliceNoCV->voxel(p) = 0;
+                        outputSliceOnlyCV->voxel(p) = 1;
                     } else {
-                        outputSliceNoCV->setVoxelNormalized(1, p);
-                        outputSliceOnlyCV->setVoxelNormalized(0, p);
+                        outputSliceNoCV->voxel(p) = 1;
+                        outputSliceOnlyCV->voxel(p) = 0;
                     }
                 } else {
-                    outputSliceNoCV->setVoxelNormalized(0, p);
-                    outputSliceOnlyCV->setVoxelNormalized(0, p);
+                    outputSliceNoCV->voxel(p) = 0;
+                    outputSliceOnlyCV->voxel(p) = 0;
                 }
             }
         }
-        noCriticalVoxels->writeSlices(outputSliceNoCV.get(), z);
-        onlyCriticalVoxels->writeSlices(outputSliceOnlyCV.get(), z);
     }
 
     progress.setProgress(1.0f);
-    return std::make_pair(std::move(noCriticalVoxels), std::move(onlyCriticalVoxels));
+    return std::make_pair(
+            std::move(noCriticalVoxels).finalize(),
+            std::move(onlyCriticalVoxels).finalize());
 }
 
 class NoopMetadata {
@@ -472,13 +464,76 @@ static void addFixedForegroundPointsToMask(const std::vector<tgt::vec3>& points,
     }
 }
 
-static std::unique_ptr<HDF5FileVolume> createCCAVolume(const VolumeBase& input, const std::string& tmpVolumePath, size_t& numComponents, ProgressReporter& progress) {
+struct LZ4SliceVolumeCCAInputWrapper {
+    LZ4SliceVolumeCCAInputWrapper(const LZ4SliceVolume<uint8_t>& vol)
+        : volume_(vol)
+    {
+    }
+
+    tgt::svec3 getDimensions() const {
+        return volume_.getDimensions();
+    }
+    tgt::vec3 getSpacing() const {
+        return tgt::vec3::one;
+    }
+    tgt::vec3 getOffset() const {
+        return tgt::vec3::zero;
+    }
+    tgt::mat4 getPhysicalToWorldMatrix() const {
+        return tgt::mat4::identity;
+    }
+    std::string getBaseType() const {
+        return "uint32_t";
+    }
+    VolumeRAM* getSlice(size_t z) const {
+        return new VolumeAtomic<uint8_t>(volume_.loadSlice(z));
+    }
+    const LZ4SliceVolume<uint8_t>& volume_;
+};
+struct LZ4SliceVolumeCCABuilderWrapper {
+    LZ4SliceVolumeCCABuilderWrapper(LZ4SliceVolumeBuilder<uint32_t>& builder)
+        : builder_(builder)
+    {
+    }
+
+    tgt::svec3 getDimensions() const {
+        return builder_.getDimensions();
+    }
+    std::string getBaseType() const {
+        return "uint32";
+    }
+    void writeSlices(VolumeAtomic<uint32_t>* slice, size_t _z) const {
+        tgtAssert(slice, "No slice");
+        builder_.pushSlice(*slice);
+    }
+    void writeSlices(VolumeRAM* slice, size_t _z) const {
+        tgtAssert(false, "Invalid slice");
+    }
+    void writeSpacing(const tgt::svec3&) {
+        //ignored for now
+    }
+    void writeOffset(const tgt::svec3&) {
+        //ignored for now
+    }
+    void writePhysicalToWorldTransformation(const tgt::mat4&) {
+        //ignored for now
+    }
+    void writeRealWorldMapping(const RealWorldMapping&) {
+        //ignored for now
+    }
+    void writeVolumeMinMax(const VolumeMinMax*) {
+        //ignored for now
+    }
+    LZ4SliceVolumeBuilder<uint32_t>& builder_;
+};
+
+static LZ4SliceVolume<uint32_t> createCCAVolume(const LZ4SliceVolume<uint8_t>& input, const std::string& tmpVolumePath, size_t& numComponents, ProgressReporter& progress) {
     TaskTimeLogger _("Create CCA volume", tgt::Info);
 
     StreamingComponents<0, NoopMetadata> sc;
 
     std::function<bool(const VolumeRAM* vol, tgt::svec3 pos)> isOne = [](const VolumeRAM* slice, tgt::svec3 pos) {
-        return slice->getVoxelNormalized(pos) > 0.5f;
+        return slice->getVoxelNormalized(pos) > 0.0f;
     };
     auto writeMetaData = [] (uint32_t, const NoopMetadata&) {};
 
@@ -486,19 +541,13 @@ static std::unique_ptr<HDF5FileVolume> createCCAVolume(const VolumeBase& input, 
         return true;
     };
 
-    const std::string baseType = "uint32";
-    const std::string volumeFilePath = tmpVolumePath;
-    const std::string volumeLocation = HDF5VolumeWriter::VOLUME_DATASET_NAME;
-    const tgt::svec3 dim = input.getDimensions();
-    const int deflateLevel = 1;
-    const tgt::svec3 chunkSize(dim.xy(), 1);
+    LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getDimensions());
+    LZ4SliceVolumeCCABuilderWrapper outputWrapper(outputVolumeBuilder);
 
-    std::unique_ptr<HDF5FileVolume> outputVolume = HDF5FileVolume::createVolume(volumeFilePath, volumeLocation, baseType, input.getDimensions(), 1, true, deflateLevel, chunkSize, false);
-
-    auto stats = sc.cca(input, *outputVolume, writeMetaData, isOne, true, componentConstraintTest, progress);
+    auto stats = sc.cca(LZ4SliceVolumeCCAInputWrapper(input), outputWrapper, writeMetaData, isOne, true, componentConstraintTest, progress);
     numComponents = stats.numComponents;
 
-    return outputVolume;
+    return std::move(outputVolumeBuilder).finalize();
 }
 
 static uint64_t toLinearPos(const tgt::svec3& pos, const tgt::svec3& dimensions) {
@@ -552,7 +601,7 @@ struct IdVolumeInitializer {
     }
 };
 
-static void initializeIdVolumes(HDF5FileVolume& branchIds, const HDF5FileVolume& holeIds, std::vector<IdVolumeInitializer>& initializers, ProgressReporter& progress) {
+static void initializeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4SliceVolume<uint32_t>& holeIds, std::vector<IdVolumeInitializer>& initializers, ProgressReporter& progress) {
     TaskTimeLogger _("Initialize IdVolumes", tgt::Info);
     IdVolumeInitializationReader initializationReader(branchIds, holeIds);
 
@@ -640,7 +689,7 @@ struct IdVolumeFinalizer {
     }
 };
 
-static void finalizeIdVolumes(HDF5FileVolume& branchIds, const HDF5FileVolume& holeIds, std::vector<IdVolumeFinalizer>& finalizers, ProgressReporter& progress) {
+static void finalizeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4SliceVolume<uint32_t>& holeIds, std::vector<IdVolumeFinalizer>& finalizers, ProgressReporter& progress) {
     TaskTimeLogger _("Initialize IdVolumes", tgt::Info);
     tgtAssert(branchIds.getDimensions() == holeIds.getDimensions(), "Invalid dimensions");
 
@@ -655,16 +704,14 @@ static void finalizeIdVolumes(HDF5FileVolume& branchIds, const HDF5FileVolume& h
     for(size_t z=0; z < dim.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dim.z);
 
-        std::unique_ptr<VolumeRAM_UInt32> branchSlice(dynamic_cast<VolumeRAM_UInt32*>(branchIds.loadSlices(z, z)));
-        std::unique_ptr<VolumeRAM_UInt32> holeSlice(dynamic_cast<VolumeRAM_UInt32*>(holeIds.loadSlices(z, z)));
-        tgtAssert(branchSlice, "Invalid volume format");
-        tgtAssert(holeSlice, "Invalid volume format");
+        auto branchSlice = branchIds.getWritableSlice(z);
+        auto holeSlice = holeIds.loadSlice(z);
 
         for(size_t y=0; y < dim.y; ++y) {
             for(size_t x=0; x < dim.x; ++x) {
                 tgt::svec3 pos(x,y,z);
                 for(IdVolumeFinalizer* finalizer : finalizer_finder.findBounds(pos)) {
-                    if(holeSlice->voxel(x,y,0) == finalizer->id_) {
+                    if(holeSlice.voxel(x,y,0) == finalizer->id_) {
                         uint32_t floodedId = finalizer->getValue(pos);
                         tgtAssert(floodedId != IdVolume::BACKGROUND_VALUE, "flooded label is background");
                         if(floodedId != IdVolume::UNLABELED_FOREGROUND_VALUE) {
@@ -674,16 +721,15 @@ static void finalizeIdVolumes(HDF5FileVolume& branchIds, const HDF5FileVolume& h
                 }
             }
         }
-        branchIds.writeSlices(branchSlice.get(), z);
     }
     progress.setProgress(1.0f);
 }
 
 struct UnfinishedRegions {
-    std::unique_ptr<HDF5FileVolume> holeIds;
+    LZ4SliceVolume<uint32_t> holeIds;
     std::map<uint32_t, tgt::SBounds> regions;
 
-    void floodAllRegions(HDF5FileVolume& branchIds, ProgressReporter& progress) {
+    void floodAllRegions(LZ4SliceVolume<uint32_t>& branchIds, ProgressReporter& progress) && {
         TaskTimeLogger _("Flood remaining unlabled regions", tgt::Info);
 
         SubtaskProgressReporterCollection<3> subtaskReporters(progress);
@@ -715,7 +761,7 @@ struct UnfinishedRegions {
             initializers.emplace_back(id, offset, dim);
         }
 
-        initializeIdVolumes(branchIds, *holeIds, initializers, subtaskReporters.get<0>());
+        initializeIdVolumes(branchIds, holeIds, initializers, subtaskReporters.get<0>());
 
         std::vector<IdVolumeFinalizer> finalizers;
         size_t i=0;
@@ -725,11 +771,13 @@ struct UnfinishedRegions {
             ++i;
         }
 
-        finalizeIdVolumes(branchIds, *holeIds, finalizers, subtaskReporters.get<2>());
+        finalizeIdVolumes(branchIds, holeIds, finalizers, subtaskReporters.get<2>());
+
+        std::move(holeIds).deleteFromDisk();
     }
 };
 
-static UnfinishedRegions collectUnfinishedRegions(const VolumeBase& input, const std::string& tmpVolumePath, ProgressReporter& progress) {
+static UnfinishedRegions collectUnfinishedRegions(const LZ4SliceVolume<uint8_t>& input, const std::string& tmpVolumePath, ProgressReporter& progress) {
     TaskTimeLogger _("Collect unlabled regions", tgt::Info);
 
     std::map<uint32_t, tgt::SBounds> regions;
@@ -737,7 +785,7 @@ static UnfinishedRegions collectUnfinishedRegions(const VolumeBase& input, const
     StreamingComponents<0, CCANodeMetaData> sc;
 
     std::function<bool(const VolumeRAM* vol, tgt::svec3 pos)> isOne = [](const VolumeRAM* slice, tgt::svec3 pos) {
-        return slice->getVoxelNormalized(pos) > 0.5f;
+        return slice->getVoxelNormalized(pos) > 0.0f;
     };
     auto writeMetaData = [&regions] (uint32_t id, const CCANodeMetaData& metadata) {
         regions.emplace(id, metadata.bounds_);
@@ -747,23 +795,17 @@ static UnfinishedRegions collectUnfinishedRegions(const VolumeBase& input, const
         return true;
     };
 
-    const std::string baseType = "uint32";
-    const std::string volumeFilePath = tmpVolumePath;
-    const std::string volumeLocation = HDF5VolumeWriter::VOLUME_DATASET_NAME;
-    const tgt::svec3 dim = input.getDimensions();
-    const int deflateLevel = 1;
-    const tgt::svec3 chunkSize(dim.xy(), 1);
+    LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getDimensions());
+    LZ4SliceVolumeCCABuilderWrapper outputWrapper(outputVolumeBuilder);
 
-    std::unique_ptr<HDF5FileVolume> outputVolume = HDF5FileVolume::createVolume(volumeFilePath, volumeLocation, baseType, input.getDimensions(), 1, true, deflateLevel, chunkSize, false);
-
-    sc.cca(input, *outputVolume, writeMetaData, isOne, true, componentConstraintTest, progress);
+    sc.cca(LZ4SliceVolumeCCAInputWrapper(input), outputWrapper, writeMetaData, isOne, true, componentConstraintTest, progress);
 
     return UnfinishedRegions {
-        std::move(outputVolume), regions
+        std::move(outputVolumeBuilder).finalize(), regions
     };
 }
 
-static void addClippedOffRegionsToCritical(HDF5FileVolume& criticalVoxels, const HDF5FileVolume& ccaVolume, const ProtoVesselGraph& graph, size_t numComponents, const LZ4SliceVolume<uint8_t>& segmentation, ProgressReporter& progress) {
+static void addClippedOffRegionsToCritical(LZ4SliceVolume<uint8_t>& criticalVoxels, const LZ4SliceVolume<uint32_t>& ccaVolume, const ProtoVesselGraph& graph, size_t numComponents, const LZ4SliceVolume<uint8_t>& segmentation, ProgressReporter& progress) {
     TaskTimeLogger _("Add clipped off regions to critical voxels", tgt::Info);
 
     BranchIdVolumeReader ccaReader(ccaVolume, graph, numComponents, segmentation);
@@ -772,8 +814,7 @@ static void addClippedOffRegionsToCritical(HDF5FileVolume& criticalVoxels, const
     for(size_t z = 0; z < dim.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dim.z);
 
-        std::unique_ptr<VolumeRAM> slice(criticalVoxels.loadSlices(z,z));
-        tgtAssert(slice, "Invalid volume format");
+        auto slice = criticalVoxels.getWritableSlice(z);
 
         ccaReader.advance();
 
@@ -782,12 +823,10 @@ static void addClippedOffRegionsToCritical(HDF5FileVolume& criticalVoxels, const
                 tgt::ivec3 p(x,y,z);
 
                 if(ccaReader.isObject(p) && !ccaReader.isValidEdgeId(ccaReader.getEdgeId(p.xy()))) {
-                    slice->setVoxelNormalized(1.0f, x, y, 0);
+                    slice->voxel(x, y, 0) = 1;
                 }
             }
         }
-
-        criticalVoxels.writeSlices(slice.get(), z);
     }
     progress.setProgress(1.0f);
 }
@@ -803,54 +842,49 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
 
     // Create an assignment edge <-> vessel component
     //  1. Split vessel components at nodes edges
-    const std::string segNoCriticalTmpPath = VoreenApplication::app()->getUniqueTmpFilePath(".h5");
-    const std::string segOnlyCriticalTmpPath = VoreenApplication::app()->getUniqueTmpFilePath(".h5");
-
-    auto segmentationWithAndWithoutCriticalVoxels = splitSegmentationCriticalVoxels(segNoCriticalTmpPath, segOnlyCriticalTmpPath, *protograph, SkeletonClassReader(skeleton), input, subtaskReporters.get<2>());
+    auto segmentationWithAndWithoutCriticalVoxels = splitSegmentationCriticalVoxels(
+            VoreenApplication::app()->getUniqueTmpFilePath(".lz4"),
+            VoreenApplication::app()->getUniqueTmpFilePath(".lz4"),
+            *protograph,
+            SkeletonClassReader(skeleton),
+            input,
+            subtaskReporters.get<2>());
     {
         // Drop VolumeMask and thus free the used non-volatile storage space.
         VolumeMask _dump(std::move(skeleton));
     }
-    std::unique_ptr<HDF5FileVolume> segNoCriticalVoxelsHDF5 = std::move(segmentationWithAndWithoutCriticalVoxels.first);
-    std::unique_ptr<HDF5FileVolume> segOnlyCriticalVoxelsHDF5 = std::move(segmentationWithAndWithoutCriticalVoxels.second);
-
-    segNoCriticalVoxelsHDF5.reset(nullptr); //drop hdf5 vol
+    LZ4SliceVolume<uint8_t> segNoCriticalVoxels = std::move(segmentationWithAndWithoutCriticalVoxels.first);
+    LZ4SliceVolume<uint8_t> segOnlyCriticalVoxels = std::move(segmentationWithAndWithoutCriticalVoxels.second);
 
     //  2. Perform a cca to distinguish components
     size_t numComponents;
-    std::unique_ptr<VolumeBase> segNoCriticalVoxels(HDF5VolumeReader().read(segNoCriticalTmpPath)->at(0));
-    const std::string ccaNoCriticalTmpPath = VoreenApplication::app()->getUniqueTmpFilePath(".h5");
-    std::unique_ptr<HDF5FileVolume> branchIdSegmentation = createCCAVolume(*segNoCriticalVoxels, ccaNoCriticalTmpPath, numComponents, subtaskReporters.get<3>());
+    LZ4SliceVolume<uint32_t> branchIdSegmentation = createCCAVolume(segNoCriticalVoxels, VoreenApplication::app()->getUniqueTmpFilePath(".lz4"), numComponents, subtaskReporters.get<3>());
+    std::move(segNoCriticalVoxels).deleteFromDisk();
 
     // 4. Find unlabeled regions
     //
     // Add cut off unlabeled regions to the critical voxels (i.e., unlabeled regions) to allow flooding from valid edge label regions later
-    addClippedOffRegionsToCritical(*segOnlyCriticalVoxelsHDF5, *branchIdSegmentation, *protograph, numComponents, input.segmentation, subtaskReporters.get<4>());
-    segOnlyCriticalVoxelsHDF5.reset(nullptr); //drop hdf5 vol
-    std::unique_ptr<VolumeBase> segOnlyCriticalVoxels(HDF5VolumeReader().read(segOnlyCriticalTmpPath)->at(0)); //reopen hdf5vol as VolumeBase
-    const std::string ccaOnlyCriticalTmpPath = VoreenApplication::app()->getUniqueTmpFilePath(".h5");
-    auto unfinishedRegions = collectUnfinishedRegions(*segOnlyCriticalVoxels, ccaOnlyCriticalTmpPath, subtaskReporters.get<5>());
+    addClippedOffRegionsToCritical(segOnlyCriticalVoxels, branchIdSegmentation, *protograph, numComponents, input.segmentation, subtaskReporters.get<4>());
+    auto unfinishedRegions = collectUnfinishedRegions(segOnlyCriticalVoxels, VoreenApplication::app()->getUniqueTmpFilePath(".lz4"), subtaskReporters.get<5>());
+    std::move(segOnlyCriticalVoxels).deleteFromDisk();
 
     //  5. Flood remaining unlabeled regions locally
-    unfinishedRegions.floodAllRegions(*branchIdSegmentation, subtaskReporters.get<6>());
+    std::move(unfinishedRegions).floodAllRegions(branchIdSegmentation, subtaskReporters.get<6>());
 
     //  6. Create a reader that reads edge ids from the underlying segmentation
-    BranchIdVolumeReader ccaReader(*branchIdSegmentation, *protograph, numComponents, input.segmentation);
+    BranchIdVolumeReader ccaReader(branchIdSegmentation, *protograph, numComponents, input.segmentation);
 
     //  7. Create better VesselGraph from protograph and and the edge-id-segmentation
     auto output = protograph->createVesselGraph(ccaReader, input.sampleMask, input.metadata, subtaskReporters.get<7>());
+    std::move(branchIdSegmentation).deleteFromDisk();
 
 
 #ifdef VRN_DEBUG
-    generatedSkeletons.add(HDF5VolumeReader().read(ccaOnlyCriticalTmpPath)->at(0));
-    generatedSkeletons.add(HDF5VolumeReader().read(ccaNoCriticalTmpPath)->at(0));
+    //generatedSkeletons.add(HDF5VolumeReader().read(ccaOnlyCriticalTmpPath)->at(0));
+    //generatedSkeletons.add(HDF5VolumeReader().read(ccaNoCriticalTmpPath)->at(0));
 #endif
 
     // Clean up files
-    tgt::FileSystem::deleteFile(segNoCriticalTmpPath);
-    tgt::FileSystem::deleteFile(segOnlyCriticalTmpPath);
-    tgt::FileSystem::deleteFile(ccaNoCriticalTmpPath);
-    tgt::FileSystem::deleteFile(ccaOnlyCriticalTmpPath);
 
     return output;
 }
