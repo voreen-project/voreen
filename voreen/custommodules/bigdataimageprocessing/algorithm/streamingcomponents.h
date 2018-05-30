@@ -51,12 +51,13 @@ public:
     typedef std::function<bool(const MetaData&)> componentConstraintTest;
     typedef std::function<void(uint32_t id, const MetaData&)> ComponentCompletionCallback;
 
-    StreamingComponentsStats cca(const VolumeBase& input, HDF5FileVolume& output, ComponentCompletionCallback writeMetaData, getBinVoxel isOne, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress) const;
+    template<typename InputType, typename OutputType>
+    StreamingComponentsStats cca(const InputType& input, OutputType& output, ComponentCompletionCallback componentCompletionCallback, getBinVoxel isOne, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress) const;
 private:
     class RowStorage; // Forward declaration
 
-    template<typename outputBaseType>
-    void writeRowsToStorage(RowStorage& rows, HDF5FileVolume& output, ComponentCompletionCallback componentCompletionCallback, componentConstraintTest meetsComponentConstraints, bool applyLabeling, uint32_t& idCounter, uint64_t& voxelCounter, ProgressReporter& progress) const;
+    template<typename outputBaseType, typename OutputType>
+    void writeRowsToStorage(RowStorage& rows, OutputType& output, ComponentCompletionCallback componentCompletionCallback, componentConstraintTest meetsComponentConstraints, bool applyLabeling, uint32_t& idCounter, uint64_t& voxelCounter, ProgressReporter& progress) const;
 
 
 protected:
@@ -159,19 +160,16 @@ SC_TEMPLATE
 const std::string SC_NS::loggerCat_("voreen.bigdataimageprocessing.streamingcomponents");
 
 SC_TEMPLATE
-template<typename outputBaseType>
-void SC_NS::writeRowsToStorage(RowStorage& rows, HDF5FileVolume& output, ComponentCompletionCallback componentCompletionCallback, componentConstraintTest meetsComponentConstraints, bool applyLabeling, uint32_t& idCounter, uint64_t& voxelCounter, ProgressReporter& progress) const {
-    H5::PredType t = getPredType<outputBaseType>();
-    tgtAssert(output.getBaseType() == getBaseTypeFromDataType(t), "data type mismatch");
+template<typename outputBaseType, typename OutputType>
+void SC_NS::writeRowsToStorage(RowStorage& rows, OutputType& output, ComponentCompletionCallback componentCompletionCallback, componentConstraintTest meetsComponentConstraints, bool applyLabeling, uint32_t& idCounter, uint64_t& voxelCounter, ProgressReporter& progress) const {
 
     const tgt::svec3 dim = output.getDimensions();
-    std::unique_ptr<VolumeRAM> slice(VolumeFactory().create(output.getBaseType(), tgt::vec3(dim.x, dim.y, 1)));
-    outputBaseType* sliceData = static_cast<outputBaseType*>(slice->getData());
+    VolumeAtomic<outputBaseType> slice(tgt::vec3(dim.x, dim.y, 1));
 
     for(size_t z = 0; z<dim.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dim.z);
         // Initialize slice with 0s
-        std::fill(sliceData, sliceData+dim.y*dim.x, 0);
+        slice.clear();
         for(size_t y = 0; y<dim.y; ++y) {
             Row& currentRow = rows.getRows()[z*dim.y+y];
             for(auto& run : currentRow.getRuns()) {
@@ -188,19 +186,20 @@ void SC_NS::writeRowsToStorage(RowStorage& rows, HDF5FileVolume& output, Compone
                     }
 
                     for(size_t x = run.lowerBound_; x < run.upperBound_; ++x) {
-                        sliceData[y*dim.x + x] = applyLabeling ? id : 1;
+                        slice.voxel(x,y,0) = applyLabeling ? id : 1;
                         ++voxelCounter;
                     }
 
                 }
             }
         }
-        output.writeSlices(slice.get(), z);
+        output.writeSlices(&slice, z);
     }
 }
 
 SC_TEMPLATE
-StreamingComponentsStats SC_NS::cca(const VolumeBase& input, HDF5FileVolume& output, ComponentCompletionCallback componentCompletionCallback, getBinVoxel isOne, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress) const {
+template<typename InputType, typename OutputType>
+StreamingComponentsStats SC_NS::cca(const InputType& input, OutputType& output, ComponentCompletionCallback componentCompletionCallback, getBinVoxel isOne, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress) const {
     const tgt::svec3 dim = input.getDimensions();
     tgtAssert(input.getDimensions() == output.getDimensions(), "dimensions of input and output differ");
     tgtAssert(tgt::hand(tgt::greaterThan(input.getDimensions(), tgt::svec3::one)), "Degenerated volume dimensions");
@@ -260,14 +259,16 @@ StreamingComponentsStats SC_NS::cca(const VolumeBase& input, HDF5FileVolume& out
 
     progress.setProgressRange(tgt::vec2(0.5, 1));
     if(applyLabeling) {
+        tgtAssert(output.getBaseType() == "uint32", "data type mismatch");
         writeRowsToStorage<uint32_t>(rows, output, componentCompletionCallback, meetsComponentConstraints, applyLabeling, idCounter, voxelCounter, progress);
     } else {
+        tgtAssert(output.getBaseType() == "uint8", "data type mismatch");
         writeRowsToStorage<uint8_t>(rows, output, componentCompletionCallback, meetsComponentConstraints, applyLabeling, idCounter, voxelCounter, progress);
     }
     progress.setProgress(1.0f);
 
     const uint32_t numComponents = idCounter - 1;
-    const float minValue = voxelCounter < input.getNumVoxels() ? 0.0f : 1.0f; // Check if there are any background voxels at all
+    const float minValue = voxelCounter < tgt::hmul(dim) ? 0.0f : 1.0f; // Check if there are any background voxels at all
     const float maxValue = voxelCounter > 0 ? (applyLabeling ? numComponents : 1.0f) : 0.0f; // Check if there are any foreground voxels, if there are, check if we applied labeling
     std::unique_ptr<VolumeRAM> helper(VolumeFactory().create(output.getBaseType(), tgt::vec3(1))); // Used to get element range
     const tgt::vec2 range = helper->elementRange(); // Used for normalization
