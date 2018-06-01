@@ -86,6 +86,8 @@ MDSPlot::MDSPlot()
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
     , numDimensions_("numDimensions", "Number of Dimensions", MAX_NUM_DIMENSIONS, 1, MAX_NUM_DIMENSIONS)
     , principalComponent_("principalComponent", "Principal Component", 1, 1, MAX_NUM_DIMENSIONS)
+    , scaleToMagnitude_("scaleToMagnitude", "Scale to Magnitude of Principle Component")
+    , sphereRadius_("sphereRadius", "Sphere Radius", 0.01, 0.0f, 0.1f)
     , colorCoding_("colorCoding", "Color Coding")
     , renderedChannel_("renderedChannel", "Channel")
     , renderedRuns_("renderedRuns", "Rendered Runs")
@@ -153,13 +155,21 @@ MDSPlot::MDSPlot()
             // Eigenvalue index only useful when rendering 1D.
             principalComponent_.setVisibleFlag(numDimensions_.get() == 1);
 
+            // Scaling only useful when rendering 3D
+            scaleToMagnitude_.setVisibleFlag(numDimensions_.get() == 3);
+
             // Adjust camera correctly when using 3D visualization.
             if (numDimensions_.get() == 3)
                 camera_.adaptInteractionToScene(tgt::Bounds(-tgt::vec3::one, tgt::vec3::one), 0.1f, true);
         });
     addProperty(principalComponent_);
-        principalComponent_.setVisibleFlag(false);
+        principalComponent_.setVisibleFlag(numDimensions_.get() == 1);
         principalComponent_.setGroupID("rendering");
+    addProperty(scaleToMagnitude_);
+        scaleToMagnitude_.setVisibleFlag(numDimensions_.get() == 3);
+        scaleToMagnitude_.setGroupID("rendering");
+    addProperty(sphereRadius_);
+        sphereRadius_.setGroupID("rendering");
     addProperty(colorCoding_);
         colorCoding_.addOption("run", "Only Run", COLOR_RUN);
         colorCoding_.addOption("timeStep", "Only Time Step", COLOR_TIMESTEP);
@@ -209,7 +219,7 @@ Processor* MDSPlot::create() const {
 
 void MDSPlot::initialize() {
     RenderProcessor::initialize();
-    sphere_.setSphereGeometry(0.03f, tgt::vec3::zero, tgt::vec4::one, 16);
+    sphere_.setSphereGeometry(1.0f, tgt::vec3::zero, tgt::vec4::one, 16);
 }
 
 void MDSPlot::deinitialize() {
@@ -439,6 +449,13 @@ void MDSPlot::renderingPass(bool picking) {
         MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
         MatStack.loadMatrix(camera_.get().getViewMatrix());
 
+        tgt::vec3 scale = tgt::vec3::one;
+        if(scaleToMagnitude_.get()) {
+            // Scale each axis to it's eigenvalues size.
+            scale = tgt::vec3(&mdsData.eigenvalues_[0]);
+            scale /= tgt::vec3(mdsData.eigenvalues_[0]);
+        }
+
         for (int runIdx : renderingOrder_) {
 
             size_t runOffset = 0;
@@ -450,13 +467,13 @@ void MDSPlot::renderingPass(bool picking) {
             IMode.begin(tgt::ImmediateMode::LINE_STRIP);
             for(size_t j=0; j<numTimeSteps; j++) {
                 IMode.color(getColor(runIdx, j, picking));
-                IMode.vertex(tgt::vec3(&mdsData.nVectors_[j+runOffset][0]));
+                IMode.vertex(tgt::vec3(&mdsData.nVectors_[j+runOffset][0]) * scale);
             }
             IMode.end();
 
             if(!picking && numTimeSteps > 0) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
-                drawTimeStepSelection(runIdx, selectedTimeStep, tgt::vec3(&mdsData.nVectors_[runOffset+selectedTimeStep][0]));
+                drawTimeStepSelection(runIdx, selectedTimeStep, tgt::vec3(&mdsData.nVectors_[runOffset+selectedTimeStep][0])*scale);
             }
         }
 
@@ -475,7 +492,12 @@ void MDSPlot::renderingPass(bool picking) {
 
 void MDSPlot::drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, const tgt::vec3& position) const {
 
+    // Skip rendering, if not visible anyways.
+    if(sphereRadius_.get() <= std::numeric_limits<float>::epsilon())
+        return;
+
     MatStack.pushMatrix();
+    MatStack.scale(tgt::vec3(sphereRadius_.get()));
     MatStack.translate(position);
 
     size_t numTimeSteps = ensembleInport_.getData()->getRuns()[runIdx].timeSteps_.size();

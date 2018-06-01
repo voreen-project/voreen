@@ -109,6 +109,8 @@ protected:
 
     IntProperty numDimensions_;
     IntProperty principalComponent_;
+    BoolProperty scaleToMagnitude_;
+    FloatProperty sphereRadius_;
     OptionProperty<ColorCoding> colorCoding_;
     OptionProperty<std::string> renderedChannel_;
     StringListProperty renderedRuns_;
