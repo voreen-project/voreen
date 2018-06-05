@@ -242,17 +242,19 @@ void JsonSerializer::write(std::ostream& stream, bool pretty, bool compressed) {
 
     resolveUnresolvedReferences();
 
+    // Prepare gzip compressing stream
+    // We have to do it in the outside scope (that lives longer than the OStreamWrapper sb
+    // because sb references this stream if compression is used.
+    filtering_ostream compressingStream;
+    compressingStream.push(gzip_compressor(
+                gzip_params(
+                    gzip::best_compression
+                    )
+                ));
 
     // Wrap compressing stream for rapidjson
     std::unique_ptr<rapidjson::OStreamWrapper> sb;
     if(compressed) {
-        // Prepare gzip compressing stream
-        filtering_ostream compressingStream;
-        compressingStream.push(gzip_compressor(
-                    gzip_params(
-                        gzip::best_compression
-                        )
-                    ));
         compressingStream.push(stream);
         sb.reset(new rapidjson::OStreamWrapper(compressingStream));
     } else {
