@@ -138,6 +138,7 @@ class LZ4SliceVolumeReader {
     static int slicePosOffsetToSliceStorageIndex(int slicePosOffset) {
         return slicePosOffset + neighborhoodExtent;
     }
+
 public:
     LZ4SliceVolumeReader(const LZ4SliceVolume<Voxel>& volume);
 
@@ -145,17 +146,17 @@ public:
     boost::optional<Voxel> getVoxel(tgt::ivec3 pos) const;
     boost::optional<Voxel> getVoxelRelative(tgt::ivec2 slicePos, int sliceOffset) const;
 
-    void seek(size_t sliceNumber);
+    void seek(int sliceNumber);
     void advance();
 
-    size_t getCurrentZPos() const;
+    int getCurrentZPos() const;
     const LZ4SliceVolume<Voxel>& getVolume() const;
 private:
-    boost::optional<VolumeAtomic<Voxel>> loadSliceFromVolume(size_t sliceNumber) const;
+    boost::optional<VolumeAtomic<Voxel>> loadSliceFromVolume(int sliceNumber) const;
 
     const LZ4SliceVolume<Voxel>& volume_;
     std::array<boost::optional<VolumeAtomic<Voxel>>, neighborhoodSize> slices_;
-    size_t pos_;
+    int pos_;
 };
 
 template<typename Voxel>
@@ -309,18 +310,18 @@ template<typename Voxel, uint64_t neighborhoodExtent>
 LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::LZ4SliceVolumeReader(const LZ4SliceVolume<Voxel>& volume)
     : volume_(volume)
     , slices_()
-    , pos_(-1)
+    , pos_(-(int)neighborhoodSize)
 {
     std::fill(slices_.begin(), slices_.end(), boost::none);
 }
 
 template<typename Voxel, uint64_t neighborhoodExtent>
-void LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::seek(size_t newPos) {
+void LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::seek(int newPos) {
     if(pos_ != newPos) {
         pos_ = newPos;
 
         for(size_t i=0; i<neighborhoodSize; ++i) {
-            auto pos = pos_+slicePosOffsetToSliceStorageIndex(i);
+            auto pos = pos_ + sliceStorageIndextoSlicePosOffset(i);
             slices_[i] = std::move(loadSliceFromVolume(pos));
         }
     }
@@ -337,7 +338,7 @@ void LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::advance() {
 }
 
 template<typename Voxel, uint64_t neighborhoodExtent>
-size_t LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::getCurrentZPos() const {
+int LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::getCurrentZPos() const {
     return pos_;
 }
 
@@ -374,7 +375,7 @@ boost::optional<Voxel> LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::getVoxel
 }
 
 template<typename Voxel, uint64_t neighborhoodExtent>
-boost::optional<VolumeAtomic<Voxel>> LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::loadSliceFromVolume(size_t sliceNumber) const {
+boost::optional<VolumeAtomic<Voxel>> LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::loadSliceFromVolume(int sliceNumber) const {
     if(0 <= sliceNumber && sliceNumber < volume_.getNumSlices()) {
         return volume_.loadSlice(sliceNumber);
     } else {
