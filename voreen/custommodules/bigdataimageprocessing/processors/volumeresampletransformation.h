@@ -201,9 +201,11 @@ void VolumeResampleTransformation::resample(const VolumeBase& inputVol, std::uni
 
     bool aborted = false;
 #ifdef VRN_MODULE_OPENMP
-        #pragma omp parallel for
+    #pragma omp parallel for
+    for (long z = 0; z<static_cast<long>(outputDim.z); ++z) {
+#else
+    for (size_t z = 0; z<outputDim.z; ++z) {
 #endif
-    for(size_t z=0; z<outputDim.z; ++z) {
 
 #ifdef VRN_MODULE_OPENMP
         if(aborted) {
@@ -213,7 +215,7 @@ void VolumeResampleTransformation::resample(const VolumeBase& inputVol, std::uni
 
         std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(baseType, tgt::svec3(outputDim.xy(), 1)));
 
-        for (long y = 0; y<static_cast<long>(outputDim.y); ++y) { // MSVC requires y to be signed.
+        for (size_t y = 0; y<outputDim.y; ++y) {
             for(size_t x=0; x<outputDim.x; ++x) {
                 tgt::vec4 outputVoxelPos(x,y,z,1);
                 tgt::vec4 inputVoxelPos = voxelOutToVoxelIn*outputVoxelPos;
