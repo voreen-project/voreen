@@ -46,7 +46,7 @@ public:
 
     SurfaceBuilder(SurfaceBuilder&& other);
 
-    static StoredSurface finalize(SurfaceBuilder&& builder);
+    StoredSurface finalize() &&;
 
     ~SurfaceBuilder() {}
 

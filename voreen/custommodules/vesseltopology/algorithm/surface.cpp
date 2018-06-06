@@ -43,9 +43,9 @@ SurfaceBuilder::SurfaceBuilder(SurfaceBuilder&& other)
 {
 }
 
-StoredSurface SurfaceBuilder::finalize(SurfaceBuilder&& builder) {
-    StoredSurface ret(builder.filename_, builder.numVoxelsStored_);
-    SurfaceBuilder _ = std::move(builder); //destroy builder and thus flush the file
+StoredSurface SurfaceBuilder::finalize() && {
+    StoredSurface ret(filename_, numVoxelsStored_);
+    SurfaceBuilder _ = std::move(*this); //destroy builder and thus flush the file
     return ret;
 }
 

@@ -49,14 +49,14 @@ static tgt::svec3 fromLinearPos(uint64_t pos, const tgt::svec3& dimensions) {
 
 /// IdVolumeStorageInitializer -----------------------------------------------
 IdVolumeStorageInitializer::IdVolumeStorageInitializer(std::string filename)
-    : file_(filename, std::ofstream::binary | std::ofstream::trunc)
-    , filename_(filename)
+    : filename_(filename)
+    , file_(filename, std::ofstream::binary | std::ofstream::trunc)
 {
 }
 
 IdVolumeStorageInitializer::IdVolumeStorageInitializer(IdVolumeStorageInitializer&& other)
-    : file_(std::move(other.file_))
-    , filename_(other.filename_)
+    : filename_(other.filename_)
+    , file_(std::move(other.file_))
 {
 }
 
@@ -67,12 +67,15 @@ IdVolumeStorageInitializer::~IdVolumeStorageInitializer()
 void IdVolumeStorageInitializer::push(IdVolume::Value val) {
     file_.write(reinterpret_cast<char*>(&val), sizeof(val));
 }
+void IdVolumeStorageInitializer::push(IdVolume::Value* vals, size_t number_of_vals) {
+    file_.write(reinterpret_cast<char*>(vals), sizeof(*vals)*number_of_vals);
+}
 
 /// IdVolumeStorage ----------------------------------------------------------
 IdVolumeStorage::IdVolumeStorage(IdVolumeStorageInitializer&& initializer, tgt::svec3 dimensions)
-    : file_()
-    , dimensions_(dimensions)
+    : dimensions_(dimensions)
     , filename_(initializer.filename_)
+    , file_()
 {
     size_t numVoxels = tgt::hmul(dimensions);
 
@@ -87,7 +90,30 @@ IdVolumeStorage::IdVolumeStorage(IdVolumeStorageInitializer&& initializer, tgt::
     }
 
     file_.open(openParams);
+    tgtAssert(file_.is_open(), "File is not open");
 }
+static IdVolumeStorageInitializer initializeFromLZ4(const LZ4SliceVolume<IdVolume::Value>& compressedData, std::string filename) {
+    IdVolumeStorageInitializer initializer(filename);
+    for(size_t z = 0; z < compressedData.getNumSlices(); ++z) {
+        auto slice = compressedData.loadSlice(z);
+        initializer.push(slice.voxel(), slice.getNumVoxels());
+    }
+    return initializer;
+}
+IdVolumeStorage::IdVolumeStorage(const LZ4SliceVolume<IdVolume::Value>& compressedData, std::string filename)
+    : IdVolumeStorage(initializeFromLZ4(compressedData, filename), compressedData.getDimensions())
+{
+    tgtAssert(file_.is_open(), "File is not open");
+}
+IdVolumeStorage::IdVolumeStorage(IdVolumeStorage&& other)
+    : dimensions_(other.dimensions_)
+    , filename_(other.filename_)
+    , file_(std::move(other.file_))
+{
+    other.filename_ = "";
+    tgtAssert(file_.is_open(), "File is not open");
+}
+
 IdVolumeStorage::~IdVolumeStorage() {
     file_.close();
     if(!filename_.empty()) {
@@ -111,6 +137,15 @@ IdVolume::Value IdVolumeStorage::get(const tgt::svec3& pos) const {
     return reinterpret_cast<IdVolume::Value*>(file_.data())[index];
 }
 
+VolumeAtomic<IdVolume::Value> IdVolumeStorage::getSlice(size_t z) const {
+    tgtAssert(file_.is_open(), "File is not open");
+    tgtAssert(z < dimensions_.z, "Invalid pos");
+
+    size_t index = toLinearPos(tgt::svec3(0, 0, z), dimensions_);
+
+    return VolumeAtomic<IdVolume::Value>(&reinterpret_cast<IdVolume::Value*>(file_.data())[index], tgt::svec3(dimensions_.xy(), 1), false);
+}
+
 /// IdVolume -------------------------------------------------------------------
 const IdVolume::Value IdVolume::BACKGROUND_VALUE = 0xffffffff;
 const IdVolume::Value IdVolume::UNLABELED_FOREGROUND_VALUE = 0xfffffffe;
@@ -129,6 +164,14 @@ IdVolume::IdVolume(IdVolumeStorageInitializer&& storage, StoredSurface surface, 
     , surfaceFile_(surface)
     , numUnlabeledForegroundVoxels_(numUnlabeledForegroundVoxels)
 {
+    tgtAssert(data_->file_.is_open(), "File is not open");
+}
+IdVolume::IdVolume(IdVolumeStorage&& storage, StoredSurface surface, size_t numUnlabeledForegroundVoxels)
+    : data_(tgt::make_unique<IdVolumeStorage>(std::move(storage)))
+    , surfaceFile_(surface)
+    , numUnlabeledForegroundVoxels_(numUnlabeledForegroundVoxels)
+{
+    tgtAssert(data_->file_.is_open(), "File is not open");
 }
 
 IdVolume::~IdVolume() {
@@ -242,7 +285,7 @@ void IdVolume::floodIteration(size_t& numberOfFloodedVoxels, ProgressReporter& p
     }
     tgtAssert(surface.m<0>().empty() && surface.m<1>().empty() && surface.m<2>().empty(), "Writing surface back unfinished");
 
-    surfaceFile_ = SurfaceBuilder::finalize(std::move(builder));
+    surfaceFile_ = std::move(builder).finalize();
 
     progress.setProgress(static_cast<float>(numberOfFloodedVoxels)/numUnlabeledForegroundVoxels_);
 }

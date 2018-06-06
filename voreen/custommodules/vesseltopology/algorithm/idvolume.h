@@ -52,6 +52,7 @@ public:
     IdVolume(IdVolume&&);
     //IdVolume(IdVolumeInitializationReader& initializationReader);
     IdVolume(IdVolumeStorageInitializer&& storage, StoredSurface surface, tgt::svec3 dimensions, size_t numUnlabeledForegroundVoxels);
+    IdVolume(IdVolumeStorage&& storage, StoredSurface surface, size_t numUnlabeledForegroundVoxels);
     ~IdVolume();
 
     void floodFromLabels(ProgressReporter& progress, size_t maxIt);
@@ -73,16 +74,20 @@ private:
 class IdVolumeStorage {
 public:
     IdVolumeStorage(IdVolumeStorageInitializer&& initializer, tgt::svec3 dimensions);
+    IdVolumeStorage(const LZ4SliceVolume<IdVolume::Value>& compressedData, std::string filename);
+    IdVolumeStorage(IdVolumeStorage&& other);
 
     ~IdVolumeStorage();
 
     void set(const tgt::svec3& pos, IdVolume::Value val);
 
     IdVolume::Value get(const tgt::svec3& pos) const;
+    VolumeAtomic<IdVolume::Value> getSlice(size_t z) const;
 
     tgt::svec3 dimensions_;
     std::string filename_;
 private:
+    friend class IdVolume;
     boost::iostreams::mapped_file file_;
 };
 
@@ -164,6 +169,7 @@ public:
     ~IdVolumeStorageInitializer();
 
     void push(IdVolume::Value val);
+    void push(IdVolume::Value* vals, size_t number_of_vals);
 
     const std::string filename_;
 

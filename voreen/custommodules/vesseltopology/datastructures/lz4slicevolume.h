@@ -99,6 +99,7 @@ public:
     void writeSlice(const VolumeAtomic<Voxel>& slice, size_t sliceNumber);
     LZ4WriteableSlice<Voxel> getWritableSlice(size_t sliceNumber);
 
+    const LZ4SliceVolumeMetadata& getMetaData() const;
     tgt::svec3 getDimensions() const;
     size_t getNumSlices() const;
 
@@ -115,19 +116,19 @@ private:
     std::string filePath_;
 };
 
-/*
+
 template<typename Voxel>
 class LZ4SliceVolumeSliceCacher {
 public:
     LZ4SliceVolumeSliceCacher(LZ4SliceVolume<Voxel>& volume);
 
-    const VolumeAtomic<Voxel>& loadSlice(size_t sliceNumber) const;
+    const VolumeAtomic<Voxel>& getSlice(size_t sliceNumber) const;
 private:
     LZ4SliceVolume<Voxel>& volume_;
-    std::unique_ptr<VolumeAtomic<Voxel>> slice_;
-    size_t sliceNum_;
+    mutable VolumeAtomic<Voxel> slice_;
+    mutable size_t sliceNum_;
 };
-*/
+
 
 template<typename Voxel, uint64_t neighborhoodExtent>
 class LZ4SliceVolumeReader {
@@ -174,6 +175,24 @@ public:
 private:
     LZ4SliceVolume<Voxel> volumeInConstruction_;
     size_t numSlicesPushed_;
+};
+
+template<typename Voxel>
+class LZ4SliceVolumeVoxelBuilder {
+public:
+    LZ4SliceVolumeVoxelBuilder(std::string filePath, LZ4SliceVolumeMetadata metadata);
+    LZ4SliceVolumeVoxelBuilder(LZ4SliceVolumeVoxelBuilder&& other);
+
+    void pushVoxel(Voxel v);
+    void finalizeCurrentSlice();
+
+    LZ4SliceVolume<Voxel> finalize() &&;
+    tgt::svec3 getDimensions() const;
+
+private:
+    LZ4SliceVolumeBuilder<Voxel> builder_;
+    VolumeAtomic<Voxel> currentSlice_;
+    size_t numVoxelsPushed_;
 };
 
 /// LZ4WritableSlice -----------------------------------------------------------
@@ -278,6 +297,11 @@ VolumeAtomic<Voxel> LZ4SliceVolume<Voxel>::loadSlice(size_t sliceNumber) const {
 }
 
 template<typename Voxel>
+const LZ4SliceVolumeMetadata& LZ4SliceVolume<Voxel>::getMetaData() const {
+    return metadata_;
+}
+
+template<typename Voxel>
 void LZ4SliceVolume<Voxel>::writeSlice(const VolumeAtomic<Voxel>& slice, size_t sliceNumber) {
     tgtAssert(slice.getDimensions() == getSliceDimensions(), "Invalid slice dimensions");
     tgtAssert(sliceNumber < getNumSlices(), "Invalid slice number");
@@ -303,6 +327,26 @@ tgt::svec3 LZ4SliceVolume<Voxel>::getDimensions() const {
 }
 
 LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized);
+
+/// LZ4SliceVolumeSliceCacher --------------------------------------------------
+
+template<typename Voxel>
+LZ4SliceVolumeSliceCacher<Voxel>::LZ4SliceVolumeSliceCacher(LZ4SliceVolume<Voxel>& volume)
+    : volume_(volume)
+    , slice_(volume_.loadSlice(0))
+    , sliceNum_(0)
+{
+}
+
+template<typename Voxel>
+const VolumeAtomic<Voxel>& LZ4SliceVolumeSliceCacher<Voxel>::getSlice(size_t sliceNumber) const {
+    if (sliceNum_ != sliceNumber) {
+        sliceNum_ = sliceNumber;
+        slice_ = volume_.loadSlice(sliceNum_);
+    }
+
+    return slice_;
+}
 
 /// LZ4SliceVolumeReader --------------------------------------------------
 
@@ -415,6 +459,7 @@ void LZ4SliceVolumeBuilder<Voxel>::pushSlice(const VolumeAtomic<Voxel>& slice) {
 
 template<typename Voxel>
 LZ4SliceVolume<Voxel> LZ4SliceVolumeBuilder<Voxel>::finalize() && {
+    tgtAssert(numSlicesPushed_ == volumeInConstruction_.getNumSlices(), "Invalid number of slices pushed");
     auto tmp = std::move(*this);
     tmp.volumeInConstruction_.metadata_.save(tmp.volumeInConstruction_.filePath_);
     return std::move(tmp.volumeInConstruction_);
@@ -424,5 +469,52 @@ tgt::svec3 LZ4SliceVolumeBuilder<Voxel>::getDimensions() const {
     return volumeInConstruction_.getDimensions();
 }
 
+
+/// LZ4SliceVolumeVoxelBuilder ------------------------------------------------------
+template<typename Voxel>
+LZ4SliceVolumeVoxelBuilder<Voxel>::LZ4SliceVolumeVoxelBuilder(std::string filePath, LZ4SliceVolumeMetadata metadata)
+    : builder_(filePath, metadata)
+    , currentSlice_(tgt::svec3(metadata.dimensions_.xy(), 1))
+    , numVoxelsPushed_(0)
+{
+}
+
+template<typename Voxel>
+LZ4SliceVolumeVoxelBuilder<Voxel>::LZ4SliceVolumeVoxelBuilder(LZ4SliceVolumeVoxelBuilder&& other)
+    : builder_(std::move(other.builder_))
+    , currentSlice_(std::move(other.currentSlice_))
+    , numVoxelsPushed_(other.numVoxelsPushed_)
+{
+    other.numVoxelsPushed_ = -1;
+}
+
+template<typename Voxel>
+void LZ4SliceVolumeVoxelBuilder<Voxel>::finalizeCurrentSlice() {
+    tgtAssert(numVoxelsPushed_ == currentSlice_.getNumVoxels(), "no many voxels pushed to slice");
+    builder_.pushSlice(currentSlice_);
+    currentSlice_.clear();
+    numVoxelsPushed_ = 0;
+}
+
+template<typename Voxel>
+void LZ4SliceVolumeVoxelBuilder<Voxel>::pushVoxel(Voxel voxel) {
+    tgtAssert(numVoxelsPushed_ <= currentSlice_.getNumVoxels(), "no many voxels pushed to slice");
+    if(numVoxelsPushed_ == currentSlice_.getNumVoxels()) {
+        finalizeCurrentSlice();
+    }
+    currentSlice_.voxel(numVoxelsPushed_) = voxel;
+    ++numVoxelsPushed_;
+}
+
+template<typename Voxel>
+LZ4SliceVolume<Voxel> LZ4SliceVolumeVoxelBuilder<Voxel>::finalize() && {
+    finalizeCurrentSlice();
+    auto tmp = std::move(*this);
+    return std::move(tmp.builder_).finalize();
+}
+template<typename Voxel>
+tgt::svec3 LZ4SliceVolumeVoxelBuilder<Voxel>::getDimensions() const {
+    return builder_.getDimensions();
+}
 
 }
