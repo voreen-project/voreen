@@ -30,6 +30,7 @@
 #include "modules/flowreen/datastructures/streamlinebundle.h"
 
 #include "modules/flowreen/utils/pathlinecreatorbackgroundthread.h"
+#include "modules/flowreen/utils/streamlinebundledetectorbackgroundthread.h"
 
 namespace voreen {
 
@@ -118,6 +119,7 @@ PathlineCreator::PathlineCreator()
     setPropertyGroupGuiName("pathline", "Pathline Settings");
         //streamline bundles
     addProperty(detectPathlineBundlesProp_);
+        detectPathlineBundlesProp_.setReadOnlyFlag(true); // Bundling currently not possible. TODO: implement!
         detectPathlineBundlesProp_.onChange(MemberFunctionCallback<PathlineCreator>(this, &PathlineCreator::generateBundlesHasBeenChanged));
         detectPathlineBundlesProp_.setGroupID("streamlinebundles");
     addProperty(bundleDetectionProgressProp_);
@@ -230,6 +232,24 @@ void PathlineCreator::process() {
     }
     case PATHLINEBUNDLES:
     {
+        // We don't need to calculate the streamlines again, they didn't change.
+        // Thus, we add all old streamlines to our new streamlinelist.
+        for (const Streamline& streamline : streamlineOutport_.getData()->getStreamlines())
+            streamlineListThreadOutput_->addStreamline(streamline);
+
+        // Calculate the noise threshold.
+        size_t minNumStreamlines = static_cast<size_t>(minNumPathlinesPerBundleProp_.get() * streamlineListThreadOutput_->getStreamlines().size() / 100.0f);
+
+        // Create a new thread.
+        /*
+        backgroundThread_ = new StreamlineBundleDetectorBackgroundThread(
+            this,
+            streamlineListThreadOutput_,
+            maxAverageDistanceThresholdProp_.get(),
+            minNumStreamlines,
+            resampleSizeProp_.get()
+        );
+        */
         break;
     }
     default:
