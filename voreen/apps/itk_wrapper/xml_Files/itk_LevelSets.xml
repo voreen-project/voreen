@@ -1,0 +1,151 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_LevelSets" group="Segmentation">
+    <filterlist>
+      <filter name="CurvesLevelSetImageFilter" codeState ="TESTING">
+        <inports>
+          <port name="InputImage">             
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+	  </port>
+          <port name="FeatureImage" nameIsSetter="true">             
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+	  </port>
+        </inports>
+        <outports>
+          <port name="OutputImage" filterTemplate="false"/>
+        </outports>
+        <arguments>
+          <argument name="PropagationScaling" argumenttype="Float" defaultValue="2.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="CurvatureScaling" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="AdvectionScaling" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="MaximumRMSError" argumenttype="Float" defaultValue="0.02f" minValue="0.0f" maxValue="1.0f"/>
+          <argument name="NumberOfIterations" argumenttype="Int" defaultValue="800" minValue="1" maxValue="10000"/>
+        </arguments>
+      </filter>
+      <filter name="GeodesicActiveContourLevelSetImageFilter" codeState ="TESTING">
+        <inports>
+          <port name="InputImage">             
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+          </port>
+          <port name="FeatureImage" nameIsSetter="true">             
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+	  </port>
+        </inports>
+        <outports>
+          <port name="OutputImage" filterTemplate="false"/>
+        </outports>
+        <arguments>
+          <argument name="PropagationScaling" argumenttype="Float" defaultValue="2.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="CurvatureScaling" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="AdvectionScaling" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="MaximumRMSError" argumenttype="Float" defaultValue="0.02f" minValue="0.0f" maxValue="1.0f"/>
+          <argument name="NumberOfIterations" argumenttype="Int" defaultValue="800" minValue="1" maxValue="10000"/>
+        </arguments>
+      </filter>
+      <filter name="GeodesicActiveContourShapePriorLevelSetImageFilter" codeState ="TESTING">
+        <inports>
+          <port name="InputImage">             
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+	  </port>
+          <port name="FeatureImage" nameIsSetter="true">             
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+	  </port>
+        </inports>
+        <outports>
+          <port name="OutputImage" filterTemplate="false"/>
+        </outports>
+        <arguments>
+          <argument name="PropagationScaling" argumenttype="Float" defaultValue="2.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="CurvatureScaling" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="AdvectionScaling" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="MaximumRMSError" argumenttype="Float" defaultValue="0.02f" minValue="0.0f" maxValue="1.0f"/>
+          <argument name="NumberOfIterations" argumenttype="Int" defaultValue="800" minValue="1" maxValue="10000"/>
+        </arguments>
+      </filter>
+      <filter name="NarrowBandCurvesLevelSetImageFilter">
+        <inports>
+          <port name="InputImage">             
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+	  </port>
+          <port name="FeatureImage" nameIsSetter="true">             
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+	  </port>
+        </inports>
+        <outports>
+          <port name="OutputImage" filterTemplate="false"/>
+        </outports>
+        <arguments>
+          <argument name="PropagationScaling" argumenttype="Float" defaultValue="2.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="CurvatureScaling" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="AdvectionScaling" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="MaximumRMSError" argumenttype="Float" defaultValue="0.02f" minValue="0.0f" maxValue="1.0f"/>
+          <argument name="NumberOfIterations" argumenttype="Int" defaultValue="800" minValue="1" maxValue="10000"/>
+        </arguments>
+      </filter>
+      <filter name="NarrowBandThresholdSegmentationLevelSetImageFilter" codeState ="TESTING">
+        <inports>
+          <port name="InputImage">             
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+	  </port>
+          <port name="FeatureImage" nameIsSetter="true">             
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+	  </port>
+        </inports>
+        <outports>
+          <port name="OutputImage" filterTemplate="false"/>
+        </outports>
+        <arguments>
+          <argument name="PropagationScaling" argumenttype="Float" defaultValue="2.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="CurvatureScaling" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="AdvectionScaling" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="MaximumRMSError" argumenttype="Float" defaultValue="0.02f" minValue="0.0f" maxValue="1.0f"/>
+          <argument name="NumberOfIterations" argumenttype="Int" defaultValue="800" minValue="1" maxValue="10000"/>
+        </arguments>
+      </filter>
+      <filter name="ShapeDetectionLevelSetImageFilter" codeState ="TESTING">
+        <inports>
+          <port name="InputImage">             
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+          </port>
+          <port name="FeatureImage" nameIsSetter="true">             
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+	  </port>
+        </inports>
+        <outports>
+          <port name="OutputImage" filterTemplate="false"/>
+        </outports>
+        <arguments>
+          <argument name="PropagationScaling" argumenttype="Float" defaultValue="2.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="CurvatureScaling" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="AdvectionScaling" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="100.0f"/>
+          <argument name="MaximumRMSError" argumenttype="Float" defaultValue="0.02f" minValue="0.0f" maxValue="1.0f"/>
+          <argument name="NumberOfIterations" argumenttype="Int" defaultValue="800" minValue="1" maxValue="10000"/>
+        </arguments>
+      </filter>
+    </filterlist>
+  </ITK_Module>
+</VoreenData>

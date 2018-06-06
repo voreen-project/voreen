@@ -1,0 +1,120 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" GlobalDescription="">
+        <ProcessorNetwork version="11">
+            <MetaData>
+                <MetaItem name="ProcessorSelection" type="SelectionMetaData::Processor">
+                    <values>
+                        <item type="VolumeSelector" ref="ref1" />
+                        <item type="VolumeSelector" ref="ref2" />
+                        <item type="VolumeCollectionSource" ref="ref0" />
+                    </values>
+                </MetaItem>
+            </MetaData>
+            <Processors>
+                <Processor type="VolumeCollectionSource" name="VolumeCollectionSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-731" y="-321" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="volumeURLList">
+                            <VolumeURLs>
+                                <url value="input/walnut_uint8.vvd" />
+                                <url value="input/engine.vvd" />
+                                <url value="input/nucleon.vvd" />
+                                <url value="input/walnut_uint16.vvd" />
+                            </VolumeURLs>
+                            <Selection>
+                                <entry url="input/engine.vvd" value="false" />
+                                <entry url="input/nucleon.vvd" value="true" />
+                                <entry url="input/walnut_uint16.vvd" value="false" />
+                                <entry url="input/walnut_uint8.vvd" value="true" />
+                            </Selection>
+                        </Property>
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSelector" name="VolumeSelector" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-781" y="-216" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="volumeID" value="0" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSelector" name="VolumeSelector 2" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-631" y="-216" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="volumeID" value="1" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSave" name="VolumeSave" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-772" y="-123" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="continousSave" value="false" />
+                        <Property name="outputFilename" value="output/walnut_uint8.vvd" />
+                        <Property name="save" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSave" name="VolumeSave 2" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-620" y="-123" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="continousSave" value="false" />
+                        <Property name="outputFilename" value="output/nucleon.vvd" />
+                        <Property name="save" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="volumecollection">
+                        <Processor type="VolumeCollectionSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="volumecollection">
+                        <Processor type="VolumeSelector" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumecollection">
+                        <Processor type="VolumeCollectionSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="volumecollection">
+                        <Processor type="VolumeSelector" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSelector" ref="ref1" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeSave" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSelector" ref="ref2" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeSave" ref="ref4" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+            <PropertyStateCollections />
+            <PropertyStateFileReferences />
+            <PropertyStateDirectoryReferences />
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

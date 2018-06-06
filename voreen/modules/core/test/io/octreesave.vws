@@ -1,0 +1,967 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false">
+        <ProcessorNetwork version="17">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="OctreeSave" ref="ref19" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="Zoom" type="ZoomMetaData">
+                    <transform.row0 x="0.8929131031036377" y="0" z="0" />
+                    <transform.row1 x="0" y="0.8929131031036377" z="0" />
+                    <transform.row2 x="242" y="347" z="1" />
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-505.16339111" y="122.00980377" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.46717557" />
+                <MetaItem name="autoLinkCameras" type="BoolMetaData" value="false" />
+            </MetaData>
+            <Processors>
+                <Processor type="VolumeSource" name="Channel 1" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-989" y="-490" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_medium.vvd" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="Channel 2" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-876" y="-490" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_medium.vvd" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="Channel 3" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-762" y="-489" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_medium.vvd" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="OctreeCreator" name="Octree Creation" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-839" y="-261" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="autogenerateOctree" name="autogenerateOctree" value="true" />
+                        <Property mapKey="brickDimensions" name="brickDimensions" value="treeDepth" />
+                        <Property mapKey="brickPoolManager" name="brickPoolManager" value="brickPoolManagerDisk" />
+                        <Property mapKey="clearOctree" name="clearOctree" />
+                        <Property mapKey="generateOctree" name="generateOctree" guiName="Load Octree" />
+                        <Property mapKey="homogeneityThreshold" name="homogeneityThreshold" value="0.01" tracking="false" />
+                        <Property mapKey="numThreads" name="numThreads" value="8" />
+                        <Property mapKey="progressProperty" name="progressProperty" />
+                        <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
+                        <Property mapKey="statusProperty" name="statusProperty" value="Octree loaded from cache." />
+                        <Property mapKey="treeDepth" name="treeDepth" value="7" tracking="false" />
+                        <Property mapKey="useRelativeThreshold" name="useRelativeThreshold" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumeInput" direction="1" portID="volumeInput" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="volumeInput2" direction="1" portID="volumeInput2" guiName="Volume Input 2" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="volumeInput3" direction="1" portID="volumeInput3" guiName="Volume Input 3" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="volumeInput4" direction="1" portID="volumeInput4" guiName="Volume Input 4" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="volumeOutport" direction="0" portID="volumeOutport" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="VolumeSource" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-109" y="-492" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_medium.vvd" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="OctreeCreator" name="OctreeCreator" id="ref6">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-338" y="-259" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="autogenerateOctree" name="autogenerateOctree" value="true" />
+                        <Property mapKey="brickDimensions" name="brickDimensions" value="treeDepth" />
+                        <Property mapKey="brickPoolManager" name="brickPoolManager" value="brickPoolManagerDisk" />
+                        <Property mapKey="clearOctree" name="clearOctree" />
+                        <Property mapKey="generateOctree" name="generateOctree" guiName="Load Octree" />
+                        <Property mapKey="homogeneityThreshold" name="homogeneityThreshold" value="0.01" tracking="false" />
+                        <Property mapKey="numThreads" name="numThreads" value="8" />
+                        <Property mapKey="progressProperty" name="progressProperty" />
+                        <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
+                        <Property mapKey="statusProperty" name="statusProperty" value="Octree loaded from cache." />
+                        <Property mapKey="treeDepth" name="treeDepth" value="7" tracking="false" />
+                        <Property mapKey="useRelativeThreshold" name="useRelativeThreshold" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumeInput" direction="1" portID="volumeInput" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="volumeInput2" direction="1" portID="volumeInput2" guiName="Volume Input 2" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="volumeInput3" direction="1" portID="volumeInput3" guiName="Volume Input 3" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="volumeInput4" direction="1" portID="volumeInput4" guiName="Volume Input 4" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="volumeOutport" direction="0" portID="volumeOutport" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="VolumeSource 2" id="ref8">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-254" y="-491" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_medium.vvd" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="VolumeSource 3" id="ref9">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-396" y="-499" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_medium.vvd" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="VolumeSource 4" id="ref10">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-531" y="-494" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_medium.vvd" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="VolumeSource 5" id="ref11">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="63" y="-499" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_medium.vvd" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="OctreeCreator" name="OctreeCreator 2" id="ref12">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="181" y="-257" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="autogenerateOctree" name="autogenerateOctree" value="true" />
+                        <Property mapKey="brickDimensions" name="brickDimensions" value="treeDepth" />
+                        <Property mapKey="brickPoolManager" name="brickPoolManager" value="brickPoolManagerDisk" />
+                        <Property mapKey="clearOctree" name="clearOctree" />
+                        <Property mapKey="generateOctree" name="generateOctree" guiName="Load Octree" />
+                        <Property mapKey="homogeneityThreshold" name="homogeneityThreshold" value="0.01" tracking="false" />
+                        <Property mapKey="numThreads" name="numThreads" value="8" />
+                        <Property mapKey="progressProperty" name="progressProperty" />
+                        <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
+                        <Property mapKey="statusProperty" name="statusProperty" value="Octree loaded from cache." />
+                        <Property mapKey="treeDepth" name="treeDepth" value="7" tracking="false" />
+                        <Property mapKey="useRelativeThreshold" name="useRelativeThreshold" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumeInput" direction="1" portID="volumeInput" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="volumeInput2" direction="1" portID="volumeInput2" guiName="Volume Input 2" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="volumeInput3" direction="1" portID="volumeInput3" guiName="Volume Input 3" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="volumeInput4" direction="1" portID="volumeInput4" guiName="Volume Input 4" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="volumeOutport" direction="0" portID="volumeOutport" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="VolumeSource 7" id="ref14">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="277" y="-495" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_medium.vvd" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="VolumeSource 9" id="ref15">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="816" y="-494" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_medium.vvd" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="VolumeSource 11" id="ref17">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="657" y="-491" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_medium.vvd" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="VolumeSource 12" id="ref18">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="493" y="-495" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_medium.vvd" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="OctreeCreator" name="OctreeCreator 3" id="ref16">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="686" y="-262" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="autogenerateOctree" name="autogenerateOctree" value="true" />
+                        <Property mapKey="brickDimensions" name="brickDimensions" value="treeDepth" />
+                        <Property mapKey="brickPoolManager" name="brickPoolManager" value="brickPoolManagerDisk" />
+                        <Property mapKey="clearOctree" name="clearOctree" />
+                        <Property mapKey="generateOctree" name="generateOctree" guiName="Load Octree" />
+                        <Property mapKey="homogeneityThreshold" name="homogeneityThreshold" value="0.01" tracking="false" />
+                        <Property mapKey="numThreads" name="numThreads" value="8" />
+                        <Property mapKey="progressProperty" name="progressProperty" />
+                        <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
+                        <Property mapKey="statusProperty" name="statusProperty" value="Octree loaded from cache." />
+                        <Property mapKey="treeDepth" name="treeDepth" value="7" tracking="false" />
+                        <Property mapKey="useRelativeThreshold" name="useRelativeThreshold" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumeInput" direction="1" portID="volumeInput" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="volumeInput2" direction="1" portID="volumeInput2" guiName="Volume Input 2" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="volumeInput3" direction="1" portID="volumeInput3" guiName="Volume Input 3" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="volumeInput4" direction="1" portID="volumeInput4" guiName="Volume Input 4" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="volumeOutport" direction="0" portID="volumeOutport" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="OctreeSave" name="OctreeSave" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-808" y="-132" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="applyChannelShift" name="applyChannelShift" value="false" />
+                        <Property mapKey="channelShift0" name="channelShift0">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="channelShift1" name="channelShift1">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="channelShift2" name="channelShift2">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="channelShift3" name="channelShift3">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="chunkSize" name="chunkSize">
+                            <value x="128" y="96" z="1" />
+                        </Property>
+                        <Property mapKey="clipRegion">
+                            <bounds.llf x="0" y="0" z="0" />
+                            <bounds.urb x="127" y="95" z="113" />
+                            <minValue x="0" y="0" z="0" />
+                            <maxValue x="127" y="95" z="113" />
+                            <minRange x="0" y="0" z="0" />
+                            <maxRange x="2147483647" y="2147483647" z="2147483647" />
+                            <stepping x="1" y="1" z="1" />
+                        </Property>
+                        <Property mapKey="compressionLevel_" name="compressionLevel_" value="1" />
+                        <Property mapKey="defaultValue" name="defaultValue" value="0" />
+                        <Property mapKey="enableClipping" name="enableClipping" value="false" />
+                        <Property mapKey="enableCompression" name="enableCompression" value="false" />
+                        <Property mapKey="enableShuffling" name="enableShuffling" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/threechannels_clean.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/threechannels_clean.vvd" />
+                                    <item value="/data/dominik/git/voreen-testdata/voreen-testdata/output/threechannels_clean.vvd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="outputFormat" name="outputFormat" value="vvd" />
+                        <Property mapKey="outputProp" name="outputProp" value="3C * 1400832V = 8 MB" />
+                        <Property mapKey="progress" name="progress" />
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="OctreeSave" name="OctreeSave 2" id="ref7">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-334" y="-133" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="applyChannelShift" name="applyChannelShift" value="false" />
+                        <Property mapKey="channelShift0" name="channelShift0">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="channelShift1" name="channelShift1">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="channelShift2" name="channelShift2">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="channelShift3" name="channelShift3">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="chunkSize" name="chunkSize">
+                            <value x="89" y="63" z="1" />
+                        </Property>
+                        <Property mapKey="clipRegion">
+                            <bounds.llf x="22" y="23" z="32" />
+                            <bounds.urb x="110" y="85" z="91" />
+                            <minValue x="0" y="0" z="0" />
+                            <maxValue x="127" y="95" z="113" />
+                            <minRange x="0" y="0" z="0" />
+                            <maxRange x="2147483647" y="2147483647" z="2147483647" />
+                            <stepping x="1" y="1" z="1" />
+                        </Property>
+                        <Property mapKey="compressionLevel_" name="compressionLevel_" value="1" />
+                        <Property mapKey="defaultValue" name="defaultValue" value="0" />
+                        <Property mapKey="enableClipping" name="enableClipping" value="true" />
+                        <Property mapKey="enableCompression" name="enableCompression" value="false" />
+                        <Property mapKey="enableShuffling" name="enableShuffling" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/fourchannels_clipped.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/fourchannels_clipped.vvd" />
+                                    <item value="/data/dominik/git/voreen-testdata/voreen-testdata/output/fourchannels_clipped.vvd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="outputFormat" name="outputFormat" value="vvd" />
+                        <Property mapKey="outputProp" name="outputProp" value="4C * 336420V = 2.6 MB" />
+                        <Property mapKey="progress" name="progress" />
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="OctreeSave" name="OctreeSave 3" id="ref13">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="177" y="-128" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="applyChannelShift" name="applyChannelShift" value="true" />
+                        <Property mapKey="channelShift0" name="channelShift0">
+                            <value x="-3" y="8" z="-9" />
+                        </Property>
+                        <Property mapKey="channelShift1" name="channelShift1">
+                            <value x="8" y="-6" z="3" />
+                        </Property>
+                        <Property mapKey="channelShift2" name="channelShift2">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="channelShift3" name="channelShift3">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="chunkSize" name="chunkSize">
+                            <value x="128" y="96" z="1" />
+                        </Property>
+                        <Property mapKey="clipRegion">
+                            <bounds.llf x="0" y="0" z="0" />
+                            <bounds.urb x="127" y="95" z="113" />
+                            <minValue x="0" y="0" z="0" />
+                            <maxValue x="127" y="95" z="113" />
+                            <minRange x="0" y="0" z="0" />
+                            <maxRange x="2147483647" y="2147483647" z="2147483647" />
+                            <stepping x="1" y="1" z="1" />
+                        </Property>
+                        <Property mapKey="compressionLevel_" name="compressionLevel_" value="1" />
+                        <Property mapKey="defaultValue" name="defaultValue" value="0" />
+                        <Property mapKey="enableClipping" name="enableClipping" value="false" />
+                        <Property mapKey="enableCompression" name="enableCompression" value="false" />
+                        <Property mapKey="enableShuffling" name="enableShuffling" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/twochannels_shifted.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/twochannels_shifted.vvd" />
+                                    <item value="/data/dominik/git/voreen-testdata/voreen-testdata/output/twochannels_shifted.vvd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="outputFormat" name="outputFormat" value="vvd" />
+                        <Property mapKey="outputProp" name="outputProp" value="2C * 1400832V = 5.3 MB" />
+                        <Property mapKey="progress" name="progress" />
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="OctreeSave" name="OctreeSave 4" id="ref19">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="680" y="-124" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="applyChannelShift" name="applyChannelShift" value="true" />
+                        <Property mapKey="channelShift0" name="channelShift0">
+                            <value x="6" y="-3" z="8" />
+                        </Property>
+                        <Property mapKey="channelShift1" name="channelShift1">
+                            <value x="-5" y="12" z="-10" />
+                        </Property>
+                        <Property mapKey="channelShift2" name="channelShift2">
+                            <value x="10" y="-10" z="12" />
+                        </Property>
+                        <Property mapKey="channelShift3" name="channelShift3">
+                            <value x="-4" y="5" z="-12" />
+                        </Property>
+                        <Property mapKey="chunkSize" name="chunkSize">
+                            <value x="87" y="59" z="1" />
+                        </Property>
+                        <Property mapKey="clipRegion">
+                            <bounds.llf x="26" y="14" z="26" />
+                            <bounds.urb x="112" y="72" z="73" />
+                            <minValue x="0" y="0" z="0" />
+                            <maxValue x="127" y="95" z="113" />
+                            <minRange x="0" y="0" z="0" />
+                            <maxRange x="2147483647" y="2147483647" z="2147483647" />
+                            <stepping x="1" y="1" z="1" />
+                        </Property>
+                        <Property mapKey="compressionLevel_" name="compressionLevel_" value="1" />
+                        <Property mapKey="defaultValue" name="defaultValue" value="0" />
+                        <Property mapKey="enableClipping" name="enableClipping" value="true" />
+                        <Property mapKey="enableCompression" name="enableCompression" value="false" />
+                        <Property mapKey="enableShuffling" name="enableShuffling" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/threechannels_clipped_shifted.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/threechannels_clipped_shifted.vvd" />
+                                    <item value="/data/dominik/git/voreen-testdata/voreen-testdata/output/threechannels_clipped_shifted.vvd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="outputFormat" name="outputFormat" value="vvd" />
+                        <Property mapKey="outputProp" name="outputProp" value="3C * 246384V = 1.4 MB" />
+                        <Property mapKey="progress" name="progress" />
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="volumeInput">
+                        <Processor type="OctreeCreator" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref2" />
+                    </Outport>
+                    <Inport name="volumeInput2">
+                        <Processor type="OctreeCreator" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref3" />
+                    </Outport>
+                    <Inport name="volumeInput3">
+                        <Processor type="OctreeCreator" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumeOutport">
+                        <Processor type="OctreeCreator" ref="ref1" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="OctreeSave" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref5" />
+                    </Outport>
+                    <Inport name="volumeInput4">
+                        <Processor type="OctreeCreator" ref="ref6" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumeOutport">
+                        <Processor type="OctreeCreator" ref="ref6" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="OctreeSave" ref="ref7" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref8" />
+                    </Outport>
+                    <Inport name="volumeInput3">
+                        <Processor type="OctreeCreator" ref="ref6" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref9" />
+                    </Outport>
+                    <Inport name="volumeInput2">
+                        <Processor type="OctreeCreator" ref="ref6" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref10" />
+                    </Outport>
+                    <Inport name="volumeInput">
+                        <Processor type="OctreeCreator" ref="ref6" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref11" />
+                    </Outport>
+                    <Inport name="volumeInput">
+                        <Processor type="OctreeCreator" ref="ref12" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumeOutport">
+                        <Processor type="OctreeCreator" ref="ref12" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="OctreeSave" ref="ref13" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref14" />
+                    </Outport>
+                    <Inport name="volumeInput2">
+                        <Processor type="OctreeCreator" ref="ref12" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref15" />
+                    </Outport>
+                    <Inport name="volumeInput3">
+                        <Processor type="OctreeCreator" ref="ref16" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref17" />
+                    </Outport>
+                    <Inport name="volumeInput2">
+                        <Processor type="OctreeCreator" ref="ref16" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref18" />
+                    </Outport>
+                    <Inport name="volumeInput">
+                        <Processor type="OctreeCreator" ref="ref16" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumeOutport">
+                        <Processor type="OctreeCreator" ref="ref16" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="OctreeSave" ref="ref19" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups>
+                <item value="Data Input" />
+                <item value="3D Rendering" />
+                <item value="2D Slice Views" />
+                <item value="2D Point Highlighting" />
+                <item value="Axis-aligned Clipping" />
+                <item value="Clipping Plane 1" />
+                <item value="Clipping Plane 2" />
+                <item value="Clipping Plane 3" />
+                <item value="Voxel Spacing Correction" />
+                <item value="Channel Shift Correction" />
+                <item value="Save Clipped Volume" />
+                <item value="Save Octree to Disk" />
+                <item value="3D Color Map Animation" />
+                <item value="2D Color Map Animation" />
+            </PropertyGroups>
+            <GroupMembership>
+                <value key="Channel 1.volumeInfo">
+                    <First value="Data Input" />
+                    <Second value="1" />
+                </value>
+                <value key="Channel 1.volumeURL">
+                    <First value="Data Input" />
+                    <Second value="0" />
+                </value>
+                <value key="Channel 2.volumeInfo">
+                    <First value="Data Input" />
+                    <Second value="3" />
+                </value>
+                <value key="Channel 2.volumeURL">
+                    <First value="Data Input" />
+                    <Second value="2" />
+                </value>
+                <value key="Channel 3.volumeInfo">
+                    <First value="Data Input" />
+                    <Second value="5" />
+                </value>
+                <value key="Channel 3.volumeURL">
+                    <First value="Data Input" />
+                    <Second value="4" />
+                </value>
+                <value key="Octree Creation.generateOctree">
+                    <First value="Data Input" />
+                    <Second value="10" />
+                </value>
+                <value key="Octree Creation.progressProperty">
+                    <First value="Data Input" />
+                    <Second value="12" />
+                </value>
+                <value key="Octree Creation.statusProperty">
+                    <First value="Data Input" />
+                    <Second value="11" />
+                </value>
+            </GroupMembership>
+            <MenuEntityVisibility>
+                <value key="Animation" value="true" />
+                <value key="Open Workspace..." value="true" />
+                <value key="Properties" value="true" />
+                <value key="Save Workspace" value="true" />
+                <value key="Save Workspace As..." value="true" />
+                <value key="Screenshot" value="true" />
+                <value key="Workspace Description" value="true" />
+            </MenuEntityVisibility>
+        </ApplicationModeConfig>
+        <GlobalDescription>
+            <![CDATA[<h4>Ultramicroscopy Workspace</h4> <p>This workspace allows to visualize large multi-channel volume data sets.</p>
+<p>The input data may contain up to four data channels. The color map for each channel can be specified separately for the 3D rendering and the 2D slice views.</p>
+<p>The workspace supports both axis-aligned clipping as well as up to three arbitrarily oriented clipping planes for the 3D view.</p>
+<p>Additional features include the highlighting of up to four points of interest in the data set, voxel space correction, and a channel shift correction to remove chromatic aberrations in microscopy data.</p>
+<p>When saving a volume, both the axis-aligned clipping parameters as well as the channel shift correction are taken into account, so that loading a reduced volume (which does not need the application of a channel shift correction anymore) might significantly speed up the rendering. (Please note that currently only saving the volume as a VVD-file does incorporate  the clipping and channel shift settings, while saving the volume as an octree does not.)</p>
+]]>
+        </GlobalDescription>
+    </Workspace>
+</VoreenData>

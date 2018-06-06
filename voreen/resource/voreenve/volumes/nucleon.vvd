@@ -1,0 +1,292 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Volumes>
+        <Volume>
+            <RawData filename="nucleon.raw" format="uint8" x="41" y="41" z="41" />
+            <MetaData>
+                <MetaItem name="Offset" type="Vec3MetaData">
+                    <value x="-0.99999994" y="-0.99999994" z="-0.99999994" />
+                </MetaItem>
+                <MetaItem name="Spacing" type="Vec3MetaData">
+                    <value x="0.04878049" y="0.04878049" z="0.04878049" />
+                </MetaItem>
+            </MetaData>
+            <DerivedData>
+                <DerivedItem type="VolumeHash" hash="ea067b385174c7d99fa0e5c7db318fe0" />
+                <DerivedItem type="VolumeMinMax" min="0" max="0.97647059" minNorm="0" maxNorm="0.97647059" />
+                <DerivedItem>
+                    <histogram>
+                        <minValues>
+                            <item value="0" />
+                        </minValues>
+                        <maxValues>
+                            <item value="0.97647059" />
+                        </maxValues>
+                        <bucketCounts>
+                            <item value="256" />
+                        </bucketCounts>
+                        <buckets>
+                            <item value="12612" />
+                            <item value="5020" />
+                            <item value="3452" />
+                            <item value="2588" />
+                            <item value="2200" />
+                            <item value="1876" />
+                            <item value="1649" />
+                            <item value="1492" />
+                            <item value="1316" />
+                            <item value="1204" />
+                            <item value="1031" />
+                            <item value="1084" />
+                            <item value="893" />
+                            <item value="849" />
+                            <item value="652" />
+                            <item value="712" />
+                            <item value="801" />
+                            <item value="536" />
+                            <item value="656" />
+                            <item value="520" />
+                            <item value="501" />
+                            <item value="520" />
+                            <item value="524" />
+                            <item value="461" />
+                            <item value="361" />
+                            <item value="392" />
+                            <item value="484" />
+                            <item value="408" />
+                            <item value="397" />
+                            <item value="325" />
+                            <item value="380" />
+                            <item value="256" />
+                            <item value="337" />
+                            <item value="345" />
+                            <item value="268" />
+                            <item value="272" />
+                            <item value="0" />
+                            <item value="317" />
+                            <item value="292" />
+                            <item value="328" />
+                            <item value="280" />
+                            <item value="204" />
+                            <item value="260" />
+                            <item value="256" />
+                            <item value="216" />
+                            <item value="164" />
+                            <item value="244" />
+                            <item value="236" />
+                            <item value="224" />
+                            <item value="268" />
+                            <item value="228" />
+                            <item value="174" />
+                            <item value="213" />
+                            <item value="188" />
+                            <item value="232" />
+                            <item value="144" />
+                            <item value="128" />
+                            <item value="184" />
+                            <item value="168" />
+                            <item value="196" />
+                            <item value="244" />
+                            <item value="140" />
+                            <item value="200" />
+                            <item value="128" />
+                            <item value="185" />
+                            <item value="105" />
+                            <item value="144" />
+                            <item value="180" />
+                            <item value="120" />
+                            <item value="184" />
+                            <item value="173" />
+                            <item value="141" />
+                            <item value="160" />
+                            <item value="0" />
+                            <item value="200" />
+                            <item value="133" />
+                            <item value="116" />
+                            <item value="68" />
+                            <item value="200" />
+                            <item value="128" />
+                            <item value="136" />
+                            <item value="96" />
+                            <item value="84" />
+                            <item value="120" />
+                            <item value="116" />
+                            <item value="188" />
+                            <item value="76" />
+                            <item value="157" />
+                            <item value="144" />
+                            <item value="128" />
+                            <item value="132" />
+                            <item value="84" />
+                            <item value="145" />
+                            <item value="92" />
+                            <item value="116" />
+                            <item value="100" />
+                            <item value="176" />
+                            <item value="108" />
+                            <item value="109" />
+                            <item value="112" />
+                            <item value="109" />
+                            <item value="80" />
+                            <item value="88" />
+                            <item value="76" />
+                            <item value="144" />
+                            <item value="101" />
+                            <item value="80" />
+                            <item value="120" />
+                            <item value="92" />
+                            <item value="0" />
+                            <item value="128" />
+                            <item value="144" />
+                            <item value="92" />
+                            <item value="69" />
+                            <item value="88" />
+                            <item value="100" />
+                            <item value="97" />
+                            <item value="108" />
+                            <item value="124" />
+                            <item value="144" />
+                            <item value="88" />
+                            <item value="68" />
+                            <item value="96" />
+                            <item value="112" />
+                            <item value="40" />
+                            <item value="100" />
+                            <item value="88" />
+                            <item value="76" />
+                            <item value="88" />
+                            <item value="68" />
+                            <item value="145" />
+                            <item value="60" />
+                            <item value="44" />
+                            <item value="144" />
+                            <item value="76" />
+                            <item value="65" />
+                            <item value="100" />
+                            <item value="108" />
+                            <item value="120" />
+                            <item value="68" />
+                            <item value="113" />
+                            <item value="108" />
+                            <item value="88" />
+                            <item value="96" />
+                            <item value="124" />
+                            <item value="72" />
+                            <item value="0" />
+                            <item value="96" />
+                            <item value="60" />
+                            <item value="68" />
+                            <item value="84" />
+                            <item value="84" />
+                            <item value="64" />
+                            <item value="80" />
+                            <item value="92" />
+                            <item value="81" />
+                            <item value="72" />
+                            <item value="92" />
+                            <item value="112" />
+                            <item value="116" />
+                            <item value="64" />
+                            <item value="76" />
+                            <item value="112" />
+                            <item value="41" />
+                            <item value="121" />
+                            <item value="109" />
+                            <item value="120" />
+                            <item value="108" />
+                            <item value="88" />
+                            <item value="76" />
+                            <item value="48" />
+                            <item value="108" />
+                            <item value="76" />
+                            <item value="112" />
+                            <item value="108" />
+                            <item value="92" />
+                            <item value="72" />
+                            <item value="100" />
+                            <item value="136" />
+                            <item value="108" />
+                            <item value="96" />
+                            <item value="85" />
+                            <item value="0" />
+                            <item value="108" />
+                            <item value="101" />
+                            <item value="160" />
+                            <item value="116" />
+                            <item value="124" />
+                            <item value="108" />
+                            <item value="112" />
+                            <item value="164" />
+                            <item value="164" />
+                            <item value="161" />
+                            <item value="220" />
+                            <item value="269" />
+                            <item value="260" />
+                            <item value="240" />
+                            <item value="220" />
+                            <item value="56" />
+                            <item value="44" />
+                            <item value="20" />
+                            <item value="24" />
+                            <item value="48" />
+                            <item value="52" />
+                            <item value="24" />
+                            <item value="32" />
+                            <item value="0" />
+                            <item value="12" />
+                            <item value="20" />
+                            <item value="16" />
+                            <item value="20" />
+                            <item value="32" />
+                            <item value="20" />
+                            <item value="24" />
+                            <item value="16" />
+                            <item value="40" />
+                            <item value="24" />
+                            <item value="44" />
+                            <item value="32" />
+                            <item value="0" />
+                            <item value="0" />
+                            <item value="4" />
+                            <item value="8" />
+                            <item value="12" />
+                            <item value="12" />
+                            <item value="4" />
+                            <item value="4" />
+                            <item value="24" />
+                            <item value="24" />
+                            <item value="8" />
+                            <item value="12" />
+                            <item value="24" />
+                            <item value="8" />
+                            <item value="8" />
+                            <item value="8" />
+                            <item value="24" />
+                            <item value="12" />
+                            <item value="4" />
+                            <item value="16" />
+                            <item value="28" />
+                            <item value="16" />
+                            <item value="24" />
+                            <item value="8" />
+                            <item value="12" />
+                            <item value="12" />
+                            <item value="0" />
+                            <item value="12" />
+                            <item value="0" />
+                            <item value="0" />
+                            <item value="12" />
+                            <item value="8" />
+                            <item value="4" />
+                            <item value="16" />
+                            <item value="28" />
+                            <item value="16" />
+                            <item value="0" />
+                        </buckets>
+                    </histogram>
+                </DerivedItem>
+                <DerivedItem type="VolumePreview" height="64" prevData="AAAAAAILDg4ODxMWFxkbHiAjJScpKy0vMTM0NDU3Nzc3NjQ0MzIwLiwqKCYkIR8cGhgWFREODg4NBwAAAAAAAAAAAAMFCw4PDxAUFxgaHB8iJCYpKy0vMTM1Njc3OTk5OTg3NzU0MjAuLConJSMgHhsZFxUSDw8ODQgEAQAAAAAAAAAHDA0QExMUGBodHyEkJyosMDI0Nzk8PkBBQUJCQkJCQUA+PDo4NTMxLisoJSMgHhsZFhMTEQ4NCgIAAAAAAAMHCw4QEhQWGBseISQnKi0wNDc6PUBDRUdJS0xMTU1MTEtKSEZEQT47OTUyLisoJSMgHBkWFRMRDwwJBQAAAAIFDA4OExQVGBseIiYoLC8zNzw/QkZJTE9RU1VWV1dYV1ZVVFJQTUpHREA9OTUxLSknJB8cGRYUFBAODgkCAQILCw0QExUXGBwgIyYrLzM3PEBESU1QVFdaXV9hY2RkZGRjYmBeXFlVUk5LRkI+OTUxLSgkIR4aFxYUEQ4MCgQIDg4QEhUYGhwhJSgsMTY7P0VJTlNXW19jZmlsbnBxcXFxcG9tamhkYV1ZVVBLR0E9ODMuKSYjHhsZFhQQDw0ICw4PExUXGx8hJiotMjc9QkdNU1hdYmdrb3N2eXt9fn9/fn18end0cW1pZF9aVU9KRD86NC8rJyMgHRkWFBEODQ4SEhQWGR4iJiouNDo/RUtRV11jaW5zeHyAhIeJi4yNjY2MioiFgn56dXBrZWBZU01IQjw2MSsnJCAbFxQTEQ4OFBQVGBwhJiouNDpBR01UWmFobnR6gIWJjpKVl5mbm5ubmpiWk5CLh4J9d3FqZF1XUEpDPTcwLCcjHhoWFRMPDxQVGBwhJiouNDpCSE9WXWVsc3qAh42Sl5ygo6aoqaqqqqinpKGemZSPiYN9dm9oYFlSS0Q+NzArJyMeGRYTDxEXGBsfJCkuNDtCSVBXX2dvd3+GjZSaoKWqrrG0tri4ubi3tbKvrKeinZaQiYJ6c2tiW1NMRT43MSsmIRwZFhIUGhseIictMzpBSVFZYGlxeoKKkpmgp62zt7y/wsTFxsbGxcPAvbm1sKqjnZWNhX11bGRcVExEPTYvKSQfHBkVFh0eIiYrMjlASFBYYWpzfIWNlp6mrbS6wMXJzM/R09PU09LQzsrHwr23sKmimpGIgHduZVxTS0M8NC4oJCAbFxgfICUqMDc+Rk5XYGpzfYaQmaKrsrrBx8zR1dnb3d/f39/e3NrX087Jw722rqadlIqBd25kW1JKQjozLScjHhkaIiMnLjU8RExVXmhyfIeRmqSttr7GzdPY3eHk5ujp6urq6ejl4t/a1c/JwbqxqJ+Vi4F3bGJZUEg/ODEpJSAbHCQlKzI5QUpSXGZwe4aQm6WvucHJ0djd4+fq7e/x8vLz8vHw7uvo5ODa1M3FvLOpn5WKgHVrYFdNRD01LSgjHh4nKC42PkZPWGNueYSPmqWvusPM1Nvi5+zv8vX2+Pn5+fn49/Xz8e3p5N7Xz8e+tKmflIh9c2hdU0pBOTErJSAhKisyOkNMVV9qdoCMmKOvucTN1t3k6+/z9/n7/P39/v7+/f37+vj18e3n4dnRyL6zqJ2RhXpvZFlPRz41LigjIy0vNj5HUVtlcX2IlaCsuMLN1t7m7PH1+fv9/v7+/v7+/v7+/v38+vfz7uni2tHHvLGmmo2CdmpgVUtCOTIrJSYwMjpDS1Zha3iEkJ2ptcDL1d7m7fP3+v3+/v/+/v39/f39/v7+/v37+fXw6eLZz8W6rqKViX1xZVpQRj01LicoMzU9RlBbZnF+ipeksL3I093l7fP4+/3//v79+/r5+Pj4+fv8/f7//v359fDp4dfNwbapnZCDd2tfVUtAOTEqKjY4QEpUX2t3hJGeq7fEz9rj6/L3+/7+/vz6+PXy8PDv8PL09vn8/f7+/Pn17ufe1Mm9sKOWiX1wZFlORDszLCw3OkNNWGRwfIqXpLG+ytbg6fH3+/7//vz59fHs6ebl5OXo6+/z+Pv9//79+fPt5NrPw7eqnY+CdWldUkc+NS4uOz1GUVtodIGPnKq3xNDb5u70+v3+/vv48+3n4dvX1dXW2t7k6vD2+v3+/vv38eng1cm9sKKUh3ptYVVKQTgwLz0/SVRfbHiFk6GvvMnV4Orx+Pz+/vz48uvj29PMxsTDxcnP1+Do7/b7/f/9+vXt5NrOwrWnmYt+cWRZTUQ6MjE/QkxXYm98ipimtMHO2uTu9fr+/v368+zi2M3DurOvrrG3v8nU3ujw+Pz+/vz48ejf08e5rJ6QgnRoXFBGPDQzQUROWWVyf42bqbfF0t3n8ff8//779u7k2cy+sqedmZebo625xtTg6vP5/f79+vPr4tfKva+hk4V3al5SSD41NENGUFtndIKQnqy6yNXg6vP5/f/9+fPp3c/AsKGThoF/g42aqbnJ1+Tv9vz+/vv17uXazsCypJaIem1gVEpANzVFR1FdaXeEkqGvvcvX4+31+v7//Pfv49bGtKKPfW5nZWp3hpqtv8/e6/T7/v799/Do3NDDtaeYinxvYlVLQTc2RUdSXmp4hpSisb/M2eTu9vv+//v17ODRv6yWgWxaUU5VZXeNo7fJ2ujy+f3+/fjx6d7Sxbeomox9cGNWTEI4NkVIU19reYeVpLLAztrl7/f8/v769OrdzbqkjXVeRzw4QVVqg5uxxdbl8Pj9/v758urf08a4qpuNfnFkV0xCOTdGSFNfa3mHlaSzwc7b5u/3/P7++vTp28u3oYlwVz8xKzhOZX+XrsPV5O/4/f7++fPq39TGuaqbjX9xZFhNQjk3RUhTX2t5h5WkssDO2uXv9/z+/vr06tzMuKOLc1pCNjE8UWeBma/E1eXw+P3+/vny6t/Txriqm41/cWRXTUI5NkVHUl5qeIaUo7LAzdrl7vf7/v779OvezrumkHliTUI/R1puhp2zxtfm8Pn9/v358unf08W4qZuMfnFkV0xCOTZFR1FdaneFk6KwvszY5O32+/7//Pbt4dPCr5uHc2JaV15sfZOnuszb6fL6/v79+PHo3dHEtqiZi31wY1ZMQTc1REZQXGh2g5GgrrzJ1uLs9Pr9//348ObZyrmol4d5c3B1gY+hssPT4ez1+/7+/Pbv5tvPwrSml4l7bmFVS0E3NENFT1pmdIGPnau5x9Tf6fL4/f/9+vTr4NPFtaibkIuJjZaisL7N2+fx+P3//vv17eTZzL+xo5WHeWxfU0lANjNBQ01YZHF+i5qotsPQ3Obv9vv+/vz48Ojd0cW5r6ajoaSstMDM2OPt9fr+/v358urh1cm8rqCShHZpXVFHPjUxPkFLVWFue4iWpLK/zNjj7PT5/f7++/Xv5t3TysK7uLe6v8bP2eLr8/n8/v779+/n3dHFt6qcjoBzZlpPRTwzLzw+SFNeaneDkp+tusfT3ujw9vv+//369e/o4NnTzszLzdHW3eTs8vj8/v/9+fPs49jMwLOll4l8b2NXTEM5MS45O0VPWmZzf42ap7XBztnj7PP5/P7+/Pr18Ovm4d7c293g4+nu8/j7/v79+vXv593Tx7qtoJKFeGtfVElANy8sNjlCTFZibnqHlKGvu8jT3ufv9fr9/v79+/j08O3r6unq7O/z9vr8/v/++/fx6+LYzcG0p5qNgHNnW1BGPTQtKjU3P0hTXml1gY6bqLTBzNfg6fD2+v3+//78+vj29PT09PX3+fv9/v7++/jz7OTb0ca6raCUh3puYldNQjoyKygyNDxFTllkb3uIlKGtucXQ2eLq8Pb6/P7+/v39/Pv6+vr7/P3+/v79+/fz7ebd1Mm+sqaZjYB0aV1TST83MCkmLjA5QUlUXml1gY2ZpbG9yNLb4+rw9fn7/f7////+/v7+//////78+vfy7ebe1szBtquekoZ6bmNYTkQ8NCwmIywtND1FT1ljbnqFkZ2ptL/J0tvi6e/z9vn7/f3+/v7+/v7+/fz6+PTx6+Xe1s3Dua2ilop/c2hdU0lANzAqJCEpKjA4QUpTXGdyfYmUn6u1v8nS2eDn7PD09vj6+/v8/Pz7+vn39fHu6ePd1c3Euq+kmY2Cd2xhV01FPDMtJyIeJSctNDtETVZga3WAi5ahq7W/yNDX3uPo7O/y9Pb39/f39vXz8e7q5uDa08vCua+lmpCFem9lWlFHPzcvKiQfHCMkKTA3P0dQWWNtd4KMl6GrtL3FzNPZ3uPm6ezt7u/v7+7t6ufk4NvWz8jAuK+lm5GGfHFnXVRLQjszLCchHBohIiYsMzpCSlJbZW94goyWn6mxucHIztPY3N/i5OXl5uXk4+Dd2tXQysS9tayjmpCHfXNpX1ZNRT02LygkHxoYHh8kKS01PENLVF1mb3iCi5Sdpa20u8HHzNDU1tja2tva2dfV0s7JxL63sKmgmI+GfHNqYFdPRz83MSsmIR0YFhwcICUpMDc9RU1VXWZvd4CJkZmhqK+1ur/Dx8nMzc7OzszLyMXBvLexq6SdlYyEe3JqYVlQSEE6MiwmIh4aFxQZGRwgJSsxNz9GTVVdZW11fYWNlJuhp62ytrm8vsDAwcC/vbq3tK+qpJ6XkIiAeXBoYFhRSUI6NC0oIx4bGBQRFRYZHiMoLDE4P0ZNVFtja3J6gYiOlJqfpKirrrCysrOysa+sqaahnJeRioR9dm5mXldQSUI6NC4qJSAbGBQQDxQVFxofJCgsMjg/RUtSWWBnbnV7gYeNkpaanaCio6SkpKKhnpuYk4+KhH54cWpjXFVOSEE7NC4qJiEcGBYTDw4UFBQWGh8kKCwxNz1DSlBWXGNpb3V6f4OIi4+Rk5SVlZWUkpCNioWBfHdxa2VfWFJMRkA6NC4qJiEcGBUUEw8OEBETFhgdISQoLDE3PEJHTVNZXmRpbnN3e36Bg4WGh4eHhoSCf3x4dHBrZmFbVU9KRD45My4qJiIfGhcUEhAOCw4OERQWGh0fJCgrMDU6P0RKT1RZXmJmam5xdHZ3eHl5eXh3dHJvbGhkX1tWUUxGQTw3Mi0pJiEeGxgVExANCwgODg4RFRYYGh8jJSktMzc7QUVJTlNWWl5hZGZoampra2tqaWdlYl9bWFRQS0dDPjk1MCsnJCEcGRcVEw4ODAUCCAkNDxEUFhYaHiAlKSwwNDg9QUVITE9TVVhaXF1eX19fXl1bWVdUUU1KRkM+OjYyLiomIh8cGBYVEhAOCwcDAAAECg0OERMUFxkcICQmKS0wNDk8P0JFSEtNT1BRUlNTU1JRUE5MSUZDQD06NjIuKyclIh4bGBUUExANDAcAAAAAAQQJDg4RFBUWGRwfIiQnKi0wNDc5Oz5BQ0VGR0dISEhHR0ZEQj89Ojg1Mi8rKCUjIB4bGBUUEg8OCwUDAAAAAAAABgoNDxERExYZGx0fIiUnKi0vMTQ2ODo8PT0+Pj8+Pj08Ozk3NTIwLispJiMgHhwaFxQRERAOCwgCAAAAAA==" />
+            </DerivedData>
+        </Volume>
+    </Volumes>
+</VoreenData>

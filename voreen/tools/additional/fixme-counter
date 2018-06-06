@@ -1,0 +1,57 @@
+#!/bin/sh
+
+DIRS="include src apps/voreenve apps/voltool ext/tgt"
+
+(find $DIRS -name "*.h" -or -name "*.vert" -or -name "*.frag" ; \
+find $DIRS -not -name "moc_*" -and -name "*.cpp") | \
+xargs -i grep --ignore-case -P --files-with-matches '(fixme|todo[^a-z]).*' {} | \
+perl -n -e 'chomp;$f=$_;$l=0;foreach(`svn blame -v $f`){$l++;print "$f $l $_" unless $_ !~ /fixme|todo[^a-z]/i;}' > fixmes
+
+#perl -n -e '$_=~/^(.*?):(\d+):(.*)$/; print "$1 ($2): $3\n";' > fixme.files
+
+ 
+#(xargs -i svn blame {}  | grep --ignore-case --with-filename -n -P '(fixme|todo).*'
+#--only-matching 
+
+# xargs -i grep --ignore-case --with-filename -n -P --only-matching '(fixme|todo).*' {} | \
+# perl -n -e '$_=~/^(.*?):(\d+):(.*)$/; print "$1 ($2): $3\n";' > fixme.files
+
+COUNT=`wc -l fixmes | cut -f1 -d ' '`
+
+echo $COUNT > fixmes.count
+
+cat > fixmes.html <<EOF
+<html>
+<head>
+<title>Voreen FIXMEs: $COUNT remaining</title>
+</head>
+<body>
+<h1>Voren FIXMEs: $COUNT remaining</h1>
+EOF
+
+perl >> fixmes.html <<'EOF'
+  open F, 'fixmes' or die $!;
+  $last = '';
+  while (<F>) {    
+    $_= ~/^(.*?) (\d+)\s+(\d+)\s+(\w+)\s+(\d{4}-\d{2}-\d{2}).*((todo|fixme).*)$/i;
+    ($path, $line, $rev, $user, $date, $msg) = ($1, $2, $3, $4, $5, $6);
+    $path2 = $path;
+    $rep = 'voreen&path=%2Ftrunk%2Fvoreen';
+    if ($path =~ m!^ext/tgt!) {
+      $path2 =~ s!^ext/!trunk/!;
+      $rep = 'tgt&path=';
+    }
+    $link = qq(<a href="https://wwwmath.uni-muenster.de:16050/voreen/secure/websvn/filedetails.php?repname=$rep%2F$path2">$path</a> ($line): $msg ($user, $date)<br>\n);
+    $path =~ m!^(.*)/[^/]+$!;
+    print "<h2>$1</h2>" unless $1 eq $last;
+    $last = $1;
+    print $link;
+  }
+  close F;
+EOF
+
+cat >> fixmes.html <<EOF
+<hr />
+generated: `date -R` 
+</body></html>
+EOF

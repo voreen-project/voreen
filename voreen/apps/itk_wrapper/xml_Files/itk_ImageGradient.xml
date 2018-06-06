@@ -1,0 +1,76 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_ImageGradient" group="Filtering">
+    <filterlist>
+      <filter name="GradientImageFilter" codeState ="STABLE">
+	<inports>
+          <port name="InputImage"/>
+        </inports>
+        <outports>
+          <port name="OutputImage" filterTemplate="false">
+	    <possibleTypes>
+              <type value="3xFloat"/>
+            </possibleTypes>
+          </port>
+        </outports>
+        <arguments>
+          <argument name="UseImageSpacing" argumenttype="Bool" defaultValue="false"/>
+        </arguments>
+      </filter>
+      <filter name="GradientMagnitudeImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="UseImageSpacing" argumenttype="Bool" defaultValue="false"/>
+        </arguments>
+      </filter>
+      <filter name="GradientMagnitudeRecursiveGaussianImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage"/>
+        </inports>
+        <outports>
+          <port name="OutputImage" filterTemplate="false"/>
+        </outports>
+        <arguments>
+          <argument name="NormalizeAcrossScale" argumenttype="Bool" defaultValue="false"/>
+          <argument name="Sigma" argumenttype="Float" defaultValue="0.1f" minValue="0.0f" maxValue="1.0f"/>
+        </arguments>
+      </filter>
+      <filter name="GradientRecursiveGaussianImageFilter">
+        <inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="RealScalar"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage" filterTemplate="false">
+            <possibleTypes>
+              <type value="3xDouble"/>
+            </possibleTypes>
+          </port>
+        </outports>
+        <arguments>
+          <argument name="NormalizeAcrossScale" argumenttype="Bool" defaultValue="false"/>
+          <argument name="UseImageDirection" argumenttype="Bool" defaultValue="false"/>
+          <argument name="Sigma" argumenttype="Float" defaultValue="0.1f" minValue="0.0f" maxValue="1.0f"/>
+        </arguments>
+      </filter>
+      <filter name="VectorGradientMagnitudeImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="RealVector"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage" filterTemplate="false">
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+          </port>
+        </outports>
+      </filter>    
+    </filterlist>
+  </ITK_Module>
+</VoreenData>

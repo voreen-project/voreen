@@ -1,0 +1,22 @@
+<!DOCTYPE RCC><RCC version="1.0">
+  <qresource prefix="/voreenve/icons" >    
+    <!-- <file alias="clear_dependency.png">../../resource/voreenve/icons/clear_dependency.png</file> -->      
+    <file alias="network-mode.png">../../resource/voreenve/icons/network-mode.png</file>
+    <file alias="application-mode.png">../../resource/voreenve/icons/application-mode.png</file>
+  </qresource>
+  
+  <qresource prefix="/voreenve/image" >
+    <file alias="logo-startup-wizard.png">../../resource/voreenve/image/logo-startup-wizard.png</file>
+    <file alias="aboutbox.png">../../resource/voreenve/image/aboutbox.png</file>
+    <file alias="splash.png">../../resource/voreenve/image/splash.png</file>
+  </qresource>
+
+  <qresource prefix="/voreenve/widgetstyle" >
+    <file alias="highlight-dockwidget.png">../../resource/voreenve/widgetstyle/highlight-dockwidget.png</file>
+    <file alias="highlight-menu.png">../../resource/voreenve/widgetstyle/highlight-menu.png</file>
+    <file alias="menu.png">../../resource/voreenve/widgetstyle/menu.png</file>
+    <file alias="scrollbar.png">../../resource/voreenve/widgetstyle/scrollbar.png</file>
+    <file alias="toolbarhandle.png">../../resource/voreenve/widgetstyle/toolbarhandle.png</file>
+    <file alias="voreen.qss">../../resource/voreenve/widgetstyle/voreen.qss</file>
+  </qresource>
+</RCC>

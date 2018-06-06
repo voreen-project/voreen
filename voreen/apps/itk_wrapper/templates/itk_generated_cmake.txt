@@ -1,0 +1,13 @@
+
+################################################################################
+# Core module resources
+################################################################################
+SET(MOD_CORE_MODULECLASS ITK_GENERATEDModule)
+
+SET(MOD_CORE_SOURCES
+§FILTERCPP§
+)
+
+SET(MOD_CORE_HEADERS
+§FILTERH§
+)

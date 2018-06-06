@@ -1,0 +1,85 @@
+/***********************************************************************************
+ *                                                                                 *
+ * Voreen - The Volume Rendering Engine                                            *
+ *                                                                                 *
+ * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
+ * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * For a list of authors please refer to the file "CREDITS.txt".                   *
+ *                                                                                 *
+ * This file is part of the Voreen software package. Voreen is free software:      *
+ * you can redistribute it and/or modify it under the terms of the GNU General     *
+ * Public License version 2 as published by the Free Software Foundation.          *
+ *                                                                                 *
+ * Voreen is distributed in the hope that it will be useful, but WITHOUT ANY       *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR   *
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.      *
+ *                                                                                 *
+ * You should have received a copy of the GNU General Public License in the file   *
+ * "LICENSE.txt" along with this file. If not, see <http://www.gnu.org/licenses/>. *
+ *                                                                                 *
+ * For non-commercial academic use see the license exception specified in the file *
+ * "LICENSE-academic.txt". To get information about commercial licensing please    *
+ * contact the authors.                                                            *
+ *                                                                                 *
+ ***********************************************************************************/
+
+#ifndef VRN_APPMODEGROUPPROPERTYWIDGET_H
+#define VRN_APPMODEGROUPPROPERTYWIDGET_H
+
+#include "voreen/core/properties/property.h"
+#include "voreen/qt/voreenqtapi.h"
+
+#include <QWidget>
+#include <QFrame>
+#include <QVBoxLayout>
+#include <QGridLayout>
+
+namespace voreen {
+
+class ExpandableHeaderButton;
+class PropertyWidgetFactory;
+class QPropertyWidget;
+class GroupPropertyWidget;
+
+/**
+ * Widget containing each processor's property widgets. The title bar contains the name of the
+ * processor and an +/- icon allowing to expand the properties.
+ */
+class VRN_QT_API AppModePropertyGroupWidget : public QWidget {
+    Q_OBJECT
+public:
+
+    AppModePropertyGroupWidget(const std::string& groupName, QWidget* parent = 0, bool expanded = false);
+
+    bool isExpanded() const;
+
+    void setProperties(const std::vector<Property*> properties);
+    void addProperty(Property* property);
+
+public slots:
+    void setExpanded(bool expanded);
+    void toggleExpansionState();
+    //void updateHeaderTitle();
+    void instantiateWidgets();
+    void updateState();
+
+protected:
+    ExpandableHeaderButton* header_;
+    QFrame* propertyFrame_;
+    std::vector<Property*> properties_;
+    std::vector<QPropertyWidget*> widgets_;
+    void showEvent(QShowEvent*);
+
+    bool expanded_;
+    QVBoxLayout* mainLayout_;
+    QGridLayout* propertyLayout_;
+
+protected slots:
+    /// adjusts the visibility of the property according to the view flags
+    void updatePropertyVisibility();
+
+};
+
+} // namespace
+
+#endif // VRN_APPMODEGROUPPROPERTIESWIDGET_H

@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <conditions>
+        <item>
+            <First value="NumberOfFrames" />
+            <Second>
+            </Second>
+        </item>
+    </conditions>
+    <divisionkeys>
+        <item value="SeriesNumber" />
+		<item value="InstanceNumber" />
+		<item value="AcquisitionNumber" />
+    </divisionkeys>
+    <dict>
+        <Dict>
+			<entry group="0020" element="0011" keyword="SeriesNumber" vr="IS" vm="1" name="Series Number" metaData = "true"/>
+  			<entry group="0020" element="0012" keyword="AcquisitionNumber" vr="IS" vm="1" name="Acquisition Number" metaData = "true"/>
+  			<entry group="0020" element="0013" keyword="InstanceNumber" vr="IS" vm="1" name="Instance Number" metaData = "true"/>
+			<entry group="0028" element="0008" keyword="NumberOfFrames" vr="IS" vm="1" name="Number of Frames" metaData = "false"/>
+		</Dict>
+    </dict>
+</VoreenData>

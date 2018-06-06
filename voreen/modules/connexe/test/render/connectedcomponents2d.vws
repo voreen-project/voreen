@@ -1,0 +1,343 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" GlobalDescription="">
+        <ProcessorNetwork version="11">
+            <Processors>
+                <Processor type="Canvas" name="Canvas Orig" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-653" y="146" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="35" y="117" width="500" height="450" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" id="ref12">
+                            <value x="500" y="450" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" value="output/original.png" />
+                        <Property name="showCursor" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Background" name="Background" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-653" y="-53" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="angle" value="36" />
+                        <Property name="backgroundModeAsString" value="monochrome" />
+                        <Property name="color1">
+                            <value x="0.11372549" y="0.62352943" z="0.65882355" w="1" />
+                        </Property>
+                        <Property name="color2">
+                            <value x="0.192157" y="0.192157" z="0.192157" w="1" />
+                        </Property>
+                        <Property name="repeat" value="1" />
+                        <Property name="texture" value="" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ConnectedComponents2D" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-525" y="-51" />
+                    </MetaData>
+                    <name>
+                        <![CDATA[ConnectedComponents2D:
+Alpha, No Sorting, Stretch]]>
+                    </name>
+                    <Properties>
+                        <Property name="binarizeOutput" value="false" />
+                        <Property name="channel" value="alpha" />
+                        <Property name="connectivity" value="8-neighborhood" />
+                        <Property name="maxComponents" value="65535" />
+                        <Property name="minComponentSize" value="1" />
+                        <Property name="sorting" value="none" />
+                        <Property name="stretchLabels" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ConnectedComponents2D" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-316" y="-51" />
+                    </MetaData>
+                    <name>
+                        <![CDATA[ConnectedComponents2D:
+RGB, Binary]]>
+                    </name>
+                    <Properties>
+                        <Property name="binarizeOutput" value="true" />
+                        <Property name="channel" value="rgb" />
+                        <Property name="connectivity" value="8-neighborhood" />
+                        <Property name="maxComponents" value="65535" />
+                        <Property name="minComponentSize" value="1" />
+                        <Property name="sorting" value="none" />
+                        <Property name="stretchLabels" value="false" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ConnectedComponents2D" id="ref6">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-108" y="-52" />
+                    </MetaData>
+                    <name>
+                        <![CDATA[ConnectedComponents2D:
+RGBA, Increasing, Stretch]]>
+                    </name>
+                    <Properties>
+                        <Property name="binarizeOutput" value="false" />
+                        <Property name="channel" value="rgba" />
+                        <Property name="connectivity" value="8-neighborhood" />
+                        <Property name="maxComponents" value="65535" />
+                        <Property name="minComponentSize" value="1" />
+                        <Property name="sorting" value="increasing" />
+                        <Property name="stretchLabels" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageSource" name="ImageSource" id="ref8">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-360" y="-240" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="clearButton" />
+                        <Property name="imageFile" value="input/images/nucleon-stipple.png" />
+                        <Property name="imageSize" id="ref16">
+                            <value x="500" y="450" />
+                        </Property>
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Background" name="Background 2" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-487" y="47" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="angle" value="36" />
+                        <Property name="backgroundModeAsString" value="monochrome" />
+                        <Property name="color1">
+                            <value x="0.11372549" y="0.62352943" z="0.65882355" w="1" />
+                        </Property>
+                        <Property name="color2">
+                            <value x="0.192157" y="0.192157" z="0.192157" w="1" />
+                        </Property>
+                        <Property name="repeat" value="1" />
+                        <Property name="texture" value="" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Background" name="Background 3" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-279" y="48" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="angle" value="36" />
+                        <Property name="backgroundModeAsString" value="monochrome" />
+                        <Property name="color1">
+                            <value x="0.11372549" y="0.62352943" z="0.65882355" w="1" />
+                        </Property>
+                        <Property name="color2">
+                            <value x="0.192157" y="0.192157" z="0.192157" w="1" />
+                        </Property>
+                        <Property name="repeat" value="1" />
+                        <Property name="texture" value="" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Background" name="Background 4" id="ref7">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-71" y="50" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="angle" value="36" />
+                        <Property name="backgroundModeAsString" value="monochrome" />
+                        <Property name="color1">
+                            <value x="0.11372549" y="0.62352943" z="0.65882355" w="1" />
+                        </Property>
+                        <Property name="color2">
+                            <value x="0.192157" y="0.192157" z="0.192157" w="1" />
+                        </Property>
+                        <Property name="repeat" value="1" />
+                        <Property name="texture" value="" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas 2" id="ref9">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-483" y="147" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="53" y="157" width="500" height="450" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" id="ref13">
+                            <value x="500" y="450" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" value="output/alpha-nosort-stretch.png" />
+                        <Property name="showCursor" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas 3" id="ref10">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-275" y="151" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="77" y="202" width="500" height="450" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" id="ref14">
+                            <value x="500" y="450" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" value="output/rgb-binary.png" />
+                        <Property name="showCursor" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas 4" id="ref11">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-67" y="153" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="102" y="251" width="500" height="450" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" id="ref15">
+                            <value x="500" y="450" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" value="output/rgba-incr-stretch.png" />
+                        <Property name="showCursor" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="image.output">
+                        <Processor type="Background" ref="ref0" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="ConnectedComponents2D" ref="ref2" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Background" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="ConnectedComponents2D" ref="ref4" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Background" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="ConnectedComponents2D" ref="ref6" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Background" ref="ref7" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref8" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="ConnectedComponents2D" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref8" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="ConnectedComponents2D" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref8" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="ConnectedComponents2D" ref="ref6" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref8" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Background" ref="ref0" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.output">
+                        <Processor type="Background" ref="ref3" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref9" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.output">
+                        <Processor type="Background" ref="ref5" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref10" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.output">
+                        <Processor type="Background" ref="ref7" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref11" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref12" />
+                    <DestinationProperty type="IntVec2Property" ref="ref13" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref13" />
+                    <DestinationProperty type="IntVec2Property" ref="ref12" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref13" />
+                    <DestinationProperty type="IntVec2Property" ref="ref14" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref14" />
+                    <DestinationProperty type="IntVec2Property" ref="ref13" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref14" />
+                    <DestinationProperty type="IntVec2Property" ref="ref15" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref15" />
+                    <DestinationProperty type="IntVec2Property" ref="ref14" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref16" />
+                    <DestinationProperty type="IntVec2Property" ref="ref12" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+            </PropertyLinks>
+            <PropertyStateCollections />
+            <PropertyStateFileReferences />
+            <PropertyStateDirectoryReferences />
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

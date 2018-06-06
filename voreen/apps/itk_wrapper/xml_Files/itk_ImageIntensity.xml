@@ -1,0 +1,333 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_ImageIntensity" group="Filtering">
+    <filterlist>
+      <filter name="AbsImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="AcosImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="AddImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+      <filter name="AndImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1">
+            <possibleTypes>
+              <type value="IntegerScalar"/>
+            </possibleTypes>
+          </port>
+          <port name="InputImage2">
+            <possibleTypes>
+              <type value="IntegerScalar"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+      <filter name="AsinImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="Atan2ImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+      <filter name="AtanImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="BinaryMagnitudeImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+      <filter name="BoundedReciprocalImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="ConstrainedValueAdditionImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+      <filter name="ConstrainedValueDifferenceImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+      <filter name="CosImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="DivideImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+      <filter name="EdgePotentialImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="IntegerVector"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+	  <port name="OutputImage"/>
+	</outports>
+      </filter>
+      <filter name="ExpImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="ExpNegativeImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="HistogramMatchingImageFilter" enabled="false" description="Linking Error!">        
+        <arguments>
+          <argument name="NumberOfHistogramLevels" argumenttype="Int" defaultValue="0" minValue="0" maxValue="1000"/>
+          <argument name="NumberOfMatchPoints" argumenttype="Int" defaultValue="0" minValue="0" maxValue="1000"/>
+          <argument name="ThresholdAtMeanIntensity" argumenttype="Bool" defaultValue="false"/>
+        </arguments>
+      </filter>
+      <filter name="IntensityWindowingImageFilter" codeState ="STABLE">
+	<inports>
+	  <port name="InputImage">
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+          </port>
+	</inports>
+        <outports>
+          <port name="OutputImage"/>
+	</outports>
+        <arguments>
+          <argument name="OutputMinimum" argumenttype="PixelType"/>
+          <argument name="OutputMaximum" argumenttype="PixelType"/>
+          <argument name="WindowMinimum" argumenttype="PixelType"/>
+          <argument name="WindowMaximum" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+      <filter name="InvertIntensityImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Maximum" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+      <filter name="Log10ImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="LogImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="MaskImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage"/>
+          <port name="MaskImage" nameIsSetter="true"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="OutsideValue" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+      <filter name="MaskNegatedImageFilter" enabled="false" description="SetMaskImage-Function is missing in Headerfile!">
+        <inports>
+          <port name="InputImage"/>
+          <port name="MaskImage" nameIsSetter="true"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="OutsideValue" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+      <filter name="MatrixIndexSelectionImageFilter" enabled="false" description="Needs Matrix InputImage.">
+      </filter>
+      <filter name="MaximumImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+      <filter name="MinimumImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+      <filter name="ModulusImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="IntegerScalar"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="Dividend" argumenttype="PixelType" minValue="1"/>
+        </arguments>
+      </filter>
+      <filter name="MultiplyImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+      <filter name="NormalizeImageFilter" enabled="false" description="Linking error!">
+      </filter>
+      <filter name="NormalizeToConstantImageFilter" enabled="false" description="Headerfile missing!">
+        <arguments>
+          <argument name="Constant" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+      <filter name="NotImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="OrImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1">
+            <possibleTypes>
+              <type value="IntegerScalar"/>
+            </possibleTypes>
+          </port>
+          <port name="InputImage2">
+            <possibleTypes>
+              <type value="IntegerScalar"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+      <filter name="RescaleIntensityImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="OutputMaximum" argumenttype="PixelType"/>
+          <argument name="OutputMinimum" argumenttype="PixelType"/>
+        </arguments>
+      </filter>
+      <filter name="ShiftScaleImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Scale" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="5000.0f"/>
+          <argument name="Shift" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="5000.0f"/>
+        </arguments>
+      </filter>
+      <filter name="SigmoidImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Alpha" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="5000.0f"/>
+          <argument name="Beta" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="5000.0f"/>
+        </arguments>
+      </filter>
+      <filter name="SinImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="SqrtImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="SquareImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="SubtractImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+      <filter name="SymmetricEigenAnalysisImageFilter" enabled="false" description="Does not work!?">
+        <arguments>
+          <argument name="Dimension" argumenttype="Int" defaultValue="1" minValue="1" maxValue="3"/>
+        </arguments>
+      </filter>
+      <filter name="TanImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="TernaryAddImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+          <port name="InputImage3"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+      <filter name="TernaryMagnitudeImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+          <port name="InputImage3"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+      <filter name="TernaryMagnitudeSquaredImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+          <port name="InputImage3"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+      <filter name="WeightedAddImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1"/>
+          <port name="InputImage2"/>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="Alpha" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="100.0f"/>
+        </arguments>
+      </filter>
+      <filter name="XorImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage1">
+            <possibleTypes>
+              <type value="IntegerScalar"/>
+            </possibleTypes>
+          </port>
+          <port name="InputImage2">
+            <possibleTypes>
+              <type value="IntegerScalar"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+      </filter>
+    </filterlist>
+  </ITK_Module>
+</VoreenData>

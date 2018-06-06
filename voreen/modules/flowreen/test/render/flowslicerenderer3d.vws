@@ -1,0 +1,208 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" GlobalDescription="">
+        <ProcessorNetwork version="13">
+            <MetaData>
+                <MetaItem name="ProcessorSelection" type="SelectionMetaData::Processor">
+                    <values>
+                        <item type="FlowSliceRenderer3D" ref="ref1" />
+                    </values>
+                </MetaItem>
+            </MetaData>
+            <Processors>
+                <Processor type="VolumeSource" name="VolumeSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="14" y="-290" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="volumeURL" url="input/flow/carotid.flow?preferredReader=FlowReader" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle">
+                            <Properties />
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="19" y="47" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="99" y="156" width="483" height="433" />
+                        <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
+                            <value x="99" y="156" />
+                        </MetaItem>
+                        <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
+                            <value x="483" y="433" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize">
+                            <value x="483" y="433" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" noPathSet="false" value="output/rendering.png" />
+                        <Property name="showCursor" value="true" />
+                        <Property name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input">
+                            <Properties>
+                                <Property name="image.input.renderSizeOrigin" id="ref4">
+                                    <value x="483" y="433" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Background" name="Background" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="20" y="-63" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="angle" value="0" />
+                        <Property name="backgroundModeAsString" value="monochrome" />
+                        <Property name="color1">
+                            <value x="0.49803901" y="0.49803901" z="0.49803901" w="1" />
+                        </Property>
+                        <Property name="color2">
+                            <value x="0.2" y="0.2" z="0.2" w="1" />
+                        </Property>
+                        <Property name="repeat" value="1" />
+                        <Property name="shader.program" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false" />
+                        <Property name="texture" noPathSet="false" value="" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.output">
+                            <Properties />
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="FlowSliceRenderer3D" name="FlowSliceRenderer3D" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-6" y="-174" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="arrowSizeProp" value="10" />
+                        <Property name="arrowSpacingProp" value="2" />
+                        <Property name="boundingBoxColorProp">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property name="camera" adjustProjectionToViewport="true" projectionMode="1" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="50" fovy="45">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="520" y="245" />
+                            </MetaData>
+                            <position x="-1.44533503" y="1.09129214" z="-2.61610675" />
+                            <focus x="0" y="0" z="0" />
+                            <upVector x="0.18587323" y="0.93909633" z="0.28904906" />
+                        </Property>
+                        <Property name="colorCoding" value="magnitude" />
+                        <Property name="colorProp_">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property name="colorTableProp_" value="hot metal" />
+                        <Property name="kernelSizeProp" value="7" />
+                        <Property name="magnitudeThreshold">
+                            <value x="0.1" y="50" />
+                        </Property>
+                        <Property name="maxStreamlineLength" value="150" />
+                        <Property name="numSeedingPositions" value="10" />
+                        <Property name="pixelSamplingProp" value="50" />
+                        <Property name="sliceNoXYProp" value="23" />
+                        <Property name="sliceNoXZProp" value="24" />
+                        <Property name="sliceNoZYProp" value="48" />
+                        <Property name="spotScale" value="5" />
+                        <Property name="spotTesselation" value="16" />
+                        <Property name="useAdaptiveKernelSizeProp" value="false" />
+                        <Property name="useBoundingBoxProp" value="true" />
+                        <Property name="useCoordinateAxisProp" value="true" />
+                        <Property name="useSpotBendingProp" value="true" />
+                        <Property name="useSpotFilteringProp" value="true" />
+                        <Property name="useXYSliceProp" value="true" />
+                        <Property name="useXZSliceProp" value="true" />
+                        <Property name="useZYSliceProp" value="true" />
+                        <Property name="visualizationMode" value="color coding" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.volumehandle">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.outport">
+                            <Properties>
+                                <Property name="image.outport.renderSizeReceive" id="ref5">
+                                    <value x="483" y="433" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers>
+                        <Handler name="cameraHandler">
+                            <Properties>
+                                <Property name="cameraHandler.adjustCamera" value="bigsizechange" />
+                                <Property name="cameraHandler.interactionMetaphor" value="trackball" />
+                                <Property name="cameraHandler.moveBackward" lod="1" enabled="true" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveDown" lod="1" enabled="true" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveForward" lod="1" enabled="true" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveLeft" lod="1" enabled="true" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveRight" lod="1" enabled="true" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveUp" lod="1" enabled="true" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.resetTrackballCenter" />
+                                <Property name="cameraHandler.rotate" lod="1" enabled="true" mouseAction="31" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.shift" lod="1" enabled="true" mouseAction="31" mouseButtons="1" keyCode="0" modifier="3" shareEvents="false" />
+                                <Property name="cameraHandler.shiftTrackballCenter" value="scenecenter" />
+                                <Property name="cameraHandler.wheelZoom" lod="1" enabled="true" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.zoom" lod="1" enabled="true" mouseAction="31" mouseButtons="100" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="volumehandle.volumehandle">
+                        <Processor type="FlowSliceRenderer3D" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.output">
+                        <Processor type="Background" ref="ref2" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="FlowSliceRenderer3D" ref="ref1" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Background" ref="ref2" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks>
+                <PropertyLink>
+                    <SourceProperty ref="ref4" />
+                    <DestinationProperty ref="ref5" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+            </PropertyLinks>
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

@@ -1,0 +1,168 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2">
+        <VolumeContainer>
+            <VolumeHandles />
+        </VolumeContainer>
+        <ProcessorNetwork version="8">
+            <MetaData>
+                <MetaItem name="ProcessorSelection" type="SelectionMetaData::Processor">
+                    <values>
+                        <item type="NodeGraphSource" ref="ref3" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="Zoom" type="ZoomMetaData">
+                    <transform.row0 x="1.125" y="0" z="0" />
+                    <transform.row1 x="0" y="1.125" z="0" />
+                    <transform.row2 x="496.26022338867187" y="221.07406616210937" z="1" />
+                </MetaItem>
+            </MetaData>
+            <Processors>
+                <Processor type="Canvas" name="Canvas" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-475" y="328" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="5" y="5" width="1374" height="955" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" lod="1">
+                            <value x="1374" y="955" />
+                        </Property>
+                        <Property name="showCursor" lod="1" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="GraphPlot" name="GraphPlot" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-476" y="237" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="axesWidth" lod="1" value="1.5" />
+                        <Property name="enablePicking" lod="1" value="false" />
+                        <Property name="highlightColor" lod="1">
+                            <value x="1" y="0.89999998" z="0.80000001" w="1" />
+                        </Property>
+                        <Property name="marginBottom" lod="1" value="40" />
+                        <Property name="marginLeft" lod="1" value="40" />
+                        <Property name="marginRight" lod="1" value="40" />
+                        <Property name="marginTop" lod="1" value="40" />
+                        <Property name="plotDataTable" />
+                        <Property name="plotEntitiesProperty" guiName="No Data" lod="1" entities="-1" xCI="0" yCI="-1">
+                            <colorMap name="Visifire 1">
+                                <colors>
+                                    <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
+                                    <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
+                                    <item x="0.85546875" y="0.265625" z="0.24609375" w="1" />
+                                    <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
+                                    <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
+                                    <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
+                                    <item x="0.68359375" y="0.84375" z="0.96875" w="1" />
+                                    <item x="0" y="0.5546875" z="0.5546875" w="1" />
+                                    <item x="0.54296875" y="0.7265625" z="0" w="1" />
+                                    <item x="0.9765625" y="0.73828125" z="0.05859375" w="1" />
+                                    <item x="0.9765625" y="0.4296875" z="0.2734375" w="1" />
+                                    <item x="0.61328125" y="0.03125" z="0.05078125" w="1" />
+                                    <item x="0.62890625" y="0.5234375" z="0.7421875" w="1" />
+                                    <item x="0.796875" y="0.3984375" z="0" w="1" />
+                                    <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
+                                </colors>
+                            </colorMap>
+                            <plotEntitySettingsVector />
+                        </Property>
+                        <Property name="plotLabel" lod="1" value="" />
+                        <Property name="plotLabelColor" lod="1">
+                            <value x="0" y="0" z="1" w="1" />
+                        </Property>
+                        <Property name="plotLabelSize" lod="1" value="18" />
+                        <Property name="renderAxes" lod="1" value="false" />
+                        <Property name="renderScales" lod="1" value="false" />
+                        <Property name="selectionProperty" lod="1" threeDimensional="false">
+                            <values />
+                        </Property>
+                        <Property name="xLabel" lod="1" value="x axis" />
+                        <Property name="yLabel" lod="1" value="y axis" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ForceDirectedLayout" name="ForceDirectedLayout" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-496" y="121" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="EdgeAngleEqualization" value="0" />
+                        <Property name="applyForces" />
+                        <Property name="applyForcesStep" />
+                        <Property name="charge" value="2" />
+                        <Property name="damping" value="0.56999999" />
+                        <Property name="horizontalMagneticForce" value="0" />
+                        <Property name="initLayout" />
+                        <Property name="magneticAlpha" value="0.19" />
+                        <Property name="magneticBeta" value="1.11000001" />
+                        <Property name="springForce" value="0.30000001" />
+                        <Property name="springLength" value="2.67000008" />
+                        <Property name="threshold" value="0.01" />
+                        <Property name="verticalMagneticForce" value="0" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="NodeGraphSource" name="NodeGraphSource" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-488" y="-86" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="ConnectionCount" value="15" />
+                        <Property name="GenerateTree" value="false" />
+                        <Property name="MaxChildCount" value="4" />
+                        <Property name="NodeCount" value="10" />
+                        <Property name="OmitNotConnectedNodes_" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="GraphPlot" ref="ref0" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="PlotData.OutgoingNodes">
+                        <Processor type="ForceDirectedLayout" ref="ref2" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="GraphPlot" ref="ref0" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="PlotData.OutgoingEdges">
+                        <Processor type="ForceDirectedLayout" ref="ref2" />
+                    </Outport>
+                    <Inport name="connectionPort">
+                        <Processor type="GraphPlot" ref="ref0" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="Nodes">
+                        <Processor type="NodeGraphSource" ref="ref3" />
+                    </Outport>
+                    <Inport name="PlotData.IncomingNodes">
+                        <Processor type="ForceDirectedLayout" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="Connections">
+                        <Processor type="NodeGraphSource" ref="ref3" />
+                    </Outport>
+                    <Inport name="PlotData.IncomingEdges">
+                        <Processor type="ForceDirectedLayout" ref="ref2" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

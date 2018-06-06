@@ -1,0 +1,50 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_Smoothing" group="Filtering">
+    <filterlist>
+      <filter name="BinomialBlurImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Repetitions" argumenttype="Int" defaultValue="1" minValue="1" maxValue="255"/>
+        </arguments>
+      </filter>
+      <filter name="DiscreteGaussianImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage"/>
+        </inports>
+        <outports>
+          <port name="OutputImage">
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+          </port>
+        </outports>
+        <arguments>
+          <argument name="InternalNumberOfStreamDivisions" argumenttype="Int" defaultValue="1" minValue="1" maxValue="INT_MAX"/>
+          <argument name="MaximumError" argumenttype="PixelType" minValue="1.0f"/>
+          <argument name="Variance" argumenttype="PixelType"/>
+          <argument name="UseImageSpacing" argumenttype="Bool" defaultValue="false"/>
+          <argument name="FilterDimensionality" argumenttype="Int" defaultValue="3" minValue="1" maxValue="10"/>
+        </arguments>
+      </filter>
+      <filter name="MeanImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="MedianImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="Radius" argumenttype="SizeType" defaultValue="(1)" minValue="(0)" maxValue="(3)"/>
+        </arguments>
+      </filter>
+      <filter name="RecursiveGaussianImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="NormalizeAcrossScale" argumenttype="Bool" defaultValue="false"/>
+          <argument name="Sigma" argumenttype="Float" defaultValue="0.1f" minValue="0.0f" maxValue="1.0f"/>
+        </arguments>
+      </filter>
+      <filter name="SmoothingRecursiveGaussianImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="NormalizeAcrossScale" argumenttype="Bool" defaultValue="false"/>
+          <argument name="Sigma" argumenttype="Float" defaultValue="0.1f" minValue="0.0f" maxValue="1.0f"/>
+        </arguments>
+      </filter>
+    </filterlist>
+  </ITK_Module>
+</VoreenData>

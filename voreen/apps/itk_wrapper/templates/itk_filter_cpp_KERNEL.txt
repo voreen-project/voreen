@@ -1,0 +1,77 @@
+/***********************************************************************************
+ *                                                                                 *
+ * Voreen - The Volume Rendering Engine                                            *
+ *                                                                                 *
+ * Copyright (C) 2005-2014 University of Muenster, Germany.                        *
+ * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * For a list of authors please refer to the file "CREDITS.txt".                   *
+ *                                                                                 *
+ * This file is part of the Voreen software package. Voreen is free software:      *
+ * you can redistribute it and/or modify it under the terms of the GNU General     *
+ * Public License version 2 as published by the Free Software Foundation.          *
+ *                                                                                 *
+ * Voreen is distributed in the hope that it will be useful, but WITHOUT ANY       *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR   *
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.      *
+ *                                                                                 *
+ * You should have received a copy of the GNU General Public License in the file   *
+ * "LICENSE.txt" along with this file. If not, see <http://www.gnu.org/licenses/>. *
+ *                                                                                 *
+ * For non-commercial academic use see the license exception specified in the file *
+ * "LICENSE-academic.txt". To get information about commercial licensing please    *
+ * contact the authors.                                                            *
+ *                                                                                 *
+ ***********************************************************************************/
+
+#include "§LOWERFILTERNAME§.h"
+#include "voreen/core/datastructures/volume/volumeram.h"
+#include "voreen/core/datastructures/volume/volume.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/ports/conditions/portconditionvolumetype.h"
+#include "modules/itk/utils/itkwrapper.h"
+#include "voreen/core/datastructures/volume/operators/volumeoperatorconvert.h"
+#include "itkImage.h"
+
+#include "itk§FILTERNAME§.h"
+#include "itkBinaryBallStructuringElement.h"
+#include "itkBinaryCrossStructuringElement.h"
+#include "itkFlatStructuringElement.h"
+
+#include <iostream>
+
+namespace voreen {
+
+const std::string §FILTERNAME§ITK::loggerCat_("voreen.§FILTERNAME§ITK");
+
+§FILTERNAME§ITK::§FILTERNAME§ITK()
+    : ITKProcessor(),
+§PORTS§§PROPERTIES§
+    structuringElement_("structuringElement", "Structuring Element"),
+    shape_("shape", "Shape"),
+    radius_("Radius", "Radius", tgt::ivec3(1),tgt::ivec3(1),tgt::ivec3(20))
+{
+§PORTADD§
+
+    structuringElement_.addOption("binaryBall", "BinaryBall");
+    structuringElement_.addOption("binaryCross", "BinaryCross");
+    structuringElement_.addOption("flat", "Flat");
+    addProperty(structuringElement_);
+
+    shape_.addOption("box","Box");
+    shape_.addOption("ball","Ball");
+    shape_.addOption("cross","Cross");
+    shape_.addOption("annulus","Annulus");
+    addProperty(shape_);
+    shape_.setVisibleFlag(false);
+
+    addProperty(radius_);
+§PROPERTYADD§
+}
+
+Processor* §FILTERNAME§ITK::create() const {
+    return new §FILTERNAME§ITK();
+}
+
+§FILTERMETHODS§
+§PROCESSINGMETHODS§
+}   // namespace

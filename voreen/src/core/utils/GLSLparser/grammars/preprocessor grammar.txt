@@ -1,0 +1,154 @@
+Terminals:
+ID 7:	#endif
+ID 10:	#error
+ID 14:	#extension
+ID 4:	#if
+ID 8:	#ifdef
+ID 9:	#ifndef
+ID 15:	#include
+ID 13:	#line
+ID 11:	#pragma
+ID 3:	#undef
+ID 12:	#version
+ID 28:	%
+ID 37:	&
+ID 40:	&&
+ID 18:	(
+ID 19:	)
+ID 26:	*
+ID 22:	+
+ID 20:	,
+ID 23:	-
+ID 27:	/
+ID 31:	<
+ID 29:	<<
+ID 32:	<=
+ID 35:	==
+ID 34:	>
+ID 33:	>=
+ID 30:	>>
+ID 38:	^
+ID 16:	defined
+ID 44:	identifier
+ID 45:	int-constant
+ID 47:	newline
+ID 50:	pirate
+ID 46:	string
+ID 43:	text
+ID 42:	token
+ID 39:	|
+ID 41:	||
+ID 24:	~
+ID 25:	!
+ID 36:	!=
+ID 21:	"
+ID 1:	#
+ID 17:	##
+ID 2:	#define
+ID 5:	#elif
+ID 6:	#else
+
+Productions:
+ID  0:	[$START$] ::= [program]
+ID  87:	[additive-expression] ::= [multiplicative-expression]
+ID  88:	[additive-expression] ::= [additive-expression] + [multiplicative-expression]
+ID  89:	[additive-expression] ::= [additive-expression] - [multiplicative-expression]
+ID  74:	[and-expression] ::= [equality-expression]
+ID  75:	[and-expression] ::= [and-expression] & [equality-expression]
+ID  41:	[conditional-directive] ::= [if-part] [endif-directive]
+ID  42:	[conditional-directive] ::= [if-part] [else-part] [endif-directive]
+ID  58:	[constant-expression] ::= [logical-or-expression]
+ID  19:	[def-directive] ::= #define identifier newline
+ID  20:	[def-directive] ::= #define identifier [token-list] newline
+ID  21:	[def-directive] ::= #define identifier ( ) newline
+ID  22:	[def-directive] ::= #define identifier ( ) [token-list] newline
+ID  23:	[def-directive] ::= #define identifier ( [formals-list] ) newline
+ID  24:	[def-directive] ::= #define identifier ( [formals-list] ) [token-list] newline
+ID  64:	[defined-operator] ::= defined ( identifier )
+ID  65:	[defined-operator] ::= defined identifier
+ID  9:	[directive] ::= [def-directive]
+ID  10:	[directive] ::= [undef-directive]
+ID  11:	[directive] ::= [error-directive]
+ID  12:	[directive] ::= [extension-directive]
+ID  13:	[directive] ::= [include-directive]
+ID  14:	[directive] ::= [line-directive]
+ID  15:	[directive] ::= [null-directive]
+ID  16:	[directive] ::= [pragma-directive]
+ID  17:	[directive] ::= [version-directive]
+ID  18:	[directive] ::= [conditional-directive]
+ID  56:	[elif-directive] ::= #elif [constant-expression] newline
+ID  48:	[elif-part] ::= [elif-directive] [particle-list]
+ID  46:	[elif-parts] ::= [elif-part]
+ID  47:	[elif-parts] ::= [elif-parts] [elif-part]
+ID  55:	[else-directive] ::= #else newline
+ID  49:	[else-part] ::= [elif-parts]
+ID  50:	[else-part] ::= [elif-parts] [else-directive] [particle-list]
+ID  51:	[else-part] ::= [else-directive] [particle-list]
+ID  57:	[endif-directive] ::= #endif newline
+ID  76:	[equality-expression] ::= [relational-expression]
+ID  77:	[equality-expression] ::= [equality-expression] == [relational-expression]
+ID  78:	[equality-expression] ::= [equality-expression] != [relational-expression]
+ID  29:	[error-directive] ::= #error newline
+ID  30:	[error-directive] ::= #error [token-list] newline
+ID  72:	[exclusive-or-expression] ::= [and-expression]
+ID  73:	[exclusive-or-expression] ::= [exclusive-or-expression] ^ [and-expression]
+ID  3:	[expression-parsing] ::= pirate [constant-expression]
+ID  31:	[extension-directive] ::= #extension newline
+ID  32:	[extension-directive] ::= #extension [token-list] newline
+ID  27:	[formals-list] ::= identifier
+ID  28:	[formals-list] ::= [formals-list] , identifier
+ID  52:	[if-directive] ::= #if [constant-expression] newline
+ID  43:	[if-part] ::= [if-directive] [particle-list]
+ID  44:	[if-part] ::= [ifdef-directive] [particle-list]
+ID  45:	[if-part] ::= [ifndef-directive] [particle-list]
+ID  53:	[ifdef-directive] ::= #ifdef identifier newline
+ID  54:	[ifndef-directive] ::= #ifndef identifier newline
+ID  33:	[include-directive] ::= #include " string " newline
+ID  70:	[inclusive-or-expression] ::= [exclusive-or-expression]
+ID  71:	[inclusive-or-expression] ::= [inclusive-or-expression] | [exclusive-or-expression]
+ID  34:	[line-directive] ::= #line int-constant newline
+ID  35:	[line-directive] ::= #line int-constant " string " newline
+ID  68:	[logical-and-expression] ::= [inclusive-or-expression]
+ID  69:	[logical-and-expression] ::= [logical-and-expression] && [inclusive-or-expression]
+ID  66:	[logical-or-expression] ::= [logical-and-expression]
+ID  67:	[logical-or-expression] ::= [logical-or-expression] || [logical-and-expression]
+ID  59:	[macro-evaluation] ::= identifier
+ID  60:	[macro-evaluation] ::= identifier ( )
+ID  61:	[macro-evaluation] ::= identifier ( [parameter-list] )
+ID  90:	[multiplicative-expression] ::= [unary-expression]
+ID  91:	[multiplicative-expression] ::= [multiplicative-expression] * [unary-expression]
+ID  92:	[multiplicative-expression] ::= [multiplicative-expression] / [unary-expression]
+ID  93:	[multiplicative-expression] ::= [multiplicative-expression] % [unary-expression]
+ID  36:	[null-directive] ::= # newline
+ID  62:	[parameter-list] ::= [constant-expression]
+ID  63:	[parameter-list] ::= [parameter-list] , [constant-expression]
+ID  6:	[particle] ::= [directive]
+ID  7:	[particle] ::= text
+ID  8:	[particle] ::= newline
+ID  4:	[particle-list] ::= [particle]
+ID  5:	[particle-list] ::= [particle-list] [particle]
+ID  37:	[pragma-directive] ::= #pragma [token-list] newline
+ID  99:	[primary-expression] ::= [defined-operator]
+ID  100:	[primary-expression] ::= [macro-evaluation]
+ID  101:	[primary-expression] ::= int-constant
+ID  102:	[primary-expression] ::= ( [constant-expression] )
+ID  1:	[program] ::= [particle-list]
+ID  2:	[program] ::= [expression-parsing]
+ID  79:	[relational-expression] ::= [shift-expression]
+ID  80:	[relational-expression] ::= [relational-expression] < [shift-expression]
+ID  81:	[relational-expression] ::= [relational-expression] > [shift-expression]
+ID  82:	[relational-expression] ::= [relational-expression] <= [shift-expression]
+ID  83:	[relational-expression] ::= [relational-expression] >= [shift-expression]
+ID  84:	[shift-expression] ::= [additive-expression]
+ID  85:	[shift-expression] ::= [shift-expression] << [additive-expression]
+ID  86:	[shift-expression] ::= [shift-expression] >> [additive-expression]
+ID  25:	[token-list] ::= token
+ID  26:	[token-list] ::= [token-list] token
+ID  94:	[unary-expression] ::= [primary-expression]
+ID  95:	[unary-expression] ::= + [unary-expression]
+ID  96:	[unary-expression] ::= - [unary-expression]
+ID  97:	[unary-expression] ::= ! [unary-expression]
+ID  98:	[unary-expression] ::= ~ [unary-expression]
+ID  38:	[undef-directive] ::= #undef identifier newline
+ID  39:	[version-directive] ::= #version int-constant newline
+ID  40:	[version-directive] ::= #version int-constant identifier newline
