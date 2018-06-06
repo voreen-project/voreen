@@ -29,6 +29,8 @@
 #include "../interaction/plotcamerainteractionhandler.h"
 #include "../datastructures/plotrow.h"
 
+#include "../ext/triangle/include/del_interface.hpp"
+
 namespace voreen {
 
 const std::string SurfacePlot::loggerCat_("voreen.SurfacePlot");
@@ -36,7 +38,6 @@ const std::string SurfacePlot::loggerCat_("voreen.SurfacePlot");
 SurfacePlot::SurfacePlot()
     : PlotProcessor(PlotEntitySettings::SURFACE, true)
     , omitDelaunayTriangulation_(0)
-    , delaunay_(nullptr)
     , glLibMeshes_()
     , glLibPickingMeshes_()
 {
@@ -87,26 +88,23 @@ void SurfacePlot::generateDelaunay() {
             currentIndexX_ = plotEntitiesProp_.getXColumnIndex();
             currentIndexY_ = plotEntitiesProp_.getYColumnIndex();
 
-//#ifdef VRN_MODULE_TRIANGLE
-            delete delaunay_;
-
             std::vector<tpp::Delaunay::Point> points;
             for (std::vector<PlotRowValue>::const_iterator it = data_.getRowsBegin(); it < data_.getRowsEnd(); ++it) {
                 points.push_back(tpp::Delaunay::Point(it->getValueAt(plotEntitiesProp_.getXColumnIndex()), it->getValueAt(plotEntitiesProp_.getYColumnIndex())));
             }
 
-            delaunay_ = new tpp::Delaunay(points);
+            tpp::Delaunay delaunay(points);
             std::string s = "vziQ";
-            delaunay_->Triangulate(s);
+            delaunay.Triangulate(s);
             voronoiRegions_.clear();
-            delaunay_->generateVoronoiRegions(data_, voronoiRegions_);
+            delaunay.generateVoronoiRegions(data_, voronoiRegions_);
 
             triangleEdgeIndices_.clear();
-            triangleEdgeIndices_.reserve(delaunay_->ntriangles() * 3);
-            for (tpp::Delaunay::fIterator fit = delaunay_->fbegin(); fit != delaunay_->fend(); ++fit) {
-                triangleEdgeIndices_.push_back(delaunay_->Org(fit));
-                triangleEdgeIndices_.push_back(delaunay_->Dest(fit));
-                triangleEdgeIndices_.push_back(delaunay_->Apex(fit));
+            triangleEdgeIndices_.reserve(delaunay.ntriangles() * 3);
+            for (tpp::Delaunay::fIterator fit = delaunay.fbegin(); fit != delaunay.fend(); ++fit) {
+                triangleEdgeIndices_.push_back(delaunay.Org(fit));
+                triangleEdgeIndices_.push_back(delaunay.Dest(fit));
+                triangleEdgeIndices_.push_back(delaunay.Apex(fit));
             }
 
 /*#else
@@ -166,7 +164,7 @@ void SurfacePlot::generateDelaunay() {
             }
 #endif */
 
-        clipVoronoiRegionsToZoom();
+            clipVoronoiRegionsToZoom();
         }
     }
 }

@@ -75,7 +75,11 @@ PlottingModule::PlottingModule(const std::string& modulePath)
     registerSerializableType(new PlotDataSelect());
     registerSerializableType(new PlotFunctionDiscret());
     registerSerializableType(new ScatterPlot());
+#ifndef WIN32
+    // Surface Plot uses the included triangle library which will crash on win32 systems.
+    // As long as this isn't resolved (e.g. by using another library), we don't include this processor.
     registerSerializableType(new SurfacePlot());
+#endif
 
     registerSerializableType(new LinkEvaluatorColorMapId());
     registerSerializableType(new LinkEvaluatorPlotEntitiesId());
