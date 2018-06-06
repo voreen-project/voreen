@@ -271,7 +271,7 @@ VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional
             }
         }
     }
-    surfaceFile_ = SurfaceBuilder::finalize(std::move(builder));
+    surfaceFile_ = std::move(builder).finalize();
     progress.setProgress(1.0f);
 }
 
@@ -394,7 +394,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
     tgtAssert(to_delete_prev_prev.empty() && to_delete_prev.empty() && to_delete_current.empty(), "Deletion unfinished");
     tgtAssert(surface.m<0>().empty() && surface.m<1>().empty() && surface.m<2>().empty() && surface.m<3>().empty(), "Writing surface back unfinished");
 
-    surfaceFile_ = SurfaceBuilder::finalize(std::move(builder));
+    surfaceFile_ = std::move(builder).finalize();
 
 
     progress.setProgress(static_cast<float>(numberOfDeletedVoxels)/numOriginalForegroundVoxels_);

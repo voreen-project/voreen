@@ -23,7 +23,6 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "../datastructures/lz4slicevolume.h"
 #include "vesselgraphcreator.h"
 
 #include "voreen/core/datastructures/volume/volume.h"
@@ -37,15 +36,13 @@
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/utils/stringutils.h"
 
-#include "modules/hdf5/io/hdf5volumereader.h"
-#include "modules/hdf5/io/hdf5volumewriter.h"
-#include "modules/hdf5/io/hdf5filevolume.h"
-
 #include "../algorithm/streaminggraphcreation.h"
 #include "../algorithm/volumemask.h"
 #include "../algorithm/idvolume.h"
 #include "../algorithm/vesselgraphnormalization.h"
 #include "../algorithm/boundshierarchy.h"
+
+#include "../datastructures/lz4slicevolume.h"
 
 #include "custommodules/bigdataimageprocessing/processors/connectedcomponentanalysis.h"
 
@@ -556,7 +553,7 @@ static uint64_t toLinearPos(const tgt::svec3& pos, const tgt::svec3& dimensions)
 
 struct IdVolumeInitializer {
     uint32_t id_;
-    IdVolumeStorageInitializer storage_;
+    LZ4SliceVolumeVoxelBuilder<IdVolume::Value> storage_;
     SurfaceBuilder surface_;
     size_t numUnlabeledForegroundVoxels_;
     size_t numTotalVoxels_;
@@ -566,7 +563,7 @@ struct IdVolumeInitializer {
 
     IdVolumeInitializer(uint32_t id, tgt::svec3 offset, tgt::svec3 size)
         : id_(id)
-        , storage_(VoreenApplication::app()->getUniqueTmpFilePath(".raw"))
+        , storage_(VoreenApplication::app()->getUniqueTmpFilePath(".lz4"), size)
         , surface_()
         , numUnlabeledForegroundVoxels_(0)
         , numTotalVoxels_(0)
@@ -592,7 +589,7 @@ struct IdVolumeInitializer {
     }
 
     void pushLabel(IdVolume::Value v) {
-        storage_.push(v);
+        storage_.pushVoxel(v);
         ++numTotalVoxels_;
     }
 
@@ -655,21 +652,55 @@ static void initializeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4Sl
     progress.setProgress(1.0f);
 }
 
+static LZ4SliceVolume<IdVolume::Value> flood(IdVolumeInitializer&& volume, ProgressReporter& progress) {
+    tgtAssert(volume.numTotalVoxels_ == tgt::hmul(volume.size_), "Incomplete IdVolumeInitializer");
+
+    auto lz4vol = std::move(volume.storage_).finalize();
+
+    std::string filename = VoreenApplication::app()->getUniqueTmpFilePath(".raw");
+    IdVolumeStorage idStorage(lz4vol, filename);
+    IdVolume vol(std::move(idStorage), std::move(volume.surface_).finalize(), volume.numUnlabeledForegroundVoxels_);
+    vol.floodFromLabels(progress, std::numeric_limits<size_t>::max());
+
+    std::move(lz4vol).deleteFromDisk();
+
+    LZ4SliceVolumeBuilder<IdVolume::Value> builder(VoreenApplication::app()->getUniqueTmpFilePath(".lz4"), lz4vol.getMetaData());
+    for(size_t z = 0; z<vol.getDimensions().z; ++z) {
+        builder.pushSlice(vol.data_->getSlice(z));
+    }
+    return std::move(builder).finalize();
+}
+
 struct IdVolumeFinalizer {
     uint32_t id_;
-    IdVolume vol_;
+    LZ4SliceVolume<IdVolume::Value> vol_;
+    LZ4SliceVolumeSliceCacher<IdVolume::Value> slices_;
 
     tgt::svec3 offset_;
     tgt::svec3 size_;
 
     IdVolumeFinalizer(IdVolumeInitializer&& volume, ProgressReporter& progress)
         : id_(volume.id_)
-        , vol_(std::move(volume.storage_), SurfaceBuilder::finalize(std::move(volume.surface_)), volume.size_, volume.numUnlabeledForegroundVoxels_)
+        , vol_(flood(std::move(volume), progress))
+        , slices_(vol_)
         , offset_(volume.offset_)
         , size_(volume.size_)
     {
-        tgtAssert(volume.numTotalVoxels_ == tgt::hmul(size_), "Incomplete IdVolumeInitializer");
-        vol_.floodFromLabels(progress, std::numeric_limits<size_t>::max());
+    }
+
+    IdVolumeFinalizer(const IdVolumeFinalizer& other) = delete;
+    IdVolumeFinalizer(IdVolumeFinalizer&& other)
+        : id_(other.id_)
+        , vol_(std::move(other.vol_))
+        , slices_(vol_)
+        , offset_(other.offset_)
+        , size_(other.size_)
+    {
+    }
+
+    ~IdVolumeFinalizer()
+    {
+        std::move(vol_).deleteFromDisk();
     }
 
     bool containsPoint(const tgt::svec3& p) const {
@@ -685,7 +716,8 @@ struct IdVolumeFinalizer {
 
     IdVolume::Value getValue(const tgt::svec3& p) const {
         tgtAssert(containsPoint(p), "Invalid p");
-        return vol_.data_->get(p - offset_);
+        tgt::svec3 pos = p - offset_;
+        return slices_.getSlice(pos.z).voxel(pos.x, pos.y, 0);
     }
 };
 
