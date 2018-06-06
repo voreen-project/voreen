@@ -62,9 +62,9 @@ public:
 
     /**
      * While using this constructor the class will use an preallocated chunk
-     * of memory given in \p data. This memory will be deleted by this class.
+     * of memory given in \p data. If takeOwnership is true, this memory will be deleted by this class.
      */
-    VolumeAtomic(T* data, const tgt::svec3& dimensions);
+    VolumeAtomic(T* data, const tgt::svec3& dimensions, bool takeOwnership=true);
 
     /**
      * Move constructor.
@@ -253,6 +253,7 @@ protected:
     float minMagnitudeImpl(IsScalar<false>) const;
 
     T* data_;
+    bool ownsData_;
 
     tgt::vec2 elementRange_;
 
@@ -336,6 +337,7 @@ template<class T>
 VolumeAtomic<T>::VolumeAtomic(const tgt::svec3& dimensions, bool allocMem) 
     : VolumeRAM(dimensions)
     , data_(0)
+    , ownsData_(true)
     , elementRange_(static_cast<float>(VolumeElement<T>::rangeMinElement()),
         static_cast<float>(VolumeElement<T>::rangeMaxElement()))
     , minMaxValid_(false)
@@ -353,9 +355,11 @@ VolumeAtomic<T>::VolumeAtomic(const tgt::svec3& dimensions, bool allocMem)
 
 template<class T>
 VolumeAtomic<T>::VolumeAtomic(T* data,
-                              const tgt::svec3& dimensions)
+                              const tgt::svec3& dimensions,
+                              bool takeOwnership)
     : VolumeRAM(dimensions)
     , data_(data)
+    , ownsData_(takeOwnership)
     , elementRange_(static_cast<float>(VolumeElement<T>::rangeMinElement()),
          static_cast<float>(VolumeElement<T>::rangeMaxElement()))
     , minMaxValid_(false)
@@ -463,7 +467,9 @@ VolumeAtomic<T>* VolumeAtomic<T>::getSubVolume(tgt::svec3 dimensions, tgt::svec3
 
 template<class T>
 VolumeAtomic<T>::~VolumeAtomic() {
-    delete[] data_;
+    if(ownsData_) {
+        delete[] data_;
+    }
 }
 
 template<class T>
