@@ -1034,6 +1034,10 @@ VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput inp
             break;
         }
     }
+    std::move(processedInput.segmentation).deleteFromDisk();
+    if(processedInput.sampleMask) {
+        std::move(*processedInput.sampleMask).deleteFromDisk();
+    }
     return VesselGraphCreatorOutput {
         std::move(graph),
         std::move(generatedSkeletons)
