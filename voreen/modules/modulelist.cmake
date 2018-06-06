@@ -5,8 +5,6 @@
 # standard modules without external dependencies (enabled by default)
 OPTION(VRN_MODULE_BASE              "Provides basic rendering and data processing functionality"    ON )
 OPTION(VRN_MODULE_CONNEXE           "Connected component analysis using the Connexe library"        ON )
-OPTION(VRN_MODULE_DYNAMICGLSL         
-        "Provides a processor that parses its shader and dynamically adds port and properties"      ON )
 OPTION(VRN_MODULE_EXPERIMENTAL      "Provides experimental code not yet ready for productive use"   OFF)
 OPTION(VRN_MODULE_FLOWREEN          "Provides flow visualization techniques"                        ON )
 OPTION(VRN_MODULE_PLOTTING          "Provides plotting components"                                  ON )
