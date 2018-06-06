@@ -20,7 +20,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/tabbedview.cpp
     ${MOD_DIR}/processors/arbitraryvolumeclipping.cpp
     ${MOD_DIR}/processors/pong.cpp
-    ${MOD_DIR}/processors/multivolumegeometryraycaster.cpp
     ${MOD_DIR}/processors/screenspaceambientocclusion.cpp
     ${MOD_DIR}/processors/registrationinitializer.cpp
     ${MOD_DIR}/processors/volumerealworldmapping.cpp
@@ -56,7 +55,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/tabbedview.h
     ${MOD_DIR}/processors/arbitraryvolumeclipping.h
     ${MOD_DIR}/processors/pong.h
-    ${MOD_DIR}/processors/multivolumegeometryraycaster.h
     ${MOD_DIR}/processors/screenspaceambientocclusion.h
     ${MOD_DIR}/processors/registrationinitializer.h
     ${MOD_DIR}/processors/volumerealworldmapping.h

@@ -44,6 +44,7 @@
 #include "processors/meshfrustumclipping.h"
 #include "processors/mousepositionrenderer.h"
 #include "processors/multivolumecrosssectionanalyzer.h"
+#include "processors/multivolumegeometryraycaster.h"
 #include "processors/normalestimation.h"
 #include "processors/radarglyphrenderer2d.h"
 #include "processors/radarglyphrenderer3d.h"
@@ -94,6 +95,9 @@ ExperimentalModule::ExperimentalModule(const std::string& modulePath)
     //registerSerializableType(new LP_Plot());
     registerSerializableType(new MousePositionRenderer());
     registerSerializableType(new MultiVolumeCrossSectionAnalyzer());
+#ifdef GL_ATOMIC_COUNTER_BUFFER //disable compilation for old gl headers
+    registerSerializableType(new MultiVolumeGeometryRaycaster());
+#endif
     registerSerializableType(new NormalEstimation());
     registerSerializableType(new RadarGlyphRenderer2D());
     registerSerializableType(new RadarGlyphRenderer3D());

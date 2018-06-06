@@ -43,6 +43,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/meshfrustumclipping.cpp 
     ${MOD_DIR}/processors/mousepositionrenderer.cpp
     ${MOD_DIR}/processors/multivolumecrosssectionanalyzer.cpp
+    ${MOD_DIR}/processors/multivolumegeometryraycaster.cpp
     ${MOD_DIR}/processors/normalestimation.cpp
     ${MOD_DIR}/processors/pwivolume.cpp
     ${MOD_DIR}/processors/regiongrowing.cpp
@@ -98,6 +99,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/meshfrustumclipping.h
     ${MOD_DIR}/processors/mousepositionrenderer.h
     ${MOD_DIR}/processors/multivolumecrosssectionanalyzer.h
+    ${MOD_DIR}/processors/multivolumegeometryraycaster.h
     ${MOD_DIR}/processors/normalestimation.h
     ${MOD_DIR}/processors/radarglyphrendererbase.h
     ${MOD_DIR}/processors/radarglyphrenderer2d.h
