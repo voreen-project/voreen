@@ -33,21 +33,10 @@
 
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 
-#include "../ext/triangle/include/del_interface.hpp"
-
 #include <vector>
 #include <list>
 
 namespace voreen {
-
-/*
-#ifndef VRN_MODULE_TRIANGLE
-// forward declaration if no triangle module available
-namespace tpp {
-    class Delaunay;
-}
-#endif
-*/
 
 /**
  * This processor is able to create 3D surface plots.
@@ -94,7 +83,6 @@ protected:
     int currentIndexX_;             ///< column index of current x axis (local variable to notice when according setting in properties changes and delauney triangulation has to be redone)
     int currentIndexY_;             ///< column index of current x axis (local variable to notice when according setting in properties changes and delauney triangulation has to be redone)
 
-    tpp::Delaunay* delaunay_;               ///< pointer to delaunay object which does delaunay triangulation and voronoi diagram generation
     std::vector<int> triangleEdgeIndices_;  ///< vector of edge indices of delaunay triangulation - input format for plot library
     std::vector< std::list< tgt::dvec2 > > voronoiRegions_;  ///< vector of voronoi regions each being a point list in ccw order
 
