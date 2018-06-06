@@ -1139,8 +1139,13 @@ bool FileSystem::fileExists(const std::string& filename) {
     std::string converted = replaceAllCharacters(filename, badSlash_, goodSlash_);
     removeTrailingCharacters(converted, goodSlash_);
 
+#ifdef WIN32
+    WIN32_FILE_ATTRIBUTE_DATA fad;
+    return (GetFileAttributesEx(converted.c_str(), GetFileExInfoStandard, &fad) != 0);
+#else
     struct stat st;
     return (stat(converted.c_str(), &st) == 0);
+#endif
 }
 
 uint64_t FileSystem::dirSize(const std::string& directory, const bool recursive) {
@@ -1164,10 +1169,20 @@ uint64_t FileSystem::fileSize(const std::string& filename) {
     std::string converted = replaceAllCharacters(filename, badSlash_, goodSlash_);
     removeTrailingCharacters(converted, goodSlash_);
 
+#ifdef WIN32
+    WIN32_FILE_ATTRIBUTE_DATA fad;
+    if (GetFileAttributesEx(converted.c_str(), GetFileExInfoStandard, &fad)) {
+        LARGE_INTEGER size;
+        size.HighPart = fad.nFileSizeHigh;
+        size.LowPart = fad.nFileSizeLow;
+        return size.QuadPart;
+    }
+#else
     struct stat st;
     if(stat(converted.c_str(), &st) == 0) {
         return st.st_size;
     }
+#endif
     else {
         // error
         return 0;
@@ -1181,10 +1196,20 @@ time_t FileSystem::fileTime(const std::string& filename) {
     std::string converted = replaceAllCharacters(filename, badSlash_, goodSlash_);
     removeTrailingCharacters(converted, goodSlash_);
 
+#ifdef WIN32
+    WIN32_FILE_ATTRIBUTE_DATA fad;
+    if (GetFileAttributesEx(converted.c_str(), GetFileExInfoStandard, &fad)) {
+        LARGE_INTEGER size;
+        size.HighPart = fad.ftLastWriteTime.dwHighDateTime;
+        size.LowPart = fad.ftLastWriteTime.dwLowDateTime;
+        return size.QuadPart;
+    }
+#else
     struct stat st;
     if(stat(converted.c_str(), &st) == 0) {
         return st.st_mtime;
     }
+#endif
     else {
         // error
         return 0;
@@ -1198,10 +1223,20 @@ time_t FileSystem::fileAccessTime(const std::string& filename) {
     std::string converted = replaceAllCharacters(filename, badSlash_, goodSlash_);
     removeTrailingCharacters(converted, goodSlash_);
 
+#ifdef WIN32
+    WIN32_FILE_ATTRIBUTE_DATA fad;
+    if (GetFileAttributesEx(converted.c_str(), GetFileExInfoStandard, &fad)) {
+        LARGE_INTEGER size;
+        size.HighPart = fad.ftLastAccessTime.dwHighDateTime;
+        size.LowPart = fad.ftLastAccessTime.dwLowDateTime;
+        return size.QuadPart;
+    }
+#else
     struct stat st;
     if(stat(converted.c_str(), &st) == 0) {
         return st.st_atime;
     }
+#endif
     else {
         // error
         return 0;
@@ -1231,7 +1266,7 @@ std::vector<std::string> FileSystem::readDirectory(const std::string& directory,
         return listFiles(directory, sort);
 }
 
-#ifdef _WIN32
+#ifdef WIN32
 std::vector<std::string> FileSystem::listFiles(const std::string& directory, const bool sort) {
     std::vector<std::string> result;
     if (directory.empty())
@@ -1316,7 +1351,7 @@ std::vector<std::string> FileSystem::listFilesRecursive(const std::string& direc
     return result;
 }
 
-#ifdef _WIN32
+#ifdef WIN32
 std::vector<std::string> FileSystem::listSubDirectories(const std::string& directory, const bool sort) {
     std::vector<std::string> result;
     if (directory.empty())
