@@ -81,7 +81,6 @@ modules/connexe
 
 modules/devil/*
 modules/deprecated
-modules/dynamicglsl
 
 modules/ffmpeg/*
 modules/ffmpeg/videoencoder
