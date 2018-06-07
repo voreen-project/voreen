@@ -178,57 +178,6 @@ IdVolume::~IdVolume() {
     tgt::FileSystem::deleteFile(surfaceFile_.filename_);
 }
 
-/*
-IdVolume::IdVolume(IdVolumeInitializationReader& initializationReader)
-    : data_(nullptr)
-    , surfaceFile_("", 0)
-    , numUnlabeledForegroundVoxels_(0)
-{
-    //TaskTimeLogger _("Build IdVolume", tgt::Info);
-    const tgt::ivec3 dim = initializationReader.getDimensions();
-
-    SurfaceBuilder builder;
-    IdVolumeStorageInitializer initializer(VoreenApplication::app()->getUniqueTmpFilePath(".raw"));
-
-    for(size_t z=0; z < dim.z; ++z) {
-        initializationReader.advance();
-
-        for(size_t y=0; y < dim.y; ++y) {
-            for(size_t x=0; x < dim.x; ++x) {
-                tgt::svec3 pos(x,y,z);
-                uint32_t label;
-                if(initializationReader.isObject(pos)) {
-                    if(initializationReader.isLabeled(pos)) {
-                        label = initializationReader.getBranchId(pos);
-
-                        bool isLabelSurfaceVoxel =
-                            !( (x == 0       || initializationReader.isLabeled(tgt::ivec3(x-1, y  , z  )))
-                            && (x == dim.x-1 || initializationReader.isLabeled(tgt::ivec3(x+1, y  , z  )))
-                            && (y == 0       || initializationReader.isLabeled(tgt::ivec3(x  , y-1, z  )))
-                            && (y == dim.y-1 || initializationReader.isLabeled(tgt::ivec3(x  , y+1, z  )))
-                            && (z == 0       || initializationReader.isLabeled(tgt::ivec3(x  , y  , z-1)))
-                            && (z == dim.z-1 || initializationReader.isLabeled(tgt::ivec3(x  , y  , z+1))));
-
-                        if(isLabelSurfaceVoxel) {
-                            builder.push(toLinearPos(tgt::svec3(pos), dim));
-                        }
-                    } else {
-                        label = IdVolume::UNLABELED_FOREGROUND_VALUE;
-                        ++numUnlabeledForegroundVoxels_;
-                    }
-                } else {
-                    label = IdVolume::BACKGROUND_VALUE;
-                }
-                initializer.push(label);
-            }
-        }
-    }
-
-    data_.reset(new IdVolumeStorage(std::move(initializer), dim));
-    surfaceFile_ = SurfaceBuilder::finalize(std::move(builder));
-}
-*/
-
 void IdVolume::floodIteration(size_t& numberOfFloodedVoxels, ProgressReporter& progress) {
     SurfaceReader surfaceReader(surfaceFile_);
     SurfaceBuilder builder;
