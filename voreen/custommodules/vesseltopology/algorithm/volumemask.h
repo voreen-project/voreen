@@ -301,7 +301,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
                         for(int x = -1; x != 2; ++x) {
                             tgt::ivec3 p = tgt::ivec3(pos) + tgt::ivec3(x, y, z);
                             if(get(p, BACKGROUND) == OBJECT) {
-                                surface.m<3>().insert(toLinearPos(tgt::svec3(p)));
+                                surface.m<3>().push_back(toLinearPos(tgt::svec3(p)));
                             }
                         }
                     }
@@ -314,7 +314,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
                             if(x != 0 || y != 0) {
                                 tgt::ivec3 p = tgt::ivec3(pos) + tgt::ivec3(x, y, z);
                                 if(get(p, BACKGROUND) == OBJECT) {
-                                    surface.m<2>().insert(toLinearPos(tgt::svec3(p)));
+                                    surface.m<2>().push_back(toLinearPos(tgt::svec3(p)));
                                 }
                             }
                         }
@@ -327,7 +327,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
                         for(int x = -1; x != 2; ++x) {
                             tgt::ivec3 p = tgt::ivec3(pos) + tgt::ivec3(x, y, z);
                             if(get(p, BACKGROUND) == OBJECT) {
-                                surface.m<1>().insert(toLinearPos(tgt::svec3(p)));
+                                surface.m<1>().push_back(toLinearPos(tgt::svec3(p)));
                             }
                         }
                     }
@@ -335,7 +335,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
 
             } else {
                 //Voxel is potentially deletable, but was not, so it will (or may at least) become inactive for now
-                // => we do not: "surface.m<2>().insert(toLinearPos(pos));"
+                // => we do not: "surface.m<2>().push_back(toLinearPos(pos));"
             }
         }
     };
@@ -379,7 +379,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
             }
         } else {
             // Active surface voxel is not valid for current scraping direction
-            surface.m<0>().insert(linearPos);
+            surface.m<0>().push_back(linearPos);
         }
     }
     for(int i=0; i<5; ++i) {

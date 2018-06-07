@@ -205,7 +205,7 @@ void IdVolume::floodIteration(size_t& numberOfFloodedVoxels, ProgressReporter& p
             surface.advance(builder);
             ++z;
         }
-        auto label_if_in_volume = [&] (std::set<uint64_t>& set, tgt::ivec3 offset) {
+        auto label_if_in_volume = [&] (SurfaceSlice& set, tgt::ivec3 offset) {
             tgt::ivec3 npos = pos;
             npos += offset;
             if(
@@ -215,7 +215,7 @@ void IdVolume::floodIteration(size_t& numberOfFloodedVoxels, ProgressReporter& p
               ) {
                 if(data_->get(npos) == UNLABELED_FOREGROUND_VALUE) {
                     data_->set(npos, current_label);
-                    set.insert(toLinearPos(tgt::svec3(npos), dimensions));
+                    set.push_back(toLinearPos(tgt::svec3(npos), dimensions));
                     ++numberOfFloodedVoxels;
                 }
             }

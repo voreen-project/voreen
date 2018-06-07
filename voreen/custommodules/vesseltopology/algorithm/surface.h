@@ -24,7 +24,7 @@
  ***********************************************************************************/
 #pragma once
 #include <string>
-#include <set>
+#include <vector>
 #include <array>
 #include <fstream>
 
@@ -40,6 +40,8 @@ struct StoredSurface {
     size_t numVoxels_;
 };
 
+typedef std::vector<uint64_t> SurfaceSlice;
+
 class SurfaceBuilder {
 public:
     SurfaceBuilder();
@@ -51,7 +53,7 @@ public:
     ~SurfaceBuilder() {}
 
     void push(uint64_t linearVoxelPos);
-    void push_all(std::set<uint64_t> linearVoxelPositions);
+    void push_all(SurfaceSlice linearVoxelPositions);
 
 private:
     std::string filename_;
@@ -73,9 +75,10 @@ private:
     StoredSurface surface_;
     std::ifstream file_;
 };
+
 template<int N>
 struct SurfaceSlices {
-    std::array<std::set<uint64_t>, N> slices_;
+    std::array<SurfaceSlice, N> slices_;
 
     void advance(SurfaceBuilder& builder) {
         builder.push_all(m<N-1>());
@@ -87,7 +90,7 @@ struct SurfaceSlices {
     }
 
     template<int i>
-    std::set<uint64_t>& m() {
+    SurfaceSlice& m() {
         static_assert(0 <= i && i < N, "Invalid index");
         return std::get<i>(slices_);
     }
