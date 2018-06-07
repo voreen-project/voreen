@@ -605,21 +605,36 @@ static void initializeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4Sl
     tgt::svec3 dim = branchIds.getDimensions();
     tgtAssert(holeIds.getDimensions() == dim, "Volume dimension mismatch");
 
-    std::vector<std::pair<IdVolumeInitializer*, tgt::SBounds>> initializer_finder_init;
-    for(auto& initializer: initializers) {
-        initializer_finder_init.emplace_back(&initializer, initializer.getBounds());
+    std::vector<boost::optional<BoundsHierarchy<size_t, IdVolumeInitializer*>>> initializer_finders;
+    for(size_t z=0; z < dim.z; ++z) {
+        std::vector<std::pair<IdVolumeInitializer*, tgt::SBounds>> initializer_finder_init;
+        for(auto& initializer: initializers) {
+            tgt::SBounds full_bounds = initializer.getBounds();
+            if(full_bounds.getLLF().z <= z && z <= full_bounds.getURB().z) {
+                tgt::SBounds bounds(tgt::svec3(full_bounds.getLLF().xy(), 0), tgt::svec3(full_bounds.getURB().xy(), 0));
+                initializer_finder_init.emplace_back(&initializer, bounds);
+            }
+        }
+        if(initializer_finder_init.empty()) {
+            initializer_finders.emplace_back(boost::none);
+        } else {
+            initializer_finders.emplace_back(std::move(initializer_finder_init));
+        }
     }
-    BoundsHierarchy<size_t, IdVolumeInitializer*> initializer_finder(std::move(initializer_finder_init));
 
     for(size_t z=0; z < dim.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dim.z);
         initializationReader.advance();
 
+        if(!initializer_finders.at(z)) {
+            continue;
+        }
         for(size_t y=0; y < dim.y; ++y) {
             for(size_t x=0; x < dim.x; ++x) {
                 tgt::svec3 pos(x,y,z);
 
-                for(IdVolumeInitializer* initializer : initializer_finder.findBounds(pos)) {
+                tgt::svec3 slicePos(x,y,0);
+                for(IdVolumeInitializer* initializer : initializer_finders.at(z)->findBounds(slicePos)) {
                     uint32_t label;
 
                     if(initializationReader.isObject(pos, initializer->id_)) {
@@ -722,19 +737,34 @@ struct IdVolumeFinalizer {
 };
 
 static void finalizeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4SliceVolume<uint32_t>& holeIds, std::vector<IdVolumeFinalizer>& finalizers, ProgressReporter& progress) {
-    TaskTimeLogger _("Initialize IdVolumes", tgt::Info);
+    TaskTimeLogger _("Finalize IdVolumes", tgt::Info);
     tgtAssert(branchIds.getDimensions() == holeIds.getDimensions(), "Invalid dimensions");
 
     const tgt::svec3 dim = branchIds.getDimensions();
 
-    std::vector<std::pair<IdVolumeFinalizer*, tgt::SBounds>> finalizer_finder_init;
-    for(auto& finalizer: finalizers) {
-        finalizer_finder_init.emplace_back(&finalizer, finalizer.getBounds());
+    std::vector<boost::optional<BoundsHierarchy<size_t, IdVolumeFinalizer*>>> finalizer_finders;
+    for(size_t z=0; z < dim.z; ++z) {
+        std::vector<std::pair<IdVolumeFinalizer*, tgt::SBounds>> finalizer_finder_init;
+        for(auto& finalizer: finalizers) {
+            tgt::SBounds full_bounds = finalizer.getBounds();
+            if(full_bounds.getLLF().z <= z && z <= full_bounds.getURB().z) {
+                tgt::SBounds bounds(tgt::svec3(full_bounds.getLLF().xy(), 0), tgt::svec3(full_bounds.getURB().xy(), 0));
+                finalizer_finder_init.emplace_back(&finalizer, bounds);
+            }
+        }
+        if(finalizer_finder_init.empty()) {
+            finalizer_finders.emplace_back(boost::none);
+        } else {
+            finalizer_finders.emplace_back(std::move(finalizer_finder_init));
+        }
     }
-    BoundsHierarchy<size_t, IdVolumeFinalizer*> finalizer_finder(std::move(finalizer_finder_init));
 
     for(size_t z=0; z < dim.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dim.z);
+
+        if(!finalizer_finders.at(z)) {
+            continue;
+        }
 
         auto branchSlice = branchIds.getWritableSlice(z);
         auto holeSlice = holeIds.loadSlice(z);
@@ -742,7 +772,9 @@ static void finalizeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4Slic
         for(size_t y=0; y < dim.y; ++y) {
             for(size_t x=0; x < dim.x; ++x) {
                 tgt::svec3 pos(x,y,z);
-                for(IdVolumeFinalizer* finalizer : finalizer_finder.findBounds(pos)) {
+                tgt::svec3 slicePos(x,y,0);
+
+                for(IdVolumeFinalizer* finalizer : finalizer_finders.at(z)->findBounds(slicePos)) {
                     if(holeSlice.voxel(x,y,0) == finalizer->id_) {
                         uint32_t floodedId = finalizer->getValue(pos);
                         tgtAssert(floodedId != IdVolume::BACKGROUND_VALUE, "flooded label is background");
