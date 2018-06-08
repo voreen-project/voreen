@@ -198,6 +198,114 @@ std::string strJoin(const std::vector<T>& tokens, const std::string& delim) {
     return s.str();
 }
 
+// ----------------------------------------------------------------------------
+// Functions related to conversion from BaseType/Format to compile time types
+// (i.e. uint*_t, int*_t, float, double and the tgt::Vector?<T> variants)
+
+// Get the BaseType string (i.e., uint*, int*, float or double) from the given Type
+template<typename T>
+std::string getBaseTypeFromType();
+
+// Get the Format string (i.e., uint*, int*, float, double or Vector*(...)) from the given Type
+template<typename T>
+std::string getFormatFromType();
+
+// Macro: DISPATCH_FOR_FORMAT(format, FUNC, ARGUMENTS...)
+
+// Dispatch to a template function matching the given format with the above macro.
+//
+// Example usage:
+//
+// template<typename Voxel>
+// static void createVolumeRAM(tgt::svec3 dimensions, std::unique_ptr<VolumeRAM>& res) {
+//     res.reset(new VolumeAtomic<Voxel>(dimensions));
+// }
+//
+// std::unique_ptr<VolumeRAM> createVolumeRAMForFormat(std::string format, tgt::svec3 dimensions) {
+//     std::unique_ptr<VolumeRAM> res(nullptr);
+//     DISPATCH_FOR_FORMAT(format, createVolumeRAM, dimensions, res);
+//     return res;
+// }
+
+/// Implementation -------------------------------------------------------------
+
+#define IMPL_FORMAT_CONVERSION_FOR_TYPE(TYPE) \
+template<> \
+inline std::string getBaseTypeFromType<TYPE ## _t>() { \
+    return #TYPE; \
+}\
+template<> \
+inline std::string getBaseTypeFromType<tgt::Vector2<TYPE ## _t>>() { \
+    return #TYPE; \
+}\
+template<> \
+inline std::string getBaseTypeFromType<tgt::Vector3<TYPE ## _t>>() { \
+    return #TYPE; \
+}\
+template<> \
+inline std::string getBaseTypeFromType<tgt::Vector4<TYPE ## _t>>() { \
+    return #TYPE; \
+}\
+\
+template<> \
+inline std::string getFormatFromType<TYPE ## _t>() { \
+    return #TYPE; \
+}\
+template<> \
+inline std::string getFormatFromType<tgt::Vector2<TYPE ## _t>>() { \
+    return "Vector2(" #TYPE ")"; \
+}\
+template<> \
+inline std::string getFormatFromType<tgt::Vector3<TYPE ## _t>>() { \
+    return "Vector3(" #TYPE ")"; \
+}\
+template<> \
+inline std::string getFormatFromType<tgt::Vector4<TYPE ## _t>>() { \
+    return "Vector4(" #TYPE ")"; \
+}\
+
+IMPL_FORMAT_CONVERSION_FOR_TYPE(uint8)
+IMPL_FORMAT_CONVERSION_FOR_TYPE(uint16)
+IMPL_FORMAT_CONVERSION_FOR_TYPE(uint32)
+IMPL_FORMAT_CONVERSION_FOR_TYPE(uint64)
+IMPL_FORMAT_CONVERSION_FOR_TYPE(int8)
+IMPL_FORMAT_CONVERSION_FOR_TYPE(int16)
+IMPL_FORMAT_CONVERSION_FOR_TYPE(int32)
+IMPL_FORMAT_CONVERSION_FOR_TYPE(int64)
+IMPL_FORMAT_CONVERSION_FOR_TYPE(float)
+IMPL_FORMAT_CONVERSION_FOR_TYPE(double)
+
+#undef IMPL_FORMAT_CONVERSION_FOR_TYPE
+
+#define IMPL_DISPATCH_FOR_FORMAT_OPTION(TYPE, format, FUNC, ...) \
+    if ((format) == #TYPE) { \
+        FUNC<TYPE ## _t>(__VA_ARGS__); \
+    } else \
+    if ((format) == #TYPE) { \
+        FUNC<tgt::Vector2<TYPE ## _t>>(__VA_ARGS__); \
+    } else \
+    if ((format) == #TYPE) { \
+        FUNC<tgt::Vector3<TYPE ## _t>>(__VA_ARGS__); \
+    } else \
+    if ((format) == #TYPE) { \
+        FUNC<tgt::Vector4<TYPE ## _t>>(__VA_ARGS__); \
+    } else \
+
+#define DISPATCH_FOR_FORMAT(format, FUNC, ...) \
+    IMPL_DISPATCH_FOR_FORMAT_OPTION(uint8, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_FORMAT_OPTION(uint16, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_FORMAT_OPTION(uint32, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_FORMAT_OPTION(uint64, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_FORMAT_OPTION(int8, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_FORMAT_OPTION(int16, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_FORMAT_OPTION(int32, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_FORMAT_OPTION(int64, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_FORMAT_OPTION(float, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_FORMAT_OPTION(double, format, FUNC, __VA_ARGS__) \
+    { \
+        tgtAssert(false, "Invalid format"); \
+    } \
+
 } // namespace
 
 #endif // VRN_STRINGUTILS_H
