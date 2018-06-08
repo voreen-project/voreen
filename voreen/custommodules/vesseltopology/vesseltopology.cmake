@@ -85,6 +85,8 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/datastructures/vesselgraph.cpp
     ${MOD_DIR}/datastructures/protovesselgraph.cpp
     ${MOD_DIR}/datastructures/lz4slicevolume.cpp
+    ${MOD_DIR}/io/lz4slicevolumefilereader.cpp
+    ${MOD_DIR}/io/volumedisklz4.cpp
     ${MOD_DIR}/ports/vesselgraphport.cpp
     ${MOD_DIR}/processors/appropriatespacinglinker.cpp
     ${MOD_DIR}/processors/aortasegmentation.cpp
@@ -127,6 +129,8 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/datastructures/vesselgraph.h
     ${MOD_DIR}/datastructures/protovesselgraph.h
     ${MOD_DIR}/datastructures/lz4slicevolume.h
+    ${MOD_DIR}/io/lz4slicevolumefilereader.h
+    ${MOD_DIR}/io/volumedisklz4.h
     ${MOD_DIR}/ports/vesselgraphport.h
     ${MOD_DIR}/processors/appropriatespacinglinker.h
     ${MOD_DIR}/processors/aortasegmentation.h

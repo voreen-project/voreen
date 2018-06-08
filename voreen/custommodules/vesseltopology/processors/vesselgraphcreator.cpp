@@ -563,7 +563,7 @@ struct IdVolumeInitializer {
 
     IdVolumeInitializer(uint32_t id, tgt::svec3 offset, tgt::svec3 size)
         : id_(id)
-        , storage_(VoreenApplication::app()->getUniqueTmpFilePath(".lz4"), size)
+        , storage_(VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), size)
         , surface_()
         , numUnlabeledForegroundVoxels_(0)
         , numTotalVoxels_(0)
@@ -679,7 +679,7 @@ static LZ4SliceVolume<IdVolume::Value> flood(IdVolumeInitializer&& volume, Progr
 
     std::move(lz4vol).deleteFromDisk();
 
-    LZ4SliceVolumeBuilder<IdVolume::Value> builder(VoreenApplication::app()->getUniqueTmpFilePath(".lz4"), lz4vol.getMetaData());
+    LZ4SliceVolumeBuilder<IdVolume::Value> builder(VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), lz4vol.getMetaData());
     for(size_t z = 0; z<vol.getDimensions().z; ++z) {
         builder.pushSlice(vol.data_->getSlice(z));
     }
@@ -793,7 +793,7 @@ struct UnfinishedRegions {
     LZ4SliceVolume<uint32_t> holeIds;
     std::map<uint32_t, tgt::SBounds> regions;
 
-    void floodAllRegions(LZ4SliceVolume<uint32_t>& branchIds, ProgressReporter& progress) && {
+    void floodAllRegions(LZ4SliceVolume<uint32_t>& branchIds, ProgressReporter& progress) {
         TaskTimeLogger _("Flood remaining unlabled regions", tgt::Info);
 
         SubtaskProgressReporterCollection<3> subtaskReporters(progress);
@@ -836,8 +836,6 @@ struct UnfinishedRegions {
         }
 
         finalizeIdVolumes(branchIds, holeIds, finalizers, subtaskReporters.get<2>());
-
-        std::move(holeIds).deleteFromDisk();
     }
 };
 
@@ -907,8 +905,8 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
     // Create an assignment edge <-> vessel component
     //  1. Split vessel components at nodes edges
     auto segmentationWithAndWithoutCriticalVoxels = splitSegmentationCriticalVoxels(
-            VoreenApplication::app()->getUniqueTmpFilePath(".lz4"),
-            VoreenApplication::app()->getUniqueTmpFilePath(".lz4"),
+            VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION),
+            VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION),
             *protograph,
             SkeletonClassReader(skeleton),
             input,
@@ -922,33 +920,42 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
 
     //  2. Perform a cca to distinguish components
     size_t numComponents;
-    LZ4SliceVolume<uint32_t> branchIdSegmentation = createCCAVolume(segNoCriticalVoxels, VoreenApplication::app()->getUniqueTmpFilePath(".lz4"), numComponents, subtaskReporters.get<3>());
+    LZ4SliceVolume<uint32_t> branchIdSegmentation = createCCAVolume(segNoCriticalVoxels, VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), numComponents, subtaskReporters.get<3>());
+#ifdef VRN_DEBUG
+    generatedSkeletons.add(std::move(segNoCriticalVoxels).toVolume().release());
+#else
     std::move(segNoCriticalVoxels).deleteFromDisk();
+#endif
 
     // 4. Find unlabeled regions
     //
     // Add cut off unlabeled regions to the critical voxels (i.e., unlabeled regions) to allow flooding from valid edge label regions later
     addClippedOffRegionsToCritical(segOnlyCriticalVoxels, branchIdSegmentation, *protograph, numComponents, input.segmentation, subtaskReporters.get<4>());
-    auto unfinishedRegions = collectUnfinishedRegions(segOnlyCriticalVoxels, VoreenApplication::app()->getUniqueTmpFilePath(".lz4"), subtaskReporters.get<5>());
+    auto unfinishedRegions = collectUnfinishedRegions(segOnlyCriticalVoxels, VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), subtaskReporters.get<5>());
+#ifdef VRN_DEBUG
+    generatedSkeletons.add(std::move(segOnlyCriticalVoxels).toVolume().release());
+#else
     std::move(segOnlyCriticalVoxels).deleteFromDisk();
+#endif
 
     //  5. Flood remaining unlabeled regions locally
-    std::move(unfinishedRegions).floodAllRegions(branchIdSegmentation, subtaskReporters.get<6>());
+    unfinishedRegions.floodAllRegions(branchIdSegmentation, subtaskReporters.get<6>());
+#ifdef VRN_DEBUG
+    generatedSkeletons.add(std::move(unfinishedRegions.holeIds).toVolume().release());
+#else
+    std::move(unfinishedRegions.holeIds).deleteFromDisk();
+#endif
 
     //  6. Create a reader that reads edge ids from the underlying segmentation
     BranchIdVolumeReader ccaReader(branchIdSegmentation, *protograph, numComponents, input.segmentation);
 
     //  7. Create better VesselGraph from protograph and and the edge-id-segmentation
     auto output = protograph->createVesselGraph(ccaReader, input.sampleMask, input.metadata, subtaskReporters.get<7>());
-    std::move(branchIdSegmentation).deleteFromDisk();
-
-
 #ifdef VRN_DEBUG
-    //generatedSkeletons.add(HDF5VolumeReader().read(ccaOnlyCriticalTmpPath)->at(0));
-    //generatedSkeletons.add(HDF5VolumeReader().read(ccaNoCriticalTmpPath)->at(0));
+    generatedSkeletons.add(std::move(branchIdSegmentation).toVolume().release());
+#else
+    std::move(branchIdSegmentation).deleteFromDisk();
 #endif
-
-    // Clean up files
 
     return output;
 }

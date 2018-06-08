@@ -30,6 +30,7 @@
 
 #include "voreen/core/io/serialization/serializable.h"
 #include "voreen/core/io/serialization/xmldeserializer.h"
+#include "voreen/core/utils/stringutils.h"
 #include <vector>
 #include <string>
 
@@ -43,15 +44,27 @@ namespace voreen {
 class LZ4SliceVolumeMetadata : public Serializable {
 public:
     LZ4SliceVolumeMetadata(tgt::svec3 dimensions);
-    LZ4SliceVolumeMetadata(const std::string& xmlfile);
     LZ4SliceVolumeMetadata(const LZ4SliceVolumeMetadata&) = default;
 
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
 
+    tgt::svec3 dimensions_;
+};
+
+class LZ4SliceVolumeMetadataFull : public LZ4SliceVolumeMetadata {
+public:
+    LZ4SliceVolumeMetadataFull(LZ4SliceVolumeMetadata, std::string format, std::string baseType);
+    LZ4SliceVolumeMetadataFull(const LZ4SliceVolumeMetadataFull&) = default;
+
+    static LZ4SliceVolumeMetadataFull load(const std::string& xmlfile);
     void save(const std::string& xmlfile) const;
 
-    tgt::svec3 dimensions_;
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+
+    std::string format_;
+    std::string baseType_;
 };
 
 template<typename Voxel>
@@ -84,8 +97,31 @@ private:
     VolumeAtomic<Voxel> slice_;
 };
 
+class LZ4SliceVolumeBase {
+public:
+    const static std::string FILE_EXTENSION;
+    static std::unique_ptr<LZ4SliceVolumeBase> open(std::string filePath);
+
+    LZ4SliceVolumeBase(std::string filePath, LZ4SliceVolumeMetadataFull metadata);
+    virtual ~LZ4SliceVolumeBase() { }
+
+    virtual std::unique_ptr<VolumeRAM> loadBaseSlab(size_t beginZ, size_t endZ) const = 0;
+    virtual std::unique_ptr<LZ4SliceVolumeBase> moveToHeap() && = 0;
+
+    std::unique_ptr<Volume> toVolume() &&;
+
+    const LZ4SliceVolumeMetadataFull& getMetaData() const;
+    const tgt::svec3& getDimensions() const;
+    size_t getNumSlices() const;
+    const std::string& getFilePath() const;
+
+protected:
+    LZ4SliceVolumeMetadataFull metadata_;
+    std::string filePath_;
+};
+
 template<typename Voxel>
-class LZ4SliceVolume {
+class LZ4SliceVolume : public LZ4SliceVolumeBase {
 public:
     static LZ4SliceVolume open(std::string filePath);
     void deleteFromDisk() &&;
@@ -95,14 +131,13 @@ public:
     LZ4SliceVolume<Voxel>& operator=(LZ4SliceVolume<Voxel>&& other);
     //LZ4SliceVolume(const LZ4SliceVolume& other) = delete; //Disable
 
+    std::unique_ptr<VolumeRAM> loadBaseSlab(size_t beginZ, size_t endZ) const;
+    virtual std::unique_ptr<LZ4SliceVolumeBase> moveToHeap() &&;
+
+    VolumeAtomic<Voxel> loadSlab(size_t beginZ, size_t endZ) const;
     VolumeAtomic<Voxel> loadSlice(size_t sliceNumber) const;
     void writeSlice(const VolumeAtomic<Voxel>& slice, size_t sliceNumber);
     LZ4WriteableSlice<Voxel> getWritableSlice(size_t sliceNumber);
-
-    const LZ4SliceVolumeMetadata& getMetaData() const;
-    tgt::svec3 getDimensions() const;
-    size_t getNumSlices() const;
-
 
 private:
     friend class LZ4SliceVolumeBuilder<Voxel>;
@@ -111,9 +146,6 @@ private:
     std::string getSliceFilePath(size_t sliceNum) const;
     tgt::svec3 getSliceDimensions() const;
     size_t getSliceMemorySize() const;
-
-    LZ4SliceVolumeMetadata metadata_;
-    std::string filePath_;
 };
 
 
@@ -195,6 +227,9 @@ private:
     size_t numVoxelsPushed_;
 };
 
+
+LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized);
+
 /// LZ4WritableSlice -----------------------------------------------------------
 
 template<typename Voxel>
@@ -213,9 +248,10 @@ LZ4WriteableSlice<Voxel>::~LZ4WriteableSlice() {
 /// LZ4SliceVolume -------------------------------------------------------------
 template<typename Voxel>
 LZ4SliceVolume<Voxel> LZ4SliceVolume<Voxel>::open(std::string filePath) {
-    return LZ4SliceVolume(filePath, LZ4SliceVolumeMetadata(filePath));
+    auto metadata = LZ4SliceVolumeMetadataFull::load(filePath);
+    tgtAssert(metadata.format_ == getFormatFromType<Voxel>(), "Opened file with invalid format");
+    return LZ4SliceVolume(filePath, metadata);
 }
-
 template<typename Voxel>
 void LZ4SliceVolume<Voxel>::deleteFromDisk() && {
     LZ4SliceVolume dump = std::move(*this);
@@ -241,14 +277,8 @@ size_t LZ4SliceVolume<Voxel>::getSliceMemorySize() const {
 }
 
 template<typename Voxel>
-size_t LZ4SliceVolume<Voxel>::getNumSlices() const {
-    return metadata_.dimensions_.z;
-}
-
-template<typename Voxel>
 LZ4SliceVolume<Voxel>::LZ4SliceVolume(LZ4SliceVolume<Voxel>&& other)
-    : filePath_(other.filePath_)
-    , metadata_(std::move(other.metadata_))
+    : LZ4SliceVolumeBase(other.filePath_, std::move(other.metadata_))
 {
     other.filePath_ = "";
 }
@@ -263,11 +293,41 @@ LZ4SliceVolume<Voxel>& LZ4SliceVolume<Voxel>::operator=(LZ4SliceVolume<Voxel>&& 
     return *this;
 }
 
+
 template<typename Voxel>
 LZ4SliceVolume<Voxel>::LZ4SliceVolume(std::string filePath, LZ4SliceVolumeMetadata metadata)
-    : filePath_(filePath)
-    , metadata_(metadata)
+    : LZ4SliceVolumeBase(
+            filePath,
+            LZ4SliceVolumeMetadataFull(metadata, getFormatFromType<Voxel>(), getBaseTypeFromType<Voxel>())
+            )
 {
+}
+
+template<typename Voxel>
+std::unique_ptr<VolumeRAM> LZ4SliceVolume<Voxel>::loadBaseSlab(size_t beginZ, size_t endZ) const {
+    return std::unique_ptr<VolumeRAM>(new VolumeAtomic<Voxel>(loadSlab(beginZ, endZ)));
+}
+
+template<typename Voxel>
+std::unique_ptr<LZ4SliceVolumeBase> LZ4SliceVolume<Voxel>::moveToHeap() && {
+    return std::unique_ptr<LZ4SliceVolumeBase>(new LZ4SliceVolume<Voxel>(std::move(*this)));
+}
+
+template<typename Voxel>
+VolumeAtomic<Voxel> LZ4SliceVolume<Voxel>::loadSlab(size_t beginZ, size_t endZ) const {
+    tgtAssert(beginZ < endZ, "Invalid slab range");
+
+    size_t dim_x = getDimensions().x;
+    size_t dim_y = getDimensions().y;
+    VolumeAtomic<Voxel> output(tgt::svec3(dim_x, dim_y, endZ - beginZ));
+
+    for(size_t z=beginZ; z<endZ; ++z) {
+        auto slice = loadSlice(z);
+        auto sliceStart = &slice.voxel(0,0,0);
+        std::copy(sliceStart, sliceStart+slice.getNumVoxels(), &output.voxel(0,0,z-beginZ));
+    }
+
+    return output;
 }
 
 template<typename Voxel>
@@ -285,7 +345,7 @@ VolumeAtomic<Voxel> LZ4SliceVolume<Voxel>::loadSlice(size_t sliceNumber) const {
 
     //Read file into buffer (sliceMemorySize is larger than it needs to be, but this way we do not need to check the actual file size)
     std::unique_ptr<char[]> compressedBuffer(new char[compressedFileSize]);
-    compressedFile.read(compressedBuffer.get(), compressedFileSize); //TODO check if this is valid (because sliceMemorySize may be larger than the file
+    compressedFile.read(compressedBuffer.get(), compressedFileSize);
     compressedFile.close();
 
     // Decompress buffer
@@ -294,11 +354,6 @@ VolumeAtomic<Voxel> LZ4SliceVolume<Voxel>::loadSlice(size_t sliceNumber) const {
     tgtAssert(bytesDecompressed == sliceMemorySize, "Invalid memory size (resulting in memory corruption!)");
 
     return VolumeAtomic<Voxel>(reinterpret_cast<Voxel*>(decompressedBuffer.release()), getSliceDimensions());
-}
-
-template<typename Voxel>
-const LZ4SliceVolumeMetadata& LZ4SliceVolume<Voxel>::getMetaData() const {
-    return metadata_;
 }
 
 template<typename Voxel>
@@ -320,13 +375,6 @@ template<typename Voxel>
 LZ4WriteableSlice<Voxel> LZ4SliceVolume<Voxel>::getWritableSlice(size_t sliceNumber) {
     return LZ4WriteableSlice<Voxel>(*this, sliceNumber, loadSlice(sliceNumber));
 }
-
-template<typename Voxel>
-tgt::svec3 LZ4SliceVolume<Voxel>::getDimensions() const {
-    return metadata_.dimensions_;
-}
-
-LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized);
 
 /// LZ4SliceVolumeSliceCacher --------------------------------------------------
 
