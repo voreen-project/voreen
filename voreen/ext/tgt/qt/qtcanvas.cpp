@@ -42,6 +42,7 @@ QtCanvas::QtCanvas(const std::string& title,
                    Qt::WindowFlags f)
     : QOpenGLWidget(nullptr, f) // Set parent at the very end to ensure widgets visibility is not limited by parent.
     , GLCanvas(title, size, buffers)
+    , initializedGL_(false)
 {
     setWindowTitle(QString(title.c_str()));
     setFocusPolicy(Qt::StrongFocus);
@@ -59,6 +60,7 @@ QtCanvas::QtCanvas(const std::string& title,
     create(); // Creates internal window handle.
     QResizeEvent event(this->size(), this->size());
     resizeEvent(&event); // Forces OpenGL initialization.
+    tgtAssert(initializedGL_, "Initialization failed");
 
     // Configure other format related settings, once the context is created.
     rgbaSize_ = ivec4(format().redBufferSize(),
@@ -87,7 +89,8 @@ bool QtCanvas::isActive() {
 }
 
 void QtCanvas::initializeGL() {
-    // Nothing to do.
+    tgtAssert(!initializedGL_, "Context already initialized");
+    initializedGL_ = true;
 }
 
 void QtCanvas::paintGL() {
@@ -219,6 +222,7 @@ void QtCanvas::timerEvent(QTimerEvent* e) {
 bool QtCanvas::event(QEvent *event) {
 
     switch (event->type()) {
+    // Handle touch events.
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
@@ -253,9 +257,17 @@ bool QtCanvas::event(QEvent *event) {
 
         break;
     }
+
+    // Since the show event might force a context-recreation when passed to QOpenGLWidget,
+    // which will lead to big context problems, we pass it directly to QWidget instead!
+    case QEvent::Show:
+        return QWidget::event(event);
+
+    // All other events will be passed to superclass.
     default:
         return QOpenGLWidget::event(event);
     }
+
     return true;
 }
 

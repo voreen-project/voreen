@@ -24,15 +24,11 @@
  ***********************************************************************************/
 
 #include "voreen/qt/mainwindow/menuentities/rendertargetviewermenuentity/rendertargetviewermenuentity.h"
+#include "voreen/qt/mainwindow/menuentities/rendertargetviewermenuentity/rendertargetviewer.h"
 
 #include "voreen/qt/widgets/voreentoolwindow.h"
 #include "voreen/qt/mainwindow/voreenqtmainwindow.h"
 #include "voreen/qt/networkeditor/networkeditor.h"
-
-#include "tgt/glcontextmanager.h"
-#include "tgt/qt/qtcanvas.h"
-
-#include "voreen/qt/mainwindow/menuentities/rendertargetviewermenuentity/rendertargetviewer.h"
 
 #include <QLayout>
 

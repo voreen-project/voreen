@@ -771,7 +771,6 @@ void VoreenQtMainWindow::createMainWindowMenusAndToolbars() {
     createBasicMenuEntities();
     createCustomMenuEntities();
     initializeMenuEntities();
-    LGL_ERROR;
 }
 
 void VoreenQtMainWindow::createQMenus() {
@@ -900,7 +899,6 @@ void VoreenQtMainWindow::initializeMenuEntities() {
         try {
             if(!entity->isInitialized()) {
                 entity->initialize();
-                LGL_ERROR;
             }
         }
         catch (tgt::Exception& e) {
