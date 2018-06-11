@@ -61,7 +61,6 @@ protected:
     virtual void process();
 
     void syncResultingDebugVesselGraphSelectorID();
-    void adjustToList();
 
     VesselGraphListPort inport_;
     VesselGraphPort outport_;
