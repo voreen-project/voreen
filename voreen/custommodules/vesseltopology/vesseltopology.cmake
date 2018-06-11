@@ -104,6 +104,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/vesselgraphsave.cpp
     ${MOD_DIR}/processors/vesselgraphskeletonextractor.cpp
     ${MOD_DIR}/processors/vesselgraphsource.cpp
+    ${MOD_DIR}/processors/vesselgraphselector.cpp
     ${MOD_DIR}/processors/vesselgraphstatplotter.cpp
     ${MOD_DIR}/processors/vesselnessextractor.cpp
     ${MOD_DIR}/processors/volumefloodfill.cpp
@@ -149,6 +150,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/vesselgraphsave.h
     ${MOD_DIR}/processors/vesselgraphskeletonextractor.h
     ${MOD_DIR}/processors/vesselgraphsource.h
+    ${MOD_DIR}/processors/vesselgraphselector.h
     ${MOD_DIR}/processors/vesselgraphstatplotter.h
     ${MOD_DIR}/processors/vesselnessextractor.h
     ${MOD_DIR}/processors/volumefloodfill.h
