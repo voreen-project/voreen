@@ -66,7 +66,7 @@ VesselGraphCreator::VesselGraphCreator()
     , edgeOutport_(Port::OUTPORT, "vesselgraphcreator_edge.outport", "Edges Voxels", false, Processor::VALID)
     , generatedVolumesOutport_(Port::OUTPORT, "generatedSkeletons.outport", "Generated Volumes", false, Processor::VALID)
     , generatedGraphsOutport_(Port::OUTPORT, "generatedGraphs.outport", "Generated Graphs", false, Processor::VALID)
-    , numRefinementIterations_("numRefinementIterations", "Refinement Iterations", 0, 0, 10, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_ADVANCED)
+    , numRefinementIterations_("numRefinementIterations", "Refinement Iterations", 0, 0, 100, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_ADVANCED)
     , minVoxelLength_("minVoxelLength", "Min Voxel Length", 0, 0, 50, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
     , minElongation_("minElongation", "Minimum Elongation", 0, 0, 5, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_DEBUG)
     , minBulgeSize_("minBulgeSize", "Minimum Bulge Size", 0, 0, 10, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_DEFAULT)
@@ -1064,6 +1064,12 @@ VesselGraphCreatorInput VesselGraphCreator::prepareComputeInput() {
     );
 }
 
+static bool iterationMadeProgress(const VesselGraph& before, const VesselGraph& after) {
+    return before.getBounds() != after.getBounds()
+        || before.getNodes().size() != after.getNodes().size()
+        || before.getEdges().size() != after.getEdges().size();
+}
+
 VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput input, ProgressReporter& progressReporter) const {
     TaskTimeLogger _("Extract VesselGraph (total)", tgt::Info);
     float progressPerIteration = 1.0f/(input.numRefinementIterations+1);
@@ -1077,11 +1083,15 @@ VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput inp
     for(int i=0; i < input.numRefinementIterations; ++i) {
         SubtaskProgressReporter refinementProgress(progressReporter, progressPerIteration*tgt::vec2(i+1, i+2));
         try {
+            std::unique_ptr<VesselGraph> prev_graph = std::move(graph);
+            graph = refineVesselGraph(processedInput, *prev_graph, *generatedVolumes, refinementProgress);
+            bool done = !iterationMadeProgress(*prev_graph, *graph);
             if(input.saveDebugData) {
-                generatedGraphs->push_back(std::move(*graph));
-                graph = refineVesselGraph(processedInput, generatedGraphs->back(), *generatedVolumes, refinementProgress);
-            } else {
-                graph = refineVesselGraph(processedInput, *graph, *generatedVolumes, refinementProgress);
+                generatedGraphs->push_back(std::move(*prev_graph));
+            }
+            if(done) {
+                LINFO("Refinement reached fixed point after " << (i+1) << " iterations. Aborting early.");
+                break;
             }
         } catch(tgt::IOException e) {
             LERROR("IO Exception occured in VesselGraphCreator compute thread");
