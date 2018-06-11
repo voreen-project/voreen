@@ -117,7 +117,6 @@ struct VesselGraphCreatorProcessedInput {
         , sampleMask(input.sampleMask ?
                 boost::optional<LZ4SliceVolume<uint8_t>>(binarizeVolume(*input.sampleMask, input.binarizationThresholdSegmentationNormalized))
                 : boost::none)
-        , metadata(input.segmentation)
         , fixedForegroundPoints(std::move(input.fixedForegroundPoints))
         , numRefinementIterations(input.numRefinementIterations)
         , minVoxelLength(input.minVoxelLength)
@@ -128,7 +127,6 @@ struct VesselGraphCreatorProcessedInput {
 
     LZ4SliceVolume<uint8_t> segmentation;
     boost::optional<LZ4SliceVolume<uint8_t>> sampleMask;
-    const VolumeBase& metadata;
 
     std::vector<tgt::vec3> fixedForegroundPoints;
     int numRefinementIterations;
@@ -341,10 +339,10 @@ struct ClosestSkeletonVoxelsAdaptor : public EdgeVoxelRefResultSetBase {
 
 static std::pair<LZ4SliceVolume<uint8_t>, LZ4SliceVolume<uint8_t>> splitSegmentationCriticalVoxels(const std::string& tmpPathNoCritical, const std::string& tmpPathOnlyCritical, const ProtoVesselGraph& graph, SkeletonClassReader&& skeletonClassReader, const VesselGraphCreatorProcessedInput& input, ProgressReporter& progress) {
     TaskTimeLogger _("Split segmentation wrt critical voxels", tgt::Info);
-    //const auto rwToVoxel = input.metadata.getWorldToVoxelMatrix();
-    const auto voxelToRw = input.metadata.getVoxelToWorldMatrix();
-    const auto dimensions = input.metadata.getDimensions();
-    const float criticalVoxelDistDiff = 1.001f*tgt::length(input.metadata.getSpacing());
+
+    const auto voxelToRw = input.segmentation.getMetaData().getVoxelToWorldMatrix();
+    const auto dimensions = input.segmentation.getDimensions();
+    const float criticalVoxelDistDiff = 1.001f*tgt::length(input.segmentation.getMetaData().getSpacing());
 
     const std::string format = "uint8";
     const tgt::svec3 slicedim(dimensions.xy(), 1);
@@ -359,8 +357,8 @@ static std::pair<LZ4SliceVolume<uint8_t>, LZ4SliceVolume<uint8_t>> splitSegmenta
 
     KDTreeVoxelFinder<EdgeVoxelRef> finder(std::move(finderBuilder));
 
-    LZ4SliceVolumeBuilder<uint8_t> onlyCriticalVoxels(tmpPathOnlyCritical, LZ4SliceVolumeMetadata(dimensions));
-    LZ4SliceVolumeBuilder<uint8_t> noCriticalVoxels(tmpPathNoCritical, LZ4SliceVolumeMetadata(dimensions));
+    LZ4SliceVolumeBuilder<uint8_t> onlyCriticalVoxels(tmpPathOnlyCritical, input.segmentation.getMetaData());
+    LZ4SliceVolumeBuilder<uint8_t> noCriticalVoxels(tmpPathNoCritical, input.segmentation.getMetaData());
 
     for(size_t z = 0; z<dimensions.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dimensions.z);
@@ -538,7 +536,7 @@ static LZ4SliceVolume<uint32_t> createCCAVolume(const LZ4SliceVolume<uint8_t>& i
         return true;
     };
 
-    LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getDimensions());
+    LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getMetaData());
     LZ4SliceVolumeCCABuilderWrapper outputWrapper(outputVolumeBuilder);
 
     auto stats = sc.cca(LZ4SliceVolumeCCAInputWrapper(input), outputWrapper, writeMetaData, isOne, true, componentConstraintTest, progress);
@@ -563,7 +561,7 @@ struct IdVolumeInitializer {
 
     IdVolumeInitializer(uint32_t id, tgt::svec3 offset, tgt::svec3 size)
         : id_(id)
-        , storage_(VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), size)
+        , storage_(VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), LZ4SliceVolumeMetadata(size))
         , surface_()
         , numUnlabeledForegroundVoxels_(0)
         , numTotalVoxels_(0)
@@ -857,7 +855,7 @@ static UnfinishedRegions collectUnfinishedRegions(const LZ4SliceVolume<uint8_t>&
         return true;
     };
 
-    LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getDimensions());
+    LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getMetaData());
     LZ4SliceVolumeCCABuilderWrapper outputWrapper(outputVolumeBuilder);
 
     sc.cca(LZ4SliceVolumeCCAInputWrapper(input), outputWrapper, writeMetaData, isOne, true, componentConstraintTest, progress);
@@ -899,7 +897,7 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
 
     // Create new protograph
     std::unique_ptr<MetaDataCollector> mdc = cca(NeighborCountVoxelClassifier(skeleton), subtaskReporters.get<0>());
-    std::unique_ptr<ProtoVesselGraph> protograph = mdc->createProtoVesselGraph(input.metadata.getDimensions(), input.metadata.getVoxelToWorldMatrix(), input.sampleMask, subtaskReporters.get<1>());
+    std::unique_ptr<ProtoVesselGraph> protograph = mdc->createProtoVesselGraph(input.segmentation.getDimensions(), input.segmentation.getMetaData().getVoxelToWorldMatrix(), input.sampleMask, subtaskReporters.get<1>());
 
 
     // Create an assignment edge <-> vessel component
@@ -950,7 +948,7 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
     BranchIdVolumeReader ccaReader(branchIdSegmentation, *protograph, numComponents, input.segmentation);
 
     //  7. Create better VesselGraph from protograph and and the edge-id-segmentation
-    auto output = protograph->createVesselGraph(ccaReader, input.sampleMask, input.metadata, subtaskReporters.get<7>());
+    auto output = protograph->createVesselGraph(ccaReader, input.sampleMask, subtaskReporters.get<7>());
 #ifdef VRN_DEBUG
     generatedSkeletons.add(std::move(branchIdSegmentation).toVolume().release());
 #else
@@ -972,11 +970,13 @@ std::unique_ptr<VesselGraph> refineVesselGraph(VesselGraphCreatorProcessedInput&
     };
     std::unique_ptr<VesselGraph> normalizedGraph = VesselGraphNormalization::removeEndEdgesRecursively(prevGraph, isEdgeDeletable);
 
-    tgt::mat4 rwToVoxel = input.metadata.getWorldToVoxelMatrix();
+    tgt::mat4 rwToVoxel;
+    bool inverted = input.segmentation.getMetaData().getVoxelToWorldMatrix().invert(rwToVoxel);
+    tgtAssert(inverted, "Matrix inversion failed!");
 
     // Create new voxelmask
-    auto fixedForegroundMaskOnlyEndvoxels = GraphNodeVoxelReader::create<EndNodeVoxelExtractor>(*normalizedGraph, rwToVoxel, input.metadata.getDimensions());
-    VolumeMask mask(input.segmentation, input.sampleMask, input.metadata.getSpacing(), fixedForegroundMaskOnlyEndvoxels, subtaskReporters.get<0>());
+    auto fixedForegroundMaskOnlyEndvoxels = GraphNodeVoxelReader::create<EndNodeVoxelExtractor>(*normalizedGraph, rwToVoxel, input.segmentation.getMetaData().getDimensions());
+    VolumeMask mask(input.segmentation, input.sampleMask, fixedForegroundMaskOnlyEndvoxels, subtaskReporters.get<0>());
     addFixedForegroundPointsToMask(input.fixedForegroundPoints, mask);
 
     // Skeletonize new mask
@@ -990,7 +990,7 @@ std::unique_ptr<VesselGraph> createInitialVesselGraph(VesselGraphCreatorProcesse
     SubtaskProgressReporterCollection<3> subtaskReporters(progress);
     progress.setProgress(0.0f);
 
-    VolumeMask mask(input.segmentation, input.sampleMask, input.metadata.getSpacing(), NoFixedForeground(), subtaskReporters.get<0>());
+    VolumeMask mask(input.segmentation, input.sampleMask, NoFixedForeground(), subtaskReporters.get<0>());
     addFixedForegroundPointsToMask(input.fixedForegroundPoints, mask);
     mask.skeletonize<VolumeMask::IMPROVED>(std::numeric_limits<size_t>::max(), subtaskReporters.get<1>());
 

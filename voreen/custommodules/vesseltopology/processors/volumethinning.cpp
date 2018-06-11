@@ -101,7 +101,6 @@ void VolumeThinning::process() {
     VolumeMask m(
             std::move(binarizeVolume(invol, invol.getRealWorldMapping().realWorldToNormalized(binarizationThreshold_.get()))),
             std::move(sampleMask ? boost::optional<LZ4SliceVolume<uint8_t>>(binarizeVolume(*sampleMask, 0.5)) : boost::none),
-            invol.getSpacing(),
             NoFixedForeground(),
             subtaskReporters.get<0>());
     switch(thinningAlgorithm_.getValue()) {

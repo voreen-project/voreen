@@ -39,7 +39,42 @@ const static std::string METADATA_ROOT_NODE_STRING = "metadata";
 
 LZ4SliceVolumeMetadata::LZ4SliceVolumeMetadata(tgt::svec3 dimensions)
     : dimensions_(dimensions)
+    , spacing_(tgt::vec3::one)
+    , offset_(tgt::vec3::zero)
+    , physicalToWorldTransformation_(tgt::mat4::identity)
 {
+}
+
+LZ4SliceVolumeMetadata& LZ4SliceVolumeMetadata::withOffset(tgt::vec3 offset) {
+    offset_ = offset;
+    return *this;
+}
+LZ4SliceVolumeMetadata& LZ4SliceVolumeMetadata::withSpacing(tgt::vec3 spacing) {
+    spacing_ = spacing;
+    return *this;
+}
+LZ4SliceVolumeMetadata& LZ4SliceVolumeMetadata::withPhysicalToWorldTransformation(tgt::mat4 physicalToWorldTransformation) {
+    physicalToWorldTransformation_ = physicalToWorldTransformation;
+    return *this;
+}
+
+const tgt::svec3& LZ4SliceVolumeMetadata::getDimensions() const {
+    return dimensions_;
+}
+const tgt::vec3& LZ4SliceVolumeMetadata::getOffset() const {
+    return offset_;
+}
+const tgt::vec3& LZ4SliceVolumeMetadata::getSpacing() const {
+    return spacing_;
+}
+const tgt::mat4& LZ4SliceVolumeMetadata::getPhysicalToWorldMatrix() const {
+    return physicalToWorldTransformation_;
+}
+tgt::mat4 LZ4SliceVolumeMetadata::getVoxelToPhysicalMatrix() const {
+    return tgt::mat4::createTranslation(getOffset()) * tgt::mat4::createScale(getSpacing());
+}
+tgt::mat4 LZ4SliceVolumeMetadata::getVoxelToWorldMatrix() const {
+    return getPhysicalToWorldMatrix() * getVoxelToPhysicalMatrix();
 }
 
 void LZ4SliceVolumeMetadata::serialize(Serializer& s) const {
@@ -83,6 +118,12 @@ void LZ4SliceVolumeMetadataFull::deserialize(Deserializer& s) {
     s.deserialize("format", format_);
     s.deserialize("baseType", baseType_);
 }
+const std::string& LZ4SliceVolumeMetadataFull::getFormat() const {
+    return format_;
+}
+const std::string& LZ4SliceVolumeMetadataFull::getBaseType() const {
+    return baseType_;
+}
 
 /// LZ4SliceVolumeBase ---------------------------------------------------------
 LZ4SliceVolumeBase::LZ4SliceVolumeBase(std::string filePath, LZ4SliceVolumeMetadataFull metadata)
@@ -100,14 +141,11 @@ static void createLZ4Vol(std::string filepath, std::unique_ptr<LZ4SliceVolumeBas
 std::unique_ptr<LZ4SliceVolumeBase> LZ4SliceVolumeBase::open(std::string filePath) {
     auto metadata = LZ4SliceVolumeMetadataFull::load(filePath);
     std::unique_ptr<LZ4SliceVolumeBase> res(nullptr);
-    DISPATCH_FOR_FORMAT(metadata.format_, createLZ4Vol, filePath, res);
+    DISPATCH_FOR_FORMAT(metadata.getFormat(), createLZ4Vol, filePath, res);
     return res;
 }
 std::unique_ptr<Volume> LZ4SliceVolumeBase::toVolume() && {
-    //TODO
-    tgt::vec3 spacing = tgt::vec3::one;
-    tgt::vec3 offset = tgt::vec3::zero;
-    return tgt::make_unique<Volume>(new VolumeDiskLZ4(std::move(*this).moveToHeap()), spacing, offset);
+    return tgt::make_unique<Volume>(new VolumeDiskLZ4(std::move(*this).moveToHeap()), metadata_.getSpacing(), metadata_.getOffset(), metadata_.getPhysicalToWorldMatrix());
 }
 
 const LZ4SliceVolumeMetadataFull& LZ4SliceVolumeBase::getMetaData() const {
@@ -115,7 +153,7 @@ const LZ4SliceVolumeMetadataFull& LZ4SliceVolumeBase::getMetaData() const {
 }
 
 const tgt::svec3& LZ4SliceVolumeBase::getDimensions() const {
-    return metadata_.dimensions_;
+    return metadata_.getDimensions();
 }
 
 size_t LZ4SliceVolumeBase::getNumSlices() const {
@@ -131,7 +169,12 @@ const std::string& LZ4SliceVolumeBase::getFilePath() const {
 LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized) {
     const auto dimensions = volume.getDimensions();
 
-    LZ4SliceVolumeBuilder<uint8_t> builder(VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), LZ4SliceVolumeMetadata(dimensions));
+    LZ4SliceVolumeBuilder<uint8_t> builder(
+            VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION),
+            LZ4SliceVolumeMetadata(dimensions)
+                .withSpacing(volume.getSpacing())
+                .withOffset(volume.getOffset())
+                .withPhysicalToWorldTransformation(volume.getPhysicalToWorldMatrix()));
 
     for(size_t z = 0; z<dimensions.z; ++z) {
         //progress.setProgress(static_cast<float>(z)/dimensions.z);

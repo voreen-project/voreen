@@ -43,13 +43,28 @@ namespace voreen {
 
 class LZ4SliceVolumeMetadata : public Serializable {
 public:
-    LZ4SliceVolumeMetadata(tgt::svec3 dimensions);
+    explicit LZ4SliceVolumeMetadata(tgt::svec3 dimensions);
     LZ4SliceVolumeMetadata(const LZ4SliceVolumeMetadata&) = default;
+
+    LZ4SliceVolumeMetadata& withOffset(tgt::vec3 offset);
+    LZ4SliceVolumeMetadata& withSpacing(tgt::vec3 spacing);
+    LZ4SliceVolumeMetadata& withPhysicalToWorldTransformation(tgt::mat4 physicalToWorldTransformation);
+
+    const tgt::svec3& getDimensions() const;
+    const tgt::vec3& getOffset() const;
+    const tgt::vec3& getSpacing() const;
+    const tgt::mat4& getPhysicalToWorldMatrix() const;
+    tgt::mat4 getVoxelToPhysicalMatrix() const;
+    tgt::mat4 getVoxelToWorldMatrix() const;
 
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
 
+private:
     tgt::svec3 dimensions_;
+    tgt::vec3 spacing_;
+    tgt::vec3 offset_;
+    tgt::mat4 physicalToWorldTransformation_;
 };
 
 class LZ4SliceVolumeMetadataFull : public LZ4SliceVolumeMetadata {
@@ -63,6 +78,10 @@ public:
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
 
+    const std::string& getFormat() const;
+    const std::string& getBaseType() const;
+
+private:
     std::string format_;
     std::string baseType_;
 };
@@ -249,7 +268,7 @@ LZ4WriteableSlice<Voxel>::~LZ4WriteableSlice() {
 template<typename Voxel>
 LZ4SliceVolume<Voxel> LZ4SliceVolume<Voxel>::open(std::string filePath) {
     auto metadata = LZ4SliceVolumeMetadataFull::load(filePath);
-    tgtAssert(metadata.format_ == getFormatFromType<Voxel>(), "Opened file with invalid format");
+    tgtAssert(metadata.getFormat() == getFormatFromType<Voxel>(), "Opened file with invalid format");
     return LZ4SliceVolume(filePath, metadata);
 }
 template<typename Voxel>
@@ -268,7 +287,7 @@ std::string LZ4SliceVolume<Voxel>::getSliceFilePath(size_t sliceNum) const {
 
 template<typename Voxel>
 tgt::svec3 LZ4SliceVolume<Voxel>::getSliceDimensions() const {
-    return tgt::svec3(metadata_.dimensions_.xy(), 1);
+    return tgt::svec3(metadata_.getDimensions().xy(), 1);
 }
 
 template<typename Voxel>
@@ -522,7 +541,7 @@ tgt::svec3 LZ4SliceVolumeBuilder<Voxel>::getDimensions() const {
 template<typename Voxel>
 LZ4SliceVolumeVoxelBuilder<Voxel>::LZ4SliceVolumeVoxelBuilder(std::string filePath, LZ4SliceVolumeMetadata metadata)
     : builder_(filePath, metadata)
-    , currentSlice_(tgt::svec3(metadata.dimensions_.xy(), 1))
+    , currentSlice_(tgt::svec3(metadata.getDimensions().xy(), 1))
     , numVoxelsPushed_(0)
 {
 }

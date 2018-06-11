@@ -107,14 +107,14 @@ ProtoVesselGraph::ProtoVesselGraph(tgt::mat4 toRWMatrix)
 {
 }
 
-std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeReader& segmentedVolumeReader, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, const VolumeBase& metadata, ProgressReporter& progress) {
+std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeReader& segmentedVolumeReader, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress) {
     TaskTimeLogger _("Extract edge features", tgt::Info);
 
-    const tgt::vec3 spacing = metadata.getSpacing();
-    const tgt::svec3 dimensions = metadata.getDimensions();
+    const tgt::vec3 spacing = segmentedVolumeReader.getSpacing();
+    const tgt::svec3 dimensions = segmentedVolumeReader.getDimensions();
     //std::unique_ptr<VesselGraph> graph(new VesselGraph(skeleton.getBoundingBox().getBoundingBox()));
     std::unique_ptr<VesselGraph> graph(new VesselGraph());
-    const tgt::mat4 toRWMatrix = metadata.getVoxelToWorldMatrix();
+    const tgt::mat4 toRWMatrix = segmentedVolumeReader.getVoxelToWorldMatrix();
 
     tgtAssert(!sampleMask || sampleMask->getDimensions() == dimensions, "Invalid segmentation volume dimensions");
 

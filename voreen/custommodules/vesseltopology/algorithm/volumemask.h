@@ -105,7 +105,7 @@ public:
     };
 
     template<class F>
-    VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, tgt::vec3 spacing, F&& fixedForegroundReader, ProgressReporter& progress);
+    VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, F&& fixedForegroundReader, ProgressReporter& progress);
     VolumeMask(VolumeMask&& other);
     ~VolumeMask();
 
@@ -216,11 +216,11 @@ private:
 
 
 template<class F>
-VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, tgt::vec3 spacing, F&& fixedForegroundReader, ProgressReporter& progress)
+VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, F&& fixedForegroundReader, ProgressReporter& progress)
     : data_(nullptr)
     , surfaceFile_("", 0)
     , numOriginalForegroundVoxels_(0)
-    , spacing_(spacing)
+    , spacing_(vol.getMetaData().getSpacing())
 {
     TaskTimeLogger _("Create VolumeMask", tgt::Info);
     SubtaskProgressReporterCollection<2> subtaskReporters(progress);

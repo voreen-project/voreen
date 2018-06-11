@@ -188,7 +188,7 @@ struct ProtoVesselGraph {
     uint64_t insertNode(std::vector<tgt::svec3>&& voxels, bool atSampleBorder);
     uint64_t insertEdge(size_t node1, size_t node2, std::vector<tgt::svec3>&& voxels);
 
-    std::unique_ptr<VesselGraph> createVesselGraph(BranchIdVolumeReader& segmentedVolumeReader, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, const VolumeBase& metadata, ProgressReporter& progress);
+    std::unique_ptr<VesselGraph> createVesselGraph(BranchIdVolumeReader& segmentedVolumeReader, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress);
 
     std::vector<ProtoVesselGraphNode> nodes_;
     std::vector<ProtoVesselGraphEdge> edges_;
@@ -251,11 +251,6 @@ struct BranchIdVolumeReader {
         branchIdReader_.advance();
         segmentationReader_.advance();
     }
-    /*
-    tgt::svec3 getDimensions() const {
-        return segmentationVolume_.getDimensions();
-    }
-    */
     bool isValidEdgeId(uint64_t id) const {
         return id != INVALID_EDGE_ID;
     }
@@ -265,15 +260,19 @@ struct BranchIdVolumeReader {
         return voxel && *voxel > 0;
     }
 
-    /*
+
     tgt::vec3 getSpacing() const {
-        return segmentationVolume_.getSpacing();
+        return segmentationReader_.getVolume().getMetaData().getSpacing();
     }
 
     tgt::mat4 getVoxelToWorldMatrix() const {
-        return segmentationVolume_.getVoxelToWorldMatrix();
+        return segmentationReader_.getVolume().getMetaData().getVoxelToWorldMatrix();
     }
-    */
+
+    tgt::svec3 getDimensions() const {
+        return segmentationReader_.getVolume().getDimensions();
+    }
+
 
     LZ4SliceVolumeReader<uint32_t, 0> branchIdReader_;
     LZ4SliceVolumeReader<uint8_t, 1> segmentationReader_;
