@@ -88,6 +88,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/io/lz4slicevolumefilereader.cpp
     ${MOD_DIR}/io/volumedisklz4.cpp
     ${MOD_DIR}/ports/vesselgraphport.cpp
+    ${MOD_DIR}/ports/vesselgraphlistport.cpp
     ${MOD_DIR}/processors/appropriatespacinglinker.cpp
     ${MOD_DIR}/processors/aortasegmentation.cpp
     ${MOD_DIR}/processors/localandglobalthreshold.cpp
@@ -132,6 +133,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/io/lz4slicevolumefilereader.h
     ${MOD_DIR}/io/volumedisklz4.h
     ${MOD_DIR}/ports/vesselgraphport.h
+    ${MOD_DIR}/ports/vesselgraphlistport.h
     ${MOD_DIR}/processors/appropriatespacinglinker.h
     ${MOD_DIR}/processors/aortasegmentation.h
     ${MOD_DIR}/processors/localandglobalthreshold.h

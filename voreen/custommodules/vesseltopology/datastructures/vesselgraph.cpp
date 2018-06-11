@@ -616,20 +616,35 @@ VesselGraph::VesselGraph()
     , bounds_()
 {
 }
-VesselGraph::VesselGraph(const VesselGraph& original)
-    : nodes_()
-    , edges_()
-    , bounds_(original.bounds_)
+
+VesselGraph::VesselGraph(VesselGraph&& other)
+    : nodes_(std::move(other.nodes_))
+    , edges_(std::move(other.edges_))
+    , bounds_(other.bounds_)
 {
-    for(auto& node: original.nodes_) {
-        std::vector<tgt::vec3> voxels(node.voxels_);
-        insertNode(node.pos_, std::move(voxels), node.isAtSampleBorder_, node.getUUID());
+    // Fix up references:
+    for(auto& node: nodes_) {
+        node.graph_ = this;
     }
 
-    for(auto& edge: original.edges_) {
-        std::vector<VesselSkeletonVoxel> voxels(edge.getVoxels());
-        insertEdge(edge.getNodeID1(), edge.getNodeID2(), std::move(voxels), edge.getUUID());
+    for(auto& edge: edges_) {
+        edge.graph_ = this;
     }
+}
+
+VesselGraph VesselGraph::clone() const {
+
+    VesselGraph res(getBounds());
+    for(auto& node: nodes_) {
+        std::vector<tgt::vec3> voxels(node.voxels_);
+        res.insertNode(node.pos_, std::move(voxels), node.isAtSampleBorder_, node.getUUID());
+    }
+
+    for(auto& edge: edges_) {
+        std::vector<VesselSkeletonVoxel> voxels(edge.getVoxels());
+        res.insertEdge(edge.getNodeID1(), edge.getNodeID2(), std::move(voxels), edge.getUUID());
+    }
+    return res;
 }
 
 const VesselGraphNode& VesselGraph::getNode(size_t i) const {

@@ -262,8 +262,11 @@ public:
     VesselGraph(const tgt::Bounds& bounds);
     // Create a graph with undefined bounds
     VesselGraph();
+    // Move data from one graph to another
+    VesselGraph(VesselGraph&& original);
+
     // Create a deep copy from another graph
-    VesselGraph(const VesselGraph& original);
+    VesselGraph clone() const;
 
     virtual ~VesselGraph() {}
 
