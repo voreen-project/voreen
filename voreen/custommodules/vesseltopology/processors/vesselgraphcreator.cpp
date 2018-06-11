@@ -67,9 +67,10 @@ VesselGraphCreator::VesselGraphCreator()
     , generatedVolumesOutport_(Port::OUTPORT, "generatedSkeletons.outport", "Generated Volumes", false, Processor::VALID)
     , generatedGraphsOutport_(Port::OUTPORT, "generatedGraphs.outport", "Generated Graphs", false, Processor::VALID)
     , numRefinementIterations_("numRefinementIterations", "Refinement Iterations", 0, 0, 10, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_ADVANCED)
-    , minVoxelLength_("minVoxelLength", "Min Voxel Length", 0, 0, 50)
-    , minElongation_("minElongation", "Minimum Elongation", 0, 0, 5)
-    , minBulgeSize_("minBulgeSize", "Minimum Bulge Size", 0, 0, 10)
+    , minVoxelLength_("minVoxelLength", "Min Voxel Length", 0, 0, 50, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
+    , minElongation_("minElongation", "Minimum Elongation", 0, 0, 5, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_DEBUG)
+    , minBulgeSize_("minBulgeSize", "Minimum Bulge Size", 0, 0, 10, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_DEFAULT)
+    , saveDebugData_("saveDebugData", "Generate Debug Data", false, Processor::INVALID_RESULT, Property::LOD_DEBUG)
     , binarizationThresholdSegmentation_("binarizationThresholdSegmentation", "Binarization Threshold (Segmentation)", 0.5f, 0.0f, 1.0f, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_ADVANCED)
     , tmpStorageSizeInfo_("tmpStorageSizeInfo", "Required temporary storage (estimated)", "")
 {
@@ -90,6 +91,8 @@ VesselGraphCreator::VesselGraphCreator()
             minElongation_.setGroupID("refinement");
         addProperty(minBulgeSize_);
             minBulgeSize_.setGroupID("refinement");
+        addProperty(saveDebugData_);
+            saveDebugData_.setGroupID("refinement");
     setPropertyGroupGuiName("refinement", "Refinement");
 
         addProperty(binarizationThresholdSegmentation_);
@@ -124,6 +127,7 @@ struct VesselGraphCreatorProcessedInput {
         , minVoxelLength(input.minVoxelLength)
         , minElongation(input.minElongation)
         , minBulgeSize(input.minBulgeSize)
+        , saveDebugData(input.saveDebugData)
     {
     }
 
@@ -135,6 +139,7 @@ struct VesselGraphCreatorProcessedInput {
     int minVoxelLength;
     float minElongation;
     float minBulgeSize;
+    bool saveDebugData;
 };
 
 struct SparseBinaryVolume {
@@ -921,41 +926,42 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
     //  2. Perform a cca to distinguish components
     size_t numComponents;
     LZ4SliceVolume<uint32_t> branchIdSegmentation = createCCAVolume(segNoCriticalVoxels, VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), numComponents, subtaskReporters.get<3>());
-#ifdef VRN_DEBUG
-    generatedVolumes.add(std::move(segNoCriticalVoxels).toVolume().release());
-#else
-    std::move(segNoCriticalVoxels).deleteFromDisk();
-#endif
+    if(input.saveDebugData) {
+        generatedVolumes.add(std::move(segNoCriticalVoxels).toVolume().release());
+    } else {
+        std::move(segNoCriticalVoxels).deleteFromDisk();
+    }
 
     // 4. Find unlabeled regions
     //
     // Add cut off unlabeled regions to the critical voxels (i.e., unlabeled regions) to allow flooding from valid edge label regions later
     addClippedOffRegionsToCritical(segOnlyCriticalVoxels, branchIdSegmentation, *protograph, numComponents, input.segmentation, subtaskReporters.get<4>());
     auto unfinishedRegions = collectUnfinishedRegions(segOnlyCriticalVoxels, VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), subtaskReporters.get<5>());
-#ifdef VRN_DEBUG
-    generatedVolumes.add(std::move(segOnlyCriticalVoxels).toVolume().release());
-#else
-    std::move(segOnlyCriticalVoxels).deleteFromDisk();
-#endif
+    if(input.saveDebugData) {
+        generatedVolumes.add(std::move(segOnlyCriticalVoxels).toVolume().release());
+    } else {
+        std::move(segOnlyCriticalVoxels).deleteFromDisk();
+    }
 
     //  5. Flood remaining unlabeled regions locally
     unfinishedRegions.floodAllRegions(branchIdSegmentation, subtaskReporters.get<6>());
-#ifdef VRN_DEBUG
-    generatedVolumes.add(std::move(unfinishedRegions.holeIds).toVolume().release());
-#else
-    std::move(unfinishedRegions.holeIds).deleteFromDisk();
-#endif
+
+    if(input.saveDebugData) {
+        generatedVolumes.add(std::move(unfinishedRegions.holeIds).toVolume().release());
+    } else {
+        std::move(unfinishedRegions.holeIds).deleteFromDisk();
+    }
 
     //  6. Create a reader that reads edge ids from the underlying segmentation
     BranchIdVolumeReader ccaReader(branchIdSegmentation, *protograph, numComponents, input.segmentation);
 
     //  7. Create better VesselGraph from protograph and and the edge-id-segmentation
     auto output = protograph->createVesselGraph(ccaReader, input.sampleMask, subtaskReporters.get<7>());
-#ifdef VRN_DEBUG
-    generatedVolumes.add(std::move(branchIdSegmentation).toVolume().release());
-#else
-    std::move(branchIdSegmentation).deleteFromDisk();
-#endif
+    if(input.saveDebugData) {
+        generatedVolumes.add(std::move(branchIdSegmentation).toVolume().release());
+    } else {
+        std::move(branchIdSegmentation).deleteFromDisk();
+    }
 
     return output;
 }
@@ -1053,7 +1059,8 @@ VesselGraphCreatorInput VesselGraphCreator::prepareComputeInput() {
         numRefinementIterations_.get(),
         minVoxelLength_.get(),
         minElongation_.get(),
-        minBulgeSize_.get()
+        minBulgeSize_.get(),
+        saveDebugData_.get()
     );
 }
 
@@ -1070,10 +1077,14 @@ VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput inp
     for(int i=0; i < input.numRefinementIterations; ++i) {
         SubtaskProgressReporter refinementProgress(progressReporter, progressPerIteration*tgt::vec2(i+1, i+2));
         try {
-            generatedGraphs->push_back(std::move(*graph));
-            graph = refineVesselGraph(processedInput, generatedGraphs->back(), *generatedVolumes, refinementProgress);
+            if(input.saveDebugData) {
+                generatedGraphs->push_back(std::move(*graph));
+                graph = refineVesselGraph(processedInput, generatedGraphs->back(), *generatedVolumes, refinementProgress);
+            } else {
+                graph = refineVesselGraph(processedInput, *graph, *generatedVolumes, refinementProgress);
+            }
         } catch(tgt::IOException e) {
-            LERROR("Could not create hdf5 output volume for branchIdSegmentation.");
+            LERROR("IO Exception occured in VesselGraphCreator compute thread");
             std::cout << e.what() << std::endl;
             break;
         }
@@ -1083,7 +1094,9 @@ VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput inp
         std::move(*processedInput.sampleMask).deleteFromDisk();
     }
 
-    generatedGraphs->push_back(graph->clone());
+    if(input.saveDebugData) {
+        generatedGraphs->push_back(graph->clone());
+    }
 
     return VesselGraphCreatorOutput {
         std::move(graph),

@@ -58,6 +58,7 @@ struct VesselGraphCreatorInput {
     int minVoxelLength;
     float minElongation;
     float minBulgeSize;
+    bool saveDebugData;
 
     VesselGraphCreatorInput(
             const VolumeBase& segmentation,
@@ -67,7 +68,8 @@ struct VesselGraphCreatorInput {
             int numRefinementIterations,
             int minVoxelLength,
             float minElongation,
-            float minBulgeSize
+            float minBulgeSize,
+            bool saveDebugData
             )
         : segmentation(segmentation)
         , sampleMask(sampleMask)
@@ -77,6 +79,7 @@ struct VesselGraphCreatorInput {
         , minVoxelLength(minVoxelLength)
         , minElongation(minElongation)
         , minBulgeSize(minBulgeSize)
+        , saveDebugData(saveDebugData)
     {
         tgtAssert(!sampleMask || segmentation.getDimensions() == sampleMask->getDimensions(), "Sample mask dimension mismatch");
     }
@@ -91,6 +94,7 @@ struct VesselGraphCreatorInput {
         , minVoxelLength(old.minVoxelLength)
         , minElongation(old.minElongation)
         , minBulgeSize(old.minBulgeSize)
+        , saveDebugData(old.saveDebugData)
     {
     }
 };
@@ -146,6 +150,7 @@ private:
     IntProperty minVoxelLength_;
     FloatProperty minElongation_;
     FloatProperty minBulgeSize_;
+    BoolProperty saveDebugData_;
 
     // Info
     StringProperty tmpStorageSizeInfo_;
