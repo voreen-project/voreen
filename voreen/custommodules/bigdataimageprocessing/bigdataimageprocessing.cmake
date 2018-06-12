@@ -31,11 +31,12 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/datastructures/lz4slicevolume.cpp
     ${MOD_DIR}/io/lz4slicevolumefilereader.cpp
     ${MOD_DIR}/io/volumedisklz4.cpp
-    ${MOD_DIR}/processors/connectedcomponentanalysis.cpp
-    ${MOD_DIR}/processors/segmentationquantification.cpp
-    ${MOD_DIR}/processors/volumebricksource.cpp
-    ${MOD_DIR}/processors/volumebricksave.cpp
     ${MOD_DIR}/processors/binarymedian.cpp
+    ${MOD_DIR}/processors/connectedcomponentanalysis.cpp
+    ${MOD_DIR}/processors/largevolumeformatconversion.cpp
+    ${MOD_DIR}/processors/segmentationquantification.cpp
+    ${MOD_DIR}/processors/volumebricksave.cpp
+    ${MOD_DIR}/processors/volumebricksource.cpp
     ${MOD_DIR}/processors/volumeresampletransformation.cpp
 
     # Volumefiltering
@@ -54,11 +55,12 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/datastructures/lz4slicevolume.h
     ${MOD_DIR}/io/lz4slicevolumefilereader.h
     ${MOD_DIR}/io/volumedisklz4.h
-    ${MOD_DIR}/processors/connectedcomponentanalysis.h
-    ${MOD_DIR}/processors/segmentationquantification.h
-    ${MOD_DIR}/processors/volumebricksource.h
-    ${MOD_DIR}/processors/volumebricksave.h
     ${MOD_DIR}/processors/binarymedian.cpp
+    ${MOD_DIR}/processors/connectedcomponentanalysis.h
+    ${MOD_DIR}/processors/largevolumeformatconversion.h
+    ${MOD_DIR}/processors/segmentationquantification.h
+    ${MOD_DIR}/processors/volumebricksave.h
+    ${MOD_DIR}/processors/volumebricksource.h
     ${MOD_DIR}/processors/volumeresampletransformation.h
 
     # Volumefiltering
