@@ -352,4 +352,12 @@ VRN_CORE_API std::string convertNewlinesUnixToWindows(const std::string& str) {
     return strReplaceAll(str, "\n", "\r\n");
 }
 
+std::string getFormatFromBaseTypeAndChannels(const std::string baseType, size_t numChannels) {
+    if(numChannels == 1) {
+        return baseType;
+    } else {
+        return "Vector" + std::to_string(numChannels) + "(" + baseType + ")";
+    }
+}
+
 } // namespace

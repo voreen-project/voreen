@@ -210,6 +210,9 @@ std::string getBaseTypeFromType();
 template<typename T>
 std::string getFormatFromType();
 
+// Get the Format string from the given base type and number of channels
+std::string getFormatFromBaseTypeAndChannels(const std::string baseType, size_t numChannels);
+
 // Macro: DISPATCH_FOR_FORMAT(format, FUNC, ARGUMENTS...)
 
 // Dispatch to a template function matching the given format with the above macro.
