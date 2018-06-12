@@ -42,8 +42,7 @@
 #include "../algorithm/vesselgraphnormalization.h"
 #include "../algorithm/boundshierarchy.h"
 
-#include "../datastructures/lz4slicevolume.h"
-
+#include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 #include "custommodules/bigdataimageprocessing/processors/connectedcomponentanalysis.h"
 
 #include "tgt/bounds.h"

@@ -31,10 +31,10 @@
 #include "voreen/core/datastructures/volume/volumebase.h"
 #include "voreen/core/datastructures/volume/volumeram.h"
 #include "voreen/core/io/progressreporter.h"
+#include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 #include "tgt/vector.h"
 #include "tgt/filesystem.h"
 #include "../util/tasktimelogger.h"
-#include "../datastructures/lz4slicevolume.h"
 #include "surface.h"
 
 #include <boost/iostreams/device/mapped_file.hpp>

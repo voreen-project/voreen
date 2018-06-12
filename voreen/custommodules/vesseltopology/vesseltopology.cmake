@@ -60,22 +60,6 @@ ELSE()
     MESSAGE(FATAL_ERROR "Could not find YAML Library.")
 ENDIF()
 
-################################################################################
-# External dependency: lz4 library
-################################################################################
-MESSAGE(STATUS "Trying to find lz4 libraries")
-FIND_PACKAGE(LZ4)
-IF(LZ4_FOUND)
-    MESSAGE(STATUS "  - Found lz4 library")
-
-    MESSAGE(STATUS "Include Directories: " ${LZ4_INCLUDE_DIR})
-    MESSAGE(STATUS "Libraries: " ${LZ4_LIBRARIES})
-    LIST(APPEND MOD_INCLUDE_DIRECTORIES ${LZ4_INCLUDE_DIR})
-    LIST(APPEND MOD_LIBRARIES ${LZ4_LIBRARIES})
-ELSE()
-    MESSAGE(FATAL_ERROR "Could not find lz4 Library.")
-ENDIF()
-
 SET(MOD_CORE_SOURCES
     ${MOD_DIR}/algorithm/idvolume.cpp
     ${MOD_DIR}/algorithm/streaminggraphcreation.cpp
@@ -84,9 +68,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/algorithm/volumemask.cpp
     ${MOD_DIR}/datastructures/vesselgraph.cpp
     ${MOD_DIR}/datastructures/protovesselgraph.cpp
-    ${MOD_DIR}/datastructures/lz4slicevolume.cpp
-    ${MOD_DIR}/io/lz4slicevolumefilereader.cpp
-    ${MOD_DIR}/io/volumedisklz4.cpp
     ${MOD_DIR}/ports/vesselgraphport.cpp
     ${MOD_DIR}/ports/vesselgraphlistport.cpp
     ${MOD_DIR}/processors/appropriatespacinglinker.cpp
@@ -130,9 +111,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/algorithm/volumemask.h
     ${MOD_DIR}/datastructures/vesselgraph.h
     ${MOD_DIR}/datastructures/protovesselgraph.h
-    ${MOD_DIR}/datastructures/lz4slicevolume.h
-    ${MOD_DIR}/io/lz4slicevolumefilereader.h
-    ${MOD_DIR}/io/volumedisklz4.h
     ${MOD_DIR}/ports/vesselgraphport.h
     ${MOD_DIR}/ports/vesselgraphlistport.h
     ${MOD_DIR}/processors/appropriatespacinglinker.h

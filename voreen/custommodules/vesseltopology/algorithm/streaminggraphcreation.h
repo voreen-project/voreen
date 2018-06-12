@@ -33,11 +33,11 @@
 
 #include "../datastructures/vesselgraph.h"
 #include "../datastructures/protovesselgraph.h"
-#include "../datastructures/lz4slicevolume.h"
 #include "../algorithm/volumemask.h"
 #include "../util/tasktimelogger.h"
 #include "../util/kdtreebuilder.h"
 #include "custommodules/bigdataimageprocessing/volumefiltering/slicereader.h"
+#include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 
 #include "tgt/vector.h"
 #include "tgt/memory.h"

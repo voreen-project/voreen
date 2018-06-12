@@ -36,6 +36,8 @@
 #include "processors/volumebricksource.h"
 #include "processors/volumebricksave.h"
 
+#include "io/lz4slicevolumefilereader.h"
+
 namespace voreen {
 
 BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& modulePath)
@@ -54,6 +56,8 @@ BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& mo
 
     registerProcessor(new VolumeBrickSource());
     registerProcessor(new VolumeBrickSave());
+
+    registerVolumeReader(new LZ4SliceVolumeFileReader());
 }
 
 } // namespace

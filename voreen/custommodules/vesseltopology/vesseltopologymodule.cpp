@@ -58,8 +58,6 @@
 #include "processors/volumelistloopinitiator.h"
 #include "processors/volumelistloopfinalizer.h"
 
-#include "io/lz4slicevolumefilereader.h"
-
 namespace voreen {
 
 VesselTopologyModule::VesselTopologyModule(const std::string& modulePath)
@@ -103,8 +101,6 @@ VesselTopologyModule::VesselTopologyModule(const std::string& modulePath)
 
     registerProcessor(new VolumeListLoopInitiator());
     registerProcessor(new VolumeListLoopFinalizer());
-
-    registerVolumeReader(new LZ4SliceVolumeFileReader());
 }
 
 } // namespace

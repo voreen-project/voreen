@@ -29,9 +29,9 @@
 #include "tgt/matrix.h"
 #include "tgt/memory.h"
 #include "../util/kdtreebuilder.h"
-#include "../datastructures/lz4slicevolume.h"
 #include "voreen/core/datastructures/volume/volume.h"
 #include "custommodules/bigdataimageprocessing/volumefiltering/slicereader.h"
+#include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 #include "vesselgraph.h"
 
 namespace voreen {
