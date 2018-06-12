@@ -45,17 +45,26 @@ LZ4SliceVolumeMetadata::LZ4SliceVolumeMetadata(tgt::svec3 dimensions)
 {
 }
 
-LZ4SliceVolumeMetadata& LZ4SliceVolumeMetadata::withOffset(tgt::vec3 offset) {
-    offset_ = offset;
-    return *this;
+LZ4SliceVolumeMetadata LZ4SliceVolumeMetadata::withOffset(tgt::vec3 offset) const {
+    LZ4SliceVolumeMetadata metadata(*this);
+    metadata.offset_ = offset;
+    return metadata;
 }
-LZ4SliceVolumeMetadata& LZ4SliceVolumeMetadata::withSpacing(tgt::vec3 spacing) {
-    spacing_ = spacing;
-    return *this;
+LZ4SliceVolumeMetadata LZ4SliceVolumeMetadata::withSpacing(tgt::vec3 spacing) const {
+    LZ4SliceVolumeMetadata metadata(*this);
+    metadata.spacing_ = spacing;
+    return metadata;
 }
-LZ4SliceVolumeMetadata& LZ4SliceVolumeMetadata::withPhysicalToWorldTransformation(tgt::mat4 physicalToWorldTransformation) {
-    physicalToWorldTransformation_ = physicalToWorldTransformation;
-    return *this;
+LZ4SliceVolumeMetadata LZ4SliceVolumeMetadata::withPhysicalToWorldTransformation(tgt::mat4 physicalToWorldTransformation) const {
+    LZ4SliceVolumeMetadata metadata(*this);
+    metadata.physicalToWorldTransformation_ = physicalToWorldTransformation;
+    return metadata;
+}
+
+LZ4SliceVolumeMetadata LZ4SliceVolumeMetadata::withRealWorldMapping(RealWorldMapping realWorldMapping) const {
+    LZ4SliceVolumeMetadata metadata(*this);
+    metadata.realWorldMapping_ = realWorldMapping;
+    return metadata;
 }
 
 const tgt::svec3& LZ4SliceVolumeMetadata::getDimensions() const {
@@ -75,6 +84,9 @@ tgt::mat4 LZ4SliceVolumeMetadata::getVoxelToPhysicalMatrix() const {
 }
 tgt::mat4 LZ4SliceVolumeMetadata::getVoxelToWorldMatrix() const {
     return getPhysicalToWorldMatrix() * getVoxelToPhysicalMatrix();
+}
+const RealWorldMapping& LZ4SliceVolumeMetadata::getRealWorldMapping() const {
+    return realWorldMapping_;
 }
 
 void LZ4SliceVolumeMetadata::serialize(Serializer& s) const {
@@ -145,7 +157,9 @@ std::unique_ptr<LZ4SliceVolumeBase> LZ4SliceVolumeBase::open(std::string filePat
     return res;
 }
 std::unique_ptr<Volume> LZ4SliceVolumeBase::toVolume() && {
-    return tgt::make_unique<Volume>(new VolumeDiskLZ4(std::move(*this).moveToHeap()), metadata_.getSpacing(), metadata_.getOffset(), metadata_.getPhysicalToWorldMatrix());
+    auto res = tgt::make_unique<Volume>(new VolumeDiskLZ4(std::move(*this).moveToHeap()), metadata_.getSpacing(), metadata_.getOffset(), metadata_.getPhysicalToWorldMatrix());
+    res->setRealWorldMapping(metadata_.getRealWorldMapping());
+    return res;
 }
 
 const LZ4SliceVolumeMetadataFull& LZ4SliceVolumeBase::getMetaData() const {

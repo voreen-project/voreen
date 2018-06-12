@@ -484,7 +484,7 @@ struct LZ4SliceVolumeCCAInputWrapper {
         return tgt::mat4::identity;
     }
     std::string getBaseType() const {
-        return "uint32_t";
+        return "uint32";
     }
     VolumeRAM* getSlice(size_t z) const {
         return new VolumeAtomic<uint8_t>(volume_.loadSlice(z));
@@ -542,7 +542,7 @@ static LZ4SliceVolume<uint32_t> createCCAVolume(const LZ4SliceVolume<uint8_t>& i
         return true;
     };
 
-    LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getMetaData());
+    LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getMetaData().withRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint32_t>()));
     LZ4SliceVolumeCCABuilderWrapper outputWrapper(outputVolumeBuilder);
 
     auto stats = sc.cca(LZ4SliceVolumeCCAInputWrapper(input), outputWrapper, writeMetaData, isOne, true, componentConstraintTest, progress);
@@ -861,7 +861,7 @@ static UnfinishedRegions collectUnfinishedRegions(const LZ4SliceVolume<uint8_t>&
         return true;
     };
 
-    LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getMetaData());
+    LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getMetaData().withRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint32_t>()));
     LZ4SliceVolumeCCABuilderWrapper outputWrapper(outputVolumeBuilder);
 
     sc.cca(LZ4SliceVolumeCCAInputWrapper(input), outputWrapper, writeMetaData, isOne, true, componentConstraintTest, progress);

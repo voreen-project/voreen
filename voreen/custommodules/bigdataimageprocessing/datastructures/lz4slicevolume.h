@@ -46,9 +46,10 @@ public:
     explicit LZ4SliceVolumeMetadata(tgt::svec3 dimensions);
     LZ4SliceVolumeMetadata(const LZ4SliceVolumeMetadata&) = default;
 
-    LZ4SliceVolumeMetadata& withOffset(tgt::vec3 offset);
-    LZ4SliceVolumeMetadata& withSpacing(tgt::vec3 spacing);
-    LZ4SliceVolumeMetadata& withPhysicalToWorldTransformation(tgt::mat4 physicalToWorldTransformation);
+    LZ4SliceVolumeMetadata withOffset(tgt::vec3 offset) const;
+    LZ4SliceVolumeMetadata withSpacing(tgt::vec3 spacing) const;
+    LZ4SliceVolumeMetadata withPhysicalToWorldTransformation(tgt::mat4 physicalToWorldTransformation) const;
+    LZ4SliceVolumeMetadata withRealWorldMapping(RealWorldMapping realWorldMapping) const;
 
     const tgt::svec3& getDimensions() const;
     const tgt::vec3& getOffset() const;
@@ -56,6 +57,7 @@ public:
     const tgt::mat4& getPhysicalToWorldMatrix() const;
     tgt::mat4 getVoxelToPhysicalMatrix() const;
     tgt::mat4 getVoxelToWorldMatrix() const;
+    const RealWorldMapping& getRealWorldMapping() const;
 
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
@@ -65,6 +67,7 @@ private:
     tgt::vec3 spacing_;
     tgt::vec3 offset_;
     tgt::mat4 physicalToWorldTransformation_;
+    RealWorldMapping realWorldMapping_;
 };
 
 class LZ4SliceVolumeMetadataFull : public LZ4SliceVolumeMetadata {
