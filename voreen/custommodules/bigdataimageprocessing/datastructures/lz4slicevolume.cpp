@@ -180,7 +180,7 @@ const std::string& LZ4SliceVolumeBase::getFilePath() const {
 
 /// Helper function ------------------------------------------------------------
 
-LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized) {
+LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized, ProgressReporter* progress) {
     const auto dimensions = volume.getDimensions();
 
     LZ4SliceVolumeBuilder<uint8_t> builder(
@@ -191,7 +191,9 @@ LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizat
                 .withPhysicalToWorldTransformation(volume.getPhysicalToWorldMatrix()));
 
     for(size_t z = 0; z<dimensions.z; ++z) {
-        //progress.setProgress(static_cast<float>(z)/dimensions.z);
+        if(progress) {
+            progress->setProgress(static_cast<float>(z)/dimensions.z);
+        }
 
         std::unique_ptr<const VolumeRAM> inSlice(volume.getSlice(z));
         auto outSlice(builder.getNextWritableSlice());
@@ -207,7 +209,16 @@ LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizat
         }
     }
 
+    if(progress) {
+        progress->setProgress(1.0f);
+    }
     return (std::move(builder)).finalize();
+}
+LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized, ProgressReporter& progress) {
+    return binarizeVolume(volume, binarizationThresholdSegmentationNormalized, &progress);
+}
+LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized, ProgressReporter&& progress) {
+    return binarizeVolume(volume, binarizationThresholdSegmentationNormalized, &progress);
 }
 
 }
