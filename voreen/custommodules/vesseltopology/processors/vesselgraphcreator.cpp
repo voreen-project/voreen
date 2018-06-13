@@ -116,10 +116,11 @@ bool VesselGraphCreator::isReady() const {
 }
 
 struct VesselGraphCreatorProcessedInput {
-    VesselGraphCreatorProcessedInput(VesselGraphCreatorInput& input)
-        : segmentation(binarizeVolume(input.segmentation, input.binarizationThresholdSegmentationNormalized))
-        , sampleMask(input.sampleMask ?
-                boost::optional<LZ4SliceVolume<uint8_t>>(binarizeVolume(*input.sampleMask, input.binarizationThresholdSegmentationNormalized))
+    VesselGraphCreatorProcessedInput(VesselGraphCreatorInput& input, ProgressReporter& progress)
+        : segmentation(binarizeVolume(input.segmentation, input.binarizationThresholdSegmentationNormalized,
+                    input.sampleMask ? SubtaskProgressReporter(progress, tgt::vec2(0,0.5)) : SubtaskProgressReporter(progress, tgt::vec2(0,1))))
+        , sampleMask(input.sampleMask
+                ? boost::optional<LZ4SliceVolume<uint8_t>>(binarizeVolume(*input.sampleMask, input.binarizationThresholdSegmentationNormalized, SubtaskProgressReporter(progress, tgt::vec2(0,0.5))))
                 : boost::none)
         , fixedForegroundPoints(std::move(input.fixedForegroundPoints))
         , numRefinementIterations(input.numRefinementIterations)
@@ -484,7 +485,7 @@ struct LZ4SliceVolumeCCAInputWrapper {
         return tgt::mat4::identity;
     }
     std::string getBaseType() const {
-        return "uint32_t";
+        return "uint32";
     }
     VolumeRAM* getSlice(size_t z) const {
         return new VolumeAtomic<uint8_t>(volume_.loadSlice(z));
@@ -542,7 +543,7 @@ static LZ4SliceVolume<uint32_t> createCCAVolume(const LZ4SliceVolume<uint8_t>& i
         return true;
     };
 
-    LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getMetaData());
+    LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getMetaData().withRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint32_t>()));
     LZ4SliceVolumeCCABuilderWrapper outputWrapper(outputVolumeBuilder);
 
     auto stats = sc.cca(LZ4SliceVolumeCCAInputWrapper(input), outputWrapper, writeMetaData, isOne, true, componentConstraintTest, progress);
@@ -861,7 +862,7 @@ static UnfinishedRegions collectUnfinishedRegions(const LZ4SliceVolume<uint8_t>&
         return true;
     };
 
-    LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getMetaData());
+    LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getMetaData().withRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint32_t>()));
     LZ4SliceVolumeCCABuilderWrapper outputWrapper(outputVolumeBuilder);
 
     sc.cca(LZ4SliceVolumeCCAInputWrapper(input), outputWrapper, writeMetaData, isOne, true, componentConstraintTest, progress);
@@ -1071,16 +1072,19 @@ static bool iterationMadeProgress(const VesselGraph& before, const VesselGraph& 
 
 VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput input, ProgressReporter& progressReporter) const {
     TaskTimeLogger _("Extract VesselGraph (total)", tgt::Info);
-    float progressPerIteration = 1.0f/(input.numRefinementIterations+1);
-    SubtaskProgressReporter initialProgress(progressReporter, tgt::vec2(0, progressPerIteration));
 
-    VesselGraphCreatorProcessedInput processedInput(input);
+    SubtaskProgressReporterCollection<2> progressCollection(progressReporter, {0.01,0.99});
+
+    VesselGraphCreatorProcessedInput processedInput(input, progressCollection.get<0>());
+
+    float progressPerIteration = 1.0f/(input.numRefinementIterations+1);
+    SubtaskProgressReporter initialProgress(progressCollection.get<1>(), tgt::vec2(0, progressPerIteration));
 
     std::unique_ptr<VolumeList> generatedVolumes(new VolumeContainer());
     std::unique_ptr<std::vector<VesselGraph>> generatedGraphs(new std::vector<VesselGraph>());
     std::unique_ptr<VesselGraph> graph = createInitialVesselGraph(processedInput, *generatedVolumes, initialProgress);
     for(int i=0; i < input.numRefinementIterations; ++i) {
-        SubtaskProgressReporter refinementProgress(progressReporter, progressPerIteration*tgt::vec2(i+1, i+2));
+        SubtaskProgressReporter refinementProgress(progressCollection.get<1>(), progressPerIteration*tgt::vec2(i+1, i+2));
         try {
             std::unique_ptr<VesselGraph> prev_graph = std::move(graph);
             graph = refineVesselGraph(processedInput, *prev_graph, *generatedVolumes, refinementProgress);

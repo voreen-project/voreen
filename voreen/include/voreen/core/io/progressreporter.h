@@ -28,10 +28,12 @@
 
 #include "voreen/core/voreencoreapi.h"
 #include "tgt/vector.h"
+#include "tgt/assert.h"
 #include <string>
 #include <array>
 #include <memory>
 #include <boost/thread.hpp>
+#include <numeric>
 
 namespace voreen {
 
@@ -136,6 +138,19 @@ struct SubtaskProgressReporterCollection {
         for(uint8_t i=0; i < n; ++i) {
             reporters_[i].reset(new SubtaskProgressReporter(parent, tgt::vec2(static_cast<float>(i)/n, static_cast<float>(i+1)/n)));
         }
+    }
+
+    SubtaskProgressReporterCollection(ProgressReporter& parent, const std::array<float, n>& subtaskWorkWeight)
+        : reporters_()
+    {
+        float weightSum = std::accumulate(subtaskWorkWeight.begin(), subtaskWorkWeight.end(), 0.0f);
+        float progressBegin = 0.0f;
+        for(uint8_t i=0; i < n; ++i) {
+            float progressEnd = progressBegin + subtaskWorkWeight[i]/weightSum;
+            reporters_[i].reset(new SubtaskProgressReporter(parent, tgt::vec2(progressBegin, progressEnd)));
+            progressBegin = progressEnd;
+        }
+        tgtAssert(progressBegin == 1.0f, "Invalid progress end");
     }
 
     template<uint8_t i>

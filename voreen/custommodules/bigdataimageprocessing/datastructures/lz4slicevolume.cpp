@@ -45,17 +45,26 @@ LZ4SliceVolumeMetadata::LZ4SliceVolumeMetadata(tgt::svec3 dimensions)
 {
 }
 
-LZ4SliceVolumeMetadata& LZ4SliceVolumeMetadata::withOffset(tgt::vec3 offset) {
-    offset_ = offset;
-    return *this;
+LZ4SliceVolumeMetadata LZ4SliceVolumeMetadata::withOffset(tgt::vec3 offset) const {
+    LZ4SliceVolumeMetadata metadata(*this);
+    metadata.offset_ = offset;
+    return metadata;
 }
-LZ4SliceVolumeMetadata& LZ4SliceVolumeMetadata::withSpacing(tgt::vec3 spacing) {
-    spacing_ = spacing;
-    return *this;
+LZ4SliceVolumeMetadata LZ4SliceVolumeMetadata::withSpacing(tgt::vec3 spacing) const {
+    LZ4SliceVolumeMetadata metadata(*this);
+    metadata.spacing_ = spacing;
+    return metadata;
 }
-LZ4SliceVolumeMetadata& LZ4SliceVolumeMetadata::withPhysicalToWorldTransformation(tgt::mat4 physicalToWorldTransformation) {
-    physicalToWorldTransformation_ = physicalToWorldTransformation;
-    return *this;
+LZ4SliceVolumeMetadata LZ4SliceVolumeMetadata::withPhysicalToWorldTransformation(tgt::mat4 physicalToWorldTransformation) const {
+    LZ4SliceVolumeMetadata metadata(*this);
+    metadata.physicalToWorldTransformation_ = physicalToWorldTransformation;
+    return metadata;
+}
+
+LZ4SliceVolumeMetadata LZ4SliceVolumeMetadata::withRealWorldMapping(RealWorldMapping realWorldMapping) const {
+    LZ4SliceVolumeMetadata metadata(*this);
+    metadata.realWorldMapping_ = realWorldMapping;
+    return metadata;
 }
 
 const tgt::svec3& LZ4SliceVolumeMetadata::getDimensions() const {
@@ -75,6 +84,9 @@ tgt::mat4 LZ4SliceVolumeMetadata::getVoxelToPhysicalMatrix() const {
 }
 tgt::mat4 LZ4SliceVolumeMetadata::getVoxelToWorldMatrix() const {
     return getPhysicalToWorldMatrix() * getVoxelToPhysicalMatrix();
+}
+const RealWorldMapping& LZ4SliceVolumeMetadata::getRealWorldMapping() const {
+    return realWorldMapping_;
 }
 
 void LZ4SliceVolumeMetadata::serialize(Serializer& s) const {
@@ -145,7 +157,9 @@ std::unique_ptr<LZ4SliceVolumeBase> LZ4SliceVolumeBase::open(std::string filePat
     return res;
 }
 std::unique_ptr<Volume> LZ4SliceVolumeBase::toVolume() && {
-    return tgt::make_unique<Volume>(new VolumeDiskLZ4(std::move(*this).moveToHeap()), metadata_.getSpacing(), metadata_.getOffset(), metadata_.getPhysicalToWorldMatrix());
+    auto res = tgt::make_unique<Volume>(new VolumeDiskLZ4(std::move(*this).moveToHeap()), metadata_.getSpacing(), metadata_.getOffset(), metadata_.getPhysicalToWorldMatrix());
+    res->setRealWorldMapping(metadata_.getRealWorldMapping());
+    return res;
 }
 
 const LZ4SliceVolumeMetadataFull& LZ4SliceVolumeBase::getMetaData() const {
@@ -166,7 +180,7 @@ const std::string& LZ4SliceVolumeBase::getFilePath() const {
 
 /// Helper function ------------------------------------------------------------
 
-LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized) {
+LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized, ProgressReporter* progress) {
     const auto dimensions = volume.getDimensions();
 
     LZ4SliceVolumeBuilder<uint8_t> builder(
@@ -177,7 +191,9 @@ LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizat
                 .withPhysicalToWorldTransformation(volume.getPhysicalToWorldMatrix()));
 
     for(size_t z = 0; z<dimensions.z; ++z) {
-        //progress.setProgress(static_cast<float>(z)/dimensions.z);
+        if(progress) {
+            progress->setProgress(static_cast<float>(z)/dimensions.z);
+        }
 
         std::unique_ptr<const VolumeRAM> inSlice(volume.getSlice(z));
         auto outSlice(builder.getNextWritableSlice());
@@ -193,7 +209,16 @@ LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizat
         }
     }
 
+    if(progress) {
+        progress->setProgress(1.0f);
+    }
     return (std::move(builder)).finalize();
+}
+LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized, ProgressReporter& progress) {
+    return binarizeVolume(volume, binarizationThresholdSegmentationNormalized, &progress);
+}
+LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized, ProgressReporter&& progress) {
+    return binarizeVolume(volume, binarizationThresholdSegmentationNormalized, &progress);
 }
 
 }
