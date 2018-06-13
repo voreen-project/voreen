@@ -244,4 +244,8 @@ VolumeReader* HDF5VolumeReader::create(ProgressBar* progress) const {
     return new HDF5VolumeReader();
 }
 
+bool HDF5VolumeReader::canSupportFileWatching() const {
+    return true;
+}
+
 } // namespace voreen

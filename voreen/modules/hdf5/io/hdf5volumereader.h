@@ -69,6 +69,11 @@ public:
      */
     virtual std::vector<VolumeURL> listVolumes(const std::string& url) const;
 
+    /**
+     * HDF5 format supports filewatching, thus this functions returns true.
+     */
+    virtual bool canSupportFileWatching() const;
+
 private:
     static const std::string loggerCat_;
 };

@@ -24,7 +24,11 @@
  ***********************************************************************************/
 
 #include "voreen/core/datastructures/volume/volumelist.h"
+
 #include "voreen/core/properties/volumeurllistproperty.h"
+#include "voreen/core/io/volumereader.h"
+#include "voreen/core/io/volumeserializer.h"
+#include "voreen/core/io/volumeserializerpopulator.h"
 
 #include "voreen/qt/widgets/volumeviewhelper.h"
 #include "voreen/qt/widgets/property/volumeurllistpropertywidget.h"
@@ -45,9 +49,10 @@ namespace voreen {
 
 const std::string VolumeURLListPropertyWidget::loggerCat_("voreenqt.VolumeURLListPropertyWidget");
 
-VolumeURLListPropertyWidget::VolumeURLListPropertyWidget(VolumeURLListProperty* volumeListProp, QWidget* parent) :
-        QPropertyWidget(volumeListProp, parent, false),
-        volumeIOHelper_(parent, VolumeIOHelper::MULTI_FILE)
+VolumeURLListPropertyWidget::VolumeURLListPropertyWidget(VolumeURLListProperty* volumeListProp, QWidget* parent)
+    : QPropertyWidget(volumeListProp, parent, false)
+    , volumeIOHelper_(parent, VolumeIOHelper::MULTI_FILE)
+    , fileWatchCheckBox_(nullptr)
 {
     urlListProperty_ = volumeListProp;
     tgtAssert(urlListProperty_, "No volume collection property");
@@ -116,12 +121,28 @@ void VolumeURLListPropertyWidget::updateFromPropertySlot() {
 
     volumeTreeWidget_->clear();
 
+    bool supportFileWatching = fileWatchCheckBox_ != nullptr && urlListProperty_->isFileWatchEditable() && !collection->empty();
     int numSelected = 0;
     for (size_t i = 0 ; i< collection->size(); i++) {
         VolumeBase* handle = collection->at(i);
         std::string url = handle->getOrigin().getURL();
-        QTreeWidgetItem* qtwi = new QTreeWidgetItem(volumeTreeWidget_);
 
+        // Only allow file watching, if all volume formats are watchable.
+        if (supportFileWatching) {
+            std::string preferredReader = handle->getOrigin().getSearchParameter("preferredReader");
+            if (preferredReader.empty()) {
+                if (fileWatchCheckBox_->isEnabled())
+                    LWARNING("No preferred reader set. Disabling file watching.");
+                supportFileWatching = false;
+            }
+            else {
+                VolumeSerializerPopulator populator;
+                VolumeReader* reader = populator.getVolumeSerializer()->getReaderByName(preferredReader);
+                supportFileWatching = reader->canSupportFileWatching();
+            }
+        }
+
+        QTreeWidgetItem* qtwi = new QTreeWidgetItem(volumeTreeWidget_);
         qtwi->setFont(0, QFont(QString("Arial"), fontSize));
         QString info = QString::fromStdString(VolumeViewHelper::getStrippedVolumeName(handle)
             + "\n"
@@ -139,6 +160,16 @@ void VolumeURLListPropertyWidget::updateFromPropertySlot() {
             numSelected++;
 
         volumeTreeWidget_->addTopLevelItem(qtwi);
+    }
+
+    // Handle file watching ability.
+    if (supportFileWatching) {
+        fileWatchCheckBox_->setEnabled(true);
+    }
+    else {
+        urlListProperty_->setFileWatchEnabled(false);
+        fileWatchCheckBox_->setChecked(false);
+        fileWatchCheckBox_->setEnabled(false);
     }
 
     clearButton_->setEnabled(!collection->empty());

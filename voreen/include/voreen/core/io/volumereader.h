@@ -155,9 +155,14 @@ public:
     virtual VolumeURL convertOriginToAbsolutePath(const VolumeURL& origin, const std::string& basePath) const;
 
     /**
-    * Returns true if the reader is able to read files without extension, false otherwise.
-    */
+     * Returns true if the reader is able to read files without extension, false otherwise.
+     */
     virtual bool canHandleMissingExtension() const;
+
+    /**
+     * Returns true if the format supported by this reader supports file watching.
+     */
+    virtual bool canSupportFileWatching() const;
 
     /**
      * Returns a list of filename extensions that are supported by this reader.

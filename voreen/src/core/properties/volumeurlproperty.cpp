@@ -48,7 +48,7 @@ VolumeURLProperty::VolumeURLProperty(const std::string& id, const std::string& g
     , volume_(0)
     , volumeOwner_(false)
     , infoProp_(0)
-    , inCallback_(false)
+    , recursiveSet_(false)
     , progressBar_(0)
 {}
 
@@ -58,7 +58,7 @@ VolumeURLProperty::VolumeURLProperty()
     , volume_(0)
     , volumeOwner_(false)
     , infoProp_(0)
-    , inCallback_(false)
+    , recursiveSet_(false)
     , progressBar_(0)
 {}
 
@@ -67,7 +67,7 @@ Property* VolumeURLProperty::create() const {
 }
 
 void VolumeURLProperty::fileActionCallback() {
-    inCallback_ = true;
+    recursiveSet_ = true;
     try {
         loadVolume();
     }
@@ -86,7 +86,7 @@ void VolumeURLProperty::fileActionCallback() {
         // Output error message.
         LWARNING(e.what() << " The file might has been moved or deleted.");
     }
-    inCallback_ = false;
+    recursiveSet_ = false;
 }
 
 void VolumeURLProperty::deinitialize() {
@@ -107,14 +107,27 @@ void VolumeURLProperty::set(const std::string& url) {
         setVolume(0);
 
     // Remove old watch.
-    if (!inCallback_)
+    bool recursive = recursiveSet_;
+    if (!recursive) {
+        recursiveSet_ = true;
         removeWatch(VolumeURL(get()).getPath());
+    }
 
+    // Set actual value (might trigger set by callback).
     StringProperty::set(url);
 
     // Add new watch.
-    if (!inCallback_)
-        addWatch(VolumeURL(get()).getPath());
+    if (!recursive) {
+        // Add watch if possible.
+        std::string path = VolumeURL(get()).getPath();
+        bool success = addWatch(path);
+        if (!success) {
+            LWARNING("Parent directory of " << tgt::FileSystem::fileName(path) << " does not exist. Resetting path.");
+            setFileWatchEnabled(false);
+            StringProperty::set("");
+        }
+        recursiveSet_ = false;
+    }
 
     // invalidate even if the url is the same to fix problems with loading the same url again
     invalidate();
@@ -196,18 +209,18 @@ void VolumeURLProperty::addInfoProperty(VolumeInfoProperty* pointer) {
 void VolumeURLProperty::serialize(Serializer& s) const {
     Property::serialize(s);
     VoreenFileWatchListener::serialize(s);
-    s.serialize("urls", VolumeURL(value_));
+    s.serialize("urls", VolumeURL(get()));
 }
 
 void VolumeURLProperty::deserialize(Deserializer& s) {
     Property::deserialize(s);
     VoreenFileWatchListener::deserialize(s);
     
+    std::string value;
     try {
         VolumeURL tmp;
         s.deserialize("urls", tmp);
-        value_ = tmp.getURL();
-        addWatch(tmp.getPath());
+        value = tmp.getURL();
     }
     catch(SerializationNoSuchDataException) {
         s.removeLastError();
@@ -216,13 +229,15 @@ void VolumeURLProperty::deserialize(Deserializer& s) {
         std::string relativeURL;
         s.deserialize("url", relativeURL);
         if (relativeURL.empty())
-            value_ = "";
+            value = "";
         else {
             std::string basePath = tgt::FileSystem::dirName(s.getDocumentPath());
-            value_ = VolumeURL::convertURLToAbsolutePath(relativeURL, basePath);
-            addWatch(VolumeURL(value_).getPath());
+            value = VolumeURL::convertURLToAbsolutePath(relativeURL, basePath);
         }
     }
+
+    // Set value.
+    set(value);
 }
 
 ProgressBar* VolumeURLProperty::getProgressBar() {

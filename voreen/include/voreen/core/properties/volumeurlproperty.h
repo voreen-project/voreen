@@ -138,7 +138,7 @@ private:
     VolumeBase* volume_;             ///< the volume belonging to the assigned URL
     bool volumeOwner_;               ///< determines, if the property owns the volume_
     VolumeInfoProperty* infoProp_;   ///< pointer to an info property, can be NULL
-    bool inCallback_;                ///< determines if currently inside callback
+    bool recursiveSet_;              ///< determines if set was called recursively
 
     ProgressBar* progressBar_;
 
