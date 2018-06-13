@@ -379,10 +379,16 @@ SingleOctreeRaycasterCL::SingleOctreeRaycasterCL()
     compositingMode_.addOption("mop", "Max Opacity Projection (MOP)",   "COMPOSITING_MODE_MOP");
     addProperty(compositingMode_);
 
+    // The same as "Very High", but does always renders up to the maximum level of detail.
     renderingQuality_.addSetting("Full",    &samplingRate_,                 1.f);
     renderingQuality_.addSetting("Full",    &useIterativeRefinement_,       true);
     renderingQuality_.addSetting("Full",    &nodeLevelReduction_,           0); //< no reduction
     renderingQuality_.addSetting("Full",    &screenResolutionReduction_,    1); //< no reduction (factor of 1.f)
+
+    renderingQuality_.addSetting("Very High",    &samplingRate_,                 1.f);
+    renderingQuality_.addSetting("Very High",    &useIterativeRefinement_,       true);
+    renderingQuality_.addSetting("Very High",    &nodeLevelReduction_,           0); //< no reduction
+    renderingQuality_.addSetting("Very High",    &screenResolutionReduction_,    1); //< no reduction (factor of 1.f)
 
     renderingQuality_.addSetting("High",    &samplingRate_,                 1.f);
     renderingQuality_.addSetting("High",    &useIterativeRefinement_,       true);
@@ -759,11 +765,18 @@ void SingleOctreeRaycasterCL::process() {
     float samplingStepSize = 1.f / (float)(avgDim * samplingRate);
 
     // compute desired node level of detail
-    size_t nodeLevel = computeNodeLevel(tgt::vec3(0.5f), inputOctree->getDimensions(),
-        inputVolume->getTextureToWorldMatrix(), inputOctree->getNumLevels(),
-        cameraProperty_.get().getPosition(), cameraProperty_.get().getProjectionMatrix(outputRenderSize), outputRenderSize);
-    int nodeLevelReduction = QualityMode.isInteractionMode() ? interactionNodeLevelReduction_.get() : nodeLevelReduction_.get();
-    nodeLevel -= std::min((size_t)nodeLevelReduction, nodeLevel);
+    size_t nodeLevel;
+    if(renderingQuality_.getValue() == "Full" && !QualityMode.isInteractionMode()) {
+        // Always show all levels in full quality mode
+        nodeLevel = inputOctree->getNumLevels()-1;
+    } else {
+        // Otherwise compute level of detail from screen size and other parameters
+        nodeLevel = computeNodeLevel(tgt::vec3(0.5f), inputOctree->getDimensions(),
+                inputVolume->getTextureToWorldMatrix(), inputOctree->getNumLevels(),
+                cameraProperty_.get().getPosition(), cameraProperty_.get().getProjectionMatrix(outputRenderSize), outputRenderSize);
+        int nodeLevelReduction = QualityMode.isInteractionMode() ? interactionNodeLevelReduction_.get() : nodeLevelReduction_.get();
+        nodeLevel -= std::min((size_t)nodeLevelReduction, nodeLevel);
+    }
 
     // update brick buffer (upload bricks)
     size_t numBricksUsed = 0;
@@ -1989,6 +2002,8 @@ void SingleOctreeRaycasterCL::updatePropertyConfiguration() {
     int interactionQualityIndex = interactionQuality_.getSelectedIndex();
     if (interactionQualityIndex <= renderingQualityIndex-1) //< account for "full" quality option not available in interaction quality
         interactionQuality_.selectByIndex(renderingQualityIndex-1);
+
+    nodeLevelReduction_.setReadOnlyFlag(renderingQuality_.getValue() == "Full");
 }
 
 void SingleOctreeRaycasterCL::resetChannelShift() {
