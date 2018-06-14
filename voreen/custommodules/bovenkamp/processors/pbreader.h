@@ -50,7 +50,6 @@ public:
     virtual std::string getClassName() const { return "PBReader";  }
     virtual std::string getCategory() const  { return "Data Inport";     }
     virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL; }
-    virtual bool usesExpensiveComputation() const {return true;}
 
     /** Enables the laoding of the data for a new laoded workspace */
     void initialize();
@@ -88,12 +87,6 @@ private:
      * Called in "process".
      */
     void readParameters(tgt::svec3& dimensions, tgt::vec3& spacing, int& timesteps);
-    /**
-     * Help function to read the data of a magnitude or velocity file.
-     * Called in "process".
-     */
-    void readFile(std::string filename, tgt::svec3 dimensions, int timesteps, float** outputArray, size_t currentChannel = 1, size_t numChannels = 3, 
-                              float progressMin = 0.f, float progressMax = 1.f);
     
     /// Ports
     VolumeListPort magnitudeOutport_;   //< port containing the magnitude volume of all time steps
