@@ -60,22 +60,6 @@ ELSE()
     MESSAGE(FATAL_ERROR "Could not find YAML Library.")
 ENDIF()
 
-################################################################################
-# External dependency: lz4 library
-################################################################################
-MESSAGE(STATUS "Trying to find lz4 libraries")
-FIND_PACKAGE(LZ4)
-IF(LZ4_FOUND)
-    MESSAGE(STATUS "  - Found lz4 library")
-
-    MESSAGE(STATUS "Include Directories: " ${LZ4_INCLUDE_DIR})
-    MESSAGE(STATUS "Libraries: " ${LZ4_LIBRARIES})
-    LIST(APPEND MOD_INCLUDE_DIRECTORIES ${LZ4_INCLUDE_DIR})
-    LIST(APPEND MOD_LIBRARIES ${LZ4_LIBRARIES})
-ELSE()
-    MESSAGE(FATAL_ERROR "Could not find lz4 Library.")
-ENDIF()
-
 SET(MOD_CORE_SOURCES
     ${MOD_DIR}/algorithm/idvolume.cpp
     ${MOD_DIR}/algorithm/streaminggraphcreation.cpp
@@ -85,6 +69,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/datastructures/vesselgraph.cpp
     ${MOD_DIR}/datastructures/protovesselgraph.cpp
     ${MOD_DIR}/ports/vesselgraphport.cpp
+    ${MOD_DIR}/ports/vesselgraphlistport.cpp
     ${MOD_DIR}/processors/appropriatespacinglinker.cpp
     ${MOD_DIR}/processors/aortasegmentation.cpp
     ${MOD_DIR}/processors/localandglobalthreshold.cpp
@@ -100,6 +85,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/vesselgraphsave.cpp
     ${MOD_DIR}/processors/vesselgraphskeletonextractor.cpp
     ${MOD_DIR}/processors/vesselgraphsource.cpp
+    ${MOD_DIR}/processors/vesselgraphselector.cpp
     ${MOD_DIR}/processors/vesselgraphstatplotter.cpp
     ${MOD_DIR}/processors/vesselnessextractor.cpp
     ${MOD_DIR}/processors/volumefloodfill.cpp
@@ -125,8 +111,8 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/algorithm/volumemask.h
     ${MOD_DIR}/datastructures/vesselgraph.h
     ${MOD_DIR}/datastructures/protovesselgraph.h
-    ${MOD_DIR}/datastructures/lz4slicevolume.h
     ${MOD_DIR}/ports/vesselgraphport.h
+    ${MOD_DIR}/ports/vesselgraphlistport.h
     ${MOD_DIR}/processors/appropriatespacinglinker.h
     ${MOD_DIR}/processors/aortasegmentation.h
     ${MOD_DIR}/processors/localandglobalthreshold.h
@@ -142,6 +128,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/vesselgraphsave.h
     ${MOD_DIR}/processors/vesselgraphskeletonextractor.h
     ${MOD_DIR}/processors/vesselgraphsource.h
+    ${MOD_DIR}/processors/vesselgraphselector.h
     ${MOD_DIR}/processors/vesselgraphstatplotter.h
     ${MOD_DIR}/processors/vesselnessextractor.h
     ${MOD_DIR}/processors/volumefloodfill.h

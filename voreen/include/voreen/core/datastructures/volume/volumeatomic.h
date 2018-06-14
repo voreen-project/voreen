@@ -62,14 +62,19 @@ public:
 
     /**
      * While using this constructor the class will use an preallocated chunk
-     * of memory given in \p data. This memory will be deleted by this class.
+     * of memory given in \p data. If takeOwnership is true, this memory will be deleted by this class.
      */
-    VolumeAtomic(T* data, const tgt::svec3& dimensions);
+    VolumeAtomic(T* data, const tgt::svec3& dimensions, bool takeOwnership=true);
 
     /**
      * Move constructor.
      */
     VolumeAtomic(VolumeAtomic<T>&& other);
+
+    /**
+     * Move assignment.
+     */
+    VolumeAtomic<T>& operator=(VolumeAtomic<T>&& other);
 
     /// Deletes the \a data_ array
     virtual ~VolumeAtomic();
@@ -248,6 +253,7 @@ protected:
     float minMagnitudeImpl(IsScalar<false>) const;
 
     T* data_;
+    bool ownsData_;
 
     tgt::vec2 elementRange_;
 
@@ -331,6 +337,7 @@ template<class T>
 VolumeAtomic<T>::VolumeAtomic(const tgt::svec3& dimensions, bool allocMem)
     : VolumeRAM(dimensions)
     , data_(0)
+    , ownsData_(true)
     , elementRange_(static_cast<float>(VolumeElement<T>::rangeMinElement()),
         static_cast<float>(VolumeElement<T>::rangeMaxElement()))
     , minMaxValid_(false)
@@ -339,7 +346,7 @@ VolumeAtomic<T>::VolumeAtomic(const tgt::svec3& dimensions, bool allocMem)
         try {
             data_ = new T[numVoxels_];
         }
-        catch (std::bad_alloc) {
+        catch (std::bad_alloc&) {
             LERROR("Failed to allocate memory: bad allocation");
             throw; // throw it to the caller
         }
@@ -348,9 +355,11 @@ VolumeAtomic<T>::VolumeAtomic(const tgt::svec3& dimensions, bool allocMem)
 
 template<class T>
 VolumeAtomic<T>::VolumeAtomic(T* data,
-                              const tgt::svec3& dimensions)
+                              const tgt::svec3& dimensions,
+                              bool takeOwnership)
     : VolumeRAM(dimensions)
     , data_(data)
+    , ownsData_(takeOwnership)
     , elementRange_(static_cast<float>(VolumeElement<T>::rangeMinElement()),
          static_cast<float>(VolumeElement<T>::rangeMaxElement()))
     , minMaxValid_(false)
@@ -362,6 +371,19 @@ VolumeAtomic<T>::VolumeAtomic(VolumeAtomic<T>&& other)
     : VolumeAtomic(other.data_, other.dimensions_)
 {
     other.data_ = nullptr;
+}
+
+template<typename T>
+VolumeAtomic<T>& VolumeAtomic<T>::operator=(VolumeAtomic<T>&& other) {
+    // This looks quite funky, but is actually safe:
+
+    // Destruct the current object, but keep the memory.
+    this->~VolumeAtomic();
+
+    // Call the move constructor on the memory region of the current object.
+    new(this) VolumeAtomic(std::move(other));
+
+    return *this;
 }
 
 template<class T>
@@ -377,7 +399,10 @@ VolumeAtomic<T>* VolumeAtomic<T>::clone() const {
     }
 
     // copy over the voxel data
-    memcpy(newVolume->data_, data_, getNumBytes());
+    T* dst = newVolume->data_;
+    const T* src = data_;
+    size_t len = getNumVoxels();
+    std::copy(src, src+len, dst);
 
     return newVolume;
 }
@@ -419,21 +444,21 @@ VolumeAtomic<T>* VolumeAtomic<T>::getSubVolume(tgt::svec3 dimensions, tgt::svec3
     T* data = reinterpret_cast<T*>(newVolume->getData());
 
     // determine parameters
-    size_t voxelSize = static_cast<size_t>(getBytesPerVoxel());
     tgt::svec3 dataDims = getDimensions();
     size_t initialStartPos = (offset.z * dataDims.x * dataDims.y)+(offset.y * dataDims.x) + offset.x;
 
-    // per row
-    size_t dataSize = dimensions.x*voxelSize;
 
-    // memcpy each row for every slice to form sub volume
+    // copy each row for every slice to form sub volume
     size_t volumePos;
     size_t subVolumePos;
     for (size_t i=0; i < dimensions.z; i++) {
         for (size_t j=0; j < dimensions.y; j++) {
             volumePos = (j*dataDims.x) + (i*dataDims.x*dataDims.y);
             subVolumePos = (j*dimensions.x) + (i*dimensions.x*dimensions.y);
-            memcpy(data + subVolumePos, (data_ + volumePos + initialStartPos), dataSize);
+            T* dst = data + subVolumePos;
+            const T* src = data_ + volumePos + initialStartPos;
+            size_t len = dimensions.x;
+            std::copy(src, src+len, dst);
         }
     }
 
@@ -442,7 +467,9 @@ VolumeAtomic<T>* VolumeAtomic<T>::getSubVolume(tgt::svec3 dimensions, tgt::svec3
 
 template<class T>
 VolumeAtomic<T>::~VolumeAtomic() {
-    delete[] data_;
+    if(ownsData_) {
+        delete[] data_;
+    }
 }
 
 template<class T>
@@ -692,7 +719,7 @@ float VolumeAtomic<T>::minMagnitude() const {
 
 template<class T>
 void VolumeAtomic<T>::clear() {
-    memset(data_, 0, getNumBytes());
+    std::fill(data_, data_+getNumVoxels(), T(0.0f));
     invalidate();
 }
 
@@ -725,17 +752,18 @@ void* VolumeAtomic<T>::getBrickData(const tgt::svec3& offset, const tgt::svec3& 
     // determine parameters
     tgt::svec3 dataDims = getDimensions();
     size_t initialStartPos = (offset.z * dataDims.x * dataDims.y)+(offset.y * dataDims.x) + offset.x;
-    // per row
-    size_t rowSizeInBytes = dimensions.x*static_cast<size_t>(getBytesPerVoxel());
 
-    // memcpy each row for every slice to form sub volume
+    // copy each row for every slice to form sub volume
     size_t volumePos;
     size_t bufferPos;
     for (size_t z=0; z < dimensions.z; z++) {
         for (size_t y=0; y < dimensions.y; y++) {
             volumePos = (y*dataDims.x) + (z*dataDims.x*dataDims.y);
             bufferPos = (y*dimensions.x) + (z*dimensions.x*dimensions.y);
-            memcpy((data + bufferPos), (data_ + volumePos + initialStartPos), rowSizeInBytes);
+            T* dst = data + bufferPos;
+            const T* src = data_ + volumePos + initialStartPos;
+            size_t len = dimensions.x;
+            std::copy(src, src+len, dst);
         }
     }
 
@@ -757,7 +785,10 @@ void* VolumeAtomic<T>::getSliceData(const size_t firstSlice, const size_t lastSl
     //determine parameters
     size_t initialStartPos = dataDims.x * dataDims.y * firstSlice;
     //copy data
-    memcpy(data,data_ + initialStartPos, bufferSize*getBytesPerVoxel());
+    T* dst = data;
+    const T* src = data_ + initialStartPos;
+    size_t len = bufferSize;
+    std::copy(src, src+len, dst);
 
     return reinterpret_cast<void*>(data);
 }

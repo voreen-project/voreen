@@ -248,7 +248,9 @@ VolumeBase* VolumeSerializer::read(const VolumeURL& origin) const {
     std::vector<VolumeReader*> matchingReaders = getReaders(origin.getURL());
     tgtAssert(!matchingReaders.empty(), "readers vector empty (exception expected)");
     if (matchingReaders.size() == 1) {
-        return matchingReaders.front()->read(origin);
+        VolumeBase* handle = matchingReaders.front()->read(origin);
+        appendPreferredReaderToOriginURLs(handle, matchingReaders.front());
+        return handle;
     }
     else {
         std::vector<std::string> errors;

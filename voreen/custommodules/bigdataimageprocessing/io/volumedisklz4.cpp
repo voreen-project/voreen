@@ -23,69 +23,43 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "roiskeletonize.h"
-#include "../pfskelmodule.h"
-#include "../utils/pfskelwrapper.h"
+#include "volumedisklz4.h"
 
-#include "voreen/core/datastructures/volume/volumeatomic.h"
-#include "voreen/core/datastructures/roi/roiraster.h"
-#include "voreen/core/voreenapplication.h"
+#include "voreen/core/utils/hashing.h"
 
-#include "modules/core/io/datvolumewriter.h"
-#include "modules/core/io/datvolumereader.h"
-
-#include "modules/roi/processors/roistorage.h"
 
 namespace voreen {
 
-using tgt::mat4;
-using tgt::vec3;
-using tgt::svec3;
-using tgt::ivec3;
+const std::string VolumeDiskLZ4::loggerCat_("voreen.hdf5.VolumeDiskLZ4");
 
-ROISkeletonize::ROISkeletonize()
-    : ROISegmenter()
-    , fieldSt_("fieldSt", "Field Strength", 4, 4, 10)
-    , highDiv_("highDiv", "High Divergence %", 33, 0, 100)
-    , branchTh_("branchTh", "Short Branch Threshold", 8, 2, 100)
+
+VolumeDiskLZ4::VolumeDiskLZ4(std::unique_ptr<LZ4SliceVolumeBase> volume)
+    : VolumeDisk(volume->getMetaData().getBaseType(), volume->getDimensions())
+    , volume_(std::move(volume))
 {
-    addProperty(fieldSt_);
-    addProperty(highDiv_);
-    addProperty(branchTh_);
 }
 
-bool ROISkeletonize::isCompatible(std::set<ROIBase*> rois) {
-    return ( (rois.size() == 1) && dynamic_cast<ROIRaster*>(*rois.begin()) );
+VolumeDiskLZ4::~VolumeDiskLZ4() {
 }
 
-void ROISkeletonize::process() {
-    if(!isActive())
-        return;
+std::string VolumeDiskLZ4::getHash() const {
+    std::string configStr;
+
+    configStr += volume_->getFilePath() + "#";
+
+    return VoreenHash::getHash(configStr);
 }
 
-void ROISkeletonize::segment() {
-    ROIBase* roi = *rois_.begin();
-    ROIRaster* rr = dynamic_cast<ROIRaster*>(roi);
-
-    Graph g = PFSkelWrapper::calculateSkeleton(rr, fieldSt_.get(), highDiv_.get(), branchTh_.get());
-    ROIGraph* rg = new ROIGraph(rr->getGrid(), g);
-    rg->setGuiName("PFSkel(" + roi->getGuiName() + ", " + itos(fieldSt_.get()) + ", " + itos(highDiv_.get()) + ")");
-    rg->setComment("Skeleton of " + roi->getGuiName() + " FieldSt: " + itos(fieldSt_.get()) + ", HighDiv:" + itos(highDiv_.get()) + ", BranchTh: " + itos(branchTh_.get()));
-    rg->setColor(ROIStorage::getNextColor());
-    storage_->addROI(rg);
+VolumeRAM* VolumeDiskLZ4::loadVolume() const {
+    return volume_->loadBaseSlab(0, volume_->getNumSlices()).release();
 }
 
-Geometry* ROISkeletonize::getRasterMesh(tgt::plane /*pl*/) const {
-    return 0;
+VolumeRAM* VolumeDiskLZ4::loadSlices(const size_t firstZSlice, const size_t lastZSlice) const {
+    return volume_->loadBaseSlab(firstZSlice, lastZSlice+1).release();
 }
 
-void ROISkeletonize::activate() {
-    //ROIBase* roi = *rois_.begin();
-    ROISegmenter::activate();
-}
-
-void ROISkeletonize::deactivate() {
-    ROISegmenter::deactivate();
+VolumeRAM* VolumeDiskLZ4::loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const {
+    throw tgt::Exception("loadBrick is not supported");
 }
 
 } // namespace voreen

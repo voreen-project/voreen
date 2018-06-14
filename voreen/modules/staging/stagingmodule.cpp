@@ -40,7 +40,6 @@
 #include "processors/tabbedview.h"
 #include "processors/arbitraryvolumeclipping.h"
 #include "processors/pong.h"
-#include "processors/multivolumegeometryraycaster.h"
 #include "processors/screenspaceambientocclusion.h"
 #include "processors/registrationinitializer.h"
 #include "processors/volumerealworldmapping.h"
@@ -81,14 +80,10 @@ StagingModule::StagingModule(const std::string& modulePath)
     registerSerializableType(new SlicePointRenderer3D());
     registerSerializableType(new SIMDRayCaster());
     registerSerializableType(new APVTestRaycaster());
-
     #ifdef GL_COMPUTE_SHADER //disable compilation for old gl headers
         registerSerializableType(new Particles());
     #endif
     registerSerializableType(new TabbedView());
-    #ifdef GL_ATOMIC_COUNTER_BUFFER //disable compilation for old gl headers
-        registerSerializableType(new MultiVolumeGeometryRaycaster());
-    #endif
 }
 
 } // namespace

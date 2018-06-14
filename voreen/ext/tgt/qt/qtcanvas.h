@@ -114,6 +114,10 @@ protected:
     virtual void activate();
     virtual bool isActive();
 
+private:
+
+    bool initializedGL_;
+
 public:
     ///
     /// Helpers used to generate tgt-Events out of qt-Events
@@ -127,7 +131,6 @@ public:
     static tgt::Event::Modifier getModifier(QInputEvent* e);
     static KeyEvent::KeyCode getKey(int key);
     static QSurfaceFormat getSurfaceFormat(const Buffers buffers);
-
 };
 
 } // namespace

@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
+ * Copyright (C) 2005-2016 University of Muenster, Germany.                        *
  * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -23,39 +23,39 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_ROISKELETONIZE_H
-#define VRN_ROISKELETONIZE_H
-
-#include "../../roi/processors/roisegmenter.h"
-#include "voreen/core/properties/intproperty.h"
+#include "vesselgraphlistport.h"
 
 namespace voreen {
 
-class ROISkeletonize : public ROISegmenter {
-public:
-    ROISkeletonize();
-    virtual Processor* create() const { return new ROISkeletonize(); }
-    virtual std::string getClassName() const { return "ROISkeletonize"; }
-    virtual std::string getCategory() const { return "ROI"; }
-    virtual void process();
+VesselGraphListPort::VesselGraphListPort(PortDirection direction, const std::string& name, const std::string& guiName, bool allowMultipleConnections, Processor::InvalidationLevel invalidationLevel)
+    : GenericPort<std::vector<VesselGraph>>(direction, name, guiName, allowMultipleConnections, invalidationLevel)
+{
+}
 
-    virtual bool isCompatible(std::set<ROIBase*> rois);
-    virtual void segment();
+VesselGraphListPort::~VesselGraphListPort() {
+}
+Port* VesselGraphListPort::create(PortDirection direction, const std::string& id, const std::string& guiName) const
+{
+    return new VesselGraphListPort(direction,id,guiName);
+}
+tgt::col3 VesselGraphListPort::getColorHint() const {
+    return tgt::col3(64, 128, 0);
+}
 
-    virtual Geometry* getRasterMesh(tgt::plane pl) const;
+std::string VesselGraphListPort::getContentDescription() const {
+    std::stringstream strstr;
+    //port values
+    strstr  << Port::getContentDescription();
 
-    virtual void activate();
-    virtual void deactivate();
-protected:
-    virtual void setDescriptions() {
-        setDescription("");
+    if (hasData()) {
+        const std::vector<VesselGraph>* graphs = getData();
+
+        strstr << std::endl << graphs->size() << " Graphs";
     }
+    return strstr.str();
+}
 
-    IntProperty fieldSt_;
-    IntProperty highDiv_;
-    IntProperty branchTh_;
-};
-
+std::string VesselGraphListPort::getContentDescriptionHTML() const {
+    return getContentDescription();
+}
 } // namespace voreen
-
-#endif

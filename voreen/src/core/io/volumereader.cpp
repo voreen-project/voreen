@@ -230,6 +230,10 @@ bool VolumeReader::canHandleMissingExtension() const {
     return false;
 }
 
+bool VolumeReader::canSupportFileWatching() const {
+    return false;
+}
+
 void VolumeReader::setProgressBar(ProgressBar* progressBar) {
     progress_ = progressBar;
 }

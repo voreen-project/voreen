@@ -107,7 +107,7 @@ ProtoVesselGraph::ProtoVesselGraph(tgt::mat4 toRWMatrix)
 {
 }
 
-std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeReader& segmentedVolumeReader, const VolumeBase* sampleMask, ProgressReporter& progress) {
+std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeReader& segmentedVolumeReader, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress) {
     TaskTimeLogger _("Extract edge features", tgt::Info);
 
     const tgt::vec3 spacing = segmentedVolumeReader.getSpacing();
@@ -116,13 +116,7 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
     std::unique_ptr<VesselGraph> graph(new VesselGraph());
     const tgt::mat4 toRWMatrix = segmentedVolumeReader.getVoxelToWorldMatrix();
 
-    tgtAssert(segmentedVolumeReader.getDimensions() == dimensions, "Invalid segmentation volume dimensions");
-
-    // For now get RAM representation for volume mask.
-    // One may consider switching to a slice based approach later, but that
-    // may get complicated (or would have to be employed during CCA).
-    const VolumeRAM* sampleMaskRAM = sampleMask ? sampleMask->getRepresentation<VolumeRAM>() : nullptr;
-    tgtAssert(!sampleMaskRAM || sampleMaskRAM->getDimensions() == dimensions, "Invalid sampleMask dimensions");
+    tgtAssert(!sampleMask || sampleMask->getDimensions() == dimensions, "Invalid segmentation volume dimensions");
 
     // Create nodes
     for(const auto& node : nodes_) {
@@ -156,6 +150,7 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
     for(int z = 0; z < dimensions.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dimensions.z);
         segmentedVolumeReader.advance();
+        boost::optional<VolumeAtomic<uint8_t>> sampleMaskSlice = sampleMask ? boost::optional<VolumeAtomic<uint8_t>>(sampleMask->loadSlice(z)) : boost::none;
 
         for(int y = 0; y < dimensions.y; ++y) {
             for(int x = 0; x < dimensions.x; ++x) {
@@ -167,7 +162,7 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
                 }
 
                 // Ignore values outside of sample (may happen due to inaccuracies in mask generation)
-                if(sampleMaskRAM && sampleMaskRAM->getVoxelNormalized(ipos) == 0) {
+                if(sampleMaskSlice && sampleMaskSlice->voxel(x, y, 0) == 0) {
                     continue;
                 }
 

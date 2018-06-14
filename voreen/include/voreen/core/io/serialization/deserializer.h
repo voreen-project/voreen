@@ -499,7 +499,7 @@ void Deserializer::optionalDeserialize(const std::string& key, T& data, const T&
     try {
         deserialize(key, data);
     }
-    catch (SerializationNoSuchDataException e) {
+    catch (SerializationNoSuchDataException& e) {
         data = defaultValue;
         removeLastError();
     }

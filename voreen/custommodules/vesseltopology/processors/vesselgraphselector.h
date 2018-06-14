@@ -23,27 +23,53 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_PFSKELMODULE_H
-#define VRN_PFSKELMODULE_H
+#ifndef VRN_VESSELGRAPHSELECTOR_H
+#define VRN_VESSELGRAPHSELECTOR_H
 
-#include "voreen/core/voreenmodule.h"
-#include "voreen/core/properties/filedialogproperty.h"
+#include "voreen/core/processors/processor.h"
+#include "../ports/vesselgraphport.h"
+#include "../ports/vesselgraphlistport.h"
+#include "voreen/core/properties/intproperty.h"
+#include "../datastructures/vesselgraph.h"
 
 namespace voreen {
 
-class PFSkelModule : public VoreenModule {
+class Volume;
+class ProcessorWidgetFactory;
+
+/**
+ * Selects a single volume out of a input list.
+ */
+class VRN_CORE_API VesselGraphSelector : public Processor {
 
 public:
-    PFSkelModule(const std::string& modulePath);
+    VesselGraphSelector();
+    virtual Processor* create() const;
 
-    virtual std::string getDescription() const {
-        return "";
+    virtual std::string getClassName() const { return "VesselGraphSelector";  }
+    virtual std::string getCategory() const  { return "Input";           }
+    virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL; }
+    virtual bool isUtility() const           { return true; }
+
+    virtual void adjustPropertiesToInput();
+
+protected:
+    virtual void setDescriptions() {
+        setDescription("Selects a single vessel graph from the input list.");
     }
 
-    std::string getPFSkelDir() const { return PFSkelDir_.get(); }
+    virtual void process();
 
-private:
-    FileDialogProperty PFSkelDir_;
+    void syncResultingDebugVesselGraphSelectorID();
+
+    VesselGraphListPort inport_;
+    VesselGraphPort outport_;
+
+    IntProperty graphID_;
+    IntProperty debugVolumeID_;
+    IntProperty resultingDebugVesselGraphSelectorID_; // Link with VesselGraphSelector
+
+    static const std::string loggerCat_;
 };
 
 } // namespace

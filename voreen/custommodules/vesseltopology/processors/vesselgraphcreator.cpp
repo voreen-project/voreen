@@ -36,16 +36,13 @@
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/utils/stringutils.h"
 
-#include "modules/hdf5/io/hdf5volumereader.h"
-#include "modules/hdf5/io/hdf5volumewriter.h"
-#include "modules/hdf5/io/hdf5filevolume.h"
-
 #include "../algorithm/streaminggraphcreation.h"
 #include "../algorithm/volumemask.h"
 #include "../algorithm/idvolume.h"
 #include "../algorithm/vesselgraphnormalization.h"
 #include "../algorithm/boundshierarchy.h"
 
+#include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 #include "custommodules/bigdataimageprocessing/processors/connectedcomponentanalysis.h"
 
 #include "tgt/bounds.h"
@@ -66,11 +63,13 @@ VesselGraphCreator::VesselGraphCreator()
     , graphOutport_(Port::OUTPORT, "vesselgraphcreator_graph.outport", "Graph", false, Processor::VALID)
     , nodeOutport_(Port::OUTPORT, "vesselgraphcreator_node.outport", "Nodes Voxels", false, Processor::VALID)
     , edgeOutport_(Port::OUTPORT, "vesselgraphcreator_edge.outport", "Edges Voxels", false, Processor::VALID)
-    , generatedSkeletonsOutport_(Port::OUTPORT, "generatedSkeletons.outport", "Generated Skeletons", false, Processor::VALID)
-    , numRefinementIterations_("numRefinementIterations", "Refinement Iterations", 0, 0, 10, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_ADVANCED)
-    , minVoxelLength_("minVoxelLength", "Min Voxel Length", 0, 0, 50)
-    , minElongation_("minElongation", "Minimum Elongation", 0, 0, 5)
-    , minBulgeSize_("minBulgeSize", "Minimum Bulge Size", 0, 0, 10)
+    , generatedVolumesOutport_(Port::OUTPORT, "generatedSkeletons.outport", "Generated Volumes", false, Processor::VALID)
+    , generatedGraphsOutport_(Port::OUTPORT, "generatedGraphs.outport", "Generated Graphs", false, Processor::VALID)
+    , numRefinementIterations_("numRefinementIterations", "Refinement Iterations", 0, 0, 100, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_ADVANCED)
+    , minVoxelLength_("minVoxelLength", "Min Voxel Length", 0, 0, 50, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
+    , minElongation_("minElongation", "Minimum Elongation", 0, 0, 5, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_DEBUG)
+    , minBulgeSize_("minBulgeSize", "Minimum Bulge Size", 0, 0, 10, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_DEFAULT)
+    , saveDebugData_("saveDebugData", "Generate Debug Data", false, Processor::INVALID_RESULT, Property::LOD_DEBUG)
     , binarizationThresholdSegmentation_("binarizationThresholdSegmentation", "Binarization Threshold (Segmentation)", 0.5f, 0.0f, 1.0f, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_ADVANCED)
     , tmpStorageSizeInfo_("tmpStorageSizeInfo", "Required temporary storage (estimated)", "")
 {
@@ -80,7 +79,8 @@ VesselGraphCreator::VesselGraphCreator()
     addPort(graphOutport_);
     addPort(nodeOutport_);
     addPort(edgeOutport_);
-    addPort(generatedSkeletonsOutport_);
+    addPort(generatedVolumesOutport_);
+    addPort(generatedGraphsOutport_);
 
         addProperty(numRefinementIterations_);
             numRefinementIterations_.setGroupID("refinement");
@@ -90,6 +90,8 @@ VesselGraphCreator::VesselGraphCreator()
             minElongation_.setGroupID("refinement");
         addProperty(minBulgeSize_);
             minBulgeSize_.setGroupID("refinement");
+        addProperty(saveDebugData_);
+            saveDebugData_.setGroupID("refinement");
     setPropertyGroupGuiName("refinement", "Refinement");
 
         addProperty(binarizationThresholdSegmentation_);
@@ -110,8 +112,35 @@ VoreenSerializableObject* VesselGraphCreator::create() const {
 
 bool VesselGraphCreator::isReady() const {
     return isInitialized() && segmentedVolumeInport_.isReady() &&
-        (graphOutport_.isReady() || nodeOutport_.isReady() || edgeOutport_.isReady() || generatedSkeletonsOutport_.isReady());
+        (graphOutport_.isReady() || nodeOutport_.isReady() || edgeOutport_.isReady() || generatedVolumesOutport_.isReady() || generatedGraphsOutport_.isReady());
 }
+
+struct VesselGraphCreatorProcessedInput {
+    VesselGraphCreatorProcessedInput(VesselGraphCreatorInput& input, ProgressReporter& progress)
+        : segmentation(binarizeVolume(input.segmentation, input.binarizationThresholdSegmentationNormalized,
+                    input.sampleMask ? SubtaskProgressReporter(progress, tgt::vec2(0,0.5)) : SubtaskProgressReporter(progress, tgt::vec2(0,1))))
+        , sampleMask(input.sampleMask
+                ? boost::optional<LZ4SliceVolume<uint8_t>>(binarizeVolume(*input.sampleMask, input.binarizationThresholdSegmentationNormalized, SubtaskProgressReporter(progress, tgt::vec2(0,0.5))))
+                : boost::none)
+        , fixedForegroundPoints(std::move(input.fixedForegroundPoints))
+        , numRefinementIterations(input.numRefinementIterations)
+        , minVoxelLength(input.minVoxelLength)
+        , minElongation(input.minElongation)
+        , minBulgeSize(input.minBulgeSize)
+        , saveDebugData(input.saveDebugData)
+    {
+    }
+
+    LZ4SliceVolume<uint8_t> segmentation;
+    boost::optional<LZ4SliceVolume<uint8_t>> sampleMask;
+
+    std::vector<tgt::vec3> fixedForegroundPoints;
+    int numRefinementIterations;
+    int minVoxelLength;
+    float minElongation;
+    float minBulgeSize;
+    bool saveDebugData;
+};
 
 struct SparseBinaryVolume {
     size_t linearPos(const tgt::svec3& pos) {
@@ -315,27 +344,15 @@ struct ClosestSkeletonVoxelsAdaptor : public EdgeVoxelRefResultSetBase {
     }
 };
 
-static std::pair<std::unique_ptr<HDF5FileVolume>, std::unique_ptr<HDF5FileVolume>> splitSegmentationCriticalVoxels(const std::string& tmpPathNoCritical, const std::string& tmpPathOnlyCritical, const ProtoVesselGraph& graph, SkeletonClassReader&& skeletonClassReader, const VolumeBase& segmentation, const float segmentationBinarizationThreshold, ProgressReporter& progress) {
+static std::pair<LZ4SliceVolume<uint8_t>, LZ4SliceVolume<uint8_t>> splitSegmentationCriticalVoxels(const std::string& tmpPathNoCritical, const std::string& tmpPathOnlyCritical, const ProtoVesselGraph& graph, SkeletonClassReader&& skeletonClassReader, const VesselGraphCreatorProcessedInput& input, ProgressReporter& progress) {
     TaskTimeLogger _("Split segmentation wrt critical voxels", tgt::Info);
-    const auto rwToVoxel = segmentation.getWorldToVoxelMatrix();
-    const auto voxelToRw = segmentation.getVoxelToWorldMatrix();
-    const auto dimensions = segmentation.getDimensions();
-    const float criticalVoxelDistDiff = 1.001f*tgt::length(segmentation.getSpacing());
+
+    const auto voxelToRw = input.segmentation.getMetaData().getVoxelToWorldMatrix();
+    const auto dimensions = input.segmentation.getDimensions();
+    const float criticalVoxelDistDiff = 1.001f*tgt::length(input.segmentation.getMetaData().getSpacing());
 
     const std::string format = "uint8";
     const tgt::svec3 slicedim(dimensions.xy(), 1);
-
-    std::unique_ptr<HDF5FileVolume> onlyCriticalVoxels = HDF5FileVolume::createVolume(tmpPathOnlyCritical, HDF5VolumeWriter::VOLUME_DATASET_NAME, format, dimensions, 1, true, 1, slicedim, false);
-    std::unique_ptr<HDF5FileVolume> noCriticalVoxels = HDF5FileVolume::createVolume(tmpPathNoCritical, HDF5VolumeWriter::VOLUME_DATASET_NAME, format, dimensions, 1, true, 1, slicedim, false);
-
-    onlyCriticalVoxels->writeOffset(segmentation.getOffset());
-    noCriticalVoxels->writeOffset(segmentation.getOffset());
-
-    onlyCriticalVoxels->writeSpacing(segmentation.getSpacing());
-    noCriticalVoxels->writeSpacing(segmentation.getSpacing());
-
-    onlyCriticalVoxels->writePhysicalToWorldTransformation(segmentation.getPhysicalToWorldMatrix());
-    noCriticalVoxels->writePhysicalToWorldTransformation(segmentation.getPhysicalToWorldMatrix());
 
     KDTreeBuilder<EdgeVoxelRef> finderBuilder;
 
@@ -347,17 +364,21 @@ static std::pair<std::unique_ptr<HDF5FileVolume>, std::unique_ptr<HDF5FileVolume
 
     KDTreeVoxelFinder<EdgeVoxelRef> finder(std::move(finderBuilder));
 
+    LZ4SliceVolumeBuilder<uint8_t> onlyCriticalVoxels(tmpPathOnlyCritical, input.segmentation.getMetaData());
+    LZ4SliceVolumeBuilder<uint8_t> noCriticalVoxels(tmpPathNoCritical, input.segmentation.getMetaData());
+
     for(size_t z = 0; z<dimensions.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dimensions.z);
-        std::unique_ptr<const VolumeRAM> slice(segmentation.getSlice(z));
-        std::unique_ptr<VolumeRAM> outputSliceOnlyCV(VolumeFactory().create(format, slicedim));
-        std::unique_ptr<VolumeRAM> outputSliceNoCV(VolumeFactory().create(format, slicedim));
+        auto slice = input.segmentation.loadSlice(z);
+
+        auto outputSliceOnlyCV = onlyCriticalVoxels.getNextWritableSlice();
+        auto outputSliceNoCV = noCriticalVoxels.getNextWritableSlice();
 
         skeletonClassReader.advance();
         for(size_t y = 0; y<dimensions.y; ++y) {
             for(size_t x = 0; x<dimensions.x; ++x) {
                 const tgt::svec3 p(x,y,0);
-                if(slice->getVoxelNormalized(p) >= segmentationBinarizationThreshold) {
+                if(slice.voxel(p) > 0) {
                     tgt::ivec3 ipos(x,y,z);
                     tgt::vec3 rwpos = transform(voxelToRw, ipos);
 
@@ -409,24 +430,24 @@ static std::pair<std::unique_ptr<HDF5FileVolume>, std::unique_ptr<HDF5FileVolume
 
 
                     if(skeletonClassReader.getClass(tgt::ivec2(x, y)) != 2 && isCritical) {
-                        outputSliceNoCV->setVoxelNormalized(0, p);
-                        outputSliceOnlyCV->setVoxelNormalized(1, p);
+                        outputSliceNoCV->voxel(p) = 0;
+                        outputSliceOnlyCV->voxel(p) = 1;
                     } else {
-                        outputSliceNoCV->setVoxelNormalized(1, p);
-                        outputSliceOnlyCV->setVoxelNormalized(0, p);
+                        outputSliceNoCV->voxel(p) = 1;
+                        outputSliceOnlyCV->voxel(p) = 0;
                     }
                 } else {
-                    outputSliceNoCV->setVoxelNormalized(0, p);
-                    outputSliceOnlyCV->setVoxelNormalized(0, p);
+                    outputSliceNoCV->voxel(p) = 0;
+                    outputSliceOnlyCV->voxel(p) = 0;
                 }
             }
         }
-        noCriticalVoxels->writeSlices(outputSliceNoCV.get(), z);
-        onlyCriticalVoxels->writeSlices(outputSliceOnlyCV.get(), z);
     }
 
     progress.setProgress(1.0f);
-    return std::make_pair(std::move(noCriticalVoxels), std::move(onlyCriticalVoxels));
+    return std::make_pair(
+            std::move(noCriticalVoxels).finalize(),
+            std::move(onlyCriticalVoxels).finalize());
 }
 
 class NoopMetadata {
@@ -445,13 +466,76 @@ static void addFixedForegroundPointsToMask(const std::vector<tgt::vec3>& points,
     }
 }
 
-static std::unique_ptr<HDF5FileVolume> createCCAVolume(const VolumeBase& input, const std::string& tmpVolumePath, size_t& numComponents, ProgressReporter& progress) {
+struct LZ4SliceVolumeCCAInputWrapper {
+    LZ4SliceVolumeCCAInputWrapper(const LZ4SliceVolume<uint8_t>& vol)
+        : volume_(vol)
+    {
+    }
+
+    tgt::svec3 getDimensions() const {
+        return volume_.getDimensions();
+    }
+    tgt::vec3 getSpacing() const {
+        return tgt::vec3::one;
+    }
+    tgt::vec3 getOffset() const {
+        return tgt::vec3::zero;
+    }
+    tgt::mat4 getPhysicalToWorldMatrix() const {
+        return tgt::mat4::identity;
+    }
+    std::string getBaseType() const {
+        return "uint32";
+    }
+    VolumeRAM* getSlice(size_t z) const {
+        return new VolumeAtomic<uint8_t>(volume_.loadSlice(z));
+    }
+    const LZ4SliceVolume<uint8_t>& volume_;
+};
+struct LZ4SliceVolumeCCABuilderWrapper {
+    LZ4SliceVolumeCCABuilderWrapper(LZ4SliceVolumeBuilder<uint32_t>& builder)
+        : builder_(builder)
+    {
+    }
+
+    tgt::svec3 getDimensions() const {
+        return builder_.getDimensions();
+    }
+    std::string getBaseType() const {
+        return "uint32";
+    }
+    void writeSlices(VolumeAtomic<uint32_t>* slice, size_t _z) const {
+        tgtAssert(slice, "No slice");
+        builder_.pushSlice(*slice);
+    }
+    void writeSlices(VolumeRAM* slice, size_t _z) const {
+        tgtAssert(false, "Invalid slice");
+    }
+    void writeSpacing(const tgt::svec3&) {
+        //ignored for now
+    }
+    void writeOffset(const tgt::svec3&) {
+        //ignored for now
+    }
+    void writePhysicalToWorldTransformation(const tgt::mat4&) {
+        //ignored for now
+    }
+    void writeRealWorldMapping(const RealWorldMapping&) {
+        //ignored for now
+    }
+    void writeVolumeMinMax(const VolumeMinMax*) {
+        //ignored for now
+    }
+    LZ4SliceVolumeBuilder<uint32_t>& builder_;
+};
+
+static LZ4SliceVolume<uint32_t> createCCAVolume(const LZ4SliceVolume<uint8_t>& input, const std::string& tmpVolumePath, size_t& numComponents, ProgressReporter& progress) {
     TaskTimeLogger _("Create CCA volume", tgt::Info);
 
     StreamingComponents<0, NoopMetadata> sc;
 
     std::function<bool(const VolumeRAM* vol, tgt::svec3 pos)> isOne = [](const VolumeRAM* slice, tgt::svec3 pos) {
-        return slice->getVoxelNormalized(pos) > 0.5f;
+        return slice->getVoxelNormalized(pos) > 0.0f;
     };
     auto writeMetaData = [] (uint32_t, const NoopMetadata&) {};
 
@@ -459,19 +543,13 @@ static std::unique_ptr<HDF5FileVolume> createCCAVolume(const VolumeBase& input, 
         return true;
     };
 
-    const std::string baseType = "uint32";
-    const std::string volumeFilePath = tmpVolumePath;
-    const std::string volumeLocation = HDF5VolumeWriter::VOLUME_DATASET_NAME;
-    const tgt::svec3 dim = input.getDimensions();
-    const int deflateLevel = 1;
-    const tgt::svec3 chunkSize(dim.xy(), 1);
+    LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getMetaData().withRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint32_t>()));
+    LZ4SliceVolumeCCABuilderWrapper outputWrapper(outputVolumeBuilder);
 
-    std::unique_ptr<HDF5FileVolume> outputVolume = HDF5FileVolume::createVolume(volumeFilePath, volumeLocation, baseType, input.getDimensions(), 1, true, deflateLevel, chunkSize, false);
-
-    auto stats = sc.cca(input, *outputVolume, writeMetaData, isOne, true, componentConstraintTest, progress);
+    auto stats = sc.cca(LZ4SliceVolumeCCAInputWrapper(input), outputWrapper, writeMetaData, isOne, true, componentConstraintTest, progress);
     numComponents = stats.numComponents;
 
-    return outputVolume;
+    return std::move(outputVolumeBuilder).finalize();
 }
 
 static uint64_t toLinearPos(const tgt::svec3& pos, const tgt::svec3& dimensions) {
@@ -480,7 +558,7 @@ static uint64_t toLinearPos(const tgt::svec3& pos, const tgt::svec3& dimensions)
 
 struct IdVolumeInitializer {
     uint32_t id_;
-    IdVolumeStorageInitializer storage_;
+    LZ4SliceVolumeVoxelBuilder<IdVolume::Value> storage_;
     SurfaceBuilder surface_;
     size_t numUnlabeledForegroundVoxels_;
     size_t numTotalVoxels_;
@@ -490,7 +568,7 @@ struct IdVolumeInitializer {
 
     IdVolumeInitializer(uint32_t id, tgt::svec3 offset, tgt::svec3 size)
         : id_(id)
-        , storage_(VoreenApplication::app()->getUniqueTmpFilePath(".raw"))
+        , storage_(VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), LZ4SliceVolumeMetadata(size))
         , surface_()
         , numUnlabeledForegroundVoxels_(0)
         , numTotalVoxels_(0)
@@ -516,7 +594,7 @@ struct IdVolumeInitializer {
     }
 
     void pushLabel(IdVolume::Value v) {
-        storage_.push(v);
+        storage_.pushVoxel(v);
         ++numTotalVoxels_;
     }
 
@@ -525,28 +603,43 @@ struct IdVolumeInitializer {
     }
 };
 
-static void initializeIdVolumes(HDF5FileVolume& branchIds, const HDF5FileVolume& holeIds, std::vector<IdVolumeInitializer>& initializers, ProgressReporter& progress) {
+static void initializeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4SliceVolume<uint32_t>& holeIds, std::vector<IdVolumeInitializer>& initializers, ProgressReporter& progress) {
     TaskTimeLogger _("Initialize IdVolumes", tgt::Info);
     IdVolumeInitializationReader initializationReader(branchIds, holeIds);
 
     tgt::svec3 dim = branchIds.getDimensions();
     tgtAssert(holeIds.getDimensions() == dim, "Volume dimension mismatch");
 
-    std::vector<std::pair<IdVolumeInitializer*, tgt::SBounds>> initializer_finder_init;
-    for(auto& initializer: initializers) {
-        initializer_finder_init.emplace_back(&initializer, initializer.getBounds());
+    std::vector<boost::optional<BoundsHierarchy<size_t, IdVolumeInitializer*>>> initializer_finders;
+    for(size_t z=0; z < dim.z; ++z) {
+        std::vector<std::pair<IdVolumeInitializer*, tgt::SBounds>> initializer_finder_init;
+        for(auto& initializer: initializers) {
+            tgt::SBounds full_bounds = initializer.getBounds();
+            if(full_bounds.getLLF().z <= z && z <= full_bounds.getURB().z) {
+                tgt::SBounds bounds(tgt::svec3(full_bounds.getLLF().xy(), 0), tgt::svec3(full_bounds.getURB().xy(), 0));
+                initializer_finder_init.emplace_back(&initializer, bounds);
+            }
+        }
+        if(initializer_finder_init.empty()) {
+            initializer_finders.emplace_back(boost::none);
+        } else {
+            initializer_finders.emplace_back(std::move(initializer_finder_init));
+        }
     }
-    BoundsHierarchy<size_t, IdVolumeInitializer*> initializer_finder(std::move(initializer_finder_init));
 
     for(size_t z=0; z < dim.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dim.z);
         initializationReader.advance();
 
+        if(!initializer_finders.at(z)) {
+            continue;
+        }
         for(size_t y=0; y < dim.y; ++y) {
             for(size_t x=0; x < dim.x; ++x) {
                 tgt::svec3 pos(x,y,z);
 
-                for(IdVolumeInitializer* initializer : initializer_finder.findBounds(pos)) {
+                tgt::svec3 slicePos(x,y,0);
+                for(IdVolumeInitializer* initializer : initializer_finders.at(z)->findBounds(slicePos)) {
                     uint32_t label;
 
                     if(initializationReader.isObject(pos, initializer->id_)) {
@@ -579,21 +672,55 @@ static void initializeIdVolumes(HDF5FileVolume& branchIds, const HDF5FileVolume&
     progress.setProgress(1.0f);
 }
 
+static LZ4SliceVolume<IdVolume::Value> flood(IdVolumeInitializer&& volume, ProgressReporter& progress) {
+    tgtAssert(volume.numTotalVoxels_ == tgt::hmul(volume.size_), "Incomplete IdVolumeInitializer");
+
+    auto lz4vol = std::move(volume.storage_).finalize();
+
+    std::string filename = VoreenApplication::app()->getUniqueTmpFilePath(".raw");
+    IdVolumeStorage idStorage(lz4vol, filename);
+    IdVolume vol(std::move(idStorage), std::move(volume.surface_).finalize(), volume.numUnlabeledForegroundVoxels_);
+    vol.floodFromLabels(progress, std::numeric_limits<size_t>::max());
+
+    std::move(lz4vol).deleteFromDisk();
+
+    LZ4SliceVolumeBuilder<IdVolume::Value> builder(VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), lz4vol.getMetaData());
+    for(size_t z = 0; z<vol.getDimensions().z; ++z) {
+        builder.pushSlice(vol.data_->getSlice(z));
+    }
+    return std::move(builder).finalize();
+}
+
 struct IdVolumeFinalizer {
     uint32_t id_;
-    IdVolume vol_;
+    LZ4SliceVolume<IdVolume::Value> vol_;
+    LZ4SliceVolumeSliceCacher<IdVolume::Value> slices_;
 
     tgt::svec3 offset_;
     tgt::svec3 size_;
 
     IdVolumeFinalizer(IdVolumeInitializer&& volume, ProgressReporter& progress)
         : id_(volume.id_)
-        , vol_(std::move(volume.storage_), SurfaceBuilder::finalize(std::move(volume.surface_)), volume.size_, volume.numUnlabeledForegroundVoxels_)
+        , vol_(flood(std::move(volume), progress))
+        , slices_(vol_)
         , offset_(volume.offset_)
         , size_(volume.size_)
     {
-        tgtAssert(volume.numTotalVoxels_ == tgt::hmul(size_), "Incomplete IdVolumeInitializer");
-        vol_.floodFromLabels(progress, std::numeric_limits<size_t>::max());
+    }
+
+    IdVolumeFinalizer(const IdVolumeFinalizer& other) = delete;
+    IdVolumeFinalizer(IdVolumeFinalizer&& other)
+        : id_(other.id_)
+        , vol_(std::move(other.vol_))
+        , slices_(vol_)
+        , offset_(other.offset_)
+        , size_(other.size_)
+    {
+    }
+
+    ~IdVolumeFinalizer()
+    {
+        std::move(vol_).deleteFromDisk();
     }
 
     bool containsPoint(const tgt::svec3& p) const {
@@ -609,35 +736,51 @@ struct IdVolumeFinalizer {
 
     IdVolume::Value getValue(const tgt::svec3& p) const {
         tgtAssert(containsPoint(p), "Invalid p");
-        return vol_.data_->get(p - offset_);
+        tgt::svec3 pos = p - offset_;
+        return slices_.getSlice(pos.z).voxel(pos.x, pos.y, 0);
     }
 };
 
-static void finalizeIdVolumes(HDF5FileVolume& branchIds, const HDF5FileVolume& holeIds, std::vector<IdVolumeFinalizer>& finalizers, ProgressReporter& progress) {
-    TaskTimeLogger _("Initialize IdVolumes", tgt::Info);
+static void finalizeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4SliceVolume<uint32_t>& holeIds, std::vector<IdVolumeFinalizer>& finalizers, ProgressReporter& progress) {
+    TaskTimeLogger _("Finalize IdVolumes", tgt::Info);
     tgtAssert(branchIds.getDimensions() == holeIds.getDimensions(), "Invalid dimensions");
 
     const tgt::svec3 dim = branchIds.getDimensions();
 
-    std::vector<std::pair<IdVolumeFinalizer*, tgt::SBounds>> finalizer_finder_init;
-    for(auto& finalizer: finalizers) {
-        finalizer_finder_init.emplace_back(&finalizer, finalizer.getBounds());
+    std::vector<boost::optional<BoundsHierarchy<size_t, IdVolumeFinalizer*>>> finalizer_finders;
+    for(size_t z=0; z < dim.z; ++z) {
+        std::vector<std::pair<IdVolumeFinalizer*, tgt::SBounds>> finalizer_finder_init;
+        for(auto& finalizer: finalizers) {
+            tgt::SBounds full_bounds = finalizer.getBounds();
+            if(full_bounds.getLLF().z <= z && z <= full_bounds.getURB().z) {
+                tgt::SBounds bounds(tgt::svec3(full_bounds.getLLF().xy(), 0), tgt::svec3(full_bounds.getURB().xy(), 0));
+                finalizer_finder_init.emplace_back(&finalizer, bounds);
+            }
+        }
+        if(finalizer_finder_init.empty()) {
+            finalizer_finders.emplace_back(boost::none);
+        } else {
+            finalizer_finders.emplace_back(std::move(finalizer_finder_init));
+        }
     }
-    BoundsHierarchy<size_t, IdVolumeFinalizer*> finalizer_finder(std::move(finalizer_finder_init));
 
     for(size_t z=0; z < dim.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dim.z);
 
-        std::unique_ptr<VolumeRAM_UInt32> branchSlice(dynamic_cast<VolumeRAM_UInt32*>(branchIds.loadSlices(z, z)));
-        std::unique_ptr<VolumeRAM_UInt32> holeSlice(dynamic_cast<VolumeRAM_UInt32*>(holeIds.loadSlices(z, z)));
-        tgtAssert(branchSlice, "Invalid volume format");
-        tgtAssert(holeSlice, "Invalid volume format");
+        if(!finalizer_finders.at(z)) {
+            continue;
+        }
+
+        auto branchSlice = branchIds.getWritableSlice(z);
+        auto holeSlice = holeIds.loadSlice(z);
 
         for(size_t y=0; y < dim.y; ++y) {
             for(size_t x=0; x < dim.x; ++x) {
                 tgt::svec3 pos(x,y,z);
-                for(IdVolumeFinalizer* finalizer : finalizer_finder.findBounds(pos)) {
-                    if(holeSlice->voxel(x,y,0) == finalizer->id_) {
+                tgt::svec3 slicePos(x,y,0);
+
+                for(IdVolumeFinalizer* finalizer : finalizer_finders.at(z)->findBounds(slicePos)) {
+                    if(holeSlice.voxel(x,y,0) == finalizer->id_) {
                         uint32_t floodedId = finalizer->getValue(pos);
                         tgtAssert(floodedId != IdVolume::BACKGROUND_VALUE, "flooded label is background");
                         if(floodedId != IdVolume::UNLABELED_FOREGROUND_VALUE) {
@@ -647,16 +790,15 @@ static void finalizeIdVolumes(HDF5FileVolume& branchIds, const HDF5FileVolume& h
                 }
             }
         }
-        branchIds.writeSlices(branchSlice.get(), z);
     }
     progress.setProgress(1.0f);
 }
 
 struct UnfinishedRegions {
-    std::unique_ptr<HDF5FileVolume> holeIds;
+    LZ4SliceVolume<uint32_t> holeIds;
     std::map<uint32_t, tgt::SBounds> regions;
 
-    void floodAllRegions(HDF5FileVolume& branchIds, ProgressReporter& progress) {
+    void floodAllRegions(LZ4SliceVolume<uint32_t>& branchIds, ProgressReporter& progress) {
         TaskTimeLogger _("Flood remaining unlabled regions", tgt::Info);
 
         SubtaskProgressReporterCollection<3> subtaskReporters(progress);
@@ -688,7 +830,7 @@ struct UnfinishedRegions {
             initializers.emplace_back(id, offset, dim);
         }
 
-        initializeIdVolumes(branchIds, *holeIds, initializers, subtaskReporters.get<0>());
+        initializeIdVolumes(branchIds, holeIds, initializers, subtaskReporters.get<0>());
 
         std::vector<IdVolumeFinalizer> finalizers;
         size_t i=0;
@@ -698,11 +840,11 @@ struct UnfinishedRegions {
             ++i;
         }
 
-        finalizeIdVolumes(branchIds, *holeIds, finalizers, subtaskReporters.get<2>());
+        finalizeIdVolumes(branchIds, holeIds, finalizers, subtaskReporters.get<2>());
     }
 };
 
-static UnfinishedRegions collectUnfinishedRegions(const VolumeBase& input, const std::string& tmpVolumePath, ProgressReporter& progress) {
+static UnfinishedRegions collectUnfinishedRegions(const LZ4SliceVolume<uint8_t>& input, const std::string& tmpVolumePath, ProgressReporter& progress) {
     TaskTimeLogger _("Collect unlabled regions", tgt::Info);
 
     std::map<uint32_t, tgt::SBounds> regions;
@@ -710,7 +852,7 @@ static UnfinishedRegions collectUnfinishedRegions(const VolumeBase& input, const
     StreamingComponents<0, CCANodeMetaData> sc;
 
     std::function<bool(const VolumeRAM* vol, tgt::svec3 pos)> isOne = [](const VolumeRAM* slice, tgt::svec3 pos) {
-        return slice->getVoxelNormalized(pos) > 0.5f;
+        return slice->getVoxelNormalized(pos) > 0.0f;
     };
     auto writeMetaData = [&regions] (uint32_t id, const CCANodeMetaData& metadata) {
         regions.emplace(id, metadata.bounds_);
@@ -720,33 +862,26 @@ static UnfinishedRegions collectUnfinishedRegions(const VolumeBase& input, const
         return true;
     };
 
-    const std::string baseType = "uint32";
-    const std::string volumeFilePath = tmpVolumePath;
-    const std::string volumeLocation = HDF5VolumeWriter::VOLUME_DATASET_NAME;
-    const tgt::svec3 dim = input.getDimensions();
-    const int deflateLevel = 1;
-    const tgt::svec3 chunkSize(dim.xy(), 1);
+    LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getMetaData().withRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint32_t>()));
+    LZ4SliceVolumeCCABuilderWrapper outputWrapper(outputVolumeBuilder);
 
-    std::unique_ptr<HDF5FileVolume> outputVolume = HDF5FileVolume::createVolume(volumeFilePath, volumeLocation, baseType, input.getDimensions(), 1, true, deflateLevel, chunkSize, false);
-
-    sc.cca(input, *outputVolume, writeMetaData, isOne, true, componentConstraintTest, progress);
+    sc.cca(LZ4SliceVolumeCCAInputWrapper(input), outputWrapper, writeMetaData, isOne, true, componentConstraintTest, progress);
 
     return UnfinishedRegions {
-        std::move(outputVolume), regions
+        std::move(outputVolumeBuilder).finalize(), regions
     };
 }
 
-static void addClippedOffRegionsToCritical(HDF5FileVolume& criticalVoxels, const HDF5FileVolume& ccaVolume, const ProtoVesselGraph& graph, size_t numComponents, const VolumeBase& segmentation, float segmentationBinarizationThreshold, ProgressReporter& progress) {
+static void addClippedOffRegionsToCritical(LZ4SliceVolume<uint8_t>& criticalVoxels, const LZ4SliceVolume<uint32_t>& ccaVolume, const ProtoVesselGraph& graph, size_t numComponents, const LZ4SliceVolume<uint8_t>& segmentation, ProgressReporter& progress) {
     TaskTimeLogger _("Add clipped off regions to critical voxels", tgt::Info);
 
-    BranchIdVolumeReader ccaReader(ccaVolume, graph, numComponents, segmentation, segmentationBinarizationThreshold);
+    BranchIdVolumeReader ccaReader(ccaVolume, graph, numComponents, segmentation);
     auto dim = criticalVoxels.getDimensions();
 
     for(size_t z = 0; z < dim.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dim.z);
 
-        std::unique_ptr<VolumeRAM> slice(criticalVoxels.loadSlices(z,z));
-        tgtAssert(slice, "Invalid volume format");
+        auto slice = criticalVoxels.getWritableSlice(z);
 
         ccaReader.advance();
 
@@ -755,79 +890,83 @@ static void addClippedOffRegionsToCritical(HDF5FileVolume& criticalVoxels, const
                 tgt::ivec3 p(x,y,z);
 
                 if(ccaReader.isObject(p) && !ccaReader.isValidEdgeId(ccaReader.getEdgeId(p.xy()))) {
-                    slice->setVoxelNormalized(1.0f, x, y, 0);
+                    slice->voxel(x, y, 0) = 1;
                 }
             }
         }
-
-        criticalVoxels.writeSlices(slice.get(), z);
     }
     progress.setProgress(1.0f);
 }
 
-std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorInput& input, VolumeMask&& skeleton, VolumeList& generatedSkeletons, ProgressReporter& progress) {
+
+std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInput& input, VolumeMask&& skeleton, VolumeList& generatedVolumes, ProgressReporter& progress) {
     SubtaskProgressReporterCollection<8> subtaskReporters(progress);
 
     // Create new protograph
     std::unique_ptr<MetaDataCollector> mdc = cca(NeighborCountVoxelClassifier(skeleton), subtaskReporters.get<0>());
-    std::unique_ptr<ProtoVesselGraph> protograph = mdc->createProtoVesselGraph(input.segmentation.getDimensions(), input.segmentation.getVoxelToWorldMatrix(), input.sampleMask, subtaskReporters.get<1>());
+    std::unique_ptr<ProtoVesselGraph> protograph = mdc->createProtoVesselGraph(input.segmentation.getDimensions(), input.segmentation.getMetaData().getVoxelToWorldMatrix(), input.sampleMask, subtaskReporters.get<1>());
 
 
     // Create an assignment edge <-> vessel component
     //  1. Split vessel components at nodes edges
-    const std::string segNoCriticalTmpPath = VoreenApplication::app()->getUniqueTmpFilePath(".h5");
-    const std::string segOnlyCriticalTmpPath = VoreenApplication::app()->getUniqueTmpFilePath(".h5");
-
-    auto segmentationWithAndWithoutCriticalVoxels = splitSegmentationCriticalVoxels(segNoCriticalTmpPath, segOnlyCriticalTmpPath, *protograph, SkeletonClassReader(skeleton), input.segmentation, input.binarizationThresholdSegmentationNormalized, subtaskReporters.get<2>());
+    auto segmentationWithAndWithoutCriticalVoxels = splitSegmentationCriticalVoxels(
+            VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION),
+            VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION),
+            *protograph,
+            SkeletonClassReader(skeleton),
+            input,
+            subtaskReporters.get<2>());
     {
         // Drop VolumeMask and thus free the used non-volatile storage space.
         VolumeMask _dump(std::move(skeleton));
     }
-    std::unique_ptr<HDF5FileVolume> segNoCriticalVoxelsHDF5 = std::move(segmentationWithAndWithoutCriticalVoxels.first);
-    std::unique_ptr<HDF5FileVolume> segOnlyCriticalVoxelsHDF5 = std::move(segmentationWithAndWithoutCriticalVoxels.second);
-
-    segNoCriticalVoxelsHDF5.reset(nullptr); //drop hdf5 vol
+    LZ4SliceVolume<uint8_t> segNoCriticalVoxels = std::move(segmentationWithAndWithoutCriticalVoxels.first);
+    LZ4SliceVolume<uint8_t> segOnlyCriticalVoxels = std::move(segmentationWithAndWithoutCriticalVoxels.second);
 
     //  2. Perform a cca to distinguish components
     size_t numComponents;
-    std::unique_ptr<VolumeBase> segNoCriticalVoxels(HDF5VolumeReader().read(segNoCriticalTmpPath)->at(0));
-    const std::string ccaNoCriticalTmpPath = VoreenApplication::app()->getUniqueTmpFilePath(".h5");
-    std::unique_ptr<HDF5FileVolume> branchIdSegmentation = createCCAVolume(*segNoCriticalVoxels, ccaNoCriticalTmpPath, numComponents, subtaskReporters.get<3>());
+    LZ4SliceVolume<uint32_t> branchIdSegmentation = createCCAVolume(segNoCriticalVoxels, VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), numComponents, subtaskReporters.get<3>());
+    if(input.saveDebugData) {
+        generatedVolumes.add(std::move(segNoCriticalVoxels).toVolume().release());
+    } else {
+        std::move(segNoCriticalVoxels).deleteFromDisk();
+    }
 
     // 4. Find unlabeled regions
     //
     // Add cut off unlabeled regions to the critical voxels (i.e., unlabeled regions) to allow flooding from valid edge label regions later
-    addClippedOffRegionsToCritical(*segOnlyCriticalVoxelsHDF5, *branchIdSegmentation, *protograph, numComponents, input.segmentation, input.binarizationThresholdSegmentationNormalized, subtaskReporters.get<4>());
-    segOnlyCriticalVoxelsHDF5.reset(nullptr); //drop hdf5 vol
-    std::unique_ptr<VolumeBase> segOnlyCriticalVoxels(HDF5VolumeReader().read(segOnlyCriticalTmpPath)->at(0)); //reopen hdf5vol as VolumeBase
-    const std::string ccaOnlyCriticalTmpPath = VoreenApplication::app()->getUniqueTmpFilePath(".h5");
-    auto unfinishedRegions = collectUnfinishedRegions(*segOnlyCriticalVoxels, ccaOnlyCriticalTmpPath, subtaskReporters.get<5>());
+    addClippedOffRegionsToCritical(segOnlyCriticalVoxels, branchIdSegmentation, *protograph, numComponents, input.segmentation, subtaskReporters.get<4>());
+    auto unfinishedRegions = collectUnfinishedRegions(segOnlyCriticalVoxels, VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), subtaskReporters.get<5>());
+    if(input.saveDebugData) {
+        generatedVolumes.add(std::move(segOnlyCriticalVoxels).toVolume().release());
+    } else {
+        std::move(segOnlyCriticalVoxels).deleteFromDisk();
+    }
 
     //  5. Flood remaining unlabeled regions locally
-    unfinishedRegions.floodAllRegions(*branchIdSegmentation, subtaskReporters.get<6>());
+    unfinishedRegions.floodAllRegions(branchIdSegmentation, subtaskReporters.get<6>());
+
+    if(input.saveDebugData) {
+        generatedVolumes.add(std::move(unfinishedRegions.holeIds).toVolume().release());
+    } else {
+        std::move(unfinishedRegions.holeIds).deleteFromDisk();
+    }
 
     //  6. Create a reader that reads edge ids from the underlying segmentation
-    BranchIdVolumeReader ccaReader(*branchIdSegmentation, *protograph, numComponents, input.segmentation, input.binarizationThresholdSegmentationNormalized);
+    BranchIdVolumeReader ccaReader(branchIdSegmentation, *protograph, numComponents, input.segmentation);
 
     //  7. Create better VesselGraph from protograph and and the edge-id-segmentation
     auto output = protograph->createVesselGraph(ccaReader, input.sampleMask, subtaskReporters.get<7>());
-
-
-#ifdef VRN_DEBUG
-    generatedSkeletons.add(HDF5VolumeReader().read(ccaOnlyCriticalTmpPath)->at(0));
-    generatedSkeletons.add(HDF5VolumeReader().read(ccaNoCriticalTmpPath)->at(0));
-#endif
-
-    // Clean up files
-    tgt::FileSystem::deleteFile(segNoCriticalTmpPath);
-    tgt::FileSystem::deleteFile(segOnlyCriticalTmpPath);
-    tgt::FileSystem::deleteFile(ccaNoCriticalTmpPath);
-    tgt::FileSystem::deleteFile(ccaOnlyCriticalTmpPath);
+    if(input.saveDebugData) {
+        generatedVolumes.add(std::move(branchIdSegmentation).toVolume().release());
+    } else {
+        std::move(branchIdSegmentation).deleteFromDisk();
+    }
 
     return output;
 }
 
-std::unique_ptr<VesselGraph> refineVesselGraph(VesselGraphCreatorInput& input, const VesselGraph& prevGraph, VolumeList& generatedSkeletons, ProgressReporter& progress) {
+std::unique_ptr<VesselGraph> refineVesselGraph(VesselGraphCreatorProcessedInput& input, const VesselGraph& prevGraph, VolumeList& generatedVolumes, ProgressReporter& progress) {
     TaskTimeLogger _("Refinement iteration", tgt::Info);
 
     SubtaskProgressReporterCollection<3> subtaskReporters(progress);
@@ -839,29 +978,31 @@ std::unique_ptr<VesselGraph> refineVesselGraph(VesselGraphCreatorInput& input, c
     };
     std::unique_ptr<VesselGraph> normalizedGraph = VesselGraphNormalization::removeEndEdgesRecursively(prevGraph, isEdgeDeletable);
 
-    tgt::mat4 rwToVoxel = input.segmentation.getWorldToVoxelMatrix();
+    tgt::mat4 rwToVoxel;
+    bool inverted = input.segmentation.getMetaData().getVoxelToWorldMatrix().invert(rwToVoxel);
+    tgtAssert(inverted, "Matrix inversion failed!");
 
     // Create new voxelmask
-    auto fixedForegroundMaskOnlyEndvoxels = GraphNodeVoxelReader::create<EndNodeVoxelExtractor>(*normalizedGraph, rwToVoxel, input.segmentation.getDimensions());
-    VolumeMask mask(input.segmentation, input.sampleMask, fixedForegroundMaskOnlyEndvoxels, input.binarizationThresholdSegmentationNormalized, subtaskReporters.get<0>());
+    auto fixedForegroundMaskOnlyEndvoxels = GraphNodeVoxelReader::create<EndNodeVoxelExtractor>(*normalizedGraph, rwToVoxel, input.segmentation.getMetaData().getDimensions());
+    VolumeMask mask(input.segmentation, input.sampleMask, fixedForegroundMaskOnlyEndvoxels, subtaskReporters.get<0>());
     addFixedForegroundPointsToMask(input.fixedForegroundPoints, mask);
 
     // Skeletonize new mask
     mask.skeletonize<VolumeMask::IMPROVED_NO_LINE_PRESERVATION>(std::numeric_limits<size_t>::max(), subtaskReporters.get<1>());
 
-    return createGraphFromMask(input, std::move(mask), generatedSkeletons, subtaskReporters.get<2>());
+    return createGraphFromMask(input, std::move(mask), generatedVolumes, subtaskReporters.get<2>());
 }
 
-std::unique_ptr<VesselGraph> createInitialVesselGraph(VesselGraphCreatorInput& input, VolumeList& generatedSkeletons, ProgressReporter& progress) {
+std::unique_ptr<VesselGraph> createInitialVesselGraph(VesselGraphCreatorProcessedInput& input, VolumeList& generatedVolumes, ProgressReporter& progress) {
     TaskTimeLogger _("Create initial VesselGraph", tgt::Info);
     SubtaskProgressReporterCollection<3> subtaskReporters(progress);
     progress.setProgress(0.0f);
 
-    VolumeMask mask(input.segmentation, input.sampleMask, NoFixedForeground(), input.binarizationThresholdSegmentationNormalized, subtaskReporters.get<0>());
+    VolumeMask mask(input.segmentation, input.sampleMask, NoFixedForeground(), subtaskReporters.get<0>());
     addFixedForegroundPointsToMask(input.fixedForegroundPoints, mask);
     mask.skeletonize<VolumeMask::IMPROVED>(std::numeric_limits<size_t>::max(), subtaskReporters.get<1>());
 
-    return createGraphFromMask(input, std::move(mask), generatedSkeletons, subtaskReporters.get<2>());
+    return createGraphFromMask(input, std::move(mask), generatedVolumes, subtaskReporters.get<2>());
 }
 
 static bool tryExtractPoints(const Geometry* geometry, std::vector<tgt::vec3>& output, const tgt::mat4& rwToVoxel) {
@@ -908,7 +1049,8 @@ VesselGraphCreatorInput VesselGraphCreator::prepareComputeInput() {
 
     const float binarizationThresholdSegmentationNormalized = segmentation->getRealWorldMapping().realWorldToNormalized(binarizationThresholdSegmentation_.get());
 
-    generatedSkeletonsOutport_.clear();
+    generatedVolumesOutport_.clear();
+    generatedGraphsOutport_.clear();
     return VesselGraphCreatorInput(
         *segmentation,
         sampleMask,
@@ -917,29 +1059,62 @@ VesselGraphCreatorInput VesselGraphCreator::prepareComputeInput() {
         numRefinementIterations_.get(),
         minVoxelLength_.get(),
         minElongation_.get(),
-        minBulgeSize_.get()
+        minBulgeSize_.get(),
+        saveDebugData_.get()
     );
+}
+
+static bool iterationMadeProgress(const VesselGraph& before, const VesselGraph& after) {
+    return before.getBounds() != after.getBounds()
+        || before.getNodes().size() != after.getNodes().size()
+        || before.getEdges().size() != after.getEdges().size();
 }
 
 VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput input, ProgressReporter& progressReporter) const {
     TaskTimeLogger _("Extract VesselGraph (total)", tgt::Info);
+
+    SubtaskProgressReporterCollection<2> progressCollection(progressReporter, {0.01,0.99});
+
+    VesselGraphCreatorProcessedInput processedInput(input, progressCollection.get<0>());
+
     float progressPerIteration = 1.0f/(input.numRefinementIterations+1);
-    SubtaskProgressReporter initialProgress(progressReporter, tgt::vec2(0, progressPerIteration));
-    std::unique_ptr<VolumeList> generatedSkeletons(new VolumeContainer());
-    std::unique_ptr<VesselGraph> graph = createInitialVesselGraph(input, *generatedSkeletons, initialProgress);
+    SubtaskProgressReporter initialProgress(progressCollection.get<1>(), tgt::vec2(0, progressPerIteration));
+
+    std::unique_ptr<VolumeList> generatedVolumes(new VolumeContainer());
+    std::unique_ptr<std::vector<VesselGraph>> generatedGraphs(new std::vector<VesselGraph>());
+    std::unique_ptr<VesselGraph> graph = createInitialVesselGraph(processedInput, *generatedVolumes, initialProgress);
     for(int i=0; i < input.numRefinementIterations; ++i) {
-        SubtaskProgressReporter refinementProgress(progressReporter, progressPerIteration*tgt::vec2(i+1, i+2));
+        SubtaskProgressReporter refinementProgress(progressCollection.get<1>(), progressPerIteration*tgt::vec2(i+1, i+2));
         try {
-            graph = refineVesselGraph(input, *graph, *generatedSkeletons, refinementProgress);
+            std::unique_ptr<VesselGraph> prev_graph = std::move(graph);
+            graph = refineVesselGraph(processedInput, *prev_graph, *generatedVolumes, refinementProgress);
+            bool done = !iterationMadeProgress(*prev_graph, *graph);
+            if(input.saveDebugData) {
+                generatedGraphs->push_back(std::move(*prev_graph));
+            }
+            if(done) {
+                LINFO("Refinement reached fixed point after " << (i+1) << " iterations. Aborting early.");
+                break;
+            }
         } catch(tgt::IOException e) {
-            LERROR("Could not create hdf5 output volume for branchIdSegmentation.");
+            LERROR("IO Exception occured in VesselGraphCreator compute thread");
             std::cout << e.what() << std::endl;
             break;
         }
     }
+    std::move(processedInput.segmentation).deleteFromDisk();
+    if(processedInput.sampleMask) {
+        std::move(*processedInput.sampleMask).deleteFromDisk();
+    }
+
+    if(input.saveDebugData) {
+        generatedGraphs->push_back(graph->clone());
+    }
+
     return VesselGraphCreatorOutput {
         std::move(graph),
-        std::move(generatedSkeletons)
+        std::move(generatedVolumes),
+        std::move(generatedGraphs)
     };
 }
 
@@ -966,7 +1141,8 @@ void VesselGraphCreator::processComputeOutput(VesselGraphCreatorOutput output) {
         nodeOutport_.setData(nullptr);
         edgeOutport_.setData(nullptr);
     }
-    generatedSkeletonsOutport_.setData(output.generatedSkeletons.release());
+    generatedVolumesOutport_.setData(output.generatedVolumes.release());
+    generatedGraphsOutport_.setData(output.generatedGraphs.release());
 }
 void VesselGraphCreator::adjustPropertiesToInput() {
     const VolumeBase* segmentation = segmentedVolumeInport_.getData();

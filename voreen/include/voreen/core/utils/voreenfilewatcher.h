@@ -153,22 +153,26 @@ public:
 
     /**
      * Adds a path to be watched for changes.
-     * Empty paths will be ignored.
+     * Empty paths will succeed but be ignored.
      * Path may be watched already.
      *
      * Note that the file or directory itself does not need to exist
      * when function is called, but the containing directory does.
      * This is necessary since the path needs to be resolved
      * to it's absolute variant.
+     *
+     * Returns true if successful, false otherwise.
      */
-    void addWatch(const std::string& path);
+    bool addWatch(const std::string& path);
 
     /**
      * Removes a path.
-     * Empty paths will be ignored.
+     * Empty paths will succeed but be ignored.
      * Path must be watched already.
+     *
+     * Returns true if successful, false otherwise.
      */
-    void removeWatch(const std::string& path);
+    bool removeWatch(const std::string& path);
 
     /**
      * Removes all watches.

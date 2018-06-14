@@ -23,61 +23,75 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_HDF5VOLUMEREADER_H
-#define VRN_HDF5VOLUMEREADER_H
+#ifndef VRN_VOLUMEDISK_LZ4_H
+#define VRN_VOLUMEDISK_LZ4_H
 
-#include "voreen/core/io/volumereader.h"
+#include "voreen/core/datastructures/volume/volumedisk.h"
+#include "../datastructures/lz4slicevolume.h"
 
 namespace voreen {
 
 /**
- * Reader for volumes in the hierarchical data format 5 (HDF5).
- * http://www.hdfgroup.org/
- *
- * HDF5 is a generic data format. DataSets of 3 oder 4 dimensions
- * in the tree of a file are considered volumes. If present the
- * fourth dimension indicates the channel. Additional attributes
- * (e.g. spacing) have to be specified as an Attribute of the
- * DataSet they describe.
- *
+ * Disk volume representing a (3D volume) of a LZ4 file.
  */
-class VRN_CORE_API HDF5VolumeReader : public VolumeReader {
+class VRN_CORE_API VolumeDiskLZ4 : public VolumeDisk {
 public:
-    HDF5VolumeReader();
-    ~HDF5VolumeReader() {}
-    virtual VolumeReader* create(ProgressBar* progress = 0) const;
-
-    virtual std::string getClassName() const   { return "HDF5VolumeReader"; }
-    virtual std::string getFormatDescription() const { return "3D HDF5 format"; }
+    /**
+     * Constructor.
+     * @param volume The handle for the volume contained in a lz4 slice volume file.
+     * @param channel The channel within the file volume this volumedisk should represent
+     */
+    VolumeDiskLZ4(std::unique_ptr<LZ4SliceVolumeBase> volume);
 
     /**
-     * See VolumeReader.
+     * Destructor.
      */
-    virtual VolumeList* read(const std::string& url);
-
-    /*
-     * See VolumeReader
-     */
-    virtual VolumeBase* read(const VolumeURL& origin);
+    virtual ~VolumeDiskLZ4();
 
     /**
-     * See VolumeReader.
+     * Computes a hash string from the datastack properties: file name, volume location and channel.
+     */
+    virtual std::string getHash() const;
+
+    /**
+     * Loads the channel/timestep from disk and returns it as VolumeRAM.
+     * The caller is responsible for deleting the returned object.
      *
-     * All 3 oder 4 dimensional DataSets within the file will be considered a
-     * volume. Location and channel number are distinguish different
-     * volumes in the same file.
+     * @throw tgt::Exception if the volume could not be loaded
      */
-    virtual std::vector<VolumeURL> listVolumes(const std::string& url) const;
+    virtual VolumeRAM* loadVolume() const;
 
     /**
-     * HDF5 format supports filewatching, thus this functions returns true.
+     * Loads a set of consecutive z slices of the LZ4 channel/timestep from disk
+     * and returns them as VolumeRAM.
+     * The caller is responsible for deleting the returned object.
+     *
+     * @param firstZSlice first slice of the slice range to load (inclusive)
+     * @param lastZSlice last slice of the slice range (inclusive)
+     *
+     * @throw tgt::Exception if the slices could not be loaded
      */
-    virtual bool canSupportFileWatching() const;
+    virtual VolumeRAM* loadSlices(const size_t firstZSlice, const size_t lastZSlice) const;
 
-private:
+    /**
+     * Loads a brick of the LZ4 channel/timestep volume from disk and returns it as VolumeRAM.
+     * The caller is responsible for deleting the returned object.
+     *
+     * @param offset lower-left-front corner voxel of the brick to load
+     * @param dimensions dimension of the brick to load
+     *
+     * @throw tgt::Exception if the brick could not be loaded
+     */
+    virtual VolumeRAM* loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const;
+
+protected:
+
+    /// The volume inside a LZ4 file
+    const std::unique_ptr<LZ4SliceVolumeBase> volume_;
+
     static const std::string loggerCat_;
 };
 
 } // namespace voreen
 
-#endif // VRN_HDF5VOLUMEREADER_H
+#endif //VRN_VOLUMEDISK_LZ4_H

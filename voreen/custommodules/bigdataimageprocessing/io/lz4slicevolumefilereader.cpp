@@ -23,22 +23,61 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "pfskelmodule.h"
+#include "lz4slicevolumefilereader.h"
+#include "../datastructures/lz4slicevolume.h"
 
-#include "processors/roiskeletonize.h"
+
+#include "tgt/exception.h"
+#include "tgt/assert.h"
+#include "tgt/vector.h"
+
+#include <boost/thread.hpp>
+
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 namespace voreen {
 
-PFSkelModule::PFSkelModule(const std::string& modulePath)
-    : VoreenModule(modulePath)
-    , PFSkelDir_("PFSkelDir", "PFSkel Directory", "Set PFSkel Directory", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_APPLICATION)
+const std::string LZ4SliceVolumeFileReader::loggerCat_ = "voreen.lz4.LZ4SliceVolumeFileReader";
+
+LZ4SliceVolumeFileReader::LZ4SliceVolumeFileReader() : VolumeReader()
 {
-    setID("PFSkel");
-    setGuiName("PFSkel");
+    extensions_.push_back(LZ4SliceVolumeBase::FILE_EXTENSION);
 
-    registerProcessor(new ROISkeletonize());
-
-    addProperty(PFSkelDir_);
+    protocols_.push_back(LZ4SliceVolumeBase::FILE_EXTENSION);
 }
 
-} // namespace
+VolumeList* LZ4SliceVolumeFileReader::read(const std::string &url) {
+    std::vector<VolumeURL> urls = listVolumes(url);
+    VolumeList* volumeList = new VolumeList();
+
+    try {
+        for(const auto& url : urls) {
+            volumeList->add(read(url));
+        }
+    } catch(tgt::IOException e) {
+        delete volumeList;
+        throw e;
+    }
+    return volumeList;
+}
+
+VolumeBase* LZ4SliceVolumeFileReader::read(const VolumeURL& origin) {
+    std::string fileName = origin.getPath();
+    LINFO("Loading " << fileName);
+
+    std::unique_ptr<LZ4SliceVolumeBase> fileVolume = LZ4SliceVolumeBase::open(fileName);
+    return std::move(*fileVolume).toVolume().release();
+}
+
+std::vector<VolumeURL> LZ4SliceVolumeFileReader::listVolumes(const std::string& urlStr) const {
+    std::vector<VolumeURL> urls;
+    urls.push_back(VolumeURL(urlStr));
+    return urls;
+}
+
+VolumeReader* LZ4SliceVolumeFileReader::create(ProgressBar* progress) const {
+    return new LZ4SliceVolumeFileReader();
+}
+
+} // namespace voreen

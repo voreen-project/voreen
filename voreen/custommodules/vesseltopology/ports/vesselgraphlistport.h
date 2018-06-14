@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
+ * Copyright (C) 2005-2016 University of Muenster, Germany.                        *
  * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -22,37 +22,38 @@
  * contact the authors.                                                            *
  *                                                                                 *
  ***********************************************************************************/
+#ifndef VRN_VESSELGRAPHLISTPORT_H
+#define VRN_VESSELGRAPHLISTPORT_H
 
-#ifndef VRN_PFSKELWRAPPER_H
-#define VRN_PFSKELWRAPPER_H
-
-#include "../../roi/processors/roisegmenter.h"
-#include "voreen/core/datastructures/roi/roigraph.h"
+#include "voreen/core/ports/genericport.h"
+#include "../datastructures/vesselgraph.h"
+#include <vector>
 
 namespace voreen {
 
-class ROIRaster;
-
-class PFSkelWrapper {
+// A generic port for vectors of VesselGraphs. Nothing special to see here.
+class VesselGraphListPort : public GenericPort<std::vector<VesselGraph>> {
 public:
-    PFSkelWrapper();
+    VesselGraphListPort(PortDirection direction, const std::string& name, const std::string& guiName = "",
+                    bool allowMultipleConnections = false,
+                    Processor::InvalidationLevel invalidationLevel = Processor::INVALID_PARAMETERS);
+    ~VesselGraphListPort();
 
-    struct SkelPoint {
-        tgt::vec3 pos_;
-        int seg_;
-    };
+    virtual Port* create(PortDirection direction, const std::string& id, const std::string& guiName = "") const;
 
-    static Graph calculateSkeleton(ROIRaster* rr, int fieldst, int highd, int branchTh);
-    static std::vector<tgt::vec3> calculateSkeletonGeometry(const Volume* v, int fieldst, int highd, int branchTh);
-    static std::vector<tgt::vec3> calculateSkeletonVoxels(const Volume* v, int fieldst, int highd, int branchTh);
+    virtual std::string getClassName() const {return "VesselGraphListPort";}
+    virtual tgt::col3 getColorHint() const;
+
+    virtual std::string getContentDescription() const;
+
+    virtual std::string getContentDescriptionHTML() const;
 
 protected:
-    static Graph calculateSkeleton(const std::string& basename, const std::string& rawFile, tgt::ivec3 dims, int fieldst, int highd, int branchTh);
-    static std::vector<std::vector<tgt::vec3> >readSkeleton(std::string fname);
-    static std::vector<tgt::vec3> readCritical(std::string fname);
-    static Graph postProcessSkeleton(const std::vector<std::vector<tgt::vec3> >& segments, const std::vector<tgt::vec3>& critPoints, int branchTh);
+    std::string portData_;
+
+    static const std::string loggerCat_; ///< category used in logging
 };
 
 } // namespace voreen
 
-#endif
+#endif // VRN_VESSELGRAPHLISTPORT_H

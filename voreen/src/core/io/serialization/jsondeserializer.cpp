@@ -155,7 +155,6 @@ void JsonDeserializer::deserialize(const std::string& key, tgt::dvec4& data) {
     deserializeFromMember(key, data);
 }
 
-
 void JsonDeserializer::deserialize(const std::string& key, tgt::ivec2& data) {
     deserializeFromMember(key, data);
 }
@@ -165,6 +164,18 @@ void JsonDeserializer::deserialize(const std::string& key, tgt::ivec3& data) {
 }
 
 void JsonDeserializer::deserialize(const std::string& key, tgt::ivec4& data) {
+    deserializeFromMember(key, data);
+}
+
+void JsonDeserializer::deserialize(const std::string& key, tgt::svec2& data) {
+    deserializeFromMember(key, data);
+}
+
+void JsonDeserializer::deserialize(const std::string& key, tgt::svec3& data) {
+    deserializeFromMember(key, data);
+}
+
+void JsonDeserializer::deserialize(const std::string& key, tgt::svec4& data) {
     deserializeFromMember(key, data);
 }
 

@@ -613,9 +613,13 @@ void AnimationEditor::stop() {
     if(interactionMode_)
         animation_->setInteractionMode(false);
     timer_->stop();
-    currentFrame_ = 0;
-    animation_->renderAt((float)currentFrame_/30.0f);
-    emit currentFrameChanged(currentFrame_);
+
+    // Reset animation to first frame IF we have animated something already.
+    if(currentFrame_ != 0) {
+        currentFrame_ = 0;
+        animation_->renderAt((float)currentFrame_/30.0f);
+        emit currentFrameChanged(currentFrame_);
+    }
 
     uncheckControls();
 }

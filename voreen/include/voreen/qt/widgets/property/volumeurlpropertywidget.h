@@ -66,7 +66,6 @@ protected slots:
     virtual void changeFileWatchOption(bool checked);
 
 private:
-    VolumeBase* getVolume() const;
 
     QToolButton* loadButton_;
     QPushButton* clearButton_;

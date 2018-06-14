@@ -45,6 +45,7 @@
 #include "voreen/core/ports/genericport.h"
 
 #include "../ports/vesselgraphport.h"
+#include "../ports/vesselgraphlistport.h"
 
 namespace voreen {
 
@@ -57,6 +58,7 @@ struct VesselGraphCreatorInput {
     int minVoxelLength;
     float minElongation;
     float minBulgeSize;
+    bool saveDebugData;
 
     VesselGraphCreatorInput(
             const VolumeBase& segmentation,
@@ -66,7 +68,8 @@ struct VesselGraphCreatorInput {
             int numRefinementIterations,
             int minVoxelLength,
             float minElongation,
-            float minBulgeSize
+            float minBulgeSize,
+            bool saveDebugData
             )
         : segmentation(segmentation)
         , sampleMask(sampleMask)
@@ -76,6 +79,7 @@ struct VesselGraphCreatorInput {
         , minVoxelLength(minVoxelLength)
         , minElongation(minElongation)
         , minBulgeSize(minBulgeSize)
+        , saveDebugData(saveDebugData)
     {
         tgtAssert(!sampleMask || segmentation.getDimensions() == sampleMask->getDimensions(), "Sample mask dimension mismatch");
     }
@@ -90,12 +94,14 @@ struct VesselGraphCreatorInput {
         , minVoxelLength(old.minVoxelLength)
         , minElongation(old.minElongation)
         , minBulgeSize(old.minBulgeSize)
+        , saveDebugData(old.saveDebugData)
     {
     }
 };
 struct VesselGraphCreatorOutput {
     std::unique_ptr<VesselGraph> graph;
-    std::unique_ptr<VolumeList> generatedSkeletons;
+    std::unique_ptr<VolumeList> generatedVolumes;
+    std::unique_ptr<std::vector<VesselGraph>> generatedGraphs;
 };
 
 // A processor that extracts a vessel graph from a voxel skeleton volume and annotates
@@ -133,7 +139,8 @@ private:
     VesselGraphPort graphOutport_;
     GeometryPort nodeOutport_;
     GeometryPort edgeOutport_;
-    VolumeListPort generatedSkeletonsOutport_; //For debug purposes
+    VolumeListPort generatedVolumesOutport_; //For debug purposes
+    VesselGraphListPort generatedGraphsOutport_; //For debug purposes
 
     // Binarization
     FloatProperty binarizationThresholdSegmentation_;
@@ -143,6 +150,7 @@ private:
     IntProperty minVoxelLength_;
     FloatProperty minElongation_;
     FloatProperty minBulgeSize_;
+    BoolProperty saveDebugData_;
 
     // Info
     StringProperty tmpStorageSizeInfo_;

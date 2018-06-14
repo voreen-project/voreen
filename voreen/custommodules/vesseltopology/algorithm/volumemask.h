@@ -31,6 +31,7 @@
 #include "voreen/core/datastructures/volume/volumebase.h"
 #include "voreen/core/datastructures/volume/volumeram.h"
 #include "voreen/core/io/progressreporter.h"
+#include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 #include "tgt/vector.h"
 #include "tgt/filesystem.h"
 #include "../util/tasktimelogger.h"
@@ -104,7 +105,7 @@ public:
     };
 
     template<class F>
-    VolumeMask(const VolumeBase& vol, const VolumeBase* sampleMask, F&& fixedForegroundReader, float binarizationThresholdNormalized, ProgressReporter& progress);
+    VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, F&& fixedForegroundReader, ProgressReporter& progress);
     VolumeMask(VolumeMask&& other);
     ~VolumeMask();
 
@@ -215,41 +216,38 @@ private:
 
 
 template<class F>
-VolumeMask::VolumeMask(const VolumeBase& vol, const VolumeBase* sampleMask, F&& fixedForegroundReader, float binarizationThresholdNormalized, ProgressReporter& progress)
+VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, F&& fixedForegroundReader, ProgressReporter& progress)
     : data_(nullptr)
     , surfaceFile_("", 0)
     , numOriginalForegroundVoxels_(0)
-    , spacing_(vol.getSpacing())
+    , spacing_(vol.getMetaData().getSpacing())
 {
     TaskTimeLogger _("Create VolumeMask", tgt::Info);
     SubtaskProgressReporterCollection<2> subtaskReporters(progress);
-    tgtAssert(!sampleMask || vol.getDimensions() == sampleMask->getDimensions(), "Sample mask dimension mismatch");
 
     VolumeMaskStorageInitializer initializer(VoreenApplication::app()->getUniqueTmpFilePath());
 
     tgt::svec3 dimensions = vol.getDimensions();
-    tgtAssert(!sampleMask || vol.getDimensions() == sampleMask->getDimensions(), "Sample mask dimension mismatch");
+    tgtAssert(!sampleMask || dimensions == sampleMask->getDimensions(), "Sample mask dimension mismatch");
 
     // Initialize volumetric data (data_)
     for(size_t z = 0; z<dimensions.z; ++z) {
         subtaskReporters.get<0>().setProgress(static_cast<float>(z)/dimensions.z);
-        std::unique_ptr<const VolumeRAM> volSlice(vol.getSlice(z));
-        std::unique_ptr<const VolumeRAM> maskSlice(sampleMask ? sampleMask->getSlice(z) : nullptr);
+        auto volSlice = vol.loadSlice(z);
+        boost::optional<VolumeAtomic<uint8_t>> sampleMaskSlice = sampleMask ? boost::optional<VolumeAtomic<uint8_t>>(sampleMask->loadSlice(z)) : boost::none;
         fixedForegroundReader.advance();
         for(size_t y = 0; y<dimensions.y; ++y) {
             for(size_t x = 0; x<dimensions.x; ++x) {
                 const tgt::svec3 p(x,y,z);
                 const tgt::svec3 slicePos(x,y,0);
                 Value val;
-                if(maskSlice && maskSlice->getVoxelNormalized(slicePos) == 0) {
+                if(sampleMaskSlice && sampleMaskSlice->voxel(slicePos) == 0) {
                     val = VolumeMask::OUTSIDE_VOLUME;
-                } else if(volSlice->getVoxelNormalized(slicePos) >= binarizationThresholdNormalized) {
-                    if(fixedForegroundReader.isForeground(x, y)) {
-                        val = VolumeMask::FIXED_OBJECT;
-                    } else {
-                        val = VolumeMask::OBJECT;
-                        ++numOriginalForegroundVoxels_;
-                    }
+                } else if(fixedForegroundReader.isForeground(x, y)) {
+                    val = VolumeMask::FIXED_OBJECT;
+                } else if(volSlice.getVoxelNormalized(slicePos) > 0) {
+                    val = VolumeMask::OBJECT;
+                    ++numOriginalForegroundVoxels_;
                 } else {
                     val = VolumeMask::BACKGROUND;
                 }
@@ -273,7 +271,7 @@ VolumeMask::VolumeMask(const VolumeBase& vol, const VolumeBase* sampleMask, F&& 
             }
         }
     }
-    surfaceFile_ = SurfaceBuilder::finalize(std::move(builder));
+    surfaceFile_ = std::move(builder).finalize();
     progress.setProgress(1.0f);
 }
 
@@ -303,7 +301,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
                         for(int x = -1; x != 2; ++x) {
                             tgt::ivec3 p = tgt::ivec3(pos) + tgt::ivec3(x, y, z);
                             if(get(p, BACKGROUND) == OBJECT) {
-                                surface.m<3>().insert(toLinearPos(tgt::svec3(p)));
+                                surface.m<3>().push_back(toLinearPos(tgt::svec3(p)));
                             }
                         }
                     }
@@ -316,7 +314,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
                             if(x != 0 || y != 0) {
                                 tgt::ivec3 p = tgt::ivec3(pos) + tgt::ivec3(x, y, z);
                                 if(get(p, BACKGROUND) == OBJECT) {
-                                    surface.m<2>().insert(toLinearPos(tgt::svec3(p)));
+                                    surface.m<2>().push_back(toLinearPos(tgt::svec3(p)));
                                 }
                             }
                         }
@@ -329,7 +327,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
                         for(int x = -1; x != 2; ++x) {
                             tgt::ivec3 p = tgt::ivec3(pos) + tgt::ivec3(x, y, z);
                             if(get(p, BACKGROUND) == OBJECT) {
-                                surface.m<1>().insert(toLinearPos(tgt::svec3(p)));
+                                surface.m<1>().push_back(toLinearPos(tgt::svec3(p)));
                             }
                         }
                     }
@@ -337,7 +335,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
 
             } else {
                 //Voxel is potentially deletable, but was not, so it will (or may at least) become inactive for now
-                // => we do not: "surface.m<2>().insert(toLinearPos(pos));"
+                // => we do not: "surface.m<2>().push_back(toLinearPos(pos));"
             }
         }
     };
@@ -381,7 +379,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
             }
         } else {
             // Active surface voxel is not valid for current scraping direction
-            surface.m<0>().insert(linearPos);
+            surface.m<0>().push_back(linearPos);
         }
     }
     for(int i=0; i<5; ++i) {
@@ -396,7 +394,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
     tgtAssert(to_delete_prev_prev.empty() && to_delete_prev.empty() && to_delete_current.empty(), "Deletion unfinished");
     tgtAssert(surface.m<0>().empty() && surface.m<1>().empty() && surface.m<2>().empty() && surface.m<3>().empty(), "Writing surface back unfinished");
 
-    surfaceFile_ = SurfaceBuilder::finalize(std::move(builder));
+    surfaceFile_ = std::move(builder).finalize();
 
 
     progress.setProgress(static_cast<float>(numberOfDeletedVoxels)/numOriginalForegroundVoxels_);

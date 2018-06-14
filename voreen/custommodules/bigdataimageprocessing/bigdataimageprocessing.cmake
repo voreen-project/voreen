@@ -7,16 +7,36 @@ IF(NOT VRN_MODULE_HDF5)
 ENDIF()
 
 ################################################################################
+# External dependency: lz4 library
+################################################################################
+MESSAGE(STATUS "Trying to find lz4 libraries")
+FIND_PACKAGE(LZ4)
+IF(LZ4_FOUND)
+    MESSAGE(STATUS "  - Found lz4 library")
+
+    MESSAGE(STATUS "Include Directories: " ${LZ4_INCLUDE_DIR})
+    MESSAGE(STATUS "Libraries: " ${LZ4_LIBRARIES})
+    LIST(APPEND MOD_INCLUDE_DIRECTORIES ${LZ4_INCLUDE_DIR})
+    LIST(APPEND MOD_LIBRARIES ${LZ4_LIBRARIES})
+ELSE()
+    MESSAGE(FATAL_ERROR "Could not find lz4 Library.")
+ENDIF()
+
+################################################################################
 # Core module resources
 ################################################################################
 SET(MOD_CORE_MODULECLASS BigDataImageProcessingModule)
 
 SET(MOD_CORE_SOURCES
-    ${MOD_DIR}/processors/connectedcomponentanalysis.cpp
-    ${MOD_DIR}/processors/segmentationquantification.cpp
-    ${MOD_DIR}/processors/volumebricksource.cpp
-    ${MOD_DIR}/processors/volumebricksave.cpp
+    ${MOD_DIR}/datastructures/lz4slicevolume.cpp
+    ${MOD_DIR}/io/lz4slicevolumefilereader.cpp
+    ${MOD_DIR}/io/volumedisklz4.cpp
     ${MOD_DIR}/processors/binarymedian.cpp
+    ${MOD_DIR}/processors/connectedcomponentanalysis.cpp
+    ${MOD_DIR}/processors/largevolumeformatconversion.cpp
+    ${MOD_DIR}/processors/segmentationquantification.cpp
+    ${MOD_DIR}/processors/volumebricksave.cpp
+    ${MOD_DIR}/processors/volumebricksource.cpp
     ${MOD_DIR}/processors/volumeresampletransformation.cpp
 
     # Volumefiltering
@@ -32,11 +52,15 @@ IF(VRN_MODULE_PLOTTING)
     )
 ENDIF()
 SET(MOD_CORE_HEADERS
-    ${MOD_DIR}/processors/connectedcomponentanalysis.h
-    ${MOD_DIR}/processors/segmentationquantification.h
-    ${MOD_DIR}/processors/volumebricksource.h
-    ${MOD_DIR}/processors/volumebricksave.h
+    ${MOD_DIR}/datastructures/lz4slicevolume.h
+    ${MOD_DIR}/io/lz4slicevolumefilereader.h
+    ${MOD_DIR}/io/volumedisklz4.h
     ${MOD_DIR}/processors/binarymedian.cpp
+    ${MOD_DIR}/processors/connectedcomponentanalysis.h
+    ${MOD_DIR}/processors/largevolumeformatconversion.h
+    ${MOD_DIR}/processors/segmentationquantification.h
+    ${MOD_DIR}/processors/volumebricksave.h
+    ${MOD_DIR}/processors/volumebricksource.h
     ${MOD_DIR}/processors/volumeresampletransformation.h
 
     # Volumefiltering

@@ -443,6 +443,42 @@ public:
      * @throws XmlSerializationFormatException if a Json node is incorrect formatted.
      * @throws XmlSerializationDuplicateIdException if multiple Json nodes share same id attribute
      */
+    void deserialize(const std::string& key, tgt::svec2& data);
+
+    /**
+     * Deserializes the given @c key/data pair.
+     *
+     * @param key the Json node key
+     * @param data variable to store deserialized data
+     *
+     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
+     * @throws XmlSerializationFormatException if a Json node is incorrect formatted.
+     * @throws XmlSerializationDuplicateIdException if multiple Json nodes share same id attribute
+     */
+    void deserialize(const std::string& key, tgt::svec3& data);
+
+    /**
+     * Deserializes the given @c key/data pair.
+     *
+     * @param key the Json node key
+     * @param data variable to store deserialized data
+     *
+     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
+     * @throws XmlSerializationFormatException if a Json node is incorrect formatted.
+     * @throws XmlSerializationDuplicateIdException if multiple Json nodes share same id attribute
+     */
+    void deserialize(const std::string& key, tgt::svec4& data);
+
+    /**
+     * Deserializes the given @c key/data pair.
+     *
+     * @param key the Json node key
+     * @param data variable to store deserialized data
+     *
+     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
+     * @throws XmlSerializationFormatException if a Json node is incorrect formatted.
+     * @throws XmlSerializationDuplicateIdException if multiple Json nodes share same id attribute
+     */
     void deserialize(const std::string& key, tgt::col3& data);
 
     /**
@@ -795,6 +831,15 @@ private:
         readTgtVector(val, data);
     }
     void readFromValue(const rapidjson::Value& val, tgt::ivec4& data) {
+        readTgtVector(val, data);
+    }
+    void readFromValue(const rapidjson::Value& val, tgt::svec2& data) {
+        readTgtVector(val, data);
+    }
+    void readFromValue(const rapidjson::Value& val, tgt::svec3& data) {
+        readTgtVector(val, data);
+    }
+    void readFromValue(const rapidjson::Value& val, tgt::svec4& data) {
         readTgtVector(val, data);
     }
     void readFromValue(const rapidjson::Value& val, tgt::col3& data) {

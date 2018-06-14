@@ -357,6 +357,30 @@ public:
      * @param key the Json node key
      * @param data the data
      */
+    void serialize(const std::string& key, const tgt::svec2& data);
+
+    /**
+     * Serializes the given @c key/data pair.
+     *
+     * @param key the Json node key
+     * @param data the data
+     */
+    void serialize(const std::string& key, const tgt::svec3& data);
+
+    /**
+     * Serializes the given @c key/data pair.
+     *
+     * @param key the Json node key
+     * @param data the data
+     */
+    void serialize(const std::string& key, const tgt::svec4& data);
+
+    /**
+     * Serializes the given @c key/data pair.
+     *
+     * @param key the Json node key
+     * @param data the data
+     */
     void serialize(const std::string& key, const tgt::col3& data);
 
     /**
@@ -642,6 +666,15 @@ private:
         return serializeTgtVecToValue(data, false);
     }
     rapidjson::Value serializeToValue(const tgt::ivec4& data) {
+        return serializeTgtVecToValue(data, false);
+    }
+    rapidjson::Value serializeToValue(const tgt::svec2& data) {
+        return serializeTgtVecToValue(data, false);
+    }
+    rapidjson::Value serializeToValue(const tgt::svec3& data) {
+        return serializeTgtVecToValue(data, false);
+    }
+    rapidjson::Value serializeToValue(const tgt::svec4& data) {
         return serializeTgtVecToValue(data, false);
     }
     rapidjson::Value serializeToValue(const tgt::dvec2& data) {

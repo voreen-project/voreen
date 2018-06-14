@@ -98,6 +98,8 @@ template<typename T, typename V>
 class BoundsHierarchy {
 public:
     BoundsHierarchy(const std::vector<std::pair<V, Bounds>>&&);
+    BoundsHierarchy(BoundsHierarchy&&) noexcept;
+    BoundsHierarchy& operator=(BoundsHierarchy&& other);
 
     std::vector<V> findBounds(const tgt::Vector3<T>& p) const;
 
@@ -179,6 +181,9 @@ const Bounds& BoundsHierarchyNode<T,V>::getBounds() const {
         case BoundsHierarchyNodeType::INNER:
             return inner.bounds;
         case BoundsHierarchyNodeType::LEAF:
+            return leaf.bounds;
+        default:
+            tgtAssert(false, "Unknown type");
             return leaf.bounds;
     }
 }
@@ -265,6 +270,18 @@ template<typename T, typename V>
 BoundsHierarchy<T,V>::BoundsHierarchy(const std::vector<std::pair<V, Bounds>>&& bounds)
     : root(buildHierarchy(std::move(bounds)))
 {
+}
+
+template<typename T, typename V>
+BoundsHierarchy<T,V>::BoundsHierarchy(BoundsHierarchy&& other) noexcept
+    : root(std::move(other.root))
+{
+}
+template<typename T, typename V>
+BoundsHierarchy<T,V>& BoundsHierarchy<T,V>::operator=(BoundsHierarchy<T,V>&& other) {
+    this->~BoundsHierarchyNode();
+    new(this) BoundsHierarchy(std::move(other));
+    return *this;
 }
 
 #undef Bounds

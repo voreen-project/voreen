@@ -99,8 +99,8 @@ void GLContextManager::pushContext(GLContextBase* context) {
 
 #ifdef TGT_DEBUG
     std::string indentation;
-    for(size_t i=0; i < contexts_.size(); i++) indentation += "  ";
-    LDEBUG(indentation << "GLContextManager: Pushing Context: " << registered_[context]);
+    for(size_t i=0; i < contexts_.size(); i++) indentation += "* ";
+    LDEBUG(indentation << "Pushing Context: " << registered_[context]);
 #endif
 
     if (!context->isActive())
@@ -124,8 +124,8 @@ void GLContextManager::popContext() {
 
 #ifdef TGT_DEBUG
     std::string indentation;
-    for(size_t i=0; i< contexts_.size(); i++) indentation += "  ";
-    LDEBUG(indentation << "GLContextManager: Poping Context");
+    for(size_t i=0; i< contexts_.size(); i++) indentation += "* ";
+    LDEBUG(indentation << "Poping Context");
 #endif
 
     if (!contexts_.empty() && !contexts_.back()->isActive()) {
@@ -145,11 +145,11 @@ bool GLContextManager::hasActiveContext() const {
 }
 
 bool GLContextManager::isContextActive(GLContextBase* context) const { 
-    return getActiveContext() == context;
+    return getActiveContext() == context && context->isActive();
 }
 
 bool GLContextManager::isMainContextActive() const {
-    return getActiveContext() == mainContext_ && mainContext_->isActive();
+    return isContextActive(mainContext_);
 }
 
 void GLContextManager::activateMainContext() {

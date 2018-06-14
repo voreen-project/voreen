@@ -282,7 +282,7 @@ static tgt::vec3 generate_random_direction(random_engine_type& random_engine) {
 
 static std::unique_ptr<VesselGraph> addEdgesToNodesWithUUIDs(const VesselGraph& input, const std::set<VesselGraphNodeUUID>& uuids, float amount, random_engine_type random_engine) {
     EdgeGenerator edgeGenerator(input);
-    std::unique_ptr<VesselGraph> output(new VesselGraph(input));
+    std::unique_ptr<VesselGraph> output(new VesselGraph(input.clone()));
 
     //Find pairs of nodes that are both connected to one other node:
     std::vector<std::pair<const VesselGraphNode*, const VesselGraphNode*>> pairs;

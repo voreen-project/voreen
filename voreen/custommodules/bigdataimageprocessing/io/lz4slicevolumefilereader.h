@@ -23,39 +23,56 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "lz4slicevolume.h"
+#ifndef VRN_LZ4VOLUMEREADER_H
+#define VRN_LZ4VOLUMEREADER_H
 
-#include <fstream>
+#include "voreen/core/io/volumereader.h"
 
 namespace voreen {
 
-const static std::string METADATA_ROOT_NODE_STRING = "metadata";
+/**
+ * Reader for volumes in the hierarchical data format 5 (LZ4).
+ * http://www.hdfgroup.org/
+ *
+ * LZ4 is a generic data format. DataSets of 3 oder 4 dimensions
+ * in the tree of a file are considered volumes. If present the
+ * fourth dimension indicates the channel. Additional attributes
+ * (e.g. spacing) have to be specified as an Attribute of the
+ * DataSet they describe.
+ *
+ */
+class VRN_CORE_API LZ4SliceVolumeFileReader : public VolumeReader {
+public:
+    LZ4SliceVolumeFileReader();
+    ~LZ4SliceVolumeFileReader() {}
+    virtual VolumeReader* create(ProgressBar* progress = 0) const;
 
-LZ4SliceVolumeMetadata::LZ4SliceVolumeMetadata(tgt::svec3 dimensions)
-    : dimensions_(dimensions)
-{
-}
+    virtual std::string getClassName() const   { return "LZ4SliceVolumeReader"; }
+    virtual std::string getFormatDescription() const { return "LZ4 Slice Volume Format"; }
 
-LZ4SliceVolumeMetadata::LZ4SliceVolumeMetadata(const std::string& xmlfile)
-    : dimensions_(tgt::svec3::one)
-{
-    XmlDeserializer ds;
-    std::ifstream filestream(xmlfile);
-    ds.read(filestream);
-    ds.deserialize(METADATA_ROOT_NODE_STRING, *this);
-}
+    /**
+     * See VolumeReader.
+     */
+    virtual VolumeList* read(const std::string& url);
 
-void LZ4SliceVolumeMetadata::serialize(Serializer& s) const {
-    s.serialize("dimensions", dimensions_);
-}
-void LZ4SliceVolumeMetadata::deserialize(Deserializer& s) {
-    s.deserialize("dimensions", dimensions_);
-}
+    /*
+     * See VolumeReader
+     */
+    virtual VolumeBase* read(const VolumeURL& origin);
 
-void LZ4SliceVolumeMetadata::save(const std::string& xmlfile) const {
-    XmlSerializer ser;
-    std::ofstream filestream(xmlfile);
-    ser.serialize(METADATA_ROOT_NODE_STRING, *this);
-}
+    /**
+     * See VolumeReader.
+     *
+     * All 3 oder 4 dimensional DataSets within the file will be considered a
+     * volume. Location and channel number are distinguish different
+     * volumes in the same file.
+     */
+    virtual std::vector<VolumeURL> listVolumes(const std::string& url) const;
 
-}
+private:
+    static const std::string loggerCat_;
+};
+
+} // namespace voreen
+
+#endif // VRN_LZ4VOLUMEREADER_H

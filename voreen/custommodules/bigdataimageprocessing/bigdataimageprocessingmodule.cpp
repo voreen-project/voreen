@@ -26,6 +26,7 @@
 #include "bigdataimageprocessingmodule.h"
 #include "processors/binarymedian.h"
 #include "processors/connectedcomponentanalysis.h"
+#include "processors/largevolumeformatconversion.h"
 #include "processors/segmentationquantification.h"
 #include "processors/volumeresampletransformation.h"
 
@@ -35,6 +36,8 @@
 
 #include "processors/volumebricksource.h"
 #include "processors/volumebricksave.h"
+
+#include "io/lz4slicevolumefilereader.h"
 
 namespace voreen {
 
@@ -46,6 +49,7 @@ BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& mo
 
     registerProcessor(new BinaryMedian());
     registerProcessor(new ConnectedComponentAnalysis());
+    registerProcessor(new LargeVolumeFormatConversion());
     registerProcessor(new SegmentationQuantification());
     registerProcessor(new VolumeResampleTransformation());
 #ifdef VRN_MODULE_PLOTTING
@@ -54,6 +58,8 @@ BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& mo
 
     registerProcessor(new VolumeBrickSource());
     registerProcessor(new VolumeBrickSave());
+
+    registerVolumeReader(new LZ4SliceVolumeFileReader());
 }
 
 } // namespace

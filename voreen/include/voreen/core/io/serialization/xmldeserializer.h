@@ -445,6 +445,42 @@ public:
      * @param key the XML node key
      * @param data variable to store deserialized data
      *
+     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
+     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
+     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     */
+    void deserialize(const std::string& key, tgt::svec2& data);
+
+    /**
+     * Deserializes the given @c key/data pair.
+     *
+     * @param key the XML node key
+     * @param data variable to store deserialized data
+     *
+     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
+     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
+     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     */
+    void deserialize(const std::string& key, tgt::svec3& data);
+
+    /**
+     * Deserializes the given @c key/data pair.
+     *
+     * @param key the XML node key
+     * @param data variable to store deserialized data
+     *
+     * @throws XmlSerializationNoSuchDataException if no data with the given key can be found.
+     * @throws XmlSerializationFormatException if a XML node is incorrect formatted.
+     * @throws XmlSerializationDuplicateIdException if multiple XML nodes share same id attribute
+     */
+    void deserialize(const std::string& key, tgt::svec4& data);
+
+    /**
+     * Deserializes the given @c key/data pair.
+     *
+     * @param key the XML node key
+     * @param data variable to store deserialized data
+     *
      * @throws SerializationNoSuchDataException if no data with the given key can be found.
      * @throws SerializationFormatException if a XML node is incorrect formatted.
      * @throws SerializationDuplicateIdException if multiple XML nodes share same id attribute

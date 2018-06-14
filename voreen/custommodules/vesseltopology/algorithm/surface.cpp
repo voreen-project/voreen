@@ -31,21 +31,21 @@ namespace voreen {
 /// SurfaceBuilder ---------------------------------------------
 SurfaceBuilder::SurfaceBuilder()
     : filename_(VoreenApplication::app()->getUniqueTmpFilePath())
-    , file_(filename_, std::ios::binary | std::ios::trunc)
     , numVoxelsStored_(0)
+    , file_(filename_, std::ios::binary | std::ios::trunc)
 {
 }
 
 SurfaceBuilder::SurfaceBuilder(SurfaceBuilder&& other)
     : filename_(other.filename_)
-    , file_(std::move(other.file_))
     , numVoxelsStored_(other.numVoxelsStored_)
+    , file_(std::move(other.file_))
 {
 }
 
-StoredSurface SurfaceBuilder::finalize(SurfaceBuilder&& builder) {
-    StoredSurface ret(builder.filename_, builder.numVoxelsStored_);
-    SurfaceBuilder _ = std::move(builder); //destroy builder and thus flush the file
+StoredSurface SurfaceBuilder::finalize() && {
+    StoredSurface ret(filename_, numVoxelsStored_);
+    SurfaceBuilder _ = std::move(*this); //destroy builder and thus flush the file
     return ret;
 }
 
@@ -53,10 +53,12 @@ void SurfaceBuilder::push(uint64_t linearVoxelPos) {
     ++numVoxelsStored_;
     file_.write(reinterpret_cast<char*>(&linearVoxelPos), sizeof(linearVoxelPos));
 }
-void SurfaceBuilder::push_all(std::set<uint64_t> linearVoxelPositions) {
-    for(uint64_t linearpos : linearVoxelPositions) {
-        push(linearpos);
-    }
+void SurfaceBuilder::push_all(SurfaceSlice linearVoxelPositions) {
+    std::sort(linearVoxelPositions.begin(), linearVoxelPositions.end());
+    auto last = unique(linearVoxelPositions.begin(), linearVoxelPositions.end());
+    linearVoxelPositions.erase(last, linearVoxelPositions.end());
+    numVoxelsStored_ += linearVoxelPositions.size();
+    file_.write(reinterpret_cast<char*>(linearVoxelPositions.data()), sizeof(uint64_t) * linearVoxelPositions.size());
 }
 /// SurfaceReader ----------------------------------------------
 SurfaceReader::SurfaceReader(StoredSurface surface)

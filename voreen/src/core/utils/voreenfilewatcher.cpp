@@ -193,19 +193,19 @@ VoreenFileWatchListener::~VoreenFileWatchListener() {
         VoreenApplication::app()->getCommandQueue()->removeAll(this);
 }
 
-void VoreenFileWatchListener::addWatch(const std::string& path) {
+bool VoreenFileWatchListener::addWatch(const std::string& path) {
 
     // Ignore empty paths.
     if (path.empty())
-        return;
+        return true;
 
     // Retrieve parent dir.
     std::string parentDir = tgt::FileSystem::parentDir(path);
     if (parentDir.empty() && VoreenApplication::app())
         parentDir = VoreenApplication::app()->getBasePath();
 
-    if(!tgt::FileSystem::dirExists(parentDir))
-        LERRORC("VoreenFileWatchListener", "Parent directory of '"<< path << "' does not exist. File watching will not work properly.");
+    if (!tgt::FileSystem::dirExists(parentDir))
+        return false;
 
     // Get actual file or folder name (also works for directories).
     std::string name = tgt::FileSystem::fileName(path);
@@ -222,18 +222,17 @@ void VoreenFileWatchListener::addWatch(const std::string& path) {
     watchedPaths_.insert(std::make_pair(parentDir, name));
 
     // If parent directory is already being watched, skip request.
-    if (watchedPaths_.count(parentDir) > 1)
-        return;
-
-    if (isFileWatchEnabled() && VoreenFileWatcher::isInited())
+    if (watchedPaths_.count(parentDir) == 1 && isFileWatchEnabled() && VoreenFileWatcher::isInited())
         VoreenFileWatcher::getRef().requestAddWatch(this, parentDir);
+
+    return true;
 }
 
-void VoreenFileWatchListener::removeWatch(const std::string& path) {
+bool VoreenFileWatchListener::removeWatch(const std::string& path) {
 
     // Ignore empty paths.
     if (path.empty())
-        return;
+        return true;
 
     // Retrieve parent dir.
     std::string parentDir = getParentDir(path);
@@ -257,20 +256,17 @@ void VoreenFileWatchListener::removeWatch(const std::string& path) {
         }
     }
 
-    if (!found) {
-        LERRORC("VoreenFileWatchListener", "Path '" << path << "' is not being watched.");
-        return;
-    }
+    if (!found)
+        return false;
 
     if (single)
         absolutePaths_.erase(path);
 
     // If parent directory is still being watched due to another contained file, skip request.
-    if (watchedPaths_.count(parentDir) != 0)
-        return;
-
-    if (isFileWatchEnabled() && VoreenFileWatcher::isInited())
+    if (watchedPaths_.count(parentDir) == 0 && isFileWatchEnabled() && VoreenFileWatcher::isInited())
         VoreenFileWatcher::getRef().requestRemoveWatch(this, parentDir);
+
+    return true;
 }
 
 void VoreenFileWatchListener::removeAllWatches() {

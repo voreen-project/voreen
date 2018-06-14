@@ -671,7 +671,7 @@ void AsyncComputeProcessor<I,O>::process() {
                     setProgress(0.0f);
                 }
             }
-        } catch(InvalidInputException e) {
+        } catch(InvalidInputException& e) {
             std::string msg = e.what();
             std::string header = "Error starting computation:";
             switch(e.severity_) {

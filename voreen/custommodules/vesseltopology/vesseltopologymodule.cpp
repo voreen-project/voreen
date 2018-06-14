@@ -42,6 +42,7 @@
 #include "processors/vesselgraphsave.h"
 #include "processors/vesselgraphskeletonextractor.h"
 #include "processors/vesselgraphsource.h"
+#include "processors/vesselgraphselector.h"
 #include "processors/vesselgraphstatplotter.h"
 #include "processors/vesselnessextractor.h"
 #include "processors/volumefloodfill.h"
@@ -85,6 +86,7 @@ VesselTopologyModule::VesselTopologyModule(const std::string& modulePath)
     registerProcessor(new VesselGraphSave());
     registerProcessor(new VesselGraphSkeletonExtractor());
     registerProcessor(new VesselGraphSource());
+    registerProcessor(new VesselGraphSelector());
     registerProcessor(new VesselGraphStatPlotter());
     registerProcessor(new VesselnessExtractor());
     registerProcessor(new VolumeFloodFill());

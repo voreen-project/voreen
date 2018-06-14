@@ -57,7 +57,6 @@ resource/voreenve/image
 resource/voreenve/volumes
 resource/voreenve/widgetstyle
 resource/voreenve/workspaces/*
-resource/voreenve/workspaces/additional
 resource/voreenve/workspaces/tools
 
 # tfs
@@ -82,7 +81,6 @@ modules/connexe
 
 modules/devil/*
 modules/deprecated
-modules/dynamicglsl
 
 modules/ffmpeg/*
 modules/ffmpeg/videoencoder

@@ -95,21 +95,31 @@ void VolumeThinning::process() {
     }
 
     auto t_start = std::chrono::high_resolution_clock::now();
-    SubtaskProgressReporterCollection<2> subtaskReporters(*this);
 
-    VolumeMask m(invol, sampleMask, NoFixedForeground(), invol.getRealWorldMapping().realWorldToNormalized(binarizationThreshold_.get()), subtaskReporters.get<0>());
+    float binarizationThreshold = invol.getRealWorldMapping().realWorldToNormalized(binarizationThreshold_.get());
+
+    SubtaskProgressReporterCollection<3> subtaskReporters(*this, {{0.01,0.49,0.50}});
+
+    VolumeMask m(
+            std::move(binarizeVolume(invol, invol.getRealWorldMapping().realWorldToNormalized(binarizationThreshold_.get()),
+                    sampleMask ? SubtaskProgressReporter(subtaskReporters.get<0>(), tgt::vec2(0,0.5)) : subtaskReporters.get<0>())),
+            std::move(sampleMask
+                ? boost::optional<LZ4SliceVolume<uint8_t>>(binarizeVolume(*sampleMask, 0.5, SubtaskProgressReporter(subtaskReporters.get<0>(), tgt::vec2(0.5,1.0))))
+                : boost::none),
+            NoFixedForeground(),
+            subtaskReporters.get<1>());
     switch(thinningAlgorithm_.getValue()) {
         case VolumeMask::MA:
-            m.skeletonize<VolumeMask::MA>(maxSteps_.get(), subtaskReporters.get<1>());
+            m.skeletonize<VolumeMask::MA>(maxSteps_.get(), subtaskReporters.get<2>());
             break;
         case VolumeMask::CHEN:
-            m.skeletonize<VolumeMask::CHEN>(maxSteps_.get(), subtaskReporters.get<1>());
+            m.skeletonize<VolumeMask::CHEN>(maxSteps_.get(), subtaskReporters.get<2>());
             break;
         case VolumeMask::IMPROVED:
-            m.skeletonize<VolumeMask::IMPROVED>(maxSteps_.get(), subtaskReporters.get<1>());
+            m.skeletonize<VolumeMask::IMPROVED>(maxSteps_.get(), subtaskReporters.get<2>());
             break;
         case VolumeMask::IMPROVED_NO_LINE_PRESERVATION:
-            m.skeletonize<VolumeMask::IMPROVED_NO_LINE_PRESERVATION>(maxSteps_.get(), subtaskReporters.get<1>());
+            m.skeletonize<VolumeMask::IMPROVED_NO_LINE_PRESERVATION>(maxSteps_.get(), subtaskReporters.get<2>());
             break;
     }
     VolumeBase* outvol = new Volume(m.toVolumeRAM("uint8"), &invol);

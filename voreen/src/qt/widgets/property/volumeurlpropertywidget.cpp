@@ -28,6 +28,9 @@
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/volume/volume.h"
 #include "voreen/core/voreenapplication.h"
+#include "voreen/core/io/volumereader.h"
+#include "voreen/core/io/volumeserializer.h"
+#include "voreen/core/io/volumeserializerpopulator.h"
 
 #include "voreen/qt/widgets/volumeviewhelper.h"
 #include "voreen/qt/voreenapplicationqt.h"
@@ -54,6 +57,7 @@ const std::string VolumeURLPropertyWidget::loggerCat_("voreen.qt.VolumeHandlePro
 VolumeURLPropertyWidget::VolumeURLPropertyWidget(VolumeURLProperty* volumeHandleProp, QWidget* parent)
     : QPropertyWidget(volumeHandleProp, parent, false)
     , volumeIOHelper_(parent, VolumeIOHelper::SINGLE_FILE)
+    , fileWatchCheckBox_(nullptr)
 #ifdef VRN_MODULE_GDCM
     , dicomConnectionDialog_(new DicomConnectionDialog(this))
 #else
@@ -135,19 +139,39 @@ VolumeURLPropertyWidget::VolumeURLPropertyWidget(VolumeURLProperty* volumeHandle
     updateFromPropertySlot();
 }
 
-VolumeBase* VolumeURLPropertyWidget::getVolume() const {
-
+void VolumeURLPropertyWidget::updateFromPropertySlot() {
     VolumeURLProperty* handleProp = dynamic_cast<VolumeURLProperty*>(prop_);
     if (!handleProp) {
         LWARNING("No volume property");
-        return 0;
+        return;
     }
 
-    return handleProp->getVolume();
-}
+    bool supportFileWatching = fileWatchCheckBox_ != nullptr && handleProp->isFileWatchEditable() && !handleProp->getURL().empty();
+    if (supportFileWatching) {
+        std::string preferredReader = VolumeURL(handleProp->getURL()).getSearchParameter("preferredReader");
+        if (preferredReader.empty()) {
+            if (fileWatchCheckBox_->isEnabled())
+                LWARNING("No preferred reader set. Disabling file watching.");
+            supportFileWatching = false;
+        }
+        else {
+            VolumeSerializerPopulator populator;
+            VolumeReader* reader = populator.getVolumeSerializer()->getReaderByName(preferredReader);
+            supportFileWatching = reader->canSupportFileWatching();
+        }
+    }
 
-void VolumeURLPropertyWidget::updateFromPropertySlot() {
-    VolumeBase* handle = getVolume();
+    // Handle file watching ability.
+    if (supportFileWatching) {
+        fileWatchCheckBox_->setEnabled(true);
+    }
+    else {
+        handleProp->setFileWatchEnabled(false);
+        fileWatchCheckBox_->setChecked(false);
+        fileWatchCheckBox_->setEnabled(false);
+    }
+
+    VolumeBase* handle = handleProp->getVolume();
     if (handle) {
         clearButton_->setEnabled(true);
     }

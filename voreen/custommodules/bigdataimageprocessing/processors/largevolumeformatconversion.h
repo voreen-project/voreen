@@ -23,61 +23,63 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_HDF5VOLUMEREADER_H
-#define VRN_HDF5VOLUMEREADER_H
+#ifndef VRN_LARGEVOLUMEFORMATCONVERSION_H
+#define VRN_LARGEVOLUMEFORMATCONVERSION_H
 
-#include "voreen/core/io/volumereader.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
+
+#include <string>
+#include "voreen/core/processors/volumeprocessor.h"
+#include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/intproperty.h"
+#include "voreen/core/properties/temppathproperty.h"
+#include "../datastructures/lz4slicevolume.h"
 
 namespace voreen {
 
-/**
- * Reader for volumes in the hierarchical data format 5 (HDF5).
- * http://www.hdfgroup.org/
- *
- * HDF5 is a generic data format. DataSets of 3 oder 4 dimensions
- * in the tree of a file are considered volumes. If present the
- * fourth dimension indicates the channel. Additional attributes
- * (e.g. spacing) have to be specified as an Attribute of the
- * DataSet they describe.
- *
- */
-class VRN_CORE_API HDF5VolumeReader : public VolumeReader {
+struct LargeVolumeFormatConversionInput {
+    std::string outputPath_;
+    std::string outputBaseType_;
+    const VolumeBase* inputVolume_;
+};
+struct LargeVolumeFormatConversionOutput {
+    std::unique_ptr<Volume> outputVolume_;
+};
+class VRN_CORE_API LargeVolumeFormatConversion : public AsyncComputeProcessor<LargeVolumeFormatConversionInput, LargeVolumeFormatConversionOutput> {
 public:
-    HDF5VolumeReader();
-    ~HDF5VolumeReader() {}
-    virtual VolumeReader* create(ProgressBar* progress = 0) const;
+    typedef LargeVolumeFormatConversionOutput ComputeOutput;
+    typedef LargeVolumeFormatConversionInput ComputeInput;
 
-    virtual std::string getClassName() const   { return "HDF5VolumeReader"; }
-    virtual std::string getFormatDescription() const { return "3D HDF5 format"; }
+    LargeVolumeFormatConversion();
+    virtual ~LargeVolumeFormatConversion();
+    virtual Processor* create() const;
 
-    /**
-     * See VolumeReader.
-     */
-    virtual VolumeList* read(const std::string& url);
+    virtual std::string getClassName() const { return "LargeVolumeFormatConversion"; }
+    virtual std::string getCategory() const  { return "Volume Processing";      }
+    virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL;        }
 
-    /*
-     * See VolumeReader
-     */
-    virtual VolumeBase* read(const VolumeURL& origin);
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
 
-    /**
-     * See VolumeReader.
-     *
-     * All 3 oder 4 dimensional DataSets within the file will be considered a
-     * volume. Location and channel number are distinguish different
-     * volumes in the same file.
-     */
-    virtual std::vector<VolumeURL> listVolumes(const std::string& url) const;
+    virtual bool usesExpensiveComputation() const { return true; }
 
-    /**
-     * HDF5 format supports filewatching, thus this functions returns true.
-     */
-    virtual bool canSupportFileWatching() const;
-
+protected:
+    virtual void setDescriptions() {
+        setDescription("Converts a multi-channel input volume to an arbitrary multi-channel target format.");
+    }
 private:
-    static const std::string loggerCat_;
+    VolumePort inport_;
+    VolumePort outport_;
+
+    BoolProperty enableProcessing_;
+    StringOptionProperty targetBaseType_;
+    IntProperty numChannels_;
+    TempPathProperty outputVolumeFilePath_;
+
+    static const std::string loggerCat_; ///< category used in logging
 };
 
-} // namespace voreen
+}   //namespace
 
-#endif // VRN_HDF5VOLUMEREADER_H
+#endif // VRN_LARGEVOLUMEFORMATCONVERSION_H
