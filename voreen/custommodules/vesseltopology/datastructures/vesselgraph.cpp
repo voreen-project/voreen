@@ -240,6 +240,7 @@ VesselGraphEdgePathProperties::VesselGraphEdgePathProperties()
     , minRadiusStdDeviation_(INVALID_DATA)
     , maxRadiusAvg_(INVALID_DATA)
     , maxRadiusStdDeviation_(INVALID_DATA)
+    , maxRadiusMax_(INVALID_DATA)
     , avgRadiusAvg_(INVALID_DATA)
     , avgRadiusStdDeviation_(INVALID_DATA)
     , roundnessAvg_(INVALID_DATA)
@@ -255,6 +256,7 @@ bool VesselGraphEdgePathProperties::hasValidData() const {
     tgtAssert(isValid ^ (avgRadiusStdDeviation_ == INVALID_DATA), "Partially invalid data");
     tgtAssert(isValid ^ (maxRadiusAvg_ == INVALID_DATA), "Partially invalid data");
     tgtAssert(isValid ^ (maxRadiusStdDeviation_ == INVALID_DATA), "Partially invalid data");
+    tgtAssert(isValid ^ (maxRadiusMax_ == INVALID_DATA), "Partially invalid data");
     tgtAssert(isValid ^ (roundnessAvg_ == INVALID_DATA), "Partially invalid data");
     tgtAssert(isValid ^ (roundnessStdDeviation_ == INVALID_DATA), "Partially invalid data");
     return isValid;
@@ -301,6 +303,10 @@ VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const Vess
             return v.maxDistToSurface_;
             },
             output.maxRadiusAvg_, output.maxRadiusStdDeviation_);
+    auto maybe_max = std::max_element(path.begin(), path.end(), [](const VesselSkeletonVoxel& v1, const VesselSkeletonVoxel& v2) {
+            return v1.maxDistToSurface_ < v2.maxDistToSurface_;
+            });
+    output.maxRadiusMax_ = maybe_max!=path.end() ? maybe_max->maxDistToSurface_ : INVALID_DATA;
 
     // Compute roundness vals
     statisticalAnalysis<VesselSkeletonVoxel>(path, [] (const VesselSkeletonVoxel& v) {
@@ -508,6 +514,10 @@ float VesselGraphEdge::getMaxRadiusAvg() const {
     return pathProps_.maxRadiusAvg_;
 }
 
+float VesselGraphEdge::getMaxRadiusMax() const {
+    return pathProps_.maxRadiusMax_;
+}
+
 float VesselGraphEdge::getMaxRadiusStdDeviation() const {
     return pathProps_.maxRadiusStdDeviation_;
 }
@@ -535,8 +545,14 @@ float VesselGraphEdge::getEffectiveLength() const {
 }
 
 float VesselGraphEdge::getRelativeBulgeSize() const {
-    float edge_length_contributed_length = std::max(getNode1().estimatedRadius(), getNode2().estimatedRadius());
-    return std::max(0.0f,(getLength() / edge_length_contributed_length) - 1);
+    //float edge_length_contributed_length = std::max(getNode1().estimatedRadius(), getNode2().estimatedRadius());
+    //return std::max(0.0f,(getLength() / edge_length_contributed_length) - 1);
+    if(hasValidData()) {
+        tgtAssert(getMaxRadiusMax() > 0, "Invalid max radius max");
+        return getLength() / std::max(std::numeric_limits<float>::epsilon(), getMaxRadiusMax());
+    } else {
+        return 0;
+    }
 }
 
 bool VesselGraphEdge::isLoop() const {

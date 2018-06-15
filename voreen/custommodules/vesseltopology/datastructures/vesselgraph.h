@@ -138,6 +138,7 @@ struct VesselGraphEdgePathProperties : public Serializable {
     float minRadiusStdDeviation_;
     float maxRadiusAvg_;
     float maxRadiusStdDeviation_;
+    float maxRadiusMax_;
     float avgRadiusAvg_;
     float avgRadiusStdDeviation_;
     float roundnessAvg_;
@@ -180,6 +181,7 @@ struct VesselGraphEdge : public Serializable {
     float getMinRadiusStdDeviation() const;
     float getMaxRadiusAvg() const;
     float getMaxRadiusStdDeviation() const;
+    float getMaxRadiusMax() const;
     float getAvgRadiusAvg() const;
     float getAvgRadiusStdDeviation() const;
     float getRoundnessAvg() const;
