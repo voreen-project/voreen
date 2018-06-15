@@ -378,37 +378,6 @@ struct ClosestVoxelsAdaptorWithPredeterminedID : public VoxelRefResultSetBase {
     }
 };
 
-template<typename E>
-struct KDTreeVoxelFinder {
-    typedef KDTreeBuilder<E> Builder;
-    typedef nanoflann::KDTreeSingleIndexAdaptor<
-		nanoflann::L2_Simple_Adaptor<typename Builder::coord_t, Builder>,
-		Builder,
-		3 /* dim */
-		> Index;
-
-    KDTreeVoxelFinder(Builder&& builder)
-        : storage_(std::move(builder))
-        , index_(3 /*dim */, storage_, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* recommended as a sensible value by library creator */))
-    {
-        index_.buildIndex();
-    }
-
-    /**
-     * Find the closest skeleton voxel(s)
-     */
-    template<class ResultSet>
-    void findClosest(tgt::vec3 rwPos, ResultSet& set) {
-        nanoflann::SearchParams params;
-        params.sorted = false;
-
-        index_.radiusSearchCustomCallback(rwPos.elem, set, params);
-    }
-
-    Builder storage_;
-    Index index_;
-};
-
 /// A reader for the initial graph extraction from a generic input segmentation
 /// It will be binarized on-the-fly
 struct InitialSegmentationSliceReader : public CachingSliceReader {

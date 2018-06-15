@@ -26,6 +26,7 @@
 
 #include <vector>
 #include "../ext/nanoflann/nanoflann.hpp"
+#include "tgt/vector.h"
 
 template<typename E>
 class KDTreeBuilder {
@@ -71,3 +72,35 @@ public:
 private:
     std::vector<E> points_;
 };
+
+template<typename E>
+struct KDTreeVoxelFinder {
+    typedef KDTreeBuilder<E> Builder;
+    typedef nanoflann::KDTreeSingleIndexAdaptor<
+		nanoflann::L2_Simple_Adaptor<typename Builder::coord_t, Builder>,
+		Builder,
+		3 /* dim */
+		> Index;
+
+    KDTreeVoxelFinder(Builder&& builder)
+        : storage_(std::move(builder))
+        , index_(3 /*dim */, storage_, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* recommended as a sensible value by library creator */))
+    {
+        index_.buildIndex();
+    }
+
+    /**
+     * Find the closest skeleton voxel(s)
+     */
+    template<class ResultSet>
+    void findClosest(tgt::vec3 rwPos, ResultSet& set) {
+        nanoflann::SearchParams params;
+        params.sorted = false;
+
+        index_.radiusSearchCustomCallback(rwPos.elem, set, params);
+    }
+
+    Builder storage_;
+    Index index_;
+};
+
