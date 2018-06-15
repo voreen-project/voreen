@@ -86,10 +86,10 @@ private:
 // A node within the vessel graph.
 // It stores its position, references to edges as well as all voxels that define this node.
 struct VesselGraphNode : public Serializable {
-    VesselGraphNode(VesselGraph& graph, size_t id, const tgt::vec3& position, std::vector<tgt::vec3> voxels, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
+    VesselGraphNode(VesselGraph& graph, size_t id, const tgt::vec3& position, std::vector<tgt::vec3> voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
 
     VesselGraphNode(VesselGraphNode&&);
-    void operator=(VesselGraphNode&&);
+    VesselGraphNode& operator=(VesselGraphNode&&);
 
     std::vector<std::reference_wrapper<const VesselGraphEdge>> getEdges() const;
     std::vector<const VesselGraphEdge*> getEdgesAsPtrs() const; //All pointers guaranteed to be non-null
@@ -97,9 +97,8 @@ struct VesselGraphNode : public Serializable {
     int getDegree() const;
     bool isEndNode() const;
     size_t getID() const;
+    float getRadius() const;
     VesselGraphNodeUUID getUUID() const;
-
-    float estimatedRadius() const;
 
     size_t id_;
     VesselGraphNodeUUID uuid_;
@@ -107,6 +106,7 @@ struct VesselGraphNode : public Serializable {
     tgt::vec3 pos_;
     std::vector<tgt::vec3> voxels_;
     bool isAtSampleBorder_;
+    float radius_;
 
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
@@ -275,8 +275,8 @@ public:
     // Insert a new node into the graph and clone it from the given existing node
     size_t insertNode(const VesselGraphNode& base);
     // Insert a new node into the graph and construct it from the given parameters
-    size_t insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>&& voxels, bool isAtSampleBorder);
-    size_t insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>&& voxels, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
+    size_t insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>&& voxels, float radius, bool isAtSampleBorder);
+    size_t insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>&& voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
 
     // Insert a new edge by deriving its properties from the provided path
     size_t insertEdge(size_t node1, size_t node2, const std::vector<VesselSkeletonVoxel>&& path);

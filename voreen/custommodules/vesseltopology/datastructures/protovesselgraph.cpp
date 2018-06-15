@@ -58,7 +58,7 @@ ProtoVesselGraphNode::ProtoVesselGraphNode(uint64_t id, std::vector<tgt::svec3>&
 {
     tgtAssert(!voxels_.empty(), "No voxels");
     tgt::svec3 voxelSum = std::accumulate(voxels_.begin(), voxels_.end(), tgt::svec3::zero);
-    voxelPos_ = tgt::vec3(voxelSum)/static_cast<float>(voxels.size());
+    voxelPos_ = tgt::vec3(voxelSum)/static_cast<float>(voxels_.size());
 }
 
 static EdgeVoxelFinder::Builder transformVoxels(const tgt::mat4& toRWMatrix, const std::vector<tgt::svec3>& voxels) {
@@ -118,7 +118,7 @@ struct ProtoNodeRef {
 
     ProtoNodeRef(const ProtoVesselGraphNode& node, const tgt::mat4& voxelToRw)
         : node_(node)
-        , radius_(std::numeric_limits<float>::infinity())
+        , radius_(0)
         , rwPos_(voxelToRw.transform(node.voxelPos_))
     {
     }
@@ -212,14 +212,16 @@ struct ClosestProtoNodeAdaptor {
 };
 
 static boost::optional<uint64_t> findNearOtherEdgeID(const BranchIdVolumeReader& segmentedVolumeReader, const tgt::ivec3& currentPos, uint64_t centerID) {
-    for(int dz = -1; dz <= 1; ++dz) {
-        for(int dy = -1; dy <= 1; ++dy) {
-            for(int dx = -1; dx <= 1; ++dx) {
-                tgt::ivec3 dp = tgt::ivec3(-1, -1, -1);
-                if (dp == tgt::ivec3::zero) {
+    tgt::ivec3 minPos = tgt::max(tgt::ivec3::zero, currentPos - tgt::ivec3(1, 1, 1));
+    tgt::ivec3 maxPos = tgt::min(tgt::ivec3(segmentedVolumeReader.getDimensions()), currentPos + tgt::ivec3(2,2,2));
+    for(int z = minPos.z; z < maxPos.z; ++z) {
+        for(int y = minPos.y; y < maxPos.y; ++y) {
+            for(int x = minPos.x; x < maxPos.x; ++x) {
+                tgt::ivec3 pos(x,y,z);
+                if (pos == currentPos) {
                     continue;
                 }
-                uint64_t id = segmentedVolumeReader.getEdgeId(currentPos + dp);
+                uint64_t id = segmentedVolumeReader.getEdgeId(pos);
                 if(id != centerID && id != BranchIdVolumeReader::INVALID_EDGE_ID) {
                     return id;
                 }
@@ -327,7 +329,7 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
 
                     if(closestNode.found()) {
                         ProtoNodeRef& node = nodeFinder.storage_.points().at(closestNode.best_);
-                        node.radius_ = std::max(node.radius_, closestNode.currentDist_);
+                        node.radius_ = std::max(node.radius_, std::sqrt(closestNode.currentDist_));
                     }
                 }
             }
@@ -336,17 +338,15 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
     progress.setProgress(1.0f);
 
     // Create nodes
-    for(const auto& node : nodes_) {
-        size_t numVoxels = 0;
-        tgt::vec3 sum = tgt::vec3::zero;
+    for(const ProtoNodeRef& nodeRef : nodeFinder.storage_.points()) {
+        const ProtoVesselGraphNode& node = nodeRef.node_;
         std::vector<tgt::vec3> rwBrachVoxels;
         for(const auto& p : node.voxels_) {
             tgt::vec3 rwpos = toRWMatrix.transform(tgt::vec3(p));
-            sum += rwpos;
             rwBrachVoxels.push_back(rwpos);
-            ++numVoxels;
         }
-        size_t id = graph->insertNode(sum/static_cast<float>(numVoxels), std::move(rwBrachVoxels), node.atSampleBorder_);
+        tgtAssert(!std::isnan(tgt::hmul(nodeRef.rwPos_)), "Invalid pos");
+        size_t id = graph->insertNode(nodeRef.rwPos_, std::move(rwBrachVoxels), nodeRef.radius_, node.atSampleBorder_);
         tgtAssert(id == node.id_, "ID mismatch");
     }
 

@@ -186,6 +186,8 @@ private:
 
 template<typename Voxel, uint64_t neighborhoodExtent>
 class LZ4SliceVolumeReader {
+
+    const static boost::optional<VolumeAtomic<Voxel>> NO_SLICE;
     const static uint64_t neighborhoodSize = 2*neighborhoodExtent+1;
     static int sliceStorageIndextoSlicePosOffset(int sliceIndex) {
         return sliceIndex - neighborhoodExtent;
@@ -423,6 +425,9 @@ const VolumeAtomic<Voxel>& LZ4SliceVolumeSliceCacher<Voxel>::getSlice(size_t sli
 /// LZ4SliceVolumeReader --------------------------------------------------
 
 template<typename Voxel, uint64_t neighborhoodExtent>
+const boost::optional<VolumeAtomic<Voxel>> LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::NO_SLICE;
+
+template<typename Voxel, uint64_t neighborhoodExtent>
 LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::LZ4SliceVolumeReader(const LZ4SliceVolume<Voxel>& volume)
     : volume_(volume)
     , slices_()
@@ -466,8 +471,11 @@ const LZ4SliceVolume<Voxel>& LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::ge
 template<typename Voxel, uint64_t neighborhoodExtent>
 const boost::optional<VolumeAtomic<Voxel>>& LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::getSlice(int sliceNumber) const {
     int sliceStorageIndex = slicePosOffsetToSliceStorageIndex(sliceNumber - pos_);
-    tgtAssert(0 <= sliceStorageIndex && sliceStorageIndex < neighborhoodSize, "Invalid slice number");
-    return slices_[sliceStorageIndex];
+    if(0 <= sliceStorageIndex && sliceStorageIndex < neighborhoodSize) {
+        return slices_[sliceStorageIndex];
+    } else {
+        return NO_SLICE;
+    }
 }
 
 template<typename Voxel, uint64_t neighborhoodExtent>

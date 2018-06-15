@@ -83,49 +83,46 @@ void VesselSkeletonVoxel::deserialize(Deserializer& s) {
 
 
 // VesselGraphNode -------------------------------------------------------------------------
-VesselGraphNode::VesselGraphNode(VesselGraph& graph, size_t id, const tgt::vec3& position, std::vector<tgt::vec3> voxels, bool isAtSampleBorder, VesselGraphNodeUUID uuid)
-    : graph_(&graph)
-    , id_(id)
+VesselGraphNode::VesselGraphNode(VesselGraph& graph, size_t id, const tgt::vec3& position, std::vector<tgt::vec3> voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid)
+    : id_(id)
+    , uuid_(uuid)
     , edges_()
     , pos_(position)
     , voxels_(voxels)
     , isAtSampleBorder_(isAtSampleBorder)
-    , uuid_(uuid)
+    , radius_(radius)
+    , graph_(&graph)
 {
 }
 VesselGraphNode::VesselGraphNode(VesselGraphNode&& other)
-    : graph_(other.graph_)
-    , id_(other.id_)
+    : id_(other.id_)
+    , uuid_(std::move(other.uuid_))
     , edges_(std::move(other.edges_))
     , pos_(other.pos_)
     , voxels_(std::move(other.voxels_))
     , isAtSampleBorder_(other.isAtSampleBorder_)
-    , uuid_(std::move(other.uuid_))
+    , radius_(other.radius_)
+    , graph_(other.graph_)
 {
     other.graph_ = nullptr;
 }
-void VesselGraphNode::operator=(VesselGraphNode&& other)
+VesselGraphNode& VesselGraphNode::operator=(VesselGraphNode&& other)
 {
-
-    graph_ = other.graph_;
-    id_ = other.id_;
-    edges_ = std::move(other.edges_);
-    pos_ = other.pos_;
-    voxels_ = std::move(other.voxels_);
-    isAtSampleBorder_ = other.isAtSampleBorder_;
-
-    other.graph_ = nullptr;
+    this->~VesselGraphNode();
+    new(this) VesselGraphNode(std::move(other));
+    return *this;
 }
 
 // ONLY used for deserialization
 VesselGraphNode::VesselGraphNode()
-    : graph_(nullptr)
-    , id_(-1)
+    : id_(-1)
+    , uuid_()
     , edges_()
     , pos_()
     , voxels_()
     , isAtSampleBorder_(false)
-    , uuid_()
+    , radius_(std::numeric_limits<float>::quiet_NaN())
+    , graph_(nullptr)
 {
 }
 
@@ -170,23 +167,15 @@ VesselGraphNodeUUID VesselGraphNode::getUUID() const {
 size_t VesselGraphNode::getID() const {
     return id_;
 }
-float VesselGraphNode::estimatedRadius() const {
-    float max_rad_of_connected_edges = 0;
-    for(const auto& edge : getEdges()) {
-        if(edge.get().hasValidData()) {
-            float rad = edge.get().getAvgRadiusAvg();
-            if(rad > max_rad_of_connected_edges) {
-                max_rad_of_connected_edges = rad;
-            }
-        }
-    }
-    return max_rad_of_connected_edges;
+float VesselGraphNode::getRadius() const {
+    return radius_;
 }
 void VesselGraphNode::serialize(Serializer& s) const {
     s.serialize("id", id_);
     s.serialize("edges", edges_);
     s.serialize("pos", pos_);
     s.serialize("voxels_", voxels_);
+    s.serialize("radius", radius_);
     s.serialize("isAtSampleBorder", isAtSampleBorder_);
 }
 void VesselGraphNode::deserialize(Deserializer& s) {
@@ -194,6 +183,7 @@ void VesselGraphNode::deserialize(Deserializer& s) {
     s.deserialize("edges", edges_);
     s.deserialize("pos", pos_);
     s.deserialize("voxels_", voxels_);
+    s.deserialize("radius", radius_);
     s.deserialize("isAtSampleBorder", isAtSampleBorder_);
 }
 
@@ -314,6 +304,7 @@ VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const Vess
             },
             output.roundnessAvg_, output.roundnessStdDeviation_);
 
+    tgtAssert(!std::isnan(output.length_), "Invalid length");
     return output;
 }
 void VesselGraphEdgePathProperties::serialize(Serializer& s) const {
@@ -358,6 +349,8 @@ VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, size_t id, size_t node1ID, 
 
     // Compute path properties
     pathProps_ = VesselGraphEdgePathProperties::fromPath(node1, node2, voxels_);
+
+    tgtAssert(!std::isnan(getLength()), "Invalid length");
 }
 
 VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, size_t id, size_t node1ID, size_t node2ID, VesselGraphEdgePathProperties pathProps, VesselGraphEdgeUUID uuid)
@@ -374,6 +367,8 @@ VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, size_t id, size_t node1ID, 
     VesselGraphNode& node2 = getNode2();
     // Compute distance
     distance_ = tgt::distance(node1.pos_, node2.pos_);
+
+    tgtAssert(!std::isnan(getLength()), "Invalid length");
 }
 
 VesselGraphEdge::VesselGraphEdge(VesselGraphEdge&& other)
@@ -541,17 +536,33 @@ float VesselGraphEdge::getElongation() const {
 }
 
 float VesselGraphEdge::getEffectiveLength() const {
-    return std::max(0.0f, pathProps_.length_ - getNode1().estimatedRadius() - getNode2().estimatedRadius());
+    return std::max(0.0f, getLength() - getNode1().getRadius() - getNode2().getRadius());
 }
 
 float VesselGraphEdge::getRelativeBulgeSize() const {
     //float edge_length_contributed_length = std::max(getNode1().estimatedRadius(), getNode2().estimatedRadius());
     //return std::max(0.0f,(getLength() / edge_length_contributed_length) - 1);
     if(hasValidData()) {
-        tgtAssert(getMaxRadiusMax() > 0, "Invalid max radius max");
-        return getLength() / std::max(std::numeric_limits<float>::epsilon(), getMaxRadiusMax());
+        if(getNode1().isEndNode() == getNode2().isEndNode()) {
+            return -1;
+        }
+        //const VesselGraphNode* endNode;
+        const VesselGraphNode* branchNode;
+        if(getNode1().isEndNode()) {
+            //endNode = &getNode1();
+            branchNode = &getNode2();
+        } else {
+            //endNode = &getNode2();
+            branchNode = &getNode1();
+        }
+        float parentVesselRadius = getMaxRadiusMax();
+        if(branchNode->getRadius() > 0) {
+            parentVesselRadius = std::min(parentVesselRadius, branchNode->getRadius());
+        }
+        tgtAssert(parentVesselRadius > 0, "Invalid parent vessel radius");
+        return getLength() / parentVesselRadius;
     } else {
-        return 0;
+        return -1;
     }
 }
 
@@ -653,7 +664,7 @@ VesselGraph VesselGraph::clone() const {
     VesselGraph res(getBounds());
     for(auto& node: nodes_) {
         std::vector<tgt::vec3> voxels(node.voxels_);
-        res.insertNode(node.pos_, std::move(voxels), node.isAtSampleBorder_, node.getUUID());
+        res.insertNode(node.pos_, std::move(voxels), node.getRadius(), node.isAtSampleBorder_, node.getUUID());
     }
 
     for(auto& edge: edges_) {
@@ -680,17 +691,17 @@ VesselGraphEdge& VesselGraph::getEdge(size_t i) {
 }
 size_t VesselGraph::insertNode(const VesselGraphNode& base) {
     std::vector<tgt::vec3> new_voxels(base.voxels_);
-    return insertNode(base.pos_, std::move(new_voxels), base.isAtSampleBorder_, base.getUUID());
+    return insertNode(base.pos_, std::move(new_voxels), base.getRadius(), base.isAtSampleBorder_, base.getUUID());
 }
 
-size_t VesselGraph::insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>&& voxels, bool isAtSampleBorder) {
-    return insertNode(position, std::move(voxels), isAtSampleBorder, VoreenApplication::app()->generateUUID());
+size_t VesselGraph::insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>&& voxels, float radius, bool isAtSampleBorder) {
+    return insertNode(position, std::move(voxels), radius, isAtSampleBorder, VoreenApplication::app()->generateUUID());
 }
-size_t VesselGraph::insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>&& voxels, bool isAtSampleBorder, VesselGraphNodeUUID uuid) {
+size_t VesselGraph::insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>&& voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid) {
     size_t edgeID = nodes_.size();
     bounds_.addPoint(position);
     //TODO: add voxels as well?
-    nodes_.emplace_back(*this, edgeID, position, std::move(voxels), isAtSampleBorder, uuid);
+    nodes_.emplace_back(*this, edgeID, position, std::move(voxels), radius, isAtSampleBorder, uuid);
     return edgeID;
 }
 

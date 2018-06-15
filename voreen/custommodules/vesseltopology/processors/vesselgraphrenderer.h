@@ -157,7 +157,7 @@ protected:
     BoolProperty enabled_;
     ShaderProperty shader_;
     ShaderProperty activeEdgeShader_;
-    BoolProperty renderEnclosingSpheres_;
+    BoolProperty renderNodeRadii_;
     FloatProperty nodeRadiusMultiplier_;
     FloatProperty edgeCrossSectionMultiplier_;
     ArbitraryHistogramTF<VesselGraphNode> nodeDegreeTF_;

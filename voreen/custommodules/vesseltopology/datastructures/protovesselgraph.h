@@ -275,7 +275,7 @@ struct BranchIdVolumeReader {
     }
 
 
-    LZ4SliceVolumeReader<uint32_t, 0> branchIdReader_;
+    LZ4SliceVolumeReader<uint32_t, 1> branchIdReader_;
     LZ4SliceVolumeReader<uint8_t, 1> segmentationReader_;
     //const VolumeBase& segmentationVolume_;
     std::vector<uint64_t> ccaToEdgeIdTable_;

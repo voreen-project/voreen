@@ -498,7 +498,7 @@ static std::unique_ptr<VesselGraph> subdivideEdgesWithUUIDs(const VesselGraph& i
         ContinuousPathPos split(edge, random_engine);
         tgt::vec3 split_pos = split.splitLocation();
 
-        size_t split_node_id = output->insertNode(split_pos, std::vector<tgt::vec3>(), false);
+        size_t split_node_id = output->insertNode(split_pos, std::vector<tgt::vec3>(), 0.0f, false);
 
         // First path part
         auto split_left = split.splitPathLeft();
@@ -534,7 +534,7 @@ static std::unique_ptr<VesselGraph> subdivideEdgesWithUUIDs(const VesselGraph& i
         tgt::vec3 new_direction = generate_random_direction(random_engine);
 
         tgt::vec3 new_node_pos = split_pos + new_direction*new_length;
-        size_t new_node_id = output->insertNode(new_node_pos, std::vector<tgt::vec3>(), false);
+        size_t new_node_id = output->insertNode(new_node_pos, std::vector<tgt::vec3>(), 0.0f, false);
 
         VesselGraphEdgePathProperties new_edge_properties = edge.getPathProperties();
         // Again, we assume that radius, roundness, etc. do not change
@@ -590,7 +590,7 @@ static std::unique_ptr<VesselGraph> splitEdgesWithUUIDs(const VesselGraph& input
         {
             // First path part
             tgt::vec3 split_pos_l = split_l.splitLocation();
-            size_t split_node_id_l = output->insertNode(split_pos_l, std::vector<tgt::vec3>(), false);
+            size_t split_node_id_l = output->insertNode(split_pos_l, std::vector<tgt::vec3>(), 0.0f, false);
 
             auto path_left = split_l.splitPathLeft();
             if(path_left.empty()) {
@@ -609,7 +609,7 @@ static std::unique_ptr<VesselGraph> splitEdgesWithUUIDs(const VesselGraph& input
         {
             // Second path part
             tgt::vec3 split_pos_r = split_r.splitLocation();
-            size_t split_node_id_r = output->insertNode(split_pos_r, std::vector<tgt::vec3>(), false);
+            size_t split_node_id_r = output->insertNode(split_pos_r, std::vector<tgt::vec3>(), 0.0f, false);
 
             auto path_right = split_r.splitPathRight();
             if(path_right.empty()) {
@@ -652,7 +652,7 @@ static std::unique_ptr<VesselGraph> moveNodes(const VesselGraph& input, float am
             voxels.push_back(v + shift);
         }
 
-        output->insertNode(node.pos_+ shift, std::move(voxels), node.isAtSampleBorder_, node.getUUID());
+        output->insertNode(node.pos_+ shift, std::move(voxels), node.getRadius(), node.isAtSampleBorder_, node.getUUID());
     }
 
     for(auto& edge : input.getEdges()) {

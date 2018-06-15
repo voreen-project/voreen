@@ -55,6 +55,7 @@ VesselGraphRenderer::VesselGraphRenderer()
             })
     , activeEdgeProperty_("activeEdgeProperty", "Active edge property")
     , edgeTFs_()
+    , renderNodeRadii_("renderNodeRadii", "Render Node Radii", true)
     , activeEdgeID_("activeEdgeID", "Active Edge ID", -1, -1, std::numeric_limits<int>::max()/2) // This is stupid. Somehow Qt divides by 0 if we set INT_MAX and causes a SIGFPE...
     , activeEdgeColor_("activeEdgeColor", "Active Edge Color", tgt::Color(0.25f, 0.75f, 0.f, 1.f))
     , enableLighting_("enableLighting", "Enable Lighting", false)
@@ -83,6 +84,7 @@ VesselGraphRenderer::VesselGraphRenderer()
     ADD_EDGE_PROPERTY(RELATIVE_BULGE_SIZE, RelativeBulgeSize, "Relative Bulge Size")
 
     addProperty(enabled_);
+    addProperty(renderNodeRadii_);
     addProperty(nodeRadiusMultiplier_);
     addProperty(edgeCrossSectionMultiplier_);
     addProperty(nodeDegreeTF_.getProperty());
@@ -209,7 +211,13 @@ void VesselGraphRenderer::render() {
     for(const VesselGraphNode& node : graph->getNodes()) {
         MatStack.pushMatrix();
         MatStack.translate(node.pos_);
-        MatStack.scale(tgt::vec3(nodeRadius));
+        float r;
+        if(renderNodeRadii_.get()) {
+            r = std::max(node.getRadius(), nodeRadius);
+        } else {
+            r = nodeRadius;
+        }
+        MatStack.scale(tgt::vec3(r));
         // set matrix stack uniforms
         shader->setUniform("modelViewMatrixStack_", MatStack.getModelViewMatrix());
         shader->setUniform("modelViewProjectionMatrixStack_", MatStack.getProjectionMatrix() * MatStack.getModelViewMatrix());
