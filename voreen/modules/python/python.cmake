@@ -29,9 +29,8 @@ IF(WIN32)
     )
 
 ELSEIF(UNIX)
-    # this is a hack to prevent CMake from finding python 3 instead of 2.7
-    MESSAGE(STATUS "Trying to find Python 2.7 version...")
-    FIND_PACKAGE(PythonLibs "2.7" EXACT)
+    MESSAGE(STATUS "Trying to find Python 3 version...")
+    FIND_PACKAGE(PythonLibs "3")
     IF(PYTHONLIBS_FOUND)
         MESSAGE(STATUS "  - Found Python library")
         SET(MOD_INCLUDE_DIRECTORIES ${PYTHON_INCLUDE_DIRS})

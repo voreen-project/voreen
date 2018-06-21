@@ -39,21 +39,27 @@
 #include "voreen/core/voreenapplication.h"
 
 #include "voreen/core/properties/boolproperty.h"
+#include "voreen/core/properties/boundingboxproperty.h"
 #include "voreen/core/properties/buttonproperty.h"
 #include "voreen/core/properties/cameraproperty.h"
-#include "voreen/core/properties/filedialogproperty.h"
+//#include "voreen/core/properties/colorproperty.h" // covered by FloatVec4Property
+//#include "voreen/core/properties/filedialogproperty.h" // covered by StringProperty
 #include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/fontproperty.h"
 #include "voreen/core/properties/intproperty.h"
+//#include "voreen/core/properties/lightsourceproperty.h" // covered by FloatVec4Property
 #include "voreen/core/properties/matrixproperty.h"
 #include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/planeproperty.h"
 #include "voreen/core/properties/propertyvector.h"
 #include "voreen/core/properties/shaderproperty.h"
 #include "voreen/core/properties/stringproperty.h"
-#include "voreen/core/properties/transfunc/1d/1dkeys/transfunc1dkeysproperty.h"
+//#include "voreen/core/properties/temppathproperty.h" // covered by FileDialogProperty
 #include "voreen/core/properties/vectorproperty.h"
 #include "voreen/core/properties/volumeurllistproperty.h"
-#include "voreen/core/properties/volumeurlproperty.h"
+//#include "voreen/core/properties/volumeurlproperty.h" // covered by StringProperty
+//#include "voreen/core/properties/color/colorswitchproperty.h" // covered by ColorProperty
+#include "voreen/core/properties/transfunc/1d/1dkeys/transfunc1dkeysproperty.h"
 
 #include "voreen/core/datastructures/transfunc/1d/1dkeys/transfunc1dkeys.h"
 #include "voreen/core/network/processornetwork.h"
@@ -198,14 +204,14 @@ static PyObject* voreen_setPropertyValue(PyObject* /*self*/, PyObject* args) {
     }
 
     // check parameter 1 and 2, if they are strings
-    if (!PyString_Check(PyTuple_GetItem(args, 0)) || !PyString_Check(PyTuple_GetItem(args, 1))) {
+    if (!PyUnicode_Check(PyTuple_GetItem(args, 0)) || !PyUnicode_Check(PyTuple_GetItem(args, 1))) {
         PyErr_SetString(PyExc_TypeError, "setPropertyValue() arguments 1 and 2 must be strings");
         return 0;
     }
 
     // read processor name and property id
-    char* processorName = PyString_AsString(PyTuple_GetItem(args, 0));
-    char* propertyID = PyString_AsString(PyTuple_GetItem(args, 1));
+    char* processorName = PyUnicodeAsString(PyTuple_GetItem(args, 0));
+    char* propertyID = PyUnicodeAsString(PyTuple_GetItem(args, 1));
     if (!processorName || !propertyID) {
         PyErr_SetString(PyExc_TypeError, "setPropertyValue() arguments 1 and 2 must be strings");
         return 0;
@@ -217,21 +223,7 @@ static PyObject* voreen_setPropertyValue(PyObject* /*self*/, PyObject* args) {
         return 0;
 
     // determine property type, convert and assign value
-    if (IntProperty* typedProp = dynamic_cast<IntProperty*>(property)) {
-        int value;
-        if (!PyArg_ParseTuple(args, "ssi:setPropertyValue", &processorName, &propertyID, &value))
-            return 0;
-        if (setPropertyValue<IntProperty, int>(typedProp, value, "setPropertyValue"))
-            Py_RETURN_NONE;
-    }
-    else if (FloatProperty* typedProp = dynamic_cast<FloatProperty*>(property)) {
-        float value;
-        if (!PyArg_ParseTuple(args, "ssf:setPropertyValue", &processorName, &propertyID, &value))
-            return 0;
-        if (setPropertyValue<FloatProperty, float>(typedProp, value, "setPropertyValue"))
-            Py_RETURN_NONE;
-    }
-    else if (BoolProperty* typedProp = dynamic_cast<BoolProperty*>(property)) {
+    if (BoolProperty* typedProp = dynamic_cast<BoolProperty*>(property)) {
         char value;
         if (!PyArg_ParseTuple(args, "ssb:setPropertyValue", &processorName, &propertyID, &value))
             return 0;
@@ -243,10 +235,64 @@ static PyObject* voreen_setPropertyValue(PyObject* /*self*/, PyObject* args) {
         typedProp->clicked();
         Py_RETURN_NONE;
     }
+    else if (CameraProperty* typedProp = dynamic_cast<CameraProperty*>(property)) {
+        tgt::vec3 position, focus, up;
+        if (!PyArg_ParseTuple(args, "ss((fff)(fff)(fff)):setPropertyValue",
+                              &processorName, &propertyID,
+                              &position.x, &position.y, &position.z,
+                              &focus.x, &focus.y, &focus.z,
+                              &up.x, &up.y, &up.z))
+            return 0;
+
+        typedProp->setPosition(position);
+        typedProp->setFocus(focus);
+        typedProp->setUpVector(up);
+        Py_RETURN_NONE;
+    }
+    else if (FloatProperty* typedProp = dynamic_cast<FloatProperty*>(property)) {
+        float value;
+        if (!PyArg_ParseTuple(args, "ssf:setPropertyValue", &processorName, &propertyID, &value))
+            return 0;
+        if (setPropertyValue<FloatProperty, float>(typedProp, value, "setPropertyValue"))
+            Py_RETURN_NONE;
+    }
+    else if (IntProperty* typedProp = dynamic_cast<IntProperty*>(property)) {
+        int value;
+        if (!PyArg_ParseTuple(args, "ssi:setPropertyValue", &processorName, &propertyID, &value))
+            return 0;
+        if (setPropertyValue<IntProperty, int>(typedProp, value, "setPropertyValue"))
+            Py_RETURN_NONE;
+    }
+    else if (PlaneProperty* typedProp = dynamic_cast<PlaneProperty*>(property)) {
+        tgt::plane value;
+        if (!PyArg_ParseTuple(args, "ss(fff)f:setPropertyValue", &processorName, &propertyID,
+                              &value.n.x, &value.n.y, &value.n.z, &value.d))
+            return 0;
+        if (setPropertyValue<PlaneProperty, tgt::plane>(typedProp, value, "setPropertyValue"))
+            Py_RETURN_NONE;
+    }
+    else if (ShaderProperty* typedProp = dynamic_cast<ShaderProperty*>(property)) {
+        char* vertexFilename;
+        char* geometryFilename;
+        char* fragmentFilename;
+
+        if (!PyArg_ParseTuple(args, "sssss:setPropertyValue", &processorName, &propertyID,
+                              &vertexFilename, &geometryFilename, &fragmentFilename))
+            return 0;
+
+        ShaderSource value(ShaderFileList
+                           (tgt::ShaderObject::VERTEX_SHADER, vertexFilename)
+                           (tgt::ShaderObject::GEOMETRY_SHADER, geometryFilename)
+                           (tgt::ShaderObject::FRAGMENT_SHADER, fragmentFilename));
+
+        if (setPropertyValue<ShaderProperty, ShaderSource>(typedProp, value, "setPropertyValue"))
+            Py_RETURN_NONE;
+    }
     else if (StringProperty* typedProp = dynamic_cast<StringProperty*>(property)) {
         char* value;
         if (!PyArg_ParseTuple(args, "sss:setPropertyValue", &processorName, &propertyID, &value))
             return 0;
+
         if (setPropertyValue<StringProperty, std::string>(typedProp, std::string(value), "setPropertyValue"))
             Py_RETURN_NONE;
     }
@@ -255,6 +301,26 @@ static PyObject* voreen_setPropertyValue(PyObject* /*self*/, PyObject* args) {
         if (!PyArg_ParseTuple(args, "sss:setPropertyValue", &processorName, &propertyID, &value))
             return 0;
         if (setPropertyValue<OptionPropertyBase, std::string>(typedProp, std::string(value), "setPropertyValue"))
+            Py_RETURN_NONE;
+    }
+    else if (IntBoundingBoxProperty* typedProp = dynamic_cast<IntBoundingBoxProperty*>(property)) {
+        tgt::ivec3 llf, urb;
+        if (!PyArg_ParseTuple(args, "ss(iii)(iii):setPropertyValue", &processorName, &propertyID,
+                              &llf.x, &llf.y, &llf.z, &urb.x, &urb.y, &urb.z))
+            return 0;
+
+        tgt::IntBounds value(llf, urb);
+        if (setPropertyValue<IntBoundingBoxProperty, tgt::IntBounds>(typedProp, value, "setPropertyValue"))
+            Py_RETURN_NONE;
+    }
+    else if (FloatBoundingBoxProperty* typedProp = dynamic_cast<FloatBoundingBoxProperty*>(property)) {
+        tgt::vec3 llf, urb;
+        if (!PyArg_ParseTuple(args, "ss(fff)(fff):setPropertyValue", &processorName, &propertyID,
+                              &llf.x, &llf.y, &llf.z, &urb.x, &urb.y, &urb.z))
+            return 0;
+
+        tgt::Bounds value(llf, urb);
+        if (setPropertyValue<FloatBoundingBoxProperty, tgt::Bounds>(typedProp, value, "setPropertyValue"))
             Py_RETURN_NONE;
     }
     else if (IntVec2Property* typedProp = dynamic_cast<IntVec2Property*>(property)) {
@@ -343,20 +409,6 @@ static PyObject* voreen_setPropertyValue(PyObject* /*self*/, PyObject* args) {
         if (setPropertyValue<FloatMat4Property, tgt::mat4>(typedProp, value, "setPropertyValue"))
             Py_RETURN_NONE;
     }
-    else if (CameraProperty* typedProp = dynamic_cast<CameraProperty*>(property)) {
-        tgt::vec3 position, focus, up;
-        if (!PyArg_ParseTuple(args, "ss((fff)(fff)(fff)):setPropertyValue",
-                &processorName, &propertyID,
-                &position.x, &position.y, &position.z,
-                &focus.x, &focus.y, &focus.z,
-                &up.x, &up.y, &up.z))
-            return 0;
-
-        typedProp->setPosition(position);
-        typedProp->setFocus(focus);
-        typedProp->setUpVector(up);
-        Py_RETURN_NONE;
-    }
 
 
     // we only get here, if property value assignment has failed or
@@ -388,16 +440,56 @@ static PyObject* voreen_getPropertyValue(PyObject* /*self*/, PyObject* args) {
 
     // determine property type and return value, if type compatible
     PyObject* result = (PyObject*)-1; //< to determine whether Py_BuildValue has been executed
-    if (IntProperty* typedProp = dynamic_cast<IntProperty*>(property))
-        result = Py_BuildValue("i", typedProp->get());
-    else if (FloatProperty* typedProp = dynamic_cast<FloatProperty*>(property))
-        result = Py_BuildValue("f", typedProp->get());
-    else if (BoolProperty* typedProp = dynamic_cast<BoolProperty*>(property))
+    if (BoolProperty* typedProp = dynamic_cast<BoolProperty*>(property)) {
         result = Py_BuildValue("b", typedProp->get());
-    else if (StringProperty* typedProp = dynamic_cast<StringProperty*>(property))
+    }
+    else if (CameraProperty* typedProp = dynamic_cast<CameraProperty*>(property)) {
+        tgt::vec3 position = typedProp->get().getPosition();
+        tgt::vec3 focus = typedProp->get().getFocus();
+        tgt::vec3 upVector = typedProp->get().getUpVector();
+        result = Py_BuildValue("([fff][fff][fff])",
+                               position.x, position.y, position.z,
+                               focus.x, focus.y, focus.z,
+                               upVector.x, upVector.y, upVector.z
+        );
+    }
+    else if (FloatProperty* typedProp = dynamic_cast<FloatProperty*>(property)) {
+        result = Py_BuildValue("f", typedProp->get());
+    }
+    else if (IntProperty* typedProp = dynamic_cast<IntProperty*>(property)) {
+        result = Py_BuildValue("i", typedProp->get());
+    }
+    else if (PlaneProperty* typedProp = dynamic_cast<PlaneProperty*>(property)) {
+        tgt::vec3 normal = typedProp->get().n;
+        float d = typedProp->get().d;
+        result = Py_BuildValue("([fff]f)",
+                               &normal.x, &normal.y, &normal.z,
+                               d
+        );
+    }
+    //else if (ShaderProperty* typedProp = dynamic_cast<ShaderProperty*>(property)) {
+        // Not supported due to dynamic document count
+    //}
+    else if (StringProperty* typedProp = dynamic_cast<StringProperty*>(property)) {
         result = Py_BuildValue("s", typedProp->get().c_str());
-    else if (OptionPropertyBase* typedProp = dynamic_cast<OptionPropertyBase*>(property))
+    }
+    else if (OptionPropertyBase* typedProp = dynamic_cast<OptionPropertyBase*>(property)) {
         result = Py_BuildValue("s", typedProp->get().c_str());
+    }
+    else if (IntBoundingBoxProperty* typedProp = dynamic_cast<IntBoundingBoxProperty*>(property)) {
+        tgt::IntBounds value = typedProp->get();
+        result = Py_BuildValue("[[iii][iii]]",
+                               value.getLLF().x, value.getLLF().y, value.getLLF().z,
+                               value.getURB().x, value.getURB().y, value.getURB().z
+        );
+    }
+    else if (FloatBoundingBoxProperty* typedProp = dynamic_cast<FloatBoundingBoxProperty*>(property)) {
+        tgt::Bounds value = typedProp->get();
+        result = Py_BuildValue("[[fff][fff]]",
+                               value.getLLF().x, value.getLLF().y, value.getLLF().z,
+                               value.getURB().x, value.getURB().y, value.getURB().z
+        );
+    }
     else if (IntVec2Property* typedProp = dynamic_cast<IntVec2Property*>(property)) {
         tgt::ivec2 value = typedProp->get();
         result = Py_BuildValue("[ii]", value.x, value.y);
@@ -443,15 +535,6 @@ static PyObject* voreen_getPropertyValue(PyObject* /*self*/, PyObject* args) {
                     value[2][0], value[2][1], value[2][2], value[2][3],
                     value[3][0], value[3][1], value[3][2], value[3][3]);
     }
-    else if (CameraProperty* typedProp = dynamic_cast<CameraProperty*>(property)) {
-        tgt::vec3 position = typedProp->get().getPosition();
-        tgt::vec3 focus = typedProp->get().getFocus();
-        tgt::vec3 upVector = typedProp->get().getUpVector();
-        result = Py_BuildValue("([fff][fff][fff])",
-                    position.x, position.y, position.z,
-                    focus.x, focus.y, focus.z,
-                    upVector.x, upVector.y, upVector.z);
-    }
 
     // if result is still -1, Py_BuildValue has not been executed
     if (result == (PyObject*)-1) {
@@ -477,14 +560,14 @@ static PyObject* voreen_setPropertyMinValue(PyObject* /*self*/, PyObject* args) 
     }
 
     // check parameter 1 and 2, if they are strings
-    if (!PyString_Check(PyTuple_GetItem(args, 0)) || !PyString_Check(PyTuple_GetItem(args, 1))) {
+    if (!PyUnicode_Check(PyTuple_GetItem(args, 0)) || !PyUnicode_Check(PyTuple_GetItem(args, 1))) {
         PyErr_SetString(PyExc_TypeError, "setPropertyValue() arguments 1 and 2 must be strings");
         return 0;
     }
 
     // read processor name and property id
-    char* processorName = PyString_AsString(PyTuple_GetItem(args, 0));
-    char* propertyID = PyString_AsString(PyTuple_GetItem(args, 1));
+    char* processorName = PyUnicodeAsString(PyTuple_GetItem(args, 0));
+    char* propertyID = PyUnicodeAsString(PyTuple_GetItem(args, 1));
     if (!processorName || !propertyID) {
         PyErr_SetString(PyExc_TypeError, "setPropertyMinValue() arguments 1 and 2 must be strings");
         return 0;
@@ -506,6 +589,22 @@ static PyObject* voreen_setPropertyMinValue(PyObject* /*self*/, PyObject* args) 
     else if (FloatProperty* typedProp = dynamic_cast<FloatProperty*>(property)) {
         float value;
         if (!PyArg_ParseTuple(args, "ssf:setPropertyMinValue", &processorName, &propertyID, &value))
+            return 0;
+        typedProp->setMinValue(value);
+        Py_RETURN_NONE;
+    }
+    else if (IntBoundingBoxProperty* typedProp = dynamic_cast<IntBoundingBoxProperty*>(property)) {
+        tgt::ivec3 value;
+        if (!PyArg_ParseTuple(args, "ss(iii):setPropertyMinValue", &processorName, &propertyID,
+                              &value.x, &value.y, &value.z))
+            return 0;
+        typedProp->setMinValue(value);
+        Py_RETURN_NONE;
+    }
+    else if (FloatBoundingBoxProperty* typedProp = dynamic_cast<FloatBoundingBoxProperty*>(property)) {
+        tgt::vec3 value;
+        if (!PyArg_ParseTuple(args, "ss(fff):setPropertyMinValue", &processorName, &propertyID,
+                              &value.x, &value.y, &value.z))
             return 0;
         typedProp->setMinValue(value);
         Py_RETURN_NONE;
@@ -624,14 +723,14 @@ static PyObject* voreen_setPropertyMaxValue(PyObject* /*self*/, PyObject* args) 
     }
 
     // check parameter 1 and 2, if they are strings
-    if (!PyString_Check(PyTuple_GetItem(args, 0)) || !PyString_Check(PyTuple_GetItem(args, 1))) {
+    if (!PyUnicode_Check(PyTuple_GetItem(args, 0)) || !PyUnicode_Check(PyTuple_GetItem(args, 1))) {
         PyErr_SetString(PyExc_TypeError, "setPropertyValue() arguments 1 and 2 must be strings");
         return 0;
     }
 
     // read processor name and property id
-    char* processorName = PyString_AsString(PyTuple_GetItem(args, 0));
-    char* propertyID = PyString_AsString(PyTuple_GetItem(args, 1));
+    char* processorName = PyUnicodeAsString(PyTuple_GetItem(args, 0));
+    char* propertyID = PyUnicodeAsString(PyTuple_GetItem(args, 1));
     if (!processorName || !propertyID) {
         PyErr_SetString(PyExc_TypeError, "setPropertyMaxValue() arguments 1 and 2 must be strings");
         return 0;
@@ -653,6 +752,22 @@ static PyObject* voreen_setPropertyMaxValue(PyObject* /*self*/, PyObject* args) 
     else if (FloatProperty* typedProp = dynamic_cast<FloatProperty*>(property)) {
         float value;
         if (!PyArg_ParseTuple(args, "ssf:setPropertyMaxValue", &processorName, &propertyID, &value))
+            return 0;
+        typedProp->setMaxValue(value);
+        Py_RETURN_NONE;
+    }
+    else if (IntBoundingBoxProperty* typedProp = dynamic_cast<IntBoundingBoxProperty*>(property)) {
+        tgt::ivec3 value;
+        if (!PyArg_ParseTuple(args, "ss(iii):setPropertyMaxValue", &processorName, &propertyID,
+                              &value.x, &value.y, &value.z))
+            return 0;
+        typedProp->setMaxValue(value);
+        Py_RETURN_NONE;
+    }
+    else if (FloatBoundingBoxProperty* typedProp = dynamic_cast<FloatBoundingBoxProperty*>(property)) {
+        tgt::vec3 value;
+        if (!PyArg_ParseTuple(args, "ss(fff):setPropertyMaxValue", &processorName, &propertyID,
+                              &value.x, &value.y, &value.z))
             return 0;
         typedProp->setMaxValue(value);
         Py_RETURN_NONE;
@@ -1488,17 +1603,33 @@ static PyMethodDef voreen_methods[] = {
     { NULL, NULL, 0, NULL} // sentinal
 };
 
+static struct PyModuleDef voreenModuleDef =
+{
+    PyModuleDef_HEAD_INIT,
+    "voreen",
+    NULL,
+    -1,
+    voreen_methods
+};
+
+PyMODINIT_FUNC
+PyInit_voreenModule(void)
+{
+    return PyModule_Create(&voreenModuleDef);
+}
+
 namespace voreen {
 
 const std::string PyVoreen::loggerCat_ = "voreen.Python.PyVoreen";
 
 PyVoreen::PyVoreen() {
-    if (Py_IsInitialized()) {
+    if (!Py_IsInitialized()) {
         // initialize voreen module
-        Py_InitModule("voreen", voreen_methods);
+        if(PyImport_AppendInittab("voreen", PyInit_voreenModule) == -1)
+            LWARNING("Failed to init helper module 'voreen'");
     }
     else {
-        LERROR("Python environment not initialized");
+        LERROR("Python environment already initialized");
     }
 }
 
@@ -1664,7 +1795,7 @@ static PyObject* printModuleInfo(const std::string& moduleName, bool omitFunctio
     }
 
     // get reference to module
-    PyObject* mod = PyImport_AddModule(const_cast<char*>(moduleName.c_str())); // const cast required for
+    PyObject* mod = PyImport_AddModule(moduleName.c_str()); // const cast required for
                                                                                // Python 2.4
     if (!mod) {
         PyErr_SetString(PyExc_SystemError,

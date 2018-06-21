@@ -32,6 +32,7 @@
 // include this at very first
 #include <Python.h>
 
+#include "../pythonmodule.h"
 #include "pythonscript.h"
 
 #include "tgt/filesystem.h"
@@ -46,7 +47,7 @@ const std::string PythonScript::loggerCat_ = "voreen.Python.PythonScript";
 
 PythonScript::PythonScript()
     : source_("")
-    , byteCode_(0)
+    , byteCode_(nullptr)
     , compiled_(false)
     , errorLine_(-1)
     , errorCol_(-1)
@@ -75,10 +76,13 @@ bool PythonScript::load(const std::string& filename, bool pCompile) {
         return false;
 
     // allocate memory
-    char* sourceChar = new char[len+1];
-
-    if (!sourceChar)
-        return false;   //allocation failed
+    char* sourceChar = nullptr;
+    try {
+        sourceChar = new char[len+1];
+    }
+    catch (std::bad_alloc&) {
+        return false;
+    }
 
     file->read(sourceChar, len);
     sourceChar[len] = 0; // terminate with 0
@@ -126,7 +130,7 @@ bool PythonScript::run(bool logErrors) {
         LDEBUG("Running compiled script '" << getFilename() << "' ...");
 
         // eval compiled byte code and check for errors
-        PyObject* dum = PyEval_EvalCode((PyCodeObject*)byteCode_, glb, glb);
+        PyObject* dum = PyEval_EvalCode(byteCode_, glb, glb);
         success = checkRuntimeError(logErrors);
         Py_XDECREF(dum);
     }
@@ -205,8 +209,8 @@ bool PythonScript::checkCompileError(bool logErrors) {
         if (logErrors)
             LWARNING("Failed to parse exception, printing as string:");
         PyObject* s = PyObject_Str(errvalue);
-        if (s && PyString_AsString(s)) {
-            log_ = std::string(PyString_AsString(s));
+        if (s && PyUnicode_Check(s)) {
+            log_ = PyUnicodeAsString(s);
             Py_XDECREF(s);
         }
     }
@@ -244,8 +248,8 @@ bool PythonScript::checkRuntimeError(bool logErrors) {
     PyErr_Fetch(&pyError_type, &pyError_value, &pyError_traceback);
 
     // 1. Read and append error type
-    /*if (pyError_type != 0 && (pyError_string = PyObject_Str(pyError_type)) != 0 && (PyString_Check(pyError_string))) {
-        pyException.append(PyString_AsString(pyError_string));
+    /*if (pyError_type != 0 && (pyError_string = PyObject_Str(pyError_type)) != 0 && (PyUnicode_Check(pyError_string))) {
+        pyException.append(PyUnicodeAsString(pyError_string));
         Py_XDECREF(pyError_string);
         pyError_string = 0;
     }
@@ -263,14 +267,14 @@ bool PythonScript::checkRuntimeError(bool logErrors) {
             std::string stacktraceLine;
             if (frame && frame->f_code) {
                 PyCodeObject* codeObject = frame->f_code;
-                if (PyString_Check(codeObject->co_filename))
-                    stacktraceLine.append(string("  File \"") + PyString_AsString(codeObject->co_filename) + string("\", "));
+                if (PyUnicode_Check(codeObject->co_filename))
+                    stacktraceLine.append(string("  File \"") + PyUnicodeAsString(codeObject->co_filename) + string("\", "));
 
                 errorLine_ = PyCode_Addr2Line(codeObject, frame->f_lasti);
                 stacktraceLine.append(string("line ") + itos(errorLine_));
 
-                if (PyString_Check(codeObject->co_name))
-                    stacktraceLine.append(string(", in ") + PyString_AsString(codeObject->co_name));
+                if (PyUnicode_Check(codeObject->co_name))
+                    stacktraceLine.append(string(", in ") + PyUnicodeAsString(codeObject->co_name));
             }
             stacktraceLine.append("\n");
             stacktraceStr = stacktraceLine + stacktraceStr;
@@ -283,8 +287,8 @@ bool PythonScript::checkRuntimeError(bool logErrors) {
     std::stringstream s;
     s << errorLine_;
     pyException.append(string("[") + s.str() + string("] "));
-    if (pyError_value && (pyError_string = PyObject_Str(pyError_value)) != 0 && (PyString_Check(pyError_string))) {
-        pyException.append(PyString_AsString(pyError_string));
+    if (pyError_value && (pyError_string = PyObject_Str(pyError_value)) != 0 && (PyUnicode_Check(pyError_string))) {
+        pyException.append(PyUnicodeAsString(pyError_string));
         Py_XDECREF(pyError_string);
         pyError_string = 0;
     }
