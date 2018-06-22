@@ -37,6 +37,7 @@
 #include "processors/probabilityvolumecreator.h"
 #include "processors/similaritydatasource.h"
 #include "processors/similaritydatavolume.h"
+#include "processors/volumelistmerger.h"
 #include "processors/waveheightextractor.h"
 
 #include "io/fieldplotsave.h"
@@ -83,6 +84,7 @@ VisContest2018Module::VisContest2018Module(const std::string& modulePath)
     // Misc
     registerProcessor(new WaveHeightExtractor());
     registerProcessor(new EnsembleVolumeExtractor());
+    registerProcessor(new VolumeListMerger());
 }
 
 } // namespace

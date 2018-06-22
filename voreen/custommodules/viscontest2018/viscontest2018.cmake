@@ -72,6 +72,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/probabilityvolumecreator.cpp
     ${MOD_DIR}/processors/similaritydatasource.cpp
     ${MOD_DIR}/processors/similaritydatavolume.cpp
+    ${MOD_DIR}/processors/volumelistmerger.cpp
     ${MOD_DIR}/processors/waveheightextractor.cpp
 
     #Properties
@@ -118,6 +119,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/probabilityvolumecreator.h
     ${MOD_DIR}/processors/similaritydatavolume.h
     ${MOD_DIR}/processors/similaritydatasource.h
+    ${MOD_DIR}/processors/volumelistmerger.h
     ${MOD_DIR}/processors/waveheightextractor.h
 
     #Properties

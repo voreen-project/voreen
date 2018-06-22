@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2017 University of Muenster, Germany.                        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
  * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -23,66 +23,40 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_ENSEMBLEFILTER_H
-#define VRN_ENSEMBLEFILTER_H
+#ifndef VRN_VOLUMELISTMERGER_H
+#define VRN_VOLUMELISTMERGER_H
 
 #include "voreen/core/processors/processor.h"
-
-#include "../ports/ensembledatasetport.h"
+#include "voreen/core/ports/genericport.h"
 
 namespace voreen {
 
-class Filter {
-public:
-    virtual ~Filter() {}
-    virtual Property& getProperty() = 0;
-    virtual EnsembleDataset* applyFilter(const EnsembleDataset* ensemble) = 0;
-    virtual void adjustToEnsemble(const EnsembleDataset* ensemble) = 0;
-};
-
 /**
- * Base class for all processors filtering an ensemble dataset.
+ *
  */
-class VRN_CORE_API EnsembleFilter : public Processor {
+class VRN_CORE_API VolumeListMerger : public Processor {
 public:
-    EnsembleFilter();
-    virtual ~EnsembleFilter();
-
+    VolumeListMerger();
+    virtual ~VolumeListMerger();
     virtual Processor* create() const;
-    virtual std::string getClassName() const { return "EnsembleFilter";        }
-    virtual std::string getCategory() const  { return "Filter";                }
-    virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL; }
-    virtual bool isUtility() const           { return true;                    }
 
-    virtual void serialize(Serializer& s) const;
-    virtual void deserialize(Deserializer& s);
+    virtual std::string getClassName() const  { return "VolumeListMerger";      }
+    virtual std::string getCategory() const   { return "Volume Processing";     }
+    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
 
 protected:
+    virtual void setDescriptions() {
+        setDescription("Merges incoming Lists into one single List.");
+    }
 
-    void addFilter(Filter* filter);
+    virtual void process();
 
-    void process();
-    void invalidate(int inv = 1);
+private:
 
-    void applyFilter();
-    void adjustToEnsemble();
-
-    /// Inport for the ensemble data structure.
-    EnsembleDatasetPort ensembleInport_;
-
-    /// The ensemble data
-    EnsembleDatasetPort ensembleOutport_;
-
-    /// Filter list
-    std::vector<Filter*> filters_;
-
-    /// Hash value of last valid data.
-    std::string hash_;
-
-    /// Determines if process needs to be executed.
-    bool needsProcess_;
+    VolumeListPort inport_;
+    VolumeListPort outport_;
 };
 
-} // namespace
+}   //namespace
 
 #endif

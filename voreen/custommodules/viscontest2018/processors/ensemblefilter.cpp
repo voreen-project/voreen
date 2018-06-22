@@ -34,6 +34,7 @@
 #include "voreen/core/properties/numeric/intervalproperty.h"
 
 #include "../properties/stringlistproperty.h"
+#include "../utils/ensemblehash.h"
 
 namespace voreen {
 
@@ -202,7 +203,7 @@ private:
 class FilterChannel : public Filter {
 public:
     FilterChannel()
-        : channels_("channel", "Selected Channel")
+        : channels_("channel", "Selected Channel", Processor::INVALID_RESULT, true)
     {
         channels_.setDescription("Selects a single channel from the ensemble data.");
     }
@@ -306,7 +307,7 @@ EnsembleFilter::EnsembleFilter()
     addPort(ensembleOutport_);
 
     addFilter(new FilterRun());
-    //addFilter(new FilterTimeStep());
+    //addFilter(new FilterTimeStep()); // replaced by FilterTimeInterval
     addFilter(new FilterTimeInterval());
     addFilter(new FilterChannel());
     addFilter(new FilterROI());
@@ -342,8 +343,15 @@ void EnsembleFilter::addFilter(Filter* filter) {
 }
 
 void EnsembleFilter::adjustToEnsemble() {
-    for (Filter* filter : filters_)
-        filter->adjustToEnsemble(ensembleInport_.getData());
+    if(ensembleInport_.hasData()) {
+        std::string hash = EnsembleHash(*ensembleInport_.getData()).getHash();
+        if(hash != hash_) {
+            for (Filter* filter : filters_)
+                filter->adjustToEnsemble(ensembleInport_.getData());
+
+            hash_ = hash;
+        }
+    }
 }
 
 void EnsembleFilter::applyFilter() {
@@ -358,6 +366,16 @@ void EnsembleFilter::applyFilter() {
 
         ensembleOutport_.setData(ensemble.release(), true);
     }
+}
+
+void EnsembleFilter::serialize(Serializer& s) const {
+    Processor::serialize(s);
+    s.serialize("hash", hash_);
+}
+
+void EnsembleFilter::deserialize(Deserializer& s) {
+    Processor::deserialize(s);
+    s.optionalDeserialize("hash", hash_, std::string(""));
 }
 
 } // namespace
