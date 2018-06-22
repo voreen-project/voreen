@@ -889,7 +889,7 @@ static void addClippedOffRegionsToCritical(LZ4SliceVolume<uint8_t>& criticalVoxe
             for(size_t x = 0; x < dim.x; ++x) {
                 tgt::ivec3 p(x,y,z);
 
-                if(ccaReader.isObject(p) && !ccaReader.isValidEdgeId(ccaReader.getEdgeId(p.xy()))) {
+                if(ccaReader.isObject(p) && !ccaReader.isValidEdgeId(ccaReader.getEdgeId(p))) {
                     slice->voxel(x, y, 0) = 1;
                 }
             }

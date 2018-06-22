@@ -300,7 +300,7 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeAllEdges(const Vess
                 new_pos += voxel;
             }
             new_pos /= static_cast<float>(voxels.size());
-            future_node->id_ = output->insertNode(new_pos, std::move(voxels), false /* TODO: should be always not at sample border, right? */);
+            future_node->id_ = output->insertNode(new_pos, std::move(voxels), 0.0f, false /* TODO: should be always not at sample border, right? */);
         }
     }
 

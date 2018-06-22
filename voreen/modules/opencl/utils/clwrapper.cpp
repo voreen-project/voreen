@@ -89,24 +89,29 @@ cl::Platform OpenCL::getPlatformByVendor(tgt::GpuCapabilities::GpuVendor vendor)
         return platforms_.front();
     }
     else { // more than one platform available
-        if (vendor == tgt::GpuCapabilities::GPU_VENDOR_NVIDIA) {
-            for (size_t i=0; i<platforms_.size(); i++) {
-                if (toLower(platforms_.at(i).getVendor()).find("nvidia") != std::string::npos)
-                    return platforms_.at(i);
+        switch(vendor) {
+        case tgt::GpuCapabilities::GPU_VENDOR_NVIDIA:
+            for (const Platform& platform : platforms_) {
+                if (toLower(platform.getVendor()).find("nvidia") != std::string::npos)
+                    return platform;
             }
-        }
-        else if (tgt::GpuCapabilities::GPU_VENDOR_ATI) {
-            for (size_t i=0; i<platforms_.size(); i++) {
-                if ((toLower(platforms_.at(i).getVendor()).find("amd") != std::string::npos) ||
-                    (toLower(platforms_.at(i).getVendor()).find("ati") != std::string::npos)    )
-                    return platforms_.at(i);
+            break;
+        case tgt::GpuCapabilities::GPU_VENDOR_ATI:
+            for (const Platform& platform : platforms_) {
+                if ((toLower(platform.getVendor()).find("amd") != std::string::npos) ||
+                    (toLower(platform.getVendor()).find("ati") != std::string::npos))
+                    return platform;
             }
-        }
-        else if (tgt::GpuCapabilities::GPU_VENDOR_UNKNOWN) {
-            for (size_t i=0; i<platforms_.size(); i++) {
-                if (toLower(platforms_.at(i).getVendor()).find("intel") != std::string::npos)
-                    return platforms_.at(i);
+            break;
+        case tgt::GpuCapabilities::GPU_VENDOR_INTEL:
+            for (const Platform& platform : platforms_) {
+                if (toLower(platform.getVendor()).find("intel") != std::string::npos)
+                    return platform;
             }
+            break;
+        case tgt::GpuCapabilities::GPU_VENDOR_UNKNOWN:
+        default:
+            break;
         }
 
         // no matching platform found

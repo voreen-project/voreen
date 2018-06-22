@@ -174,9 +174,10 @@ struct ProtoVesselGraphNode {
 
     ProtoVesselGraphNode(uint64_t id, std::vector<tgt::svec3>&& voxels, bool atSampleBorder);
 
-    std::vector<tgt::svec3> voxels_;
-    bool atSampleBorder_;
     uint64_t id_;
+    std::vector<tgt::svec3> voxels_;
+    tgt::vec3 voxelPos_;
+    bool atSampleBorder_;
     std::vector<uint64_t> edges_;
 };
 
@@ -237,13 +238,13 @@ struct BranchIdVolumeReader {
             ccaToEdgeIdTable_[*ccaindex] = pair.first;
         }
     }
-    uint32_t getCCAId(const tgt::ivec2& pos) const {
-        auto voxel = branchIdReader_.getVoxelRelative(pos, 0);
+    uint32_t getCCAId(const tgt::ivec3& pos) const {
+        auto voxel = branchIdReader_.getVoxel(pos);
         tgtAssert(voxel, "Read invalid voxel");
         return *voxel;
     }
 
-    uint64_t getEdgeId(const tgt::ivec2& xypos) const {
+    uint64_t getEdgeId(const tgt::ivec3& xypos) const {
         return ccaToEdgeIdTable_.at(getCCAId(xypos));
     }
 
@@ -274,7 +275,7 @@ struct BranchIdVolumeReader {
     }
 
 
-    LZ4SliceVolumeReader<uint32_t, 0> branchIdReader_;
+    LZ4SliceVolumeReader<uint32_t, 1> branchIdReader_;
     LZ4SliceVolumeReader<uint8_t, 1> segmentationReader_;
     //const VolumeBase& segmentationVolume_;
     std::vector<uint64_t> ccaToEdgeIdTable_;

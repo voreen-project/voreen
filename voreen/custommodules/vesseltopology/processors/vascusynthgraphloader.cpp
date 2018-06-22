@@ -141,7 +141,7 @@ void VascuSynthGraphLoader::process() {
                         }
                         std::vector<tgt::vec3> voxels;
                         voxels.push_back(pos);
-                        size_t id = output->insertNode(pos, std::move(voxels), false);
+                        size_t id = output->insertNode(pos, std::move(voxels), 0.0f, false);
                         idMap.insert({nodeId, id});
                     }
                 }
