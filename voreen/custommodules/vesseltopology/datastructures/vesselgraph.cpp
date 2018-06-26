@@ -296,7 +296,7 @@ VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const Vess
     auto maybe_max = std::max_element(path.begin(), path.end(), [](const VesselSkeletonVoxel& v1, const VesselSkeletonVoxel& v2) {
             return v1.maxDistToSurface_ < v2.maxDistToSurface_;
             });
-    output.maxRadiusMax_ = maybe_max!=path.end() ? maybe_max->maxDistToSurface_ : INVALID_DATA;
+    output.maxRadiusMax_ = maybe_max!=path.end() && maybe_max->hasValidData() ? maybe_max->maxDistToSurface_ : INVALID_DATA;
 
     // Compute roundness vals
     statisticalAnalysis<VesselSkeletonVoxel>(path, [] (const VesselSkeletonVoxel& v) {
