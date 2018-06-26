@@ -313,7 +313,6 @@ void PathlineCreator::stopBackgroundThread() {
 
 void PathlineCreator::volumeListPortHasChanged() {
     stopBackgroundThread();
-    if(autoGenerateProp_.get()) dirtyFlag_ = PATHLINES;
 
     const VolumeList* volumes = volInport_.getData();
     if(!volumes || volumes->empty())
@@ -324,17 +323,33 @@ void PathlineCreator::volumeListPortHasChanged() {
     roiProp_.setMinValue(tgt::ivec3::zero);
     roiProp_.setMaxValue(tgt::ivec3(reference->getDimensions()) - tgt::ivec3::one);
 
-    // TODO: gain more detailed information for whole time series
-    /*
+    // TODO: speed up gaining more detailed information for whole time series
     VolumeMinMaxMagnitude* data = reference->getDerivedData<VolumeMinMaxMagnitude>();
-    absoluteMagnitudeThresholdProp_.setMinValue(data->getMinMagnitude());
-    absoluteMagnitudeThresholdProp_.setMaxValue(data->getMaxMagnitude());
-    */
-    absoluteMagnitudeThresholdProp_.setMinValue(0.0f);
-    absoluteMagnitudeThresholdProp_.setMaxValue(200.0f);
+    float min = data->getMinMagnitude();
+    float max = data->getMaxMagnitude();
+    for(size_t i = 1; i < volumes->size(); i++) {
+        if(volumes->at(i)->getDimensions() != reference->getDimensions()) {
+            LERROR("Volume Dimensions do not match");
+            return;
+        }
+
+        // TODO: speed up, it's too slow!
+        //data = volumes->at(i)->getDerivedData<VolumeMinMaxMagnitude>();
+        //min = std::min(min, data->getMinMagnitude());
+        //max = std::max(max, data->getMaxMagnitude());
+    }
+
+    // HACK: since we won't iterate each volume, we need to predefine some values.
+    min = 0.0f;
+    max = max * 100.0f;
+
+    absoluteMagnitudeThresholdProp_.setMinValue(min);
+    absoluteMagnitudeThresholdProp_.setMaxValue(max);
 
     tgt::vec3 length = reference->getSpacing() * tgt::vec3(reference->getDimensions());
     maxAverageDistanceThresholdProp_.setMaxValue(sqrtf(length.x*length.x + length.y*length.y + length.z*length.z));
+
+    if(autoGenerateProp_.get()) dirtyFlag_ = PATHLINES;
 
     // Invalidate processor
     invalidate();
