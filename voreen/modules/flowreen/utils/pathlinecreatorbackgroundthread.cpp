@@ -166,6 +166,11 @@ void PathlineCreatorBackgroundThread::threadMain() {
         processor_->setProgress(processor_->getProgress() + progressPerTimeStep);
     }
 
+    // Add missing pathlines.
+    for(const Streamline& pathline : pathlines) {
+        output_->addStreamline(pathline);
+    }
+
     processor_->setProgress(1.0f);
 }
 
