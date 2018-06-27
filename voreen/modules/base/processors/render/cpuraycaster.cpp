@@ -171,7 +171,9 @@ void CPURaycaster::process() {
 
     // iterate over viewport and perform ray casting for each fragment
     for (int y=0; y < entryPort_.getSize().y; ++y) {
-#pragma omp parallel for schedule(dynamic) shared(volume,samplingStepSize,table,output,entryBuffer,exitBuffer,tfTexture,y,mode)
+#ifdef VRN_MODULE_OPENMP
+        #pragma omp parallel for schedule(dynamic) shared(volume,samplingStepSize,table,output,entryBuffer,exitBuffer,tfTexture,y,mode)
+#endif
         for (int x=0; x < entryPort_.getSize().x; ++x) {
             vec4 gl_FragColor = vec4(0.f);
             int p = (y * entryPort_.getSize().x + x);
