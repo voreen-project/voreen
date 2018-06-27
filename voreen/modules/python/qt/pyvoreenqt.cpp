@@ -30,8 +30,11 @@
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif
 
-// Do this at very first
-#include "Python.h"
+// Makro 'slots' must be undefined in order make python work using Qt.
+#pragma push_macro("slots")
+#undef slots
+#include <Python.h>
+#pragma pop_macro("slots")
 #include "modules/python/pythonmodule.h"
 
 #include "modules/python/qt/pyvoreenqt.h"
@@ -40,10 +43,6 @@
 #include "voreen/core/voreenapplication.h"
 #include "voreen/core/network/processornetwork.h"
 #include "voreen/core/network/networkevaluator.h"
-
-// core module is always available
-#include "modules/core/processors/output/canvasrenderer.h"
-#include "modules/core/qt/processor/canvasrendererwidget.h"
 
 #include <cstdlib>
 #include <QApplication>

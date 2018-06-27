@@ -31,7 +31,7 @@
 #endif
 
 // Do this at very first
-#include "Python.h"
+#include <Python.h>
 #include "../pythonmodule.h"
 
 #include "pyvoreen.h"
