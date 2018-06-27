@@ -59,7 +59,7 @@ def benchmark():
     message =  'frames: %i\n' % (frames)
     message += 'total runtime: %f\n' % (runtime)
     message += 'fps: %f' %(fps)
-    print message
+    print (message)
     voreenqt.messageBox("Finished!\n" + message)
 
 
@@ -71,4 +71,4 @@ if voreenqt.questionBox(
         "Start?"):
     benchmark()
 else:
-    print "aborting on user request"
+    print ('aborting on user request')

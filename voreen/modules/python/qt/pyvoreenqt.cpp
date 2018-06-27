@@ -30,8 +30,11 @@
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif
 
-// Do this at very first
-#include "Python.h"
+// Makro 'slots' must be undefined in order make python work using Qt.
+#pragma push_macro("slots")
+#undef slots
+#include <Python.h>
+#pragma pop_macro("slots")
 #include "modules/python/pythonmodule.h"
 
 #include "modules/python/qt/pyvoreenqt.h"
@@ -40,10 +43,6 @@
 #include "voreen/core/voreenapplication.h"
 #include "voreen/core/network/processornetwork.h"
 #include "voreen/core/network/networkevaluator.h"
-
-// core module is always available
-#include "modules/core/processors/output/canvasrenderer.h"
-#include "modules/core/qt/processor/canvasrendererwidget.h"
 
 #include <cstdlib>
 #include <QApplication>
@@ -116,9 +115,7 @@ static PyObject* printModuleInfo(const std::string& moduleName, bool omitFunctio
     }
 
     // get reference to module
-    PyObject* mod = PyImport_AddModule(const_cast<char*>(moduleName.c_str())); // const cast required for
-                                                                               // Python 2.4
-
+    PyObject* mod = PyImport_AddModule(moduleName.c_str());
     if (!mod) {
         PyErr_SetString(PyExc_SystemError,
             (moduleName + std::string(".info() failed to access module ") + moduleName).c_str());
@@ -189,16 +186,34 @@ static PyMethodDef voreenqt_methods[] = {
     { NULL, NULL, 0, NULL} // sentinal
 };
 
+static struct PyModuleDef voreenQtModuleDef =
+{
+    PyModuleDef_HEAD_INIT,
+    "voreenqt",
+    NULL,
+    -1,
+    voreenqt_methods
+};
+
+PyMODINIT_FUNC
+PyInit_voreenQtModule(void)
+{
+    return PyModule_Create(&voreenQtModuleDef);
+}
+
 //------------------------------------------------------------------------------
 
 namespace voreen {
 
 PyVoreenQt::PyVoreenQt() {
 
-    if (Py_IsInitialized())
-        Py_InitModule("voreenqt", voreenqt_methods);
-    else
-        LERRORC("voreen.Python.PyVoreenQt", "Python environment not initialized");
+    if (!Py_IsInitialized()) {
+        if(PyImport_AppendInittab("voreenqt", PyInit_voreenQtModule) == -1)
+            LWARNINGC("voreen.Python.PyVoreenQt", "Failed to init helper module 'voreenqt'");
+    }
+    else {
+        LERRORC("voreen.Python.PyVoreenQt", "Python environment already initialized");
+    }
 }
 
 } // namespace

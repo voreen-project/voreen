@@ -33,28 +33,11 @@ const std::string PythonModuleQt::loggerCat_("voreen.python.PythonModuleQt");
 
 PythonModuleQt::PythonModuleQt(const std::string& modulePath)
     : VoreenModuleQt(modulePath)
-    , pythonQt_(0)
 {
     setID("Python (Qt)");
     setGuiName("Python (Qt)");
 
     registerCustomMenuEntity(new PythonEditor());
-}
-
-void PythonModuleQt::initialize() {
-    VoreenModuleQt::initialize();
-
-    if (PythonModule::getInstance() && PythonModule::getInstance()->isInitialized())
-        pythonQt_ = new PyVoreenQt();
-    else
-        LERROR("Skipped instantiation of VoreenPythonQt: Python module not initialized");
-}
-
-void PythonModuleQt::deinitialize() {
-    delete pythonQt_;
-    pythonQt_ = 0;
-
-    VoreenModuleQt::deinitialize();
 }
 
 } // namespace

@@ -4,20 +4,19 @@
 ################################################################################
 
 IF(WIN32)
-    SET(MOD_INCLUDE_DIRECTORIES "${MOD_DIR}/ext/python27/include")
+    SET(MOD_INCLUDE_DIRECTORIES "${MOD_DIR}/ext/python36/include")
 
-	SET(MOD_DEBUG_LIBRARIES 
-		"${MOD_DIR}/ext/python27/lib/debug/python27_d.lib"
+	SET(MOD_RELEASE_DLLS
+		"${MOD_DIR}/ext/python36/lib/release/python36.dll"
 	)
-	SET(MOD_RELEASE_LIBRARIES 
-		"${MOD_DIR}/ext/python27/lib/release/python27.lib"
+    SET(MOD_DEBUG_DLLS
+		"${MOD_DIR}/ext/python36/lib/debug/python36_d.dll"
 	)
-	
-	SET(MOD_DEBUG_DLLS
-		"${MOD_DIR}/ext/python27/lib/debug/python27_d.dll"
+	SET(MOD_RELEASE_LIBRARIES
+		"${MOD_DIR}/ext/python36/lib/release/python36.lib"
 	)
-	SET(MOD_RELEASE_DLLS 
-		"${MOD_DIR}/ext/python27/lib/release/python27.dll"
+    SET(MOD_DEBUG_LIBRARIES
+		"${MOD_DIR}/ext/python36/lib/debug/python36_d.lib"
 	)
     
     # deployment
@@ -25,13 +24,12 @@ IF(WIN32)
         ${MOD_DIR}/scripts
     )
     SET(MOD_INSTALL_FILES
-        ${MOD_DIR}/ext/python27/LICENSE
+        ${MOD_DIR}/ext/python36/LICENSE.txt
     )
 
 ELSEIF(UNIX)
-    # this is a hack to prevent CMake from finding python 3 instead of 2.7
-    MESSAGE(STATUS "Trying to find Python 2.7 version...")
-    FIND_PACKAGE(PythonLibs "2.7" EXACT)
+    MESSAGE(STATUS "Trying to find Python 3 version...")
+    FIND_PACKAGE(PythonLibs "3")
     IF(PYTHONLIBS_FOUND)
         MESSAGE(STATUS "  - Found Python library")
         SET(MOD_INCLUDE_DIRECTORIES ${PYTHON_INCLUDE_DIRS})

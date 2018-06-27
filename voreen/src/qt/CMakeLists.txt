@@ -508,13 +508,9 @@ SET(VRN_QT_HEADERS_NONMOC
     ../../ext/tgt/qt/qttimer.h
 )
 
-
+# TODO: still necessary?
+# we need to link against cocoa
 IF(APPLE)
-    # add apple specific source files
-    #LIST(APPEND VRN_QT_SOURCES ../../ext/tgt/qt/maccorecontext.mm)
-    #LIST(APPEND VRN_QT_HEADERS_NONMOC ../../ext/tgt/qt/maccorecontext.h)
-
-    # we need to link against cocoa
     FIND_LIBRARY(COCOA_LIB Cocoa)
     LIST(APPEND VRN_EXTERNAL_LIBRARIES ${COCOA_LIB})
 ENDIF()
@@ -527,7 +523,7 @@ LIST(APPEND VRN_QT_HEADERS_NONMOC ${VRN_MODULE_QT_HEADERS_NONMOC})
 # QMAKE_CHANGED must be set to true, to allow changing Qt versions by changing the qmake.exe in QT_QMAKE_EXECUTABLE
 SET(QT_QMAKE_CHANGED TRUE)
 # find Qt library
-SET(VRN_QT_COMPONENTS Core Gui Widgets OpenGL Svg)
+SET(VRN_QT_COMPONENTS Core Gui Widgets Svg)
 IF(QT_USE_QTNETWORK)
     LIST(APPEND VRN_QT_COMPONENTS Network)
 ENDIF()
