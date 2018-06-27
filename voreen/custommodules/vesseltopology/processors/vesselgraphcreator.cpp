@@ -903,8 +903,11 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
     SubtaskProgressReporterCollection<8> subtaskReporters(progress);
 
     // Create new protograph
-    std::unique_ptr<MetaDataCollector> mdc = cca(NeighborCountVoxelClassifier(skeleton), subtaskReporters.get<0>());
-    std::unique_ptr<ProtoVesselGraph> protograph = mdc->createProtoVesselGraph(input.segmentation.getDimensions(), input.segmentation.getMetaData().getVoxelToWorldMatrix(), input.sampleMask, subtaskReporters.get<1>());
+    std::unique_ptr<ProtoVesselGraph> protograph(nullptr);
+    {
+        std::unique_ptr<MetaDataCollector> mdc = cca(NeighborCountVoxelClassifier(skeleton), subtaskReporters.get<0>());
+        protograph = mdc->createProtoVesselGraph(input.segmentation.getDimensions(), input.segmentation.getMetaData().getVoxelToWorldMatrix(), input.sampleMask, subtaskReporters.get<1>());
+    }
 
 
     // Create an assignment edge <-> vessel component
