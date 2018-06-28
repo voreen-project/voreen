@@ -1,5 +1,5 @@
 # Consecutively loads the ten time steps of the golf ball data set
-# (http://www.voreen.org/files/volumedynamics.zip), 
+# (https://www.uni-muenster.de/imperia/md/content/voreen/golfball-10steps.zip), 
 # and takes a snapshot of each frame.
 
 import voreen
