@@ -346,12 +346,13 @@ void AsyncComputeProcessor<I,O>::ComputeProgressReporter::setProgress(float prog
         auto remainingDurationMillis = std::chrono::duration_cast<std::chrono::milliseconds>(remainingDuration);
         std::string timeFormat(formatTime(remainingDurationMillis.count()));
 
-        VoreenApplication::app()->getCommandQueue()->enqueue(this, LambdaFunctionCallback([this, timeFormat] () {
+        VoreenApplication::app()->getCommandQueue()->enqueue(this, LambdaFunctionCallback([this, timeFormat, progress] {
                         std::string msg = timeFormat + " remaining";
                         processor_.statusDisplay_.set(msg);
+                        processor_.setProgress(progress);
                     }));
     }
-    processor_.setProgress(progress);
+
     interruptionPoint();
 }
 

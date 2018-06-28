@@ -50,6 +50,7 @@ ProgressPropertyWidget::ProgressPropertyWidget(ProgressProperty* prop, QWidget* 
 }
 
 void ProgressPropertyWidget::updateFromPropertySlot() {
+
     // currently working version. maybe...
     if (time_.elapsed() > 500 || property_->getProgress() == 1.f || property_->getProgress() == 0.f) {
         // We probably want to restart the timer before doing anything else in case one of the
@@ -58,7 +59,6 @@ void ProgressPropertyWidget::updateFromPropertySlot() {
         time_.restart();
 
         progressBar_->setValue(tgt::iround(property_->getProgress() * 100.f));
-        qApp->processEvents();
     }
 
     /* previous version. crashes, if a setProgress is called within a thread
