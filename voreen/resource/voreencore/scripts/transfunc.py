@@ -9,4 +9,4 @@ import voreenqt
 voreen.loadTransferFunction(
     "SingleVolumeRaycaster", 
     "transferFunction", 
-    voreen.getBasePath() + "/resource/transferfuncs/nucleon.tfi")
+    voreen.getBasePath() + "/resource/voreencore/transferfuncs/nucleon.tfi")
