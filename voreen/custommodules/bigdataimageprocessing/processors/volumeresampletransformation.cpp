@@ -143,7 +143,7 @@ VolumeResampleTransformationInput VolumeResampleTransformation::prepareComputeIn
     outputVolume->writePhysicalToWorldTransformation(input.getPhysicalToWorldMatrix());
 
     auto minmax = input.getDerivedData<VolumeMinMax>();
-    RealWorldMapping rwm(tgt::vec2(minmax->getMin(), minmax->getMax()), input.getRealWorldMapping().getUnit());
+    RealWorldMapping rwm = input.getRealWorldMapping();
     outputVolume->writeRealWorldMapping(rwm);
 
     tgt::mat4 invertedTransform;
@@ -154,7 +154,6 @@ VolumeResampleTransformationInput VolumeResampleTransformation::prepareComputeIn
     tgt::mat4 outputVoxelToWorld = input.getPhysicalToWorldMatrix() * tgt::mat4::createTranslation(offset) * tgt::mat4::createScale(spacing);
 
     const tgt::mat4 voxelOutToVoxelIn = input.getWorldToVoxelMatrix() * invertedTransform * outputVoxelToWorld;
-    const RealWorldMapping inputNormalized2outputNormalized = RealWorldMapping::combine(input.getRealWorldMapping().getInverseMapping(), rwm);
 
     tgt::ivec3 inputMaxVoxelPos(tgt::ivec3(input.getDimensions()) - tgt::ivec3(1));
     float outsideVolumeValueNormalized = rwm.realWorldToNormalized(outsideVolumeValue_.get());
@@ -163,7 +162,6 @@ VolumeResampleTransformationInput VolumeResampleTransformation::prepareComputeIn
             input,
             std::move(outputVolume),
             voxelOutToVoxelIn,
-            inputNormalized2outputNormalized,
             filteringMode_.getValue(),
             outsideVolumeHandling_.getValue(),
             outsideVolumeValueNormalized
@@ -176,20 +174,20 @@ VolumeResampleTransformationOutput VolumeResampleTransformation::compute(VolumeR
         case NEAREST:
             switch(input.outsideVolumeHandling) {
                 case CLAMP:
-                    resample(input.input, std::move(input.outputVolume), input.voxelOutToVoxelIn, input.inputNormalized2outputNormalized, NearestFiltering<Clamping>(Clamping(inputMaxVoxelPos)), progress);
+                    resample(input.input, std::move(input.outputVolume), input.voxelOutToVoxelIn, NearestFiltering<Clamping>(Clamping(inputMaxVoxelPos)), progress);
                     break;
                 case CONSTANT_VALUE:
-                    resample(input.input, std::move(input.outputVolume), input.voxelOutToVoxelIn, input.inputNormalized2outputNormalized, NearestFiltering<ConstantValue>(ConstantValue(inputMaxVoxelPos, input.outsideVolumeValue)), progress);
+                    resample(input.input, std::move(input.outputVolume), input.voxelOutToVoxelIn, NearestFiltering<ConstantValue>(ConstantValue(inputMaxVoxelPos, input.outsideVolumeValue)), progress);
                     break;
             }
             break;
         case LINEAR:
             switch(outsideVolumeHandling_.getValue()) {
                 case CLAMP:
-                    resample(input.input, std::move(input.outputVolume), input.voxelOutToVoxelIn, input.inputNormalized2outputNormalized, LinearFiltering<Clamping>(Clamping(inputMaxVoxelPos)), progress);
+                    resample(input.input, std::move(input.outputVolume), input.voxelOutToVoxelIn, LinearFiltering<Clamping>(Clamping(inputMaxVoxelPos)), progress);
                     break;
                 case CONSTANT_VALUE:
-                    resample(input.input, std::move(input.outputVolume), input.voxelOutToVoxelIn, input.inputNormalized2outputNormalized, LinearFiltering<ConstantValue>(ConstantValue(inputMaxVoxelPos, input.outsideVolumeValue)), progress);
+                    resample(input.input, std::move(input.outputVolume), input.voxelOutToVoxelIn, LinearFiltering<ConstantValue>(ConstantValue(inputMaxVoxelPos, input.outsideVolumeValue)), progress);
                     break;
             }
             break;

@@ -81,7 +81,6 @@ struct VolumeResampleTransformationInput {
               const VolumeBase& input
             , std::unique_ptr<HDF5FileVolume>&& outputVolume
             , tgt::mat4 voxelOutToVoxelIn
-            , RealWorldMapping inputNormalized2outputNormalized
             , FilteringMode filteringMode
             , OutsideVolumeHandling outsideVolumeHandling
             , float outsideVolumeValue
@@ -89,7 +88,6 @@ struct VolumeResampleTransformationInput {
         : input(input)
         , outputVolume(std::move(outputVolume))
         , voxelOutToVoxelIn(voxelOutToVoxelIn)
-        , inputNormalized2outputNormalized(inputNormalized2outputNormalized)
         , filteringMode(filteringMode)
         , outsideVolumeHandling(outsideVolumeHandling)
         , outsideVolumeValue(outsideVolumeValue)
@@ -101,7 +99,6 @@ struct VolumeResampleTransformationInput {
         : input(old.input)
         , outputVolume(std::move(old.outputVolume))
         , voxelOutToVoxelIn(old.voxelOutToVoxelIn)
-        , inputNormalized2outputNormalized(old.inputNormalized2outputNormalized)
         , filteringMode(old.filteringMode)
         , outsideVolumeHandling(old.outsideVolumeHandling)
         , outsideVolumeValue(old.outsideVolumeValue)
@@ -152,7 +149,7 @@ private:
     tgt::vec3 getOutputOffset(const VolumeBase& input) const;
 
     template<class S>
-    void resample(const VolumeBase& input, std::unique_ptr<HDF5FileVolume> output, const tgt::mat4& voxelOutToVoxelIn, RealWorldMapping inputNormalized2outputNormalized, S samplingStrategy, ProgressReporter& progress) const;
+    void resample(const VolumeBase& input, std::unique_ptr<HDF5FileVolume> output, const tgt::mat4& voxelOutToVoxelIn, S samplingStrategy, ProgressReporter& progress) const;
 
     tgt::vec3 getCurrentSpacing() const;
 
@@ -187,7 +184,7 @@ private:
 // ------------------------------------
 
 template<class S>
-void VolumeResampleTransformation::resample(const VolumeBase& inputVol, std::unique_ptr<HDF5FileVolume> output, const tgt::mat4& voxelOutToVoxelIn, RealWorldMapping inputNormalized2outputNormalized, S samplingStrategy, ProgressReporter& progress) const {
+void VolumeResampleTransformation::resample(const VolumeBase& inputVol, std::unique_ptr<HDF5FileVolume> output, const tgt::mat4& voxelOutToVoxelIn, S samplingStrategy, ProgressReporter& progress) const {
     tgt::svec3 outputDim = output->getDimensions();
     tgt::ivec3 inputMaxVoxelPos(tgt::ivec3(inputVol.getDimensions()) - tgt::ivec3(1));
 
@@ -219,10 +216,9 @@ void VolumeResampleTransformation::resample(const VolumeBase& inputVol, std::uni
             for(size_t x=0; x<outputDim.x; ++x) {
                 tgt::vec4 outputVoxelPos(x,y,z,1);
                 tgt::vec4 inputVoxelPos = voxelOutToVoxelIn*outputVoxelPos;
-                float inputNormalized = samplingStrategy.sample(*input, inputVoxelPos.xyz());
-                float outputNormalized = inputNormalized2outputNormalized.realWorldToNormalized(inputNormalized);
+                float value = samplingStrategy.sample(*input, inputVoxelPos.xyz());
 
-                outputSlice->setVoxelNormalized(outputNormalized, outputVoxelPos.x, outputVoxelPos.y, 0);
+                outputSlice->setVoxelNormalized(value, outputVoxelPos.x, outputVoxelPos.y, 0);
             }
         }
         output->writeSlices(outputSlice.get(), z);
