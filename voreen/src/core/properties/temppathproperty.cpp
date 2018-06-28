@@ -35,6 +35,7 @@ TempPathProperty::TempPathProperty(const std::string& id, const std::string& gui
     const std::string& fileFilter, FileDialogProperty::FileMode fileMode,
     int invalidationLevel, Property::LevelOfDetail lod)
     : FileDialogProperty(id, guiText, dialogCaption, directory, fileFilter, fileMode, invalidationLevel, lod, VoreenFileWatchListener::ALWAYS_OFF)
+    , useGeneratedPath_(false)
 {
     // Initialize auto generated path.
     setUseGeneratedPath(true);
@@ -68,6 +69,9 @@ void TempPathProperty::serialize(Serializer& s) const {
 void TempPathProperty::deserialize(Deserializer& s) {
     s.optionalDeserialize("useGeneratedPath", useGeneratedPath_, true);
     if(useGeneratedPath_) {
+        // Bypass FileDialogProperty::deserialize()
+        Property::deserialize(s);
+        VoreenFileWatchListener::deserialize(s);
         generateAndUseNewTmpPath();
     } else {
         FileDialogProperty::deserialize(s);
