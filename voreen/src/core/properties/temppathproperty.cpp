@@ -24,6 +24,7 @@
 ***********************************************************************************/
 
 #include "voreen/core/properties/temppathproperty.h"
+#include "voreen/core/utils/voreenfilepathhelper.h"
 
 #include "voreen/core/voreenapplication.h"
 
@@ -65,10 +66,11 @@ void TempPathProperty::serialize(Serializer& s) const {
 }
 
 void TempPathProperty::deserialize(Deserializer& s) {
-    FileDialogProperty::deserialize(s);
     s.optionalDeserialize("useGeneratedPath", useGeneratedPath_, true);
     if(useGeneratedPath_) {
         generateAndUseNewTmpPath();
+    } else {
+        FileDialogProperty::deserialize(s);
     }
 }
 
