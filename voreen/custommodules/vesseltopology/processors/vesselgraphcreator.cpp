@@ -1154,7 +1154,7 @@ void VesselGraphCreator::adjustPropertiesToInput() {
     const VolumeBase* segmentation = segmentedVolumeInport_.getData();
     if(segmentation) {
         if(!segmentation->hasDerivedData<VolumeMinMax>()) {
-            LWARNING("Calculating VolumeMinMax. This may take a while...");
+            LINFO("Calculating VolumeMinMax. This may take a while...");
         }
         const VolumeMinMax* mm = segmentation->getDerivedData<VolumeMinMax>();
         bool minMaxWereEqual = binarizationThresholdSegmentation_.getMinValue() == binarizationThresholdSegmentation_.getMaxValue();
