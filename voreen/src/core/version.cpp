@@ -73,7 +73,7 @@ const std::string VoreenVersion::getRevision() {
 }
 
 const std::string VoreenVersion::getCopyright() {
-    return "Copyright (C) 2005-2017 University of Münster, Germany. \nVisualization and Computer Graphics Group (VisCG).";
+    return "Copyright (C) 2005-2018 University of Münster, Germany. \nVisualization and Computer Graphics Group (VisCG).";
 }
 
 void VoreenVersion::logAll(const std::string& loggerCat) {
