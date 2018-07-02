@@ -163,13 +163,17 @@ int main(int argc, char* argv[]) {
 
     std::string scriptFilename;
 #ifdef VRN_MODULE_PYTHON
-    vrnApp.getCommandLineParser()->addOption("script", scriptFilename, CommandLineParser::MainOption,
+    cmdParser->addOption("script", scriptFilename, CommandLineParser::MainOption,
         "Run a Python script after the network configuration has been applied.");
 #endif
 
     std::string workingDirectory;
-    vrnApp.getCommandLineParser()->addOption("workdir",  workingDirectory, CommandLineParser::MainOption,
+    cmdParser->addOption("workdir",  workingDirectory, CommandLineParser::MainOption,
         "Absolute work directory of the workspace. If unspecified, the workspace file location is used.");
+
+    std::string tempDataPath;
+    cmdParser->addOption("tempdir", tempDataPath, CommandLineParser::MainOption,
+        "Path to directory in which temporary data will be placed.");
 
     // init application
     try {
@@ -177,6 +181,11 @@ int main(int argc, char* argv[]) {
     }
     catch (VoreenException& e) {
         exitFailure("Failed to initialize application: " + std::string(e.what()));
+    }
+
+    // Change temp data path before doing anything else after initialization
+    if(!tempDataPath.empty()) {
+        vrnApp.setTempDataPath(tempDataPath);
     }
 
     // check parameters
