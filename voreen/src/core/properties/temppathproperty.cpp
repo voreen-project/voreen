@@ -27,6 +27,7 @@
 #include "voreen/core/utils/voreenfilepathhelper.h"
 
 #include "voreen/core/voreenapplication.h"
+#include <regex>
 
 namespace voreen {
 
@@ -78,9 +79,18 @@ void TempPathProperty::deserialize(Deserializer& s) {
     }
 }
 
+static const std::regex FILE_EXTENSION_REGEX("\\(\\*(\\.[a-zA-Z0-9]+)\\)");
+
 void TempPathProperty::generateAndUseNewTmpPath() {
+    std::smatch match;
+    std::string extension;
+    if(std::regex_search(fileFilter_, match, FILE_EXTENSION_REGEX)) {
+        extension = match[1].str();
+    } else {
+        extension = "";
+    }
     tgtAssert(VoreenApplication::app(), "No voreen application");
-    set(VoreenApplication::app()->getUniqueTmpFilePath(fileFilter_));
+    set(VoreenApplication::app()->getUniqueTmpFilePath(extension));
 }
 
 }   // namespace
