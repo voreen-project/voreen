@@ -1085,10 +1085,12 @@ VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput inp
 
     std::unique_ptr<VolumeList> generatedVolumes(new VolumeContainer());
     std::unique_ptr<std::vector<VesselGraph>> generatedGraphs(new std::vector<VesselGraph>());
+    LINFO("Begin graph extraction iteration: " << 0);
     std::unique_ptr<VesselGraph> graph = createInitialVesselGraph(processedInput, *generatedVolumes, initialProgress);
     LINFO("Inital graph: " << graph->getNodes().size() << " Nodes, " << graph->getEdges().size() << " Edges.");
 
     for(int i=0; i < input.numRefinementIterations; ++i) {
+        LINFO("Begin graph extraction iteration: " << (i+1));
         SubtaskProgressReporter refinementProgress(progressCollection.get<1>(), progressPerIteration*tgt::vec2(i+1, i+2));
         try {
             std::unique_ptr<VesselGraph> prev_graph = std::move(graph);
