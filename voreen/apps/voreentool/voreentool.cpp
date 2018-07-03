@@ -111,9 +111,10 @@ int main(int argc, char* argv[]) {
 
     // create Voreen application
     VoreenApplicationQt::setupPrerequisites();
+
+    qtApp_ = new QApplication(argc, argv);
     VoreenApplicationQt vrnApp(APP_BINARY, APP_NAME, APP_DESC, argc, argv,
         VoreenApplication::ApplicationFeatures(VoreenApplication::APP_ALL /*&~ VoreenApplication::APP_WIDGETS*/));
-    qtApp_ = new QApplication(argc, argv);
 
     // prepare command line parser
     CommandLineParser* cmdParser = vrnApp.getCommandLineParser();
