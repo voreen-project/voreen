@@ -39,7 +39,7 @@ const std::string VoreenVersion::getCompilerVersion() {
         ver << "Microsoft Visual C++ 2013";
     #elif _MSC_VER == 1900
         ver << "Microsoft Visual C++ 2015";
-    #elif _MSC_VER == 1910
+    #elif _MSC_VER >= 1910
         ver << "Microsoft Visual C++ 2017";
     #else
         ver << "Unknown Microsoft Visual C++ (_MSC_VER=" << _MSC_VER << ")";
