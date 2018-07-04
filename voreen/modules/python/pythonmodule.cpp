@@ -171,8 +171,9 @@ void PythonModule::initialize() {
     // init Python's internal module search path
     addModulePath(VoreenApplication::app()->getCoreResourcePath("scripts"));
     addModulePath(getModulePath("scripts"));
-#ifdef WIN32
-    addModulePath(getModulePath("ext/python27/modules"));
+#if defined(WIN32) && defined(VRN_USE_PYTHON_VERSION)
+    std::string versionPath = "ext/" VRN_USE_PYTHON_VERSION "/modules";
+    addModulePath(getModulePath(versionPath));
 #endif
 
     //

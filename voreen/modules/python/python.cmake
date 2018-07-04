@@ -4,19 +4,22 @@
 ################################################################################
 
 IF(WIN32)
-    SET(MOD_INCLUDE_DIRECTORIES "${MOD_DIR}/ext/python36/include")
+    SET(VRN_USE_PYTHON_VERSION python37)
+    SET(MOD_DEFINITIONS "-DVRN_USE_PYTHON_VERSION=\"${VRN_USE_PYTHON_VERSION}\"")
+
+    SET(MOD_INCLUDE_DIRECTORIES "${MOD_DIR}/ext/${VRN_USE_PYTHON_VERSION}/include")
 
 	SET(MOD_RELEASE_DLLS
-		"${MOD_DIR}/ext/python36/lib/release/python36.dll"
+		"${MOD_DIR}/ext/${VRN_USE_PYTHON_VERSION}/lib/release/${VRN_USE_PYTHON_VERSION}.dll"
 	)
     SET(MOD_DEBUG_DLLS
-		"${MOD_DIR}/ext/python36/lib/debug/python36_d.dll"
+		"${MOD_DIR}/ext/${VRN_USE_PYTHON_VERSION}/lib/debug/${VRN_USE_PYTHON_VERSION}_d.dll"
 	)
 	SET(MOD_RELEASE_LIBRARIES
-		"${MOD_DIR}/ext/python36/lib/release/python36.lib"
+		"${MOD_DIR}/ext/${VRN_USE_PYTHON_VERSION}/lib/release/${VRN_USE_PYTHON_VERSION}.lib"
 	)
     SET(MOD_DEBUG_LIBRARIES
-		"${MOD_DIR}/ext/python36/lib/debug/python36_d.lib"
+		"${MOD_DIR}/ext/${VRN_USE_PYTHON_VERSION}/lib/debug/${VRN_USE_PYTHON_VERSION}_d.lib"
 	)
     
     # deployment
@@ -24,7 +27,7 @@ IF(WIN32)
         ${MOD_DIR}/scripts
     )
     SET(MOD_INSTALL_FILES
-        ${MOD_DIR}/ext/python36/LICENSE.txt
+        ${MOD_DIR}/ext/${VRN_USE_PYTHON_VERSION}/LICENSE.txt
     )
 
 ELSEIF(UNIX)
