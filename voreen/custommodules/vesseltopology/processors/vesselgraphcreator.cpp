@@ -1076,7 +1076,7 @@ static bool iterationMadeProgress(const VesselGraph& before, const VesselGraph& 
 VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput input, ProgressReporter& progressReporter) const {
     TaskTimeLogger _("Extract VesselGraph (total)", tgt::Info);
 
-    SubtaskProgressReporterCollection<2> progressCollection(progressReporter, {0.01,0.99});
+    SubtaskProgressReporterCollection<2> progressCollection(progressReporter, {0.01f,0.99f});
 
     VesselGraphCreatorProcessedInput processedInput(input, progressCollection.get<0>());
 
