@@ -201,7 +201,10 @@ void CodeEdit::statusAreaPaintEvent(QPaintEvent* event) {
     painter.setPen(Qt::black);
     // Damn you, Qt! See:
     // http://www.qtcentre.org/threads/32552-Changing-the-font-of-a-QPainter
-    QFont font(currentFont().key(), currentFont().pointSize());
+    QFont font;
+    bool success = font.fromString(currentFont().toString());
+    font.setUnderline(false);
+    tgtAssert(success, "Failed to set line number font from string");
     painter.setFont(font);
     tgtAssert(painter.font().pointSize() == font.pointSize(), "Font size did not propagate.");
 
