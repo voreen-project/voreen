@@ -143,7 +143,6 @@ VolumeResampleTransformationInput VolumeResampleTransformation::prepareComputeIn
     outputVolume->writePhysicalToWorldTransformation(input.getPhysicalToWorldMatrix());
     outputVolume->writeVolumeMinMax(input.getDerivedData<VolumeMinMax>());
 
-    auto minmax = input.getDerivedData<VolumeMinMax>();
     RealWorldMapping rwm = input.getRealWorldMapping();
     outputVolume->writeRealWorldMapping(rwm);
 
