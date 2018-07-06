@@ -236,6 +236,9 @@ void MDSPlot::process() {
     if(privatePort_.getSize() != outport_.getSize())
         privatePort_.resize(outport_.getSize());
 
+    // Change depth func to apply rendering order properly.
+    glDepthFunc(GL_LEQUAL);
+
     // Render picking pass.
     pickingBuffer_.activateTarget();
     pickingBuffer_.clearTarget();
@@ -268,6 +271,7 @@ void MDSPlot::process() {
     }
 
     // Restore state.
+    glDepthFunc(GL_LESS);
     glLineWidth(1.0f);
     IMode.color(tgt::col4::one);
 }
@@ -497,8 +501,8 @@ void MDSPlot::drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, const tgt
         return;
 
     MatStack.pushMatrix();
-    MatStack.scale(tgt::vec3(sphereRadius_.get()));
     MatStack.translate(position);
+    MatStack.scale(tgt::vec3(sphereRadius_.get()));
 
     size_t numTimeSteps = ensembleInport_.getData()->getRuns()[runIdx].timeSteps_.size();
     bool timeStepAvailable = timeStepIdx < numTimeSteps;

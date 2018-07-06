@@ -17,28 +17,33 @@ SET(MOD_CORE_MODULECLASS VisContest2018Module)
 SET(MOD_OPENGL_CORE_PROFILE_COMPATIBLE ON)
 
 # External libraries
-IF(UNIX)
-    FIND_PACKAGE(VTK REQUIRED)
-    INCLUDE(${VTK_USE_FILE})
-    SET(MOD_LIBRARIES ${VTK_LIBRARIES})
-ELSE()
-    
-    SET(VRN_VTK_VERSION 8.0)
+OPTION(VRN_USE_VTK "Use VTK for conversion into HDF5" ON)
+IF(${VRN_USE_VTK})
+    MESSAGE(STATUS "Using VTK library")
+    SET(MOD_DEFINITIONS "-DVRN_USE_VTK")
+    IF(UNIX)
+        FIND_PACKAGE(VTK REQUIRED)
+        INCLUDE(${VTK_USE_FILE})
+        SET(MOD_LIBRARIES ${VTK_LIBRARIES})
+    ELSE()
 
-    LIST(APPEND VTK_LIB_NAMES #add missing
-        "CommonCore" "CommonDataModel" "CommonMisc" "CommonSystem" "CommonTransforms"
-        "CommonExecutionModel" "CommonMath" "expat" "sys" "lz4" "zlib" "IOCore" "IOXML" "IOXMLParser"
-    )
-    
-    FOREACH(elem ${VTK_LIB_NAMES})
-        LIST(APPEND MOD_DEBUG_LIBRARIES   "${MOD_DIR}/ext/vtk/lib/debug/vtk${elem}-${VRN_VTK_VERSION}.lib")
-        LIST(APPEND MOD_DEBUG_DLLS        "${MOD_DIR}/ext/vtk/lib/debug/vtk${elem}-${VRN_VTK_VERSION}.dll")
-        LIST(APPEND MOD_RELEASE_LIBRARIES "${MOD_DIR}/ext/vtk/lib/release/vtk${elem}-${VRN_VTK_VERSION}.lib")
-        LIST(APPEND MOD_RELEASE_DLLS      "${MOD_DIR}/ext/vtk/lib/release/vtk${elem}-${VRN_VTK_VERSION}.dll")
-    ENDFOREACH()
-    
-    SET(MOD_INCLUDE_DIRECTORIES "${MOD_DIR}/ext/vtk/include")
-    
+        SET(VRN_VTK_VERSION 8.0)
+
+        LIST(APPEND VTK_LIB_NAMES #add missing
+            "CommonCore" "CommonDataModel" "CommonMisc" "CommonSystem" "CommonTransforms"
+            "CommonExecutionModel" "CommonMath" "expat" "sys" "lz4" "zlib" "IOCore" "IOXML" "IOXMLParser"
+        )
+
+        FOREACH(elem ${VTK_LIB_NAMES})
+            LIST(APPEND MOD_DEBUG_LIBRARIES   "${MOD_DIR}/ext/vtk/lib/debug/vtk${elem}-${VRN_VTK_VERSION}.lib")
+            LIST(APPEND MOD_DEBUG_DLLS        "${MOD_DIR}/ext/vtk/lib/debug/vtk${elem}-${VRN_VTK_VERSION}.dll")
+            LIST(APPEND MOD_RELEASE_LIBRARIES "${MOD_DIR}/ext/vtk/lib/release/vtk${elem}-${VRN_VTK_VERSION}.lib")
+            LIST(APPEND MOD_RELEASE_DLLS      "${MOD_DIR}/ext/vtk/lib/release/vtk${elem}-${VRN_VTK_VERSION}.dll")
+        ENDFOREACH()
+
+        SET(MOD_INCLUDE_DIRECTORIES "${MOD_DIR}/ext/vtk/include")
+
+    ENDIF()
 ENDIF()
 
 # deployment
@@ -57,7 +62,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/io/fieldplotsave.cpp
     ${MOD_DIR}/io/fieldplotsource.cpp
     ${MOD_DIR}/io/similaritydatasave.cpp
-    ${MOD_DIR}/io/vtivolumereader.cpp
     
     #Processors
     ${MOD_DIR}/processors/ensembledatasource.cpp
@@ -104,7 +108,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/io/fieldplotsave.h
     ${MOD_DIR}/io/fieldplotsource.h
     ${MOD_DIR}/io/similaritydatasave.h
-    ${MOD_DIR}/io/vtivolumereader.h
 
     #Processors
     ${MOD_DIR}/processors/ensembledatasource.h
@@ -141,6 +144,11 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/utils/ensemblehash.h
     ${MOD_DIR}/utils/utils.h
 )
+
+IF(${VRN_USE_VTK})
+    SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES} ${MOD_DIR}/io/vtivolumereader.cpp)
+    SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS} ${MOD_DIR}/io/vtivolumereader.h)
+ENDIF()
 
 ###############################################################################
 # Qt module resources 

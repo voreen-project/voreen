@@ -114,6 +114,8 @@ protected:
     FloatIntervalProperty timeInterval_;
     StringListProperty selectedRuns_;
     BoolProperty hasLogarithmicDensity_;
+    StringProperty xUnit_;
+    StringProperty yUnit_;
 
     ShaderProperty plotShader_;
 

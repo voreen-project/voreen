@@ -68,7 +68,9 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
     , valueRange_("valueRange", "Value Range", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
     , timeInterval_("timeInterval", "Selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
     , selectedRuns_("selectedRuns", "Selected Runs")
-    , hasLogarithmicDensity_("logarithmicDensity", "Logarithmic Density", true, Processor::VALID)
+    , hasLogarithmicDensity_("logarithmicDensity", "Logarithmic Density", false, Processor::VALID)
+    , xUnit_("xUnit", "x-Unit", "time")
+    , yUnit_("yUnit", "y-Unit", "value")
     , plotShader_("shaderprop", "Plot Shader", "fieldplot.frag", "passthrough.vert", "", Processor::INVALID_PROGRAM, Property::LOD_DEBUG)
     , timeStepPosition_(0.0f)
     , viewPortWidth_(0.0f)
@@ -97,6 +99,10 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
     addProperty(hasLogarithmicDensity_);
         hasLogarithmicDensity_.setGroupID("rendering");
         ON_CHANGE_LAMBDA(hasLogarithmicDensity_, [this] { requirePlotDataUpdate_ = true; });
+    addProperty(xUnit_);
+        xUnit_.setGroupID("rendering");
+    addProperty(yUnit_);
+        yUnit_.setGroupID("rendering");
     addProperty(renderedChannel_);
         renderedChannel_.setGroupID("rendering");
         renderedChannel_.setReadOnlyFlag(true);
@@ -457,8 +463,8 @@ void FieldParallelPlotViewer::renderAxes() {
         plotLib_->renderAxisScales(PlotLibrary::X_AXIS, false);
         plotLib_->renderAxisScales(PlotLibrary::Y_AXIS, false);
         plotLib_->setFontSize(12);
-        plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "time");
-        plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "value");
+        plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, xUnit_.get());
+        plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, yUnit_.get());
     }
     plotLib_->resetRenderStatus();
 

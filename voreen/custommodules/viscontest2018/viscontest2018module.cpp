@@ -43,7 +43,9 @@
 #include "io/fieldplotsave.h"
 #include "io/fieldplotsource.h"
 #include "io/similaritydatasave.h"
+#ifdef VRN_USE_VTK
 #include "io/vtivolumereader.h"
+#endif
 
 #include "properties/link/viscontest2018linkevaluatorid.h"
 
@@ -76,7 +78,9 @@ VisContest2018Module::VisContest2018Module(const std::string& modulePath)
     registerProcessor(new FieldPlotSave());
     registerProcessor(new FieldPlotSource());
     registerProcessor(new SimilarityDataSave());
+#ifdef VRN_USE_VTK
     registerVolumeReader(new VTIVolumeReader());
+#endif
     
     // Properties
     registerSerializableType(new LinkEvaluatorIntListId());

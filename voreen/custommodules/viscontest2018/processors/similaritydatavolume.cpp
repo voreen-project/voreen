@@ -309,11 +309,15 @@ void SimilartyDataVolume::adjustToEnsemble() {
     group2_.reset();
     singleRunSelection_.reset();
     singleRunSelection_.setOptions(std::deque<Option<std::string>>());
+    std::vector<int> selection;
     for(const EnsembleDataset::Run& run : ensemble->getRuns()) {
         group1_.addRow(run.name_);
+        selection.push_back(static_cast<int>(selection.size()));
         group2_.addRow(run.name_);
         singleRunSelection_.addOption(run.name_, run.name_);
     }
+    group1_.setSelectedRowIndices(selection);
+    group2_.setSelectedRowIndices(selection);
 
     selectedChannel_.reset();
     selectedChannel_.setOptions(std::deque<Option<std::string>>());
