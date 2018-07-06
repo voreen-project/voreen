@@ -66,6 +66,10 @@
 #include <clocale>
 #endif
 
+#include <locale>
+#include <codecvt>
+#include <string>
+
 using namespace voreen;
 
 const std::string APP_BINARY  = "voreentool";
@@ -92,7 +96,7 @@ const std::string loggerCat_  = "voreentool.main";
 void executeNetwork(ProcessorNetwork* network, NetworkEvaluator* networkEvaluator,
     const std::vector<std::string>& configurationOptions, const std::vector<std::string>& actionOptions,
     bool triggerAllActions, bool triggerImageSaves, bool triggerVolumeSaves, bool triggerGeometrySaves,
-    const std::string& pythonScriptFilename);
+    const std::string& pythonScriptFilename, const std::vector<std::string>& pythonScriptArgs);
 
 /**
  * Exits the application with state EXIT_FAILURE.
@@ -163,9 +167,12 @@ int main(int argc, char* argv[]) {
         "Trigger a \"save file\" event on all GeometrySave and TextSave processors after the network has been evaluated.");
 
     std::string scriptFilename;
+    std::vector<std::string> scriptArgs;
 #ifdef VRN_MODULE_PYTHON
     cmdParser->addOption("script", scriptFilename, CommandLineParser::MainOption,
         "Run a Python script after the network configuration has been applied.");
+    cmdParser->addMultiOption("scriptArgs", scriptArgs, CommandLineParser::MainOption,
+        "Arguments passed to the python script (possibly multiple).");
 #endif
 
     std::string workingDirectory;
@@ -235,7 +242,7 @@ int main(int argc, char* argv[]) {
         try {
             executeNetwork(workspace->getProcessorNetwork(), networkEvaluator_, configurationOptions, actionOptions,
                 triggerAllActions, triggerImageSaves && glMode, triggerVolumeSaves, triggerGeometrySaves,
-                scriptFilename);
+                scriptFilename, scriptArgs);
         }
         catch (VoreenException& e) {
             delete workspace;
@@ -268,10 +275,16 @@ int main(int argc, char* argv[]) {
 
 //-------------------------------------------------------------------------------------------------
 
+static std::wstring utf8_to_utf16(const std::string& str) {
+    // Note: This of course assumes that the input is utf8 encoded.
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    return converter.from_bytes(str);
+}
+
 void executeNetwork(ProcessorNetwork* network, NetworkEvaluator* networkEvaluator,
         const std::vector<std::string>& configurationOptions, const std::vector<std::string>& actionOptions,
         bool triggerAllActions, bool triggerImageSaves, bool triggerVolumeSaves, bool triggerGeometrySaves,
-        const std::string& pythonScriptFilename) {
+        const std::string& pythonScriptFilename, const std::vector<std::string>& pythonScriptArgs) {
 
     tgtAssert(network, "no network passed (null pointer)");
     tgtAssert(networkEvaluator, "no network evaluator passed (null pointer)") ;
@@ -306,8 +319,23 @@ void executeNetwork(ProcessorNetwork* network, NetworkEvaluator* networkEvaluato
         if (!PythonModule::getInstance())
             throw VoreenException("Failed to run Python script: PythonModule not instantiated");
         LINFO("Running Python script '" << pythonScriptFilename << "' ...");
+
+        std::vector<std::wstring> wstringargs;
+        wstringargs.push_back(utf8_to_utf16(pythonScriptFilename));
+        for(const std::string& s : pythonScriptArgs) {
+            wstringargs.push_back(utf8_to_utf16(s));
+        }
+
+        std::vector<wchar_t*> wargs;
+        for(std::wstring& s : wstringargs) {
+            wargs.push_back(&s[0]); //s.data() only in c++17
+        }
+        PythonModule::getInstance()->setArgv(wargs.size(), wargs.data());
         PythonModule::getInstance()->runScript(pythonScriptFilename, false);  //< throws VoreenException on failure
         LINFO("Python script finished.");
+
+        // Be sure to clear future dangling references
+        PythonModule::getInstance()->setArgv(0, nullptr);
     }
 #endif
 
