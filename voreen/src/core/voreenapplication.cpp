@@ -276,6 +276,8 @@ VoreenApplication::VoreenApplication(const std::string& binaryName, const std::s
     // command line options
     cmdParser_->addFlagOption("help,h", CommandLineParser::AdditionalOption, "Print help message");
 
+    cmdParser_->addFlagOption("revision", CommandLineParser::AdditionalOption, "Print revision of binary and exit.");
+
     cmdParser_->addOption<bool>("logging", CommandLineParser::AdditionalOption,
         "If set to false, logging is disabled entirely (not recommended)"
         /*, enableLogging_->get(), enableLogging_->get() ? "true" : "false" */);
@@ -629,6 +631,14 @@ void VoreenApplication::initialize() {
         cmdParser_->getOptionValue("help", helpFlag);
         if (helpFlag) {
             std::cout << cmdParser_->getUsageString() << std::endl;
+            exit(EXIT_SUCCESS);
+        }
+
+        // if --revision has been passed, print revision and exit
+        bool revisionFlag = false;
+        cmdParser_->getOptionValue("revision", revisionFlag);
+        if (revisionFlag) {
+            std::cout << VoreenVersion::getRevision() << std::endl;
             exit(EXIT_SUCCESS);
         }
     }
@@ -1297,6 +1307,10 @@ void VoreenApplication::tempDataPathChanged() {
     catch (const boost::interprocess::interprocess_exception& exception) {
         throw VoreenException(std::string("Failed to create file lock: ") + exception.what());
     }
+}
+
+void VoreenApplication::setTempDataPath(const std::string& path) {
+    tempDataPath_.set(path);
 }
 
 std::string VoreenApplication::getTestDataPath() const {

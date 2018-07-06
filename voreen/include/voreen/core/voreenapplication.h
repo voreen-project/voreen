@@ -589,6 +589,12 @@ public:
     void cleanOrphanedTemporaryData();
 
     /**
+     * Sets path to directory in which temporary data will be placed. It is stored in
+     * the application settings using a FileDialogProperty.
+     */
+    void setTempDataPath(const std::string& path);
+
+    /**
      * Returns the test data directory. If not set, an empty string is returned.
      *
      * @see setTestDataPath
@@ -752,7 +758,7 @@ private:
     // Mersenne twister pseudo-random number generator for initialization of uuidGenerator to avoid valgrind uninitialized value messages
     boost::mt19937 mersenneTwister_;
     // Generator for uuids (mutable, since ()-operator is non-const)
-    mutable boost::uuids::random_generator uuidGenerator_;
+    mutable boost::uuids::basic_random_generator<boost::mt19937> uuidGenerator_;
 
     // The tempDataPath for this particular instance of Voreen
     std::string tempDataPathInstance_;

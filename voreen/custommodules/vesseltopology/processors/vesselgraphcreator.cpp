@@ -903,8 +903,11 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
     SubtaskProgressReporterCollection<8> subtaskReporters(progress);
 
     // Create new protograph
-    std::unique_ptr<MetaDataCollector> mdc = cca(NeighborCountVoxelClassifier(skeleton), subtaskReporters.get<0>());
-    std::unique_ptr<ProtoVesselGraph> protograph = mdc->createProtoVesselGraph(input.segmentation.getDimensions(), input.segmentation.getMetaData().getVoxelToWorldMatrix(), input.sampleMask, subtaskReporters.get<1>());
+    std::unique_ptr<ProtoVesselGraph> protograph(nullptr);
+    {
+        std::unique_ptr<MetaDataCollector> mdc = cca(NeighborCountVoxelClassifier(skeleton), subtaskReporters.get<0>());
+        protograph = mdc->createProtoVesselGraph(input.segmentation.getDimensions(), input.segmentation.getMetaData().getVoxelToWorldMatrix(), input.sampleMask, subtaskReporters.get<1>());
+    }
 
 
     // Create an assignment edge <-> vessel component
@@ -1073,7 +1076,7 @@ static bool iterationMadeProgress(const VesselGraph& before, const VesselGraph& 
 VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput input, ProgressReporter& progressReporter) const {
     TaskTimeLogger _("Extract VesselGraph (total)", tgt::Info);
 
-    SubtaskProgressReporterCollection<2> progressCollection(progressReporter, {0.01,0.99});
+    SubtaskProgressReporterCollection<2> progressCollection(progressReporter, {0.01f,0.99f});
 
     VesselGraphCreatorProcessedInput processedInput(input, progressCollection.get<0>());
 
@@ -1083,12 +1086,17 @@ VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput inp
     std::unique_ptr<VolumeList> generatedVolumes(new VolumeContainer());
     std::unique_ptr<std::vector<VesselGraph>> generatedGraphs(new std::vector<VesselGraph>());
     std::unique_ptr<VesselGraph> graph = createInitialVesselGraph(processedInput, *generatedVolumes, initialProgress);
+    LINFO("Finished graph extraction iteration: " << 0);
+    LINFO("Inital graph: " << graph->getNodes().size() << " Nodes, " << graph->getEdges().size() << " Edges.");
+
     for(int i=0; i < input.numRefinementIterations; ++i) {
         SubtaskProgressReporter refinementProgress(progressCollection.get<1>(), progressPerIteration*tgt::vec2(i+1, i+2));
         try {
             std::unique_ptr<VesselGraph> prev_graph = std::move(graph);
             graph = refineVesselGraph(processedInput, *prev_graph, *generatedVolumes, refinementProgress);
+            LINFO("Finished graph extraction iteration: " << (i+1));
             bool done = !iterationMadeProgress(*prev_graph, *graph);
+            LINFO("Iteration " << (i+1) << ": " << graph->getNodes().size() << " Nodes, " << graph->getEdges().size() << " Edges.");
             if(input.saveDebugData) {
                 generatedGraphs->push_back(std::move(*prev_graph));
             }
@@ -1148,7 +1156,7 @@ void VesselGraphCreator::adjustPropertiesToInput() {
     const VolumeBase* segmentation = segmentedVolumeInport_.getData();
     if(segmentation) {
         if(!segmentation->hasDerivedData<VolumeMinMax>()) {
-            LWARNING("Calculating VolumeMinMax. This may take a while...");
+            LINFO("Calculating VolumeMinMax. This may take a while...");
         }
         const VolumeMinMax* mm = segmentation->getDerivedData<VolumeMinMax>();
         bool minMaxWereEqual = binarizationThresholdSegmentation_.getMinValue() == binarizationThresholdSegmentation_.getMaxValue();

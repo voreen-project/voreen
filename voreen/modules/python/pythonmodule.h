@@ -36,6 +36,9 @@
 
 namespace voreen {
 
+// Helper to convert Unicode PyObject into c-string
+char* PyUnicodeAsString(PyObject* object);
+
 /**
  * Implement this interface in order to receive the output of
  * Python scripts.
@@ -95,12 +98,7 @@ public:
      * @param argc number of command line arguments
      * @param argv array of arguments
      */
-    void setArgv(int argc, char* argv[]);
-
-    /**
-     * Passes the specified program name to the Python environment.
-     */
-    void setProgramName(const std::string& prgName);
+    void setArgv(int argc, wchar_t * argv[]);
 
     /**
      * Appends the passed path to the Python interpreter's module search path.
@@ -147,8 +145,8 @@ protected:
     virtual void deinitialize();
 
 private:
-    /// The actual Voreen Python bindings
-    PyVoreen* pyVoreen_;
+    /// The actual Voreen Python bindings (uses RAII)
+    PyVoreen pyVoreen_;
 
     /// Output of Python scripts is redirected to these.
     static std::vector<PythonOutputListener*> outputListeners_;

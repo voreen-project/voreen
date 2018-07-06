@@ -130,6 +130,7 @@ char* strToChr(const std::string& s){
     return result;
 }
 
+
 std::string strReplaceAll(const std::string& str, const std::string& from, const std::string& to) {
     std::string strConv(str);
     size_t lookHere = 0;
@@ -291,7 +292,7 @@ std::string formatSpatialLength(float base_mm) {
     else if (mm >= 1.0f)
         out << mm << " mm";
     else if (mu >= 1.0f)
-        out << mu << " µm";
+        out << mu << " Âµm";
     else
         out << nm << " nm";
 
@@ -318,7 +319,7 @@ VRN_CORE_API std::string formatSpatialLength(const tgt::vec3& position) {
     else if (posMM.x >= 1.0f || posMM.y >= 1.0f || posMM.z > 1.0f)
         out << posMM << " mm";
     else if (posMU.x >= 1.0f || posMU.y >= 1.0f || posMU.z > 1.0f)
-        out << posMU << " µm";
+        out << posMU << " Âµm";
     else
         out << posNM << " nm";
 

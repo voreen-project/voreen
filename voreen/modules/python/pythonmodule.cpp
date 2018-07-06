@@ -32,6 +32,22 @@
 
 namespace voreen {
 
+char* PyUnicodeAsString(PyObject* object) {
+
+    tgtAssert(object != nullptr, "Object was null");
+    tgtAssert(PyUnicode_Check(object), "No Unicode Object");
+
+    char* result = NULL;
+    PyObject* bytes = PyUnicode_AsEncodedString(object, "UTF-8", "strict");
+    if (bytes != NULL) {
+        result = PyBytes_AS_STRING(bytes);
+        result = strdup(result);
+        Py_DECREF(bytes);
+    }
+
+    return result;
+}
+
 const std::string PythonModule::loggerCat_("voreen.Python.Module");
 PythonModule* PythonModule::instance_ = 0;
 std::vector<PythonOutputListener*> PythonModule::outputListeners_;
@@ -83,11 +99,25 @@ static PyMethodDef internal_methods[] = {
     { NULL, NULL, 0, NULL} // sentinal
 };
 
+static struct PyModuleDef voreenInternalModuleDef =
+{
+    PyModuleDef_HEAD_INIT,
+    "voreen_internal",
+    NULL,
+    -1,
+    internal_methods
+};
+
+PyMODINIT_FUNC
+PyInit_voreenInternalModule(void)
+{
+    return PyModule_Create(&voreenInternalModuleDef);
+}
+
 // -----------------------------------------------------------------
 PythonModule::PythonModule(const std::string& modulePath)
     : VoreenModule(modulePath)
     , tgt::ResourceManager<PythonScript>(false)
-    , pyVoreen_(0)
 {
     setID("Python");
     setGuiName("Python");
@@ -95,7 +125,7 @@ PythonModule::PythonModule(const std::string& modulePath)
 }
 
 PythonModule::~PythonModule() {
-    instance_ = 0;
+    instance_ = nullptr;
 }
 
 PythonModule* PythonModule::getInstance() {
@@ -106,12 +136,18 @@ void PythonModule::initialize() {
     VoreenModule::initialize();
 
     //
+    // Register module extensions (needs to be done before(!) Py_Initialize()
+    //
+    if(PyImport_AppendInittab("voreen_internal", PyInit_voreenInternalModule) == -1)
+        LWARNING("Failed to init helper module 'voreen_internal'");
+
+    //
     // Initialize Python interpreter
     //
     LINFO("Python version: " << Py_GetVersion());
 
     // Pass program name to the Python interpreter
-    char str_pyvoreen[] = "PyVoreen";
+    static wchar_t str_pyvoreen[] = L"PyVoreen";
     Py_SetProgramName(str_pyvoreen);
 
 #ifdef WIN32
@@ -120,7 +156,7 @@ void PythonModule::initialize() {
 #endif
 
     // Initialize the Python interpreter. Required.
-    Py_InitializeEx(false);
+    Py_InitializeEx(0);
     if (!Py_IsInitialized())
         throw VoreenException("Failed to initialize Python interpreter");
 
@@ -135,18 +171,14 @@ void PythonModule::initialize() {
     // init Python's internal module search path
     addModulePath(VoreenApplication::app()->getCoreResourcePath("scripts"));
     addModulePath(getModulePath("scripts"));
-#ifdef WIN32
-    addModulePath(getModulePath("ext/python27/modules"));
+#if defined(WIN32) && defined(VRN_USE_PYTHON_VERSION)
+    std::string versionPath = "ext/" VRN_USE_PYTHON_VERSION "/modules";
+    addModulePath(getModulePath(versionPath));
 #endif
 
     //
     // Redirect script output from std::cout to voreen_print function (see above)
     //
-
-    // import helper module
-    if (!Py_InitModule("voreen_internal", internal_methods)) {
-        LWARNING("Failed to init helper module 'voreen_internal'");
-    }
 
     // load output redirector script and run it once
     std::string filename = "outputcatcher.py";
@@ -160,20 +192,12 @@ void PythonModule::initialize() {
     else {
         LWARNING("Failed to load init script '" << filename << "'");
     }
-
-    //
-    // Create actual Voreen Python bindings
-    //
-    pyVoreen_ = new PyVoreen();
 }
 
 void PythonModule::deinitialize() {
 
     if (!isInitialized())
         throw VoreenException("not initialized");
-
-    delete pyVoreen_;
-    pyVoreen_ = 0;
 
     // clean up python interpreter
     Py_Finalize();
@@ -235,14 +259,8 @@ void PythonModule::runScript(const std::string& filename, bool logErrors) {
         throw VoreenException(errorMsg);
 }
 
-void PythonModule::setArgv(int argc, char* argv[]) {
+void PythonModule::setArgv(int argc, wchar_t* argv[]) {
     PySys_SetArgv(argc, argv);
-}
-
-void PythonModule::setProgramName(const std::string& prgName) {
-    char* str = strToChr(prgName);
-    Py_SetProgramName(str);
-    delete[] str;
 }
 
 void PythonModule::addModulePath(const std::string& path) {
@@ -277,10 +295,10 @@ bool PythonModule::checkForPythonError(std::string& errorMsg) {
     // convert indicators to Python strings, if possible
     PyObject* errtypeStr = PyObject_Str(errtype);
     PyObject* errvalueStr = PyObject_Str(errvalue);
-    if (errtypeStr && PyString_AsString(errtypeStr))
-        errorMsg = std::string(PyString_AsString(errtypeStr));
-    if (errvalueStr && PyString_AsString(errvalueStr))
-        errorMsg += std::string(", ") + std::string(PyString_AsString(errvalueStr));
+    if (errtypeStr && PyUnicode_Check(errtypeStr))
+        errorMsg = PyUnicodeAsString(errtypeStr);
+    if (errvalueStr && PyUnicode_Check(errvalueStr))
+        errorMsg += std::string(", ") + PyUnicodeAsString(errvalueStr);
 
     // free allocated ressources
     Py_XDECREF(errtypeStr);

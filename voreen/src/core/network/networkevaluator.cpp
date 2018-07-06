@@ -441,6 +441,7 @@ void NetworkEvaluator::process() {
         LGL_ERROR;
     }
 
+    // TODO: find better solution, very ugly code!
     for (std::vector<Processor*>::const_iterator iter = getProcessorNetwork()->getProcessors().begin(); iter != getProcessorNetwork()->getProcessors().end(); ++iter) {
         if (((*iter)->isReady() && !(*iter)->isValid()) && (((*iter)->getClassName().compare("Canvas") != 0) && ((*iter)->getClassName().compare("StereoCanvas") != 0))){
             tgtAssert(VoreenApplication::app(), "VoreenApplication not instantiated");

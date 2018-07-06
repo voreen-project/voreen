@@ -40,10 +40,8 @@ public:
     PythonModuleQt(const std::string& modulePath);
 
 protected:
-    virtual void initialize();
-    virtual void deinitialize();
 
-    PyVoreenQt* pythonQt_;
+    PyVoreenQt pythonQt_;
 
     static const std::string loggerCat_;
 };

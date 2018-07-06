@@ -98,7 +98,7 @@ void VolumeThinning::process() {
 
     float binarizationThreshold = invol.getRealWorldMapping().realWorldToNormalized(binarizationThreshold_.get());
 
-    SubtaskProgressReporterCollection<3> subtaskReporters(*this, {{0.01,0.49,0.50}});
+    SubtaskProgressReporterCollection<3> subtaskReporters(*this, {{0.01f,0.49f,0.50f}});
 
     VolumeMask m(
             std::move(binarizeVolume(invol, invol.getRealWorldMapping().realWorldToNormalized(binarizationThreshold_.get()),

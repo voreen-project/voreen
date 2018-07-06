@@ -268,7 +268,7 @@ void ConnectedComponentAnalysis::adjustPropertiesToInput() {
         return;
     }
     if(!input->hasDerivedData<VolumeMinMax>()) {
-        LWARNING("Calculating VolumeMinMax. This may take a while...");
+        LINFO("Calculating VolumeMinMax. This may take a while...");
     }
     const VolumeMinMax* mm = input->getDerivedData<VolumeMinMax>();
 

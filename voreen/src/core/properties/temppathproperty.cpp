@@ -24,8 +24,10 @@
 ***********************************************************************************/
 
 #include "voreen/core/properties/temppathproperty.h"
+#include "voreen/core/utils/voreenfilepathhelper.h"
 
 #include "voreen/core/voreenapplication.h"
+#include <regex>
 
 namespace voreen {
 
@@ -34,6 +36,7 @@ TempPathProperty::TempPathProperty(const std::string& id, const std::string& gui
     const std::string& fileFilter, FileDialogProperty::FileMode fileMode,
     int invalidationLevel, Property::LevelOfDetail lod)
     : FileDialogProperty(id, guiText, dialogCaption, directory, fileFilter, fileMode, invalidationLevel, lod, VoreenFileWatchListener::ALWAYS_OFF)
+    , useGeneratedPath_(false)
 {
     // Initialize auto generated path.
     setUseGeneratedPath(true);
@@ -65,16 +68,29 @@ void TempPathProperty::serialize(Serializer& s) const {
 }
 
 void TempPathProperty::deserialize(Deserializer& s) {
-    FileDialogProperty::deserialize(s);
     s.optionalDeserialize("useGeneratedPath", useGeneratedPath_, true);
     if(useGeneratedPath_) {
+        // Bypass FileDialogProperty::deserialize()
+        Property::deserialize(s);
+        VoreenFileWatchListener::deserialize(s);
         generateAndUseNewTmpPath();
+    } else {
+        FileDialogProperty::deserialize(s);
     }
 }
 
+static const std::regex FILE_EXTENSION_REGEX("\\(\\*(\\.[a-zA-Z0-9]+)\\)");
+
 void TempPathProperty::generateAndUseNewTmpPath() {
+    std::smatch match;
+    std::string extension;
+    if(std::regex_search(fileFilter_, match, FILE_EXTENSION_REGEX)) {
+        extension = match[1].str();
+    } else {
+        extension = "";
+    }
     tgtAssert(VoreenApplication::app(), "No voreen application");
-    set(VoreenApplication::app()->getUniqueTmpFilePath(fileFilter_));
+    set(VoreenApplication::app()->getUniqueTmpFilePath(extension));
 }
 
 }   // namespace

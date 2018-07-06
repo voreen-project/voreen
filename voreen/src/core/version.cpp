@@ -39,7 +39,7 @@ const std::string VoreenVersion::getCompilerVersion() {
         ver << "Microsoft Visual C++ 2013";
     #elif _MSC_VER == 1900
         ver << "Microsoft Visual C++ 2015";
-    #elif _MSC_VER == 1910
+    #elif _MSC_VER >= 1910
         ver << "Microsoft Visual C++ 2017";
     #else
         ver << "Unknown Microsoft Visual C++ (_MSC_VER=" << _MSC_VER << ")";
@@ -73,7 +73,7 @@ const std::string VoreenVersion::getRevision() {
 }
 
 const std::string VoreenVersion::getCopyright() {
-    return "Copyright (C) 2005-2017 University of Münster, Germany. \nVisualization and Computer Graphics Group (VisCG).";
+    return "Copyright (C) 2005-2018 University of Münster, Germany. \nVisualization and Computer Graphics Group (VisCG).";
 }
 
 void VoreenVersion::logAll(const std::string& loggerCat) {

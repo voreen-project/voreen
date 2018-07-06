@@ -58,7 +58,10 @@ TouchTableWidget::TouchTableWidget()
     invalidPosition_.setVisibleFlag(false);
 
     addProperty(symbolFile_);
-    symbolFile_.set(VoreenApplication::app()->getModulePath("touchtable") + "/textures" + "/nosymbol.png");
+    // Module path only available once Application is initialized.
+    // However object factories need an instance beforehand.
+    if(VoreenApplication::app()->isInitialized())
+        symbolFile_.set(VoreenApplication::app()->getModulePath("touchtable") + "/textures" + "/nosymbol.png");
 }
 
 void TouchTableWidget::initialize() {

@@ -485,9 +485,6 @@ struct MetaDataCollector {
     // Create the vessel graph using the collected metadata and the segmentedVolume.
     // skeleton is currently only used for volume metadata
     // sampleMask may be null
-    template<class S>
-    std::unique_ptr<VesselGraph> createVesselGraph(S& segmentedVolumeReader, const VolumeBase* sampleMask, ProgressReporter& progress);
-
     std::unique_ptr<ProtoVesselGraph> createProtoVesselGraph(tgt::svec3 dimensions, const tgt::mat4& toRwMatrix, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress);
 
     std::vector<tgt::svec3> endPoints_;
