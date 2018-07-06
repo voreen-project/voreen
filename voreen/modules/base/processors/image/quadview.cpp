@@ -192,6 +192,7 @@ void QuadView::process() {
             glVertex2f(0.0f, 1.0f);
             glVertex2f(0.0f, -1.0f);
             glEnd();
+            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
             shader_->activate();
             glDepthFunc(GL_LESS);
         }
