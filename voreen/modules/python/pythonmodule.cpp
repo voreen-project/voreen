@@ -147,7 +147,7 @@ void PythonModule::initialize() {
     LINFO("Python version: " << Py_GetVersion());
 
     // Pass program name to the Python interpreter
-    static const wchar_t str_pyvoreen[] = L"PyVoreen";
+    static wchar_t str_pyvoreen[] = L"PyVoreen";
     Py_SetProgramName(str_pyvoreen);
 
 #ifdef WIN32
