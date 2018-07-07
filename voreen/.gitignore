@@ -67,8 +67,6 @@ ui_aboutbox.h
 tags
 
 # VC build files
-Debug/
-Release/
 ipch/
 *.pdb
 *.idb

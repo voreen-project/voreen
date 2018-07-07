@@ -1,6 +1,2 @@
 .DS_Store
-Voreen.opensdf
 
-# build folders for builds near the source repository
-release
-debug

@@ -147,10 +147,20 @@ void PythonModule::initialize() {
     LINFO("Python version: " << Py_GetVersion());
 
     // Pass program name to the Python interpreter
-    static wchar_t str_pyvoreen[] = L"PyVoreen";
+    static const wchar_t str_pyvoreen[] = L"PyVoreen";
     Py_SetProgramName(str_pyvoreen);
 
 #ifdef WIN32
+#ifndef VRN_USE_PYTHON_VERSION
+#error VRN_USE_PYTHON_VERSION needs to be defined by module cmake file
+#endif
+
+    // Set Python home to embedded build
+    std::string libraryPath = getModulePath("ext/" VRN_USE_PYTHON_VERSION);
+    static std::wstring str_pyhome; // we need static storage duration for PythonHome.
+    str_pyhome = std::wstring(libraryPath.begin(), libraryPath.end());
+    Py_SetPythonHome(str_pyhome.c_str());
+
     // disable import of 'site' module (not available in embedded windows build)
     Py_NoSiteFlag = 1;
 #endif
@@ -171,9 +181,8 @@ void PythonModule::initialize() {
     // init Python's internal module search path
     addModulePath(VoreenApplication::app()->getCoreResourcePath("scripts"));
     addModulePath(getModulePath("scripts"));
-#if defined(WIN32) && defined(VRN_USE_PYTHON_VERSION)
-    std::string versionPath = "ext/" VRN_USE_PYTHON_VERSION "/modules";
-    addModulePath(getModulePath(versionPath));
+#ifdef WIN32
+    addModulePath(libraryPath + "/lib");
 #endif
 
     //
