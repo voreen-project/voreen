@@ -1,20 +1,15 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
-    <Workspace version="2" readonly="true" GlobalDescription="">
-        <ProcessorNetwork version="17">
+    <Workspace version="2" readonly="true" GlobalDescription='&lt;font color=&quot;#808080&quot;&gt;&lt;h4&gt;Geometry Rendering&lt;/h4&gt; &lt;p&gt;This workspace allows to render geometries. Simply pass a geometry file of any supported type to the geometry source and it will be rendered by the Geometry Renderer. The latter can be configured to adjust the visual outcome.&lt;/p&gt;&lt;/font&gt;'>
+        <ProcessorNetwork version="19">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="GeometryRenderer" ref="ref3" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="4.35989618" y="-16.56760597" />
+                    <value x="18" y="-52" />
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.14681625" />
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="2.159183741" />
             </MetaData>
             <Processors>
                 <Processor type="Background" name="Background" id="ref0">
@@ -29,18 +24,22 @@
                             <value x="0.20784314" y="0.20784314" z="0.20784314" w="1" />
                         </Property>
                         <Property mapKey="color2" name="color2">
-                            <value x="0.70980394" y="0.70980394" z="0.70980394" w="1" />
+                            <value x="0.709803939" y="0.709803939" z="0.709803939" w="1" />
                         </Property>
                         <Property mapKey="enable" name="enable" value="true" />
                         <Property mapKey="randomClouds" name="randomClouds" value="true" />
                         <Property mapKey="repeat" name="repeat" value="1" />
-                        <Property mapKey="shader.program" name="shader.program" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                        <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" width="700" height="700" />
                             </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
+                            </components>
                         </Property>
-                        <Property mapKey="texture" name="texture">
+                        <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                     </Properties>
@@ -63,21 +62,28 @@
                 <Processor type="Canvas" name="Canvas" id="ref1">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="86" y="133" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="85" y="303" width="358" height="359" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="368" y="190" width="512" height="512" />
+                        <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
+                            <value x="8" y="8" />
+                        </MetaItem>
+                        <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
+                            <value x="2012" y="1326" />
+                        </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="85" y="303" />
+                            <value x="368" y="190" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="358" y="359" />
+                            <value x="512" y="512" />
                         </MetaItem>
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize">
-                            <value x="358" y="359" />
+                            <value x="512" y="512" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="showCanvas" name="showCanvas" value="true" />
@@ -88,7 +94,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref5">
-                                    <value x="358" y="359" />
+                                    <value x="512" y="512" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -106,12 +112,12 @@
                         <Property mapKey="addobjcolor" name="addobjcolor" value="false" />
                         <Property mapKey="calcNormals" name="calcNormals" value="true" />
                         <Property mapKey="clearGeometry" name="clearGeometry" />
-                        <Property mapKey="geometryFile" name="geometryFile">
+                        <Property mapKey="geometryFile" name="geometryFile" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../geometry/mesh_testscene_a.vge" />
+                                    <item value="../../../../../voreen-development/voreen/resource/voreenve/geometry/mesh_testscene_a.vge" />
                                     <item value="resource/voreenve/geometry/mesh_testscene_a.vge" />
-                                    <item value="/voreen/resource/voreenve/geometry/mesh_testscene_a.vge" />
+                                    <item value="C:/voreen-development/voreen/resource/voreenve/geometry/mesh_testscene_a.vge" />
                                 </paths>
                             </paths>
                         </Property>
@@ -124,7 +130,7 @@
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="geometry.pointlist" direction="0" portID="geometry.pointlist" guiName="PointList Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.pointlist" direction="0" portID="geometry.pointlist" guiName="PointList Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -141,31 +147,43 @@
                     <Properties>
                         <Property mapKey="enable.clipping" name="enable.clipping" value="false" />
                         <Property mapKey="enableLighting" name="enableLighting" value="true" />
-                        <Property mapKey="geometry_opaque.prg" name="geometry_opaque.prg" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                        <Property mapKey="geometry_opaque.prg" name="geometry_opaque.prg">
                             <MetaData>
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
                             </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
+                                <item shaderType="2" originalFilename="trianglemesh.geom" modified="false" />
+                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
+                            </components>
                         </Property>
-                        <Property mapKey="geometry_transparent.prg" name="geometry_transparent.prg" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                        <Property mapKey="geometry_transparent.prg" name="geometry_transparent.prg">
                             <MetaData>
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
                             </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
+                                <item shaderType="2" originalFilename="trianglemesh.geom" modified="false" />
+                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
+                            </components>
                         </Property>
                         <Property mapKey="lightAmbient" name="lightAmbient">
                             <value x="0" y="0" z="0.78039217" w="1" />
                         </Property>
                         <Property mapKey="lightDiffuse" name="lightDiffuse">
-                            <value x="0" y="0.66666669" z="1" w="1" />
+                            <value x="0" y="0.666666687" z="1" w="1" />
                         </Property>
-                        <Property mapKey="lightPosition" name="lightPosition">
-                            <value x="4.86000013" y="2.83999991" z="4.01000023" w="3" />
+                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="10">
+                            <value x="4.860000134" y="2.839999914" z="4.010000229" w="3" />
+                            <Center x="0" y="0" z="0" />
+                            <LightPos x="4.860000134" y="2.839999914" z="4.010000229" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
-                            <value x="0.78431374" y="0.78431374" z="0.78431374" w="1" />
+                            <value x="0.784313738" y="0.784313738" z="0.784313738" w="1" />
                         </Property>
                         <Property mapKey="lineWidth" name="lineWidth" value="1" />
                         <Property mapKey="mapTexture" name="mapTexture" value="false" />
-                        <Property mapKey="materialShininess" name="materialShininess" value="76.33999634" />
+                        <Property mapKey="materialShininess" name="materialShininess" value="76.339996338" />
                         <Property mapKey="plane.distance" name="plane.distance" value="0" />
                         <Property mapKey="plane.normal" name="plane.normal">
                             <value x="0" y="0" z="1" />
@@ -201,33 +219,60 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="65" y="-106" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="adaptToScene" name="adaptToScene" value="false" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01204808">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="1312.865966797" minValue="0.026257319" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="1318.117431641" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.010818684">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="1139" y="541" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="4.9298501" y="4.94732857" z="4.4857192" />
-                            <focus x="-0.05437316" y="0.07919068" z="-0.02538244" />
-                            <upVector x="-0.39979804" y="0.80886543" z="-0.43115944" />
+                            <position x="7.951684952" y="4.484490395" z="-0.23855339" />
+                            <focus x="-0.338107944" y="0.41098547" z="-0.590548038" />
+                            <upVector x="-0.430742651" y="0.902451634" z="0.006478768" />
                             <trackball moveCenter="false">
-                                <center x="0" y="0" z="0" />
+                                <center x="-0.338107944" y="0.41098547" z="-0.590548038" />
                             </trackball>
-                            <sceneLLF x="0" y="0" z="0" />
-                            <sceneURB x="0" y="0" z="0" />
+                            <sceneLLF x="-2.323093891" y="-1" z="-3.216279984" />
+                            <sceneURB x="1.646878004" y="1.821971059" z="2.035183907" />
                         </Property>
-                        <Property mapKey="composeShader" name="composeShader" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false" />
+                        <Property mapKey="composeShader" name="composeShader">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
+                            </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
+                            </components>
+                        </Property>
+                        <Property mapKey="forceAdaptToScene" name="forceAdaptToScene" />
                         <Property mapKey="maxFragmentsPerPixelAvgAbs" minValue="1" maxValue="50" minRange="0" maxRange="2147483647" stepping="1">
                             <value x="15" y="20" />
                         </Property>
-                        <Property mapKey="oirAddImageShader" name="oirAddImageShader" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false" />
-                        <Property mapKey="oirBlendShader" name="oirBlendShader" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false" />
+                        <Property mapKey="oirAddImageShader" name="oirAddImageShader">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
+                            </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="oit_addimage.frag" modified="false" />
+                            </components>
+                        </Property>
+                        <Property mapKey="oirBlendShader" name="oirBlendShader">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
+                            </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="oit_blend.frag" modified="false" />
+                            </components>
+                        </Property>
                         <Property mapKey="renderGeometries" name="renderGeometries" value="true" />
                     </Properties>
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin">
-                                    <value x="358" y="359" />
+                                    <value x="512" y="512" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -237,7 +282,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.output.renderSizeReceive" name="image.output.renderSizeReceive" id="ref6">
-                                    <value x="358" y="359" />
+                                    <value x="512" y="512" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -315,8 +360,64 @@
         </ProcessorNetwork>
         <Animation />
         <ApplicationModeConfig MainCanvas="Canvas::Canvas">
-            <PropertyGroups />
-            <GroupMembership />
+            <PropertyGroups>
+                <item value="Geometry Source" />
+                <item value="Geometry Rendering" />
+            </PropertyGroups>
+            <GroupMembership>
+                <value key="GeometryProcessor.adaptToScene">
+                    <First value="Geometry Rendering" />
+                    <Second value="7" />
+                </value>
+                <value key="GeometryProcessor.forceAdaptToScene">
+                    <First value="Geometry Rendering" />
+                    <Second value="8" />
+                </value>
+                <value key="GeometryRenderer.enableLighting">
+                    <First value="Geometry Rendering" />
+                    <Second value="1" />
+                </value>
+                <value key="GeometryRenderer.lightAmbient">
+                    <First value="Geometry Rendering" />
+                    <Second value="3" />
+                </value>
+                <value key="GeometryRenderer.lightDiffuse">
+                    <First value="Geometry Rendering" />
+                    <Second value="4" />
+                </value>
+                <value key="GeometryRenderer.lightPosition">
+                    <First value="Geometry Rendering" />
+                    <Second value="2" />
+                </value>
+                <value key="GeometryRenderer.lightSpecular">
+                    <First value="Geometry Rendering" />
+                    <Second value="5" />
+                </value>
+                <value key="GeometryRenderer.materialShininess">
+                    <First value="Geometry Rendering" />
+                    <Second value="6" />
+                </value>
+                <value key="GeometryRenderer.polygonMode">
+                    <First value="Geometry Rendering" />
+                    <Second value="0" />
+                </value>
+                <value key="GeometrySource.clearGeometry">
+                    <First value="Geometry Source" />
+                    <Second value="3" />
+                </value>
+                <value key="GeometrySource.geometryFile">
+                    <First value="Geometry Source" />
+                    <Second value="0" />
+                </value>
+                <value key="GeometrySource.geometryType">
+                    <First value="Geometry Source" />
+                    <Second value="1" />
+                </value>
+                <value key="GeometrySource.loadGeometry">
+                    <First value="Geometry Source" />
+                    <Second value="2" />
+                </value>
+            </GroupMembership>
             <MenuEntityVisibility />
         </ApplicationModeConfig>
     </Workspace>

@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="true">
-        <ProcessorNetwork version="17">
+        <ProcessorNetwork version="19">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values>
@@ -11,20 +11,15 @@
                         <item type="TextBoxMetaData" userType="65568" caption="ROI probabilities input" captionFontSize="9" x="1212" y="-606" width="739" height="149" baseColor="#ffaaff" />
                     </values>
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="OctreeSegmentationQuantification" ref="ref24" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="Zoom" type="ZoomMetaData">
                     <transform.row0 x="0.8929131031036377" y="0" z="0" />
                     <transform.row1 x="0" y="0.8929131031036377" z="0" />
                     <transform.row2 x="242" y="347" z="1" />
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="542.89111328" y="161.91490173" />
+                    <value x="508.5" y="191.5" />
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.31498027" />
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.502772987" />
                 <MetaItem name="autoLinkCameras" type="BoolMetaData" value="false" />
             </MetaData>
             <Processors>
@@ -34,11 +29,16 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="" absolute="false">
+                                <path noPathSet="true" />
+                                <searchParameters />
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -54,11 +54,16 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="" absolute="false">
+                                <path noPathSet="true" />
+                                <searchParameters />
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -74,11 +79,16 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="" absolute="false">
+                                <path noPathSet="true" />
+                                <searchParameters />
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -94,11 +104,16 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="" absolute="false">
+                                <path noPathSet="true" />
+                                <searchParameters />
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -113,13 +128,13 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-272" y="106" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.015625" frustLeft="-0.00647208" frustRight="0.00647208" frustBottom="-0.00647208" frustTop="0.00647208" frustNear="0.015625" frustFar="502" fovy="44.9999733" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="false" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref49">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.015625" frustLeft="-0.006472083" frustRight="0.006472083" frustBottom="-0.006472083" frustTop="0.006472083" frustNear="0.015625" frustFar="502" fovy="44.999973297" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="false" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref49">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="751" y="323" />
                             </MetaData>
-                            <position x="0.0231512" y="1.10529482" z="-3.73220396" />
+                            <position x="0.0231512" y="1.105294824" z="-3.73220396" />
                             <focus x="0" y="0" z="0" />
-                            <upVector x="-0.04600444" y="0.95789772" z="0.28340015" />
+                            <upVector x="-0.046004441" y="0.957897723" z="0.283400148" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
                             </trackball>
@@ -142,7 +157,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.entrypoints.renderSizeReceive" name="image.entrypoints.renderSizeReceive" id="ref47">
-                                    <value x="605" y="481" />
+                                    <value x="798" y="482" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -150,7 +165,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.exitpoints.renderSizeReceive" name="image.exitpoints.renderSizeReceive" id="ref48">
-                                    <value x="605" y="481" />
+                                    <value x="798" y="482" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -226,7 +241,7 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="volumeOutport" direction="0" portID="volumeOutport" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumeOutport" direction="0" portID="volumeOutport" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -262,7 +277,7 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="volumehandle.output" direction="0" portID="volumehandle.output" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.output" direction="0" portID="volumehandle.output" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -277,14 +292,15 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-285" y="302" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="adaptToScene" name="adaptToScene" value="false" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.015625" frustLeft="-0.00647208" frustRight="0.00647208" frustBottom="-0.00647208" frustTop="0.00647208" frustNear="0.015625" frustFar="502" fovy="44.9999733" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="false" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref50">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.015625" frustLeft="-0.006472083" frustRight="0.006472083" frustBottom="-0.006472083" frustTop="0.006472083" frustNear="0.015625" frustFar="502" fovy="44.999973297" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="false" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref50">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="751" y="346" />
                             </MetaData>
-                            <position x="0.0231512" y="1.10529482" z="-3.73220396" />
+                            <position x="0.0231512" y="1.105294824" z="-3.73220396" />
                             <focus x="0" y="0" z="0" />
-                            <upVector x="-0.04600444" y="0.95789772" z="0.28340015" />
+                            <upVector x="-0.046004441" y="0.957897723" z="0.283400148" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
                             </trackball>
@@ -293,23 +309,24 @@
                         </Property>
                         <Property mapKey="composeShader" name="composeShader">
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
+                        <Property mapKey="forceAdaptToScene" name="forceAdaptToScene" />
                         <Property mapKey="maxFragmentsPerPixelAvgAbs" minValue="1" maxValue="50" minRange="0" maxRange="2147483647" stepping="1">
                             <value x="15" y="20" />
                         </Property>
                         <Property mapKey="oirAddImageShader" name="oirAddImageShader">
                             <components>
-                                <item shaderType="1" originalFilename="oit_addimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="oit_addimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="oirBlendShader" name="oirBlendShader">
                             <components>
-                                <item shaderType="1" originalFilename="oit_blend.frag" modified="false" />
                                 <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="oit_blend.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="renderGeometries" name="renderGeometries" value="true" />
@@ -318,7 +335,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref46">
-                                    <value x="605" y="481" />
+                                    <value x="798" y="482" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -328,7 +345,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.output.renderSizeReceive" name="image.output.renderSizeReceive" id="ref158">
-                                    <value x="605" y="481" />
+                                    <value x="798" y="482" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -369,14 +386,14 @@
                         <Property mapKey="brickBufferSizeMB" name="brickBufferSizeMB" value="1023" />
                         <Property mapKey="brickUploadBudgetMD" name="brickUploadBudgetMD" value="64" />
                         <Property mapKey="brickUploadTimeLimit" name="brickUploadTimeLimit" value="250" />
-                        <Property mapKey="cameraProperty" name="cameraProperty" projectionMode="1" maxValue="500" minValue="0.015625" frustLeft="-0.00647208" frustRight="0.00647208" frustBottom="-0.00647208" frustTop="0.00647208" frustNear="0.015625" frustFar="502" fovy="44.9999733" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref51">
+                        <Property mapKey="cameraProperty" name="cameraProperty" projectionMode="1" maxValue="500" minValue="0.015625" frustLeft="-0.006472083" frustRight="0.006472083" frustBottom="-0.006472083" frustTop="0.006472083" frustNear="0.015625" frustFar="502" fovy="44.999973297" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref51">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="767" y="354" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.0231512" y="1.10529482" z="-3.73220396" />
+                            <position x="0.0231512" y="1.105294824" z="-3.73220396" />
                             <focus x="0" y="0" z="0" />
-                            <upVector x="-0.04600444" y="0.95789772" z="0.28340015" />
+                            <upVector x="-0.046004441" y="0.957897723" z="0.283400148" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
                             </trackball>
@@ -422,9 +439,9 @@
                             </MetaData>
                             <programFilenamePaths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="../../../../../../voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                     <item value="modules/opencl/cl/singleoctreeraycaster.cl" />
-                                    <item value="/home/aaron/voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="C:/voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                 </paths>
                             </programFilenamePaths>
                         </Property>
@@ -453,7 +470,7 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="TransfuncPropertyWidgetPainterZoom" type="Vec2MetaData">
-                                    <value x="0" y="0.34372473" />
+                                    <value x="0" y="0.343724728" />
                                 </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
@@ -475,7 +492,7 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="TransfuncPropertyWidgetPainterZoom" type="Vec2MetaData">
-                                    <value x="0" y="0.34372473" />
+                                    <value x="0" y="0.343724728" />
                                 </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
@@ -497,7 +514,7 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="TransfuncPropertyWidgetPainterZoom" type="Vec2MetaData">
-                                    <value x="0" y="0.34372473" />
+                                    <value x="0" y="0.343724728" />
                                 </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
@@ -570,8 +587,8 @@
                     <Properties>
                         <Property mapKey="boundingBoxWidth" name="boundingBoxWidth" value="1" />
                         <Property mapKey="boundingboxColorSwitch" name="boundingboxColorSwitch" useActiveColor="true">
-                            <value x="0.80000001" y="0.80000001" z="0.80000001" w="1" />
-                            <activeColor x="0.80000001" y="0.80000001" z="0.80000001" w="1" />
+                            <value x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
+                            <activeColor x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
                             <inactiveColor x="1" y="1" z="1" w="1" />
                         </Property>
                         <Property mapKey="boundingboxGridOpacity" name="boundingboxGridOpacity" value="1" />
@@ -622,14 +639,14 @@
                         <Property mapKey="lineZWidth" name="lineZWidth" value="1" />
                         <Property mapKey="planeShaderOpaque" name="planeShaderOpaque">
                             <components>
-                                <item shaderType="1" originalFilename="slicepositionrenderer.frag" modified="false" />
                                 <item shaderType="0" originalFilename="slicepositionrenderer.vert" modified="false" />
+                                <item shaderType="1" originalFilename="slicepositionrenderer.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="planeShaderTransparent" name="planeShaderTransparent">
                             <components>
-                                <item shaderType="1" originalFilename="slicepositionrenderer.frag" modified="false" />
                                 <item shaderType="0" originalFilename="slicepositionrenderer.vert" modified="false" />
+                                <item shaderType="1" originalFilename="slicepositionrenderer.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="renderXSlice" name="renderXSlice" guiName="Show Slices" value="false" id="ref106" />
@@ -690,10 +707,10 @@
                         <Property mapKey="enableRightX" name="enableRightX" value="true" />
                         <Property mapKey="enableTopY" name="enableTopY" value="true" />
                         <Property mapKey="innerColor" name="innerColor" id="ref273">
-                            <value x="1" y="0.66666669" z="0" w="1" />
+                            <value x="1" y="0.666666687" z="0" w="1" />
                         </Property>
                         <Property mapKey="lineWidth" name="lineWidth" value="1" />
-                        <Property mapKey="manipulatorScaling" name="manipulatorScaling" value="1.20000005" />
+                        <Property mapKey="manipulatorScaling" name="manipulatorScaling" value="1.200000048" />
                         <Property mapKey="mouseEvent.clipplaneMovement" name="mouseEvent.clipplaneMovement" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="mouseEvent.synchronizedMovement" name="mouseEvent.synchronizedMovement" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
                         <Property mapKey="showHandles" name="showHandles" value="true" />
@@ -865,7 +882,7 @@
                             <value x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="color2" name="color2">
-                            <value x="0.39215699" y="0.39215699" z="0.39215699" w="1" />
+                            <value x="0.392156988" y="0.392156988" z="0.392156988" w="1" />
                         </Property>
                         <Property mapKey="enable" name="enable" value="true" />
                         <Property mapKey="randomClouds" name="randomClouds" value="true" />
@@ -876,11 +893,11 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                             </components>
                         </Property>
-                        <Property mapKey="texture" name="texture">
+                        <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                     </Properties>
@@ -903,7 +920,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref29">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="428" y="936" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="9" y="8" width="1596" height="965" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="337" y="154" width="1596" height="965" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="9" y="8" />
@@ -920,7 +937,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="65" y="242" />
+                            <value x="337" y="154" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1596" y="965" />
@@ -931,7 +948,7 @@
                             <value x="1596" y="965" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="showCanvas" name="showCanvas" value="true" />
@@ -942,7 +959,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref104">
-                                    <value x="1210" y="963" />
+                                    <value x="1596" y="965" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -1045,35 +1062,35 @@
                         <Property mapKey="alwaysUseOpacity" name="alwaysUseOpacity" value="false" />
                         <Property mapKey="autoreset" name="autoreset" value="false" />
                         <Property mapKey="blockedElementColor" name="blockedElementColor">
-                            <value x="0.75" y="0.05" z="0.05" w="1" />
+                            <value x="0.75" y="0.050000001" z="0.050000001" w="1" />
                         </Property>
                         <Property mapKey="enable" name="enable" guiName="Enable Plane 1" value="false" id="ref78" />
                         <Property mapKey="glMeshShaderOpaqueProp" name="glMeshShaderOpaqueProp">
                             <components>
-                                <item shaderType="1" originalFilename="planemanipulation_mesh.frag" modified="false" />
                                 <item shaderType="0" originalFilename="planemanipulation_mesh.vert" modified="false" />
+                                <item shaderType="1" originalFilename="planemanipulation_mesh.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="glMeshShaderTransparentProp" name="glMeshShaderTransparentProp">
                             <components>
-                                <item shaderType="1" originalFilename="planemanipulation_mesh.frag" modified="false" />
                                 <item shaderType="0" originalFilename="planemanipulation_mesh.vert" modified="false" />
+                                <item shaderType="1" originalFilename="planemanipulation_mesh.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="grabbedElementColor" name="grabbedElementColor">
-                            <value x="0.89999998" y="0.89999998" z="0.89999998" w="1" />
+                            <value x="0.899999976" y="0.899999976" z="0.899999976" w="1" />
                         </Property>
                         <Property mapKey="grabbedPlaneOpacity" name="grabbedPlaneOpacity" value="0" />
                         <Property mapKey="iModeShaderOpaqueProp" name="iModeShaderOpaqueProp">
                             <components>
-                                <item shaderType="1" originalFilename="planemanipulation_imode.frag" modified="false" />
                                 <item shaderType="0" originalFilename="planemanipulation_imode.vert" modified="false" />
+                                <item shaderType="1" originalFilename="planemanipulation_imode.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="iModeShaderTransparentProp_" name="iModeShaderTransparentProp_">
                             <components>
-                                <item shaderType="1" originalFilename="planemanipulation_imode.frag" modified="false" />
                                 <item shaderType="0" originalFilename="planemanipulation_imode.vert" modified="false" />
+                                <item shaderType="1" originalFilename="planemanipulation_imode.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="invert" name="invert" value="false" id="ref60" />
@@ -1130,35 +1147,35 @@
                         <Property mapKey="alwaysUseOpacity" name="alwaysUseOpacity" value="false" />
                         <Property mapKey="autoreset" name="autoreset" value="false" />
                         <Property mapKey="blockedElementColor" name="blockedElementColor">
-                            <value x="0.75" y="0.05" z="0.05" w="1" />
+                            <value x="0.75" y="0.050000001" z="0.050000001" w="1" />
                         </Property>
                         <Property mapKey="enable" name="enable" guiName="Enable Plane 2" value="false" id="ref80" />
                         <Property mapKey="glMeshShaderOpaqueProp" name="glMeshShaderOpaqueProp">
                             <components>
-                                <item shaderType="1" originalFilename="planemanipulation_mesh.frag" modified="false" />
                                 <item shaderType="0" originalFilename="planemanipulation_mesh.vert" modified="false" />
+                                <item shaderType="1" originalFilename="planemanipulation_mesh.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="glMeshShaderTransparentProp" name="glMeshShaderTransparentProp">
                             <components>
-                                <item shaderType="1" originalFilename="planemanipulation_mesh.frag" modified="false" />
                                 <item shaderType="0" originalFilename="planemanipulation_mesh.vert" modified="false" />
+                                <item shaderType="1" originalFilename="planemanipulation_mesh.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="grabbedElementColor" name="grabbedElementColor">
-                            <value x="0.89999998" y="0.89999998" z="0.89999998" w="1" />
+                            <value x="0.899999976" y="0.899999976" z="0.899999976" w="1" />
                         </Property>
                         <Property mapKey="grabbedPlaneOpacity" name="grabbedPlaneOpacity" value="0" />
                         <Property mapKey="iModeShaderOpaqueProp" name="iModeShaderOpaqueProp">
                             <components>
-                                <item shaderType="1" originalFilename="planemanipulation_imode.frag" modified="false" />
                                 <item shaderType="0" originalFilename="planemanipulation_imode.vert" modified="false" />
+                                <item shaderType="1" originalFilename="planemanipulation_imode.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="iModeShaderTransparentProp_" name="iModeShaderTransparentProp_">
                             <components>
-                                <item shaderType="1" originalFilename="planemanipulation_imode.frag" modified="false" />
                                 <item shaderType="0" originalFilename="planemanipulation_imode.vert" modified="false" />
+                                <item shaderType="1" originalFilename="planemanipulation_imode.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="invert" name="invert" value="false" id="ref66" />
@@ -1215,35 +1232,35 @@
                         <Property mapKey="alwaysUseOpacity" name="alwaysUseOpacity" value="false" />
                         <Property mapKey="autoreset" name="autoreset" value="false" />
                         <Property mapKey="blockedElementColor" name="blockedElementColor">
-                            <value x="0.75" y="0.05" z="0.05" w="1" />
+                            <value x="0.75" y="0.050000001" z="0.050000001" w="1" />
                         </Property>
                         <Property mapKey="enable" name="enable" guiName="Enable Plane 3" value="false" id="ref82" />
                         <Property mapKey="glMeshShaderOpaqueProp" name="glMeshShaderOpaqueProp">
                             <components>
-                                <item shaderType="1" originalFilename="planemanipulation_mesh.frag" modified="false" />
                                 <item shaderType="0" originalFilename="planemanipulation_mesh.vert" modified="false" />
+                                <item shaderType="1" originalFilename="planemanipulation_mesh.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="glMeshShaderTransparentProp" name="glMeshShaderTransparentProp">
                             <components>
-                                <item shaderType="1" originalFilename="planemanipulation_mesh.frag" modified="false" />
                                 <item shaderType="0" originalFilename="planemanipulation_mesh.vert" modified="false" />
+                                <item shaderType="1" originalFilename="planemanipulation_mesh.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="grabbedElementColor" name="grabbedElementColor">
-                            <value x="0.89999998" y="0.89999998" z="0.89999998" w="1" />
+                            <value x="0.899999976" y="0.899999976" z="0.899999976" w="1" />
                         </Property>
                         <Property mapKey="grabbedPlaneOpacity" name="grabbedPlaneOpacity" value="0" />
                         <Property mapKey="iModeShaderOpaqueProp" name="iModeShaderOpaqueProp">
                             <components>
-                                <item shaderType="1" originalFilename="planemanipulation_imode.frag" modified="false" />
                                 <item shaderType="0" originalFilename="planemanipulation_imode.vert" modified="false" />
+                                <item shaderType="1" originalFilename="planemanipulation_imode.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="iModeShaderTransparentProp_" name="iModeShaderTransparentProp_">
                             <components>
-                                <item shaderType="1" originalFilename="planemanipulation_imode.frag" modified="false" />
                                 <item shaderType="0" originalFilename="planemanipulation_imode.vert" modified="false" />
+                                <item shaderType="1" originalFilename="planemanipulation_imode.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="invert" name="invert" value="false" id="ref72" />
@@ -1253,7 +1270,7 @@
                         </Property>
                         <Property mapKey="mouseEvent.clipplaneManipulation" name="mouseEvent.clipplaneManipulation" enabled="true" mouseAction="7" mouseButtons="127" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="planeColor" name="planeColor">
-                            <value x="0.66666669" y="0" z="0" w="1" />
+                            <value x="0.666666687" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="planeNormal" name="planeNormal" guiName="Plane Normal 3" id="ref74">
                             <value x="-1" y="0" z="0" />
@@ -1315,6 +1332,7 @@
                         </Property>
                         <Property mapKey="fontSize" name="fontSize" value="14" />
                         <Property mapKey="interactionLevelOfDetail" name="interactionLevelOfDetail" value="2" id="ref124" />
+                        <Property mapKey="legendAlignment" name="legendAlignment" value="NW" />
                         <Property mapKey="legendLineLength" name="legendLineLength" value="80" />
                         <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="true" mouseAction="3" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="true" />
@@ -1447,7 +1465,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref282">
-                                    <value x="605" y="481" />
+                                    <value x="798" y="482" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -1491,6 +1509,7 @@
                         </Property>
                         <Property mapKey="fontSize" name="fontSize" value="14" />
                         <Property mapKey="interactionLevelOfDetail" name="interactionLevelOfDetail" value="2" id="ref123" />
+                        <Property mapKey="legendAlignment" name="legendAlignment" value="NW" />
                         <Property mapKey="legendLineLength" name="legendLineLength" value="80" />
                         <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="true" mouseAction="3" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="true" />
@@ -1614,7 +1633,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref279">
-                                    <value x="605" y="481" />
+                                    <value x="798" y="482" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -1658,6 +1677,7 @@
                         </Property>
                         <Property mapKey="fontSize" name="fontSize" value="14" />
                         <Property mapKey="interactionLevelOfDetail" name="interactionLevelOfDetail" value="1" />
+                        <Property mapKey="legendAlignment" name="legendAlignment" value="NW" />
                         <Property mapKey="legendLineLength" name="legendLineLength" value="80" />
                         <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="true" mouseAction="3" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="true" />
@@ -1691,7 +1711,7 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="TransfuncPropertyWidgetPainterZoom" type="Vec2MetaData">
-                                    <value x="0" y="0.34372473" />
+                                    <value x="0" y="0.343724728" />
                                 </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="2" filter="0" dataType="5121" gammaValue="1">
@@ -1713,7 +1733,7 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="TransfuncPropertyWidgetPainterZoom" type="Vec2MetaData">
-                                    <value x="0" y="0.34372473" />
+                                    <value x="0" y="0.343724728" />
                                 </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="2" filter="0" dataType="5121" gammaValue="1">
@@ -1735,7 +1755,7 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="TransfuncPropertyWidgetPainterZoom" type="Vec2MetaData">
-                                    <value x="0" y="0.34372473" />
+                                    <value x="0" y="0.343724728" />
                                 </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="2" filter="0" dataType="5121" gammaValue="1">
@@ -1790,7 +1810,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref276">
-                                    <value x="605" y="481" />
+                                    <value x="798" y="482" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -1829,28 +1849,28 @@
                         <Port name="inport1" direction="1" portID="inport1" guiName="Image1 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="inport1.renderSizeOrigin" name="inport1.renderSizeOrigin" id="ref157">
-                                    <value x="605" y="481" />
+                                    <value x="798" y="482" />
                                 </Property>
                             </Properties>
                         </Port>
                         <Port name="inport2" direction="1" portID="inport2" guiName="Image2 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="inport2.renderSizeOrigin" name="inport2.renderSizeOrigin" id="ref274">
-                                    <value x="605" y="481" />
+                                    <value x="798" y="482" />
                                 </Property>
                             </Properties>
                         </Port>
                         <Port name="inport3" direction="1" portID="inport3" guiName="Image3 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="inport3.renderSizeOrigin" name="inport3.renderSizeOrigin" id="ref277">
-                                    <value x="605" y="481" />
+                                    <value x="798" y="482" />
                                 </Property>
                             </Properties>
                         </Port>
                         <Port name="inport4" direction="1" portID="inport4" guiName="Image4 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="inport4.renderSizeOrigin" name="inport4.renderSizeOrigin" id="ref280">
-                                    <value x="605" y="481" />
+                                    <value x="798" y="482" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -1860,7 +1880,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref105">
-                                    <value x="1210" y="963" />
+                                    <value x="1596" y="965" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -1876,14 +1896,14 @@
                     <Properties>
                         <Property mapKey="axesAlignmentProp" name="axesAlignmentProp" value="xy-plane" />
                         <Property mapKey="axisLength" name="axisLength" value="1" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.015625" frustLeft="-0.00647208" frustRight="0.00647208" frustBottom="-0.00647208" frustTop="0.00647208" frustNear="0.015625" frustFar="502" fovy="44.9999733" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="false" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref159">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.015625" frustLeft="-0.006472083" frustRight="0.006472083" frustBottom="-0.006472083" frustTop="0.006472083" frustNear="0.015625" frustFar="502" fovy="44.999973297" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="false" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref159">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="-1049" y="308" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.0231512" y="1.10529482" z="-3.73220396" />
+                            <position x="0.0231512" y="1.105294824" z="-3.73220396" />
                             <focus x="0" y="0" z="0" />
-                            <upVector x="-0.04600444" y="0.95789772" z="0.28340015" />
+                            <upVector x="-0.046004441" y="0.957897723" z="0.283400148" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
                             </trackball>
@@ -1892,57 +1912,57 @@
                         </Property>
                         <Property mapKey="cubeSize" name="cubeSize" value="1" />
                         <Property mapKey="enableProp" name="enableProp" value="true" />
-                        <Property mapKey="filenameBack" name="filenameBack">
+                        <Property mapKey="filenameBack" name="filenameBack" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/coronal_b.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
                                     <item value="resource/voreencore/textures/coronal_b.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameBottom" name="filenameBottom">
+                        <Property mapKey="filenameBottom" name="filenameBottom" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/axial_b.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
                                     <item value="resource/voreencore/textures/axial_b.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameFront" name="filenameFront">
+                        <Property mapKey="filenameFront" name="filenameFront" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/coronal_f.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
                                     <item value="resource/voreencore/textures/coronal_f.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameLeft" name="filenameLeft">
+                        <Property mapKey="filenameLeft" name="filenameLeft" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/sagittal_l.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
                                     <item value="resource/voreencore/textures/sagittal_l.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameRight" name="filenameRight">
+                        <Property mapKey="filenameRight" name="filenameRight" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/sagittal_r.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
                                     <item value="resource/voreencore/textures/sagittal_r.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameTop" name="filenameTop">
+                        <Property mapKey="filenameTop" name="filenameTop" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/axial_t.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
                                     <item value="resource/voreencore/textures/axial_t.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1952,9 +1972,9 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                                 <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
                                 <item shaderType="2" originalFilename="trianglemesh.geom" modified="false" />
+                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="orientationTypeProp" name="orientationTypeProp" value="axis3d" />
@@ -1965,12 +1985,12 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/orientationoverlay.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/orientationoverlay.frag" modified="false" />
                             </components>
                         </Property>
-                        <Property mapKey="shiftX" name="shiftX" value="0.94999999" />
-                        <Property mapKey="shiftY" name="shiftY" value="0.05" />
+                        <Property mapKey="shiftX" name="shiftX" value="0.949999988" />
+                        <Property mapKey="shiftY" name="shiftY" value="0.050000001" />
                     </Properties>
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -1999,9 +2019,9 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                                 <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
                                 <item shaderType="2" originalFilename="trianglemesh.geom" modified="false" />
+                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="pointColor0" name="pointColor0" id="ref208">
@@ -2066,9 +2086,9 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                                 <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
                                 <item shaderType="2" originalFilename="trianglemesh.geom" modified="false" />
+                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="keyEvent.point0ActivateKey" name="keyEvent.point0ActivateKey" enabled="true" mouseAction="0" mouseButtons="0" keyCode="49" modifier="0" shareEvents="true" />
@@ -2125,8 +2145,8 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -2157,9 +2177,9 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                                 <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
                                 <item shaderType="2" originalFilename="trianglemesh.geom" modified="false" />
+                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="keyEvent.point0ActivateKey" name="keyEvent.point0ActivateKey" enabled="true" mouseAction="0" mouseButtons="0" keyCode="49" modifier="0" shareEvents="true" />
@@ -2216,8 +2236,8 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -2249,9 +2269,9 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                                 <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
                                 <item shaderType="2" originalFilename="trianglemesh.geom" modified="false" />
+                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="keyEvent.point0ActivateKey" name="keyEvent.point0ActivateKey" enabled="true" mouseAction="0" mouseButtons="0" keyCode="49" modifier="0" shareEvents="true" />
@@ -2309,8 +2329,8 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -2365,7 +2385,7 @@
                         <Property mapKey="enableClipping" name="enableClipping" value="false" id="ref250" />
                         <Property mapKey="enableCompression" name="enableCompression" value="false" />
                         <Property mapKey="enableShuffling" name="enableShuffling" value="false" />
-                        <Property mapKey="outputFilename" name="outputFilename">
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="outputFormat" name="outputFormat" value="vvd" />
@@ -2615,7 +2635,7 @@
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xy-plane" id="ref264" />
                         <Property mapKey="sliceIndex" name="sliceIndex" value="58" id="ref265" />
                         <Property mapKey="solidcolor" name="solidcolor" id="ref260">
-                            <value x="1" y="0.66666669" z="0" w="1" />
+                            <value x="1" y="0.666666687" z="0" w="1" />
                         </Property>
                     </Properties>
                     <Inports>
@@ -2635,7 +2655,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="renderoutport.renderSizeReceive" name="renderoutport.renderSizeReceive" id="ref275">
-                                    <value x="605" y="481" />
+                                    <value x="798" y="482" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -2660,7 +2680,7 @@
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xz-plane" id="ref267" />
                         <Property mapKey="sliceIndex" name="sliceIndex" value="48" id="ref268" />
                         <Property mapKey="solidcolor" name="solidcolor" id="ref261">
-                            <value x="1" y="0.66666669" z="0" w="1" />
+                            <value x="1" y="0.666666687" z="0" w="1" />
                         </Property>
                     </Properties>
                     <Inports>
@@ -2680,7 +2700,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="renderoutport.renderSizeReceive" name="renderoutport.renderSizeReceive" id="ref278">
-                                    <value x="605" y="481" />
+                                    <value x="798" y="482" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -2705,7 +2725,7 @@
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="yz-plane" id="ref270" />
                         <Property mapKey="sliceIndex" name="sliceIndex" value="64" id="ref271" />
                         <Property mapKey="solidcolor" name="solidcolor" id="ref263">
-                            <value x="1" y="0.66666669" z="0" w="1" />
+                            <value x="1" y="0.666666687" z="0" w="1" />
                         </Property>
                     </Properties>
                     <Inports>
@@ -2725,7 +2745,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="renderoutport.renderSizeReceive" name="renderoutport.renderSizeReceive" id="ref281">
-                                    <value x="605" y="481" />
+                                    <value x="798" y="482" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -2747,8 +2767,8 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="weightFirst" name="weightFirst" value="1" />
@@ -2787,8 +2807,8 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="weightFirst" name="weightFirst" value="1" />
@@ -2827,8 +2847,8 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="weightFirst" name="weightFirst" value="1" />
@@ -2861,7 +2881,7 @@
                     <Properties>
                         <Property mapKey="axesAlignmentProp" name="axesAlignmentProp" value="xy-plane" id="ref283" />
                         <Property mapKey="axisLength" name="axisLength" value="1" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
@@ -2876,57 +2896,57 @@
                         </Property>
                         <Property mapKey="cubeSize" name="cubeSize" value="1" />
                         <Property mapKey="enableProp" name="enableProp" guiName="Show 2D Orientation Overlay" value="true" id="ref286" />
-                        <Property mapKey="filenameBack" name="filenameBack">
+                        <Property mapKey="filenameBack" name="filenameBack" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/coronal_b.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
                                     <item value="resource/voreencore/textures/coronal_b.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameBottom" name="filenameBottom">
+                        <Property mapKey="filenameBottom" name="filenameBottom" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/axial_b.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
                                     <item value="resource/voreencore/textures/axial_b.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameFront" name="filenameFront">
+                        <Property mapKey="filenameFront" name="filenameFront" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/coronal_f.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
                                     <item value="resource/voreencore/textures/coronal_f.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameLeft" name="filenameLeft">
+                        <Property mapKey="filenameLeft" name="filenameLeft" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/sagittal_l.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
                                     <item value="resource/voreencore/textures/sagittal_l.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameRight" name="filenameRight">
+                        <Property mapKey="filenameRight" name="filenameRight" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/sagittal_r.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
                                     <item value="resource/voreencore/textures/sagittal_r.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameTop" name="filenameTop">
+                        <Property mapKey="filenameTop" name="filenameTop" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/axial_t.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
                                     <item value="resource/voreencore/textures/axial_t.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -2935,9 +2955,9 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                                 <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
                                 <item shaderType="2" originalFilename="trianglemesh.geom" modified="false" />
+                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="orientationTypeProp" name="orientationTypeProp" value="axis2d" />
@@ -2947,12 +2967,12 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/orientationoverlay.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/orientationoverlay.frag" modified="false" />
                             </components>
                         </Property>
-                        <Property mapKey="shiftX" name="shiftX" value="0.89999998" />
-                        <Property mapKey="shiftY" name="shiftY" value="0.1" />
+                        <Property mapKey="shiftX" name="shiftX" value="0.899999976" />
+                        <Property mapKey="shiftY" name="shiftY" value="0.100000001" />
                     </Properties>
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -2977,7 +2997,7 @@
                     <Properties>
                         <Property mapKey="axesAlignmentProp" name="axesAlignmentProp" value="xz-plane" id="ref284" />
                         <Property mapKey="axisLength" name="axisLength" value="1" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
@@ -2992,57 +3012,57 @@
                         </Property>
                         <Property mapKey="cubeSize" name="cubeSize" value="1" />
                         <Property mapKey="enableProp" name="enableProp" guiName="Show 2D Orientation Overlay" value="true" id="ref287" />
-                        <Property mapKey="filenameBack" name="filenameBack">
+                        <Property mapKey="filenameBack" name="filenameBack" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/coronal_b.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
                                     <item value="resource/voreencore/textures/coronal_b.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameBottom" name="filenameBottom">
+                        <Property mapKey="filenameBottom" name="filenameBottom" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/axial_b.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
                                     <item value="resource/voreencore/textures/axial_b.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameFront" name="filenameFront">
+                        <Property mapKey="filenameFront" name="filenameFront" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/coronal_f.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
                                     <item value="resource/voreencore/textures/coronal_f.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameLeft" name="filenameLeft">
+                        <Property mapKey="filenameLeft" name="filenameLeft" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/sagittal_l.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
                                     <item value="resource/voreencore/textures/sagittal_l.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameRight" name="filenameRight">
+                        <Property mapKey="filenameRight" name="filenameRight" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/sagittal_r.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
                                     <item value="resource/voreencore/textures/sagittal_r.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameTop" name="filenameTop">
+                        <Property mapKey="filenameTop" name="filenameTop" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/axial_t.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
                                     <item value="resource/voreencore/textures/axial_t.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -3051,9 +3071,9 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                                 <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
                                 <item shaderType="2" originalFilename="trianglemesh.geom" modified="false" />
+                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="orientationTypeProp" name="orientationTypeProp" value="axis2d" />
@@ -3063,12 +3083,12 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/orientationoverlay.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/orientationoverlay.frag" modified="false" />
                             </components>
                         </Property>
-                        <Property mapKey="shiftX" name="shiftX" value="0.89999998" />
-                        <Property mapKey="shiftY" name="shiftY" value="0.0971" />
+                        <Property mapKey="shiftX" name="shiftX" value="0.899999976" />
+                        <Property mapKey="shiftY" name="shiftY" value="0.097099997" />
                     </Properties>
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -3093,7 +3113,7 @@
                     <Properties>
                         <Property mapKey="axesAlignmentProp" name="axesAlignmentProp" value="yz-plane" id="ref285" />
                         <Property mapKey="axisLength" name="axisLength" value="1" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
@@ -3108,57 +3128,57 @@
                         </Property>
                         <Property mapKey="cubeSize" name="cubeSize" value="1" />
                         <Property mapKey="enableProp" name="enableProp" guiName="Show 2D Orientation Overlay" value="true" id="ref288" />
-                        <Property mapKey="filenameBack" name="filenameBack">
+                        <Property mapKey="filenameBack" name="filenameBack" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/coronal_b.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
                                     <item value="resource/voreencore/textures/coronal_b.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameBottom" name="filenameBottom">
+                        <Property mapKey="filenameBottom" name="filenameBottom" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/axial_b.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
                                     <item value="resource/voreencore/textures/axial_b.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameFront" name="filenameFront">
+                        <Property mapKey="filenameFront" name="filenameFront" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/coronal_f.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
                                     <item value="resource/voreencore/textures/coronal_f.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameLeft" name="filenameLeft">
+                        <Property mapKey="filenameLeft" name="filenameLeft" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/sagittal_l.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
                                     <item value="resource/voreencore/textures/sagittal_l.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameRight" name="filenameRight">
+                        <Property mapKey="filenameRight" name="filenameRight" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/sagittal_r.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
                                     <item value="resource/voreencore/textures/sagittal_r.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="filenameTop" name="filenameTop">
+                        <Property mapKey="filenameTop" name="filenameTop" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../voreencore/textures/axial_t.png" />
+                                    <item value="../../../../../../voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
                                     <item value="resource/voreencore/textures/axial_t.png" />
-                                    <item value="/home/aaron/voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -3167,9 +3187,9 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                                 <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
                                 <item shaderType="2" originalFilename="trianglemesh.geom" modified="false" />
+                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="orientationTypeProp" name="orientationTypeProp" value="axis2d" />
@@ -3179,12 +3199,12 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/orientationoverlay.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/orientationoverlay.frag" modified="false" />
                             </components>
                         </Property>
-                        <Property mapKey="shiftX" name="shiftX" value="0.89999998" />
-                        <Property mapKey="shiftY" name="shiftY" value="0.1" />
+                        <Property mapKey="shiftX" name="shiftX" value="0.899999976" />
+                        <Property mapKey="shiftY" name="shiftY" value="0.100000001" />
                     </Properties>
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -3209,7 +3229,7 @@
                     <Properties>
                         <Property mapKey="computequantification" name="computequantification" />
                         <Property mapKey="exportbutton" name="exportbutton" />
-                        <Property mapKey="exportfile" name="exportfile">
+                        <Property mapKey="exportfile" name="exportfile" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="quantificationprogressproperty" name="quantificationprogressproperty" />
@@ -3263,11 +3283,16 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="" absolute="false">
+                                <path noPathSet="true" />
+                                <searchParameters />
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -3283,11 +3308,16 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="" absolute="false">
+                                <path noPathSet="true" />
+                                <searchParameters />
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -3303,11 +3333,16 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="" absolute="false">
+                                <path noPathSet="true" />
+                                <searchParameters />
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -3323,11 +3358,16 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="" absolute="false">
+                                <path noPathSet="true" />
+                                <searchParameters />
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
