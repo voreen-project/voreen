@@ -849,6 +849,7 @@ VesselnessExtractorInput VesselnessExtractor::prepareComputeInput() {
     }
     output->writeOffset(inputVol->getOffset());
     output->writeSpacing(inputVol->getSpacing());
+    output->writePhysicalToWorldTransformation(inputVol->getPhysicalToWorldMatrix());
 
     return VesselnessExtractorInput(
             *inputVol,
@@ -899,7 +900,7 @@ void VesselnessExtractor::adjustPropertiesToInput() {
     }
     vesselRadiusRangeRW_.setMinValue(tgt::min(inputVol->getSpacing()));
     vesselRadiusRangeRW_.setMaxValue(tgt::min(inputVol->getBoundingBox(false).getBoundingBox().diagonal()));
-    vesselRadiusRangeRW_.adaptDecimalsToRange(3);
+    vesselRadiusRangeRW_.adaptDecimalsToRange(5);
 }
 
 void VesselnessExtractor::updateSmoothingProperties() {

@@ -1,32 +1,28 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
-    <Workspace version="2" readonly="true" GlobalDescription='&lt;font color=&quot;#808080&quot;&gt;&lt;h4&gt;Renderloop Example&lt;/h4&gt; &lt;p&gt;This workspace demonstrates the use of the RenderLoop processors.&lt;/p&gt;&lt;p&gt;Please note that this workspace does not provide an application mode configuration.&lt;/p&gt;&lt;/font&gt;'>
-        <ProcessorNetwork version="17">
+    <Workspace version="2" readonly="true" GlobalDescription='&lt;font color=&quot;#808080&quot;&gt;&lt;h4&gt;Renderloop Example&lt;/h4&gt; &lt;p&gt;This workspace demonstrates the use of the RenderLoop processors.&lt;/p&gt;&lt;/font&gt;'>
+        <ProcessorNetwork version="19">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="RenderLoopFinalizer" ref="ref2" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="10.36332035" y="-196" />
+                    <value x="8.675853729" y="-196" />
                 </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="2.37098217" />
             </MetaData>
             <Processors>
                 <Processor type="Canvas" name="Canvas" id="ref3">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-83" y="-32" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="303" y="85" width="321" height="319" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="346" y="172" width="512" height="512" />
                         <MetaItem name="Processor_GI" type="PositionMetaData" x="-444" y="271" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-1672" y="8" />
+                            <value x="8" y="8" />
                         </MetaItem>
                         <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
-                            <value x="1031" y="961" />
+                            <value x="2012" y="1326" />
                         </MetaItem>
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
@@ -37,18 +33,18 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="303" y="85" />
+                            <value x="346" y="172" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="321" y="319" />
+                            <value x="512" y="512" />
                         </MetaItem>
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize" id="ref6">
-                            <value x="321" y="319" />
+                            <value x="512" y="512" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="showCanvas" name="showCanvas" value="true" />
@@ -59,7 +55,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin">
-                                    <value x="1031" y="961" />
+                                    <value x="512" y="512" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -75,7 +71,7 @@
                         <MetaItem name="Processor_GI" type="PositionMetaData" x="-437" y="-30" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="numIterations" name="numIterations" value="5" />
+                        <Property mapKey="numIterations" name="numIterations" value="1" />
                     </Properties>
                     <Inports>
                         <Port name="image.inport" direction="1" portID="image.inport" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -137,11 +133,15 @@
                         <Property mapKey="enable" name="enable" value="true" />
                         <Property mapKey="iamode.adapt" name="iamode.adapt" value="false" />
                         <Property mapKey="iamode.factor" name="iamode.factor" value="1" />
-                        <Property mapKey="shader.program" name="shader.program" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                        <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
                             </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/gaussian.frag" modified="false" />
+                            </components>
                         </Property>
                         <Property mapKey="sigma" name="sigma" value="2" />
                     </Properties>
@@ -168,12 +168,12 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="clearButton" name="clearButton" />
-                        <Property mapKey="imageFile" name="imageFile">
+                        <Property mapKey="imageFile" name="imageFile" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreencore/textures/nucleon.png" />
+                                    <item value="../../../../../voreen-development/voreen/resource/voreencore/textures/nucleon.png" />
                                     <item value="resource/voreencore/textures/nucleon.png" />
-                                    <item value="/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/nucleon.png" />
+                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/nucleon.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -247,8 +247,57 @@
         </ProcessorNetwork>
         <Animation />
         <ApplicationModeConfig MainCanvas="Canvas::Canvas">
-            <PropertyGroups />
-            <GroupMembership />
+            <PropertyGroups>
+                <item value="Input" />
+                <item value="Filter Settings" />
+                <item value="Save Result" />
+            </PropertyGroups>
+            <GroupMembership>
+                <value key="Canvas.saveScreenshot">
+                    <First value="Save Result" />
+                    <Second value="1" />
+                </value>
+                <value key="Canvas.screenshotFilename">
+                    <First value="Save Result" />
+                    <Second value="0" />
+                </value>
+                <value key="Gaussian.blurBlue">
+                    <First value="Filter Settings" />
+                    <Second value="5" />
+                </value>
+                <value key="Gaussian.blurGreen">
+                    <First value="Filter Settings" />
+                    <Second value="4" />
+                </value>
+                <value key="Gaussian.blurRed">
+                    <First value="Filter Settings" />
+                    <Second value="3" />
+                </value>
+                <value key="Gaussian.enable">
+                    <First value="Filter Settings" />
+                    <Second value="1" />
+                </value>
+                <value key="Gaussian.sigma">
+                    <First value="Filter Settings" />
+                    <Second value="2" />
+                </value>
+                <value key="ImageSource.clearButton">
+                    <First value="Input" />
+                    <Second value="1" />
+                </value>
+                <value key="ImageSource.imageFile">
+                    <First value="Input" />
+                    <Second value="0" />
+                </value>
+                <value key="ImageSource.imageSize">
+                    <First value="Input" />
+                    <Second value="2" />
+                </value>
+                <value key="RenderLoopInitiator.numIterations">
+                    <First value="Filter Settings" />
+                    <Second value="0" />
+                </value>
+            </GroupMembership>
             <MenuEntityVisibility />
         </ApplicationModeConfig>
     </Workspace>

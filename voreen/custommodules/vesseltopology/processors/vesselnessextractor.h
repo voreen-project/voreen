@@ -7,7 +7,7 @@
 #include "voreen/core/properties/intproperty.h"
 #include "voreen/core/properties/vectorproperty.h"
 #include "voreen/core/properties/boolproperty.h"
-#include "voreen/core/properties/filedialogproperty.h"
+#include "voreen/core/properties/temppathproperty.h"
 #include "voreen/core/properties/stringproperty.h"
 #include "voreen/core/properties/numeric/intervalproperty.h"
 #include "voreen/core/ports/volumeport.h"
@@ -95,7 +95,7 @@ private:
     VolumePort inport_;
     VolumePort outport_;
 
-    FileDialogProperty outputVolumeFilePath_;
+    TempPathProperty outputVolumeFilePath_;
     FloatIntervalProperty vesselRadiusRangeRW_;
     IntProperty scaleSpaceSteps_;
     FloatVec3Property minStandardDeviationVec_;

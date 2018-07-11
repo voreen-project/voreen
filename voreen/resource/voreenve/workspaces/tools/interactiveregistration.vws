@@ -1,14 +1,14 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
-    <Workspace version="2" readonly="false" GlobalDescription="">
-        <ProcessorNetwork version="17">
+    <Workspace version="2" readonly="true" GlobalDescription='&lt;font color=&quot;#808080&quot;&gt;&lt;h4&gt;Interactive Registration Workspace&lt;/h4&gt; &lt;p&gt;This workspace demonstrates how registration of two different volumes or the same volume in different orientations can be done interactively in 3D using the InteractiveRegistrationWidget processor.&lt;/p&gt;&lt;/font&gt;'>
+        <ProcessorNetwork version="19">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
-                    <values />
-                </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="MultiVolumeRaycaster" ref="ref3" />
+                        <item type="TextBoxMetaData" userType="65568" caption="Multi-Volume Rendering" captionFontSize="21" x="-1078" y="-302" width="559" height="593" />
+                        <item type="TextBoxMetaData" userType="65568" caption="Registration" captionFontSize="21" x="-502" y="-302" width="707" height="593" />
+                        <item type="TextBoxMetaData" userType="65568" caption="Static Volume" captionFontSize="21" x="-826" y="-844" width="311" height="518" />
+                        <item type="TextBoxMetaData" userType="65568" caption="Moving Volume" captionFontSize="21" x="-500" y="-843" width="311" height="518" />
                     </values>
                 </MetaItem>
                 <MetaItem name="Zoom" type="ZoomMetaData">
@@ -17,16 +17,23 @@
                     <transform.row2 x="4938.4365234375" y="3656.15673828125" z="1" />
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-552.23937988" y="-307.70532227" />
+                    <value x="-436.551300049" y="-148.816299438" />
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.49072924" />
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.69511956" />
                 <MetaItem name="autoLinkCameras" type="BoolMetaData" value="false" />
             </MetaData>
             <Processors>
                 <Processor type="Canvas" name="Canvas" id="ref12">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-483" y="502" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-1173" y="290" width="1280" height="977" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-534" y="487" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="377" y="178" width="1200" height="900" />
+                        <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
+                            <value x="8" y="8" />
+                        </MetaItem>
+                        <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
+                            <value x="2012" y="1326" />
+                        </MetaItem>
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
                             <value x="-1280" y="0" />
@@ -36,23 +43,23 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-1173" y="290" />
+                            <value x="377" y="178" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="1280" y="977" />
+                            <value x="1200" y="900" />
                         </MetaItem>
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize">
-                            <value x="1280" y="977" />
+                            <value x="1200" y="900" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="" />
                                     <item value="resource/voreenve/workspaces/tools" />
-                                    <item value="/data/dominik/git/voreen-master/voreen/resource/voreenve/workspaces/tools" />
+                                    <item value="C:/voreen-development/voreen/resource/voreenve/workspaces/tools" />
                                 </paths>
                             </paths>
                         </Property>
@@ -64,7 +71,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref62">
-                                    <value x="1280" y="977" />
+                                    <value x="1200" y="900" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -86,7 +93,7 @@
                             <value x="1" y="1" z="1" w="1" />
                         </Property>
                         <Property mapKey="color2" name="color2">
-                            <value x="0.39215699" y="0.39215699" z="0.39215699" w="1" />
+                            <value x="0.392156988" y="0.392156988" z="0.392156988" w="1" />
                         </Property>
                         <Property mapKey="enable" name="enable" value="true" />
                         <Property mapKey="randomClouds" name="randomClouds" value="true" />
@@ -96,16 +103,16 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                             </components>
                         </Property>
-                        <Property mapKey="texture" name="texture">
+                        <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="" />
                                     <item value="resource/voreenve/workspaces/tools" />
-                                    <item value="/data/dominik/git/voreen-master/voreen/resource/voreenve/workspaces/tools" />
+                                    <item value="C:/voreen-development/voreen/resource/voreenve/workspaces/tools" />
                                 </paths>
                             </paths>
                         </Property>
@@ -131,19 +138,19 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-729" y="-119" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="735.35528564" minValue="0.01470711" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="738.29669189" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02774447" id="ref28">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="735.355285645" minValue="0.01470711" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="738.296691895" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02774447" id="ref28">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="721" y="372" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.92005157" y="2.7539835" z="-2.11718941" />
-                            <focus x="-0.02439022" y="-0.02439022" z="-0.02439022" />
-                            <upVector x="0.44362271" y="0.59968728" z="0.66601366" />
+                            <position x="0.920051575" y="2.753983498" z="-2.117189407" />
+                            <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
+                            <upVector x="0.443622708" y="0.599687278" z="0.666013658" />
                             <trackball moveCenter="false">
-                                <center x="-0.02439022" y="-0.02439022" z="-0.02439022" />
+                                <center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             </trackball>
-                            <sceneLLF x="-1.31272233" y="-1.4984473" z="-1.18924642" />
-                            <sceneURB x="1.1752466" y="1.44297373" z="1.34247875" />
+                            <sceneLLF x="-1.312722325" y="-1.498447299" z="-1.189246416" />
+                            <sceneURB x="1.175246596" y="1.442973733" z="1.342478752" />
                         </Property>
                         <Property mapKey="cameraInsideVolumeTechnique" name="cameraInsideVolumeTechnique" value="gpu" />
                         <Property mapKey="jitterEntryPoints" name="jitterEntryPoints" value="false" />
@@ -161,7 +168,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.entrypoints.renderSizeReceive" name="image.entrypoints.renderSizeReceive" id="ref203">
-                                    <value x="640" y="488" />
+                                    <value x="600" y="450" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -169,7 +176,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.exitpoints.renderSizeReceive" name="image.exitpoints.renderSizeReceive" id="ref67">
-                                    <value x="640" y="488" />
+                                    <value x="600" y="450" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -196,15 +203,15 @@
                         </Handler>
                     </InteractionHandlers>
                 </Processor>
-                <Processor type="BoundingBoxRenderer" name="BoundingBoxRenderer" id="ref20">
+                <Processor type="BoundingBoxRenderer" name="BoundingBox Moving" id="ref20">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-1028" y="198" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="boundingBoxWidth" name="boundingBoxWidth" value="1" />
                         <Property mapKey="boundingboxColorSwitch" name="boundingboxColorSwitch" useActiveColor="true">
-                            <value x="0.80000001" y="0.80000001" z="0.80000001" w="1" />
-                            <activeColor x="0.80000001" y="0.80000001" z="0.80000001" w="1" />
+                            <value x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
+                            <activeColor x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
                             <inactiveColor x="1" y="1" z="1" w="1" />
                         </Property>
                         <Property mapKey="boundingboxGridOpacity" name="boundingboxGridOpacity" value="1" />
@@ -246,39 +253,51 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-802" y="113" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="adaptToScene" name="adaptToScene" value="false" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="735.35528564" minValue="0.01470711" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="738.29669189" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02774447" id="ref29">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="735.355285645" minValue="0.01470711" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="738.296691895" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02774447" id="ref29">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="4" y="4" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.92005157" y="2.7539835" z="-2.11718941" />
-                            <focus x="-0.02439022" y="-0.02439022" z="-0.02439022" />
-                            <upVector x="0.44362271" y="0.59968728" z="0.66601366" />
+                            <position x="0.920051575" y="2.753983498" z="-2.117189407" />
+                            <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
+                            <upVector x="0.443622708" y="0.599687278" z="0.666013658" />
                             <trackball moveCenter="false">
-                                <center x="-0.02439022" y="-0.02439022" z="-0.02439022" />
+                                <center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             </trackball>
-                            <sceneLLF x="-1.31272233" y="-1.4984473" z="-1.18924642" />
-                            <sceneURB x="1.1752466" y="1.44297373" z="1.34247875" />
+                            <sceneLLF x="-1.312722325" y="-1.498447299" z="-1.189246416" />
+                            <sceneURB x="1.175246596" y="1.442973733" z="1.342478752" />
                         </Property>
                         <Property mapKey="composeShader" name="composeShader">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
+                            </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
+                        <Property mapKey="forceAdaptToScene" name="forceAdaptToScene" />
                         <Property mapKey="maxFragmentsPerPixelAvgAbs" minValue="1" maxValue="50" minRange="0" maxRange="2147483647" stepping="1">
                             <value x="15" y="20" />
                         </Property>
                         <Property mapKey="oirAddImageShader" name="oirAddImageShader">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
+                            </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="oit_addimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="oit_addimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="oirBlendShader" name="oirBlendShader">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
+                            </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="oit_blend.frag" modified="false" />
                                 <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="oit_blend.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="renderGeometries" name="renderGeometries" value="true" />
@@ -287,7 +306,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref66">
-                                    <value x="640" y="488" />
+                                    <value x="600" y="450" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -297,7 +316,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.output.renderSizeReceive" name="image.output.renderSizeReceive" id="ref65">
-                                    <value x="640" y="488" />
+                                    <value x="600" y="450" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -330,15 +349,28 @@
                 </Processor>
                 <Processor type="VolumeSource" name="VolumeSource Static" id="ref5">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-714" y="-623" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-747" y="-784" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="../../volumes/nucleon.vvd" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="">
+                                <path noPathSet="false">
+                                    <paths>
+                                        <item value="../../volumes/nucleon.vvd" />
+                                        <item value="resource/voreenve/volumes/nucleon.vvd" />
+                                        <item value="C:/voreen-development/voreen/resource/voreenve/volumes/nucleon.vvd" />
+                                    </paths>
+                                </path>
+                                <searchParameters>
+                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                </searchParameters>
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -350,13 +382,13 @@
                 </Processor>
                 <Processor type="BoundingBoxRenderer" name="BoundingBox Static" id="ref6">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-1087" y="68" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-1014" y="70" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="boundingBoxWidth" name="boundingBoxWidth" value="1" />
                         <Property mapKey="boundingboxColorSwitch" name="boundingboxColorSwitch" useActiveColor="true">
-                            <value x="0.80000001" y="0.80000001" z="0.80000001" w="1" />
-                            <activeColor x="0.80000001" y="0.80000001" z="0.80000001" w="1" />
+                            <value x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
+                            <activeColor x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
                             <inactiveColor x="1" y="1" z="1" w="1" />
                         </Property>
                         <Property mapKey="boundingboxGridOpacity" name="boundingboxGridOpacity" value="1" />
@@ -424,35 +456,32 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLightAttenuation" name="applyLightAttenuation" value="false" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="735.35528564" minValue="0.01470711" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="738.29669189" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02774447" id="ref30">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="735.355285645" minValue="0.01470711" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="738.296691895" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02774447" id="ref30">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="4" y="4" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.92005157" y="2.7539835" z="-2.11718941" />
-                            <focus x="-0.02439022" y="-0.02439022" z="-0.02439022" />
-                            <upVector x="0.44362271" y="0.59968728" z="0.66601366" />
+                            <position x="0.920051575" y="2.753983498" z="-2.117189407" />
+                            <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
+                            <upVector x="0.443622708" y="0.599687278" z="0.666013658" />
                             <trackball moveCenter="false">
-                                <center x="-0.02439022" y="-0.02439022" z="-0.02439022" />
+                                <center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             </trackball>
-                            <sceneLLF x="-1.02439022" y="-1.02439022" z="-1.02439022" />
-                            <sceneURB x="0.97560978" y="0.97560978" z="0.97560978" />
+                            <sceneLLF x="-1.024390221" y="-1.024390221" z="-1.024390221" />
+                            <sceneURB x="0.975609779" y="0.975609779" z="0.975609779" />
                         </Property>
                         <Property mapKey="classification" name="classification" value="transfer-function">
                             <Options>
-                                <Option Key="none" Description="none" Value="none">
-                                    <GuiColor r="0" g="0" b="0" a="0" />
-                                </Option>
                                 <Option Key="transfer-function" Description="Transfer Function" Value="transfer-function">
                                     <GuiColor r="0" g="0" b="0" a="0" />
                                 </Option>
                                 <Option Key="pre-integrated-gpu" Description="Pre-Integrated TF (GPU)" Value="pre-integrated-gpu">
                                     <GuiColor r="0" g="0" b="0" a="0" />
                                 </Option>
-                                <Option Key="pre-integrated-cpu" Description="Pre-integrated TF (CPU)" Value="pre-integrated-cpu">
+                                <Option Key="pre-integrated-cpu" Description="Pre-Integrated TF (CPU)" Value="pre-integrated-cpu">
                                     <GuiColor r="0" g="0" b="0" a="0" />
                                 </Option>
-                                <Option Key="pre-integrated-approximation" Description="Pre-integrated TF (Approximation)" Value="pre-integrated-approximation">
+                                <Option Key="pre-integrated-approximation" Description="Pre-Integrated TF (Approximation)" Value="pre-integrated-approximation">
                                     <GuiColor r="0" g="0" b="0" a="0" />
                                 </Option>
                             </Options>
@@ -463,7 +492,7 @@
                         <Property mapKey="compositing" name="compositing" value="dvr" />
                         <Property mapKey="compositing2" name="compositing2" value="dvr" />
                         <Property mapKey="compositing3" name="compositing3" value="dvr" />
-                        <Property mapKey="gradient" name="gradient" value="central-differences">
+                        <Property mapKey="gradient" name="gradient" value="sobel">
                             <Options>
                                 <Option Key="none" Description="none" Value="none">
                                     <GuiColor r="0" g="0" b="0" a="0" />
@@ -482,7 +511,7 @@
                                 </Option>
                             </Options>
                         </Property>
-                        <Property mapKey="interQuality" name="interQuality" value="High">
+                        <Property mapKey="interQuality" name="interQuality" value="Medium">
                             <Options>
                                 <Option Key="Full" Description="Full" Value="Full">
                                     <GuiColor r="0" g="0" b="0" a="0" />
@@ -499,41 +528,41 @@
                             </Options>
                         </Property>
                         <Property mapKey="interactionCoarseness" name="interactionCoarseness" value="4" />
-                        <Property mapKey="interactionQuality" name="interactionQuality" value="1" />
+                        <Property mapKey="interactionQuality" name="interactionQuality" value="0.75" />
                         <Property mapKey="isoValue" name="isoValue" value="0.5" />
                         <Property mapKey="lightAmbient" name="lightAmbient">
-                            <value x="0.40000001" y="0.40000001" z="0.40000001" w="1" />
+                            <value x="0.400000006" y="0.400000006" z="0.400000006" w="1" />
                         </Property>
                         <Property mapKey="lightAttenuation" name="lightAttenuation">
                             <value x="1" y="0" z="0" />
                         </Property>
                         <Property mapKey="lightDiffuse" name="lightDiffuse">
-                            <value x="0.80000001" y="0.80000001" z="0.80000001" w="1" />
+                            <value x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
                         </Property>
-                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="14.70710564">
+                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="14.707105637">
                             <MetaData>
                                 <MetaItem name="FollowCamera" type="BoolMetaData" value="false" />
                                 <MetaItem name="UseBackHemisphere" type="BoolMetaData" value="false" />
                             </MetaData>
-                            <value x="-1.47784793" y="-1.55427444" z="-1.57274449" w="1" />
-                            <Center x="-0.02439022" y="-0.02439022" z="-0.02439022" />
-                            <LightPos x="0.31081903" y="-2.51332331" z="-0.66112334" w="1" />
+                            <value x="-1.477847934" y="-1.55427444" z="-1.572744489" w="1" />
+                            <Center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
+                            <LightPos x="0.31081903" y="-2.513323307" z="-0.661123335" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
-                            <value x="0.60000002" y="0.60000002" z="0.60000002" w="1" />
+                            <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
                         </Property>
                         <Property mapKey="materialShininess" name="materialShininess" value="60" />
                         <Property mapKey="raycast.prg" name="raycast.prg">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" width="700" height="700" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="rc_multivolume.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="rc_multivolume.frag" modified="false" />
                             </components>
                         </Property>
-                        <Property mapKey="renderingQuality" name="renderingQuality" value="Medium">
+                        <Property mapKey="renderingQuality" name="renderingQuality" value="High">
                             <Options>
                                 <Option Key="Full" Description="Full" Value="Full">
                                     <GuiColor r="0" g="0" b="0" a="0" />
@@ -549,7 +578,7 @@
                                 </Option>
                             </Options>
                         </Property>
-                        <Property mapKey="samplingRate" name="samplingRate" value="2" />
+                        <Property mapKey="samplingRate" name="samplingRate" value="4" />
                         <Property mapKey="shading1" name="shading1" value="none" />
                         <Property mapKey="shading2" name="shading2" value="none" />
                         <Property mapKey="shading3" name="shading3" value="phong" />
@@ -589,21 +618,21 @@
                                 <domain x="0" y="249" />
                                 <threshold x="0" y="1" />
                                 <Keys>
-                                    <key type="TransFuncMappingKey" intensity="0.134868" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.134867996" split="false">
                                         <colorL r="153" g="0" b="255" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.184211" split="true">
+                                    <key type="TransFuncMappingKey" intensity="0.184211001" split="true">
                                         <colorL r="129" g="90" b="255" a="26" />
                                         <colorR r="142" g="0" b="0" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.407895" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.407894999" split="false">
                                         <colorL r="255" g="0" b="0" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.45723701" split="true">
+                                    <key type="TransFuncMappingKey" intensity="0.457237005" split="true">
                                         <colorL r="255" g="0" b="0" a="36" />
                                         <colorR r="92" g="92" b="92" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.75657898" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.756578982" split="false">
                                         <colorL r="4" g="255" b="0" a="0" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="0.875" split="false">
@@ -652,28 +681,28 @@
                         </Property>
                     </Properties>
                     <Inports>
-                        <Port name="entryPort2" direction="1" portID="entryPort2" guiName="Entry-points of Volume2" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="entryPort2" direction="1" portID="entryPort2" guiName="Entry-points of Volume2" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
-                        <Port name="entryPort3" direction="1" portID="entryPort3" guiName="Entry-points of Volume3" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="entryPort3" direction="1" portID="entryPort3" guiName="Entry-points of Volume3" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
-                        <Port name="entryPort4" direction="1" portID="entryPort4" guiName="Entry-points of Volume4" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="entryPort4" direction="1" portID="entryPort4" guiName="Entry-points of Volume4" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
-                        <Port name="entryPortGlobal" direction="1" portID="entryPortGlobal" guiName="Global Entry-points Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="entryPortGlobal" direction="1" portID="entryPortGlobal" guiName="Global Entry-points Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
-                        <Port name="exitPort2" direction="1" portID="exitPort2" guiName="Exit-points of Volume2" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="exitPort2" direction="1" portID="exitPort2" guiName="Exit-points of Volume2" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
-                        <Port name="exitPort3" direction="1" portID="exitPort3" guiName="Exit-points of Volume3" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="exitPort3" direction="1" portID="exitPort3" guiName="Exit-points of Volume3" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
-                        <Port name="exitPort4" direction="1" portID="exitPort4" guiName="Exit-points of Volume4" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="exitPort4" direction="1" portID="exitPort4" guiName="Exit-points of Volume4" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
-                        <Port name="exitPortGlobal" direction="1" portID="exitPortGlobal" guiName="Global Exit-points Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="exitPortGlobal" direction="1" portID="exitPortGlobal" guiName="Global Exit-points Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                         <Port name="image.entrypoints" direction="1" portID="image.entrypoints" guiName="Entry-points Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -734,7 +763,7 @@
                 </Processor>
                 <Processor type="QuadView" name="QuadView" id="ref1">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-480" y="399" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-535" y="374" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="forwardDoubleClickEvent" name="forwardDoubleClickEvent" value="false" />
@@ -751,28 +780,28 @@
                         <Port name="inport1" direction="1" portID="inport1" guiName="Image1 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="inport1.renderSizeOrigin" name="inport1.renderSizeOrigin" id="ref64">
-                                    <value x="640" y="488" />
+                                    <value x="600" y="450" />
                                 </Property>
                             </Properties>
                         </Port>
                         <Port name="inport2" direction="1" portID="inport2" guiName="Image2 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="inport2.renderSizeOrigin" name="inport2.renderSizeOrigin" id="ref70">
-                                    <value x="640" y="488" />
+                                    <value x="600" y="450" />
                                 </Property>
                             </Properties>
                         </Port>
                         <Port name="inport3" direction="1" portID="inport3" guiName="Image3 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="inport3.renderSizeOrigin" name="inport3.renderSizeOrigin" id="ref68">
-                                    <value x="640" y="488" />
+                                    <value x="600" y="450" />
                                 </Property>
                             </Properties>
                         </Port>
                         <Port name="inport4" direction="1" portID="inport4" guiName="Image4 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="inport4.renderSizeOrigin" name="inport4.renderSizeOrigin" id="ref146">
-                                    <value x="640" y="488" />
+                                    <value x="600" y="450" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -782,7 +811,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref63">
-                                    <value x="1280" y="977" />
+                                    <value x="1200" y="900" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -793,7 +822,7 @@
                 </Processor>
                 <Processor type="TextOverlay" name="TextOverlay 2" id="ref13">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-483" y="141" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-417" y="57" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="blendMode" name="blendMode" value="auto" />
@@ -810,13 +839,14 @@
                         <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="textoverlay.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="textoverlay.frag" modified="false" />
                             </components>
                         </Property>
-                        <Property mapKey="voreen.fontprop" name="voreen.fontprop" fontSize="15" fontName="VeraMono.ttf" textAlignment="2" lineWidth="640">
+                        <Property mapKey="voreen.fontprop" name="voreen.fontprop" fontSize="15" fontName="VeraMono.ttf" textAlignment="2" lineWidth="600">
                             <fontColor x="1" y="1" z="1" w="1" />
                         </Property>
                     </Properties>
@@ -850,7 +880,7 @@
                 </Processor>
                 <Processor type="TextOverlay" name="TextOverlay 3" id="ref15">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-257" y="133" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-191" y="49" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="blendMode" name="blendMode" value="auto" />
@@ -867,13 +897,14 @@
                         <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="textoverlay.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="textoverlay.frag" modified="false" />
                             </components>
                         </Property>
-                        <Property mapKey="voreen.fontprop" name="voreen.fontprop" fontSize="15" fontName="VeraMono.ttf" textAlignment="2" lineWidth="640">
+                        <Property mapKey="voreen.fontprop" name="voreen.fontprop" fontSize="15" fontName="VeraMono.ttf" textAlignment="2" lineWidth="600">
                             <fontColor x="1" y="1" z="1" w="1" />
                         </Property>
                     </Properties>
@@ -907,7 +938,7 @@
                 </Processor>
                 <Processor type="TextOverlay" name="TextOverlay 4" id="ref17">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-40" y="130" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="25" y="46" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="blendMode" name="blendMode" value="auto" />
@@ -924,13 +955,14 @@
                         <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="textoverlay.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="textoverlay.frag" modified="false" />
                             </components>
                         </Property>
-                        <Property mapKey="voreen.fontprop" name="voreen.fontprop" fontSize="15" fontName="VeraMono.ttf" textAlignment="2" lineWidth="640">
+                        <Property mapKey="voreen.fontprop" name="voreen.fontprop" fontSize="15" fontName="VeraMono.ttf" textAlignment="2" lineWidth="600">
                             <fontColor x="1" y="1" z="1" w="1" />
                         </Property>
                     </Properties>
@@ -964,7 +996,7 @@
                 </Processor>
                 <Processor type="Background" name="Background 2" id="ref14">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-486" y="233" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-420" y="149" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="angle" name="angle" value="0" id="ref39" />
@@ -974,7 +1006,7 @@
                             <value x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="color2" name="color2" id="ref35">
-                            <value x="0.2" y="0.2" z="0.2" w="1" />
+                            <value x="0.200000003" y="0.200000003" z="0.200000003" w="1" />
                         </Property>
                         <Property mapKey="enable" name="enable" value="true" />
                         <Property mapKey="randomClouds" name="randomClouds" value="true" />
@@ -982,18 +1014,19 @@
                         <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                             </components>
                         </Property>
-                        <Property mapKey="texture" name="texture" id="ref37">
+                        <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false" id="ref37">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="" />
                                     <item value="resource/voreenve/workspaces/tools" />
-                                    <item value="/data/dominik/git/voreen-master/voreen/resource/voreenve/workspaces/tools" />
+                                    <item value="C:/voreen-development/voreen/resource/voreenve/workspaces/tools" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1016,7 +1049,7 @@
                 </Processor>
                 <Processor type="Background" name="Background 3" id="ref16">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-260" y="230" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-194" y="146" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="angle" name="angle" value="0" id="ref40" />
@@ -1026,7 +1059,7 @@
                             <value x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="color2" name="color2" id="ref36">
-                            <value x="0.2" y="0.2" z="0.2" w="1" />
+                            <value x="0.200000003" y="0.200000003" z="0.200000003" w="1" />
                         </Property>
                         <Property mapKey="enable" name="enable" value="true" />
                         <Property mapKey="randomClouds" name="randomClouds" value="true" />
@@ -1034,18 +1067,19 @@
                         <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                             </components>
                         </Property>
-                        <Property mapKey="texture" name="texture" id="ref38">
+                        <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false" id="ref38">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="" />
                                     <item value="resource/voreenve/workspaces/tools" />
-                                    <item value="/data/dominik/git/voreen-master/voreen/resource/voreenve/workspaces/tools" />
+                                    <item value="C:/voreen-development/voreen/resource/voreenve/workspaces/tools" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1068,7 +1102,7 @@
                 </Processor>
                 <Processor type="Background" name="Background 4" id="ref18">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-39" y="229" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="26" y="145" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="angle" name="angle" value="0" id="ref47" />
@@ -1078,7 +1112,7 @@
                             <value x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="color2" name="color2" id="ref44">
-                            <value x="0.2" y="0.2" z="0.2" w="1" />
+                            <value x="0.200000003" y="0.200000003" z="0.200000003" w="1" />
                         </Property>
                         <Property mapKey="enable" name="enable" value="true" />
                         <Property mapKey="randomClouds" name="randomClouds" value="true" />
@@ -1086,18 +1120,19 @@
                         <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                             </components>
                         </Property>
-                        <Property mapKey="texture" name="texture" id="ref45">
+                        <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false" id="ref45">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="" />
                                     <item value="resource/voreenve/workspaces/tools" />
-                                    <item value="/data/dominik/git/voreen-master/voreen/resource/voreenve/workspaces/tools" />
+                                    <item value="C:/voreen-development/voreen/resource/voreenve/workspaces/tools" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1120,18 +1155,29 @@
                 </Processor>
                 <Processor type="VolumeTransformation" name="VolumeTransformation" id="ref19">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-433" y="-474" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-422" y="-660" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="enableProcessing" name="enableProcessing" value="true" />
+                        <Property mapKey="rotationAngle" name="rotationAngle" value="0" />
+                        <Property mapKey="rotationAxis" name="rotationAxis">
+                            <value x="1" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="rotationReferencePoint" name="rotationReferencePoint">
+                            <value x="0" y="0" z="0" />
+                        </Property>
                         <Property mapKey="sourceCoordinateSystem" name="sourceCoordinateSystem" value="volume-coordinates" />
                         <Property mapKey="transformMatrix" name="transformMatrix" id="ref50">
-                            <value.row0 x="0.21530205" y="0.25083423" z="0.9437831" w="-0.06873788" />
-                            <value.row1 x="0.7258814" y="0.60539681" z="-0.3264915" w="-0.02773676" />
-                            <value.row2 x="-0.6532591" y="0.75536919" z="-0.05173519" w="0.07661623" />
+                            <value.row0 x="0.21530205" y="0.250834227" z="0.943783104" w="0.005378794" />
+                            <value.row1 x="0.725881398" y="0.605396807" z="-0.326491505" w="-0.21440348" />
+                            <value.row2 x="-0.653259099" y="0.755369186" z="-0.051735189" w="0.155049786" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="transformationMode" name="transformationMode" value="concatenate" />
+                        <Property mapKey="transformationType" name="transformationType" value="arbitrary" />
+                        <Property mapKey="translationAmount" name="translationAmount">
+                            <value x="0" y="0" z="0" />
+                        </Property>
                     </Properties>
                     <Inports>
                         <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -1143,7 +1189,7 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="volumehandle.output" direction="0" portID="volumehandle.output" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.output" direction="0" portID="volumehandle.output" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -1155,15 +1201,16 @@
                 </Processor>
                 <Processor type="InteractiveRegistrationWidget" name="InteractiveRegistrationWidget" id="ref22">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-544" y="42" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-478" y="-41" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="0" maxValue="500" minValue="0.01" frustLeft="-1" frustRight="1" frustBottom="-1" frustTop="1" frustNear="0.01" frustFar="3" fovy="178.85411072" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref186">
+                        <Property mapKey="camera" name="camera" projectionMode="0" maxValue="500" minValue="0.01" frustLeft="-1" frustRight="1" frustBottom="-1" frustTop="1" frustNear="0.01" frustFar="3" fovy="178.854110718" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref186">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="-1276" y="4" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-0.02439022" y="-0.02439022" z="-1.52439022" />
-                            <focus x="-0.02439022" y="-0.02439022" z="-0.02439022" />
+                            <position x="-0.024390221" y="-0.024390221" z="-1.524390221" />
+                            <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             <upVector x="0" y="-1" z="0" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
@@ -1171,27 +1218,27 @@
                             <sceneLLF x="0" y="0" z="0" />
                             <sceneURB x="0" y="0" z="0" />
                         </Property>
-                        <Property mapKey="centerWidget" name="centerWidget" />
+                        <Property mapKey="centerWidget" name="centerWidget" id="ref212" />
                         <Property mapKey="plane" name="plane" id="ref188">
-                            <value x="0" y="-0" z="-1" />
+                            <value x="0" y="-0" z="-0.99999994" />
                         </Property>
-                        <Property mapKey="planeDist" name="planeDist" value="-0.07317066" id="ref190" />
+                        <Property mapKey="planeDist" name="planeDist" value="0.024390338" id="ref190" />
                         <Property mapKey="point" name="point">
-                            <value x="0.06819187" y="-0.11362353" z="-0.12195122" />
+                            <value x="-0.024390221" y="-0.024390221" z="-0.024390459" />
                         </Property>
                         <Property mapKey="render" name="render" value="true" id="ref59" />
-                        <Property mapKey="ringColor" name="ringColor">
-                            <value x="0" y="1" z="0" w="0.80000001" />
+                        <Property mapKey="ringColor" name="ringColor" id="ref208">
+                            <value x="0" y="1" z="0" w="0.800000012" />
                         </Property>
-                        <Property mapKey="ringRadius" name="ringRadius" value="116.51999664" id="ref54" />
-                        <Property mapKey="sphereColor" name="sphereColor">
-                            <value x="0" y="0" z="1" w="0.80000001" />
+                        <Property mapKey="ringRadius" name="ringRadius" value="116.519996643" id="ref54" />
+                        <Property mapKey="sphereColor" name="sphereColor" id="ref210">
+                            <value x="0" y="0" z="1" w="0.800000012" />
                         </Property>
                         <Property mapKey="sphereRadius" name="sphereRadius" value="5" id="ref56" />
                         <Property mapKey="transformMatrix" name="transformMatrix" id="ref49">
-                            <value.row0 x="0.21530205" y="0.25083423" z="0.9437831" w="-0.06873788" />
-                            <value.row1 x="0.7258814" y="0.60539681" z="-0.3264915" w="-0.02773676" />
-                            <value.row2 x="-0.6532591" y="0.75536919" z="-0.05173519" w="0.07661623" />
+                            <value.row0 x="0.21530205" y="0.250834227" z="0.943783104" w="0.005378794" />
+                            <value.row1 x="0.725881398" y="0.605396807" z="-0.326491505" w="-0.21440348" />
+                            <value.row2 x="-0.653259099" y="0.755369186" z="-0.051735189" w="0.155049786" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                     </Properties>
@@ -1218,15 +1265,28 @@
                 </Processor>
                 <Processor type="VolumeSource" name="VolumeSource Moving" id="ref23">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-424" y="-630" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-424" y="-780" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="../../volumes/walnut.vvd" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="">
+                                <path noPathSet="false">
+                                    <paths>
+                                        <item value="../../volumes/walnut.vvd" />
+                                        <item value="resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="C:/voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                    </paths>
+                                </path>
+                                <searchParameters>
+                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                </searchParameters>
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -1238,15 +1298,16 @@
                 </Processor>
                 <Processor type="InteractiveRegistrationWidget" name="InteractiveRegistrationWidget 2" id="ref24">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-106" y="38" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-40" y="-45" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="0" maxValue="500" minValue="0.01" frustLeft="-1" frustRight="1" frustBottom="-1" frustTop="1" frustNear="0.01" frustFar="3" fovy="178.85411072" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref198">
+                        <Property mapKey="camera" name="camera" projectionMode="0" maxValue="500" minValue="0.01" frustLeft="-1" frustRight="1" frustBottom="-1" frustTop="1" frustNear="0.01" frustFar="3" fovy="178.854110718" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref198">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="4" y="4" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-1.52439022" y="-0.02439022" z="-0.02439022" />
-                            <focus x="-0.02439022" y="-0.02439022" z="-0.02439022" />
+                            <position x="-1.524390221" y="-0.024390221" z="-0.024390221" />
+                            <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             <upVector x="-0" y="-0" z="1" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
@@ -1254,27 +1315,27 @@
                             <sceneLLF x="0" y="0" z="0" />
                             <sceneURB x="0" y="0" z="0" />
                         </Property>
-                        <Property mapKey="centerWidget" name="centerWidget" />
+                        <Property mapKey="centerWidget" name="centerWidget" id="ref216" />
                         <Property mapKey="plane" name="plane" id="ref200">
                             <value x="-1" y="0" z="-0" />
                         </Property>
                         <Property mapKey="planeDist" name="planeDist" value="0.02439034" id="ref202" />
                         <Property mapKey="point" name="point">
-                            <value x="-0.02439034" y="-0.13276663" z="-0.37576151" />
+                            <value x="-0.024390459" y="-0.024390221" z="-0.024390221" />
                         </Property>
                         <Property mapKey="render" name="render" value="true" id="ref61" />
-                        <Property mapKey="ringColor" name="ringColor">
-                            <value x="0" y="1" z="0" w="0.80000001" />
+                        <Property mapKey="ringColor" name="ringColor" id="ref214">
+                            <value x="0" y="1" z="0" w="0.800000012" />
                         </Property>
-                        <Property mapKey="ringRadius" name="ringRadius" value="116.51999664" id="ref55" />
-                        <Property mapKey="sphereColor" name="sphereColor">
-                            <value x="0" y="0" z="1" w="0.80000001" />
+                        <Property mapKey="ringRadius" name="ringRadius" value="116.519996643" id="ref55" />
+                        <Property mapKey="sphereColor" name="sphereColor" id="ref215">
+                            <value x="0" y="0" z="1" w="0.800000012" />
                         </Property>
                         <Property mapKey="sphereRadius" name="sphereRadius" value="5" id="ref60" />
                         <Property mapKey="transformMatrix" name="transformMatrix" id="ref51">
-                            <value.row0 x="0.21530205" y="0.25083423" z="0.9437831" w="-0.06873788" />
-                            <value.row1 x="0.7258814" y="0.60539681" z="-0.3264915" w="-0.02773676" />
-                            <value.row2 x="-0.6532591" y="0.75536919" z="-0.05173519" w="0.07661623" />
+                            <value.row0 x="0.21530205" y="0.250834227" z="0.943783104" w="0.005378794" />
+                            <value.row1 x="0.725881398" y="0.605396807" z="-0.326491505" w="-0.21440348" />
+                            <value.row2 x="-0.653259099" y="0.755369186" z="-0.051735189" w="0.155049786" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                     </Properties>
@@ -1301,15 +1362,16 @@
                 </Processor>
                 <Processor type="InteractiveRegistrationWidget" name="InteractiveRegistrationWidget 3" id="ref25">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-331" y="42" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-265" y="-41" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="0" maxValue="500" minValue="0.01" frustLeft="-1" frustRight="1" frustBottom="-1" frustTop="1" frustNear="0.01" frustFar="3" fovy="178.85411072" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref192">
+                        <Property mapKey="camera" name="camera" projectionMode="0" maxValue="500" minValue="0.01" frustLeft="-1" frustRight="1" frustBottom="-1" frustTop="1" frustNear="0.01" frustFar="3" fovy="178.854110718" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref192">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="4" y="4" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-0.02439022" y="-1.52439022" z="-0.02439022" />
-                            <focus x="-0.02439022" y="-0.02439022" z="-0.02439022" />
+                            <position x="-0.024390221" y="-1.524390221" z="-0.024390221" />
+                            <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             <upVector x="-0" y="-0" z="1" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
@@ -1317,27 +1379,27 @@
                             <sceneLLF x="0" y="0" z="0" />
                             <sceneURB x="0" y="0" z="0" />
                         </Property>
-                        <Property mapKey="centerWidget" name="centerWidget" />
+                        <Property mapKey="centerWidget" name="centerWidget" id="ref213" />
                         <Property mapKey="plane" name="plane" id="ref194">
                             <value x="0" y="1" z="0" />
                         </Property>
-                        <Property mapKey="planeDist" name="planeDist" value="-0.12195128" id="ref196" />
+                        <Property mapKey="planeDist" name="planeDist" value="-0.02439034" id="ref196" />
                         <Property mapKey="point" name="point">
-                            <value x="-0.25792345" y="0.0731706" z="0.24421993" />
+                            <value x="0.018323809" y="-0.024390459" z="0.063005045" />
                         </Property>
                         <Property mapKey="render" name="render" value="true" id="ref58" />
-                        <Property mapKey="ringColor" name="ringColor">
-                            <value x="0" y="1" z="0" w="0.58039218" />
+                        <Property mapKey="ringColor" name="ringColor" id="ref209">
+                            <value x="0" y="1" z="0" w="0.800000012" />
                         </Property>
-                        <Property mapKey="ringRadius" name="ringRadius" value="116.51999664" id="ref53" />
-                        <Property mapKey="sphereColor" name="sphereColor">
-                            <value x="0" y="0" z="1" w="0.80000001" />
+                        <Property mapKey="ringRadius" name="ringRadius" value="116.519996643" id="ref53" />
+                        <Property mapKey="sphereColor" name="sphereColor" id="ref211">
+                            <value x="0" y="0" z="1" w="0.800000012" />
                         </Property>
                         <Property mapKey="sphereRadius" name="sphereRadius" value="5" id="ref57" />
                         <Property mapKey="transformMatrix" name="transformMatrix" id="ref52">
-                            <value.row0 x="0.21530205" y="0.25083423" z="0.9437831" w="-0.06873788" />
-                            <value.row1 x="0.7258814" y="0.60539681" z="-0.3264915" w="-0.02773676" />
-                            <value.row2 x="-0.6532591" y="0.75536919" z="-0.05173519" w="0.07661623" />
+                            <value.row0 x="0.21530205" y="0.250834227" z="0.943783104" w="0.005378794" />
+                            <value.row1 x="0.725881398" y="0.605396807" z="-0.326491505" w="-0.21440348" />
+                            <value.row2 x="-0.653259099" y="0.755369186" z="-0.051735189" w="0.155049786" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                     </Properties>
@@ -1364,12 +1426,12 @@
                 </Processor>
                 <Processor type="MultiSliceViewer" name="MultiSliceViewer" id="ref8">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-471" y="-51" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-405" y="-134" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="alignCameraButton" name="alignCameraButton" id="ref83" />
-                        <Property mapKey="blendingFactor1" name="blendingFactor1" value="0.47999999" id="ref103" />
-                        <Property mapKey="blendingFactor2" name="blendingFactor2" value="0.55000001" id="ref107" />
+                        <Property mapKey="blendingFactor1" name="blendingFactor1" value="0.479999989" id="ref103" />
+                        <Property mapKey="blendingFactor2" name="blendingFactor2" value="0.550000012" id="ref107" />
                         <Property mapKey="blendingFactor3" name="blendingFactor3" value="0.5" id="ref111" />
                         <Property mapKey="blendingFactor4" name="blendingFactor4" value="0.5" id="ref115" />
                         <Property mapKey="blendingMode1" name="blendingMode1" value="maximumAlpha" id="ref101" />
@@ -1377,13 +1439,13 @@
                         <Property mapKey="blendingMode3" name="blendingMode3" value="maximumAlpha" id="ref109" />
                         <Property mapKey="blendingMode4" name="blendingMode4" value="maximumAlpha" id="ref113" />
                         <Property mapKey="cacheSize" name="cacheSize" value="20" id="ref145" />
-                        <Property mapKey="camera" name="camera" projectionMode="0" maxValue="500" minValue="0.01" frustLeft="-1" frustRight="1" frustBottom="-1" frustTop="1" frustNear="0.01" frustFar="3" fovy="178.85411072" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref185">
+                        <Property mapKey="camera" name="camera" projectionMode="0" maxValue="500" minValue="0.01" frustLeft="-1" frustRight="1" frustBottom="-1" frustTop="1" frustNear="0.01" frustFar="3" fovy="178.854110718" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref185">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="-1276" y="6" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-0.02439022" y="-0.02439022" z="-1.52439022" />
-                            <focus x="-0.02439022" y="-0.02439022" z="-0.02439022" />
+                            <position x="-0.024390221" y="-0.024390221" z="-1.524390221" />
+                            <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             <upVector x="0" y="-1" z="0" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
@@ -1398,9 +1460,9 @@
                         <Property mapKey="crosshairWidth" name="crosshairWidth" value="1" id="ref89" />
                         <Property mapKey="mainInport" name="mainInport" value="2" id="ref73" />
                         <Property mapKey="plane" name="plane" id="ref187">
-                            <value x="0" y="-0" z="-1" />
+                            <value x="0" y="-0" z="-0.99999994" />
                         </Property>
-                        <Property mapKey="planeDist" name="planeDist" value="-0.07317066" id="ref189" />
+                        <Property mapKey="planeDist" name="planeDist" value="0.024390338" id="ref189" />
                         <Property mapKey="renderCrosshair" name="renderCrosshair" value="true" id="ref85" />
                         <Property mapKey="restrictToMainVolume" name="restrictToMainVolume" value="false" id="ref75" />
                         <Property mapKey="samplingRate" name="samplingRate" value="2" id="ref143" />
@@ -1434,7 +1496,7 @@
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
                                         <colorL r="0" g="0" b="0" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.48816568" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.488165677" split="false">
                                         <colorL r="255" g="255" b="255" a="255" />
                                     </key>
                                 </Keys>
@@ -1462,19 +1524,19 @@
                                     <key type="TransFuncMappingKey" intensity="0.22485207" split="false">
                                         <colorL r="172" g="58" b="165" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.36094674" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.360946745" split="false">
                                         <colorL r="255" g="0" b="0" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.36094674" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.360946745" split="false">
                                         <colorL r="255" g="0" b="0" a="255" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.68343192" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.683431923" split="false">
                                         <colorL r="156" g="99" b="0" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.72189349" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.721893489" split="false">
                                         <colorL r="4" g="255" b="0" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.88165683" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.881656826" split="false">
                                         <colorL r="73" g="255" b="1" a="255" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="0.96627003" split="false">
@@ -1522,8 +1584,8 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="xSliceIndex" name="xSliceIndex" value="20" id="ref77" />
-                        <Property mapKey="ySliceIndex" name="ySliceIndex" value="18" id="ref79" />
-                        <Property mapKey="zSliceIndex" name="zSliceIndex" value="22" id="ref81" />
+                        <Property mapKey="ySliceIndex" name="ySliceIndex" value="20" id="ref79" />
+                        <Property mapKey="zSliceIndex" name="zSliceIndex" value="20" id="ref81" />
                     </Properties>
                     <Inports>
                         <Port name="volume1" direction="1" portID="volume1" guiName="Volume 1" allowMultipleConnections="false" invalidationLevel="20">
@@ -1565,7 +1627,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="output.renderSizeReceive" name="output.renderSizeReceive" id="ref71">
-                                    <value x="640" y="488" />
+                                    <value x="600" y="450" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -1600,12 +1662,12 @@
                 </Processor>
                 <Processor type="MultiSliceViewer" name="MultiSliceViewer 2" id="ref9">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-259" y="-51" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-193" y="-134" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="alignCameraButton" name="alignCameraButton" id="ref82" />
-                        <Property mapKey="blendingFactor1" name="blendingFactor1" value="0.47999999" id="ref102" />
-                        <Property mapKey="blendingFactor2" name="blendingFactor2" value="0.55000001" id="ref106" />
+                        <Property mapKey="blendingFactor1" name="blendingFactor1" value="0.479999989" id="ref102" />
+                        <Property mapKey="blendingFactor2" name="blendingFactor2" value="0.550000012" id="ref106" />
                         <Property mapKey="blendingFactor3" name="blendingFactor3" value="0.5" id="ref110" />
                         <Property mapKey="blendingFactor4" name="blendingFactor4" value="0.5" id="ref114" />
                         <Property mapKey="blendingMode1" name="blendingMode1" value="maximumAlpha" id="ref100" />
@@ -1613,12 +1675,13 @@
                         <Property mapKey="blendingMode3" name="blendingMode3" value="maximumAlpha" id="ref108" />
                         <Property mapKey="blendingMode4" name="blendingMode4" value="maximumAlpha" id="ref112" />
                         <Property mapKey="cacheSize" name="cacheSize" value="20" id="ref144" />
-                        <Property mapKey="camera" name="camera" projectionMode="0" maxValue="500" minValue="0.01" frustLeft="-1" frustRight="1" frustBottom="-1" frustTop="1" frustNear="0.01" frustFar="3" fovy="178.85411072" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref191">
+                        <Property mapKey="camera" name="camera" projectionMode="0" maxValue="500" minValue="0.01" frustLeft="-1" frustRight="1" frustBottom="-1" frustTop="1" frustNear="0.01" frustFar="3" fovy="178.854110718" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref191">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="-1276" y="6" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-0.02439022" y="-1.52439022" z="-0.02439022" />
-                            <focus x="-0.02439022" y="-0.02439022" z="-0.02439022" />
+                            <position x="-0.024390221" y="-1.524390221" z="-0.024390221" />
+                            <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             <upVector x="-0" y="-0" z="1" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
@@ -1635,7 +1698,7 @@
                         <Property mapKey="plane" name="plane" id="ref193">
                             <value x="0" y="1" z="0" />
                         </Property>
-                        <Property mapKey="planeDist" name="planeDist" value="-0.12195128" id="ref195" />
+                        <Property mapKey="planeDist" name="planeDist" value="-0.02439034" id="ref195" />
                         <Property mapKey="renderCrosshair" name="renderCrosshair" value="true" id="ref84" />
                         <Property mapKey="restrictToMainVolume" name="restrictToMainVolume" value="false" id="ref74" />
                         <Property mapKey="samplingRate" name="samplingRate" value="2" id="ref142" />
@@ -1656,6 +1719,7 @@
                         <Property mapKey="transferFunction1" name="transferFunction1" domainFittingStrategy="1" computeHistogram="true" id="ref92">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
@@ -1665,7 +1729,7 @@
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
                                         <colorL r="0" g="0" b="0" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.48816568" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.488165677" split="false">
                                         <colorL r="255" g="255" b="255" a="255" />
                                     </key>
                                 </Keys>
@@ -1674,6 +1738,7 @@
                         <Property mapKey="transferFunction2" name="transferFunction2" domainFittingStrategy="1" computeHistogram="true" id="ref94">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="256" y="1" z="1" />
@@ -1689,19 +1754,19 @@
                                     <key type="TransFuncMappingKey" intensity="0.22485207" split="false">
                                         <colorL r="172" g="58" b="165" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.36094674" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.360946745" split="false">
                                         <colorL r="255" g="0" b="0" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.36094674" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.360946745" split="false">
                                         <colorL r="255" g="0" b="0" a="255" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.68343192" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.683431923" split="false">
                                         <colorL r="156" g="99" b="0" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.72189349" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.721893489" split="false">
                                         <colorL r="4" g="255" b="0" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.88165683" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.881656826" split="false">
                                         <colorL r="73" g="255" b="1" a="255" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="0.96627003" split="false">
@@ -1713,6 +1778,7 @@
                         <Property mapKey="transferFunction3" name="transferFunction3" domainFittingStrategy="1" computeHistogram="true" id="ref96">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
@@ -1731,6 +1797,7 @@
                         <Property mapKey="transferFunction4" name="transferFunction4" domainFittingStrategy="1" computeHistogram="true" id="ref98">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
@@ -1747,8 +1814,8 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="xSliceIndex" name="xSliceIndex" value="20" id="ref76" />
-                        <Property mapKey="ySliceIndex" name="ySliceIndex" value="18" id="ref78" />
-                        <Property mapKey="zSliceIndex" name="zSliceIndex" value="22" id="ref80" />
+                        <Property mapKey="ySliceIndex" name="ySliceIndex" value="20" id="ref78" />
+                        <Property mapKey="zSliceIndex" name="zSliceIndex" value="20" id="ref80" />
                     </Properties>
                     <Inports>
                         <Port name="volume1" direction="1" portID="volume1" guiName="Volume 1" allowMultipleConnections="false" invalidationLevel="20">
@@ -1790,7 +1857,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="output.renderSizeReceive" name="output.renderSizeReceive" id="ref69">
-                                    <value x="640" y="488" />
+                                    <value x="600" y="450" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -1825,12 +1892,12 @@
                 </Processor>
                 <Processor type="MultiSliceViewer" name="MultiSliceViewer 3" id="ref10">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-35" y="-51" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="30" y="-134" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="alignCameraButton" name="alignCameraButton" id="ref153" />
-                        <Property mapKey="blendingFactor1" name="blendingFactor1" value="0.47999999" id="ref163" />
-                        <Property mapKey="blendingFactor2" name="blendingFactor2" value="0.55000001" id="ref165" />
+                        <Property mapKey="blendingFactor1" name="blendingFactor1" value="0.479999989" id="ref163" />
+                        <Property mapKey="blendingFactor2" name="blendingFactor2" value="0.550000012" id="ref165" />
                         <Property mapKey="blendingFactor3" name="blendingFactor3" value="0.5" id="ref167" />
                         <Property mapKey="blendingFactor4" name="blendingFactor4" value="0.5" id="ref169" />
                         <Property mapKey="blendingMode1" name="blendingMode1" value="maximumAlpha" id="ref162" />
@@ -1838,12 +1905,13 @@
                         <Property mapKey="blendingMode3" name="blendingMode3" value="maximumAlpha" id="ref166" />
                         <Property mapKey="blendingMode4" name="blendingMode4" value="maximumAlpha" id="ref168" />
                         <Property mapKey="cacheSize" name="cacheSize" value="20" id="ref184" />
-                        <Property mapKey="camera" name="camera" projectionMode="0" maxValue="500" minValue="0.01" frustLeft="-1" frustRight="1" frustBottom="-1" frustTop="1" frustNear="0.01" frustFar="3" fovy="178.85411072" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref197">
+                        <Property mapKey="camera" name="camera" projectionMode="0" maxValue="500" minValue="0.01" frustLeft="-1" frustRight="1" frustBottom="-1" frustTop="1" frustNear="0.01" frustFar="3" fovy="178.854110718" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01" id="ref197">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="-1276" y="6" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-1.52439022" y="-0.02439022" z="-0.02439022" />
-                            <focus x="-0.02439022" y="-0.02439022" z="-0.02439022" />
+                            <position x="-1.524390221" y="-0.024390221" z="-0.024390221" />
+                            <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             <upVector x="-0" y="-0" z="1" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
@@ -1881,6 +1949,7 @@
                         <Property mapKey="transferFunction1" name="transferFunction1" domainFittingStrategy="1" computeHistogram="true" id="ref158">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
@@ -1890,7 +1959,7 @@
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
                                         <colorL r="0" g="0" b="0" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.48816568" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.488165677" split="false">
                                         <colorL r="255" g="255" b="255" a="255" />
                                     </key>
                                 </Keys>
@@ -1899,6 +1968,7 @@
                         <Property mapKey="transferFunction2" name="transferFunction2" domainFittingStrategy="1" computeHistogram="true" id="ref159">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="256" y="1" z="1" />
@@ -1914,19 +1984,19 @@
                                     <key type="TransFuncMappingKey" intensity="0.22485207" split="false">
                                         <colorL r="172" g="58" b="165" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.36094674" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.360946745" split="false">
                                         <colorL r="255" g="0" b="0" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.36094674" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.360946745" split="false">
                                         <colorL r="255" g="0" b="0" a="255" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.68343192" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.683431923" split="false">
                                         <colorL r="156" g="99" b="0" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.72189349" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.721893489" split="false">
                                         <colorL r="4" g="255" b="0" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.88165683" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.881656826" split="false">
                                         <colorL r="73" g="255" b="1" a="255" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="0.96627003" split="false">
@@ -1938,6 +2008,7 @@
                         <Property mapKey="transferFunction3" name="transferFunction3" domainFittingStrategy="1" computeHistogram="true" id="ref160">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
@@ -1956,6 +2027,7 @@
                         <Property mapKey="transferFunction4" name="transferFunction4" domainFittingStrategy="1" computeHistogram="true" id="ref161">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
@@ -1972,8 +2044,8 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="xSliceIndex" name="xSliceIndex" value="20" id="ref150" />
-                        <Property mapKey="ySliceIndex" name="ySliceIndex" value="18" id="ref151" />
-                        <Property mapKey="zSliceIndex" name="zSliceIndex" value="22" id="ref152" />
+                        <Property mapKey="ySliceIndex" name="ySliceIndex" value="20" id="ref151" />
+                        <Property mapKey="zSliceIndex" name="zSliceIndex" value="20" id="ref152" />
                     </Properties>
                     <Inports>
                         <Port name="volume1" direction="1" portID="volume1" guiName="Volume 1" allowMultipleConnections="false" invalidationLevel="20">
@@ -2015,7 +2087,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="output.renderSizeReceive" name="output.renderSizeReceive" id="ref147">
-                                    <value x="640" y="488" />
+                                    <value x="600" y="450" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -2050,7 +2122,7 @@
                 </Processor>
                 <Processor type="OptimizedProxyGeometry" name="OptimizedProxyGeometry" id="ref11">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-1012" y="-438" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-749" y="-523" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="clipRegion">
@@ -2165,16 +2237,16 @@
                 </Processor>
                 <Processor type="MeshEntryExitPoints" name="MeshEntryExitPoints 2" id="ref26">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-1012" y="-338" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-744" y="-417" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0" y="0" z="3.5" />
+                            <position x="0.998515666" y="2.498732805" z="-2.238150358" />
                             <focus x="0" y="0" z="0" />
-                            <upVector x="0" y="1" z="0" />
+                            <upVector x="0.764229238" y="0.23320578" z="0.601305962" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
                             </trackball>
@@ -2197,7 +2269,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.entrypoints.renderSizeReceive" name="image.entrypoints.renderSizeReceive" id="ref204">
-                                    <value x="640" y="488" />
+                                    <value x="600" y="450" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -2205,7 +2277,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.exitpoints.renderSizeReceive" name="image.exitpoints.renderSizeReceive" id="ref205">
-                                    <value x="640" y="488" />
+                                    <value x="600" y="450" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -2234,10 +2306,10 @@
                 </Processor>
                 <Processor type="MeshEntryExitPoints" name="MeshEntryExitPoints 3" id="ref27">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-15" y="-337" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-416" y="-425" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
@@ -2266,7 +2338,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.entrypoints.renderSizeReceive" name="image.entrypoints.renderSizeReceive" id="ref206">
-                                    <value x="640" y="488" />
+                                    <value x="600" y="450" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -2274,7 +2346,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.exitpoints.renderSizeReceive" name="image.exitpoints.renderSizeReceive" id="ref207">
-                                    <value x="640" y="488" />
+                                    <value x="600" y="450" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -2303,7 +2375,7 @@
                 </Processor>
                 <Processor type="OptimizedProxyGeometry" name="OptimizedProxyGeometry 2" id="ref21">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-15" y="-437" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-432" y="-519" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="clipRegion">
@@ -3939,12 +4011,116 @@
                     <DestinationProperty ref="ref207" />
                     <Evaluator type="LinkEvaluatorRenderSize" />
                 </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ColorProperty" ref="ref208" />
+                    <DestinationProperty type="ColorProperty" ref="ref209" />
+                    <Evaluator type="LinkEvaluatorVec4Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ColorProperty" ref="ref209" />
+                    <DestinationProperty type="ColorProperty" ref="ref208" />
+                    <Evaluator type="LinkEvaluatorVec4Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ColorProperty" ref="ref210" />
+                    <DestinationProperty type="ColorProperty" ref="ref211" />
+                    <Evaluator type="LinkEvaluatorVec4Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ColorProperty" ref="ref211" />
+                    <DestinationProperty type="ColorProperty" ref="ref210" />
+                    <Evaluator type="LinkEvaluatorVec4Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ButtonProperty" ref="ref212" />
+                    <DestinationProperty type="ButtonProperty" ref="ref213" />
+                    <Evaluator type="LinkEvaluatorButtonId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ButtonProperty" ref="ref213" />
+                    <DestinationProperty type="ButtonProperty" ref="ref212" />
+                    <Evaluator type="LinkEvaluatorButtonId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ColorProperty" ref="ref209" />
+                    <DestinationProperty type="ColorProperty" ref="ref214" />
+                    <Evaluator type="LinkEvaluatorVec4Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ColorProperty" ref="ref214" />
+                    <DestinationProperty type="ColorProperty" ref="ref209" />
+                    <Evaluator type="LinkEvaluatorVec4Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ColorProperty" ref="ref211" />
+                    <DestinationProperty type="ColorProperty" ref="ref215" />
+                    <Evaluator type="LinkEvaluatorVec4Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ColorProperty" ref="ref215" />
+                    <DestinationProperty type="ColorProperty" ref="ref211" />
+                    <Evaluator type="LinkEvaluatorVec4Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ButtonProperty" ref="ref213" />
+                    <DestinationProperty type="ButtonProperty" ref="ref216" />
+                    <Evaluator type="LinkEvaluatorButtonId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ButtonProperty" ref="ref216" />
+                    <DestinationProperty type="ButtonProperty" ref="ref213" />
+                    <Evaluator type="LinkEvaluatorButtonId" />
+                </PropertyLink>
             </PropertyLinks>
         </ProcessorNetwork>
         <Animation />
         <ApplicationModeConfig MainCanvas="Canvas::Canvas">
-            <PropertyGroups />
-            <GroupMembership />
+            <PropertyGroups>
+                <item value="Input" />
+                <item value="Registration" />
+            </PropertyGroups>
+            <GroupMembership>
+                <value key="InteractiveRegistrationWidget.centerWidget">
+                    <First value="Registration" />
+                    <Second value="5" />
+                </value>
+                <value key="InteractiveRegistrationWidget.render">
+                    <First value="Registration" />
+                    <Second value="0" />
+                </value>
+                <value key="InteractiveRegistrationWidget.ringColor">
+                    <First value="Registration" />
+                    <Second value="3" />
+                </value>
+                <value key="InteractiveRegistrationWidget.ringRadius">
+                    <First value="Registration" />
+                    <Second value="2" />
+                </value>
+                <value key="InteractiveRegistrationWidget.sphereColor">
+                    <First value="Registration" />
+                    <Second value="4" />
+                </value>
+                <value key="InteractiveRegistrationWidget.sphereRadius">
+                    <First value="Registration" />
+                    <Second value="1" />
+                </value>
+                <value key="VolumeSource Moving.volumeInfo">
+                    <First value="Input" />
+                    <Second value="1" />
+                </value>
+                <value key="VolumeSource Moving.volumeURL">
+                    <First value="Input" />
+                    <Second value="0" />
+                </value>
+                <value key="VolumeSource Static.volumeInfo">
+                    <First value="Input" />
+                    <Second value="3" />
+                </value>
+                <value key="VolumeSource Static.volumeURL">
+                    <First value="Input" />
+                    <Second value="2" />
+                </value>
+            </GroupMembership>
             <MenuEntityVisibility />
         </ApplicationModeConfig>
     </Workspace>

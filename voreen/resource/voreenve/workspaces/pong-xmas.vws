@@ -1,31 +1,27 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="true" GlobalDescription='&lt;font color=&quot;#808080&quot;&gt;&lt;h4&gt;Pong&lt;/h4&gt; &lt;p&gt;What more description do you need?&lt;/p&gt;&lt;/font&gt;'>
-        <ProcessorNetwork version="17">
+        <ProcessorNetwork version="19">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="ImageSource" ref="ref3" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="-497" y="247" />
                 </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="2.974999905" />
             </MetaData>
             <Processors>
                 <Processor type="Canvas" name="Canvas" id="ref1">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-547" y="367" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="214" y="182" width="1053" height="724" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="291" y="158" width="1024" height="768" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-1672" y="8" />
+                            <value x="8" y="8" />
                         </MetaItem>
                         <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
-                            <value x="1031" y="961" />
+                            <value x="2012" y="1326" />
                         </MetaItem>
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
@@ -36,10 +32,10 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="214" y="182" />
+                            <value x="291" y="158" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="1053" y="724" />
+                            <value x="1024" y="768" />
                         </MetaItem>
                         <MetaItem name="preferedNoFullscreenCanvasPosition" type="IVec2MetaData">
                             <value x="-1010" y="185" />
@@ -50,10 +46,10 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize">
-                            <value x="1053" y="724" />
+                            <value x="1024" y="768" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="showCanvas" name="showCanvas" value="true" />
@@ -64,7 +60,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref4">
-                                    <value x="1053" y="724" />
+                                    <value x="1024" y="768" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -79,10 +75,14 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-571" y="267" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="shader.program" name="shader.program" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                        <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
+                            </components>
                         </Property>
                         <Property mapKey="toucheventsimulator.event" name="toucheventsimulator.event" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="8" shareEvents="false" />
                     </Properties>
@@ -109,22 +109,26 @@
                     <Properties>
                         <Property mapKey="ballSize" name="ballSize" value="0.07" />
                         <Property mapKey="color" name="color">
-                            <value x="1" y="0.50196081" z="0" w="1" />
+                            <value x="1" y="0.501960814" z="0" w="1" />
                         </Property>
                         <Property mapKey="computerOpponent1" name="computerOpponent1" value="true" />
                         <Property mapKey="computerOpponent2" name="computerOpponent2" value="true" />
                         <Property mapKey="crazyMode" name="crazyMode" value="false" />
                         <Property mapKey="opacity" name="opacity" value="1" />
                         <Property mapKey="paddleAutoSpeed" name="paddleAutoSpeed" value="6" />
-                        <Property mapKey="paddleHeight" name="paddleHeight" value="0.22" />
-                        <Property mapKey="paddleWidth" name="paddleWidth" value="0.04" />
+                        <Property mapKey="paddleHeight" name="paddleHeight" value="0.219999999" />
+                        <Property mapKey="paddleWidth" name="paddleWidth" value="0.039999999" />
                         <Property mapKey="randomFac" name="randomFac" value="4" />
                         <Property mapKey="resetGame" name="resetGame" />
-                        <Property mapKey="shader.program" name="shader.program" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                        <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
                             </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
+                            </components>
                         </Property>
                         <Property mapKey="speedFac" name="speedFac" value="2" />
                         <Property mapKey="xmasMode" name="xmasMode" value="true" />
@@ -133,7 +137,7 @@
                         <Port name="image.in" direction="1" portID="image.in" guiName="" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.in.renderSizeOrigin" name="image.in.renderSizeOrigin">
-                                    <value x="1053" y="724" />
+                                    <value x="1024" y="768" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -143,7 +147,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.out.renderSizeReceive" name="image.out.renderSizeReceive" id="ref5">
-                                    <value x="1053" y="724" />
+                                    <value x="1024" y="768" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -154,16 +158,16 @@
                 </Processor>
                 <Processor type="ImageSource" name="ImageSource" id="ref3">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-549" y="67" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-549" y="66" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="clearButton" name="clearButton" />
-                        <Property mapKey="imageFile" name="imageFile">
+                        <Property mapKey="imageFile" name="imageFile" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../modules/staging/textures/team.jpg" />
+                                    <item value="../../../../../voreen-development/voreen/modules/staging/textures/team.jpg" />
                                     <item value="modules/staging/textures/team.jpg" />
-                                    <item value="/home/a_sche26/voreen-development/voreen/modules/staging/textures/team.jpg" />
+                                    <item value="C:/voreen-development/voreen/modules/staging/textures/team.jpg" />
                                 </paths>
                             </paths>
                         </Property>
@@ -221,8 +225,60 @@
         </ProcessorNetwork>
         <Animation />
         <ApplicationModeConfig MainCanvas="Canvas::Canvas">
-            <PropertyGroups />
-            <GroupMembership />
+            <PropertyGroups>
+                <item value="Settings" />
+                <item value="Game" />
+            </PropertyGroups>
+            <GroupMembership>
+                <value key="ImageSource.imageFile">
+                    <First value="Settings" />
+                    <Second value="0" />
+                </value>
+                <value key="Pong.ballSize">
+                    <First value="Settings" />
+                    <Second value="3" />
+                </value>
+                <value key="Pong.computerOpponent1">
+                    <First value="Game" />
+                    <Second value="2" />
+                </value>
+                <value key="Pong.computerOpponent2">
+                    <First value="Game" />
+                    <Second value="3" />
+                </value>
+                <value key="Pong.crazyMode">
+                    <First value="Game" />
+                    <Second value="1" />
+                </value>
+                <value key="Pong.paddleAutoSpeed">
+                    <First value="Settings" />
+                    <Second value="5" />
+                </value>
+                <value key="Pong.paddleHeight">
+                    <First value="Settings" />
+                    <Second value="1" />
+                </value>
+                <value key="Pong.paddleWidth">
+                    <First value="Settings" />
+                    <Second value="2" />
+                </value>
+                <value key="Pong.randomFac">
+                    <First value="Settings" />
+                    <Second value="6" />
+                </value>
+                <value key="Pong.resetGame">
+                    <First value="Game" />
+                    <Second value="0" />
+                </value>
+                <value key="Pong.speedFac">
+                    <First value="Settings" />
+                    <Second value="4" />
+                </value>
+                <value key="Pong.xmasMode">
+                    <First value="Settings" />
+                    <Second value="7" />
+                </value>
+            </GroupMembership>
             <MenuEntityVisibility />
         </ApplicationModeConfig>
     </Workspace>

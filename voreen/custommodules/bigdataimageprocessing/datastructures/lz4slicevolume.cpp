@@ -91,9 +91,17 @@ const RealWorldMapping& LZ4SliceVolumeMetadata::getRealWorldMapping() const {
 
 void LZ4SliceVolumeMetadata::serialize(Serializer& s) const {
     s.serialize("dimensions", dimensions_);
+    s.serialize("offset", offset_);
+    s.serialize("spacing", spacing_);
+    s.serialize("physicalToWorldTransformation", physicalToWorldTransformation_);
+    s.serialize("realWorldMapping", realWorldMapping_);
 }
 void LZ4SliceVolumeMetadata::deserialize(Deserializer& s) {
     s.deserialize("dimensions", dimensions_);
+    s.deserialize("offset", offset_);
+    s.deserialize("spacing", spacing_);
+    s.deserialize("physicalToWorldTransformation", physicalToWorldTransformation_);
+    s.deserialize("realWorldMapping", realWorldMapping_);
 }
 
 /// LZ4SliceVolumeMetadataFull -------------------------------------------------
@@ -116,8 +124,9 @@ LZ4SliceVolumeMetadataFull LZ4SliceVolumeMetadataFull::load(const std::string& x
 
 void LZ4SliceVolumeMetadataFull::save(const std::string& xmlfile) const {
     XmlSerializer ser;
-    std::ofstream filestream(xmlfile);
     ser.serialize(METADATA_ROOT_NODE_STRING, *this);
+    std::ofstream filestream(xmlfile);
+    ser.write(filestream);
 }
 
 void LZ4SliceVolumeMetadataFull::serialize(Serializer& s) const {
