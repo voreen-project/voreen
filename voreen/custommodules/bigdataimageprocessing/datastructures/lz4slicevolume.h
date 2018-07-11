@@ -360,21 +360,18 @@ template<typename Voxel>
 VolumeAtomic<Voxel> LZ4SliceVolume<Voxel>::loadSlice(size_t sliceNumber) const {
     std::ifstream compressedFile(getSliceFilePath(sliceNumber), std::ifstream::binary);
 
-    const size_t sliceMemorySize = getSliceMemorySize();
+    compressedFile.seekg(0,compressedFile.end); // Seek to end
+    size_t compressedFileSize = compressedFile.tellg(); // end file position == file size
+    compressedFile.clear(); // Clear all error state flags
+    compressedFile.seekg(0, std::ios::beg); // Seek to beginning
 
-    compressedFile.seekg(0,compressedFile.end);
-    size_t compressedFileSize = compressedFile.tellg();
-    compressedFile.clear(); //?
-    compressedFile.seekg(0, std::ios::beg);
-
-    tgtAssert(compressedFileSize < sliceMemorySize, "Invalid slice memory size");
-
-    //Read file into buffer (sliceMemorySize is larger than it needs to be, but this way we do not need to check the actual file size)
+    //Read file into buffer (buffer size is exactly the size of the file)
     std::unique_ptr<char[]> compressedBuffer(new char[compressedFileSize]);
     compressedFile.read(compressedBuffer.get(), compressedFileSize);
     compressedFile.close();
 
     // Decompress buffer
+    const size_t sliceMemorySize = getSliceMemorySize();
     std::unique_ptr<char[]> decompressedBuffer(new char[sliceMemorySize]);
     size_t bytesDecompressed = LZ4_decompress_safe(compressedBuffer.get(), decompressedBuffer.get(), compressedFileSize, sliceMemorySize);
     tgtAssert(bytesDecompressed == sliceMemorySize, "Invalid memory size (resulting in memory corruption!)");
