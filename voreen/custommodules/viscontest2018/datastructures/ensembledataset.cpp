@@ -83,6 +83,9 @@ void EnsembleDataset::addRun(const Run& run) {
     maxNumTimeSteps_ = std::max(run.timeSteps_.size(), maxNumTimeSteps_);
     totalNumTimeSteps_ += run.timeSteps_.size();
 
+    RunMetaData metaData;
+    runMetaData_.push_back(metaData);
+
     for (size_t t = 0; t < run.timeSteps_.size(); t++) {
         std::vector<std::string> channels;
         for (const auto& channel : run.timeSteps_[t].channels_) {
@@ -93,11 +96,15 @@ void EnsembleDataset::addRun(const Run& run) {
             tgtAssert(channel.second->hasDerivedData<VolumeMinMax>(), "Derived data min max not available");
             VolumeMinMax* minMax = channel.second->getDerivedData<VolumeMinMax>();
 
-            if (valueRange_.find(channelName) != valueRange_.end())
-                valueRange_[channelName] = tgt::vec2(std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest());
+            if(channelMetaData_.find(channelName) == channelMetaData_.end()) {
+                channelMetaData_[channelName].valueRange_ = tgt::vec2(std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest());
+            }
+            else {
+                channelMetaData_[channelName].valueRange_.x = std::min(channelMetaData_[channelName].valueRange_.x, minMax->getMin());
+                channelMetaData_[channelName].valueRange_.y = std::max(channelMetaData_[channelName].valueRange_.y, minMax->getMax());
+            }
 
-            valueRange_[channelName].x = std::min(valueRange_[channelName].x, minMax->getMin());
-            valueRange_[channelName].y = std::max(valueRange_[channelName].y, minMax->getMax());
+            runMetaData_.back().timeStepDurationStats_.addSample(run.timeSteps_[t].duration_);
 
             if (runs_.empty()) {
                 dimensions_ = channel.second->getDimensions();
@@ -181,6 +188,16 @@ size_t EnsembleDataset::getTotalNumTimeSteps() const {
     return totalNumTimeSteps_;
 }
 
+const Statistics& EnsembleDataset::getTimeStepDurationStats(size_t runIdx) const {
+    tgtAssert(runIdx < runs_.size(), "Run not available");
+    return runMetaData_[runIdx].timeStepDurationStats_;
+}
+
+const tgt::vec3& EnsembleDataset::getColor(size_t runIdx) const {
+    tgtAssert(runIdx < runs_.size(), "Run not available");
+    return runs_[runIdx].color_;
+}
+
 float EnsembleDataset::getMinTimeStepDuration() const {
     return minTimeStepDuration_;
 }
@@ -223,8 +240,8 @@ void EnsembleDataset::setRoi(const tgt::IntBounds& roi) {
 }
 
 const tgt::vec2& EnsembleDataset::getValueRange(const std::string& channel) const {
-    tgtAssert(valueRange_.find(channel) != valueRange_.end(), "Channel not available");
-    return valueRange_.at(channel);
+    tgtAssert(channelMetaData_.find(channel) != channelMetaData_.end(), "Channel not available");
+    return channelMetaData_.at(channel).valueRange_;
 }
 
 const std::vector<std::string>& EnsembleDataset::getCommonChannels() const {

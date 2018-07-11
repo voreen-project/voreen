@@ -76,8 +76,8 @@ public:
             // Adjust range to data.
             std::vector<int> selectedRunIndices;
             for (const EnsembleDataset::Run& run : ensemble->getRuns()) {
-                runs_.addRow(run.name_, run.color_);
-                selectedRunIndices.push_back(selectedRunIndices.size());
+                runs_.addRow(run.name_, ensemble->getColor(selectedRunIndices.size()));
+                selectedRunIndices.push_back(static_cast<int>(selectedRunIndices.size()));
             }
             runs_.setSelectedRowIndices(selectedRunIndices);
         }
@@ -112,7 +112,7 @@ public:
                 continue;
 
             std::vector<EnsembleDataset::TimeStep> timeSteps;
-            int max = std::min<int>(run.timeSteps_.size() - 1, timeSteps_.get().y);
+            int max = std::min(static_cast<int>(run.timeSteps_.size()) - 1, timeSteps_.get().y);
             for (int i = timeSteps_.get().x; i <= max; i++) {
                 timeSteps.push_back(run.timeSteps_[i]);
             }
@@ -131,8 +131,8 @@ public:
         // Adjust range to data.
         if (ensemble && ensemble->getMaxNumTimeSteps() > 0) {
             timeSteps_.setMinValue(0);
-            timeSteps_.setMaxValue(ensemble->getMaxNumTimeSteps() - 1);
-            timeSteps_.set(tgt::ivec2(0, ensemble->getMaxNumTimeSteps() - 1));
+            timeSteps_.setMaxValue(static_cast<int>(ensemble->getMaxNumTimeSteps()) - 1);
+            timeSteps_.set(tgt::ivec2(0, static_cast<int>(ensemble->getMaxNumTimeSteps()) - 1));
         }
     }
 

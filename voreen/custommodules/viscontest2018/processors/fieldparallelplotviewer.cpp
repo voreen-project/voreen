@@ -71,6 +71,7 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
     , hasLogarithmicDensity_("logarithmicDensity", "Logarithmic Density", false, Processor::VALID)
     , xUnit_("xUnit", "x-Unit", "time")
     , yUnit_("yUnit", "y-Unit", "value")
+    , fontSize_("fontSize", "Font Size", 10, 1, 30)
     , plotShader_("shaderprop", "Plot Shader", "fieldplot.frag", "passthrough.vert", "", Processor::INVALID_PROGRAM, Property::LOD_DEBUG)
     , timeStepPosition_(0.0f)
     , viewPortWidth_(0.0f)
@@ -103,6 +104,8 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
         xUnit_.setGroupID("rendering");
     addProperty(yUnit_);
         yUnit_.setGroupID("rendering");
+    addProperty(fontSize_);
+        fontSize_.setGroupID("rendering");
     addProperty(renderedChannel_);
         renderedChannel_.setGroupID("rendering");
         renderedChannel_.setReadOnlyFlag(true);
@@ -265,9 +268,9 @@ bool FieldParallelPlotViewer::checkConsistency() {
 
     std::vector<int> renderedRunsIndices;
     for(const EnsembleDataset::Run& run : dataset->getRuns()) {
+        renderedRuns_.addRow(run.name_, dataset->getColor(renderedRunsIndices.size()));
+        selectedRuns_.addRow(run.name_, dataset->getColor(renderedRunsIndices.size()));
         renderedRunsIndices.push_back(static_cast<int>(renderedRunsIndices.size()));
-        renderedRuns_.addRow(run.name_, run.color_);
-        selectedRuns_.addRow(run.name_, run.color_);
     }
     renderedRuns_.setSelectedRowIndices(renderedRunsIndices);
 
@@ -458,11 +461,11 @@ void FieldParallelPlotViewer::renderAxes() {
         plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
         plotLib_->renderAxes();
         plotLib_->setDrawingColor(tgt::Color(0, 0, 0, .5f));
-        plotLib_->setFontSize(10);
+        plotLib_->setFontSize(fontSize_.get());
         plotLib_->setFontColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
         plotLib_->renderAxisScales(PlotLibrary::X_AXIS, false);
         plotLib_->renderAxisScales(PlotLibrary::Y_AXIS, false);
-        plotLib_->setFontSize(12);
+        plotLib_->setFontSize(fontSize_.get() + 2);
         plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, xUnit_.get());
         plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, yUnit_.get());
     }

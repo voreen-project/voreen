@@ -116,6 +116,7 @@ protected:
     BoolProperty hasLogarithmicDensity_;
     StringProperty xUnit_;
     StringProperty yUnit_;
+    IntProperty fontSize_;
 
     ShaderProperty plotShader_;
 

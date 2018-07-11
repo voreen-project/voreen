@@ -88,6 +88,7 @@ MDSPlot::MDSPlot()
     , principalComponent_("principalComponent", "Principal Component", 1, 1, MAX_NUM_DIMENSIONS)
     , scaleToMagnitude_("scaleToMagnitude", "Scale to Magnitude of Principle Component")
     , sphereRadius_("sphereRadius", "Sphere Radius", 0.01, 0.0f, 0.1f)
+    , fontSize_("fontSize", "Font Size", 10, 1, 30)
     , colorCoding_("colorCoding", "Color Coding")
     , renderedChannel_("renderedChannel", "Channel")
     , renderedRuns_("renderedRuns", "Rendered Runs")
@@ -170,6 +171,8 @@ MDSPlot::MDSPlot()
         scaleToMagnitude_.setGroupID("rendering");
     addProperty(sphereRadius_);
         sphereRadius_.setGroupID("rendering");
+    addProperty(fontSize_);
+        fontSize_.setGroupID("rendering");
     addProperty(colorCoding_);
         colorCoding_.addOption("run", "Only Run", COLOR_RUN);
         colorCoding_.addOption("timeStep", "Only Time Step", COLOR_TIMESTEP);
@@ -252,7 +255,7 @@ void MDSPlot::process() {
         outport_.activateTarget();
         outport_.clearTarget();
 
-        glLineWidth(3.0f);
+        glLineWidth(6.0f);
         renderingPass(false);
 
         outport_.deactivateTarget();
@@ -261,7 +264,7 @@ void MDSPlot::process() {
         privatePort_.activateTarget();
         privatePort_.clearTarget(); // TODO: may change clear color to..?
 
-        glLineWidth(3.0f);
+        glLineWidth(6.0f);
         renderingPass(false);
 
         privatePort_.deactivateTarget();
@@ -309,11 +312,11 @@ void MDSPlot::renderAxes() {
         plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
         plotLib_->renderAxes();
         plotLib_->setDrawingColor(tgt::Color(0, 0, 0, .5f));
-        plotLib_->setFontSize(12);
+        plotLib_->setFontSize(fontSize_.get() + 2);
 
         switch(numDimensions_.get()) {
         case 1:
-            plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "time");
+            plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "t [ms]");
             if(principalComponent_.get() == 1)
                 plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "1th PC");
             else if(principalComponent_.get() == 2)
@@ -322,10 +325,10 @@ void MDSPlot::renderAxes() {
                 plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "3rd PC");
 
             plotLib_->setDrawingColor(tgt::Color(0, 0, 0, .5f));
-            plotLib_->setFontSize(10);
+            plotLib_->setFontSize(fontSize_.get());
             plotLib_->setFontColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
             plotLib_->renderAxisScales(PlotLibrary::X_AXIS, false);
-            plotLib_->setFontSize(12);
+            plotLib_->setFontSize(fontSize_.get() + 2);
             break;
         case 3:
             plotLib_->renderAxisLabel(PlotLibrary::Z_AXIS, "3rd PC");
@@ -534,15 +537,19 @@ tgt::vec3 MDSPlot::getColor(size_t runIdx, size_t timeStepIdx, bool picking) con
     
     switch (colorCoding_.getValue()) {
     case COLOR_RUN:
-        return dataset->getRuns()[runIdx].color_;
+        return dataset->getColor(runIdx);
     case COLOR_TIMESTEP:
         return  (1.0f - ts) * FIRST_TIME_STEP_COLOR + ts * LAST_TIME_STEP_COLOR;
     case COLOR_RUN_AND_TIMESTEP:
-        return (1.0f - ts) * dataset->getRuns()[runIdx].color_ + ts * FADE_OUT_COLOR;
+        return (1.0f - ts) * dataset->getColor(runIdx) + ts * FADE_OUT_COLOR;
     case COLOR_DURATION:
     {
-        ts = dataset->getRuns()[runIdx].timeSteps_[timeStepIdx].duration_ / dataset->getMaxTimeStepDuration();
-        return (1.0f - ts) * MIN_DURATION_COLOR + ts * MAX_DURATION_COLOR;
+        const Statistics& stats = dataset->getTimeStepDurationStats(runIdx);
+        if(std::abs(dataset->getRuns()[runIdx].timeSteps_[timeStepIdx].duration_ - stats.getMean()) > stats.getStdDev()) {
+            ts = mapRange(dataset->getRuns()[runIdx].timeSteps_[timeStepIdx].duration_, stats.getMin(), stats.getMax(), 0.0f, 1.0f);
+            return (1.0f - ts) * MIN_DURATION_COLOR + ts * MAX_DURATION_COLOR;
+        }
+        return MIN_DURATION_COLOR;
     }
     default:
         return tgt::vec3::one;
@@ -667,7 +674,7 @@ void MDSPlot::adjustToEnsemble() {
     numSeedPoints_.set(32768);
 
     numEigenvalues_.setMinValue(MAX_NUM_DIMENSIONS);
-    numEigenvalues_.setMaxValue(dataset->getTotalNumTimeSteps());
+    numEigenvalues_.setMaxValue(static_cast<int>(dataset->getTotalNumTimeSteps()));
 
     renderedChannel_.blockCallbacks(true);
     for (const std::string& channel : dataset->getCommonChannels())
@@ -676,9 +683,9 @@ void MDSPlot::adjustToEnsemble() {
 
     std::vector<int> renderedRunsIndices;
     for (const EnsembleDataset::Run& run : dataset->getRuns()) {
+        renderedRuns_.addRow(run.name_, dataset->getColor(renderedRunsIndices.size()));
+        selectedRuns_.addRow(run.name_, dataset->getColor(renderedRunsIndices.size()));
         renderedRunsIndices.push_back(static_cast<int>(renderedRunsIndices.size()));
-        renderedRuns_.addRow(run.name_, run.color_);
-        selectedRuns_.addRow(run.name_, run.color_);
     }
     renderedRuns_.setSelectedRowIndices(renderedRunsIndices);
 
@@ -726,8 +733,7 @@ MDSPlot::DMMatrix MDSPlot::calculateDistanceMatrixFromField(const std::string& c
 
     const EnsembleDataset* dataset = ensembleInport_.getData();
 
-    const int RandPoints = numSeedPoints_.get();
-    const size_t totalPoints = RandPoints;
+    const size_t totalPoints = static_cast<size_t>(numSeedPoints_.get());
 
     size_t DistanceMatrixSize = dataset->getTotalNumTimeSteps();
     DMMatrix DistanceMatrix(DistanceMatrixSize);
@@ -746,8 +752,8 @@ MDSPlot::DMMatrix MDSPlot::calculateDistanceMatrixFromField(const std::string& c
     std::function<float()> rnd(std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
     const tgt::IntBounds& roi = dataset->getRoi();
 
-    std::vector<tgt::vec3> RValues(RandPoints);
-    for (int k=0; k<RandPoints; k++) {
+    std::vector<tgt::vec3> RValues(totalPoints);
+    for (size_t k=0; k<totalPoints; k++) {
         RValues[k] = tgt::vec3(rnd(), rnd(), rnd());
         RValues[k] = tgt::vec3(roi.getLLF()) + RValues[k] * tgt::vec3(roi.diagonal());
     }
@@ -763,7 +769,7 @@ MDSPlot::DMMatrix MDSPlot::calculateDistanceMatrixFromField(const std::string& c
             const VolumeBase* volume = timeStep.channels_.at(channel);
             const VolumeRAM_Float* data = dynamic_cast<const VolumeRAM_Float*>(volume->getRepresentation<VolumeRAM>());
 
-            for (int k=0; k<RandPoints; k++) {
+            for (size_t k=0; k<totalPoints; k++) {
                 float value = dataset->pickSample(data, volume->getSpacing(), RValues[k]);
 
                 switch(fieldSimilarityMeasure_.getValue()) {

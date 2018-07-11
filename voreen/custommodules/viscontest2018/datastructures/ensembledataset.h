@@ -30,10 +30,7 @@
 
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/volume/volumelist.h"
-#include "voreen/core/io/serialization/serializable.h"
-#include "voreen/core/io/serialization/xmlserializer.h"
-#include "voreen/core/io/serialization/xmldeserializer.h"
-#include "voreen/core/ports/port.h"
+#include "voreen/core/utils/statistics.h"
 
 #include "tgt/vector.h"
 
@@ -79,6 +76,9 @@ public:
     size_t getMaxNumTimeSteps() const;
     size_t getTotalNumTimeSteps() const;
 
+    const Statistics& getTimeStepDurationStats(size_t runIdx) const;
+    const tgt::vec3& getColor(size_t runIdx) const;
+
     float getMinTimeStepDuration() const;
     float getMaxTimeStepDuration() const;
     float getStartTime() const;
@@ -112,13 +112,24 @@ public:
 
 private:
 
+    struct RunMetaData {
+        //tgt::vec3 color_; // currently member of run but should be stored here
+        Statistics timeStepDurationStats_{false};
+        // could add simulation parameters here
+    };
+
+    struct ChannelMetaData {
+        tgt::vec2 valueRange_;
+    };
+
     //----------------
     //  Members
     //----------------
     std::vector<Run> runs_;
     std::vector<std::string> commonChannels_;
 
-    std::map<std::string, tgt::vec2> valueRange_;
+    std::vector<RunMetaData> runMetaData_;
+    std::map<std::string, ChannelMetaData> channelMetaData_;
 
     size_t minNumTimeSteps_;
     size_t maxNumTimeSteps_;
