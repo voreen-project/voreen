@@ -24,6 +24,7 @@ IF(WIN32)
     
     # deployment
     SET(MOD_INSTALL_DIRECTORIES
+        ${MOD_DIR}/ext/${VRN_USE_PYTHON_VERSION}/lib
         ${MOD_DIR}/scripts
     )
     SET(MOD_INSTALL_FILES
