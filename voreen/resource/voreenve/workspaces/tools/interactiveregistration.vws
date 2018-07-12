@@ -11,6 +11,11 @@
                         <item type="TextBoxMetaData" userType="65568" caption="Moving Volume" captionFontSize="21" x="-500" y="-843" width="311" height="518" />
                     </values>
                 </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="Background" ref="ref0" />
+                    </values>
+                </MetaItem>
                 <MetaItem name="Zoom" type="ZoomMetaData">
                     <transform.row0 x="0.70870667695999146" y="0" z="0" />
                     <transform.row1 x="0" y="0.70870667695999146" z="0" />
@@ -26,7 +31,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref12">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-534" y="487" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="377" y="178" width="1200" height="900" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-1660" y="101" width="1200" height="900" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="8" y="8" />
@@ -43,7 +48,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="377" y="178" />
+                            <value x="-1660" y="101" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1200" y="900" />
@@ -59,7 +64,7 @@
                                 <paths>
                                     <item value="" />
                                     <item value="resource/voreenve/workspaces/tools" />
-                                    <item value="C:/voreen-development/voreen/resource/voreenve/workspaces/tools" />
+                                    <item value="/git/voreen1/voreen/resource/voreenve/workspaces/tools" />
                                 </paths>
                             </paths>
                         </Property>
@@ -87,10 +92,10 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="angle" name="angle" value="60" />
-                        <Property mapKey="backgroundModeAsString" name="backgroundModeAsString" value="gradient" />
-                        <Property mapKey="blendMode" name="blendMode" value="alpha-blending" />
+                        <Property mapKey="backgroundModeAsString" name="backgroundModeAsString" value="monochrome" />
+                        <Property mapKey="blendMode" name="blendMode" value="add" />
                         <Property mapKey="color1" name="color1">
-                            <value x="1" y="1" z="1" w="1" />
+                            <value x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="color2" name="color2">
                             <value x="0.392156988" y="0.392156988" z="0.392156988" w="1" />
@@ -101,6 +106,7 @@
                         <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
                             </MetaData>
                             <components>
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
@@ -112,7 +118,7 @@
                                 <paths>
                                     <item value="" />
                                     <item value="resource/voreenve/workspaces/tools" />
-                                    <item value="C:/voreen-development/voreen/resource/voreenve/workspaces/tools" />
+                                    <item value="/git/voreen1/voreen/resource/voreenve/workspaces/tools" />
                                 </paths>
                             </paths>
                         </Property>
@@ -138,16 +144,16 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-729" y="-119" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="735.355285645" minValue="0.01470711" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="738.296691895" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02774447" id="ref28">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="735.355285645" minValue="0.01470711" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="738.296691895" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.022700185" id="ref28">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="721" y="372" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.920051575" y="2.753983498" z="-2.117189407" />
-                            <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
-                            <upVector x="0.443622708" y="0.599687278" z="0.666013658" />
+                            <position x="4.241413116" y="-1.085685968" z="0.641525388" />
+                            <focus x="-0.005636215" y="-0.222253442" z="0.154656291" />
+                            <upVector x="0.228399262" y="0.590966523" z="0.773687482" />
                             <trackball moveCenter="false">
-                                <center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
+                                <center x="-0.005636215" y="-0.222253442" z="0.154656291" />
                             </trackball>
                             <sceneLLF x="-1.312722325" y="-1.498447299" z="-1.189246416" />
                             <sceneURB x="1.175246596" y="1.442973733" z="1.342478752" />
@@ -255,16 +261,16 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="false" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="735.355285645" minValue="0.01470711" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="738.296691895" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02774447" id="ref29">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="735.355285645" minValue="0.01470711" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="738.296691895" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.022700185" id="ref29">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="4" y="4" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.920051575" y="2.753983498" z="-2.117189407" />
-                            <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
-                            <upVector x="0.443622708" y="0.599687278" z="0.666013658" />
+                            <position x="4.241413116" y="-1.085685968" z="0.641525388" />
+                            <focus x="-0.005636215" y="-0.222253442" z="0.154656291" />
+                            <upVector x="0.228399262" y="0.590966523" z="0.773687482" />
                             <trackball moveCenter="false">
-                                <center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
+                                <center x="-0.005636215" y="-0.222253442" z="0.154656291" />
                             </trackball>
                             <sceneLLF x="-1.312722325" y="-1.498447299" z="-1.189246416" />
                             <sceneURB x="1.175246596" y="1.442973733" z="1.342478752" />
@@ -359,7 +365,7 @@
                                     <paths>
                                         <item value="../../volumes/nucleon.vvd" />
                                         <item value="resource/voreenve/volumes/nucleon.vvd" />
-                                        <item value="C:/voreen-development/voreen/resource/voreenve/volumes/nucleon.vvd" />
+                                        <item value="/git/voreen1/voreen/resource/voreenve/volumes/nucleon.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -452,23 +458,23 @@
                 </Processor>
                 <Processor type="MultiVolumeRaycaster" name="MultiVolumeRaycaster" id="ref3">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-778" y="23" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-815" y="15" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLightAttenuation" name="applyLightAttenuation" value="false" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="735.355285645" minValue="0.01470711" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="738.296691895" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02774447" id="ref30">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="735.355285645" minValue="0.01470711" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="738.296691895" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.022700185" id="ref30">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="4" y="4" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.920051575" y="2.753983498" z="-2.117189407" />
-                            <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
-                            <upVector x="0.443622708" y="0.599687278" z="0.666013658" />
+                            <position x="4.241413116" y="-1.085685968" z="0.641525388" />
+                            <focus x="-0.005636215" y="-0.222253442" z="0.154656291" />
+                            <upVector x="0.228399262" y="0.590966523" z="0.773687482" />
                             <trackball moveCenter="false">
-                                <center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
+                                <center x="-0.005636215" y="-0.222253442" z="0.154656291" />
                             </trackball>
-                            <sceneLLF x="-1.024390221" y="-1.024390221" z="-1.024390221" />
-                            <sceneURB x="0.975609779" y="0.975609779" z="0.975609779" />
+                            <sceneLLF x="-1.249620676" y="-1.692963958" z="-1.111206293" />
+                            <sceneURB x="1.238348365" y="1.248457074" z="1.420518875" />
                         </Property>
                         <Property mapKey="classification" name="classification" value="transfer-function">
                             <Options>
@@ -544,9 +550,9 @@
                                 <MetaItem name="FollowCamera" type="BoolMetaData" value="false" />
                                 <MetaItem name="UseBackHemisphere" type="BoolMetaData" value="false" />
                             </MetaData>
-                            <value x="-1.477847934" y="-1.55427444" z="-1.572744489" w="1" />
-                            <Center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
-                            <LightPos x="0.31081903" y="-2.513323307" z="-0.661123335" w="1" />
+                            <value x="-1.459093928" y="-1.75213778" z="-1.393697977" w="1" />
+                            <Center x="-0.005636215" y="-0.222253442" z="0.154656291" />
+                            <LightPos x="-0.480008006" y="-2.228871822" z="-1.285383105" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -596,11 +602,41 @@
                                 <domain x="0" y="249" />
                                 <threshold x="0" y="1" />
                                 <Keys>
-                                    <key type="TransFuncMappingKey" intensity="0" split="false">
-                                        <colorL r="0" g="0" b="0" a="0" />
+                                    <key type="TransFuncMappingKey" intensity="0.141155347" split="false">
+                                        <colorL r="153" g="0" b="255" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="1" split="false">
-                                        <colorL r="255" g="255" b="255" a="255" />
+                                    <key type="TransFuncMappingKey" intensity="0.152678221" split="false">
+                                        <colorL r="129" g="90" b="255" a="11" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.172714874" split="false">
+                                        <colorL r="145" g="78" b="221" a="11" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.185806513" split="false">
+                                        <colorL r="172" g="58" b="165" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.411943138" split="false">
+                                        <colorL r="255" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.437869608" split="false">
+                                        <colorL r="255" g="0" b="0" a="13" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.47819972" split="false">
+                                        <colorL r="255" g="0" b="0" a="13" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.501153827" split="false">
+                                        <colorL r="156" g="99" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.786436856" split="false">
+                                        <colorL r="4" g="255" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.846931994" split="false">
+                                        <colorL r="73" g="255" b="1" a="82" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.94993031" split="false">
+                                        <colorL r="8" g="82" b="7" a="83" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.98955363" split="false">
+                                        <colorL r="54" g="254" b="51" a="0" />
                                     </key>
                                 </Keys>
                             </TransferFunction>
@@ -610,33 +646,25 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
-                                    <value x="0" y="249" />
+                                    <value x="0" y="22526" />
                                 </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
-                                <texDimensions x="256" y="1" z="1" />
-                                <domain x="0" y="249" />
+                                <texDimensions x="4096" y="1" z="1" />
+                                <domain x="0" y="22526" />
                                 <threshold x="0" y="1" />
                                 <Keys>
-                                    <key type="TransFuncMappingKey" intensity="0.134867996" split="false">
-                                        <colorL r="153" g="0" b="255" a="0" />
+                                    <key type="TransFuncMappingKey" intensity="0.277660906" split="false">
+                                        <colorL r="187" g="153" b="79" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.184211001" split="true">
-                                        <colorL r="129" g="90" b="255" a="26" />
-                                        <colorR r="142" g="0" b="0" a="0" />
+                                    <key type="TransFuncMappingKey" intensity="0.308825374" split="false">
+                                        <colorL r="225" g="186" b="130" a="76" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.407894999" split="false">
-                                        <colorL r="255" g="0" b="0" a="0" />
+                                    <key type="TransFuncMappingKey" intensity="0.337159067" split="false">
+                                        <colorL r="181" g="147" b="52" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.457237005" split="true">
-                                        <colorL r="255" g="0" b="0" a="36" />
-                                        <colorR r="92" g="92" b="92" a="0" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.756578982" split="false">
-                                        <colorL r="4" g="255" b="0" a="0" />
-                                    </key>
-                                    <key type="TransFuncMappingKey" intensity="0.875" split="false">
-                                        <colorL r="88" g="255" b="86" a="255" />
+                                    <key type="TransFuncMappingKey" intensity="0.870876431" split="false">
+                                        <colorL r="132" g="91" b="77" a="56" />
                                     </key>
                                 </Keys>
                             </TransferFunction>
@@ -1026,7 +1054,7 @@
                                 <paths>
                                     <item value="" />
                                     <item value="resource/voreenve/workspaces/tools" />
-                                    <item value="C:/voreen-development/voreen/resource/voreenve/workspaces/tools" />
+                                    <item value="/git/voreen1/voreen/resource/voreenve/workspaces/tools" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1079,7 +1107,7 @@
                                 <paths>
                                     <item value="" />
                                     <item value="resource/voreenve/workspaces/tools" />
-                                    <item value="C:/voreen-development/voreen/resource/voreenve/workspaces/tools" />
+                                    <item value="/git/voreen1/voreen/resource/voreenve/workspaces/tools" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1132,7 +1160,7 @@
                                 <paths>
                                     <item value="" />
                                     <item value="resource/voreenve/workspaces/tools" />
-                                    <item value="C:/voreen-development/voreen/resource/voreenve/workspaces/tools" />
+                                    <item value="/git/voreen1/voreen/resource/voreenve/workspaces/tools" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1275,7 +1303,7 @@
                                     <paths>
                                         <item value="../../volumes/walnut.vvd" />
                                         <item value="resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="C:/voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="/git/voreen1/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -2240,15 +2268,15 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-744" y="-417" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="735.355285645" minValue="0.01470711" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="738.296691895" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.022700185" id="ref217">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.998515666" y="2.498732805" z="-2.238150358" />
-                            <focus x="0" y="0" z="0" />
-                            <upVector x="0.764229238" y="0.23320578" z="0.601305962" />
+                            <position x="4.241413116" y="-1.085685968" z="0.641525388" />
+                            <focus x="-0.005636215" y="-0.222253442" z="0.154656291" />
+                            <upVector x="0.228399262" y="0.590966523" z="0.773687482" />
                             <trackball moveCenter="false">
-                                <center x="0" y="0" z="0" />
+                                <center x="-0.005636215" y="-0.222253442" z="0.154656291" />
                             </trackball>
                             <sceneLLF x="0" y="0" z="0" />
                             <sceneURB x="0" y="0" z="0" />
@@ -2309,15 +2337,15 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-416" y="-425" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="735.355285645" minValue="0.01470711" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="738.296691895" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.022700185" id="ref218">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0" y="0" z="3.5" />
-                            <focus x="0" y="0" z="0" />
-                            <upVector x="0" y="1" z="0" />
+                            <position x="4.241413116" y="-1.085685968" z="0.641525388" />
+                            <focus x="-0.005636215" y="-0.222253442" z="0.154656291" />
+                            <upVector x="0.228399262" y="0.590966523" z="0.773687482" />
                             <trackball moveCenter="false">
-                                <center x="0" y="0" z="0" />
+                                <center x="-0.005636215" y="-0.222253442" z="0.154656291" />
                             </trackball>
                             <sceneLLF x="0" y="0" z="0" />
                             <sceneURB x="0" y="0" z="0" />
@@ -2543,14 +2571,6 @@
                         <Processor type="VolumeSource" ref="ref5" />
                     </Outport>
                     <Inport name="volume2">
-                        <Processor type="MultiVolumeRaycaster" ref="ref3" />
-                    </Inport>
-                </Connection>
-                <Connection>
-                    <Outport name="volumehandle.volumehandle">
-                        <Processor type="VolumeSource" ref="ref5" />
-                    </Outport>
-                    <Inport name="volume2">
                         <Processor type="MultiSliceViewer" ref="ref8" />
                     </Inport>
                 </Connection>
@@ -2704,6 +2724,14 @@
                     </Outport>
                     <Inport name="volumehandle.volumehandle">
                         <Processor type="OptimizedProxyGeometry" ref="ref21" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.output">
+                        <Processor type="VolumeTransformation" ref="ref19" />
+                    </Outport>
+                    <Inport name="volume2">
+                        <Processor type="MultiVolumeRaycaster" ref="ref3" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -4070,6 +4098,26 @@
                     <SourceProperty type="ButtonProperty" ref="ref216" />
                     <DestinationProperty type="ButtonProperty" ref="ref213" />
                     <Evaluator type="LinkEvaluatorButtonId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref30" />
+                    <DestinationProperty type="CameraProperty" ref="ref217" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref217" />
+                    <DestinationProperty type="CameraProperty" ref="ref30" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref30" />
+                    <DestinationProperty type="CameraProperty" ref="ref218" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref218" />
+                    <DestinationProperty type="CameraProperty" ref="ref30" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
                 </PropertyLink>
             </PropertyLinks>
         </ProcessorNetwork>
