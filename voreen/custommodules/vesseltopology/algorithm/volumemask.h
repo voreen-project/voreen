@@ -82,20 +82,43 @@ struct ScrapeIterationDescriptor {
     size_t deletedLastIteration;
 };
 
-class VolumeMaskStorage;
+
+enum class VolumeMaskValue {
+    FIXED_OBJECT = 0b11,
+    OBJECT = 0b10,
+    OUTSIDE_VOLUME = 0b01,
+    BACKGROUND = 0b00,
+};
+
+class VolumeMaskStorage {
+
+public:
+    VolumeMaskStorage(std::string filename, tgt::svec3 dimensions);
+
+    ~VolumeMaskStorage();
+
+    void set(const tgt::svec3& pos, VolumeMaskValue val);
+
+    VolumeMaskValue get(const tgt::svec3& pos) const;
+
+    static const size_t VOXELS_PER_BYTE = 4;
+
+    tgt::svec3 dimensions_;
+private:
+    std::pair<size_t, char> indexAndSubindexFor(const tgt::svec3& pos) const {
+        size_t voxelpos = pos.x + dimensions_.x*(pos.y + dimensions_.y*pos.z);
+        return std::make_pair(voxelpos/VOXELS_PER_BYTE, voxelpos % VOXELS_PER_BYTE);
+    }
+
+    const std::string filename_;
+    boost::iostreams::mapped_file file_;
+};
 
 /**
  * Helper class that stores a binary volume in ram and provides methods to thin it.
  */
 class VolumeMask {
 public:
-
-    enum Value {
-        FIXED_OBJECT = 0b11,
-        OBJECT = 0b10,
-        OUTSIDE_VOLUME = 0b01,
-        BACKGROUND = 0b00,
-    };
 
     enum ThinningAlgorithm {
         MA,
@@ -109,8 +132,8 @@ public:
     VolumeMask(VolumeMask&& other);
     ~VolumeMask();
 
-    void set(const tgt::svec3& pos, Value val);
-    Value get(const tgt::ivec3& pos, Value outsideVolumeValue = OBJECT) const;
+    void set(const tgt::svec3& pos, VolumeMaskValue val);
+    VolumeMaskValue get(const tgt::ivec3& pos, VolumeMaskValue outsideVolumeValue = VolumeMaskValue::OBJECT) const;
 
     // Creates a VolumeRAM using the provided format and the contents of this mask.
     // Background voxels can be expected to be zero, while foreground voxels will
@@ -153,7 +176,7 @@ private:
     uint64_t toLinearPos(const tgt::svec3& pos);
     tgt::svec3 fromLinearPos(uint64_t pos);
 
-    std::unique_ptr<VolumeMaskStorage> data_; // Never null
+    VolumeMaskStorage data_;
     tgt::vec3 spacing_;
 
     StoredSurface surfaceFile_;
@@ -172,62 +195,19 @@ struct NoFixedForeground {
 // --------------------------------------------------------------------------------------------------
 // Implementation -----------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------
-class VolumeMaskStorageInitializer {
-public:
-    VolumeMaskStorageInitializer(std::string filename);
-
-    VolumeMaskStorageInitializer(VolumeMaskStorageInitializer&& other);
-
-    ~VolumeMaskStorageInitializer();
-
-    void push(VolumeMask::Value val);
-
-    const std::string filename_;
-
-private:
-    std::ofstream file_;
-    uint8_t packetsInRemainingByte_;
-    uint8_t remainingByte_;
-};
-
-class VolumeMaskStorage {
-
-public:
-    VolumeMaskStorage(VolumeMaskStorageInitializer&& initializer, tgt::svec3 dimensions);
-
-    ~VolumeMaskStorage();
-
-    void set(const tgt::svec3& pos, VolumeMask::Value val);
-
-    VolumeMask::Value get(const tgt::svec3& pos) const;
-
-    static const size_t VOXELS_PER_BYTE = 4;
-
-    tgt::svec3 dimensions_;
-private:
-    std::pair<size_t, char> indexAndSubindexFor(const tgt::svec3& pos) const {
-        size_t voxelpos = pos.x + dimensions_.x*(pos.y + dimensions_.y*pos.z);
-        return std::make_pair(voxelpos/VOXELS_PER_BYTE, voxelpos % VOXELS_PER_BYTE);
-    }
-
-    const std::string filename_;
-    boost::iostreams::mapped_file file_;
-};
 
 
 template<class F>
 VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, F&& fixedForegroundReader, ProgressReporter& progress)
-    : data_(nullptr)
+    : data_(VoreenApplication::app()->getUniqueTmpFilePath(), vol.getDimensions())
     , surfaceFile_("", 0)
     , numOriginalForegroundVoxels_(0)
     , spacing_(vol.getMetaData().getSpacing())
 {
     TaskTimeLogger _("Create VolumeMask", tgt::Info);
     SubtaskProgressReporterCollection<2> subtaskReporters(progress);
-
-    VolumeMaskStorageInitializer initializer(VoreenApplication::app()->getUniqueTmpFilePath());
-
     tgt::svec3 dimensions = vol.getDimensions();
+
     tgtAssert(!sampleMask || dimensions == sampleMask->getDimensions(), "Sample mask dimension mismatch");
 
     // Initialize volumetric data (data_)
@@ -240,23 +220,21 @@ VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional
             for(size_t x = 0; x<dimensions.x; ++x) {
                 const tgt::svec3 p(x,y,z);
                 const tgt::svec3 slicePos(x,y,0);
-                Value val;
+                VolumeMaskValue val;
                 if(sampleMaskSlice && sampleMaskSlice->voxel(slicePos) == 0) {
-                    val = VolumeMask::OUTSIDE_VOLUME;
+                    val = VolumeMaskValue::OUTSIDE_VOLUME;
                 } else if(fixedForegroundReader.isForeground(x, y)) {
-                    val = VolumeMask::FIXED_OBJECT;
+                    val = VolumeMaskValue::FIXED_OBJECT;
                 } else if(volSlice.getVoxelNormalized(slicePos) > 0) {
-                    val = VolumeMask::OBJECT;
+                    val = VolumeMaskValue::OBJECT;
                     ++numOriginalForegroundVoxels_;
                 } else {
-                    val = VolumeMask::BACKGROUND;
+                    val = VolumeMaskValue::BACKGROUND;
                 }
-                initializer.push(val);
+                data_.set(p, val);
             }
         }
     }
-
-    data_.reset(new VolumeMaskStorage(std::move(initializer), dimensions));
 
     // Initialize surface
     SurfaceBuilder builder;
@@ -265,7 +243,7 @@ VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional
         for(size_t y = 0; y<dimensions.y; ++y) {
             for(size_t x = 0; x<dimensions.x; ++x) {
                 const tgt::svec3 p(x,y,z);
-                if(get(p, BACKGROUND) == OBJECT && isSurfaceVoxel(p)) {
+                if(get(p, VolumeMaskValue::BACKGROUND) == VolumeMaskValue::OBJECT && isSurfaceVoxel(p)) {
                     builder.push(toLinearPos(p));
                 }
             }
@@ -291,7 +269,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
     auto deleteAll = [this, &deleted_this_it] (std::vector<tgt::svec3>& voxels, SurfaceSlices<4>& surface) {
         for(const auto& pos : voxels) {
             if(L::deletableScraping(*this, pos)) {
-                set(pos, BACKGROUND);
+                set(pos, VolumeMaskValue::BACKGROUND);
                 ++deleted_this_it;
 
                 // Add neighbors to active surface (as their status might have changed now)
@@ -300,7 +278,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
                     for(int y = -1; y != 2; ++y) {
                         for(int x = -1; x != 2; ++x) {
                             tgt::ivec3 p = tgt::ivec3(pos) + tgt::ivec3(x, y, z);
-                            if(get(p, BACKGROUND) == OBJECT) {
+                            if(get(p, VolumeMaskValue::BACKGROUND) == VolumeMaskValue::OBJECT) {
                                 surface.m<3>().push_back(toLinearPos(tgt::svec3(p)));
                             }
                         }
@@ -313,7 +291,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
                         for(int x = -1; x != 2; ++x) {
                             if(x != 0 || y != 0) {
                                 tgt::ivec3 p = tgt::ivec3(pos) + tgt::ivec3(x, y, z);
-                                if(get(p, BACKGROUND) == OBJECT) {
+                                if(get(p, VolumeMaskValue::BACKGROUND) == VolumeMaskValue::OBJECT) {
                                     surface.m<2>().push_back(toLinearPos(tgt::svec3(p)));
                                 }
                             }
@@ -326,7 +304,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
                     for(int y = -1; y != 2; ++y) {
                         for(int x = -1; x != 2; ++x) {
                             tgt::ivec3 p = tgt::ivec3(pos) + tgt::ivec3(x, y, z);
-                            if(get(p, BACKGROUND) == OBJECT) {
+                            if(get(p, VolumeMaskValue::BACKGROUND) == VolumeMaskValue::OBJECT) {
                                 surface.m<1>().push_back(toLinearPos(tgt::svec3(p)));
                             }
                         }
@@ -351,7 +329,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
 
         tgt::svec3 pos = fromLinearPos(linearPos);
 
-        if(get(pos, BACKGROUND) != OBJECT) {
+        if(get(pos, VolumeMaskValue::BACKGROUND) != VolumeMaskValue::OBJECT) {
             // Voxel might have been added to surface before deletion (i.e. after deletion of a voxel in a previous slice)
             // In this case we can skip the voxel.
             continue;
@@ -373,7 +351,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
         }
 
         // 3
-        if(get(scrapeDescriptor.getNeightbor(pos), OBJECT) == BACKGROUND) {
+        if(get(scrapeDescriptor.getNeightbor(pos), VolumeMaskValue::OBJECT) == VolumeMaskValue::BACKGROUND) {
             if (isEulerInvariantVoxel(pos)) {
                 to_delete_current.push_back(pos);
             }
@@ -404,7 +382,7 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
 
 struct LinePreservingScraping {
     static bool deletableScraping(const VolumeMask& m, const tgt::svec3& pos) {
-        return m.get(pos, VolumeMask::BACKGROUND) != VolumeMask::BACKGROUND
+        return m.get(pos, VolumeMaskValue::BACKGROUND) != VolumeMaskValue::BACKGROUND
             && !m.isEndVoxel(pos, 0 /* Parameter! One might want to consider other values*/)
             && m.isEulerInvariantVoxel(pos)
             && m.isSimple(pos)
@@ -414,7 +392,7 @@ struct LinePreservingScraping {
 
 struct NoLinePreservingScraping {
     static bool deletableScraping(const VolumeMask& m, const tgt::svec3& pos) {
-        return m.get(pos, VolumeMask::BACKGROUND) != VolumeMask::BACKGROUND
+        return m.get(pos, VolumeMaskValue::BACKGROUND) != VolumeMaskValue::BACKGROUND
             && m.isEulerInvariantVoxel(pos)
             && m.isSimple(pos)
         ;

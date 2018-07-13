@@ -95,7 +95,7 @@ SkeletonClassReader::SkeletonClassReader(const VolumeMask& skeleton)
 }
 
 bool SkeletonClassReader::isObject(const tgt::ivec3& xyz) const {
-    return skeleton_.get(xyz, VolumeMask::BACKGROUND) != VolumeMask::BACKGROUND;
+    return skeleton_.get(xyz, VolumeMaskValue::BACKGROUND) != VolumeMaskValue::BACKGROUND;
 }
 
 uint8_t SkeletonClassReader::getClass(const tgt::ivec2& xypos) const {

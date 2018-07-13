@@ -462,7 +462,7 @@ public:
 
 static void addFixedForegroundPointsToMask(const std::vector<tgt::vec3>& points, VolumeMask& mask) {
     for(auto& p: points) {
-        mask.set(tgt::svec3(tgt::iround(p)), VolumeMask::FIXED_OBJECT);
+        mask.set(tgt::svec3(tgt::iround(p)), VolumeMaskValue::FIXED_OBJECT);
     }
 }
 

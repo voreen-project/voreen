@@ -60,10 +60,10 @@ bool fitsTemplate(const voreen::VolumeMask* vol, const tgt::svec3& pos, size_t t
     //return true;
 }
 bool isObjectPoint(const voreen::VolumeMask* vol, const tgt::svec3& p, int dx, int dy, int dz) {
-    return readRelative(vol, p, dx, dy, dz) != voreen::VolumeMask::BACKGROUND;
+    return vol->get(tgt::ivec3(p.x+dx,p.y+dy,p.z+dz)) != voreen::VolumeMaskValue::BACKGROUND;
 }
 bool isObjectPoint(const voreen::VolumeMask* vol, const tgt::ivec3& p, int dx, int dy, int dz) {
-    return readRelative(vol, p, dx, dy, dz) != voreen::VolumeMask::BACKGROUND;
+    return vol->get(tgt::ivec3(p.x+dx,p.y+dy,p.z+dz)) != voreen::VolumeMaskValue::BACKGROUND;
 }
 bool isTailPoint(const voreen::VolumeMask* vol, const tgt::svec3& pos) {
     size_t numNeighbours = 0;
@@ -89,7 +89,7 @@ bool isTailPoint(const voreen::VolumeMask* vol, const tgt::svec3& pos) {
 }
 
 bool isNearBorderObjectPoint(const voreen::VolumeMask* vol, const tgt::svec3& pos) {
-    if(vol->get(pos)==voreen::VolumeMask::BACKGROUND) {
+    if(vol->get(pos)==voreen::VolumeMaskValue::BACKGROUND) {
         return false;
     }
     for(int dz = -1; dz<=1; ++dz) {
@@ -205,19 +205,19 @@ VolumeMask::~VolumeMask() {
     tgt::FileSystem::deleteFile(surfaceFile_.filename_);
 }
 
-void VolumeMask::set(const tgt::svec3& pos, VolumeMask::Value val) {
-    tgtAssert(val == FIXED_OBJECT || data_->get(pos) != FIXED_OBJECT, "tried to change fixed object voxel");
-    data_->set(pos, val);
+void VolumeMask::set(const tgt::svec3& pos, VolumeMaskValue val) {
+    tgtAssert(val == VolumeMaskValue::FIXED_OBJECT || data_.get(pos) != VolumeMaskValue::FIXED_OBJECT, "tried to change fixed object voxel");
+    data_.set(pos, val);
 }
-VolumeMask::Value VolumeMask::get(const tgt::ivec3& pos, VolumeMask::Value outsideVolumeValue) const {
+VolumeMaskValue VolumeMask::get(const tgt::ivec3& pos, VolumeMaskValue outsideVolumeValue) const {
     auto dim = getDimensions();
     if(     pos.x < 0 || pos.x >= static_cast<int>(dim.x)
          || pos.y < 0 || pos.y >= static_cast<int>(dim.y)
          || pos.z < 0 || pos.z >= static_cast<int>(dim.z)) {
         return outsideVolumeValue;
     } else {
-        VolumeMask::Value val = data_->get(tgt::svec3(pos));
-        if(val == OUTSIDE_VOLUME) {
+        VolumeMaskValue val = data_.get(tgt::svec3(pos));
+        if(val == VolumeMaskValue::OUTSIDE_VOLUME) {
             // Value might be masked
             return outsideVolumeValue;
         } else {
@@ -233,9 +233,9 @@ voreen::VolumeRAM* VolumeMask::toVolumeRAM(std::string format) const {
         for(size_t y = 0; y<dim.y; ++y) {
             for(size_t x = 0; x<dim.x; ++x) {
                 const tgt::svec3 p(x,y,z);
-                VolumeMask::Value val = get(p, BACKGROUND);
-                tgtAssert( val==OBJECT || val==FIXED_OBJECT || val==BACKGROUND, "Invalid value in volume mask: ");
-                if(val == BACKGROUND) {
+                VolumeMaskValue val = get(p, VolumeMaskValue::BACKGROUND);
+                tgtAssert( val==VolumeMaskValue::OBJECT || val==VolumeMaskValue::FIXED_OBJECT || val==VolumeMaskValue::BACKGROUND, "Invalid value in volume mask: ");
+                if(val == VolumeMaskValue::BACKGROUND) {
                     output->setVoxelNormalized(0, p);
                 } else /*val == OBJECT || FIXED_OBJECT*/ {
                     output->setVoxelNormalized(1, p);
@@ -266,7 +266,7 @@ void VolumeMask::thinnerByMa(size_t& numberOfDeletedVoxels) {
         for(int y = dim.y -1 ; y>=0; --y) {
             for(int x = dim.x -1 ; x>=0; --x) {
                 tgt::svec3 pos = tgt::svec3(x,y,z);
-                if(get(pos, BACKGROUND) == OBJECT && isNearBorderObjectPoint(this, pos)) {
+                if(get(pos, VolumeMaskValue::BACKGROUND) == VolumeMaskValue::OBJECT && isNearBorderObjectPoint(this, pos)) {
                 //if(isNearBorderObjectPoint(this, pos) && isEulerInvariantVoxel(pos)) {
                     marked.push_back(pos);
                 }
@@ -278,7 +278,7 @@ void VolumeMask::thinnerByMa(size_t& numberOfDeletedVoxels) {
         deletedThisIt = 0;
         for(auto pos = marked.begin(); pos != marked.end();) {
             if(deletableMa(*pos)) {
-                set(*pos, BACKGROUND);
+                set(*pos, VolumeMaskValue::BACKGROUND);
                 ++deletedThisIt;
                 pos = marked.erase(pos);
             } else {
@@ -310,7 +310,7 @@ bool VolumeMask::isLine(const tgt::ivec3& prev, const tgt::ivec3& start, int min
         for(int dy = -1; dy<=1; ++dy) {
             for(int dx = -1; dx<=1; ++dx) {
                 tgt::ivec3 p = start + tgt::ivec3(dx, dy, dz);
-                if(get(p) != BACKGROUND && p != prev && (dx != 0 || dy != 0 || dz != 0)) {
+                if(get(p) != VolumeMaskValue::BACKGROUND && p != prev && (dx != 0 || dy != 0 || dz != 0)) {
                     ++numObjects;
                     neighbor = tgt::ivec3(p);
                 }
@@ -329,7 +329,7 @@ bool VolumeMask::isEulerInvariantVoxel(const tgt::svec3& pos) const {
         for(int dy = -1; dy<=1; ++dy) {
             for(int dx = -1; dx<=1; ++dx) {
                 if(dx != 0 || dy != 0 ||  dz!= 0) {
-                    neighborhood[i++] = get(tgt::ivec3(pos.x + dx, pos.y + dy, pos.z + dz)) != BACKGROUND;
+                    neighborhood[i++] = get(tgt::ivec3(pos.x + dx, pos.y + dy, pos.z + dz)) != VolumeMaskValue::BACKGROUND;
                 }
             }
         }
@@ -346,7 +346,7 @@ bool VolumeMask::isEulerInvariantVoxel(const tgt::svec3& pos) const {
     return eulerVal == 0;
 }
 bool VolumeMask::isSimple(const tgt::svec3& pos) const {
-    if(get(pos)==BACKGROUND) {
+    if(get(pos)==VolumeMaskValue::BACKGROUND) {
         return false;
     }
     uint8_t neighborhood[3][3][3];
@@ -429,7 +429,7 @@ bool VolumeMask::isSingleBorderVoxel(const tgt::svec3& pos) const {
     for(int dz = -1; dz<=1; ++dz) {
         for(int dy = -1; dy<=1; ++dy) {
             for(int dx = -1; dx<=1; ++dx) {
-                if(get(tgt::ivec3(pos.x+dx, pos.y+dy, pos.z+dz), BACKGROUND) != BACKGROUND) {
+                if(get(tgt::ivec3(pos.x+dx, pos.y+dy, pos.z+dz), VolumeMaskValue::BACKGROUND) != VolumeMaskValue::BACKGROUND) {
                     ++numNeighbours;
                 }
             }
@@ -455,7 +455,7 @@ void VolumeMask::thinnerByChen(size_t& numberOfDeletedVoxels) {
             for(int x = dim.x -1 ; x>=0; --x) {
                 tgt::svec3 pos = tgt::svec3(x,y,z);
                 //if(isNearBorderObjectPoint(this, pos)) {
-                if(get(pos, BACKGROUND) == OBJECT && isSurfaceVoxel(pos)) {
+                if(get(pos, VolumeMaskValue::BACKGROUND) == VolumeMaskValue::OBJECT && isSurfaceVoxel(pos)) {
                     marked.push_back(pos);
                 }
             }
@@ -466,7 +466,7 @@ void VolumeMask::thinnerByChen(size_t& numberOfDeletedVoxels) {
     deletedThisIt = 0;
     for(auto pos = marked.begin(); pos != marked.end();) {
         if(deletableChen(*pos)) {
-            set(*pos, BACKGROUND);
+            set(*pos, VolumeMaskValue::BACKGROUND);
             ++deletedThisIt;
             pos = marked.erase(pos);
         } else {
@@ -476,39 +476,37 @@ void VolumeMask::thinnerByChen(size_t& numberOfDeletedVoxels) {
     numberOfDeletedVoxels += deletedThisIt;
 }
 const tgt::svec3& VolumeMask::getDimensions() const {
-    return data_->dimensions_;
+    return data_.dimensions_;
 }
 
 uint64_t VolumeMask::toLinearPos(const tgt::svec3& pos) {
-    return pos.x + data_->dimensions_.x*(pos.y + data_->dimensions_.y*pos.z);
+    return pos.x + data_.dimensions_.x*(pos.y + data_.dimensions_.y*pos.z);
 }
 tgt::svec3 VolumeMask::fromLinearPos(uint64_t pos) {
     tgt::svec3 p;
-    p.x = pos % data_->dimensions_.x;
-    pos /= data_->dimensions_.x;
-    p.y = pos % data_->dimensions_.y;
-    pos /= data_->dimensions_.y;
+    p.x = pos % data_.dimensions_.x;
+    pos /= data_.dimensions_.x;
+    p.y = pos % data_.dimensions_.y;
+    pos /= data_.dimensions_.y;
     p.z = pos;
     return p;
 }
 
 /// VolumeMaskStorage ----------------------------------------------------------
-VolumeMaskStorage::VolumeMaskStorage(VolumeMaskStorageInitializer&& initializer, tgt::svec3 dimensions)
+VolumeMaskStorage::VolumeMaskStorage(std::string filename, tgt::svec3 dimensions)
     : file_()
     , dimensions_(dimensions)
-    , filename_(initializer.filename_)
+    , filename_(filename)
 {
+
     size_t numVoxels = tgt::hmul(dimensions);
+    size_t fileSize = numVoxels/VOXELS_PER_BYTE + (((numVoxels%VOXELS_PER_BYTE) == 0) ? 0 : 1);
 
     boost::iostreams::mapped_file_params openParams;
-    openParams.path = initializer.filename_;
+    openParams.path = filename_;
     openParams.mode = std::ios::in | std::ios::out;
-    openParams.length = numVoxels/VOXELS_PER_BYTE + (((numVoxels%VOXELS_PER_BYTE) == 0) ? 0 : 1);
-
-    {
-        //Destroy initializer and thus close the file
-        auto dump = std::move(initializer);
-    }
+    openParams.length = fileSize;
+    openParams.new_file_size = fileSize; // Option: Do create the file (overwrite if it does not exist)!
 
     file_.open(openParams);
 }
@@ -516,7 +514,7 @@ VolumeMaskStorage::~VolumeMaskStorage() {
     file_.close();
     tgt::FileSystem::deleteFile(filename_);
 }
-void VolumeMaskStorage::set(const tgt::svec3& pos, VolumeMask::Value val) {
+void VolumeMaskStorage::set(const tgt::svec3& pos, VolumeMaskValue val) {
     tgtAssert(file_.is_open(), "File is not open");
     tgtAssert(pos.x < dimensions_.x && pos.y < dimensions_.y && pos.z < dimensions_.z, "Invalid pos");
 
@@ -526,52 +524,18 @@ void VolumeMaskStorage::set(const tgt::svec3& pos, VolumeMask::Value val) {
 
     char currentByte = file_.data()[index];
     char currentByteExceptNewValue = currentByte & (~(0b11 << (2*subindex)));
-    char newByte = currentByteExceptNewValue | (val << (2*subindex));
+    char newByte = currentByteExceptNewValue | (static_cast<uint8_t>(val) << (2*subindex));
     file_.data()[index] = newByte;
 }
-VolumeMask::Value VolumeMaskStorage::get(const tgt::svec3& pos) const {
+VolumeMaskValue VolumeMaskStorage::get(const tgt::svec3& pos) const {
     tgtAssert(file_.is_open(), "File is not open");
     tgtAssert(pos.x < dimensions_.x && pos.y < dimensions_.y && pos.z < dimensions_.z, "Invalid pos");
 
     size_t index;
     uint8_t subindex;
     std::tie(index, subindex) = indexAndSubindexFor(pos);
-    return static_cast<VolumeMask::Value>((file_.const_data()[index] >> (2*subindex)) & 0b11);
+    return static_cast<VolumeMaskValue>((file_.const_data()[index] >> (2*subindex)) & 0b11);
 }
 
-/// VolumeMaskStorageInitializer -----------------------------------------------
-VolumeMaskStorageInitializer::VolumeMaskStorageInitializer(std::string filename)
-    : file_(filename, std::ofstream::binary | std::ofstream::trunc)
-    , filename_(filename)
-    , packetsInRemainingByte_(0)
-    , remainingByte_(0)
-{
-}
-
-VolumeMaskStorageInitializer::VolumeMaskStorageInitializer(VolumeMaskStorageInitializer&& other)
-    : file_(std::move(other.file_))
-    , filename_(other.filename_)
-    , packetsInRemainingByte_(other.packetsInRemainingByte_)
-    , remainingByte_(other.remainingByte_)
-{
-}
-
-VolumeMaskStorageInitializer::~VolumeMaskStorageInitializer()
-{
-    file_.write(reinterpret_cast<char*>(&remainingByte_), sizeof(remainingByte_));
-}
-
-void VolumeMaskStorageInitializer::push(VolumeMask::Value val) {
-    uint8_t packet = val;
-
-    remainingByte_ |= packet << (2*packetsInRemainingByte_);
-    ++packetsInRemainingByte_;
-
-    if(packetsInRemainingByte_ == VolumeMaskStorage::VOXELS_PER_BYTE) {
-        file_.write(reinterpret_cast<char*>(&remainingByte_), sizeof(remainingByte_));
-        remainingByte_ = 0;
-        packetsInRemainingByte_ = 0;
-    }
-}
 
 } // namespace voreen
