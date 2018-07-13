@@ -105,10 +105,18 @@ public:
 
     tgt::svec3 dimensions_;
 private:
+    static const tgt::svec3 BLOCK_SIZE;
     std::pair<size_t, char> indexAndSubindexFor(const tgt::svec3& pos) const {
-        size_t voxelpos = pos.x + dimensions_.x*(pos.y + dimensions_.y*pos.z);
+        tgt::svec3 in_block_pos = pos % BLOCK_SIZE;
+        tgt::svec3 block_pos = pos / BLOCK_SIZE;
+        size_t in_block_linear = in_block_pos.x + BLOCK_SIZE.x*(in_block_pos.y + BLOCK_SIZE.y * in_block_pos.z);
+        size_t block_linear = block_pos.x + dimInBlocks_.x*(block_pos.y + dimInBlocks_.y * block_pos.z);
+        size_t voxelpos = block_linear*tgt::hmul(BLOCK_SIZE) + in_block_linear;
         return std::make_pair(voxelpos/VOXELS_PER_BYTE, voxelpos % VOXELS_PER_BYTE);
     }
+
+    size_t data_index(size_t linearIndex) const;
+    tgt::svec3 dimInBlocks_;
 
     const std::string filename_;
     boost::iostreams::mapped_file file_;

@@ -493,14 +493,19 @@ tgt::svec3 VolumeMask::fromLinearPos(uint64_t pos) {
 }
 
 /// VolumeMaskStorage ----------------------------------------------------------
+const tgt::svec3 VolumeMaskStorage::BLOCK_SIZE(32,32,32);
 VolumeMaskStorage::VolumeMaskStorage(std::string filename, tgt::svec3 dimensions)
     : file_()
     , dimensions_(dimensions)
     , filename_(filename)
+    , dimInBlocks_(
+            (dimensions.x / BLOCK_SIZE.x) + (dimensions.x % BLOCK_SIZE.x == 0 ? 0 : 1),
+            (dimensions.y / BLOCK_SIZE.y) + (dimensions.y % BLOCK_SIZE.y == 0 ? 0 : 1),
+            (dimensions.z / BLOCK_SIZE.z) + (dimensions.z % BLOCK_SIZE.z == 0 ? 0 : 1)
+            )
 {
-
-    size_t numVoxels = tgt::hmul(dimensions);
-    size_t fileSize = numVoxels/VOXELS_PER_BYTE + (((numVoxels%VOXELS_PER_BYTE) == 0) ? 0 : 1);
+    size_t numVoxelsPhyical = tgt::hmul(BLOCK_SIZE*dimInBlocks_);
+    size_t fileSize = numVoxelsPhyical/VOXELS_PER_BYTE + (((numVoxelsPhyical%VOXELS_PER_BYTE) == 0) ? 0 : 1);
 
     boost::iostreams::mapped_file_params openParams;
     openParams.path = filename_;
