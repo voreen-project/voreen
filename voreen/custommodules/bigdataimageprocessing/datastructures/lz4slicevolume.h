@@ -386,8 +386,9 @@ void LZ4SliceVolume<Voxel>::writeSlice(const VolumeAtomic<Voxel>& slice, size_t 
 
     const size_t sliceMemorySize = getSliceMemorySize();
 
-    std::unique_ptr<char[]> compressedBuffer(new char[sliceMemorySize]);
-    size_t compressedSize = LZ4_compress_default((const char *)(slice.getData()), compressedBuffer.get(), sliceMemorySize, sliceMemorySize);
+    const size_t dstSize = LZ4_compressBound(sliceMemorySize);
+    std::unique_ptr<char[]> compressedBuffer(new char[dstSize]);
+    size_t compressedSize = LZ4_compress_default((const char *)(slice.getData()), compressedBuffer.get(), sliceMemorySize, dstSize);
     tgtAssert(compressedSize > 0, "Compression failed");
 
     std::ofstream outStream(getSliceFilePath(sliceNumber), std::ofstream::binary);
