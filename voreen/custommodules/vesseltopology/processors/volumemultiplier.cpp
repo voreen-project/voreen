@@ -49,7 +49,7 @@ VolumeMultiplier::VolumeMultiplier()
     , outputVolumeFilePath_("outputVolumeFilePath", "Output Volume", "Path", "", "HDF5 (*.h5)", FileDialogProperty::SAVE_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , outputVolumeDeflateLevel_("outputVolumeDeflateLevel", "Deflate Level", 1, 0, 9, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEFAULT)
     , multiplicationFactor_("multiplicationFactor", "Multiplication Factor", tgt::ivec3(1), tgt::ivec3(1), tgt::ivec3(100))
-    , outputSizeDisplay_("kernelSizeDisplay", "Kernel Size", "")
+    , outputSizeDisplay_("outputSize", "Output Size", "")
 {
     addPort(inport_);
         inport_.onChange(LambdaFunctionCallback([this] () {
