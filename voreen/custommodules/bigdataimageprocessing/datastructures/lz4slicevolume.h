@@ -358,7 +358,11 @@ VolumeAtomic<Voxel> LZ4SliceVolume<Voxel>::loadSlab(size_t beginZ, size_t endZ) 
 
 template<typename Voxel>
 VolumeAtomic<Voxel> LZ4SliceVolume<Voxel>::loadSlice(size_t sliceNumber) const {
-    std::ifstream compressedFile(getSliceFilePath(sliceNumber), std::ifstream::binary);
+    std::string sliceFileName = getSliceFilePath(sliceNumber);
+    std::ifstream compressedFile(sliceFileName, std::ifstream::binary);
+    if(compressedFile.fail()) {
+        throw std::system_error(errno, std::system_category(), "Failed to open lz4 slice file "+sliceFileName);
+    }
 
     compressedFile.seekg(0,compressedFile.end); // Seek to end
     size_t compressedFileSize = compressedFile.tellg(); // end file position == file size
