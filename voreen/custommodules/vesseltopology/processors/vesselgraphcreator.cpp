@@ -532,10 +532,10 @@ struct LZ4SliceVolumeCCABuilderWrapper {
 static LZ4SliceVolume<uint32_t> createCCAVolume(const LZ4SliceVolume<uint8_t>& input, const std::string& tmpVolumePath, size_t& numComponents, ProgressReporter& progress) {
     TaskTimeLogger _("Create CCA volume", tgt::Info);
 
-    StreamingComponents<0, NoopMetadata> sc;
+    StreamingComponents<0, NoopMetadata, CCAVoidLabel> sc;
 
-    std::function<bool(const VolumeRAM* vol, tgt::svec3 pos)> isOne = [](const VolumeRAM* slice, tgt::svec3 pos) {
-        return slice->getVoxelNormalized(pos) > 0.0f;
+    StreamingComponents<0, NoopMetadata, CCAVoidLabel>::getClassFunc isOne = [](const VolumeRAM* slice, tgt::svec3 pos) {
+        return slice->getVoxelNormalized(pos) > 0.0f ? CCAVoidLabel::some(): boost::none;
     };
     auto writeMetaData = [] (uint32_t, const NoopMetadata&) {};
 
@@ -835,10 +835,10 @@ static UnfinishedRegions collectUnfinishedRegions(const LZ4SliceVolume<uint8_t>&
 
     std::map<uint32_t, tgt::SBounds> regions;
 
-    StreamingComponents<0, CCANodeMetaData> sc;
+    StreamingComponents<0, CCANodeMetaData, CCAVoidLabel> sc;
 
-    std::function<bool(const VolumeRAM* vol, tgt::svec3 pos)> isOne = [](const VolumeRAM* slice, tgt::svec3 pos) {
-        return slice->getVoxelNormalized(pos) > 0.0f;
+    StreamingComponents<0, CCANodeMetaData, CCAVoidLabel>::getClassFunc isOne = [](const VolumeRAM* slice, tgt::svec3 pos) {
+        return slice->getVoxelNormalized(pos) > 0.0f ? CCAVoidLabel::some() : boost::none;
     };
     auto writeMetaData = [&regions] (uint32_t id, const CCANodeMetaData& metadata) {
         regions.emplace(id, metadata.bounds_);

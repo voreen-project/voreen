@@ -149,8 +149,8 @@ private:
 
 template<int ADJACENCY>
 StreamingComponentsStats ConnectedComponentAnalysis::runCCA(const VolumeBase& input, HDF5FileVolume& output, std::function<void(uint32_t id, const CCANodeMetaData&)> writeMetaData, ProgressReporter& progressReporter) const {
-    StreamingComponents<ADJACENCY, CCANodeMetaData> sc;
-    std::function<bool(const VolumeRAM* vol, tgt::svec3 pos)> isOne;
+    StreamingComponents<ADJACENCY, CCANodeMetaData, CCAVoidLabel> sc;
+    std::function<boost::optional<CCAVoidLabel>(const VolumeRAM* vol, tgt::svec3 pos)> getClass;
 
     float binarizationThresholdNormalized;
     if(input.hasMetaData("RealWorldMapping")) {
@@ -162,16 +162,16 @@ StreamingComponentsStats ConnectedComponentAnalysis::runCCA(const VolumeBase& in
     }
 
     if(invertBinarization_.get()) {
-        isOne = [binarizationThresholdNormalized](const VolumeRAM* slice, tgt::svec3 pos) {
-            return slice->getVoxelNormalized(pos) <= binarizationThresholdNormalized;
+        getClass = [binarizationThresholdNormalized](const VolumeRAM* slice, tgt::svec3 pos) {
+            return slice->getVoxelNormalized(pos) <= binarizationThresholdNormalized ? CCAVoidLabel::some() : boost::none;
             };
     } else {
-        isOne = [binarizationThresholdNormalized](const VolumeRAM* slice, tgt::svec3 pos) {
-            return slice->getVoxelNormalized(pos) > binarizationThresholdNormalized;
+        getClass = [binarizationThresholdNormalized](const VolumeRAM* slice, tgt::svec3 pos) {
+            return slice->getVoxelNormalized(pos) > binarizationThresholdNormalized ? CCAVoidLabel::some() : boost::none;
             };
     }
 
-    return sc.cca(input, output, writeMetaData, isOne, applyLabeling_.get(), generateComponentConstraintTest(input), progressReporter);
+    return sc.cca(input, output, writeMetaData, getClass, applyLabeling_.get(), generateComponentConstraintTest(input), progressReporter);
 }
 
 } // namespace voreen

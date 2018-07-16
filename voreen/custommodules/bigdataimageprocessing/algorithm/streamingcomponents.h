@@ -35,8 +35,21 @@
 #include "tgt/vector.h"
 
 namespace voreen {
-#define SC_TEMPLATE template<int ADJACENCY, typename MetaData>
-#define SC_NS StreamingComponents<ADJACENCY, MetaData>
+#define SC_TEMPLATE template<int ADJACENCY, typename MetaData, typename ClassID>
+#define SC_NS StreamingComponents<ADJACENCY, MetaData, ClassID>
+
+struct CCAVoidLabel {
+    CCAVoidLabel() { }
+    static boost::optional<CCAVoidLabel> some() {
+        return boost::optional<CCAVoidLabel>(CCAVoidLabel());
+    }
+    bool operator==(const CCAVoidLabel&) const {
+        return true;
+    }
+    bool operator!=(const CCAVoidLabel&) const {
+        return false;
+    }
+};
 
 struct StreamingComponentsStats {
     uint32_t numComponents;
@@ -47,12 +60,12 @@ SC_TEMPLATE
 class StreamingComponents {
 
 public:
-    typedef std::function<bool(const VolumeRAM* vol, tgt::svec3 pos)> getBinVoxel;
+    typedef std::function<boost::optional<ClassID>(const VolumeRAM* vol, tgt::svec3 pos)> getClassFunc;
     typedef std::function<bool(const MetaData&)> componentConstraintTest;
     typedef std::function<void(uint32_t id, const MetaData&)> ComponentCompletionCallback;
 
     template<typename InputType, typename OutputType>
-    StreamingComponentsStats cca(const InputType& input, OutputType& output, ComponentCompletionCallback componentCompletionCallback, getBinVoxel isOne, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress) const;
+    StreamingComponentsStats cca(const InputType& input, OutputType& output, ComponentCompletionCallback componentCompletionCallback, getClassFunc getClass, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress) const;
 private:
     class RowStorage; // Forward declaration
 
@@ -100,7 +113,7 @@ private:
 
     class Run final : public Node {
     public:
-        Run(tgt::svec2 yzPos_, size_t lowerBound_, size_t upperBound_);
+        Run(tgt::svec2 yzPos_, size_t lowerBound_, size_t upperBound_, ClassID cls);
         ~Run();
 
         template<int ROW_MH_DIST>
@@ -113,11 +126,12 @@ private:
         const tgt::svec2 yzPos_;
         const size_t lowerBound_;
         const size_t upperBound_;
+        const ClassID class_;
     };
 
     class Row {
     public:
-        void init(const VolumeRAM* slice, size_t sliceNum, size_t rowNum, getBinVoxel isOne);
+        void init(const VolumeRAM* slice, size_t sliceNum, size_t rowNum, getClassFunc getClass);
         Row();
         ~Row() {}
 
@@ -130,7 +144,7 @@ private:
 
     class RowStorage {
     public:
-        RowStorage(const tgt::svec3& volumeDimensions, getBinVoxel isOne);
+        RowStorage(const tgt::svec3& volumeDimensions, getClassFunc getClass);
         ~RowStorage();
         void add(const VolumeRAM* slice, size_t sliceNum, size_t row);
         Row& latest() const;
@@ -148,7 +162,7 @@ private:
 
         const size_t storageSize_;
         const size_t rowsPerSlice_;
-        const getBinVoxel isOne_;
+        const getClassFunc getClass_;
         Row* rows_;
         size_t storagePos_;
     };
@@ -199,14 +213,14 @@ void SC_NS::writeRowsToStorage(RowStorage& rows, OutputType& output, ComponentCo
 
 SC_TEMPLATE
 template<typename InputType, typename OutputType>
-StreamingComponentsStats SC_NS::cca(const InputType& input, OutputType& output, ComponentCompletionCallback componentCompletionCallback, getBinVoxel isOne, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress) const {
+StreamingComponentsStats SC_NS::cca(const InputType& input, OutputType& output, ComponentCompletionCallback componentCompletionCallback, getClassFunc getClass, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress) const {
     const tgt::svec3 dim = input.getDimensions();
     tgtAssert(input.getDimensions() == output.getDimensions(), "dimensions of input and output differ");
     tgtAssert(tgt::hand(tgt::greaterThan(input.getDimensions(), tgt::svec3::one)), "Degenerated volume dimensions");
 
     progress.setProgressRange(tgt::vec2(0, 0.5));
 
-    RowStorage rows(dim, isOne);
+    RowStorage rows(dim, getClass);
     // First layer
     {
         std::unique_ptr<const VolumeRAM> activeLayer(input.getSlice(0));
@@ -380,10 +394,11 @@ void SC_NS::RunComposition::unref() {
 }
 
 SC_TEMPLATE
-SC_NS::Run::Run(tgt::svec2 yzPos, size_t lowerBound, size_t upperBound)
+SC_NS::Run::Run(tgt::svec2 yzPos, size_t lowerBound, size_t upperBound, ClassID cls)
     : yzPos_(yzPos)
     , lowerBound_(lowerBound) // first voxel part of run
     , upperBound_(upperBound) // first voxel not part of run
+    , class_(cls)
 {
 }
 
@@ -410,6 +425,10 @@ void SC_NS::Run::addNode(Node* other) {
 SC_TEMPLATE
 template<int ROW_MH_DIST>
 void SC_NS::Run::tryMerge(Run& other) {
+    if(class_ != other.class_) {
+        return;
+    }
+
     static const int MAX_MH_DIST = 3 - ADJACENCY;
 
     // The two rows are already too far apart in the yz-dimension
@@ -443,28 +462,30 @@ MetaData SC_NS::Run::getMetaData() const {
 }
 
 SC_TEMPLATE
-void SC_NS::Row::init(const VolumeRAM* slice, size_t sliceNum, size_t rowNum, getBinVoxel isOne)
+void SC_NS::Row::init(const VolumeRAM* slice, size_t sliceNum, size_t rowNum, getClassFunc getClass)
 {
     // Finalize previous:
     runs_.clear();
 
     // Insert new runs
-    bool inRun = false;
+    boost::optional<ClassID> prevClass = boost::none;
     size_t runStart = 0;
     size_t rowLength = slice->getDimensions().x;
     tgt::svec2 yzPos(rowNum, sliceNum);
     for(size_t x = 0; x < rowLength; ++x) {
-        bool one = isOne(slice, tgt::svec3(x, rowNum, 0));
-        if(inRun && !one) {
-            runs_.emplace_back(yzPos, runStart, x);
-            inRun = false;
-        } else if(!inRun && one) {
-            runStart = x;
-            inRun = true;
+        auto currentClass = getClass(slice, tgt::svec3(x, rowNum, 0));
+        if(prevClass != currentClass) {
+            if(prevClass) {
+                runs_.emplace_back(yzPos, runStart, x, *prevClass);
+            }
+            if(currentClass) {
+                runStart = x;
+            }
         }
+        prevClass = currentClass;
     }
-    if(inRun) {
-        runs_.emplace_back(yzPos, runStart, rowLength);
+    if(prevClass) {
+        runs_.emplace_back(yzPos, runStart, rowLength, *prevClass);
     }
 }
 
@@ -507,13 +528,13 @@ std::vector<typename SC_NS::Run>& SC_NS::Row::getRuns() {
 }
 
 SC_TEMPLATE
-SC_NS::RowStorage::RowStorage(const tgt::svec3& volumeDimensions, getBinVoxel isOne)
+SC_NS::RowStorage::RowStorage(const tgt::svec3& volumeDimensions, getClassFunc getClass)
     //: storageSize_(volumeDimensions.y + 2)
     : storageSize_(tgt::hmul(volumeDimensions.yz()))
     , rowsPerSlice_(volumeDimensions.y)
     , rows_(new Row[storageSize_])
     , storagePos_(-1)
-    , isOne_(isOne)
+    , getClass_(getClass)
 {
 }
 
@@ -526,7 +547,7 @@ SC_NS::RowStorage::~RowStorage() {
 SC_TEMPLATE
 void SC_NS::RowStorage::add(const VolumeRAM* slice, size_t sliceNum, size_t rowNum) {
     storagePos_ = (storagePos_ + 1)%storageSize_;
-    rows_[storagePos_].init(slice, sliceNum, rowNum, isOne_);
+    rows_[storagePos_].init(slice, sliceNum, rowNum, getClass_);
 }
 
 SC_TEMPLATE
