@@ -32,8 +32,8 @@
 
 #include "tgt/vector.h"
 #include "surface.h"
-#include "../datastructures/protovesselgraph.h"
 #include "voreen/core/datastructures/volume/volumebase.h"
+#include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 
 namespace voreen {
 
@@ -101,8 +101,10 @@ struct IdVolumeInitializationReader {
     }
 
     bool isLabeled(const tgt::ivec3& pos) const {
-        return getBranchId(pos) != 0
-            && getHoleId(pos) == 0; // holeIdBrick might override regions that are cut off and must be relabeled
+        //return getBranchId(pos) != 0
+        //    && getHoleId(pos) == 0; // holeIdBrick might override regions that are cut off and must be relabeled
+        auto branchId = getBranchId(pos);
+        return branchId != IdVolume::BACKGROUND_VALUE && branchId != IdVolume::UNLABELED_FOREGROUND_VALUE;
     }
 
     bool isObject(const tgt::ivec3& pos, uint32_t idToFill) const {

@@ -329,7 +329,7 @@ struct ClosestSkeletonVoxelsAdaptor : public EdgeVoxelRefResultSetBase {
     }
 
     inline DistanceType worstDist() const {
-        return currentDist_*1.001;
+        return currentDist_;
     }
 
     /**
@@ -344,8 +344,8 @@ struct ClosestSkeletonVoxelsAdaptor : public EdgeVoxelRefResultSetBase {
     }
 };
 
-static std::pair<LZ4SliceVolume<uint8_t>, LZ4SliceVolume<uint8_t>> splitSegmentationCriticalVoxels(const std::string& tmpPathNoCritical, const std::string& tmpPathOnlyCritical, const ProtoVesselGraph& graph, SkeletonClassReader&& skeletonClassReader, const VesselGraphCreatorProcessedInput& input, ProgressReporter& progress) {
-    TaskTimeLogger _("Split segmentation wrt critical voxels", tgt::Info);
+static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath, const ProtoVesselGraph& graph, SkeletonClassReader&& skeletonClassReader, const VesselGraphCreatorProcessedInput& input, ProgressReporter& progress) {
+    TaskTimeLogger _("Create closest id volume", tgt::Info);
 
     const auto voxelToRw = input.segmentation.getMetaData().getVoxelToWorldMatrix();
     const auto dimensions = input.segmentation.getDimensions();
@@ -364,90 +364,43 @@ static std::pair<LZ4SliceVolume<uint8_t>, LZ4SliceVolume<uint8_t>> splitSegmenta
 
     KDTreeVoxelFinder<EdgeVoxelRef> finder(std::move(finderBuilder));
 
-    LZ4SliceVolumeBuilder<uint8_t> onlyCriticalVoxels(tmpPathOnlyCritical, input.segmentation.getMetaData());
-    LZ4SliceVolumeBuilder<uint8_t> noCriticalVoxels(tmpPathNoCritical, input.segmentation.getMetaData());
+    LZ4SliceVolumeBuilder<uint32_t> outputIDs(tmpPath, input.segmentation.getMetaData().withRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint32_t>()));
 
     for(size_t z = 0; z<dimensions.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dimensions.z);
         auto slice = input.segmentation.loadSlice(z);
 
-        auto outputSliceOnlyCV = onlyCriticalVoxels.getNextWritableSlice();
-        auto outputSliceNoCV = noCriticalVoxels.getNextWritableSlice();
+        auto outputSlice = outputIDs.getNextWritableSlice();
 
         skeletonClassReader.advance();
         for(size_t y = 0; y<dimensions.y; ++y) {
             for(size_t x = 0; x<dimensions.x; ++x) {
                 const tgt::svec3 p(x,y,0);
+                uint32_t label;
                 if(slice.voxel(p) > 0) {
                     tgt::ivec3 ipos(x,y,z);
                     tgt::vec3 rwpos = transform(voxelToRw, ipos);
 
-                    bool isCritical;
-
                     if(finder.storage_.points().empty()) {
-                        isCritical = false;
+                        label = 0xCAFEBABE; //Doesn't really matter. only happens in edge cases anyway
                     } else {
                         ClosestSkeletonVoxelsAdaptor closestVoxels(finder.storage_.points());
                         finder.findClosest(rwpos, closestVoxels);
                         tgtAssert(closestVoxels.size() > 0, "No voxels");
 
-                        float closestDistSq = closestVoxels.currentDist_;
-
-                        float criticalDistance = std::sqrt(closestDistSq) + criticalVoxelDistDiff;
-                        float criticalDistanceSq = criticalDistance*criticalDistance;
-                        SkeletonVoxelsWithinAdaptor criticalVoxelsRes(finder.storage_.points(), criticalDistanceSq);
-                        finder.findClosest(rwpos, criticalVoxelsRes);
-                        tgtAssert(closestVoxels.size() <= criticalVoxelsRes.size(), "Found fewer voxels than before");
-
-                        std::set<const ProtoVesselGraphEdge*> criticalEdges;
-                        for(const auto& vox : criticalVoxelsRes.getVoxels()) {
-                            criticalEdges.insert(&vox->edge);
-                        }
-                        isCritical = criticalEdges.size() >= 2;
-                    }
-
-
-                    /*
-                    // The voxel can only be critical if any of the edges share a node:
-                    std::set<size_t> nodeIDs;
-                    bool foundCriticalSharingANode = false;
-                    for(const auto& edge : criticalEdges) {
-                        if(nodeIDs.count(edge->getNodeID1()) > 0) {
-                            foundCriticalSharingANode = true;
-                            break;
-                        }
-                        nodeIDs.insert(edge->getNodeID1());
-
-                        if(edge->getNodeID1() != edge->getNodeID2() && nodeIDs.count(edge->getNodeID2()) > 0) {
-                            foundCriticalSharingANode = true;
-                            break;
-                        }
-                        nodeIDs.insert(edge->getNodeID2());
-                    }
-
-                    bool isCritical = foundCriticalSharingANode;
-                    */
-
-
-                    if(skeletonClassReader.getClass(tgt::ivec2(x, y)) != 2 && isCritical) {
-                        outputSliceNoCV->voxel(p) = 0;
-                        outputSliceOnlyCV->voxel(p) = 1;
-                    } else {
-                        outputSliceNoCV->voxel(p) = 1;
-                        outputSliceOnlyCV->voxel(p) = 0;
+                        // Just pick the first one (TODO: may be a "random" (but deterministic) one?)
+                        label = static_cast<uint32_t>(closestVoxels.getVoxels()[0]->edge.id_);
                     }
                 } else {
-                    outputSliceNoCV->voxel(p) = 0;
-                    outputSliceOnlyCV->voxel(p) = 0;
+                    label = IdVolume::BACKGROUND_VALUE;
                 }
+                outputSlice->voxel(p) = label;
             }
         }
     }
 
     progress.setProgress(1.0f);
-    return std::make_pair(
-            std::move(noCriticalVoxels).finalize(),
-            std::move(onlyCriticalVoxels).finalize());
+    return std::move(outputIDs).finalize();
 }
 
 class NoopMetadata {
@@ -466,8 +419,9 @@ static void addFixedForegroundPointsToMask(const std::vector<tgt::vec3>& points,
     }
 }
 
+template<typename T>
 struct LZ4SliceVolumeCCAInputWrapper {
-    LZ4SliceVolumeCCAInputWrapper(const LZ4SliceVolume<uint8_t>& vol)
+    LZ4SliceVolumeCCAInputWrapper(const LZ4SliceVolume<T>& vol)
         : volume_(vol)
     {
     }
@@ -488,9 +442,9 @@ struct LZ4SliceVolumeCCAInputWrapper {
         return "uint32";
     }
     VolumeRAM* getSlice(size_t z) const {
-        return new VolumeAtomic<uint8_t>(volume_.loadSlice(z));
+        return new VolumeAtomic<T>(volume_.loadSlice(z));
     }
-    const LZ4SliceVolume<uint8_t>& volume_;
+    const LZ4SliceVolume<T>& volume_;
 };
 struct LZ4SliceVolumeCCABuilderWrapper {
     LZ4SliceVolumeCCABuilderWrapper(LZ4SliceVolumeBuilder<uint32_t>& builder)
@@ -529,13 +483,31 @@ struct LZ4SliceVolumeCCABuilderWrapper {
     LZ4SliceVolumeBuilder<uint32_t>& builder_;
 };
 
-static LZ4SliceVolume<uint32_t> createCCAVolume(const LZ4SliceVolume<uint8_t>& input, const std::string& tmpVolumePath, size_t& numComponents, ProgressReporter& progress) {
+struct CCAUint32Label {
+    uint32_t label_;
+
+    CCAUint32Label(uint32_t label)
+        : label_(label)
+    {
+    }
+    bool operator==(const CCAUint32Label& other) const {
+        return label_ == other.label_;
+    }
+    bool operator!=(const CCAUint32Label& other) const {
+        return label_ != other.label_;
+    }
+};
+
+static LZ4SliceVolume<uint32_t> createCCAVolume(const LZ4SliceVolume<uint32_t>& input, const std::string& tmpVolumePath, size_t& numComponents, ProgressReporter& progress) {
     TaskTimeLogger _("Create CCA volume", tgt::Info);
 
-    StreamingComponents<0, NoopMetadata, CCAVoidLabel> sc;
+    StreamingComponents<0, NoopMetadata, CCAUint32Label> sc;
 
-    StreamingComponents<0, NoopMetadata, CCAVoidLabel>::getClassFunc isOne = [](const VolumeRAM* slice, tgt::svec3 pos) {
-        return slice->getVoxelNormalized(pos) > 0.0f ? CCAVoidLabel::some(): boost::none;
+    StreamingComponents<0, NoopMetadata, CCAUint32Label>::getClassFunc getClass = [](const VolumeRAM* slice, tgt::svec3 pos) {
+        const VolumeAtomic<uint32_t>* uslice = dynamic_cast<const VolumeAtomic<uint32_t>*>(slice);
+        tgtAssert(uslice, "Invalid slice base type"); // TODO: use uint32 in cca
+        uint32_t label = uslice->voxel(pos);
+        return label != IdVolume::BACKGROUND_VALUE ? boost::optional<CCAUint32Label>(label) : boost::none;
     };
     auto writeMetaData = [] (uint32_t, const NoopMetadata&) {};
 
@@ -546,7 +518,7 @@ static LZ4SliceVolume<uint32_t> createCCAVolume(const LZ4SliceVolume<uint8_t>& i
     LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getMetaData().withRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint32_t>()));
     LZ4SliceVolumeCCABuilderWrapper outputWrapper(outputVolumeBuilder);
 
-    auto stats = sc.cca(LZ4SliceVolumeCCAInputWrapper(input), outputWrapper, writeMetaData, isOne, true, componentConstraintTest, progress);
+    auto stats = sc.cca(LZ4SliceVolumeCCAInputWrapper<uint32_t>(input), outputWrapper, writeMetaData, getClass, true, componentConstraintTest, progress);
     numComponents = stats.numComponents;
 
     return std::move(outputVolumeBuilder).finalize();
@@ -830,15 +802,70 @@ struct UnfinishedRegions {
     }
 };
 
-static UnfinishedRegions collectUnfinishedRegions(const LZ4SliceVolume<uint8_t>& input, const std::string& tmpVolumePath, ProgressReporter& progress) {
+static void mapEdgeIds(LZ4SliceVolume<uint32_t>& regions, size_t numComponents, const ProtoVesselGraph& graph, ProgressReporter& progress) {
+    std::vector<uint32_t> ccaToEdgeIdTable(numComponents+1, IdVolume::UNLABELED_FOREGROUND_VALUE);
+    ccaToEdgeIdTable[0] = IdVolume::BACKGROUND_VALUE;
+
+    //populate ccaToEdgeIdTable
+    {
+        std::vector<std::pair<uint32_t, tgt::svec3>> query_positions;
+        for(const auto& edge: graph.edges_) {
+            if(edge.voxels_.empty()) {
+                query_positions.push_back(std::make_pair(static_cast<uint32_t>(edge.id_), tgt::svec3(-1)));
+            } else {
+                query_positions.push_back(std::make_pair(static_cast<uint32_t>(edge.id_), edge.voxels_[0]));
+            }
+        }
+        std::sort(query_positions.begin(), query_positions.end(), [] (const std::pair<uint32_t, tgt::svec3>& p1, const std::pair<uint32_t, tgt::svec3>& p2) {
+                return p1.second.z < p2.second.z;
+                });
+
+        LZ4SliceVolumeReader<uint32_t,0> reader(regions);
+        reader.seek(0);
+        for(auto& pair : query_positions) {
+            tgt::svec3& p = pair.second;
+            if(p.z == -1) {
+                continue;
+            }
+
+            tgtAssert(p.z >= reader.getCurrentZPos(), "invalid reader pos");
+            while(p.z > reader.getCurrentZPos()) {
+                reader.advance();
+            }
+            auto ccaindex = reader.getVoxelRelative(p.xy(), 0);
+            tgtAssert(ccaindex, "Read invalid voxel");
+            tgtAssert(*ccaindex != 0, "sample at background voxel");
+
+            ccaToEdgeIdTable[*ccaindex] = pair.first;
+        }
+    }
+
+
+    // Map ids in regions inplace
+    auto dim = regions.getDimensions();
+    for(size_t z=0; z<dim.z; ++z) {
+        auto slice = regions.getWritableSlice(z);
+        for(size_t y=0; y<dim.y; ++y) {
+            for(size_t x=0; x<dim.x; ++x) {
+                tgt::svec3 p(x,y,0);
+                uint32_t& vox = slice->voxel(p);
+                vox = ccaToEdgeIdTable.at(vox);
+            }
+        }
+    }
+}
+
+static UnfinishedRegions collectUnfinishedRegions(const LZ4SliceVolume<uint32_t>& input, const std::string& tmpVolumePath, ProgressReporter& progress) {
     TaskTimeLogger _("Collect unlabled regions", tgt::Info);
 
     std::map<uint32_t, tgt::SBounds> regions;
 
     StreamingComponents<0, CCANodeMetaData, CCAVoidLabel> sc;
 
-    StreamingComponents<0, CCANodeMetaData, CCAVoidLabel>::getClassFunc isOne = [](const VolumeRAM* slice, tgt::svec3 pos) {
-        return slice->getVoxelNormalized(pos) > 0.0f ? CCAVoidLabel::some() : boost::none;
+    StreamingComponents<0, CCANodeMetaData, CCAVoidLabel>::getClassFunc getClass = [](const VolumeRAM* slice, tgt::svec3 pos) {
+        const VolumeAtomic<uint32_t>* uslice = dynamic_cast<const VolumeAtomic<uint32_t>*>(slice);
+        tgtAssert(uslice, "Invalid slice base type"); // Only unfinished regions => max value. TODO: use uint32 in cca
+        return uslice->voxel(pos) == IdVolume::UNLABELED_FOREGROUND_VALUE ? CCAVoidLabel::some() : boost::none;
     };
     auto writeMetaData = [&regions] (uint32_t id, const CCANodeMetaData& metadata) {
         regions.emplace(id, metadata.bounds_);
@@ -851,39 +878,12 @@ static UnfinishedRegions collectUnfinishedRegions(const LZ4SliceVolume<uint8_t>&
     LZ4SliceVolumeBuilder<uint32_t> outputVolumeBuilder(tmpVolumePath, input.getMetaData().withRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint32_t>()));
     LZ4SliceVolumeCCABuilderWrapper outputWrapper(outputVolumeBuilder);
 
-    sc.cca(LZ4SliceVolumeCCAInputWrapper(input), outputWrapper, writeMetaData, isOne, true, componentConstraintTest, progress);
+    sc.cca(LZ4SliceVolumeCCAInputWrapper<uint32_t>(input), outputWrapper, writeMetaData, getClass, true, componentConstraintTest, progress);
 
     return UnfinishedRegions {
         std::move(outputVolumeBuilder).finalize(), regions
     };
 }
-
-static void addClippedOffRegionsToCritical(LZ4SliceVolume<uint8_t>& criticalVoxels, const LZ4SliceVolume<uint32_t>& ccaVolume, const ProtoVesselGraph& graph, size_t numComponents, const LZ4SliceVolume<uint8_t>& segmentation, ProgressReporter& progress) {
-    TaskTimeLogger _("Add clipped off regions to critical voxels", tgt::Info);
-
-    BranchIdVolumeReader ccaReader(ccaVolume, graph, numComponents, segmentation);
-    auto dim = criticalVoxels.getDimensions();
-
-    for(size_t z = 0; z < dim.z; ++z) {
-        progress.setProgress(static_cast<float>(z)/dim.z);
-
-        auto slice = criticalVoxels.getWritableSlice(z);
-
-        ccaReader.advance();
-
-        for(size_t y = 0; y < dim.y; ++y) {
-            for(size_t x = 0; x < dim.x; ++x) {
-                tgt::ivec3 p(x,y,z);
-
-                if(ccaReader.isObject(p) && !ccaReader.isValidEdgeId(ccaReader.getEdgeId(p))) {
-                    slice->voxel(x, y, 0) = 1;
-                }
-            }
-        }
-    }
-    progress.setProgress(1.0f);
-}
-
 
 std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInput& input, VolumeMask&& skeleton, VolumeList& generatedVolumes, ProgressReporter& progress) {
     SubtaskProgressReporterCollection<8> subtaskReporters(progress);
@@ -898,8 +898,7 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
 
     // Create an assignment edge <-> vessel component
     //  1. Split vessel components at nodes edges
-    auto segmentationWithAndWithoutCriticalVoxels = splitSegmentationCriticalVoxels(
-            VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION),
+    auto closestIDs = createClosestIDVolume(
             VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION),
             *protograph,
             SkeletonClassReader(skeleton),
@@ -909,43 +908,34 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
         // Drop VolumeMask and thus free the used non-volatile storage space.
         VolumeMask _dump(std::move(skeleton));
     }
-    LZ4SliceVolume<uint8_t> segNoCriticalVoxels = std::move(segmentationWithAndWithoutCriticalVoxels.first);
-    LZ4SliceVolume<uint8_t> segOnlyCriticalVoxels = std::move(segmentationWithAndWithoutCriticalVoxels.second);
 
     //  2. Perform a cca to distinguish components
     size_t numComponents;
-    LZ4SliceVolume<uint32_t> branchIdSegmentation = createCCAVolume(segNoCriticalVoxels, VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), numComponents, subtaskReporters.get<3>());
-    if(input.saveDebugData) {
-        generatedVolumes.add(std::move(segNoCriticalVoxels).toVolume().release());
+    LZ4SliceVolume<uint32_t> branchIdSegmentation = createCCAVolume(closestIDs, VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), numComponents, subtaskReporters.get<3>());
+    if(input.saveDebugData) { //TODO maybe get rid of this
+        generatedVolumes.add(std::move(closestIDs).toVolume().release());
     } else {
-        std::move(segNoCriticalVoxels).deleteFromDisk();
+        std::move(closestIDs).deleteFromDisk();
     }
 
-    // 4. Find unlabeled regions
-    //
-    // Add cut off unlabeled regions to the critical voxels (i.e., unlabeled regions) to allow flooding from valid edge label regions later
-    addClippedOffRegionsToCritical(segOnlyCriticalVoxels, branchIdSegmentation, *protograph, numComponents, input.segmentation, subtaskReporters.get<4>());
-    auto unfinishedRegions = collectUnfinishedRegions(segOnlyCriticalVoxels, VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), subtaskReporters.get<5>());
-    if(input.saveDebugData) {
-        generatedVolumes.add(std::move(segOnlyCriticalVoxels).toVolume().release());
-    } else {
-        std::move(segOnlyCriticalVoxels).deleteFromDisk();
-    }
+    // 3. Change branchIdSegmentation inplace and assign proper edge ids from protograph. Unassigned regions get id UNLABELED_REGION_ID;
+    mapEdgeIds(branchIdSegmentation, numComponents, *protograph, subtaskReporters.get<4>());
+
+    // 4. Collect bounding boxes from unfinished regions.
+    auto unfinishedRegions = collectUnfinishedRegions(branchIdSegmentation, VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), subtaskReporters.get<5>());
 
     //  5. Flood remaining unlabeled regions locally
     unfinishedRegions.floodAllRegions(branchIdSegmentation, subtaskReporters.get<6>());
 
-    if(input.saveDebugData) {
+    if(input.saveDebugData) { //TODO maybe get rid of this
         generatedVolumes.add(std::move(unfinishedRegions.holeIds).toVolume().release());
     } else {
         std::move(unfinishedRegions.holeIds).deleteFromDisk();
     }
 
-    //  6. Create a reader that reads edge ids from the underlying segmentation
-    BranchIdVolumeReader ccaReader(branchIdSegmentation, *protograph, numComponents, input.segmentation);
-
-    //  7. Create better VesselGraph from protograph and and the edge-id-segmentation
-    auto output = protograph->createVesselGraph(ccaReader, input.sampleMask, subtaskReporters.get<7>());
+    BranchIdVolumeReader branchIdReader(branchIdSegmentation);
+    //  6. Create better VesselGraph from protograph and and the edge-id-segmentation
+    auto output = protograph->createVesselGraph(branchIdReader, input.sampleMask, subtaskReporters.get<7>());
     if(input.saveDebugData) {
         generatedVolumes.add(std::move(branchIdSegmentation).toVolume().release());
     } else {

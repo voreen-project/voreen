@@ -134,7 +134,7 @@ static boost::optional<uint64_t> findNearOtherEdgeID(const BranchIdVolumeReader&
                     continue;
                 }
                 uint64_t id = segmentedVolumeReader.getEdgeId(pos);
-                if(id != centerID && id != BranchIdVolumeReader::INVALID_EDGE_ID) {
+                if(id != centerID && segmentedVolumeReader.isValidEdgeId(id)) {
                     return id;
                 }
             }
@@ -286,6 +286,5 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
 
     return graph;
 }
-const uint64_t BranchIdVolumeReader::INVALID_EDGE_ID = -1;
 
 }

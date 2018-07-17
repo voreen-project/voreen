@@ -30,7 +30,7 @@
 #include "voreen/core/processors/processorwidgetfactory.h"
 #include <limits.h> //for std::numeric_limits
 
-static const int NUM_DEBUG_VOLUMES_PER_ITERATION = 4;
+static const int NUM_DEBUG_VOLUMES_PER_ITERATION = 3;
 
 namespace voreen {
 

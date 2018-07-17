@@ -32,6 +32,7 @@
 #include "voreen/core/datastructures/volume/volume.h"
 #include "custommodules/bigdataimageprocessing/volumefiltering/slicereader.h"
 #include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
+#include "../algorithm/idvolume.h"
 #include "vesselgraph.h"
 
 namespace voreen {
@@ -198,87 +199,45 @@ struct ProtoVesselGraph {
 };
 
 struct BranchIdVolumeReader {
-    static const uint64_t INVALID_EDGE_ID;
-    BranchIdVolumeReader(const LZ4SliceVolume<uint32_t>& ccaVolume, const ProtoVesselGraph& graph, size_t numComponents, const LZ4SliceVolume<uint8_t>& segmentation)
+    BranchIdVolumeReader(const LZ4SliceVolume<uint32_t>& ccaVolume)
         : branchIdReader_(ccaVolume)
-        , segmentationReader_(segmentation)
-        , ccaToEdgeIdTable_(numComponents+1, INVALID_EDGE_ID)
     {
         branchIdReader_.seek(-1);
-        segmentationReader_.seek(-1);
-
-        //populate ccaToEdgeIdTable
-        std::vector<std::pair<uint64_t, tgt::svec3>> query_positions;
-        for(const auto& edge: graph.edges_) {
-            if(edge.voxels_.empty()) {
-                query_positions.push_back(std::make_pair(edge.id_, tgt::svec3(-1)));
-            } else {
-                query_positions.push_back(std::make_pair(edge.id_, edge.voxels_[0]));
-            }
-        }
-        std::sort(query_positions.begin(), query_positions.end(), [] (const std::pair<uint64_t, tgt::svec3>& p1, const std::pair<uint64_t, tgt::svec3>& p2) {
-                return p1.second.z < p2.second.z;
-                });
-
-        LZ4SliceVolumeReader<uint32_t,0> reader(ccaVolume);
-        reader.seek(0);
-        for(auto& pair : query_positions) {
-            tgt::svec3& p = pair.second;
-            if(p.z == -1) {
-                continue;
-            }
-
-            tgtAssert(p.z >= reader.getCurrentZPos(), "invalid reader pos");
-            while(p.z > reader.getCurrentZPos()) {
-                reader.advance();
-            }
-            auto ccaindex = reader.getVoxelRelative(p.xy(), 0);
-            tgtAssert(ccaindex, "Read invalid voxel");
-
-            ccaToEdgeIdTable_[*ccaindex] = pair.first;
-        }
-    }
-    uint32_t getCCAId(const tgt::ivec3& pos) const {
-        auto voxel = branchIdReader_.getVoxel(pos);
-        tgtAssert(voxel, "Read invalid voxel");
-        return *voxel;
     }
 
     uint64_t getEdgeId(const tgt::ivec3& xypos) const {
-        return ccaToEdgeIdTable_.at(getCCAId(xypos));
+        auto vox = branchIdReader_.getVoxel(xypos);
+        tgtAssert(vox, "Invalid voxel positions");
+        return *vox;
     }
 
     void advance() {
         branchIdReader_.advance();
-        segmentationReader_.advance();
     }
     bool isValidEdgeId(uint64_t id) const {
-        return id != INVALID_EDGE_ID;
+        uint32_t id32 = static_cast<uint32_t>(id);
+        return id32 != IdVolume::UNLABELED_FOREGROUND_VALUE && id32 != IdVolume::BACKGROUND_VALUE;
     }
 
     bool isObject(const tgt::ivec3& pos) const {
-        auto voxel = segmentationReader_.getVoxel(pos);
-        return voxel && *voxel > 0;
+        auto voxel = branchIdReader_.getVoxel(pos);
+        return voxel && *voxel != IdVolume::BACKGROUND_VALUE;
     }
 
-
     tgt::vec3 getSpacing() const {
-        return segmentationReader_.getVolume().getMetaData().getSpacing();
+        return branchIdReader_.getVolume().getMetaData().getSpacing();
     }
 
     tgt::mat4 getVoxelToWorldMatrix() const {
-        return segmentationReader_.getVolume().getMetaData().getVoxelToWorldMatrix();
+        return branchIdReader_.getVolume().getMetaData().getVoxelToWorldMatrix();
     }
 
     tgt::svec3 getDimensions() const {
-        return segmentationReader_.getVolume().getDimensions();
+        return branchIdReader_.getVolume().getDimensions();
     }
 
 
     LZ4SliceVolumeReader<uint32_t, 1> branchIdReader_;
-    LZ4SliceVolumeReader<uint8_t, 1> segmentationReader_;
-    //const VolumeBase& segmentationVolume_;
-    std::vector<uint64_t> ccaToEdgeIdTable_;
 };
 
 }

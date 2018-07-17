@@ -876,7 +876,8 @@ VesselnessExtractorOutput VesselnessExtractor::compute(VesselnessExtractorInput 
 
     // Now build max with the following scale space steps
     for(int step=1; step < input.scaleSpaceSteps; ++step) {
-        std::unique_ptr<SliceReader> reader = buildStack(input.input, input.getStandardDeviationForStep(step), input.baseType);
+        auto stddev = input.getStandardDeviationForStep(step);
+        std::unique_ptr<SliceReader> reader = buildStack(input.input, stddev, input.baseType);
 
         progressReporter.setProgressRange(tgt::vec2(stepProgressDelta*step, stepProgressDelta*(step+1)));
 
