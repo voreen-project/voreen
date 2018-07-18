@@ -132,7 +132,7 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeEndEdges(const Vess
         }
     }
 
-    std::unordered_map<const VesselGraphNode*, size_t> new_node_ids;
+    std::unordered_map<const VesselGraphNode*, VGNodeID> new_node_ids;
     for(const VesselGraphEdge& edge : input.getEdges()) {
         if(edges_to_delete.count(&edge) > 0) {
             ++num_removed_edges;
@@ -142,8 +142,8 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeEndEdges(const Vess
         const VesselGraphNode& node1 = edge.getNode1();
         const VesselGraphNode& node2 = edge.getNode2();
 
-        size_t new_node1_id = -1;
-        size_t new_node2_id = -1;
+        VGNodeID new_node1_id = -1;
+        VGNodeID new_node2_id = -1;
         if(new_node_ids.count(&node1) > 0) {
             new_node1_id = new_node_ids[&node1];
         } else {
@@ -168,7 +168,7 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeEndEdges(const Vess
 }
 
 struct FutureNode {
-    static const size_t ID_NOT_ASSIGNED = -1;
+    static const VGNodeID ID_NOT_ASSIGNED;
     FutureNode(const VesselGraphNode* node)
         : nodes_()
         , edges_()
@@ -205,9 +205,10 @@ struct FutureNode {
     }
     std::unordered_set<const VesselGraphNode*> nodes_;
     std::unordered_set<const VesselGraphEdge*> edges_;
-    size_t id_; // Id in the future graph, will only be set when creating the graph
+    VGNodeID id_; // Id in the future graph, will only be set when creating the graph
     FutureNode* parent_; // Points to other node if this has been merged with another node
 };
+const VGNodeID FutureNode::ID_NOT_ASSIGNED = -1;
 
 inline bool isPartOfLoop(const VesselGraphEdge& edge) {
     const VesselGraphNode& node1 = edge.getNode1();
@@ -306,8 +307,8 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeAllEdges(const Vess
 
     // Insert all remaining edges into the new graph using the ids from previously created future nodes
     for(const auto& new_edge : new_edges) {
-        size_t future_node_id1 = new_nodes[&new_edge->getNode1()]->getRootNode()->id_;
-        size_t future_node_id2 = new_nodes[&new_edge->getNode2()]->getRootNode()->id_;
+        VGNodeID future_node_id1 = new_nodes[&new_edge->getNode1()]->getRootNode()->id_;
+        VGNodeID future_node_id2 = new_nodes[&new_edge->getNode2()]->getRootNode()->id_;
 
         tgtAssert(future_node_id1 != FutureNode::ID_NOT_ASSIGNED, "node1 without assigned id")
         tgtAssert(future_node_id2 != FutureNode::ID_NOT_ASSIGNED, "node2 without assigned id")
@@ -435,7 +436,7 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeDregree2Nodes(const
     //    also, merge edges via hashmap
     //
     //    insert non-deleted nodes, generate map: old node pointer -> new id
-    std::unordered_map<const VesselGraphNode*, size_t> new_node_ids;
+    std::unordered_map<const VesselGraphNode*, VGNodeID> new_node_ids;
     for(const auto& node : input.getNodes()) {
         if(node.getDegree() == 2) {
             auto node_edges = node.getEdges(); //TODO: go with ids if performance is a problem
@@ -449,7 +450,7 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeDregree2Nodes(const
 
             future_edge_1->merge(*future_edge_2);
         } else {
-            size_t node_id = output->insertNode(node);
+            VGNodeID node_id = output->insertNode(node);
             new_node_ids.insert({&node, node_id});
         }
     }
@@ -461,14 +462,14 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeDregree2Nodes(const
         if(&future_edge != future_edge.getRootNode()) {
             continue; //Not a root component
         }
-        const size_t NODE_NOT_FOUND = -1;
-        size_t node_id_begin = NODE_NOT_FOUND;
-        size_t node_id_end = NODE_NOT_FOUND;
+        const VGNodeID NODE_NOT_FOUND = -1;
+        VGNodeID node_id_begin = NODE_NOT_FOUND;
+        VGNodeID node_id_end = NODE_NOT_FOUND;
         if(new_node_ids.count(future_edge.begin_) == 0) {
             // we have to have detected a circle: add a single node for the edge:
             tgtAssert(future_edge.begin_ && future_edge.begin_ == future_edge.end_, "Non circle without nodes");
             const VesselGraphNode* circle_node = future_edge.begin_;
-            size_t circle_node_id = output->insertNode(*circle_node);
+            VGNodeID circle_node_id = output->insertNode(*circle_node);
             node_id_begin = circle_node_id;
             node_id_end = circle_node_id;
         } else {
@@ -487,7 +488,7 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeDregree2Nodes(const
         tgtAssert(node_id_end != NODE_NOT_FOUND, "Invalid node_id_begin");
 
         std::vector<VesselSkeletonVoxel> voxels = future_edge.collectVoxels();
-        size_t inserted_edge = output->insertEdge(node_id_begin, node_id_end, std::move(voxels), future_edge.getUUID());
+        VGEdgeID inserted_edge = output->insertEdge(node_id_begin, node_id_end, std::move(voxels), future_edge.getUUID());
         tgtAssert(output->getEdge(inserted_edge).getLength() > 0, "Invalid edge length");
     }
 

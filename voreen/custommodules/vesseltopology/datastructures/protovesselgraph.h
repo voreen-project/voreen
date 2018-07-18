@@ -54,7 +54,7 @@ struct ProtoVoxelGraphEdgeVoxelSet {
     typedef uint64_t IndexType;
     typedef float DistanceType;
 
-    std::vector<uint64_t> closestIDs_;
+    std::vector<IndexType> closestIDs_;
     float currentDist_;
 
     ProtoVoxelGraphEdgeVoxelSet()
@@ -95,7 +95,7 @@ struct ProtoVoxelGraphEdgeVoxelSet {
      */
     std::pair<IndexType,DistanceType> worst_item() const {
         if (closestIDs_.empty()) throw std::runtime_error("Cannot invoke RadiusResultSet::worst_item() on an empty list of results.");
-        uint64_t id = closestIDs_[0];
+        IndexType id = closestIDs_[0];
         return std::make_pair<IndexType,DistanceType>(std::move(id), worstDist());
     }
 
@@ -103,7 +103,7 @@ struct ProtoVoxelGraphEdgeVoxelSet {
      * Called during search to add an element matching the criteria.
      * @return true if the search should be continued, false if the results are sufficient
      */
-    inline bool addPoint(float dist, size_t index)
+    inline bool addPoint(float dist, IndexType index)
     {
         if(dist <= currentDist_) {
             if(dist < currentDist_) {
@@ -155,7 +155,7 @@ struct EdgeVoxelFinder {
 };
 
 struct ProtoVesselGraphEdge {
-    ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, uint64_t id, uint64_t node1, uint64_t node2, std::vector<tgt::svec3>&& voxels);
+    ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, std::vector<tgt::svec3>&& voxels);
     std::vector<uint64_t> findClosestVoxelIndex(tgt::vec3) const;
     std::vector<ProtoVesselGraphEdgeVoxel>& voxels() {
         return rwvoxels_.storage_.points();
@@ -164,22 +164,22 @@ struct ProtoVesselGraphEdge {
         return rwvoxels_.storage_.points();
     }
 
-    uint64_t id_;
-    uint64_t node1_;
-    uint64_t node2_;
+    VGEdgeID id_;
+    VGNodeID node1_;
+    VGNodeID node2_;
     std::vector<tgt::svec3> voxels_;
     EdgeVoxelFinder rwvoxels_;
 };
 
 struct ProtoVesselGraphNode {
 
-    ProtoVesselGraphNode(uint64_t id, std::vector<tgt::svec3>&& voxels, bool atSampleBorder);
+    ProtoVesselGraphNode(VGNodeID id, std::vector<tgt::svec3>&& voxels, bool atSampleBorder);
 
-    uint64_t id_;
+    VGNodeID id_;
     std::vector<tgt::svec3> voxels_;
     tgt::vec3 voxelPos_;
     bool atSampleBorder_;
-    std::vector<uint64_t> edges_;
+    std::vector<VGEdgeID> edges_;
 };
 
 struct BranchIdVolumeReader;
@@ -187,8 +187,8 @@ struct BranchIdVolumeReader;
 struct ProtoVesselGraph {
     ProtoVesselGraph(tgt::mat4 toRWMatrix);
 
-    uint64_t insertNode(std::vector<tgt::svec3>&& voxels, bool atSampleBorder);
-    uint64_t insertEdge(size_t node1, size_t node2, std::vector<tgt::svec3>&& voxels);
+    VGNodeID insertNode(std::vector<tgt::svec3>&& voxels, bool atSampleBorder);
+    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, std::vector<tgt::svec3>&& voxels);
 
     std::unique_ptr<VesselGraph> createVesselGraph(BranchIdVolumeReader& segmentedVolumeReader, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress);
 
@@ -205,7 +205,7 @@ struct BranchIdVolumeReader {
         branchIdReader_.seek(-1);
     }
 
-    uint64_t getEdgeId(const tgt::ivec3& xypos) const {
+    VGEdgeID getEdgeId(const tgt::ivec3& xypos) const {
         auto vox = branchIdReader_.getVoxel(xypos);
         tgtAssert(vox, "Invalid voxel positions");
         return *vox;
@@ -214,9 +214,8 @@ struct BranchIdVolumeReader {
     void advance() {
         branchIdReader_.advance();
     }
-    bool isValidEdgeId(uint64_t id) const {
-        uint32_t id32 = static_cast<uint32_t>(id);
-        return id32 != IdVolume::UNLABELED_FOREGROUND_VALUE && id32 != IdVolume::BACKGROUND_VALUE;
+    bool isValidEdgeId(VGEdgeID id) const {
+        return id.raw() != IdVolume::UNLABELED_FOREGROUND_VALUE && id.raw() != IdVolume::BACKGROUND_VALUE;
     }
 
     bool isObject(const tgt::ivec3& pos) const {

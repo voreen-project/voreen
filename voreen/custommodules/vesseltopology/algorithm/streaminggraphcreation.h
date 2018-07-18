@@ -656,7 +656,7 @@ static bool isAtSampleBorder(const tgt::svec3& p, const tgt::svec3& volumedim) {
 struct VoxelKDElement {
     typedef tgt::ivec3 VoxelType;
 
-    VoxelKDElement(tgt::ivec3 pos, uint64_t nodeID)
+    VoxelKDElement(tgt::ivec3 pos, VGNodeID nodeID)
         : pos_(pos)
         , nodeID_(nodeID)
     {
@@ -667,7 +667,7 @@ struct VoxelKDElement {
     }
 
     VoxelType pos_;
-    uint64_t nodeID_;
+    VGNodeID nodeID_;
 };
 
 template<typename E>

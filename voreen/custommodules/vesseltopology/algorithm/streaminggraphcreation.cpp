@@ -24,6 +24,7 @@
  ***********************************************************************************/
 
 #include "streaminggraphcreation.h"
+#include "../datastructures/vesselgraph.h"
 #include "tgt/vector.h"
 
 namespace voreen {
@@ -325,14 +326,14 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
     std::unique_ptr<ProtoVesselGraph> graph(new ProtoVesselGraph(toRwMatrix));
 
 
-    std::vector<std::pair<tgt::svec3, uint64_t>> nodeVoxelMap;
+    std::vector<std::pair<tgt::svec3, VGNodeID>> nodeVoxelMap;
 
     KDTreeBuilder<VoxelKDElement> nodeVoxelTreeBuilder;
     // Insert nodes
     for(const auto& p : endPoints_) {
         std::vector<tgt::svec3> voxels;
         voxels.push_back(p);
-        uint64_t id = graph->insertNode(std::move(voxels), isAtSampleBorder(p, dimensions));
+        VGNodeID id = graph->insertNode(std::move(voxels), isAtSampleBorder(p, dimensions));
         nodeVoxelTreeBuilder.push(VoxelKDElement(tgt::ivec3(p),id));
         nodeVoxelMap.push_back(std::make_pair(p, id));
     }
@@ -343,7 +344,7 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
             voxels.push_back(p);
             junctionAtSampleBorder |= isAtSampleBorder(p, dimensions);
         }
-        uint64_t id = graph->insertNode(std::move(voxels), junctionAtSampleBorder);
+        VGNodeID id = graph->insertNode(std::move(voxels), junctionAtSampleBorder);
         for(const auto& p : branchPoint) {
             nodeVoxelTreeBuilder.push(VoxelKDElement(tgt::ivec3(p),id));
         }
@@ -360,9 +361,9 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
         tgtAssert(!regularSequence.voxels_.empty(), "Empty sequence");
         tgt::ivec3 leftEnd = regularSequence.voxels_.front();
         tgt::ivec3 rightEnd = regularSequence.voxels_.back();
-        const uint64_t NO_NODE_FOUND = -1;
-        uint64_t leftEndNode = NO_NODE_FOUND;
-        uint64_t rightEndNode = NO_NODE_FOUND;
+        const VGNodeID NO_NODE_FOUND = -1;
+        VGNodeID leftEndNode = NO_NODE_FOUND;
+        VGNodeID rightEndNode = NO_NODE_FOUND;
 
         if(leftEnd == rightEnd) {
             // One voxel long branch
@@ -381,7 +382,7 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
                 std::vector<tgt::svec3> voxels;
                 voxels.push_back(tgt::svec3(leftEnd));
                 voxels.push_back(tgt::svec3(rightEnd));
-                uint64_t newNode = graph->insertNode(std::move(voxels), isAtSampleBorder(tgt::svec3(leftEnd), dimensions) || isAtSampleBorder(tgt::svec3(rightEnd), dimensions));
+                VGNodeID newNode = graph->insertNode(std::move(voxels), isAtSampleBorder(tgt::svec3(leftEnd), dimensions) || isAtSampleBorder(tgt::svec3(rightEnd), dimensions));
 
                 nodeVoxelMap.push_back(std::make_pair(leftEnd, newNode));
                 nodeVoxelMap.push_back(std::make_pair(rightEnd, newNode));
@@ -405,12 +406,12 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
     // Correct sample mask border information if sampleMask is present
     if(sampleMask) {
         LZ4SliceVolumeReader<uint8_t, 1> sampleMaskReader(*sampleMask);
-        std::sort(nodeVoxelMap.begin(), nodeVoxelMap.end(), [] (const std::pair<tgt::svec3, uint64_t>& n1, const std::pair<tgt::svec3, uint64_t>& n2) {
+        std::sort(nodeVoxelMap.begin(), nodeVoxelMap.end(), [] (const std::pair<tgt::svec3, VGNodeID>& n1, const std::pair<tgt::svec3, VGNodeID>& n2) {
                 return n1.first.z < n2.first.z;
                 });
         for(const auto& pair: nodeVoxelMap) {
             const tgt::svec3& p = pair.first;
-            const uint64_t id = pair.second;
+            const VGNodeID id = pair.second;
 
             sampleMaskReader.seek(p.z);
 
@@ -418,7 +419,7 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
                 for(int dy = -1; dy <= 1; ++dy) {
                     for(int dx = -1; dx <= 1; ++dx) {
                         if(sampleMaskReader.getSlice(p.z+dz)->voxel(tgt::svec3(p.x+dx, p.y+dy, 0)) == 0) {
-                            graph->nodes_.at(id).atSampleBorder_ = true;
+                            graph->nodes_.at(id.raw()).atSampleBorder_ = true;
                             goto sample_mask_search_done;
                         }
                     }

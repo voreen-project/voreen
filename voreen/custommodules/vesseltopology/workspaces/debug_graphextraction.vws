@@ -126,12 +126,14 @@
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../sciebo/lymphgefaessdaten/segmentation_control.vvd" />
+                                        <item value="../../../../../../home/dominik/sciebo/lymphgefaessdaten/segmentation_control.vvd" />
                                         <item value="../../../home/dominik/sciebo/lymphgefaessdaten/segmentation_control.vvd" />
                                         <item value="/home/dominik/sciebo/lymphgefaessdaten/segmentation_control.vvd" />
                                     </paths>
                                 </path>
-                                <searchParameters />
+                                <searchParameters>
+                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                </searchParameters>
                             </urls>
                         </Property>
                     </Properties>
@@ -155,13 +157,13 @@
                         <Property mapKey="binarizationThresholdSegmentation" name="binarizationThresholdSegmentation" value="0.5" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
-                        <Property mapKey="minBulgeSize" name="minBulgeSize" value="1" />
+                        <Property mapKey="minBulgeSize" name="minBulgeSize" value="3" />
                         <Property mapKey="minElongation" name="minElongation" value="0" />
                         <Property mapKey="minVoxelLength" name="minVoxelLength" value="0" />
-                        <Property mapKey="numRefinementIterations" name="numRefinementIterations" value="1" />
+                        <Property mapKey="numRefinementIterations" name="numRefinementIterations" value="3" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="saveDebugData" name="saveDebugData" value="true" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="4.853 sec remaining" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 16.052 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="tmpStorageSizeInfo" name="tmpStorageSizeInfo" value="1.1 MB" />
@@ -727,6 +729,7 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="nodeRadiusMultiplier_" name="nodeRadiusMultiplier_" value="0.370000005" />
+                        <Property mapKey="renderNodeRadii" name="renderNodeRadii" value="true" />
                         <Property mapKey="shader" name="shader">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" width="700" height="700" />
@@ -758,7 +761,7 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-220" y="-606" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="volumeID" name="volumeID" value="-1" id="ref27" />
+                        <Property mapKey="volumeID" name="volumeID" value="0" id="ref27" />
                     </Properties>
                     <Inports>
                         <Port name="volumecollection" direction="1" portID="volumecollection" guiName="VolumeList Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -4563,7 +4566,7 @@
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xy-plane" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="16" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="71" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="-1" y="-1" z="-1" />
@@ -7686,10 +7689,10 @@
                 <Processor type="Canvas" name="Canvas 2" id="ref14">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-80" y="-207" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="334" y="842" width="951" height="801" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-1093" y="29" width="951" height="801" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="334" y="842" />
+                            <value x="-1093" y="29" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="951" y="801" />
@@ -7726,9 +7729,9 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="0" y="-602" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="debugVolumeID" name="debugVolumeID" value="3" />
-                        <Property mapKey="graphID" name="graphID" value="-1" />
-                        <Property mapKey="resultingDebugVesselGraphSelectorID" name="resultingDebugVesselGraphSelectorID" value="-1" id="ref26" />
+                        <Property mapKey="debugVolumeID" name="debugVolumeID" value="0" />
+                        <Property mapKey="graphID" name="graphID" value="0" />
+                        <Property mapKey="resultingDebugVesselGraphSelectorID" name="resultingDebugVesselGraphSelectorID" value="0" id="ref26" />
                     </Properties>
                     <Inports>
                         <Port name="vesselgraphlist.inport" direction="1" portID="vesselgraphlist.inport" guiName="VesselGraphList Input" allowMultipleConnections="false" invalidationLevel="10">

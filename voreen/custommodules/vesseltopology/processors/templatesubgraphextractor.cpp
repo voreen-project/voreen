@@ -716,9 +716,9 @@ static void fillGraph(PathTreeNode* root, VesselGraph& output) {
     std::vector<const NodePath*> paths;
     root->collect_tree_components(nodes_to_keep, paths);
 
-    std::unordered_map<const VesselGraphNode*, size_t> nodes_to_new_index;
+    std::unordered_map<const VesselGraphNode*, VGNodeID> nodes_to_new_index;
     for(auto node : nodes_to_keep) {
-        size_t index = output.insertNode(*node);
+        VGNodeID index = output.insertNode(*node);
         nodes_to_new_index.insert(std::make_pair(node, index));
     }
 

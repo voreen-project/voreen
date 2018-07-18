@@ -389,7 +389,7 @@ static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath
                         tgtAssert(closestVoxels.size() > 0, "No voxels");
 
                         // Just pick the first one (TODO: may be a "random" (but deterministic) one?)
-                        label = static_cast<uint32_t>(closestVoxels.getVoxels()[0]->edge.id_);
+                        label = closestVoxels.getVoxels()[0]->edge.id_.raw();
                     }
                 } else {
                     label = IdVolume::BACKGROUND_VALUE;
@@ -811,9 +811,9 @@ static void mapEdgeIds(LZ4SliceVolume<uint32_t>& regions, size_t numComponents, 
         std::vector<std::pair<uint32_t, tgt::svec3>> query_positions;
         for(const auto& edge: graph.edges_) {
             if(edge.voxels_.empty()) {
-                query_positions.push_back(std::make_pair(static_cast<uint32_t>(edge.id_), tgt::svec3(-1)));
+                query_positions.push_back(std::make_pair(edge.id_.raw(), tgt::svec3(-1)));
             } else {
-                query_positions.push_back(std::make_pair(static_cast<uint32_t>(edge.id_), edge.voxels_[0]));
+                query_positions.push_back(std::make_pair(edge.id_.raw(), edge.voxels_[0]));
             }
         }
         std::sort(query_positions.begin(), query_positions.end(), [] (const std::pair<uint32_t, tgt::svec3>& p1, const std::pair<uint32_t, tgt::svec3>& p2) {
