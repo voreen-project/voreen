@@ -28,9 +28,9 @@
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../../../../../voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="../../volumes/walnut.vvd" />
                                         <item value="resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="C:/voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -2586,6 +2586,10 @@
                 <value key="MultiSliceViewer 3.xSliceIndex">
                     <First value="Slice Views" />
                     <Second value="2" />
+                </value>
+                <value key="MultiSliceViewer.transferFunction1">
+                    <First value="Slice Views" />
+                    <Second value="10" />
                 </value>
                 <value key="MultiSliceViewer.zSliceIndex">
                     <First value="Slice Views" />
