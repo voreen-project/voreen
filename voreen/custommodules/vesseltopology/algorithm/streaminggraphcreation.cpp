@@ -418,7 +418,8 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
             for(int dz = -1; dz <= 1; ++dz) {
                 for(int dy = -1; dy <= 1; ++dy) {
                     for(int dx = -1; dx <= 1; ++dx) {
-                        if(sampleMaskReader.getSlice(p.z+dz)->voxel(tgt::svec3(p.x+dx, p.y+dy, 0)) == 0) {
+                        auto voxel = sampleMaskReader.getVoxelRelative(tgt::ivec2(p.x+dx, p.y+dy), dz);
+                        if(!voxel || *voxel == 0) {
                             graph->nodes_.at(id.raw()).atSampleBorder_ = true;
                             goto sample_mask_search_done;
                         }

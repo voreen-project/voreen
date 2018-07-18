@@ -484,7 +484,11 @@ template<typename Voxel, uint64_t neighborhoodExtent>
 boost::optional<Voxel> LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::getVoxel(tgt::ivec3 pos) const {
     const auto& slice = getSlice(pos.z);
     if(slice) {
-        return slice->voxel(pos.x, pos.y, 0);
+        if(pos.x < 0 || pos.x >= volume_.getDimensions().x || pos.y < 0 || pos.y >= volume_.getDimensions().y) {
+            return boost::none;
+        } else {
+            return slice->voxel(pos.x, pos.y, 0);
+        }
     } else {
         return boost::none;
     }
@@ -494,7 +498,11 @@ boost::optional<Voxel> LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::getVoxel
     tgtAssert(-static_cast<int>(neighborhoodExtent) <= sliceOffset && sliceOffset <= static_cast<int>(neighborhoodExtent), "Invalid slice offset");
     const auto& slice = getSlice(pos_ + sliceOffset);
     if(slice) {
-        return slice->voxel(slicePos.x, slicePos.y, 0);
+        if(slicePos.x < 0 || slicePos.x >= volume_.getDimensions().x || slicePos.y < 0 || slicePos.y >= volume_.getDimensions().y) {
+            return boost::none;
+        } else {
+            return slice->voxel(slicePos.x, slicePos.y, 0);
+        }
     } else {
         return boost::none;
     }
