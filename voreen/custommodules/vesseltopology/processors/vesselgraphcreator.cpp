@@ -590,7 +590,7 @@ static void initializeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4Sl
         for(auto& initializer: initializers) {
             tgt::SBounds full_bounds = initializer.getBounds();
             if(full_bounds.getLLF().z <= z && z <= full_bounds.getURB().z) {
-                tgt::SBounds bounds(tgt::svec3(full_bounds.getLLF().xy(), 0), tgt::svec3(full_bounds.getURB().xy(), 0));
+                tgt::SBounds bounds(tgt::svec3(full_bounds.getLLF().xy(), 0), tgt::svec3(full_bounds.getURB().xy(), 1 /* [0,1] => volume >= 0 */));
                 initializer_finder_init.emplace_back(&initializer, bounds);
             }
         }
@@ -720,7 +720,7 @@ static void finalizeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4Slic
         for(auto& finalizer: finalizers) {
             tgt::SBounds full_bounds = finalizer.getBounds();
             if(full_bounds.getLLF().z <= z && z <= full_bounds.getURB().z) {
-                tgt::SBounds bounds(tgt::svec3(full_bounds.getLLF().xy(), 0), tgt::svec3(full_bounds.getURB().xy(), 0));
+                tgt::SBounds bounds(tgt::svec3(full_bounds.getLLF().xy(), 0), tgt::svec3(full_bounds.getURB().xy(), 1/* [0,1] => volume >= 0 */));
                 finalizer_finder_init.emplace_back(&finalizer, bounds);
             }
         }
