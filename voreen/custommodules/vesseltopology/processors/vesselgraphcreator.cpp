@@ -388,7 +388,7 @@ static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath
                         finder.findClosest(rwpos, closestVoxels);
                         tgtAssert(closestVoxels.size() > 0, "No voxels");
 
-                        // Just pick the first one (TODO: may be a "random" (but deterministic) one?)
+                        // Just pick the first one
                         label = closestVoxels.getVoxels()[0]->edge.id_.raw();
                     }
                 } else {
@@ -910,7 +910,7 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
     //  2. Perform a cca to distinguish components
     size_t numComponents;
     LZ4SliceVolume<uint32_t> branchIdSegmentation = createCCAVolume(closestIDs, VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), numComponents, subtaskReporters.get<3>());
-    if(input.saveDebugData) { //TODO maybe get rid of this
+    if(input.saveDebugData) {
         generatedVolumes.add(std::move(closestIDs).toVolume().release());
     } else {
         std::move(closestIDs).deleteFromDisk();
@@ -925,7 +925,7 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
     //  5. Flood remaining unlabeled regions locally
     unfinishedRegions.floodAllRegions(branchIdSegmentation, subtaskReporters.get<6>());
 
-    if(input.saveDebugData) { //TODO maybe get rid of this
+    if(input.saveDebugData) {
         generatedVolumes.add(std::move(unfinishedRegions.holeIds).toVolume().release());
     } else {
         std::move(unfinishedRegions.holeIds).deleteFromDisk();
