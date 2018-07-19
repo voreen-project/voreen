@@ -501,12 +501,11 @@ struct CCAUint32Label {
 static LZ4SliceVolume<uint32_t> createCCAVolume(const LZ4SliceVolume<uint32_t>& input, const std::string& tmpVolumePath, size_t& numComponents, ProgressReporter& progress) {
     TaskTimeLogger _("Create CCA volume", tgt::Info);
 
-    StreamingComponents<0, NoopMetadata, CCAUint32Label> sc;
+    typedef StreamingComponents<0, NoopMetadata, CCAUint32Label, VolumeAtomic<uint32_t>> SC;
+    SC sc;
 
-    StreamingComponents<0, NoopMetadata, CCAUint32Label>::getClassFunc getClass = [](const VolumeRAM* slice, tgt::svec3 pos) {
-        const VolumeAtomic<uint32_t>* uslice = dynamic_cast<const VolumeAtomic<uint32_t>*>(slice);
-        tgtAssert(uslice, "Invalid slice base type"); // TODO: use uint32 in cca
-        uint32_t label = uslice->voxel(pos);
+    typename SC::getClassFunc getClass = [](const VolumeAtomic<uint32_t>& slice, tgt::svec3 pos) {
+        uint32_t label = slice.voxel(pos);
         return label != IdVolume::BACKGROUND_VALUE ? boost::optional<CCAUint32Label>(label) : boost::none;
     };
     auto writeMetaData = [] (uint32_t, const NoopMetadata&) {};
@@ -860,12 +859,11 @@ static UnfinishedRegions collectUnfinishedRegions(const LZ4SliceVolume<uint32_t>
 
     std::map<uint32_t, tgt::SBounds> regions;
 
-    StreamingComponents<0, CCANodeMetaData, CCAVoidLabel> sc;
+    typedef StreamingComponents<0, CCANodeMetaData, CCAVoidLabel, VolumeAtomic<uint32_t>> SC;
+    SC sc;
 
-    StreamingComponents<0, CCANodeMetaData, CCAVoidLabel>::getClassFunc getClass = [](const VolumeRAM* slice, tgt::svec3 pos) {
-        const VolumeAtomic<uint32_t>* uslice = dynamic_cast<const VolumeAtomic<uint32_t>*>(slice);
-        tgtAssert(uslice, "Invalid slice base type"); // Only unfinished regions => max value. TODO: use uint32 in cca
-        return uslice->voxel(pos) == IdVolume::UNLABELED_FOREGROUND_VALUE ? CCAVoidLabel::some() : boost::none;
+    typename SC::getClassFunc getClass = [](const VolumeAtomic<uint32_t>& slice, tgt::svec3 pos) {
+        return slice.voxel(pos) == IdVolume::UNLABELED_FOREGROUND_VALUE ? CCAVoidLabel::some() : boost::none;
     };
     auto writeMetaData = [&regions] (uint32_t id, const CCANodeMetaData& metadata) {
         regions.emplace(id, metadata.bounds_);

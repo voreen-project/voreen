@@ -35,8 +35,8 @@
 #include "tgt/vector.h"
 
 namespace voreen {
-#define SC_TEMPLATE template<int ADJACENCY, typename MetaData, typename ClassID>
-#define SC_NS StreamingComponents<ADJACENCY, MetaData, ClassID>
+#define SC_TEMPLATE template<int ADJACENCY, typename MetaData, typename ClassID, typename SliceType>
+#define SC_NS StreamingComponents<ADJACENCY, MetaData, ClassID, SliceType>
 
 struct CCAVoidLabel {
     CCAVoidLabel() { }
@@ -56,11 +56,11 @@ struct StreamingComponentsStats {
     uint64_t numVoxels;
 };
 
-SC_TEMPLATE
+template<int ADJACENCY, typename MetaData, typename ClassID, typename SliceType=VolumeRAM>
 class StreamingComponents {
 
 public:
-    typedef std::function<boost::optional<ClassID>(const VolumeRAM* vol, tgt::svec3 pos)> getClassFunc;
+    typedef std::function<boost::optional<ClassID>(const SliceType& vol, tgt::svec3 pos)> getClassFunc;
     typedef std::function<bool(const MetaData&)> componentConstraintTest;
     typedef std::function<void(uint32_t id, const MetaData&)> ComponentCompletionCallback;
 
@@ -131,7 +131,7 @@ private:
 
     class Row {
     public:
-        void init(const VolumeRAM* slice, size_t sliceNum, size_t rowNum, getClassFunc getClass);
+        void init(const SliceType& slice, size_t sliceNum, size_t rowNum, getClassFunc getClass);
         Row();
         ~Row() {}
 
@@ -146,7 +146,7 @@ private:
     public:
         RowStorage(const tgt::svec3& volumeDimensions, getClassFunc getClass);
         ~RowStorage();
-        void add(const VolumeRAM* slice, size_t sliceNum, size_t row);
+        void add(const SliceType& slice, size_t sliceNum, size_t row);
         Row& latest() const;
 
         template<int DY, int DZ>
@@ -223,11 +223,12 @@ StreamingComponentsStats SC_NS::cca(const InputType& input, OutputType& output, 
     RowStorage rows(dim, getClass);
     // First layer
     {
-        std::unique_ptr<const VolumeRAM> activeLayer(input.getSlice(0));
-        rows.add(activeLayer.get(), 0, 0);
+        std::unique_ptr<const SliceType> activeLayer(dynamic_cast<const SliceType*>(input.getSlice(0)));
+        tgtAssert(activeLayer, "No slice or invalid slice format");
+        rows.add(*activeLayer.get(), 0, 0);
         for(size_t y = 1; y<dim.y; ++y) {
             // Create new row at z=0
-            rows.add(activeLayer.get(), 0, y);
+            rows.add(*activeLayer.get(), 0, y);
 
             // merge with row (-1, 0)
             rows.template connectLatestWith<-1, 0>();
@@ -237,10 +238,11 @@ StreamingComponentsStats SC_NS::cca(const InputType& input, OutputType& output, 
     // The rest of the layers
     for(size_t z = 1; z<dim.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dim.z);
-        std::unique_ptr<const VolumeRAM> activeLayer(input.getSlice(z));
+        std::unique_ptr<const SliceType> activeLayer(dynamic_cast<const SliceType*>(input.getSlice(z)));
+        tgtAssert(activeLayer, "No slice or invalid type");
 
         // Create new row at y=0
-        rows.add(activeLayer.get(), z, 0);
+        rows.add(*activeLayer.get(), z, 0);
 
         // merge with row (0, -1)
         rows.template connectLatestWith< 0,-1>();
@@ -250,7 +252,7 @@ StreamingComponentsStats SC_NS::cca(const InputType& input, OutputType& output, 
 
         for(size_t y = 1; y<dim.y; ++y) {
             // Create new row
-            rows.add(activeLayer.get(), z, y);
+            rows.add(*activeLayer.get(), z, y);
 
             // merge with row (-1, 0)
             rows.template connectLatestWith<-1, 0>();
@@ -462,7 +464,7 @@ MetaData SC_NS::Run::getMetaData() const {
 }
 
 SC_TEMPLATE
-void SC_NS::Row::init(const VolumeRAM* slice, size_t sliceNum, size_t rowNum, getClassFunc getClass)
+void SC_NS::Row::init(const SliceType& slice, size_t sliceNum, size_t rowNum, getClassFunc getClass)
 {
     // Finalize previous:
     runs_.clear();
@@ -470,7 +472,7 @@ void SC_NS::Row::init(const VolumeRAM* slice, size_t sliceNum, size_t rowNum, ge
     // Insert new runs
     boost::optional<ClassID> prevClass = boost::none;
     size_t runStart = 0;
-    size_t rowLength = slice->getDimensions().x;
+    size_t rowLength = slice.getDimensions().x;
     tgt::svec2 yzPos(rowNum, sliceNum);
     for(size_t x = 0; x < rowLength; ++x) {
         auto currentClass = getClass(slice, tgt::svec3(x, rowNum, 0));
@@ -545,7 +547,7 @@ SC_NS::RowStorage::~RowStorage() {
 
 
 SC_TEMPLATE
-void SC_NS::RowStorage::add(const VolumeRAM* slice, size_t sliceNum, size_t rowNum) {
+void SC_NS::RowStorage::add(const SliceType& slice, size_t sliceNum, size_t rowNum) {
     storagePos_ = (storagePos_ + 1)%storageSize_;
     rows_[storagePos_].init(slice, sliceNum, rowNum, getClass_);
 }

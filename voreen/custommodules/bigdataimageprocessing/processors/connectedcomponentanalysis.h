@@ -149,8 +149,9 @@ private:
 
 template<int ADJACENCY>
 StreamingComponentsStats ConnectedComponentAnalysis::runCCA(const VolumeBase& input, HDF5FileVolume& output, std::function<void(uint32_t id, const CCANodeMetaData&)> writeMetaData, ProgressReporter& progressReporter) const {
-    StreamingComponents<ADJACENCY, CCANodeMetaData, CCAVoidLabel> sc;
-    std::function<boost::optional<CCAVoidLabel>(const VolumeRAM* vol, tgt::svec3 pos)> getClass;
+    typedef StreamingComponents<ADJACENCY, CCANodeMetaData, CCAVoidLabel> SC;
+    SC sc;
+    typename SC::getClassFunc getClass;
 
     float binarizationThresholdNormalized;
     if(input.hasMetaData("RealWorldMapping")) {
@@ -162,12 +163,12 @@ StreamingComponentsStats ConnectedComponentAnalysis::runCCA(const VolumeBase& in
     }
 
     if(invertBinarization_.get()) {
-        getClass = [binarizationThresholdNormalized](const VolumeRAM* slice, tgt::svec3 pos) {
-            return slice->getVoxelNormalized(pos) <= binarizationThresholdNormalized ? CCAVoidLabel::some() : boost::none;
+        getClass = [binarizationThresholdNormalized](const VolumeRAM& slice, tgt::svec3 pos) {
+            return slice.getVoxelNormalized(pos) <= binarizationThresholdNormalized ? CCAVoidLabel::some() : boost::none;
             };
     } else {
-        getClass = [binarizationThresholdNormalized](const VolumeRAM* slice, tgt::svec3 pos) {
-            return slice->getVoxelNormalized(pos) > binarizationThresholdNormalized ? CCAVoidLabel::some() : boost::none;
+        getClass = [binarizationThresholdNormalized](const VolumeRAM& slice, tgt::svec3 pos) {
+            return slice.getVoxelNormalized(pos) > binarizationThresholdNormalized ? CCAVoidLabel::some() : boost::none;
             };
     }
 
