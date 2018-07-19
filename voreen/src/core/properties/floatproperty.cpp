@@ -61,8 +61,8 @@ void FloatProperty::adaptDecimalsToRange(size_t numSignificantDecimals) {
     // values.
     float min = getMinValue();
     float max = getMaxValue();
-    setMaxValue(std::numeric_limits<float>::lowest());
-    setMinValue(std::numeric_limits<float>::max());
+    setMinValue(std::numeric_limits<float>::lowest());
+    setMaxValue(std::numeric_limits<float>::max());
     setMinValue(min);
     setMaxValue(max);
 }
