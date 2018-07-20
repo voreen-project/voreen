@@ -315,6 +315,7 @@ void executeNetwork(ProcessorNetwork* network, NetworkEvaluator* networkEvaluato
 
     // run Python script
 #ifdef VRN_MODULE_PYTHON
+    wchar_t* empty_argv = nullptr;
     if (!pythonScriptFilename.empty()) {
         if (!PythonModule::getInstance())
             throw VoreenException("Failed to run Python script: PythonModule not instantiated");
@@ -335,7 +336,7 @@ void executeNetwork(ProcessorNetwork* network, NetworkEvaluator* networkEvaluato
         LINFO("Python script finished.");
 
         // Be sure to clear future dangling references
-        PythonModule::getInstance()->setArgv(0, nullptr);
+        PythonModule::getInstance()->setArgv(0, &empty_argv);
     }
 #endif
 
