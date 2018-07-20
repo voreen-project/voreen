@@ -90,6 +90,9 @@ enum class VolumeMaskValue {
     BACKGROUND = 0b00,
 };
 
+#define VOLUME_MASK_STORAGE_BLOCK_SIZE_X 32
+#define VOLUME_MASK_STORAGE_BLOCK_SIZE_Y 32
+#define VOLUME_MASK_STORAGE_BLOCK_SIZE_Z 32
 class VolumeMaskStorage {
 
 public:
@@ -105,13 +108,12 @@ public:
 
     tgt::svec3 dimensions_;
 private:
-    static const tgt::svec3 BLOCK_SIZE;
     std::pair<size_t, char> indexAndSubindexFor(const tgt::svec3& pos) const {
-        tgt::svec3 in_block_pos = pos % BLOCK_SIZE;
-        tgt::svec3 block_pos = pos / BLOCK_SIZE;
-        size_t in_block_linear = in_block_pos.x + BLOCK_SIZE.x*(in_block_pos.y + BLOCK_SIZE.y * in_block_pos.z);
+        tgt::svec3 in_block_pos(pos.x % VOLUME_MASK_STORAGE_BLOCK_SIZE_X, pos.y % VOLUME_MASK_STORAGE_BLOCK_SIZE_Y, pos.z % VOLUME_MASK_STORAGE_BLOCK_SIZE_Z);
+        tgt::svec3 block_pos(pos.x / VOLUME_MASK_STORAGE_BLOCK_SIZE_X, pos.y / VOLUME_MASK_STORAGE_BLOCK_SIZE_Y, pos.z / VOLUME_MASK_STORAGE_BLOCK_SIZE_Z);
+        size_t in_block_linear = in_block_pos.x + VOLUME_MASK_STORAGE_BLOCK_SIZE_X*(in_block_pos.y + VOLUME_MASK_STORAGE_BLOCK_SIZE_Y * in_block_pos.z);
         size_t block_linear = block_pos.x + dimInBlocks_.x*(block_pos.y + dimInBlocks_.y * block_pos.z);
-        size_t voxelpos = block_linear*tgt::hmul(BLOCK_SIZE) + in_block_linear;
+        size_t voxelpos = block_linear*VOLUME_MASK_STORAGE_BLOCK_SIZE_X*VOLUME_MASK_STORAGE_BLOCK_SIZE_Y*VOLUME_MASK_STORAGE_BLOCK_SIZE_Z + in_block_linear;
         return std::make_pair(voxelpos/VOXELS_PER_BYTE, voxelpos % VOXELS_PER_BYTE);
     }
 
