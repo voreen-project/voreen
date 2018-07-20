@@ -255,6 +255,11 @@ private:
          */
         std::unique_ptr<ComputeOutput> retrieveOutput();
 
+        /**
+         * Remove the output from the (finished) computation thread.
+         */
+        void clearOutput();
+
         void threadMain();
 
     private:
@@ -302,6 +307,11 @@ void AsyncComputeProcessor<I, O>::ComputeThread::setInput(I&& input) {
 template<class I, class O>
 std::unique_ptr<O> AsyncComputeProcessor<I, O>::ComputeThread::retrieveOutput() {
     return std::move(output_);
+}
+
+template<class I, class O>
+void AsyncComputeProcessor<I, O>::ComputeThread::clearOutput() {
+    return output_.reset(nullptr);
 }
 
 template<class I, class O>
@@ -516,6 +526,8 @@ template<class I, class O>
 void AsyncComputeProcessor<I, O>::dataWillChange(const Port* source) {
     lockMutex();
     interruptComputation();
+    // Clear the result, if we have one already, as it will not be valid (i.e., corresponding to the input) afterwards.
+    computation_.clearOutput();
     // The port will no longer store it's currently contained data.
     // The data itself might continue existing, therefore we need to remove the observer.
     if(source->isDataInvalidationObservable() && source->hasData()) {
@@ -613,13 +625,18 @@ void AsyncComputeProcessor<I,O>::interruptComputation() throw() {
 
 template<class I, class O>
 void AsyncComputeProcessor<I,O>::process() {
+
+    bool abortNecessary = (getInvalidationLevel() >= INVALID_RESULT || updateForced_ || stopForced_) && computation_.isRunning();
+    stopForced_ = false;
+
+    if(abortNecessary) {
+        interruptComputation();
+    }
+
     std::unique_ptr<O> result = computation_.retrieveOutput();
 
     bool restartNecessary = (!result && getInvalidationLevel() >= INVALID_RESULT && continuousUpdate_.get()) && !stopForced_ || updateForced_;
     updateForced_ = false;
-
-    bool abortNecessary = (restartNecessary || stopForced_) && computation_.isRunning();
-    stopForced_ = false;
 
     //If we need to restart anyways, we don't care about the result
     if(result && !restartNecessary) {
@@ -636,11 +653,6 @@ void AsyncComputeProcessor<I,O>::process() {
 
         setProgressRange(tgt::vec2(0.0f, 1.0f));
         setProgress(1.0f);
-    }
-
-    if(abortNecessary) {
-        tgtAssert(computation_.isRunning(), "Abort: No computation running");
-        interruptComputation();
     }
 
     if(restartNecessary) {
