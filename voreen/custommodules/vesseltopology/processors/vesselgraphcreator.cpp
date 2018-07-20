@@ -1048,13 +1048,14 @@ static bool iterationMadeProgress(const VesselGraph& before, const VesselGraph& 
 }
 
 VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput input, ProgressReporter& progressReporter) const {
-    SubtaskProgressReporterCollection<2> progressCollection(progressReporter, {0.01f,0.99f});
+    LINFO("Starting graph extraction from volume '" << input.segmentation.getOrigin().getURL() << "' (dimensions: " << input.segmentation.getDimensions() << ")");
 
     std::unique_ptr<VolumeList> generatedVolumes(new VolumeContainer());
     std::unique_ptr<std::vector<VesselGraph>> generatedGraphs(new std::vector<VesselGraph>());
     std::unique_ptr<VesselGraph> graph(nullptr);
     try {
         TaskTimeLogger _("Extract VesselGraph (total)", tgt::Info);
+        SubtaskProgressReporterCollection<2> progressCollection(progressReporter, {0.01f,0.99f});
 
         VesselGraphCreatorProcessedInput processedInput(input, progressCollection.get<0>());
 
