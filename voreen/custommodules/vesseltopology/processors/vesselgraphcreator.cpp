@@ -1048,49 +1048,56 @@ static bool iterationMadeProgress(const VesselGraph& before, const VesselGraph& 
 }
 
 VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput input, ProgressReporter& progressReporter) const {
-    TaskTimeLogger _("Extract VesselGraph (total)", tgt::Info);
-
     SubtaskProgressReporterCollection<2> progressCollection(progressReporter, {0.01f,0.99f});
-
-    VesselGraphCreatorProcessedInput processedInput(input, progressCollection.get<0>());
-
-    float progressPerIteration = 1.0f/(input.numRefinementIterations+1);
-    SubtaskProgressReporter initialProgress(progressCollection.get<1>(), tgt::vec2(0, progressPerIteration));
 
     std::unique_ptr<VolumeList> generatedVolumes(new VolumeContainer());
     std::unique_ptr<std::vector<VesselGraph>> generatedGraphs(new std::vector<VesselGraph>());
-    std::unique_ptr<VesselGraph> graph = createInitialVesselGraph(processedInput, *generatedVolumes, initialProgress);
-    LINFO("Finished graph extraction iteration: " << 0);
-    LINFO("Inital graph: " << graph->getNodes().size() << " Nodes, " << graph->getEdges().size() << " Edges.");
+    std::unique_ptr<VesselGraph> graph(nullptr);
+    try {
+        TaskTimeLogger _("Extract VesselGraph (total)", tgt::Info);
 
-    for(int i=0; i < input.numRefinementIterations; ++i) {
-        SubtaskProgressReporter refinementProgress(progressCollection.get<1>(), progressPerIteration*tgt::vec2(i+1, i+2));
-        try {
-            std::unique_ptr<VesselGraph> prev_graph = std::move(graph);
-            graph = refineVesselGraph(processedInput, *prev_graph, *generatedVolumes, refinementProgress);
-            LINFO("Finished graph extraction iteration: " << (i+1));
-            bool done = !iterationMadeProgress(*prev_graph, *graph);
-            LINFO("Iteration " << (i+1) << ": " << graph->getNodes().size() << " Nodes, " << graph->getEdges().size() << " Edges.");
+        VesselGraphCreatorProcessedInput processedInput(input, progressCollection.get<0>());
+
+        float progressPerIteration = 1.0f/(input.numRefinementIterations+1);
+        SubtaskProgressReporter initialProgress(progressCollection.get<1>(), tgt::vec2(0, progressPerIteration));
+
+        graph = createInitialVesselGraph(processedInput, *generatedVolumes, initialProgress);
+        LINFO("Inital graph: " << graph->getNodes().size() << " Nodes, " << graph->getEdges().size() << " Edges.");
+
+        for(int i=0; i < input.numRefinementIterations; ++i) {
+            SubtaskProgressReporter refinementProgress(progressCollection.get<1>(), progressPerIteration*tgt::vec2(i+1, i+2));
+
             if(input.saveDebugData) {
-                generatedGraphs->push_back(std::move(*prev_graph));
+                generatedGraphs->push_back(graph->clone());
             }
+            std::unique_ptr<VesselGraph> next_graph = refineVesselGraph(processedInput, *graph, *generatedVolumes, refinementProgress);
+
+            bool done = !iterationMadeProgress(*graph, *next_graph);
+
+            graph = std::move(next_graph);
+
+            LINFO("Iteration " << (i+1) << ": " << graph->getNodes().size() << " Nodes, " << graph->getEdges().size() << " Edges.");
             if(done) {
                 LINFO("Refinement reached fixed point after " << (i+1) << " iterations. Aborting early.");
                 break;
             }
-        } catch(tgt::IOException e) {
-            LERROR("IO Exception occured in VesselGraphCreator compute thread");
-            std::cout << e.what() << std::endl;
-            break;
         }
-    }
-    std::move(processedInput.segmentation).deleteFromDisk();
-    if(processedInput.sampleMask) {
-        std::move(*processedInput.sampleMask).deleteFromDisk();
-    }
 
-    if(input.saveDebugData) {
-        generatedGraphs->push_back(graph->clone());
+        if(input.saveDebugData) {
+            generatedGraphs->push_back(graph->clone());
+        }
+
+        std::move(processedInput.segmentation).deleteFromDisk();
+        if(processedInput.sampleMask) {
+            std::move(*processedInput.sampleMask).deleteFromDisk();
+        }
+
+    } catch(InterruptionException&) {
+        // Finish up work and save out results collected so far
+        LINFO("Graph extraction interrupted.");
+    } catch(tgt::IOException e) {
+        LERROR("IO Exception occured in VesselGraphCreator compute thread");
+        std::cout << e.what() << std::endl;
     }
 
     return VesselGraphCreatorOutput {
