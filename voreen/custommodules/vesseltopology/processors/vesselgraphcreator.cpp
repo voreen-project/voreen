@@ -382,7 +382,7 @@ static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath
                     tgt::vec3 rwpos = transform(voxelToRw, ipos);
 
                     if(finder.storage_.points().empty()) {
-                        label = 0xCAFEBABE; //Doesn't really matter. only happens in edge cases anyway
+                        label = 0xFEEDBEEF; //Doesn't really matter. only happens in edge cases anyway
                     } else {
                         ClosestSkeletonVoxelsAdaptor closestVoxels(finder.storage_.points());
                         finder.findClosest(rwpos, closestVoxels);

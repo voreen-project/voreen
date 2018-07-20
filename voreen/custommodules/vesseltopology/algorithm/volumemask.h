@@ -239,7 +239,13 @@ VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional
                 } else {
                     val = VolumeMaskValue::BACKGROUND;
                 }
-                data_.set(p, val);
+                // NOTE! This is a shortcut that only works under the assumption that newly created
+                // files are filled with zeros, which I'm PRETTY sure of, but not 100% certain.
+                if(val != VolumeMaskValue::BACKGROUND) {
+                    data_.set(p, val);
+                } else {
+                    tgtAssert(data_.get(p) == VolumeMaskValue::BACKGROUND, "File was not zeroed before filling");
+                }
             }
         }
     }
