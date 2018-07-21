@@ -67,7 +67,7 @@ void VolumeSelector::initialize() {
 
 void VolumeSelector::invalidate(int inv/*inv = INVALID_RESULT*/) {
     Processor::invalidate(inv);
-    //adjustToVolumeList();
+    adjustToVolumeList();
 }
 
 void VolumeSelector::adjustToVolumeList() {
