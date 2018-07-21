@@ -301,8 +301,8 @@ void TransFunc2DPropertyWidget::loadDomainSlot(QAction* action) {
 //    textureCanvas_->update();
 //}
 //
-//void TransFuncPropertyWidget::derivedDataThreadFinished(const VolumeBase* source, const VolumeDerivedData* derivedData) {
-//    if(dynamic_cast<const VolumeHistogramIntensity*>(derivedData)) {
+//void TransFuncPropertyWidget::derivedDataThreadFinished(const VolumeBase* source) {
+//    if(source->hasDerivedData<VolumeHistogramIntensity>()) {
 //        texturePainter_->setHistogram(&(static_cast<const VolumeHistogramIntensity*>(derivedData)->getHistogram(property_->getVolumeChannel())));
 //        textureCanvas_->update();
 //    }

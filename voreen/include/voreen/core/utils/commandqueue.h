@@ -68,19 +68,19 @@ public:
      *
      * @Note: Owners need to keep track of these tasks!
      */
-    void enqueue(void* owner, const Callback& command);
+    void enqueue(const void* owner, const Callback& command);
 
     /**
      * Removes All tasks owned by the given owner.
      *
      * @param owner if null, every command is removed
      */
-    void removeAll(void* owner = nullptr);
+    void removeAll(const void* owner = nullptr);
 
 protected:
 
     boost::recursive_mutex mutex_; ///< Mutex that makes queue access thread safe
-    std::deque<std::pair<void*, std::unique_ptr<Callback>> > commands_; ///< Actual command queue, defines order of execution
+    std::deque<std::pair<const void*, std::unique_ptr<Callback>> > commands_; ///< Actual command queue, defines order of execution
 
 private:
 

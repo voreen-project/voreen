@@ -60,8 +60,9 @@ public:
 
     /**
      * This method is called by the observed Volume after a VolumeDerivedDataThread has finished.
+     * Then the observer itself needs to check if the derived data has changed.
      */
-    virtual void derivedDataThreadFinished(const VolumeBase* source, const VolumeDerivedData* derivedData) {}
+    virtual void derivedDataThreadFinished(const VolumeBase* source) {}
 
     /**
      * This method is called when removing a representation (e.g., VolumeRAM) from the volume.

@@ -196,8 +196,8 @@ void TransFuncPropertyBase::volumeChange(const VolumeBase* source) {
     }
 }
 
-void TransFuncPropertyBase::derivedDataThreadFinished(const VolumeBase* source, const VolumeDerivedData* derivedData) {
-    if (dynamic_cast<const VolumeMinMax*>(derivedData) && volume_ == source &&
+void TransFuncPropertyBase::derivedDataThreadFinished(const VolumeBase* source) {
+    if (source->hasDerivedData<VolumeMinMax>() && volume_ == source &&
         isDomainFittingEnabled()) {
         applyDomainFromData();
     }

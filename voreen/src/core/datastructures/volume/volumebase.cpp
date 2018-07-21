@@ -59,6 +59,9 @@ VolumeBase::VolumeBase()
 }
 
 VolumeBase::~VolumeBase() {
+    // Remove all related commands.
+    VoreenApplication::app()->getCommandQueue()->removeAll(this);
+
     // Volume and VolumeDecorator already notify the observer!
     //notifyDelete();
     stopRunningThreads();

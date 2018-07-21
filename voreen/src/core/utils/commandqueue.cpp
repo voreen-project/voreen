@@ -77,13 +77,13 @@ void CommandQueue::executeAll() {
     }
 }
 
-void CommandQueue::enqueue(void* owner, const Callback& command) {
+void CommandQueue::enqueue(const void* owner, const Callback& command) {
     boost::lock_guard<boost::recursive_mutex> lock(mutex_);
 
     commands_.push_back(std::make_pair(owner, std::unique_ptr<Callback>(command.clone())));
 }
 
-void CommandQueue::removeAll(void* owner) {
+void CommandQueue::removeAll(const void* owner) {
     boost::lock_guard<boost::recursive_mutex> lock(mutex_);
 
     if (owner) {

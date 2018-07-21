@@ -43,6 +43,10 @@
 // volume memory management
 #include "voreen/core/memorymanager/volumememorymanager.h"
 
+// command queue
+#include "voreen/core/utils/commandqueue.h"
+#include "voreen/core/datastructures/callback/lambdacallback.h"
+
 // meta data
 #include "voreen/core/datastructures/meta/metadatacontainer.h"
 #include "voreen/core/datastructures/meta/realworldmappingmetadata.h"
@@ -667,10 +671,12 @@ void VolumeBase::derivedDataThreadFinished(VolumeDerivedDataThreadBase* ddt) con
     derivedDataThreads_.erase(ddt);
     derivedDataThreadMutex_.unlock();
 
-    // notify observers
-    std::vector<VolumeObserver*> observers = Observable<VolumeObserver>::getObservers();
-    for (size_t i=0; i<observers.size(); ++i)
-        observers[i]->derivedDataThreadFinished(this, result);
+    // enqueue notification of observers
+    VoreenApplication::app()->getCommandQueue()->enqueue(this, LambdaFunctionCallback([this] {
+        std::vector<VolumeObserver*> observers = Observable<VolumeObserver>::getObservers();
+        for (size_t i = 0; i<observers.size(); ++i)
+            observers[i]->derivedDataThreadFinished(this);
+    }));
 
     derivedDataThreadMutex_.lock();
     derivedDataThreadsFinished_.insert(ddt);

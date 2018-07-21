@@ -124,7 +124,7 @@ public:
     /** @see VolumeObserver */
     virtual void volumeChange(const VolumeBase* source);
     /** @see VolumeObserver */
-    virtual void derivedDataThreadFinished(const VolumeBase* source, const VolumeDerivedData* derivedData);
+    virtual void derivedDataThreadFinished(const VolumeBase* source);
 
     /**
      * Returns the flag if the histogram of the volume should be computed automatically using a background thread (default is true).
