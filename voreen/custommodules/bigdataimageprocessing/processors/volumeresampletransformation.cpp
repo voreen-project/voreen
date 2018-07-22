@@ -68,6 +68,7 @@ VolumeResampleTransformation::VolumeResampleTransformation()
                         updateSpacingProperties();
                         adjustPropertiesToInput();
                     });
+            updateSpacingProperties();
 
         addProperty(outputSpacing_);
             outputSpacing_.setTracking(false);
