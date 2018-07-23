@@ -51,7 +51,7 @@ namespace voreen {
 
 static const int MAX_NUM_DIMENSIONS = 3;
 static const int GRAB_ENABLE_DISTANCE = 0;
-static const tgt::ivec2 MARGINS(50);
+static const tgt::ivec2 MARGINS(75, 50);
 static const float EIGENVALUE_RELATIVE_THRESHOLD = 0.01f;
 static const tgt::vec3 FIRST_TIME_STEP_COLOR = tgt::vec3(1.0f, 0.0f, 0.0f);
 static const tgt::vec3 LAST_TIME_STEP_COLOR = tgt::vec3::one;
@@ -88,6 +88,7 @@ MDSPlot::MDSPlot()
     , principalComponent_("principalComponent", "Principal Component", 1, 1, MAX_NUM_DIMENSIONS)
     , scaleToMagnitude_("scaleToMagnitude", "Scale to Magnitude of Principle Component")
     , sphereRadius_("sphereRadius", "Sphere Radius", 0.01, 0.0f, 0.1f)
+    , toggleAxes_("toggleAxes", "Render Axes", true, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , fontSize_("fontSize", "Font Size", 10, 1, 30)
     , colorCoding_("colorCoding", "Color Coding")
     , renderedChannel_("renderedChannel", "Channel")
@@ -173,6 +174,8 @@ MDSPlot::MDSPlot()
         sphereRadius_.setGroupID("rendering");
     addProperty(fontSize_);
         fontSize_.setGroupID("rendering");
+    addProperty(toggleAxes_);
+        toggleAxes_.setGroupID("rendering");
     addProperty(colorCoding_);
         colorCoding_.addOption("run", "Only Run", COLOR_RUN);
         colorCoding_.addOption("timeStep", "Only Time Step", COLOR_TIMESTEP);
@@ -284,62 +287,66 @@ void MDSPlot::renderAxes() {
     outport_.activateTarget();
     outport_.clearTarget();
 
-    // Set Plot status.
-    plotLib_->setWindowSize(outport_.getSize());
-    plotLib_->setAxesWidth(1.0f);
-    plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
-    plotLib_->setLineWidth(1.0f);
-    plotLib_->setMaxGlyphSize(1.0f);
-    plotLib_->setMarginBottom(MARGINS.y);
-    plotLib_->setMarginTop(MARGINS.y);
-    plotLib_->setMarginLeft(MARGINS.x);
-    plotLib_->setMarginRight(MARGINS.x);
-    plotLib_->setMinimumScaleStep(32, PlotLibrary::X_AXIS);
-    plotLib_->setMinimumScaleStep(32, PlotLibrary::Y_AXIS);
-    plotLib_->setMinimumScaleStep(32, PlotLibrary::Z_AXIS);
-    if(numDimensions_.get() == 1)
-        plotLib_->setDomain(Interval<plot_t>(ensembleInport_.getData()->getStartTime(), ensembleInport_.getData()->getEndTime()), PlotLibrary::X_AXIS);
-    else
-        plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::X_AXIS);
-    plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::Y_AXIS);
-    if(numDimensions_.get() == 3) {
-        plotLib_->setDimension(PlotLibrary::THREE);
-        plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::Z_AXIS);
-    } else
-        plotLib_->setDimension(PlotLibrary::TWO);
-
-    if (plotLib_->setRenderStatus()) {
+    if(toggleAxes_.get()) {
+        // Set Plot status.
+        plotLib_->setWindowSize(outport_.getSize());
+        plotLib_->setAxesWidth(1.0f);
         plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
-        plotLib_->renderAxes();
-        plotLib_->setDrawingColor(tgt::Color(0, 0, 0, .5f));
-        plotLib_->setFontSize(fontSize_.get() + 2);
+        plotLib_->setLineWidth(1.0f);
+        plotLib_->setMaxGlyphSize(1.0f);
+        plotLib_->setMarginBottom(MARGINS.y);
+        plotLib_->setMarginTop(MARGINS.y);
+        plotLib_->setMarginLeft(MARGINS.x);
+        plotLib_->setMarginRight(MARGINS.x);
+        plotLib_->setMinimumScaleStep(32, PlotLibrary::X_AXIS);
+        plotLib_->setMinimumScaleStep(32, PlotLibrary::Y_AXIS);
+        plotLib_->setMinimumScaleStep(32, PlotLibrary::Z_AXIS);
+        if (numDimensions_.get() == 1)
+            plotLib_->setDomain(Interval<plot_t>(ensembleInport_.getData()->getStartTime(),
+                                                 ensembleInport_.getData()->getEndTime()), PlotLibrary::X_AXIS);
+        else
+            plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::X_AXIS);
+        plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::Y_AXIS);
+        if (numDimensions_.get() == 3) {
+            plotLib_->setDimension(PlotLibrary::THREE);
+            plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::Z_AXIS);
+        } else
+            plotLib_->setDimension(PlotLibrary::TWO);
 
-        switch(numDimensions_.get()) {
-        case 1:
-            plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "t [ms]");
-            if(principalComponent_.get() == 1)
-                plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "1th PC");
-            else if(principalComponent_.get() == 2)
-                plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "2nd PC");
-            else
-                plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "3rd PC");
-
+        if (plotLib_->setRenderStatus()) {
+            plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
+            plotLib_->renderAxes();
             plotLib_->setDrawingColor(tgt::Color(0, 0, 0, .5f));
-            plotLib_->setFontSize(fontSize_.get());
-            plotLib_->setFontColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
-            plotLib_->renderAxisScales(PlotLibrary::X_AXIS, false);
             plotLib_->setFontSize(fontSize_.get() + 2);
-            break;
-        case 3:
-            plotLib_->renderAxisLabel(PlotLibrary::Z_AXIS, "3rd PC");
-            // Fallthrough
-        case 2:
-            plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "1th PC");
-            plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "2nd PC");
-            break;
+
+            switch (numDimensions_.get()) {
+                case 1:
+                    plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "t [s]");
+                    if (principalComponent_.get() == 1)
+                        plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "1th PC");
+                    else if (principalComponent_.get() == 2)
+                        plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "2nd PC");
+                    else
+                        plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "3rd PC");
+
+                    plotLib_->setDrawingColor(tgt::Color(0, 0, 0, .5f));
+                    plotLib_->setFontSize(fontSize_.get());
+                    plotLib_->setFontColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
+                    plotLib_->renderAxisScales(PlotLibrary::X_AXIS, false);
+                    plotLib_->setFontSize(fontSize_.get() + 2);
+                    break;
+                case 3:
+                    plotLib_->renderAxisLabel(PlotLibrary::Z_AXIS, "3rd PC");
+                    // Fallthrough
+                case 2:
+                    plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "1th PC");
+                    plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "2nd PC");
+                    break;
+            }
         }
+        plotLib_->resetRenderStatus();
+
     }
-    plotLib_->resetRenderStatus();
 
     // Plot data
     float xMinMarginNDC = mapRange(MARGINS.x, 0, outport_.getSize().x, -1.0f, 1.0f);

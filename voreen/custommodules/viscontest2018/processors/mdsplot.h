@@ -112,6 +112,7 @@ protected:
     BoolProperty scaleToMagnitude_;
     FloatProperty sphereRadius_;
     IntProperty fontSize_;
+    BoolProperty toggleAxes_; //< used for merging plots
     OptionProperty<ColorCoding> colorCoding_;
     OptionProperty<std::string> renderedChannel_;
     StringListProperty renderedRuns_;
