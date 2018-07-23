@@ -97,7 +97,7 @@ void EnsembleDataset::addRun(const Run& run) {
             VolumeMinMax* minMax = channel.second->getDerivedData<VolumeMinMax>();
 
             if(channelMetaData_.find(channelName) == channelMetaData_.end()) {
-                channelMetaData_[channelName].valueRange_ = tgt::vec2(std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest());
+                channelMetaData_[channelName].valueRange_ = tgt::vec2(minMax->getMin(), minMax->getMax());
             }
             else {
                 channelMetaData_[channelName].valueRange_.x = std::min(channelMetaData_[channelName].valueRange_.x, minMax->getMin());
