@@ -46,6 +46,7 @@
 // command queue
 #include "voreen/core/utils/commandqueue.h"
 #include "voreen/core/datastructures/callback/lambdacallback.h"
+#include "voreen/core/voreenapplication.h"
 
 // meta data
 #include "voreen/core/datastructures/meta/metadatacontainer.h"
