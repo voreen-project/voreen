@@ -54,12 +54,16 @@ const Modality Modality::MODALITY_EEP_VOLUME("eep volume");
 Modality::Modality(const std::string& name)
   : name_(name)
 {
+    if(name.empty()) {
+        return;
+    }
     for (size_t i = 0; i < modalityNames_().size(); ++i) {
-        if ((name.empty() == true) || (name == modalityNames_()[i]))
+        if (name == modalityNames_()[i])
             return;
     }
     modalityNames_().push_back(name_);
-    modalities().push_back(this);
+    // Create a copy of the current modality in order to avoid saving dangling pointers of non const objects:
+    modalities().push_back(Modality(*this));
 }
 
 } // namespace voreen

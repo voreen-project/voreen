@@ -63,7 +63,7 @@ protected:
     VolumeListPort inport_;
     VolumeListPort outport_;
 
-    OptionProperty<Modality*> modalityProp_;
+    OptionProperty<Modality> modalityProp_;
     Modality currentModality_;
     VolumeList filteredList_;
 

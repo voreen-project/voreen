@@ -41,10 +41,10 @@ VolumeListModalityFilter::VolumeListModalityFilter()
     addPort(inport_);
     addPort(outport_);
 
-    std::vector<Option<Modality*> > options;
-    const std::vector<Modality*>& modalities = Modality::getModalities();
+    std::vector<Option<Modality> > options;
+    const std::vector<Modality>& modalities = Modality::getModalities();
     for (size_t i = 0; i < modalities.size(); ++i) {
-        modalityProp_.addOption(modalities[i]->getName(), modalities[i]->getName(), modalities[i]);
+        modalityProp_.addOption(modalities[i].getName(), modalities[i].getName(), modalities[i]);
     }
     modalityProp_.set(Modality::MODALITY_ANY.getName());
     modalityProp_.onChange(MemberFunctionCallback<VolumeListModalityFilter>(this,
@@ -87,7 +87,7 @@ void VolumeListModalityFilter::adjustFilteredList() {
     }
 
     if (currentModality_.getName() != modalityProp_.get()) {
-        currentModality_ = *(modalityProp_.getValue());
+        currentModality_ = modalityProp_.getValue();
         filteredList_.clear();
         if (currentModality_ != Modality::MODALITY_ANY) {
             for (size_t i = 0; i < collection->size(); ++i) {

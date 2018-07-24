@@ -44,7 +44,7 @@ public:
     std::string getName() const { return name_; }
     bool isUnknown() const { return name_ == MODALITY_UNKNOWN.name_; }
 
-    static const std::vector<Modality*> getModalities() { return modalities(); }
+    static const std::vector<Modality>& getModalities() { return modalities(); }
     static const std::vector<std::string>& getModalityNames() { return modalityNames_(); }
 
     // all known modalities
@@ -82,8 +82,8 @@ protected:
         return modalityNames;
     }
 
-    static std::vector<Modality*>& modalities() {
-        static std::vector<Modality*> modalities;
+    static std::vector<Modality>& modalities() {
+        static std::vector<Modality> modalities;
         return modalities;
     }
 };
