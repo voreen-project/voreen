@@ -46,7 +46,7 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Takes a RGB or RGBA volume as input and computes the vector magnitude of the first three channels. The result is stored in an intensity volume.");
+        setDescription("Takes a RGB or RGBA volume as input and computes the vector magnitude of the first three channels. The result is stored in a float intensity volume.");
     }
 
     virtual void process();
