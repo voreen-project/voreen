@@ -152,12 +152,12 @@ Volume* VolumeOperatorVorticity::apply(const VolumeBase* srcVolume, VolumeOperat
         Volume* xvh = voOpGr.apply<U>(xValsVol, gt);
         delete xValsVol;
         const VolumeAtomic<tgt::Vector3<U> >* xGrad = xvh->getRepresentation<VolumeAtomic<tgt::Vector3<U> > >();
-        delete yValsVol;
         Volume* yvh = voOpGr.apply<U>(yValsVol, gt);
+        delete yValsVol;
         const VolumeAtomic<tgt::Vector3<U> >* yGrad = yvh->getRepresentation<VolumeAtomic<tgt::Vector3<U> > >();
         Volume* zvh = voOpGr.apply<U>(zValsVol, gt);
-        const VolumeAtomic<tgt::Vector3<U> >* zGrad = zvh->getRepresentation<VolumeAtomic<tgt::Vector3<U> > >();
         delete zValsVol;
+        const VolumeAtomic<tgt::Vector3<U> >* zGrad = zvh->getRepresentation<VolumeAtomic<tgt::Vector3<U> > >();
 
         for (pos.z = 0; pos.z < dim.z; pos.z++) {
             for (pos.y = 0; pos.y < dim.y; pos.y++) {
