@@ -189,28 +189,28 @@ struct analyze_header
 /* 348 bytes */
 
 /* Acceptable values for datatype */
-#define DT_NONE 0
-#define DT_UNKNOWN 0
-#define DT_BINARY 1
-#define DT_UNSIGNED_CHAR 2
-#define DT_SIGNED_SHORT 4
-#define DT_SIGNED_INT 8
-#define DT_FLOAT 16
-#define DT_COMPLEX 32
-#define DT_DOUBLE 64
-#define DT_RGB 128
-#define DT_ALL 255
+#define VRN_ANALYZE_DT_NONE 0
+#define VRN_ANALYZE_DT_UNKNOWN 0
+#define VRN_ANALYZE_DT_BINARY 1
+#define VRN_ANALYZE_DT_UNSIGNED_CHAR 2
+#define VRN_ANALYZE_DT_SIGNED_SHORT 4
+#define VRN_ANALYZE_DT_SIGNED_INT 8
+#define VRN_ANALYZE_DT_FLOAT 16
+#define VRN_ANALYZE_DT_COMPLEX 32
+#define VRN_ANALYZE_DT_DOUBLE 64
+#define VRN_ANALYZE_DT_RGB 128
+#define VRN_ANALYZE_DT_ALL 255
 
                             /*------------------- new codes for NIFTI ---*/
-#define DT_INT8                  256     /* signed char (8 bits)         */
-#define DT_UINT16                512     /* unsigned short (16 bits)     */
-#define DT_UINT32                768     /* unsigned int (32 bits)       */
-#define DT_INT64                1024     /* long long (64 bits)          */
-#define DT_UINT64               1280     /* unsigned long long (64 bits) */
-#define DT_FLOAT128             1536     /* long double (128 bits)       */
-#define DT_COMPLEX128           1792     /* double pair (128 bits)       */
-#define DT_COMPLEX256           2048     /* long double pair (256 bits)  */
-#define DT_RGBA32               2304     /* 4 byte RGBA (32 bits/voxel)  */
+#define VRN_ANALYZE_DT_INT8                  256     /* signed char (8 bits)         */
+#define VRN_ANALYZE_DT_UINT16                512     /* unsigned short (16 bits)     */
+#define VRN_ANALYZE_DT_UINT32                768     /* unsigned int (32 bits)       */
+#define VRN_ANALYZE_DT_INT64                1024     /* long long (64 bits)          */
+#define VRN_ANALYZE_DT_UINT64               1280     /* unsigned long long (64 bits) */
+#define VRN_ANALYZE_DT_FLOAT128             1536     /* long double (128 bits)       */
+#define VRN_ANALYZE_DT_COMPLEX128           1792     /* double pair (128 bits)       */
+#define VRN_ANALYZE_DT_COMPLEX256           2048     /* long double pair (256 bits)  */
+#define VRN_ANALYZE_DT_RGBA32               2304     /* 4 byte RGBA (32 bits/voxel)  */
 
 /* Acceptable values for intent codes, see http://nifti.nimh.nih.gov/nifti-1/documentation/nifti1diagrams_v2.pdf */
 #define IC_INTENT_NONE          0
@@ -604,52 +604,52 @@ VolumeList* AnalyzeVolumeReader::readNifti(const std::string &fileName, bool sta
     //}
     if(voreenVoxelType == "") {
         switch(header.datatype) {
-            case DT_UNSIGNED_CHAR:
+            case VRN_ANALYZE_DT_UNSIGNED_CHAR:
                 voreenVoxelType = "uint8";
                 denormalize = RealWorldMapping::createDenormalizingMapping<uint8_t>();
                 break;
-            case DT_SIGNED_SHORT:
+            case VRN_ANALYZE_DT_SIGNED_SHORT:
                 voreenVoxelType = "int16";
                 denormalize = RealWorldMapping::createDenormalizingMapping<int16_t>();
                 break;
-            case DT_SIGNED_INT:
+            case VRN_ANALYZE_DT_SIGNED_INT:
                 voreenVoxelType = "int32";
                 denormalize = RealWorldMapping::createDenormalizingMapping<int32_t>();
                 break;
-            case DT_FLOAT:
+            case VRN_ANALYZE_DT_FLOAT:
                 voreenVoxelType = "float";
                 break;
-            case DT_DOUBLE:
+            case VRN_ANALYZE_DT_DOUBLE:
                 voreenVoxelType = "double";
                 break;
-            case DT_RGB:
+            case VRN_ANALYZE_DT_RGB:
                 voreenVoxelType = "Vector3(uint8)";
                 applyRWM = false;
                 break;
-            case DT_RGBA32:         /* 4 byte RGBA (32 bits/voxel)  */
+            case VRN_ANALYZE_DT_RGBA32:         /* 4 byte RGBA (32 bits/voxel)  */
                 voreenVoxelType = "Vector4(uint8)";
                 applyRWM = false;
                 break;
-            case DT_INT8:           /* signed char (8 bits)         */
+            case VRN_ANALYZE_DT_INT8:           /* signed char (8 bits)         */
                 voreenVoxelType = "int8";
                 break;
-            case DT_UINT16:         /* unsigned short (16 bits)     */
+            case VRN_ANALYZE_DT_UINT16:         /* unsigned short (16 bits)     */
                 voreenVoxelType = "uint16";
                 denormalize = RealWorldMapping::createDenormalizingMapping<uint16_t>();
                 break;
-            case DT_UINT32:         /* unsigned int (32 bits)       */
+            case VRN_ANALYZE_DT_UINT32:         /* unsigned int (32 bits)       */
                 voreenVoxelType = "uint32";
                 denormalize = RealWorldMapping::createDenormalizingMapping<uint32_t>();
                 break;
-            case DT_INT64:          /* long long (64 bits)          */
-            case DT_UINT64:         /* unsigned long long (64 bits) */
-            case DT_FLOAT128:       /* long double (128 bits)       */
-            case DT_COMPLEX128:     /* double pair (128 bits)       */
-            case DT_COMPLEX256:     /* long double pair (256 bits)  */
-            case DT_ALL:
-            case DT_COMPLEX:
-            case 0: //DT_NONE/DT_UNKNOWN
-            case DT_BINARY:
+            case VRN_ANALYZE_DT_INT64:          /* long long (64 bits)          */
+            case VRN_ANALYZE_DT_UINT64:         /* unsigned long long (64 bits) */
+            case VRN_ANALYZE_DT_FLOAT128:       /* long double (128 bits)       */
+            case VRN_ANALYZE_DT_COMPLEX128:     /* double pair (128 bits)       */
+            case VRN_ANALYZE_DT_COMPLEX256:     /* long double pair (256 bits)  */
+            case VRN_ANALYZE_DT_ALL:
+            case VRN_ANALYZE_DT_COMPLEX:
+            case 0: //VRN_ANALYZE_DT_NONE/VRN_ANALYZE_DT_UNKNOWN
+            case VRN_ANALYZE_DT_BINARY:
             default:
                 throw tgt::UnsupportedFormatException("Unsupported datatype!");
         }
@@ -792,28 +792,28 @@ VolumeList* AnalyzeVolumeReader::readAnalyze(const std::string &fileName, int vo
 
     std::string voreenVoxelType;
     switch(dimension.datatype) {
-        case DT_UNSIGNED_CHAR:
+        case VRN_ANALYZE_DT_UNSIGNED_CHAR:
             voreenVoxelType = "uint8";
             break;
-        case DT_SIGNED_SHORT:
+        case VRN_ANALYZE_DT_SIGNED_SHORT:
             voreenVoxelType = "int16";
             break;
-        case DT_SIGNED_INT:
+        case VRN_ANALYZE_DT_SIGNED_INT:
             voreenVoxelType = "int32";
             break;
-        case DT_FLOAT:
+        case VRN_ANALYZE_DT_FLOAT:
             voreenVoxelType = "float";
             break;
-        case DT_DOUBLE:
+        case VRN_ANALYZE_DT_DOUBLE:
             voreenVoxelType = "double";
             break;
-        case DT_RGB:
+        case VRN_ANALYZE_DT_RGB:
             voreenVoxelType = "Vector3(uint8)";
             break;
-        case DT_ALL:
-        case DT_COMPLEX:
-        case 0: //DT_NONE/DT_UNKNOWN
-        case DT_BINARY:
+        case VRN_ANALYZE_DT_ALL:
+        case VRN_ANALYZE_DT_COMPLEX:
+        case 0: //VRN_ANALYZE_DT_NONE/VRN_ANALYZE_DT_UNKNOWN
+        case VRN_ANALYZE_DT_BINARY:
         default:
             throw tgt::UnsupportedFormatException("Unsupported datatype!");
     }
