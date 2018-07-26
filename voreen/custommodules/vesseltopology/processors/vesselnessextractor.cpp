@@ -674,6 +674,7 @@ ParallelFilterValue1D VesselnessFinalizer::getValue(const Sample& sample, const 
 
 
 
+    /*
     float dirAccumulator = 0.0f;
     tgt::vec3 thisDir = thisVal.xyz();
     for(int z = pos.z-extent; z <= pos.z+extent; ++z) {
@@ -689,8 +690,9 @@ ParallelFilterValue1D VesselnessFinalizer::getValue(const Sample& sample, const 
     dirAccumulator /= hmul(2*extent_+ tgt::ivec3::one) - 1;
 
 
-    //return scalarVesselness;
     return std::sqrt(scalarVesselness * dirAccumulator);
+    */
+    return scalarVesselness;
 }
 
 // VesselnessExtractor ---------------------------------------------------------------------------------------------------------
