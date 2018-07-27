@@ -415,6 +415,7 @@ struct NoLinePreservingScraping {
     }
 };
 
+
 struct ScrapeIterationQueueElement {
     ScrapeIterationQueueElement(ScrapeIterationDescriptor descriptor, float initialProgress)
         : descriptor(descriptor)
@@ -422,13 +423,13 @@ struct ScrapeIterationQueueElement {
     {
     }
 
-    bool operator <(const ScrapeIterationQueueElement& rhs) {
-        return accumulatedProgress < rhs.accumulatedProgress;
-    }
-
     ScrapeIterationDescriptor descriptor;
     float accumulatedProgress;
 };
+
+inline bool operator <(const ScrapeIterationQueueElement& lhs, const ScrapeIterationQueueElement& rhs) {
+    return lhs.accumulatedProgress < rhs.accumulatedProgress;
+}
 
 class ScrapeIterationCoordinator {
 public:
