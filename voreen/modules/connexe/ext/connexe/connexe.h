@@ -32,7 +32,7 @@ extern "C" {
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifndef __APPLE__
+#if !defined(__APPLE__ ) && !defined(__FreeBSD__)
 #include <malloc.h>
 #endif
 #include <string.h>
