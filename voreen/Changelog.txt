@@ -20,7 +20,7 @@ Voreen Changelog
       o Added IsoSurfaceExtractor processor to create iso surface geometries from volume data
       o GeometryRenderer supports order-independent transparency rendering for geometries
       o Revised and extended Splitter, TripleView, QuadView, and TabbedView processors
-      o Added filewatching for input data in FileDialogProperty? widgets and VolumeURL and VolumeURLListProperty (currently only HDF5 volumes are supported)
+      o Added filewatching for input data in FileDialogProperty widgets and VolumeURL and VolumeURLListProperty (currently only HDF5 volumes are supported)
       o AsyncCompute processor class for multi-threaded computations
       o Revised and extended shader code editor (including clickable links to included shader files)
       o Introduced support for binary JSON serialization in addition to XML serialization
