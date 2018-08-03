@@ -76,11 +76,11 @@ modules/modulelist.cmake
 modules/sample.cmake
 
 modules/base
-modules/core
 modules/connexe
+modules/core
 
-modules/devil/*
 modules/deprecated
+modules/devil/*
 
 modules/ffmpeg/*
 modules/ffmpeg/videoencoder
@@ -105,6 +105,8 @@ modules/itk_generated
 modules/opencl
 modules/openmp
 modules/plotting
+modules/poi
+modules/poi/documentation
 modules/pvm
 
 modules/python/*
@@ -119,9 +121,13 @@ modules/sample
 modules/segy
 modules/staging
 modules/stereoscopy
+modules/surface
+
 modules/tiff/*
 modules/tiff/io
+
 modules/volumelabeling
+
 modules/zip/*
 modules/zip/io
 
