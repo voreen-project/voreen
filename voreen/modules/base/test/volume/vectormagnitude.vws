@@ -28,8 +28,8 @@
                                 <path noPathSet="false">
                                     <paths>
                                         <item value="input/flow/flow_data.vvd" />
-                                        <item value="../voreen-testdata/voreen-testdata/input/flow/flow_data.vvd" />
-                                        <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/input/flow/flow_data.vvd" />
+                                        <item value="../../voreen-testdata/voreen-testdata/input/flow/flow_data.vvd" />
+                                        <item value="/home/aaron/voreen-testdata/voreen-testdata/input/flow/flow_data.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -81,16 +81,16 @@
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave" id="ref3">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-471" y="-244" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-469" y="-244" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="continousSave" name="continousSave" value="true" />
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/flow_magnitudes.vvd" />
-                                    <item value="../voreen-testdata/voreen-testdata/output/flow_magnitudes.vvd" />
-                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/flow_magnitudes.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/flow_magnitudes.vvd" />
+                                    <item value="/home/aaron/voreen-testdata/voreen-testdata/output/flow_magnitudes.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -143,16 +143,16 @@
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave 2" id="ref4">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-325" y="-244" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-324" y="-243" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="continousSave" name="continousSave" value="true" />
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/disabled.vvd" />
-                                    <item value="../voreen-testdata/voreen-testdata/output/disabled.vvd" />
-                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/disabled.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/disabled.vvd" />
+                                    <item value="/home/aaron/voreen-testdata/voreen-testdata/output/disabled.vvd" />
                                 </paths>
                             </paths>
                         </Property>
