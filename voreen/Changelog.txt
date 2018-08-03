@@ -5,6 +5,7 @@ Voreen Changelog
 ----------------------
 
     * Features:
+      o Added startup wizard at the start of VoreenVE with recent workspaces and template workspaces
       o Complete revision of application mode and application mode configuration
       o Revised animation editor
       o Revised transfer functions (internally as well as TF editor in GUI), separated 1D and 2D TFs, increased flexibility of 2D TF, added 1D Gaussian TFs
