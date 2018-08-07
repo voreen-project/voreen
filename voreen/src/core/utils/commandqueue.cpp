@@ -45,6 +45,11 @@ CommandQueueElement::CommandQueueElement(CommandQueueElement&& other)
     , mutex_()
 {
 }
+CommandQueueElement& CommandQueueElement::operator=(CommandQueueElement&& other) {
+    owner_ = other.owner_;
+    callback_ = std::move(other.callback_);
+    return *this;
+}
 
 CommandQueue::CommandQueue()
 {}

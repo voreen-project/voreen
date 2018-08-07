@@ -267,6 +267,12 @@ inline std::string getFormatFromType<tgt::Vector4<TYPE ## _t>>() { \
     return "Vector4(" #TYPE ")"; \
 }\
 
+// MSVC 2012 lacks float_t and double_t
+#if (_MSC_VER <= 1700)
+#define float_t float
+#define double_t double
+#endif
+
 IMPL_FORMAT_CONVERSION_FOR_TYPE(uint8)
 IMPL_FORMAT_CONVERSION_FOR_TYPE(uint16)
 IMPL_FORMAT_CONVERSION_FOR_TYPE(uint32)

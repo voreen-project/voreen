@@ -35,15 +35,17 @@
 
 namespace voreen {
 
-    class Callback;
+class Callback;
 
 struct CommandQueueElement {
     CommandQueueElement(const void* owner, std::unique_ptr<Callback>&& callback);
     CommandQueueElement(CommandQueueElement&&);
+    CommandQueueElement& operator=(CommandQueueElement&&);
     const void* owner_;
     std::unique_ptr<Callback> callback_;
     boost::mutex mutex_; // Mutual exclusion for execution of callback and deletion of the element
 };
+
 /**
  * Command queue for executing deferred tasks.
  * This can come in handy for tasks being started in another than the main thread.
