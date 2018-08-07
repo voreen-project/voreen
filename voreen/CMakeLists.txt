@@ -9,7 +9,6 @@ ENDIF()
 
 # Add path for additional cmake find scripts
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/")
-MESSAGE(STATUS FOOBAR ${CMAKE_MODULE_PATH})
 
 include(cmake/commonconf.cmake)
 

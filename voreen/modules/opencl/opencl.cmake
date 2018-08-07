@@ -50,6 +50,9 @@ IF(WIN32)
 					 ${NVIDIA_OPENCL_BASEDIR}/../lib/x64)
 
         MESSAGE(STATUS "  - NVidia CUDA OpenCL library path: " ${OPENCL_LIBRARY})
+        
+        #for openCL 1.2
+        ADD_DEFINITIONS( -DCL_USE_DEPRECATED_OPENCL_1_2_APIS )
     ENDIF()
 
 ELSEIF(UNIX)
