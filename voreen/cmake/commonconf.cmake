@@ -243,11 +243,11 @@ ELSEIF(UNIX)
         MESSAGE(STATUS "* Adding install target")
         SET(VRN_ADD_INSTALL_TARGET ON)
         MESSAGE(STATUS "* Install directory (CMAKE_INSTALL_PREFIX): ${CMAKE_INSTALL_PREFIX}")
-    ENDIF()
-
-    # hardcode Voreen base path, if binary output dir has been modified
-    IF(NOT ${VRN_BINARY_OUTPUT_DIR} STREQUAL "${VRN_HOME}/bin")
-        LIST(APPEND VRN_DEFINITIONS "-DVRN_BASE_PATH=\"${VRN_HOME}\"")
+    ELSE()
+        # hardcode Voreen base path, if binary output dir has been modified and we are not in deployment mode
+        IF(NOT ${VRN_BINARY_OUTPUT_DIR} STREQUAL "${VRN_HOME}/bin")
+            LIST(APPEND VRN_DEFINITIONS "-DVRN_BASE_PATH=\"${VRN_HOME}\"")
+        ENDIF()
     ENDIF()
 
     include(CheckCXXCompilerFlag)
