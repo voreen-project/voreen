@@ -17,6 +17,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/cubeproxygeometry.cpp 
     ${MOD_DIR}/processors/canny.cpp 
     ${MOD_DIR}/processors/geometryclippingwidget.cpp
+    ${MOD_DIR}/processors/multiview.cpp
     ${MOD_DIR}/processors/rawtexturesave.cpp 
     ${MOD_DIR}/processors/rawtexturesource.cpp
     ${MOD_DIR}/processors/targettotexture.cpp
@@ -38,6 +39,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/canny.h 
     ${MOD_DIR}/processors/cubeproxygeometry.h
     ${MOD_DIR}/processors/geometryclippingwidget.h
+    ${MOD_DIR}/processors/multiview.h
     ${MOD_DIR}/processors/textseriessource.h
     ${MOD_DIR}/processors/targettotexture.h
     ${MOD_DIR}/processors/texturetotarget.h
