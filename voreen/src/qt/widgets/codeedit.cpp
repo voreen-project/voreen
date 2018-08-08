@@ -177,6 +177,16 @@ void CodeEdit::paintEvent(QPaintEvent* e) {
     statusArea_->update();
 }
 
+void CodeEdit::wheelEvent(QWheelEvent* event) {
+
+    // Block zoom since it would break font size.
+    if (event->modifiers() & Qt::ControlModifier) {
+        event->setModifiers(event->modifiers() & ~Qt::ControlModifier);
+    }
+
+    QTextBrowser::wheelEvent(event);
+}
+
 void CodeEdit::highlightCurrentLine() {
     QList<QTextEdit::ExtraSelection> extraSelections;
 
