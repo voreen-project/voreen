@@ -42,11 +42,10 @@
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/datastructures/volume/volumeobserver.h"
-
-#include "boost/optional.hpp"
-
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/voreenapplication.h"
+
+#include "boost/optional.hpp"
 
 #include <exception>
 #include <chrono>
@@ -356,6 +355,10 @@ void AsyncComputeProcessor<I,O>::ComputeProgressReporter::setProgress(float prog
         auto remainingDurationMillis = std::chrono::duration_cast<std::chrono::milliseconds>(remainingDuration);
         std::string timeFormat(formatTime(remainingDurationMillis.count()));
 
+        // Remove old commands of this progress reporter.
+        VoreenApplication::app()->getCommandQueue()->removeAll(this);
+
+        // Enqueue new command for an ui update.
         VoreenApplication::app()->getCommandQueue()->enqueue(this, LambdaFunctionCallback([this, timeFormat, progress] {
                         std::string msg = timeFormat + " remaining";
                         processor_.statusDisplay_.set(msg);
