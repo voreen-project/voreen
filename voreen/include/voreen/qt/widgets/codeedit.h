@@ -55,8 +55,9 @@ public slots:
     void updateHighlight();
 
 protected:
-    void resizeEvent(QResizeEvent *event);
-    void paintEvent(QPaintEvent *event);
+    void resizeEvent(QResizeEvent* event);
+    void paintEvent(QPaintEvent* event);
+    void wheelEvent(QWheelEvent* event);
 
 private slots:
     void updateStatusAreaWidth();

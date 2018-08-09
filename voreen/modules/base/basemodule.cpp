@@ -74,7 +74,6 @@
 #include "processors/image/imageoverlay.h"
 #include "processors/image/imagethreshold.h"
 #include "processors/image/loopcompositor.h"
-#include "processors/image/multiview.h"
 #include "processors/image/orientationoverlay.h"
 #include "processors/image/quadview.h"
 #include "processors/image/regionofinterest2d.h"
@@ -218,7 +217,6 @@ BaseModule::BaseModule(const std::string& modulePath) : VoreenModule(modulePath)
     registerSerializableType(new ImageThreshold());
     registerSerializableType(new Mean());
     registerSerializableType(new Median());
-    registerSerializableType(new MultiView());
     registerSerializableType(new NonMinMaxSuppression());
     registerSerializableType(new OrientationOverlay());
     registerSerializableType(new QuadView());

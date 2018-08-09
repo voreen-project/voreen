@@ -39,6 +39,7 @@ class ProgressBarGraphicsItem : public NWEBaseGraphicsItem, public ProgressBar {
 public:
     //constructor and destructor
     ProgressBarGraphicsItem(PortOwnerGraphicsItem* parent, const QPointF& center, qreal width, qreal height);
+    virtual ~ProgressBarGraphicsItem();
 
      //---------------------------------------------------------------------------------
     //      nwebasegraphicsitem functions
