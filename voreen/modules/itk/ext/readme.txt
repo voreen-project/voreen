@@ -1,0 +1,1 @@
+Windows Users: Put pre-built ITK 4 library here (see voreen.uni-muenster.de)

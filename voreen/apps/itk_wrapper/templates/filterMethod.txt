@@ -1,0 +1,30 @@
+template<§TEMPLATES§>
+void §FILTERNAME§ITK::§FIRSTLOWFILTERNAME§§METHODTYPE§ITK() {
+§VOXELPROPERTY§
+§ENABLEPROCESSOR§
+§ITKIMAGETYPEDEF§
+§ITKPOINTER§
+
+    //Filter define
+    typedef itk::§FILTERNAME§<§ITKIMAGETYPES§> FilterType;
+    typename FilterType::Pointer filter = FilterType::New();
+
+§FILTERINPUTSET§
+§FILTERATTRIBUTESET§
+
+    observe(filter.GetPointer());
+
+    try
+    {
+        filter->Update();
+§FILTERATTRIBUTEGET§
+    }
+    catch (itk::ExceptionObject &e)
+    {
+        LERROR(e);
+    }
+
+
+§OUTPUTSET§
+
+}

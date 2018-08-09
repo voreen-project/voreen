@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_LabelVoting" group="Segmentation">
+    <filterlist>
+      <filter name="BinaryMedianImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="LabelVotingImageFilter" codeState ="STABLE">
+	<inports>
+          <port name="InputImage">
+            <possibleTypes>
+              <type value="UInt8"/>
+              <type value="UInt16"/>
+              <type value="UInt32"/>
+            </possibleTypes>
+          </port>
+        </inports>
+        <outports>
+          <port name="OutputImage"/>
+        </outports>
+        <arguments>
+          <argument name="LabelForUndecidedPixels" argumenttype="PixelType"/>
+        </arguments> 
+      </filter>
+      <filter name="VotingBinaryHoleFillingImageFilter" codeState ="STABLE">
+      </filter>
+      <filter name="VotingBinaryIterativeHoleFillingImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage"/>
+        </inports>
+        <outports>
+          <port name="OutputImage" filterTemplate ="false"/>
+        </outports>
+        <arguments>
+          <argument name="MaximumNumberOfIterations" argumenttype="Int" defaultValue="1" minValue="1" maxValue="10000"/>
+        </arguments>  
+      </filter>
+    </filterlist>
+  </ITK_Module>
+</VoreenData>

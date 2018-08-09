@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <conditions>
+        <item>
+            <First value="ImplementationVersionName" />
+            <Second>
+                <item value="Philips MR 26.2" />
+            </Second>
+        </item>
+        <item>
+            <First value="DiffusionGradientOrientation" />
+            <Second>
+            </Second>
+        </item>
+    </conditions>
+    <divisionkeys>
+        <item value="DiffusionGradientOrientation" />
+    </divisionkeys>
+    <dict>
+        <Dict>
+			<entry group="0018" element="9087" keyword="DiffusionBValue" name="Diffusion b-Value" vr="FD" vm="1" metaData="true"/>
+            <entry group="0018" element="9089" keyword="DiffusionGradientOrientation" name="Diffusion Gradient Orientation" vr="FD" vm="3" metaData="true"/>
+            <entry group="0002" element="0013" keyword="ImplementationVersionName" name="Implementation Version Name" vr="SH" vm="1" metaData="false"/>
+        </Dict>
+    </dict>
+</VoreenData>

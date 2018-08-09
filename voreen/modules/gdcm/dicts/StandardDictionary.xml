@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Dict>
+        <entry group="0010" element="0010" keyword="PatientName" vr="PN" vm="1" name="Patient's Name" metaData="true"/>
+        <entry group="0010" element="0020" keyword="PatientID" vr="LO" vm="1" name="Patient ID" metaData="true"/>
+        <entry group="0008" element="1030" keyword="StudyDescription" vr="LO" vm="1" name="Study Description" metaData="true"/>
+        <entry group="0008" element="0020" keyword="StudyDate" vr="DA" vm="1" name="Study Date" metaData="true"/>
+		<entry group="0008" element="0030" keyword="StudyTime" vr="TM" vm="1" name="Study Time" metaData="true"/>
+		<entry group="0008" element="0021" keyword="SeriesDate" vr="DA" vm="1" name="Series Date" metaData="true"/>
+		<entry group="0008" element="0031" keyword="SeriesTime" vr="TM" vm="1" name="Series Time" metaData="true"/>
+		<entry group="0008" element="0022" keyword="AcquisitionDate" vr="DA" vm="1" name="Acquisition Date" metaData="false"/>
+		<entry group="0008" element="0032" keyword="AcquisitionTime" vr="TM" vm="1" name="Acquisition Time" metaData = "false"/>
+		<entry group="0008" element="002a" keyword="AcquisitionDateTime" vr="DT" vm="1" name="Acquisition DateTime" metaData="false"/>
+        <entry group="0020" element="000d" keyword="StudyInstanceUID" vr="UI" vm="1" name="Study Instance UID" metaData="true"/>
+        <entry group="0008" element="103e" keyword="SeriesDescription" vr="LO" vm="1" name="Series Description" metaData="true"/>
+        <entry group="0020" element="000e" keyword="SeriesInstanceUID" vr="UI" vm="1" name="Series Instance UID" metaData="true"/>
+		<entry group="0020" element="0052" keyword="FrameOfReferenceUID" vr="UI" vm="1" name="Frame of Reference UID" metaData="true"/>
+        <entry group="0008" element="0060" keyword="Modality" vr="CS" vm="1" name="Modality" metaData="true"/>
+        <entry group="0002" element="0002" keyword="MediaStorageSOPClassUID" vr="UI" vm="1" name="Media Storage SOP Class UID" metaData="false"/>
+        <entry group="0020" element="0032" keyword="ImagePositionPatient" vr="DS" vm="3" name="Image Position (Patient)" metaData="false"/>
+        <entry group="0004" element="1500" keyword="ReferencedFileID" vr="CS" vm="1-8" name="Referenced File ID" metaData="false"/>
+        <entry group="0004" element="1220" keyword="DirectoryRecordSequence" vr="SQ" vm="1" name="Directory Record Sequence" metaData="false"/>
+        <entry group="0004" element="1430" keyword="DirectoryRecordType" vr="CS" vm="1" name="Directory Record Type" metaData="false"/>
+		<entry group="0028" element="1052" keyword="RescaleIntercept" vr="DS" vm="1" name="Rescale Intercept" metaData="false"/>
+  		<entry group="0028" element="1053" keyword="RescaleSlope" vr="DS" vm="1" name="Rescale Slope" metaData="false"/>
+  		<entry group="0028" element="1054" keyword="RescaleType" vr="LO" vm="1" name="Rescale Type" metaData="false"/>
+		<entry group="0028" element="0008" keyword="NumberOfFrames" vr="IS" vm="1" name="Number of Frames" metaData = "false"/>
+		<entry group="0018" element="0088" keyword="SpacingBetweenSlices" vr="DS" vm="1" name="Spacing Between Slices" metaData = "false"/>
+		<entry group="0008" element="0018" keyword="SOPInstanceUID" vr="UI" vm="1" name="SOP Instance UID" metaData = "false"/>
+    </Dict>
+</VoreenData>
+

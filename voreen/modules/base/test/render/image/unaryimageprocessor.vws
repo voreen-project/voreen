@@ -1,0 +1,173 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" GlobalDescription="">
+        <ProcessorNetwork version="11">
+            <MetaData>
+                <MetaItem name="ProcessorSelection" type="SelectionMetaData::Processor">
+                    <values>
+                        <item type="UnaryImageProcessor" ref="ref1" />
+                    </values>
+                </MetaItem>
+            </MetaData>
+            <Processors>
+                <Processor type="ImageSource" name="ImageSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="72" y="-256" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="clearButton" />
+                        <Property name="imageFile" noPathSet="false" value="input/images/nucleon.png" />
+                        <Property name="imageSize">
+                            <value x="321" y="319" />
+                        </Property>
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="UnaryImageProcessor" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-49" y="-135" />
+                    </MetaData>
+                    <name>
+                        <![CDATA[UnaryImageProcessor
+disabled]]>
+                    </name>
+                    <Properties>
+                        <Property name="enable" value="false" />
+                        <Property name="shader.program" fragmentModified="true" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="749" y="112" width="700" height="700" />
+                            </MetaData>
+                            <fragmentSource>
+                                <![CDATA[#include "modules/mod_sampler2d.frag"
+#include "modules/mod_filtering.frag"
+                            
+uniform sampler2D colorTex_;
+uniform sampler2D depthTex_;    
+uniform TextureParameters texParams_;
+
+void main() {
+    vec2 p = gl_FragCoord.xy * screenDimRCP_;
+    vec4 color = textureLookup2Dnormalized(colorTex_, texParams_, p);
+    FragData0 = rgbToGrayScale(color);
+    gl_FragDepth = textureLookup2Dnormalized(depthTex_, texParams_, p).z;
+}]]>
+                            </fragmentSource>
+                        </Property>
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-21" y="-39" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="33" y="101" width="321" height="319" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" id="ref5">
+                            <value x="321" y="319" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" noPathSet="false" value="output/disabled.png" />
+                        <Property name="showCursor" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="UnaryImageProcessor" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="140" y="-135" />
+                    </MetaData>
+                    <name>
+                        <![CDATA[UnaryImageProcessor
+grayscale]]>
+                    </name>
+                    <Properties>
+                        <Property name="enable" value="true" />
+                        <Property name="shader.program" fragmentModified="true" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="980" y="0" width="700" height="700" />
+                            </MetaData>
+                            <fragmentSource>
+                                <![CDATA[#include "modules/mod_sampler2d.frag"
+#include "modules/mod_filtering.frag"
+                            
+uniform sampler2D colorTex_;
+uniform sampler2D depthTex_;    
+uniform TextureParameters texParams_;
+
+void main() {
+    vec2 p = gl_FragCoord.xy * screenDimRCP_;
+    vec4 color = textureLookup2Dnormalized(colorTex_, texParams_, p);
+    FragData0 = rgbToGrayScale(color);
+    gl_FragDepth = textureLookup2Dnormalized(depthTex_, texParams_, p).z;
+}]]>
+                            </fragmentSource>
+                        </Property>
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas 2" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="168" y="-39" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="377" y="100" width="321" height="319" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" id="ref6">
+                            <value x="321" y="319" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" noPathSet="false" value="output/grayscale.png" />
+                        <Property name="showCursor" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="image.inport">
+                        <Processor type="UnaryImageProcessor" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.out">
+                        <Processor type="ImageSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="image.inport">
+                        <Processor type="UnaryImageProcessor" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="UnaryImageProcessor" ref="ref1" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="UnaryImageProcessor" ref="ref2" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref4" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref5" />
+                    <DestinationProperty type="IntVec2Property" ref="ref6" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref6" />
+                    <DestinationProperty type="IntVec2Property" ref="ref5" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+            </PropertyLinks>
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

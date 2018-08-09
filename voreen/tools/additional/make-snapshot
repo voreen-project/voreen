@@ -1,0 +1,84 @@
+#!/usr/bin/perl
+#
+# Delete the files and directories specified in 'snapshot-remove.txt'
+# for building the public snapshot.
+# NOTE: It may also delete itself, so watch out!
+#
+use strict;
+use warnings;
+use File::Path;
+
+my $really = ($ARGV[0] and $ARGV[0] eq '-r');
+
+if (not $really) {
+    print "Making dry run...\n";
+}
+
+chdir '..';
+
+#
+# Remove unwanted files
+#
+
+my $file = 'tools/snapshot-remove.txt';
+
+open F, $file or die "Can't open $file: $!";
+my @list = <F>;
+close F;
+
+foreach my $f (@list) {
+    chomp $f;
+
+    # skip comments and lines with only whitespace
+    next if $f =~ /^\s*(#.*)?$/;
+
+    # skip some obviously unsave absolute or relative paths
+    if ($f =~ /(^(\.|\/))|(\.\.)/) {
+        print STDERR "warning: skiping path '$f' because it may be unsafe\n";
+        next;
+    }
+
+    if (-d $f) {
+        print "dir:  $f\n";
+        rmtree $f if $really;
+    }
+    elsif (-f $f) {
+        print "file: $f\n";
+        unlink $f if $really;
+    }
+    else {
+        print STDERR "warning: not a file or directory: $f\n";
+    }
+
+}
+
+#
+# Add define to config-default.txt
+#
+open F, "config-default.txt" or die "Can't open config-default.txt: $!";
+my @config = <F>;
+close F;
+my $found_define = 0;
+my $DEFINE = 'VRN_SNAPSHOT';
+foreach (@config) {
+    if ($_ =~ /^DEFINES \+= $DEFINE/) { $found_define = 1; }
+}
+
+print $found_define ? "Define $DEFINE already there in config-default.txt.\n"
+           : "Adding default $DEFINE to config-default.txt.\n";
+
+if ($really and not $found_define) {
+    print "Setting $DEFINE in config-default.txt\n";
+    open F, ">config-default.txt" or die "Can't open config-default.txt for writing: $!";
+    foreach (@config) {
+        if ($_ =~ /### Local Variables/) {
+            print F "DEFINES += $DEFINE\n\n";
+        }
+        print F $_;
+    }
+    close F;
+}
+
+if (not $really) {
+    print "Dry run finished.\nTo really apply these changes, run this script with the '-r' argument.\n";
+}

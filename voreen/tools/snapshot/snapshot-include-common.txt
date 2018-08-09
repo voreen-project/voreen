@@ -1,0 +1,134 @@
+# list of files and directories that should be included in the snapshot source release (windows and unix)
+
+# root
+Changelog.txt
+CMakeLists.txt
+config-default.cmake
+CREDITS.txt
+Doxyfile
+LICENSE.txt
+LICENSE-academic.txt
+readme.txt
+
+# framework
+cmake
+src
+include
+ext/tgt
+
+# apps
+apps/simple
+apps/voreentool
+apps/voreenve
+apps/itk_wrapper
+
+# test apps
+apps/tests/descriptiontest
+apps/tests/networkevaluatortest
+apps/tests/octreetest
+apps/tests/processorcreatetest
+apps/tests/processornetworktest
+apps/tests/processorinittest
+apps/tests/serializertest
+apps/tests/volumeorigintest
+
+# ext
+ext/efsw
+ext/eigen
+ext/md5
+ext/rapidjson
+ext/stb
+ext/tinyxml
+ext/tinyobj
+
+# user data
+data/screenshots/
+data/voreenve.cfg.sample
+
+# resources: voreencore
+resource/voreencore/fonts
+resource/voreencore/scripts
+resource/voreencore/textures
+# resources: voreenqt
+resource/voreenqt/icons
+# resources: voreenve
+resource/voreenve/icons
+resource/voreenve/image
+resource/voreenve/volumes
+resource/voreenve/widgetstyle
+resource/voreenve/workspaces/*
+resource/voreenve/workspaces/tools
+
+# tfs
+resource/voreencore/transferfuncs/presets
+resource/voreencore/transferfuncs/windows
+
+resource/voreencore/transferfuncs/nucleon.tfi
+resource/voreencore/transferfuncs/nucleon2.tfi
+resource/voreencore/transferfuncs/walnut.tfi
+
+# doc
+doc/*
+doc/animation
+
+# modules
+modules/modulelist.cmake
+modules/sample.cmake
+
+modules/base
+modules/connexe
+modules/core
+
+modules/deprecated
+modules/devil/*
+
+modules/ffmpeg/*
+modules/ffmpeg/videoencoder
+modules/flowreen
+
+modules/gdcm/*
+modules/gdcm/dicts
+modules/gdcm/io
+modules/gdcm/qt
+
+modules/hdf5/*
+modules/hdf5/io
+modules/hdf5/utils
+
+modules/itk/*
+modules/itk/io
+modules/itk/processors
+modules/itk/utils
+
+modules/itk_generated
+
+modules/opencl
+modules/openmp
+modules/plotting
+modules/poi
+modules/poi/documentation
+modules/pvm
+
+modules/python/*
+modules/python/core
+modules/python/qt
+modules/python/scripts
+#modules/python/veplugin
+
+modules/randomwalker
+
+modules/sample
+modules/segy
+modules/staging
+modules/stereoscopy
+modules/surface
+
+modules/tiff/*
+modules/tiff/io
+
+modules/volumelabeling
+
+modules/zip/*
+modules/zip/io
+
+custommodules/readme.txt

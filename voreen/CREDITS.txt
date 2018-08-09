@@ -1,0 +1,51 @@
+The Voreen Team (alphabetically):
+
+Tobias Brix
+Raphael Bruns
+Alexander Bock
+Benjamin Bolte
+Helge Böschen
+Mathias Dehne
+Stefan Diepenbrock
+Christian Döring
+Dominik Drees
+Maike Dudek
+Jan Esser
+André Exeler
+Dirk Feldmann
+Alejandro Figueroa Meana
+Timo Griese
+Philipp Hanraths
+Dieter Janzen
+Jens Kasten
+Daniel Kirsch
+Rico Lehmann
+Roland Leißa
+Simon Leistikow
+Florian Lindemann
+Markus Madeja
+Jörg Mensmann
+Jennis Meyer-Spradow
+Zoha Moztarzadeh
+Reza Nawrozi
+Borislav Petkov
+Jörg-Stefan Praßni
+Stephan Rademacher
+Rainer Reich
+Mona Riemenschneider
+Timo Ropinski
+Christoph Rosemann
+Jan Roters
+Aaron Scherzinger
+Sönke Schmid
+Christian Schulte zu Berge
+Michael Specht
+Fabian Spiegel
+David Terbeek
+Andreas Völker
+Christian Vorholt
+Carolin Walter
+Michael Weinkath
+Frank Wisniewski
+Marco Ziolkowski
+Johannes Zurhorst

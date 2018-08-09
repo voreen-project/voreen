@@ -1,0 +1,65 @@
+/***********************************************************************************
+ *                                                                                 *
+ * Voreen - The Volume Rendering Engine                                            *
+ *                                                                                 *
+ * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
+ * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * For a list of authors please refer to the file "CREDITS.txt".                   *
+ *                                                                                 *
+ * This file is part of the Voreen software package. Voreen is free software:      *
+ * you can redistribute it and/or modify it under the terms of the GNU General     *
+ * Public License version 2 as published by the Free Software Foundation.          *
+ *                                                                                 *
+ * Voreen is distributed in the hope that it will be useful, but WITHOUT ANY       *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR   *
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.      *
+ *                                                                                 *
+ * You should have received a copy of the GNU General Public License in the file   *
+ * "LICENSE.txt" along with this file. If not, see <http://www.gnu.org/licenses/>. *
+ *                                                                                 *
+ * For non-commercial academic use see the license exception specified in the file *
+ * "LICENSE-academic.txt". To get information about commercial licensing please    *
+ * contact the authors.                                                            *
+ *                                                                                 *
+ ***********************************************************************************/
+
+#include "bigdataimageprocessingmodule.h"
+#include "processors/binarymedian.h"
+#include "processors/connectedcomponentanalysis.h"
+#include "processors/largevolumeformatconversion.h"
+#include "processors/segmentationquantification.h"
+#include "processors/volumeresampletransformation.h"
+
+#ifdef VRN_MODULE_PLOTTING
+#include "processors/segmentationslicedensity.h"
+#endif
+
+#include "processors/volumebricksource.h"
+#include "processors/volumebricksave.h"
+
+#include "io/lz4slicevolumefilereader.h"
+
+namespace voreen {
+
+BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& modulePath)
+    : VoreenModule(modulePath)
+{
+    setID("bigdataimageprocessing");
+    setGuiName("Big Data Image Processing");
+
+    registerProcessor(new BinaryMedian());
+    registerProcessor(new ConnectedComponentAnalysis());
+    registerProcessor(new LargeVolumeFormatConversion());
+    registerProcessor(new SegmentationQuantification());
+    registerProcessor(new VolumeResampleTransformation());
+#ifdef VRN_MODULE_PLOTTING
+    registerProcessor(new SegmentationSliceDensity());
+#endif
+
+    registerProcessor(new VolumeBrickSource());
+    registerProcessor(new VolumeBrickSave());
+
+    registerVolumeReader(new LZ4SliceVolumeFileReader());
+}
+
+} // namespace

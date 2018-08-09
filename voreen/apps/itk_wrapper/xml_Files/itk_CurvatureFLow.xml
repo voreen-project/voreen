@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_CurvatureFlow" group="Filtering">
+    <filterlist>
+      <filter name="BinaryMinMaxCurvatureFlowImageFilter" enabled="false" description="Linking error!">
+        <inports>
+          <port name="InputImage"/>
+        </inports>
+        <outports>
+          <port name="OutputImage">
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+          </port>
+        </outports>
+        <arguments>
+          <argument name="Threshold" argumenttype="Float" defaultValue="1.0f" minValue="0.0f" maxValue="10.0f"/>
+        </arguments>
+      </filter>
+      <filter name="CurvatureFlowImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage"/>
+        </inports>
+        <outports>
+          <port name="OutputImage">
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+          </port>
+        </outports>
+        <arguments>
+          <argument name="TimeStep" argumenttype="Int" defaultValue="1" minValue="0" maxValue="1000"/>
+        </arguments>
+      </filter>
+      <filter name="MinMaxCurvatureFlowImageFilter" codeState ="STABLE">
+        <inports>
+          <port name="InputImage"/>
+        </inports>
+        <outports>
+          <port name="OutputImage">
+            <possibleTypes>
+              <type value="Float"/>
+            </possibleTypes>
+          </port>
+        </outports>
+        <arguments>
+          <argument name="StencilRadius" argumenttype="Int" defaultValue="1" minValue="0" maxValue="1000"/>
+        </arguments>
+      </filter>
+    </filterlist>
+  </ITK_Module>
+</VoreenData>

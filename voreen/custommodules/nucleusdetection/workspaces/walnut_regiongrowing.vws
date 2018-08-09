@@ -1,0 +1,1471 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription='&lt;font color=&quot;#808080&quot;&gt;&lt;h4&gt;Slice View workspace&lt;/h4&gt; &lt;p&gt;This workspace demonstrates the SliceViewer processor. There are several other workspaces (e.g., the quadview workspace) which use multiple slice views.&lt;/p&gt;&lt;p&gt;Several configuration options are available in the property list of the application mode.&lt;/p&gt;&lt;/font&gt;'>
+        <ProcessorNetwork version="17">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="RegionGrowing" ref="ref2" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-100.0622406" y="-234.35629272" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.75952727" />
+            </MetaData>
+            <Processors>
+                <Processor type="VolumeSource" name="VolumeSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-86" y="-564" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="../../resource/voreenve/volumes/walnut.vvd?preferredReader=VvdVolumeReader" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="SliceViewer" name="SliceViewer" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-214" y="-442" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="applyChannelShift" name="applyChannelShift" value="false" />
+                        <Property mapKey="boundaryColor" name="boundaryColor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="boundaryWidth" name="boundaryWidth" value="1" />
+                        <Property mapKey="channelShift0" name="channelShift0">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="channelShift1" name="channelShift1">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="channelShift2" name="channelShift2">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="channelShift3" name="channelShift3">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="fontSize" name="fontSize" value="14" />
+                        <Property mapKey="interactionLevelOfDetail" name="interactionLevelOfDetail" value="0" />
+                        <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="true" mouseAction="3" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="true" />
+                        <Property mapKey="mouseEvent.cursorPositionPress" name="mouseEvent.cursorPositionPress" enabled="true" mouseAction="19" mouseButtons="3" keyCode="0" modifier="0" shareEvents="true" />
+                        <Property mapKey="numSlicesPerCol" name="numSlicesPerCol" value="1" />
+                        <Property mapKey="numSlicesPerRow" name="numSlicesPerRow" value="1" />
+                        <Property mapKey="pickingMatrix" name="pickingMatrix" id="ref15">
+                            <value.row0 x="0.39687499" y="0" z="0" w="0" />
+                            <value.row1 x="0" y="-0.39583334" z="0" w="142.5" />
+                            <value.row2 x="0" y="0" z="1" w="0" />
+                            <value.row3 x="0" y="0" z="0" w="1" />
+                        </Property>
+                        <Property mapKey="renderLegend" name="renderLegend" value="false" />
+                        <Property mapKey="renderSliceBoundaries" name="renderSliceBoundaries" value="true" />
+                        <Property mapKey="selectCenterSliceOnInputChange" name="selectCenterSliceOnInputChange" value="true" />
+                        <Property mapKey="showCursorInformation" name="showCursorInformation" value="onMove" />
+                        <Property mapKey="showSliceNumber" name="showSliceNumber" value="true" />
+                        <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xy-plane" id="ref10" />
+                        <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
+                        <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="0" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="89" id="ref8" />
+                        <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
+                        <Property mapKey="sliceMousePos" name="sliceMousePos">
+                            <value x="-1" y="-1" z="-1" />
+                        </Property>
+                        <Property mapKey="textureMode" name="textureMode" value="3d-texture" />
+                        <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
+                                    <value x="0" y="0.34372473" />
+                                </MetaItem>
+                                <MetaItem name="TransfuncPropertyWidgetPainterZoom" type="Vec2MetaData">
+                                    <value x="0" y="0.34372473" />
+                                </MetaItem>
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="256" y="1" z="1" />
+                                <domain x="0" y="0.34372473" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="transferFunction2" name="transferFunction2" domainFittingStrategy="1">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="transferFunction3" name="transferFunction3" domainFittingStrategy="1">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="transferFunction4" name="transferFunction4" domainFittingStrategy="1">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="voxelOffset" name="voxelOffset">
+                            <value x="0" y="0" />
+                        </Property>
+                        <Property mapKey="zoomFactor" name="zoomFactor" value="1" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.volumehandle" direction="1" portID="volumehandle.volumehandle" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.outport" direction="0" portID="image.outport" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref20">
+                                    <value x="320" y="480" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers>
+                        <Handler name="mouseWheelHandler">
+                            <Properties>
+                                <Property mapKey="mouseWheelHandler" name="mouseWheelHandler" enabled="true" mouseAction="23" mouseButtons="98" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                        <Handler name="zoomHandler">
+                            <Properties>
+                                <Property mapKey="zoomHandler" name="zoomHandler" enabled="true" mouseAction="23" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+                <Processor type="Canvas" name="Canvas" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-91" y="98" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="205" y="479" width="640" height="480" />
+                        <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
+                            <value x="-1672" y="8" />
+                        </MetaItem>
+                        <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
+                            <value x="1031" y="961" />
+                        </MetaItem>
+                        <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
+                            <value x="299" y="95" />
+                        </MetaItem>
+                        <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
+                            <value x="450" y="365" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="205" y="479" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="640" y="480" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="640" y="480" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="C:/Users/tbrix_01/Desktop/image thumbnail/image/walnut_slice.png" />
+                                    <item value="C:/Users/tbrix_01/Desktop/image thumbnail/image/walnut_slice.png" />
+                                    <item value="C:/Users/tbrix_01/Desktop/image thumbnail/image/walnut_slice.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref17">
+                                    <value x="640" y="480" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Background" name="Background" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-83" y="12" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="angle" name="angle" value="0" />
+                        <Property mapKey="backgroundModeAsString" name="backgroundModeAsString" value="monochrome" />
+                        <Property mapKey="blendMode" name="blendMode" value="add" />
+                        <Property mapKey="color1" name="color1">
+                            <value x="0" y="0" z="0" w="1" />
+                        </Property>
+                        <Property mapKey="color2" name="color2">
+                            <value x="0.2" y="0.2" z="0.2" w="1" />
+                        </Property>
+                        <Property mapKey="repeat" name="repeat" value="1" />
+                        <Property mapKey="shader.program" name="shader.program" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                        </Property>
+                        <Property mapKey="texture" name="texture">
+                            <paths noPathSet="true" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.output" direction="0" portID="image.output" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Splitter" name="Splitter" id="ref6">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-83" y="-80" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="gridColor" name="gridColor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="lineWidth" name="lineWidth" value="1" />
+                        <Property mapKey="position" name="position" value="0.5" />
+                        <Property mapKey="showGrid" name="showGrid" value="true" />
+                        <Property mapKey="vertical" name="vertical" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport1" direction="1" portID="inport1" guiName="Image1 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport1.renderSizeOrigin" name="inport1.renderSizeOrigin" id="ref19">
+                                    <value x="320" y="480" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                        <Port name="inport2" direction="1" portID="inport2" guiName="Image2 Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="inport2.renderSizeOrigin" name="inport2.renderSizeOrigin" id="ref12">
+                                    <value x="320" y="480" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref18">
+                                    <value x="640" y="480" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="RegionGrowing" name="RegionGrowing" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="48" y="-272" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="adaptive" name="adaptive" value="false" />
+                        <Property mapKey="fillCostFunction" name="fillCostFunction" value="intensity" />
+                        <Property mapKey="maxSeedDistance" name="maxSeedDistance" value="0" />
+                        <Property mapKey="startGrowing" name="startGrowing" />
+                        <Property mapKey="strictness" name="strictness" value="1" />
+                        <Property mapKey="threshold.lower" name="threshold.lower" value="0" />
+                        <Property mapKey="threshold.upper" name="threshold.upper" value="1" />
+                        <Property mapKey="thresholdFilling" name="thresholdFilling" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="pointlist.seedpoints" direction="1" portID="pointlist.seedpoints" guiName="" allowMultipleConnections="false" invalidationLevel="20">
+                            <Properties />
+                        </Port>
+                        <Port name="volumehandle.volume" direction="1" portID="volumehandle.volume" guiName="" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="volumehandle.segmentation" direction="0" portID="volumehandle.segmentation" guiName="volumehandle.segmentation" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="RegionOfInterest2D" name="RegionOfInterest2D" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-236" y="-355" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="antialiasing" name="antialiasing" value="false" />
+                        <Property mapKey="boundingBoxColor" name="boundingBoxColor">
+                            <value x="0.80000001" y="0.80000001" z="0.80000001" w="0.80000001" />
+                        </Property>
+                        <Property mapKey="clearROIs" name="clearROIs" />
+                        <Property mapKey="deleteLastRoi" name="deleteLastRoi" />
+                        <Property mapKey="deleteLastRoiInSlice" name="deleteLastRoiInSlice" />
+                        <Property mapKey="fillRegions" name="fillRegions" value="false" />
+                        <Property mapKey="geometryMode" name="geometryMode" value="points" />
+                        <Property mapKey="loadROIs" name="loadROIs">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="maskBackgroundColor" name="maskBackgroundColor">
+                            <value x="0" y="0" z="0" w="0" />
+                        </Property>
+                        <Property mapKey="maskColor" name="maskColor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
+                        <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="true" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="4" shareEvents="false" />
+                        <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseAction="7" mouseButtons="1" keyCode="0" modifier="4" shareEvents="false" />
+                        <Property mapKey="numberOfRois" name="numberOfRois" value="12" />
+                        <Property mapKey="renderCurrentLayerOnly" name="renderCurrentLayerOnly" value="true" />
+                        <Property mapKey="roiColor" name="roiColor">
+                            <value x="1" y="0" z="0" w="1" />
+                        </Property>
+                        <Property mapKey="roiLayer" name="roiLayer" value="89" id="ref14" />
+                        <Property mapKey="saveROIs" name="saveROIs">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="shader.program" name="shader.program" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                        </Property>
+                        <Property mapKey="size" name="size" value="3" />
+                        <Property mapKey="transformationMatrix" name="transformationMatrix" id="ref16">
+                            <value.row0 x="0.39687499" y="0" z="0" w="0" />
+                            <value.row1 x="0" y="-0.39583334" z="0" w="142.5" />
+                            <value.row2 x="0" y="0" z="1" w="0" />
+                            <value.row3 x="0" y="0" z="0" w="1" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="20">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                        <Port name="image.mask" direction="0" portID="image.mask" guiName="Mask Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                        <Port name="image.overlay" direction="0" portID="image.overlay" guiName="ROI Image Overlay Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                        <Port name="image.roi" direction="0" portID="image.roi" guiName="ROI Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                    <RegionsOfInterest>
+                        <Region type="RegionOfInterestGeometry" layer="41" geometryMode="0" size="3" antialiasing="false">
+                            <points>
+                                <item x="153" y="285" />
+                                <item x="154" y="283" />
+                                <item x="156" y="282" />
+                                <item x="157" y="280" />
+                                <item x="159" y="278" />
+                                <item x="156" y="279" />
+                                <item x="154" y="280" />
+                                <item x="150" y="281" />
+                                <item x="148" y="281" />
+                                <item x="146" y="281" />
+                                <item x="144" y="281" />
+                                <item x="141" y="281" />
+                                <item x="139" y="281" />
+                                <item x="135" y="281" />
+                                <item x="133" y="281" />
+                                <item x="131" y="281" />
+                                <item x="129" y="282" />
+                                <item x="128" y="284" />
+                                <item x="130" y="284" />
+                                <item x="136" y="284" />
+                                <item x="140" y="283" />
+                                <item x="143" y="282" />
+                                <item x="146" y="282" />
+                                <item x="149" y="280" />
+                                <item x="151" y="280" />
+                                <item x="153" y="279" />
+                                <item x="156" y="277" />
+                                <item x="158" y="275" />
+                                <item x="160" y="273" />
+                                <item x="162" y="271" />
+                                <item x="164" y="270" />
+                                <item x="166" y="269" />
+                                <item x="167" y="266" />
+                                <item x="169" y="262" />
+                                <item x="169" y="259" />
+                                <item x="170" y="257" />
+                                <item x="170" y="255" />
+                                <item x="170" y="253" />
+                                <item x="171" y="251" />
+                                <item x="173" y="248" />
+                                <item x="175" y="247" />
+                                <item x="177" y="246" />
+                                <item x="179" y="245" />
+                                <item x="181" y="247" />
+                                <item x="183" y="249" />
+                                <item x="184" y="251" />
+                                <item x="186" y="253" />
+                                <item x="187" y="255" />
+                                <item x="187" y="253" />
+                                <item x="186" y="251" />
+                                <item x="185" y="249" />
+                                <item x="183" y="247" />
+                                <item x="179" y="243" />
+                                <item x="177" y="241" />
+                                <item x="173" y="238" />
+                                <item x="169" y="236" />
+                                <item x="167" y="235" />
+                                <item x="165" y="233" />
+                                <item x="163" y="231" />
+                                <item x="162" y="229" />
+                                <item x="160" y="228" />
+                                <item x="159" y="226" />
+                                <item x="158" y="224" />
+                                <item x="156" y="223" />
+                                <item x="155" y="221" />
+                                <item x="154" y="219" />
+                                <item x="153" y="217" />
+                                <item x="150" y="214" />
+                                <item x="148" y="213" />
+                                <item x="146" y="211" />
+                                <item x="144" y="210" />
+                                <item x="143" y="212" />
+                                <item x="144" y="214" />
+                                <item x="146" y="217" />
+                                <item x="148" y="220" />
+                                <item x="150" y="222" />
+                                <item x="151" y="224" />
+                                <item x="151" y="226" />
+                                <item x="150" y="228" />
+                                <item x="147" y="228" />
+                                <item x="145" y="228" />
+                                <item x="143" y="229" />
+                                <item x="140" y="229" />
+                                <item x="138" y="230" />
+                                <item x="136" y="230" />
+                                <item x="133" y="232" />
+                                <item x="131" y="232" />
+                                <item x="127" y="232" />
+                                <item x="125" y="233" />
+                                <item x="122" y="233" />
+                                <item x="119" y="234" />
+                                <item x="118" y="236" />
+                                <item x="118" y="238" />
+                                <item x="118" y="241" />
+                                <item x="118" y="244" />
+                                <item x="118" y="246" />
+                                <item x="118" y="248" />
+                                <item x="118" y="250" />
+                                <item x="117" y="252" />
+                                <item x="115" y="253" />
+                                <item x="113" y="255" />
+                                <item x="113" y="253" />
+                                <item x="114" y="251" />
+                                <item x="115" y="249" />
+                            </points>
+                            <viewport x="320" y="480" />
+                            <trafoMatrix.row0 x="0.39687499" y="0" z="0" w="0" />
+                            <trafoMatrix.row1 x="0" y="-0.39583334" z="0" w="142.5" />
+                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
+                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
+                            <roiColor x="1" y="0" z="0" w="1" />
+                            <maskColor x="1" y="1" z="1" w="1" />
+                        </Region>
+                        <Region type="RegionOfInterestGeometry" layer="41" geometryMode="0" size="3" antialiasing="false">
+                            <points>
+                                <item x="165" y="209" />
+                                <item x="168" y="208" />
+                                <item x="169" y="206" />
+                                <item x="170" y="204" />
+                                <item x="172" y="201" />
+                                <item x="174" y="200" />
+                                <item x="175" y="197" />
+                                <item x="176" y="195" />
+                                <item x="174" y="192" />
+                                <item x="173" y="190" />
+                                <item x="171" y="188" />
+                                <item x="170" y="186" />
+                                <item x="168" y="184" />
+                                <item x="166" y="183" />
+                                <item x="169" y="183" />
+                                <item x="171" y="183" />
+                                <item x="173" y="183" />
+                                <item x="177" y="183" />
+                                <item x="181" y="183" />
+                                <item x="184" y="183" />
+                                <item x="186" y="183" />
+                                <item x="188" y="182" />
+                                <item x="190" y="181" />
+                            </points>
+                            <viewport x="320" y="480" />
+                            <trafoMatrix.row0 x="0.39687499" y="0" z="0" w="0" />
+                            <trafoMatrix.row1 x="0" y="-0.39583334" z="0" w="142.5" />
+                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
+                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
+                            <roiColor x="1" y="0" z="0" w="1" />
+                            <maskColor x="1" y="1" z="1" w="1" />
+                        </Region>
+                        <Region type="RegionOfInterestGeometry" layer="41" geometryMode="0" size="3" antialiasing="false">
+                            <points>
+                                <item x="204" y="232" />
+                                <item x="206" y="232" />
+                                <item x="208" y="232" />
+                                <item x="211" y="232" />
+                                <item x="213" y="231" />
+                                <item x="216" y="231" />
+                                <item x="217" y="229" />
+                                <item x="220" y="227" />
+                                <item x="222" y="224" />
+                                <item x="223" y="221" />
+                                <item x="223" y="219" />
+                                <item x="223" y="216" />
+                                <item x="223" y="213" />
+                                <item x="221" y="210" />
+                                <item x="220" y="206" />
+                                <item x="219" y="203" />
+                                <item x="219" y="200" />
+                                <item x="219" y="198" />
+                                <item x="217" y="197" />
+                            </points>
+                            <viewport x="320" y="480" />
+                            <trafoMatrix.row0 x="0.39687499" y="0" z="0" w="0" />
+                            <trafoMatrix.row1 x="0" y="-0.39583334" z="0" w="142.5" />
+                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
+                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
+                            <roiColor x="1" y="0" z="0" w="1" />
+                            <maskColor x="1" y="1" z="1" w="1" />
+                        </Region>
+                        <Region type="RegionOfInterestGeometry" layer="47" geometryMode="0" size="3" antialiasing="false">
+                            <points>
+                                <item x="128" y="294" />
+                                <item x="129" y="292" />
+                                <item x="131" y="289" />
+                                <item x="132" y="287" />
+                                <item x="134" y="283" />
+                                <item x="136" y="282" />
+                                <item x="139" y="281" />
+                                <item x="141" y="278" />
+                                <item x="143" y="278" />
+                                <item x="145" y="277" />
+                                <item x="147" y="277" />
+                                <item x="149" y="277" />
+                                <item x="152" y="277" />
+                                <item x="155" y="277" />
+                                <item x="157" y="278" />
+                                <item x="160" y="281" />
+                                <item x="162" y="283" />
+                                <item x="164" y="284" />
+                                <item x="165" y="287" />
+                                <item x="165" y="290" />
+                                <item x="166" y="292" />
+                                <item x="166" y="294" />
+                                <item x="167" y="296" />
+                                <item x="166" y="294" />
+                                <item x="166" y="292" />
+                                <item x="167" y="289" />
+                                <item x="167" y="287" />
+                                <item x="168" y="285" />
+                                <item x="168" y="283" />
+                                <item x="169" y="280" />
+                                <item x="170" y="277" />
+                                <item x="171" y="274" />
+                                <item x="171" y="271" />
+                                <item x="172" y="269" />
+                                <item x="173" y="267" />
+                                <item x="174" y="265" />
+                                <item x="176" y="262" />
+                                <item x="178" y="260" />
+                                <item x="181" y="258" />
+                                <item x="183" y="257" />
+                                <item x="185" y="257" />
+                                <item x="187" y="257" />
+                                <item x="189" y="258" />
+                                <item x="191" y="258" />
+                                <item x="193" y="259" />
+                                <item x="192" y="257" />
+                                <item x="190" y="256" />
+                                <item x="188" y="253" />
+                                <item x="187" y="251" />
+                                <item x="185" y="248" />
+                                <item x="184" y="246" />
+                                <item x="184" y="244" />
+                                <item x="186" y="242" />
+                                <item x="189" y="242" />
+                                <item x="191" y="241" />
+                                <item x="195" y="241" />
+                                <item x="199" y="240" />
+                                <item x="203" y="239" />
+                                <item x="208" y="237" />
+                                <item x="212" y="235" />
+                                <item x="214" y="234" />
+                                <item x="216" y="232" />
+                                <item x="218" y="231" />
+                                <item x="220" y="230" />
+                                <item x="222" y="229" />
+                                <item x="223" y="227" />
+                                <item x="223" y="225" />
+                                <item x="222" y="223" />
+                                <item x="222" y="221" />
+                                <item x="221" y="218" />
+                                <item x="221" y="216" />
+                                <item x="221" y="214" />
+                                <item x="221" y="212" />
+                                <item x="221" y="210" />
+                                <item x="222" y="208" />
+                                <item x="223" y="205" />
+                                <item x="223" y="203" />
+                                <item x="223" y="200" />
+                            </points>
+                            <viewport x="320" y="480" />
+                            <trafoMatrix.row0 x="0.39687499" y="0" z="0" w="0" />
+                            <trafoMatrix.row1 x="0" y="-0.39583334" z="0" w="142.5" />
+                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
+                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
+                            <roiColor x="1" y="0" z="0" w="1" />
+                            <maskColor x="1" y="1" z="1" w="1" />
+                        </Region>
+                        <Region type="RegionOfInterestGeometry" layer="47" geometryMode="0" size="3" antialiasing="false">
+                            <points>
+                                <item x="114" y="258" />
+                                <item x="114" y="256" />
+                                <item x="114" y="254" />
+                                <item x="115" y="251" />
+                                <item x="116" y="248" />
+                                <item x="118" y="245" />
+                                <item x="119" y="242" />
+                                <item x="119" y="239" />
+                                <item x="120" y="237" />
+                                <item x="121" y="235" />
+                                <item x="123" y="234" />
+                                <item x="125" y="232" />
+                                <item x="127" y="231" />
+                                <item x="129" y="230" />
+                                <item x="131" y="230" />
+                                <item x="135" y="230" />
+                                <item x="138" y="229" />
+                                <item x="141" y="229" />
+                                <item x="143" y="228" />
+                                <item x="145" y="228" />
+                                <item x="147" y="227" />
+                                <item x="149" y="225" />
+                                <item x="151" y="223" />
+                                <item x="153" y="221" />
+                                <item x="155" y="219" />
+                                <item x="155" y="217" />
+                                <item x="153" y="214" />
+                                <item x="151" y="211" />
+                                <item x="153" y="212" />
+                                <item x="157" y="215" />
+                                <item x="162" y="220" />
+                                <item x="166" y="221" />
+                                <item x="168" y="222" />
+                                <item x="169" y="220" />
+                                <item x="169" y="218" />
+                                <item x="167" y="215" />
+                                <item x="165" y="213" />
+                                <item x="164" y="210" />
+                                <item x="163" y="207" />
+                                <item x="163" y="205" />
+                                <item x="164" y="203" />
+                                <item x="166" y="201" />
+                                <item x="167" y="199" />
+                                <item x="169" y="197" />
+                                <item x="170" y="195" />
+                                <item x="170" y="192" />
+                                <item x="171" y="189" />
+                                <item x="171" y="187" />
+                                <item x="171" y="184" />
+                                <item x="172" y="182" />
+                                <item x="174" y="182" />
+                                <item x="176" y="182" />
+                                <item x="178" y="183" />
+                                <item x="180" y="184" />
+                                <item x="182" y="184" />
+                                <item x="185" y="184" />
+                                <item x="188" y="184" />
+                                <item x="190" y="184" />
+                                <item x="192" y="184" />
+                                <item x="194" y="185" />
+                                <item x="196" y="185" />
+                                <item x="196" y="183" />
+                                <item x="196" y="181" />
+                                <item x="196" y="179" />
+                                <item x="195" y="177" />
+                                <item x="195" y="175" />
+                                <item x="195" y="173" />
+                                <item x="195" y="171" />
+                            </points>
+                            <viewport x="320" y="480" />
+                            <trafoMatrix.row0 x="0.39687499" y="0" z="0" w="0" />
+                            <trafoMatrix.row1 x="0" y="-0.39583334" z="0" w="142.5" />
+                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
+                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
+                            <roiColor x="1" y="0" z="0" w="1" />
+                            <maskColor x="1" y="1" z="1" w="1" />
+                        </Region>
+                        <Region type="RegionOfInterestGeometry" layer="61" geometryMode="0" size="3" antialiasing="false">
+                            <points>
+                                <item x="117" y="270" />
+                                <item x="117" y="268" />
+                                <item x="118" y="265" />
+                                <item x="120" y="262" />
+                                <item x="121" y="260" />
+                                <item x="122" y="258" />
+                                <item x="123" y="255" />
+                                <item x="123" y="251" />
+                                <item x="124" y="249" />
+                                <item x="125" y="247" />
+                                <item x="126" y="245" />
+                                <item x="128" y="243" />
+                                <item x="130" y="241" />
+                                <item x="133" y="239" />
+                                <item x="136" y="237" />
+                                <item x="138" y="235" />
+                                <item x="140" y="234" />
+                                <item x="141" y="232" />
+                                <item x="142" y="229" />
+                                <item x="144" y="227" />
+                                <item x="145" y="225" />
+                                <item x="146" y="223" />
+                                <item x="146" y="220" />
+                                <item x="148" y="217" />
+                                <item x="151" y="215" />
+                                <item x="153" y="215" />
+                                <item x="156" y="214" />
+                                <item x="158" y="213" />
+                                <item x="160" y="212" />
+                                <item x="162" y="211" />
+                                <item x="164" y="210" />
+                                <item x="165" y="208" />
+                                <item x="167" y="206" />
+                                <item x="169" y="205" />
+                                <item x="171" y="203" />
+                                <item x="173" y="202" />
+                                <item x="175" y="200" />
+                                <item x="176" y="198" />
+                                <item x="177" y="196" />
+                                <item x="179" y="195" />
+                                <item x="181" y="194" />
+                                <item x="183" y="194" />
+                                <item x="185" y="192" />
+                                <item x="187" y="192" />
+                                <item x="189" y="190" />
+                                <item x="191" y="189" />
+                                <item x="193" y="189" />
+                                <item x="194" y="187" />
+                                <item x="197" y="184" />
+                                <item x="199" y="182" />
+                                <item x="201" y="180" />
+                                <item x="202" y="178" />
+                            </points>
+                            <viewport x="320" y="480" />
+                            <trafoMatrix.row0 x="0.39687499" y="0" z="0" w="0" />
+                            <trafoMatrix.row1 x="0" y="-0.39583334" z="0" w="142.5" />
+                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
+                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
+                            <roiColor x="1" y="0" z="0" w="1" />
+                            <maskColor x="1" y="1" z="1" w="1" />
+                        </Region>
+                        <Region type="RegionOfInterestGeometry" layer="61" geometryMode="0" size="3" antialiasing="false">
+                            <points>
+                                <item x="194" y="301" />
+                                <item x="196" y="299" />
+                                <item x="198" y="296" />
+                                <item x="199" y="294" />
+                                <item x="201" y="292" />
+                                <item x="202" y="290" />
+                                <item x="204" y="289" />
+                                <item x="206" y="288" />
+                                <item x="208" y="286" />
+                                <item x="209" y="283" />
+                                <item x="211" y="280" />
+                                <item x="212" y="277" />
+                                <item x="214" y="275" />
+                                <item x="216" y="273" />
+                                <item x="218" y="272" />
+                                <item x="220" y="271" />
+                                <item x="222" y="269" />
+                                <item x="224" y="269" />
+                                <item x="226" y="267" />
+                                <item x="228" y="267" />
+                                <item x="230" y="266" />
+                            </points>
+                            <viewport x="320" y="480" />
+                            <trafoMatrix.row0 x="0.39687499" y="0" z="0" w="0" />
+                            <trafoMatrix.row1 x="0" y="-0.39583334" z="0" w="142.5" />
+                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
+                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
+                            <roiColor x="1" y="0" z="0" w="1" />
+                            <maskColor x="1" y="1" z="1" w="1" />
+                        </Region>
+                        <Region type="RegionOfInterestGeometry" layer="61" geometryMode="0" size="3" antialiasing="false">
+                            <points>
+                                <item x="195" y="270" />
+                                <item x="198" y="267" />
+                                <item x="201" y="264" />
+                                <item x="204" y="261" />
+                                <item x="205" y="258" />
+                                <item x="208" y="254" />
+                                <item x="209" y="251" />
+                                <item x="211" y="247" />
+                                <item x="212" y="244" />
+                                <item x="213" y="241" />
+                                <item x="214" y="238" />
+                                <item x="214" y="235" />
+                                <item x="216" y="232" />
+                                <item x="216" y="230" />
+                                <item x="217" y="228" />
+                                <item x="217" y="226" />
+                                <item x="217" y="224" />
+                                <item x="217" y="222" />
+                                <item x="217" y="220" />
+                                <item x="217" y="218" />
+                                <item x="218" y="216" />
+                                <item x="219" y="214" />
+                                <item x="219" y="212" />
+                                <item x="221" y="211" />
+                            </points>
+                            <viewport x="320" y="480" />
+                            <trafoMatrix.row0 x="0.39687499" y="0" z="0" w="0" />
+                            <trafoMatrix.row1 x="0" y="-0.39583334" z="0" w="142.5" />
+                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
+                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
+                            <roiColor x="1" y="0" z="0" w="1" />
+                            <maskColor x="1" y="1" z="1" w="1" />
+                        </Region>
+                        <Region type="RegionOfInterestGeometry" layer="71" geometryMode="0" size="3" antialiasing="false">
+                            <points>
+                                <item x="111" y="265" />
+                                <item x="111" y="263" />
+                                <item x="113" y="260" />
+                                <item x="116" y="257" />
+                                <item x="118" y="256" />
+                                <item x="120" y="255" />
+                                <item x="122" y="254" />
+                                <item x="124" y="254" />
+                                <item x="126" y="254" />
+                                <item x="128" y="254" />
+                                <item x="131" y="254" />
+                                <item x="133" y="253" />
+                                <item x="135" y="252" />
+                                <item x="138" y="251" />
+                                <item x="140" y="250" />
+                                <item x="142" y="250" />
+                                <item x="143" y="247" />
+                                <item x="145" y="242" />
+                                <item x="145" y="240" />
+                                <item x="145" y="237" />
+                                <item x="145" y="234" />
+                                <item x="145" y="230" />
+                                <item x="145" y="227" />
+                                <item x="144" y="225" />
+                                <item x="143" y="223" />
+                                <item x="141" y="223" />
+                                <item x="138" y="222" />
+                                <item x="135" y="221" />
+                                <item x="133" y="220" />
+                                <item x="131" y="220" />
+                                <item x="129" y="220" />
+                                <item x="127" y="218" />
+                                <item x="125" y="218" />
+                                <item x="123" y="217" />
+                                <item x="122" y="215" />
+                                <item x="124" y="213" />
+                                <item x="126" y="212" />
+                                <item x="129" y="210" />
+                                <item x="132" y="207" />
+                                <item x="136" y="206" />
+                                <item x="140" y="205" />
+                                <item x="142" y="203" />
+                                <item x="145" y="200" />
+                                <item x="146" y="197" />
+                                <item x="147" y="195" />
+                                <item x="148" y="192" />
+                                <item x="149" y="189" />
+                                <item x="150" y="187" />
+                                <item x="151" y="185" />
+                                <item x="152" y="183" />
+                                <item x="154" y="182" />
+                                <item x="156" y="182" />
+                                <item x="158" y="182" />
+                                <item x="161" y="185" />
+                                <item x="162" y="188" />
+                                <item x="162" y="190" />
+                                <item x="164" y="191" />
+                                <item x="166" y="191" />
+                                <item x="169" y="191" />
+                                <item x="173" y="192" />
+                                <item x="176" y="192" />
+                                <item x="178" y="192" />
+                                <item x="181" y="192" />
+                                <item x="183" y="193" />
+                                <item x="185" y="194" />
+                                <item x="187" y="194" />
+                                <item x="189" y="195" />
+                                <item x="191" y="195" />
+                                <item x="193" y="196" />
+                                <item x="195" y="198" />
+                                <item x="197" y="199" />
+                                <item x="199" y="199" />
+                                <item x="201" y="200" />
+                                <item x="201" y="202" />
+                                <item x="201" y="204" />
+                                <item x="200" y="206" />
+                                <item x="200" y="208" />
+                            </points>
+                            <viewport x="320" y="480" />
+                            <trafoMatrix.row0 x="0.39687499" y="0" z="0" w="0" />
+                            <trafoMatrix.row1 x="0" y="-0.39583334" z="0" w="142.5" />
+                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
+                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
+                            <roiColor x="1" y="0" z="0" w="1" />
+                            <maskColor x="1" y="1" z="1" w="1" />
+                        </Region>
+                        <Region type="RegionOfInterestGeometry" layer="71" geometryMode="0" size="3" antialiasing="false">
+                            <points>
+                                <item x="209" y="260" />
+                                <item x="207" y="257" />
+                                <item x="206" y="255" />
+                                <item x="206" y="253" />
+                                <item x="206" y="250" />
+                                <item x="207" y="247" />
+                                <item x="209" y="245" />
+                                <item x="210" y="240" />
+                                <item x="213" y="235" />
+                                <item x="216" y="232" />
+                                <item x="220" y="229" />
+                                <item x="223" y="228" />
+                                <item x="224" y="226" />
+                                <item x="224" y="224" />
+                                <item x="223" y="221" />
+                                <item x="222" y="219" />
+                                <item x="220" y="218" />
+                            </points>
+                            <viewport x="320" y="480" />
+                            <trafoMatrix.row0 x="0.39687499" y="0" z="0" w="0" />
+                            <trafoMatrix.row1 x="0" y="-0.39583334" z="0" w="142.5" />
+                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
+                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
+                            <roiColor x="1" y="0" z="0" w="1" />
+                            <maskColor x="1" y="1" z="1" w="1" />
+                        </Region>
+                        <Region type="RegionOfInterestGeometry" layer="71" geometryMode="0" size="3" antialiasing="false">
+                            <points>
+                                <item x="160" y="281" />
+                                <item x="162" y="282" />
+                                <item x="165" y="282" />
+                                <item x="167" y="283" />
+                                <item x="170" y="284" />
+                                <item x="174" y="285" />
+                                <item x="176" y="285" />
+                                <item x="179" y="287" />
+                                <item x="181" y="288" />
+                            </points>
+                            <viewport x="320" y="480" />
+                            <trafoMatrix.row0 x="0.39687499" y="0" z="0" w="0" />
+                            <trafoMatrix.row1 x="0" y="-0.39583334" z="0" w="142.5" />
+                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
+                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
+                            <roiColor x="1" y="0" z="0" w="1" />
+                            <maskColor x="1" y="1" z="1" w="1" />
+                        </Region>
+                        <Region type="RegionOfInterestGeometry" layer="71" geometryMode="0" size="3" antialiasing="false">
+                            <points>
+                                <item x="189" y="295" />
+                                <item x="189" y="293" />
+                                <item x="188" y="291" />
+                                <item x="188" y="288" />
+                                <item x="187" y="286" />
+                                <item x="187" y="284" />
+                                <item x="186" y="282" />
+                            </points>
+                            <viewport x="320" y="480" />
+                            <trafoMatrix.row0 x="0.39687499" y="0" z="0" w="0" />
+                            <trafoMatrix.row1 x="0" y="-0.39583334" z="0" w="142.5" />
+                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
+                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
+                            <roiColor x="1" y="0" z="0" w="1" />
+                            <maskColor x="1" y="1" z="1" w="1" />
+                        </Region>
+                    </RegionsOfInterest>
+                </Processor>
+                <Processor type="SliceViewer" name="SliceViewer 2" id="ref7">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="49" y="-187" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="applyChannelShift" name="applyChannelShift" value="false" />
+                        <Property mapKey="boundaryColor" name="boundaryColor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="boundaryWidth" name="boundaryWidth" value="1" />
+                        <Property mapKey="channelShift0" name="channelShift0">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="channelShift1" name="channelShift1">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="channelShift2" name="channelShift2">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="channelShift3" name="channelShift3">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="fontSize" name="fontSize" value="14" />
+                        <Property mapKey="interactionLevelOfDetail" name="interactionLevelOfDetail" value="0" />
+                        <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="true" mouseAction="3" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="true" />
+                        <Property mapKey="mouseEvent.cursorPositionPress" name="mouseEvent.cursorPositionPress" enabled="true" mouseAction="19" mouseButtons="3" keyCode="0" modifier="0" shareEvents="true" />
+                        <Property mapKey="numSlicesPerCol" name="numSlicesPerCol" value="1" />
+                        <Property mapKey="numSlicesPerRow" name="numSlicesPerRow" value="1" />
+                        <Property mapKey="pickingMatrix" name="pickingMatrix">
+                            <value.row0 x="0.39687499" y="0" z="0" w="0" />
+                            <value.row1 x="0" y="-0.39583334" z="0" w="142.5" />
+                            <value.row2 x="0" y="0" z="1" w="0" />
+                            <value.row3 x="0" y="0" z="0" w="1" />
+                        </Property>
+                        <Property mapKey="renderLegend" name="renderLegend" value="false" />
+                        <Property mapKey="renderSliceBoundaries" name="renderSliceBoundaries" value="true" />
+                        <Property mapKey="selectCenterSliceOnInputChange" name="selectCenterSliceOnInputChange" value="true" />
+                        <Property mapKey="showCursorInformation" name="showCursorInformation" value="onMove" />
+                        <Property mapKey="showSliceNumber" name="showSliceNumber" value="true" />
+                        <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xy-plane" id="ref11" />
+                        <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
+                        <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="0" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="89" id="ref9" />
+                        <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
+                        <Property mapKey="sliceMousePos" name="sliceMousePos">
+                            <value x="3" y="36" z="89" />
+                        </Property>
+                        <Property mapKey="textureMode" name="textureMode" value="3d-texture" />
+                        <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
+                                    <value x="0" y="0.34372473" />
+                                </MetaItem>
+                                <MetaItem name="TransfuncPropertyWidgetPainterZoom" type="Vec2MetaData">
+                                    <value x="0" y="0.34372473" />
+                                </MetaItem>
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="256" y="1" z="1" />
+                                <domain x="0" y="0.34372473" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="transferFunction2" name="transferFunction2" domainFittingStrategy="1">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="transferFunction3" name="transferFunction3" domainFittingStrategy="1">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="transferFunction4" name="transferFunction4" domainFittingStrategy="1">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="voxelOffset" name="voxelOffset">
+                            <value x="0" y="0" />
+                        </Property>
+                        <Property mapKey="zoomFactor" name="zoomFactor" value="1" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.volumehandle" direction="1" portID="volumehandle.volumehandle" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.outport" direction="0" portID="image.outport" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref13">
+                                    <value x="320" y="480" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers>
+                        <Handler name="mouseWheelHandler">
+                            <Properties>
+                                <Property mapKey="mouseWheelHandler" name="mouseWheelHandler" enabled="true" mouseAction="23" mouseButtons="98" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                        <Handler name="zoomHandler">
+                            <Properties>
+                                <Property mapKey="zoomHandler" name="zoomHandler" enabled="true" mouseAction="23" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="volumehandle.volumehandle">
+                        <Processor type="SliceViewer" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="volumehandle.volume">
+                        <Processor type="RegionGrowing" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="SliceViewer" ref="ref1" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="RegionOfInterest2D" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.output">
+                        <Processor type="Background" ref="ref4" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="Splitter" ref="ref6" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Background" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.segmentation">
+                        <Processor type="RegionGrowing" ref="ref2" />
+                    </Outport>
+                    <Inport name="volumehandle.volumehandle">
+                        <Processor type="SliceViewer" ref="ref7" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.overlay">
+                        <Processor type="RegionOfInterest2D" ref="ref3" />
+                    </Outport>
+                    <Inport name="inport1">
+                        <Processor type="Splitter" ref="ref6" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="geometry.roiGeometry">
+                        <Processor type="RegionOfInterest2D" ref="ref3" />
+                    </Outport>
+                    <Inport name="pointlist.seedpoints">
+                        <Processor type="RegionGrowing" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="SliceViewer" ref="ref7" />
+                    </Outport>
+                    <Inport name="inport2">
+                        <Processor type="Splitter" ref="ref6" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks>
+                <PropertyLink>
+                    <SourceProperty type="IntegerProperty" ref="ref8" />
+                    <DestinationProperty type="IntegerProperty" ref="ref9" />
+                    <Evaluator type="LinkEvaluatorIntId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntegerProperty" ref="ref9" />
+                    <DestinationProperty type="IntegerProperty" ref="ref8" />
+                    <Evaluator type="LinkEvaluatorIntId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref10" />
+                    <DestinationProperty ref="ref11" />
+                    <Evaluator type="LinkEvaluatorStringId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref11" />
+                    <DestinationProperty ref="ref10" />
+                    <Evaluator type="LinkEvaluatorStringId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref12" />
+                    <DestinationProperty ref="ref13" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntegerProperty" ref="ref8" />
+                    <DestinationProperty type="IntegerProperty" ref="ref14" />
+                    <Evaluator type="LinkEvaluatorIntId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="FloatMat4Property" ref="ref15" />
+                    <DestinationProperty type="FloatMat4Property" ref="ref16" />
+                    <Evaluator type="LinkEvaluatorMat4Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref17" />
+                    <DestinationProperty ref="ref18" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref19" />
+                    <DestinationProperty ref="ref20" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+            </PropertyLinks>
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="Canvas::Canvas">
+            <PropertyGroups>
+                <item value="Load Volume" />
+                <item value="2D Slice View" />
+            </PropertyGroups>
+            <GroupMembership>
+                <value key="SliceViewer.renderLegend">
+                    <First value="2D Slice View" />
+                    <Second value="13" />
+                </value>
+                <value key="SliceViewer.showCursorInformation">
+                    <First value="2D Slice View" />
+                    <Second value="11" />
+                </value>
+                <value key="SliceViewer.showSliceNumber">
+                    <First value="2D Slice View" />
+                    <Second value="12" />
+                </value>
+                <value key="SliceViewer.sliceAlignmentProp">
+                    <First value="2D Slice View" />
+                    <Second value="8" />
+                </value>
+                <value key="SliceViewer.sliceIndex">
+                    <First value="2D Slice View" />
+                    <Second value="9" />
+                </value>
+                <value key="SliceViewer.sliceMousePos">
+                    <First value="2D Slice View" />
+                    <Second value="10" />
+                </value>
+                <value key="SliceViewer.transferFunction">
+                    <First value="2D Slice View" />
+                    <Second value="4" />
+                </value>
+                <value key="SliceViewer.transferFunction2">
+                    <First value="2D Slice View" />
+                    <Second value="5" />
+                </value>
+                <value key="SliceViewer.transferFunction3">
+                    <First value="2D Slice View" />
+                    <Second value="6" />
+                </value>
+                <value key="SliceViewer.transferFunction4">
+                    <First value="2D Slice View" />
+                    <Second value="7" />
+                </value>
+                <value key="SliceViewer.voxelOffset">
+                    <First value="2D Slice View" />
+                    <Second value="14" />
+                </value>
+                <value key="SliceViewer.zoomFactor">
+                    <First value="2D Slice View" />
+                    <Second value="15" />
+                </value>
+                <value key="VolumeSource.volumeInfo">
+                    <First value="Load Volume" />
+                    <Second value="1" />
+                </value>
+                <value key="VolumeSource.volumeURL">
+                    <First value="Load Volume" />
+                    <Second value="0" />
+                </value>
+            </GroupMembership>
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

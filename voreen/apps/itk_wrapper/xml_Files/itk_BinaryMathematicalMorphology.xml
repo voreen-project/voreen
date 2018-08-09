@@ -1,0 +1,49 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+  <ITK_Module name="itk_BinaryMathematicalMorphology" group="Filtering">
+    <filterlist>
+      <filter name="BinaryDilateImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="DilateValue" argumenttype="PixelType"/>
+          <argument name="Kernel" argumenttype="KernelType"/>  
+        </arguments>
+      </filter>
+      <filter name="BinaryErodeImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="ErodeValue" argumenttype="PixelType"/>
+          <argument name="Kernel" argumenttype="KernelType"/>  
+        </arguments>
+      </filter>
+      <filter name="BinaryMorphologicalClosingImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="ForegroundValue" argumenttype="PixelType"/>
+          <argument name="Kernel" argumenttype="KernelType"/>
+        </arguments>
+      </filter>
+      <filter name="BinaryMorphologicalOpeningImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="ForegroundValue" argumenttype="PixelType"/>
+          <argument name="BackgroundValue" argumenttype="PixelType"/>
+          <argument name="Kernel" argumenttype="KernelType"/>  
+        </arguments>
+      </filter>
+      <filter name="BinaryPruningImageFilter" codeState ="STABLE">
+        <arguments> 
+          <argument name="Iteration" argumenttype="Int" defaultValue="1" minValue="1" maxValue="100" />
+        </arguments>
+      </filter>
+      <filter name="DilateObjectMorphologyImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name ="Kernel" argumenttype="KernelType"/>
+        </arguments>
+      </filter>
+      <filter name="ErodeObjectMorphologyImageFilter" codeState ="STABLE">
+        <arguments>
+          <argument name="BackgroundValue" argumenttype="PixelType"/>
+          <argument name="ErodeValue" argumenttype="PixelType"/>
+          <argument name="Kernel" argumenttype="KernelType"/>
+        </arguments>
+      </filter>
+    </filterlist>
+  </ITK_Module>
+</VoreenData>

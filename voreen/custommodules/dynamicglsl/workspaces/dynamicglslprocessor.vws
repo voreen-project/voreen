@@ -1,0 +1,279 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" GlobalDescription="">
+        <ProcessorNetwork version="12">
+            <MetaData>
+                <MetaItem name="ProcessorSelection" type="SelectionMetaData::Processor">
+                    <values>
+                        <item type="DynamicGLSLProcessor" ref="ref5" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="Zoom" type="ZoomMetaData">
+                    <transform.row0 x="1.4174113273620605" y="0" z="0" />
+                    <transform.row1 x="0" y="1.4174113273620605" z="0" />
+                    <transform.row2 x="-228.51911926269531" y="406.8109130859375" z="1" />
+                </MetaItem>
+            </MetaData>
+            <Processors>
+                <Processor type="Canvas" name="Canvas" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="256" y="-52" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="310" y="86" width="232" height="205" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize">
+                            <value x="232" y="205" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" noPathSet="true" value="" />
+                        <Property name="showCursor" value="true" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="DynamicGLSLProcessor" name="DynamicGLSLProcessor" fragmentModified="true" fragmentIsExternal="false" vertexModified="true" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="221" y="-231" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="32" y="199" width="677" height="642" />
+                    </MetaData>
+                    <Properties />
+                    <InteractionHandlers />
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="220" y="-219" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="26" y="350" width="695" height="603" />
+                    </MetaData>
+                    <fragmentSource>
+                        <![CDATA[/**********************************************************************
+ *                                                                    *
+ * Voreen - The Volume Rendering Engine                               *
+ *                                                                    *
+ * Copyright (C) 2005-2012 Visualization and Computer Graphics Group, *
+ * Department of Computer Science, University of Muenster, Germany.   *
+ * <http://viscg.uni-muenster.de>                                     *
+ *                                                                    *
+ * This file is part of the Voreen software package. Voreen is free   *
+ * software: you can redistribute it and/or modify it under the terms *
+ * of the GNU General Public License version 2 as published by the    *
+ * Free Software Foundation.                                          *
+ *                                                                    *
+ * Voreen is distributed in the hope that it will be useful,          *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the       *
+ * GNU General Public License for more details.                       *
+ *                                                                    *
+ * You should have received a copy of the GNU General Public License  *
+ * in the file "LICENSE.txt" along with this program.                 *
+ * If not, see <http://www.gnu.org/licenses/>.                        *
+ *                                                                    *
+ * The authors reserve all rights not expressly granted herein. For   *
+ * non-commercial academic use see the license exception specified in *
+ * the file "LICENSE-academic.txt". To get information about          *
+ * commercial licensing please contact the authors.                   *
+ *                                                                    *
+ **********************************************************************/
+
+#include "modules/mod_sampler2d.frag"
+#include "modules/mod_sampler3d.frag"
+#include "modules/mod_transfunc.frag"
+
+#include "modules/mod_raysetup.frag"
+
+#include "modules/mod_depth.frag"
+#include "modules/mod_compositing.frag"
+#include "modules/mod_gradients.frag"
+#include "modules/mod_shading.frag"
+
+/*******************/
+/* Declare Inports */
+/*******************/
+//$ @name = "inport", @depthtex = "inputTexDepth_", @params = "inputTexParams_"
+uniform sampler2D inputTex_;
+uniform sampler2D inputTexDepth_;
+uniform TextureParameters inputTexParams_;
+
+//$ @name = "volumeport", @params = "volParams_"
+uniform VolumeParameters volumeStruct_;
+uniform sampler3D volume_;
+
+uniform float samplingStepSize_;
+
+/********************/
+/* Declare Outports */
+/********************/
+
+//$ @name = "outport0"
+out vec4 FragData;
+
+//$ @name = "outport1"
+out vec4 FragData1;
+
+
+/**********************/
+/* Declare Properties */
+/**********************/
+//$ @name = "test", @label = "Test property"
+uniform float test_;
+
+/***
+ * The main method.
+ ***/
+void main() {
+    vec2 p = gl_FragCoord.xy * screenDimRCP_;
+    FragData = vec4(0.0, test_, 0.0, 1.0);
+    FragData1 = vec4(1.0, 1.0, 0.0, 1.0)*texture2D(inputTex_, p);
+    gl_FragDepth = texture2D(inputTexDepth_, p).z;
+}
+]]>
+                    </fragmentSource>
+                    <vertexSource>
+                        <![CDATA[/**********************************************************************
+ *                                                                    *
+ * Voreen - The Volume Rendering Engine                               *
+ *                                                                    *
+ * Copyright (C) 2005-2012 Visualization and Computer Graphics Group, *
+ * Department of Computer Science, University of Muenster, Germany.   *
+ * <http://viscg.uni-muenster.de>                                     *
+ *                                                                    *
+ * This file is part of the Voreen software package. Voreen is free   *
+ * software: you can redistribute it and/or modify it under the terms *
+ * of the GNU General Public License version 2 as published by the    *
+ * Free Software Foundation.                                          *
+ *                                                                    *
+ * Voreen is distributed in the hope that it will be useful,          *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the       *
+ * GNU General Public License for more details.                       *
+ *                                                                    *
+ * You should have received a copy of the GNU General Public License  *
+ * in the file "LICENSE.txt" along with this program.                 *
+ * If not, see <http://www.gnu.org/licenses/>.                        *
+ *                                                                    *
+ * The authors reserve all rights not expressly granted herein. For   *
+ * non-commercial academic use see the license exception specified in *
+ * the file "LICENSE-academic.txt". To get information about          *
+ * commercial licensing please contact the authors.                   *
+ *                                                                    *
+ **********************************************************************/
+
+/**
+ * Simply pass through the provided vertex data.
+ */
+void main() {
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+    gl_Position = ftransform();
+    gl_FrontColor = gl_Color;
+}
+]]>
+                    </vertexSource>
+                </Processor>
+                <Processor type="MultiplanarProxyGeometry" name="MultiplanarProxyGeometry" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="151" y="-403" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="slicePosX" value="0.5" />
+                        <Property name="slicePosY" value="0.5" />
+                        <Property name="slicePosZ" value="0.5" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="VolumeSource" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="293" y="-507" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="volumeURL" url="../../volumes/nucleon.vvd" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Background" name="Background" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="256" y="-136" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="angle" value="180" />
+                        <Property name="backgroundModeAsString" value="gradient" />
+                        <Property name="color1">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property name="color2">
+                            <value x="0.2" y="0.2" z="0.2" w="1" />
+                        </Property>
+                        <Property name="repeat" value="0.5" />
+                        <Property name="shader.program" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false" />
+                        <Property name="texture" noPathSet="false" value="" />
+                    </Properties>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="MeshEntryExitPoints" name="MeshEntryExitPoints" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="166" y="-318" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="camera" adjustProjectionToViewport="true" projectionMode="1" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="50" fovy="45">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="-933" y="353" />
+                            </MetaData>
+                            <position x="2.27921033" y="-2.39784288" z="1.68839538" />
+                            <focus x="-0.02018351" y="-0.08215646" z="-0.08127946" />
+                            <upVector x="-0.32196552" y="0.35196444" z="0.87889659" />
+                        </Property>
+                        <Property name="jitterEntryPoints" value="false" />
+                        <Property name="jitterStepLength" value="0.005" />
+                        <Property name="supportCameraInsideVolume" value="true" />
+                        <Property name="useCulling" value="true" />
+                        <Property name="useFloatRenderTargets" value="false" />
+                    </Properties>
+                    <InteractionHandlers>
+                        <Handler name="cameraHandler">
+                            <Properties>
+                                <Property name="cameraHandler.adjustCamera" value="bigsizechange" />
+                                <Property name="cameraHandler.interactionMetaphor" value="trackball" />
+                                <Property name="cameraHandler.moveBackward" lod="1" enabled="true" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveDown" lod="1" enabled="true" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveForward" lod="1" enabled="true" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveLeft" lod="1" enabled="true" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveRight" lod="1" enabled="true" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveUp" lod="1" enabled="true" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.resetTrackballCenter" />
+                                <Property name="cameraHandler.rotate" lod="1" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.shift" lod="1" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property name="cameraHandler.shiftTrackballCenter" value="scenecenter" />
+                                <Property name="cameraHandler.wheelZoom" lod="1" enabled="true" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.zoom" lod="1" enabled="true" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="proxygeometry.out">
+                        <Processor type="MultiplanarProxyGeometry" ref="ref0" />
+                    </Outport>
+                    <Inport name="proxgeometry.geometry">
+                        <Processor type="MeshEntryExitPoints" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref2" />
+                    </Outport>
+                    <Inport name="volume.in">
+                        <Processor type="MultiplanarProxyGeometry" ref="ref0" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.output">
+                        <Processor type="Background" ref="ref3" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref4" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

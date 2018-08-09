@@ -1,0 +1,1890 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" GlobalDescription="">
+        <ProcessorNetwork version="13">
+            <Processors>
+                <Processor type="Canvas" name="Canvas Points" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-652" y="243" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="43" y="110" width="400" height="400" />
+                        <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
+                            <value x="43" y="110" />
+                        </MetaItem>
+                        <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
+                            <value x="400" y="400" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" id="ref16">
+                            <value x="400" y="400" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" noPathSet="false" value="output/points.png" />
+                        <Property name="showCursor" value="true" />
+                        <Property name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input">
+                            <Properties>
+                                <Property name="image.input.renderSizeOrigin" id="ref21">
+                                    <value x="400" y="400" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="GeometryProcessor" name="Geometry Processor" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-670" y="143" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="camera" adjustProjectionToViewport="true" projectionMode="1" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="501.99996948" fovy="45.00000381" id="ref13">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="722" y="373" />
+                            </MetaData>
+                            <position x="1.47080815" y="1.39161801" z="-0.33883795" />
+                            <focus x="0.07853427" y="-0.116204" z="-0.05400378" />
+                            <upVector x="-0.08865076" y="-0.10525357" z="-0.99048609" />
+                        </Property>
+                        <Property name="renderGeometries" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input">
+                            <Properties>
+                                <Property name="image.input.renderSizeOrigin">
+                                    <value x="400" y="400" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.output">
+                            <Properties>
+                                <Property name="image.output.renderSizeReceive" id="ref22">
+                                    <value x="400" y="400" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers>
+                        <Handler name="cameraHandler">
+                            <Properties>
+                                <Property name="cameraHandler.adjustCamera" value="bigsizechange" />
+                                <Property name="cameraHandler.interactionMetaphor" value="trackball" />
+                                <Property name="cameraHandler.moveBackward" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveDown" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveForward" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveLeft" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveRight" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveUp" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.resetTrackballCenter" />
+                                <Property name="cameraHandler.rotate" lod="1" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.shift" lod="1" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property name="cameraHandler.shiftTrackballCenter" value="scenecenter" />
+                                <Property name="cameraHandler.wheelZoom" lod="1" enabled="true" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.zoom" lod="1" enabled="true" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+                <Processor type="GeometrySource" name="PointListSource" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-106" y="-166" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="clearGeometry" />
+                        <Property name="geometryFile" noPathSet="false" value="input/geometry/cow-skeleton-segmentlist-world.vge" />
+                        <Property name="geometryType" value="geometry" />
+                        <Property name="loadGeometry" />
+                        <Property name="skipItems" value="0" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="geometry.pointlist">
+                            <Properties />
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="GeometryProcessor" name="GeometryProcessor" id="ref7">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-269" y="143" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="camera" adjustProjectionToViewport="true" projectionMode="1" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="501.99996948" fovy="45.00000381" id="ref14">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="722" y="373" />
+                            </MetaData>
+                            <position x="1.47080815" y="1.39161801" z="-0.33883795" />
+                            <focus x="0.07853427" y="-0.116204" z="-0.05400378" />
+                            <upVector x="-0.08865076" y="-0.10525357" z="-0.99048609" />
+                        </Property>
+                        <Property name="renderGeometries" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input">
+                            <Properties>
+                                <Property name="image.input.renderSizeOrigin">
+                                    <value x="400" y="400" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.output">
+                            <Properties>
+                                <Property name="image.output.renderSizeReceive" id="ref24">
+                                    <value x="400" y="400" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers>
+                        <Handler name="cameraHandler">
+                            <Properties>
+                                <Property name="cameraHandler.adjustCamera" value="bigsizechange" />
+                                <Property name="cameraHandler.interactionMetaphor" value="trackball" />
+                                <Property name="cameraHandler.moveBackward" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveDown" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveForward" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveLeft" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveRight" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveUp" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.resetTrackballCenter" />
+                                <Property name="cameraHandler.rotate" lod="1" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.shift" lod="1" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property name="cameraHandler.shiftTrackballCenter" value="scenecenter" />
+                                <Property name="cameraHandler.wheelZoom" lod="1" enabled="true" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.zoom" lod="1" enabled="true" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+                <Processor type="Canvas" name="Canvas Spheres" id="ref8">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-259" y="245" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="468" y="109" width="400" height="400" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" id="ref17">
+                            <value x="400" y="400" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" noPathSet="false" value="output/spheres.png" />
+                        <Property name="showCursor" value="true" />
+                        <Property name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input">
+                            <Properties>
+                                <Property name="image.input.renderSizeOrigin" id="ref23">
+                                    <value x="400" y="400" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="GeometryProcessor" name="GeometryProcessor 2" id="ref9">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="126" y="145" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="camera" adjustProjectionToViewport="true" projectionMode="1" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="501.99996948" fovy="45.00000381" id="ref15">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="722" y="373" />
+                            </MetaData>
+                            <position x="1.47080815" y="1.39161801" z="-0.33883795" />
+                            <focus x="0.07853427" y="-0.116204" z="-0.05400378" />
+                            <upVector x="-0.08865076" y="-0.10525357" z="-0.99048609" />
+                        </Property>
+                        <Property name="renderGeometries" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input">
+                            <Properties>
+                                <Property name="image.input.renderSizeOrigin">
+                                    <value x="400" y="400" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.output">
+                            <Properties>
+                                <Property name="image.output.renderSizeReceive" id="ref26">
+                                    <value x="400" y="400" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers>
+                        <Handler name="cameraHandler">
+                            <Properties>
+                                <Property name="cameraHandler.adjustCamera" value="bigsizechange" />
+                                <Property name="cameraHandler.interactionMetaphor" value="trackball" />
+                                <Property name="cameraHandler.moveBackward" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveDown" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveForward" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveLeft" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveRight" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveUp" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.resetTrackballCenter" />
+                                <Property name="cameraHandler.rotate" lod="1" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.shift" lod="1" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property name="cameraHandler.shiftTrackballCenter" value="scenecenter" />
+                                <Property name="cameraHandler.wheelZoom" lod="1" enabled="true" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.zoom" lod="1" enabled="true" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+                <Processor type="Canvas" name="Canvas IllumSpheres" id="ref10">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="129" y="247" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="43" y="551" width="400" height="400" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" id="ref18">
+                            <value x="400" y="400" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" noPathSet="false" value="output/illum-spheres.png" />
+                        <Property name="showCursor" value="true" />
+                        <Property name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input">
+                            <Properties>
+                                <Property name="image.input.renderSizeOrigin" id="ref25">
+                                    <value x="400" y="400" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="PointSegmentListRenderer" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-877" y="143" />
+                    </MetaData>
+                    <name>
+                        <![CDATA[PointSegmentListRenderer
+Points]]>
+                    </name>
+                    <Properties>
+                        <Property name="applyUniformColor" value="false" />
+                        <Property name="color">
+                            <value x="0.75" y="0.25" z="0" w="1" />
+                        </Property>
+                        <Property name="coordinateSystem" value="world" />
+                        <Property name="depthTest" value="true" />
+                        <Property name="pointSize" value="5" />
+                        <Property name="pointSmooth" value="false" />
+                        <Property name="renderingPrimitive" value="points" />
+                        <Property name="segmentColors">
+                            <ElementProperties>
+                                <Property name="segmentColor0">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor1">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor10">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor11">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor12">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor13">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor14">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor15">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor16">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor17">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor18">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor19">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor2">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor20">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor21">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor22">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor23">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor24">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor25">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor26">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor27">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor28">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor29">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor3">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor30">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor31">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor32">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor33">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor34">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor35">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor36">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor37">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor38">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor39">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor4">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor40">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor41">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor42">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor43">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor44">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor45">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor46">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor47">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor48">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor49">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor5">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor50">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor51">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor52">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor53">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor54">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor55">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor56">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor57">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor58">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor59">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor6">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor60">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor61">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor62">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor63">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor64">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor65">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor66">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor67">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor68">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor69">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor7">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor70">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor71">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor72">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor73">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor74">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor75">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor76">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor77">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor78">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor79">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor8">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor80">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor81">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor82">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor83">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor84">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor85">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor86">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor87">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor88">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor89">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor9">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor90">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor91">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor92">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor93">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor94">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor95">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor96">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor97">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor98">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor99">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                            </ElementProperties>
+                        </Property>
+                        <Property name="sphereDiameter" value="0.01" />
+                        <Property name="sphereSlicesStacks" value="20" />
+                    </Properties>
+                    <Inports>
+                        <Port name="geometry.input">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="PointSegmentListRenderer" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-478" y="143" />
+                    </MetaData>
+                    <name>
+                        <![CDATA[PointSegmentListRenderer
+Spheres]]>
+                    </name>
+                    <Properties>
+                        <Property name="applyUniformColor" value="false" />
+                        <Property name="color">
+                            <value x="0.75" y="0.25" z="0" w="1" />
+                        </Property>
+                        <Property name="coordinateSystem" value="world" />
+                        <Property name="depthTest" value="true" />
+                        <Property name="pointSize" value="3" />
+                        <Property name="pointSmooth" value="false" />
+                        <Property name="renderingPrimitive" value="spheres" />
+                        <Property name="segmentColors">
+                            <ElementProperties>
+                                <Property name="segmentColor0">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor1">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor10">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor11">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor12">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor13">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor14">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor15">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor16">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor17">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor18">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor19">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor2">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor20">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor21">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor22">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor23">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor24">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor25">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor26">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor27">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor28">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor29">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor3">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor30">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor31">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor32">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor33">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor34">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor35">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor36">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor37">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor38">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor39">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor4">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor40">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor41">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor42">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor43">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor44">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor45">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor46">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor47">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor48">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor49">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor5">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor50">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor51">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor52">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor53">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor54">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor55">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor56">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor57">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor58">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor59">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor6">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor60">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor61">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor62">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor63">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor64">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor65">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor66">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor67">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor68">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor69">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor7">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor70">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor71">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor72">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor73">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor74">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor75">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor76">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor77">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor78">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor79">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor8">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor80">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor81">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor82">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor83">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor84">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor85">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor86">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor87">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor88">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor89">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor9">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor90">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor91">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor92">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor93">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor94">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor95">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor96">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor97">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor98">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor99">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                            </ElementProperties>
+                        </Property>
+                        <Property name="sphereDiameter" value="0.02" />
+                        <Property name="sphereSlicesStacks" value="20" />
+                    </Properties>
+                    <Inports>
+                        <Port name="geometry.input">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="PointSegmentListRenderer" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-78" y="145" />
+                    </MetaData>
+                    <name>
+                        <![CDATA[PointSegmentListRenderer
+Illumspheres]]>
+                    </name>
+                    <Properties>
+                        <Property name="applyUniformColor" value="false" />
+                        <Property name="color">
+                            <value x="0.75" y="0.25" z="0" w="1" />
+                        </Property>
+                        <Property name="coordinateSystem" value="world" />
+                        <Property name="depthTest" value="true" />
+                        <Property name="pointSize" value="3" />
+                        <Property name="pointSmooth" value="false" />
+                        <Property name="renderingPrimitive" value="illuminated-spheres" />
+                        <Property name="segmentColors">
+                            <ElementProperties>
+                                <Property name="segmentColor0">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor1">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor10">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor11">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor12">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor13">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor14">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor15">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor16">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor17">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor18">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor19">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor2">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor20">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor21">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor22">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor23">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor24">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor25">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor26">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor27">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor28">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor29">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor3">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor30">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor31">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor32">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor33">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor34">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor35">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor36">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor37">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor38">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor39">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor4">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor40">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor41">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor42">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor43">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor44">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor45">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor46">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor47">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor48">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor49">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor5">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor50">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor51">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor52">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor53">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor54">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor55">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor56">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor57">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor58">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor59">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor6">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor60">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor61">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor62">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor63">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor64">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor65">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor66">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor67">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor68">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor69">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor7">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor70">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor71">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor72">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor73">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor74">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor75">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor76">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor77">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor78">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor79">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor8">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor80">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor81">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor82">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor83">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor84">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor85">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor86">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor87">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor88">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor89">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor9">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor90">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor91">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor92">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor93">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor94">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor95">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor96">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor97">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor98">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor99">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                            </ElementProperties>
+                        </Property>
+                        <Property name="sphereDiameter" value="0.02" />
+                        <Property name="sphereSlicesStacks" value="20" />
+                    </Properties>
+                    <Inports>
+                        <Port name="geometry.input">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas UniformCol" id="ref12">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="531" y="247" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="469" y="551" width="400" height="400" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="canvasSize" id="ref20">
+                            <value x="400" y="400" />
+                        </Property>
+                        <Property name="saveScreenshot" />
+                        <Property name="screenshotFilename" noPathSet="false" value="output/uniform-col.png" />
+                        <Property name="showCursor" value="true" />
+                        <Property name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input">
+                            <Properties>
+                                <Property name="image.input.renderSizeOrigin" id="ref27">
+                                    <value x="400" y="400" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="PointSegmentListRenderer" id="ref6">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="323" y="145" />
+                    </MetaData>
+                    <name>
+                        <![CDATA[PointSegmentListRenderer
+UniformCol]]>
+                    </name>
+                    <Properties>
+                        <Property name="applyUniformColor" value="true" />
+                        <Property name="color">
+                            <value x="0.75" y="0.25" z="0" w="1" />
+                        </Property>
+                        <Property name="coordinateSystem" value="world" />
+                        <Property name="depthTest" value="true" />
+                        <Property name="pointSize" value="5" />
+                        <Property name="pointSmooth" value="false" />
+                        <Property name="renderingPrimitive" value="points" />
+                        <Property name="segmentColors">
+                            <ElementProperties>
+                                <Property name="segmentColor0">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor1">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor10">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor11">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor12">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor13">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor14">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor15">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor16">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor17">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor18">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor19">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor2">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor20">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor21">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor22">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor23">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor24">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor25">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor26">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor27">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor28">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor29">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor3">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor30">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor31">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor32">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor33">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor34">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor35">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor36">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor37">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor38">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor39">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor4">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor40">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor41">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor42">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor43">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor44">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor45">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor46">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor47">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor48">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor49">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor5">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor50">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor51">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor52">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor53">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor54">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor55">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor56">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor57">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor58">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor59">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor6">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor60">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor61">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor62">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor63">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor64">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor65">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor66">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor67">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor68">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor69">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor7">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor70">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor71">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor72">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor73">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor74">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor75">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor76">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor77">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor78">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor79">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor8">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor80">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor81">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor82">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor83">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor84">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor85">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor86">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor87">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor88">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor89">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor9">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                                <Property name="segmentColor90">
+                                    <value x="1" y="0" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor91">
+                                    <value x="0" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor92">
+                                    <value x="0" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor93">
+                                    <value x="1" y="0" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor94">
+                                    <value x="0" y="1" z="1" w="1" />
+                                </Property>
+                                <Property name="segmentColor95">
+                                    <value x="1" y="1" z="0" w="1" />
+                                </Property>
+                                <Property name="segmentColor96">
+                                    <value x="1" y="0.39215687" z="0.07843138" w="1" />
+                                </Property>
+                                <Property name="segmentColor97">
+                                    <value x="0.98039216" y="0.78431374" z="0.58823532" w="1" />
+                                </Property>
+                                <Property name="segmentColor98">
+                                    <value x="0.58823532" y="0.78431374" z="0.98039216" w="1" />
+                                </Property>
+                                <Property name="segmentColor99">
+                                    <value x="0.11764706" y="0.11764706" z="0.11764706" w="1" />
+                                </Property>
+                            </ElementProperties>
+                        </Property>
+                        <Property name="sphereDiameter" value="0.01" />
+                        <Property name="sphereSlicesStacks" value="20" />
+                    </Properties>
+                    <Inports>
+                        <Port name="geometry.input">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="GeometryProcessor" name="GeometryProcessor 3" id="ref11">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="523" y="145" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="camera" adjustProjectionToViewport="true" projectionMode="1" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="501.99996948" fovy="45.00000381" id="ref19">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="722" y="373" />
+                            </MetaData>
+                            <position x="1.47080815" y="1.39161801" z="-0.33883795" />
+                            <focus x="0.07853427" y="-0.116204" z="-0.05400378" />
+                            <upVector x="-0.08865076" y="-0.10525357" z="-0.99048609" />
+                        </Property>
+                        <Property name="renderGeometries" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input">
+                            <Properties>
+                                <Property name="image.input.renderSizeOrigin">
+                                    <value x="400" y="400" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.output">
+                            <Properties>
+                                <Property name="image.output.renderSizeReceive" id="ref28">
+                                    <value x="400" y="400" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers>
+                        <Handler name="cameraHandler">
+                            <Properties>
+                                <Property name="cameraHandler.adjustCamera" value="bigsizechange" />
+                                <Property name="cameraHandler.interactionMetaphor" value="trackball" />
+                                <Property name="cameraHandler.moveBackward" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveDown" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveForward" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveLeft" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveRight" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.moveUp" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.resetTrackballCenter" />
+                                <Property name="cameraHandler.rotate" lod="1" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.shift" lod="1" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property name="cameraHandler.shiftTrackballCenter" value="scenecenter" />
+                                <Property name="cameraHandler.wheelZoom" lod="1" enabled="true" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property name="cameraHandler.zoom" lod="1" enabled="true" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="image.output">
+                        <Processor type="GeometryProcessor" ref="ref0" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="geometry.pointlist">
+                        <Processor type="GeometrySource" ref="ref2" />
+                    </Outport>
+                    <Inport name="geometry.input">
+                        <Processor type="PointSegmentListRenderer" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="geometry.pointlist">
+                        <Processor type="GeometrySource" ref="ref2" />
+                    </Outport>
+                    <Inport name="geometry.input">
+                        <Processor type="PointSegmentListRenderer" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="geometry.pointlist">
+                        <Processor type="GeometrySource" ref="ref2" />
+                    </Outport>
+                    <Inport name="geometry.input">
+                        <Processor type="PointSegmentListRenderer" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="geometry.pointlist">
+                        <Processor type="GeometrySource" ref="ref2" />
+                    </Outport>
+                    <Inport name="geometry.input">
+                        <Processor type="PointSegmentListRenderer" ref="ref6" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.output">
+                        <Processor type="GeometryProcessor" ref="ref7" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref8" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.output">
+                        <Processor type="GeometryProcessor" ref="ref9" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref10" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.output">
+                        <Processor type="GeometryProcessor" ref="ref11" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref12" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections>
+                <CoProcessorConnection>
+                    <Outport name="coprocessor.geometryrenderer">
+                        <Processor type="PointSegmentListRenderer" ref="ref3" />
+                    </Outport>
+                    <Inport name="coprocessor.geometryrenderers">
+                        <Processor type="GeometryProcessor" ref="ref0" />
+                    </Inport>
+                </CoProcessorConnection>
+                <CoProcessorConnection>
+                    <Outport name="coprocessor.geometryrenderer">
+                        <Processor type="PointSegmentListRenderer" ref="ref4" />
+                    </Outport>
+                    <Inport name="coprocessor.geometryrenderers">
+                        <Processor type="GeometryProcessor" ref="ref7" />
+                    </Inport>
+                </CoProcessorConnection>
+                <CoProcessorConnection>
+                    <Outport name="coprocessor.geometryrenderer">
+                        <Processor type="PointSegmentListRenderer" ref="ref5" />
+                    </Outport>
+                    <Inport name="coprocessor.geometryrenderers">
+                        <Processor type="GeometryProcessor" ref="ref9" />
+                    </Inport>
+                </CoProcessorConnection>
+                <CoProcessorConnection>
+                    <Outport name="coprocessor.geometryrenderer">
+                        <Processor type="PointSegmentListRenderer" ref="ref6" />
+                    </Outport>
+                    <Inport name="coprocessor.geometryrenderers">
+                        <Processor type="GeometryProcessor" ref="ref11" />
+                    </Inport>
+                </CoProcessorConnection>
+            </CoProcessorConnections>
+            <PropertyLinks>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref13" />
+                    <DestinationProperty type="CameraProperty" ref="ref14" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref14" />
+                    <DestinationProperty type="CameraProperty" ref="ref13" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref14" />
+                    <DestinationProperty type="CameraProperty" ref="ref15" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref15" />
+                    <DestinationProperty type="CameraProperty" ref="ref14" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref15" />
+                    <DestinationProperty type="CameraProperty" ref="ref13" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref13" />
+                    <DestinationProperty type="CameraProperty" ref="ref15" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref16" />
+                    <DestinationProperty type="IntVec2Property" ref="ref17" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref17" />
+                    <DestinationProperty type="IntVec2Property" ref="ref16" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref17" />
+                    <DestinationProperty type="IntVec2Property" ref="ref18" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref18" />
+                    <DestinationProperty type="IntVec2Property" ref="ref17" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref13" />
+                    <DestinationProperty type="CameraProperty" ref="ref19" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref19" />
+                    <DestinationProperty type="CameraProperty" ref="ref13" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref15" />
+                    <DestinationProperty type="CameraProperty" ref="ref19" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref19" />
+                    <DestinationProperty type="CameraProperty" ref="ref15" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref18" />
+                    <DestinationProperty type="IntVec2Property" ref="ref20" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref20" />
+                    <DestinationProperty type="IntVec2Property" ref="ref18" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref21" />
+                    <DestinationProperty ref="ref22" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref23" />
+                    <DestinationProperty ref="ref24" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref25" />
+                    <DestinationProperty ref="ref26" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref27" />
+                    <DestinationProperty ref="ref28" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+            </PropertyLinks>
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

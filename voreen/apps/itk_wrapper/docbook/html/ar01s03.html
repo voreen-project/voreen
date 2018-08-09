@@ -1,0 +1,1223 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>3.&nbsp;Adding new ITK-filters</title><link rel="stylesheet" type="text/css" href="style.css"><meta name="generator" content="DocBook XSL Stylesheets V1.76.1-RC2"><link rel="home" href="index.html" title="Voreen ITK-Wrapper Manual"><link rel="up" href="index.html" title="Voreen ITK-Wrapper Manual"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3.&nbsp;Adding new ITK-filters</th></tr></table><hr></div><div class="sect1" title="3.&nbsp;Adding new ITK-filters"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d5e61"></a>3.&nbsp;Adding new ITK-filters</h2></div></div></div>
+    
+      
+
+    
+      <p>Now you know how to generate the Voreen processors representing the
+    already defined ITK filters with the ITK-Wrapper. But what about adding
+    new filters?</p>
+
+    
+      <p>To add a new ITK filter you have to define the filter in its module
+    XML file. To understand the XML filestructure it is described in the next
+    section.</p>
+
+    
+      <p>Section 3.2 shows some examples of already added filters and section
+    3.3 explains how to add a more difficult filter which cannot be generated
+    automatically by the wrapper (special filter).</p>
+
+    
+      <div class="sect2" title="3.1.&nbsp;XML-File-Structure"><div class="titlepage"><div><div><h3 class="title"><a name="d5e66"></a>3.1.&nbsp;XML-File-Structure</h3></div></div></div>
+      
+         
+
+      
+         <p>In order to find a specific ITK filter in Voreen, we used the
+      <a class="ulink" href="http://www.itk.org/Doxygen/html/modules.html" target="_top">ITK-Doxygen</a>
+      structure. All filters are subsumed under different groups which contain
+      different modules. For example, there is the group "Filtering" which
+      contains the modules "ITKAnisotropicSmoothing", "ITKImageFeature" and so
+      on. Thus each XML file in the <code class="filename">xml_Files</code> directory
+      of the ITK-Wrapper represents one module of the ITK-Doxygen structure.
+      (The group to which a module belongs is defined in the associated XML
+      file itself).</p>
+
+      
+         <p>The inner structure of such an XML file is structured as
+      followed:</p>
+
+      
+         <p>First the <span class="bold"><strong>xml version</strong></span> and the
+      <span class="bold"><strong>VoreenData</strong></span> version need to be
+      declared:</p>
+
+      
+         <pre class="programlisting">&lt;?xml version="1.0" ?&gt;
+&lt;VoreenData version="1"&gt;</pre>
+
+      
+         <p>After that the <span class="bold"><strong>ITK_Module</strong></span> is
+      defined through a <span class="bold"><strong>name</strong></span> ("itk_" followed
+      by the name of the module, e.g. "AnisotropicSmoothing"), a <span class="bold"><strong>group</strong></span> (e.g. "Filtering") and a <span class="bold"><strong>filterlist</strong></span> containing the <span class="bold"><strong>filters</strong></span> of the module:</p>
+
+      
+         <pre class="programlisting">  &lt;ITK_Module name="itk_AnisotropicSmoothing" group="Filtering"&gt;
+    &lt;filterlist&gt;
+      &lt;filter ...&gt;
+      &lt;/filter&gt;
+      ...
+    &lt;/filterlist&gt;
+  &lt;/ITK_Module&gt;
+&lt;/VoreenData&gt;</pre>
+
+      
+         <p>Each <span class="bold"><strong>filter</strong></span> element is then
+      described through a number of XML attributes and -child elements:</p>
+
+      
+         <div class="variablelist"><dl><dt><span class="term">
+                  <span class="bold"><strong>name</strong></span>
+               </span></dt><dd>
+            
+                  <p>Name of the filter, e.g.
+            "CurvatureAnisotropicDiffusionImageFilter"</p>
+
+            
+                  <p>
+                     <span class="bold"><strong>Note:</strong></span> The name must be
+            exactly the name of the ITK filter, otherwise it will not
+            work!</p>
+          
+               </dd><dt><span class="term">
+                  <span class="bold"><strong>enabled (optional)</strong></span>
+               </span></dt><dd>
+            
+                  <p>Boolean to enable or disable a filter. Default value is
+            <span class="emphasis"><em>true</em></span>.</p>
+          
+               </dd><dt><span class="term">
+                  <span class="bold"><strong>description (optional)</strong></span>
+               </span></dt><dd>
+            
+                  <p>If a filter is disabled the description attribute can be set
+            to describe why the filter is disabled. Otherwise the description
+            is taken as the processor description in Voreen. If the filter is
+            enabled and no description is set, the wrapper will generate a
+            link to the ITK Doxygen page of the filter (by using the name of
+            the filter) as processor description.</p>
+          
+               </dd><dt><span class="term">
+                  <span class="bold"><strong>autoGenerated
+          (optional)</strong></span>
+               </span></dt><dd>
+            
+                  <p>Boolean whether the filter can be auto generated by the
+            wrapper or not (see "3.3 Special Filters"). Default value is
+            <span class="emphasis"><em>true</em></span>.</p>
+          
+               </dd><dt><span class="term">
+                  <span class="bold"><strong>codeState (optional)</strong></span>
+               </span></dt><dd>
+            
+                  <p>Code state of a filter.</p>
+
+            
+                  <p>Possible values are <span class="emphasis"><em>EXPERIMENTAL</em></span>,
+            <span class="emphasis"><em>TESTING</em></span> and <span class="emphasis"><em>STABLE</em></span>.
+            Default value is <span class="emphasis"><em>EXPERIMENTAL</em></span>.</p>
+          
+               </dd><dt><span class="term">
+                  <span class="bold"><strong>inports (optional)</strong></span>
+               </span></dt><dd>
+            
+                  <p>Child element containing the inports / inputs of a filter.
+            See <span class="bold"><strong>port</strong></span>.</p>
+
+            
+                  <p>
+                     <span class="bold"><strong>Note:</strong></span> By default a filter
+            has one inport and one outport, which support all scalar volume
+            types. It is only necessary to set the ports of a filter if it has
+            more or less than one in- and/or outport or if the port supports
+            only specific volume types. If you set one port of the filter
+            (inport or outport) you have to set all ports of the filter.As an
+            example: If you have a filter which has volume type constraints
+            for the inport you nevertheless have to set the outport.</p>
+          
+               </dd><dt><span class="term">
+                  <span class="bold"><strong>outports (optional)</strong></span>
+               </span></dt><dd>
+            
+                  <p>Child element of a <span class="bold"><strong>filter</strong></span>
+            containing the outports / outputs of a filter. See <span class="bold"><strong>port</strong></span>.</p>
+
+            
+                  <p>
+                     <span class="bold"><strong>Note 1:</strong></span> By default a filter
+            has one inport and one outport, which allow all scalar volume
+            types. So you only have to set the ports of a filter if it has
+            more or less than one in- or outport or if there are only special
+            volume types supported for the port. But if you set one port of
+            the filter (inport or outport) you have to set all ports of the
+            filter! So if there is for example a filter which has volume type
+            constraints only on the inport you nevertheless have to set the
+            outport.</p>
+
+            
+                  <p>
+                     <span class="bold"><strong>Note 2:</strong></span> You can only set
+            one type for the possibleTypes of an outport (e.g.
+            <span class="emphasis"><em>UInt8</em></span>). If there is a volume type constraint
+            on the inport, for example <span class="emphasis"><em>IntegerScalar,</em></span> and
+            you want the output of the outport to be from the same type as the
+            input of the inport you don't have to set the possibleTypes of the
+            outport. This ensures that the output is of the same type as the
+            input.</p>
+
+            
+                  <div class="variablelist"><dl><dt><span class="term">
+                           <span class="bold"><strong>port</strong></span>
+                        </span></dt><dd>
+                  
+                           <p>Child element of <span class="bold"><strong>inports</strong></span> element or <span class="bold"><strong>outports</strong></span> element containing the
+                  attributes and child elements:</p>
+
+                  
+                           <div class="variablelist"><dl><dt><span class="term">
+                                    <span class="bold"><strong>name</strong></span>
+                                 </span></dt><dd>
+                        
+                                    <p>Name of an inport or outport of a filter, e.g.
+                        "InputImage"</p>
+                      
+                                 </dd><dt><span class="term">
+                                    <span class="bold"><strong>filterTemplate
+                      (optional)</strong></span>
+                                 </span></dt><dd>
+                        
+                                    <p>Boolean defining whether the port is a template
+                        argument of the filter or not. Default value is
+                        <span class="emphasis"><em>true</em></span>.</p>
+
+                        
+                                    <p>This attribute is necessary if for example a
+                        filter has two inports and one outport but only one
+                        template argument because all ports have to be from
+                        the same volume type.</p>
+                      
+                                 </dd><dt><span class="term">
+                                    <span class="bold"><strong>nameIsSetter
+                      (optional)</strong></span>
+                                 </span></dt><dd>
+                        
+                                    <p>Boolean defining whether the name of the port is
+                        the filter input setter of or not. Default value is
+                        <span class="emphasis"><em>false</em></span>.</p>
+
+                        
+                                    <p>Usually the inputs of a filter are set with
+                        "SetInput1(...);", "SetInput2(...);" and so on (or
+                        only with "SetInput(..);" if there is only one input)
+                        but sometimes a special name is needed to set an
+                        input, e.g. "SetMaskImage(...)". In this case the name
+                        of the inport (here "MaskImage") can be used to set
+                        the input.</p>
+                      
+                                 </dd><dt><span class="term">
+                                    <span class="bold"><strong>possibleTypes</strong></span>
+                                 </span></dt><dd>
+                        
+                                    <p>Child element of a <span class="bold"><strong>port</strong></span> containing the possible
+                        volume types of the port.</p>
+
+                        
+                                    <p>Possible values for a volume <span class="bold"><strong>type</strong></span> are
+                        <span class="emphasis"><em>UInt8</em></span>, <span class="emphasis"><em>Int8</em></span>,
+                        <span class="emphasis"><em>UInt16</em></span>,
+                        <span class="emphasis"><em>Int16</em></span>,
+                        <span class="emphasis"><em>UInt32</em></span>,
+                        <span class="emphasis"><em>Int32</em></span>,
+                        <span class="emphasis"><em>UInt64</em></span>,
+                        <span class="emphasis"><em>Int64</em></span>,
+                        <span class="emphasis"><em>Float</em></span>,
+                        <span class="emphasis"><em>Double</em></span>,
+                        <span class="emphasis"><em>4xUInt8</em></span>,
+                        <span class="emphasis"><em>4xInt8</em></span>,
+                        <span class="emphasis"><em>4xUInt16</em></span>,
+                        <span class="emphasis"><em>4xInt16</em></span>,
+                        <span class="emphasis"><em>4xFloat</em></span>,
+                        <span class="emphasis"><em>4xDouble</em></span>,
+                        <span class="emphasis"><em>3xUInt8</em></span>,
+                        <span class="emphasis"><em>3xInt8</em></span>,
+                        <span class="emphasis"><em>3xUInt16</em></span>,
+                        <span class="emphasis"><em>3xInt16</em></span>,
+                        <span class="emphasis"><em>3xFloat</em></span>,
+                        <span class="emphasis"><em>3xDouble</em></span>,
+                        <span class="emphasis"><em>2xUInt8</em></span>,
+                        <span class="emphasis"><em>2xInt8</em></span>,
+                        <span class="emphasis"><em>2xUInt16</em></span>,
+                        <span class="emphasis"><em>2xInt16</em></span>,
+                        <span class="emphasis"><em>2xFloat</em></span>,
+                        <span class="emphasis"><em>2xDouble</em></span>, or the metaTypes
+                        <span class="emphasis"><em>Scalar</em></span> (which contains all scalar
+                        volume types apart from <span class="emphasis"><em>UInt64</em></span>
+                        and <span class="emphasis"><em>Int64</em></span>),
+                        <span class="emphasis"><em>IntegerScalar</em></span> (which contains all
+                        scalar integer volume types apart from
+                        <span class="emphasis"><em>UInt64</em></span> and
+                        <span class="emphasis"><em>Int64</em></span>),
+                        <span class="emphasis"><em>RealScalar</em></span> (which contains all
+                        scalar real volume types), <span class="emphasis"><em>Vector</em></span>
+                        (which contains all vector volume types),
+                        <span class="emphasis"><em>IntegerVector </em></span>(which contains all
+                        vector integer volume types) and
+                        <span class="emphasis"><em>RealVector</em></span> (which contains all
+                        vector real volume types).</p>
+                      
+                                 </dd></dl></div>
+                
+                        </dd></dl></div>
+          
+               </dd><dt><span class="term">
+                  <span class="bold"><strong>attributes (optional)</strong></span>
+               </span></dt><dd>
+            
+                  <p>Child element of a <span class="bold"><strong>filter</strong></span>
+            containing the attributes of a filter:</p>
+
+            
+                  <div class="variablelist"><dl><dt><span class="term">
+                           <span class="bold"><strong>attribute</strong></span>
+                        </span></dt><dd>
+                  
+                           <p>Child element of <span class="bold"><strong>attributes</strong></span> element containing:</p>
+
+                  
+                           <div class="variablelist"><dl><dt><span class="term">
+                                    <span class="bold"><strong>name</strong></span>
+                                 </span></dt><dd>
+                        
+                                    <p>Name of the attribute, e.g.
+                        "NumberOfIterations"</p>
+                      
+                                 </dd><dt><span class="term">
+                                    <span class="bold"><strong>argumenttype</strong></span>
+                                 </span></dt><dd>
+                        
+                                    <p>Type of the argument.</p>
+
+                        
+                                    <p>Possible values are:</p>
+
+                        
+                                    <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+                            
+                                          <p>
+                                             <span class="emphasis"><em>Int</em></span>,
+                            <span class="emphasis"><em>Float</em></span> and
+                            <span class="emphasis"><em>Bool</em></span>: Represented through an
+                            Int-, a Float- or a BoolProperty in Voreen.</p>
+                          
+                                       </li><li class="listitem">
+                            
+                                          <p>
+                                             <span class="emphasis"><em>KernelType</em></span>: Used if a
+                            filter has a TKernel as template-argument. This
+                            means, that it needs a structuring element as
+                            kernel.</p>
+
+                            
+                                          <p>The ITK-Wrapper then generates a processor
+                            where you can choose one of the existing structuring
+                            elements through a StringOptionProperty.</p>
+                          
+                                       </li><li class="listitem">
+                            
+                                          <p>
+                                             <span class="emphasis"><em>SizeType</em></span> and
+                            <span class="emphasis"><em>IndexTxpe</em></span>: Represented through
+                            an IntVec3Property in Voreen.</p>
+                          
+                                       </li><li class="listitem">
+                            
+                                          <p>
+                                             <span class="emphasis"><em>ArrayType</em></span>: Represented
+                            through a FloatVec3Property in Voreen.</p>
+                          
+                                       </li><li class="listitem">
+                            
+                                          <p>
+                                             <span class="emphasis"><em>PixelType</em></span>: Represented
+                            through a VoxelTypeProperty in Voreen.</p>
+                          
+                                       </li><li class="listitem">
+                            
+                                          <p>
+                                             <span class="emphasis"><em>SetSeedType</em></span>: Only used if
+                            a filter needs a seed point and has no
+                            AddSeed-function!</p>
+
+                            
+                                          <p>The ITK-Wrapper then generates a processor
+                            with a GeometryPort as an additional inport through
+                            which seed points can be added. (To do this the
+                            SeedpointGenerator- or the VolumePicking processor
+                            can be used.) The seed point which should be used as
+                            the filter's seed point can be chosen through an
+                            IntProperty.</p>
+                          
+                                       </li><li class="listitem">
+                            
+                                          <p>
+                                             <span class="emphasis"><em>AddSeedType</em></span>: Used if a
+                            filter needs one ore more seed point(s).</p>
+
+                            
+                                          <p>The ITK-Wrapper then generates a processor
+                            with a GeometryPort as additional inport through
+                            which seed points can be added. (To do this the
+                            SeedpointGenerator- or the VolumePicking processor
+                            can be used.) All added seed points will be added to
+                            the filter as well but some filters only use the
+                            first added seed point.</p>
+                          
+                                       </li><li class="listitem">
+                            
+                                          <p>
+                                             <span class="emphasis"><em>VectorSeedType</em></span>: Used if a
+                            filter needs a vector of seed points and has no
+                            AddSeed-function.</p>
+
+                            
+                                          <p>The ITK-Wrapper then generates a processor
+                            with a GeometryPort as additional inport through
+                            which seed points can be added. (To do this the
+                            SeedpointGenerator- or the VolumePicking processor
+                            can be used.)</p>
+                          
+                                       </li></ul></div>
+                      
+                                 </dd><dt><span class="term">
+                                    <span class="bold"><strong>inputArgument
+                      (optional)</strong></span>
+                                 </span></dt><dd>
+                        
+                                    <p>Boolean defining whether the argument is an
+                        input- or an output-argument of the filter. Default
+                        value is <span class="emphasis"><em>true</em></span>.</p>
+                      
+                                 </dd><dt><span class="term">
+                                    <span class="bold"><strong>defaultValue</strong></span>
+                                 </span></dt><dd>
+                        
+                                    <p>Default value of the argument. Only needed for
+                        the argumenttypes <span class="emphasis"><em>Int</em></span> (e.g.
+                        defaultValue="1"), <span class="emphasis"><em>Float</em></span> (e.g.
+                        defaultValue="1.0f"), <span class="emphasis"><em>Bool </em></span>(e.g.
+                        defaultValue="false"), <span class="emphasis"><em>SizeType</em></span>
+                        and <span class="emphasis"><em>IndexType</em></span> (e.g.
+                        defaultValue="<span class="bold"><strong>(</strong></span>1<span class="bold"><strong>)</strong></span>") and
+                        <span class="emphasis"><em>ArrayType</em></span> (e.g.
+                        defaultValue="<span class="bold"><strong>(</strong></span>1.0f<span class="bold"><strong>)</strong></span>"). All other argumenttypes
+                        don't have a defaultValue.</p>
+                      
+                                 </dd><dt><span class="term">
+                                    <span class="bold"><strong>minValue</strong></span>
+                                 </span></dt><dd>
+                        
+                                    <p>Minimum value of the argument. Only needed for
+                        the argumenttypes <span class="emphasis"><em>Int</em></span>,
+                        <span class="emphasis"><em>Float</em></span>,
+                        <span class="emphasis"><em>SizeType</em></span>,
+                        <span class="emphasis"><em>IndexType</em></span> and <span class="emphasis"><em>Array
+                        Type</em></span> (examples see: defaultValue). For the
+                        argumenttype <span class="emphasis"><em>PixelType</em></span> the
+                        minValue is optional (example: value 0 is not
+                        allowed).</p>
+                      
+                                 </dd><dt><span class="term">
+                                    <span class="bold"><strong>maxValue</strong></span>
+                                 </span></dt><dd>
+                        
+                                    <p>Maximum value of the argument. Only needed for
+                        the argumenttypes <span class="emphasis"><em>Int</em></span>,
+                        <span class="emphasis"><em>Float</em></span>,
+                        <span class="emphasis"><em>SizeType</em></span>,
+                        <span class="emphasis"><em>IndexType</em></span> and <span class="emphasis"><em>Array
+                        Type</em></span> (examples see: defaultValue). For the
+                        argumenttype <span class="emphasis"><em>PixelType</em></span> the
+                        maxValue is optional like the minValue.</p>
+                      
+                                 </dd></dl></div>
+                
+                        </dd></dl></div>
+          
+               </dd></dl></div>
+    
+      </div>
+
+    
+      <div class="sect2" title="3.2.&nbsp;Examples"><div class="titlepage"><div><div><h3 class="title"><a name="d5e315"></a>3.2.&nbsp;Examples</h3></div></div></div>
+      
+         
+
+      
+         <p>This section shows some examples of filters which can be generated
+      automatically by the ITK-Wrapper. Apart from these examples you can find
+      other filter examples in the XML files of the
+      <code class="filename">xml_Files</code> directory where over 150 filters are
+      already defined.</p>
+
+      
+         <div class="sect3" title="3.2.1.&nbsp;Example 1: AbsImageFilter - A very simple filter"><div class="titlepage"><div><div><h4 class="title"><a name="d5e319"></a>3.2.1.&nbsp;Example 1: AbsImageFilter - A very simple filter</h4></div></div></div>
+        
+            
+
+        
+            <p>One of the simplest filters is the <a class="ulink" href="http://www.itk.org/Doxygen/html/classitk_1_1AbsImageFilter.html" target="_top">AbsImageFilter</a>
+        which can be found in "itk_ImageIntensity.xml" in the
+        <code class="filename">xml_Files</code> directory. This filter has one standard
+        inport, one standard outport and no attributes. Therefore it can be
+        simply defined like this:</p>
+
+        
+            <pre class="programlisting">      &lt;filter name="AbsImageFilter" codeState="STABLE"&gt;
+      &lt;/filter&gt;</pre>
+      
+         </div>
+
+      
+         <div class="sect3" title="3.2.2.&nbsp;Example 2: AndImageFiler - A simple filter with two inports and volume type constraints"><div class="titlepage"><div><div><h4 class="title"><a name="d5e325"></a>3.2.2.&nbsp;Example 2: AndImageFiler - A simple filter with two inports and
+        volume type constraints</h4></div></div></div>
+        
+            
+
+        
+            <p>The <a class="ulink" href="http://www.itk.org/Doxygen/html/classitk_1_1AndImageFilter.html" target="_top">AndImageFilter</a>
+        also can be found in "itk_ImageIntensity.xml" in the xml_Files
+        directory. It has two inports and one outport which only allow scalar
+        integer volume types and no attributes.</p>
+
+        
+            <pre class="programlisting">      &lt;filter name="AndImageFilter" codeState="STABLE"&gt;
+        &lt;inports&gt;
+          &lt;port name="InputImage1"&gt;
+            &lt;possibleTypes&gt;
+              &lt;type value="IntegerScalar"/&gt;
+            &lt;/possibleTypes&gt;
+          &lt;/port&gt;
+          &lt;port name="InputImage2"&gt;
+            &lt;possibleTypes&gt;
+              &lt;type value="IntegerScalar"/&gt;
+            &lt;/possibleTypes&gt;
+          &lt;/port&gt;
+        &lt;/inports&gt;
+        &lt;outports&gt;
+          &lt;port name="OutputImage"/&gt;
+        &lt;/outports&gt;
+      &lt;/filter&gt;</pre>
+      
+         </div>
+
+      
+         <div class="sect3" title="3.2.3.&nbsp;Example 3: CheckerBoardImageFilter - A filter where not all ports are template-arguments of the filter"><div class="titlepage"><div><div><h4 class="title"><a name="d5e330"></a>3.2.3.&nbsp;Example 3: CheckerBoardImageFilter - A filter where not all
+        ports are template-arguments of the filter</h4></div></div></div>
+        
+            
+
+        
+            <p>The <a class="ulink" href="http://www.itk.org/Doxygen/html/classitk_1_1CheckerBoardImageFilter.html" target="_top">CheckerBoardImageFilter</a>
+        can be found in "itk_ImageCompare.xml" in the xml_Files directory. It
+        has two inports and one outport but only one template argument because
+        all ports have to be from the same volume type. Therefore the
+        filterTemplate argument needs to be set to false for the second inport
+        and the outport.</p>
+
+        
+            <pre class="programlisting">      &lt;filter name="CheckerBoardImageFilter" codeState="STABLE"&gt;
+        &lt;inports&gt;
+          &lt;port name="InputImage1"/&gt;
+          &lt;port name="InputImage2" filterTemplate="false"/&gt;
+        &lt;/inports&gt;
+        &lt;outports&gt;
+          &lt;port name="OutputImage" filterTemplate="false"/&gt;
+        &lt;/outports&gt;
+      &lt;/filter&gt;</pre>
+      
+         </div>
+
+      
+         <div class="sect3" title="3.2.4.&nbsp;Example 4: GrayscaleGeodesicDilateImageFilter - A filter where the name of the inport is the name of the input-setter of the filter"><div class="titlepage"><div><div><h4 class="title"><a name="d5e335"></a>3.2.4.&nbsp;Example 4: GrayscaleGeodesicDilateImageFilter - A filter where
+        the name of the inport is the name of the input-setter of the
+        filter</h4></div></div></div>
+        
+            
+
+        
+            <p>The <a class="ulink" href="http://www.itk.org/Doxygen/html/classitk_1_1GrayscaleGeodesicDilateImageFilter.html" target="_top">GrayscaleGeodesicDilateImageFilter</a>
+        can be found in "itk_MathematicalMorphology.xml" in the xml_Files
+        directory. It has two inports, one outport and two arguments of the
+        type Bool. But this time the names of the inports are needed as
+        setters for the inputs of the filter. Apart from this the second input
+        is no template argument of the filter because it needs to be from the
+        same volume type as the first input.</p>
+
+        
+            <pre class="programlisting">      &lt;filter name="GrayscaleGeodesicDilateImageFilter" codeState="STABLE"&gt;
+        &lt;inports&gt;
+          &lt;port name="MarkerImage" nameIsSetter="true"/&gt;
+          &lt;port name="MaskImage" nameIsSetter="true" filterTemplate="false"/&gt;
+        &lt;/inports&gt;
+        &lt;outports&gt;
+          &lt;port name="OutputImage"/&gt;
+        &lt;/outports&gt;
+        &lt;arguments&gt;
+          &lt;argument name="RunOneIteration" argumenttype="Bool" defaultValue="false"/&gt;
+          &lt;argument name="FullyConnected" argumenttype="Bool" defaultValue="false"/&gt;
+        &lt;/arguments&gt;
+      &lt;/filter&gt;</pre>
+      
+         </div>
+
+      
+         <div class="sect3" title="3.2.5.&nbsp;Example 5: GrayscaleDilateImageFilter - A filter with a TKernel"><div class="titlepage"><div><div><h4 class="title"><a name="d5e340"></a>3.2.5.&nbsp;Example 5: GrayscaleDilateImageFilter - A filter with a
+        TKernel</h4></div></div></div>
+        
+            
+
+        
+            <p>The <a class="ulink" href="http://www.itk.org/Doxygen/html/classitk_1_1GrayscaleDilateImageFilter.html" target="_top">GrayscaleDilateImageFilter</a>
+        can be found in "itk_MathematicalMorphology.xml" in the xml_Files
+        directory. It has one standard inport, one standard outport and three
+        arguments. The special thing about this filter is, that is has a
+        TKernel as template argument. This means, that it needs a structuring
+        element as kernel.</p>
+
+        
+            <p>The wrapper therefore generates a processor with a range of
+        different structuring elements which can be chosen by a
+        StringOptionProperty.</p>
+
+        
+            <pre class="programlisting">      &lt;filter name="GrayscaleDilateImageFilter" codeState="STABLE"&gt;
+        &lt;arguments&gt;
+          &lt;argument name="Kernel" argumenttype="KernelType"/&gt;
+          &lt;argument name="Algorithm" argumenttype="Int" defaultValue="0" 
+                    minValue="0" maxValue="3"/&gt;
+          &lt;argument name="Boundary" argumenttype="PixelType"/&gt;
+        &lt;/arguments&gt;
+      &lt;/filter&gt;</pre>
+      
+         </div>
+
+      
+         <div class="sect3" title="3.2.6.&nbsp;Example 6: CannyEdgeDetectionImageFilter - A filter with an ArrayType-argument"><div class="titlepage"><div><div><h4 class="title"><a name="d5e346"></a>3.2.6.&nbsp;Example 6: CannyEdgeDetectionImageFilter - A filter with an
+        ArrayType-argument</h4></div></div></div>
+        
+            
+
+        
+            <p>The <a class="ulink" href="http://www.itk.org/Doxygen/html/classitk_1_1CannyEdgeDetectionImageFilter.html" target="_top">CannyEdgeDetectionImageFilter</a>
+        can be found in "itk_ImageFeature.xml" in the xml_Files directory. It
+        has one inport and one outport with a volume type constraint (Float)
+        and five arguments where three are from the type
+        <span class="emphasis"><em>PixelType</em></span> and two are from the type
+        <span class="emphasis"><em>ArrayType</em></span>.</p>
+
+        
+            <pre class="programlisting">      &lt;filter name="CannyEdgeDetectionImageFilter" codeState="STABLE"&gt;
+        &lt;inports&gt;
+          &lt;port name="InputImage"&gt;
+            &lt;possibleTypes&gt;
+              &lt;type value="Float"/&gt;
+            &lt;/possibleTypes&gt;
+          &lt;/port&gt;
+        &lt;/inports&gt;
+        &lt;outports&gt;
+          &lt;port name="OutputImage"/&gt;
+        &lt;/outports&gt;
+        &lt;arguments&gt;
+          &lt;argument name="LowerThreshold" argumenttype="PixelType"/&gt;
+          &lt;argument name="UpperThreshold" argumenttype="PixelType"/&gt;
+          &lt;argument name="OutsideValue" argumenttype="PixelType"/&gt;
+          &lt;argument name="Variance" argumenttype="ArrayType" defaultValue="(0.1f)" 
+                    minValue="(0.0f)" maxValue="(0.99f)"/&gt;
+          &lt;argument name="MaximumError" argumenttype="ArrayType" defaultValue="(0.1f)" 
+                    minValue="(0.0f)" maxValue="(0.99f)"/&gt;
+        &lt;/arguments&gt;
+      &lt;/filter&gt;</pre>
+      
+         </div>
+
+      
+         <div class="sect3" title="3.2.7.&nbsp;Example 7: ConfidenceConnectedImageFilter - A segmentation-filter which needs a seed point"><div class="titlepage"><div><div><h4 class="title"><a name="d5e353"></a>3.2.7.&nbsp;Example 7: ConfidenceConnectedImageFilter - A
+        segmentation-filter which needs a seed point</h4></div></div></div>
+        
+            
+
+        
+            <p>The <a class="ulink" href="http://www.itk.org/Doxygen/html/classitk_1_1ConfidenceConnectedImageFilter.html" target="_top">ConfidenceConnectedImageFilter</a>
+        can be found in "itk_RegionGrowing.xml" in the xml_Files directory. It
+        has one standard inport, one standard outport and five arguments. To
+        find a segmentation of the input-image the filter needs an initial
+        seed point. Therefore it has an argument from the type
+        <span class="emphasis"><em>AddSeedType</em></span>.</p>
+
+        
+            <p>This ensures that the generated processor has a GeometryPort as
+        additional inport through which seed points can be added. To do this
+        for example the SeedpointGenerator- or the VolumePicking processor can
+        be used.</p>
+
+        
+            <pre class="programlisting">      &lt;filter name="ConfidenceConnectedImageFilter"&gt;
+        &lt;arguments&gt;
+          &lt;argument name="Seed" argumenttype="AddSeedType"/&gt;
+          &lt;argument name="NumberOfIterations" argumenttype="Int" defaultValue="1" 
+                    minValue="0" maxValue="1000"/&gt;
+          &lt;argument name="ReplaceValue" argumenttype="PixelType"/&gt;
+          &lt;argument name="Multiplier" argumenttype="Float" defaultValue="1.0f" 
+                    minValue="1.0f" maxValue="1000.0f"/&gt;
+          &lt;argument name="InitialNeighborhoodRadius" argumenttype="Int" defaultValue="1" 
+                    minValue="0" maxValue="1000"/&gt;
+        &lt;/arguments&gt;
+      &lt;/filter&gt;</pre>
+      
+         </div>
+    
+      </div>
+
+    
+      <div class="sect2" title="3.3.&nbsp;Special Filters"><div class="titlepage"><div><div><h3 class="title"><a name="d5e360"></a>3.3.&nbsp;Special Filters</h3></div></div></div>
+      
+         
+
+      
+         <p>Although the ITK-Wrapper can generate a lot of filters
+      automatically using the allready mentioned methods, there are still some
+      filters which cannot be generated this way because they need for example
+      an special input. This could be for example a special structure which
+      cannot directly be represented by Voreen (e.g. a LabelMap), a special
+      output from another filter or a special function.</p>
+
+      
+         <p>This section describes how the ITK-Wrapper can help to create
+      these special filters (see 3.3.1) and how the created filters can then s
+      be integrated into Voreen using the ITK-Wrapper (see 3.3.2).</p>
+
+      
+         <div class="sect3" title="3.3.1.&nbsp;Pre Generation of a special filter with the ITK-Wrapper"><div class="titlepage"><div><div><h4 class="title"><a name="d5e364"></a>3.3.1.&nbsp;Pre Generation of a special filter with the ITK-Wrapper</h4></div></div></div>
+        
+            
+
+        
+            <p>As an example to explain how a special filter can be created we
+        take a closer look at the <a class="ulink" href="http://www.itk.org/Doxygen/html/classitk_1_1LabelMapOverlayImageFilter.html" target="_top">LabelMapContourOverlayImageFilter</a>.
+        The special thing about this filter is, that it needs a <a class="ulink" href="http://www.itk.org/Doxygen/html/classitk_1_1LabelMap.html" target="_top">LabelMap</a>
+        as one input which is a special representation of an image that is not
+        supported by Voreen. Therefore we need a second filter, e.g the <a class="ulink" href="http://www.itk.org/Doxygen/html/classitk_1_1BinaryImageToLabelMapFilter.html" target="_top">BinaryImageToLabelMapFilter</a>,
+        which can convert a "normal" image to a LabelMap and take it's output
+        as input for the LabelMapContourOverlayImageFilter. This is not
+        directly possible with the ITK-Wrapper but we can use the wrapper to
+        pre generate a filter which can then be enhanced.</p>
+
+        
+            <p>As a first step we pre-define the filter with all needed ports
+        and attributes in its module XML "ITKImageFusion" and let the wrapper
+        generate a Voreen processor out of this definition:</p>
+
+        
+            <pre class="programlisting">&lt;?xml version="1.0" ?&gt;
+&lt;VoreenData version="1"&gt;
+  &lt;ITK_Module name="ITKImageFusion" group="Filtering"&gt;
+    &lt;filterlist&gt;
+      ...
+      &lt;filter name="LabelMapContourOverlayImageFilter"&gt;
+        &lt;inports&gt;
+          &lt;port name="LabelImage"&gt;
+            &lt;possibleTypes&gt;
+              &lt;type value="IntegerScalar"/&gt;
+            &lt;/possibleTypes&gt;
+          &lt;/port&gt;
+          &lt;port name="FeatureImage" nameIsSetter="true"&gt;
+            &lt;possibleTypes&gt;
+              &lt;type value="IntegerScalar"/&gt;
+            &lt;/possibleTypes&gt;
+          &lt;/port&gt;
+        &lt;/inports&gt;
+        &lt;outports&gt;
+          &lt;port name="OutputImage"&gt;
+            &lt;possibleTypes&gt;
+              &lt;type value="3xInt16"/&gt;
+            &lt;/possibleTypes&gt;
+          &lt;/port&gt;
+        &lt;/outports&gt;
+        &lt;arguments&gt;
+          &lt;argument name="Opacity" argumenttype="Float" defaultValue="0.5f" 
+                    minValue="0.0f" maxValue="1.0f"/&gt;
+        &lt;/arguments&gt;
+      &lt;/filter&gt;
+      ...
+    &lt;/filterlist&gt;
+  &lt;/ITK_Module&gt;
+&lt;/VoreenData</pre>
+
+        
+            <p>The generated processor-.cpp then looks like this:</p>
+
+        
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+            
+                  <p>First there are some includes:</p>
+
+            
+                  <pre class="programlisting">#include "labelmapcontouroverlayimagefilter.h"
+#include "voreen/core/datastructures/volume/volume.h"
+#include "voreen/core/datastructures/volume/volumehandle.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/ports/conditions/portconditionvolumetype.h"
+#include "modules/itk/utils/itkwrapper.h"
+#include "voreen/core/datastructures/volume/operators/volumeoperatorconvert.h"
+#include "itkImage.h"
+
+#include "itkLabelMapContourOverlayImageFilter.h"
+
+#include &lt;iostream&gt;</pre>
+          
+               </li><li class="listitem">
+            
+                  <p>Then the two inputs and the output, represented through
+            ports, and the attribute, represented through a property, are
+            defined:</p>
+
+            
+                  <pre class="programlisting">namespace voreen {
+
+const std::string LabelMapContourOverlayImageFilterITK::
+                  loggerCat_("voreen.LabelMapContourOverlayImageFilterITK");
+
+LabelMapContourOverlayImageFilterITK::LabelMapContourOverlayImageFilterITK()
+    : ITKProcessor(),
+    inport1_(Port::INPORT, "LabelImage"),
+    inport2_(Port::INPORT, "FeatureImage"),
+    outport1_(Port::OUTPORT, "OutputImage"),
+    opacity_("opacity", "Opacity", 0.5f, 0.0f, 1.0f)
+{
+    addPort(inport1_);
+    PortConditionLogicalOr* orCondition1 = new PortConditionLogicalOr();
+    orCondition1-&gt;addLinkedCondition(new PortConditionVolumeTypeUInt8());
+    orCondition1-&gt;addLinkedCondition(new PortConditionVolumeTypeInt8());
+    orCondition1-&gt;addLinkedCondition(new PortConditionVolumeTypeUInt16());
+    orCondition1-&gt;addLinkedCondition(new PortConditionVolumeTypeInt16());
+    orCondition1-&gt;addLinkedCondition(new PortConditionVolumeTypeUInt32());
+    orCondition1-&gt;addLinkedCondition(new PortConditionVolumeTypeInt32());
+    inport1_.addCondition(orCondition1);
+    addPort(inport2_);
+    PortConditionLogicalOr* orCondition2 = new PortConditionLogicalOr();
+    orCondition2-&gt;addLinkedCondition(new PortConditionVolumeTypeUInt8());
+    orCondition2-&gt;addLinkedCondition(new PortConditionVolumeTypeInt8());
+    orCondition2-&gt;addLinkedCondition(new PortConditionVolumeTypeUInt16());
+    orCondition2-&gt;addLinkedCondition(new PortConditionVolumeTypeInt16());
+    orCondition2-&gt;addLinkedCondition(new PortConditionVolumeTypeUInt32());
+    orCondition2-&gt;addLinkedCondition(new PortConditionVolumeTypeInt32());
+    inport2_.addCondition(orCondition2);
+    addPort(outport1_);
+
+    addProperty(opacity_);
+}
+
+Processor* LabelMapContourOverlayImageFilterITK::create() const {
+    return new LabelMapContourOverlayImageFilterITK();
+}</pre>
+          
+               </li><li class="listitem">
+            
+                  <p>After that the most important part follows, the
+            labelMapContourOverlayImageFilterITK method which defines and
+            performs the filter with the transferred
+            template-arguments:</p>
+
+            
+                  <p>Here first of all the image types of the two inputs and the
+            output and two ITK SmartPointers which point to the input images
+            are defined.</p>
+
+            
+                  <pre class="programlisting">template&lt;class T, class S&gt;
+void LabelMapContourOverlayImageFilterITK::labelMapContourOverlayImageFilterITK() {
+
+    typedef itk::Image&lt;T, 3&gt; InputImageType1;
+    typedef itk::Image&lt;S, 3&gt; InputImageType2;
+    typedef itk::Image&lt;itk::CovariantVector&lt;int16_t,3&gt;, 3&gt; OutputImageType1;
+
+    typename InputImageType1::Pointer p1 = voreenToITK&lt;T&gt;(inport1_.getData());
+    typename InputImageType2::Pointer p2 = voreenToITK&lt;S&gt;(inport2_.getData());</pre>
+
+            
+                  <p>Then the filter definition follows which will not work like
+            this because the first template argument of the filter needs to be
+            a TLabelMap and not a TImage. Therefore the following
+            SetInput(p1)-command also won't work whereas the second input and
+            the argument of the filter are set correctly.</p>
+
+            
+                  <pre class="programlisting">    //Filter define
+    typedef itk::LabelMapContourOverlayImageFilter&lt;InputImageType1, InputImageType2, 
+                                                   OutputImageType1&gt; FilterType;
+    typename FilterType::Pointer filter = FilterType::New();
+
+    filter-&gt;SetInput(p1);
+    filter-&gt;SetFeatureImage(p2);
+
+    filter-&gt;SetOpacity(opacity_.get());</pre>
+
+            
+                  <p>In the last part the filter is performed and the output is
+            set.</p>
+
+            
+                  <pre class="programlisting">    observe(filter.GetPointer());
+
+    try
+    {
+        filter-&gt;Update();
+    }
+    catch (itk::ExceptionObject &amp;e)
+    {
+        LERROR(e);
+    }
+
+    VolumeHandle* outputVolume1 = 0;
+    outputVolume1 = ITKVec3ToVoreenVec3Copy&lt;int16_t&gt;(filter-&gt;GetOutput());
+
+    if (outputVolume1)
+        outport1_.setData(outputVolume1);
+    else
+        outport1_.setData(0);
+}</pre>
+          
+               </li><li class="listitem">
+            
+                  <p>After that the processing-methods follow which validate the
+            allowed volume types for the inputs and call the
+            labelMapContourOverlayImageFilterITK method with the appropriate
+            template-arguments.</p>
+
+            
+                  <pre class="programlisting">void LabelMapContourOverlayImageFilterITK::process() {
+    const VolumeHandleBase* inputHandle1 = inport1_.getData();
+    const Volume* inputVolume1 = inputHandle1-&gt;getRepresentation&lt;Volume&gt;();
+    
+    if (dynamic_cast&lt;const VolumeUInt8*&gt;(inputVolume1))  {
+        volumeTypeSwitch1&lt;uint8_t&gt;();
+    }
+    else if (dynamic_cast&lt;const VolumeInt8*&gt;(inputVolume1))  {
+        volumeTypeSwitch1&lt;int8_t&gt;();
+    }
+    else if (dynamic_cast&lt;const VolumeUInt16*&gt;(inputVolume1))  {
+        volumeTypeSwitch1&lt;uint16_t&gt;();
+    }
+    else if (dynamic_cast&lt;const VolumeInt16*&gt;(inputVolume1))  {
+        volumeTypeSwitch1&lt;int16_t&gt;();
+    }
+    else if (dynamic_cast&lt;const VolumeUInt32*&gt;(inputVolume1))  {
+        volumeTypeSwitch1&lt;uint32_t&gt;();
+    }
+    else if (dynamic_cast&lt;const VolumeInt32*&gt;(inputVolume1))  {
+        volumeTypeSwitch1&lt;int32_t&gt;();
+    }
+    else {
+        LERROR("Inputformat of Volume 1 is not supported!");
+    }
+}
+
+template &lt;class T&gt;
+void LabelMapContourOverlayImageFilterITK::volumeTypeSwitch1() {
+    const VolumeHandleBase* inputHandle2 = inport2_.getData();
+    const Volume* inputVolume2 = inputHandle2-&gt;getRepresentation&lt;Volume&gt;();
+    
+    if (dynamic_cast&lt;const VolumeUInt8*&gt;(inputVolume2))  {
+        labelMapContourOverlayImageFilterITK&lt;T, uint8_t&gt;();
+    }
+    else if (dynamic_cast&lt;const VolumeInt8*&gt;(inputVolume2))  {
+        labelMapContourOverlayImageFilterITK&lt;T, int8_t&gt;();
+    }
+    else if (dynamic_cast&lt;const VolumeUInt16*&gt;(inputVolume2))  {
+        labelMapContourOverlayImageFilterITK&lt;T, uint16_t&gt;();
+    }
+    else if (dynamic_cast&lt;const VolumeInt16*&gt;(inputVolume2))  {
+        labelMapContourOverlayImageFilterITK&lt;T, int16_t&gt;();
+    }
+    else if (dynamic_cast&lt;const VolumeUInt32*&gt;(inputVolume2))  {
+        labelMapContourOverlayImageFilterITK&lt;T, uint32_t&gt;();
+    }
+    else if (dynamic_cast&lt;const VolumeInt32*&gt;(inputVolume2))  {
+        labelMapContourOverlayImageFilterITK&lt;T, int32_t&gt;();
+    }
+    else {
+        LERROR("Inputformat of Volume 2 is not supported!");
+    }
+}
+}   // namespace</pre>
+          
+               </li></ul></div>
+
+        
+            <p>And the generated processor.h looks like this:</p>
+
+        
+            <pre class="programlisting">#ifndef VRN_LABELMAPCONTOUROVERLAYIMAGEFILTER_H
+#define VRN_LABELMAPCONTOUROVERLAYIMAGEFILTER_H
+
+#include "modules/itk/processors/itkprocessor.h"
+#include "voreen/core/processors/volumeprocessor.h"
+#include "voreen/core/ports/allports.h"
+#include &lt;string&gt;
+
+#include "voreen/core/properties/floatproperty.h"
+
+namespace voreen {
+
+class VolumeHandleBase;
+
+class LabelMapContourOverlayImageFilterITK : public ITKProcessor {
+public:
+    LabelMapContourOverlayImageFilterITK();
+
+    virtual Processor* create() const;
+
+    virtual std::string getCategory() const   { 
+        return "Volume Processing/Filtering/ImageFusion"; 
+    }
+    virtual std::string getClassName() const  { 
+        return "LabelMapContourOverlayImageFilterITK";  
+    }
+    virtual CodeState getCodeState() const    { 
+        return CODE_STATE_EXPERIMENTAL; 
+    }
+
+protected:
+    template&lt;class T, class S&gt;
+    void labelMapContourOverlayImageFilterITK();
+
+    virtual void process();
+    template&lt;class T&gt;
+    void volumeTypeSwitch1();
+
+private:
+    VolumePort inport1_;
+    VolumePort inport2_;
+    VolumePort outport1_;
+
+    FloatProperty opacity_;
+
+    static const std::string loggerCat_;
+};
+}
+#endif</pre>
+
+        
+            <p>Now we enhance the processor.cpp by the following lines to make
+        the filter work:</p>
+
+        
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+            
+                  <p>As mentioned above we need for example the <a class="ulink" href="http://www.itk.org/Doxygen/html/classitk_1_1BinaryImageToLabelMapFilter.html" target="_top">BinaryImageToLabelMapFilter</a>
+            to convert the first input image to a LabelMap. Therefore we need
+            to include this filter first:</p>
+
+            
+                  <pre class="programlisting">...
+#include "itkLabelMapContourOverlayImageFilter.h"
+<span class="bold"><strong>#include "itkBinaryImageToLabelMapFilter.h"</strong></span>
+...</pre>
+          
+               </li><li class="listitem">
+            
+                  <p>Then this filter must be defined and convert the first input
+            image to a LabelMap:</p>
+
+            
+                  <pre class="programlisting">...
+    typedef itk::Image&lt;T, 3&gt; InputImageType1;    
+    typedef itk::Image&lt;S, 3&gt; InputImageType2;
+    typedef itk::Image&lt;itk::CovariantVector&lt;T,3&gt;, 3&gt; OutputImageType1;
+
+    typename InputImageType1::Pointer p1 = voreenToITK&lt;T&gt;(inport1_.getData());
+    typename InputImageType2::Pointer p2 = voreenToITK&lt;S&gt;(inport2_.getData());
+
+    <span class="bold"><strong>typedef itk::BinaryImageToLabelMapFilter&lt;InputImageType1&gt; LabelMapType;</strong></span>
+    
+                     <span class="bold"><strong>LabelMapType::Pointer labelMap = LabelMapType::New();
+    labelMap-&gt;SetInput(p1);
+    labelMap-&gt;Update();</strong></span>
+
+
+                  </pre>
+          
+               </li><li class="listitem">
+            
+                  <p>After that the output of this filter can be used as input
+            for the LabelMapContourOverlayImageFilter:</p>
+
+            
+                  <pre class="programlisting">    //Filter define
+    typedef itk::LabelMapContourOverlayImageFilter&lt;<span class="bold"><strong>LabelMapType::OutputImageType</strong></span>, 
+                                                   InputImageType2, 
+                                                   OutputImageType1&gt; FilterType;
+    typename FilterType::Pointer filter = FilterType::New();
+      
+    filter-&gt;SetInput(<span class="bold"><strong>labelMap-&gt;GetOutput()</strong></span>);
+    filter-&gt;SetFeatureImage(p2);
+
+...</pre>
+          
+               </li></ul></div>
+
+        
+            <p>After these changes the LabelMapContourOverlayImageFilter will
+        work but it is also possible to add more things like for example a
+        read only property that shows how many objects the filter has found in
+        the image for a more comfortable analysis of the filter.</p>
+
+        
+            <p>Therefore additionally the following lines can be added to the
+        .cpp-file:</p>
+
+        
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+            
+                  <p>First the new property-definition:</p>
+
+            
+                  <pre class="programlisting">LabelMapContourOverlayImageFilterITK::LabelMapContourOverlayImageFilterITK()
+    : ITKProcessor(),
+    inport1_(Port::INPORT, "LabelMap"),
+    inport2_(Port::INPORT, "FeatureImage"),
+    outport1_(Port::OUTPORT, "OutputImage"),
+    <span class="bold"><strong>numObjects_("numObjects", "Number of Objects", 0, 0, 1000),</strong></span>
+    opacity_("opacity", "Opacity", 0.0f, 0.f, 1.f)
+{
+    ...
+
+    <span class="bold"><strong>addProperty(numObjects_);
+    numObjects_.setWidgetsEnabled(false);</strong></span>
+    addProperty(opacity_);
+}</pre>
+          
+               </li><li class="listitem">
+            
+                  <p>And then the setting of this property:</p>
+
+            
+                  <pre class="programlisting">    ...
+    LabelMapType::Pointer labelMap = LabelMapType::New();
+    labelMap-&gt;SetInput(p1);
+    labelMap-&gt;Update();
+    <span class="bold"><strong>numObjects_.set(labelMap-&gt;GetOutput()-&gt;GetNumberOfLabelObjects());
+    ...</strong></span>
+                  </pre>
+          
+               </li></ul></div>
+
+        
+            <p>... and to the .h-file:</p>
+
+        
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+            
+                  <p>The new IntProperty:</p>
+
+            
+                  <pre class="programlisting">...
+
+#include "voreen/core/properties/floatproperty.h"
+<span class="bold"><strong>#include "voreen/core/properties/intproperty.h"</strong></span>
+
+namespace voreen {
+
+class VolumeHandleBase;
+
+class LabelMapContourOverlayImageFilterITK : public ITKProcessor {
+...
+
+private:
+    VolumePort inport1_;
+    VolumePort inport2_;
+    VolumePort outport1_;
+
+    <span class="bold"><strong>IntProperty numObjects_;</strong></span>
+    FloatProperty opacity_;
+
+    static const std::string loggerCat_;
+};
+}
+#endif</pre>
+          
+               </li></ul></div>
+
+        
+            <p>Now the LabelMapContourOverlayImageFilter is complete and works
+        for the moment. But there is still a problem:</p>
+
+        
+            <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+            
+                  <p>The filter will be overwritten after running the ITK-Wrapper
+            again!</p>
+          
+               </li></ul></div>
+
+        
+            <p>The next section describes how to solve this problem.</p>
+      
+         </div>
+
+      
+         <div class="sect3" title="3.3.2.&nbsp;Integrating a special filter to Voreen with the ITK-Wrapper"><div class="titlepage"><div><div><h4 class="title"><a name="d5e434"></a>3.3.2.&nbsp;Integrating a special filter to Voreen with the
+        ITK-Wrapper</h4></div></div></div>
+        
+            
+
+        
+            <p>As mentioned in the last chapter we can use the ITK-Wrapper to
+        pre generate a special filter and then enhance this filter. But if we
+        run the wrapper again these enhancements will be lost. To prevent this
+        you have to copy the filter's .cpp- and .h-file to the
+        <code class="filename">specialFilters</code> directory (see section 2) where
+        all special filters are stored.</p>
+
+        
+            <p>Apart from this you have to change the filter's definition in
+        the "ITKImageFusion" xml like this:</p>
+
+        
+            <pre class="programlisting">...
+      &lt;filter name="LabelMapContourOverlayImageFilter" <span class="bold"><strong>autoGenerated="false"</strong></span>
+              
+               <span class="bold"><strong>codeState ="STABLE"</strong></span>&gt;
+      &lt;/filter&gt;
+...</pre>
+
+        
+            <p>This has the effect that the ITK-Wrapper copies the
+        processor-files of the filter from the specialFilters directory to
+        it's module directory under
+        "<code class="filename">module/itk_generated/processors</code>" and adds the
+        filter to the <code class="filename">itk_generatedmodule.cpp</code>, the
+        <code class="filename">itk_generated_core.pri</code> and the
+        <code class="filename">itk_generated_module.xml</code>.</p>
+
+        
+            <p>
+               <span class="bold"><strong>Note:</strong></span> The
+        <span class="emphasis"><em>codeState</em></span> will not be set by the wrapper if the
+        filter's attribute <span class="emphasis"><em>autoGenerated</em></span> is set to
+        <span class="emphasis"><em>false</em></span>. It is just set to have an overview of the
+        code states of a module. So you have to set the codeState in the
+        .h-file of the filter in the specialFilters directory on your
+        own.</p>
+
+        
+            <p>After that you can run the ITK-Wrapper again without overwriting
+        the new filter. </p>
+      
+         </div>
+    
+      </div>
+  
+   </div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left">&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;</td></tr><tr><td width="40%" align="left" valign="top">&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;</td></tr></table></div></body></html>

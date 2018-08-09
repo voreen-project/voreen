@@ -1,0 +1,1 @@
+Windows Users: Put pre-built GDCMv2 library here (see voreen.uni-muenster.de)

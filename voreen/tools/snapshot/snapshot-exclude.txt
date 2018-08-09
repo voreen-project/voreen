@@ -1,0 +1,45 @@
+# List of files and directories that should be excluded from the snapshot source release.
+# Each entry is interpreted as Perl regular expression, which is compared to the dir/file path
+# relative to the work directory, e.g., "\.svn" results in the comparison: "$relpath =~ m/\.svn/"
+#
+# NOTE that certain non-alphanumeric characters function as meta-characters in regular expressions 
+# and need to be escaped, if they are to be interpreted literally. This especially applies
+# to the ".", which matches any character if not escaped!
+
+\.svn
+\.git
+\.gitignore
+\.moc
+
+# remove .ui directories, but not aboutbox.ui
+\/\.ui
+
+\.obj
+#\.pdb
+\.idb
+\.ncb
+\.vcproj
+\.sln
+\.suo
+
+Makefile
+modules/gen_moduleregistration.h
+modules/gen_moduleregistration_qt.h
+modules/gen_moduleregistration_ve.h
+voreenve-log.html
+apps/voreenve/voreenve$
+apps/voltool/voltool$
+qrc_vrn_qt.cpp
+qrc_vrn_app.cpp
+
+# VS build directories
+src\\core\\Debug
+src\\core\\Release
+src\\qt\\Debug
+src\\qt\\Release
+apps\\voreenve\\Debug
+apps\\voreenve\\Release
+apps\\voltool\\Debug
+apps\\voltool\\Release
+apps\\simple\\Debug
+apps\\simple\\Release

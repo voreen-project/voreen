@@ -1,0 +1,60 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <TransFuncIntensity>
+        <Keys>
+            <key>
+                <intensity value="0.000000" />
+                <split value="false" />
+                <colorL r="43" g="0" b="141" a="255" />
+            </key>
+            <key>
+                <intensity value="0.010558" />
+                <split value="false" />
+                <colorL r="92" g="2" b="250" a="255" />
+            </key>
+            <key>
+                <intensity value="0.022396" />
+                <split value="false" />
+                <colorL r="146" g="0" b="170" a="255" />
+            </key>
+            <key>
+                <intensity value="0.033275" />
+                <split value="false" />
+                <colorL r="196" g="7" b="87" a="255" />
+            </key>
+            <key>
+                <intensity value="0.044793" />
+                <split value="false" />
+                <colorL r="250" g="64" b="5" a="255" />
+            </key>
+            <key>
+                <intensity value="0.055991" />
+                <split value="false" />
+                <colorL r="255" g="121" b="0" a="255" />
+            </key>
+            <key>
+                <intensity value="0.067189" />
+                <split value="false" />
+                <colorL r="254" g="177" b="3" a="255" />
+            </key>
+            <key>
+                <intensity value="0.078067" />
+                <split value="false" />
+                <colorL r="252" g="234" b="2" a="255" />
+            </key>
+            <key>
+                <intensity value="0.088306" />
+                <split value="false" />
+                <colorL r="253" g="246" b="33" a="255" />
+            </key>
+            <key>
+                <intensity value="0.099504" />
+                <split value="true" />
+                <colorL r="255" g="255" b="255" a="255" />
+                <colorR r="0" g="0" b="0" a="0" />
+            </key>
+        </Keys>
+        <lower value="0.000000" />
+        <upper value="0.099184" />
+    </TransFuncIntensity>
+</VoreenData>

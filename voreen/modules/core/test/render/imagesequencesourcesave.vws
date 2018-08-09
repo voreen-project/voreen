@@ -1,0 +1,86 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" GlobalDescription="">
+        <ProcessorNetwork version="13">
+            <Processors>
+                <Processor type="ImageSequenceSource" name="ImageSequenceSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="196" y="-344" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="clearSequence" />
+                        <Property name="imageDirectory" noPathSet="false" value="input/images/sequence" />
+                        <Property name="numImages" value="3" />
+                        <Property name="reloadSequence" />
+                        <Property name="showProgressBar" value="false" />
+                        <Property name="textureFiltering" value="true" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="imagesequence.out">
+                            <Properties />
+                        </Port>
+                    </Outports>
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageSequenceSave" name="SequenceSave Basename" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="81" y="-211" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="basename" value="sequence" />
+                        <Property name="continousSave" value="false" />
+                        <Property name="outputDirectory" noPathSet="false" value="output" />
+                        <Property name="save" />
+                    </Properties>
+                    <Inports>
+                        <Port name="imagesequence.input">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ImageSequenceSave" name="SequenceSave Filename" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="296" y="-210" />
+                    </MetaData>
+                    <Properties>
+                        <Property name="basename" value="" />
+                        <Property name="continousSave" value="false" />
+                        <Property name="outputDirectory" noPathSet="false" value="output" />
+                        <Property name="save" />
+                    </Properties>
+                    <Inports>
+                        <Port name="imagesequence.input">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="imagesequence.out">
+                        <Processor type="ImageSequenceSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="imagesequence.input">
+                        <Processor type="ImageSequenceSave" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="imagesequence.out">
+                        <Processor type="ImageSequenceSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="imagesequence.input">
+                        <Processor type="ImageSequenceSave" ref="ref2" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+    </Workspace>
+</VoreenData>

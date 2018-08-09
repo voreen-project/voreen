@@ -1,0 +1,311 @@
+<html>
+<head></head>
+<body>
+<h1>Action-/Goto-Table</h1>
+<table border="1">
+  <tr>
+    <th>&nbsp;</th>
+    <th>[$START$]</th><th>[</th><th>]</th><th>=</th><th>@</th>
+    <th>,</th><th>"</th><th>'</th><th>true</th><th>false</th>
+    <th>IDENTIFIER</th><th>INTCONST</th><th>FLOATCONST</th><th>STRING</th><th>CHARACTER</th>
+    <th>[annotation]</th><th>[tag-list]</th><th>[tag]</th><th>[tag-assignment]</th><th>[value-list]</th>
+    <th>[single-value]</th><th>[tag-name]</th><th>$END$</th>  </tr>
+  <tr>
+    <td>0</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>transition -> 1</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>transition -> 2</td><td>transition -> 5</td><td>transition -> 3</td><td>transition -> 4</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>transition -> 6</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>1</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>transition -> 7</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>2</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>accept</td>  </tr>
+  <tr>
+    <td>3</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 2</td>
+    <td>reduce: pid = 2</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 2</td>  </tr>
+  <tr>
+    <td>4</td>
+    <td>&nbsp;</td><td>transition -> 12</td><td>&nbsp;</td><td>&nbsp;</td><td>transition -> 1</td>
+    <td>&nbsp;</td><td>transition -> 8</td><td>transition -> 9</td><td>transition -> 16</td><td>transition -> 13</td>
+    <td>&nbsp;</td><td>transition -> 11</td><td>transition -> 10</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>transition -> 14</td><td>transition -> 15</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>5</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>transition -> 1</td>
+    <td>transition -> 17</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>transition -> 18</td><td>transition -> 4</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>transition -> 6</td><td>reduce: pid = 1</td>  </tr>
+  <tr>
+    <td>6</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>transition -> 19</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>7</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 9</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>8</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>transition -> 20</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>9</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>transition -> 21</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>10</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 15</td><td>&nbsp;</td><td>reduce: pid = 15</td>
+    <td>reduce: pid = 15</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 15</td>  </tr>
+  <tr>
+    <td>11</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 14</td><td>&nbsp;</td><td>reduce: pid = 14</td>
+    <td>reduce: pid = 14</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 14</td>  </tr>
+  <tr>
+    <td>12</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>transition -> 8</td><td>transition -> 9</td><td>transition -> 16</td><td>transition -> 13</td>
+    <td>&nbsp;</td><td>transition -> 11</td><td>transition -> 10</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>transition -> 23</td>
+    <td>transition -> 22</td><td>&nbsp;</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>13</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 13</td><td>&nbsp;</td><td>reduce: pid = 13</td>
+    <td>reduce: pid = 13</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 13</td>  </tr>
+  <tr>
+    <td>14</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 6</td>
+    <td>reduce: pid = 6</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 6</td>  </tr>
+  <tr>
+    <td>15</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>transition -> 24</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>16</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 12</td><td>&nbsp;</td><td>reduce: pid = 12</td>
+    <td>reduce: pid = 12</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 12</td>  </tr>
+  <tr>
+    <td>17</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>transition -> 1</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>transition -> 25</td><td>transition -> 4</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>transition -> 6</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>18</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 3</td>
+    <td>reduce: pid = 3</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 3</td>  </tr>
+  <tr>
+    <td>19</td>
+    <td>&nbsp;</td><td>reduce: pid = 7</td><td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 7</td>
+    <td>&nbsp;</td><td>reduce: pid = 7</td><td>reduce: pid = 7</td><td>reduce: pid = 7</td><td>reduce: pid = 7</td>
+    <td>&nbsp;</td><td>reduce: pid = 7</td><td>reduce: pid = 7</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>20</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>transition -> 26</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>21</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>transition -> 27</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>22</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 10</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>reduce: pid = 10</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>23</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>transition -> 29</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>transition -> 28</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>24</td>
+    <td>&nbsp;</td><td>reduce: pid = 8</td><td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 8</td>
+    <td>&nbsp;</td><td>reduce: pid = 8</td><td>reduce: pid = 8</td><td>reduce: pid = 8</td><td>reduce: pid = 8</td>
+    <td>&nbsp;</td><td>reduce: pid = 8</td><td>reduce: pid = 8</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>25</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 4</td>
+    <td>reduce: pid = 4</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 4</td>  </tr>
+  <tr>
+    <td>26</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 16</td><td>&nbsp;</td><td>reduce: pid = 16</td>
+    <td>reduce: pid = 16</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 16</td>  </tr>
+  <tr>
+    <td>27</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 17</td><td>&nbsp;</td><td>reduce: pid = 17</td>
+    <td>reduce: pid = 17</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 17</td>  </tr>
+  <tr>
+    <td>28</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>transition -> 8</td><td>transition -> 9</td><td>transition -> 16</td><td>transition -> 13</td>
+    <td>&nbsp;</td><td>transition -> 11</td><td>transition -> 10</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>transition -> 30</td><td>&nbsp;</td><td>&nbsp;</td>  </tr>
+  <tr>
+    <td>29</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 5</td>
+    <td>reduce: pid = 5</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 5</td>  </tr>
+  <tr>
+    <td>30</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>reduce: pid = 11</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>reduce: pid = 11</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>  </tr>
+</table>
+<h1>Productions</h1>
+<table border="1">
+  <tr>
+    <th>PID</th>
+    <th>Production</th>
+  </tr>
+  <tr>
+    <td>0</td>
+    <td>[$START$] ::= [annotation]</td>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td>[annotation] ::= [tag-list]</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>[tag-list] ::= [tag]</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>[tag-list] ::= [tag-list] [tag]</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>[tag-list] ::= [tag-list] , [tag]</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>[tag] ::= [tag-assignment] [ [value-list] ]</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td>[tag] ::= [tag-assignment] [single-value]</td>
+  </tr>
+  <tr>
+    <td>7</td>
+    <td>[tag-assignment] ::= [tag-name] =</td>
+  </tr>
+  <tr>
+    <td>8</td>
+    <td>[tag-assignment] ::= [tag-assignment] [tag-name] =</td>
+  </tr>
+  <tr>
+    <td>9</td>
+    <td>[tag-name] ::= @ IDENTIFIER</td>
+  </tr>
+  <tr>
+    <td>10</td>
+    <td>[value-list] ::= [single-value]</td>
+  </tr>
+  <tr>
+    <td>11</td>
+    <td>[value-list] ::= [value-list] , [single-value]</td>
+  </tr>
+  <tr>
+    <td>12</td>
+    <td>[single-value] ::= true</td>
+  </tr>
+  <tr>
+    <td>13</td>
+    <td>[single-value] ::= false</td>
+  </tr>
+  <tr>
+    <td>14</td>
+    <td>[single-value] ::= INTCONST</td>
+  </tr>
+  <tr>
+    <td>15</td>
+    <td>[single-value] ::= FLOATCONST</td>
+  </tr>
+  <tr>
+    <td>16</td>
+    <td>[single-value] ::= " STRING "</td>
+  </tr>
+  <tr>
+    <td>17</td>
+    <td>[single-value] ::= ' CHARACTER '</td>
+  </tr>
+</table>
+</body>
+</html>
