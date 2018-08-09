@@ -138,6 +138,7 @@ SET(MOD_CORE_HEADERS
 SET(MOD_INSTALL_DIRECTORIES
     ${MOD_DIR}/cl
     ${MOD_DIR}/glsl
+    ${MOD_DIR}/workspaces
 )
 
 ################################################################################

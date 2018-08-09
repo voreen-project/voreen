@@ -120,3 +120,12 @@ SET(MOD_QT_HEADERS
 SET(MOD_QT_HEADERS_NONMOC
     ${MOD_DIR}/qt/processor/bodyparts3dprocessorwidgetfactory.h
 )
+
+
+# deployment
+SET(MOD_INSTALL_DIRECTORIES
+    ${MOD_DIR}/bodypartsdata
+    ${MOD_DIR}/glsl
+    ${MOD_DIR}/textures
+    ${MOD_DIR}/workspaces
+)

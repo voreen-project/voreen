@@ -12,3 +12,9 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/sampleprocessor.h
     ${MOD_DIR}/processors/samplerenderprocessor.h
 )
+
+# deployment
+SET(MOD_INSTALL_DIRECTORIES
+    ${MOD_DIR}/glsl
+    ${MOD_DIR}/workspaces
+)

@@ -41,6 +41,11 @@ ELSEIF(UNIX)
     ELSE()
         MESSAGE(FATAL_ERROR "Python library not found!")
     ENDIF()
+    
+    # deployment
+    SET(MOD_INSTALL_DIRECTORIES
+        ${MOD_DIR}/scripts
+    )
 ENDIF()
 
 
