@@ -41,7 +41,9 @@ Voreen Changelog
       o Python module now uses Python 3 instead of Python 2.7
       o Introduced GlMeshGeometry class to replace TriangleMeshGeometry perspectively
       o Introduced command queue for better event and callback handling
-      o Better handling of temporary data (in particular by introducing the TempPathProperty class)
+      o Better handling of temporary data (in particular by introducing the TempPathProperty class)	      
+      o Added warnings for non-initialized uniforms in shaders
+
 
     * Bug Fixes/Minor Changes:
       o Fixes for background threads computing derived data
