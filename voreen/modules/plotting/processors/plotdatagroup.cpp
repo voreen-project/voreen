@@ -76,11 +76,6 @@ void PlotDataGroup::initialize() {
     Processor::initialize();
 
     pDataOut_ = new PlotData(0, 0);
-    if (inPort_.hasData()) {
-        readData();
-        calculate();
-    }
-    setOutPortData();
 }
 
 void PlotDataGroup::deinitialize() {
