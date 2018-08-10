@@ -4,14 +4,14 @@ Tobias Brix
 Raphael Bruns
 Alexander Bock
 Benjamin Bolte
-Helge Böschen
+Helge BÃ¶schen
 Mathias Dehne
 Stefan Diepenbrock
-Christian Döring
+Christian DÃ¶ring
 Dominik Drees
 Maike Dudek
 Jan Esser
-André Exeler
+AndrÃ© Exeler
 Dirk Feldmann
 Alejandro Figueroa Meana
 Timo Griese
@@ -20,16 +20,16 @@ Dieter Janzen
 Jens Kasten
 Daniel Kirsch
 Rico Lehmann
-Roland Leißa
+Roland LeiÃŸa
 Simon Leistikow
 Florian Lindemann
 Markus Madeja
-Jörg Mensmann
+JÃ¶rg Mensmann
 Jennis Meyer-Spradow
 Zoha Moztarzadeh
 Reza Nawrozi
 Borislav Petkov
-Jörg-Stefan Praßni
+JÃ¶rg-Stefan PraÃŸni
 Stephan Rademacher
 Rainer Reich
 Mona Riemenschneider
@@ -37,12 +37,12 @@ Timo Ropinski
 Christoph Rosemann
 Jan Roters
 Aaron Scherzinger
-Sönke Schmid
+SÃ¶nke Schmid
 Christian Schulte zu Berge
 Michael Specht
 Fabian Spiegel
 David Terbeek
-Andreas Völker
+Andreas VÃ¶lker
 Christian Vorholt
 Carolin Walter
 Michael Weinkath
