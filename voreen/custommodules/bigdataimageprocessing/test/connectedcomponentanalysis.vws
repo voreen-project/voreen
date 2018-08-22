@@ -62,9 +62,9 @@
                         <Property mapKey="componentStatFilePath" name="componentStatFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/cca6.csv" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/cca6.csv" />
-                                    <item value="/git/voreen-testdata/voreen-testdata/output/cca6.csv" />
+                                    <item value="output/cca6_metadata.csv" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/cca6_metadata.csv" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/cca6_metadata.csv" />
                                 </paths>
                             </paths>
                         </Property>
@@ -79,9 +79,9 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../nosnapshot/tmp/voreentmp/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901/6919ceca-add4-40e0-ab4b-a1f58809f080.h5" />
-                                    <item value="../../../nosnapshot/tmp/voreentmp/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901/6919ceca-add4-40e0-ab4b-a1f58809f080.h5" />
-                                    <item value="/nosnapshot/tmp/voreentmp/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901/6919ceca-add4-40e0-ab4b-a1f58809f080.h5" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/318cf86b-7a79-4a1c-aea4-6dea0788c7a3.h5" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/318cf86b-7a79-4a1c-aea4-6dea0788c7a3.h5" />
+                                    <item value="/nosnapshot/tmp/voreentmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/318cf86b-7a79-4a1c-aea4-6dea0788c7a3.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -120,9 +120,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca6.vvd" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca6.vvd" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/cca6.vvd" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca6.vvd" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca6.vvd" />
+                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca6.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -154,9 +154,9 @@
                         <Property mapKey="componentStatFilePath" name="componentStatFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/cca18.csv" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/cca18.csv" />
-                                    <item value="/git/voreen-testdata/voreen-testdata/output/cca18.csv" />
+                                    <item value="output/cca18_metadata.csv" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/cca18_metadata.csv" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/cca18_metadata.csv" />
                                 </paths>
                             </paths>
                         </Property>
@@ -171,9 +171,9 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../nosnapshot/tmp/voreentmp/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901/c58960d9-4cac-4036-ad2e-1aef26946dae.h5" />
-                                    <item value="../../../nosnapshot/tmp/voreentmp/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901/c58960d9-4cac-4036-ad2e-1aef26946dae.h5" />
-                                    <item value="/nosnapshot/tmp/voreentmp/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901/c58960d9-4cac-4036-ad2e-1aef26946dae.h5" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/4c9fdea7-ba0c-45cc-8f66-240980c37d5c.h5" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/4c9fdea7-ba0c-45cc-8f66-240980c37d5c.h5" />
+                                    <item value="/nosnapshot/tmp/voreentmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/4c9fdea7-ba0c-45cc-8f66-240980c37d5c.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -212,9 +212,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca18.vvd" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca18.vvd" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/cca18.vvd" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca18.vvd" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca18.vvd" />
+                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca18.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -238,7 +238,7 @@
                 </Processor>
                 <Processor type="ConnectedComponentAnalysis" name="CCA 26" id="ref3">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="353" y="-93" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="355" y="-91" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLabeling" name="applyLabeling" value="true" />
@@ -246,9 +246,9 @@
                         <Property mapKey="componentStatFilePath" name="componentStatFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/cca26.csv" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/cca26.csv" />
-                                    <item value="/git/voreen-testdata/voreen-testdata/output/cca26.csv" />
+                                    <item value="output/cca26_metadata.csv" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/cca26_metadata.csv" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/cca26_metadata.csv" />
                                 </paths>
                             </paths>
                         </Property>
@@ -263,9 +263,9 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../nosnapshot/tmp/voreentmp/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901/fced3dbe-eec8-4979-aefd-686432f00d6c.h5" />
-                                    <item value="../../../nosnapshot/tmp/voreentmp/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901/fced3dbe-eec8-4979-aefd-686432f00d6c.h5" />
-                                    <item value="/nosnapshot/tmp/voreentmp/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901/fced3dbe-eec8-4979-aefd-686432f00d6c.h5" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd.h5" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd.h5" />
+                                    <item value="/nosnapshot/tmp/voreentmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -304,9 +304,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca26.vvd" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca26.vvd" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/cca26.vvd" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca26.vvd" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca26.vvd" />
+                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca26.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -371,9 +371,9 @@
                         <Property mapKey="componentStatFilePath" name="componentStatFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/cca_filtered.csv" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/cca_filtered.csv" />
-                                    <item value="/git/voreen-testdata/voreen-testdata/output/cca_filtered.csv" />
+                                    <item value="output/cca_filtered_metadata.csv" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/cca_filtered_metadata.csv" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/cca_filtered_metadata.csv" />
                                 </paths>
                             </paths>
                         </Property>
@@ -388,9 +388,9 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../nosnapshot/tmp/voreentmp/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901/a76fbfb4-5989-4acc-8232-260830730951.h5" />
-                                    <item value="../../../nosnapshot/tmp/voreentmp/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901/a76fbfb4-5989-4acc-8232-260830730951.h5" />
-                                    <item value="/nosnapshot/tmp/voreentmp/5c2edfcc-3b1f-4a4c-9ca9-52248d7d3901/a76fbfb4-5989-4acc-8232-260830730951.h5" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/3466cda7-8b6d-422c-92e4-d22bbe2d4a4d.h5" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/3466cda7-8b6d-422c-92e4-d22bbe2d4a4d.h5" />
+                                    <item value="/nosnapshot/tmp/voreentmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/3466cda7-8b6d-422c-92e4-d22bbe2d4a4d.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -429,9 +429,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca_filtered.vvd" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca_filtered.vvd" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/cca_filtered.vvd" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca_filtered.vvd" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca_filtered.vvd" />
+                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cca_filtered.vvd" />
                                 </paths>
                             </paths>
                         </Property>
