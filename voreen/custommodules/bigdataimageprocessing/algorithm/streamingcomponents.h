@@ -161,7 +161,7 @@ private:
             return numMergers_;
         }
 
-        std::unordered_map<uint64_t, MetaData> getMetadata() const {
+        const std::unordered_map<uint64_t, MetaData>& getMetadata() const {
             return metadata_;
         }
     private:
@@ -491,6 +491,7 @@ SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t
 
     MergerFile tmp(std::move(in));
     std::fstream& mergerFile = tmp.getFile();
+    const auto& metadataMap = tmp.getMetadata();
 
     MergerInfo mergerIds{0, 0};
     NodeWithId* nodes[2];
@@ -533,7 +534,9 @@ SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t
             if(root == node) {
                 // Node is a root => a finished component
                 uint64_t runid = root->id.id();
-                cccallback(finalid, tmp.getMetadata().at(runid));
+                const auto& entry = metadataMap.find(runid);
+                tgtAssert(entry != metadataMap.end(), "No metadata for runid");
+                cccallback(finalid, entry->second);
             }
             data[next_finalized_node_id] = finalid;
             delete node;
