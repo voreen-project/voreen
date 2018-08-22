@@ -304,24 +304,16 @@ void SC_NS::writeOutputVolume(const RootFile& rootFile, const InputType& input, 
             row.init(*activeLayer.get(), z, y, getClass, runIdCounter);
             auto& runs = row.getRuns();
             auto run = runs.begin();
-            for(size_t x = 0; x<dim.x; ++x) {
+            for(size_t x = 0; x<dim.x;) {
+                if(run == runs.end()) {
+                    break;
+                }
+
                 uint32_t id;
-                if(run != runs.end() && run->lowerBound_ <= x) {
-                    if(x >= run->upperBound_) {
-                        tgtAssert(run->upperBound_ == x, "we lost the correct run somehow");
-                        ++run;
-                    }
-                    if(run != runs.end()) {
-                        tgtAssert(run->upperBound_ > x, "overlapping runs");
-                        if(run->lowerBound_ <= x) {
-                            id = rootFile.getRootID(run->getId()); //TODO: make sure component is not filtered out or something
-                            ++voxelCounter;
-                        } else {
-                            id = 0;
-                        }
-                    } else {
-                        id = 0;
-                    }
+                tgtAssert(run->upperBound_ > x, "overlapping runs");
+                if(run->lowerBound_ <= x) {
+                    id = rootFile.getRootID(run->getId());
+                    ++voxelCounter;
                 } else {
                     id = 0;
                 }
@@ -330,6 +322,12 @@ void SC_NS::writeOutputVolume(const RootFile& rootFile, const InputType& input, 
                 } else {
                     tgtAssert((std::is_same<outputBaseType, uint8_t>::value), "invalid output type for binary volume");
                     slice.voxel(x,y,0) = id > 0;
+                }
+
+                ++x;
+                if(x >= run->upperBound_) {
+                    tgtAssert(run->upperBound_ == x, "we lost the correct run somehow");
+                    ++run;
                 }
             }
         }
