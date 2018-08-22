@@ -356,8 +356,13 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
     KDTreeNeighborhoodFinder<VoxelKDElement> nodeVoxelTree(std::move(nodeVoxelTreeBuilder));
 
     size_t progressCounter = 0;
+    size_t progressGranularity = 1 << 20;
     for(const auto& regularSequence : regularSequences_) {
-        progress.setProgress(static_cast<float>(progressCounter++)/regularSequences_.size());
+        if((progressCounter%progressGranularity) == 0) {
+            progress.setProgress(static_cast<float>(progressCounter)/regularSequences_.size());
+        }
+        progressCounter++;
+
         tgtAssert(!regularSequence.voxels_.empty(), "Empty sequence");
         tgt::ivec3 leftEnd = regularSequence.voxels_.front();
         tgt::ivec3 rightEnd = regularSequence.voxels_.back();
