@@ -491,7 +491,6 @@ SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t
     uint32_t* data = reinterpret_cast<uint32_t*>(file_.data());
 
     MergerFile tmp(std::move(in));
-    auto next_merger_id = tmp.getNumMergers();
     std::fstream& mergerFile = tmp.getFile();
 
     MergerInfo mergerIds{0, 0};
@@ -501,7 +500,7 @@ SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t
     std::priority_queue<NodeWithId*, std::vector<NodeWithId*>, NodeWithIdMaxHeapComp> prior;
 
     uint32_t finalIdCounter = 1;
-    while(next_merger_id--) {
+    for(int64_t next_merger_id = tmp.getNumMergers()-1; next_merger_id >= 0; next_merger_id--) {
         mergerFile.seekg(next_merger_id*sizeof(mergerIds));
         mergerFile.read(reinterpret_cast<char*>(&mergerIds), sizeof(mergerIds));
         tgtAssert(mergerFile.good(), "Read error");
@@ -527,8 +526,7 @@ SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t
             handleId(mergerIds.idRoot, nodes[0]);
             nodes[1]->parent = nodes[0];
         }
-        while (prior.top()->id.id() == next_finalized_node_id) {
-            tgtAssert(!prior.empty(), "queue is empty");
+        while (next_finalized_node_id > 0 && !prior.empty() && prior.top()->id.id() == next_finalized_node_id) {
             NodeWithId* node = prior.top();
             prior.pop();
             NodeWithId* root = node->getRoot();
