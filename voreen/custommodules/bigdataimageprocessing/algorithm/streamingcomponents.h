@@ -105,7 +105,7 @@ private:
     class RowStorage; // Forward declaration
 
     template<typename outputBaseType, typename InputType, typename OutputType>
-    void writeRowsToStorage(const RootFile& rootFile, const InputType& input, OutputType& output, getClassFunc getClass, uint64_t& voxelCounter, ProgressReporter& progress) const;
+    void writeOutputVolume(const RootFile& rootFile, const InputType& input, OutputType& output, getClassFunc getClass, uint64_t& voxelCounter, ProgressReporter& progress) const;
 
 
 protected:
@@ -126,12 +126,14 @@ private:
             : output_(filename, std::fstream::binary | std::fstream::in | std::fstream::out | std::fstream::trunc)
             , filename_(filename)
             , numMergers_(0)
+            , metadata_()
         {
         }
         MergerFile(MergerFile&& other)
             : output_(std::move(other.output_))
             , filename_(other.filename_)
             , numMergers_(other.numMergers_)
+            , metadata_(std::move(other.metadata_))
         {
             other.filename_ = "";
             other.numMergers_ = -1;
@@ -140,7 +142,13 @@ private:
             output_.close();
             tgt::FileSystem::deleteFile(filename_);
         }
-        void noteMerger(MergerInfo e) {
+        void noteMerger(MergerInfo e, MetaData metadata) {
+            uint64_t rootid = e.idRoot.id();
+            uint64_t otherid = e.idOther.id();
+            metadata_[rootid] = metadata;
+            if(!e.notesSingleNonConnectedComponent()) {
+                metadata_.erase(otherid);
+            }
             output_.write(reinterpret_cast<char*>(&e), sizeof(e));
             tgtAssert(output_.good(), "Write failed");
             ++numMergers_;
@@ -152,14 +160,20 @@ private:
         uint64_t getNumMergers() const {
             return numMergers_;
         }
+
+        std::unordered_map<uint64_t, MetaData> getMetadata() const {
+            return metadata_;
+        }
     private:
         std::fstream output_;
         std::string filename_;
         uint64_t numMergers_;
+        // Metadata of all root components, mapped via the runid
+        std::unordered_map<uint64_t, MetaData> metadata_;
     };
     class RootFile {
     public:
-        RootFile(MergerFile&& mergerFile, const std::string& filename, uint64_t maxId);
+        RootFile(MergerFile&& mergerFile, const std::string& filename, uint64_t numUsedIds, ComponentCompletionCallback cccallback);
         ~RootFile();
         uint32_t getRootID(uint64_t) const;
         uint32_t getMaxRootId() const;
@@ -214,8 +228,9 @@ private:
         Run(uint64_t id, tgt::svec2 yzPos_, size_t lowerBound_, size_t upperBound_, ClassID cls);
         ~Run();
 
+        // If merge between runs is successfull, return the mergerInfo and the metadata
         template<int ROW_MH_DIST>
-        boost::optional<MergerInfo> tryMerge(Run& other, const componentConstraintTest& cctest);
+        boost::optional<std::pair<MergerInfo, MetaData>> tryMerge(Run& other, const componentConstraintTest& cctest);
 
         MetaData getMetaData() const;
         void addNode(Node* other);
@@ -275,7 +290,7 @@ const std::string SC_NS::loggerCat_("voreen.bigdataimageprocessing.streamingcomp
 
 SC_TEMPLATE
 template<typename outputBaseType, typename InputType, typename OutputType>
-void SC_NS::writeRowsToStorage(const RootFile& rootFile, const InputType& input, OutputType& output, getClassFunc getClass, uint64_t& voxelCounter, ProgressReporter& progress) const
+void SC_NS::writeOutputVolume(const RootFile& rootFile, const InputType& input, OutputType& output, getClassFunc getClass, uint64_t& voxelCounter, ProgressReporter& progress) const
 {
     uint64_t runIdCounter = 1;
     tgt::svec3 dim = output.getDimensions();
@@ -388,17 +403,17 @@ StreamingComponentsStats SC_NS::cca(const InputType& input, OutputType& output, 
         // RowStorage is destructed and all remaining row info is written.
     }
 
-    RootFile rootFile(std::move(mergers), VoreenApplication::app()->getUniqueTmpFilePath(".root"), runIdCounter-1);
+    RootFile rootFile(std::move(mergers), VoreenApplication::app()->getUniqueTmpFilePath(".root"), runIdCounter-1, componentCompletionCallback);
 
     uint64_t voxelCounter = 0;
     progress.setProgressRange(tgt::vec2(0.5, 1));
 
     if(applyLabeling) {
         tgtAssert(output.getBaseType() == "uint32", "data type mismatch");
-        writeRowsToStorage<uint32_t>(rootFile, input, output, getClass, voxelCounter, progress);
+        writeOutputVolume<uint32_t>(rootFile, input, output, getClass, voxelCounter, progress);
     } else {
         tgtAssert(output.getBaseType() == "uint8", "data type mismatch");
-        writeRowsToStorage<uint8_t>(rootFile, input, output, getClass, voxelCounter, progress);
+        writeOutputVolume<uint8_t>(rootFile, input, output, getClass, voxelCounter, progress);
     }
     progress.setProgress(1.0f);
 
@@ -458,7 +473,7 @@ struct NodeWithIdMaxHeapComp {
 };
 
 SC_TEMPLATE
-SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t numUsedIds)
+SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t numUsedIds, ComponentCompletionCallback cccallback)
     : file_()
     , filename_(filename)
 {
@@ -516,7 +531,14 @@ SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t
             tgtAssert(!prior.empty(), "queue is empty");
             NodeWithId* node = prior.top();
             prior.pop();
-            data[next_finalized_node_id] = node->getRoot()->getFinalId(finalIdCounter);
+            NodeWithId* root = node->getRoot();
+            uint32_t finalid = root->getFinalId(finalIdCounter);
+            if(root == node) {
+                // Node is a root => a finished component
+                uint64_t runid = root->id.id();
+                cccallback(finalid, tmp.getMetadata().at(runid));
+            }
+            data[next_finalized_node_id] = finalid;
             delete node;
             next_finalized_node_id--;
         }
@@ -534,8 +556,7 @@ SC_NS::RootFile::~RootFile() {
 SC_TEMPLATE
 uint32_t SC_NS::RootFile::getRootID(uint64_t id) const {
     uint32_t* data = reinterpret_cast<uint32_t*>(file_.data());
-    uint32_t rootid = data[id];
-    return rootid ? maxRootID_ + 1 - rootid : 0;
+    return data[id];
 }
 
 SC_TEMPLATE
@@ -658,7 +679,7 @@ void SC_NS::Run::addNode(Node* other) {
 
 SC_TEMPLATE
 template<int ROW_MH_DIST>
-boost::optional<typename SC_NS::MergerInfo> SC_NS::Run::tryMerge(Run& other, const componentConstraintTest& cctest) {
+boost::optional<std::pair<typename SC_NS::MergerInfo, MetaData>> SC_NS::Run::tryMerge(Run& other, const componentConstraintTest& cctest) {
     if(class_ != other.class_) {
         return boost::none;
     }
@@ -697,10 +718,10 @@ boost::optional<typename SC_NS::MergerInfo> SC_NS::Run::tryMerge(Run& other, con
     auto childId = child->getComponentIdForMerger();
     root->addNode(child);
     rootId.setMeetsConstraints(cctest(root->getMetaData()));
-    return MergerInfo {
+    return std::make_pair(MergerInfo {
         rootId,
         childId,
-    };
+    }, root->getMetaData());
 }
 
 SC_TEMPLATE
@@ -715,11 +736,12 @@ void SC_NS::Row::finalize(MergerFile& mergerFile, const componentConstraintTest&
         if(run.Node::getParent() == nullptr) {
             // Run is not connected to anything
             CCARunID id = run.getComponentIdForMerger();
-            id.setMeetsConstraints(cctest(run.getMetaData()));
+            const auto& metadata = run.getMetaData();
+            id.setMeetsConstraints(cctest(metadata));
             mergerFile.noteMerger(MergerInfo {
                     id,
                     id
-                    });
+                    }, metadata);
         }
     }
     runs_.clear();
@@ -765,7 +787,7 @@ void SC_NS::Row::connect(typename SC_NS::Row& other, MergerFile& mergerFile, con
     while(thisRun != runs_.end() && otherRun != other.runs_.end()) {
         auto mergeEvent = thisRun->template tryMerge<ROW_MH_DIST>(*otherRun, cctest);
         if(mergeEvent) {
-            mergerFile.noteMerger(*mergeEvent);
+            mergerFile.noteMerger(mergeEvent->first, mergeEvent->second);
         }
 
         // Advance the run that cannot overlap with the follower of the current other
