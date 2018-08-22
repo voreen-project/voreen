@@ -298,6 +298,7 @@ void SC_NS::writeOutputVolume(const RootFile& rootFile, const InputType& input, 
         progress.setProgress(static_cast<float>(z) / static_cast<float>(dim.z));
         std::unique_ptr<const SliceType> activeLayer(dynamic_cast<const SliceType*>(input.getSlice(z)));
         VolumeAtomic<outputBaseType> slice(tgt::vec3(dim.x, dim.y, 1));
+        slice.clear(); //Default initialize with zeros (background)
         tgtAssert(activeLayer, "No slice or invalid type");
         for(size_t y = 0; y<dim.y; ++y) {
             Row row;
