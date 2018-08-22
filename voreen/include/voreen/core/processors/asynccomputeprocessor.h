@@ -205,6 +205,8 @@ private:
 #endif
     typedef std::chrono::time_point<Clock> TimePoint;
 
+    const static std::chrono::milliseconds MINIMUM_PROGRESS_UPDATE_INTERVAL;
+
     /// Used to manage the visibility of properties during compute()
     bool isDisabledDuringComputation(Property* property) const;
     void savePropertyVisibilities();
@@ -232,6 +234,7 @@ private:
     private:
         AsyncComputeProcessor<ComputeInput, ComputeOutput>& processor_;
         TimePoint startTime_;
+        TimePoint lastUpdate_;
     };
 
     /**
@@ -336,6 +339,7 @@ template<class I, class O>
 AsyncComputeProcessor<I,O>::ComputeProgressReporter::ComputeProgressReporter(AsyncComputeProcessor<I, O>& processor)
     : processor_(processor)
     , startTime_(Clock::now())
+    , lastUpdate_(Clock::now())
 {
 }
 
@@ -349,6 +353,14 @@ template<class I, class O>
 void AsyncComputeProcessor<I,O>::ComputeProgressReporter::setProgress(float progress) {
     if(progress != 0) {
         TimePoint now = Clock::now();
+
+        auto timeSinceLastUpdate = now - lastUpdate_;
+        auto timeSinceLastUpdateMillis = std::chrono::duration_cast<std::chrono::milliseconds>(timeSinceLastUpdate);
+        if(timeSinceLastUpdateMillis < MINIMUM_PROGRESS_UPDATE_INTERVAL) {
+            return;
+        }
+        lastUpdate_ = now;
+
         auto computeDuration = now - startTime_;
         auto expectedTotalDuration = computeDuration/progress;
         auto remainingDuration = expectedTotalDuration - computeDuration;
@@ -407,6 +419,9 @@ template<class I, class O>
 void AsyncComputeProcessor<I,O>::interruptionPoint() {
     boost::this_thread::interruption_point();
 }
+
+template<class I, class O>
+const std::chrono::milliseconds AsyncComputeProcessor<I,O>::MINIMUM_PROGRESS_UPDATE_INTERVAL(500);
 
 template<class I, class O>
 AsyncComputeProcessor<I,O>::AsyncComputeProcessor()
