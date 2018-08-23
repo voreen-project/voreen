@@ -64,6 +64,7 @@ RawVolumeReader::ReadHints::ReadHints(tgt::ivec3 dimensions, tgt::vec3 spacing,
 RawVolumeReader::RawVolumeReader(ProgressBar* progress)
     : VolumeReader(progress)
 {
+    extensions_.push_back("raw");
     protocols_.push_back("raw");
 }
 

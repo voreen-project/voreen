@@ -114,8 +114,8 @@ void VolumeIOHelper::showFileOpenDialog() {
     // filters
     QStringList filters;
     QString allVolumesFilter = QString::fromStdString(getVolumeReaderFilterString());
-    QString rawVolumeFilter = "Raw Volume Files (*)";
-    filters << allVolumesFilter << rawVolumeFilter;
+    QString allFilesFilter = "All Files (*)";
+    filters << allVolumesFilter << allFilesFilter;
     // additionally, create one filter per volume reader
     std::map<std::string, VolumeReader*> filterToReaderMap;
     std::vector<VolumeReader*> volumeReaders =
@@ -195,7 +195,7 @@ void VolumeIOHelper::showFileOpenDialog() {
     // 2. Load selected volume files (depending on selected filter)
     //
     tgtAssert(volumeSerializerPopulator_, "no volumeserializerpopulator");
-    if (selectedFilter == allVolumesFilter || selectedFilter == rawVolumeFilter) {
+    if (selectedFilter == allVolumesFilter || selectedFilter == allFilesFilter) {
         // combined filter for all supported volume files => pass each filename to matching reader
         const VolumeSerializer* volumeSerializer = volumeSerializerPopulator_->getVolumeSerializer();
         for (size_t i = 0; i < filenames.size(); i++) {
