@@ -337,7 +337,8 @@ Geometry* GeometrySource::readPLYGeometry(const std::string& filename) {
             if(faceVertexNum != 3)
                 throw tgt::CorruptedFileException("Faces with number of vertices != 3 currently not supported", filename);
 
-            tgt::ivec3 faceIndices(reinterpret_cast<int*>(curOffset + 1));
+            int* elms = reinterpret_cast<int*>(curOffset + 1);
+            tgt::ivec3 faceIndices(elms[0], elms[1], elms[2]);
             if(format == BINARY_BIG_ENDIAN) {
                 unsigned char *memp = reinterpret_cast<unsigned char*>(&faceIndices);
                 std::reverse(memp, memp + sizeof(int));
@@ -536,16 +537,16 @@ Geometry* GeometrySource::readOBJGeometry(const std::string& filename) {
 
         bool hasNormals   = !shapes[i].mesh.normals.empty();
         for (size_t v = 0; v < shapes[i].mesh.positions.size() / 3; v++) {
-            vertices.push_back(VertexNormalTexCoord(tgt::vec3(&shapes[i].mesh.positions[3*v]),
-                                              hasNormals  ? tgt::vec3(&(shapes[i].mesh.normals[3*v])) : tgt::vec3(0.0),
-                                              useTextures ? tgt::vec2(tgt::vec2(&(shapes[i].mesh.texcoords[2*v]))) : tgt::vec2(0.f),
+            vertices.push_back(VertexNormalTexCoord(tgt::vec3::fromPointer(&shapes[i].mesh.positions[3*v]),
+                                              hasNormals  ? tgt::vec3::fromPointer(&(shapes[i].mesh.normals[3*v])) : tgt::vec3(0.0),
+                                              useTextures ? tgt::vec2::fromPointer(&(shapes[i].mesh.texcoords[2*v])) : tgt::vec2(0.f),
                                               useTextures ? tgt::ivec2(requiredTextures, actualTextureFunctions) : tgt::ivec2(0)
                                               )
                               );
         }
 
         for (size_t v = 0; v < shapes[i].mesh.indices.size() / 3; v++) {
-            tgt::ivec3 curFace = tgt::ivec3(tgt::Vector3<unsigned int>(&shapes[i].mesh.indices[3*v])) + baseIndex;
+            tgt::ivec3 curFace = tgt::ivec3(tgt::Vector3<unsigned int>::fromPointer(&shapes[i].mesh.indices[3*v])) + baseIndex;
             faces.push_back(curFace);
         }
 
@@ -718,17 +719,17 @@ Geometry* GeometrySource::readOBJGeometryWithColor(const std::string& filename, 
 
         bool hasNormals   = !shapes[i].mesh.normals.empty();
         for (size_t v = 0; v < shapes[i].mesh.positions.size() / 3; v++) {
-            vertices.push_back(VertexColorNormalTexCoord(tgt::vec3(&shapes[i].mesh.positions[3*v]),
+            vertices.push_back(VertexColorNormalTexCoord(tgt::vec3::fromPointer(&shapes[i].mesh.positions[3*v]),
                                               objColor_.get(),
-                                              hasNormals  ? tgt::vec3(&(shapes[i].mesh.normals[3*v])) : tgt::vec3(0.0),
-                                              useTextures ? tgt::vec2(tgt::vec2(&(shapes[i].mesh.texcoords[2*v]))) : tgt::vec2(0.f),
+                                              hasNormals  ? tgt::vec3::fromPointer(&(shapes[i].mesh.normals[3*v])) : tgt::vec3(0.0),
+                                              useTextures ? tgt::vec2::fromPointer(&(shapes[i].mesh.texcoords[2*v])) : tgt::vec2(0.f),
                                               useTextures ? tgt::ivec2(requiredTextures, actualTextureFunctions) : tgt::ivec2(0)
                                               )
                               );
         }
 
         for (size_t v = 0; v < shapes[i].mesh.indices.size() / 3; v++) {
-            tgt::ivec3 curFace = tgt::ivec3(tgt::Vector3<unsigned int>(&shapes[i].mesh.indices[3*v])) + baseIndex;
+            tgt::ivec3 curFace = tgt::ivec3(tgt::Vector3<unsigned int>::fromPointer(&shapes[i].mesh.indices[3*v])) + baseIndex;
             faces.push_back(curFace);
         }
 

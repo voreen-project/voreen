@@ -298,7 +298,7 @@ vec4 CPURaycaster::directRendering(const vec3& first, const vec3& last, tgt::Tex
         if (color.a > 0.0f) {
 
             //actual compositing
-            result.xyz() = result.xyz() + (1.0f - result.a) * color.a * vec3(color.elem);
+            result.xyz() = result.xyz() + (1.0f - result.a) * color.a * color.xyz();
             result.a = result.a + (1.0f - result.a) * color.a;
         }
 

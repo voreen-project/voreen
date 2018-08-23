@@ -215,9 +215,11 @@ struct Vector2 {
             elem[i] = v;
     }
     /// Init from array with equal size
-    explicit Vector2(const T* v) {
+    static Vector2 fromPointer(const T* v) {
+        Vector2 vec;
         for (size_t i = 0; i < size; ++i)
-            elem[i] = v[i];
+            vec.elem[i] = v[i];
+        return vec;
     }
     /// Init componentwisely
     Vector2(T t1, T t2) {
@@ -309,9 +311,11 @@ struct Vector3 {
             elem[i] = v;
     }
     /// Init from array with equal size
-    explicit Vector3(const T* v) {
+    static Vector3 fromPointer(const T* v) {
+        Vector3 vec;
         for (size_t i = 0; i < size; ++i)
-            elem[i] = v[i];
+            vec.elem[i] = v[i];
+        return vec;
     }
     /// Init componentwisely
     Vector3(T t1, T t2, T t3) {
@@ -438,9 +442,11 @@ struct Vector4 {
             elem[i] = init;
     }
     /// Init from array with equal size
-    explicit Vector4(const T* init) {
+    static Vector4 fromPointer(const T* v) {
+        Vector4 vec;
         for (size_t i = 0; i < size; ++i)
-            elem[i] = init[i];
+            vec.elem[i] = v[i];
+        return vec;
     }
     /// Init componentwisely
     Vector4(T t1, T t2, T t3, T t4) {

@@ -20,6 +20,27 @@ using namespace voreen;
 
 // Space efficient symmetric 3 dimensional matrix
 struct SymMat3 {
+
+    SymMat3(float val = 0)
+        : xx(val)
+        , xy(val)
+        , xz(val)
+        , yy(val)
+        , yz(val)
+        , zz(val)
+    {
+    }
+
+    SymMat3(float xx, float xy, float xz, float yy, float yz, float zz)
+        : xx(xx)
+        , xy(xy)
+        , xz(xz)
+        , yy(yy)
+        , yz(yz)
+        , zz(zz)
+    {
+    }
+
     float xx;
     float xy;
     float xz;

@@ -121,7 +121,7 @@ void PreIntegrationTable::computeTable() const {
                             curCol.a = 1.f - pow(1.f - curCol.a, samplingStepSize_ * 200.0f * scale);
 
                             //actual compositing
-                            tgt::vec3 result_rgb = tgt::vec3(result.elem) + (1.0f - result.a) * curCol.a * tgt::vec3(curCol.elem);
+                            tgt::vec3 result_rgb = result.xyz() + (1.0f - result.a) * curCol.a * curCol.xyz();
                             result.a = result.a + (1.0f - result.a) * curCol.a;
 
                             result.xyz() = result_rgb;

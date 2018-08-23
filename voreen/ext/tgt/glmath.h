@@ -162,8 +162,8 @@ inline ivec4 getViewport() {
 inline void getViewport(ivec2& pos, ivec2& size) {
     ivec4 v;
     glGetIntegerv(GL_VIEWPORT, (GLint *) v.elem);
-    pos = ivec2(v.elem);
-    size = ivec2(&v.elem[2]);
+    pos = v.xy();
+    size = v.zw();
 }
 
 /*

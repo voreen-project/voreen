@@ -222,9 +222,6 @@ public:
 
     //-------------------------------------------------------------------
 protected:
-    // protected default constructor
-    VolumeAtomic() {}
-
     // small utility
     template<bool> struct IsScalar{};
 
@@ -368,7 +365,11 @@ VolumeAtomic<T>::VolumeAtomic(T* data,
 
 template<class T>
 VolumeAtomic<T>::VolumeAtomic(VolumeAtomic<T>&& other)
-    : VolumeAtomic(other.data_, other.dimensions_)
+    : VolumeRAM(other.dimensions_)
+    , data_(other.data_)
+    , ownsData_(other.ownsData_)
+    , elementRange_(other.elementRange_)
+    , minMaxValid_(other.minMaxValid_)
 {
     other.data_ = nullptr;
 }
