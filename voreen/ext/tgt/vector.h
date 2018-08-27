@@ -1322,19 +1322,19 @@ inline float length(const Vector4<int>& v) {
 /// output Vector2d to stream
 template<typename T>
 std::ostream& operator << (std::ostream& s, const Vector2<T>& v) {
-    return (s << "[" << v.elem[0] << " " << v.elem[1] << "]");
+    return (s << "[" << +v.elem[0] << " " << +v.elem[1] << "]");
 }
 
 /// output Vector3d to stream
 template<typename T>
 std::ostream& operator << (std::ostream& s, const Vector3<T>& v) {
-    return (s << "[" << v.elem[0] << " " << v.elem[1] << " " << v.elem[2] << "]");
+    return (s << "[" << +v.elem[0] << " " << +v.elem[1] << " " << +v.elem[2] << "]");
 }
 
 /// output Vector4d to stream
 template<typename T>
 std::ostream& operator << (std::ostream& s, const Vector4<T>& v) {
-    return (s << "[" << v.elem[0] << " " << v.elem[1] << " " << v.elem[2] << " " << v.elem[3] << "]");
+    return (s << "[" << +v.elem[0] << " " << +v.elem[1] << " " << +v.elem[2] << " " << +v.elem[3] << "]");
 }
 
 // specialication for (unsigned) int, to make it output numbers and not characters
