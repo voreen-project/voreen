@@ -178,7 +178,7 @@ ElementArray<Element>::ElementArray(const std::string& filename, size_t numEleme
 template<typename Element>
 ElementArray<Element>::~ElementArray() {
     file_.close();
-    //tgt::FileSystem::deleteFile(filename_); //TODO
+    tgt::FileSystem::deleteFile(filename_);
 }
 
 template<typename Element>
@@ -331,7 +331,7 @@ NodeStorage<Element>& NodeStorage<Element>::operator=(NodeStorage&& other) {
 template<typename Element>
 NodeStorage<Element>::~NodeStorage() {
     file_.close();
-    //tgt::FileSystem::deleteFile(filename_); //TODO
+    tgt::FileSystem::deleteFile(filename_);
 }
 template<typename Element>
 const Node<Element>& NodeStorage<Element>::operator[](size_t index) const {

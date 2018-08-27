@@ -1,5 +1,14 @@
+#include <cstdio>
+#include <string>
 #define TGT_ASSERT_H
 #define tgtAssert(cond, text) assert((cond))
+namespace tgt{
+    struct FileSystem {
+        static void deleteFile(const std::string& name) {
+            std::remove(name.c_str());
+        };
+    };
+}
 #include "tgt/vector.h"
 #include "kdtree.h"
 
@@ -65,7 +74,7 @@ int main() {
     test<double>(10000, [&] () { return std::uniform_real_distribution<float>(-1e10,1e10)(generator); });
     test<int>(10000, [&] () { return std::uniform_int_distribution<int>(-10000,10000)(generator); });
     test<int8_t>(10000, [&] () { return std::uniform_int_distribution<int8_t>(-1,1)(generator); });
-    test<int16_t>(10000, [&] () { return std::uniform_int_distribution<int16_t>(-100,100)(generator); });
+    test<int16_t>(10000, [&] () { return std::uniform_int_distribution<int16_t>(-50,50)(generator); });
     test<int32_t>(10000, [&] () { return std::uniform_int_distribution<int32_t>(-1000,1000)(generator); });
     test<int64_t>(10000, [&] () { return std::uniform_int_distribution<int64_t>(0,1337)(generator); });
 }
