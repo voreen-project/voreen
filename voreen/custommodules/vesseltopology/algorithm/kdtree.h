@@ -3,7 +3,7 @@
 #include <boost/iostreams/device/mapped_file.hpp>
 
 namespace voreen {
-namespace kdtree {
+namespace static_kdtree {
 
 //struct ExampleElement {
 //    typedef float CoordType;
@@ -55,11 +55,13 @@ private:
 
 template<typename Element>
 struct Node {
+    typedef tgt::Vector3<typename Element::CoordType> PosType;
     Node(Element elm, size_t left_child, size_t right_child);
 
     Element elm_;
     size_t left_child_;
     size_t right_child_;
+
 };
 
 template<typename Element>
@@ -72,10 +74,11 @@ public:
 
     ~NodeStorage();
     const Node<Element>& operator[](size_t index) const;
+    size_t size() const;
 private:
     boost::iostreams::mapped_file_source file_;
     std::string filename_;
-    size_t numElements_;
+    size_t numNodes_;
 };
 
 template<typename Element>
@@ -93,22 +96,39 @@ private:
 };
 
 template<typename Element>
+struct SearchResult {
+    typename Element::CoordType distSq_;
+    const Element* element_;
+
+    SearchResult(typename Element::CoordType distSq, const Element* element);
+    static SearchResult none();
+
+    bool found() const;
+    typename Element::CoordType dist() const;
+
+    void takeBetter(const SearchResult& other);
+};
+
+template<typename Element>
 class Tree {
 public:
-    typedef tgt::Vector3<typename Element::CoordType> PosType;
+    static_assert(std::numeric_limits<typename Element::CoordType>::is_signed, "Element pos type must be signed");
+    typedef typename Node<Element>::PosType PosType;
     Tree(const std::string& storagefilename, ElementArrayBuilder<Element>&& elements);
 
-    std::pair<typename Element::CoordType, const Element&> findNearest(const PosType& pos) const;
+    SearchResult<Element> findNearest(const PosType& pos) const;
 
     const Node<Element>& root() const;
 private:
+    void findNearestFrom(const PosType& pos, int depth, size_t node, SearchResult<Element>& best_result) const;
+
     NodeStorage<Element> nodes_;
     size_t root_;
 };
 
 /// Implementation -------------------------------------------------------------
 
-/// ElementArrayBuilder --------------------------------------------------------
+/// Impl: ElementArrayBuilder --------------------------------------------------------
 template<typename Element>
 ElementArrayBuilder<Element>::ElementArrayBuilder(const std::string& filename)
     : file_(filename, std::ofstream::binary | std::ofstream::out | std::ofstream::trunc)
@@ -139,7 +159,7 @@ ElementArray<Element> ElementArrayBuilder<Element>::finalize() && {
     return ElementArray<Element>(tmp.filename_, tmp.numElements_);
 }
 
-/// ElementArray ---------------------------------------------------------------
+/// Impl: ElementArray ---------------------------------------------------------------
 template<typename Element>
 ElementArray<Element>::ElementArray(const std::string& filename, size_t numElements)
     : file_()
@@ -174,7 +194,7 @@ Element* ElementArray<Element>::data()
     return reinterpret_cast<Element*>(file_.data());
 }
 
-/// ElementArrayView -----------------------------------------------------------
+/// Impl: ElementArrayView -----------------------------------------------------------
 template<typename Element>
 ElementArrayView<Element>::ElementArrayView(Element* begin, Element* end)
     : begin_(begin)
@@ -229,7 +249,7 @@ void ElementArrayView<Element>::sort(int dimension)
     }
 }
 
-/// Node -----------------------------------------------------------------------
+/// Impl: Node -----------------------------------------------------------------------
 template<typename Element>
 Node<Element>::Node(Element elm, size_t left_child, size_t right_child)
     : elm_(elm)
@@ -238,7 +258,7 @@ Node<Element>::Node(Element elm, size_t left_child, size_t right_child)
 {
 }
 
-/// NodeStorageBuilder ---------------------------------------------------------
+/// Impl: NodeStorageBuilder ---------------------------------------------------------
 template<typename Element>
 NodeStorageBuilder<Element>::NodeStorageBuilder(const std::string& filename)
     : file_(filename, std::ofstream::binary | std::ofstream::out | std::ofstream::trunc)
@@ -269,19 +289,19 @@ NodeStorage<Element> NodeStorageBuilder<Element>::finalize() && {
     return NodeStorage<Element>(tmp.filename_, tmp.numNodes_);
 }
 
-/// NodeStorage ----------------------------------------------------------------
+/// Impl: NodeStorage ----------------------------------------------------------------
 template<typename Element>
 NodeStorage<Element>::NodeStorage()
     : file_()
     , filename_()
-    , numElements_(0)
+    , numNodes_(0)
 {
 }
 template<typename Element>
-NodeStorage<Element>::NodeStorage(const std::string& filename, size_t numElements)
+NodeStorage<Element>::NodeStorage(const std::string& filename, size_t numNodes)
     : file_(filename)
     , filename_(filename)
-    , numElements_(numElements)
+    , numNodes_(numNodes)
 {
     tgtAssert(file_.is_open(), "File not open");
 }
@@ -290,7 +310,7 @@ template<typename Element>
 NodeStorage<Element>::NodeStorage(NodeStorage&& other)
     : file_(std::move(other.file_))
     , filename_(std::move(other.filename_))
-    , numElements_(other.numElements_)
+    , numNodes_(other.numNodes_)
 {
     //Somehow moving a file source only copies a reference to it, thus later closing our file in the destructor
     //REALLY make sure that the other does not happen here:
@@ -315,12 +335,47 @@ NodeStorage<Element>::~NodeStorage() {
 }
 template<typename Element>
 const Node<Element>& NodeStorage<Element>::operator[](size_t index) const {
-    tgtAssert(index < numElements_, "Invalid index");
+    tgtAssert(index < numNodes_, "Invalid index");
     const Node<Element>* data = reinterpret_cast<const Node<Element>*>(file_.data());
     return data[index];
 }
+template<typename Element>
+size_t NodeStorage<Element>::size() const {
+    return numNodes_;
+}
+/// Impl: SearchResult ---------------------------------------------------------------
+template<typename Element>
+SearchResult<Element> SearchResult<Element>::none() {
+    return SearchResult (
+        std::numeric_limits<typename Element::CoordType>::max(),
+        nullptr
+    );
+}
+template<typename Element>
+SearchResult<Element>::SearchResult(typename Element::CoordType distSq, const Element* element)
+    : distSq_(distSq)
+    , element_(element)
+{
+}
 
-/// Tree -----------------------------------------------------------------------
+template<typename Element>
+bool SearchResult<Element>::found() const {
+    return element_ != nullptr;
+}
+template<typename Element>
+typename Element::CoordType SearchResult<Element>::dist() const {
+    return std::sqrt(distSq_);
+}
+
+template<typename Element>
+void SearchResult<Element>::takeBetter(const SearchResult& other) {
+    if(!found() || (other.found() && other.distSq_ < distSq_)) {
+        distSq_ = other.distSq_;
+        element_ = other.element_;
+    }
+}
+
+/// Impl: Tree -----------------------------------------------------------------------
 const size_t NO_NODE_ID = -1;
 
 template<typename Element>
@@ -350,9 +405,46 @@ Tree<Element>::Tree(const std::string& storagefilename, ElementArrayBuilder<Elem
 
 template<typename Element>
 const Node<Element>& Tree<Element>::root() const {
+    tgtAssert(nodes_.size() > 0, "No root in empty tree");
     return nodes_[root_];
 }
 
+template<typename Element>
+SearchResult<Element> Tree<Element>::findNearest(const PosType& pos) const {
+    if(nodes_.size() == 0) {
+        return SearchResult<Element>::none();
+    }
+    SearchResult<Element> result = SearchResult<Element>::none();
+    findNearestFrom(pos, 0, root_, result);
+    return result;
+}
 
-} //namespace KDTree
+template<typename Element>
+void Tree<Element>::findNearestFrom(const PosType& pos, int depth, size_t node, SearchResult<Element>& best_result) const {
+    const Node<Element>& current = nodes_[node];
+    size_t firstChild, secondChild;
+    int dim = depth%3;
+    typename Element::CoordType planeDist = pos.elem[dim] - current.elm_.getPos().elem[dim];
+    if(planeDist < 0) {
+        firstChild = current.left_child_;
+        secondChild = current.right_child_;
+    } else {
+        firstChild = current.right_child_;
+        secondChild = current.left_child_;
+    }
+
+    if(firstChild != NO_NODE_ID) {
+        findNearestFrom(pos, depth+1, firstChild, best_result);
+    }
+
+    best_result.takeBetter(SearchResult<Element>(tgt::distanceSq(pos,current.elm_.getPos()), &current.elm_));
+
+    tgtAssert(best_result.found(), "Invalid result");
+    if(planeDist*planeDist < best_result.distSq_ && secondChild != NO_NODE_ID) {
+        findNearestFrom(pos, depth+1, secondChild, best_result);
+    }
+}
+
+
+} //namespace static_kdtree
 } //namespace voreen
