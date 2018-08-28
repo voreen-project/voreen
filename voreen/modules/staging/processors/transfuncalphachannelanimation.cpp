@@ -29,7 +29,7 @@
 
 namespace voreen {
 
-const std::string TransFuncAlphaChannelAnimation::loggerCat_("voreen.experimental.TransFuncAlphaChannelAnimation");
+const std::string TransFuncAlphaChannelAnimation::loggerCat_("voreen.staging.TransFuncAlphaChannelAnimation");
 
 TransFuncAlphaChannelAnimation::TransFuncAlphaChannelAnimation()
     : Processor()

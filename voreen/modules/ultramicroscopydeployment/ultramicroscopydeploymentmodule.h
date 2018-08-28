@@ -23,17 +23,17 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_MPIDEPLOYMENTMODULE_H
-#define VRN_MPIDEPLOYMENTMODULE_H
+#ifndef VRN_ULTRAMICROSCOPYDEPLOYMENTMODULE_H
+#define VRN_ULTRAMICROSCOPYDEPLOYMENTMODULE_H
 
 #include "voreen/core/voreenmodule.h"
 
 namespace voreen {
 
-class MPIDeploymentModule: public VoreenModule {
+class UltramicroscopyDeploymentModule: public VoreenModule {
 
 public:
-    MPIDeploymentModule(const std::string& modulePath);
+    UltramicroscopyDeploymentModule(const std::string& modulePath);
 
     virtual std::string getDescription() const {
         return "Module to check if all required modules are activated.";

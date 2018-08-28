@@ -23,23 +23,19 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "mpideploymentmodule.h"
-
-#include "processors/transfuncalphachannelanimation.h"
+#include "ultramicroscopydeploymentmodule.h"
 
 #include "voreen/core/voreenapplication.h"
 
 namespace voreen {
 
-MPIDeploymentModule::MPIDeploymentModule(const std::string& modulePath)
+UltramicroscopyDeploymentModule::UltramicroscopyDeploymentModule(const std::string& modulePath)
     : VoreenModule(modulePath)
 {
-    setID("MPIDeployment");
-    setGuiName("MPIDeployment");
+    setID("UltramicroscopyDeployment");
+    setGuiName("UltramicroscopyDeployment");
 
     //addShaderPath(getModulePath("glsl"));
-
-    registerProcessor(new TransFuncAlphaChannelAnimation());
 }
 
 } // namespace
