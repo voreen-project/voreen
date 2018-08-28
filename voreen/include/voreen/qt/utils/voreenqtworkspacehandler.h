@@ -104,9 +104,6 @@ private:
     void applicationModeConfigurationChanged() {workspaceHasBeenModified();}
 
 
-    /// Deletes all tmpFiles located in tmpPath.
-    void cleanupTempFiles(std::vector<std::string> tmpFiles, std::string tmpPath);
-
     Workspace* workspace_;
 
     // The following entities are assigned to the workspace manager, but not owned by it

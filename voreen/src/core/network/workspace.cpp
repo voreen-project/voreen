@@ -49,12 +49,8 @@ namespace voreen {
 //-------------------------------------------------------------------------------------------------
 
 const std::string Workspace::loggerCat_("voreen.Workspace");
+const int Workspace::WORKSPACE_VERSION = 2;
 
-namespace {
-
-const int WORKSPACE_VERSION = 2;
-
-} // namespace
 
 ApplicationModeConfiguration::ApplicationModeConfiguration(Workspace* workspace)
     : workspace_(workspace)
@@ -568,7 +564,8 @@ void Workspace::setProcessorNetwork(ProcessorNetwork* network) {
 }
 
 void Workspace::serialize(Serializer& s) const {
-    s.serialize("version", version_);
+    // Always serialize newest version.
+    s.serialize("version", WORKSPACE_VERSION);
 
     //HACK: new workspaces are always NOT read only
     s.serialize("readonly", false);
@@ -588,6 +585,9 @@ void Workspace::serialize(Serializer& s) const {
 void Workspace::deserialize(Deserializer& s) {
     // clear existing network and containers
     clearResources();
+
+    // Deserialize version number for incompatibility checks.
+    s.deserialize("version", version_);
 
     try {
         s.deserialize("readonly", readOnly_);

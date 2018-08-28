@@ -48,13 +48,8 @@ using std::vector;
 namespace voreen {
 
 const std::string ProcessorNetwork::loggerCat_("voreen.ProcessorNetwork");
-
-namespace {
-
-// Increase this counter when incompatible changes are introduced into the serialization format
-const int NETWORK_VERSION = 19; //< Voreen 5.0
-
-} // namespace
+const int ProcessorNetwork::NETWORK_VERSION = 19; //< Voreen 5.0
+const int ProcessorNetwork::WARNING_VERSION = 19; //< Voreen 5.0
 
 ProcessorNetwork::ProcessorNetwork()
     : version_(NETWORK_VERSION)
@@ -1261,7 +1256,7 @@ void ProcessorNetwork::serialize(Serializer& s) const {
     metaDataContainer_.serialize(s);
 
     // misc
-    s.serialize("version", version_);
+    s.serialize("version", NETWORK_VERSION); // Serialization always stores newest version!
 
     // Serialize Processors and add them to the network element
     s.serialize("Processors", processors_, "Processor");
@@ -1393,6 +1388,9 @@ void ProcessorNetwork::deserialize(Deserializer& s) {
 
     // meta data
     metaDataContainer_.deserialize(s);
+
+    // misc
+    s.deserialize("version", version_);
 
     notifyNetworkChanged();
 }

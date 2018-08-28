@@ -194,6 +194,9 @@ class VRN_CORE_API Workspace : public Serializable, public ProcessorNetworkObser
 
 public:
 
+    /// Current Network version. Used to check for incompatible versions.
+    static const int WORKSPACE_VERSION;
+
     /**
      * Constructor.
      */
@@ -285,17 +288,16 @@ public:
     /// network observer functions
     virtual void networkChanged() { setModified(true); }
 private:
-    int version_;
+
     ProcessorNetwork* network_;
     Animation* animation_;
     std::string filename_;
+    int version_;
     bool readOnly_;
     std::string description_;
     bool modified_;
 
     ApplicationModeConfiguration applicationModeConfig_;
-
-    //tgt::GLCanvas* mainGLContext_; //currently not in use
 
     std::vector<std::string> errorList_;
 

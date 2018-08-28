@@ -224,6 +224,15 @@ void VoreenQtWorkspaceHandler::openWorkspace(const QString& filename) {
 
     QApplication::restoreOverrideCursor();
 
+    // Emit warning if version is beyond specific threshold defined by the Processor Network.
+    if(workspace_->getProcessorNetwork()->getVersion() < ProcessorNetwork::WARNING_VERSION) {
+        VoreenApplication::app()->showMessageBox("Deprecated Workspace",
+                                                 "Your workspace was created using a version of Voreen prior to 5.0.\n"
+                                                 "Therefore this workspace is not guaranteed to work as expected.\n\n"
+                                                 "Once you have verified the functionality, you need to save the workspace again to disable this warning.\n"
+        );
+    }
+
     // show deserialization errors
     showWorkspaceErrors();
     showNetworkErrors();
@@ -433,46 +442,6 @@ bool VoreenQtWorkspaceHandler::checkForReadOnly(const std::string& wsFilepath) {
             return false;
     } else
         return false;
-}
-
-void VoreenQtWorkspaceHandler::cleanupTempFiles(std::vector<std::string> tmpFiles, std::string tmpPath) {
-    if ((tmpFiles.empty() == true) || (tmpPath.empty() == true))
-        return;
-
-    // Delete all temporary files.
-    for (size_t i = 0; i < tmpFiles.size(); ++i) {
-        tgt::FileSystem::deleteFile(tmpPath + "/" + tmpFiles[i]);
-
-        // Remove file name to obtain the remaing path
-        size_t pos = tmpFiles[i].rfind("/");
-        if (pos == std::string::npos)
-            pos = 0;
-        tmpFiles[i] = tmpFiles[i].substr(0, pos);
-    }
-
-    // Now, the directory part of the temp. file is either empty,
-    // if it has been created by the during the import, or it is not.
-    // If it is not empty, the directory path will then be deleted piecewise,
-    // and the remaining "file name" will be reduced until all file names are
-    // empty, e.g. "/data/foo" => "/data" => "".
-    bool foundNonEmptyString = true;
-    while (foundNonEmptyString == true) {
-        foundNonEmptyString = false;
-        for (size_t i = 0; i < tmpFiles.size(); ++i) {
-            if (tmpFiles[i].empty() == true)
-                continue;
-
-            foundNonEmptyString = true;
-            tgt::FileSystem::deleteDirectory(tmpPath + "/" + tmpFiles[i]);
-
-            // Reduce remaining path
-            //
-            size_t pos = tmpFiles[i].rfind("/");
-            if (pos == std::string::npos)
-                pos = 0;
-            tmpFiles[i] = tmpFiles[i].substr(0, pos);
-        }   // for (i
-    }   // while (
 }
 
 void VoreenQtWorkspaceHandler::showNetworkErrors() {
