@@ -5,8 +5,8 @@ run: debug
 runrelease: debug
 	./kdtreetest
 
-debug: kdtreetest.cpp kdtree.h
+debug: kdtreetest.cpp ../kdtree.h
 	g++ kdtreetest.cpp -o kdtreetest -g -I ../ -I ../../../../ext/ -lboost_system -lboost_iostreams
 
-release: kdtreetest.cpp kdtree.h
+release: kdtreetest.cpp ../kdtree.h
 	g++ kdtreetest.cpp -o kdtreetest -g -O3 -I ../ -I ../../../../ext/ -lboost_system -lboost_iostreams

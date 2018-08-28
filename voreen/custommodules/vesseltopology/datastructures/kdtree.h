@@ -1,5 +1,9 @@
+#pragma once
+
 #include "tgt/vector.h"
+#include "tgt/filesystem.h"
 #include <fstream>
+#include <vector>
 #include <boost/iostreams/device/mapped_file.hpp>
 
 namespace voreen {
@@ -106,7 +110,23 @@ struct SearchResult {
     bool found() const;
     typename Element::CoordType dist() const;
 
-    void takeBetter(const SearchResult& other);
+    void takeBetter(SearchResult&& other);
+};
+
+template<typename Element>
+struct SearchResultSet {
+    typename Element::CoordType distSq_;
+    std::vector<const Element*> elements_;
+
+    SearchResultSet(typename Element::CoordType distSq, const Element* element);
+    static SearchResultSet none();
+
+    bool found() const;
+    typename Element::CoordType dist() const;
+
+    void takeBetter(SearchResultSet&& other);
+private:
+    SearchResultSet();
 };
 
 template<typename Element>
@@ -117,10 +137,12 @@ public:
     Tree(const std::string& storagefilename, ElementArrayBuilder<Element>&& elements);
 
     SearchResult<Element> findNearest(const PosType& pos) const;
+    SearchResultSet<Element> findAllNearest(const PosType& pos) const;
 
     const Node<Element>& root() const;
 private:
-    void findNearestFrom(const PosType& pos, int depth, size_t node, SearchResult<Element>& best_result) const;
+    template<typename Result>
+    void findNearestFrom(const PosType& pos, int depth, size_t node, Result& best_result) const;
 
     NodeStorage<Element> nodes_;
     size_t root_;
@@ -166,14 +188,16 @@ ElementArray<Element>::ElementArray(const std::string& filename, size_t numEleme
     , filename_(filename)
     , numElements_(numElements)
 {
-    size_t fileSize = numElements_ * sizeof(Element);
-    boost::iostreams::mapped_file_params openParams;
-    openParams.path = filename_;
-    openParams.mode = std::ios::in | std::ios::out;
-    openParams.length = fileSize;
+    if(numElements_ > 0) {
+        size_t fileSize = numElements_ * sizeof(Element);
+        boost::iostreams::mapped_file_params openParams;
+        openParams.path = filename_;
+        openParams.mode = std::ios::in | std::ios::out;
+        openParams.length = fileSize;
 
-    file_.open(openParams);
-    tgtAssert(file_.is_open(), "File not open");
+        file_.open(openParams);
+        tgtAssert(file_.is_open(), "File not open");
+    }
 }
 template<typename Element>
 ElementArray<Element>::~ElementArray() {
@@ -299,11 +323,17 @@ NodeStorage<Element>::NodeStorage()
 }
 template<typename Element>
 NodeStorage<Element>::NodeStorage(const std::string& filename, size_t numNodes)
-    : file_(filename)
+    : file_()
     , filename_(filename)
     , numNodes_(numNodes)
 {
-    tgtAssert(file_.is_open(), "File not open");
+    if(numNodes_ > 0) {
+        boost::iostreams::mapped_file_params openParams;
+        openParams.path = filename_;
+
+        file_.open(openParams);
+        tgtAssert(file_.is_open(), "File not open");
+    }
 }
 
 template<typename Element>
@@ -315,7 +345,7 @@ NodeStorage<Element>::NodeStorage(NodeStorage&& other)
     //Somehow moving a file source only copies a reference to it, thus later closing our file in the destructor
     //REALLY make sure that the other does not happen here:
     other.file_ = boost::iostreams::mapped_file_source();
-    tgtAssert(file_.is_open(), "File not open");
+    tgtAssert(numNodes_ == 0 || file_.is_open(), "File not open");
     tgtAssert(!other.file_.is_open(), "File not open");
 }
 template<typename Element>
@@ -323,7 +353,7 @@ NodeStorage<Element>& NodeStorage<Element>::operator=(NodeStorage&& other) {
     if(&other != this) {
         this->~NodeStorage();
         new(this) NodeStorage(std::move(other));
-        tgtAssert(file_.is_open(), "File not open");
+        tgtAssert(numNodes_ == 0 || file_.is_open(), "File not open");
     }
     return *this;
 }
@@ -360,7 +390,9 @@ SearchResult<Element>::SearchResult(typename Element::CoordType distSq, const El
 
 template<typename Element>
 bool SearchResult<Element>::found() const {
-    return element_ != nullptr;
+    bool res = element_ != nullptr;
+    tgtAssert(res != (distSq_ == std::numeric_limits<typename Element::CoordType>::max()), "Valid distance for invalid element");
+    return res;
 }
 template<typename Element>
 typename Element::CoordType SearchResult<Element>::dist() const {
@@ -368,10 +400,55 @@ typename Element::CoordType SearchResult<Element>::dist() const {
 }
 
 template<typename Element>
-void SearchResult<Element>::takeBetter(const SearchResult& other) {
+void SearchResult<Element>::takeBetter(SearchResult&& other) {
     if(!found() || (other.found() && other.distSq_ < distSq_)) {
         distSq_ = other.distSq_;
         element_ = other.element_;
+    }
+}
+
+/// Impl: SearchResultSet ------------------------------------------------------------
+
+template<typename Element>
+SearchResultSet<Element>::SearchResultSet()
+    : distSq_(std::numeric_limits<typename Element::CoordType>::max())
+    , elements_()
+{
+}
+template<typename Element>
+SearchResultSet<Element> SearchResultSet<Element>::none() {
+    return SearchResultSet();
+}
+template<typename Element>
+SearchResultSet<Element>::SearchResultSet(typename Element::CoordType distSq, const Element* element)
+    : distSq_(distSq)
+    , elements_()
+{
+    if(element) {
+        elements_.push_back(element);
+    }
+}
+
+template<typename Element>
+bool SearchResultSet<Element>::found() const {
+    bool res = !elements_.empty();
+    tgtAssert(res != (distSq_ == std::numeric_limits<typename Element::CoordType>::max()), "Valid distance for invalid element");
+    return res;
+}
+template<typename Element>
+typename Element::CoordType SearchResultSet<Element>::dist() const {
+    return std::sqrt(distSq_);
+}
+
+template<typename Element>
+void SearchResultSet<Element>::takeBetter(SearchResultSet&& other) {
+    if(other.distSq_ <= distSq_) {
+        if(other.distSq_ == distSq_) {
+            elements_.insert(elements_.end(), other.elements_.begin(), other.elements_.end());
+        } else {
+            distSq_ = other.distSq_;
+            elements_ = std::move(other.elements_);
+        }
     }
 }
 
@@ -420,7 +497,18 @@ SearchResult<Element> Tree<Element>::findNearest(const PosType& pos) const {
 }
 
 template<typename Element>
-void Tree<Element>::findNearestFrom(const PosType& pos, int depth, size_t node, SearchResult<Element>& best_result) const {
+SearchResultSet<Element> Tree<Element>::findAllNearest(const PosType& pos) const {
+    if(nodes_.size() == 0) {
+        return SearchResultSet<Element>::none();
+    }
+    SearchResultSet<Element> result = SearchResultSet<Element>::none();
+    findNearestFrom(pos, 0, root_, result);
+    return result;
+}
+
+template<typename Element>
+template<typename Result>
+void Tree<Element>::findNearestFrom(const PosType& pos, int depth, size_t node, Result& best_result) const {
     const Node<Element>& current = nodes_[node];
     size_t firstChild, secondChild;
     int dim = depth%3;
@@ -437,10 +525,10 @@ void Tree<Element>::findNearestFrom(const PosType& pos, int depth, size_t node, 
         findNearestFrom(pos, depth+1, firstChild, best_result);
     }
 
-    best_result.takeBetter(SearchResult<Element>(tgt::distanceSq(pos,current.elm_.getPos()), &current.elm_));
+    best_result.takeBetter(Result(tgt::distanceSq(pos,current.elm_.getPos()), &current.elm_));
 
     tgtAssert(best_result.found(), "Invalid result");
-    if(planeDist*planeDist < best_result.distSq_ && secondChild != NO_NODE_ID) {
+    if(planeDist*planeDist <= best_result.distSq_ && secondChild != NO_NODE_ID) {
         findNearestFrom(pos, depth+1, secondChild, best_result);
     }
 }
