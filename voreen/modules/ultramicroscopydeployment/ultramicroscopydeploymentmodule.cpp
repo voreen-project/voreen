@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -23,23 +23,19 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_MPIDEPLOYMENTMODULE_H
-#define VRN_MPIDEPLOYMENTMODULE_H
+#include "ultramicroscopydeploymentmodule.h"
 
-#include "voreen/core/voreenmodule.h"
+#include "voreen/core/voreenapplication.h"
 
 namespace voreen {
 
-class MPIDeploymentModule: public VoreenModule {
+UltramicroscopyDeploymentModule::UltramicroscopyDeploymentModule(const std::string& modulePath)
+    : VoreenModule(modulePath)
+{
+    setID("UltramicroscopyDeployment");
+    setGuiName("UltramicroscopyDeployment");
 
-public:
-    MPIDeploymentModule(const std::string& modulePath);
-
-    virtual std::string getDescription() const {
-        return "Module to check if all required modules are activated.";
-    }
-};
+    //addShaderPath(getModulePath("glsl"));
+}
 
 } // namespace
-
-#endif

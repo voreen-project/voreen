@@ -4,9 +4,8 @@
 #                                                                    #
 # Voreen - Mac deployment script                                     #
 #                                                                    #
-# Copyright (C) 2005-2010 Visualization and Computer Graphics Group, #
-# Department of Computer Science, University of Muenster, Germany.   #
-# <http://viscg.uni-muenster.de>                                     #
+# Copyright (C) 2005-2018 University of Muenster, Germany,           #
+# Department of Computer Science.                                    #
 #                                                                    #
 ######################################################################
 
