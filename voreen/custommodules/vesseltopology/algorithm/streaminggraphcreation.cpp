@@ -26,6 +26,7 @@
 #include "streaminggraphcreation.h"
 #include "../datastructures/vesselgraph.h"
 #include "tgt/vector.h"
+#include "../util/kdtreebuilder.h"
 
 namespace voreen {
 
@@ -321,6 +322,63 @@ void MetaDataCollector::collect(BranchData&& data) {
     data.voxels_->collectVoxels(v);
     branchPoints_.push_back(v);
 }
+
+struct VoxelKDElement {
+    typedef tgt::ivec3 VoxelType;
+
+    VoxelKDElement(tgt::ivec3 pos, VGNodeID nodeID)
+        : pos_(pos)
+        , nodeID_(nodeID)
+    {
+    }
+
+    inline typename VoxelType::ElemType at(int dim) const {
+        return pos_[dim];
+    }
+
+    VoxelType pos_;
+    VGNodeID nodeID_;
+};
+
+template<typename E>
+class KDTreeNeighborhoodFinder {
+public:
+    typedef nanoflann::KDTreeSingleIndexAdaptor<
+		nanoflann::L2_Simple_Adaptor<typename KDTreeBuilder<E>::coord_t, KDTreeBuilder<E>>,
+		KDTreeBuilder<E>,
+		3 /* dim */
+		> Index;
+
+    KDTreeNeighborhoodFinder(KDTreeBuilder<E>&& builder)
+        : adaptor_(std::move(builder))
+        , index_(3 /*dim */, adaptor_, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* recommended as a sensible value by library creator */))
+    {
+        index_.buildIndex();
+    }
+
+    std::vector<const E*> find_26_neighbors(const typename E::VoxelType& pos) {
+        auto search_radius = static_cast<typename KDTreeBuilder<E>::coord_t>(4); // (L2 distance)^2 < 4 <=> 26_neighbors (or equal)
+
+        nanoflann::SearchParams params;
+        params.sorted = false;
+
+        std::vector<std::pair<size_t, typename KDTreeBuilder<E>::coord_t> > index_results;
+        index_.radiusSearch(pos.elem, search_radius, index_results, params);
+
+        std::vector<const E*> results;
+        for(const auto& index_result : index_results) {
+            const E& p = adaptor_.points()[index_result.first];
+            if(p.pos_ != pos) {
+                results.push_back(&p);
+            }
+        }
+        return results;
+    }
+
+private:
+    KDTreeBuilder<E> adaptor_;
+    Index index_;
+};
 std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt::svec3 dimensions, const tgt::mat4& toRwMatrix, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress) {
     TaskTimeLogger _("Create Protograph", tgt::Info);
     std::unique_ptr<ProtoVesselGraph> graph(new ProtoVesselGraph(toRwMatrix));

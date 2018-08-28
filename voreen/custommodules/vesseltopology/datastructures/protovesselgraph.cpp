@@ -61,12 +61,22 @@ ProtoVesselGraphNode::ProtoVesselGraphNode(VGNodeID id, std::vector<tgt::svec3>&
     voxelPos_ = tgt::vec3(voxelSum)/static_cast<float>(voxels_.size());
 }
 
-static EdgeVoxelFinder::Builder transformVoxels(const tgt::mat4& toRWMatrix, const std::vector<tgt::svec3>& voxels) {
-    EdgeVoxelFinder::Builder builder;
+static std::vector<tgt::vec3> transformVoxels(const tgt::mat4& toRWMatrix, const std::vector<tgt::svec3>& voxels) {
+    std::vector<tgt::vec3> output;
     for(const auto& v: voxels) {
-        builder.push(ProtoVesselGraphEdgeVoxel(toRWMatrix.transform(tgt::vec3(v))));
+        output.push_back(toRWMatrix.transform(tgt::vec3(v)));
     }
-    return builder;
+    return output;
+}
+
+static static_kdtree::Tree<ProtoVesselGraphEdgeElement> buildTree(const std::vector<tgt::vec3>& voxels) {
+    voreen::static_kdtree::ElementArrayBuilder<ProtoVesselGraphEdgeElement> builder(VoreenApplication::app()->getUniqueTmpFilePath(".kdtreestorage"));
+    uint64_t i = 0;
+    for(const auto& v: voxels) {
+        builder.push(ProtoVesselGraphEdgeElement(&v, i));
+        ++i;
+    }
+    return static_kdtree::Tree<ProtoVesselGraphEdgeElement>(VoreenApplication::app()->getUniqueTmpFilePath(".kdtree"), std::move(builder));
 }
 
 ProtoVesselGraphEdge::ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, std::vector<tgt::svec3>&& voxels)
@@ -74,12 +84,13 @@ ProtoVesselGraphEdge::ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID
     , node1_(node1)
     , node2_(node2)
     , voxels_(std::move(voxels))
-    , rwvoxels_(transformVoxels(toRWMatrix, voxels_))
+    , voxelsRw_(transformVoxels(toRWMatrix, voxels_))
+    , tree_(buildTree(voxelsRw_))
 {
 }
-std::vector<uint64_t> ProtoVesselGraphEdge::findClosestVoxelIndex(tgt::vec3 v) const {
-    auto resultSet = rwvoxels_.findClosest(v);
-    tgtAssert(!resultSet.empty(), "Should be: No voxels => no id!");
+static_kdtree::SearchResultSet<ProtoVesselGraphEdgeElement> ProtoVesselGraphEdge::findClosestVoxelIndex(tgt::vec3 v) const {
+    auto resultSet = tree_.findAllNearest(v);
+    tgtAssert(!resultSet.elements_.empty(), "Should be: No voxels => no id!");
     return resultSet;
 }
 
@@ -167,7 +178,7 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
         auto& skeletonVoxelsList = skeletonVoxelsLists.back();
         skeletonVoxelsList.reserve(edge.voxels().size());
         for(const auto& voxel : edge.voxels()) {
-            skeletonVoxelsList.emplace_back(voxel.rwpos_, std::numeric_limits<float>::infinity(), 0, 0, 0, 0);
+            skeletonVoxelsList.emplace_back(voxel, std::numeric_limits<float>::infinity(), 0, 0, 0, 0);
         }
     }
 
@@ -193,11 +204,11 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
                 }
 
                 tgt::vec3 rwVoxel = toRWMatrix.transform(tgt::vec3(x, y, z));
-                std::vector<uint64_t> voxelids = edges_.at(id.raw()).findClosestVoxelIndex(rwVoxel);
+                auto neared_result = edges_.at(id.raw()).findClosestVoxelIndex(rwVoxel);
 
-                float volume = tgt::hmul(spacing) / voxelids.size();
-                for(uint64_t voxelid : voxelids) {
-                    VesselSkeletonVoxel& voxel = skeletonVoxelsLists.at(id.raw()).at(voxelid);
+                float volume = tgt::hmul(spacing) / neared_result.elements_.size();
+                for(auto element : neared_result.elements_) {
+                    VesselSkeletonVoxel& voxel = skeletonVoxelsLists.at(id.raw()).at(element->voxelIndex_);
 
                     voxel.volume_ += volume;
                 }
@@ -217,8 +228,8 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
                     continue;
                 }
 
-                for(uint64_t voxelid : voxelids) {
-                    VesselSkeletonVoxel& voxel = skeletonVoxelsLists.at(id.raw()).at(voxelid);
+                for(auto element : neared_result.elements_) {
+                    VesselSkeletonVoxel& voxel = skeletonVoxelsLists.at(id.raw()).at(element->voxelIndex_);
 
                     float dist = std::sqrt(surfaceDistanceSq(voxel.pos_, rwVoxel, spacing));
 

@@ -41,6 +41,7 @@
 #include "../algorithm/idvolume.h"
 #include "../algorithm/vesselgraphnormalization.h"
 #include "../algorithm/boundshierarchy.h"
+#include "../datastructures/kdtree.h"
 
 #include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 #include "custommodules/bigdataimageprocessing/processors/connectedcomponentanalysis.h"
@@ -199,148 +200,29 @@ struct GraphNodeVoxelReader {
 };
 
 struct EdgeVoxelRef {
-    typedef tgt::vec3 VoxelType;
+    typedef float CoordType;
 
-    VoxelType rwPos; // Cached for better performance
-    const ProtoVesselGraphEdge& edge;
+    tgt::vec3 rwPos;
+    const ProtoVesselGraphEdge* edge;
 
-    inline typename VoxelType::ElemType at(int dim) const {
-        return rwPos[dim];
+    inline const tgt::Vector3<CoordType>& getPos() const {
+        return rwPos;
     }
 
-    EdgeVoxelRef(VoxelType rwPos, const ProtoVesselGraphEdge& edge)
+    EdgeVoxelRef(tgt::vec3 rwPos, const ProtoVesselGraphEdge& edge)
         : rwPos(rwPos)
-        , edge(edge)
+        , edge(&edge)
     {
     }
-};
-
-struct EdgeVoxelRefResultSetBase {
-    typedef size_t IndexType;
-    typedef float DistanceType;
-
-    const std::vector<EdgeVoxelRef>& storage_;
-    std::vector<size_t> closestIDs_;
-
-    EdgeVoxelRefResultSetBase(const std::vector<EdgeVoxelRef>& storage)
-        : storage_(storage)
-        , closestIDs_()
+    EdgeVoxelRef(const EdgeVoxelRef& other)
+        : rwPos(other.rwPos)
+        , edge(other.edge)
     {
     }
-
-    inline void init() {
-        clear();
-    }
-
-    inline void clear() {
-        closestIDs_.clear();
-    }
-
-    inline size_t size() const {
-        return closestIDs_.size();
-    }
-
-    inline bool full() const {
-        //Not sure what to do here...
-        //This is analogous to the implementation of the max radius set of nanoflann
-        return true;
-    }
-
-    std::vector<const EdgeVoxelRef*> getVoxels() const {
-        std::vector<const EdgeVoxelRef*> result;
-        for(auto id : closestIDs_) {
-            result.push_back(&getEdgeVoxelRef(id));
-        }
-        return result;
-    }
-
-    const EdgeVoxelRef& getEdgeVoxelRef(size_t id) const {
-        return storage_.at(id);
-    }
-};
-
-struct SkeletonVoxelsWithinAdaptor : public EdgeVoxelRefResultSetBase {
-    float maxdistSq_;
-    float worstDistSoFar_;
-    size_t worstIndexSoFar_;
-
-    SkeletonVoxelsWithinAdaptor(const std::vector<EdgeVoxelRef>& storage, float maxdistSq)
-        : EdgeVoxelRefResultSetBase(storage)
-        , maxdistSq_(maxdistSq)
-        , worstDistSoFar_(-1)
-        , worstIndexSoFar_(-1)
-    {
-    }
-
-    /**
-     * Called during search to add an element matching the criteria.
-     * @return true if the search should be continued, false if the results are sufficient
-     */
-    inline bool addPoint(float dist, size_t index)
-    {
-        if(dist <= maxdistSq_) {
-            closestIDs_.push_back(index);
-            if(worstDistSoFar_ < dist) {
-                worstDistSoFar_ = dist;
-                worstIndexSoFar_ = index;
-            }
-        }
-        return true;
-    }
-
-    inline DistanceType worstDist() const {
-        return maxdistSq_;
-    }
-
-    /**
-     * Find the worst result (furtherest neighbor) without copying or sorting
-     * Pre-conditions: size() > 0
-     */
-    std::pair<IndexType,DistanceType> worst_item() const
-    {
-        if (closestIDs_.empty()) throw std::runtime_error("Cannot invoke RadiusResultSet::worst_item() on an empty list of results.");
-        return std::pair<IndexType,DistanceType>(worstIndexSoFar_, worstDistSoFar_);
-    }
-};
-
-struct ClosestSkeletonVoxelsAdaptor : public EdgeVoxelRefResultSetBase {
-    float currentDist_;
-
-    ClosestSkeletonVoxelsAdaptor(const std::vector<EdgeVoxelRef>& storage)
-        : EdgeVoxelRefResultSetBase(storage)
-        , currentDist_(std::numeric_limits<float>::infinity())
-    {
-    }
-
-    /**
-     * Called during search to add an element matching the criteria.
-     * @return true if the search should be continued, false if the results are sufficient
-     */
-    inline bool addPoint(float dist, size_t index)
-    {
-        if(dist <= currentDist_) {
-            if(dist < currentDist_) {
-                closestIDs_.clear();
-            }
-            currentDist_ = dist;
-            closestIDs_.push_back(index);
-        }
-        return true;
-    }
-
-    inline DistanceType worstDist() const {
-        return currentDist_;
-    }
-
-    /**
-     * Find the worst result (furtherest neighbor) without copying or sorting
-     * Pre-conditions: size() > 0
-     */
-    std::pair<IndexType,DistanceType> worst_item() const
-    {
-        if (closestIDs_.empty()) throw std::runtime_error("Cannot invoke RadiusResultSet::worst_item() on an empty list of results.");
-        size_t id = closestIDs_[0];
-        return std::make_pair<IndexType,DistanceType>(std::move(id), worstDist());
+    EdgeVoxelRef& operator=(const EdgeVoxelRef& other) {
+        rwPos = other.rwPos;
+        edge = other.edge;
+        return *this;
     }
 };
 
@@ -354,15 +236,15 @@ static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath
     const std::string format = "uint8";
     const tgt::svec3 slicedim(dimensions.xy(), 1);
 
-    KDTreeBuilder<EdgeVoxelRef> finderBuilder;
+    static_kdtree::ElementArrayBuilder<EdgeVoxelRef> finderBuilder(VoreenApplication::app()->getUniqueTmpFilePath(".kdtreestorage"));
 
     for(auto& edge : graph.edges_) {
         for(auto& rwvoxel : edge.voxels()) {
-            finderBuilder.push(EdgeVoxelRef(rwvoxel.rwpos_, edge));
+            finderBuilder.push(EdgeVoxelRef(rwvoxel, edge));
         }
     }
 
-    KDTreeVoxelFinder<EdgeVoxelRef> finder(std::move(finderBuilder));
+    static_kdtree::Tree<EdgeVoxelRef> finder(VoreenApplication::app()->getUniqueTmpFilePath(".kdtree"), std::move(finderBuilder));
 
     LZ4SliceVolumeBuilder<uint32_t> outputIDs(tmpPath, input.segmentation.getMetaData().withRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint32_t>()));
 
@@ -381,15 +263,11 @@ static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath
                     tgt::ivec3 ipos(x,y,z);
                     tgt::vec3 rwpos = transform(voxelToRw, ipos);
 
-                    if(finder.storage_.points().empty()) {
+                    auto result = finder.findNearest(rwpos);
+                    if(!result.found()) {
                         label = 0xFEEDBEEF; //Doesn't really matter. only happens in edge cases anyway
                     } else {
-                        ClosestSkeletonVoxelsAdaptor closestVoxels(finder.storage_.points());
-                        finder.findClosest(rwpos, closestVoxels);
-                        tgtAssert(closestVoxels.size() > 0, "No voxels");
-
-                        // Just pick the first one
-                        label = closestVoxels.getVoxels()[0]->edge.id_.raw();
+                        label = result.element_->edge->id_.raw();
                     }
                 } else {
                     label = IdVolume::BACKGROUND_VALUE;

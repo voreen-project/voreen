@@ -28,7 +28,7 @@
 #include "tgt/vector.h"
 #include "tgt/matrix.h"
 #include "tgt/memory.h"
-#include "../util/kdtreebuilder.h"
+#include "../datastructures/kdtree.h"
 #include "voreen/core/datastructures/volume/volume.h"
 #include "custommodules/bigdataimageprocessing/volumefiltering/slicereader.h"
 #include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
@@ -37,138 +37,37 @@
 
 namespace voreen {
 
-struct ProtoVesselGraphEdgeVoxel {
-    typedef tgt::vec3 VoxelType;
-    VoxelType rwpos_;
-    ProtoVesselGraphEdgeVoxel(VoxelType v)
-        : rwpos_(v)
+struct ProtoVesselGraphEdgeElement {
+    typedef float CoordType;
+    const tgt::Vector3<CoordType>& getPos() const {
+        return *pos_;
+    }
+
+    ProtoVesselGraphEdgeElement(const tgt::vec3* pos, uint64_t voxelIndex)
+        : pos_(pos)
+        , voxelIndex_(voxelIndex)
     {
     }
-
-    inline typename VoxelType::ElemType at(int dim) const {
-        return rwpos_[dim];
-    }
-};
-
-struct ProtoVoxelGraphEdgeVoxelSet {
-    typedef uint64_t IndexType;
-    typedef float DistanceType;
-
-    std::vector<IndexType> closestIDs_;
-    float currentDist_;
-
-    ProtoVoxelGraphEdgeVoxelSet()
-        : closestIDs_()
-        , currentDist_(std::numeric_limits<float>::infinity())
-    {
-    }
-
-    inline bool found() {
-        return currentDist_ < std::numeric_limits<float>::infinity();
-    }
-
-    inline void init() {
-        clear();
-    }
-
-    inline void clear() {
-        closestIDs_.clear();
-    }
-
-    inline size_t size() const {
-        return closestIDs_.size();
-    }
-
-    inline bool full() const {
-        //Not sure what to do here...
-        //This is analogous to the implementation of the max radius set of nanoflann
-        return true;
-    }
-
-    inline DistanceType worstDist() const {
-        return currentDist_*1.001;
-    }
-
-    /**
-     * Find the worst result (furtherest neighbor) without copying or sorting
-     * Pre-conditions: size() > 0
-     */
-    std::pair<IndexType,DistanceType> worst_item() const {
-        if (closestIDs_.empty()) throw std::runtime_error("Cannot invoke RadiusResultSet::worst_item() on an empty list of results.");
-        IndexType id = closestIDs_[0];
-        return std::make_pair<IndexType,DistanceType>(std::move(id), worstDist());
-    }
-
-    /**
-     * Called during search to add an element matching the criteria.
-     * @return true if the search should be continued, false if the results are sufficient
-     */
-    inline bool addPoint(float dist, IndexType index)
-    {
-        if(dist <= currentDist_) {
-            if(dist < currentDist_) {
-                closestIDs_.clear();
-                currentDist_ = dist;
-            }
-            closestIDs_.push_back(index);
-        }
-        return true;
-    }
-};
-
-struct EdgeVoxelFinder {
-    typedef KDTreeBuilder<ProtoVesselGraphEdgeVoxel> Builder;
-    typedef nanoflann::KDTreeSingleIndexAdaptor<
-		nanoflann::L2_Simple_Adaptor<typename Builder::coord_t, Builder>,
-		Builder,
-		3 /* dim */
-		> Index;
-
-    EdgeVoxelFinder(Builder&& builder)
-        : storage_(std::move(builder))
-        , index_(3 /*dim */, storage_, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* recommended as a sensible value by library creator */))
-    {
-        index_.buildIndex();
-    }
-
-    EdgeVoxelFinder(EdgeVoxelFinder&& other)
-        : EdgeVoxelFinder(std::move(other.storage_))
-    {
-    }
-
-
-    /**
-     * Find the closest skeleton voxel(s)
-     */
-    std::vector<uint64_t> findClosest(tgt::vec3 rwPos) const {
-        nanoflann::SearchParams params;
-        params.sorted = false;
-
-        ProtoVoxelGraphEdgeVoxelSet set;
-        index_.radiusSearchCustomCallback(rwPos.elem, set, params);
-
-        return std::move(set.closestIDs_);
-    }
-
-    Builder storage_;
-    Index index_;
+    const tgt::vec3* pos_;
+    uint64_t voxelIndex_;
 };
 
 struct ProtoVesselGraphEdge {
     ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, std::vector<tgt::svec3>&& voxels);
-    std::vector<uint64_t> findClosestVoxelIndex(tgt::vec3) const;
-    std::vector<ProtoVesselGraphEdgeVoxel>& voxels() {
-        return rwvoxels_.storage_.points();
+    static_kdtree::SearchResultSet<ProtoVesselGraphEdgeElement> findClosestVoxelIndex(tgt::vec3) const;
+    std::vector<tgt::vec3>& voxels() {
+        return voxelsRw_;
     }
-    const std::vector<ProtoVesselGraphEdgeVoxel>& voxels() const {
-        return rwvoxels_.storage_.points();
+    const std::vector<tgt::vec3>& voxels() const {
+        return voxelsRw_;
     }
 
     VGEdgeID id_;
     VGNodeID node1_;
     VGNodeID node2_;
     std::vector<tgt::svec3> voxels_;
-    EdgeVoxelFinder rwvoxels_;
+    std::vector<tgt::vec3> voxelsRw_;
+    static_kdtree::Tree<ProtoVesselGraphEdgeElement> tree_;
 };
 
 struct ProtoVesselGraphNode {
