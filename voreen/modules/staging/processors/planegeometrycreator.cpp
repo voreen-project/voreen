@@ -126,7 +126,7 @@ void PlaneGeometryCreator::onVolumePortChangeCallback() {
 void PlaneGeometryCreator::onResetClickedCallback() {
     normal_.set(tgt::vec3(0.f,1.f,0.f));
 
-    if(tgt::hmul(tgt::greaterThanEqual(position_.getMaxValue(),tgt::vec3(1000000.f - 1.f)))) //default (-"epsilon")
+    if(tgt::hand(tgt::greaterThanEqual(position_.getMaxValue(),tgt::vec3(1000000.f - 1.f)))) //default (-"epsilon")
         position_.set(tgt::vec3::zero);
     else
         position_.set((position_.getMinValue() + position_.getMaxValue()) / 2.f);

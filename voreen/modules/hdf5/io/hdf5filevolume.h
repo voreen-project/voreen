@@ -46,6 +46,11 @@ class HDF5FileVolume {
 public:
 
     /**
+     * Constant used for converting HDF5-spacing into Voreen-spacing anc vice-versa.
+     */
+    static const float MM_PER_HDF5_UNIT_OF_LENGTH;
+
+    /**
      * Open a data set inside a hdf5 file as a HDF5FileVolume.
      * @throws tgt::IOException if the file or the dataset could not be opened.
      */
@@ -425,7 +430,6 @@ private:
     static const std::string REPRESENTATION_HISTOGRAMINTENSITYGRADIENT_METADATA_ATTRIBUTE_NAME;
     static const std::string REPRESENTATION_PREVIEW_ATTRIBUTE_NAME;
     static const std::string REPRESENTATION_PREVIEW_METADATA_ATTRIBUTE_NAME;
-    static const float MM_PER_HDF5_UNIT_OF_LENGTH;
 
     static const std::string loggerCat_;
 };
