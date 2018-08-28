@@ -126,6 +126,29 @@ bool test(int numElements, std::function<T()> random) {
     }
 }
 
+template<typename T>
+void testMaxRadius() {
+    voreen::static_kdtree::ElementArrayBuilder<ExampleElement<T>> builder("elms.tmp");
+    builder.push(ExampleElement<T>(tgt::Vector3<T>(2,0,0), 4));
+    builder.push(ExampleElement<T>(tgt::Vector3<T>(1,1,1), 3));
+    builder.push(ExampleElement<T>(tgt::Vector3<T>(0,1,1), 2));
+    builder.push(ExampleElement<T>(tgt::Vector3<T>(0,0,1), 1));
+    builder.push(ExampleElement<T>(tgt::Vector3<T>(0,0,0), 0));
+
+    voreen::static_kdtree::Tree<ExampleElement<T>> tree("tree.bin", std::move(builder));
+    tgt::Vector3<T> query(0,0,0);
+
+    auto test = [&] (T distSq, int num_results) {
+        auto result = tree.findAllWithin(query, distSq);
+        assert(result.elements_.size() == num_results);
+    };
+    test(0, 1);
+    test(1, 2);
+    test(2, 3);
+    test(3, 4);
+    test(4, 5);
+}
+
 int main() {
     std::default_random_engine generator;
     generator.seed(0xdeadbeef);
@@ -137,4 +160,6 @@ int main() {
     test<int16_t>(10000, [&] () { return std::uniform_int_distribution<int16_t>(-50,50)(generator); });
     test<int32_t>(10000, [&] () { return std::uniform_int_distribution<int32_t>(-1000,1000)(generator); });
     test<int64_t>(10000, [&] () { return std::uniform_int_distribution<int64_t>(0,1337)(generator); });
+
+    testMaxRadius<int32_t>();
 }

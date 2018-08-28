@@ -100,33 +100,43 @@ private:
 };
 
 template<typename Element>
-struct SearchResult {
+struct SearchNearestResult {
     typename Element::CoordType distSq_;
     const Element* element_;
 
-    SearchResult(typename Element::CoordType distSq, const Element* element);
-    static SearchResult none();
+    static SearchNearestResult none();
 
     bool found() const;
     typename Element::CoordType dist() const;
 
-    void takeBetter(SearchResult&& other);
+    void tryInsert(typename Element::CoordType distSq, const Element* element);
 };
 
 template<typename Element>
-struct SearchResultSet {
+struct SearchNearestResultSet {
     typename Element::CoordType distSq_;
     std::vector<const Element*> elements_;
 
-    SearchResultSet(typename Element::CoordType distSq, const Element* element);
-    static SearchResultSet none();
+    SearchNearestResultSet(typename Element::CoordType maxDistSq);
 
     bool found() const;
     typename Element::CoordType dist() const;
 
-    void takeBetter(SearchResultSet&& other);
+    void tryInsert(typename Element::CoordType distSq, const Element* element);
 private:
-    SearchResultSet();
+    SearchNearestResultSet();
+};
+
+template<typename Element>
+struct SearchAllWithinResultSet {
+    typename Element::CoordType distSq_;
+    std::vector<const Element*> elements_;
+
+    SearchAllWithinResultSet(typename Element::CoordType maxDistSq);
+
+    bool found() const;
+
+    void tryInsert(typename Element::CoordType distSq, const Element* element);
 };
 
 template<typename Element>
@@ -136,8 +146,9 @@ public:
     typedef typename Node<Element>::PosType PosType;
     Tree(const std::string& storagefilename, ElementArrayBuilder<Element>&& elements);
 
-    SearchResult<Element> findNearest(const PosType& pos) const;
-    SearchResultSet<Element> findAllNearest(const PosType& pos) const;
+    SearchNearestResult<Element> findNearest(const PosType& pos) const;
+    SearchNearestResultSet<Element> findAllNearest(const PosType& pos, typename Element::CoordType maxDistSq = std::numeric_limits<typename Element::CoordType>::max()) const;
+    SearchAllWithinResultSet<Element> findAllWithin(const PosType& pos, typename Element::CoordType maxDistSq) const;
 
     const Node<Element>& root() const;
 private:
@@ -373,82 +384,85 @@ template<typename Element>
 size_t NodeStorage<Element>::size() const {
     return numNodes_;
 }
-/// Impl: SearchResult ---------------------------------------------------------------
+/// Impl: SearchNearestResult ---------------------------------------------------------------
 template<typename Element>
-SearchResult<Element> SearchResult<Element>::none() {
-    return SearchResult (
+SearchNearestResult<Element> SearchNearestResult<Element>::none() {
+    return SearchNearestResult {
         std::numeric_limits<typename Element::CoordType>::max(),
         nullptr
-    );
-}
-template<typename Element>
-SearchResult<Element>::SearchResult(typename Element::CoordType distSq, const Element* element)
-    : distSq_(distSq)
-    , element_(element)
-{
+    };
 }
 
 template<typename Element>
-bool SearchResult<Element>::found() const {
-    bool res = element_ != nullptr;
-    tgtAssert(res != (distSq_ == std::numeric_limits<typename Element::CoordType>::max()), "Valid distance for invalid element");
-    return res;
+bool SearchNearestResult<Element>::found() const {
+    return element_ != nullptr;
 }
 template<typename Element>
-typename Element::CoordType SearchResult<Element>::dist() const {
+typename Element::CoordType SearchNearestResult<Element>::dist() const {
     return std::sqrt(distSq_);
 }
 
 template<typename Element>
-void SearchResult<Element>::takeBetter(SearchResult&& other) {
-    if(!found() || (other.found() && other.distSq_ < distSq_)) {
-        distSq_ = other.distSq_;
-        element_ = other.element_;
+void SearchNearestResult<Element>::tryInsert(typename Element::CoordType distSq, const Element* element) {
+    if(distSq < distSq_) {
+        distSq_ = distSq;
+        element_ = element;
     }
 }
 
-/// Impl: SearchResultSet ------------------------------------------------------------
+/// Impl: SearchNearestResultSet ------------------------------------------------------------
 
 template<typename Element>
-SearchResultSet<Element>::SearchResultSet()
+SearchNearestResultSet<Element>::SearchNearestResultSet()
     : distSq_(std::numeric_limits<typename Element::CoordType>::max())
     , elements_()
 {
 }
+
 template<typename Element>
-SearchResultSet<Element> SearchResultSet<Element>::none() {
-    return SearchResultSet();
-}
-template<typename Element>
-SearchResultSet<Element>::SearchResultSet(typename Element::CoordType distSq, const Element* element)
-    : distSq_(distSq)
+SearchNearestResultSet<Element>::SearchNearestResultSet(typename Element::CoordType maxDistSq)
+    : distSq_(maxDistSq)
     , elements_()
 {
-    if(element) {
-        elements_.push_back(element);
-    }
 }
 
 template<typename Element>
-bool SearchResultSet<Element>::found() const {
-    bool res = !elements_.empty();
-    tgtAssert(res != (distSq_ == std::numeric_limits<typename Element::CoordType>::max()), "Valid distance for invalid element");
-    return res;
+bool SearchNearestResultSet<Element>::found() const {
+    return !elements_.empty();
 }
 template<typename Element>
-typename Element::CoordType SearchResultSet<Element>::dist() const {
+typename Element::CoordType SearchNearestResultSet<Element>::dist() const {
     return std::sqrt(distSq_);
 }
 
 template<typename Element>
-void SearchResultSet<Element>::takeBetter(SearchResultSet&& other) {
-    if(other.distSq_ <= distSq_) {
-        if(other.distSq_ == distSq_) {
-            elements_.insert(elements_.end(), other.elements_.begin(), other.elements_.end());
-        } else {
-            distSq_ = other.distSq_;
-            elements_ = std::move(other.elements_);
+void SearchNearestResultSet<Element>::tryInsert(typename Element::CoordType distSq, const Element* element) {
+    if(distSq <= distSq_) {
+        if(distSq != distSq_) {
+            elements_.clear();
         }
+        distSq_ = distSq;
+        elements_.push_back(element);
+    }
+}
+
+/// Impl: SearchAllWithinResultSet ----------------------------------------------------------
+template<typename Element>
+SearchAllWithinResultSet<Element>::SearchAllWithinResultSet(typename Element::CoordType maxDistSq)
+    : distSq_(maxDistSq)
+    , elements_()
+{
+}
+
+template<typename Element>
+bool SearchAllWithinResultSet<Element>::found() const {
+    return !elements_.empty();
+}
+
+template<typename Element>
+void SearchAllWithinResultSet<Element>::tryInsert(typename Element::CoordType distSq, const Element* element) {
+    if(distSq <= distSq_) {
+        elements_.push_back(element);
     }
 }
 
@@ -487,21 +501,31 @@ const Node<Element>& Tree<Element>::root() const {
 }
 
 template<typename Element>
-SearchResult<Element> Tree<Element>::findNearest(const PosType& pos) const {
+SearchNearestResult<Element> Tree<Element>::findNearest(const PosType& pos) const {
+    SearchNearestResult<Element> result = SearchNearestResult<Element>::none();
     if(nodes_.size() == 0) {
-        return SearchResult<Element>::none();
+        return result;
     }
-    SearchResult<Element> result = SearchResult<Element>::none();
     findNearestFrom(pos, 0, root_, result);
     return result;
 }
 
 template<typename Element>
-SearchResultSet<Element> Tree<Element>::findAllNearest(const PosType& pos) const {
+SearchNearestResultSet<Element> Tree<Element>::findAllNearest(const PosType& pos, typename Element::CoordType maxDistSq) const {
+    SearchNearestResultSet<Element> result(maxDistSq);
     if(nodes_.size() == 0) {
-        return SearchResultSet<Element>::none();
+        return result;
     }
-    SearchResultSet<Element> result = SearchResultSet<Element>::none();
+    findNearestFrom(pos, 0, root_, result);
+    return result;
+}
+
+template<typename Element>
+SearchAllWithinResultSet<Element> Tree<Element>::findAllWithin(const PosType& pos, typename Element::CoordType maxDistSq) const {
+    SearchAllWithinResultSet<Element> result(maxDistSq);
+    if(nodes_.size() == 0) {
+        return result;
+    }
     findNearestFrom(pos, 0, root_, result);
     return result;
 }
@@ -525,9 +549,8 @@ void Tree<Element>::findNearestFrom(const PosType& pos, int depth, size_t node, 
         findNearestFrom(pos, depth+1, firstChild, best_result);
     }
 
-    best_result.takeBetter(Result(tgt::distanceSq(pos,current.elm_.getPos()), &current.elm_));
+    best_result.tryInsert(tgt::distanceSq(pos,current.elm_.getPos()), &current.elm_);
 
-    tgtAssert(best_result.found(), "Invalid result");
     if(planeDist*planeDist <= best_result.distSq_ && secondChild != NO_NODE_ID) {
         findNearestFrom(pos, depth+1, secondChild, best_result);
     }

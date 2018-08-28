@@ -88,7 +88,7 @@ ProtoVesselGraphEdge::ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID
     , tree_(buildTree(voxelsRw_))
 {
 }
-static_kdtree::SearchResultSet<ProtoVesselGraphEdgeElement> ProtoVesselGraphEdge::findClosestVoxelIndex(tgt::vec3 v) const {
+static_kdtree::SearchNearestResultSet<ProtoVesselGraphEdgeElement> ProtoVesselGraphEdge::findClosestVoxelIndex(tgt::vec3 v) const {
     auto resultSet = tree_.findAllNearest(v);
     tgtAssert(!resultSet.elements_.empty(), "Should be: No voxels => no id!");
     return resultSet;

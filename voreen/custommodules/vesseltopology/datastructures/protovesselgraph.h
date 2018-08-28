@@ -54,7 +54,7 @@ struct ProtoVesselGraphEdgeElement {
 
 struct ProtoVesselGraphEdge {
     ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, std::vector<tgt::svec3>&& voxels);
-    static_kdtree::SearchResultSet<ProtoVesselGraphEdgeElement> findClosestVoxelIndex(tgt::vec3) const;
+    static_kdtree::SearchNearestResultSet<ProtoVesselGraphEdgeElement> findClosestVoxelIndex(tgt::vec3) const;
     std::vector<tgt::vec3>& voxels() {
         return voxelsRw_;
     }
