@@ -463,7 +463,7 @@ void AsyncComputeProcessor<I,O>::interruptionPoint() {
 }
 
 template<class I, class O>
-const std::chrono::milliseconds AsyncComputeProcessor<I,O>::MINIMUM_PROGRESS_UPDATE_INTERVAL(500);
+const std::chrono::milliseconds AsyncComputeProcessor<I,O>::MINIMUM_PROGRESS_UPDATE_INTERVAL(100);
 
 template<class I, class O>
 AsyncComputeProcessor<I,O>::AsyncComputeProcessor()
