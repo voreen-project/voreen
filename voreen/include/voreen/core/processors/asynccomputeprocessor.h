@@ -238,6 +238,20 @@ private:
     };
 
     /**
+     * Ignores all progress reports, e.g. when running non-interactively.
+     */
+    class NoopProgressReporter : public ProgressReporter {
+    public:
+        NoopProgressReporter();
+        virtual ~NoopProgressReporter();
+
+        virtual void setProgressMessage(const std::string& message);
+        virtual std::string getProgressMessage() const;
+    private:
+        std::string message_;
+    };
+
+    /**
      * Abstraction of the compute thread, including input and output data.
      */
     class ComputeThread : public ProcessorBackgroundThread<AsyncComputeProcessor<ComputeInput, ComputeOutput>> {
@@ -322,11 +336,16 @@ void AsyncComputeProcessor<I, O>::ComputeThread::threadMain() {
     tgtAssert(input_, "ComputeThrad started without input!");
     output_.reset();
 
-    ComputeProgressReporter progressReporter(*ProcessorBackgroundThread<AsyncComputeProcessor<I,O>>::processor_);
+    std::unique_ptr<ProgressReporter> progress;
+    if(ProcessorBackgroundThread<AsyncComputeProcessor<I,O>>::processor_->synchronousComputation_.get()) {
+        progress.reset(new ComputeProgressReporter(*ProcessorBackgroundThread<AsyncComputeProcessor<I,O>>::processor_));
+    } else {
+        progress.reset(new NoopProgressReporter());
+    }
     I* input = input_.release();
     ProcessorBackgroundThread<AsyncComputeProcessor<I, O>>::processor_->unlockMutex();
 
-    O* output = new O(std::move(ProcessorBackgroundThread<AsyncComputeProcessor<I,O>>::processor_->compute(std::move(*input), progressReporter)));
+    O* output = new O(std::move(ProcessorBackgroundThread<AsyncComputeProcessor<I,O>>::processor_->compute(std::move(*input), *progress)));
 
     ProcessorBackgroundThread<AsyncComputeProcessor<I, O>>::processor_->lockMutex();
     output_.reset(output);
@@ -413,6 +432,29 @@ template<class I, class O>
 void AsyncComputeProcessor<I,O>::ComputeProgressReporter::update() {
     processor_.update();
 }
+
+// AsyncComputeProcessor::NoopProgressReporter ---------------------------------------
+template<class I, class O>
+AsyncComputeProcessor<I,O>::NoopProgressReporter::NoopProgressReporter()
+    : message_()
+{
+}
+
+template<class I, class O>
+AsyncComputeProcessor<I,O>::NoopProgressReporter::~NoopProgressReporter()
+{
+}
+
+template<class I, class O>
+void AsyncComputeProcessor<I,O>::NoopProgressReporter::setProgressMessage(const std::string& message) {
+    message_ = message;
+}
+
+template<class I, class O>
+std::string AsyncComputeProcessor<I,O>::NoopProgressReporter::getProgressMessage() const {
+    return message_;
+}
+
 
 // AsyncComputeProcessor ---------------------------------------------------------
 template<class I, class O>
