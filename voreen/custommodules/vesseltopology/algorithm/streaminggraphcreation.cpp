@@ -25,8 +25,8 @@
 
 #include "streaminggraphcreation.h"
 #include "../datastructures/vesselgraph.h"
+#include "../datastructures/kdtree.h"
 #include "tgt/vector.h"
-#include "../util/kdtreebuilder.h"
 
 namespace voreen {
 
@@ -324,7 +324,10 @@ void MetaDataCollector::collect(BranchData&& data) {
 }
 
 struct VoxelKDElement {
-    typedef tgt::ivec3 VoxelType;
+    typedef int32_t CoordType;
+    const tgt::Vector3<CoordType>& getPos() const {
+        return pos_;
+    }
 
     VoxelKDElement(tgt::ivec3 pos, VGNodeID nodeID)
         : pos_(pos)
@@ -332,53 +335,22 @@ struct VoxelKDElement {
     {
     }
 
-    inline typename VoxelType::ElemType at(int dim) const {
-        return pos_[dim];
-    }
-
-    VoxelType pos_;
+    tgt::ivec3 pos_;
     VGNodeID nodeID_;
 };
 
-template<typename E>
-class KDTreeNeighborhoodFinder {
-public:
-    typedef nanoflann::KDTreeSingleIndexAdaptor<
-		nanoflann::L2_Simple_Adaptor<typename KDTreeBuilder<E>::coord_t, KDTreeBuilder<E>>,
-		KDTreeBuilder<E>,
-		3 /* dim */
-		> Index;
+static std::vector<const VoxelKDElement*> find_26_neighbors(const static_kdtree::Tree<VoxelKDElement>& tree, const tgt::ivec3& pos) {
+    int search_radius_sq = 3; // (L2 distance)^2 <= 3 <=> 26_neighbors (or equal)
 
-    KDTreeNeighborhoodFinder(KDTreeBuilder<E>&& builder)
-        : adaptor_(std::move(builder))
-        , index_(3 /*dim */, adaptor_, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* recommended as a sensible value by library creator */))
-    {
-        index_.buildIndex();
-    }
-
-    std::vector<const E*> find_26_neighbors(const typename E::VoxelType& pos) {
-        auto search_radius = static_cast<typename KDTreeBuilder<E>::coord_t>(4); // (L2 distance)^2 < 4 <=> 26_neighbors (or equal)
-
-        nanoflann::SearchParams params;
-        params.sorted = false;
-
-        std::vector<std::pair<size_t, typename KDTreeBuilder<E>::coord_t> > index_results;
-        index_.radiusSearch(pos.elem, search_radius, index_results, params);
-
-        std::vector<const E*> results;
-        for(const auto& index_result : index_results) {
-            const E& p = adaptor_.points()[index_result.first];
-            if(p.pos_ != pos) {
-                results.push_back(&p);
-            }
+    std::vector<const VoxelKDElement*> results;
+    for(auto p : tree.findAllWithin(pos, search_radius_sq).elements_) {
+        if(p->pos_ != pos) {
+            results.push_back(p);
         }
-        return results;
     }
+    return results;
+}
 
-private:
-    KDTreeBuilder<E> adaptor_;
-    Index index_;
-};
 std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt::svec3 dimensions, const tgt::mat4& toRwMatrix, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress) {
     TaskTimeLogger _("Create Protograph", tgt::Info);
     std::unique_ptr<ProtoVesselGraph> graph(new ProtoVesselGraph(toRwMatrix));
@@ -386,7 +358,7 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
 
     std::vector<std::pair<tgt::svec3, VGNodeID>> nodeVoxelMap;
 
-    KDTreeBuilder<VoxelKDElement> nodeVoxelTreeBuilder;
+    static_kdtree::ElementArrayBuilder<VoxelKDElement> nodeVoxelTreeBuilder(VoreenApplication::app()->getUniqueTmpFilePath(".kdtreestorage"));
     // Insert nodes
     for(const auto& p : endPoints_) {
         std::vector<tgt::svec3> voxels;
@@ -411,7 +383,7 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
         }
     }
 
-    KDTreeNeighborhoodFinder<VoxelKDElement> nodeVoxelTree(std::move(nodeVoxelTreeBuilder));
+    static_kdtree::Tree<VoxelKDElement> nodeVoxelTree(VoreenApplication::app()->getUniqueTmpFilePath(".kdtree"), std::move(nodeVoxelTreeBuilder));
 
     size_t progressCounter = 0;
     size_t progressGranularity = 1 << 20;
@@ -430,13 +402,13 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
 
         if(leftEnd == rightEnd) {
             // One voxel long branch
-            auto neighbors = nodeVoxelTree.find_26_neighbors(leftEnd);
+            auto neighbors = find_26_neighbors(nodeVoxelTree, leftEnd);
             RELEASE_ASSERT(neighbors.size() == 2, "Invalid number of neighbors");
             leftEndNode = neighbors.at(0)->nodeID_;
             rightEndNode = neighbors.at(1)->nodeID_;
         } else {
-            auto leftNeighbors = nodeVoxelTree.find_26_neighbors(leftEnd);
-            auto rightNeighbors = nodeVoxelTree.find_26_neighbors(rightEnd);
+            auto leftNeighbors = find_26_neighbors(nodeVoxelTree, leftEnd);
+            auto rightNeighbors = find_26_neighbors(nodeVoxelTree, rightEnd);
             if(leftNeighbors.empty() || rightNeighbors.empty()) {
                 RELEASE_ASSERT(are26Neighbors(leftEnd, rightEnd), "non-connected, non-loop sequence");
                 RELEASE_ASSERT(leftNeighbors.empty() && rightNeighbors.empty(), "left xor right neighbors are empty!");
@@ -500,7 +472,7 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
         }
 
         tgt::ivec3 endPointI(node.voxels_.at(0));
-        for(const auto& p : nodeVoxelTree.find_26_neighbors(endPointI)) {
+        for(const auto& p : find_26_neighbors(nodeVoxelTree, endPointI)) {
             graph->insertEdge(p->nodeID_, node.id_, std::vector<tgt::svec3>());
             break;
         }
