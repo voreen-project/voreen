@@ -2,9 +2,8 @@
  *                                                                    *
  * tgt - Tiny Graphics Toolbox                                        *
  *                                                                    *
- * Copyright (C) 2005-2018 Visualization and Computer Graphics Group, *
- * Department of Computer Science, University of Muenster, Germany.   *
- * <http://viscg.uni-muenster.de>                                     *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,           *
+ * Department of Computer Science.                                    *
  *                                                                    *
  * This file is part of the tgt library. This library is free         *
  * software; you can redistribute it and/or modify it under the terms *
