@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2017 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -49,7 +49,7 @@ VolumeMultiplier::VolumeMultiplier()
     , outputVolumeFilePath_("outputVolumeFilePath", "Output Volume", "Path", "", "HDF5 (*.h5)", FileDialogProperty::SAVE_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , outputVolumeDeflateLevel_("outputVolumeDeflateLevel", "Deflate Level", 1, 0, 9, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEFAULT)
     , multiplicationFactor_("multiplicationFactor", "Multiplication Factor", tgt::ivec3(1), tgt::ivec3(1), tgt::ivec3(100))
-    , outputSizeDisplay_("kernelSizeDisplay", "Kernel Size", "")
+    , outputSizeDisplay_("outputSize", "Output Size", "")
 {
     addPort(inport_);
         inport_.onChange(LambdaFunctionCallback([this] () {

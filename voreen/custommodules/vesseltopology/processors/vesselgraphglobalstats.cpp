@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2016 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -92,13 +92,13 @@ void VesselGraphGlobalStats::exportToFile(const VesselGraph& graph) {
         return;
     } else {
         try {
-            CSVWriter<size_t, size_t, size_t, float, float, float, float, float, float, float, float, float, float, float, float, float, size_t, size_t, size_t, bool> writer(segmentExportFilePath_.get());
+            CSVWriter<uint32_t, uint32_t, uint32_t, float, float, float, float, float, float, float, float, float, float, float, float, float, size_t, size_t, size_t, bool> writer(segmentExportFilePath_.get());
             writer.writeHeader("id", "node1id", "node2id", "length", "distance", "curveness", "volume", "avgCrossSection", "minRadiusAvg", "minRadiusStd", "avgRadiusAvg", "avgRadiusStd", "maxRadiusAvg", "maxRadiusStd", "roundnessAvg", "roundnessStd", "node1_degree", "node2_degree", "num_voxels", "hasNodeAtSampleBorder");
             for(const VesselGraphEdge& edge : graph.getEdges()) {
                 writer.write(
-                        edge.getID(),
-                        edge.getNodeID1(),
-                        edge.getNodeID2(),
+                        edge.getID().raw(),
+                        edge.getNodeID1().raw(),
+                        edge.getNodeID2().raw(),
                         edge.getLength(),
                         edge.getDistance(),
                         edge.getCurveness(),
@@ -129,11 +129,11 @@ void VesselGraphGlobalStats::exportToFile(const VesselGraph& graph) {
         return;
     } else {
         try {
-            CSVWriter<size_t, float, float, float, int, bool> writer(nodeExportFilePath_.get());
+            CSVWriter<uint32_t, float, float, float, int, bool> writer(nodeExportFilePath_.get());
             writer.writeHeader("id", "pos_x", "pos_y", "pos_z", "degree", "isAtSampleBorder");
             for(const VesselGraphNode& node : graph.getNodes()) {
                 writer.write(
-                        node.getID(),
+                        node.getID().raw(),
                         node.pos_.x,
                         node.pos_.y,
                         node.pos_.z,

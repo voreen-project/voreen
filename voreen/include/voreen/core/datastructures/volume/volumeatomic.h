@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -222,9 +222,6 @@ public:
 
     //-------------------------------------------------------------------
 protected:
-    // protected default constructor
-    VolumeAtomic() {}
-
     // small utility
     template<bool> struct IsScalar{};
 
@@ -368,7 +365,11 @@ VolumeAtomic<T>::VolumeAtomic(T* data,
 
 template<class T>
 VolumeAtomic<T>::VolumeAtomic(VolumeAtomic<T>&& other)
-    : VolumeAtomic(other.data_, other.dimensions_)
+    : VolumeRAM(other.dimensions_)
+    , data_(other.data_)
+    , ownsData_(other.ownsData_)
+    , elementRange_(other.elementRange_)
+    , minMaxValid_(other.minMaxValid_)
 {
     other.data_ = nullptr;
 }

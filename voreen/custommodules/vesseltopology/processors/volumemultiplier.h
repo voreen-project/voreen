@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2017 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -29,7 +29,7 @@
 #include "voreen/core/processors/asynccomputeprocessor.h"
 
 #include "voreen/core/datastructures/volume/volumebase.h"
-#include "voreen/core/properties/filedialogproperty.h"
+#include "voreen/core/properties/temppathproperty.h"
 #include "voreen/core/properties/vectorproperty.h"
 #include "voreen/core/properties/stringproperty.h"
 #include "voreen/core/ports/volumeport.h"
@@ -90,7 +90,7 @@ private:
     VolumePort outport_;
 
     // General properties
-    FileDialogProperty outputVolumeFilePath_;
+    TempPathProperty outputVolumeFilePath_;
     IntProperty outputVolumeDeflateLevel_;
 
     IntVec3Property multiplicationFactor_;

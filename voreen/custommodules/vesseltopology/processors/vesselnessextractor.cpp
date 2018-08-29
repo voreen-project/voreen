@@ -1,3 +1,28 @@
+/***********************************************************************************
+ *                                                                                 *
+ * Voreen - The Volume Rendering Engine                                            *
+ *                                                                                 *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
+ * For a list of authors please refer to the file "CREDITS.txt".                   *
+ *                                                                                 *
+ * This file is part of the Voreen software package. Voreen is free software:      *
+ * you can redistribute it and/or modify it under the terms of the GNU General     *
+ * Public License version 2 as published by the Free Software Foundation.          *
+ *                                                                                 *
+ * Voreen is distributed in the hope that it will be useful, but WITHOUT ANY       *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR   *
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.      *
+ *                                                                                 *
+ * You should have received a copy of the GNU General Public License in the file   *
+ * "LICENSE.txt" along with this file. If not, see <http://www.gnu.org/licenses/>. *
+ *                                                                                 *
+ * For non-commercial academic use see the license exception specified in the file *
+ * "LICENSE-academic.txt". To get information about commercial licensing please    *
+ * contact the authors.                                                            *
+ *                                                                                 *
+ ***********************************************************************************/
+
 #include "vesselnessextractor.h"
 
 #include "modules/hdf5/io/hdf5volumereader.h"
@@ -20,6 +45,27 @@ using namespace voreen;
 
 // Space efficient symmetric 3 dimensional matrix
 struct SymMat3 {
+
+    SymMat3(float val = 0)
+        : xx(val)
+        , xy(val)
+        , xz(val)
+        , yy(val)
+        , yz(val)
+        , zz(val)
+    {
+    }
+
+    SymMat3(float xx, float xy, float xz, float yy, float yz, float zz)
+        : xx(xx)
+        , xy(xy)
+        , xz(xz)
+        , yy(yy)
+        , yz(yz)
+        , zz(zz)
+    {
+    }
+
     float xx;
     float xy;
     float xz;
@@ -674,6 +720,7 @@ ParallelFilterValue1D VesselnessFinalizer::getValue(const Sample& sample, const 
 
 
 
+    /*
     float dirAccumulator = 0.0f;
     tgt::vec3 thisDir = thisVal.xyz();
     for(int z = pos.z-extent; z <= pos.z+extent; ++z) {
@@ -689,8 +736,9 @@ ParallelFilterValue1D VesselnessFinalizer::getValue(const Sample& sample, const 
     dirAccumulator /= hmul(2*extent_+ tgt::ivec3::one) - 1;
 
 
-    //return scalarVesselness;
     return std::sqrt(scalarVesselness * dirAccumulator);
+    */
+    return scalarVesselness;
 }
 
 // VesselnessExtractor ---------------------------------------------------------------------------------------------------------
@@ -728,7 +776,7 @@ VesselnessExtractor::VesselnessExtractor()
     , inport_(Port::INPORT, "volumehandle.input", "Volume Input")
     , outport_(Port::OUTPORT, "volumehandle.output", "Volume Output", false)
     , outputVolumeFilePath_("outputVolumeFilePath", "Output Volume", "Path", "", "HDF5 (*.h5)", FileDialogProperty::SAVE_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT)
-    , vesselRadiusRangeRW_("vesselRadiusRangeRW", "Vessel Radius (mm)", 1.0, 0.001, 500)
+    , vesselRadiusRangeRW_("vesselRadiusRangeRW", "Vessel Radius (mm)", 1.0, std::numeric_limits<float>::epsilon(), std::numeric_limits<float>::max())
     , scaleSpaceSteps_("scaleSpaceSteps", "Scale Space Steps", 5, 1, 10)
     , minStandardDeviationVec_("minStandardDeviationVec", "Used Min Standard Deviation (voxel)", tgt::vec3::zero, tgt::vec3::zero, tgt::vec3(std::numeric_limits<float>::max()))
     , maxStandardDeviationVec_("maxStandardDeviationVec", "Used Max Standard Deviation (voxel)", tgt::vec3::zero, tgt::vec3::zero, tgt::vec3(std::numeric_limits<float>::max()))
@@ -876,7 +924,8 @@ VesselnessExtractorOutput VesselnessExtractor::compute(VesselnessExtractorInput 
 
     // Now build max with the following scale space steps
     for(int step=1; step < input.scaleSpaceSteps; ++step) {
-        std::unique_ptr<SliceReader> reader = buildStack(input.input, input.getStandardDeviationForStep(step), input.baseType);
+        auto stddev = input.getStandardDeviationForStep(step);
+        std::unique_ptr<SliceReader> reader = buildStack(input.input, stddev, input.baseType);
 
         progressReporter.setProgressRange(tgt::vec2(stepProgressDelta*step, stepProgressDelta*(step+1)));
 

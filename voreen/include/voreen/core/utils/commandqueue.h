@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -28,14 +28,23 @@
 
 #include "voreen/core/voreencoreapi.h"
 
-#include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread.hpp>
 
-#include <deque>
+#include <vector>
 #include <map>
 
 namespace voreen {
 
-    class Callback;
+class Callback;
+
+struct CommandQueueElement {
+    CommandQueueElement(const void* owner, std::unique_ptr<Callback>&& callback);
+    CommandQueueElement(CommandQueueElement&&);
+    CommandQueueElement& operator=(CommandQueueElement&&);
+    const void* owner_;
+    std::unique_ptr<Callback> callback_;
+    boost::mutex mutex_; // Mutual exclusion for execution of callback and deletion of the element
+};
 
 /**
  * Command queue for executing deferred tasks.
@@ -54,11 +63,6 @@ public:
     ~CommandQueue();
 
     /**
-     * Executes only the first command in the queue and removes it.
-     */
-    void execute();
-
-    /**
      * Executes all commands in the queue in the order of insertion and removes them.
      */
     void executeAll();
@@ -68,19 +72,21 @@ public:
      *
      * @Note: Owners need to keep track of these tasks!
      */
-    void enqueue(void* owner, const Callback& command);
+    void enqueue(const void* owner, const Callback& command);
 
     /**
      * Removes All tasks owned by the given owner.
      *
      * @param owner if null, every command is removed
      */
-    void removeAll(void* owner = nullptr);
+    void removeAll(const void* owner = nullptr);
 
 protected:
 
-    boost::recursive_mutex mutex_; ///< Mutex that makes queue access thread safe
-    std::deque<std::pair<void*, std::unique_ptr<Callback>> > commands_; ///< Actual command queue, defines order of execution
+    boost::shared_mutex queueMutex_; // Either: read (shared) or modify (exclusive)
+    boost::mutex nextMutex_; // standard mutex for the commands that will be added in the _next_ executeAll
+    std::vector<CommandQueueElement> commands_; ///< Actual command queue, defines order of execution
+    std::vector<CommandQueueElement> nextCommands_; ///< Commands that will be added to the command queue soon
 
 private:
 

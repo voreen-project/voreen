@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -44,7 +44,7 @@ public:
     std::string getName() const { return name_; }
     bool isUnknown() const { return name_ == MODALITY_UNKNOWN.name_; }
 
-    static const std::vector<Modality*> getModalities() { return modalities(); }
+    static const std::vector<Modality>& getModalities() { return modalities(); }
     static const std::vector<std::string>& getModalityNames() { return modalityNames_(); }
 
     // all known modalities
@@ -82,8 +82,8 @@ protected:
         return modalityNames;
     }
 
-    static std::vector<Modality*>& modalities() {
-        static std::vector<Modality*> modalities;
+    static std::vector<Modality>& modalities() {
+        static std::vector<Modality> modalities;
         return modalities;
     }
 };

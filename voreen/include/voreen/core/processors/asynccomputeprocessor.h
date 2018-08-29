@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -42,11 +42,10 @@
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/datastructures/volume/volumeobserver.h"
-
-#include "boost/optional.hpp"
-
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/voreenapplication.h"
+
+#include "boost/optional.hpp"
 
 #include <exception>
 #include <chrono>
@@ -206,6 +205,8 @@ private:
 #endif
     typedef std::chrono::time_point<Clock> TimePoint;
 
+    const static std::chrono::milliseconds MINIMUM_PROGRESS_UPDATE_INTERVAL;
+
     /// Used to manage the visibility of properties during compute()
     bool isDisabledDuringComputation(Property* property) const;
     void savePropertyVisibilities();
@@ -233,6 +234,21 @@ private:
     private:
         AsyncComputeProcessor<ComputeInput, ComputeOutput>& processor_;
         TimePoint startTime_;
+        TimePoint lastUpdate_;
+    };
+
+    /**
+     * Ignores all progress reports, e.g. when running non-interactively.
+     */
+    class NoopProgressReporter : public ProgressReporter {
+    public:
+        NoopProgressReporter();
+        virtual ~NoopProgressReporter();
+
+        virtual void setProgressMessage(const std::string& message);
+        virtual std::string getProgressMessage() const;
+    private:
+        std::string message_;
     };
 
     /**
@@ -254,6 +270,11 @@ private:
          * a null pointer is returned, indicating "no output".
          */
         std::unique_ptr<ComputeOutput> retrieveOutput();
+
+        /**
+         * Remove the output from the (finished) computation thread.
+         */
+        void clearOutput();
 
         void threadMain();
 
@@ -305,16 +326,26 @@ std::unique_ptr<O> AsyncComputeProcessor<I, O>::ComputeThread::retrieveOutput() 
 }
 
 template<class I, class O>
+void AsyncComputeProcessor<I, O>::ComputeThread::clearOutput() {
+    return output_.reset(nullptr);
+}
+
+template<class I, class O>
 void AsyncComputeProcessor<I, O>::ComputeThread::threadMain() {
     ProcessorBackgroundThread<AsyncComputeProcessor<I, O>>::processor_->lockMutex();
     tgtAssert(input_, "ComputeThrad started without input!");
     output_.reset();
 
-    ComputeProgressReporter progressReporter(*ProcessorBackgroundThread<AsyncComputeProcessor<I,O>>::processor_);
+    std::unique_ptr<ProgressReporter> progress;
+    if(ProcessorBackgroundThread<AsyncComputeProcessor<I,O>>::processor_->synchronousComputation_.get()) {
+        progress.reset(new ComputeProgressReporter(*ProcessorBackgroundThread<AsyncComputeProcessor<I,O>>::processor_));
+    } else {
+        progress.reset(new NoopProgressReporter());
+    }
     I* input = input_.release();
     ProcessorBackgroundThread<AsyncComputeProcessor<I, O>>::processor_->unlockMutex();
 
-    O* output = new O(std::move(ProcessorBackgroundThread<AsyncComputeProcessor<I,O>>::processor_->compute(std::move(*input), progressReporter)));
+    O* output = new O(std::move(ProcessorBackgroundThread<AsyncComputeProcessor<I,O>>::processor_->compute(std::move(*input), *progress)));
 
     ProcessorBackgroundThread<AsyncComputeProcessor<I, O>>::processor_->lockMutex();
     output_.reset(output);
@@ -327,6 +358,7 @@ template<class I, class O>
 AsyncComputeProcessor<I,O>::ComputeProgressReporter::ComputeProgressReporter(AsyncComputeProcessor<I, O>& processor)
     : processor_(processor)
     , startTime_(Clock::now())
+    , lastUpdate_(Clock::now())
 {
 }
 
@@ -340,12 +372,24 @@ template<class I, class O>
 void AsyncComputeProcessor<I,O>::ComputeProgressReporter::setProgress(float progress) {
     if(progress != 0) {
         TimePoint now = Clock::now();
+
+        auto timeSinceLastUpdate = now - lastUpdate_;
+        auto timeSinceLastUpdateMillis = std::chrono::duration_cast<std::chrono::milliseconds>(timeSinceLastUpdate);
+        if(timeSinceLastUpdateMillis < MINIMUM_PROGRESS_UPDATE_INTERVAL) {
+            return;
+        }
+        lastUpdate_ = now;
+
         auto computeDuration = now - startTime_;
         auto expectedTotalDuration = computeDuration/progress;
         auto remainingDuration = expectedTotalDuration - computeDuration;
         auto remainingDurationMillis = std::chrono::duration_cast<std::chrono::milliseconds>(remainingDuration);
         std::string timeFormat(formatTime(remainingDurationMillis.count()));
 
+        // Remove old commands of this progress reporter.
+        VoreenApplication::app()->getCommandQueue()->removeAll(this);
+
+        // Enqueue new command for an ui update.
         VoreenApplication::app()->getCommandQueue()->enqueue(this, LambdaFunctionCallback([this, timeFormat, progress] {
                         std::string msg = timeFormat + " remaining";
                         processor_.statusDisplay_.set(msg);
@@ -389,11 +433,37 @@ void AsyncComputeProcessor<I,O>::ComputeProgressReporter::update() {
     processor_.update();
 }
 
+// AsyncComputeProcessor::NoopProgressReporter ---------------------------------------
+template<class I, class O>
+AsyncComputeProcessor<I,O>::NoopProgressReporter::NoopProgressReporter()
+    : message_()
+{
+}
+
+template<class I, class O>
+AsyncComputeProcessor<I,O>::NoopProgressReporter::~NoopProgressReporter()
+{
+}
+
+template<class I, class O>
+void AsyncComputeProcessor<I,O>::NoopProgressReporter::setProgressMessage(const std::string& message) {
+    message_ = message;
+}
+
+template<class I, class O>
+std::string AsyncComputeProcessor<I,O>::NoopProgressReporter::getProgressMessage() const {
+    return message_;
+}
+
+
 // AsyncComputeProcessor ---------------------------------------------------------
 template<class I, class O>
 void AsyncComputeProcessor<I,O>::interruptionPoint() {
     boost::this_thread::interruption_point();
 }
+
+template<class I, class O>
+const std::chrono::milliseconds AsyncComputeProcessor<I,O>::MINIMUM_PROGRESS_UPDATE_INTERVAL(100);
 
 template<class I, class O>
 AsyncComputeProcessor<I,O>::AsyncComputeProcessor()
@@ -516,6 +586,8 @@ template<class I, class O>
 void AsyncComputeProcessor<I, O>::dataWillChange(const Port* source) {
     lockMutex();
     interruptComputation();
+    // Clear the result, if we have one already, as it will not be valid (i.e., corresponding to the input) afterwards.
+    computation_.clearOutput();
     // The port will no longer store it's currently contained data.
     // The data itself might continue existing, therefore we need to remove the observer.
     if(source->isDataInvalidationObservable() && source->hasData()) {
@@ -613,13 +685,18 @@ void AsyncComputeProcessor<I,O>::interruptComputation() throw() {
 
 template<class I, class O>
 void AsyncComputeProcessor<I,O>::process() {
+
+    bool abortNecessary = (getInvalidationLevel() >= INVALID_RESULT || updateForced_ || stopForced_) && computation_.isRunning();
+    stopForced_ = false;
+
+    if(abortNecessary) {
+        interruptComputation();
+    }
+
     std::unique_ptr<O> result = computation_.retrieveOutput();
 
     bool restartNecessary = (!result && getInvalidationLevel() >= INVALID_RESULT && continuousUpdate_.get()) && !stopForced_ || updateForced_;
     updateForced_ = false;
-
-    bool abortNecessary = (restartNecessary || stopForced_) && computation_.isRunning();
-    stopForced_ = false;
 
     //If we need to restart anyways, we don't care about the result
     if(result && !restartNecessary) {
@@ -636,11 +713,6 @@ void AsyncComputeProcessor<I,O>::process() {
 
         setProgressRange(tgt::vec2(0.0f, 1.0f));
         setProgress(1.0f);
-    }
-
-    if(abortNecessary) {
-        tgtAssert(computation_.isRunning(), "Abort: No computation running");
-        interruptComputation();
     }
 
     if(restartNecessary) {

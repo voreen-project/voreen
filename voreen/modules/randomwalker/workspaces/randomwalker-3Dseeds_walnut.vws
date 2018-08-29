@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="true" GlobalDescription="">
-        <ProcessorNetwork version="18">
+        <ProcessorNetwork version="19">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
@@ -12,9 +12,9 @@
                     <transform.row2 x="7676.314453125" y="-4512.15673828125" z="1" />
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-345" y="236.91242981" />
+                    <value x="-346" y="236.5" />
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.403030306" />
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.645454526" />
             </MetaData>
             <Processors>
                 <Processor type="Canvas" name="Canvas" id="ref36">
@@ -149,8 +149,8 @@
                         </Property>
                         <Property mapKey="composeShader" name="composeShader">
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="forceAdaptToScene" name="forceAdaptToScene" />
@@ -159,14 +159,14 @@
                         </Property>
                         <Property mapKey="oirAddImageShader" name="oirAddImageShader">
                             <components>
-                                <item shaderType="1" originalFilename="oit_addimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="oit_addimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="oirBlendShader" name="oirBlendShader">
                             <components>
-                                <item shaderType="1" originalFilename="oit_blend.frag" modified="false" />
                                 <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="oit_blend.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="renderGeometries" name="renderGeometries" value="true" />
@@ -230,14 +230,14 @@
                         <Property mapKey="lineZWidth" name="lineZWidth" value="1" />
                         <Property mapKey="planeShaderOpaque" name="planeShaderOpaque">
                             <components>
-                                <item shaderType="1" originalFilename="slicepositionrenderer.frag" modified="false" />
                                 <item shaderType="0" originalFilename="slicepositionrenderer.vert" modified="false" />
+                                <item shaderType="1" originalFilename="slicepositionrenderer.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="planeShaderTransparent" name="planeShaderTransparent">
                             <components>
-                                <item shaderType="1" originalFilename="slicepositionrenderer.frag" modified="false" />
                                 <item shaderType="0" originalFilename="slicepositionrenderer.vert" modified="false" />
+                                <item shaderType="1" originalFilename="slicepositionrenderer.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="renderXSlice" name="renderXSlice" value="true" />
@@ -335,7 +335,7 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="0.343724728" />
+                                <domain x="0" y="22526" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -458,7 +458,7 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="0.343724728" />
+                                <domain x="0" y="22526" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -587,8 +587,8 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
@@ -699,8 +699,8 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="weightFirst" name="weightFirst" value="1" />
@@ -770,8 +770,8 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
@@ -863,36 +863,33 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
-                                        <![CDATA[/**********************************************************************
- *                                                                    *
- * Voreen - The Volume Rendering Engine                               *
- *                                                                    *
- * Copyright (C) 2005-2009 Visualization and Computer Graphics Group, *
- * Department of Computer Science, University of Muenster, Germany.   *
- * <http://viscg.uni-muenster.de>                                     *
- *                                                                    *
- * This file is part of the Voreen software package. Voreen is free   *
- * software: you can redistribute it and/or modify it under the terms *
- * of the GNU General Public License version 2 as published by the    *
- * Free Software Foundation.                                          *
- *                                                                    *
- * Voreen is distributed in the hope that it will be useful,          *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the       *
- * GNU General Public License for more details.                       *
- *                                                                    *
- * You should have received a copy of the GNU General Public License  *
- * in the file "LICENSE.txt" along with this program.                 *
- * If not, see <http://www.gnu.org/licenses/>.                        *
- *                                                                    *
- * The authors reserve all rights not expressly granted herein. For   *
- * non-commercial academic use see the license exception specified in *
- * the file "LICENSE-academic.txt". To get information about          *
- * commercial licensing please contact the authors.                   *
- *                                                                    *
- **********************************************************************/
+                                        <![CDATA[/***********************************************************************************
+ *                                                                                 *
+ * Voreen - The Volume Rendering Engine                                            *
+ *                                                                                 *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
+ * For a list of authors please refer to the file "CREDITS.txt".                   *
+ *                                                                                 *
+ * This file is part of the Voreen software package. Voreen is free software:      *
+ * you can redistribute it and/or modify it under the terms of the GNU General     *
+ * Public License version 2 as published by the Free Software Foundation.          *
+ *                                                                                 *
+ * Voreen is distributed in the hope that it will be useful, but WITHOUT ANY       *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR   *
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.      *
+ *                                                                                 *
+ * You should have received a copy of the GNU General Public License in the file   *
+ * "LICENSE.txt" along with this file. If not, see <http://www.gnu.org/licenses/>. *
+ *                                                                                 *
+ * For non-commercial academic use see the license exception specified in the file *
+ * "LICENSE-academic.txt". To get information about commercial licensing please    *
+ * contact the authors.                                                            *
+ *                                                                                 *
+ ***********************************************************************************/
 
 #include "modules/mod_sampler2d.frag"
 
@@ -937,7 +934,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -968,36 +964,33 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
-                                        <![CDATA[/**********************************************************************
- *                                                                    *
- * Voreen - The Volume Rendering Engine                               *
- *                                                                    *
- * Copyright (C) 2005-2009 Visualization and Computer Graphics Group, *
- * Department of Computer Science, University of Muenster, Germany.   *
- * <http://viscg.uni-muenster.de>                                     *
- *                                                                    *
- * This file is part of the Voreen software package. Voreen is free   *
- * software: you can redistribute it and/or modify it under the terms *
- * of the GNU General Public License version 2 as published by the    *
- * Free Software Foundation.                                          *
- *                                                                    *
- * Voreen is distributed in the hope that it will be useful,          *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the       *
- * GNU General Public License for more details.                       *
- *                                                                    *
- * You should have received a copy of the GNU General Public License  *
- * in the file "LICENSE.txt" along with this program.                 *
- * If not, see <http://www.gnu.org/licenses/>.                        *
- *                                                                    *
- * The authors reserve all rights not expressly granted herein. For   *
- * non-commercial academic use see the license exception specified in *
- * the file "LICENSE-academic.txt". To get information about          *
- * commercial licensing please contact the authors.                   *
- *                                                                    *
- **********************************************************************/
+                                        <![CDATA[/***********************************************************************************
+ *                                                                                 *
+ * Voreen - The Volume Rendering Engine                                            *
+ *                                                                                 *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
+ * For a list of authors please refer to the file "CREDITS.txt".                   *
+ *                                                                                 *
+ * This file is part of the Voreen software package. Voreen is free software:      *
+ * you can redistribute it and/or modify it under the terms of the GNU General     *
+ * Public License version 2 as published by the Free Software Foundation.          *
+ *                                                                                 *
+ * Voreen is distributed in the hope that it will be useful, but WITHOUT ANY       *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR   *
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.      *
+ *                                                                                 *
+ * You should have received a copy of the GNU General Public License in the file   *
+ * "LICENSE.txt" along with this file. If not, see <http://www.gnu.org/licenses/>. *
+ *                                                                                 *
+ * For non-commercial academic use see the license exception specified in the file *
+ * "LICENSE-academic.txt". To get information about commercial licensing please    *
+ * contact the authors.                                                            *
+ *                                                                                 *
+ ***********************************************************************************/
 
 #include "modules/mod_sampler2d.frag"
 
@@ -1082,7 +1075,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -1113,36 +1105,33 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
-                                        <![CDATA[/**********************************************************************
- *                                                                    *
- * Voreen - The Volume Rendering Engine                               *
- *                                                                    *
- * Copyright (C) 2005-2009 Visualization and Computer Graphics Group, *
- * Department of Computer Science, University of Muenster, Germany.   *
- * <http://viscg.uni-muenster.de>                                     *
- *                                                                    *
- * This file is part of the Voreen software package. Voreen is free   *
- * software: you can redistribute it and/or modify it under the terms *
- * of the GNU General Public License version 2 as published by the    *
- * Free Software Foundation.                                          *
- *                                                                    *
- * Voreen is distributed in the hope that it will be useful,          *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the       *
- * GNU General Public License for more details.                       *
- *                                                                    *
- * You should have received a copy of the GNU General Public License  *
- * in the file "LICENSE.txt" along with this program.                 *
- * If not, see <http://www.gnu.org/licenses/>.                        *
- *                                                                    *
- * The authors reserve all rights not expressly granted herein. For   *
- * non-commercial academic use see the license exception specified in *
- * the file "LICENSE-academic.txt". To get information about          *
- * commercial licensing please contact the authors.                   *
- *                                                                    *
- **********************************************************************/
+                                        <![CDATA[/***********************************************************************************
+ *                                                                                 *
+ * Voreen - The Volume Rendering Engine                                            *
+ *                                                                                 *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
+ * For a list of authors please refer to the file "CREDITS.txt".                   *
+ *                                                                                 *
+ * This file is part of the Voreen software package. Voreen is free software:      *
+ * you can redistribute it and/or modify it under the terms of the GNU General     *
+ * Public License version 2 as published by the Free Software Foundation.          *
+ *                                                                                 *
+ * Voreen is distributed in the hope that it will be useful, but WITHOUT ANY       *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR   *
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.      *
+ *                                                                                 *
+ * You should have received a copy of the GNU General Public License in the file   *
+ * "LICENSE.txt" along with this file. If not, see <http://www.gnu.org/licenses/>. *
+ *                                                                                 *
+ * For non-commercial academic use see the license exception specified in the file *
+ * "LICENSE-academic.txt". To get information about commercial licensing please    *
+ * contact the authors.                                                            *
+ *                                                                                 *
+ ***********************************************************************************/
 
 #include "modules/mod_sampler2d.frag"
 
@@ -1169,7 +1158,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -1248,7 +1236,7 @@ void main() {
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="0.343724728" />
+                                <domain x="0" y="22526" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -1388,8 +1376,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
@@ -1661,8 +1649,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
@@ -1920,36 +1908,33 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
-                                        <![CDATA[/**********************************************************************
- *                                                                    *
- * Voreen - The Volume Rendering Engine                               *
- *                                                                    *
- * Copyright (C) 2005-2009 Visualization and Computer Graphics Group, *
- * Department of Computer Science, University of Muenster, Germany.   *
- * <http://viscg.uni-muenster.de>                                     *
- *                                                                    *
- * This file is part of the Voreen software package. Voreen is free   *
- * software: you can redistribute it and/or modify it under the terms *
- * of the GNU General Public License version 2 as published by the    *
- * Free Software Foundation.                                          *
- *                                                                    *
- * Voreen is distributed in the hope that it will be useful,          *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the       *
- * GNU General Public License for more details.                       *
- *                                                                    *
- * You should have received a copy of the GNU General Public License  *
- * in the file "LICENSE.txt" along with this program.                 *
- * If not, see <http://www.gnu.org/licenses/>.                        *
- *                                                                    *
- * The authors reserve all rights not expressly granted herein. For   *
- * non-commercial academic use see the license exception specified in *
- * the file "LICENSE-academic.txt". To get information about          *
- * commercial licensing please contact the authors.                   *
- *                                                                    *
- **********************************************************************/
+                                        <![CDATA[/***********************************************************************************
+ *                                                                                 *
+ * Voreen - The Volume Rendering Engine                                            *
+ *                                                                                 *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
+ * For a list of authors please refer to the file "CREDITS.txt".                   *
+ *                                                                                 *
+ * This file is part of the Voreen software package. Voreen is free software:      *
+ * you can redistribute it and/or modify it under the terms of the GNU General     *
+ * Public License version 2 as published by the Free Software Foundation.          *
+ *                                                                                 *
+ * Voreen is distributed in the hope that it will be useful, but WITHOUT ANY       *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR   *
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.      *
+ *                                                                                 *
+ * You should have received a copy of the GNU General Public License in the file   *
+ * "LICENSE.txt" along with this file. If not, see <http://www.gnu.org/licenses/>. *
+ *                                                                                 *
+ * For non-commercial academic use see the license exception specified in the file *
+ * "LICENSE-academic.txt". To get information about commercial licensing please    *
+ * contact the authors.                                                            *
+ *                                                                                 *
+ ***********************************************************************************/
 
 #include "modules/mod_sampler2d.frag"
 
@@ -1976,7 +1961,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -2007,36 +1991,33 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
-                                        <![CDATA[/**********************************************************************
- *                                                                    *
- * Voreen - The Volume Rendering Engine                               *
- *                                                                    *
- * Copyright (C) 2005-2009 Visualization and Computer Graphics Group, *
- * Department of Computer Science, University of Muenster, Germany.   *
- * <http://viscg.uni-muenster.de>                                     *
- *                                                                    *
- * This file is part of the Voreen software package. Voreen is free   *
- * software: you can redistribute it and/or modify it under the terms *
- * of the GNU General Public License version 2 as published by the    *
- * Free Software Foundation.                                          *
- *                                                                    *
- * Voreen is distributed in the hope that it will be useful,          *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the       *
- * GNU General Public License for more details.                       *
- *                                                                    *
- * You should have received a copy of the GNU General Public License  *
- * in the file "LICENSE.txt" along with this program.                 *
- * If not, see <http://www.gnu.org/licenses/>.                        *
- *                                                                    *
- * The authors reserve all rights not expressly granted herein. For   *
- * non-commercial academic use see the license exception specified in *
- * the file "LICENSE-academic.txt". To get information about          *
- * commercial licensing please contact the authors.                   *
- *                                                                    *
- **********************************************************************/
+                                        <![CDATA[/***********************************************************************************
+ *                                                                                 *
+ * Voreen - The Volume Rendering Engine                                            *
+ *                                                                                 *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
+ * For a list of authors please refer to the file "CREDITS.txt".                   *
+ *                                                                                 *
+ * This file is part of the Voreen software package. Voreen is free software:      *
+ * you can redistribute it and/or modify it under the terms of the GNU General     *
+ * Public License version 2 as published by the Free Software Foundation.          *
+ *                                                                                 *
+ * Voreen is distributed in the hope that it will be useful, but WITHOUT ANY       *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR   *
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.      *
+ *                                                                                 *
+ * You should have received a copy of the GNU General Public License in the file   *
+ * "LICENSE.txt" along with this file. If not, see <http://www.gnu.org/licenses/>. *
+ *                                                                                 *
+ * For non-commercial academic use see the license exception specified in the file *
+ * "LICENSE-academic.txt". To get information about commercial licensing please    *
+ * contact the authors.                                                            *
+ *                                                                                 *
+ ***********************************************************************************/
 
 #include "modules/mod_sampler2d.frag"
 
@@ -2081,7 +2062,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -2112,36 +2092,33 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
-                                        <![CDATA[/**********************************************************************
- *                                                                    *
- * Voreen - The Volume Rendering Engine                               *
- *                                                                    *
- * Copyright (C) 2005-2009 Visualization and Computer Graphics Group, *
- * Department of Computer Science, University of Muenster, Germany.   *
- * <http://viscg.uni-muenster.de>                                     *
- *                                                                    *
- * This file is part of the Voreen software package. Voreen is free   *
- * software: you can redistribute it and/or modify it under the terms *
- * of the GNU General Public License version 2 as published by the    *
- * Free Software Foundation.                                          *
- *                                                                    *
- * Voreen is distributed in the hope that it will be useful,          *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the       *
- * GNU General Public License for more details.                       *
- *                                                                    *
- * You should have received a copy of the GNU General Public License  *
- * in the file "LICENSE.txt" along with this program.                 *
- * If not, see <http://www.gnu.org/licenses/>.                        *
- *                                                                    *
- * The authors reserve all rights not expressly granted herein. For   *
- * non-commercial academic use see the license exception specified in *
- * the file "LICENSE-academic.txt". To get information about          *
- * commercial licensing please contact the authors.                   *
- *                                                                    *
- **********************************************************************/
+                                        <![CDATA[/***********************************************************************************
+ *                                                                                 *
+ * Voreen - The Volume Rendering Engine                                            *
+ *                                                                                 *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
+ * For a list of authors please refer to the file "CREDITS.txt".                   *
+ *                                                                                 *
+ * This file is part of the Voreen software package. Voreen is free software:      *
+ * you can redistribute it and/or modify it under the terms of the GNU General     *
+ * Public License version 2 as published by the Free Software Foundation.          *
+ *                                                                                 *
+ * Voreen is distributed in the hope that it will be useful, but WITHOUT ANY       *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR   *
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.      *
+ *                                                                                 *
+ * You should have received a copy of the GNU General Public License in the file   *
+ * "LICENSE.txt" along with this file. If not, see <http://www.gnu.org/licenses/>. *
+ *                                                                                 *
+ * For non-commercial academic use see the license exception specified in the file *
+ * "LICENSE-academic.txt". To get information about commercial licensing please    *
+ * contact the authors.                                                            *
+ *                                                                                 *
+ ***********************************************************************************/
 
 #include "modules/mod_sampler2d.frag"
 
@@ -2226,7 +2203,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -2259,8 +2235,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="weightFirst" name="weightFirst" value="1" />
@@ -2336,16 +2312,20 @@ void main() {
                         <Property mapKey="sliceIndex" name="sliceIndex" value="57" id="ref66" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
-                            <value x="7" y="44" z="57" />
+                            <value x="-1" y="-1" z="-1" />
                         </Property>
                         <Property mapKey="textureMode" name="textureMode" value="3d-texture" />
                         <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true" id="ref80">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="true" x="109" y="606" width="463" height="281" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
+                                    <value x="0" y="22526" />
+                                </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="0.343724728" />
+                                <domain x="0" y="22526" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -2358,6 +2338,9 @@ void main() {
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transferFunction2" name="transferFunction2" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
                                 <domain x="0" y="1" />
@@ -2373,6 +2356,9 @@ void main() {
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transferFunction3" name="transferFunction3" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
                                 <domain x="0" y="1" />
@@ -2388,6 +2374,9 @@ void main() {
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transferFunction4" name="transferFunction4" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
                                 <domain x="0" y="1" />
@@ -2485,8 +2474,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
@@ -2621,8 +2610,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
@@ -2935,36 +2924,33 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
-                                        <![CDATA[/**********************************************************************
- *                                                                    *
- * Voreen - The Volume Rendering Engine                               *
- *                                                                    *
- * Copyright (C) 2005-2009 Visualization and Computer Graphics Group, *
- * Department of Computer Science, University of Muenster, Germany.   *
- * <http://viscg.uni-muenster.de>                                     *
- *                                                                    *
- * This file is part of the Voreen software package. Voreen is free   *
- * software: you can redistribute it and/or modify it under the terms *
- * of the GNU General Public License version 2 as published by the    *
- * Free Software Foundation.                                          *
- *                                                                    *
- * Voreen is distributed in the hope that it will be useful,          *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the       *
- * GNU General Public License for more details.                       *
- *                                                                    *
- * You should have received a copy of the GNU General Public License  *
- * in the file "LICENSE.txt" along with this program.                 *
- * If not, see <http://www.gnu.org/licenses/>.                        *
- *                                                                    *
- * The authors reserve all rights not expressly granted herein. For   *
- * non-commercial academic use see the license exception specified in *
- * the file "LICENSE-academic.txt". To get information about          *
- * commercial licensing please contact the authors.                   *
- *                                                                    *
- **********************************************************************/
+                                        <![CDATA[/***********************************************************************************
+ *                                                                                 *
+ * Voreen - The Volume Rendering Engine                                            *
+ *                                                                                 *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
+ * For a list of authors please refer to the file "CREDITS.txt".                   *
+ *                                                                                 *
+ * This file is part of the Voreen software package. Voreen is free software:      *
+ * you can redistribute it and/or modify it under the terms of the GNU General     *
+ * Public License version 2 as published by the Free Software Foundation.          *
+ *                                                                                 *
+ * Voreen is distributed in the hope that it will be useful, but WITHOUT ANY       *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR   *
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.      *
+ *                                                                                 *
+ * You should have received a copy of the GNU General Public License in the file   *
+ * "LICENSE.txt" along with this file. If not, see <http://www.gnu.org/licenses/>. *
+ *                                                                                 *
+ * For non-commercial academic use see the license exception specified in the file *
+ * "LICENSE-academic.txt". To get information about commercial licensing please    *
+ * contact the authors.                                                            *
+ *                                                                                 *
+ ***********************************************************************************/
 
 #include "modules/mod_sampler2d.frag"
 
@@ -2991,7 +2977,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -3022,36 +3007,33 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
-                                        <![CDATA[/**********************************************************************
- *                                                                    *
- * Voreen - The Volume Rendering Engine                               *
- *                                                                    *
- * Copyright (C) 2005-2009 Visualization and Computer Graphics Group, *
- * Department of Computer Science, University of Muenster, Germany.   *
- * <http://viscg.uni-muenster.de>                                     *
- *                                                                    *
- * This file is part of the Voreen software package. Voreen is free   *
- * software: you can redistribute it and/or modify it under the terms *
- * of the GNU General Public License version 2 as published by the    *
- * Free Software Foundation.                                          *
- *                                                                    *
- * Voreen is distributed in the hope that it will be useful,          *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the       *
- * GNU General Public License for more details.                       *
- *                                                                    *
- * You should have received a copy of the GNU General Public License  *
- * in the file "LICENSE.txt" along with this program.                 *
- * If not, see <http://www.gnu.org/licenses/>.                        *
- *                                                                    *
- * The authors reserve all rights not expressly granted herein. For   *
- * non-commercial academic use see the license exception specified in *
- * the file "LICENSE-academic.txt". To get information about          *
- * commercial licensing please contact the authors.                   *
- *                                                                    *
- **********************************************************************/
+                                        <![CDATA[/***********************************************************************************
+ *                                                                                 *
+ * Voreen - The Volume Rendering Engine                                            *
+ *                                                                                 *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
+ * For a list of authors please refer to the file "CREDITS.txt".                   *
+ *                                                                                 *
+ * This file is part of the Voreen software package. Voreen is free software:      *
+ * you can redistribute it and/or modify it under the terms of the GNU General     *
+ * Public License version 2 as published by the Free Software Foundation.          *
+ *                                                                                 *
+ * Voreen is distributed in the hope that it will be useful, but WITHOUT ANY       *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR   *
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.      *
+ *                                                                                 *
+ * You should have received a copy of the GNU General Public License in the file   *
+ * "LICENSE.txt" along with this file. If not, see <http://www.gnu.org/licenses/>. *
+ *                                                                                 *
+ * For non-commercial academic use see the license exception specified in the file *
+ * "LICENSE-academic.txt". To get information about commercial licensing please    *
+ * contact the authors.                                                            *
+ *                                                                                 *
+ ***********************************************************************************/
 
 #include "modules/mod_sampler2d.frag"
 
@@ -3096,7 +3078,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -3127,36 +3108,33 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
-                                        <![CDATA[/**********************************************************************
- *                                                                    *
- * Voreen - The Volume Rendering Engine                               *
- *                                                                    *
- * Copyright (C) 2005-2009 Visualization and Computer Graphics Group, *
- * Department of Computer Science, University of Muenster, Germany.   *
- * <http://viscg.uni-muenster.de>                                     *
- *                                                                    *
- * This file is part of the Voreen software package. Voreen is free   *
- * software: you can redistribute it and/or modify it under the terms *
- * of the GNU General Public License version 2 as published by the    *
- * Free Software Foundation.                                          *
- *                                                                    *
- * Voreen is distributed in the hope that it will be useful,          *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the       *
- * GNU General Public License for more details.                       *
- *                                                                    *
- * You should have received a copy of the GNU General Public License  *
- * in the file "LICENSE.txt" along with this program.                 *
- * If not, see <http://www.gnu.org/licenses/>.                        *
- *                                                                    *
- * The authors reserve all rights not expressly granted herein. For   *
- * non-commercial academic use see the license exception specified in *
- * the file "LICENSE-academic.txt". To get information about          *
- * commercial licensing please contact the authors.                   *
- *                                                                    *
- **********************************************************************/
+                                        <![CDATA[/***********************************************************************************
+ *                                                                                 *
+ * Voreen - The Volume Rendering Engine                                            *
+ *                                                                                 *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
+ * For a list of authors please refer to the file "CREDITS.txt".                   *
+ *                                                                                 *
+ * This file is part of the Voreen software package. Voreen is free software:      *
+ * you can redistribute it and/or modify it under the terms of the GNU General     *
+ * Public License version 2 as published by the Free Software Foundation.          *
+ *                                                                                 *
+ * Voreen is distributed in the hope that it will be useful, but WITHOUT ANY       *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR   *
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.      *
+ *                                                                                 *
+ * You should have received a copy of the GNU General Public License in the file   *
+ * "LICENSE.txt" along with this file. If not, see <http://www.gnu.org/licenses/>. *
+ *                                                                                 *
+ * For non-commercial academic use see the license exception specified in the file *
+ * "LICENSE-academic.txt". To get information about commercial licensing please    *
+ * contact the authors.                                                            *
+ *                                                                                 *
+ ***********************************************************************************/
 
 #include "modules/mod_sampler2d.frag"
 
@@ -3241,7 +3219,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -3274,8 +3251,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="weightFirst" name="weightFirst" value="1" />
@@ -3323,8 +3300,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false">
@@ -3366,8 +3343,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="weightFirst" name="weightFirst" value="1" />
@@ -3450,8 +3427,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/edgedetect.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/edgedetect.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="showImage" name="showImage" value="true" />
@@ -3574,19 +3551,16 @@ void main() {
                         </Property>
                         <Property mapKey="classification" name="classification" value="transfer-function">
                             <Options>
-                                <Option Key="none" Description="none" Value="none">
-                                    <GuiColor r="0" g="0" b="0" a="0" />
-                                </Option>
                                 <Option Key="transfer-function" Description="Transfer Function" Value="transfer-function">
                                     <GuiColor r="0" g="0" b="0" a="0" />
                                 </Option>
                                 <Option Key="pre-integrated-gpu" Description="Pre-Integrated TF (GPU)" Value="pre-integrated-gpu">
                                     <GuiColor r="0" g="0" b="0" a="0" />
                                 </Option>
-                                <Option Key="pre-integrated-cpu" Description="Pre-integrated TF (CPU)" Value="pre-integrated-cpu">
+                                <Option Key="pre-integrated-cpu" Description="Pre-Integrated TF (CPU)" Value="pre-integrated-cpu">
                                     <GuiColor r="0" g="0" b="0" a="0" />
                                 </Option>
-                                <Option Key="pre-integrated-approximation" Description="Pre-integrated TF (Approximation)" Value="pre-integrated-approximation">
+                                <Option Key="pre-integrated-approximation" Description="Pre-Integrated TF (Approximation)" Value="pre-integrated-approximation">
                                     <GuiColor r="0" g="0" b="0" a="0" />
                                 </Option>
                             </Options>
@@ -3598,7 +3572,7 @@ void main() {
                         <Property mapKey="gammaValue" name="gammaValue" value="0" />
                         <Property mapKey="gammaValue1" name="gammaValue1" value="0" />
                         <Property mapKey="gammaValue2" name="gammaValue2" value="0" />
-                        <Property mapKey="gradient" name="gradient" value="central-differences">
+                        <Property mapKey="gradient" name="gradient" value="sobel">
                             <Options>
                                 <Option Key="none" Description="none" Value="none">
                                     <GuiColor r="0" g="0" b="0" a="0" />
@@ -3663,8 +3637,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="rc_singlevolume.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="rc_singlevolume.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="renderingQuality" name="renderingQuality" value="High">
@@ -3914,6 +3888,7 @@ void main() {
                         <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028209813" id="ref108">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="124" y="457" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <position x="2.159843206" y="2.452311516" z="1.339456081" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
@@ -3934,10 +3909,14 @@ void main() {
                         <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
+                                    <value x="0" y="22526" />
+                                </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="0.343724728" />
+                                <domain x="0" y="22526" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0.064000003" split="true">
@@ -3951,6 +3930,9 @@ void main() {
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transferFunction2" name="transferFunction2" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
                                 <domain x="0" y="1" />
@@ -3966,6 +3948,9 @@ void main() {
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transferFunction3" name="transferFunction3" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
                                 <domain x="0" y="1" />
@@ -3981,6 +3966,9 @@ void main() {
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transferFunction4" name="transferFunction4" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
                                 <domain x="0" y="1" />
@@ -4059,8 +4047,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false">
@@ -4177,9 +4165,9 @@ void main() {
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../../../../Users/Simon/Desktop/voreen-deploy/resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="../../Users/Simon/Desktop/voreen-deploy/resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="C:/Users/Simon/Desktop/voreen-deploy/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="../../../resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="C:/voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>

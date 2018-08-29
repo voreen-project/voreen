@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -189,7 +189,7 @@ H5::DataSpace createDataSpace(tgt::svec3 volumeDimensions, size_t numberOfChanne
 }
 
 void writeStringAttribute(
-#if H5_VERSION_GE(1, 10, 1)
+#ifdef H5_STUPID_LOCATION_API_CHANGES
         const H5::H5Object& loc,
 #else
         const H5::H5Location& loc,
@@ -208,7 +208,7 @@ void writeStringAttribute(
 }
 
 H5std_string readStringAttribute(
-#if H5_VERSION_GE(1, 10, 1)
+#ifdef H5_STUPID_LOCATION_API_CHANGES
         const H5::H5Object& loc,
 #else
         const H5::H5Location& loc,

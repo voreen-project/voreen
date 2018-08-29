@@ -2,15 +2,15 @@
 # Core module resources
 ################################################################################
 IF(NOT VRN_MODULE_BIGDATAIMAGEPROCESSING)
-    MESSAGE(FATAL_ERROR "VolumeTopology Module requires big data image processing Module")
+    MESSAGE(FATAL_ERROR "VesselTopology Module requires big data image processing Module")
 ENDIF()
 
 IF(NOT VRN_MODULE_HDF5)
-    MESSAGE(FATAL_ERROR "VolumeTopology Module requires HDF5 Module")
+    MESSAGE(FATAL_ERROR "VesselTopology Module requires HDF5 Module")
 ENDIF()
 
 IF(NOT VRN_MODULE_PLOTTING)
-    MESSAGE(FATAL_ERROR "VolumeTopology Module requires Plotting Module")
+    MESSAGE(FATAL_ERROR "VesselTopology Module requires Plotting Module")
 ENDIF()
 
 SET(MOD_CORE_MODULECLASS VesselTopologyModule)

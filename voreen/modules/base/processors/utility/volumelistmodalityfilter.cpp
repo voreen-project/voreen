@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -41,10 +41,10 @@ VolumeListModalityFilter::VolumeListModalityFilter()
     addPort(inport_);
     addPort(outport_);
 
-    std::vector<Option<Modality*> > options;
-    const std::vector<Modality*>& modalities = Modality::getModalities();
+    std::vector<Option<Modality> > options;
+    const std::vector<Modality>& modalities = Modality::getModalities();
     for (size_t i = 0; i < modalities.size(); ++i) {
-        modalityProp_.addOption(modalities[i]->getName(), modalities[i]->getName(), modalities[i]);
+        modalityProp_.addOption(modalities[i].getName(), modalities[i].getName(), modalities[i]);
     }
     modalityProp_.set(Modality::MODALITY_ANY.getName());
     modalityProp_.onChange(MemberFunctionCallback<VolumeListModalityFilter>(this,
@@ -87,7 +87,7 @@ void VolumeListModalityFilter::adjustFilteredList() {
     }
 
     if (currentModality_.getName() != modalityProp_.get()) {
-        currentModality_ = *(modalityProp_.getValue());
+        currentModality_ = modalityProp_.getValue();
         filteredList_.clear();
         if (currentModality_ != Modality::MODALITY_ANY) {
             for (size_t i = 0; i < collection->size(); ++i) {

@@ -1,20 +1,15 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="false" GlobalDescription="">
-        <ProcessorNetwork version="17">
+        <ProcessorNetwork version="19">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="StreamlineSave" ref="ref3" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="48.82978821" y="74.52967834" />
+                    <value x="9" y="176.5" />
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.16732025" />
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="2.966481924" />
             </MetaData>
             <Processors>
                 <Processor type="StreamlineRenderer3D" name="StreamlineRenderer3D" id="ref0">
@@ -22,18 +17,18 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="2" y="200" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="240.00003052" minValue="0.0048" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="240.96003723" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.06034687">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="240.000030518" minValue="0.0048" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="240.960037231" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.060346872">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="1.09267473" y="3.03603435" z="1.3784678" />
-                            <focus x="1.19589746" y="1.45288873" z="0.89999998" />
-                            <upVector x="0.35009563" y="-0.25000203" z="0.90273589" />
+                            <position x="1.092674732" y="3.036034346" z="1.378467798" />
+                            <focus x="1.19589746" y="1.452888727" z="0.899999976" />
+                            <upVector x="0.35009563" y="-0.250002027" z="0.902735889" />
                             <trackball moveCenter="false">
-                                <center x="1.19589746" y="1.45288873" z="0.89999998" />
+                                <center x="1.19589746" y="1.452888727" z="0.899999976" />
                             </trackball>
-                            <sceneLLF x="0.71589738" y="1.08888888" z="0.46125001" />
-                            <sceneURB x="1.6758976" y="1.81688857" z="1.33875" />
+                            <sceneLLF x="0.715897381" y="1.088888884" z="0.461250007" />
+                            <sceneURB x="1.675897598" y="1.816888571" z="1.338750005" />
                         </Property>
                         <Property mapKey="colorProp" name="colorProp" value="velocity" />
                         <Property mapKey="colorRotationMatrix" name="colorRotationMatrix">
@@ -52,8 +47,8 @@
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" width="700" height="700" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="streamlinerenderer3d.frag" modified="false" />
                                 <item shaderType="0" originalFilename="streamlinerenderer3d.vert" modified="false" />
+                                <item shaderType="1" originalFilename="streamlinerenderer3d.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="streamlineStyle" name="streamlineStyle" value="lines" />
@@ -86,7 +81,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.streamlines.renderSizeReceive" name="image.streamlines.renderSizeReceive" id="ref6">
-                                    <value x="256" y="256" />
+                                    <value x="512" y="512" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -116,21 +111,21 @@
                 <Processor type="Canvas" name="Canvas" id="ref1">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="31" y="297" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="301" y="129" width="256" height="256" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="301" y="129" width="512" height="512" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
                             <value x="301" y="129" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="256" y="256" />
+                            <value x="512" y="512" />
                         </MetaItem>
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize">
-                            <value x="256" y="256" />
+                            <value x="512" y="512" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="showCanvas" name="showCanvas" value="true" />
@@ -141,7 +136,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref5">
-                                    <value x="256" y="256" />
+                                    <value x="512" y="512" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -156,8 +151,8 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-59" y="84" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="absoluteMagnitudeThreshold" name="absoluteMagnitudeThreshold">
-                            <value x="16.75" y="75.37999725" />
+                        <Property mapKey="absoluteMagnitudeThreshold" minValue="0" maxValue="99999.9921875" minRange="0" maxRange="214748368" stepping="0.01">
+                            <value x="16.75" y="75.379997253" />
                         </Property>
                         <Property mapKey="autoGenerateProp" name="autoGenerateProp" value="true" />
                         <Property mapKey="calculateStreamlineProp" name="calculateStreamlineProp" />
@@ -166,15 +161,15 @@
                         <Property mapKey="generateTubesProp" name="generateTubesProp" value="true" />
                         <Property mapKey="maxAverageDistanceThreshold" name="maxAverageDistanceThreshold" value="1" />
                         <Property mapKey="maxNumStreamlinesprop" name="maxNumStreamlinesprop" value="10000" />
-                        <Property mapKey="minNumStreamlinesPerBundle" name="minNumStreamlinesPerBundle" value="10" />
+                        <Property mapKey="minNumStreamlinesPerBundle" name="minNumStreamlinesPerBundle" value="1" />
                         <Property mapKey="progressProp" name="progressProp" />
-                        <Property mapKey="relativeMagnitudeThreshold" name="relativeMagnitudeThreshold">
-                            <value x="19.99956131" y="90.00399017" />
+                        <Property mapKey="relativeMagnitudeThreshold" minValue="0" maxValue="100" minRange="0" maxRange="214748368" stepping="0.01">
+                            <value x="19.99956131" y="90.003990173" />
                         </Property>
                         <Property mapKey="resampleSize" name="resampleSize" value="20" />
                         <Property mapKey="resetSeedProp" name="resetSeedProp" />
                         <Property mapKey="seedTimeProp" name="seedTimeProp" value="1438694912" />
-                        <Property mapKey="streamlineLengthThresholdProp" name="streamlineLengthThresholdProp">
+                        <Property mapKey="streamlineLengthThresholdProp" minValue="2" maxValue="1000" minRange="0" maxRange="214748368" stepping="1">
                             <value x="100" y="1000" />
                         </Property>
                         <Property mapKey="waitForThreadFinishedProp" name="waitForThreadFinishedProp" value="false" />
@@ -205,11 +200,16 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="../../../data/bovenkamp/debug/flow_data.vvd" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="" absolute="false">
+                                <path noPathSet="true" />
+                                <searchParameters />
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -224,12 +224,12 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-142" y="204" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="filenameprop" name="filenameprop">
+                        <Property mapKey="filenameprop" name="filenameprop" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="../../../../../voreen-testdata/voreen-testdata/output/streamline_creator_with_bundes.vsd" />
                                     <item value="../../voreen-testdata/voreen-testdata/output/streamline_creator_with_bundes.vsd" />
-                                    <item value="D:/voreen_/gitolite/voreen-testdata/voreen-testdata/output/streamline_creator_with_bundes.vsd" />
+                                    <item value="C:/voreen-testdata/voreen-testdata/output/streamline_creator_with_bundes.vsd" />
                                 </paths>
                             </paths>
                         </Property>

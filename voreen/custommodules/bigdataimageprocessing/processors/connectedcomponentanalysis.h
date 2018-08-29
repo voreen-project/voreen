@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -149,8 +149,9 @@ private:
 
 template<int ADJACENCY>
 StreamingComponentsStats ConnectedComponentAnalysis::runCCA(const VolumeBase& input, HDF5FileVolume& output, std::function<void(uint32_t id, const CCANodeMetaData&)> writeMetaData, ProgressReporter& progressReporter) const {
-    StreamingComponents<ADJACENCY, CCANodeMetaData> sc;
-    std::function<bool(const VolumeRAM* vol, tgt::svec3 pos)> isOne;
+    typedef StreamingComponents<ADJACENCY, CCANodeMetaData, CCAVoidLabel> SC;
+    SC sc;
+    typename SC::getClassFunc getClass;
 
     float binarizationThresholdNormalized;
     if(input.hasMetaData("RealWorldMapping")) {
@@ -162,16 +163,16 @@ StreamingComponentsStats ConnectedComponentAnalysis::runCCA(const VolumeBase& in
     }
 
     if(invertBinarization_.get()) {
-        isOne = [binarizationThresholdNormalized](const VolumeRAM* slice, tgt::svec3 pos) {
-            return slice->getVoxelNormalized(pos) <= binarizationThresholdNormalized;
+        getClass = [binarizationThresholdNormalized](const VolumeRAM& slice, tgt::svec3 pos) {
+            return slice.getVoxelNormalized(pos) <= binarizationThresholdNormalized ? CCAVoidLabel::some() : boost::none;
             };
     } else {
-        isOne = [binarizationThresholdNormalized](const VolumeRAM* slice, tgt::svec3 pos) {
-            return slice->getVoxelNormalized(pos) > binarizationThresholdNormalized;
+        getClass = [binarizationThresholdNormalized](const VolumeRAM& slice, tgt::svec3 pos) {
+            return slice.getVoxelNormalized(pos) > binarizationThresholdNormalized ? CCAVoidLabel::some() : boost::none;
             };
     }
 
-    return sc.cca(input, output, writeMetaData, isOne, applyLabeling_.get(), generateComponentConstraintTest(input), progressReporter);
+    return sc.cca(input, output, writeMetaData, getClass, applyLabeling_.get(), generateComponentConstraintTest(input), progressReporter);
 }
 
 } // namespace voreen

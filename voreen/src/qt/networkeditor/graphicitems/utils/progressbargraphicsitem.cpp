@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -28,6 +28,10 @@
 #include "voreen/qt/networkeditor/graphicitems/core/portownergraphicsitem.h"
 #include "voreen/qt/networkeditor/styles/nwestyle_base.h"
 
+#include "voreen/core/voreenapplication.h"
+#include "voreen/core/datastructures/callback/lambdacallback.h"
+#include "voreen/core/utils/commandqueue.h"
+
 #include <QApplication>
 #include <QGraphicsScene>
 #include <QLinearGradient>
@@ -48,6 +52,10 @@ ProgressBarGraphicsItem::ProgressBarGraphicsItem(PortOwnerGraphicsItem* parent, 
     upperForegroundColor1_ = QColor(176, 191, 217);
     upperForegroundColor2_ = QColor(60, 109, 194);
     lowerForegroundColor_ = QColor(22, 87, 199);
+}
+
+ProgressBarGraphicsItem::~ProgressBarGraphicsItem() {
+    VoreenApplication::app()->getCommandQueue()->removeAll(this);
 }
 
 //---------------------------------------------------------------------------------------------------------------
@@ -107,26 +115,27 @@ void ProgressBarGraphicsItem::forceUpdate() {
 }
 
 void ProgressBarGraphicsItem::update() {
-    // currently working version. maybe...
-    if (time_.elapsed() > 500 || progress_ == 1.f || progress_ == 0.f) {
-        NWEBaseGraphicsItem::update();
-        scene()->update();
-        time_.restart();
-    }
 
-    /* previous version. crashes, if a setProgress is called within a thread
-    //prevent crash if set in background thread
+    // Remove old commands.
+    VoreenApplication::app()->getCommandQueue()->removeAll(this);
+
+    // Setup command for the update
+    LambdaFunctionCallback command([this] {
+        if (time_.elapsed() > 500 || progress_ == 1.f || progress_ == 0.f) {
+            NWEBaseGraphicsItem::update();
+            scene()->update();
+            //qApp->processEvents(); // responsible for crashes!
+            time_.restart();
+        }
+    });
+
     bool isGuiThread = (QThread::currentThread() == QCoreApplication::instance()->thread());
     if (!isGuiThread) {
-        return;
+        VoreenApplication::app()->getCommandQueue()->enqueue(this, command);
     }
-
-    if (time_.elapsed() > 500 || progress_ == 1.f || progress_ == 0.f) {
-        QGraphicsItem::update();
-        scene()->invalidate();
-        qApp->processEvents();
-        time_.restart();
-    }*/
+    else {
+        command.exec();
+    }
 }
 
 

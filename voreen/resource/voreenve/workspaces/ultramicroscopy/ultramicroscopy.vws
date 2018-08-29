@@ -426,9 +426,12 @@
                                 </paths>
                             </programFilenamePaths>
                         </Property>
-                        <Property mapKey="renderingQuality" name="renderingQuality" value="High">
+                        <Property mapKey="renderingQuality" name="renderingQuality" value="Very High">
                             <Options>
                                 <Option Key="Full" Description="Full" Value="Full">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Very High" Description="Very High" Value="Very High">
                                     <GuiColor r="0" g="0" b="0" a="0" />
                                 </Option>
                                 <Option Key="High" Description="High" Value="High">

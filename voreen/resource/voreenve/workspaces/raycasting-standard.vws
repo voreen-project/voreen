@@ -6,10 +6,15 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-357" y="-12" />
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="VolumeSource" ref="ref3" />
+                    </values>
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.950000048" />
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-354.28125" y="-12" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.446296334" />
             </MetaData>
             <Processors>
                 <Processor type="SingleVolumeRaycaster" name="SingleVolumeRaycaster" id="ref0">
@@ -551,9 +556,9 @@
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../../../../voreen-scivis/voreen/resource/voreenve/volumes/nucleon.vvd" />
-                                        <item value="../../voreen-scivis/voreen/resource/voreenve/volumes/nucleon.vvd" />
-                                        <item value="C:/voreen-scivis/voreen/resource/voreenve/volumes/nucleon.vvd" />
+                                        <item value="../volumes/nucleon.vvd" />
+                                        <item value="resource/voreenve/volumes/nucleon.vvd" />
+                                        <item value="/voreen-development/voreen/resource/voreenve/volumes/nucleon.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>

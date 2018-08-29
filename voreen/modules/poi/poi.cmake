@@ -33,3 +33,10 @@ SET(MOD_CORE_HEADERS
 
     ${MOD_DIR}/datastructures/poilist.h
 )
+
+# deployment
+SET(MOD_INSTALL_DIRECTORIES
+    ${MOD_DIR}/documentation
+    ${MOD_DIR}/glsl
+    ${MOD_DIR}/workspaces
+)

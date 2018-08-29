@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2016 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -65,7 +65,7 @@ boost::optional<float> readFloat(const TiXmlElement* element) {
 }
 
 // This is very specific to the vascusynth graph files!
-boost::optional<size_t> readId(const TiXmlElement* element, const std::string& name) {
+boost::optional<uint32_t> readId(const TiXmlElement* element, const std::string& name) {
     if(!element) {
         return boost::none;
     }
@@ -94,14 +94,14 @@ void VascuSynthGraphLoader::process() {
             LERROR("Could not find graphNode");
         }
         output.reset(new VesselGraph());
-        std::map<size_t, size_t> idMap;
+        std::map<VGNodeID, VGNodeID> idMap;
         for(const TiXmlElement* graphElement = graphNode->FirstChildElement(); graphElement; graphElement = graphElement->NextSiblingElement()) {
             if(std::string(graphElement->Value()) == "node") {
                 auto maybeNodeId = readId(graphElement, "id");
                 if(!maybeNodeId) {
                     LERROR("No node id");
                 }
-                size_t nodeId = *maybeNodeId;
+                VGNodeID nodeId = *maybeNodeId;
                 for(const TiXmlElement* attributeElement = graphElement->FirstChildElement(); attributeElement; attributeElement = attributeElement->NextSiblingElement()) {
                     const char* attrName = attributeElement->Attribute("name");
                     if(attrName && std::string(attrName) == " position") {
@@ -141,7 +141,7 @@ void VascuSynthGraphLoader::process() {
                         }
                         std::vector<tgt::vec3> voxels;
                         voxels.push_back(pos);
-                        size_t id = output->insertNode(pos, std::move(voxels), 0.0f, false);
+                        VGNodeID id = output->insertNode(pos, std::move(voxels), 0.0f, false);
                         idMap.insert({nodeId, id});
                     }
                 }
@@ -156,7 +156,7 @@ void VascuSynthGraphLoader::process() {
                 if(!maybeToId) {
                     LERROR("No to id");
                 }
-                size_t toId = *maybeToId;
+                VGNodeID toId = *maybeToId;
 
                 for(const TiXmlElement* attributeElement = graphElement->FirstChildElement(); attributeElement; attributeElement = attributeElement->NextSiblingElement()) {
                     const char* attrName = attributeElement->Attribute("name");
@@ -169,8 +169,8 @@ void VascuSynthGraphLoader::process() {
                         }
                         float radius = *maybeRadius;
                         try {
-                            const size_t graphFromId = idMap.at(fromId);
-                            const size_t graphToId = idMap.at(toId);
+                            const VGNodeID graphFromId = idMap.at(fromId);
+                            const VGNodeID graphToId = idMap.at(toId);
 
                             radius /= 1000; //Assuming uniform spacing 0.001mm.
 

@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -44,6 +44,11 @@ namespace voreen {
  */
 class HDF5FileVolume {
 public:
+
+    /**
+     * Constant used for converting HDF5-spacing into Voreen-spacing anc vice-versa.
+     */
+    static const float MM_PER_HDF5_UNIT_OF_LENGTH;
 
     /**
      * Open a data set inside a hdf5 file as a HDF5FileVolume.
@@ -425,7 +430,6 @@ private:
     static const std::string REPRESENTATION_HISTOGRAMINTENSITYGRADIENT_METADATA_ATTRIBUTE_NAME;
     static const std::string REPRESENTATION_PREVIEW_ATTRIBUTE_NAME;
     static const std::string REPRESENTATION_PREVIEW_METADATA_ATTRIBUTE_NAME;
-    static const float MM_PER_HDF5_UNIT_OF_LENGTH;
 
     static const std::string loggerCat_;
 };

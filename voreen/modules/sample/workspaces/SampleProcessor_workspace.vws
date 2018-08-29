@@ -1,17 +1,15 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
-    <Workspace version="2" GlobalDescription="">
-        <ProcessorNetwork version="15">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="19">
             <MetaData>
-                <MetaItem name="ProcessorSelection" type="SelectionMetaData::Processor">
-                    <values>
-                        <item type="SampleProcessor" ref="ref0" />
-                        <item type="TextSource" ref="ref2" />
-                    </values>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-110.55184174" y="-337.8034668" />
+                    <value x="-110.551841736" y="-337.803466797" />
                 </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="2.844148874" />
             </MetaData>
             <Processors>
                 <Processor type="SampleProcessor" name="SampleProcessor" id="ref0">
@@ -33,6 +31,8 @@
                             </Properties>
                         </Port>
                     </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="TextSource" name="TextSource" id="ref2">
@@ -50,6 +50,8 @@
                             </Properties>
                         </Port>
                     </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="TextOverlay" name="TextOverlay" id="ref1">
@@ -66,14 +68,21 @@
                         <Property mapKey="layout1" name="layout1" value="S" />
                         <Property mapKey="layout2" name="layout2" value="NW" />
                         <Property mapKey="layout3" name="layout3" value="NW" />
-                        <Property mapKey="mouseEvent.EnterExit" name="mouseEvent.EnterExit" lod="1" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="mouseEvent.move" name="mouseEvent.move" lod="1" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="shader.program" name="shader.program" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                        <Property mapKey="mouseEvent.EnterExit" name="mouseEvent.EnterExit" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.move" name="mouseEvent.move" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
                             </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="textoverlay.frag" modified="false" />
+                            </components>
                         </Property>
-                        <Property mapKey="voreen.fontprop" name="voreen.fontprop" fontType="BitmapFont" fontSize="11" fontName="VeraMono.ttf" textAlignment="Right" verticalTextAlignment="Top" lineWidth="118" />
+                        <Property mapKey="voreen.fontprop" name="voreen.fontprop" fontSize="11" fontName="VeraMono.ttf" textAlignment="2" lineWidth="128">
+                            <fontColor x="1" y="1" z="1" w="1" />
+                        </Property>
                     </Properties>
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -99,6 +108,8 @@
                             </Properties>
                         </Port>
                     </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="Canvas" name="Canvas" id="ref3">
@@ -112,13 +123,23 @@
                         <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
                             <value x="256" y="256" />
                         </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="347" y="474" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="256" y="256" />
+                        </MetaItem>
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize">
                             <value x="256" y="256" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename" noPathSet="true" value="" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
                         <Property mapKey="showCursor" name="showCursor" value="true" />
                         <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
                     </Properties>
@@ -132,6 +153,8 @@
                         </Port>
                     </Inports>
                     <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="Background" name="Background" id="ref4">
@@ -141,19 +164,29 @@
                     <Properties>
                         <Property mapKey="angle" name="angle" value="0" />
                         <Property mapKey="backgroundModeAsString" name="backgroundModeAsString" value="monochrome" />
+                        <Property mapKey="blendMode" name="blendMode" value="alpha-blending" />
                         <Property mapKey="color1" name="color1">
                             <value x="1" y="1" z="1" w="1" />
                         </Property>
                         <Property mapKey="color2" name="color2">
-                            <value x="0.2" y="0.2" z="0.2" w="1" />
+                            <value x="0.200000003" y="0.200000003" z="0.200000003" w="1" />
                         </Property>
+                        <Property mapKey="enable" name="enable" value="true" />
+                        <Property mapKey="randomClouds" name="randomClouds" value="true" />
                         <Property mapKey="repeat" name="repeat" value="1" />
-                        <Property mapKey="shader.program" name="shader.program" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                        <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
                             </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
+                            </components>
                         </Property>
-                        <Property mapKey="texture" name="texture" noPathSet="true" value="" />
+                        <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
                     </Properties>
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -167,6 +200,8 @@
                             </Properties>
                         </Port>
                     </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
             </Processors>
@@ -216,5 +251,10 @@
             <PropertyLinks />
         </ProcessorNetwork>
         <Animation />
+        <ApplicationModeConfig MainCanvas="Canvas::Canvas">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
     </Workspace>
 </VoreenData>

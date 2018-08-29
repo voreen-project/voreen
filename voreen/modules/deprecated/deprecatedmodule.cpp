@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -28,6 +28,7 @@
 #include "processors/buttonoverlayprocessor.h"
 #include "processors/cubeproxygeometry.h"
 #include "processors/geometryclippingwidget.h"
+#include "processors/multiview.h"
 #include "processors/textseriessource.h"
 #include "processors/volumeseriessource.h"
 #include "processors/rawtexturesource.h"
@@ -53,6 +54,7 @@ DeprecatedModule::DeprecatedModule(const std::string& modulePath)
 
     registerSerializableType(new ButtonOverlayProcessor());
     registerSerializableType(new GeometryClippingWidget());
+    registerSerializableType(new MultiView());
     registerSerializableType(new TextSeriesSource());
     registerSerializableType(new RawTextureSource());
     registerSerializableType(new RawTextureSave());
