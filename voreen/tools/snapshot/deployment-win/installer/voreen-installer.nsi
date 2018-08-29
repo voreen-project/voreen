@@ -15,13 +15,13 @@
 ; Configuration
 
   !define AppName "VoreenVE"               ;  displayed in the installer and used as app directory name and shortcut name       
-  !define Version "2.6.1"                  ;  added to appname    
+  !define Version "5.0.1"                  ;  added to appname    
   !define ExecutableName "voreenve.exe"    ;  filename of the executable
   
   ; settings for the "Add/Remove Programs" entry
   !define DisplayName "VoreenVE ${Version}– Visualization Environment"
-  !define Publisher "Visualization and Computer Graphics Research Group (VisCG), University of Muenster"
-  !define HelpLink "http://www.voreen.org"
+  !define Publisher "University of Muenster, Department of Computer Science"
+  !define HelpLink "https://www.uni-muenster.de/Voreen/"
 
 ;--------------------------------
 ; Include Modern UI

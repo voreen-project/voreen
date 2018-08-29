@@ -823,7 +823,7 @@ SC_NS::RowStorage::RowStorage(const tgt::svec3& volumeDimensions, MergerFile& me
 
 SC_TEMPLATE
 SC_NS::RowStorage::~RowStorage() {
-    for(int i=0; i<storageSize_; ++i) {
+    for(size_t i=0; i<storageSize_; ++i) {
         rows_[i].finalize(mergerFile_, cctest_);
     }
     delete[] rows_;
