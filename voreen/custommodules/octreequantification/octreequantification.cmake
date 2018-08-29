@@ -2,8 +2,8 @@
 # Core module resources 
 ################################################################################
 
-IF(NOT VRN_MODULE_MPIDEPLOYMENT)
-    MESSAGE(FATAL_ERROR "Octree Quantification Module requires MPI Deployment Module")
+IF(NOT VRN_MODULE_ULTRAMICROSCOPYDEPLOYMENT)
+    MESSAGE(FATAL_ERROR "Octree Quantification Module requires UltramicroscopyDeployment Module")
 ENDIF()
 IF(NOT VRN_MODULE_PLOTTING)
     MESSAGE(FATAL_ERROR "Octree Quantification Module requires Plotting Module")

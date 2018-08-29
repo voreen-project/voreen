@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -38,6 +38,7 @@
 #include "processors/transfuncoverlay.h"
 #include "processors/particles.h"
 #include "processors/tabbedview.h"
+#include "processors/transfuncalphachannelanimation.h"
 #include "processors/arbitraryvolumeclipping.h"
 #include "processors/pong.h"
 #include "processors/screenspaceambientocclusion.h"
@@ -84,6 +85,9 @@ StagingModule::StagingModule(const std::string& modulePath)
         registerSerializableType(new Particles());
     #endif
     registerSerializableType(new TabbedView());
+
+
+    registerProcessor(new TransFuncAlphaChannelAnimation());
 }
 
 } // namespace

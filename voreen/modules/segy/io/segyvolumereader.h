@@ -54,9 +54,6 @@ public:
 
     virtual VolumeList* readSlices(const std::string& fileName, size_t firstSlice=0, size_t lastSlice=0);
 
-    virtual VolumeList* readBrick(const std::string& fileName, tgt::ivec3 brickStartPos, int brickSize);
-
-
     // SEGY DATA FORMAT
     enum {
         SEGY_IBM_FLOAT=1,    // 4-byte IBM floating-point
