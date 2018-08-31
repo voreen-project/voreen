@@ -53,7 +53,8 @@ struct ProtoVesselGraphEdgeElement {
 };
 
 struct ProtoVesselGraphEdge {
-    ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, std::vector<tgt::svec3>&& voxels);
+    typedef static_kdtree::Tree<ProtoVesselGraphEdgeElement, static_kdtree::SharedNodeStorage<ProtoVesselGraphEdgeElement>> ElementTree;
+    ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, std::vector<tgt::svec3>&& voxels, static_kdtree::SharedMemoryTreeBuilder<ProtoVesselGraphEdgeElement>& treeBuilder);
     static_kdtree::SearchNearestResultSet<ProtoVesselGraphEdgeElement> findClosestVoxelIndex(tgt::vec3) const;
     std::vector<tgt::vec3>& voxels() {
         return voxelsRw_;
@@ -67,7 +68,7 @@ struct ProtoVesselGraphEdge {
     VGNodeID node2_;
     std::vector<tgt::svec3> voxels_;
     std::vector<tgt::vec3> voxelsRw_;
-    static_kdtree::Tree<ProtoVesselGraphEdgeElement> tree_;
+    ElementTree tree_;
 };
 
 struct ProtoVesselGraphNode {
@@ -84,6 +85,7 @@ struct ProtoVesselGraphNode {
 struct BranchIdVolumeReader;
 
 struct ProtoVesselGraph {
+    typedef static_kdtree::SharedMemoryTreeBuilder<ProtoVesselGraphEdgeElement> TreeBuilder;
     ProtoVesselGraph(tgt::mat4 toRWMatrix);
 
     VGNodeID insertNode(std::vector<tgt::svec3>&& voxels, bool atSampleBorder);
@@ -94,7 +96,7 @@ struct ProtoVesselGraph {
     std::vector<ProtoVesselGraphNode> nodes_;
     std::vector<ProtoVesselGraphEdge> edges_;
     tgt::mat4 toRWMatrix_;
-
+    TreeBuilder treeBuilder_;
 };
 
 struct BranchIdVolumeReader {

@@ -69,23 +69,23 @@ static std::vector<tgt::vec3> transformVoxels(const tgt::mat4& toRWMatrix, const
     return output;
 }
 
-static static_kdtree::Tree<ProtoVesselGraphEdgeElement> buildTree(const std::vector<tgt::vec3>& voxels) {
+static ProtoVesselGraphEdge::ElementTree buildTree(const std::vector<tgt::vec3>& voxels, static_kdtree::SharedMemoryTreeBuilder<ProtoVesselGraphEdgeElement>& treeBuilder) {
     voreen::static_kdtree::ElementArrayBuilder<ProtoVesselGraphEdgeElement> builder(VoreenApplication::app()->getUniqueTmpFilePath(".kdtreestorage"));
     uint64_t i = 0;
     for(const auto& v: voxels) {
         builder.push(ProtoVesselGraphEdgeElement(&v, i));
         ++i;
     }
-    return static_kdtree::Tree<ProtoVesselGraphEdgeElement>(VoreenApplication::app()->getUniqueTmpFilePath(".kdtree"), std::move(builder));
+    return treeBuilder.buildTree(std::move(builder));
 }
 
-ProtoVesselGraphEdge::ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, std::vector<tgt::svec3>&& voxels)
+ProtoVesselGraphEdge::ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, std::vector<tgt::svec3>&& voxels, static_kdtree::SharedMemoryTreeBuilder<ProtoVesselGraphEdgeElement>& treeBuilder)
     : id_(id)
     , node1_(node1)
     , node2_(node2)
     , voxels_(std::move(voxels))
     , voxelsRw_(transformVoxels(toRWMatrix, voxels_))
-    , tree_(buildTree(voxelsRw_))
+    , tree_(buildTree(voxelsRw_, treeBuilder))
 {
 }
 static_kdtree::SearchNearestResultSet<ProtoVesselGraphEdgeElement> ProtoVesselGraphEdge::findClosestVoxelIndex(tgt::vec3 v) const {
@@ -107,7 +107,7 @@ VGEdgeID ProtoVesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, std::vecto
 
     VGEdgeID edgeID = edges_.size();
     //edges_.push_back(ProtoVesselGraphEdge(toRWMatrix_, edgeID, node1, node2, std::move(voxels)));
-    edges_.emplace_back(toRWMatrix_, edgeID, node1, node2, std::move(voxels));
+    edges_.emplace_back(toRWMatrix_, edgeID, node1, node2, std::move(voxels), treeBuilder_);
 
     n1.edges_.push_back(edgeID);
     n2.edges_.push_back(edgeID);
@@ -118,6 +118,7 @@ ProtoVesselGraph::ProtoVesselGraph(tgt::mat4 toRWMatrix)
     : nodes_()
     , edges_()
     , toRWMatrix_(toRWMatrix)
+    , treeBuilder_(VoreenApplication::app()->getUniqueTmpFilePath(".kdtrees"))
 {
 }
 
