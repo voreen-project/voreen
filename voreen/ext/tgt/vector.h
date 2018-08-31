@@ -26,8 +26,9 @@
 
 #ifdef __linux__
 // Add a .debug_gdb_scripts section within the binary with information for gdb.
-// When gdb is started at the root of the repository it should now find the script(s),
-// execute it and thus be able to print vectors in a compact manner.
+// When gdb is started (possibly only at the root of the repository) it should
+// now find the script(s), execute it and thus be able to print vectors in a
+// compact manner.
 //
 // It may be necessary to add the following line to your .gdbinit file:
 // add-auto-load-safe-path /some/path/to/voreen/repository
@@ -39,7 +40,15 @@
      .popsection \n\
      ");
 
+#ifdef VRN_BASE_PATH
+// If possible, also set the global path of the pretty printers script, thus enabling
+// pretty printing independet from the directory voreen was started in.
+DEFINE_GDB_SCRIPT(VRN_BASE_PATH "/tools/gdb/gdb-vector-pretty-printers.py")
+#else
+// Otherwise, refer to the pretty printers script relative from the project root.
 DEFINE_GDB_SCRIPT("voreen/tools/gdb/gdb-vector-pretty-printers.py")
+#endif
+
 #endif
 
 #include <iostream>
