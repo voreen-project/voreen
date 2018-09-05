@@ -127,6 +127,8 @@ modules/surface
 modules/tiff/*
 modules/tiff/io
 
+modules/ultramicroscopydeployment
+
 modules/volumelabeling
 
 modules/zip/*
