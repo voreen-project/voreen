@@ -1,6 +1,23 @@
 Voreen Changelog
 ----------------
 
+2018-09-06: Voreen 5.0.1
+----------------------
+
+    * Features:
+      o Added ultramicroscopy meta module (referencing module requirements for ultramicroscopy users) 
+      o Added ultramicroscopy workspace
+      o Added warning when opening workspaces created with Voreen versions prior to 5.0 
+
+    * Framework/API Changes:
+      o tgt::Vector constructor from pointer has been removed and replaced by a static fromPointer(...) function thus disambiguating the tgt::Vector?<...>(0) constructor
+
+    * Bug Fixes/Minor Changes:
+      o Minor bugfix in SEGY volume reader (previously crashed Voreen if a dataset could not be loaded instead of displaying an error message)
+      o Bugfix for reading RAW volume files with file extension *.raw
+      o Minor bugfixes for HDF5 volume format
+      o Fix ready state of processors not updating correctly in some instances
+
 2018-08-02: Voreen 5.0
 ----------------------
 
