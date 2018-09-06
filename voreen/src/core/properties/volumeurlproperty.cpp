@@ -122,7 +122,7 @@ void VolumeURLProperty::set(const std::string& url) {
         std::string path = VolumeURL(get()).getPath();
         bool success = addWatch(path);
         if (!success) {
-            LWARNING("Parent directory of " << tgt::FileSystem::fileName(path) << " does not exist. Resetting path.");
+            LWARNING("Parent directory of " << tgt::FileSystem::fileName(path) << " (" << tgt::FileSystem::dirName(path) << ") does not exist. Resetting path.");
             setFileWatchEnabled(false);
             StringProperty::set("");
         }
