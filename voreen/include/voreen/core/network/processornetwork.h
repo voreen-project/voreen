@@ -57,7 +57,8 @@ public:
     static const int NETWORK_VERSION ;
     /// All imported networks whose version is lower than defined by this constant will emit a warning.
     static const int WARNING_VERSION;
-
+    /// Voreen version corresponding to the WARNING_VERSION network version
+    static const std::string WARNING_VERSION_STRING;
 
     ProcessorNetwork();
     ~ProcessorNetwork();
