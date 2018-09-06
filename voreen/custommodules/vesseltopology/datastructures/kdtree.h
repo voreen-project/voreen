@@ -243,7 +243,10 @@ void ElementArrayBuilder<Element>::push(const Element& elm) {
 template<typename Element>
 ElementArray<Element> ElementArrayBuilder<Element>::finalize() && {
     auto tmp = std::move(*this);
+    tgtAssert(tmp.file_.good(), "Flush failed");
+    tgtAssert(tmp.file_.is_open(), "Flush failed");
     tmp.file_.flush();
+    tgtAssert(tmp.file_.good(), "Flush failed");
     tmp.file_.close();
     return ElementArray<Element>(tmp.filename_, tmp.numElements_);
 }
@@ -375,7 +378,10 @@ size_t NodeStorageBuilder<Element>::push(const Node<Element>& node) {
 template<typename Element>
 NodeStorage<Element> NodeStorageBuilder<Element>::finalize() && {
     auto tmp = std::move(*this);
+    tgtAssert(tmp.file_.good(), "Flush failed");
+    tgtAssert(tmp.file_.is_open(), "Flush failed");
     tmp.file_.flush();
+    tgtAssert(tmp.file_.good(), "Flush failed");
     tmp.file_.close();
     return NodeStorage<Element>(tmp.filename_, tmp.numNodes_);
 }
