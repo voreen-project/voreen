@@ -52,6 +52,7 @@ resource/voreencore/textures
 # resources: voreenqt
 resource/voreenqt/icons
 # resources: voreenve
+resource/voreenve/geometry
 resource/voreenve/icons
 resource/voreenve/image
 resource/voreenve/volumes
