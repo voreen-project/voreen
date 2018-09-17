@@ -53,27 +53,30 @@ namespace voreen {
 const std::string GeometrySource::loggerCat_("voreen.core.GeometrySource");
 
 GeometrySource::GeometrySource()
-  : Processor(),
-    geometryFile_("geometryFile", "Geometry File", "Open Geometry File", VoreenApplication::app()->getUserDataPath(), "Geometry (*.vge *.ply *.obj);;Voreen Geometry (*.vge);;PLY mesh (*.ply);;OBJ mesh (*.obj);;ASCII point lists (*.txt)"),
-    geometryType_("geometryType", "Geometry Type"),
-    skipItemCount_("skipItems", "Items to skip after each point", 0),
-    loadGeometry_("loadGeometry", "Load Geometry"),
-    clearGeometry_("clearGeometry", "Clear Geometry"),
-    //useIndexedGeometry_("useIndexed", "Prefer indexed geometry for external formats", false),
-    calculateNormals_("calcNormals", "Calculate missing normals for external formats", false),
-    addColorToOBJ_("addobjcolor", "Add Color to OBJ", false),
-    objColor_("objcolor", "OBJ color", tgt::vec4::one),
-    outport_(Port::OUTPORT, "geometry.pointlist", "PointList Output", false, Processor::VALID)
+    : Processor()
+    , geometryFile_("geometryFile", "Geometry File", "Open Geometry File", VoreenApplication::app()->getUserDataPath(), "Geometry (*.vge *.ply *.obj);;Voreen Geometry (*.vge);;PLY mesh (*.ply);;OBJ mesh (*.obj);;ASCII point lists (*.txt)")
+    , geometryType_("geometryType", "Geometry Type")
+    , skipItemCount_("skipItems", "Items to skip after each point", 0, 0, 100)
+    , loadGeometry_("loadGeometry", "Load Geometry")
+    , clearGeometry_("clearGeometry", "Clear Geometry")
+    //, useIndexedGeometry_("useIndexed", "Prefer indexed geometry for external formats", false)
+    , calculateNormals_("calcNormals", "Calculate missing normals for external formats", false)
+    , addColorToOBJ_("addobjcolor", "Add Color to OBJ", false)
+    , objColor_("objcolor", "OBJ color", tgt::vec4::one)
+    , outport_(Port::OUTPORT, "geometry.pointlist", "PointList Output", false)
+    , forceReload_(false)
 {
+    addPort(outport_);
+
     geometryType_.addOption("geometry", "Voreen Geometry (.vge)");
     geometryType_.addOption("pointlist", "Pointlist");
     geometryType_.addOption("segmentlist", "Segmented Pointlist");
 
-    loadGeometry_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::readGeometry));
-    clearGeometry_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::clearGeometry));
-    geometryFile_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::updatePropertyVisibility));
+    geometryFile_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::forceReload));
     geometryType_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::updatePropertyVisibility));
-    //useIndexedGeometry_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::readGeometry));
+    loadGeometry_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::forceReload));
+    clearGeometry_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::clearGeometry));
+    //useIndexedGeometry_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::forceReload));
 
     addProperty(geometryFile_);
     addProperty(geometryType_);
@@ -86,8 +89,6 @@ GeometrySource::GeometrySource()
 
     addProperty(addColorToOBJ_);
     addProperty(objColor_);
-
-    addPort(outport_);
 }
 
 Processor* GeometrySource::create() const {
@@ -95,19 +96,21 @@ Processor* GeometrySource::create() const {
 }
 
 void GeometrySource::process() {
-    if (geometryFile_.get() != "") {
+    if (geometryFile_.get() != "" && forceReload_) {
         try {
             readGeometry();
         }
         catch (tgt::FileNotFoundException& f) {
             LERROR(f.what());
         }
+        forceReload_ = false;
+        updatePropertyVisibility();
     }
-    updatePropertyVisibility();
 }
 
 void GeometrySource::initialize() {
     Processor::initialize();
+    forceReload_ = true;
 }
 
 void GeometrySource::readGeometry() {
@@ -881,6 +884,11 @@ void GeometrySource::clearGeometry() {
     outport_.setData(0);
     geometryFile_.set("");
     updatePropertyVisibility();
+}
+
+void GeometrySource::forceReload() {
+    forceReload_ = true;
+    invalidate();
 }
 
 void GeometrySource::updatePropertyVisibility() {

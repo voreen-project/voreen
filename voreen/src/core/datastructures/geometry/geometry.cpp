@@ -40,7 +40,6 @@ Geometry::Geometry()
 {}
 
 Geometry::~Geometry() {
-    //notifyDelete(); Called by inheriting classes.
 }
 
 std::unique_ptr<Geometry> Geometry::clone() const {

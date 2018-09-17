@@ -39,33 +39,32 @@ namespace voreen {
 const std::string ImageSequenceSource::loggerCat_("voreen.core.ImageSequenceSource");
 
 ImageSequenceSource::ImageSequenceSource()
-    : RenderProcessor(),
-      outport_(Port::OUTPORT, "imagesequence.out", "ImageSequence Output"),
-      imageDirectory_("imageDirectory","Image Directory", "Select Image Directory",
-          "", "", FileDialogProperty::DIRECTORY),
-      textureFiltering_("textureFiltering", "Enable Texture Filtering", true),
-      showProgressBar_("showProgressBar", "Show Progress Bar", true),
-      reloadSequence_("reloadSequence", "Reload"),
-      clearSequence_("clearSequence", "Clear Sequence"),
-      numImages_("numImages", "Num Images", 0, 0, 10000, VALID),
-      imageSequence_(0),
-      currentDir_(""),
-      sequenceOwner_(false),
-      forceReload_(false)
+    : RenderProcessor()
+    , outport_(Port::OUTPORT, "imagesequence.out", "ImageSequence Output", false)
+    , imageDirectory_("imageDirectory","Image Directory", "Select Image Directory",
+          "", "", FileDialogProperty::DIRECTORY)
+    , textureFiltering_("textureFiltering", "Enable Texture Filtering", true)
+    , showProgressBar_("showProgressBar", "Show Progress Bar", true)
+    , reloadSequence_("reloadSequence", "Reload")
+    , clearSequence_("clearSequence", "Clear Sequence")
+    , numImages_("numImages", "Num Images", 0, 0, 10000)
+    , imageSequence_(0)
+    , currentDir_("")
+    , sequenceOwner_(false)
+    , forceReload_(false)
 {
     addPort(outport_);
 
-    textureFiltering_.onChange(MemberFunctionCallback<ImageSequenceSource>(this, &ImageSequenceSource::forceReload));
-    reloadSequence_.onClick(MemberFunctionCallback<ImageSequenceSource>(this, &ImageSequenceSource::forceReload));
-    clearSequence_.onClick(MemberFunctionCallback<ImageSequenceSource>(this, &ImageSequenceSource::unsetDirectoryName));
-    numImages_.setReadOnlyFlag(true);
-
     addProperty(imageDirectory_);
+    ON_CHANGE(imageDirectory_, ImageSequenceSource, forceReload);
     addProperty(textureFiltering_);
     addProperty(showProgressBar_);
     addProperty(reloadSequence_);
+    ON_CHANGE(reloadSequence_, ImageSequenceSource, forceReload);
     addProperty(clearSequence_);
+    ON_CHANGE(clearSequence_, ImageSequenceSource, unsetDirectoryName);
     addProperty(numImages_);
+    numImages_.setReadOnlyFlag(true);
 }
 
 ImageSequenceSource::~ImageSequenceSource() {
@@ -78,6 +77,8 @@ Processor* ImageSequenceSource::create() const {
 void ImageSequenceSource::process() {
     if (forceReload_) {
         loadImageSequence(imageDirectory_.get());
+        outport_.setData(imageSequence_, false);
+        forceReload_ = false;
     }
 }
 
@@ -87,24 +88,11 @@ void ImageSequenceSource::initialize() {
 
     imageSequence_ = new ImageSequence();
     sequenceOwner_ = true;
-
-    if (!imageDirectory_.get().empty()) {
-        //currentDir_ = imageDirectory_.get();
-        try {
-            loadImageSequence(imageDirectory_.get());
-        }
-        catch (std::exception& e) {
-            LERROR("Failed to load image sequence: " << e.what());
-            numImages_.set(0);
-        }
-    }
-    else {
-        numImages_.set(0);
-    }
+    forceReload_ = true;
 }
 
 void ImageSequenceSource::deinitialize() {
-    outport_.setData(0);
+    outport_.setData(nullptr);
     clearSequence();
     delete imageSequence_;
     imageSequence_ = 0;
@@ -112,27 +100,10 @@ void ImageSequenceSource::deinitialize() {
     RenderProcessor::deinitialize();
 }
 
-void ImageSequenceSource::invalidate(int inv) {
-
-    RenderProcessor::invalidate(inv);
-
-    if (inv == Processor::VALID)
-        return;
-
-    if (!isInitialized())
-        return;
-
-    if (imageDirectory_.get() != currentDir_) {
-        forceReload_ = true;
-    }
-}
-
 void ImageSequenceSource::loadImageSequence(const std::string& d) {
 
     // important: d might be cleared by clearSequence
     std::string dir(d);
-
-    forceReload_ = false;
 
     if (!imageSequence_) {
         LERROR("No image sequence present");
@@ -187,18 +158,9 @@ void ImageSequenceSource::loadImageSequence(const std::string& d) {
         progressDialog = 0;
     }
 
-    // output sequence
-    outport_.setData(imageSequence_, false);
-
     LINFO("Successfully loaded " << imageSequence_->size() << " images.");
     numImages_.set(static_cast<int>(imageSequence_->size()));
     LGL_ERROR;
-}
-
-
-void ImageSequenceSource::reloadImageSequence() {
-    if (!currentDir_.empty())
-        forceReload();
 }
 
 void ImageSequenceSource::clearSequence() {
@@ -222,6 +184,12 @@ void ImageSequenceSource::clearSequence() {
     numImages_.set(0);
 }
 
+void ImageSequenceSource::forceReload() {
+    forceReload_ = true;
+    invalidate();
+}
+
+
 void ImageSequenceSource::setImageSequence(ImageSequence* sequence) {
 
     clearSequence();  // now owner of the sequence -> delete it before assigning
@@ -231,7 +199,6 @@ void ImageSequenceSource::setImageSequence(ImageSequence* sequence) {
     sequenceOwner_ = false;
 
     outport_.setData(imageSequence_, false);
-    outport_.invalidatePort();
     invalidate();
 
     numImages_.set(sequence ? static_cast<int>(sequence->size()) : 0);
@@ -239,11 +206,6 @@ void ImageSequenceSource::setImageSequence(ImageSequence* sequence) {
 
 const ImageSequence* ImageSequenceSource::getImageSequence() const {
     return imageSequence_;
-}
-
-void ImageSequenceSource::forceReload() {
-    forceReload_ = true;
-    invalidate();
 }
 
 void ImageSequenceSource::unsetDirectoryName() {

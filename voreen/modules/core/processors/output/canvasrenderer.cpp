@@ -168,9 +168,6 @@ void CanvasRenderer::process() {
             errorTex_->disable();
         }
         shader_->deactivate();
-        // TODO breaks python benchmark in windows, why?
-        //if (canvas_->getAutoFlush())
-            //canvas_->finalizeRendering();
     }
 }
 
