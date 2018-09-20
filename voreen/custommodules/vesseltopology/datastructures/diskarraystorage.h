@@ -31,6 +31,8 @@
 
 template<typename Element>
 class DiskArray {
+    //typedef Element* iterator;
+    typedef const Element* const_iterator;
 public:
     DiskArray(const boost::iostreams::mapped_file_source& file_, size_t begin, size_t end);
     DiskArray(const DiskArray& other);
@@ -38,6 +40,14 @@ public:
 
     const Element& operator[](size_t index) const;
     size_t size() const;
+    bool empty() const;
+    const Element& front() const;
+    const Element& back() const;
+
+    // May be invalidated by creating other diskarrays in the meantime!!
+    const_iterator begin() const;
+    const_iterator end() const;
+
 private:
     const boost::iostreams::mapped_file_source& file_;
     size_t begin_;
@@ -92,6 +102,33 @@ const Element& DiskArray<Element>::operator[](size_t index) const {
 template<typename Element>
 size_t DiskArray<Element>::size() const {
     return end_ - begin_;
+}
+
+template<typename Element>
+bool DiskArray<Element>::empty() const {
+    return size() == 0;
+}
+
+template<typename Element>
+const Element& DiskArray<Element>::front() const {
+    tgtAssert(!empty(), "Empty array");
+    return operator[](0);
+}
+
+template<typename Element>
+const Element& DiskArray<Element>::back() const {
+    tgtAssert(!empty(), "Empty array");
+    return operator[](size() - 1);
+}
+
+template<typename Element>
+typename DiskArray<Element>::const_iterator DiskArray<Element>::begin() const {
+    return &operator[](0);
+}
+
+template<typename Element>
+typename DiskArray<Element>::const_iterator DiskArray<Element>::end() const {
+    return begin() + size();
 }
 
 /// Impl: DiskArrayStorage -----------------------------------------------------

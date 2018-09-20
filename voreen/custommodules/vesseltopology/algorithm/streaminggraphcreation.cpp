@@ -262,22 +262,22 @@ void RegularData::consume(RegularData&& rhs) {
     voxels_ = std::unique_ptr<RunTree>(new RunNode(std::move(voxels_), std::move(rhs.voxels_)));
 }
 
-// MetadataExtractor -----------------------------------------------------------------------
-
-
-RegularSequence::RegularSequence(std::vector<tgt::svec3> voxels)
-    : voxels_(std::move(voxels))
-{
-}
 /// MetaDataCollector --------------------------------------------------------------------------------
 const std::string MetaDataCollector::loggerCat_("voreen.vesseltopology.metadatacollector");
+MetaDataCollector::MetaDataCollector()
+    : endPoints_()
+    , branchPoints_()
+    , voxelStorage_(VoreenApplication::app()->getUniqueTmpFilePath(std::string(".") + "pgvoxels"))
+    , regularSequences_()
+{
+}
 void MetaDataCollector::collect(EndData&& data) {
     endPoints_.push_back(data.pos_);
 }
 void MetaDataCollector::collect(RegularData&& data) {
     std::vector<tgt::svec3> v;
     data.voxels_->collectVoxels(v);
-    regularSequences_.emplace_back(v);
+    regularSequences_.emplace_back(voxelStorage_.store(v));
 }
 void MetaDataCollector::collect(BranchData&& data) {
     std::vector<tgt::svec3> v;
@@ -285,6 +285,7 @@ void MetaDataCollector::collect(BranchData&& data) {
     branchPoints_.push_back(v);
 }
 
+/// VoxelKDElement--------------------------------------------------------------
 struct VoxelKDElement {
     typedef int32_t CoordType;
     const tgt::Vector3<CoordType>& getPos() const {
@@ -355,9 +356,9 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
         }
         progressCounter++;
 
-        tgtAssert(!regularSequence.voxels_.empty(), "Empty sequence");
-        tgt::ivec3 leftEnd = regularSequence.voxels_.front();
-        tgt::ivec3 rightEnd = regularSequence.voxels_.back();
+        tgtAssert(!regularSequence.empty(), "Empty sequence");
+        tgt::ivec3 leftEnd = regularSequence.front();
+        tgt::ivec3 rightEnd = regularSequence.back();
         const VGNodeID NO_NODE_FOUND = -1;
         VGNodeID leftEndNode = NO_NODE_FOUND;
         VGNodeID rightEndNode = NO_NODE_FOUND;
@@ -395,7 +396,7 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
                 rightEndNode = rightNeighbors.at(0)->nodeID_;
             }
         }
-        std::vector<tgt::svec3> voxels(regularSequence.voxels_);
+        std::vector<tgt::svec3> voxels(regularSequence.begin(), regularSequence.end());
 
         graph->insertEdge(leftEndNode, rightEndNode, std::move(voxels));
     }

@@ -208,13 +208,10 @@ struct RegularData {
 };
 
 /// MetaDataCollector -------------------------------------------------------------------------------------------------------------
-struct RegularSequence {
-    RegularSequence(std::vector<tgt::svec3> voxels);
-
-    std::vector<tgt::svec3> voxels_;
-};
 // Helper that is used to collect finalized (end, regular, or branch) voxel components and creates the feature-annotated VesselGraph
 struct MetaDataCollector {
+    MetaDataCollector();
+
     // Collect metadata from finalized voxel components
     void collect(EndData&&);
     void collect(RegularData&&);
@@ -225,9 +222,12 @@ struct MetaDataCollector {
     // sampleMask may be null
     std::unique_ptr<ProtoVesselGraph> createProtoVesselGraph(tgt::svec3 dimensions, const tgt::mat4& toRwMatrix, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress);
 
+
     std::vector<tgt::svec3> endPoints_;
-    std::vector<RegularSequence> regularSequences_;
     std::vector<std::vector<tgt::svec3>> branchPoints_;
+
+    DiskArrayStorage<tgt::svec3> voxelStorage_;
+    std::vector<DiskArray<tgt::svec3>> regularSequences_;
 
     static const std::string loggerCat_;
 };
