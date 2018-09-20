@@ -25,6 +25,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <fstream>
 #include <boost/iostreams/device/mapped_file.hpp>
 #include "tgt/filesystem.h"
 
@@ -32,6 +33,7 @@ template<typename Element>
 class DiskArray {
 public:
     DiskArray(const boost::iostreams::mapped_file_source& file_, size_t begin, size_t end);
+    DiskArray(const DiskArray& other);
     ~DiskArray() {}
 
     const Element& operator[](size_t index) const;
@@ -72,6 +74,14 @@ DiskArray<Element>::DiskArray(const boost::iostreams::mapped_file_source& file, 
 }
 
 template<typename Element>
+DiskArray<Element>::DiskArray(const DiskArray& other)
+    : file_(other.file_)
+    , begin_(other.begin_)
+    , end_(other.end_)
+{
+}
+
+template<typename Element>
 const Element& DiskArray<Element>::operator[](size_t index) const {
     size_t fileIndex = index + begin_;
     tgtAssert(fileIndex < end_, "Invalid index");
@@ -90,9 +100,8 @@ DiskArrayStorage<Element>::DiskArrayStorage(const std::string& storagefilename)
     : file_()
     , numElements_(0)
     , storagefilename_(storagefilename)
-    , physicalFileSize_(1024)
+    , physicalFileSize_(0)
 {
-    ensureFit(numElements_);
 }
 
 template<typename Element>
@@ -101,10 +110,26 @@ DiskArrayStorage<Element>::~DiskArrayStorage() {
     tgt::FileSystem::deleteFile(storagefilename_);
 }
 
-static void allocateFile(const std::string& fileName, size_t size) {
-    std::ofstream file(fileName);
+static void growFile(const std::string& fileName, size_t size) {
+    {
+        //Create file if it does not exist
+        std::ofstream file(fileName, std::ios_base::binary | std::ios_base::in | std::ios_base::app);
+    }
+    // Now open the existing file and write to it
+    std::ofstream file(fileName, std::ios_base::binary | std::ios_base::in /* Do not truncate file */);
+    tgtAssert(file.good(), "Growing file failed");
     file.seekp(size);
+    tgtAssert(file.good(), "Growing file failed");
     file << '\0';
+    tgtAssert(file.good(), "Growing file failed");
+}
+
+static size_t nextPowerOfTwo(size_t input) {
+    size_t out = 1;
+    while(out < input) {
+        out = out << 1;
+    }
+    return out;
 }
 template<typename Element>
 void DiskArrayStorage<Element>::ensureFit(size_t numElements) {
@@ -112,8 +137,8 @@ void DiskArrayStorage<Element>::ensureFit(size_t numElements) {
     if(requiredFileSize > physicalFileSize_) {
         file_.close();
 
-        physicalFileSize_ *= 2;
-        allocateFile(storagefilename_, physicalFileSize_);
+        physicalFileSize_ = std::max(2*physicalFileSize_, nextPowerOfTwo(requiredFileSize));
+        growFile(storagefilename_, physicalFileSize_);
 
         boost::iostreams::mapped_file_params openParams;
         openParams.path = storagefilename_;
@@ -130,6 +155,11 @@ DiskArray<Element> DiskArrayStorage<Element>::store(const std::vector<Element>& 
     numElements_ += elements.size();
 
     ensureFit(numElements_);
+
+    Element* data = reinterpret_cast<Element*>(file_.data());
+    tgtAssert(file_.is_open(), "file not opened");
+    tgtAssert(data, "Invalid data pointer");
+    std::copy(elements.begin(), elements.end(), data + oldNumElements);
 
     return DiskArray<Element>(file_, oldNumElements, numElements_);
 }
