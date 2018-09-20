@@ -226,7 +226,7 @@ struct EdgeVoxelRef {
     }
 };
 
-static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath, const ProtoVesselGraph& graph, SkeletonClassReader&& skeletonClassReader, const VesselGraphCreatorProcessedInput& input, ProgressReporter& progress) {
+static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath, const ProtoVesselGraph& graph, const VesselGraphCreatorProcessedInput& input, ProgressReporter& progress) {
     TaskTimeLogger _("Create closest id volume", tgt::Info);
 
     const auto voxelToRw = input.segmentation.getMetaData().getVoxelToWorldMatrix();
@@ -254,7 +254,6 @@ static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath
 
         auto outputSlice = outputIDs.getNextWritableSlice();
 
-        skeletonClassReader.advance();
         for(size_t y = 0; y<dimensions.y; ++y) {
             for(size_t x = 0; x<dimensions.x; ++x) {
                 const tgt::svec3 p(x,y,0);
@@ -771,19 +770,18 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
         protograph = mdc->createProtoVesselGraph(input.segmentation.getDimensions(), input.segmentation.getMetaData().getVoxelToWorldMatrix(), input.sampleMask, subtaskReporters.get<1>());
     }
 
-
-    // Create an assignment edge <-> vessel component
-    //  1. Split vessel components at nodes edges
-    auto closestIDs = createClosestIDVolume(
-            VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION),
-            *protograph,
-            SkeletonClassReader(skeleton),
-            input,
-            subtaskReporters.get<2>());
     {
         // Drop VolumeMask and thus free the used non-volatile storage space.
         VolumeMask _dump(std::move(skeleton));
     }
+
+
+    //  1. Create an assignment edge <-> vessel component
+    auto closestIDs = createClosestIDVolume(
+            VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION),
+            *protograph,
+            input,
+            subtaskReporters.get<2>());
 
     //  2. Perform a cca to distinguish components
     size_t numComponents;
@@ -794,10 +792,10 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
         std::move(closestIDs).deleteFromDisk();
     }
 
-    // 3. Change branchIdSegmentation inplace and assign proper edge ids from protograph. Unassigned regions get id UNLABELED_REGION_ID;
+    //  3. Change branchIdSegmentation inplace and assign proper edge ids from protograph. Unassigned regions get id UNLABELED_REGION_ID;
     mapEdgeIds(branchIdSegmentation, numComponents, *protograph, subtaskReporters.get<4>());
 
-    // 4. Collect bounding boxes from unfinished regions.
+    //  4. Collect bounding boxes from unfinished (i.e., cut-off) regions.
     auto unfinishedRegions = collectUnfinishedRegions(branchIdSegmentation, VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), subtaskReporters.get<5>());
 
     //  5. Flood remaining unlabeled regions locally
@@ -810,7 +808,7 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
     }
 
     BranchIdVolumeReader branchIdReader(branchIdSegmentation);
-    //  6. Create better VesselGraph from protograph and and the edge-id-segmentation
+    //  6. Create better VesselGraph from protograph and the edge-id-segmentation
     auto output = protograph->createVesselGraph(branchIdReader, input.sampleMask, subtaskReporters.get<7>());
     if(input.saveDebugData) {
         generatedVolumes.add(std::move(branchIdSegmentation).toVolume().release());

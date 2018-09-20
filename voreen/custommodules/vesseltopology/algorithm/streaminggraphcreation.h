@@ -33,6 +33,7 @@
 
 #include "../datastructures/vesselgraph.h"
 #include "../datastructures/protovesselgraph.h"
+#include "../datastructures/diskarraystorage.h"
 #include "../algorithm/volumemask.h"
 #include "../util/tasktimelogger.h"
 #include "custommodules/bigdataimageprocessing/volumefiltering/slicereader.h"
@@ -139,9 +140,6 @@ class NeighborCountVoxelClassifier : public SkeletonClassReader {
 public:
     NeighborCountVoxelClassifier(const VolumeMask& skeleton);
     virtual ~NeighborCountVoxelClassifier();
-
-    // 0: no predefined id
-    uint32_t getPredefinedComponentId(const tgt::ivec2& xypos) const;
 };
 
 /// NeighborCountAndBranchSegmentationVoxelClassifier --------------------------------------
@@ -159,8 +157,6 @@ public:
     // Get the class of the specified voxel within the active slice
     uint8_t getClass(const tgt::ivec2& xypos) const;
     const tgt::svec3& getDimensions() const;
-    // 0: no predefined id
-    uint32_t getPredefinedComponentId(const tgt::ivec2& xypos) const;
 
     void advance();
 private:
@@ -177,7 +173,7 @@ private:
 // Metadata for end voxel components
 struct EndData {
     EndData(EndData&&, EndData&&);
-    EndData(const RunPosition&, uint32_t predeterminedComponentId);
+    EndData(const RunPosition&);
     void consume(EndData&& rhs);
 
     tgt::svec3 pos_;
@@ -186,7 +182,7 @@ struct EndData {
 // Metadata for branch voxel components
 struct BranchData {
     BranchData(BranchData&&, BranchData&&);
-    BranchData(const RunPosition&, uint32_t predeterminedComponentId);
+    BranchData(const RunPosition&);
 
     BranchData(const BranchData&) = delete;
     BranchData(BranchData&& other);
@@ -199,7 +195,7 @@ struct BranchData {
 // Metadata for regular voxel components
 struct RegularData {
     RegularData(RegularData&&, RegularData&&);
-    RegularData(const RunPosition&, uint32_t predeterminedComponentId);
+    RegularData(const RunPosition&);
 
     RegularData(const RegularData&) = delete;
     RegularData(RegularData&& other);
@@ -209,15 +205,13 @@ struct RegularData {
     std::unique_ptr<RunTree> voxels_; //Invariant: voxels_ is ordered so that voxels_[i] and voxels_[i+1] are neighbros in the volume!
     tgt::svec3 leftEnd_;
     tgt::svec3 rightEnd_;
-    uint32_t predeterminedComponentId_;
 };
 
 /// MetaDataCollector -------------------------------------------------------------------------------------------------------------
 struct RegularSequence {
-    RegularSequence(std::vector<tgt::svec3> voxels, uint32_t predeterminedComponentId);
+    RegularSequence(std::vector<tgt::svec3> voxels);
 
     std::vector<tgt::svec3> voxels_;
-    uint32_t predeterminedComponentId_;
 };
 // Helper that is used to collect finalized (end, regular, or branch) voxel components and creates the feature-annotated VesselGraph
 struct MetaDataCollector {
@@ -298,7 +292,7 @@ const uint32_t UNDEFINED_COMPONENT_ID = 0;
 template<typename MetaData>
 class Run final : public Node<MetaData> {
 public:
-    Run(MetaDataCollector&, tgt::svec2 yzPos_, size_t lowerBound_, size_t upperBound_, uint32_t  predeterminedComponentId = UNDEFINED_COMPONENT_ID);
+    Run(MetaDataCollector&, tgt::svec2 yzPos_, size_t lowerBound_, size_t upperBound_);
     ~Run();
 
     // Try to merge with another run.
@@ -309,7 +303,6 @@ public:
     uint32_t getRootAptitude() const;
 
     const RunPosition pos_;
-    const uint32_t predeterminedComponentId_;
 };
 
 // A row within a binary volume, it stores runs of end, regular, and branch voxels.
@@ -521,10 +514,9 @@ void RunComposition<MetaData>::unref() {
 
 
 template<typename MetaData>
-Run<MetaData>::Run(MetaDataCollector& mdc, tgt::svec2 yzPos, size_t lowerBound, size_t upperBound, uint32_t predeterminedComponentId)
+Run<MetaData>::Run(MetaDataCollector& mdc, tgt::svec2 yzPos, size_t lowerBound, size_t upperBound)
     : Node<MetaData>(mdc)
     , pos_(yzPos, lowerBound, upperBound)
-    , predeterminedComponentId_(predeterminedComponentId)
 {
 }
 
@@ -564,7 +556,7 @@ void Run<MetaData>::tryMerge(Run& other) {
 
 template<typename MetaData>
 MetaData Run<MetaData>::getMetaData() {
-    return std::move(MetaData(pos_, predeterminedComponentId_));
+    return std::move(MetaData(pos_));
 }
 
 template<typename MetaData>
@@ -596,7 +588,7 @@ void Row::init(const S& slice, MetaDataCollector& mdc, size_t sliceNum, size_t r
                     endRuns_.emplace_back(mdc, yzPos, runStart, x);
                     break;
                 case 2:
-                    regularRuns_.emplace_back(mdc, yzPos, runStart, x, slice.getPredefinedComponentId(tgt::ivec2(runStart, rowNum)));
+                    regularRuns_.emplace_back(mdc, yzPos, runStart, x);
                     break;
                 case 3:
                     branchRuns_.emplace_back(mdc, yzPos, runStart, x);
@@ -611,7 +603,7 @@ void Row::init(const S& slice, MetaDataCollector& mdc, size_t sliceNum, size_t r
             endRuns_.emplace_back(mdc, yzPos, runStart, rowLength);
             break;
         case 2:
-            regularRuns_.emplace_back(mdc, yzPos, runStart, rowLength, slice.getPredefinedComponentId(tgt::ivec2(runStart, rowNum)));
+            regularRuns_.emplace_back(mdc, yzPos, runStart, rowLength);
             break;
         case 3:
             branchRuns_.emplace_back(mdc, yzPos, runStart, rowLength);
