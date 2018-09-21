@@ -55,17 +55,27 @@ private:
 };
 
 template<typename Element>
+class DiskArrayBuilder;
+
+template<typename Element>
 class DiskArrayStorage {
 public:
     DiskArrayStorage(const std::string& storagefilename);
     ~DiskArrayStorage();
 
-    // Note: The Store must live longer than the returned DiskArray!
+    // Note: The store must live longer than the returned DiskArray!
     // Absolutely not threadsafe!
     DiskArray<Element> store(const std::vector<Element>& elements);
     DiskArray<Element> store(const DiskArray<Element>& elements);
 
+    // Important! Do not use DiskArrayStorage until finalize is called on the builder!
+    // (As a consequence) only one builder can be active at a time.
+    DiskArrayBuilder<Element> build();
+
 private:
+    friend class DiskArrayBuilder<Element>;
+    size_t storeElement(const Element& elm);
+
     DiskArray<Element> store(const Element* elements, size_t len);
     void ensureFit(size_t numElements);
 
@@ -73,6 +83,21 @@ private:
     size_t numElements_;
     const std::string storagefilename_;
     size_t physicalFileSize_;
+};
+
+template<typename Element>
+class DiskArrayBuilder {
+public:
+    DiskArrayBuilder(DiskArrayStorage<Element>& storage);
+    DiskArrayBuilder(DiskArrayBuilder&& other);
+    void push(const Element&);
+    DiskArray<Element> finalize() &&;
+
+private:
+    DiskArrayStorage<Element>& storage_;
+    size_t begin_;
+    size_t end_;
+    size_t numElements_;
 };
 
 
@@ -223,4 +248,57 @@ DiskArray<Element> DiskArrayStorage<Element>::store(const Element* elements, siz
     std::copy(elements, elements + len, data + oldNumElements);
 
     return DiskArray<Element>(file_, oldNumElements, numElements_);
+}
+
+template<typename Element>
+size_t DiskArrayStorage<Element>::storeElement(const Element& elm) {
+    size_t oldNumElements = numElements_;
+    numElements_ += 1;
+
+    ensureFit(numElements_);
+
+    Element* data = reinterpret_cast<Element*>(file_.data());
+    tgtAssert(file_.is_open(), "file not opened");
+    tgtAssert(data, "Invalid data pointer");
+    data[oldNumElements] = elm;
+
+    return oldNumElements;
+}
+
+template<typename Element>
+DiskArrayBuilder<Element> DiskArrayStorage<Element>::build() {
+    return DiskArrayBuilder<Element>(*this);
+}
+
+/// Impl: DiskArrayBuilder -----------------------------------------------------
+
+template<typename Element>
+DiskArrayBuilder<Element>::DiskArrayBuilder(DiskArrayStorage<Element>& storage)
+    : storage_(storage)
+    , begin_(storage.numElements_)
+    , end_(storage.numElements_)
+{
+}
+
+template<typename Element>
+DiskArrayBuilder<Element>::DiskArrayBuilder(DiskArrayBuilder&& other)
+    : storage_(other.storage_)
+    , begin_(other.begin_)
+    , end_(other.end_)
+    , numElements_(other.numElements_)
+{
+}
+
+template<typename Element>
+void DiskArrayBuilder<Element>::push(const Element& elm) {
+    size_t insertPos = storage_.storeElement(elm);
+    (void)insertPos; //mark variable as used even in release builds...
+    tgtAssert(insertPos == end_, "Invalid insert pos. Was storage used since builder was created?");
+    ++end_;
+}
+
+template<typename Element>
+DiskArray<Element> DiskArrayBuilder<Element>::finalize() && {
+    auto tmp = std::move(*this);
+    return DiskArray<Element>(storage_.file_, begin_, end_);
 }

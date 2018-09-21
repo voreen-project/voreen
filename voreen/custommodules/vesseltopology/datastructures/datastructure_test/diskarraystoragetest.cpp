@@ -41,7 +41,53 @@ namespace tgt{
 #include <random>
 
 template<typename T>
-bool test(int maxElements, int numVectors, std::function<T()> random, std::default_random_engine& generator) {
+bool testBuilder(int maxElements, int numVectors, std::function<T()> random, std::default_random_engine& generator) {
+    DiskArrayStorage<T> storage("test.tmp");
+    std::vector<std::pair<std::vector<T>, DiskArray<T>>> vectorsAndArrays;
+
+    std::uniform_int_distribution<int> dist(0,maxElements);
+
+    for(int i=0; i<numVectors; ++i) {
+        std::vector<T> vec;
+        auto builder = storage.build();
+        for(int j=0; j<dist(generator); ++j) {
+            auto v = random();
+            vec.push_back(v);
+            builder.push(v);
+        }
+        auto storedArray = std::move(builder).finalize();
+
+        vectorsAndArrays.push_back({std::move(vec), storedArray });
+    }
+
+
+    int i=0;
+    for(const auto& vecAndArr : vectorsAndArrays) {
+        const auto& vec = vecAndArr.first;
+        const auto& arr = vecAndArr.second;
+        if(vec.size() != arr.size()) {
+            std::cerr << "Fail!" << std::endl;
+            std::cerr << "Expected: Array size " << vec.size() << std::endl;
+            std::cerr << "Found   : Array size " << arr.size() << std::endl;
+            assert(false);
+            return false;
+        }
+        for(int j=0; j<vec.size(); ++j) {
+            if(vec[j] != arr[j]) {
+                std::cerr << "Fail at pos " << j << " in array " << i << "!" << std::endl;
+                std::cerr << "Expected: " << +vec[j] << std::endl;
+                std::cerr << "Found   : " << +arr[i] << std::endl;
+                assert(false);
+                return false;
+            }
+        }
+        ++i;
+    }
+    return true;
+}
+
+template<typename T>
+bool testStore(int maxElements, int numVectors, std::function<T()> random, std::default_random_engine& generator) {
     DiskArrayStorage<T> storage("test.tmp");
     std::vector<std::pair<std::vector<T>, DiskArray<T>>> vectorsAndArrays;
 
@@ -84,6 +130,14 @@ bool test(int maxElements, int numVectors, std::function<T()> random, std::defau
 }
 
 template<typename T>
+bool test(int maxElements, int numVectors, std::function<T()> random, std::default_random_engine& generator) {
+    bool res = true;
+    res &= testBuilder(maxElements, numVectors, random, generator);
+    res &= testStore(maxElements, numVectors, random, generator);
+    return res;
+}
+
+template<typename T>
 std::function<T()> randomInt(std::default_random_engine& generator) {
     return [&] () {
         return std::uniform_int_distribution<T>(
@@ -116,4 +170,6 @@ int main() {
     test<int64_t>(1000, 1000, randomInt<int64_t>(generator), generator);
     test<float>(1000, 1000, randomFloat<float>(generator), generator);
     test<double>(1000, 1000, randomFloat<double>(generator), generator);
+
+    std::cout << "Test successful!" << std::endl;
 }
