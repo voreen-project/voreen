@@ -402,8 +402,7 @@ static std::unique_ptr<VesselGraph> splitNodesWithUUIDs(const VesselGraph& input
             node2_id = edge.getNodeID2();
         }
         tgtAssert(edge.getLength() > 0, "Invalid edge length");
-        std::vector<VesselSkeletonVoxel> path(edge.getVoxels());
-        output->insertEdge(node1_id, node2_id, std::move(path), edge.getUUID());
+        output->insertEdge(node1_id, node2_id, edge.getVoxels(), edge.getUUID());
     }
 
     return VesselGraphNormalization::removeDregree2Nodes(*output);

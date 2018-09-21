@@ -30,15 +30,47 @@
 #include "tgt/filesystem.h"
 
 template<typename Element>
+struct DiskArrayReverseConstIterator {
+    DiskArrayReverseConstIterator(const Element* init)
+        : current_(init)
+    {
+    }
+    DiskArrayReverseConstIterator& operator++() {
+        current_--;
+        return *this;
+    }
+    bool operator==(const DiskArrayReverseConstIterator& other) {
+        return current_ == other.current_;
+    }
+    bool operator!=(const DiskArrayReverseConstIterator& other) {
+        return current_ != other.current_;
+    }
+    const Element& operator*() {
+        return *current_;
+    }
+    const Element* operator->() {
+        return current_;
+    }
+    const Element* current_;
+};
+
+template<typename Element>
 class DiskArray {
     //typedef Element* iterator;
     typedef const Element* const_iterator;
+    typedef DiskArrayReverseConstIterator<Element> const_reverse_iterator;
 public:
-    DiskArray(const boost::iostreams::mapped_file_source& file_, size_t begin, size_t end);
-    DiskArray(const DiskArray& other);
+    DiskArray(); //An empty disk array, not associated with any storage
+    DiskArray(boost::iostreams::mapped_file* file_, size_t begin, size_t end);
+    DiskArray(DiskArray&& other);
+    DiskArray& operator=(DiskArray&& other);
     ~DiskArray() {}
 
+    const Element& at(size_t index) const;
+    Element& at(size_t index);
     const Element& operator[](size_t index) const;
+    Element& operator[](size_t index);
+
     size_t size() const;
     bool empty() const;
     const Element& front() const;
@@ -47,9 +79,11 @@ public:
     // May be invalidated by creating other diskarrays in the meantime!!
     const_iterator begin() const;
     const_iterator end() const;
+    const_reverse_iterator rbegin() const;
+    const_reverse_iterator rend() const;
 
 private:
-    const boost::iostreams::mapped_file_source& file_;
+    boost::iostreams::mapped_file* file_;
     size_t begin_;
     size_t end_;
 };
@@ -103,7 +137,15 @@ private:
 
 /// Impl: DiskArray ------------------------------------------------------------
 template<typename Element>
-DiskArray<Element>::DiskArray(const boost::iostreams::mapped_file_source& file, size_t begin, size_t end)
+DiskArray<Element>::DiskArray()
+    : file_(nullptr)
+    , begin_(0)
+    , end_(0)
+{
+}
+
+template<typename Element>
+DiskArray<Element>::DiskArray(boost::iostreams::mapped_file* file, size_t begin, size_t end)
     : file_(file)
     , begin_(begin)
     , end_(end)
@@ -111,7 +153,7 @@ DiskArray<Element>::DiskArray(const boost::iostreams::mapped_file_source& file, 
 }
 
 template<typename Element>
-DiskArray<Element>::DiskArray(const DiskArray& other)
+DiskArray<Element>::DiskArray(DiskArray&& other)
     : file_(other.file_)
     , begin_(other.begin_)
     , end_(other.end_)
@@ -119,11 +161,42 @@ DiskArray<Element>::DiskArray(const DiskArray& other)
 }
 
 template<typename Element>
-const Element& DiskArray<Element>::operator[](size_t index) const {
+DiskArray<Element>& DiskArray<Element>::operator=(DiskArray&& other)
+{
+    if(this != &other) {
+        this->~DiskArray();
+        new(this) DiskArray(std::move(other));
+    }
+    return *this;
+
+}
+
+template<typename Element>
+const Element& DiskArray<Element>::at(size_t index) const {
     size_t fileIndex = index + begin_;
     tgtAssert(fileIndex < end_, "Invalid index");
-    const Element* data = reinterpret_cast<const Element*>(file_.data());
+    tgtAssert(file_, "No file");
+    const Element* data = reinterpret_cast<const Element*>(file_->data());
     return data[fileIndex];
+}
+
+template<typename Element>
+Element& DiskArray<Element>::at(size_t index) {
+    size_t fileIndex = index + begin_;
+    tgtAssert(fileIndex < end_, "Invalid index");
+    tgtAssert(file_, "No file");
+    Element* data = reinterpret_cast<Element*>(file_->data());
+    return data[fileIndex];
+}
+
+template<typename Element>
+const Element& DiskArray<Element>::operator[](size_t index) const {
+    return at(index);
+}
+
+template<typename Element>
+Element& DiskArray<Element>::operator[](size_t index) {
+    return at(index);
 }
 
 template<typename Element>
@@ -139,13 +212,13 @@ bool DiskArray<Element>::empty() const {
 template<typename Element>
 const Element& DiskArray<Element>::front() const {
     tgtAssert(!empty(), "Empty array");
-    return operator[](0);
+    return at(0);
 }
 
 template<typename Element>
 const Element& DiskArray<Element>::back() const {
     tgtAssert(!empty(), "Empty array");
-    return operator[](size() - 1);
+    return at(size() - 1);
 }
 
 template<typename Element>
@@ -160,6 +233,24 @@ typename DiskArray<Element>::const_iterator DiskArray<Element>::begin() const {
 template<typename Element>
 typename DiskArray<Element>::const_iterator DiskArray<Element>::end() const {
     return begin() + size();
+}
+
+template<typename Element>
+typename DiskArray<Element>::const_reverse_iterator DiskArray<Element>::rbegin() const {
+    if(empty()) {
+        return DiskArray<Element>::const_reverse_iterator(nullptr);
+    } else {
+        return DiskArray<Element>::const_reverse_iterator(&operator[](0) + size());
+    }
+}
+
+template<typename Element>
+typename DiskArray<Element>::const_reverse_iterator DiskArray<Element>::rend() const {
+    if(empty()) {
+        return DiskArray<Element>::const_reverse_iterator(nullptr);
+    } else {
+        return DiskArray<Element>::const_reverse_iterator(&operator[](0));
+    }
 }
 
 /// Impl: DiskArrayStorage -----------------------------------------------------
@@ -247,7 +338,7 @@ DiskArray<Element> DiskArrayStorage<Element>::store(const Element* elements, siz
     tgtAssert(data, "Invalid data pointer");
     std::copy(elements, elements + len, data + oldNumElements);
 
-    return DiskArray<Element>(file_, oldNumElements, numElements_);
+    return DiskArray<Element>(&file_, oldNumElements, numElements_);
 }
 
 template<typename Element>
@@ -300,5 +391,5 @@ void DiskArrayBuilder<Element>::push(const Element& elm) {
 template<typename Element>
 DiskArray<Element> DiskArrayBuilder<Element>::finalize() && {
     auto tmp = std::move(*this);
-    return DiskArray<Element>(storage_.file_, begin_, end_);
+    return DiskArray<Element>(&storage_.file_, begin_, end_);
 }

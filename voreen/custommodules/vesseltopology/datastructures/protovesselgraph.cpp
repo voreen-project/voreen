@@ -79,7 +79,7 @@ static ProtoVesselGraphEdge::ElementTree buildTree(const DiskArray<tgt::vec3>& v
     return treeBuilder.buildTree(std::move(builder));
 }
 
-ProtoVesselGraphEdge::ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, DiskArray<tgt::svec3> voxels, ProtoVesselGraph& graph)
+ProtoVesselGraphEdge::ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, const DiskArray<tgt::svec3>& voxels, ProtoVesselGraph& graph)
     : id_(id)
     , node1_(node1)
     , node2_(node2)
@@ -99,7 +99,7 @@ VGNodeID ProtoVesselGraph::insertNode(std::vector<tgt::svec3>&& voxels, bool atS
     nodes_.emplace_back(id, std::move(voxels), atSampleBorder);
     return id;
 }
-VGEdgeID ProtoVesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, DiskArray<tgt::svec3> voxels) {
+VGEdgeID ProtoVesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, const DiskArray<tgt::svec3>& voxels) {
     tgtAssert(node1 < nodes_.size(), "Edge references nonexistent node");
     tgtAssert(node2 < nodes_.size(), "Edge references nonexistent node");
     ProtoVesselGraphNode& n1 = nodes_.at(node1.raw());
@@ -174,18 +174,16 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
     }
 
     // Precreate VoxelSkeletonLists
-    std::vector<std::vector<VesselSkeletonVoxel>> skeletonVoxelsLists;
-    skeletonVoxelsLists.reserve(edges_.size());
+    DiskArrayStorage<VesselSkeletonVoxel> tmpSkeletonVoxelListStorage(VoreenApplication::app()->getUniqueTmpFilePath(".voxellists"));
+    std::vector<DiskArray<VesselSkeletonVoxel>> skeletonVoxelLists;
+    skeletonVoxelLists.reserve(edges_.size());
     for(const auto& edge : edges_) {
-        skeletonVoxelsLists.emplace_back();
-        auto& skeletonVoxelsList = skeletonVoxelsLists.back();
-        skeletonVoxelsList.reserve(edge.voxels().size());
+        auto builder = tmpSkeletonVoxelListStorage.build();
         for(const auto& voxel : edge.voxels()) {
-            skeletonVoxelsList.emplace_back(voxel, std::numeric_limits<float>::infinity(), 0, 0, 0, 0);
+            builder.push(VesselSkeletonVoxel(voxel, std::numeric_limits<float>::infinity(), 0, 0, 0, 0));
         }
+        skeletonVoxelLists.push_back(std::move(builder).finalize());
     }
-
-    const float criticalVoxelDistDiff = 1.001f*tgt::length(spacing);
 
     for(int z = 0; z < dimensions.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dimensions.z);
@@ -211,7 +209,7 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
 
                 float volume = tgt::hmul(spacing) / neared_result.elements_.size();
                 for(auto element : neared_result.elements_) {
-                    VesselSkeletonVoxel& voxel = skeletonVoxelsLists.at(id.raw()).at(element->voxelIndex_);
+                    VesselSkeletonVoxel& voxel = skeletonVoxelLists.at(id.raw()).at(element->voxelIndex_);
 
                     voxel.volume_ += volume;
                 }
@@ -232,7 +230,7 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
                 }
 
                 for(auto element : neared_result.elements_) {
-                    VesselSkeletonVoxel& voxel = skeletonVoxelsLists.at(id.raw()).at(element->voxelIndex_);
+                    VesselSkeletonVoxel& voxel = skeletonVoxelLists.at(id.raw()).at(element->voxelIndex_);
 
                     float dist = std::sqrt(surfaceDistanceSq(voxel.pos_, rwVoxel, spacing));
 
@@ -291,11 +289,11 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
 
 
     // Create edges from branches
-    for(size_t i = 0; i < skeletonVoxelsLists.size(); ++i) {
-        auto& skeletonVoxelsList = skeletonVoxelsLists.at(i);
+    for(size_t i = 0; i < skeletonVoxelLists.size(); ++i) {
+        auto& skeletonVoxelList = skeletonVoxelLists.at(i);
         auto& protoEdge = edges_.at(i);
 
-        graph->insertEdge(protoEdge.node1_, protoEdge.node2_, std::move(skeletonVoxelsList));
+        graph->insertEdge(protoEdge.node1_, protoEdge.node2_, std::move(skeletonVoxelList));
     }
 
     return graph;

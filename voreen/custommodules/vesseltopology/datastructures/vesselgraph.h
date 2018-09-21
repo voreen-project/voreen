@@ -35,6 +35,7 @@
 #include "voreen/core/io/serialization/serialization.h"
 #include "voreen/core/io/serialization/serializer.h"
 #include "voreen/core/io/serialization/deserializer.h"
+#include "../datastructures/diskarraystorage.h"
 
 #include <boost/uuid/uuid.hpp>
 #include <functional>
@@ -196,7 +197,7 @@ struct VesselGraphEdgePathProperties : public Serializable {
     float roundnessAvg_;
     float roundnessStdDeviation_;
 
-    static VesselGraphEdgePathProperties fromPath(const VesselGraphNode& begin, const VesselGraphNode& end, const std::vector<VesselSkeletonVoxel>& path);
+    static VesselGraphEdgePathProperties fromPath(const VesselGraphNode& begin, const VesselGraphNode& end, const DiskArray<VesselSkeletonVoxel>& path);
     bool hasValidData() const;
 
     virtual void serialize(Serializer& s) const;
@@ -208,7 +209,7 @@ struct VesselGraphEdgePathProperties : public Serializable {
 // axis of the branch.
 struct VesselGraphEdge : public Serializable {
     // Construct an edge implicitly. All properties will be calculated from the voxels
-    VesselGraphEdge(VesselGraph& graph, VGEdgeID id, VGNodeID node1ID, VGNodeID node2ID, const std::vector<VesselSkeletonVoxel>&& voxels, VesselGraphEdgeUUID uuid);
+    VesselGraphEdge(VesselGraph& graph, VGEdgeID id, VGNodeID node1ID, VGNodeID node2ID, DiskArray<VesselSkeletonVoxel>&& voxels, VesselGraphEdgeUUID uuid);
 
     // Construct an edge excplitily, all properties must be given. The path will be a straight line between two nodes
     VesselGraphEdge(VesselGraph& graph, VGEdgeID id, VGNodeID node1ID, VGNodeID node2ID, VesselGraphEdgePathProperties pathProps, VesselGraphEdgeUUID uuid);
@@ -238,7 +239,7 @@ struct VesselGraphEdge : public Serializable {
     float getAvgRadiusStdDeviation() const;
     float getRoundnessAvg() const;
     float getRoundnessStdDeviation() const;
-    const std::vector<VesselSkeletonVoxel>& getVoxels() const;
+    const DiskArray<VesselSkeletonVoxel>& getVoxels() const;
 
     float getElongation() const;
     float getEffectiveLength() const;
@@ -286,7 +287,7 @@ private:
     VesselGraphEdgeUUID uuid_; //globally
 
     //NOTE: the path in voxels (geometrically) starts at node1_ and ends in node2_.
-    std::vector<VesselSkeletonVoxel> voxels_;
+    DiskArray<VesselSkeletonVoxel> voxels_;
 
 private:
     VesselGraph* graph_; // Will never be null (except briefly during deserialization)
@@ -331,8 +332,10 @@ public:
     VGNodeID insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>&& voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
 
     // Insert a new edge by deriving its properties from the provided path
-    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const std::vector<VesselSkeletonVoxel>&& path);
-    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const std::vector<VesselSkeletonVoxel>&& path, VesselGraphEdgeUUID uuid);
+    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const DiskArray<VesselSkeletonVoxel>& path);
+    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const DiskArray<VesselSkeletonVoxel>& path, VesselGraphEdgeUUID uuid);
+    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const std::vector<VesselSkeletonVoxel>& path);
+    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const std::vector<VesselSkeletonVoxel>& path, VesselGraphEdgeUUID uuid);
     // Insert a new edge by deriving its properties from the path of the provided edge
     VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const VesselGraphEdge& path_definition);
     VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const VesselGraphEdge& path_definition, VesselGraphEdgeUUID uuid);
@@ -362,6 +365,9 @@ private:
     // Note: We can use vector here because we do not store pointers to other edges/nodes in nodes/edges, but only indices
     std::vector<VesselGraphNode> nodes_;
     std::vector<VesselGraphEdge> edges_;
+
+    friend struct VesselGraphEdge;
+    std::unique_ptr<DiskArrayStorage<VesselSkeletonVoxel>> voxelStorage_; //never null
 
     tgt::Bounds bounds_;
 };

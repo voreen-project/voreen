@@ -67,7 +67,7 @@ struct ProtoVesselGraph;
 
 struct ProtoVesselGraphEdge {
     typedef static_kdtree::Tree<ProtoVesselGraphEdgeElement, static_kdtree::SharedNodeStorage<ProtoVesselGraphEdgeElement>> ElementTree;
-    ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, DiskArray<tgt::svec3> voxels, ProtoVesselGraph& graph);
+    ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, const DiskArray<tgt::svec3>& voxels, ProtoVesselGraph& graph);
     static_kdtree::SearchNearestResultSet<ProtoVesselGraphEdgeElement> findClosestVoxelIndex(tgt::vec3) const;
     DiskArray<tgt::vec3>& voxels() {
         return voxelsRw_;
@@ -102,7 +102,7 @@ struct ProtoVesselGraph {
     ProtoVesselGraph(tgt::mat4 toRWMatrix);
 
     VGNodeID insertNode(std::vector<tgt::svec3>&& voxels, bool atSampleBorder);
-    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, DiskArray<tgt::svec3> voxels);
+    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const DiskArray<tgt::svec3>& voxels);
 
     std::unique_ptr<VesselGraph> createVesselGraph(BranchIdVolumeReader& segmentedVolumeReader, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress);
 

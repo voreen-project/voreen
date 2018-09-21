@@ -156,8 +156,7 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeEndEdges(const Vess
             new_node2_id = output->insertNode(node2);
             new_node_ids[&node2] = new_node2_id;
         }
-        std::vector<VesselSkeletonVoxel> new_voxels(edge.getVoxels());
-        output->insertEdge(new_node1_id, new_node2_id, std::move(new_voxels), edge.getUUID());
+        output->insertEdge(new_node1_id, new_node2_id, edge.getVoxels(), edge.getUUID());
     }
     for(const VesselGraphNode& node : input.getNodes()) {
         if(node.getDegree() == 0) {
@@ -388,7 +387,9 @@ struct FutureEdge {
                 current_start_voxel = &edge->getNode2();
             } else {
                 tgtAssert(current_start_voxel == &edge->getNode2(), "edges_ are not ordered!");
-                output.insert(output.end(), edge->getVoxels().rbegin(), edge->getVoxels().rend());
+                for(auto it = edge->getVoxels().rbegin(); it != edge->getVoxels().rend(); ++it) {
+                    output.push_back(*it);
+                }
                 current_start_voxel = &edge->getNode1();
             }
         }
