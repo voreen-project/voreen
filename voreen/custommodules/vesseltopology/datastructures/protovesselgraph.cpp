@@ -61,7 +61,7 @@ ProtoVesselGraphNode::ProtoVesselGraphNode(VGNodeID id, std::vector<tgt::svec3>&
     voxelPos_ = tgt::vec3(voxelSum)/static_cast<float>(voxels_.size());
 }
 
-static std::vector<tgt::vec3> transformVoxels(const tgt::mat4& toRWMatrix, const std::vector<tgt::svec3>& voxels) {
+static std::vector<tgt::vec3> transformVoxels(const tgt::mat4& toRWMatrix, const DiskArray<tgt::svec3>& voxels) {
     std::vector<tgt::vec3> output;
     for(const auto& v: voxels) {
         output.push_back(toRWMatrix.transform(tgt::vec3(v)));
@@ -69,23 +69,23 @@ static std::vector<tgt::vec3> transformVoxels(const tgt::mat4& toRWMatrix, const
     return output;
 }
 
-static ProtoVesselGraphEdge::ElementTree buildTree(const std::vector<tgt::vec3>& voxels, static_kdtree::SharedMemoryTreeBuilder<ProtoVesselGraphEdgeElement>& treeBuilder) {
+static ProtoVesselGraphEdge::ElementTree buildTree(const DiskArray<tgt::vec3>& voxels, static_kdtree::SharedMemoryTreeBuilder<ProtoVesselGraphEdgeElement>& treeBuilder) {
     voreen::static_kdtree::ElementArrayBuilder<ProtoVesselGraphEdgeElement> builder(VoreenApplication::app()->getUniqueTmpFilePath(".kdtreestorage"));
     uint64_t i = 0;
     for(const auto& v: voxels) {
-        builder.push(ProtoVesselGraphEdgeElement(&v, i));
+        builder.push(ProtoVesselGraphEdgeElement(v, i));
         ++i;
     }
     return treeBuilder.buildTree(std::move(builder));
 }
 
-ProtoVesselGraphEdge::ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, std::vector<tgt::svec3>&& voxels, static_kdtree::SharedMemoryTreeBuilder<ProtoVesselGraphEdgeElement>& treeBuilder)
+ProtoVesselGraphEdge::ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, DiskArray<tgt::svec3> voxels, ProtoVesselGraph& graph)
     : id_(id)
     , node1_(node1)
     , node2_(node2)
-    , voxels_(std::move(voxels))
-    , voxelsRw_(transformVoxels(toRWMatrix, voxels_))
-    , tree_(buildTree(voxelsRw_, treeBuilder))
+    , voxels_(graph.voxelStorage_.store(voxels))
+    , voxelsRw_(graph.rwvoxelStorage_.store(transformVoxels(toRWMatrix, voxels)))
+    , tree_(buildTree(voxelsRw_, graph.treeBuilder_))
 {
 }
 static_kdtree::SearchNearestResultSet<ProtoVesselGraphEdgeElement> ProtoVesselGraphEdge::findClosestVoxelIndex(tgt::vec3 v) const {
@@ -99,7 +99,7 @@ VGNodeID ProtoVesselGraph::insertNode(std::vector<tgt::svec3>&& voxels, bool atS
     nodes_.emplace_back(id, std::move(voxels), atSampleBorder);
     return id;
 }
-VGEdgeID ProtoVesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, std::vector<tgt::svec3>&& voxels) {
+VGEdgeID ProtoVesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, DiskArray<tgt::svec3> voxels) {
     tgtAssert(node1 < nodes_.size(), "Edge references nonexistent node");
     tgtAssert(node2 < nodes_.size(), "Edge references nonexistent node");
     ProtoVesselGraphNode& n1 = nodes_.at(node1.raw());
@@ -107,7 +107,7 @@ VGEdgeID ProtoVesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, std::vecto
 
     VGEdgeID edgeID = edges_.size();
     //edges_.push_back(ProtoVesselGraphEdge(toRWMatrix_, edgeID, node1, node2, std::move(voxels)));
-    edges_.emplace_back(toRWMatrix_, edgeID, node1, node2, std::move(voxels), treeBuilder_);
+    edges_.emplace_back(toRWMatrix_, edgeID, node1, node2, voxels, *this);
 
     n1.edges_.push_back(edgeID);
     n2.edges_.push_back(edgeID);
@@ -119,6 +119,8 @@ ProtoVesselGraph::ProtoVesselGraph(tgt::mat4 toRWMatrix)
     , edges_()
     , toRWMatrix_(toRWMatrix)
     , treeBuilder_(VoreenApplication::app()->getUniqueTmpFilePath(".kdtrees"))
+    , voxelStorage_(VoreenApplication::app()->getUniqueTmpFilePath(".voxelstorage"))
+    , rwvoxelStorage_(VoreenApplication::app()->getUniqueTmpFilePath(".rwvoxelstorage"))
 {
 }
 

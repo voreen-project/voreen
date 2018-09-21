@@ -63,8 +63,10 @@ public:
     // Note: The Store must live longer than the returned DiskArray!
     // Absolutely not threadsafe!
     DiskArray<Element> store(const std::vector<Element>& elements);
+    DiskArray<Element> store(const DiskArray<Element>& elements);
 
 private:
+    DiskArray<Element> store(const Element* elements, size_t len);
     void ensureFit(size_t numElements);
 
     boost::iostreams::mapped_file file_;
@@ -123,7 +125,11 @@ const Element& DiskArray<Element>::back() const {
 
 template<typename Element>
 typename DiskArray<Element>::const_iterator DiskArray<Element>::begin() const {
-    return &operator[](0);
+    if(empty()) {
+        return nullptr;
+    } else {
+        return &operator[](0);
+    }
 }
 
 template<typename Element>
@@ -188,15 +194,33 @@ void DiskArrayStorage<Element>::ensureFit(size_t numElements) {
 
 template<typename Element>
 DiskArray<Element> DiskArrayStorage<Element>::store(const std::vector<Element>& elements) {
+    if(elements.empty()) {
+        return store(nullptr, 0);
+    } else {
+        return store(&*elements.begin(), elements.size());
+    }
+}
+
+template<typename Element>
+DiskArray<Element> DiskArrayStorage<Element>::store(const DiskArray<Element>& elements) {
+    if(elements.empty()) {
+        return store(nullptr, 0);
+    } else {
+        return store(elements.begin(), elements.size());
+    }
+}
+
+template<typename Element>
+DiskArray<Element> DiskArrayStorage<Element>::store(const Element* elements, size_t len) {
     size_t oldNumElements = numElements_;
-    numElements_ += elements.size();
+    numElements_ += len;
 
     ensureFit(numElements_);
 
     Element* data = reinterpret_cast<Element*>(file_.data());
     tgtAssert(file_.is_open(), "file not opened");
     tgtAssert(data, "Invalid data pointer");
-    std::copy(elements.begin(), elements.end(), data + oldNumElements);
+    std::copy(elements, elements + len, data + oldNumElements);
 
     return DiskArray<Element>(file_, oldNumElements, numElements_);
 }

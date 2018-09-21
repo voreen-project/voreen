@@ -396,9 +396,7 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
                 rightEndNode = rightNeighbors.at(0)->nodeID_;
             }
         }
-        std::vector<tgt::svec3> voxels(regularSequence.begin(), regularSequence.end());
-
-        graph->insertEdge(leftEndNode, rightEndNode, std::move(voxels));
+        graph->insertEdge(leftEndNode, rightEndNode, regularSequence);
     }
 
     // Correct sample mask border information if sampleMask is present
@@ -436,7 +434,7 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
 
         tgt::ivec3 endPointI(node.voxels_.at(0));
         for(const auto& p : find_26_neighbors(nodeVoxelTree, endPointI)) {
-            graph->insertEdge(p->nodeID_, node.id_, std::vector<tgt::svec3>());
+            graph->insertEdge(p->nodeID_, node.id_, voxelStorage_.store(std::vector<tgt::svec3>()));
             break;
         }
     }

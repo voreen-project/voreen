@@ -29,6 +29,7 @@
 #include "tgt/matrix.h"
 #include "tgt/memory.h"
 #include "../datastructures/kdtree.h"
+#include "../datastructures/diskarraystorage.h"
 #include "voreen/core/datastructures/volume/volume.h"
 #include "custommodules/bigdataimageprocessing/volumefiltering/slicereader.h"
 #include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
@@ -40,34 +41,46 @@ namespace voreen {
 struct ProtoVesselGraphEdgeElement {
     typedef float CoordType;
     const tgt::Vector3<CoordType>& getPos() const {
-        return *pos_;
+        return pos_;
     }
 
-    ProtoVesselGraphEdgeElement(const tgt::vec3* pos, uint64_t voxelIndex)
+    ProtoVesselGraphEdgeElement(const tgt::vec3 pos, uint64_t voxelIndex)
         : pos_(pos)
         , voxelIndex_(voxelIndex)
     {
     }
-    const tgt::vec3* pos_;
+    ProtoVesselGraphEdgeElement(const ProtoVesselGraphEdgeElement& other)
+        : pos_(other.pos_)
+        , voxelIndex_(other.voxelIndex_)
+    {
+    }
+    ProtoVesselGraphEdgeElement& operator=(const ProtoVesselGraphEdgeElement& other) {
+        pos_ = other.pos_;
+        voxelIndex_ = other.voxelIndex_;
+        return *this;
+    }
+    tgt::vec3 pos_;
     uint64_t voxelIndex_;
 };
 
+struct ProtoVesselGraph;
+
 struct ProtoVesselGraphEdge {
     typedef static_kdtree::Tree<ProtoVesselGraphEdgeElement, static_kdtree::SharedNodeStorage<ProtoVesselGraphEdgeElement>> ElementTree;
-    ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, std::vector<tgt::svec3>&& voxels, static_kdtree::SharedMemoryTreeBuilder<ProtoVesselGraphEdgeElement>& treeBuilder);
+    ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, DiskArray<tgt::svec3> voxels, ProtoVesselGraph& graph);
     static_kdtree::SearchNearestResultSet<ProtoVesselGraphEdgeElement> findClosestVoxelIndex(tgt::vec3) const;
-    std::vector<tgt::vec3>& voxels() {
+    DiskArray<tgt::vec3>& voxels() {
         return voxelsRw_;
     }
-    const std::vector<tgt::vec3>& voxels() const {
+    const DiskArray<tgt::vec3>& voxels() const {
         return voxelsRw_;
     }
 
     VGEdgeID id_;
     VGNodeID node1_;
     VGNodeID node2_;
-    std::vector<tgt::svec3> voxels_;
-    std::vector<tgt::vec3> voxelsRw_;
+    DiskArray<tgt::svec3> voxels_;
+    DiskArray<tgt::vec3> voxelsRw_;
     ElementTree tree_;
 };
 
@@ -89,12 +102,16 @@ struct ProtoVesselGraph {
     ProtoVesselGraph(tgt::mat4 toRWMatrix);
 
     VGNodeID insertNode(std::vector<tgt::svec3>&& voxels, bool atSampleBorder);
-    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, std::vector<tgt::svec3>&& voxels);
+    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, DiskArray<tgt::svec3> voxels);
 
     std::unique_ptr<VesselGraph> createVesselGraph(BranchIdVolumeReader& segmentedVolumeReader, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress);
 
     std::vector<ProtoVesselGraphNode> nodes_;
     std::vector<ProtoVesselGraphEdge> edges_;
+
+    DiskArrayStorage<tgt::svec3> voxelStorage_;
+    DiskArrayStorage<tgt::vec3> rwvoxelStorage_;
+
     tgt::mat4 toRWMatrix_;
     TreeBuilder treeBuilder_;
 };
