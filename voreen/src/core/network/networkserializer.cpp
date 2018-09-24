@@ -118,6 +118,8 @@ void NetworkSerializer::process(TiXmlDocument& document) {
         case 18:
             NetworkConverter18to19().convert(processorNetworkNode);
         case 19:
+            NetworkConverter19to20().convert(processorNetworkNode);
+        case 20:
             break;
 
         default:

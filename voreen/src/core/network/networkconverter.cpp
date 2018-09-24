@@ -597,13 +597,45 @@ void NetworkConverter18to19::convert(TiXmlElement* networkElem) {
                     if (propName->find(classificationName) == 0) {
                         std::string suffix = propName->substr(classificationName.size());
                         // There might exist some old MultiVolumeRaycaster Workspaces
-                        // which have serialized there Options (2, 3, 4) as well.
+                        // which have serialized their Options (2, 3, 4) as well.
                         if (suffix == "" || suffix == "2" || suffix == "3" || suffix == "4") {
                             while (TiXmlElement* optionNode = propertyNode->FirstChildElement("Options")) {
                                 propertyNode->RemoveChild(optionNode);
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+void NetworkConverter19to20::convert(TiXmlElement* networkElem) {
+    TiXmlElement* processorsNode = networkElem->FirstChildElement("Processors");
+    if (!processorsNode) {
+        LWARNING("No <Processors> node found in <ProcessorNetwork>");
+        return;
+    }
+
+    for (TiXmlElement* node = processorsNode->FirstChildElement("Processor"); node; node = node->NextSiblingElement("Processor")) {
+        const std::string* type = node->Attribute(std::string("type"));
+        if (type && *type == "OctreeCreator") {
+            TiXmlElement* propertiesNode = node->FirstChildElement("Properties");
+            if (propertiesNode) {
+                std::vector<TiXmlElement*> deletedProperties;
+                for (TiXmlElement* propertyNode = propertiesNode->FirstChildElement("Property"); propertyNode; propertyNode = propertyNode->NextSiblingElement("Property")) {
+                    const std::string* propName = propertyNode->Attribute(std::string("name"));
+                    if (!propName)
+                        continue;
+
+                    // AsyncComputProcessor brings it's own equivalents of the following properties.
+                    if (*propName == "generateOctree" || *propName == "statusProperty" || *propName == "progressProperty" || *propName == "autogenerateOctree") {
+                        deletedProperties.push_back(propertyNode);
+                    }
+                }
+                // Delete selected nodes.
+                for (TiXmlElement* node : deletedProperties) {
+                    propertiesNode->RemoveChild(node);
                 }
             }
         }

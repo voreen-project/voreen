@@ -54,7 +54,7 @@ class VRN_CORE_API ProcessorNetwork : public Serializable, public ProcessorObser
 public:
 
     /// Current Network version. Used to check for incompatible versions.
-    static const int NETWORK_VERSION ;
+    static const int NETWORK_VERSION;
     /// All imported networks whose version is lower than defined by this constant will emit a warning.
     static const int WARNING_VERSION;
     /// Voreen version corresponding to the WARNING_VERSION network version

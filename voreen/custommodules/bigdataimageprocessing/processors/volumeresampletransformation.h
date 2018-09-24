@@ -121,7 +121,6 @@ public:
     std::string getClassName() const      { return "VolumeResampleTransformation";    }
     std::string getCategory() const       { return "Volume Processing"; }
     CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
-    bool usesExpensiveComputation() const { return true; }
     virtual bool isReady() const;
 
     virtual ComputeInput prepareComputeInput();

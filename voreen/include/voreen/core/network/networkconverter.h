@@ -215,6 +215,15 @@ public:
     virtual void convert(TiXmlElement* networkElem);
 };
 
+/**
+ * Converter for Voreen 5.1
+ * - Make OctreeCreator inherit AsyncComputeProcessor
+ */
+class NetworkConverter19to20 : public NetworkConverter {
+public:
+    virtual void convert(TiXmlElement* networkElem);
+};
+
 } // namespace
 
 #endif // VRN_NETWORKCONVERTER_H
