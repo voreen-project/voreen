@@ -57,6 +57,7 @@ Particles::Particles()
     , radius_("radius", "Point Radius", 3, 1, 10)
     , bufferObject_(0)
     , vertexArrayID_(0)
+    , time_(0)
 {
     addPort(outport_);
 
@@ -114,7 +115,6 @@ void Particles::initialize() {
     }
 
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER );
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER,  2,  bufferObject_);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0 );
     glBindVertexArray(0);
 
@@ -172,21 +172,22 @@ void Particles::process() {
         return;
 
     glBindVertexArray(vertexArrayID_);
-    glBindBuffer(GL_ARRAY_BUFFER, bufferObject_);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufferObject_);
 
     // activate compute shader
     tgt::Shader* computeProg = computeShader_.getShader();
     computeProg->activate();
 
-    static float periodic = 0.f;
-    periodic += 0.01f;
-    periodic = std::fmod(periodic, 2.f * tgt::PIf);
-    computeProg->setUniform("time_", periodic);
+    time_ += 0.01f;
+    time_ = std::fmod(time_, 2.f * tgt::PIf);
+    computeProg->setUniform("time_", time_);
 
     glDispatchCompute( NUM_PARTICLES  / WORK_GROUP_SIZE, 1,  1 );
     glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
     computeProg->deactivate();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, 0);
 
+    glBindBuffer(GL_ARRAY_BUFFER, bufferObject_);
     outport_.activateTarget();
     outport_.clearTarget();
 
