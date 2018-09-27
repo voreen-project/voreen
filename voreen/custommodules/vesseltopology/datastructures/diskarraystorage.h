@@ -82,6 +82,9 @@ public:
     const_reverse_iterator rbegin() const;
     const_reverse_iterator rend() const;
 
+    const void* storageIdentifier() const {
+        return file_;
+    }
 private:
     boost::iostreams::mapped_file* file_;
     size_t begin_;
@@ -106,11 +109,15 @@ public:
     // (As a consequence) only one builder can be active at a time.
     DiskArrayBuilder<Element> build();
 
+    const void* identifier() const {
+        return &file_;
+    }
 private:
     friend class DiskArrayBuilder<Element>;
     size_t storeElement(const Element& elm);
 
-    DiskArray<Element> store(const Element* elements, size_t len);
+    template<typename Arr>
+    DiskArray<Element> store_internal(const Arr& array);
     void ensureFit(size_t numElements);
 
     boost::iostreams::mapped_file file_;
@@ -310,35 +317,32 @@ void DiskArrayStorage<Element>::ensureFit(size_t numElements) {
 
 template<typename Element>
 DiskArray<Element> DiskArrayStorage<Element>::store(const std::vector<Element>& elements) {
-    if(elements.empty()) {
-        return store(nullptr, 0);
-    } else {
-        return store(&*elements.begin(), elements.size());
-    }
+    return store_internal(elements);
 }
 
 template<typename Element>
 DiskArray<Element> DiskArrayStorage<Element>::store(const DiskArray<Element>& elements) {
-    if(elements.empty()) {
-        return store(nullptr, 0);
-    } else {
-        return store(elements.begin(), elements.size());
-    }
+    return store_internal(elements);
 }
 
 template<typename Element>
-DiskArray<Element> DiskArrayStorage<Element>::store(const Element* elements, size_t len) {
-    size_t oldNumElements = numElements_;
-    numElements_ += len;
+template<typename Arr>
+DiskArray<Element> DiskArrayStorage<Element>::store_internal(const Arr& array) {
+    if(array.empty()) {
+        return DiskArray<Element>(nullptr, 0, 0);
+    } else {
+        size_t oldNumElements = numElements_;
+        numElements_ += array.size();
 
-    ensureFit(numElements_);
+        ensureFit(numElements_);
 
-    Element* data = reinterpret_cast<Element*>(file_.data());
-    tgtAssert(file_.is_open(), "file not opened");
-    tgtAssert(data, "Invalid data pointer");
-    std::copy(elements, elements + len, data + oldNumElements);
+        Element* data = reinterpret_cast<Element*>(file_.data());
+        tgtAssert(file_.is_open(), "file not opened");
+        tgtAssert(data, "Invalid data pointer");
+        std::copy(&*array.begin(), &*array.end(), data + oldNumElements);
 
-    return DiskArray<Element>(&file_, oldNumElements, numElements_);
+        return DiskArray<Element>(&file_, oldNumElements, numElements_);
+    }
 }
 
 template<typename Element>

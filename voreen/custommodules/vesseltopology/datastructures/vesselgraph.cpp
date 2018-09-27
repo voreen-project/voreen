@@ -759,7 +759,7 @@ VGEdgeID VesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, const std::vect
 }
 
 VGEdgeID VesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, const VesselGraphEdge& path_definition, VesselGraphEdgeUUID uuid) {
-    return insertEdge(node1, node2, voxelStorage_->store(path_definition.voxels_), uuid);
+    return insertEdge(node1, node2, path_definition.voxels_, uuid);
 }
 
 VGEdgeID VesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, const VesselGraphEdge& path_definition) {
