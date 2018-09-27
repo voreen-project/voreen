@@ -109,12 +109,15 @@ public:
     // (As a consequence) only one builder can be active at a time.
     DiskArrayBuilder<Element> build();
 
+    // Only store a single Element and return the storage position with which it can be retrieved
+    size_t storeElement(const Element& elm);
+    size_t size() const;
+
     const void* identifier() const {
         return &file_;
     }
 private:
     friend class DiskArrayBuilder<Element>;
-    size_t storeElement(const Element& elm);
 
     template<typename Arr>
     DiskArray<Element> store_internal(const Arr& array);
@@ -131,7 +134,7 @@ class DiskArrayBuilder {
 public:
     DiskArrayBuilder(DiskArrayStorage<Element>& storage);
     DiskArrayBuilder(DiskArrayBuilder&& other);
-    void push(const Element&);
+    size_t push(const Element&);
     DiskArray<Element> finalize() &&;
 
 private:
@@ -361,6 +364,11 @@ size_t DiskArrayStorage<Element>::storeElement(const Element& elm) {
 }
 
 template<typename Element>
+size_t DiskArrayStorage<Element>::size() const {
+    return numElements_;
+}
+
+template<typename Element>
 DiskArrayBuilder<Element> DiskArrayStorage<Element>::build() {
     return DiskArrayBuilder<Element>(*this);
 }
@@ -370,8 +378,8 @@ DiskArrayBuilder<Element> DiskArrayStorage<Element>::build() {
 template<typename Element>
 DiskArrayBuilder<Element>::DiskArrayBuilder(DiskArrayStorage<Element>& storage)
     : storage_(storage)
-    , begin_(storage.numElements_)
-    , end_(storage.numElements_)
+    , begin_(storage.size())
+    , end_(storage.size())
 {
 }
 
@@ -385,11 +393,12 @@ DiskArrayBuilder<Element>::DiskArrayBuilder(DiskArrayBuilder&& other)
 }
 
 template<typename Element>
-void DiskArrayBuilder<Element>::push(const Element& elm) {
+size_t DiskArrayBuilder<Element>::push(const Element& elm) {
     size_t insertPos = storage_.storeElement(elm);
     (void)insertPos; //mark variable as used even in release builds...
     tgtAssert(insertPos == end_, "Invalid insert pos. Was storage used since builder was created?");
     ++end_;
+    return insertPos - begin_;
 }
 
 template<typename Element>

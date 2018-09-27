@@ -26,6 +26,7 @@
 
 #include "tgt/vector.h"
 #include "tgt/filesystem.h"
+#include "diskarraystorage.h"
 #include <fstream>
 #include <vector>
 #include <boost/iostreams/device/mapped_file.hpp>
@@ -126,16 +127,7 @@ private:
 };
 
 template<typename Element>
-class SharedNodeStorage {
-public:
-    SharedNodeStorage(const boost::iostreams::mapped_file_source& file_, size_t numNodes_);
-
-    const Node<Element>& operator[](size_t index) const;
-    size_t size() const;
-private:
-    const boost::iostreams::mapped_file_source& file_;
-    size_t numNodes_;
-};
+using SharedNodeStorage = DiskArray<Node<Element>>;
 
 template<typename Element, typename Storage = NodeStorage<Element>>
 class Tree;
@@ -147,9 +139,7 @@ public:
 
     Tree<Element, SharedNodeStorage<Element>> buildTree(ElementArrayBuilder<Element>&& elements);
 private:
-    NodeStorageBuilder<Element> storage_;
-    boost::iostreams::mapped_file_source mappedStorage_;
-    const std::string storagefilename_;
+    DiskArrayStorage<Node<Element>> storage_;
 };
 
 template<typename Element>
@@ -456,25 +446,6 @@ size_t NodeStorage<Element>::size() const {
     return numNodes_;
 }
 
-/// Impl: SharedNodeStorage----------------------------------------------------------
-template<typename Element>
-SharedNodeStorage<Element>::SharedNodeStorage(const boost::iostreams::mapped_file_source& file, size_t numNodes)
-    : file_(file)
-    , numNodes_(numNodes)
-{
-    if(numNodes_ > 0) {
-        tgtAssert(file_.is_open(), "File not open");
-    }
-}
-template<typename Element>
-const Node<Element>& SharedNodeStorage<Element>::operator[](size_t index) const {
-    const Node<Element>* data = reinterpret_cast<const Node<Element>*>(file_.data());
-    return data[index];
-}
-template<typename Element>
-size_t SharedNodeStorage<Element>::size() const {
-    return numNodes_;
-}
 /// Impl: SearchNearestResult ---------------------------------------------------------------
 template<typename Element>
 SearchNearestResult<Element> SearchNearestResult<Element>::none() {
@@ -504,8 +475,8 @@ void SearchNearestResult<Element>::tryInsert(typename Element::CoordType distSq,
 /// Impl: SharedMemoryTreeBuilder ----------------------------------------------------
 const size_t NO_NODE_ID = -1;
 
-template<typename Element>
-static size_t buildTreeRecursively(NodeStorageBuilder<Element>& nodes, ElementArrayView<Element>& elements, int depth) {
+template<typename Element, typename Builder>
+static size_t buildTreeRecursively(Builder& nodes, ElementArrayView<Element>& elements, int depth) {
     if(elements.size() == 0) {
         return NO_NODE_ID;
     } else {
@@ -520,8 +491,6 @@ static size_t buildTreeRecursively(NodeStorageBuilder<Element>& nodes, ElementAr
 template<typename Element>
 SharedMemoryTreeBuilder<Element>::SharedMemoryTreeBuilder(const std::string& storagefilename)
     : storage_(storagefilename)
-    , mappedStorage_() // To be (re)opened later
-    , storagefilename_(storagefilename)
 {
 }
 
@@ -530,28 +499,13 @@ Tree<Element, SharedNodeStorage<Element>> SharedMemoryTreeBuilder<Element>::buil
     auto elems = std::move(elements).finalize();
     auto elem_view = elems.view();
 
-    size_t prevSize = storage_.size();
-    size_t root = buildTreeRecursively(storage_, elem_view, 0);
-    size_t numNewNodes = storage_.size() - prevSize;
+    DiskArrayBuilder<Node<Element>> builder = storage_.build();
+    size_t root = buildTreeRecursively(builder, elem_view, 0);
 
-    // Reopen file if size changes
-    // Note that indices are still valid!
-    if(numNewNodes > 0) {
-        mappedStorage_.close(); // First close old mapping
-        storage_.flush(); // Make sure all nodes are written to the file
-
-        boost::iostreams::mapped_file_params openParams;
-        openParams.path = storagefilename_;
-
-        mappedStorage_.open(openParams); // now reopen (with new size)
-        tgtAssert(mappedStorage_.is_open(), "File not open");
-    }
-
-    return Tree<Element, SharedNodeStorage<Element>>(root, SharedNodeStorage<Element>(mappedStorage_, numNewNodes));
+    return Tree<Element, SharedNodeStorage<Element>>(root, SharedNodeStorage<Element>(std::move(builder).finalize()));
 }
 
 /// Impl: Tree -----------------------------------------------------------------------
-
 template<typename Element, typename Storage>
 Tree<Element, Storage>::Tree(const std::string& storagefilename, ElementArrayBuilder<Element>&& elements) {
 
