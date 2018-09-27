@@ -203,6 +203,7 @@ struct EdgeVoxelRef {
     typedef float CoordType;
 
     tgt::vec3 rwPos;
+    float padding_;
     const ProtoVesselGraphEdge* edge;
 
     inline const tgt::Vector3<CoordType>& getPos() const {
@@ -211,11 +212,13 @@ struct EdgeVoxelRef {
 
     EdgeVoxelRef(tgt::vec3 rwPos, const ProtoVesselGraphEdge& edge)
         : rwPos(rwPos)
+        , padding_(0.0)
         , edge(&edge)
     {
     }
     EdgeVoxelRef(const EdgeVoxelRef& other)
         : rwPos(other.rwPos)
+        , padding_(0.0)
         , edge(other.edge)
     {
     }

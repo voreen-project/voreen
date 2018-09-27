@@ -46,11 +46,13 @@ struct ProtoVesselGraphEdgeElement {
 
     ProtoVesselGraphEdgeElement(const tgt::vec3 pos, uint64_t voxelIndex)
         : pos_(pos)
+        , padding_(0.0)
         , voxelIndex_(voxelIndex)
     {
     }
     ProtoVesselGraphEdgeElement(const ProtoVesselGraphEdgeElement& other)
         : pos_(other.pos_)
+        , padding_(0.0)
         , voxelIndex_(other.voxelIndex_)
     {
     }
@@ -60,6 +62,7 @@ struct ProtoVesselGraphEdgeElement {
         return *this;
     }
     tgt::vec3 pos_;
+    float padding_; // Avoid invalid write with uninitialized memory warnings in valgrind
     uint64_t voxelIndex_;
 };
 
