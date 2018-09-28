@@ -43,6 +43,7 @@ VesselGraphSave::VesselGraphSave()
     addPort(inport_);
 
     addProperty(graphFilePath_);
+        ON_CHANGE(graphFilePath_, VesselGraphSave, saveCurrentGraph);
     addProperty(saveButton_);
         ON_CHANGE(saveButton_, VesselGraphSave, saveCurrentGraph);
     addProperty(continousSave_);
