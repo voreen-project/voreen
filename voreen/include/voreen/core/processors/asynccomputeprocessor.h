@@ -332,7 +332,6 @@ void AsyncComputeProcessor<I, O>::ComputeThread::threadMain() {
     std::unique_ptr<ProgressReporter> progress;
     if(ProcessorBackgroundThread<AsyncComputeProcessor<I,O>>::processor_->synchronousComputation_.get()) {
         progress.reset(new NoopProgressReporter());
-        
     } else {
         progress.reset(new ComputeProgressReporter(*ProcessorBackgroundThread<AsyncComputeProcessor<I, O>>::processor_));
     }
@@ -379,9 +378,6 @@ void AsyncComputeProcessor<I,O>::ComputeProgressReporter::setProgress(float prog
         auto remainingDuration = expectedTotalDuration - computeDuration;
         auto remainingDurationMillis = std::chrono::duration_cast<std::chrono::milliseconds>(remainingDuration);
         std::string timeFormat(formatTime(remainingDurationMillis.count()));
-
-        // Remove old commands of this progress reporter.
-        VoreenApplication::app()->getCommandQueue()->removeAll(this);
 
         // Enqueue new command for an ui update.
         VoreenApplication::app()->getCommandQueue()->enqueue(this, LambdaFunctionCallback([this, timeFormat, progress] {
