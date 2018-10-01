@@ -41,11 +41,6 @@ VesselSkeletonVoxel::VesselSkeletonVoxel(const tgt::vec3& pos, float minDistToSu
     , numSurfaceVoxels_(numSurfaceVoxels)
     , volume_(volume)
 {
-    //std::cout << "VesselSkeletonVoxel" << sizeof(VesselSkeletonVoxel) << std::endl;
-    //std::cout << "VesselGraphEdgePathProperties" << sizeof(VesselGraphEdgePathProperties) << std::endl;
-    //std::cout << "VesselGraphEdge" << sizeof(VesselGraphEdge) << std::endl;
-    //std::cout << "VesselGraphNode" << sizeof(VesselGraphNode) << std::endl;
-    //asm("int $3");
 }
 
 VesselSkeletonVoxel::VesselSkeletonVoxel()
@@ -341,29 +336,33 @@ VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const Vess
     tgtAssert(!std::isnan(output.length_), "Invalid length");
     return output;
 }
-void VesselGraphEdgePathProperties::serialize(Serializer& s) const {
-    s.serialize("length", length_);
-    s.serialize("volume", volume_);
-    s.serialize("minRadiusAvg", minRadiusAvg_);
-    s.serialize("minRadiusStdDeviation", minRadiusStdDeviation_);
-    s.serialize("maxRadiusAvg", maxRadiusAvg_);
-    s.serialize("maxRadiusStdDeviation", maxRadiusStdDeviation_);
-    s.serialize("avgRadiusAvg", avgRadiusAvg_);
-    s.serialize("avgRadiusStdDeviation", avgRadiusStdDeviation_);
-    s.serialize("roundnessAvg", roundnessAvg_);
-    s.serialize("roundnessStdDeviation", roundnessStdDeviation_);
+VesselGraphEdgePathPropertiesSerializable::VesselGraphEdgePathPropertiesSerializable()
+    : inner_()
+{
 }
-void VesselGraphEdgePathProperties::deserialize(Deserializer& s) {
-    s.deserialize("length", length_);
-    s.deserialize("volume", volume_);
-    s.deserialize("minRadiusAvg", minRadiusAvg_);
-    s.deserialize("minRadiusStdDeviation", minRadiusStdDeviation_);
-    s.deserialize("maxRadiusAvg", maxRadiusAvg_);
-    s.deserialize("maxRadiusStdDeviation", maxRadiusStdDeviation_);
-    s.deserialize("avgRadiusAvg", avgRadiusAvg_);
-    s.deserialize("avgRadiusStdDeviation", avgRadiusStdDeviation_);
-    s.deserialize("roundnessAvg", roundnessAvg_);
-    s.deserialize("roundnessStdDeviation", roundnessStdDeviation_);
+void VesselGraphEdgePathPropertiesSerializable::serialize(Serializer& s) const {
+    s.serialize("length", inner_.length_);
+    s.serialize("volume", inner_.volume_);
+    s.serialize("minRadiusAvg", inner_.minRadiusAvg_);
+    s.serialize("minRadiusStdDeviation", inner_.minRadiusStdDeviation_);
+    s.serialize("maxRadiusAvg", inner_.maxRadiusAvg_);
+    s.serialize("maxRadiusStdDeviation", inner_.maxRadiusStdDeviation_);
+    s.serialize("avgRadiusAvg", inner_.avgRadiusAvg_);
+    s.serialize("avgRadiusStdDeviation", inner_.avgRadiusStdDeviation_);
+    s.serialize("roundnessAvg", inner_.roundnessAvg_);
+    s.serialize("roundnessStdDeviation", inner_.roundnessStdDeviation_);
+}
+void VesselGraphEdgePathPropertiesSerializable::deserialize(Deserializer& s) {
+    s.deserialize("length", inner_.length_);
+    s.deserialize("volume", inner_.volume_);
+    s.deserialize("minRadiusAvg", inner_.minRadiusAvg_);
+    s.deserialize("minRadiusStdDeviation", inner_.minRadiusStdDeviation_);
+    s.deserialize("maxRadiusAvg", inner_.maxRadiusAvg_);
+    s.deserialize("maxRadiusStdDeviation", inner_.maxRadiusStdDeviation_);
+    s.deserialize("avgRadiusAvg", inner_.avgRadiusAvg_);
+    s.deserialize("avgRadiusStdDeviation", inner_.avgRadiusStdDeviation_);
+    s.deserialize("roundnessAvg", inner_.roundnessAvg_);
+    s.deserialize("roundnessStdDeviation", inner_.roundnessStdDeviation_);
 }
 
 VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, VGEdgeID id, VGNodeID node1ID, VGNodeID node2ID, DiskArray<VesselSkeletonVoxel>&& voxels, VesselGraphEdgeUUID uuid)
@@ -621,24 +620,36 @@ size_t VesselGraphEdge::getNumValidVoxels() const {
             });
 }
 
-void VesselGraphEdge::serialize(Serializer& s) const {
-    s.serialize("id", id_.raw());
-    s.serialize("node1", node1_.raw());
-    s.serialize("node2", node2_.raw());
-    s.serialize("distance", distance_);
+VesselGraphEdgeSerializable::VesselGraphEdgeSerializable(const VesselGraphEdge& e)
+    : inner_(e)
+{
+}
+void VesselGraphEdgeSerializable::serialize(Serializer& s) const {
+    s.serialize("id", inner_.id_.raw());
+    s.serialize("node1", inner_.node1_.raw());
+    s.serialize("node2", inner_.node2_.raw());
+    s.serialize("distance", inner_.distance_);
 
-    if(voxels_.empty()) {
-        s.serialize("pathProperties", pathProps_);
+    if(inner_.voxels_.empty()) {
+        VesselGraphEdgePathPropertiesSerializable props;
+        props.inner_ = inner_.pathProps_;
+        s.serialize("pathProperties", props);
     } else {
         std::vector<VesselSkeletonVoxelSerializable> voxels;
         voxels.reserve(voxels.size());
-        for(const auto& voxel : voxels_) {
+        for(const auto& voxel : inner_.voxels_) {
             voxels.emplace_back(voxel);
         }
         s.serialize("skeletonVoxels", voxels);
     }
 }
-void VesselGraphEdge::deserialize(Deserializer& s) {
+void VesselGraphEdgeSerializable::deserialize(Deserializer&) {
+    tgtAssert(false, "Cannot deserialize VesselGraphEdgeSerializable");
+}
+void VesselGraphEdgeDeserializable::serialize(Serializer&) const {
+    tgtAssert(false, "Cannot serialize VesselGraphEdgeDeserializable");
+}
+void VesselGraphEdgeDeserializable::deserialize(Deserializer& s) {
     uint32_t id, n1, n2;
     s.deserialize("id", id);
     s.deserialize("node1", n1);
@@ -646,23 +657,20 @@ void VesselGraphEdge::deserialize(Deserializer& s) {
     id_ = id;
     node1_ = n1;
     node2_ = n2;
-    s.deserialize("distance", distance_);
 
-    bool noSkeletonVoxelsTag = false;
     try {
-        std::vector<VesselSkeletonVoxelSerializable> voxels(voxels_.begin(), voxels_.end());
+        std::vector<VesselSkeletonVoxelSerializable> voxels;
         s.deserialize("skeletonVoxels", voxels);
-        auto builder = graph_->voxelStorage_->build();
+
         for(const auto& voxel : voxels) {
-            builder.push(voxel.inner_);
+            voxels_.push_back(voxel.inner_);
         }
-        voxels_ = std::move(builder).finalize();
-        pathProps_ = VesselGraphEdgePathProperties::fromPath(getNode1(), getNode2(), voxels_);
     } catch (SerializationException s) {
-        noSkeletonVoxelsTag = true;
     }
-    if(noSkeletonVoxelsTag || voxels_.empty()) {
-        s.deserialize("pathProperties", pathProps_);
+    if(voxels_.empty()) {
+        VesselGraphEdgePathPropertiesSerializable props;
+        s.deserialize("pathProperties", props);
+        pathProps_ = props.inner_;
     }
 }
 
@@ -833,13 +841,18 @@ void VesselGraph::serialize(Serializer& s) const {
     for(const auto& node : nodes_) {
         nodes.push_back(VesselGraphNodeSerializable(node));
     }
-
     s.serialize("nodes", nodes);
-    s.serialize("edges", edges_);
+
+
+    std::vector<VesselGraphEdgeSerializable> edges;
+    for(const auto& edge : edges_) {
+        edges.emplace_back(edge);
+    }
+    s.serialize("edges", edges);
+
     s.serialize("bounds", bounds_);
 }
 void VesselGraph::deserialize(Deserializer& s) {
-    // Yeah, this is quite ugly... But we cannot set the graph pointer in Serializable::deserialize()
     std::vector<VesselGraphNodeSerializable> nodes;
     s.deserialize("nodes", nodes);
     for(const auto& node : nodes) {
@@ -847,13 +860,18 @@ void VesselGraph::deserialize(Deserializer& s) {
         tgtAssert(index == node.inner_.getID(), "Invalid node id after deserialization");
     }
 
-    std::function<VesselGraphEdge()> func =  [this] () {
-        // Set the graph pointer BEFORE deserialization so that we can use the graph in deserialize()
-        VesselGraphEdge edge;
-        edge.graph_ = this;
-        return edge;
-    };
-    s.deserialize("edges", edges_, "", func);
+    std::vector<VesselGraphEdgeDeserializable> edges;
+    s.deserialize("edges", edges, "");
+    for(const auto& edge : edges) {
+        VGEdgeID index;
+        if(edge.voxels_.empty()) {
+            index = insertEdge(edge.node1_, edge.node2_, edge.pathProps_);
+        } else {
+            index = insertEdge(edge.node1_, edge.node2_, edge.voxels_);
+        }
+        tgtAssert(index == edge.id_, "Invalid node id after deserialization");
+    }
+
     s.deserialize("bounds", bounds_);
 }
 
