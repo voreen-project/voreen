@@ -36,6 +36,7 @@
 #include <stack>
 #include <iostream>
 #include <typeinfo>
+#include <functional>
 
 #include "tinyxml/tinyxml.h"
 
@@ -661,7 +662,9 @@ public:
     inline void deserializeCollectionConstIteratorItems(
         const std::string& key,
         T& collection,
-        const std::string& itemKey = XmlSerializationConstants::ITEMNODE);
+        const std::string& itemKey,
+        const std::function<typename T::value_type()>&
+        );
 
     /**
      * Helper function for deserializing data collections like STL container.
@@ -686,7 +689,9 @@ public:
     inline void deserializeCollection(
         const std::string& key,
         T& collection,
-        const std::string& itemKey = XmlSerializationConstants::ITEMNODE);
+        const std::string& itemKey,
+        const std::function<typename T::value_type()>&
+        );
 
     /**
      * Helper function for deserializing data maps like STL maps.
@@ -1666,7 +1671,7 @@ inline void XmlDeserializer::deserializeAttributeFromNode(const std::string& nod
 }
 
 template<class T>
-inline void XmlDeserializer::deserializeCollectionConstIteratorItems(const std::string& key, T& collection, const std::string& itemKey) {
+inline void XmlDeserializer::deserializeCollectionConstIteratorItems(const std::string& key, T& collection, const std::string& itemKey, const std::function<typename T::value_type()>& constructor) {
     TiXmlElement* element = getNextXmlElement(key);
 
     TemporaryNodeChanger nodeChanger(*this, element);
@@ -1675,7 +1680,7 @@ inline void XmlDeserializer::deserializeCollectionConstIteratorItems(const std::
         collection.clear();
 
         while (true) {
-            typename T::value_type item;
+            typename T::value_type item = constructor();
 
             try {
                 // Deserialize primitive type from XML attribute?
@@ -1701,10 +1706,10 @@ inline void XmlDeserializer::deserializeCollectionConstIteratorItems(const std::
 }
 
 template<class T>
-inline void XmlDeserializer::deserializeCollection(const std::string& key, T& collection, const std::string& itemKey) {
+inline void XmlDeserializer::deserializeCollection(const std::string& key, T& collection, const std::string& itemKey, const std::function<typename T::value_type()>& constructor) {
     // Never deserialize pointer from content?
     if (!usePointerContentSerialization_) {
-        deserializeCollectionConstIteratorItems(key, collection, itemKey);
+        deserializeCollectionConstIteratorItems(key, collection, itemKey, constructor);
         return;
     }
 

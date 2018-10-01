@@ -129,8 +129,7 @@ private:
         Port* port_;
     };
 
-    friend class XmlDeserializer;
-    friend class JsonDeserializer;
+    friend class Deserializer;
     /**
      * Default constructor for serialization purposes.
      */

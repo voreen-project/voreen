@@ -36,6 +36,7 @@
 #include <stack>
 #include <iostream>
 #include <typeinfo>
+#include <functional>
 
 #include "tgt/vector.h"
 #include "tgt/matrix.h"
@@ -655,7 +656,9 @@ public:
     void deserializeCollectionConstIteratorItems(
         const std::string& key,
         T& collection,
-        const std::string& itemKey = XmlSerializationConstants::ITEMNODE);
+        const std::string& itemKey,
+        const std::function<typename T::value_type()>&
+        );
 
     /**
      * Helper function for deserializing data collections like STL container.
@@ -680,7 +683,9 @@ public:
     void deserializeCollection(
         const std::string& key,
         T& collection,
-        const std::string& itemKey = XmlSerializationConstants::ITEMNODE);
+        const std::string& itemKey,
+        const std::function<typename T::value_type()>&
+        );
 
     /**
      * Helper function for deserializing data maps like STL maps.
@@ -888,22 +893,22 @@ private:
     void readFromValue(const rapidjson::Value& val, std::pair<S, T>& data);
 
     template<class T>
-    void readFromValue(const rapidjson::Value& val, std::vector<T>& data);
+    void readFromValue(const rapidjson::Value& val, std::vector<T>& data, const std::function<T()>& constructor = [] () { return T(); });
 
     template<class T>
-    void readFromValue(const rapidjson::Value& val, std::deque<T>& data);
+    void readFromValue(const rapidjson::Value& val, std::deque<T>& data, const std::function<T()>& constructor = [] () { return T(); });
 
     template<class T>
-    void readFromValue(const rapidjson::Value& val, std::list<T>& data);
+    void readFromValue(const rapidjson::Value& val, std::list<T>& data, const std::function<T()>& constructor = [] () { return T(); });
 
     template<class T, class C>
-    void readFromValue(const rapidjson::Value& val, std::set<T, C>& data);
+    void readFromValue(const rapidjson::Value& val, std::set<T, C>& data, const std::function<T()>& constructor = [] () { return T(); });
 
     template<class T, class U, class C>
     void readFromValue(const rapidjson::Value& val, std::map<T, U, C>& data);
 
     template<class T>
-    void readFromValueIntoBackInserter(const rapidjson::Value& val, T& data);
+    void readFromValueIntoBackInserter(const rapidjson::Value& val, T& collection, const std::function<typename T::value_type()>& constructor);
 
     template<class T>
     void readFromValueIntoMap(const rapidjson::Value& val, T& data, const std::string& valueKey = XmlSerializationConstants::VALUENODE, const std::string& keyKey = XmlSerializationConstants::KEYNODE);
@@ -997,13 +1002,13 @@ void JsonDeserializer::deserialize(const std::string& key, std::pair<S, T>& data
 }
 
 template<class T>
-void JsonDeserializer::deserializeCollectionConstIteratorItems(const std::string& key, T& collection, const std::string& /*itemKey (not meaningful for json) */) {
-    deserializeFromMember(key, collection);
+void JsonDeserializer::deserializeCollectionConstIteratorItems(const std::string& key, T& collection, const std::string& /*itemKey (not meaningful for json) */, const std::function<typename T::value_type()>& constructor) {
+    readFromValue(getMember(key), collection, constructor);
 }
 
 template<class T>
-void JsonDeserializer::deserializeCollection(const std::string& key, T& collection, const std::string& itemKey) {
-    deserializeCollectionConstIteratorItems(key, collection, itemKey);
+void JsonDeserializer::deserializeCollection(const std::string& key, T& collection, const std::string& itemKey, const std::function<typename T::value_type()>& constructor) {
+    deserializeCollectionConstIteratorItems(key, collection, itemKey, constructor);
 }
 
 template<class T>
@@ -1035,23 +1040,23 @@ void JsonDeserializer::readFromValue(const rapidjson::Value& val, std::pair<S, T
 }
 
 template<class T>
-void JsonDeserializer::readFromValue(const rapidjson::Value& val, std::vector<T>& data) {
-    readFromValueIntoBackInserter(val, data);
+void JsonDeserializer::readFromValue(const rapidjson::Value& val, std::vector<T>& data, const std::function<T()>& constructor) {
+    readFromValueIntoBackInserter(val, data, constructor);
 }
 
 template<class T>
-void JsonDeserializer::readFromValue(const rapidjson::Value& val, std::deque<T>& data) {
-    readFromValueIntoBackInserter(val, data);
+void JsonDeserializer::readFromValue(const rapidjson::Value& val, std::deque<T>& data, const std::function<T()>& constructor) {
+    readFromValueIntoBackInserter(val, data, constructor);
 }
 
 template<class T>
-void JsonDeserializer::readFromValue(const rapidjson::Value& val, std::list<T>& data) {
-    readFromValueIntoBackInserter(val, data);
+void JsonDeserializer::readFromValue(const rapidjson::Value& val, std::list<T>& data, const std::function<T()>& constructor) {
+    readFromValueIntoBackInserter(val, data, constructor);
 }
 
 template<class T, class C>
-void JsonDeserializer::readFromValue(const rapidjson::Value& val, std::set<T, C>& data) {
-    readFromValueIntoBackInserter(val, data);
+void JsonDeserializer::readFromValue(const rapidjson::Value& val, std::set<T, C>& data, const std::function<T()>& constructor) {
+    readFromValueIntoBackInserter(val, data, constructor);
 }
 
 template<class T, class U, class C>
@@ -1060,7 +1065,7 @@ void JsonDeserializer::readFromValue(const rapidjson::Value& val, std::map<T, U,
 }
 
 template<class T>
-void JsonDeserializer::readFromValueIntoBackInserter(const rapidjson::Value& val, T& collection) {
+void JsonDeserializer::readFromValueIntoBackInserter(const rapidjson::Value& val, T& collection, const std::function<typename T::value_type()>& constructor) {
     if(!val.IsArray()) {
         throw SerializationNoSuchDataException("Value is not an Array.");
     }
@@ -1068,7 +1073,7 @@ void JsonDeserializer::readFromValueIntoBackInserter(const rapidjson::Value& val
     for (rapidjson::Value::ConstValueIterator itr = val.Begin(); itr != val.End(); ++itr) {
         const auto& element = *itr;
 
-        typename T::value_type item;
+        typename T::value_type item = constructor();
 
         readFromValue(element, item);
 

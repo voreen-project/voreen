@@ -35,6 +35,7 @@
 #include <set>
 #include <iostream>
 #include <typeinfo>
+#include <functional>
 
 #include "tgt/vector.h"
 #include "tgt/matrix.h"
@@ -200,7 +201,7 @@ public:
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
     template<class T>
-    void deserialize(const std::string& key, std::vector<T>& data, const std::string& itemKey = XmlSerializationConstants::ITEMNODE);
+    void deserialize(const std::string& key, std::vector<T>& data, const std::string& itemKey = XmlSerializationConstants::ITEMNODE, const std::function<T()>& constructor = [] () { return T(); });
 
     /**
      * Deserializes a data deque.
@@ -222,7 +223,7 @@ public:
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
     template<class T>
-    void deserialize(const std::string& key, std::deque<T>& data, const std::string& itemKey = XmlSerializationConstants::ITEMNODE);
+    void deserialize(const std::string& key, std::deque<T>& data, const std::string& itemKey = XmlSerializationConstants::ITEMNODE, const std::function<T()>& constructor = [] () { return T(); });
 
     /**
      * Deserializes a data list.
@@ -244,7 +245,7 @@ public:
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
     template<class T>
-    void deserialize(const std::string& key, std::list<T>& data, const std::string& itemKey = XmlSerializationConstants::ITEMNODE);
+    void deserialize(const std::string& key, std::list<T>& data, const std::string& itemKey = XmlSerializationConstants::ITEMNODE, const std::function<T()>& constructor = [] () { return T(); });
 
     /**
      * Deserializes a data set.
@@ -271,7 +272,7 @@ public:
      *         because of possible hash problems on deserialization
      */
     template<class T, class C>
-    void deserialize(const std::string& key, std::set<T, C>& data, const std::string& itemKey = XmlSerializationConstants::ITEMNODE);
+    void deserialize(const std::string& key, std::set<T, C>& data, const std::string& itemKey = XmlSerializationConstants::ITEMNODE, const std::function<T()>& constructor = [] () { return T(); });
 
     /**
      * Deserializes a data map.
@@ -404,11 +405,13 @@ private:
      *         in case of trying to allocate memory for an @c AbstractSerializable
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
-    template<class T>
+    template<typename T>
     void deserializeCollectionConstIteratorItems(
         const std::string& key,
         T& collection,
-        const std::string& itemKey = XmlSerializationConstants::ITEMNODE);
+        const std::string& itemKey,
+        const std::function<typename T::value_type()>&
+        );
 
     /**
      * Helper function for deserializing data collections like STL container.
@@ -429,11 +432,13 @@ private:
      *         in case of trying to allocate memory for an @c AbstractSerializable
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
-    template<class T>
+    template<typename T>
     void deserializeCollection(
         const std::string& key,
         T& collection,
-        const std::string& itemKey = XmlSerializationConstants::ITEMNODE);
+        const std::string& itemKey,
+        const std::function<typename T::value_type()>&
+        );
 
     /**
      * Helper function for deserializing data maps like STL maps.
@@ -530,26 +535,26 @@ void Deserializer::deserialize(const std::string& key, std::pair<S, T>& data) {
 }
 
 template<class T>
-void Deserializer::deserialize(const std::string& key, std::vector<T>& data, const std::string& itemKey) {
-    deserializeCollection(key, data, itemKey);
+void Deserializer::deserialize(const std::string& key, std::vector<T>& data, const std::string& itemKey, const std::function<T()>& constructor) {
+    deserializeCollection(key, data, itemKey, constructor);
 }
 
 template<class T>
-void Deserializer::deserialize(const std::string& key, std::deque<T>& data, const std::string& itemKey) {
-    deserializeCollection(key, data, itemKey);
+void Deserializer::deserialize(const std::string& key, std::deque<T>& data, const std::string& itemKey, const std::function<T()>& constructor) {
+    deserializeCollection(key, data, itemKey, constructor);
 }
 
 template<class T>
-void Deserializer::deserialize(const std::string& key, std::list<T>& data, const std::string& itemKey) {
-    deserializeCollection(key, data, itemKey);
+void Deserializer::deserialize(const std::string& key, std::list<T>& data, const std::string& itemKey, const std::function<T()>& constructor) {
+    deserializeCollection(key, data, itemKey, constructor);
 }
 
 template<class T, class C>
-void Deserializer::deserialize(const std::string& key, std::set<T, C>& data, const std::string& itemKey) {
+void Deserializer::deserialize(const std::string& key, std::set<T, C>& data, const std::string& itemKey, const std::function<T()>& constructor) {
     if(getUsePointerContentSerialization()) {
         raise(SerializationInvalidOperationException("Set deserialization using pointer content is not permitted."));
     }
-    deserializeCollectionConstIteratorItems(key, data, itemKey);
+    deserializeCollectionConstIteratorItems(key, data, itemKey, constructor);
 }
 
 template<class T, class U, class C>
@@ -561,13 +566,13 @@ void Deserializer::deserialize(const std::string& key,
 }
 
 template<class T>
-void Deserializer::deserializeCollectionConstIteratorItems(const std::string& key, T& collection, const std::string& itemKey) {
-    DISPATCH_TO_DESERIALIZER(deserializeCollectionConstIteratorItems(key, collection, itemKey));
+void Deserializer::deserializeCollectionConstIteratorItems(const std::string& key, T& collection, const std::string& itemKey, const std::function<typename T::value_type()>& constructor) {
+    DISPATCH_TO_DESERIALIZER(deserializeCollectionConstIteratorItems(key, collection, itemKey, constructor));
 }
 
 template<class T>
-void Deserializer::deserializeCollection(const std::string& key, T& collection, const std::string& itemKey) {
-    DISPATCH_TO_DESERIALIZER(deserializeCollection(key, collection, itemKey));
+void Deserializer::deserializeCollection(const std::string& key, T& collection, const std::string& itemKey, const std::function<typename T::value_type()>& constructor) {
+    DISPATCH_TO_DESERIALIZER(deserializeCollection(key, collection, itemKey, constructor));
 }
 
 template<class T>
