@@ -87,8 +87,7 @@ struct VesselSkeletonVoxelSerializable : public Serializable {
     virtual void deserialize(Deserializer& s);
 private:
     // Only for deserialization. you should probably not use this.
-    friend class XmlDeserializer;
-    friend class JsonDeserializer;
+    friend class Deserializer;
     VesselSkeletonVoxelSerializable();
 };
 
@@ -145,7 +144,7 @@ public:
 
 // A node within the vessel graph.
 // It stores its position, references to edges as well as all voxels that define this node.
-struct VesselGraphNode : public Serializable {
+struct VesselGraphNode {
     VesselGraphNode(VesselGraph& graph, VGNodeID id, const tgt::vec3& position, std::vector<tgt::vec3> voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
 
     VesselGraphNode(VesselGraphNode&&);
@@ -168,23 +167,30 @@ struct VesselGraphNode : public Serializable {
     bool isAtSampleBorder_;
     float radius_;
 
-    virtual void serialize(Serializer& s) const;
-    virtual void deserialize(Deserializer& s);
-
 private:
     VesselGraph* graph_; // Will never be null (except briefly during deserialization)
 
 private:
     // Disable copy constructors:
-    VesselGraphNode(const VesselGraphNode&);
-    void operator=(const VesselGraphNode&);
+    //VesselGraphNode(const VesselGraphNode&);
+    //void operator=(const VesselGraphNode&);
 
 private:
-    // Only for deserialization. you should probably not use this.
-    friend class XmlDeserializer;
-    friend class JsonDeserializer;
     friend class VesselGraph;
+    // Only for deserialization. you should probably not use this.
+    friend struct VesselGraphNodeSerializable;
     VesselGraphNode();
+};
+
+struct VesselGraphNodeSerializable : public Serializable {
+    VesselGraphNodeSerializable(const VesselGraphNode&);
+    VesselGraphNode inner_;
+
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+private:
+    VesselGraphNodeSerializable();
+    friend class Deserializer;
 };
 
 struct VesselGraphEdgePathProperties : public Serializable {
@@ -306,11 +312,9 @@ private:
 
 private:
     // Only for deserialization. you should probably not use this.
-    friend class XmlDeserializer;
-    friend class JsonDeserializer;
+    friend class Deserializer;
     friend class VesselGraph;
     VesselGraphEdge();
-    void updatePathPropertiesFromVoxels();
 };
 
 // The vessel graph itself. it stores nodes as well as edges.

@@ -41,6 +41,11 @@ VesselSkeletonVoxel::VesselSkeletonVoxel(const tgt::vec3& pos, float minDistToSu
     , numSurfaceVoxels_(numSurfaceVoxels)
     , volume_(volume)
 {
+    //std::cout << "VesselSkeletonVoxel" << sizeof(VesselSkeletonVoxel) << std::endl;
+    //std::cout << "VesselGraphEdgePathProperties" << sizeof(VesselGraphEdgePathProperties) << std::endl;
+    //std::cout << "VesselGraphEdge" << sizeof(VesselGraphEdge) << std::endl;
+    //std::cout << "VesselGraphNode" << sizeof(VesselGraphNode) << std::endl;
+    //asm("int $3");
 }
 
 VesselSkeletonVoxel::VesselSkeletonVoxel()
@@ -178,31 +183,42 @@ VGNodeID VesselGraphNode::getID() const {
 float VesselGraphNode::getRadius() const {
     return radius_;
 }
-void VesselGraphNode::serialize(Serializer& s) const {
-    s.serialize("id", id_.raw());
+
+VesselGraphNodeSerializable::VesselGraphNodeSerializable(const VesselGraphNode& node)
+    : inner_(*node.graph_, node.id_, node.pos_, node.voxels_, node.radius_, node.isAtSampleBorder_, node.uuid_)
+{
+}
+
+VesselGraphNodeSerializable::VesselGraphNodeSerializable()
+    : inner_()
+{
+}
+
+void VesselGraphNodeSerializable::serialize(Serializer& s) const {
+    s.serialize("id", inner_.id_.raw());
     std::vector<uint32_t> edges;
-    for(auto edge : edges_) {
+    for(auto edge : inner_.edges_) {
         edges.push_back(edge.raw());
     }
     s.serialize("edges", edges);
-    s.serialize("pos", pos_);
-    s.serialize("voxels_", voxels_);
-    s.serialize("radius", radius_);
-    s.serialize("isAtSampleBorder", isAtSampleBorder_);
+    s.serialize("pos", inner_.pos_);
+    s.serialize("voxels_", inner_.voxels_);
+    s.serialize("radius", inner_.radius_);
+    s.serialize("isAtSampleBorder", inner_.isAtSampleBorder_);
 }
-void VesselGraphNode::deserialize(Deserializer& s) {
+void VesselGraphNodeSerializable::deserialize(Deserializer& s) {
     uint32_t id;
     s.deserialize("id", id);
-    id_ = id;
+    inner_.id_ = id;
     std::vector<uint32_t> edges;
     s.deserialize("edges", edges);
     for(auto edge : edges) {
-        edges_.push_back(edge);
+        inner_.edges_.push_back(edge);
     }
-    s.deserialize("pos", pos_);
-    s.deserialize("voxels_", voxels_);
-    s.deserialize("radius", radius_);
-    s.deserialize("isAtSampleBorder", isAtSampleBorder_);
+    s.deserialize("pos", inner_.pos_);
+    s.deserialize("voxels_", inner_.voxels_);
+    s.deserialize("radius", inner_.radius_);
+    s.deserialize("isAtSampleBorder", inner_.isAtSampleBorder_);
 }
 
 // VesselGraphEdge -------------------------------------------------------------------------
@@ -641,6 +657,7 @@ void VesselGraphEdge::deserialize(Deserializer& s) {
             builder.push(voxel.inner_);
         }
         voxels_ = std::move(builder).finalize();
+        pathProps_ = VesselGraphEdgePathProperties::fromPath(getNode1(), getNode2(), voxels_);
     } catch (SerializationException s) {
         noSkeletonVoxelsTag = true;
     }
@@ -648,18 +665,6 @@ void VesselGraphEdge::deserialize(Deserializer& s) {
         s.deserialize("pathProperties", pathProps_);
     }
 }
-
-void VesselGraphEdge::updatePathPropertiesFromVoxels() {
-    // NOTE:
-    // Yes, this is pretty ugly, but we cannot set the graph pointer in the deserialization and we cannot
-    // therefore get the nodes in the deserialization. This method will therefore be called after the
-    // "normal" deserialization of edges, and only after all nodes have been added to the graph.
-    //
-    if(!voxels_.empty()) {
-        pathProps_ = VesselGraphEdgePathProperties::fromPath(getNode1(), getNode2(), voxels_);
-    }
-}
-
 
 // VesselGraph -------------------------------------------------------------------------
 
@@ -824,21 +829,31 @@ const tgt::Bounds& VesselGraph::getBounds() const {
 }
 
 void VesselGraph::serialize(Serializer& s) const {
-    s.serialize("nodes", nodes_);
+    std::vector<VesselGraphNodeSerializable> nodes;
+    for(const auto& node : nodes_) {
+        nodes.push_back(VesselGraphNodeSerializable(node));
+    }
+
+    s.serialize("nodes", nodes);
     s.serialize("edges", edges_);
     s.serialize("bounds", bounds_);
 }
 void VesselGraph::deserialize(Deserializer& s) {
     // Yeah, this is quite ugly... But we cannot set the graph pointer in Serializable::deserialize()
-    s.deserialize("nodes", nodes_);
-    for(auto& node : nodes_) {
-        node.graph_ = this;
+    std::vector<VesselGraphNodeSerializable> nodes;
+    s.deserialize("nodes", nodes);
+    for(const auto& node : nodes) {
+        auto index = insertNode(node.inner_);
+        tgtAssert(index == node.inner_.getID(), "Invalid node id after deserialization");
     }
-    s.deserialize("edges", edges_);
-    for(auto& edge : edges_) {
+
+    std::function<VesselGraphEdge()> func =  [this] () {
+        // Set the graph pointer BEFORE deserialization so that we can use the graph in deserialize()
+        VesselGraphEdge edge;
         edge.graph_ = this;
-        edge.updatePathPropertiesFromVoxels();
-    }
+        return edge;
+    };
+    s.deserialize("edges", edges_, "", func);
     s.deserialize("bounds", bounds_);
 }
 
