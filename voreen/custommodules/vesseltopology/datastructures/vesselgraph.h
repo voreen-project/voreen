@@ -178,18 +178,26 @@ private:
 private:
     friend class VesselGraph;
     // Only for deserialization. you should probably not use this.
-    friend struct VesselGraphNodeSerializable;
+    friend struct VesselGraphNodeDeserializable;
     VesselGraphNode();
 };
 
 struct VesselGraphNodeSerializable : public Serializable {
     VesselGraphNodeSerializable(const VesselGraphNode&);
+    const VesselGraphNode& inner_;
+
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+private:
+    friend class Deserializer;
+};
+struct VesselGraphNodeDeserializable : public Serializable {
     VesselGraphNode inner_;
 
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
 private:
-    VesselGraphNodeSerializable();
+    VesselGraphNodeDeserializable();
     friend class Deserializer;
 };
 

@@ -180,11 +180,11 @@ float VesselGraphNode::getRadius() const {
 }
 
 VesselGraphNodeSerializable::VesselGraphNodeSerializable(const VesselGraphNode& node)
-    : inner_(*node.graph_, node.id_, node.pos_, node.voxels_, node.radius_, node.isAtSampleBorder_, node.uuid_)
+    : inner_(node)
 {
 }
 
-VesselGraphNodeSerializable::VesselGraphNodeSerializable()
+VesselGraphNodeDeserializable::VesselGraphNodeDeserializable()
     : inner_()
 {
 }
@@ -201,7 +201,13 @@ void VesselGraphNodeSerializable::serialize(Serializer& s) const {
     s.serialize("radius", inner_.radius_);
     s.serialize("isAtSampleBorder", inner_.isAtSampleBorder_);
 }
-void VesselGraphNodeSerializable::deserialize(Deserializer& s) {
+void VesselGraphNodeSerializable::deserialize(Deserializer&) {
+    tgtAssert(false, "Cannot deserialize VesselGraphNodeSerializable");
+}
+void VesselGraphNodeDeserializable::serialize(Serializer&) const {
+    tgtAssert(false, "Cannot serialize VesselGraphNodeDeserializable");
+}
+void VesselGraphNodeDeserializable::deserialize(Deserializer& s) {
     uint32_t id;
     s.deserialize("id", id);
     inner_.id_ = id;
@@ -839,7 +845,7 @@ const tgt::Bounds& VesselGraph::getBounds() const {
 void VesselGraph::serialize(Serializer& s) const {
     std::vector<VesselGraphNodeSerializable> nodes;
     for(const auto& node : nodes_) {
-        nodes.push_back(VesselGraphNodeSerializable(node));
+        nodes.emplace_back(node);
     }
     s.serialize("nodes", nodes);
 
@@ -853,7 +859,7 @@ void VesselGraph::serialize(Serializer& s) const {
     s.serialize("bounds", bounds_);
 }
 void VesselGraph::deserialize(Deserializer& s) {
-    std::vector<VesselGraphNodeSerializable> nodes;
+    std::vector<VesselGraphNodeDeserializable> nodes;
     s.deserialize("nodes", nodes);
     for(const auto& node : nodes) {
         auto index = insertNode(node.inner_);
