@@ -56,14 +56,14 @@ typedef boost::uuids::uuid VesselGraphEdgeUUID;
 typedef boost::uuids::uuid VesselGraphNodeUUID;
 
 // A single voxel in a branch in the vessel graph
-struct VesselSkeletonVoxel : public Serializable {
-    VesselSkeletonVoxel(const tgt::vec3& pos, float minDistToSurface, float maxDistToSurface, float avgDistToSurface, size_t numSurfaceVoxels, float volume);
+struct VesselSkeletonVoxel {
+    VesselSkeletonVoxel(const tgt::vec3& pos, float minDistToSurface, float maxDistToSurface, float avgDistToSurface, uint32_t numSurfaceVoxels, float volume);
 
     tgt::vec3 pos_;
     float minDistToSurface_;
     float maxDistToSurface_;
     float avgDistToSurface_;
-    size_t numSurfaceVoxels_; // Surface voxels that belong to this skeleton voxel
+    uint32_t numSurfaceVoxels_; // Surface voxels that belong to this skeleton voxel
     float volume_;           // Volume of the segmentation that belong to this
                              // skeleton voxel.
                              // float, because an object voxel might be closest
@@ -74,15 +74,22 @@ struct VesselSkeletonVoxel : public Serializable {
     // Determine whether this voxel has valid data, i.e., has any associated
     // surface voxels that were used to compute the distances and other data.
     bool hasValidData() const;
+private:
+    friend struct VesselSkeletonVoxelSerializable;
+    VesselSkeletonVoxel();
+};
+
+struct VesselSkeletonVoxelSerializable : public Serializable {
+    VesselSkeletonVoxelSerializable(VesselSkeletonVoxel);
+    VesselSkeletonVoxel inner_;
 
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
-
 private:
     // Only for deserialization. you should probably not use this.
     friend class XmlDeserializer;
     friend class JsonDeserializer;
-    VesselSkeletonVoxel();
+    VesselSkeletonVoxelSerializable();
 };
 
 class VGNodeID {

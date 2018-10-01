@@ -33,7 +33,7 @@
 namespace voreen {
 
 // VesselSkeletonVoxel -------------------------------------------------------------------------
-VesselSkeletonVoxel::VesselSkeletonVoxel(const tgt::vec3& pos, float minDistToSurface, float maxDistToSurface, float avgDistToSurface, size_t numSurfaceVoxels, float volume)
+VesselSkeletonVoxel::VesselSkeletonVoxel(const tgt::vec3& pos, float minDistToSurface, float maxDistToSurface, float avgDistToSurface, uint32_t numSurfaceVoxels, float volume)
     : pos_(pos)
     , minDistToSurface_(minDistToSurface)
     , maxDistToSurface_(maxDistToSurface)
@@ -64,21 +64,29 @@ float VesselSkeletonVoxel::roundness() const {
         return 1;
     }
 }
-void VesselSkeletonVoxel::serialize(Serializer& s) const {
-    s.serialize("pos", pos_);
-    s.serialize("minDistToSurface", minDistToSurface_);
-    s.serialize("maxDistToSurface", maxDistToSurface_);
-    s.serialize("avgDistToSurface", avgDistToSurface_);
-    s.serialize("numSurfaceVoxels", numSurfaceVoxels_);
-    s.serialize("volume", volume_);
+void VesselSkeletonVoxelSerializable::serialize(Serializer& s) const {
+    s.serialize("pos", inner_.pos_);
+    s.serialize("minDistToSurface", inner_.minDistToSurface_);
+    s.serialize("maxDistToSurface", inner_.maxDistToSurface_);
+    s.serialize("avgDistToSurface", inner_.avgDistToSurface_);
+    s.serialize("numSurfaceVoxels", inner_.numSurfaceVoxels_);
+    s.serialize("volume", inner_.volume_);
 }
-void VesselSkeletonVoxel::deserialize(Deserializer& s) {
-    s.deserialize("pos", pos_);
-    s.deserialize("minDistToSurface", minDistToSurface_);
-    s.deserialize("maxDistToSurface", maxDistToSurface_);
-    s.deserialize("avgDistToSurface", avgDistToSurface_);
-    s.deserialize("numSurfaceVoxels", numSurfaceVoxels_);
-    s.deserialize("volume", volume_);
+void VesselSkeletonVoxelSerializable::deserialize(Deserializer& s) {
+    s.deserialize("pos", inner_.pos_);
+    s.deserialize("minDistToSurface", inner_.minDistToSurface_);
+    s.deserialize("maxDistToSurface", inner_.maxDistToSurface_);
+    s.deserialize("avgDistToSurface", inner_.avgDistToSurface_);
+    s.deserialize("numSurfaceVoxels", inner_.numSurfaceVoxels_);
+    s.deserialize("volume", inner_.volume_);
+}
+VesselSkeletonVoxelSerializable::VesselSkeletonVoxelSerializable()
+    : inner_()
+{
+}
+VesselSkeletonVoxelSerializable::VesselSkeletonVoxelSerializable(VesselSkeletonVoxel val)
+    : inner_(val)
+{
 }
 
 
@@ -606,7 +614,11 @@ void VesselGraphEdge::serialize(Serializer& s) const {
     if(voxels_.empty()) {
         s.serialize("pathProperties", pathProps_);
     } else {
-        std::vector<VesselSkeletonVoxel> voxels(voxels_.begin(), voxels_.end());
+        std::vector<VesselSkeletonVoxelSerializable> voxels;
+        voxels.reserve(voxels.size());
+        for(const auto& voxel : voxels_) {
+            voxels.emplace_back(voxel);
+        }
         s.serialize("skeletonVoxels", voxels);
     }
 }
@@ -622,9 +634,13 @@ void VesselGraphEdge::deserialize(Deserializer& s) {
 
     bool noSkeletonVoxelsTag = false;
     try {
-        std::vector<VesselSkeletonVoxel> voxels(voxels_.begin(), voxels_.end());
+        std::vector<VesselSkeletonVoxelSerializable> voxels(voxels_.begin(), voxels_.end());
         s.deserialize("skeletonVoxels", voxels);
-        voxels_ = graph_->voxelStorage_->store(voxels);
+        auto builder = graph_->voxelStorage_->build();
+        for(const auto& voxel : voxels) {
+            builder.push(voxel.inner_);
+        }
+        voxels_ = std::move(builder).finalize();
     } catch (SerializationException s) {
         noSkeletonVoxelsTag = true;
     }
