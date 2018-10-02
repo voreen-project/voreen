@@ -699,7 +699,7 @@ std::pair<std::vector<NodePath>, BranchSearchCone> UnprocessedBranch::find_all_f
 }
 
 static const VesselGraphNode* find_starting_node(const VesselGraph& graph, const tgt::vec3& starting_point) {
-    auto& nodes = graph.getNodes();
+    auto nodes = graph.getNodes();
     float min_dist_sq = std::numeric_limits<float>::infinity();
     const VesselGraphNode* starting_node = nullptr;
     for(auto& node : nodes) {

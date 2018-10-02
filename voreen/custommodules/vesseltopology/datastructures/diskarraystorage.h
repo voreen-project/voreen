@@ -58,6 +58,7 @@ template<typename Element>
 class DiskArray {
     //typedef Element* iterator;
     typedef const Element* const_iterator;
+    typedef Element* iterator;
     typedef DiskArrayReverseConstIterator<Element> const_reverse_iterator;
 public:
     DiskArray(); //An empty disk array, not associated with any storage
@@ -77,6 +78,8 @@ public:
     const Element& back() const;
 
     // May be invalidated by creating other diskarrays in the meantime!!
+    iterator begin();
+    iterator end();
     const_iterator begin() const;
     const_iterator end() const;
     const_reverse_iterator rbegin() const;
@@ -111,11 +114,20 @@ public:
 
     // Only store a single Element and return the storage position with which it can be retrieved
     size_t storeElement(const Element& elm);
+    size_t storeElement(Element&& elm);
     size_t size() const;
+
+    const Element& operator[](size_t index) const;
+    Element& operator[](size_t index);
 
     const void* identifier() const {
         return &file_;
     }
+
+    DiskArray<Element> asArray() {
+        return DiskArray<Element>(&file_, 0, numElements_);
+    }
+
 private:
     friend class DiskArrayBuilder<Element>;
 
@@ -144,6 +156,94 @@ private:
     size_t numElements_;
 };
 
+template<typename T>
+struct DiskArrayBackedListElement {
+    T element_;
+    size_t next_;
+
+    DiskArrayBackedListElement(T&& elm, size_t next)
+        : element_(std::move(elm))
+        , next_(next)
+    {
+    }
+};
+template<typename T>
+struct DiskArrayBackedListConstIter {
+    typedef DiskArrayBackedListElement<T> Element;
+
+    size_t index_;
+    DiskArrayStorage<Element>& storage_;
+
+    DiskArrayBackedListConstIter(size_t index, DiskArrayStorage<Element>& storage)
+        : index_(index)
+        , storage_(storage)
+    {
+    }
+
+    DiskArrayBackedListConstIter& operator++() {
+        if(index_ != -1) {
+            const Element& elm = storage_[index_];
+            index_ = elm.next_;
+        }
+        return *this;
+    }
+    bool operator==(const DiskArrayBackedListConstIter& other) {
+        return index_ == other.index_;
+    }
+    bool operator!=(const DiskArrayBackedListConstIter& other) {
+        return index_ != other.index_;
+    }
+    const T& operator*() {
+        tgtAssert(index_ != -1, "Iterator at invalid index");
+        return storage_[index_].element_;
+    }
+    const T* operator->() {
+        tgtAssert(index_ != -1, "Iterator at invalid index");
+        return &storage_[index_].element_;
+    }
+};
+
+template<typename T>
+struct DiskArrayBackedList {
+    typedef DiskArrayBackedListElement<T> Element;
+    typedef DiskArrayStorage<Element> Storage;
+    typedef DiskArrayBackedListConstIter<T> const_iterator;
+
+    DiskArrayBackedList(Storage& storage)
+        : head_(-1)
+        , tail_(-1)
+        , numElements_(0)
+        , storage_(storage)
+    {
+    }
+    void push(const T& elm) {
+        push(T(elm)); //Copy and defer to push temporary
+    }
+    void push(T&& elm) {
+        size_t oldTail = tail_;
+        tail_ = storage_.storeElement(Element(std::move(elm), -1));
+        if(oldTail == -1) {
+            head_ = tail_;
+        } else {
+            storage_[oldTail].next_ = tail_;
+        }
+        ++numElements_;
+    }
+    const_iterator begin() const {
+        return const_iterator(head_, storage_);
+    }
+    const_iterator end() const {
+        return const_iterator(-1, storage_);
+    }
+    size_t size() const {
+        return numElements_;
+    }
+private:
+    size_t head_;
+    size_t tail_;
+    size_t numElements_;
+    Storage& storage_;
+};
 
 /// Impl: DiskArray ------------------------------------------------------------
 template<typename Element>
@@ -232,6 +332,19 @@ const Element& DiskArray<Element>::back() const {
 }
 
 template<typename Element>
+typename DiskArray<Element>::iterator DiskArray<Element>::begin() {
+    if(empty()) {
+        return nullptr;
+    } else {
+        return &operator[](0);
+    }
+}
+template<typename Element>
+typename DiskArray<Element>::iterator DiskArray<Element>::end() {
+    return begin() + size();
+}
+
+template<typename Element>
 typename DiskArray<Element>::const_iterator DiskArray<Element>::begin() const {
     if(empty()) {
         return nullptr;
@@ -275,6 +388,10 @@ DiskArrayStorage<Element>::DiskArrayStorage(const std::string& storagefilename)
 
 template<typename Element>
 DiskArrayStorage<Element>::~DiskArrayStorage() {
+    for(auto& elm : asArray()) {
+        // Call destructor explicitly, because the elements will be dropped now.
+        elm.~Element();
+    }
     file_.close();
     tgt::FileSystem::deleteFile(storagefilename_);
 }
@@ -339,10 +456,7 @@ DiskArray<Element> DiskArrayStorage<Element>::store_internal(const Arr& array) {
 
         ensureFit(numElements_);
 
-        Element* data = reinterpret_cast<Element*>(file_.data());
-        tgtAssert(file_.is_open(), "file not opened");
-        tgtAssert(data, "Invalid data pointer");
-        std::copy(&*array.begin(), &*array.end(), data + oldNumElements);
+        std::copy(&*array.begin(), &*array.end(), &operator[](oldNumElements));
 
         return DiskArray<Element>(&file_, oldNumElements, numElements_);
     }
@@ -350,15 +464,18 @@ DiskArray<Element> DiskArrayStorage<Element>::store_internal(const Arr& array) {
 
 template<typename Element>
 size_t DiskArrayStorage<Element>::storeElement(const Element& elm) {
+    return storeElement(Element(elm));
+}
+
+template<typename Element>
+size_t DiskArrayStorage<Element>::storeElement(Element&& elm) {
     size_t oldNumElements = numElements_;
     numElements_ += 1;
 
     ensureFit(numElements_);
 
-    Element* data = reinterpret_cast<Element*>(file_.data());
-    tgtAssert(file_.is_open(), "file not opened");
-    tgtAssert(data, "Invalid data pointer");
-    data[oldNumElements] = elm;
+    //Move construct the new element in-place at the end of the memory mapped storage file.
+    new (&operator[](oldNumElements)) Element(std::move(elm));
 
     return oldNumElements;
 }
@@ -371,6 +488,24 @@ size_t DiskArrayStorage<Element>::size() const {
 template<typename Element>
 DiskArrayBuilder<Element> DiskArrayStorage<Element>::build() {
     return DiskArrayBuilder<Element>(*this);
+}
+
+template<typename Element>
+const Element& DiskArrayStorage<Element>::operator[](size_t index) const {
+    const Element* data = reinterpret_cast<Element*>(file_.data());
+    tgtAssert(index < numElements_, "Invalid index");
+    tgtAssert(file_.is_open(), "file not opened");
+    tgtAssert(data, "Invalid data pointer");
+    return data[index];
+}
+
+template<typename Element>
+Element& DiskArrayStorage<Element>::operator[](size_t index) {
+    Element* data = reinterpret_cast<Element*>(file_.data());
+    tgtAssert(index < numElements_, "Invalid index");
+    tgtAssert(file_.is_open(), "file not opened");
+    tgtAssert(data, "Invalid data pointer");
+    return data[index];
 }
 
 /// Impl: DiskArrayBuilder -----------------------------------------------------

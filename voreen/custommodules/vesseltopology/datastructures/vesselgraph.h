@@ -27,7 +27,6 @@
 #define VRN_VESSELGRAPH_H
 
 #include <vector>
-#include <deque>
 
 #include "tgt/vector.h"
 #include "tgt/matrix.h"
@@ -161,14 +160,14 @@ struct VesselGraphNode {
 
     VGNodeID id_;
     VesselGraphNodeUUID uuid_;
-    std::vector<VGEdgeID> edges_;
+    DiskArrayBackedList<VGEdgeID> edges_;
     tgt::vec3 pos_;
     DiskArray<tgt::vec3> voxels_;
     bool isAtSampleBorder_;
     float radius_;
 
 private:
-    VesselGraph* graph_; // Will never be null (except briefly during deserialization)
+    VesselGraph* graph_; // Will never be null
 
 private:
     // Disable copy constructors:
@@ -179,7 +178,6 @@ private:
     friend class VesselGraph;
     // Only for deserialization. you should probably not use this.
     friend struct VesselGraphNodeDeserializable;
-    VesselGraphNode();
 };
 
 struct VesselGraphNodeSerializable : public Serializable {
@@ -315,7 +313,7 @@ private:
     DiskArray<VesselSkeletonVoxel> voxels_;
 
 private:
-    VesselGraph* graph_; // Will never be null (except briefly during deserialization)
+    VesselGraph* graph_; // Will never be null
 
 private:
     // Disable copy constructors:
@@ -397,10 +395,10 @@ public:
     VesselGraphNode& getNode(VGNodeID i);
     VesselGraphEdge& getEdge(VGEdgeID i);
 
-    const std::vector<VesselGraphNode>& getNodes() const;
-    const std::vector<VesselGraphEdge>& getEdges() const;
-    std::vector<VesselGraphNode>& getNodes();
-    std::vector<VesselGraphEdge>& getEdges();
+    DiskArray<VesselGraphNode> getNodes() const;
+    DiskArray<VesselGraphEdge> getEdges() const;
+    DiskArray<VesselGraphNode> getNodes();
+    DiskArray<VesselGraphEdge> getEdges();
 
     void getEdgePropertyStats(std::function<float(const VesselGraphEdge&)>, float& /*out*/ mean, float& /*out*/stddev) const;
 
@@ -411,11 +409,19 @@ public:
     virtual void deserialize(Deserializer& s);
 
 private:
-    // Note: We can use vector here because we do not store pointers to other edges/nodes in nodes/edges, but only indices
-    std::vector<VesselGraphNode> nodes_;
-    std::vector<VesselGraphEdge> edges_;
+    // Note: No need to worry about pointer invalidation here because we do not store pointers
+    // to other edges/nodes in nodes/edges, but only indices
+    //
+    // Note: We store the diskarrays in unique pointers because DiskArrayStorage cannot be moved.
+    // The pointers are however guaranteed to be != null at all times.
+    std::unique_ptr<DiskArrayStorage<VesselGraphNode>> nodes_; //never null
+    std::unique_ptr<DiskArrayStorage<VesselGraphEdge>> edges_; //never null
+
+    // Storage for the lists in which the nodes store their connected edges
+    std::unique_ptr<DiskArrayBackedList<VGEdgeID>::Storage> nodeEdgeIdStorage_; //never null
 
     friend struct VesselGraphEdge;
+    friend struct VesselGraphNode;
     friend struct VesselGraphEdgeDeserializable;
     std::unique_ptr<DiskArrayStorage<VesselSkeletonVoxel>> edgeVoxelStorage_; //never null
     std::unique_ptr<DiskArrayStorage<tgt::vec3>> nodeVoxelStorage_; //never null
