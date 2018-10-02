@@ -145,7 +145,7 @@ public:
 // A node within the vessel graph.
 // It stores its position, references to edges as well as all voxels that define this node.
 struct VesselGraphNode {
-    VesselGraphNode(VesselGraph& graph, VGNodeID id, const tgt::vec3& position, std::vector<tgt::vec3> voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
+    VesselGraphNode(VesselGraph& graph, VGNodeID id, const tgt::vec3& position, DiskArray<tgt::vec3>&& voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
 
     VesselGraphNode(VesselGraphNode&&);
     VesselGraphNode& operator=(VesselGraphNode&&);
@@ -163,7 +163,7 @@ struct VesselGraphNode {
     VesselGraphNodeUUID uuid_;
     std::vector<VGEdgeID> edges_;
     tgt::vec3 pos_;
-    std::vector<tgt::vec3> voxels_;
+    DiskArray<tgt::vec3> voxels_;
     bool isAtSampleBorder_;
     float radius_;
 
@@ -192,13 +192,14 @@ private:
     friend class Deserializer;
 };
 struct VesselGraphNodeDeserializable : public Serializable {
-    VesselGraphNode inner_;
+    VGNodeID id_;
+    tgt::vec3 pos_;
+    std::vector<tgt::vec3> voxels_;
+    float radius_;
+    bool isAtSampleBorder_;
 
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
-private:
-    VesselGraphNodeDeserializable();
-    friend class Deserializer;
 };
 
 struct VesselGraphEdgePathProperties {
@@ -350,10 +351,6 @@ struct VesselGraphEdgeDeserializable : public Serializable {
 
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
-private:
-    // Only for deserialization. you should probably not use this.
-    friend class Deserializer;
-    //VesselGraphEdgeSerializable();
 };
 
 // The vessel graph itself. it stores nodes as well as edges.
@@ -378,8 +375,10 @@ public:
     // Insert a new node into the graph and clone it from the given existing node
     VGNodeID insertNode(const VesselGraphNode& base);
     // Insert a new node into the graph and construct it from the given parameters
-    VGNodeID insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>&& voxels, float radius, bool isAtSampleBorder);
-    VGNodeID insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>&& voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
+    VGNodeID insertNode(const tgt::vec3& position, const DiskArray<tgt::vec3>& voxels, float radius, bool isAtSampleBorder);
+    VGNodeID insertNode(const tgt::vec3& position, const DiskArray<tgt::vec3>& voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
+    VGNodeID insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>& voxels, float radius, bool isAtSampleBorder);
+    VGNodeID insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>& voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
 
     // Insert a new edge by deriving its properties from the provided path
     VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const DiskArray<VesselSkeletonVoxel>& path);
@@ -418,7 +417,8 @@ private:
 
     friend struct VesselGraphEdge;
     friend struct VesselGraphEdgeDeserializable;
-    std::unique_ptr<DiskArrayStorage<VesselSkeletonVoxel>> voxelStorage_; //never null
+    std::unique_ptr<DiskArrayStorage<VesselSkeletonVoxel>> edgeVoxelStorage_; //never null
+    std::unique_ptr<DiskArrayStorage<tgt::vec3>> nodeVoxelStorage_; //never null
 
     tgt::Bounds bounds_;
 };
