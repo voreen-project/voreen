@@ -89,13 +89,13 @@ struct ProtoVesselGraphEdge {
 
 struct ProtoVesselGraphNode {
 
-    ProtoVesselGraphNode(VGNodeID id, std::vector<tgt::svec3>&& voxels, bool atSampleBorder);
+    ProtoVesselGraphNode(VGNodeID id, DiskArray<tgt::svec3>&& voxels, bool atSampleBorder, ProtoVesselGraph& graph);
 
     VGNodeID id_;
-    std::vector<tgt::svec3> voxels_;
+    DiskArray<tgt::svec3> voxels_;
     tgt::vec3 voxelPos_;
     bool atSampleBorder_;
-    std::vector<VGEdgeID> edges_;
+    DiskArrayBackedList<VGEdgeID> edges_;
 };
 
 struct BranchIdVolumeReader;
@@ -104,16 +104,20 @@ struct ProtoVesselGraph {
     typedef static_kdtree::SharedMemoryTreeBuilder<ProtoVesselGraphEdgeElement> TreeBuilder;
     ProtoVesselGraph(tgt::mat4 toRWMatrix);
 
-    VGNodeID insertNode(std::vector<tgt::svec3>&& voxels, bool atSampleBorder);
+    VGNodeID insertNode(const std::vector<tgt::svec3>& voxels, bool atSampleBorder);
     VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const DiskArray<tgt::svec3>& voxels);
 
     std::unique_ptr<VesselGraph> createVesselGraph(BranchIdVolumeReader& segmentedVolumeReader, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress);
 
-    std::vector<ProtoVesselGraphNode> nodes_;
-    std::vector<ProtoVesselGraphEdge> edges_;
+    DiskArrayStorage<ProtoVesselGraphNode> nodes_;
+    DiskArrayStorage<ProtoVesselGraphEdge> edges_;
 
     DiskArrayStorage<tgt::svec3> voxelStorage_;
     DiskArrayStorage<tgt::vec3> rwvoxelStorage_;
+
+    // Storage for the lists in which the nodes store their connected edges
+    DiskArrayBackedList<VGEdgeID>::Storage nodeEdgeIdStorage_;
+
 
     tgt::mat4 toRWMatrix_;
     TreeBuilder treeBuilder_;

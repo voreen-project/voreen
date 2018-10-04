@@ -229,7 +229,7 @@ struct EdgeVoxelRef {
     }
 };
 
-static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath, const ProtoVesselGraph& graph, const VesselGraphCreatorProcessedInput& input, ProgressReporter& progress) {
+static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath, ProtoVesselGraph& graph, const VesselGraphCreatorProcessedInput& input, ProgressReporter& progress) {
     TaskTimeLogger _("Create closest id volume", tgt::Info);
 
     const auto voxelToRw = input.segmentation.getMetaData().getVoxelToWorldMatrix();
@@ -241,7 +241,7 @@ static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath
 
     static_kdtree::ElementArrayBuilder<EdgeVoxelRef> finderBuilder(VoreenApplication::app()->getUniqueTmpFilePath(".kdtreestorage"));
 
-    for(auto& edge : graph.edges_) {
+    for(const auto& edge : graph.edges_.asArray()) {
         for(auto& rwvoxel : edge.voxels()) {
             finderBuilder.push(EdgeVoxelRef(rwvoxel, edge));
         }
@@ -681,14 +681,14 @@ struct UnfinishedRegions {
     }
 };
 
-static void mapEdgeIds(LZ4SliceVolume<uint32_t>& regions, size_t numComponents, const ProtoVesselGraph& graph, ProgressReporter& progress) {
+static void mapEdgeIds(LZ4SliceVolume<uint32_t>& regions, size_t numComponents, ProtoVesselGraph& graph, ProgressReporter& progress) {
     std::vector<uint32_t> ccaToEdgeIdTable(numComponents+1, IdVolume::UNLABELED_FOREGROUND_VALUE);
     ccaToEdgeIdTable[0] = IdVolume::BACKGROUND_VALUE;
 
     //populate ccaToEdgeIdTable
     {
         std::vector<std::pair<uint32_t, tgt::svec3>> query_positions;
-        for(const auto& edge: graph.edges_) {
+        for(const auto& edge: graph.edges_.asArray()) {
             if(edge.voxels_.empty()) {
                 query_positions.push_back(std::make_pair(edge.id_.raw(), tgt::svec3(-1)));
             } else {

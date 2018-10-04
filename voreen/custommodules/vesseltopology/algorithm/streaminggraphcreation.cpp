@@ -416,7 +416,7 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
                     for(int dx = -1; dx <= 1; ++dx) {
                         auto voxel = sampleMaskReader.getVoxelRelative(tgt::ivec2(p.x+dx, p.y+dy), dz);
                         if(!voxel || *voxel == 0) {
-                            graph->nodes_.at(id.raw()).atSampleBorder_ = true;
+                            graph->nodes_[id.raw()].atSampleBorder_ = true;
                             goto sample_mask_search_done;
                         }
                     }
@@ -427,7 +427,7 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
     }
 
     // Create edges from end voxels directly connected to branchPoints
-    for(const auto& node : graph->nodes_) {
+    for(const auto& node : graph->nodes_.asArray()) {
         if(node.edges_.size() != 0) {
             continue;
         }
