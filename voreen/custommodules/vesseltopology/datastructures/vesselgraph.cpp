@@ -89,6 +89,10 @@ VesselSkeletonVoxelSerializable::VesselSkeletonVoxelSerializable(VesselSkeletonV
 {
 }
 
+// VG*IDs ----------------------------------------------------------------------------------
+const VGNodeID VGNodeID::INVALID = VGNodeID(-1);
+const VGEdgeID VGEdgeID::INVALID = VGEdgeID(-1);
+
 
 // VesselGraphNode -------------------------------------------------------------------------
 VesselGraphNode::VesselGraphNode(VesselGraph& graph, VGNodeID id, const tgt::vec3& position, DiskArray<tgt::vec3>&& voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid)

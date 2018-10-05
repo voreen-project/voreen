@@ -93,6 +93,7 @@ private:
 class VGNodeID {
     uint32_t internal_;
 public:
+    const static VGNodeID INVALID;
     VGNodeID()
         : internal_(-1)
     {
@@ -114,11 +115,15 @@ public:
     inline uint32_t raw() const {
         return internal_;
     }
+    inline bool isValid() const {
+        return internal_ != (uint32_t)-1;
+    }
 };
 
 class VGEdgeID {
     uint32_t internal_;
 public:
+    const static VGEdgeID INVALID;
     VGEdgeID()
         : internal_(-1)
     {
@@ -138,6 +143,9 @@ public:
     }
     inline uint32_t raw() const {
         return internal_;
+    }
+    inline bool isValid() const {
+        return internal_ != (uint32_t)-1;
     }
 };
 
