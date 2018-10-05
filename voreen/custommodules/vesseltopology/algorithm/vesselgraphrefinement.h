@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VESSELGRAPHNORMALIZATION_H
-#define VRN_VESSELGRAPHNORMALIZATION_H
+#ifndef VRN_VESSELGRAPHREFINEMENT_H
+#define VRN_VESSELGRAPHREFINEMENT_H
 
 
 #include "../datastructures/vesselgraph.h"
@@ -33,7 +33,7 @@
 
 namespace voreen {
 
-struct VesselGraphNormalization {
+struct VesselGraphRefinement {
     typedef std::function<bool(const VesselGraphEdge&)> RemovableEdgeCheck;
 
     static std::unique_ptr<VesselGraph> removeEndEdgesRecursively(const VesselGraph& input, RemovableEdgeCheck isRemovableEdge);
@@ -46,5 +46,6 @@ struct VesselGraphNormalization {
     // Will also be called after all edge removal functions
     static std::unique_ptr<VesselGraph> removeDregree2Nodes(const VesselGraph&);
 };
-} // namespace voreen::vesselgraphnormalization
-#endif // VRN_VESSELGRAPHNORMALIZATION_H
+
+} // namespace voreen
+#endif // VRN_VESSELGRAPHREFINEMENT_H

@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VESSELGRAPHNORMALIZER_H
-#define VRN_VESSELGRAPHNORMALIZER_H
+#ifndef VRN_VESSELGRAPHREFINER_H
+#define VRN_VESSELGRAPHREFINER_H
 
 #include "voreen/core/processors/processor.h"
 
@@ -35,21 +35,21 @@
 
 namespace voreen {
 
-class VesselGraphNormalizer : public Processor {
+class VesselGraphRefiner : public Processor {
 public:
-    VesselGraphNormalizer();
-    virtual ~VesselGraphNormalizer();
+    VesselGraphRefiner();
+    virtual ~VesselGraphRefiner();
     virtual std::string getCategory() const { return "Geometry"; }
-    virtual std::string getClassName() const { return "VesselGraphNormalizer"; }
+    virtual std::string getClassName() const { return "VesselGraphRefiner"; }
     virtual CodeState getCodeState() const { return Processor::CODE_STATE_EXPERIMENTAL; }
-    virtual Processor* create() const { return new VesselGraphNormalizer(); }
+    virtual Processor* create() const { return new VesselGraphRefiner(); }
 
 protected:
     virtual void setDescriptions() {
         setDescription("This processor can be used to remove small, unwanted edges from Vessel-Graphs.");
     }
 
-    enum NormalizationMethod {
+    enum RefinementMethod {
         ALL,
         END_RECURSIVE
     };
@@ -65,7 +65,7 @@ protected:
 
     // properties
     BoolProperty enabled_;
-    OptionProperty<NormalizationMethod> normalizationMethod_;
+    OptionProperty<RefinementMethod> refinementMethod_;
     IntProperty minVoxelLength_;
     FloatProperty minElongation_;
     FloatProperty minBulgeSize_;
@@ -74,4 +74,4 @@ protected:
 };
 
 } // namespace voreen
-#endif // VRN_VESSELGRAPHNORMALIZER_H
+#endif // VRN_VESSELGRAPHREFINER_H

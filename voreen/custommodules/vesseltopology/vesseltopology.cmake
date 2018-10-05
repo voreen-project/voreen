@@ -64,7 +64,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/algorithm/idvolume.cpp
     ${MOD_DIR}/algorithm/streaminggraphcreation.cpp
     ${MOD_DIR}/algorithm/surface.cpp
-    ${MOD_DIR}/algorithm/vesselgraphnormalization.cpp
+    ${MOD_DIR}/algorithm/vesselgraphrefinement.cpp
     ${MOD_DIR}/algorithm/volumemask.cpp
     ${MOD_DIR}/datastructures/vesselgraph.cpp
     ${MOD_DIR}/datastructures/protovesselgraph.cpp
@@ -79,7 +79,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/vascusynthgraphloader.cpp
     ${MOD_DIR}/processors/vesselgraphcreator.cpp
     ${MOD_DIR}/processors/vesselgraphglobalstats.cpp
-    ${MOD_DIR}/processors/vesselgraphnormalizer.cpp
+    ${MOD_DIR}/processors/vesselgraphrefiner.cpp
     ${MOD_DIR}/processors/vesselgraphperturbation.cpp
     ${MOD_DIR}/processors/vesselgraphrenderer.cpp
     ${MOD_DIR}/processors/vesselgraphsave.cpp
@@ -107,7 +107,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/algorithm/idvolume.h
     ${MOD_DIR}/algorithm/streaminggraphcreation.h
     ${MOD_DIR}/algorithm/surface.cpp
-    ${MOD_DIR}/algorithm/vesselgraphnormalization.h
+    ${MOD_DIR}/algorithm/vesselgraphrefinement.h
     ${MOD_DIR}/algorithm/volumemask.h
     ${MOD_DIR}/datastructures/vesselgraph.h
     ${MOD_DIR}/datastructures/protovesselgraph.h
@@ -124,7 +124,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/vascusynthgraphloader.h
     ${MOD_DIR}/processors/vesselgraphcreator.h
     ${MOD_DIR}/processors/vesselgraphglobalstats.h
-    ${MOD_DIR}/processors/vesselgraphnormalizer.h
+    ${MOD_DIR}/processors/vesselgraphrefiner.h
     ${MOD_DIR}/processors/vesselgraphperturbation.h
     ${MOD_DIR}/processors/vesselgraphrenderer.h
     ${MOD_DIR}/processors/vesselgraphsave.h

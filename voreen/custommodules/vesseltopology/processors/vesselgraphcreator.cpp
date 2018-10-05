@@ -39,7 +39,7 @@
 #include "../algorithm/streaminggraphcreation.h"
 #include "../algorithm/volumemask.h"
 #include "../algorithm/idvolume.h"
-#include "../algorithm/vesselgraphnormalization.h"
+#include "../algorithm/vesselgraphrefinement.h"
 #include "../algorithm/boundshierarchy.h"
 #include "../datastructures/kdtree.h"
 
@@ -832,7 +832,7 @@ std::unique_ptr<VesselGraph> refineVesselGraph(VesselGraphCreatorProcessedInput&
     auto isEdgeDeletable = [&input] (const VesselGraphEdge& edge) {
         return !edge.hasValidData() || edge.getVoxels().size() < input.minVoxelLength || edge.getElongation() < input.minElongation || edge.getRelativeBulgeSize() < input.minBulgeSize;
     };
-    std::unique_ptr<VesselGraph> normalizedGraph = VesselGraphNormalization::removeEndEdgesRecursively(prevGraph, isEdgeDeletable);
+    std::unique_ptr<VesselGraph> normalizedGraph = VesselGraphRefinement::removeEndEdgesRecursively(prevGraph, isEdgeDeletable);
 
     tgt::mat4 rwToVoxel;
     bool inverted = input.segmentation.getMetaData().getVoxelToWorldMatrix().invert(rwToVoxel);

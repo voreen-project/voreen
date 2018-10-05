@@ -3989,7 +3989,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VesselGraphNormalizer" name="VesselGraphNormalizer" id="ref15">
+                <Processor type="VesselGraphRefiner" name="VesselGraphRefiner" id="ref15">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="143" y="-167" />
                     </MetaData>
@@ -4119,7 +4119,7 @@
                         <Processor type="VesselGraphSource" ref="ref14" />
                     </Outport>
                     <Inport name="graph.input">
-                        <Processor type="VesselGraphNormalizer" ref="ref15" />
+                        <Processor type="VesselGraphRefiner" ref="ref15" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -4140,7 +4140,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="graph.output">
-                        <Processor type="VesselGraphNormalizer" ref="ref15" />
+                        <Processor type="VesselGraphRefiner" ref="ref15" />
                     </Outport>
                     <Inport name="graph.input">
                         <Processor type="VesselGraphRenderer" ref="ref19" />
@@ -4148,7 +4148,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="graph.output">
-                        <Processor type="VesselGraphNormalizer" ref="ref15" />
+                        <Processor type="VesselGraphRefiner" ref="ref15" />
                     </Outport>
                     <Inport name="graph.input2">
                         <Processor type="VesselGraphComparison" ref="ref5" />
@@ -4156,7 +4156,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="graph.output">
-                        <Processor type="VesselGraphNormalizer" ref="ref15" />
+                        <Processor type="VesselGraphRefiner" ref="ref15" />
                     </Outport>
                     <Inport name="vesselgraphskeletonextractor_graph.inport">
                         <Processor type="VesselGraphSkeletonExtractor" ref="ref16" />

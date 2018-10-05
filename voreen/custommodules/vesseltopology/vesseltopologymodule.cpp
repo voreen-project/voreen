@@ -36,7 +36,7 @@
 #endif
 #include "processors/vesselgraphcreator.h"
 #include "processors/vesselgraphglobalstats.h"
-#include "processors/vesselgraphnormalizer.h"
+#include "processors/vesselgraphrefiner.h"
 #include "processors/vesselgraphperturbation.h"
 #include "processors/vesselgraphrenderer.h"
 #include "processors/vesselgraphsave.h"
@@ -80,7 +80,7 @@ VesselTopologyModule::VesselTopologyModule(const std::string& modulePath)
 #endif
     registerProcessor(new VesselGraphCreator());
     registerProcessor(new VesselGraphGlobalStats());
-    registerProcessor(new VesselGraphNormalizer());
+    registerProcessor(new VesselGraphRefiner());
     registerProcessor(new VesselGraphPerturbation());
     registerProcessor(new VesselGraphRenderer());
     registerProcessor(new VesselGraphSave());

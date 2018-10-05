@@ -23,24 +23,24 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "vesselgraphnormalizer.h"
+#include "vesselgraphrefiner.h"
 
 #include "voreen/core/datastructures/callback/lambdacallback.h"
-#include "../algorithm/vesselgraphnormalization.h"
+#include "../algorithm/vesselgraphrefinement.h"
 
 namespace voreen {
 
 
 
-const std::string VesselGraphNormalizer::loggerCat_("voreen.vesselgraphnormalizer");
+const std::string VesselGraphRefiner::loggerCat_("voreen.vesselgraphrefiner");
 
 
-VesselGraphNormalizer::VesselGraphNormalizer()
+VesselGraphRefiner::VesselGraphRefiner()
     : Processor()
     , inport_(Port::INPORT, "graph.input", "Graph Input", false, Processor::INVALID_RESULT)
     , outport_(Port::OUTPORT, "graph.output", "Normalized Graph Output", false, Processor::VALID)
     , enabled_("enabled", "Enabled", true)
-    , normalizationMethod_("normalizationMethod", "Normalization Method")
+    , refinementMethod_("refinementMethod", "Refinement Method")
     , minVoxelLength_("minVoxelLength", "Min Voxel Length", 0, 0, 50)
     , minElongation_("minElongation", "Minimum Elongation", 0, 0, 5)
     , minBulgeSize_("minBulgeSize", "Minimum Bulge Size", 0, 0, 10)
@@ -54,16 +54,16 @@ VesselGraphNormalizer::VesselGraphNormalizer()
     addProperty(minElongation_);
     addProperty(minBulgeSize_);
 
-    addProperty(normalizationMethod_);
-        normalizationMethod_.addOption("all", "All", ALL);
-        normalizationMethod_.addOption("end_recursive", "End Recursive", END_RECURSIVE);
-        normalizationMethod_.selectByValue(END_RECURSIVE);
+    addProperty(refinementMethod_);
+        refinementMethod_.addOption("all", "All", ALL);
+        refinementMethod_.addOption("end_recursive", "End Recursive", END_RECURSIVE);
+        refinementMethod_.selectByValue(END_RECURSIVE);
 }
 
-VesselGraphNormalizer::~VesselGraphNormalizer() {
+VesselGraphRefiner::~VesselGraphRefiner() {
 }
 
-void VesselGraphNormalizer::process() {
+void VesselGraphRefiner::process() {
     const VesselGraph* input = inport_.getData();
     if(!input) {
         outport_.setData(nullptr);
@@ -75,19 +75,19 @@ void VesselGraphNormalizer::process() {
     }
 
     std::unique_ptr<VesselGraph> output(nullptr);
-    switch(normalizationMethod_.getValue()) {
+    switch(refinementMethod_.getValue()) {
         case ALL:
-            output = VesselGraphNormalization::removeAllEdges(*input, createRemovableEdgePredicate());
+            output = VesselGraphRefinement::removeAllEdges(*input, createRemovableEdgePredicate());
             break;
         case END_RECURSIVE:
-            output = VesselGraphNormalization::removeEndEdgesRecursively(*input, createRemovableEdgePredicate());
+            output = VesselGraphRefinement::removeEndEdgesRecursively(*input, createRemovableEdgePredicate());
             break;
     }
 
     outport_.setData(output.release());
 }
 
-std::function<bool(const VesselGraphEdge& edge)> VesselGraphNormalizer::createRemovableEdgePredicate() const {
+std::function<bool(const VesselGraphEdge& edge)> VesselGraphRefiner::createRemovableEdgePredicate() const {
     size_t minVoxelLength = minVoxelLength_.get();
     float minElongation = minElongation_.get();
     float minBulgeSize = minBulgeSize_.get();

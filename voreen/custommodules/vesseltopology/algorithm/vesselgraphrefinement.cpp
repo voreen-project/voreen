@@ -23,7 +23,7 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "vesselgraphnormalization.h"
+#include "vesselgraphrefinement.h"
 
 #include "voreen/core/voreenapplication.h"
 #include "../datastructures/diskarraystorage.h"
@@ -32,9 +32,12 @@
 
 #include <boost/variant.hpp>
 
+#include <unordered_map>
+#include <unordered_set>
+
 namespace voreen {
 
-std::unique_ptr<VesselGraph> VesselGraphNormalization::removeEndEdgesRecursively(const VesselGraph& input, RemovableEdgeCheck isRemovableEdge) {
+std::unique_ptr<VesselGraph> VesselGraphRefinement::removeEndEdgesRecursively(const VesselGraph& input, RemovableEdgeCheck isRemovableEdge) {
     size_t num_removed_this_it = 0;
     auto output = removeEndEdges(input, isRemovableEdge, num_removed_this_it);
     while(num_removed_this_it > 0) {
@@ -44,7 +47,7 @@ std::unique_ptr<VesselGraph> VesselGraphNormalization::removeEndEdgesRecursively
     return output;
 }
 
-static std::vector<const VesselGraphEdge*> findDeletable(const VesselGraphNode& node, VesselGraphNormalization::RemovableEdgeCheck isRemovableEdge) {
+static std::vector<const VesselGraphEdge*> findDeletable(const VesselGraphNode& node, VesselGraphRefinement::RemovableEdgeCheck isRemovableEdge) {
     std::vector<const VesselGraphEdge*> potentially_deletable;
     const auto& edges = node.getEdges();
     if(edges.size() <= 2) {
@@ -120,7 +123,7 @@ static std::vector<const VesselGraphEdge*> findDeletable(const VesselGraphNode& 
     }
 }
 
-std::unique_ptr<VesselGraph> VesselGraphNormalization::removeEndEdges(const VesselGraph& input, RemovableEdgeCheck isRemovableEdge, size_t& num_removed_edges) {
+std::unique_ptr<VesselGraph> VesselGraphRefinement::removeEndEdges(const VesselGraph& input, RemovableEdgeCheck isRemovableEdge, size_t& num_removed_edges) {
     std::unique_ptr<VesselGraph> output(new VesselGraph(input.getBounds()));
     num_removed_edges = 0;
 
@@ -232,7 +235,7 @@ inline bool isPartOfLoop(const VesselGraphEdge& edge) {
     return false;
 }
 
-std::unique_ptr<VesselGraph> VesselGraphNormalization::removeAllEdges(const VesselGraph& input, RemovableEdgeCheck isRemovableEdge) {
+std::unique_ptr<VesselGraph> VesselGraphRefinement::removeAllEdges(const VesselGraph& input, RemovableEdgeCheck isRemovableEdge) {
 
     // -----------------
     // Filtering and joining of nodes
@@ -466,7 +469,7 @@ struct FutureEdge {
     FutureEdge* parent_; // Points to other node if this has been merged with another node
 };
 
-std::unique_ptr<VesselGraph> VesselGraphNormalization::removeDregree2Nodes(const VesselGraph& input) {
+std::unique_ptr<VesselGraph> VesselGraphRefinement::removeDregree2Nodes(const VesselGraph& input) {
     std::unique_ptr<VesselGraph> output(new VesselGraph(input.getBounds()));
 
     // 1. build futureedge for all edges, create hashmap edge -> futureedge
