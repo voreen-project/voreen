@@ -201,7 +201,7 @@ public:
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
     template<class T>
-    void deserialize(const std::string& key, std::vector<T>& data, const std::string& itemKey = XmlSerializationConstants::ITEMNODE, const std::function<T()>& constructor = [] () { return T(); });
+    void deserialize(const std::string& key, std::vector<T>& data, const std::string& itemKey = XmlSerializationConstants::ITEMNODE, const std::function<T()>& constructor = DefaultConstructor<T>());
 
     /**
      * Deserializes a data deque.
@@ -223,7 +223,7 @@ public:
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
     template<class T>
-    void deserialize(const std::string& key, std::deque<T>& data, const std::string& itemKey = XmlSerializationConstants::ITEMNODE, const std::function<T()>& constructor = [] () { return T(); });
+    void deserialize(const std::string& key, std::deque<T>& data, const std::string& itemKey = XmlSerializationConstants::ITEMNODE, const std::function<T()>& constructor = DefaultConstructor<T>());
 
     /**
      * Deserializes a data list.
@@ -245,7 +245,7 @@ public:
      *         or if there are not enough allocate items if pointer content serialization is enabled
      */
     template<class T>
-    void deserialize(const std::string& key, std::list<T>& data, const std::string& itemKey = XmlSerializationConstants::ITEMNODE, const std::function<T()>& constructor = [] () { return T(); });
+    void deserialize(const std::string& key, std::list<T>& data, const std::string& itemKey = XmlSerializationConstants::ITEMNODE, const std::function<T()>& constructor = DefaultConstructor<T>());
 
     /**
      * Deserializes a data set.
@@ -272,7 +272,7 @@ public:
      *         because of possible hash problems on deserialization
      */
     template<class T, class C>
-    void deserialize(const std::string& key, std::set<T, C>& data, const std::string& itemKey = XmlSerializationConstants::ITEMNODE, const std::function<T()>& constructor = [] () { return T(); });
+    void deserialize(const std::string& key, std::set<T, C>& data, const std::string& itemKey = XmlSerializationConstants::ITEMNODE, const std::function<T()>& constructor = DefaultConstructor<T>());
 
     /**
      * Deserializes a data map.
@@ -381,6 +381,18 @@ private:
             */
         }
     } concreteDeserializer;
+
+    /**
+     * This function returns the default constructor of the template argument.
+     * Now, this is essentially a workaround for MSVC:
+     *     Classes seem not to grant friendships to any inline-lambda function.
+     *     This now works, because the function itself gets friendships granted,
+     *     so gets the returned lambda function.
+     */
+    template<typename T>
+    static std::function<T()> DefaultConstructor() {
+        return [] { return T(); };
+    }
 
     /**
      * Helper function for deserializing data collections like STL container.

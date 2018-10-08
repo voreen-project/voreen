@@ -26,7 +26,7 @@
 #include <cstdio>
 #include <string>
 #define TGT_ASSERT_H
-#define tgtAssert(cond, text) if(!(cond)) { std::cerr << "Assertion " << #cond << " failed: " << text << std::endl; asm("int $3"); }
+#define tgtAssert(cond, text) if(!(cond)) { std::cerr << "Assertion " << #cond << " failed: " << text << std::endl; exit(1); }
 #define TGT_FILESYSTEM_H
 namespace tgt{
     struct FileSystem {
@@ -43,7 +43,8 @@ namespace tgt{
 template<typename T>
 bool testBuilder(int maxElements, int numVectors, std::function<T()> random, std::default_random_engine& generator) {
     DiskArrayStorage<T> storage("test.tmp");
-    std::vector<std::pair<std::vector<T>, DiskArray<T>>> vectorsAndArrays;
+    std::vector<std::vector<T>> vectors;
+    std::vector<DiskArray<T>> arrays;
 
     std::uniform_int_distribution<int> dist(0,maxElements);
 
@@ -55,16 +56,16 @@ bool testBuilder(int maxElements, int numVectors, std::function<T()> random, std
             vec.push_back(v);
             builder.push(v);
         }
-        auto storedArray = std::move(builder).finalize();
 
-        vectorsAndArrays.push_back({std::move(vec), storedArray });
+        arrays.push_back(std::move(builder).finalize());
+        vectors.push_back(std::move(vec));
     }
 
+    tgtAssert(vectors.size() == arrays.size(), "size does not match");
 
-    int i=0;
-    for(const auto& vecAndArr : vectorsAndArrays) {
-        const auto& vec = vecAndArr.first;
-        const auto& arr = vecAndArr.second;
+    for (size_t i = 0; i < vectors.size(); i++) {
+        const auto& vec = vectors[i];
+        const auto& arr = arrays[i];
         if(vec.size() != arr.size()) {
             std::cerr << "Fail!" << std::endl;
             std::cerr << "Expected: Array size " << vec.size() << std::endl;
@@ -81,7 +82,6 @@ bool testBuilder(int maxElements, int numVectors, std::function<T()> random, std
                 return false;
             }
         }
-        ++i;
     }
     return true;
 }
@@ -89,7 +89,8 @@ bool testBuilder(int maxElements, int numVectors, std::function<T()> random, std
 template<typename T>
 bool testStore(int maxElements, int numVectors, std::function<T()> random, std::default_random_engine& generator) {
     DiskArrayStorage<T> storage("test.tmp");
-    std::vector<std::pair<std::vector<T>, DiskArray<T>>> vectorsAndArrays;
+    std::vector<std::vector<T>> vectors;
+    std::vector<DiskArray<T>> arrays;
 
     std::uniform_int_distribution<int> dist(0,maxElements);
 
@@ -98,16 +99,15 @@ bool testStore(int maxElements, int numVectors, std::function<T()> random, std::
         for(int j=0; j<dist(generator); ++j) {
             vec.push_back(random());
         }
-        auto storedArray = storage.store(vec);
-
-        vectorsAndArrays.push_back({std::move(vec), storedArray });
+        arrays.push_back(storage.store(vec));
+        vectors.push_back(std::move(vec));
     }
 
+    tgtAssert(vectors.size() == arrays.size(), "size does not match");
 
-    int i=0;
-    for(const auto& vecAndArr : vectorsAndArrays) {
-        const auto& vec = vecAndArr.first;
-        const auto& arr = vecAndArr.second;
+    for (size_t i = 0; i < vectors.size(); i++) {
+        const auto& vec = vectors[i];
+        const auto& arr = arrays[i];
         if(vec.size() != arr.size()) {
             std::cerr << "Fail!" << std::endl;
             std::cerr << "Expected: Array size " << vec.size() << std::endl;
@@ -124,7 +124,6 @@ bool testStore(int maxElements, int numVectors, std::function<T()> random, std::
                 return false;
             }
         }
-        ++i;
     }
     return true;
 }
@@ -160,11 +159,15 @@ std::function<T()> randomFloat(std::default_random_engine& generator) {
 int main() {
     std::default_random_engine generator;
     generator.seed(0xdeadbeef);
+#ifndef _MSC_VER
     test<uint8_t>(1000, 1000, randomInt<uint8_t>(generator), generator);
+#endif
     test<uint16_t>(1000, 1000, randomInt<uint16_t>(generator), generator);
     test<uint32_t>(1000, 1000, randomInt<uint32_t>(generator), generator);
     test<uint64_t>(1000, 1000, randomInt<uint64_t>(generator), generator);
+#ifndef _MSC_VER
     test<int8_t>(1000, 1000, randomInt<int8_t>(generator), generator);
+#endif
     test<int16_t>(1000, 1000, randomInt<int16_t>(generator), generator);
     test<int32_t>(1000, 1000, randomInt<int32_t>(generator), generator);
     test<int64_t>(1000, 1000, randomInt<int64_t>(generator), generator);

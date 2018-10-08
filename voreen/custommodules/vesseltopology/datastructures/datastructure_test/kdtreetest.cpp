@@ -181,7 +181,9 @@ int main() {
     test<float>(10000, [&] () { return std::uniform_real_distribution<float>(-100000,100000)(generator); });
     test<double>(10000, [&] () { return std::uniform_real_distribution<float>(-1e10,1e10)(generator); });
     test<int>(10000, [&] () { return std::uniform_int_distribution<int>(-10000,10000)(generator); });
+#ifndef _MSC_VER
     test<int8_t>(10000, [&] () { return std::uniform_int_distribution<int8_t>(-1,1)(generator); });
+#endif
     test<int16_t>(10000, [&] () { return std::uniform_int_distribution<int16_t>(-50,50)(generator); });
     test<int32_t>(10000, [&] () { return std::uniform_int_distribution<int32_t>(-1000,1000)(generator); });
     test<int64_t>(10000, [&] () { return std::uniform_int_distribution<int64_t>(0,1337)(generator); });

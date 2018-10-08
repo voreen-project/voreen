@@ -27,8 +27,6 @@
 #define VRN_PORTCONNECTION_H
 
 #include "voreen/core/io/serialization/serializable.h"
-#include "voreen/core/io/serialization/xmlserializer.h"
-#include "voreen/core/io/serialization/xmldeserializer.h"
 
 namespace voreen {
 
@@ -130,6 +128,7 @@ private:
     };
 
     friend class Deserializer;
+
     /**
      * Default constructor for serialization purposes.
      */

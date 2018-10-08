@@ -456,6 +456,7 @@ DiskArray<Element> DiskArrayStorage<Element>::store_internal(const Arr& array) {
 
         ensureFit(numElements_);
 
+        //FIXME: dereferencing end will most likely crash, end is behind (!) the last element. (sl)
         std::copy(&*array.begin(), &*array.end(), &operator[](oldNumElements));
 
         return DiskArray<Element>(&file_, oldNumElements, numElements_);
@@ -464,7 +465,11 @@ DiskArray<Element> DiskArrayStorage<Element>::store_internal(const Arr& array) {
 
 template<typename Element>
 size_t DiskArrayStorage<Element>::storeElement(const Element& elm) {
+#ifdef _MSC_VER
+    return storeElement(std::move(Element(elm)));
+#else
     return storeElement(Element(elm));
+#endif
 }
 
 template<typename Element>
