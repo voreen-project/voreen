@@ -51,11 +51,6 @@ public:
     virtual CodeState getCodeState() const   { return CODE_STATE_STABLE; }
 
     /**
-     * Reloads the image, if file path has changed.
-     */
-    virtual void invalidate(int inv = INVALID_RESULT);
-
-    /**
      * Loads the image specified by filename.
      *
      * @note The processor must have been initialized
@@ -95,9 +90,15 @@ protected:
      */
     void clearImage();
 
+    /**
+     * Forces a reload of the loaded image.
+     */
+    void forceReload();
+
     RenderPort outport_;            ///< The render port the image is written to.
     FileDialogProperty imageFile_;  ///< Path of the loaded image file.
-    ButtonProperty clearImage_;      ///< Executes clearImage().
+    ButtonProperty reloadImage_;    ///< Forces reload
+    ButtonProperty clearImage_;     ///< Executes clearImage().
     IntVec2Property imageSize_;     ///< Read-only property providing the dimensions of the loaded image.
 
     tgt::Texture* texture_;         ///< The 2D texture encapsulating the image file.
@@ -108,6 +109,7 @@ protected:
     bool textureOwner_;
 
     bool forceReload_;
+
     static const std::string loggerCat_;
 };
 

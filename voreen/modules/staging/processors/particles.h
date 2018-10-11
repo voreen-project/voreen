@@ -92,6 +92,8 @@ protected:
     tgt::EventHandler eventHandler_;    // A local eventhandler which is added to the timer.
     tgt::Timer* timer_;
     CameraInteractionHandler* cameraHandler_;
+
+    float time_;
 };
 
 } // namespace voreen

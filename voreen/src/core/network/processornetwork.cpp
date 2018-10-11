@@ -48,8 +48,9 @@ using std::vector;
 namespace voreen {
 
 const std::string ProcessorNetwork::loggerCat_("voreen.ProcessorNetwork");
-const int ProcessorNetwork::NETWORK_VERSION = 19; //< Voreen 5.0
+const int ProcessorNetwork::NETWORK_VERSION = 20; //< Voreen 5.1
 const int ProcessorNetwork::WARNING_VERSION = 19; //< Voreen 5.0
+const std::string ProcessorNetwork::WARNING_VERSION_STRING = "5.0";
 
 ProcessorNetwork::ProcessorNetwork()
     : version_(NETWORK_VERSION)

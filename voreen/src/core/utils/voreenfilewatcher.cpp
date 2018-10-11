@@ -167,8 +167,6 @@ void VoreenFileWatcher::MetaFileWatchListener::handleFileAction(efsw::WatchID wa
             {
                 tgtAssert(listener->isFileWatchEnabled(), "File Watch Callback called unintentionally");
 
-                // Remove all old commmands and enqueue the new task.
-                VoreenApplication::app()->getCommandQueue()->removeAll(listener);
                 VoreenApplication::app()->getCommandQueue()->enqueue(listener, MemberFunctionCallback<VoreenFileWatchListener>(listener, &VoreenFileWatchListener::fileActionCallback));
             }
         }

@@ -28,7 +28,7 @@
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 #include "voreen/core/datastructures/geometry/pointlistgeometry.h"
-#include "../algorithm/vesselgraphnormalization.h"
+#include "../algorithm/vesselgraphrefinement.h"
 
 #include <numeric>
 #include <queue>
@@ -120,7 +120,7 @@ namespace {
 
 static std::unique_ptr<VesselGraph> extractSubgraph(const VesselGraph& input, const tgt::vec3& starting_point, uint32_t max_edge_distance, bool keepBounds) {
     std::unique_ptr<VesselGraph> output(keepBounds ? new VesselGraph(input.getBounds()) : new VesselGraph());
-    auto& nodes = input.getNodes();
+    auto nodes = input.getNodes();
     if(nodes.empty()) {
         return output;
     }

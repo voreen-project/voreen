@@ -55,7 +55,7 @@ void VolumeSelector::process() {
     // processor is only ready, if inport contains a volumelist
     // but the list can be empty
     if(volumeID_.get() == -1) {
-        outport_.setData(0);
+        outport_.setData(nullptr);
     } else {
         outport_.setData(inport_.getData()->at(volumeID_.get()), false);
     }
@@ -82,7 +82,7 @@ void VolumeSelector::adjustToVolumeList() {
     volumeID_.setMinValue(std::min(0,static_cast<int>(collection->size())-1));
     volumeID_.setMaxValue(static_cast<int>(collection->size())-1);
     // set to first volume if no volume was present earlier
-    if (collection->size() && volumeID_.get() == -1)
+    if (!collection->empty() && volumeID_.get() == -1)
         volumeID_.set(0);
 }
 

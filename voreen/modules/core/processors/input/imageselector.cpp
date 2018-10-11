@@ -36,19 +36,19 @@ ImageSelector::ImageSelector()
     : RenderProcessor(),
       inport_(Port::INPORT, "imagesequence.in", "ImageSequence Input", false),
       outport_(Port::OUTPORT, "image.out", "image.out", false),
-      imageID_("imageID", "Selected Image", 0, 0, 10000),
+      imageID_("imageID", "Selected Image", -1, -1, std::numeric_limits<int>::max() - 1),
       imageSize_("imageSize", "Image Size", tgt::ivec2(0), tgt::ivec2(0), tgt::ivec2(1 << 12), VALID),
       wheelHandler_("wheelHandler.imageCycling", "Image Cycling", &imageID_),
       shader_(0)
 {
     addPort(inport_);
+    ON_CHANGE(inport_, ImageSelector, adjustToImageSequence);
     addPort(outport_);
 
     addProperty(imageID_);
     addProperty(imageSize_);
     imageSize_.setReadOnlyFlag(true);
     addInteractionHandler(&wheelHandler_);
-    ON_CHANGE(inport_, ImageSelector, adjustToImageSequence);
 }
 
 Processor* ImageSelector::create() const {
@@ -57,8 +57,9 @@ Processor* ImageSelector::create() const {
 
 void ImageSelector::process() {
 
-    if ((imageID_.get() < 0) || (imageID_.get() >= static_cast<int>(inport_.getData()->size()))) {
-        outport_.invalidateResult();
+    if (imageID_.get() == -1) {
+        outport_.clear();
+        outport_.invalidatePort();
         return;
     }
 
@@ -121,6 +122,7 @@ void ImageSelector::deinitialize() {
 
 void ImageSelector::invalidate(int inv) {
     RenderProcessor::invalidate(inv);
+    adjustToImageSequence();
 }
 
 void ImageSelector::adjustToImageSequence() {
@@ -130,21 +132,12 @@ void ImageSelector::adjustToImageSequence() {
     if(!sequence)
         return;
 
-    int max = static_cast<int>(sequence->size());
-
-    if (!sequence->empty()) {
-        // adjust max id to size of collection
-        if (imageID_.getMaxValue() != max - 1) {
-            imageID_.setMaxValue(max - 1);
-            //value is adjusted in setMaxValue
-        }
-        tgtAssert((imageID_.get() >= 0) && (imageID_.get() < max), "Invalid image index");
-    }
-    else {
-        imageID_.setMaxValue(max);
-        tgtAssert((imageID_.get() >= 0) && (imageID_.get() < max), "Invalid image index");
-    }
-
+    //if we have a list, adapt min and max values
+    imageID_.setMinValue(std::min(0, static_cast<int>(sequence->size()) - 1));
+    imageID_.setMaxValue(static_cast<int>(sequence->size()) - 1);
+    // set to first image if no image was present earlier
+    if (!sequence->empty() && imageID_.get() == -1)
+        imageID_.set(0);
 }
 
 } // namespace

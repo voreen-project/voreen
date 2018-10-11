@@ -113,6 +113,11 @@ private:
      */
     void clearGeometry();
 
+    /**
+     * Triggers reloading the geometry file.
+     */
+    void forceReload();
+
     /// Adjusts the visibility of the skipItemCount_ property.
     void updatePropertyVisibility();
 
@@ -128,6 +133,8 @@ private:
     ColorProperty objColor_;
 
     GeometryPort outport_;
+
+    bool forceReload_;
 
     static const std::string loggerCat_;
 };

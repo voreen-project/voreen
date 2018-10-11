@@ -1987,7 +1987,7 @@
                     </CoProcessorOutports>
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VesselGraphNormalizer" name="VesselGraphNormalizer" id="ref13">
+                <Processor type="VesselGraphRefiner" name="VesselGraphRefiner" id="ref13">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="81" y="-530" />
                     </MetaData>
@@ -2946,7 +2946,7 @@
                         <Processor type="VesselGraphCreator" ref="ref12" />
                     </Outport>
                     <Inport name="graph.input">
-                        <Processor type="VesselGraphNormalizer" ref="ref13" />
+                        <Processor type="VesselGraphRefiner" ref="ref13" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -2967,7 +2967,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="graph.output">
-                        <Processor type="VesselGraphNormalizer" ref="ref13" />
+                        <Processor type="VesselGraphRefiner" ref="ref13" />
                     </Outport>
                     <Inport name="graph.input">
                         <Processor type="VesselGraphRenderer" ref="ref16" />
@@ -2975,7 +2975,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="graph.output">
-                        <Processor type="VesselGraphNormalizer" ref="ref13" />
+                        <Processor type="VesselGraphRefiner" ref="ref13" />
                     </Outport>
                     <Inport name="vesselgraphskeletonextractor_graph.inport">
                         <Processor type="VesselGraphSkeletonExtractor" ref="ref8" />

@@ -157,13 +157,6 @@ protected:
      * Any change to these ports will stop the computation.
      * Note: This function is expected to always return references to the same ports,
      * when called between initialize() and deinitialize().
-     *
-     * =============================================================================
-     * !!! Note !!!
-     * As of now changes to Ports other than volume and geometry ports cannot be 
-     * detected, as Portobserver does not provide means to detect changed data,
-     * and there are no TextObserver, etc.
-     * =============================================================================
      */
     virtual std::vector<std::reference_wrapper<Port>> getCriticalPorts();
 
@@ -333,14 +326,14 @@ void AsyncComputeProcessor<I, O>::ComputeThread::clearOutput() {
 template<class I, class O>
 void AsyncComputeProcessor<I, O>::ComputeThread::threadMain() {
     ProcessorBackgroundThread<AsyncComputeProcessor<I, O>>::processor_->lockMutex();
-    tgtAssert(input_, "ComputeThrad started without input!");
+    tgtAssert(input_, "ComputeThread started without input!");
     output_.reset();
 
     std::unique_ptr<ProgressReporter> progress;
     if(ProcessorBackgroundThread<AsyncComputeProcessor<I,O>>::processor_->synchronousComputation_.get()) {
-        progress.reset(new ComputeProgressReporter(*ProcessorBackgroundThread<AsyncComputeProcessor<I,O>>::processor_));
-    } else {
         progress.reset(new NoopProgressReporter());
+    } else {
+        progress.reset(new ComputeProgressReporter(*ProcessorBackgroundThread<AsyncComputeProcessor<I, O>>::processor_));
     }
     I* input = input_.release();
     ProcessorBackgroundThread<AsyncComputeProcessor<I, O>>::processor_->unlockMutex();
@@ -385,9 +378,6 @@ void AsyncComputeProcessor<I,O>::ComputeProgressReporter::setProgress(float prog
         auto remainingDuration = expectedTotalDuration - computeDuration;
         auto remainingDurationMillis = std::chrono::duration_cast<std::chrono::milliseconds>(remainingDuration);
         std::string timeFormat(formatTime(remainingDurationMillis.count()));
-
-        // Remove old commands of this progress reporter.
-        VoreenApplication::app()->getCommandQueue()->removeAll(this);
 
         // Enqueue new command for an ui update.
         VoreenApplication::app()->getCommandQueue()->enqueue(this, LambdaFunctionCallback([this, timeFormat, progress] {

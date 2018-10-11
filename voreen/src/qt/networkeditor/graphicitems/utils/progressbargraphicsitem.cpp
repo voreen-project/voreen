@@ -115,10 +115,6 @@ void ProgressBarGraphicsItem::forceUpdate() {
 }
 
 void ProgressBarGraphicsItem::update() {
-
-    // Remove old commands.
-    VoreenApplication::app()->getCommandQueue()->removeAll(this);
-
     // Setup command for the update
     LambdaFunctionCallback command([this] {
         if (time_.elapsed() > 500 || progress_ == 1.f || progress_ == 0.f) {

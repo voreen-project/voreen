@@ -33,7 +33,7 @@
 namespace voreen {
 
 // VesselSkeletonVoxel -------------------------------------------------------------------------
-VesselSkeletonVoxel::VesselSkeletonVoxel(const tgt::vec3& pos, float minDistToSurface, float maxDistToSurface, float avgDistToSurface, size_t numSurfaceVoxels, float volume)
+VesselSkeletonVoxel::VesselSkeletonVoxel(const tgt::vec3& pos, float minDistToSurface, float maxDistToSurface, float avgDistToSurface, uint32_t numSurfaceVoxels, float volume)
     : pos_(pos)
     , minDistToSurface_(minDistToSurface)
     , maxDistToSurface_(maxDistToSurface)
@@ -64,34 +64,46 @@ float VesselSkeletonVoxel::roundness() const {
         return 1;
     }
 }
-void VesselSkeletonVoxel::serialize(Serializer& s) const {
-    s.serialize("pos", pos_);
-    s.serialize("minDistToSurface", minDistToSurface_);
-    s.serialize("maxDistToSurface", maxDistToSurface_);
-    s.serialize("avgDistToSurface", avgDistToSurface_);
-    s.serialize("numSurfaceVoxels", numSurfaceVoxels_);
-    s.serialize("volume", volume_);
+void VesselSkeletonVoxelSerializable::serialize(Serializer& s) const {
+    s.serialize("pos", inner_.pos_);
+    s.serialize("minDistToSurface", inner_.minDistToSurface_);
+    s.serialize("maxDistToSurface", inner_.maxDistToSurface_);
+    s.serialize("avgDistToSurface", inner_.avgDistToSurface_);
+    s.serialize("numSurfaceVoxels", inner_.numSurfaceVoxels_);
+    s.serialize("volume", inner_.volume_);
 }
-void VesselSkeletonVoxel::deserialize(Deserializer& s) {
-    s.deserialize("pos", pos_);
-    s.deserialize("minDistToSurface", minDistToSurface_);
-    s.deserialize("maxDistToSurface", maxDistToSurface_);
-    s.deserialize("avgDistToSurface", avgDistToSurface_);
-    s.deserialize("numSurfaceVoxels", numSurfaceVoxels_);
-    s.deserialize("volume", volume_);
+void VesselSkeletonVoxelSerializable::deserialize(Deserializer& s) {
+    s.deserialize("pos", inner_.pos_);
+    s.deserialize("minDistToSurface", inner_.minDistToSurface_);
+    s.deserialize("maxDistToSurface", inner_.maxDistToSurface_);
+    s.deserialize("avgDistToSurface", inner_.avgDistToSurface_);
+    s.deserialize("numSurfaceVoxels", inner_.numSurfaceVoxels_);
+    s.deserialize("volume", inner_.volume_);
 }
+VesselSkeletonVoxelSerializable::VesselSkeletonVoxelSerializable()
+    : inner_()
+{
+}
+VesselSkeletonVoxelSerializable::VesselSkeletonVoxelSerializable(VesselSkeletonVoxel val)
+    : inner_(val)
+{
+}
+
+// VG*IDs ----------------------------------------------------------------------------------
+const VGNodeID VGNodeID::INVALID = VGNodeID(-1);
+const VGEdgeID VGEdgeID::INVALID = VGEdgeID(-1);
 
 
 // VesselGraphNode -------------------------------------------------------------------------
-VesselGraphNode::VesselGraphNode(VesselGraph& graph, VGNodeID id, const tgt::vec3& position, std::vector<tgt::vec3> voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid)
+VesselGraphNode::VesselGraphNode(VesselGraph& graph, VGNodeID id, const tgt::vec3& position, DiskArray<tgt::vec3>&& voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid)
     : id_(id)
     , uuid_(uuid)
-    , edges_()
     , pos_(position)
-    , voxels_(voxels)
+    , voxels_(std::move(voxels))
     , isAtSampleBorder_(isAtSampleBorder)
     , radius_(radius)
     , graph_(&graph)
+    , edges_(*graph.nodeEdgeIdStorage_)
 {
 }
 VesselGraphNode::VesselGraphNode(VesselGraphNode&& other)
@@ -111,19 +123,6 @@ VesselGraphNode& VesselGraphNode::operator=(VesselGraphNode&& other)
     this->~VesselGraphNode();
     new(this) VesselGraphNode(std::move(other));
     return *this;
-}
-
-// ONLY used for deserialization
-VesselGraphNode::VesselGraphNode()
-    : id_(-1)
-    , uuid_()
-    , edges_()
-    , pos_()
-    , voxels_()
-    , isAtSampleBorder_(false)
-    , radius_(std::numeric_limits<float>::quiet_NaN())
-    , graph_(nullptr)
-{
 }
 
 int VesselGraphNode::getDegree() const {
@@ -170,36 +169,49 @@ VGNodeID VesselGraphNode::getID() const {
 float VesselGraphNode::getRadius() const {
     return radius_;
 }
-void VesselGraphNode::serialize(Serializer& s) const {
-    s.serialize("id", id_.raw());
+
+VesselGraphNodeSerializable::VesselGraphNodeSerializable(const VesselGraphNode& node)
+    : inner_(node)
+{
+}
+
+void VesselGraphNodeSerializable::serialize(Serializer& s) const {
+    s.serialize("id", inner_.id_.raw());
     std::vector<uint32_t> edges;
-    for(auto edge : edges_) {
+    for(auto edge : inner_.edges_) {
         edges.push_back(edge.raw());
     }
     s.serialize("edges", edges);
-    s.serialize("pos", pos_);
-    s.serialize("voxels_", voxels_);
-    s.serialize("radius", radius_);
-    s.serialize("isAtSampleBorder", isAtSampleBorder_);
+    s.serialize("pos", inner_.pos_);
+
+    std::vector<tgt::vec3> voxels;
+    for(auto voxel : inner_.voxels_) {
+        voxels.push_back(voxel);
+    }
+    s.serialize("voxels_", voxels);
+    s.serialize("radius", inner_.radius_);
+    s.serialize("isAtSampleBorder", inner_.isAtSampleBorder_);
 }
-void VesselGraphNode::deserialize(Deserializer& s) {
+void VesselGraphNodeSerializable::deserialize(Deserializer&) {
+    tgtAssert(false, "Cannot deserialize VesselGraphNodeSerializable");
+}
+void VesselGraphNodeDeserializable::serialize(Serializer&) const {
+    tgtAssert(false, "Cannot serialize VesselGraphNodeDeserializable");
+}
+void VesselGraphNodeDeserializable::deserialize(Deserializer& s) {
     uint32_t id;
     s.deserialize("id", id);
     id_ = id;
-    std::vector<uint32_t> edges;
-    s.deserialize("edges", edges);
-    for(auto edge : edges) {
-        edges_.push_back(edge);
-    }
     s.deserialize("pos", pos_);
+
     s.deserialize("voxels_", voxels_);
     s.deserialize("radius", radius_);
     s.deserialize("isAtSampleBorder", isAtSampleBorder_);
 }
 
 // VesselGraphEdge -------------------------------------------------------------------------
-template<class T>
-static void statisticalAnalysis(const std::vector<T>& voxels, std::function<float(const T&)> getVoxelValue, float& /*out*/ avg, float& /*out*/ stddev) {
+template<class T, class E>
+static void statisticalAnalysis(const T& voxels, std::function<float(const E&)> getVoxelValue, float& /*out*/ avg, float& /*out*/ stddev) {
 
     float sum = 0;
     int numValidVoxels = 0;
@@ -263,7 +275,7 @@ bool VesselGraphEdgePathProperties::hasValidData() const {
 }
 
 
-VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const VesselGraphNode& begin, const VesselGraphNode& end, const std::vector<VesselSkeletonVoxel>& path) {
+VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const VesselGraphNode& begin, const VesselGraphNode& end, const DiskArray<VesselSkeletonVoxel>& path) {
     VesselGraphEdgePathProperties output;
 
     // Compute length
@@ -281,25 +293,25 @@ VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const Vess
     // Compute volume
     if(path.size() > 0) {
         output.volume_ = 0;
-        for(VesselSkeletonVoxel voxel : path) {
+        for(const VesselSkeletonVoxel& voxel : path) {
             output.volume_ += voxel.volume_;
         }
     }
 
     // Compute min radius vals
-    statisticalAnalysis<VesselSkeletonVoxel>(path, [] (const VesselSkeletonVoxel& v) {
+    statisticalAnalysis<DiskArray<VesselSkeletonVoxel>, VesselSkeletonVoxel>(path, [] (const VesselSkeletonVoxel& v) {
             return v.minDistToSurface_;
             },
             output.minRadiusAvg_, output.minRadiusStdDeviation_);
 
     // Compute avg radius vals
-    statisticalAnalysis<VesselSkeletonVoxel>(path, [] (const VesselSkeletonVoxel& v) {
+    statisticalAnalysis<DiskArray<VesselSkeletonVoxel>, VesselSkeletonVoxel>(path, [] (const VesselSkeletonVoxel& v) {
             return v.avgDistToSurface_;
             },
             output.avgRadiusAvg_, output.avgRadiusStdDeviation_);
 
     // Compute max radius vals
-    statisticalAnalysis<VesselSkeletonVoxel>(path, [] (const VesselSkeletonVoxel& v) {
+    statisticalAnalysis<DiskArray<VesselSkeletonVoxel>, VesselSkeletonVoxel>(path, [] (const VesselSkeletonVoxel& v) {
             return v.maxDistToSurface_;
             },
             output.maxRadiusAvg_, output.maxRadiusStdDeviation_);
@@ -309,7 +321,7 @@ VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const Vess
     output.maxRadiusMax_ = maybe_max!=path.end() && maybe_max->hasValidData() ? maybe_max->maxDistToSurface_ : INVALID_DATA;
 
     // Compute roundness vals
-    statisticalAnalysis<VesselSkeletonVoxel>(path, [] (const VesselSkeletonVoxel& v) {
+    statisticalAnalysis<DiskArray<VesselSkeletonVoxel>, VesselSkeletonVoxel>(path, [] (const VesselSkeletonVoxel& v) {
             return v.roundness();
             },
             output.roundnessAvg_, output.roundnessStdDeviation_);
@@ -317,39 +329,43 @@ VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const Vess
     tgtAssert(!std::isnan(output.length_), "Invalid length");
     return output;
 }
-void VesselGraphEdgePathProperties::serialize(Serializer& s) const {
-    s.serialize("length", length_);
-    s.serialize("volume", volume_);
-    s.serialize("minRadiusAvg", minRadiusAvg_);
-    s.serialize("minRadiusStdDeviation", minRadiusStdDeviation_);
-    s.serialize("maxRadiusAvg", maxRadiusAvg_);
-    s.serialize("maxRadiusStdDeviation", maxRadiusStdDeviation_);
-    s.serialize("avgRadiusAvg", avgRadiusAvg_);
-    s.serialize("avgRadiusStdDeviation", avgRadiusStdDeviation_);
-    s.serialize("roundnessAvg", roundnessAvg_);
-    s.serialize("roundnessStdDeviation", roundnessStdDeviation_);
+VesselGraphEdgePathPropertiesSerializable::VesselGraphEdgePathPropertiesSerializable()
+    : inner_()
+{
 }
-void VesselGraphEdgePathProperties::deserialize(Deserializer& s) {
-    s.deserialize("length", length_);
-    s.deserialize("volume", volume_);
-    s.deserialize("minRadiusAvg", minRadiusAvg_);
-    s.deserialize("minRadiusStdDeviation", minRadiusStdDeviation_);
-    s.deserialize("maxRadiusAvg", maxRadiusAvg_);
-    s.deserialize("maxRadiusStdDeviation", maxRadiusStdDeviation_);
-    s.deserialize("avgRadiusAvg", avgRadiusAvg_);
-    s.deserialize("avgRadiusStdDeviation", avgRadiusStdDeviation_);
-    s.deserialize("roundnessAvg", roundnessAvg_);
-    s.deserialize("roundnessStdDeviation", roundnessStdDeviation_);
+void VesselGraphEdgePathPropertiesSerializable::serialize(Serializer& s) const {
+    s.serialize("length", inner_.length_);
+    s.serialize("volume", inner_.volume_);
+    s.serialize("minRadiusAvg", inner_.minRadiusAvg_);
+    s.serialize("minRadiusStdDeviation", inner_.minRadiusStdDeviation_);
+    s.serialize("maxRadiusAvg", inner_.maxRadiusAvg_);
+    s.serialize("maxRadiusStdDeviation", inner_.maxRadiusStdDeviation_);
+    s.serialize("avgRadiusAvg", inner_.avgRadiusAvg_);
+    s.serialize("avgRadiusStdDeviation", inner_.avgRadiusStdDeviation_);
+    s.serialize("roundnessAvg", inner_.roundnessAvg_);
+    s.serialize("roundnessStdDeviation", inner_.roundnessStdDeviation_);
+}
+void VesselGraphEdgePathPropertiesSerializable::deserialize(Deserializer& s) {
+    s.deserialize("length", inner_.length_);
+    s.deserialize("volume", inner_.volume_);
+    s.deserialize("minRadiusAvg", inner_.minRadiusAvg_);
+    s.deserialize("minRadiusStdDeviation", inner_.minRadiusStdDeviation_);
+    s.deserialize("maxRadiusAvg", inner_.maxRadiusAvg_);
+    s.deserialize("maxRadiusStdDeviation", inner_.maxRadiusStdDeviation_);
+    s.deserialize("avgRadiusAvg", inner_.avgRadiusAvg_);
+    s.deserialize("avgRadiusStdDeviation", inner_.avgRadiusStdDeviation_);
+    s.deserialize("roundnessAvg", inner_.roundnessAvg_);
+    s.deserialize("roundnessStdDeviation", inner_.roundnessStdDeviation_);
 }
 
-VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, VGEdgeID id, VGNodeID node1ID, VGNodeID node2ID, const std::vector<VesselSkeletonVoxel>&& voxels, VesselGraphEdgeUUID uuid)
+VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, VGEdgeID id, VGNodeID node1ID, VGNodeID node2ID, DiskArray<VesselSkeletonVoxel>&& voxels, VesselGraphEdgeUUID uuid)
     : graph_(&graph)
     , id_(id)
     , node1_(node1ID)
     , node2_(node2ID)
     , distance_(std::numeric_limits<float>::quiet_NaN())
     , pathProps_() //Invalid until initialized
-    , voxels_(voxels)
+    , voxels_(std::move(voxels))
     , uuid_(uuid)
 {
     VesselGraphNode& node1 = getNode1();
@@ -580,7 +596,7 @@ bool VesselGraphEdge::isLoop() const {
     return getNodeID1() == getNodeID2();
 }
 
-const std::vector<VesselSkeletonVoxel>& VesselGraphEdge::getVoxels() const {
+const DiskArray<VesselSkeletonVoxel>& VesselGraphEdge::getVoxels() const {
     return voxels_;
 }
 VGEdgeID VesselGraphEdge::getID() const {
@@ -597,19 +613,36 @@ size_t VesselGraphEdge::getNumValidVoxels() const {
             });
 }
 
-void VesselGraphEdge::serialize(Serializer& s) const {
-    s.serialize("id", id_.raw());
-    s.serialize("node1", node1_.raw());
-    s.serialize("node2", node2_.raw());
-    s.serialize("distance", distance_);
+VesselGraphEdgeSerializable::VesselGraphEdgeSerializable(const VesselGraphEdge& e)
+    : inner_(e)
+{
+}
+void VesselGraphEdgeSerializable::serialize(Serializer& s) const {
+    s.serialize("id", inner_.id_.raw());
+    s.serialize("node1", inner_.node1_.raw());
+    s.serialize("node2", inner_.node2_.raw());
+    s.serialize("distance", inner_.distance_);
 
-    if(voxels_.empty()) {
-        s.serialize("pathProperties", pathProps_);
+    if(inner_.voxels_.empty()) {
+        VesselGraphEdgePathPropertiesSerializable props;
+        props.inner_ = inner_.pathProps_;
+        s.serialize("pathProperties", props);
     } else {
-        s.serialize("skeletonVoxels", voxels_);
+        std::vector<VesselSkeletonVoxelSerializable> voxels;
+        voxels.reserve(voxels.size());
+        for(const auto& voxel : inner_.voxels_) {
+            voxels.emplace_back(voxel);
+        }
+        s.serialize("skeletonVoxels", voxels);
     }
 }
-void VesselGraphEdge::deserialize(Deserializer& s) {
+void VesselGraphEdgeSerializable::deserialize(Deserializer&) {
+    tgtAssert(false, "Cannot deserialize VesselGraphEdgeSerializable");
+}
+void VesselGraphEdgeDeserializable::serialize(Serializer&) const {
+    tgtAssert(false, "Cannot serialize VesselGraphEdgeDeserializable");
+}
+void VesselGraphEdgeDeserializable::deserialize(Deserializer& s) {
     uint32_t id, n1, n2;
     s.deserialize("id", id);
     s.deserialize("node1", n1);
@@ -617,58 +650,54 @@ void VesselGraphEdge::deserialize(Deserializer& s) {
     id_ = id;
     node1_ = n1;
     node2_ = n2;
-    s.deserialize("distance", distance_);
 
-    bool noSkeletonVoxelsTag = false;
     try {
-        s.deserialize("skeletonVoxels", voxels_);
+        std::vector<VesselSkeletonVoxelSerializable> voxels;
+        s.deserialize("skeletonVoxels", voxels);
+
+        for(const auto& voxel : voxels) {
+            voxels_.push_back(voxel.inner_);
+        }
     } catch (SerializationException s) {
-        noSkeletonVoxelsTag = true;
     }
-    if(noSkeletonVoxelsTag || voxels_.empty()) {
-        s.deserialize("pathProperties", pathProps_);
-    }
-}
-
-void VesselGraphEdge::updatePathPropertiesFromVoxels() {
-    // NOTE:
-    // Yes, this is pretty ugly, but we cannot set the graph pointer in the deserialization and we cannot
-    // therefore get the nodes in the deserialization. This method will therefore be called after the
-    // "normal" deserialization of edges, and only after all nodes have been added to the graph.
-    //
-    if(!voxels_.empty()) {
-        pathProps_ = VesselGraphEdgePathProperties::fromPath(getNode1(), getNode2(), voxels_);
+    if(voxels_.empty()) {
+        VesselGraphEdgePathPropertiesSerializable props;
+        s.deserialize("pathProperties", props);
+        pathProps_ = props.inner_;
     }
 }
-
 
 // VesselGraph -------------------------------------------------------------------------
 
 VesselGraph::VesselGraph(const tgt::Bounds& bounds)
-    : nodes_()
-    , edges_()
+    : nodes_(new DiskArrayStorage<VesselGraphNode>(VoreenApplication::app()->getUniqueTmpFilePath(".vgnodes")))
+    , edges_(new DiskArrayStorage<VesselGraphEdge>(VoreenApplication::app()->getUniqueTmpFilePath(".vgedges")))
+    , nodeEdgeIdStorage_(new DiskArrayBackedList<VGEdgeID>::Storage(VoreenApplication::app()->getUniqueTmpFilePath(".vgnodeedgerefs")))
+    , edgeVoxelStorage_(new DiskArrayStorage<VesselSkeletonVoxel>(VoreenApplication::app()->getUniqueTmpFilePath(".vgedgevoxels")))
+    , nodeVoxelStorage_(new DiskArrayStorage<tgt::vec3>(VoreenApplication::app()->getUniqueTmpFilePath(".vgnodevoxels")))
     , bounds_(bounds)
 {
 }
 
 VesselGraph::VesselGraph()
-    : nodes_()
-    , edges_()
-    , bounds_()
+    : VesselGraph(tgt::Bounds())
 {
 }
 
 VesselGraph::VesselGraph(VesselGraph&& other)
     : nodes_(std::move(other.nodes_))
     , edges_(std::move(other.edges_))
+    , nodeEdgeIdStorage_(std::move(other.nodeEdgeIdStorage_))
     , bounds_(other.bounds_)
+    , edgeVoxelStorage_(std::move(other.edgeVoxelStorage_))
+    , nodeVoxelStorage_(std::move(other.nodeVoxelStorage_))
 {
     // Fix up references:
-    for(auto& node: nodes_) {
+    for(auto& node: nodes_->asArray()) {
         node.graph_ = this;
     }
 
-    for(auto& edge: edges_) {
+    for(auto& edge: edges_->asArray()) {
         edge.graph_ = this;
     }
 }
@@ -676,70 +705,90 @@ VesselGraph::VesselGraph(VesselGraph&& other)
 VesselGraph VesselGraph::clone() const {
 
     VesselGraph res(getBounds());
-    for(auto& node: nodes_) {
-        std::vector<tgt::vec3> voxels(node.voxels_);
-        res.insertNode(node.pos_, std::move(voxels), node.getRadius(), node.isAtSampleBorder_, node.getUUID());
+    for(auto& node: nodes_->asArray()) {
+        res.insertNode(node);
     }
 
-    for(auto& edge: edges_) {
-        std::vector<VesselSkeletonVoxel> voxels(edge.getVoxels());
-        res.insertEdge(edge.getNodeID1(), edge.getNodeID2(), std::move(voxels), edge.getUUID());
+    for(auto& edge: edges_->asArray()) {
+        res.insertEdge(edge.getNodeID1(), edge.getNodeID2(), edge, edge.getUUID());
     }
     return res;
 }
 
 const VesselGraphNode& VesselGraph::getNode(VGNodeID i) const {
-    return nodes_.at(i.raw());
+    return (*nodes_)[i.raw()];
 }
 
 const VesselGraphEdge& VesselGraph::getEdge(VGEdgeID i) const {
-    return edges_.at(i.raw());
+    return (*edges_)[i.raw()];
 }
 
 VesselGraphNode& VesselGraph::getNode(VGNodeID i) {
-    return nodes_.at(i.raw());
+    return (*nodes_)[i.raw()];
 }
 
 VesselGraphEdge& VesselGraph::getEdge(VGEdgeID i) {
-    return edges_.at(i.raw());
+    return (*edges_)[i.raw()];
 }
 VGNodeID VesselGraph::insertNode(const VesselGraphNode& base) {
-    std::vector<tgt::vec3> new_voxels(base.voxels_);
-    return insertNode(base.pos_, std::move(new_voxels), base.getRadius(), base.isAtSampleBorder_, base.getUUID());
+    return insertNode(base.pos_, base.voxels_, base.getRadius(), base.isAtSampleBorder_, base.getUUID());
 }
 
-VGNodeID VesselGraph::insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>&& voxels, float radius, bool isAtSampleBorder) {
-    return insertNode(position, std::move(voxels), radius, isAtSampleBorder, VoreenApplication::app()->generateUUID());
+VGNodeID VesselGraph::insertNode(const tgt::vec3& position, const DiskArray<tgt::vec3>& voxels, float radius, bool isAtSampleBorder) {
+    return insertNode(position, voxels, radius, isAtSampleBorder, VoreenApplication::app()->generateUUID());
 }
-VGNodeID VesselGraph::insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>&& voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid) {
-    size_t edgeID = nodes_.size();
+VGNodeID VesselGraph::insertNode(const tgt::vec3& position, const DiskArray<tgt::vec3>& voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid) {
+    size_t nodeID = nodes_->size();
     bounds_.addPoint(position);
-    //TODO: add voxels as well?
-    nodes_.emplace_back(*this, edgeID, position, std::move(voxels), radius, isAtSampleBorder, uuid);
+    nodes_->storeElement(VesselGraphNode(*this, nodeID, position, nodeVoxelStorage_->store(voxels), radius, isAtSampleBorder, uuid));
+    return nodeID;
+}
+VGNodeID VesselGraph::insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>& voxels, float radius, bool isAtSampleBorder) {
+    return insertNode(position, voxels, radius, isAtSampleBorder, VoreenApplication::app()->generateUUID());
+}
+VGNodeID VesselGraph::insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>& voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid) {
+    size_t nodeID = nodes_->size();
+    bounds_.addPoint(position);
+    nodes_->storeElement(VesselGraphNode(*this, nodeID, position, nodeVoxelStorage_->store(voxels), radius, isAtSampleBorder, uuid));
+    return nodeID;
+}
+
+
+VGEdgeID VesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, const DiskArray<VesselSkeletonVoxel>& voxels) {
+    return insertEdge(node1, node2, voxels, VoreenApplication::app()->generateUUID());
+}
+VGEdgeID VesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, const DiskArray<VesselSkeletonVoxel>& voxels, VesselGraphEdgeUUID uuid) {
+    tgtAssert(node1 < nodes_->size(), "Edge references nonexistent node");
+    tgtAssert(node2 < nodes_->size(), "Edge references nonexistent node");
+    VesselGraphNode& n1 = getNode(node1);
+    VesselGraphNode& n2 = getNode(node2);
+
+    VGEdgeID edgeID = edges_->size();
+    edges_->storeElement(VesselGraphEdge(*this, edgeID, node1, node2, edgeVoxelStorage_->store(voxels), uuid));
+
+    n1.edges_.push(edgeID);
+    n2.edges_.push(edgeID);
     return edgeID;
 }
-
-
-VGEdgeID VesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, const std::vector<VesselSkeletonVoxel>&& voxels) {
-    return insertEdge(node1, node2, std::move(voxels), VoreenApplication::app()->generateUUID());
+VGEdgeID VesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, const std::vector<VesselSkeletonVoxel>& voxels) {
+    return insertEdge(node1, node2, voxels, VoreenApplication::app()->generateUUID());
 }
-VGEdgeID VesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, const std::vector<VesselSkeletonVoxel>&& voxels, VesselGraphEdgeUUID uuid) {
-    tgtAssert(node1 < nodes_.size(), "Edge references nonexistent node");
-    tgtAssert(node2 < nodes_.size(), "Edge references nonexistent node");
-    VesselGraphNode& n1 = nodes_.at(node1.raw());
-    VesselGraphNode& n2 = nodes_.at(node2.raw());
+VGEdgeID VesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, const std::vector<VesselSkeletonVoxel>& voxels, VesselGraphEdgeUUID uuid) {
+    tgtAssert(node1 < nodes_->size(), "Edge references nonexistent node");
+    tgtAssert(node2 < nodes_->size(), "Edge references nonexistent node");
+    VesselGraphNode& n1 = getNode(node1);
+    VesselGraphNode& n2 = getNode(node2);
 
-    VGEdgeID edgeID = edges_.size();
-    edges_.emplace_back(*this, edgeID, node1, node2, std::move(voxels), uuid);
+    VGEdgeID edgeID = edges_->size();
+    edges_->storeElement(VesselGraphEdge(*this, edgeID, node1, node2, edgeVoxelStorage_->store(voxels), uuid));
 
-    n1.edges_.push_back(edgeID);
-    n2.edges_.push_back(edgeID);
+    n1.edges_.push(edgeID);
+    n2.edges_.push(edgeID);
     return edgeID;
 }
 
 VGEdgeID VesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, const VesselGraphEdge& path_definition, VesselGraphEdgeUUID uuid) {
-    std::vector<VesselSkeletonVoxel> voxels(path_definition.getVoxels().begin(), path_definition.getVoxels().end());
-    return insertEdge(node1, node2, std::move(voxels), uuid);
+    return insertEdge(node1, node2, path_definition.voxels_, uuid);
 }
 
 VGEdgeID VesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, const VesselGraphEdge& path_definition) {
@@ -750,37 +799,37 @@ VGEdgeID VesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, VesselGraphEdge
     return insertEdge(node1, node2, pathProperties, VoreenApplication::app()->generateUUID());
 }
 VGEdgeID VesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, VesselGraphEdgePathProperties pathProperties, VesselGraphEdgeUUID uuid) {
-    tgtAssert(node1 < nodes_.size(), "Edge references nonexistent node");
-    tgtAssert(node2 < nodes_.size(), "Edge references nonexistent node");
-    VesselGraphNode& n1 = nodes_.at(node1.raw());
-    VesselGraphNode& n2 = nodes_.at(node2.raw());
+    tgtAssert(node1 < nodes_->size(), "Edge references nonexistent node");
+    tgtAssert(node2 < nodes_->size(), "Edge references nonexistent node");
+    VesselGraphNode& n1 = getNode(node1);
+    VesselGraphNode& n2 = getNode(node2);
 
-    VGEdgeID edgeID = edges_.size();
-    edges_.emplace_back(*this, edgeID, node1, node2, pathProperties, uuid);
+    VGEdgeID edgeID = edges_->size();
+    edges_->storeElement(VesselGraphEdge(*this, edgeID, node1, node2, pathProperties, uuid));
 
-    n1.edges_.push_back(edgeID);
-    n2.edges_.push_back(edgeID);
+    n1.edges_.push(edgeID);
+    n2.edges_.push(edgeID);
     return edgeID;
 }
 
-const std::vector<VesselGraphNode>& VesselGraph::getNodes() const {
-    return nodes_;
+DiskArray<VesselGraphNode> VesselGraph::getNodes() const {
+    return nodes_->asArray();
 }
 
-const std::vector<VesselGraphEdge>& VesselGraph::getEdges() const {
-    return edges_;
+DiskArray<VesselGraphEdge> VesselGraph::getEdges() const {
+    return edges_->asArray();
 }
 
-std::vector<VesselGraphNode>& VesselGraph::getNodes() {
-    return nodes_;
+DiskArray<VesselGraphNode> VesselGraph::getNodes() {
+    return nodes_->asArray();
 }
 
-std::vector<VesselGraphEdge>& VesselGraph::getEdges() {
-    return edges_;
+DiskArray<VesselGraphEdge> VesselGraph::getEdges() {
+    return edges_->asArray();
 }
 
 void VesselGraph::getEdgePropertyStats(std::function<float(const VesselGraphEdge&)> f, float& /*out*/ mean, float& /*out*/stddev) const {
-    statisticalAnalysis(edges_, f, mean, stddev);
+    statisticalAnalysis(getEdges(), f, mean, stddev);
 }
 
 const tgt::Bounds& VesselGraph::getBounds() const {
@@ -788,21 +837,41 @@ const tgt::Bounds& VesselGraph::getBounds() const {
 }
 
 void VesselGraph::serialize(Serializer& s) const {
-    s.serialize("nodes", nodes_);
-    s.serialize("edges", edges_);
+    std::vector<VesselGraphNodeSerializable> nodes;
+    for(const auto& node : getNodes()) {
+        nodes.emplace_back(node);
+    }
+    s.serialize("nodes", nodes);
+
+
+    std::vector<VesselGraphEdgeSerializable> edges;
+    for(const auto& edge : getEdges()) {
+        edges.emplace_back(edge);
+    }
+    s.serialize("edges", edges);
+
     s.serialize("bounds", bounds_);
 }
 void VesselGraph::deserialize(Deserializer& s) {
-    // Yeah, this is quite ugly... But we cannot set the graph pointer in Serializable::deserialize()
-    s.deserialize("nodes", nodes_);
-    for(auto& node : nodes_) {
-        node.graph_ = this;
+    std::vector<VesselGraphNodeDeserializable> nodes;
+    s.deserialize("nodes", nodes);
+    for(const auto& node : nodes) {
+        auto index = insertNode(node.pos_, node.voxels_, node.radius_, node.isAtSampleBorder_);
+        tgtAssert(index == node.id_, "Invalid node id after deserialization");
     }
-    s.deserialize("edges", edges_);
-    for(auto& edge : edges_) {
-        edge.graph_ = this;
-        edge.updatePathPropertiesFromVoxels();
+
+    std::vector<VesselGraphEdgeDeserializable> edges;
+    s.deserialize("edges", edges, "");
+    for(const auto& edge : edges) {
+        VGEdgeID index;
+        if(edge.voxels_.empty()) {
+            index = insertEdge(edge.node1_, edge.node2_, edge.pathProps_);
+        } else {
+            index = insertEdge(edge.node1_, edge.node2_, edge.voxels_);
+        }
+        tgtAssert(index == edge.id_, "Invalid node id after deserialization");
     }
+
     s.deserialize("bounds", bounds_);
 }
 

@@ -315,7 +315,7 @@ namespace voreen {
         }//else if
 
         else {
-            throw tgt::CorruptedFileException("SEGY: Unsupported format code # " + dataSampleFormat_, fileName);
+            throw tgt::CorruptedFileException("SEGY: Unsupported format code # " + std::to_string(dataSampleFormat_), fileName);
         }//else
 
 

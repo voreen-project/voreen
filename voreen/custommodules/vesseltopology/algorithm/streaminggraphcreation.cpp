@@ -131,10 +131,6 @@ const tgt::svec3& SkeletonClassReader::getDimensions() const {
 }
 
 /// NeighborCountVoxelClassifier -----------------------------------------------------------
-uint32_t NeighborCountVoxelClassifier::getPredefinedComponentId(const tgt::ivec2& xyz) const {
-    return UNDEFINED_COMPONENT_ID;
-}
-
 NeighborCountVoxelClassifier::NeighborCountVoxelClassifier(const VolumeMask& skeleton)
     : SkeletonClassReader(skeleton)
 {
@@ -159,20 +155,7 @@ NeighborCountAndBranchSegmentationVoxelClassifier::~NeighborCountAndBranchSegmen
 uint8_t NeighborCountAndBranchSegmentationVoxelClassifier::getClass(const tgt::ivec2& xypos) const {
     uint8_t neighborCountClass = skeletonClassReader_.getClass(xypos);
     return neighborCountClass;
-    /*
-    if(neighborCountClass == 2 && getPredefinedComponentId(xypos) == 0) {
-        return 3; //Forcibly classify regular voxels in branch balls as branch voxels
-    } else {
-        return neighborCountClass;
-    }
-    */
 }
-uint32_t NeighborCountAndBranchSegmentationVoxelClassifier::getPredefinedComponentId(const tgt::ivec2& xypos) const {
-    auto slice = dynamic_cast<const VolumeRAM_UInt32*>(branchSegmentationReader_.getCurrentSlice());
-    tgtAssert(slice, "No slice");
-    return slice->voxel(xypos.x, xypos.y, 0);
-}
-
 void NeighborCountAndBranchSegmentationVoxelClassifier::advance() {
     skeletonClassReader_.advance();
     branchSegmentationReader_.advance();
@@ -190,7 +173,7 @@ EndData::EndData(EndData&& l, EndData&&)
     // In this case we will just keep one of them.
     //tgtAssert(false, "Connected endvoxels: Composition");
 }
-EndData::EndData(const RunPosition& p, uint32_t)
+EndData::EndData(const RunPosition& p)
     : pos_(p.xlow_, p.y_, p.z_)
 {
     // This may happen for two mutually connected endvoxels
@@ -209,7 +192,7 @@ BranchData::BranchData(BranchData&& b1, BranchData&& b2)
     : voxels_(new RunNode(std::move(b1.voxels_), std::move(b2.voxels_)))
 {
 }
-BranchData::BranchData(const RunPosition& rp, uint32_t)
+BranchData::BranchData(const RunPosition& rp)
     : voxels_(new RunLeaf(rp))
 {
 }
@@ -221,25 +204,13 @@ RegularData::RegularData(RegularData&& other)
     : voxels_(other.voxels_.release())
     , leftEnd_(other.leftEnd_)
     , rightEnd_(other.rightEnd_)
-    , predeterminedComponentId_(other.predeterminedComponentId_)
 {
 }
 
 
 RegularData::RegularData(RegularData&& b1, RegularData&& b2)
     : voxels_(nullptr)
-    , predeterminedComponentId_(b1.predeterminedComponentId_)
 {
-    tgtAssert(
-               b1.predeterminedComponentId_ == UNDEFINED_COMPONENT_ID
-            || b2.predeterminedComponentId_ == UNDEFINED_COMPONENT_ID
-            || b1.predeterminedComponentId_ == b2.predeterminedComponentId_, "predeterminedComponentId mismatch");
-    if(b2.predeterminedComponentId_ == UNDEFINED_COMPONENT_ID) {
-        predeterminedComponentId_ = b1.predeterminedComponentId_;
-    } else {
-        predeterminedComponentId_ = b2.predeterminedComponentId_;
-    }
-
     if(are26Neighbors(b1.leftEnd_, b2.leftEnd_)) {
         b1.voxels_->invert();
         leftEnd_ = b1.rightEnd_;
@@ -263,22 +234,14 @@ RegularData::RegularData(RegularData&& b1, RegularData&& b2)
 }
 
 
-RegularData::RegularData(const RunPosition& rp, uint32_t predeterminedComponentId)
+RegularData::RegularData(const RunPosition& rp)
     : voxels_(new RunLeaf(rp))
     , leftEnd_(rp.begin())
     , rightEnd_(rp.end())
-    , predeterminedComponentId_(predeterminedComponentId)
 {
 }
 
 void RegularData::consume(RegularData&& rhs) {
-    tgtAssert(
-               predeterminedComponentId_ == UNDEFINED_COMPONENT_ID
-            || rhs.predeterminedComponentId_ == UNDEFINED_COMPONENT_ID
-            || predeterminedComponentId_ == rhs.predeterminedComponentId_, "predeterminedComponentId mismatch");
-    if(predeterminedComponentId_ == UNDEFINED_COMPONENT_ID) {
-        predeterminedComponentId_ = rhs.predeterminedComponentId_;
-    }
     if(are26Neighbors(leftEnd_, rhs.leftEnd_)) {
         voxels_->invert();
         leftEnd_ = rightEnd_;
@@ -299,23 +262,22 @@ void RegularData::consume(RegularData&& rhs) {
     voxels_ = std::unique_ptr<RunTree>(new RunNode(std::move(voxels_), std::move(rhs.voxels_)));
 }
 
-// MetadataExtractor -----------------------------------------------------------------------
-
-
-RegularSequence::RegularSequence(std::vector<tgt::svec3> voxels, uint32_t predeterminedComponentId)
-    : voxels_(std::move(voxels))
-    , predeterminedComponentId_(predeterminedComponentId)
-{
-}
 /// MetaDataCollector --------------------------------------------------------------------------------
 const std::string MetaDataCollector::loggerCat_("voreen.vesseltopology.metadatacollector");
+MetaDataCollector::MetaDataCollector()
+    : endPoints_()
+    , branchPoints_()
+    , voxelStorage_(VoreenApplication::app()->getUniqueTmpFilePath(std::string(".") + "pgvoxels"))
+    , regularSequences_()
+{
+}
 void MetaDataCollector::collect(EndData&& data) {
     endPoints_.push_back(data.pos_);
 }
 void MetaDataCollector::collect(RegularData&& data) {
     std::vector<tgt::svec3> v;
     data.voxels_->collectVoxels(v);
-    regularSequences_.emplace_back(v, data.predeterminedComponentId_);
+    regularSequences_.emplace_back(voxelStorage_.store(v));
 }
 void MetaDataCollector::collect(BranchData&& data) {
     std::vector<tgt::svec3> v;
@@ -323,6 +285,7 @@ void MetaDataCollector::collect(BranchData&& data) {
     branchPoints_.push_back(v);
 }
 
+/// VoxelKDElement--------------------------------------------------------------
 struct VoxelKDElement {
     typedef int32_t CoordType;
     const tgt::Vector3<CoordType>& getPos() const {
@@ -393,9 +356,9 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
         }
         progressCounter++;
 
-        tgtAssert(!regularSequence.voxels_.empty(), "Empty sequence");
-        tgt::ivec3 leftEnd = regularSequence.voxels_.front();
-        tgt::ivec3 rightEnd = regularSequence.voxels_.back();
+        tgtAssert(!regularSequence.empty(), "Empty sequence");
+        tgt::ivec3 leftEnd = regularSequence.front();
+        tgt::ivec3 rightEnd = regularSequence.back();
         const VGNodeID NO_NODE_FOUND = -1;
         VGNodeID leftEndNode = NO_NODE_FOUND;
         VGNodeID rightEndNode = NO_NODE_FOUND;
@@ -433,9 +396,7 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
                 rightEndNode = rightNeighbors.at(0)->nodeID_;
             }
         }
-        std::vector<tgt::svec3> voxels(regularSequence.voxels_);
-
-        graph->insertEdge(leftEndNode, rightEndNode, std::move(voxels));
+        graph->insertEdge(leftEndNode, rightEndNode, regularSequence);
     }
 
     // Correct sample mask border information if sampleMask is present
@@ -455,7 +416,7 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
                     for(int dx = -1; dx <= 1; ++dx) {
                         auto voxel = sampleMaskReader.getVoxelRelative(tgt::ivec2(p.x+dx, p.y+dy), dz);
                         if(!voxel || *voxel == 0) {
-                            graph->nodes_.at(id.raw()).atSampleBorder_ = true;
+                            graph->nodes_[id.raw()].atSampleBorder_ = true;
                             goto sample_mask_search_done;
                         }
                     }
@@ -466,14 +427,14 @@ std::unique_ptr<ProtoVesselGraph> MetaDataCollector::createProtoVesselGraph(tgt:
     }
 
     // Create edges from end voxels directly connected to branchPoints
-    for(const auto& node : graph->nodes_) {
+    for(const auto& node : graph->nodes_.asArray()) {
         if(node.edges_.size() != 0) {
             continue;
         }
 
         tgt::ivec3 endPointI(node.voxels_.at(0));
         for(const auto& p : find_26_neighbors(nodeVoxelTree, endPointI)) {
-            graph->insertEdge(p->nodeID_, node.id_, std::vector<tgt::svec3>());
+            graph->insertEdge(p->nodeID_, node.id_, voxelStorage_.store(std::vector<tgt::svec3>()));
             break;
         }
     }

@@ -226,10 +226,10 @@ void VoreenQtWorkspaceHandler::openWorkspace(const QString& filename) {
 
     // Emit warning if version is beyond specific threshold defined by the Processor Network.
     if(workspace_->getProcessorNetwork()->getVersion() < ProcessorNetwork::WARNING_VERSION) {
-        VoreenApplication::app()->showMessageBox("Deprecated Workspace",
-                                                 "Your workspace was created using a version of Voreen prior to 5.0.\n"
+        VoreenApplication::app()->showMessageBox("Outdated Workspace",
+                                                 "Your workspace was created using a version of Voreen prior to " + ProcessorNetwork::WARNING_VERSION_STRING + ".\n"
                                                  "Therefore this workspace is not guaranteed to work as expected.\n\n"
-                                                 "Once you have verified the functionality, you need to save the workspace again to disable this warning.\n"
+                                                 "To disable this warning, please save the workspace again.\n"
         );
     }
 

@@ -56,7 +56,7 @@ CommandQueue::CommandQueue()
 
 CommandQueue::~CommandQueue() {
     boost::lock_guard<boost::shared_mutex> lock(queueMutex_);
-    boost::lock_guard<boost::mutex> nlock(nextMutex_);
+    boost::lock_guard<boost::shared_mutex> nlock(nextMutex_);
     for(auto& command : commands_) {
         tgtAssert(!command.callback_, "Unexecuted commands are left in command queue");
     }
@@ -79,14 +79,14 @@ void CommandQueue::executeAll() {
     // Upgrade to write access to queue (and grab write access for nextQueue) in order to
     // clear and move elements from next to the current queue
     boost::upgrade_to_unique_lock<boost::shared_mutex> wlock(rlock);
-    boost::lock_guard<boost::mutex> nlock(nextMutex_);
+    boost::unique_lock<boost::shared_mutex> nlock(nextMutex_);
     std::swap(commands_, nextCommands_);
     nextCommands_.clear();
 }
 
 void CommandQueue::enqueue(const void* owner, const Callback& command) {
     // Write access to next queue in order to push a new element
-    boost::lock_guard<boost::mutex> lock(nextMutex_);
+    boost::unique_lock<boost::shared_mutex> lock(nextMutex_);
 
     nextCommands_.push_back(CommandQueueElement(owner, std::unique_ptr<Callback>(command.clone())));
 }
@@ -94,7 +94,7 @@ void CommandQueue::enqueue(const void* owner, const Callback& command) {
 void CommandQueue::removeAll(const void* owner) {
     // Read access to current and next queue in order to clear callbacks associated with owner
     boost::shared_lock<boost::shared_mutex> lock(queueMutex_);
-    boost::lock_guard<boost::mutex> nlock(nextMutex_);
+    boost::shared_lock<boost::shared_mutex> nlock(nextMutex_);
 
     if (owner) {
         for(auto& elm : commands_) {

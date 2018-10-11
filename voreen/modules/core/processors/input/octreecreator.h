@@ -26,22 +26,82 @@
 #ifndef VRN_OCTREECREATOR_H
 #define VRN_OCTREECREATOR_H
 
-#include "voreen/core/processors/volumeprocessor.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
+
+#include "voreen/core/datastructures/octree/volumeoctreebase.h"
 
 #include "voreen/core/ports/volumeport.h"
 #include "voreen/core/properties/boolproperty.h"
 #include "voreen/core/properties/intproperty.h"
 #include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/optionproperty.h"
-#include "voreen/core/properties/progressproperty.h"
 #include "voreen/core/properties/filedialogproperty.h"
 #include "voreen/core/properties/stringproperty.h"
 
 namespace voreen {
 
+class OctreeBrickPoolManagerBase;
 class VolumeOctreeBase;
 
-class VRN_CORE_API OctreeCreator : public VolumeProcessor {
+struct OctreeCreatorInput {
+    bool loadCached;
+    std::vector<const VolumeBase*> input;
+    OctreeBrickPoolManagerBase* brickPoolManager;
+    float homogeneityThreshold;
+    size_t brickDim;
+    int numThreads;
+
+    OctreeCreatorInput(
+        bool loadCached
+        , const std::vector<const VolumeBase*>& input
+        , OctreeBrickPoolManagerBase* brickPoolManager
+        , float homogeneityThreshold
+        , size_t brickDim
+        , int numThreads
+    )
+        : loadCached(loadCached)
+        , input(input)
+        , brickPoolManager(brickPoolManager)
+        , homogeneityThreshold(homogeneityThreshold)
+        , brickDim(brickDim)
+        , numThreads(numThreads)
+    {
+    }
+
+    OctreeCreatorInput(const OctreeCreatorInput&) = delete;
+    OctreeCreatorInput(OctreeCreatorInput&& old)
+        : loadCached(old.loadCached)
+        , input(old.input)
+        , brickPoolManager(std::move(old.brickPoolManager))
+        , homogeneityThreshold(old.homogeneityThreshold)
+        , brickDim(old.brickDim)
+        , numThreads(old.numThreads)
+    {
+    }
+};
+
+struct OctreeCreatorOutput {
+    std::unique_ptr<VolumeOctreeBase> octree;
+    std::string message;
+
+    OctreeCreatorOutput(
+        std::unique_ptr<VolumeOctreeBase> octree
+        , const std::string& message
+    )
+        : octree(std::move(octree))
+        , message(message)
+    {
+    }
+
+    OctreeCreatorOutput(const OctreeCreatorOutput&) = delete;
+    OctreeCreatorOutput(OctreeCreatorOutput&& old)
+        : octree(std::move(old.octree))
+        , message(old.message)
+    {
+    }
+};
+
+class VRN_CORE_API OctreeCreator : public AsyncComputeProcessor<OctreeCreatorInput, OctreeCreatorOutput> {
 
     friend class VoreenApplication;
 
@@ -54,8 +114,11 @@ public:
     virtual std::string getCategory() const   { return "Octree";                }
     virtual CodeState getCodeState() const    { return CODE_STATE_STABLE;       }
 
-    virtual bool usesExpensiveComputation() const { return true; }
     virtual bool isReady() const;
+
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
 
 protected:
     virtual void setDescriptions() {
@@ -63,17 +126,16 @@ protected:
                        "<p><strong>Note</strong>: The maximum amount of CPU RAM to be used by the octree as well as the disk storage path of its brick pool are defined globally via application settings.</p>");
     }
 
-    virtual void process();
-
     virtual void initialize();
     virtual void deinitialize();
 
     virtual void adjustPropertiesToInput();
 
+    virtual void setProgressMessage(const std::string& message);
+
     //void saveOctreeToVVOD();
 
 private:
-    VolumeOctreeBase* generateOctree();
 
     std::string getOctreeStoragePath() const;
     std::string getConfigurationHash() const;
@@ -81,7 +143,6 @@ private:
     void storeOctreeToCache(const VolumeOctreeBase* octree) const;
     VolumeOctreeBase* restoreOctreeFromCache() const;
     void clearOctree();
-    void forceRegenerate();
 
     void updatePropertyConfiguration();
 
@@ -107,12 +168,7 @@ private:
     VolumePort volumeInport3_;
     VolumePort volumeInport4_;
     VolumePort volumeOutport_;
-
-    ButtonProperty generateOctreeButton_;
-    StringProperty statusProperty_;
-    ProgressProperty progressProperty_;
-    BoolProperty autogenerateOctree_;
-
+    
     //FileDialogProperty saveOctreeFile_;
     //ButtonProperty saveOctreeButton_;
 
@@ -128,7 +184,7 @@ private:
 
     ButtonProperty clearOctree_;
 
-    bool forceGenerate_;
+    StringProperty progressMessage_;
 
     std::string currentConfigurationHash_;
 

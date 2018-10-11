@@ -332,8 +332,8 @@ void VesselGraphRenderer::adaptToNewInput() {
     activeEdgeID_.setMaxValue(static_cast<int>(graph->getEdges().size()) - 1);
 
 
-    const std::vector<VesselGraphNode>& nodes = graph->getNodes();
-    const std::vector<VesselGraphEdge>& edges = graph->getEdges();
+    auto nodes = graph->getNodes();
+    auto edges = graph->getEdges();
 
     nodeDegreeTF_.setData(nodes.begin(), nodes.end());
 

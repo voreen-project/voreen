@@ -26,6 +26,7 @@
 
 #include "tgt/vector.h"
 #include "tgt/filesystem.h"
+#include "diskarraystorage.h"
 #include <fstream>
 #include <vector>
 #include <boost/iostreams/device/mapped_file.hpp>
@@ -93,7 +94,7 @@ struct Node {
 };
 
 template<typename Element>
-class NodeStorage { //Memory mapped version of file created from ElementArrayBuilder
+class NodeStorage { //Memory mapped version of file created from NodeStorageBuilder
 public:
     NodeStorage();
     NodeStorage(const std::string& filename, size_t numElements);
@@ -117,10 +118,28 @@ public:
 
     size_t push(const Node<Element>& node); //push to end of file
     NodeStorage<Element> finalize() &&;
+    size_t size() const;
+    void flush();
 private:
     std::ofstream file_;
     std::string filename_;
     size_t numNodes_;
+};
+
+template<typename Element>
+using SharedNodeStorage = DiskArray<Node<Element>>;
+
+template<typename Element, typename Storage = NodeStorage<Element>>
+class Tree;
+
+template<typename Element>
+class SharedMemoryTreeBuilder {
+public:
+    SharedMemoryTreeBuilder(const std::string& storagefilename);
+
+    Tree<Element, SharedNodeStorage<Element>> buildTree(ElementArrayBuilder<Element>&& elements);
+private:
+    DiskArrayStorage<Node<Element>> storage_;
 };
 
 template<typename Element>
@@ -163,7 +182,7 @@ struct SearchAllWithinResultSet {
     void tryInsert(typename Element::CoordType distSq, const Element* element);
 };
 
-template<typename Element>
+template<typename Element, typename Storage>
 class Tree {
 public:
     static_assert(std::numeric_limits<typename Element::CoordType>::is_signed, "Element pos type must be signed");
@@ -179,7 +198,10 @@ private:
     template<typename Result>
     void findNearestFrom(const PosType& pos, int depth, size_t node, Result& best_result) const;
 
-    NodeStorage<Element> nodes_;
+    friend SharedMemoryTreeBuilder<Element>;
+    Tree(size_t root, Storage&& elements);
+
+    Storage nodes_;
     size_t root_;
 };
 
@@ -211,7 +233,10 @@ void ElementArrayBuilder<Element>::push(const Element& elm) {
 template<typename Element>
 ElementArray<Element> ElementArrayBuilder<Element>::finalize() && {
     auto tmp = std::move(*this);
+    tgtAssert(tmp.file_.good(), "Flush failed");
+    tgtAssert(tmp.file_.is_open(), "Flush failed");
     tmp.file_.flush();
+    tgtAssert(tmp.file_.good(), "Flush failed");
     tmp.file_.close();
     return ElementArray<Element>(tmp.filename_, tmp.numElements_);
 }
@@ -343,9 +368,21 @@ size_t NodeStorageBuilder<Element>::push(const Node<Element>& node) {
 template<typename Element>
 NodeStorage<Element> NodeStorageBuilder<Element>::finalize() && {
     auto tmp = std::move(*this);
+    tgtAssert(tmp.file_.good(), "Flush failed");
+    tgtAssert(tmp.file_.is_open(), "Flush failed");
     tmp.file_.flush();
+    tgtAssert(tmp.file_.good(), "Flush failed");
     tmp.file_.close();
     return NodeStorage<Element>(tmp.filename_, tmp.numNodes_);
+}
+template<typename Element>
+size_t NodeStorageBuilder<Element>::size() const {
+    return numNodes_;
+}
+template<typename Element>
+void NodeStorageBuilder<Element>::flush() {
+    tgtAssert(file_.good(), "bad file");
+    file_.flush();
 }
 
 /// Impl: NodeStorage ----------------------------------------------------------------
@@ -408,6 +445,7 @@ template<typename Element>
 size_t NodeStorage<Element>::size() const {
     return numNodes_;
 }
+
 /// Impl: SearchNearestResult ---------------------------------------------------------------
 template<typename Element>
 SearchNearestResult<Element> SearchNearestResult<Element>::none() {
@@ -431,6 +469,121 @@ void SearchNearestResult<Element>::tryInsert(typename Element::CoordType distSq,
     if(distSq < distSq_) {
         distSq_ = distSq;
         element_ = element;
+    }
+}
+
+/// Impl: SharedMemoryTreeBuilder ----------------------------------------------------
+const size_t NO_NODE_ID = -1;
+
+template<typename Element, typename Builder>
+static size_t buildTreeRecursively(Builder& nodes, ElementArrayView<Element>& elements, int depth) {
+    if(elements.size() == 0) {
+        return NO_NODE_ID;
+    } else {
+        int dim = depth % 3;
+        auto res = elements.split(dim);
+        size_t left_node = buildTreeRecursively(nodes, std::get<0>(res), depth+1);
+        size_t right_node = buildTreeRecursively(nodes, std::get<2>(res), depth+1);
+        return nodes.push(Node<Element>(std::get<1>(res), left_node, right_node));
+    }
+}
+
+template<typename Element>
+SharedMemoryTreeBuilder<Element>::SharedMemoryTreeBuilder(const std::string& storagefilename)
+    : storage_(storagefilename)
+{
+}
+
+template<typename Element>
+Tree<Element, SharedNodeStorage<Element>> SharedMemoryTreeBuilder<Element>::buildTree(ElementArrayBuilder<Element>&& elements) {
+    auto elems = std::move(elements).finalize();
+    auto elem_view = elems.view();
+
+    DiskArrayBuilder<Node<Element>> builder = storage_.build();
+    size_t root = buildTreeRecursively(builder, elem_view, 0);
+
+    return Tree<Element, SharedNodeStorage<Element>>(root, SharedNodeStorage<Element>(std::move(builder).finalize()));
+}
+
+/// Impl: Tree -----------------------------------------------------------------------
+template<typename Element, typename Storage>
+Tree<Element, Storage>::Tree(const std::string& storagefilename, ElementArrayBuilder<Element>&& elements) {
+
+    auto elems = std::move(elements).finalize();
+    auto elem_view = elems.view();
+
+    NodeStorageBuilder<Element> nodeStorageBuilder(storagefilename);
+
+    root_ = buildTreeRecursively(nodeStorageBuilder, elem_view, 0);
+    nodes_ = std::move(nodeStorageBuilder).finalize();
+}
+
+template<typename Element, typename Storage>
+Tree<Element, Storage>::Tree(size_t root, Storage&& elements)
+    : root_(root)
+    , nodes_(std::move(elements))
+{
+}
+
+template<typename Element, typename Storage>
+const Node<Element>& Tree<Element, Storage>::root() const {
+    tgtAssert(nodes_.size() > 0, "No root in empty tree");
+    return nodes_[root_];
+}
+
+template<typename Element, typename Storage>
+SearchNearestResult<Element> Tree<Element, Storage>::findNearest(const PosType& pos) const {
+    SearchNearestResult<Element> result = SearchNearestResult<Element>::none();
+    if(nodes_.size() == 0) {
+        return result;
+    }
+    findNearestFrom(pos, 0, root_, result);
+    return result;
+}
+
+template<typename Element, typename Storage>
+SearchNearestResultSet<Element> Tree<Element, Storage>::findAllNearest(const PosType& pos, typename Element::CoordType maxDistSq) const {
+    SearchNearestResultSet<Element> result(maxDistSq);
+    if(nodes_.size() == 0) {
+        return result;
+    }
+    findNearestFrom(pos, 0, root_, result);
+    return result;
+}
+
+template<typename Element, typename Storage>
+SearchAllWithinResultSet<Element> Tree<Element, Storage>::findAllWithin(const PosType& pos, typename Element::CoordType maxDistSq) const {
+    SearchAllWithinResultSet<Element> result(maxDistSq);
+    if(nodes_.size() == 0) {
+        return result;
+    }
+    findNearestFrom(pos, 0, root_, result);
+    return result;
+}
+
+template<typename Element, typename Storage>
+template<typename Result>
+void Tree<Element, Storage>::findNearestFrom(const PosType& pos, int depth, size_t node, Result& best_result) const {
+    const Node<Element>& current = nodes_[node];
+    size_t firstChild, secondChild;
+    int dim = depth%3;
+    typename Element::CoordType planeDist = pos.elem[dim] - current.elm_.getPos().elem[dim];
+    if(planeDist < 0) {
+        firstChild = current.left_child_;
+        secondChild = current.right_child_;
+    } else {
+        firstChild = current.right_child_;
+        secondChild = current.left_child_;
+    }
+
+    if(firstChild != NO_NODE_ID) {
+        findNearestFrom(pos, depth+1, firstChild, best_result);
+    }
+
+    best_result.tryInsert(tgt::distanceSq(pos,current.elm_.getPos()), &current.elm_);
+
+    if(planeDist*planeDist <= best_result.distSq_ && secondChild != NO_NODE_ID) {
+        findNearestFrom(pos, depth+1, secondChild, best_result);
     }
 }
 
@@ -487,96 +640,6 @@ template<typename Element>
 void SearchAllWithinResultSet<Element>::tryInsert(typename Element::CoordType distSq, const Element* element) {
     if(distSq <= distSq_) {
         elements_.push_back(element);
-    }
-}
-
-/// Impl: Tree -----------------------------------------------------------------------
-const size_t NO_NODE_ID = -1;
-
-template<typename Element>
-static size_t buildTree(NodeStorageBuilder<Element>& nodes, ElementArrayView<Element>& elements, int depth) {
-    if(elements.size() == 0) {
-        return NO_NODE_ID;
-    } else {
-        int dim = depth % 3;
-        auto res = elements.split(dim);
-        size_t left_node = buildTree(nodes, std::get<0>(res), depth+1);
-        size_t right_node = buildTree(nodes, std::get<2>(res), depth+1);
-        return nodes.push(Node<Element>(std::get<1>(res), left_node, right_node));
-    }
-}
-
-template<typename Element>
-Tree<Element>::Tree(const std::string& storagefilename, ElementArrayBuilder<Element>&& elements)
-{
-    auto elems = std::move(elements).finalize();
-    auto elem_view = elems.view();
-
-    NodeStorageBuilder<Element> nodeStorageBuilder(storagefilename);
-
-    root_ = buildTree(nodeStorageBuilder, elem_view, 0);
-    nodes_ = std::move(nodeStorageBuilder).finalize();
-}
-
-template<typename Element>
-const Node<Element>& Tree<Element>::root() const {
-    tgtAssert(nodes_.size() > 0, "No root in empty tree");
-    return nodes_[root_];
-}
-
-template<typename Element>
-SearchNearestResult<Element> Tree<Element>::findNearest(const PosType& pos) const {
-    SearchNearestResult<Element> result = SearchNearestResult<Element>::none();
-    if(nodes_.size() == 0) {
-        return result;
-    }
-    findNearestFrom(pos, 0, root_, result);
-    return result;
-}
-
-template<typename Element>
-SearchNearestResultSet<Element> Tree<Element>::findAllNearest(const PosType& pos, typename Element::CoordType maxDistSq) const {
-    SearchNearestResultSet<Element> result(maxDistSq);
-    if(nodes_.size() == 0) {
-        return result;
-    }
-    findNearestFrom(pos, 0, root_, result);
-    return result;
-}
-
-template<typename Element>
-SearchAllWithinResultSet<Element> Tree<Element>::findAllWithin(const PosType& pos, typename Element::CoordType maxDistSq) const {
-    SearchAllWithinResultSet<Element> result(maxDistSq);
-    if(nodes_.size() == 0) {
-        return result;
-    }
-    findNearestFrom(pos, 0, root_, result);
-    return result;
-}
-
-template<typename Element>
-template<typename Result>
-void Tree<Element>::findNearestFrom(const PosType& pos, int depth, size_t node, Result& best_result) const {
-    const Node<Element>& current = nodes_[node];
-    size_t firstChild, secondChild;
-    int dim = depth%3;
-    typename Element::CoordType planeDist = pos.elem[dim] - current.elm_.getPos().elem[dim];
-    if(planeDist < 0) {
-        firstChild = current.left_child_;
-        secondChild = current.right_child_;
-    } else {
-        firstChild = current.right_child_;
-        secondChild = current.left_child_;
-    }
-
-    if(firstChild != NO_NODE_ID) {
-        findNearestFrom(pos, depth+1, firstChild, best_result);
-    }
-
-    best_result.tryInsert(tgt::distanceSq(pos,current.elm_.getPos()), &current.elm_);
-
-    if(planeDist*planeDist <= best_result.distSq_ && secondChild != NO_NODE_ID) {
-        findNearestFrom(pos, depth+1, secondChild, best_result);
     }
 }
 

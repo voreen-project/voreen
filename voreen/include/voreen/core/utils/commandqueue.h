@@ -83,8 +83,8 @@ public:
 
 protected:
 
-    boost::shared_mutex queueMutex_; // Either: read (shared) or modify (exclusive)
-    boost::mutex nextMutex_; // standard mutex for the commands that will be added in the _next_ executeAll
+    boost::shared_mutex queueMutex_; // R/RW for queue, i.e,. either: read (shared) or modify (exclusive)
+    boost::shared_mutex nextMutex_;  // R/RW for the commands that will be added in the _next_ executeAll
     std::vector<CommandQueueElement> commands_; ///< Actual command queue, defines order of execution
     std::vector<CommandQueueElement> nextCommands_; ///< Commands that will be added to the command queue soon
 

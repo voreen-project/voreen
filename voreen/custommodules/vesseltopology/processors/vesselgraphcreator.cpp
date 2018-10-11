@@ -39,7 +39,7 @@
 #include "../algorithm/streaminggraphcreation.h"
 #include "../algorithm/volumemask.h"
 #include "../algorithm/idvolume.h"
-#include "../algorithm/vesselgraphnormalization.h"
+#include "../algorithm/vesselgraphrefinement.h"
 #include "../algorithm/boundshierarchy.h"
 #include "../datastructures/kdtree.h"
 
@@ -203,6 +203,7 @@ struct EdgeVoxelRef {
     typedef float CoordType;
 
     tgt::vec3 rwPos;
+    float padding_;
     const ProtoVesselGraphEdge* edge;
 
     inline const tgt::Vector3<CoordType>& getPos() const {
@@ -211,11 +212,13 @@ struct EdgeVoxelRef {
 
     EdgeVoxelRef(tgt::vec3 rwPos, const ProtoVesselGraphEdge& edge)
         : rwPos(rwPos)
+        , padding_(0.0)
         , edge(&edge)
     {
     }
     EdgeVoxelRef(const EdgeVoxelRef& other)
         : rwPos(other.rwPos)
+        , padding_(0.0)
         , edge(other.edge)
     {
     }
@@ -226,7 +229,7 @@ struct EdgeVoxelRef {
     }
 };
 
-static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath, const ProtoVesselGraph& graph, SkeletonClassReader&& skeletonClassReader, const VesselGraphCreatorProcessedInput& input, ProgressReporter& progress) {
+static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath, ProtoVesselGraph& graph, const VesselGraphCreatorProcessedInput& input, ProgressReporter& progress) {
     TaskTimeLogger _("Create closest id volume", tgt::Info);
 
     const auto voxelToRw = input.segmentation.getMetaData().getVoxelToWorldMatrix();
@@ -238,7 +241,7 @@ static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath
 
     static_kdtree::ElementArrayBuilder<EdgeVoxelRef> finderBuilder(VoreenApplication::app()->getUniqueTmpFilePath(".kdtreestorage"));
 
-    for(auto& edge : graph.edges_) {
+    for(const auto& edge : graph.edges_.asArray()) {
         for(auto& rwvoxel : edge.voxels()) {
             finderBuilder.push(EdgeVoxelRef(rwvoxel, edge));
         }
@@ -254,7 +257,6 @@ static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath
 
         auto outputSlice = outputIDs.getNextWritableSlice();
 
-        skeletonClassReader.advance();
         for(size_t y = 0; y<dimensions.y; ++y) {
             for(size_t x = 0; x<dimensions.x; ++x) {
                 const tgt::svec3 p(x,y,0);
@@ -679,14 +681,14 @@ struct UnfinishedRegions {
     }
 };
 
-static void mapEdgeIds(LZ4SliceVolume<uint32_t>& regions, size_t numComponents, const ProtoVesselGraph& graph, ProgressReporter& progress) {
+static void mapEdgeIds(LZ4SliceVolume<uint32_t>& regions, size_t numComponents, ProtoVesselGraph& graph, ProgressReporter& progress) {
     std::vector<uint32_t> ccaToEdgeIdTable(numComponents+1, IdVolume::UNLABELED_FOREGROUND_VALUE);
     ccaToEdgeIdTable[0] = IdVolume::BACKGROUND_VALUE;
 
     //populate ccaToEdgeIdTable
     {
         std::vector<std::pair<uint32_t, tgt::svec3>> query_positions;
-        for(const auto& edge: graph.edges_) {
+        for(const auto& edge: graph.edges_.asArray()) {
             if(edge.voxels_.empty()) {
                 query_positions.push_back(std::make_pair(edge.id_.raw(), tgt::svec3(-1)));
             } else {
@@ -771,19 +773,18 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
         protograph = mdc->createProtoVesselGraph(input.segmentation.getDimensions(), input.segmentation.getMetaData().getVoxelToWorldMatrix(), input.sampleMask, subtaskReporters.get<1>());
     }
 
-
-    // Create an assignment edge <-> vessel component
-    //  1. Split vessel components at nodes edges
-    auto closestIDs = createClosestIDVolume(
-            VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION),
-            *protograph,
-            SkeletonClassReader(skeleton),
-            input,
-            subtaskReporters.get<2>());
     {
         // Drop VolumeMask and thus free the used non-volatile storage space.
         VolumeMask _dump(std::move(skeleton));
     }
+
+
+    //  1. Create an assignment edge <-> vessel component
+    auto closestIDs = createClosestIDVolume(
+            VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION),
+            *protograph,
+            input,
+            subtaskReporters.get<2>());
 
     //  2. Perform a cca to distinguish components
     size_t numComponents;
@@ -794,10 +795,10 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
         std::move(closestIDs).deleteFromDisk();
     }
 
-    // 3. Change branchIdSegmentation inplace and assign proper edge ids from protograph. Unassigned regions get id UNLABELED_REGION_ID;
+    //  3. Change branchIdSegmentation inplace and assign proper edge ids from protograph. Unassigned regions get id UNLABELED_REGION_ID;
     mapEdgeIds(branchIdSegmentation, numComponents, *protograph, subtaskReporters.get<4>());
 
-    // 4. Collect bounding boxes from unfinished regions.
+    //  4. Collect bounding boxes from unfinished (i.e., cut-off) regions.
     auto unfinishedRegions = collectUnfinishedRegions(branchIdSegmentation, VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), subtaskReporters.get<5>());
 
     //  5. Flood remaining unlabeled regions locally
@@ -810,7 +811,7 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
     }
 
     BranchIdVolumeReader branchIdReader(branchIdSegmentation);
-    //  6. Create better VesselGraph from protograph and and the edge-id-segmentation
+    //  6. Create better VesselGraph from protograph and the edge-id-segmentation
     auto output = protograph->createVesselGraph(branchIdReader, input.sampleMask, subtaskReporters.get<7>());
     if(input.saveDebugData) {
         generatedVolumes.add(std::move(branchIdSegmentation).toVolume().release());
@@ -831,7 +832,7 @@ std::unique_ptr<VesselGraph> refineVesselGraph(VesselGraphCreatorProcessedInput&
     auto isEdgeDeletable = [&input] (const VesselGraphEdge& edge) {
         return !edge.hasValidData() || edge.getVoxels().size() < input.minVoxelLength || edge.getElongation() < input.minElongation || edge.getRelativeBulgeSize() < input.minBulgeSize;
     };
-    std::unique_ptr<VesselGraph> normalizedGraph = VesselGraphNormalization::removeEndEdgesRecursively(prevGraph, isEdgeDeletable);
+    std::unique_ptr<VesselGraph> normalizedGraph = VesselGraphRefinement::removeEndEdgesRecursively(prevGraph, isEdgeDeletable);
 
     tgt::mat4 rwToVoxel;
     bool inverted = input.segmentation.getMetaData().getVoxelToWorldMatrix().invert(rwToVoxel);

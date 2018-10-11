@@ -28,7 +28,7 @@
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 #include "voreen/core/datastructures/geometry/pointlistgeometry.h"
-#include "../algorithm/vesselgraphnormalization.h"
+#include "../algorithm/vesselgraphrefinement.h"
 
 #include "tgt/tgt_math.h"
 #include "tgt/quaternion.h"
@@ -409,14 +409,16 @@ struct NodePath {
         const VesselGraphNode* current_tail = tail_;
         for(const VesselGraphEdge* edge: edges_) {
             const VesselGraphNode* current_head;
-            auto new_voxels = edge->getVoxels();
+            const auto& new_voxels = edge->getVoxels();
             if(&edge->getNode1() == current_tail) {
                 current_head = &edge->getNode2();
                 output.insert(output.end(), new_voxels.begin(), new_voxels.end());
             } else {
                 tgtAssert(&edge->getNode2() == current_tail, "invalid node path");
                 current_head = &edge->getNode1();
-                output.insert(output.end(), new_voxels.rbegin(), new_voxels.rend());
+                for(auto it = edge->getVoxels().rbegin(); it != edge->getVoxels().rend(); ++it) {
+                    output.push_back(*it);
+                }
             }
 
             current_tail = current_head;
@@ -697,7 +699,7 @@ std::pair<std::vector<NodePath>, BranchSearchCone> UnprocessedBranch::find_all_f
 }
 
 static const VesselGraphNode* find_starting_node(const VesselGraph& graph, const tgt::vec3& starting_point) {
-    auto& nodes = graph.getNodes();
+    auto nodes = graph.getNodes();
     float min_dist_sq = std::numeric_limits<float>::infinity();
     const VesselGraphNode* starting_node = nullptr;
     for(auto& node : nodes) {

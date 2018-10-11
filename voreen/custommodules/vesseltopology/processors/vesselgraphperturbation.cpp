@@ -25,7 +25,7 @@
 
 #include "vesselgraphperturbation.h"
 #include "voreen/core/datastructures/callback/lambdacallback.h"
-#include "../algorithm/vesselgraphnormalization.h"
+#include "../algorithm/vesselgraphrefinement.h"
 
 #include <unordered_set>
 #include <set>
@@ -33,7 +33,7 @@
 
 namespace voreen {
 
-const std::string VesselGraphPerturbation::loggerCat_("voreen.vesselgraphnormalizer");
+const std::string VesselGraphPerturbation::loggerCat_("voreen.vesselgraphperturbation");
 
 
 typedef std::mt19937 random_engine_type;
@@ -402,11 +402,10 @@ static std::unique_ptr<VesselGraph> splitNodesWithUUIDs(const VesselGraph& input
             node2_id = edge.getNodeID2();
         }
         tgtAssert(edge.getLength() > 0, "Invalid edge length");
-        std::vector<VesselSkeletonVoxel> path(edge.getVoxels());
-        output->insertEdge(node1_id, node2_id, std::move(path), edge.getUUID());
+        output->insertEdge(node1_id, node2_id, edge.getVoxels(), edge.getUUID());
     }
 
-    return VesselGraphNormalization::removeDregree2Nodes(*output);
+    return VesselGraphRefinement::removeDregree2Nodes(*output);
 }
 static std::unique_ptr<VesselGraph> splitNodes(const VesselGraph& input, float amount, random_engine_type random_engine) {
     return splitNodesWithUUIDs(input, get_node_uuids(input), amount, random_engine);
