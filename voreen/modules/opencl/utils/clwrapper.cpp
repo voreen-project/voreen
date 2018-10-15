@@ -325,10 +325,9 @@ bool Platform::ClVersion::parseVersionString(const std::string& st) {
 
     //ignore vendor specific part of the string:
     size_t spacePos = str.find_first_of(" ");
-    if (spacePos != std::string::npos)
+    if (spacePos != std::string::npos) {
         str = str.substr(0, spacePos);
-    else
-        str = str;
+    }
 
     //explode version string with delimiter ".":
     std::vector<std::string> exploded;
