@@ -44,7 +44,7 @@ VolumeCreate::VolumeCreate()
     , outport_(Port::OUTPORT, "volumehandle.output", "Volume Output", false)
     , currentSeed_(0)
     , operation_("operation", "Operation")
-    , dimension_("dimension", "Dimension", 64, 2, 1024, Processor::VALID)
+    , dimension_("dimension", "Dimension", tgt::ivec3(64), tgt::ivec3(2), tgt::ivec3(1024), Processor::VALID)
     , regenerate_("regenerate", "Regenerate Volume", Processor::INVALID_RESULT)
     , numShapes_("numShapes", "Number of shapes", 4, 1, 10)
     , keepCurrentShapes_("keepShapes", "Keep current shapes", false, Processor::INVALID_RESULT)
@@ -244,19 +244,16 @@ void VolumeCreate::createCornell(const tgt::ivec3& dimensions, VolumeRAM_UInt8* 
 }
 
 void VolumeCreate::createCube(const tgt::ivec3& dimensions, VolumeRAM_UInt8* target) {
-    vec3 center;
-    center = dimensions / 2;
+    LINFO("Generating cube dataset with dimensions: " << dimensions);
 
-    int size = dimensions.x;
-    int thickness = size / 15;
-    int border = 3;
+    int border = 1;
 
-    uint8_t white = 200;
+    uint8_t white = 255;
 
     //clear dataset:
     fillBox(target, tgt::ivec3(0,0,0), dimensions, 0);
 
-    fillBox(target, tgt::ivec3(border, border, border), tgt::ivec3(size-border, border+thickness, size-border), white);
+    fillBox(target, tgt::ivec3(border), dimensions - tgt::ivec3(border), white);
 }
 
 void VolumeCreate::createBlobs(const tgt::ivec3& dimensions, VolumeRAM_UInt8* target ) {
