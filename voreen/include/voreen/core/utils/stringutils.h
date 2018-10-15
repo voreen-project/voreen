@@ -268,8 +268,10 @@ inline std::string getFormatFromType<tgt::Vector4<TYPE ## _t>>() { \
 }\
 
 // MSVC 2012 lacks float_t and double_t
-#if (_MSC_VER <= 1700)
+#ifndef float_t
 #define float_t float
+#endif
+#ifndef double_t
 #define double_t double
 #endif
 
