@@ -145,7 +145,7 @@ VolumeMultiplierInput VolumeMultiplier::prepareComputeInput() {
 
     outputVolume->writeSpacing(inputVolume.getSpacing());
     outputVolume->writeOffset(inputVolume.getOffset());
-    outputVolume->writeRealWorldMapping(RealWorldMapping(1,0,""));
+    outputVolume->writeRealWorldMapping(inputVolume.getRealWorldMapping());
 
     return VolumeMultiplierInput(
         inputVolume,
