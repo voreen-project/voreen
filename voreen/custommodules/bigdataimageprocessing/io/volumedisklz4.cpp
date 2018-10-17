@@ -65,7 +65,7 @@ template<typename Voxel>
 static void createBrick(const tgt::svec3& offset, const tgt::svec3& dimensions, LZ4SliceVolumeBase& volume, std::unique_ptr<VolumeRAM>& res) {
     tgtAssert(tgt::hand(tgt::lessThan(offset+dimensions, volume.getDimensions())), "Invalid brick range");
 
-    VolumeAtomic<Voxel> output(dimensions); //This will probably not work, need a factory
+    VolumeAtomic<Voxel> output(dimensions);
 
     auto vol = dynamic_cast<LZ4SliceVolume<Voxel>*>(&volume);
 
@@ -84,7 +84,7 @@ static void createBrick(const tgt::svec3& offset, const tgt::svec3& dimensions, 
 VolumeRAM* VolumeDiskLZ4::loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const {
     std::unique_ptr<VolumeRAM> res;
 
-    DISPATCH_FOR_FORMAT(volume_->getMetaData().getFormat(), createBrick, dimensions, offset, *volume_, res);
+    DISPATCH_FOR_FORMAT(volume_->getMetaData().getFormat(), createBrick, offset, dimensions, *volume_, res);
 
     return res.release();
 }
