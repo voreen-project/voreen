@@ -27,6 +27,7 @@
 
 #include "voreen/core/utils/hashing.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
+#include "voreen/core/utils/stringutils.h"
 #include <memory>
 
 
@@ -60,22 +61,32 @@ VolumeRAM* VolumeDiskLZ4::loadSlices(const size_t firstZSlice, const size_t last
     return volume_->loadBaseSlab(firstZSlice, lastZSlice+1).release();
 }
 
-VolumeRAM* VolumeDiskLZ4::loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const {
-    tgtAssert(tgt::hand(tgt::lessThan(offset+dimensions, volume_->getDimensions())), "Invalid brick range");
+template<typename Voxel>
+static void createBrick(const tgt::svec3& offset, const tgt::svec3& dimensions, LZ4SliceVolumeBase& volume, std::unique_ptr<VolumeRAM>& res) {
+    tgtAssert(tgt::hand(tgt::lessThan(offset+dimensions, volume.getDimensions())), "Invalid brick range");
 
-    std::unique_ptr<VolumeRAM> output(VolumeFactory().create(volume_->getMetaData().getFormat(), dimensions)); //This will probably not work, need a factory
+    VolumeAtomic<Voxel> output(dimensions); //This will probably not work, need a factory
+
+    auto vol = dynamic_cast<LZ4SliceVolume<Voxel>*>(&volume);
 
     for(size_t z=0; z<dimensions.z; ++z) {
-        size_t slice_z = z+offset.z;
-        auto slice = volume_->loadBaseSlab(slice_z, slice_z+1);
+        auto slice = vol->loadSlice(z+offset.z);
         for(size_t y=0; y<dimensions.y; ++y) {
             for(size_t x=0; x<dimensions.x; ++x) {
-                output->setVoxelNormalized(x, y, z, slice->getVoxelNormalized(x+offset.x,y+offset.y,0));
+                output.voxel(x, y, z) = slice.voxel(x+offset.x,y+offset.y,0);
             }
         }
     }
 
-    return output.release();
+    res.reset(new VolumeAtomic<Voxel>(std::move(output)));
+}
+
+VolumeRAM* VolumeDiskLZ4::loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const {
+    std::unique_ptr<VolumeRAM> res;
+
+    DISPATCH_FOR_FORMAT(volume_->getMetaData().getFormat(), createBrick, dimensions, offset, *volume_, res);
+
+    return res.release();
 }
 
 } // namespace voreen
