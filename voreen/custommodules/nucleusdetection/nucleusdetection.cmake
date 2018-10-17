@@ -158,10 +158,12 @@ IF (VRN_NUCLEUSDETECTION_CAFFE_FOUND)
     LIST(APPEND MOD_CORE_SOURCES
         ${MOD_DIR}/util/featureextractionthread.cpp
         ${MOD_DIR}/processors/patchcaffeclassifier.cpp
+        ${MOD_DIR}/processors/tilecaffeclassifier.cpp
     )
     LIST(APPEND MOD_CORE_HEADERS
         ${MOD_DIR}/util/featureextractionthread.h
         ${MOD_DIR}/processors/patchcaffeclassifier.h
+        ${MOD_DIR}/processors/tilecaffeclassifier.h
     )
 ENDIF()
 

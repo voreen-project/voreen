@@ -48,6 +48,7 @@
 // caffe classification
 #ifdef VRN_NUCLEUSDETECTION_CAFFE_FOUND
 #include "processors/patchcaffeclassifier.h"
+#include "processors/tilecaffeclassifier.h"
 #endif
 
 #include "processors/roidetector.h"
@@ -75,6 +76,7 @@ NucleusDetectionModule::NucleusDetectionModule(const std::string& modulePath)
 
 #ifdef VRN_NUCLEUSDETECTION_CAFFE_FOUND
     registerProcessor(new PatchCaffeClassifier());
+    registerProcessor(new TileCaffeClassifier());
 #endif
 
     registerProcessor(new RoiDetector());
