@@ -26,6 +26,8 @@
 #include "volumedisklz4.h"
 
 #include "voreen/core/utils/hashing.h"
+#include "voreen/core/datastructures/volume/volumefactory.h"
+#include <memory>
 
 
 namespace voreen {
@@ -59,7 +61,21 @@ VolumeRAM* VolumeDiskLZ4::loadSlices(const size_t firstZSlice, const size_t last
 }
 
 VolumeRAM* VolumeDiskLZ4::loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const {
-    throw tgt::Exception("loadBrick is not supported");
+    tgtAssert(tgt::hand(tgt::lessThan(offset+dimensions, volume_->getDimensions())), "Invalid brick range");
+
+    std::unique_ptr<VolumeRAM> output(VolumeFactory().create(volume_->getMetaData().getFormat(), dimensions)); //This will probably not work, need a factory
+
+    for(size_t z=0; z<dimensions.z; ++z) {
+        size_t slice_z = z+offset.z;
+        auto slice = volume_->loadBaseSlab(slice_z, slice_z+1);
+        for(size_t y=0; y<dimensions.y; ++y) {
+            for(size_t x=0; x<dimensions.x; ++x) {
+                output->setVoxelNormalized(x, y, z, slice->getVoxelNormalized(x+offset.x,y+offset.y,0));
+            }
+        }
+    }
+
+    return output.release();
 }
 
 } // namespace voreen
