@@ -50,7 +50,7 @@ TileCaffeClassifier::TileCaffeClassifier()
             "Prototxt (*.prototxt)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
     , modelFilename_("modelFilename", "Model File Name", "Select file...", "",
             "Caffe Model (*.caffemodel)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
-    , tileSize_("tilesize", "2D Tile Size", 244, 20, 1000)
+    , tileSize_("tilesize", "2D Tile Size", 244, 4, 1000)
     , borderSize_("bordersize", "Border Size (on EACH side of tile)", 92, 0, 500) 
     , channelWidth_("channelwidth", "Channel Width (3rd dimension)", 5, 1, 25, 2)
     , useMirroring_("usemirroring", "Use Mirroring instead of zero padding", true)
