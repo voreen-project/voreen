@@ -446,32 +446,6 @@ size_t NodeStorage<Element>::size() const {
     return numNodes_;
 }
 
-/// Impl: SearchNearestResult ---------------------------------------------------------------
-template<typename Element>
-SearchNearestResult<Element> SearchNearestResult<Element>::none() {
-    return SearchNearestResult {
-        std::numeric_limits<typename Element::CoordType>::max(),
-        nullptr
-    };
-}
-
-template<typename Element>
-bool SearchNearestResult<Element>::found() const {
-    return element_ != nullptr;
-}
-template<typename Element>
-typename Element::CoordType SearchNearestResult<Element>::dist() const {
-    return std::sqrt(distSq_);
-}
-
-template<typename Element>
-void SearchNearestResult<Element>::tryInsert(typename Element::CoordType distSq, const Element* element) {
-    if(distSq < distSq_) {
-        distSq_ = distSq;
-        element_ = element;
-    }
-}
-
 /// Impl: SharedMemoryTreeBuilder ----------------------------------------------------
 const size_t NO_NODE_ID = -1;
 
@@ -584,6 +558,32 @@ void Tree<Element, Storage>::findNearestFrom(const PosType& pos, int depth, size
 
     if(planeDist*planeDist <= best_result.distSq_ && secondChild != NO_NODE_ID) {
         findNearestFrom(pos, depth+1, secondChild, best_result);
+    }
+}
+
+/// Impl: SearchNearestResult ---------------------------------------------------------------
+template<typename Element>
+SearchNearestResult<Element> SearchNearestResult<Element>::none() {
+    return SearchNearestResult {
+        std::numeric_limits<typename Element::CoordType>::max(),
+        nullptr
+    };
+}
+
+template<typename Element>
+bool SearchNearestResult<Element>::found() const {
+    return element_ != nullptr;
+}
+template<typename Element>
+typename Element::CoordType SearchNearestResult<Element>::dist() const {
+    return std::sqrt(distSq_);
+}
+
+template<typename Element>
+void SearchNearestResult<Element>::tryInsert(typename Element::CoordType distSq, const Element* element) {
+    if(distSq < distSq_) {
+        distSq_ = distSq;
+        element_ = element;
     }
 }
 

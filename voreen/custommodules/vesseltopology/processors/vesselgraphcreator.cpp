@@ -234,10 +234,6 @@ static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath
 
     const auto voxelToRw = input.segmentation.getMetaData().getVoxelToWorldMatrix();
     const auto dimensions = input.segmentation.getDimensions();
-    const float criticalVoxelDistDiff = 1.001f*tgt::length(input.segmentation.getMetaData().getSpacing());
-
-    const std::string format = "uint8";
-    const tgt::svec3 slicedim(dimensions.xy(), 1);
 
     static_kdtree::ElementArrayBuilder<EdgeVoxelRef> finderBuilder(VoreenApplication::app()->getUniqueTmpFilePath(".kdtreestorage"));
 
@@ -265,11 +261,20 @@ static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath
                     tgt::ivec3 ipos(x,y,z);
                     tgt::vec3 rwpos = transform(voxelToRw, ipos);
 
-                    auto result = finder.findNearest(rwpos);
+                    auto result = finder.findAllNearest(rwpos);
                     if(!result.found()) {
                         label = 0xFEEDBEEF; //Doesn't really matter. only happens in edge cases anyway
                     } else {
-                        label = result.element_->edge->id_.raw();
+                        auto min_elm = std::min_element(result.elements_.begin(), result.elements_.end(), [] (const EdgeVoxelRef*& e1, const EdgeVoxelRef*& e2) {
+                            auto p1 = e1->getPos();
+                            auto p2 = e2->getPos();
+                            float cmp = p1.x - p2.x;
+                            cmp = (cmp == 0) ? p1.y - p2.y : cmp;
+                            cmp = (cmp == 0) ? p1.z - p2.z : cmp;
+                            return cmp < 0;
+                        });
+                        tgtAssert(min_elm != result.elements_.end(), "Empty result set");
+                        label = (*min_elm)->edge->id_.raw();
                     }
                 } else {
                     label = IdVolume::BACKGROUND_VALUE;
