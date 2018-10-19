@@ -28,8 +28,8 @@
 #include "voreen/core/datastructures/volume/volumebase.h"
 #include "voreen/core/datastructures/volume/volumeram.h"
 #include "voreen/core/datastructures/volume/volume.h"
-/*#include "voreen/core/datastructures/volume/volumeatomic.h"
-#include "voreen/core/datastructures/volume/volumeminmax.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
+/*#include "voreen/core/datastructures/volume/volumeminmax.h"
 #include "voreen/core/datastructures/volume/histogram.h"*/
 
 #include "tgt/stopwatch.h"
@@ -187,6 +187,12 @@ void TileCaffeClassifier::classify() {
 
     numTilesTotal = static_cast<double>(numSlices * tilesX * tilesY);
 
+    // create output volume
+    tgt::svec3 outputDim = tgt::svec3(volDim.x, volDim.y, volDim.z);
+    VolumeRAM_Float* volumeram = new VolumeRAM_Float(outputDim);
+    Volume* volume = new Volume(volumeram, dataInport_.getData()->getSpacing(), dataInport_.getData()->getOffset());
+    float* outputBuffer = reinterpret_cast<float*>(volumeram->getData());
+
 
 
     // since there may be a tile that does not entirely fit, we make it fit and distribute the overlap evenly among the data
@@ -197,18 +203,18 @@ void TileCaffeClassifier::classify() {
     float* tileBuffer = new float[channelWidth * (tileSize + 2* borderSize) * (tileSize + 2* borderSize)];
 
     // iterate over slices
-    for (size_t z = channelWidth / 2; z < volDim.z - channelWidth / 2; ++z) {
+    for (size_t z = 0 /*channelWidth / 2*/; z < volDim.z /*- channelWidth / 2*/; ++z) {
 
         //iterate over tiles in x and y direction
         for (size_t y = 0; y < tilesY; ++y) {
             for (size_t x = 0; x < tilesX; ++x) {
 
-                tgt::svec3 tileStartVoxel = tgt::svec3(std::min(x * offsets.x, lastTileStart.x), std::min(y * offsets.y, lastTileStart.y), z - channelWidth / 2);
+                tgt::svec3 tileStartVoxel = tgt::svec3(std::min(x * offsets.x, lastTileStart.x), std::min(y * offsets.y, lastTileStart.y), z /*- channelWidth / 2*/);
 
                 // we need to take into account the border (positions may be negative)
                 tgt::ivec3 tileWithBorderStartVoxel = tgt::ivec3(static_cast<int>(tileStartVoxel.x) - static_cast<int>(borderSize),
                                                                  static_cast<int>(tileStartVoxel.y) - static_cast<int>(borderSize),
-                                                                 static_cast<int>(tileStartVoxel.z));
+                                                                 static_cast<int>(tileStartVoxel.z) - static_cast<int>(channelWidth / 2));
 
 
                 // now extract the tile
@@ -232,12 +238,19 @@ void TileCaffeClassifier::classify() {
                                 if (voxelCoordinate.y < 0)
                                     voxelCoordinate.y = std::abs(voxelCoordinate.y) % static_cast<int>(volDim.y);
 
+                                if (voxelCoordinate.z < 0)
+                                    voxelCoordinate.z = std::abs(voxelCoordinate.z) % static_cast<int>(volDim.z);
+
                                 if (voxelCoordinate.x >= static_cast<int>(volDim.x)) {
                                     voxelCoordinate.x = (static_cast<int>(volDim.x) - 1) - (voxelCoordinate.x % (static_cast<int>(volDim.x) - 1));
                                 }
 
                                 if (voxelCoordinate.y >= static_cast<int>(volDim.y)) {
                                     voxelCoordinate.y = (static_cast<int>(volDim.y) - 1) - (voxelCoordinate.y % (static_cast<int>(volDim.y) - 1));
+                                }
+
+                                if (voxelCoordinate.z >= static_cast<int>(volDim.z)) {
+                                    voxelCoordinate.z = (static_cast<int>(volDim.z) - 1) - (voxelCoordinate.z % (static_cast<int>(volDim.z) - 1));
                                 }
 
                                 tgtAssert((tgt::hand(tgt::greaterThanEqual(voxelCoordinate, tgt::ivec3::zero)) && tgt::hand(tgt::lessThan(voxelCoordinate, tgt::ivec3(volDim)))), "voxel outside volume");
@@ -264,7 +277,18 @@ void TileCaffeClassifier::classify() {
                 const float* output_data = output_layer->cpu_data();           
                 
                 // TODO: set classified tile to output volume
+                for (size_t currentY = 0; currentY < tileSize; ++currentY) {
+                    for (size_t currentX = 0; currentX < tileSize; ++currentX) {
 
+                        float value = output_data[tileSize * tileSize + currentY * tileSize + currentX ];
+                        tgt::svec3 originalPos = tgt::svec3(tileStartVoxel.x + currentX, tileStartVoxel.y + currentY, z);
+                        volumeram->setVoxelNormalized(value, originalPos);
+
+                        // set current intensity to a tile buffer
+                        //size_t index = currentZ * (tileSize + 2* borderSize) * (tileSize + 2* borderSize) + currentY * (tileSize + 2* borderSize) + currentX;
+                        //tileBuffer[index] = currentIntensity;
+                    }
+                }               
 
                       
                 numTilesProcessed += 1.0;
@@ -289,7 +313,7 @@ void TileCaffeClassifier::classify() {
     delete[] tileBuffer;
 
     // TODO: set output volume
-    //classifierOutput_.setData(volume, true);
+    classifierOutput_.setData(volume, true);
 
     estimationTimer.stop();
     LINFO("Time for classification: " << (float) estimationTimer.getRuntime() / 1000.f << " seconds");
