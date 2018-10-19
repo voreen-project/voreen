@@ -687,6 +687,7 @@ struct UnfinishedRegions {
 };
 
 static void mapEdgeIds(LZ4SliceVolume<uint32_t>& regions, size_t numComponents, ProtoVesselGraph& graph, ProgressReporter& progress) {
+    TaskTimeLogger _("Map CCA to edge IDs", tgt::Info);
     std::vector<uint32_t> ccaToEdgeIdTable(numComponents+1, IdVolume::UNLABELED_FOREGROUND_VALUE);
     ccaToEdgeIdTable[0] = IdVolume::BACKGROUND_VALUE;
 
