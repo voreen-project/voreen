@@ -63,7 +63,7 @@ public:
     size_t size() const;
 
 private:
-    void sort(int dimension);
+    void partitionAtMedian(int dimension);
     Element* begin_;
     Element* end_;
 };
@@ -291,7 +291,7 @@ std::tuple<ElementArrayView<Element>, Element, ElementArrayView<Element>> Elemen
 {
     size_t dist = size();
     tgtAssert(dist > 0, "tried to split empty array view");
-    sort(dimension);
+    partitionAtMedian(dimension);
     Element* center = begin_ + dist/2;
     return {
         ElementArrayView(begin_, center),
@@ -315,21 +315,21 @@ struct SortElementsInDim {
 };
 
 template<typename Element>
-void ElementArrayView<Element>::sort(int dimension)
+void ElementArrayView<Element>::partitionAtMedian(int dimension)
 {
+    auto middle = begin_ + size()/2;
     switch(dimension) {
         case 0:
-            std::sort(begin_, end_, SortElementsInDim<Element, 0>());
+            std::nth_element(begin_, middle, end_, SortElementsInDim<Element, 0>());
             break;
         case 1:
-            std::sort(begin_, end_, SortElementsInDim<Element, 1>());
+            std::nth_element(begin_, middle, end_, SortElementsInDim<Element, 1>());
             break;
         case 2:
-            std::sort(begin_, end_, SortElementsInDim<Element, 2>());
+            std::nth_element(begin_, middle, end_, SortElementsInDim<Element, 2>());
             break;
-        default:
-            ;
-            tgtAssert(false, "Invalid dimension");
+        //default:
+            //tgtAssert(false, "Invalid dimension");
     }
 }
 
