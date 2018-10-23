@@ -180,13 +180,12 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
     // Precreate VoxelSkeletonLists
     DiskArrayStorage<VesselSkeletonVoxel> tmpSkeletonVoxelListStorage(VoreenApplication::app()->getUniqueTmpFilePath(".voxellists"));
 
-    //TODO temporary on disk!
     DiskArrayStorage<DiskArray<VesselSkeletonVoxel>> skeletonVoxelLists(VoreenApplication::app()->getUniqueTmpFilePath(".skelvoxlists"));
 
     for(const auto& edge : edges_.asArray()) {
         auto builder = tmpSkeletonVoxelListStorage.build();
         for(const auto& voxel : edge.voxels()) {
-            builder.push(VesselSkeletonVoxel(voxel, std::numeric_limits<float>::infinity(), 0, 0, 0, 0));
+            builder.push(VesselSkeletonVoxel(voxel, std::numeric_limits<float>::infinity(), 0, 0, 0, 0, false));
         }
         skeletonVoxelLists.storeElement(DiskArray<VesselSkeletonVoxel>(std::move(builder).finalize()));
     }
@@ -201,7 +200,7 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
 
                 tgt::ivec3 ipos(x, y, z);
                 VGEdgeID id = segmentedVolumeReader.getEdgeId(ipos);
-                if(!segmentedVolumeReader.isValidEdgeId(id)) {
+                if(!segmentedVolumeReader.isValidEdgeId(id)) { //TODO check: what does this mean? only foreground?
                     continue;
                 }
 
@@ -235,6 +234,8 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
                     continue;
                 }
 
+                auto otherNearEdgeID = findNearOtherEdgeID(segmentedVolumeReader, ipos, id);
+
                 for(auto element : neared_result.elements_) {
                     VesselSkeletonVoxel& voxel = skeletonVoxelLists[id.raw()].at(element->voxelIndex_);
 
@@ -248,9 +249,13 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
                     }
                     voxel.avgDistToSurface_ = (voxel.avgDistToSurface_*voxel.numSurfaceVoxels_ + dist)/(voxel.numSurfaceVoxels_+1);
                     ++voxel.numSurfaceVoxels_;
+
+                    if(otherNearEdgeID) {
+                        voxel.nearOtherEdge_ = true;
+                    }
                 }
 
-                auto otherNearEdgeID = findNearOtherEdgeID(segmentedVolumeReader, ipos, id);
+                // Determine radius for nodes
                 if(otherNearEdgeID) {
                     auto& edge1 = edges_[id.raw()];
                     auto& edge2 = edges_[otherNearEdgeID->raw()];

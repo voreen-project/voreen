@@ -56,7 +56,7 @@ typedef boost::uuids::uuid VesselGraphNodeUUID;
 
 // A single voxel in a branch in the vessel graph
 struct VesselSkeletonVoxel {
-    VesselSkeletonVoxel(const tgt::vec3& pos, float minDistToSurface, float maxDistToSurface, float avgDistToSurface, uint32_t numSurfaceVoxels, float volume);
+    VesselSkeletonVoxel(const tgt::vec3& pos, float minDistToSurface, float maxDistToSurface, float avgDistToSurface, uint32_t numSurfaceVoxels, float volume, bool nearOtherEdge);
 
     tgt::vec3 pos_;
     float minDistToSurface_;
@@ -67,12 +67,22 @@ struct VesselSkeletonVoxel {
                              // skeleton voxel.
                              // float, because an object voxel might be closest
                              // to multiple skeleton voxels => volume will be split.
+                             //
+
+    // Whether or not this skeleton voxel has associated surface points that are adjacent
+    // to voxels of other edges.
+    bool nearOtherEdge_;
 
     // Compute the roundness, i.e. minDistToSurface_/maxDistToSurface_
     float roundness() const;
     // Determine whether this voxel has valid data, i.e., has any associated
     // surface voxels that were used to compute the distances and other data.
     bool hasValidData() const;
+
+    // Is a voxel contained in an intersection
+    bool isInner() const;
+    // .. or not
+    bool isOuter() const;
 private:
     friend struct VesselSkeletonVoxelSerializable;
     VesselSkeletonVoxel();
@@ -224,6 +234,9 @@ struct VesselGraphEdgePathProperties {
     float avgRadiusStdDeviation_;
     float roundnessAvg_;
     float roundnessStdDeviation_;
+
+    float innerLengthNode1_;
+    float innerLengthNode2_;
 
     static VesselGraphEdgePathProperties fromPath(const VesselGraphNode& begin, const VesselGraphNode& end, const DiskArray<VesselSkeletonVoxel>& path);
     bool hasValidData() const;
