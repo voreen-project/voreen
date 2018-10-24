@@ -66,6 +66,7 @@ protected:
     // properties
     BoolProperty enabled_;
     OptionProperty<RefinementMethod> refinementMethod_;
+    IntProperty maxIterations_;
     IntProperty minVoxelLength_;
     FloatProperty minElongation_;
     FloatProperty minBulgeSize_;

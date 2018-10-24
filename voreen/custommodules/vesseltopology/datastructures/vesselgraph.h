@@ -237,8 +237,10 @@ struct VesselGraphEdgePathProperties {
 
     float innerLengthNode1_;
     float innerLengthNode2_;
+    float tipRadiusNode1_;
+    float tipRadiusNode2_;
 
-    static VesselGraphEdgePathProperties fromPath(const VesselGraphNode& begin, const VesselGraphNode& end, const DiskArray<VesselSkeletonVoxel>& path);
+    static VesselGraphEdgePathProperties fromPath(const VesselGraphNode& begin, const VesselGraphNode& end, const DiskArray<VesselSkeletonVoxel>& path, size_t outerPathBeginIndex, size_t outerPathEndIndex);
     bool hasValidData() const;
 };
 
@@ -287,6 +289,7 @@ struct VesselGraphEdge {
     float getRoundnessAvg() const;
     float getRoundnessStdDeviation() const;
     const DiskArray<VesselSkeletonVoxel>& getVoxels() const;
+    DiskArray<VesselSkeletonVoxel> getOuterVoxels() const;
 
     float getElongation() const;
     float getEffectiveLength() const;
@@ -319,6 +322,9 @@ struct VesselGraphEdge {
 
     bool isEndStanding() const;
     size_t getNumValidVoxels() const;
+
+    size_t outerPathBeginIndex_;
+    size_t outerPathEndIndex_;
 
 private:
     VGEdgeID id_; //within the graph

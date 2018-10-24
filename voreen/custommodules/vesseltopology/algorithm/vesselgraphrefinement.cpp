@@ -37,10 +37,10 @@
 
 namespace voreen {
 
-std::unique_ptr<VesselGraph> VesselGraphRefinement::removeEndEdgesRecursively(const VesselGraph& input, RemovableEdgeCheck isRemovableEdge) {
+std::unique_ptr<VesselGraph> VesselGraphRefinement::removeEndEdgesRecursively(const VesselGraph& input, RemovableEdgeCheck isRemovableEdge, size_t maxIterations) {
     size_t num_removed_this_it = 0;
     auto output = removeEndEdges(input, isRemovableEdge, num_removed_this_it);
-    while(num_removed_this_it > 0) {
+    for(size_t i=1; num_removed_this_it > 0 && i<maxIterations; ++i) {
         num_removed_this_it = 0;
         output = removeEndEdges(*output, isRemovableEdge, num_removed_this_it);
     }
@@ -78,10 +78,11 @@ static std::vector<const VesselGraphEdge*> findDeletable(const VesselGraphNode& 
     if(num_kept >= 2) {
         return potentially_deletable; // We are deleting all candidates, as we retain >= 2 nodes anyways
     } if(num_kept == 1) {
-        float highest_length = 0;
+        float highest_length = -std::numeric_limits<float>::infinity();
         const VesselGraphEdge* longest = nullptr;
         for(auto edge : potentially_deletable) {
-            float l = edge->getLength();
+            float l = edge->getRelativeBulgeSize();
+            //tgtAssert(l >= 0, "Invalid bulge size");
             if(l > highest_length) {
                 highest_length = l;
                 longest = edge;
@@ -96,12 +97,13 @@ static std::vector<const VesselGraphEdge*> findDeletable(const VesselGraphNode& 
         tgtAssert(deletable.size() == potentially_deletable.size() - 1, "Invalid number of edges deleted"); // We are deleting exactly all except one candidate
         return deletable;
     } else { // => num_kept == 0
-        float highest_length = 0;
-        float second_highest_length = 0;
+        float highest_length = -std::numeric_limits<float>::infinity();
+        float second_highest_length = -std::numeric_limits<float>::infinity();
         const VesselGraphEdge* longest = nullptr;
         const VesselGraphEdge* second_longest = nullptr;
         for(auto edge : potentially_deletable) {
-            float l = edge->getLength();
+            float l = edge->getRelativeBulgeSize();
+            //tgtAssert(l >= 0, "Invalid bulge size");
             if(l > highest_length) {
                 second_highest_length = highest_length;
                 second_longest = longest;
@@ -533,8 +535,6 @@ std::unique_ptr<VesselGraph> VesselGraphRefinement::removeDregree2Nodes(const Ve
         tgtAssert(output->getEdge(inserted_edge).getLength() > 0, "Invalid edge length");
     }
 
-
-    //TODO check order of voxels in edges when merging!
     return output;
 }
 } // namespace voreen
