@@ -46,16 +46,17 @@ struct DiskArrayReverseConstIterator {
         return current_ != other.current_;
     }
     const Element& operator*() {
-        return *current_;
+        return *(current_-1);
     }
     const Element* operator->() {
-        return current_;
+        return current_-1;
     }
     const Element* current_;
 };
 
 template<typename Element>
 class DiskArray {
+public:
     //typedef Element* iterator;
     typedef const Element* const_iterator;
     typedef Element* iterator;
@@ -66,6 +67,9 @@ public:
     DiskArray(DiskArray&& other);
     DiskArray& operator=(DiskArray&& other);
     ~DiskArray() {}
+
+    // Create a (sub-) slice of the disk array
+    DiskArray slice(size_t begin, size_t end) const;
 
     const Element& at(size_t index) const;
     Element& at(size_t index);
@@ -279,6 +283,11 @@ DiskArray<Element>& DiskArray<Element>::operator=(DiskArray&& other)
     }
     return *this;
 
+}
+
+template<typename Element>
+DiskArray<Element> DiskArray<Element>::slice(size_t begin, size_t end) const {
+    return DiskArray(file_, begin_+begin, begin_+end);
 }
 
 template<typename Element>
