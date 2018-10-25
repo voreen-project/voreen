@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="OctreeCreator" ref="ref6" />
+                        <item type="VolumeSave" ref="ref7" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -59,9 +59,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/walnut_hdf5_write_disk.h5" />
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/walnut_hdf5_write_disk.h5" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/walnut_hdf5_write_disk.h5" />
+                                    <item value="output/walnut_hdf5_write_disk.h5" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/walnut_hdf5_write_disk.h5" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/walnut_hdf5_write_disk.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -92,9 +92,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/walnut_hdf5_write_ram.h5" />
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/walnut_hdf5_write_ram.h5" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/walnut_hdf5_write_ram.h5" />
+                                    <item value="output/walnut_hdf5_write_ram.h5" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/walnut_hdf5_write_ram.h5" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/walnut_hdf5_write_ram.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -224,9 +224,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/walnut_hdf5_write_octree.h5" />
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/walnut_hdf5_write_octree.h5" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/walnut_hdf5_write_octree.h5" />
+                                    <item value="output/walnut_hdf5_write_octree.h5" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/walnut_hdf5_write_octree.h5" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/walnut_hdf5_write_octree.h5" />
                                 </paths>
                             </paths>
                         </Property>
