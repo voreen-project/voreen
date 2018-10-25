@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="VolumeCreate" ref="ref12" />
+                        <item type="VolumeSave" ref="ref13" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -208,9 +208,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cornell.vvd" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cornell.vvd" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/cornell.vvd" />
+                                    <item value="output/cornell.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/cornell.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/cornell.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -241,9 +241,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/blobs.vvd" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/blobs.vvd" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/blobs.vvd" />
+                                    <item value="output/blobs.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/blobs.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/blobs.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -274,9 +274,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/sphere.vvd" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/sphere.vvd" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/sphere.vvd" />
+                                    <item value="output/sphere.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/sphere.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/sphere.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -307,9 +307,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/torus.vvd" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/torus.vvd" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/torus.vvd" />
+                                    <item value="output/torus.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/torus.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/torus.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -340,9 +340,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/doubletorus.vvd" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/doubletorus.vvd" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/doubletorus.vvd" />
+                                    <item value="output/doubletorus.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/doubletorus.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/doubletorus.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -373,9 +373,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/bumpysphere.vvd" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/bumpysphere.vvd" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/bumpysphere.vvd" />
+                                    <item value="output/bumpysphere.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/bumpysphere.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/bumpysphere.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -406,9 +406,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/doublesphere.vvd" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/doublesphere.vvd" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/doublesphere.vvd" />
+                                    <item value="output/doublesphere.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/doublesphere.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/doublesphere.vvd" />
                                 </paths>
                             </paths>
                         </Property>
