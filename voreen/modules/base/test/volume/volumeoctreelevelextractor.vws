@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="OctreeCreator" ref="ref1" />
+                        <item type="VolumeSave" ref="ref9" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -131,7 +131,7 @@
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="progressMessage" name="progressMessage" value="" />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 6.200 sec" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
                         <Property mapKey="treeDepth" name="treeDepth" value="7" />
@@ -276,16 +276,16 @@
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave" id="ref7">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-15" y="192" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-15" y="193" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="continousSave" name="continousSave" value="false" />
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_64.vvd" />
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_64.vvd" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_64.vvd" />
+                                    <item value="output/octreelevel_64.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/octreelevel_64.vvd" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_64.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -316,9 +316,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_128.vvd" />
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_128.vvd" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_128.vvd" />
+                                    <item value="output/octreelevel_128.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/octreelevel_128.vvd" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_128.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -349,9 +349,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_256.vvd" />
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_256.vvd" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_256.vvd" />
+                                    <item value="output/octreelevel_256.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/octreelevel_256.vvd" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_256.vvd" />
                                 </paths>
                             </paths>
                         </Property>

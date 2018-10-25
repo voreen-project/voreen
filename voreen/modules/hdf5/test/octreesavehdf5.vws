@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="OctreeSave" ref="ref19" />
+                        <item type="OctreeSave" ref="ref13" />
                     </values>
                 </MetaItem>
                 <MetaItem name="Zoom" type="ZoomMetaData">
@@ -705,9 +705,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.h5" />
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.h5" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.h5" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.h5" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.h5" />
+                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -733,7 +733,7 @@
                 </Processor>
                 <Processor type="OctreeSave" name="OctreeSave 2" id="ref7">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-334" y="-133" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-336" y="-133" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyChannelShift" name="applyChannelShift" value="false" />

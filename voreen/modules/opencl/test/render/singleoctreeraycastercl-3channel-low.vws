@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="OctreeCreator" ref="ref1" />
+                        <item type="Canvas" ref="ref14" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -44,9 +44,9 @@
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/dvr-nearest.png" />
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/dvr-nearest.png" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/dvr-nearest.png" />
+                                    <item value="output/dvr-nearest.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/dvr-nearest.png" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/dvr-nearest.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -187,7 +187,7 @@
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="progressMessage" name="progressMessage" value="" />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="64" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 236 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
                         <Property mapKey="treeDepth" name="treeDepth" value="6" />
@@ -768,9 +768,9 @@
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/dvr-linear.png" />
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/dvr-linear.png" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/dvr-linear.png" />
+                                    <item value="output/dvr-linear.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/dvr-linear.png" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/dvr-linear.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1207,9 +1207,9 @@
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/mip-nearest.png" />
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/mip-nearest.png" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/mip-nearest.png" />
+                                    <item value="output/mip-nearest.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/mip-nearest.png" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/mip-nearest.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1258,9 +1258,9 @@
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/mip-linear.png" />
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/mip-linear.png" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/mip-linear.png" />
+                                    <item value="output/mip-linear.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/mip-linear.png" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/mip-linear.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1309,9 +1309,9 @@
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/mop-nearest.png" />
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/mop-nearest.png" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/mop-nearest.png" />
+                                    <item value="output/mop-nearest.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/mop-nearest.png" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/mop-nearest.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1748,9 +1748,9 @@
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/mop-linear.png" />
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/mop-linear.png" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/mop-linear.png" />
+                                    <item value="output/mop-linear.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/mop-linear.png" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/mop-linear.png" />
                                 </paths>
                             </paths>
                         </Property>

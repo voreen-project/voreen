@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="OctreeCreator" ref="ref1" />
+                        <item type="GeometrySave" ref="ref5" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -59,9 +59,9 @@
                         <Property mapKey="file" name="file" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreepg.vge" />
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreepg.vge" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreepg.vge" />
+                                    <item value="output/octreepg.vge" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/octreepg.vge" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/octreepg.vge" />
                                 </paths>
                             </paths>
                         </Property>
@@ -92,7 +92,7 @@
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="progressMessage" name="progressMessage" value="" />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 1.201 sec" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
                         <Property mapKey="treeDepth" name="treeDepth" value="7" />
@@ -392,9 +392,9 @@
                         <Property mapKey="file" name="file" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreeouterfacespg.vge" />
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreeouterfacespg.vge" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreeouterfacespg.vge" />
+                                    <item value="output/octreeouterfacespg.vge" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/octreeouterfacespg.vge" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/octreeouterfacespg.vge" />
                                 </paths>
                             </paths>
                         </Property>
