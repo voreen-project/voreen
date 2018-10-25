@@ -1,21 +1,26 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="false" GlobalDescription="">
-        <ProcessorNetwork version="17">
+        <ProcessorNetwork version="20">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-412.15246582" y="-110.80327606" />
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="OctreeCreator" ref="ref1" />
+                    </values>
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.55217391" />
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-412.15246582" y="-110.803276062" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.552173913" />
             </MetaData>
             <Processors>
                 <Processor type="Canvas" name="Canvas DVR/nearest" id="ref11">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-1003" y="154" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-549" y="71" width="421" height="350" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="0" y="0" width="421" height="350" />
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
                             <value x="21" y="91" />
@@ -25,7 +30,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-549" y="71" />
+                            <value x="0" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="421" y="350" />
@@ -36,12 +41,12 @@
                             <value x="421" y="350" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/dvr-nearest.png" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/dvr-nearest.png" />
-                                    <item value="D:/voreen_/gitolite/voreen-testdata/voreen-testdata/output/dvr-nearest.png" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/dvr-nearest.png" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/dvr-nearest.png" />
+                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/dvr-nearest.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -69,11 +74,24 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_medium.vvd" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="">
+                                <path noPathSet="false">
+                                    <paths>
+                                        <item value="input/walnut_medium.vvd" />
+                                        <item value="../../voreen-testdata/voreen-testdata/input/walnut_medium.vvd" />
+                                        <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/input/walnut_medium.vvd" />
+                                    </paths>
+                                </path>
+                                <searchParameters>
+                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                </searchParameters>
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -88,18 +106,18 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-497" y="-123" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="896.58563232" minValue="0.015625" frustLeft="-0.00647209" frustRight="0.00647209" frustBottom="-0.00647209" frustTop="0.00647209" frustNear="0.015625" frustFar="900.17199707" fovy="45.00000381" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02437174" id="ref16">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="896.585632324" minValue="0.015625" frustLeft="-0.006472087" frustRight="0.006472087" frustBottom="-0.006472087" frustTop="0.006472087" frustNear="0.015625" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.024371739" id="ref16">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="721" y="372" />
                             </MetaData>
-                            <position x="-0.69199288" y="1.5521853" z="-3.74411869" />
-                            <focus x="-0.06041938" y="-0.25359094" z="-0.1142664" />
-                            <upVector x="0.18559018" y="0.83312875" z="0.52101129" />
+                            <position x="-0.691992879" y="1.552185297" z="-3.74411869" />
+                            <focus x="-0.060419381" y="-0.253590941" z="-0.114266403" />
+                            <upVector x="0.185590178" y="0.83312875" z="0.521011293" />
                             <trackball moveCenter="false">
                                 <center x="-0.01474702" y="-0.01049805" z="-0.00127947" />
                             </trackball>
-                            <sceneLLF x="-1.79317129" y="-1.0078125" z="-1.77570677" />
-                            <sceneURB x="1.79317129" y="1.0078125" z="1.77570677" />
+                            <sceneLLF x="-1.793171287" y="-1.0078125" z="-1.775706768" />
+                            <sceneURB x="1.793171287" y="1.0078125" z="1.775706768" />
                         </Property>
                         <Property mapKey="cameraInsideVolumeTechnique" name="cameraInsideVolumeTechnique" value="gpu" />
                         <Property mapKey="jitterEntryPoints" name="jitterEntryPoints" value="false" />
@@ -108,7 +126,7 @@
                         <Property mapKey="useCulling" name="useCulling" value="true" />
                     </Properties>
                     <Inports>
-                        <Port name="proxgeometry.geometry" direction="1" portID="proxgeometry.geometry" guiName="Proxy Geometry Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="proxgeometry.geometry" direction="1" portID="proxgeometry.geometry" guiName="Proxy Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                     </Inports>
@@ -157,16 +175,19 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-478" y="-344" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="autogenerateOctree" name="autogenerateOctree" value="true" />
                         <Property mapKey="brickDimensions" name="brickDimensions" value="8" />
                         <Property mapKey="brickPoolManager" name="brickPoolManager" value="brickPoolManagerDisk" />
                         <Property mapKey="clearOctree" name="clearOctree" />
-                        <Property mapKey="generateOctree" name="generateOctree" guiName="Load Octree" />
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="homogeneityThreshold" name="homogeneityThreshold" value="0.02" tracking="false" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="numThreads" name="numThreads" value="8" />
-                        <Property mapKey="progressProperty" name="progressProperty" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="progressMessage" name="progressMessage" value="" />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="64" />
-                        <Property mapKey="statusProperty" name="statusProperty" value="Octree generated." />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
                         <Property mapKey="treeDepth" name="treeDepth" value="5" />
                         <Property mapKey="useRelativeThreshold" name="useRelativeThreshold" value="true" />
                     </Properties>
@@ -201,7 +222,7 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="volumeOutport" direction="0" portID="volumeOutport" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumeOutport" direction="0" portID="volumeOutport" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -221,19 +242,19 @@
                         <Property mapKey="brickBufferSizeMB" name="brickBufferSizeMB" value="64" />
                         <Property mapKey="brickUploadBudgetMD" name="brickUploadBudgetMD" value="64" />
                         <Property mapKey="brickUploadTimeLimit" name="brickUploadTimeLimit" value="250" />
-                        <Property mapKey="cameraProperty" name="cameraProperty" projectionMode="1" maxValue="896.58563232" minValue="0.015625" frustLeft="-0.00647209" frustRight="0.00647209" frustBottom="-0.00647209" frustTop="0.00647209" frustNear="0.015625" frustFar="900.17199707" fovy="45.00000381" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02437174" id="ref17">
+                        <Property mapKey="cameraProperty" name="cameraProperty" projectionMode="1" maxValue="896.585632324" minValue="0.015625" frustLeft="-0.006472087" frustRight="0.006472087" frustBottom="-0.006472087" frustTop="0.006472087" frustNear="0.015625" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.024371739" id="ref17">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="751" y="346" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1049" y="308" />
                             </MetaData>
-                            <position x="-0.69199288" y="1.5521853" z="-3.74411869" />
-                            <focus x="-0.06041938" y="-0.25359094" z="-0.1142664" />
-                            <upVector x="0.18559018" y="0.83312875" z="0.52101129" />
+                            <position x="-0.691992879" y="1.552185297" z="-3.74411869" />
+                            <focus x="-0.060419381" y="-0.253590941" z="-0.114266403" />
+                            <upVector x="0.185590178" y="0.83312875" z="0.521011293" />
                             <trackball moveCenter="false">
                                 <center x="-0.01474702" y="-0.01049805" z="-0.00127947" />
                             </trackball>
-                            <sceneLLF x="-1.80791831" y="-1.01831055" z="-1.77698624" />
-                            <sceneURB x="1.77842426" y="0.99731445" z="1.77442729" />
+                            <sceneLLF x="-1.80791831" y="-1.018310547" z="-1.776986241" />
+                            <sceneURB x="1.778424263" y="0.997314453" z="1.774427295" />
                         </Property>
                         <Property mapKey="channelShift0" name="channelShift0">
                             <value x="0" y="0" z="0" />
@@ -252,9 +273,15 @@
                         <Property mapKey="interactionNodeLevelReduction" name="interactionNodeLevelReduction" value="1" />
                         <Property mapKey="interactionQuality" name="interactionQuality" value="Medium" id="ref60">
                             <Options>
-                                <Option Key="High" Description="High" Value="High" />
-                                <Option Key="Medium" Description="Medium" Value="Medium" />
-                                <Option Key="Low" Description="Low" Value="Low" />
+                                <Option Key="High" Description="High" Value="High">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Medium" Description="Medium" Value="Medium">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Low" Description="Low" Value="Low">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
                             </Options>
                         </Property>
                         <Property mapKey="interactionSamplingRate" name="interactionSamplingRate" value="0.75" />
@@ -267,18 +294,26 @@
                             </MetaData>
                             <programFilenamePaths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen-untouched/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="../../voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                     <item value="modules/opencl/cl/singleoctreeraycaster.cl" />
-                                    <item value="D:/voreen_/gitolite/voreen-untouched/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                 </paths>
                             </programFilenamePaths>
                         </Property>
                         <Property mapKey="renderingQuality" name="renderingQuality" value="Full" id="ref58">
                             <Options>
-                                <Option Key="Full" Description="Full" Value="Full" />
-                                <Option Key="High" Description="High" Value="High" />
-                                <Option Key="Medium" Description="Medium" Value="Medium" />
-                                <Option Key="Low" Description="Low" Value="Low" />
+                                <Option Key="Full" Description="Full" Value="Full">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="High" Description="High" Value="High">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Medium" Description="Medium" Value="Medium">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Low" Description="Low" Value="Low">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
                             </Options>
                         </Property>
                         <Property mapKey="resetchannelshift" name="resetchannelshift" />
@@ -292,10 +327,10 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="23" y="29.0151825" />
+                                <domain x="23" y="29.015182495" />
                                 <threshold x="0" y="1" />
                                 <Keys>
-                                    <key type="TransFuncMappingKey" intensity="0.19599999" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.195999995" split="false">
                                         <colorL r="0" g="0" b="0" a="0" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="0.60799998" split="false">
@@ -418,10 +453,10 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="23" y="29.0151825" />
+                                <domain x="23" y="29.015182495" />
                                 <threshold x="0" y="1" />
                                 <Keys>
-                                    <key type="TransFuncMappingKey" intensity="0.19599999" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.195999995" split="false">
                                         <colorL r="0" g="0" b="0" a="0" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="0.60799998" split="false">
@@ -500,7 +535,7 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="proxygeometry.geometry" direction="0" portID="proxygeometry.geometry" guiName="Proxy Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="proxygeometry.geometry" direction="0" portID="proxygeometry.geometry" guiName="Proxy Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -520,19 +555,19 @@
                         <Property mapKey="brickBufferSizeMB" name="brickBufferSizeMB" value="64" />
                         <Property mapKey="brickUploadBudgetMD" name="brickUploadBudgetMD" value="64" />
                         <Property mapKey="brickUploadTimeLimit" name="brickUploadTimeLimit" value="250" />
-                        <Property mapKey="cameraProperty" name="cameraProperty" projectionMode="1" maxValue="896.58563232" minValue="0.015625" frustLeft="-0.00647209" frustRight="0.00647209" frustBottom="-0.00647209" frustTop="0.00647209" frustNear="0.015625" frustFar="900.17199707" fovy="45.00000381" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02437174" id="ref20">
+                        <Property mapKey="cameraProperty" name="cameraProperty" projectionMode="1" maxValue="896.585632324" minValue="0.015625" frustLeft="-0.006472087" frustRight="0.006472087" frustBottom="-0.006472087" frustTop="0.006472087" frustNear="0.015625" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.024371739" id="ref20">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="751" y="346" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1049" y="308" />
                             </MetaData>
-                            <position x="-0.69199288" y="1.5521853" z="-3.74411869" />
-                            <focus x="-0.06041938" y="-0.25359094" z="-0.1142664" />
-                            <upVector x="0.18559018" y="0.83312875" z="0.52101129" />
+                            <position x="-0.691992879" y="1.552185297" z="-3.74411869" />
+                            <focus x="-0.060419381" y="-0.253590941" z="-0.114266403" />
+                            <upVector x="0.185590178" y="0.83312875" z="0.521011293" />
                             <trackball moveCenter="false">
                                 <center x="-0.01474702" y="-0.01049805" z="-0.00127947" />
                             </trackball>
-                            <sceneLLF x="-1.80791831" y="-1.01831055" z="-1.77698624" />
-                            <sceneURB x="1.77842426" y="0.99731445" z="1.77442729" />
+                            <sceneLLF x="-1.80791831" y="-1.018310547" z="-1.776986241" />
+                            <sceneURB x="1.778424263" y="0.997314453" z="1.774427295" />
                         </Property>
                         <Property mapKey="channelShift0" name="channelShift0">
                             <value x="0" y="0" z="0" />
@@ -551,9 +586,15 @@
                         <Property mapKey="interactionNodeLevelReduction" name="interactionNodeLevelReduction" value="1" />
                         <Property mapKey="interactionQuality" name="interactionQuality" value="Medium" id="ref59">
                             <Options>
-                                <Option Key="High" Description="High" Value="High" />
-                                <Option Key="Medium" Description="Medium" Value="Medium" />
-                                <Option Key="Low" Description="Low" Value="Low" />
+                                <Option Key="High" Description="High" Value="High">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Medium" Description="Medium" Value="Medium">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Low" Description="Low" Value="Low">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
                             </Options>
                         </Property>
                         <Property mapKey="interactionSamplingRate" name="interactionSamplingRate" value="0.75" />
@@ -566,18 +607,26 @@
                             </MetaData>
                             <programFilenamePaths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen-untouched/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="../../voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                     <item value="modules/opencl/cl/singleoctreeraycaster.cl" />
-                                    <item value="D:/voreen_/gitolite/voreen-untouched/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                 </paths>
                             </programFilenamePaths>
                         </Property>
                         <Property mapKey="renderingQuality" name="renderingQuality" value="Full" id="ref57">
                             <Options>
-                                <Option Key="Full" Description="Full" Value="Full" />
-                                <Option Key="High" Description="High" Value="High" />
-                                <Option Key="Medium" Description="Medium" Value="Medium" />
-                                <Option Key="Low" Description="Low" Value="Low" />
+                                <Option Key="Full" Description="Full" Value="Full">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="High" Description="High" Value="High">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Medium" Description="Medium" Value="Medium">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Low" Description="Low" Value="Low">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
                             </Options>
                         </Property>
                         <Property mapKey="resetchannelshift" name="resetchannelshift" />
@@ -591,10 +640,10 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="23" y="29.0151825" />
+                                <domain x="23" y="29.015182495" />
                                 <threshold x="0" y="1" />
                                 <Keys>
-                                    <key type="TransFuncMappingKey" intensity="0.19599999" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.195999995" split="false">
                                         <colorL r="0" g="0" b="0" a="0" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="0.60799998" split="false">
@@ -693,7 +742,7 @@
                 <Processor type="Canvas" name="Canvas DVR/linear" id="ref10">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-807" y="156" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-604" y="103" width="421" height="350" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="0" y="0" width="421" height="350" />
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
                             <value x="318" y="150" />
@@ -703,7 +752,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-604" y="103" />
+                            <value x="0" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="421" y="350" />
@@ -714,12 +763,12 @@
                             <value x="421" y="350" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/dvr-linear.png" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/dvr-linear.png" />
-                                    <item value="D:/voreen_/gitolite/voreen-testdata/voreen-testdata/output/dvr-linear.png" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/dvr-linear.png" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/dvr-linear.png" />
+                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/dvr-linear.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -751,19 +800,19 @@
                         <Property mapKey="brickBufferSizeMB" name="brickBufferSizeMB" value="64" />
                         <Property mapKey="brickUploadBudgetMD" name="brickUploadBudgetMD" value="64" />
                         <Property mapKey="brickUploadTimeLimit" name="brickUploadTimeLimit" value="250" />
-                        <Property mapKey="cameraProperty" name="cameraProperty" projectionMode="1" maxValue="896.58563232" minValue="0.015625" frustLeft="-0.00647209" frustRight="0.00647209" frustBottom="-0.00647209" frustTop="0.00647209" frustNear="0.015625" frustFar="900.17199707" fovy="45.00000381" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02437174" id="ref24">
+                        <Property mapKey="cameraProperty" name="cameraProperty" projectionMode="1" maxValue="896.585632324" minValue="0.015625" frustLeft="-0.006472087" frustRight="0.006472087" frustBottom="-0.006472087" frustTop="0.006472087" frustNear="0.015625" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.024371739" id="ref24">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="751" y="346" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1049" y="308" />
                             </MetaData>
-                            <position x="-0.69199288" y="1.5521853" z="-3.74411869" />
-                            <focus x="-0.06041938" y="-0.25359094" z="-0.1142664" />
-                            <upVector x="0.18559018" y="0.83312875" z="0.52101129" />
+                            <position x="-0.691992879" y="1.552185297" z="-3.74411869" />
+                            <focus x="-0.060419381" y="-0.253590941" z="-0.114266403" />
+                            <upVector x="0.185590178" y="0.83312875" z="0.521011293" />
                             <trackball moveCenter="false">
                                 <center x="-0.01474702" y="-0.01049805" z="-0.00127947" />
                             </trackball>
-                            <sceneLLF x="-1.80791831" y="-1.01831055" z="-1.77698624" />
-                            <sceneURB x="1.77842426" y="0.99731445" z="1.77442729" />
+                            <sceneLLF x="-1.80791831" y="-1.018310547" z="-1.776986241" />
+                            <sceneURB x="1.778424263" y="0.997314453" z="1.774427295" />
                         </Property>
                         <Property mapKey="channelShift0" name="channelShift0">
                             <value x="0" y="0" z="0" />
@@ -782,9 +831,15 @@
                         <Property mapKey="interactionNodeLevelReduction" name="interactionNodeLevelReduction" value="1" />
                         <Property mapKey="interactionQuality" name="interactionQuality" value="Medium" id="ref62">
                             <Options>
-                                <Option Key="High" Description="High" Value="High" />
-                                <Option Key="Medium" Description="Medium" Value="Medium" />
-                                <Option Key="Low" Description="Low" Value="Low" />
+                                <Option Key="High" Description="High" Value="High">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Medium" Description="Medium" Value="Medium">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Low" Description="Low" Value="Low">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
                             </Options>
                         </Property>
                         <Property mapKey="interactionSamplingRate" name="interactionSamplingRate" value="0.75" />
@@ -797,18 +852,26 @@
                             </MetaData>
                             <programFilenamePaths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen-untouched/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="../../voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                     <item value="modules/opencl/cl/singleoctreeraycaster.cl" />
-                                    <item value="D:/voreen_/gitolite/voreen-untouched/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                 </paths>
                             </programFilenamePaths>
                         </Property>
                         <Property mapKey="renderingQuality" name="renderingQuality" value="Full" id="ref61">
                             <Options>
-                                <Option Key="Full" Description="Full" Value="Full" />
-                                <Option Key="High" Description="High" Value="High" />
-                                <Option Key="Medium" Description="Medium" Value="Medium" />
-                                <Option Key="Low" Description="Low" Value="Low" />
+                                <Option Key="Full" Description="Full" Value="Full">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="High" Description="High" Value="High">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Medium" Description="Medium" Value="Medium">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Low" Description="Low" Value="Low">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
                             </Options>
                         </Property>
                         <Property mapKey="resetchannelshift" name="resetchannelshift" />
@@ -822,10 +885,10 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="23" y="29.0151825" />
+                                <domain x="23" y="29.015182495" />
                                 <threshold x="0" y="1" />
                                 <Keys>
-                                    <key type="TransFuncMappingKey" intensity="0.19599999" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.195999995" split="false">
                                         <colorL r="0" g="0" b="0" a="0" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="0.60799998" split="false">
@@ -931,19 +994,19 @@
                         <Property mapKey="brickBufferSizeMB" name="brickBufferSizeMB" value="64" />
                         <Property mapKey="brickUploadBudgetMD" name="brickUploadBudgetMD" value="64" />
                         <Property mapKey="brickUploadTimeLimit" name="brickUploadTimeLimit" value="250" />
-                        <Property mapKey="cameraProperty" name="cameraProperty" projectionMode="1" maxValue="896.58563232" minValue="0.015625" frustLeft="-0.00647209" frustRight="0.00647209" frustBottom="-0.00647209" frustTop="0.00647209" frustNear="0.015625" frustFar="900.17199707" fovy="45.00000381" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02437174" id="ref25">
+                        <Property mapKey="cameraProperty" name="cameraProperty" projectionMode="1" maxValue="896.585632324" minValue="0.015625" frustLeft="-0.006472087" frustRight="0.006472087" frustBottom="-0.006472087" frustTop="0.006472087" frustNear="0.015625" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.024371739" id="ref25">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="751" y="346" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1049" y="308" />
                             </MetaData>
-                            <position x="-0.69199288" y="1.5521853" z="-3.74411869" />
-                            <focus x="-0.06041938" y="-0.25359094" z="-0.1142664" />
-                            <upVector x="0.18559018" y="0.83312875" z="0.52101129" />
+                            <position x="-0.691992879" y="1.552185297" z="-3.74411869" />
+                            <focus x="-0.060419381" y="-0.253590941" z="-0.114266403" />
+                            <upVector x="0.185590178" y="0.83312875" z="0.521011293" />
                             <trackball moveCenter="false">
                                 <center x="-0.01474702" y="-0.01049805" z="-0.00127947" />
                             </trackball>
-                            <sceneLLF x="-1.80791831" y="-1.01831055" z="-1.77698624" />
-                            <sceneURB x="1.77842426" y="0.99731445" z="1.77442729" />
+                            <sceneLLF x="-1.80791831" y="-1.018310547" z="-1.776986241" />
+                            <sceneURB x="1.778424263" y="0.997314453" z="1.774427295" />
                         </Property>
                         <Property mapKey="channelShift0" name="channelShift0">
                             <value x="0" y="0" z="0" />
@@ -962,9 +1025,15 @@
                         <Property mapKey="interactionNodeLevelReduction" name="interactionNodeLevelReduction" value="1" />
                         <Property mapKey="interactionQuality" name="interactionQuality" value="Medium" id="ref64">
                             <Options>
-                                <Option Key="High" Description="High" Value="High" />
-                                <Option Key="Medium" Description="Medium" Value="Medium" />
-                                <Option Key="Low" Description="Low" Value="Low" />
+                                <Option Key="High" Description="High" Value="High">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Medium" Description="Medium" Value="Medium">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Low" Description="Low" Value="Low">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
                             </Options>
                         </Property>
                         <Property mapKey="interactionSamplingRate" name="interactionSamplingRate" value="0.75" />
@@ -977,18 +1046,26 @@
                             </MetaData>
                             <programFilenamePaths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen-untouched/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="../../voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                     <item value="modules/opencl/cl/singleoctreeraycaster.cl" />
-                                    <item value="D:/voreen_/gitolite/voreen-untouched/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                 </paths>
                             </programFilenamePaths>
                         </Property>
                         <Property mapKey="renderingQuality" name="renderingQuality" value="Full" id="ref63">
                             <Options>
-                                <Option Key="Full" Description="Full" Value="Full" />
-                                <Option Key="High" Description="High" Value="High" />
-                                <Option Key="Medium" Description="Medium" Value="Medium" />
-                                <Option Key="Low" Description="Low" Value="Low" />
+                                <Option Key="Full" Description="Full" Value="Full">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="High" Description="High" Value="High">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Medium" Description="Medium" Value="Medium">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Low" Description="Low" Value="Low">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
                             </Options>
                         </Property>
                         <Property mapKey="resetchannelshift" name="resetchannelshift" />
@@ -1002,10 +1079,10 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="23" y="29.0151825" />
+                                <domain x="23" y="29.015182495" />
                                 <threshold x="0" y="1" />
                                 <Keys>
-                                    <key type="TransFuncMappingKey" intensity="0.19599999" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.195999995" split="false">
                                         <colorL r="0" g="0" b="0" a="0" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="0.60799998" split="false">
@@ -1104,7 +1181,7 @@
                 <Processor type="Canvas" name="Canvas MIP/nearest" id="ref12">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-559" y="161" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-646" y="137" width="421" height="350" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="0" y="0" width="421" height="350" />
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
                             <value x="318" y="150" />
@@ -1114,7 +1191,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-646" y="137" />
+                            <value x="0" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="421" y="350" />
@@ -1125,12 +1202,12 @@
                             <value x="421" y="350" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/mip-nearest.png" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/mip-nearest.png" />
-                                    <item value="D:/voreen_/gitolite/voreen-testdata/voreen-testdata/output/mip-nearest.png" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/mip-nearest.png" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/mip-nearest.png" />
+                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/mip-nearest.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1155,7 +1232,7 @@
                 <Processor type="Canvas" name="Canvas MIP/linear" id="ref13">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-376" y="161" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-675" y="174" width="421" height="350" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="0" y="0" width="421" height="350" />
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
                             <value x="318" y="150" />
@@ -1165,7 +1242,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-675" y="174" />
+                            <value x="0" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="421" y="350" />
@@ -1176,12 +1253,12 @@
                             <value x="421" y="350" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/mip-linear.png" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/mip-linear.png" />
-                                    <item value="D:/voreen_/gitolite/voreen-testdata/voreen-testdata/output/mip-linear.png" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/mip-linear.png" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/mip-linear.png" />
+                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/mip-linear.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1206,7 +1283,7 @@
                 <Processor type="Canvas" name="Canvas MOP/nearest" id="ref15">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-164" y="157" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-702" y="212" width="421" height="350" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="0" y="0" width="421" height="350" />
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
                             <value x="318" y="150" />
@@ -1216,7 +1293,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-702" y="212" />
+                            <value x="0" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="421" y="350" />
@@ -1227,12 +1304,12 @@
                             <value x="421" y="350" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/mop-nearest.png" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/mop-nearest.png" />
-                                    <item value="D:/voreen_/gitolite/voreen-testdata/voreen-testdata/output/mop-nearest.png" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/mop-nearest.png" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/mop-nearest.png" />
+                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/mop-nearest.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1264,19 +1341,19 @@
                         <Property mapKey="brickBufferSizeMB" name="brickBufferSizeMB" value="64" />
                         <Property mapKey="brickUploadBudgetMD" name="brickUploadBudgetMD" value="64" />
                         <Property mapKey="brickUploadTimeLimit" name="brickUploadTimeLimit" value="250" />
-                        <Property mapKey="cameraProperty" name="cameraProperty" projectionMode="1" maxValue="896.58563232" minValue="0.015625" frustLeft="-0.00647209" frustRight="0.00647209" frustBottom="-0.00647209" frustTop="0.00647209" frustNear="0.015625" frustFar="900.17199707" fovy="45.00000381" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02437174" id="ref26">
+                        <Property mapKey="cameraProperty" name="cameraProperty" projectionMode="1" maxValue="896.585632324" minValue="0.015625" frustLeft="-0.006472087" frustRight="0.006472087" frustBottom="-0.006472087" frustTop="0.006472087" frustNear="0.015625" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.024371739" id="ref26">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="751" y="346" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1049" y="308" />
                             </MetaData>
-                            <position x="-0.69199288" y="1.5521853" z="-3.74411869" />
-                            <focus x="-0.06041938" y="-0.25359094" z="-0.1142664" />
-                            <upVector x="0.18559018" y="0.83312875" z="0.52101129" />
+                            <position x="-0.691992879" y="1.552185297" z="-3.74411869" />
+                            <focus x="-0.060419381" y="-0.253590941" z="-0.114266403" />
+                            <upVector x="0.185590178" y="0.83312875" z="0.521011293" />
                             <trackball moveCenter="false">
                                 <center x="-0.01474702" y="-0.01049805" z="-0.00127947" />
                             </trackball>
-                            <sceneLLF x="-1.80791831" y="-1.01831055" z="-1.77698624" />
-                            <sceneURB x="1.77842426" y="0.99731445" z="1.77442729" />
+                            <sceneLLF x="-1.80791831" y="-1.018310547" z="-1.776986241" />
+                            <sceneURB x="1.778424263" y="0.997314453" z="1.774427295" />
                         </Property>
                         <Property mapKey="channelShift0" name="channelShift0">
                             <value x="0" y="0" z="0" />
@@ -1295,9 +1372,15 @@
                         <Property mapKey="interactionNodeLevelReduction" name="interactionNodeLevelReduction" value="1" />
                         <Property mapKey="interactionQuality" name="interactionQuality" value="Medium" id="ref68">
                             <Options>
-                                <Option Key="High" Description="High" Value="High" />
-                                <Option Key="Medium" Description="Medium" Value="Medium" />
-                                <Option Key="Low" Description="Low" Value="Low" />
+                                <Option Key="High" Description="High" Value="High">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Medium" Description="Medium" Value="Medium">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Low" Description="Low" Value="Low">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
                             </Options>
                         </Property>
                         <Property mapKey="interactionSamplingRate" name="interactionSamplingRate" value="0.75" />
@@ -1310,18 +1393,26 @@
                             </MetaData>
                             <programFilenamePaths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen-untouched/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="../../voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                     <item value="modules/opencl/cl/singleoctreeraycaster.cl" />
-                                    <item value="D:/voreen_/gitolite/voreen-untouched/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                 </paths>
                             </programFilenamePaths>
                         </Property>
                         <Property mapKey="renderingQuality" name="renderingQuality" value="Full" id="ref67">
                             <Options>
-                                <Option Key="Full" Description="Full" Value="Full" />
-                                <Option Key="High" Description="High" Value="High" />
-                                <Option Key="Medium" Description="Medium" Value="Medium" />
-                                <Option Key="Low" Description="Low" Value="Low" />
+                                <Option Key="Full" Description="Full" Value="Full">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="High" Description="High" Value="High">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Medium" Description="Medium" Value="Medium">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Low" Description="Low" Value="Low">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
                             </Options>
                         </Property>
                         <Property mapKey="resetchannelshift" name="resetchannelshift" />
@@ -1335,10 +1426,10 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="23" y="29.0151825" />
+                                <domain x="23" y="29.015182495" />
                                 <threshold x="0" y="1" />
                                 <Keys>
-                                    <key type="TransFuncMappingKey" intensity="0.19599999" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.195999995" split="false">
                                         <colorL r="0" g="0" b="0" a="0" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="0.60799998" split="false">
@@ -1444,19 +1535,19 @@
                         <Property mapKey="brickBufferSizeMB" name="brickBufferSizeMB" value="64" />
                         <Property mapKey="brickUploadBudgetMD" name="brickUploadBudgetMD" value="64" />
                         <Property mapKey="brickUploadTimeLimit" name="brickUploadTimeLimit" value="250" />
-                        <Property mapKey="cameraProperty" name="cameraProperty" projectionMode="1" maxValue="896.58563232" minValue="0.015625" frustLeft="-0.00647209" frustRight="0.00647209" frustBottom="-0.00647209" frustTop="0.00647209" frustNear="0.015625" frustFar="900.17199707" fovy="45.00000381" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02437174" id="ref27">
+                        <Property mapKey="cameraProperty" name="cameraProperty" projectionMode="1" maxValue="896.585632324" minValue="0.015625" frustLeft="-0.006472087" frustRight="0.006472087" frustBottom="-0.006472087" frustTop="0.006472087" frustNear="0.015625" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.024371739" id="ref27">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="751" y="346" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1049" y="308" />
                             </MetaData>
-                            <position x="-0.69199288" y="1.5521853" z="-3.74411869" />
-                            <focus x="-0.06041938" y="-0.25359094" z="-0.1142664" />
-                            <upVector x="0.18559018" y="0.83312875" z="0.52101129" />
+                            <position x="-0.691992879" y="1.552185297" z="-3.74411869" />
+                            <focus x="-0.060419381" y="-0.253590941" z="-0.114266403" />
+                            <upVector x="0.185590178" y="0.83312875" z="0.521011293" />
                             <trackball moveCenter="false">
                                 <center x="-0.01474702" y="-0.01049805" z="-0.00127947" />
                             </trackball>
-                            <sceneLLF x="-1.80791831" y="-1.01831055" z="-1.77698624" />
-                            <sceneURB x="1.77842426" y="0.99731445" z="1.77442729" />
+                            <sceneLLF x="-1.80791831" y="-1.018310547" z="-1.776986241" />
+                            <sceneURB x="1.778424263" y="0.997314453" z="1.774427295" />
                         </Property>
                         <Property mapKey="channelShift0" name="channelShift0">
                             <value x="0" y="0" z="0" />
@@ -1475,9 +1566,15 @@
                         <Property mapKey="interactionNodeLevelReduction" name="interactionNodeLevelReduction" value="1" />
                         <Property mapKey="interactionQuality" name="interactionQuality" value="Medium" id="ref66">
                             <Options>
-                                <Option Key="High" Description="High" Value="High" />
-                                <Option Key="Medium" Description="Medium" Value="Medium" />
-                                <Option Key="Low" Description="Low" Value="Low" />
+                                <Option Key="High" Description="High" Value="High">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Medium" Description="Medium" Value="Medium">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Low" Description="Low" Value="Low">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
                             </Options>
                         </Property>
                         <Property mapKey="interactionSamplingRate" name="interactionSamplingRate" value="0.75" />
@@ -1490,18 +1587,26 @@
                             </MetaData>
                             <programFilenamePaths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen-untouched/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="../../voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                     <item value="modules/opencl/cl/singleoctreeraycaster.cl" />
-                                    <item value="D:/voreen_/gitolite/voreen-untouched/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                 </paths>
                             </programFilenamePaths>
                         </Property>
                         <Property mapKey="renderingQuality" name="renderingQuality" value="Full" id="ref65">
                             <Options>
-                                <Option Key="Full" Description="Full" Value="Full" />
-                                <Option Key="High" Description="High" Value="High" />
-                                <Option Key="Medium" Description="Medium" Value="Medium" />
-                                <Option Key="Low" Description="Low" Value="Low" />
+                                <Option Key="Full" Description="Full" Value="Full">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="High" Description="High" Value="High">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Medium" Description="Medium" Value="Medium">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Low" Description="Low" Value="Low">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
                             </Options>
                         </Property>
                         <Property mapKey="resetchannelshift" name="resetchannelshift" />
@@ -1515,10 +1620,10 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="23" y="29.0151825" />
+                                <domain x="23" y="29.015182495" />
                                 <threshold x="0" y="1" />
                                 <Keys>
-                                    <key type="TransFuncMappingKey" intensity="0.19599999" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.195999995" split="false">
                                         <colorL r="0" g="0" b="0" a="0" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="0.60799998" split="false">
@@ -1617,7 +1722,7 @@
                 <Processor type="Canvas" name="Canvas MOP/linear" id="ref14">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="39" y="157" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-730" y="249" width="421" height="350" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="0" y="0" width="421" height="350" />
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
                             <value x="318" y="150" />
@@ -1627,7 +1732,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-730" y="249" />
+                            <value x="0" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="421" y="350" />
@@ -1638,12 +1743,12 @@
                             <value x="421" y="350" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/mop-linear.png" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/mop-linear.png" />
-                                    <item value="D:/voreen_/gitolite/voreen-testdata/voreen-testdata/output/mop-linear.png" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/mop-linear.png" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/mop-linear.png" />
+                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/mop-linear.png" />
                                 </paths>
                             </paths>
                         </Property>

@@ -1,15 +1,20 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="false" GlobalDescription="">
-        <ProcessorNetwork version="17">
+        <ProcessorNetwork version="20">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="307.42074585" y="-57.95636749" />
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="OctreeCreator" ref="ref1" />
+                    </values>
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.79370052" />
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="307.42074585" y="-57.956367493" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.793700516" />
             </MetaData>
             <Processors>
                 <Processor type="VolumeSource" name="VolumeSource" id="ref0">
@@ -18,11 +23,24 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_fullres.vvd?preferredReader=VvdVolumeReader" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="">
+                                <path noPathSet="false">
+                                    <paths>
+                                        <item value="input/walnut_fullres.vvd" />
+                                        <item value="../../voreen-testdata/voreen-testdata/input/walnut_fullres.vvd" />
+                                        <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/input/walnut_fullres.vvd" />
+                                    </paths>
+                                </path>
+                                <searchParameters>
+                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                </searchParameters>
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -38,11 +56,24 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_fullres.vvd?preferredReader=VvdVolumeReader" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="">
+                                <path noPathSet="false">
+                                    <paths>
+                                        <item value="input/walnut_fullres.vvd" />
+                                        <item value="../../voreen-testdata/voreen-testdata/input/walnut_fullres.vvd" />
+                                        <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/input/walnut_fullres.vvd" />
+                                    </paths>
+                                </path>
+                                <searchParameters>
+                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                </searchParameters>
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -58,11 +89,24 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_fullres.vvd?preferredReader=VvdVolumeReader" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="">
+                                <path noPathSet="false">
+                                    <paths>
+                                        <item value="input/walnut_fullres.vvd" />
+                                        <item value="../../voreen-testdata/voreen-testdata/input/walnut_fullres.vvd" />
+                                        <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/input/walnut_fullres.vvd" />
+                                    </paths>
+                                </path>
+                                <searchParameters>
+                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                </searchParameters>
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -77,16 +121,19 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="215" y="-144" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="autogenerateOctree" name="autogenerateOctree" value="true" />
                         <Property mapKey="brickDimensions" name="brickDimensions" value="treeDepth" />
                         <Property mapKey="brickPoolManager" name="brickPoolManager" value="brickPoolManagerDisk" />
                         <Property mapKey="clearOctree" name="clearOctree" />
-                        <Property mapKey="generateOctree" name="generateOctree" guiName="Load Octree" />
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="homogeneityThreshold" name="homogeneityThreshold" value="0" tracking="false" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="numThreads" name="numThreads" value="4" />
-                        <Property mapKey="progressProperty" name="progressProperty" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="progressMessage" name="progressMessage" value="" />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
-                        <Property mapKey="statusProperty" name="statusProperty" value="Octree generated." />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 6.200 sec" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
                         <Property mapKey="treeDepth" name="treeDepth" value="7" />
                         <Property mapKey="useRelativeThreshold" name="useRelativeThreshold" value="true" />
                     </Properties>
@@ -121,7 +168,7 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="volumeOutport" direction="0" portID="volumeOutport" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumeOutport" direction="0" portID="volumeOutport" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -233,11 +280,11 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="continousSave" name="continousSave" value="false" />
-                        <Property mapKey="outputFilename" name="outputFilename">
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/octreelevel_64.vvd" />
-                                    <item value="../../../../voreen-testdata/voreen-testdata/output/octreelevel_64.vvd" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_64.vvd" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_64.vvd" />
                                     <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_64.vvd" />
                                 </paths>
                             </paths>
@@ -266,11 +313,11 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="continousSave" name="continousSave" value="false" />
-                        <Property mapKey="outputFilename" name="outputFilename">
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/octreelevel_128.vvd" />
-                                    <item value="../../../../voreen-testdata/voreen-testdata/output/octreelevel_128.vvd" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_128.vvd" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_128.vvd" />
                                     <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_128.vvd" />
                                 </paths>
                             </paths>
@@ -299,11 +346,11 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="continousSave" name="continousSave" value="false" />
-                        <Property mapKey="outputFilename" name="outputFilename">
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/octreelevel_256.vvd" />
-                                    <item value="../../../../voreen-testdata/voreen-testdata/output/octreelevel_256.vvd" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_256.vvd" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_256.vvd" />
                                     <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/octreelevel_256.vvd" />
                                 </paths>
                             </paths>
