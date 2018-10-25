@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="true">
-        <ProcessorNetwork version="19">
+        <ProcessorNetwork version="20">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values>
@@ -11,7 +11,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="SliceViewer" ref="ref15" />
+                        <item type="OctreeCreator" ref="ref1" />
                     </values>
                 </MetaItem>
                 <MetaItem name="Zoom" type="ZoomMetaData">
@@ -200,16 +200,19 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-392" y="-463" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="autogenerateOctree" name="autogenerateOctree" value="false" />
                         <Property mapKey="brickDimensions" name="brickDimensions" value="treeDepth" />
                         <Property mapKey="brickPoolManager" name="brickPoolManager" value="brickPoolManagerDisk" />
                         <Property mapKey="clearOctree" name="clearOctree" />
-                        <Property mapKey="generateOctree" name="generateOctree" guiName="Load Octree" />
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="false" />
                         <Property mapKey="homogeneityThreshold" name="homogeneityThreshold" value="0" tracking="false" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="numThreads" name="numThreads" value="8" />
-                        <Property mapKey="progressProperty" name="progressProperty" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="progressMessage" name="progressMessage" value="" />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
-                        <Property mapKey="statusProperty" name="statusProperty" value="No input data." />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Stopped" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="treeDepth" name="treeDepth" value="7" tracking="false" />
                         <Property mapKey="useRelativeThreshold" name="useRelativeThreshold" value="true" />
                     </Properties>
@@ -444,7 +447,7 @@
                                 <paths>
                                     <item value="../../../../modules/opencl/cl/singleoctreeraycaster.cl" />
                                     <item value="modules/opencl/cl/singleoctreeraycaster.cl" />
-                                    <item value="/data/home/a_sche26/VoreenVE/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                 </paths>
                             </programFilenamePaths>
                         </Property>
@@ -926,13 +929,13 @@
                 <Processor type="Canvas" name="Canvas" id="ref28">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="178" y="895" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="164" y="288" width="1271" height="938" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="309" y="114" width="1271" height="938" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-1672" y="8" />
+                            <value x="0" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
-                            <value x="1210" y="963" />
+                            <value x="1278" y="1085" />
                         </MetaItem>
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
@@ -943,7 +946,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="164" y="288" />
+                            <value x="309" y="114" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1271" y="938" />
@@ -1923,7 +1926,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/coronal_b.png" />
                                     <item value="resource/voreencore/textures/coronal_b.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/coronal_b.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1932,7 +1935,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/axial_b.png" />
                                     <item value="resource/voreencore/textures/axial_b.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/axial_b.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1941,7 +1944,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/coronal_f.png" />
                                     <item value="resource/voreencore/textures/coronal_f.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/coronal_f.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1950,7 +1953,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/sagittal_l.png" />
                                     <item value="resource/voreencore/textures/sagittal_l.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/sagittal_l.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1959,7 +1962,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/sagittal_r.png" />
                                     <item value="resource/voreencore/textures/sagittal_r.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/sagittal_r.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1968,7 +1971,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/axial_t.png" />
                                     <item value="resource/voreencore/textures/axial_t.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/axial_t.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -2907,7 +2910,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/coronal_b.png" />
                                     <item value="resource/voreencore/textures/coronal_b.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/coronal_b.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -2916,7 +2919,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/axial_b.png" />
                                     <item value="resource/voreencore/textures/axial_b.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/axial_b.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -2925,7 +2928,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/coronal_f.png" />
                                     <item value="resource/voreencore/textures/coronal_f.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/coronal_f.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -2934,7 +2937,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/sagittal_l.png" />
                                     <item value="resource/voreencore/textures/sagittal_l.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/sagittal_l.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -2943,7 +2946,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/sagittal_r.png" />
                                     <item value="resource/voreencore/textures/sagittal_r.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/sagittal_r.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -2952,7 +2955,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/axial_t.png" />
                                     <item value="resource/voreencore/textures/axial_t.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/axial_t.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -3023,7 +3026,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/coronal_b.png" />
                                     <item value="resource/voreencore/textures/coronal_b.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/coronal_b.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -3032,7 +3035,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/axial_b.png" />
                                     <item value="resource/voreencore/textures/axial_b.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/axial_b.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -3041,7 +3044,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/coronal_f.png" />
                                     <item value="resource/voreencore/textures/coronal_f.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/coronal_f.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -3050,7 +3053,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/sagittal_l.png" />
                                     <item value="resource/voreencore/textures/sagittal_l.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/sagittal_l.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -3059,7 +3062,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/sagittal_r.png" />
                                     <item value="resource/voreencore/textures/sagittal_r.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/sagittal_r.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -3068,7 +3071,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/axial_t.png" />
                                     <item value="resource/voreencore/textures/axial_t.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/axial_t.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -3139,7 +3142,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/coronal_b.png" />
                                     <item value="resource/voreencore/textures/coronal_b.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/coronal_b.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -3148,7 +3151,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/axial_b.png" />
                                     <item value="resource/voreencore/textures/axial_b.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/axial_b.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -3157,7 +3160,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/coronal_f.png" />
                                     <item value="resource/voreencore/textures/coronal_f.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/coronal_f.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -3166,7 +3169,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/sagittal_l.png" />
                                     <item value="resource/voreencore/textures/sagittal_l.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/sagittal_l.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -3175,7 +3178,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/sagittal_r.png" />
                                     <item value="resource/voreencore/textures/sagittal_r.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/sagittal_r.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -3184,7 +3187,7 @@
                                 <paths>
                                     <item value="../../../voreencore/textures/axial_t.png" />
                                     <item value="resource/voreencore/textures/axial_t.png" />
-                                    <item value="/data/home/a_sche26/VoreenVE/resource/voreencore/textures/axial_t.png" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -5457,15 +5460,23 @@
                     <First value="2D Slice Views" />
                     <Second value="30" />
                 </value>
-                <value key="Octree Creation.generateOctree">
+                <value key="Octree Creation.manualUpdateButton_">
                     <First value="Data Input" />
                     <Second value="10" />
                 </value>
-                <value key="Octree Creation.progressProperty">
+                <value key="Octree Creation.progressDisplay">
                     <First value="Data Input" />
                     <Second value="12" />
                 </value>
-                <value key="Octree Creation.statusProperty">
+                <value key="Octree Creation.progressMessage">
+                    <First value="Data Input" />
+                    <Second value="14" />
+                </value>
+                <value key="Octree Creation.statusDisplay">
+                    <First value="Data Input" />
+                    <Second value="13" />
+                </value>
+                <value key="Octree Creation.stopUpdateButton">
                     <First value="Data Input" />
                     <Second value="11" />
                 </value>
