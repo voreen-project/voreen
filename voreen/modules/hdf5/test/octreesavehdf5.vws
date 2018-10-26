@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="OctreeSave" ref="ref13" />
+                        <item type="OctreeSave" ref="ref4" />
                     </values>
                 </MetaItem>
                 <MetaItem name="Zoom" type="ZoomMetaData">
@@ -17,7 +17,7 @@
                     <transform.row2 x="242" y="347" z="1" />
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="603.627441406" y="-21.405229568" />
+                    <value x="47.091503143" y="-32.107841492" />
                 </MetaItem>
                 <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.467175573" />
                 <MetaItem name="autoLinkCameras" type="BoolMetaData" value="false" />
@@ -130,16 +130,16 @@
                         <Property mapKey="brickDimensions" name="brickDimensions" value="treeDepth" />
                         <Property mapKey="brickPoolManager" name="brickPoolManager" value="brickPoolManagerDisk" />
                         <Property mapKey="clearOctree" name="clearOctree" />
-                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="false" />
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="homogeneityThreshold" name="homogeneityThreshold" value="0.01" tracking="false" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="numThreads" name="numThreads" value="8" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="progressMessage" name="progressMessage" value="" />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
-                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
                         <Property mapKey="treeDepth" name="treeDepth" value="7" tracking="false" />
                         <Property mapKey="useRelativeThreshold" name="useRelativeThreshold" value="false" />
                     </Properties>
@@ -705,14 +705,14 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.h5" />
-                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.h5" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.h5" />
+                                    <item value="output/threechannels_clean.h5" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/threechannels_clean.h5" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="outputFormat" name="outputFormat" value="hdf5" />
-                        <Property mapKey="outputProp" name="outputProp" value="no volume" />
+                        <Property mapKey="outputProp" name="outputProp" value="3C * 1400832V = 8 MB" />
                         <Property mapKey="progress" name="progress" />
                         <Property mapKey="save" name="save" />
                         <Property mapKey="volumeInfo" name="volumeInfo" />
@@ -733,7 +733,7 @@
                 </Processor>
                 <Processor type="OctreeSave" name="OctreeSave 2" id="ref7">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-336" y="-133" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-338" y="-133" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyChannelShift" name="applyChannelShift" value="false" />
@@ -833,9 +833,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/twochannels_shifted.h5" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/twochannels_shifted.h5" />
-                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/twochannels_shifted.h5" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/twochannels_shifted.h5" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/twochannels_shifted.h5" />
+                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/twochannels_shifted.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -897,9 +897,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/threechannels_clipped_shifted.h5" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/threechannels_clipped_shifted.h5" />
-                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clipped_shifted.h5" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clipped_shifted.h5" />
+                                    <item value="../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clipped_shifted.h5" />
+                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clipped_shifted.h5" />
                                 </paths>
                             </paths>
                         </Property>

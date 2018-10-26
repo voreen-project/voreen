@@ -17,9 +17,9 @@
                     <transform.row2 x="242" y="347" z="1" />
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-64.215682983" y="0" />
+                    <value x="-0" y="-14.983659744" />
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.467175573" />
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.467175603" />
                 <MetaItem name="autoLinkCameras" type="BoolMetaData" value="false" />
             </MetaData>
             <Processors>
@@ -705,9 +705,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.vvd" />
-                                    <item value="../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.vvd" />
-                                    <item value="/../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.vvd" />
+                                    <item value="../../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.vvd" />
+                                    <item value="../../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.vvd" />
+                                    <item value="/../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -769,9 +769,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/fourchannels_clipped.vvd" />
-                                    <item value="../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/fourchannels_clipped.vvd" />
-                                    <item value="/../home/a_sche26/voreen-testdata/voreen-testdata/output/fourchannels_clipped.vvd" />
+                                    <item value="../../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/fourchannels_clipped.vvd" />
+                                    <item value="../../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/fourchannels_clipped.vvd" />
+                                    <item value="/../../home/a_sche26/voreen-testdata/voreen-testdata/output/fourchannels_clipped.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -833,9 +833,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/twochannels_shifted.vvd" />
-                                    <item value="../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/twochannels_shifted.vvd" />
-                                    <item value="/../home/a_sche26/voreen-testdata/voreen-testdata/output/twochannels_shifted.vvd" />
+                                    <item value="../../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/twochannels_shifted.vvd" />
+                                    <item value="../../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/twochannels_shifted.vvd" />
+                                    <item value="/../../home/a_sche26/voreen-testdata/voreen-testdata/output/twochannels_shifted.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -897,9 +897,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clipped_shifted.vvd" />
-                                    <item value="../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clipped_shifted.vvd" />
-                                    <item value="/../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clipped_shifted.vvd" />
+                                    <item value="../../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clipped_shifted.vvd" />
+                                    <item value="../../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clipped_shifted.vvd" />
+                                    <item value="/../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clipped_shifted.vvd" />
                                 </paths>
                             </paths>
                         </Property>
