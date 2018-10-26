@@ -705,7 +705,7 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.vvd" />
+                                    <item value="output/threechannels_clean.vvd" />
                                     <item value="../../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.vvd" />
                                     <item value="/../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clean.vvd" />
                                 </paths>
@@ -769,7 +769,7 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/fourchannels_clipped.vvd" />
+                                    <item value="output/fourchannels_clipped.vvd" />
                                     <item value="../../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/fourchannels_clipped.vvd" />
                                     <item value="/../../home/a_sche26/voreen-testdata/voreen-testdata/output/fourchannels_clipped.vvd" />
                                 </paths>
@@ -833,7 +833,7 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/twochannels_shifted.vvd" />
+                                    <item value="output/twochannels_shifted.vvd" />
                                     <item value="../../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/twochannels_shifted.vvd" />
                                     <item value="/../../home/a_sche26/voreen-testdata/voreen-testdata/output/twochannels_shifted.vvd" />
                                 </paths>
@@ -897,7 +897,7 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clipped_shifted.vvd" />
+                                    <item value="output/threechannels_clipped_shifted.vvd" />
                                     <item value="../../../../../../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clipped_shifted.vvd" />
                                     <item value="/../../home/a_sche26/voreen-testdata/voreen-testdata/output/threechannels_clipped_shifted.vvd" />
                                 </paths>
