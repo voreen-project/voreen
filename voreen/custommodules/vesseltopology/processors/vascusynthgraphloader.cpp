@@ -76,6 +76,8 @@ boost::optional<uint32_t> readId(const TiXmlElement* element, const std::string&
     return ::atoi(id_str+1); //Again, very specific to vascusynth files
 }
 
+#define GRAPH_UNIT_TO_MM 0.04f // Don't ask...
+
 void VascuSynthGraphLoader::process() {
     const std::string path = graphFilePath_.get();
     if(path.empty()) {
@@ -134,7 +136,7 @@ void VascuSynthGraphLoader::process() {
                             continue;
                         }
                         pos.z = *z;
-                        pos /= 1000.0f; // Asuming uniform spacing 0.001mm.
+                        pos *= GRAPH_UNIT_TO_MM;
                         if(tgt::isNaN(pos)) {
                             LERROR("pos is nan: " << pos);
                             continue;
@@ -172,7 +174,7 @@ void VascuSynthGraphLoader::process() {
                             const VGNodeID graphFromId = idMap.at(fromId);
                             const VGNodeID graphToId = idMap.at(toId);
 
-                            radius /= 1000; //Assuming uniform spacing 0.001mm.
+                            radius *= GRAPH_UNIT_TO_MM;
 
                             VesselGraphEdgePathProperties properties;
                             properties.length_ = tgt::distance(output->getNode(graphFromId).pos_, output->getNode(graphToId).pos_);
@@ -181,10 +183,15 @@ void VascuSynthGraphLoader::process() {
                             properties.minRadiusStdDeviation_ = 0;
                             properties.maxRadiusAvg_ = radius;
                             properties.maxRadiusStdDeviation_ = 0;
+                            properties.maxRadiusMax_ = 0;
                             properties.avgRadiusAvg_ = radius;
                             properties.avgRadiusStdDeviation_ = 0;
                             properties.roundnessAvg_ = 1;
                             properties.roundnessStdDeviation_ = 0;
+                            properties.innerLengthNode1_ = 0;
+                            properties.innerLengthNode2_ = 0;
+                            properties.tipRadiusNode1_ = 0;
+                            properties.tipRadiusNode2_ = 0;
                             output->insertEdge(graphFromId, graphToId, properties);
                         } catch(...) {
                             LERROR("graph without matching node");
