@@ -60,24 +60,6 @@ const int WINDOW_STATE_VERSION = 15;  // V4.0
 
 ////////// VoreenVEMainWindow ////////////////////////////////////////////////////////////
 
-namespace {
-
-// Add glass highlight effect to standard menubar
-class FancyMenuBar : public QMenuBar {
-protected:
-    void paintEvent(QPaintEvent* event) {
-        QMenuBar::paintEvent(event);
-
-        // draw semi-transparent glass highlight over upper half of menubar
-        QPainter painter(this);
-        painter.setBrush(QColor(255, 255, 255, 76));
-        painter.setPen(Qt::NoPen);
-        painter.drawRect(0, 0, rect().width(), rect().height() / 2);
-    }
-};
-
-} // namespace
-
 const std::string VoreenVEMainWindow::loggerCat_("voreenve.VoreenVEMainWindow");
 
 VoreenVEMainWindow::VoreenVEMainWindow(const std::string& workspace, bool noInitialWorkspace, bool resetSettings)
