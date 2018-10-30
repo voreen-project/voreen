@@ -56,15 +56,16 @@ public:
      */
     virtual void deserialize(Deserializer& s);
 
+    //! @see Property::setReadOnlyFlag
     void setReadOnly(bool readOnly);
 
+    //! @see Property::isReadyOnlyFlagSet
     bool isReadOnly() const;
 
     void setInstantUpdate(bool instantUpdate);
     bool getInstantUpdate() const;
 
 protected:
-    bool readOnly_;
     bool instantUpdate_;
 
 };

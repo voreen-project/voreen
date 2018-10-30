@@ -40,6 +40,8 @@ public:
 
     virtual ~StringPropertyWidget() {}
 
+    virtual void updateViewFlags(Property::ViewFlags flags);
+
 public slots:
     void setProperty(const QString& text);
     void textHasChanged(const QString& text);
