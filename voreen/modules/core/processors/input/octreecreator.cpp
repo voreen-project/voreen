@@ -131,8 +131,8 @@ OctreeCreator::OctreeCreator()
     , singleBufferMemorySize_("singleBufferMemorySize", "Page File Size (MB)", 32, 1, 256)
     , numThreads_("numThreads", "Num Threads", 8, 1, 16, VALID)
     , clearOctree_("clearOctree", "Clear Octree")
-    , progressMessage_("progressMessage", "Progress Message")
-    , currentConfigurationHash_("")
+    , statusMessage_("progressMessage", "Progress Message", "", Processor::VALID)
+    , currentConfigurationHash_("octreeHash", "Octree Hash", "", INVALID_RESULT, Property::LOD_ADVANCED)
 {
     addPort(volumeInport_);
     addPort(volumeInport2_);
@@ -185,8 +185,11 @@ OctreeCreator::OctreeCreator()
     addProperty(clearOctree_);
     clearOctree_.onChange(MemberFunctionCallback<OctreeCreator>(this, &OctreeCreator::clearOctree));
 
-    addProperty(progressMessage_);
-    progressMessage_.setReadOnlyFlag(true);
+    addProperty(statusMessage_);
+    statusMessage_.setReadOnly(true);
+
+    addProperty(currentConfigurationHash_);
+    currentConfigurationHash_.setReadOnly(true);
 }
 
 OctreeCreator::~OctreeCreator() {
@@ -208,7 +211,7 @@ void OctreeCreator::initialize() {
 
 void OctreeCreator::deinitialize() {
     volumeOutport_.clear();
-    if (!VoreenApplication::app()->useCaching() && currentConfigurationHash_ != "")
+    if (!VoreenApplication::app()->useCaching() && currentConfigurationHash_.get() != "")
         clearOctree();
 
     limitCacheSize(VoreenApplication::app()->getCachePath(), getCacheLimit(), false);
@@ -252,20 +255,20 @@ OctreeCreatorInput OctreeCreator::prepareComputeInput() {
 
     //get current hash, if exists
     if (!volumeOutport_.hasData())
-        currentConfigurationHash_ = "";
+        currentConfigurationHash_.set("");
     //get current input hash
     std::string configHash = getConfigurationHash();
     //we are up to date
-    if (configHash == currentConfigurationHash_) {
+    if (configHash == currentConfigurationHash_.get()) {
         updatePropertyConfiguration();
-        throw InvalidInputException("Up to date!", InvalidInputException::S_WARNING);
+        throw InvalidInputException("Up to date!", InvalidInputException::S_IGNORE);
     }
 
     //remove old octree
     volumeOutport_.clear();
-    if (!VoreenApplication::app()->useCaching() && currentConfigurationHash_ != "")
+    if (!VoreenApplication::app()->useCaching() && currentConfigurationHash_.get() != "")
         clearOctree();
-    currentConfigurationHash_ = "";
+    currentConfigurationHash_.set("");
     // remove existing octree representation
     inputVolume->removeRepresentation<VolumeOctreeBase>();
 
@@ -368,37 +371,37 @@ OctreeCreatorInput OctreeCreator::prepareComputeInput() {
 OctreeCreatorOutput OctreeCreator::compute(OctreeCreatorInput input, ProgressReporter& progressReporter) const {
 
     std::unique_ptr<VolumeOctreeBase> octree;
-    std::string message;
+    std::string errorMessage;
 
     // Load Octree from Cache, if available.
     if (input.loadCached) {
-        progressReporter.setProgressMessage("Loading octree from cache...");
+        updateStatusMessage("Loading octree from cache...");
         octree.reset(restoreOctreeFromCache());
         if (octree) {
-            progressReporter.setProgressMessage("Octree loaded from cache.");
+            updateStatusMessage("Octree loaded from cache.");
         }
     }
 
     // Create Octree, also when cache was not available.
     if(!octree) {
-        progressReporter.setProgressMessage("Generating octree...");
+        updateStatusMessage("Generating octree...");
         
         try {
             octree.reset(new VolumeOctree(input.input, (int)input.brickDim, input.homogeneityThreshold, input.brickPoolManager, input.numThreads, &progressReporter));
-            progressReporter.setProgressMessage("Octree generated.");
+            updateStatusMessage("Octree generated.");
         }
         catch (VoreenException& e) {
-            progressReporter.setProgressMessage("Failed to generate octree!");
+            updateStatusMessage("Failed to generate octree!");
             LINFO(MemoryInfo::getProcessMemoryUsageAsString());
             LINFO(MemoryInfo::getAvailableMemoryAsString());
-            message = e.what();
+            errorMessage = e.what();
         }
     }
 
     // Done.
     return OctreeCreatorOutput(
         std::move(octree),
-        message
+        errorMessage
     );
 }
 
@@ -409,8 +412,8 @@ void OctreeCreator::processComputeOutput(OctreeCreatorOutput output) {
 
     // Retrieve Octree.
     std::unique_ptr<VolumeOctreeBase> octree = std::move(output.octree);
-    if(!octree || !output.message.empty()) {
-        std::string errorMsg = "Failed to generate octree: " + output.message;
+    if(!octree || !output.errorMessage.empty()) {
+        std::string errorMsg = "Failed to generate octree: " + output.errorMessage;
         LERROR(errorMsg);
         VoreenApplication::app()->showMessageBox(getGuiName(), errorMsg, true);
         return;
@@ -426,9 +429,9 @@ void OctreeCreator::processComputeOutput(OctreeCreatorOutput output) {
 
     // Configuration did not change since the last call of prepareComputeInput,
     // since the calculation would have been aborted otherwise.
-    currentConfigurationHash_ = getConfigurationHash();
-    if (!(octree->getOctreeConfigurationHash() == currentConfigurationHash_))
-        octree->setOctreeConfigurationHash(currentConfigurationHash_);
+    currentConfigurationHash_.set(getConfigurationHash());
+    if (!(octree->getOctreeConfigurationHash() == currentConfigurationHash_.get()))
+        octree->setOctreeConfigurationHash(currentConfigurationHash_.get());
 
     // assign RAM limit
     size_t ramLimit = VoreenApplication::app()->getCpuRamLimit();
@@ -614,7 +617,7 @@ VolumeOctreeBase* OctreeCreator::restoreOctreeFromCache() const {
 void OctreeCreator::clearOctree() {
     // clear octree
     volumeOutport_.clear();
-    currentConfigurationHash_ = "";
+    currentConfigurationHash_.set("");
 
     // clear disk cache
     std::string octreePath = getOctreeStoragePath();
@@ -689,7 +692,7 @@ void OctreeCreator::updatePropertyConfiguration() {
             size_t treeDepth = computeTreeDepth(brickDim, volumeDim);
             treeDepth_.set((int)treeDepth);
         }
-        /*
+
         bool inCache = false;
         if (VoreenApplication::app()->useCaching()) {
             std::string octreeFile = tgt::FileSystem::cleanupPath(getOctreeStoragePath() + "/octree.xml");
@@ -697,25 +700,22 @@ void OctreeCreator::updatePropertyConfiguration() {
         }
         
         if (inCache)
-            setProgressMessage("Octree found in cache!");
+            updateStatusMessage("Octree found in cache!");
         else
-            setProgressMessage("Octree not found in cache!");
+            updateStatusMessage("Octree not found in cache!");
     }
     else {
-        setProgressMessage("No input data.");
-        */
+        updateStatusMessage("No input data.");
     }
 }
 
-void OctreeCreator::setProgressMessage(const std::string& message) {
-    AsyncComputeProcessor<ComputeInput, ComputeOutput>::setProgressMessage(message);
-    /*
-    // TODO: causes deadlock when called in sequential code?
+
+
+void OctreeCreator::updateStatusMessage(const std::string& message) const {
     // Enqueue new command for an ui update.
     VoreenApplication::app()->getCommandQueue()->enqueue(this, LambdaFunctionCallback([this, message] {
-        progressMessage_.set(message);
+        statusMessage_.set(message);
     }));
-    */
 }
 
 // statics
