@@ -166,6 +166,7 @@ public:
     bool isLine(const tgt::ivec3& prev, const tgt::ivec3& start, int minLength) const;
     bool isEndVoxel(const tgt::svec3& pos, int lineVoxelChainMinLenght = 0) const;
     bool isEulerInvariantVoxel(const tgt::svec3& pos) const;
+    bool hasObjectBehind(const tgt::svec3& pos, ScrapeIterationDescriptor descriptor) const;
     bool isSimple(const tgt::svec3& pos) const;
     bool isSingleBorderVoxel(const tgt::svec3& pos) const;
 
@@ -367,7 +368,8 @@ void VolumeMask::scrape(ScrapeIterationDescriptor& scrapeDescriptor, size_t& num
         }
 
         // 3
-        if(get(scrapeDescriptor.getNeightbor(pos), VolumeMaskValue::OBJECT) == VolumeMaskValue::BACKGROUND) {
+        bool visible = get(scrapeDescriptor.getNeightbor(pos), VolumeMaskValue::OBJECT) == VolumeMaskValue::BACKGROUND;
+        if(visible && hasObjectBehind(pos, scrapeDescriptor)) {
             if (isEulerInvariantVoxel(pos)) {
                 to_delete_current.push_back(pos);
             }
