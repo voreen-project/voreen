@@ -479,6 +479,10 @@ SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t
     auto next_finalized_node_id = numUsedIds;
 
     size_t fileSize = next_finalized_node_id * sizeof(next_finalized_node_id);
+
+    // Ensure that fileSize is > 0 so that we create and do not try to open it.
+    fileSize = std::max<size_t>(1, fileSize);
+
     boost::iostreams::mapped_file_params openParams;
     openParams.path = filename_;
     openParams.mode = std::ios::in | std::ios::out;
