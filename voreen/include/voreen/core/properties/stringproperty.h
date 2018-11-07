@@ -56,18 +56,30 @@ public:
      */
     virtual void deserialize(Deserializer& s);
 
-    //! @see Property::setReadOnlyFlag
+    /**
+     * Sets, whether the contained text can be modified by the user.
+     * This is not to be confused with setReadyOnlyFlag, however!
+     * Setting the readOnlyFlag will overwrite this value, temporarily.
+     */
     void setReadOnly(bool readOnly);
 
-    //! @see Property::isReadyOnlyFlagSet
+    /**
+     * Determines, whether the contained text can be modified by the user.
+     * This is not to be confused with isReadOnlyFlagSet, however!
+     * This function may return false, even if readOnlyFlag was set to true.
+     * The differentiation is made only for giving visual feedback by the user.
+     * Example: A Property might be temporarily disabled (readOnlyFlag set to true)
+     *          but the property is usually modifiable.
+     */
     bool isReadOnly() const;
 
     void setInstantUpdate(bool instantUpdate);
     bool getInstantUpdate() const;
 
 protected:
-    bool instantUpdate_;
 
+    bool readOnly_;
+    bool instantUpdate_;
 };
 
 }

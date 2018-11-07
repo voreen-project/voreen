@@ -183,9 +183,11 @@ private:
     IntProperty numThreads_;
 
     ButtonProperty clearOctree_;
-
-    mutable StringProperty statusMessage_; // mutable, since being modified within compute()
     StringProperty currentConfigurationHash_;
+    // StatusMessage needs to be mutable, since it's being modified within compute().
+    // This causes no trouble, however, since the property is readOnly and the invalidation level is VALID.
+    mutable StringProperty statusMessage_;
+
 
     static const std::string loggerCat_;
 };

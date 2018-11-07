@@ -37,7 +37,7 @@ StringPropertyWidget::StringPropertyWidget(StringProperty* prop, QWidget* parent
     QString st = QString::fromUtf8(property_->get().c_str());
     lineEdit_ = new QLineEdit(st);
     addWidget(lineEdit_);
-    lineEdit_->setReadOnly(property_->isReadOnlyFlagSet());
+    lineEdit_->setReadOnly(property_->isReadOnly() || property_->isReadOnlyFlagSet());
 
     connect(lineEdit_, SIGNAL(textChanged(QString)), this, SLOT(textHasChanged(QString)));
     connect(lineEdit_, SIGNAL(editingFinished()), this, SLOT(hasFinishedEditing()));
@@ -48,8 +48,14 @@ void StringPropertyWidget::updateViewFlags(Property::ViewFlags flags) {
     // StringPropertyWidget is a special case and doesn't gray out the text field, since
     // this reduces visibility and readability of contained text.
     if (nameLabel_)
-        nameLabel_->setEnabled(!(flags & Property::VF_READ_ONLY));
+        nameLabel_->setEnabled(!(flags & Property::ViewFlags::VF_READ_ONLY));
     emit checkVisibility();
+}
+
+CustomLabel* StringPropertyWidget::getOrCreateNameLabel() const {
+    QPropertyWidget::getOrCreateNameLabel();
+    nameLabel_->setEnabled(!prop_->isReadOnlyFlagSet());
+    return nameLabel_;
 }
 
 void StringPropertyWidget::updateFromPropertySlot() {
@@ -60,7 +66,7 @@ void StringPropertyWidget::updateFromPropertySlot() {
         lineEdit_->setText(st);
     lineEdit_->blockSignals(false);
 
-    lineEdit_->setReadOnly(property_->isReadOnlyFlagSet());
+    lineEdit_->setReadOnly(property_->isReadOnly() || property_->isReadOnlyFlagSet());
 }
 
 void StringPropertyWidget::setProperty(const QString& text) {
