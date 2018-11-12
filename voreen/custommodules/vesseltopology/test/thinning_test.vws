@@ -94,7 +94,7 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cow_skeleton.vvd" />
+                                    <item value="output/cow_skeleton.vvd" />
                                     <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cow_skeleton.vvd" />
                                     <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/cow_skeleton.vvd" />
                                 </paths>
