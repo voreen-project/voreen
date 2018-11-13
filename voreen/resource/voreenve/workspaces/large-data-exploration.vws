@@ -228,10 +228,11 @@
                         <Property mapKey="homogeneityThreshold" name="homogeneityThreshold" value="0" tracking="false" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="numThreads" name="numThreads" value="8" />
+                        <Property mapKey="octreeHash" name="octreeHash" value="" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="progressMessage" name="progressMessage" value="" />
+                        <Property mapKey="progressMessage" name="progressMessage" value="Octree found in cache!" />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 1.458 sec" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="treeDepth" name="treeDepth" value="6" tracking="false" />
@@ -728,7 +729,7 @@
                             <value x="0" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
-                            <value x="1278" y="1085" />
+                            <value x="1280" y="1086" />
                         </MetaItem>
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
@@ -2403,13 +2404,17 @@
                     <First value="Octree Construction" />
                     <Second value="3" />
                 </value>
+                <value key="Octree Creator.progressMessage">
+                    <First value="Octree Construction" />
+                    <Second value="5" />
+                </value>
                 <value key="Octree Creator.singleBufferMemorySize">
                     <First value="Octree Construction" />
                     <Second value="15" />
                 </value>
                 <value key="Octree Creator.statusDisplay">
                     <First value="Octree Construction" />
-                    <Second value="4" />
+                    <Second value="6" />
                 </value>
                 <value key="Octree Creator.stopUpdateButton">
                     <First value="Octree Construction" />
