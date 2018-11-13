@@ -341,7 +341,6 @@ const QString PythonEditor::selectOpenFileName(QString filter) {
     tgtAssert(pythonWidget_, "pythonWidget_ has not been created!");
     QFileDialog fileDialog(pythonWidget_);
     fileDialog.setWindowTitle(tr("Choose a Python script to open"));
-    fileDialog.setDirectory(VoreenApplication::app()->getCoreResourcePath("scripts").c_str());
     fileDialog.setNameFilter(filter);
     fileDialog.setOption(QFileDialog::DontUseNativeDialog);
 
