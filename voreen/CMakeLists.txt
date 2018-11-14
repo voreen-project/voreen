@@ -7,11 +7,7 @@ IF(WIN32)
     cmake_policy(SET CMP0020 NEW)
 ENDIF()
 
-# Add path for additional cmake find scripts
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/")
-
 include(cmake/commonconf.cmake)
-
 
 ################################################################################
 # handle target dependencies
