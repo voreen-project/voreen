@@ -98,6 +98,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/volumemultiplier.cpp
     ${MOD_DIR}/processors/volumemultithreshold.cpp
     ${MOD_DIR}/processors/volumeslicepadding.cpp
+    ${MOD_DIR}/processors/volumesurfacenoise.cpp
     ${MOD_DIR}/processors/volumethinning.cpp
     ${MOD_DIR}/util/tasktimelogger.cpp
 )
@@ -143,6 +144,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volumemultiplier.h
     ${MOD_DIR}/processors/volumemultithreshold.h
     ${MOD_DIR}/processors/volumeslicepadding.h
+    ${MOD_DIR}/processors/volumesurfacenoise.h
     ${MOD_DIR}/processors/volumethinning.h
     ${MOD_DIR}/util/tasktimelogger.h
 )

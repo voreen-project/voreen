@@ -31,12 +31,14 @@
 #include <set>
 #include <unordered_map>
 
+
+namespace {
+    typedef std::mt19937 random_engine_type;
+}
 namespace voreen {
 
 const std::string VesselGraphPerturbation::loggerCat_("voreen.vesselgraphperturbation");
 
-
-typedef std::mt19937 random_engine_type;
 
 VesselGraphPerturbation::VesselGraphPerturbation()
     : Processor()
