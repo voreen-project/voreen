@@ -72,7 +72,7 @@ TileExtractor::TileExtractor()
 
     computeButton_.onChange(MemberFunctionCallback<TileExtractor>(this, &TileExtractor::computeTiles));
 
-    timeEstimation_.setReadOnly(true);
+    timeEstimation_.setEditable(false);
     //timeEstimation_.setInstantUpdate(true);
     addProperty(timeEstimation_);
 

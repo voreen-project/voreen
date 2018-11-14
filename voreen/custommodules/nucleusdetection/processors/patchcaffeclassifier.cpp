@@ -69,7 +69,7 @@ PatchCaffeClassifier::PatchCaffeClassifier()
 
     addProperty(computeButton_);
     
-    timeEstimation_.setReadOnly(true);
+    timeEstimation_.setEditable(false);
     //timeEstimation_.setInstantUpdate(true);
     addProperty(timeEstimation_);
 

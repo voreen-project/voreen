@@ -37,7 +37,7 @@ StringPropertyWidget::StringPropertyWidget(StringProperty* prop, QWidget* parent
     QString st = QString::fromUtf8(property_->get().c_str());
     lineEdit_ = new QLineEdit(st);
     addWidget(lineEdit_);
-    lineEdit_->setReadOnly(property_->isReadOnly() || property_->isReadOnlyFlagSet());
+    lineEdit_->setReadOnly(!property_->isEditable() || property_->isReadOnlyFlagSet());
 
     connect(lineEdit_, SIGNAL(textChanged(QString)), this, SLOT(textHasChanged(QString)));
     connect(lineEdit_, SIGNAL(editingFinished()), this, SLOT(hasFinishedEditing()));
@@ -66,7 +66,7 @@ void StringPropertyWidget::updateFromPropertySlot() {
         lineEdit_->setText(st);
     lineEdit_->blockSignals(false);
 
-    lineEdit_->setReadOnly(property_->isReadOnly() || property_->isReadOnlyFlagSet());
+    lineEdit_->setReadOnly(!property_->isEditable() || property_->isReadOnlyFlagSet());
 }
 
 void StringPropertyWidget::setProperty(const QString& text) {

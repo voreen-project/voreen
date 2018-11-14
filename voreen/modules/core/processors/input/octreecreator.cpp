@@ -186,10 +186,10 @@ OctreeCreator::OctreeCreator()
     clearOctree_.onChange(MemberFunctionCallback<OctreeCreator>(this, &OctreeCreator::clearOctree));
 
     addProperty(statusMessage_);
-    statusMessage_.setReadOnly(true);
+    statusMessage_.setEditable(false);
 
     addProperty(currentConfigurationHash_);
-    currentConfigurationHash_.setReadOnly(true);
+    currentConfigurationHash_.setEditable(false);
 }
 
 OctreeCreator::~OctreeCreator() {

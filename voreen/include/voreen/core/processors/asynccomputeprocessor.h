@@ -494,7 +494,7 @@ AsyncComputeProcessor<I,O>::AsyncComputeProcessor()
         progressDisplay_.setGroupID("ac_processing");
     addProperty(statusDisplay_);
         statusDisplay_.setGroupID("ac_processing");
-        statusDisplay_.setReadOnly(true);
+        statusDisplay_.setEditable(false);
     setPropertyGroupGuiName("ac_processing", "Processing");
 
     addProgressBar(&progressDisplay_);

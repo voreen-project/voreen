@@ -33,7 +33,7 @@ namespace voreen {
 StringProperty::StringProperty(const std::string& id, const std::string& guiText,
                        const std::string& value, int invalidationLevel, Property::LevelOfDetail lod)
     : TemplateProperty<std::string>(id, guiText, value, invalidationLevel, lod)
-    , readOnly_(false)
+    , editable_(true)
     , instantUpdate_(true)
 {
 }
@@ -64,13 +64,13 @@ Property* StringProperty::create() const {
     return new StringProperty();
 }
 
-void StringProperty::setReadOnly(bool readOnly) {
-    readOnly_ = readOnly;
+void StringProperty::setEditable(bool editable) {
+    editable_ = editable;
     updateWidgets();
 }
 
-bool StringProperty::isReadOnly() const {
-    return readOnly_;
+bool StringProperty::isEditable() const {
+    return editable_;
 }
 
 void StringProperty::setInstantUpdate(bool instantUpdate) {

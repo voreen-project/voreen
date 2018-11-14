@@ -46,7 +46,7 @@ TriangleMeshConverter::TriangleMeshConverter()
     addProperty(enabled_);
 
     addProperty(inputMesh_);
-        inputMesh_.setReadOnly(true);
+        inputMesh_.setEditable(false);
     addProperty(targetMesh_);
         targetMesh_.addOption("simple", "Simple", TriangleMeshGeometryBase::SIMPLE);
         targetMesh_.addOption("vertexvec3", "VertexNormal", TriangleMeshGeometryBase::NORMAL);
