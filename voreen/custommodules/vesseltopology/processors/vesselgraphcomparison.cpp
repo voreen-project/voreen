@@ -140,6 +140,10 @@ bool VesselGraphComparison::isReady() const {
     return isInitialized() && inport1_.isReady() && inport2_.isReady();
 }
 
+bool VesselGraphComparison::isEndProcessor() const {
+    return true;
+}
+
 // ----------------------------------------------------------
 // Property Comparison
 // ----------------------------------------------------------

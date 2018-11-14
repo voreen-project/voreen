@@ -59,6 +59,7 @@ public:
     virtual CodeState getCodeState() const { return Processor::CODE_STATE_EXPERIMENTAL; }
     virtual Processor* create() const { return new VesselGraphComparison(); }
     virtual bool isReady() const;
+    virtual bool isEndProcessor() const;
 
     //Render matches
     virtual void render();
