@@ -140,10 +140,11 @@ void PBReader::process() {
         }
 
         //load magnitude
+        tgt::bvec3 invertPosition(invertXInputProp_.get(), invertYInputProp_.get(), invertZInputProp_.get());
         VolumeContainer* magnitudeContainer = new VolumeContainer();
         if(isMagnitudeDataPresent_) {
             for (int t = 0; t < timesteps; t++) {
-                VolumeDiskPB* magnitude = new VolumeDiskPB(folderProp_.get() + "/" + FILE_MAGNITUDE, dimensions, t);
+                VolumeDiskPB* magnitude = new VolumeDiskPB(folderProp_.get() + "/" + FILE_MAGNITUDE, invertPosition, dimensions, t);
                 magnitudeContainer->add(new Volume(magnitude, spacing, tgt::vec3::zero));
             }
         }
@@ -152,8 +153,6 @@ void PBReader::process() {
         //load velocity
         VolumeContainer* velocityContainer = new VolumeContainer();
         if(isVelocityDataPresent_) {
-
-            tgt::bvec3 invertPosition(invertXInputProp_.get(), invertYInputProp_.get(), invertZInputProp_.get());
             tgt::bvec3 invertVelocity(invertXVelocityProp_.get(), invertYVelocityProp_.get(), invertZVelocityProp_.get());
             for (int t = 0; t < timesteps; t++) {
                 VolumeDiskPB* velocity = new VolumeDiskPB(

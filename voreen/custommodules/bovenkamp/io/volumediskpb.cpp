@@ -33,9 +33,12 @@ namespace voreen {
 
 const std::string VolumeDiskPB::loggerCat_("voreen.bovenkamp.VolumeDiskPB");
 
-VolumeDiskPB::VolumeDiskPB(const std::string& magnitudeFilename, const tgt::svec3& dimensions, int timeStep)
+VolumeDiskPB::VolumeDiskPB(const std::string& magnitudeFilename,
+                           const tgt::bvec3& invertPosition,
+                           const tgt::svec3& dimensions,
+                           int timeStep)
     : VolumeDisk(VolumeGeneratorFloat().getFormat(), dimensions)
-    , invertPosition_(false)
+    , invertPosition_(invertPosition)
     , invertVelocity_(false)
     , timeStep_(timeStep)
 {
@@ -76,24 +79,18 @@ std::string VolumeDiskPB::getHash() const {
     return VoreenHash::getHash(configStr);
 }
 
-VolumeRAM* VolumeDiskPB::loadVolume() const
-    throw (tgt::Exception)
-{
+VolumeRAM* VolumeDiskPB::loadVolume() const {
     return loadBrick(tgt::svec3::zero, dimensions_);
 }
 
-VolumeRAM* VolumeDiskPB::loadSlices(const size_t firstZSlice, const size_t lastZSlice) const
-    throw (tgt::Exception)
-{
+VolumeRAM* VolumeDiskPB::loadSlices(const size_t firstZSlice, const size_t lastZSlice) const {
     if (firstZSlice > lastZSlice)
         throw VoreenException("last slice must be behind first slice");
 
     return loadBrick(tgt::svec3(0, 0, firstZSlice), tgt::svec3(dimensions_.x, dimensions_.y, lastZSlice-firstZSlice+1));
 }
 
-VolumeRAM* VolumeDiskPB::loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const
-    throw (tgt::Exception)
-{
+VolumeRAM* VolumeDiskPB::loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const {
     // check parameters
     if (tgt::hmul(dimensions) == 0)
         throw VoreenException("requested brick dimensions are zero");
@@ -170,7 +167,7 @@ void VolumeDiskPB::readFile(const std::string& filename, VolumeRAM* volume, size
                     (invertPosition_.x ? brickDimensions.x - 1 - x : x),
                     (invertPosition_.y ? brickDimensions.y - 1 - y : y),
                     (invertPosition_.z ? brickDimensions.z - 1 - z : z))
-                    *numChannels + channel;
+                    * numChannels + channel;
 
                 // Set actual voxel value.
                 voxels[index] = value;

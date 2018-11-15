@@ -38,10 +38,14 @@ public:
     /**
      * Constructor for magnitude volumes.
      * @param magnitudeFilename Single filename pointing to a magnitude file.
+     * @param invertPosition Vector holding invert flag for each position component
      * @param dimensions Dimensions of the volume
      * @param timeStep Actual time step represented by this volume
      */
-    VolumeDiskPB(const std::string& magnitudeFilename, const tgt::svec3& dimensions, int timeStep);
+    VolumeDiskPB(const std::string& magnitudeFilename,
+                 const tgt::bvec3& invertPosition,
+                 const tgt::svec3& dimensions,
+                 int timeStep);
 
     /**
     * Constructor for velocity volumes.
@@ -76,8 +80,7 @@ public:
      *
      * @throw tgt::Exception if the volume could not be loaded
      */
-    virtual VolumeRAM* loadVolume() const
-        throw (tgt::Exception);
+    virtual VolumeRAM* loadVolume() const;
 
     /**
      * Loads a set of consecutive z slices of the PB files from disk
@@ -89,8 +92,7 @@ public:
      *
      * @throw tgt::Exception if the slices could not be loaded
      */
-    virtual VolumeRAM* loadSlices(const size_t firstZSlice, const size_t lastZSlice) const
-        throw (tgt::Exception);
+    virtual VolumeRAM* loadSlices(const size_t firstZSlice, const size_t lastZSlice) const;
 
     /**
      * Loads a brick of the PB files from disk and returns it as VolumeRAM.
@@ -101,8 +103,7 @@ public:
      *
      * @throw tgt::Exception if the brick could not be loaded
      */
-    virtual VolumeRAM* loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const
-        throw (tgt::Exception);
+    virtual VolumeRAM* loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const;
 
 private:
 
