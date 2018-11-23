@@ -2,6 +2,12 @@
 namespace voreen {
    struct VesselGraph;
 }
+
+struct NetmetsResult {
+   float fnr;
+   float fpr;
+};
+
 extern "C" {
-   float netmets_compare_networks(const voreen::VesselGraph& g1, const voreen::VesselGraph& g2);
+   NetmetsResult netmets_compare_networks(const voreen::VesselGraph& g1, const voreen::VesselGraph& g2);
 }

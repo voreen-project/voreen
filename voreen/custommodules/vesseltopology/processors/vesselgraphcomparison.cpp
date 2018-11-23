@@ -814,36 +814,15 @@ Matching<VesselGraphEdge> VesselGraphComparison::matchEdgesLAP(const VesselGraph
     return output;
 }
 
-float compareNetmets(const VesselGraph& g1, const VesselGraph& g2) {
+NetmetsResult compareNetmets(const VesselGraph& templateGraph, const VesselGraph& testGraph) {
 #ifdef VESSELTOPOLOGY_USE_NETMETS
-    return netmets_compare_networks(g1, g2);
+    return netmets_compare_networks(templateGraph, testGraph);
 #else
-    return std::numeric_limits<float>::quiet_NaN();
+    NetmetsResult result;
+    result.fpr = std::numeric_limits<float>::quiet_NaN();
+    result.fnr = std::numeric_limits<float>::quiet_NaN();
+    return result;
 #endif
-    //// find appropriate radius
-    //float radiusSum = 0.0;
-    //for(const auto& edge : g1) {
-    //    radiusSum += edge.getAvgRadiusAvg();
-    //}
-    //for(const auto& edge : g2) {
-    //    radiusSum += edge.getAvgRadiusAvg();
-    //}
-    //float globalAvgRadius = radiusSum / (g1.getEdges().size() + g2.getEdges().size());
-    //float sigma = globalAvgRadius;
-
-    //stim::network<float> GT;			// ground truth network
-    //stim::network<float> T;			// test network
-
-    //auto device = -1;
-    //GT = GT.compare(T, sigma, device);				// compare the ground truth to the test case - store errors in GT
-    //T = T.compare(GT, sigma, device);				// compare the test case to the ground truth - store errors in T
-
-	////calculate the metrics
-	//float FPR = GT.average();						// calculate the metrics
-	//float FNR = T.average();
-
-	//std::cout << "FNR: " << FPR << std::endl;		// print false alarms and misses
-	//std::cout << "FPR: " << FNR << std::endl;
 }
 
 
@@ -957,11 +936,10 @@ void VesselGraphComparison::compare(const VesselGraph& g1, const VesselGraph& g2
     lengthSimilarity_.set(edge_matching.matchRatio()*(1.0f-compareMatches<LengthProperty, RelativeError>(edge_matching.matches_)));
 
     // 4. (orthogonal) step: Compare geometry of networks using netmets
-    float netmetsFNR = compareNetmets(g1, g2);
-    float netmetsFPR = compareNetmets(g2, g1);
+    NetmetsResult netmetsResult = compareNetmets(g1 /*template!*/, g2);
 
-    netmetsFNR_.set(netmetsFNR);
-    netmetsFPR_.set(netmetsFPR);
+    netmetsFNR_.set(netmetsResult.fnr);
+    netmetsFPR_.set(netmetsResult.fpr);
 
     const std::string statExportFileName = statExportFile_.get();
 
@@ -1049,8 +1027,8 @@ void VesselGraphComparison::compare(const VesselGraph& g1, const VesselGraph& g2
                     , compareMatches<RoundnessStdProperty, AbsoluteError>(edge_matching.matches_)
                     , compareMatches<RoundnessStdProperty, RelativeError>(edge_matching.matches_)
                     , compareMatches<RoundnessStdProperty, ExpSimilarity>(edge_matching.matches_)
-                    , netmetsFNR
-                    , netmetsFPR
+                    , netmetsResult.fnr
+                    , netmetsResult.fpr
                     );
             LINFO("Writing edge stats: " << statExportFileName);
         } catch(tgt::IOException& e) {

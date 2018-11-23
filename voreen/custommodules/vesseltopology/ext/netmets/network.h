@@ -57,6 +57,7 @@ namespace stim{
 
 template<typename T>
 class network{
+public:
 
 	///Each edge is a fiber with two nodes.
 	///Each node is an in index to the endpoint of the fiber in the nodes array.
@@ -237,7 +238,7 @@ class network{
 
 	};
 
-protected:
+public:
 
 	std::vector<edge> E;       //list of edges
 	std::vector<vertex> V;	   //list of vertices.
