@@ -34,6 +34,7 @@
 #include "tgt/tgt_math.h"
 
 #include <chrono>
+#include <complex>
 
 namespace {
 
@@ -123,7 +124,7 @@ private:
 class VesselnessFeatureExtractor : public VolumeFilter {
 public:
 
-    VesselnessFeatureExtractor(float alpha, float beta, float c, const tgt::ivec3& extent, const tgt::vec3 standardDeviation, const SamplingStrategy<float>& samplingStrategy, const std::string sliceBaseType);
+    VesselnessFeatureExtractor(float alpha, float beta, float c, const tgt::ivec3& extent, const tgt::vec3 standardDeviation, const SamplingStrategy<float>& samplingStrategy, const std::string sliceBaseType, float scale);
     virtual ~VesselnessFeatureExtractor();
 
     tgt::vec4 computeVesselnessFeatureVector(const SymMat3& hessian) const;
@@ -149,6 +150,8 @@ private:
     SeparableKernel yyKernel_;
     SeparableKernel yzKernel_;
     SeparableKernel zzKernel_;
+
+    float scale_;
 };
 
 // Computes an improved vesselness from a four component vector (e_1, v) of vessel direction vector and vesselness value
@@ -384,44 +387,36 @@ SymMat3 SymMat3::minusUnitTimes(float a) const {
 }
 
 void SymMat3::getEigenValues(float& l1, float& l2, float& l3) const {
-    // Find eigenvalues using the following method:
-    // https://en.wikipedia.org/wiki/Eigenvalue_algorithm#3.C3.973_matrices
-    float p1 = xy*xy + xz*xz + yz*yz;
-    if(p1 == 0) {
-        l1 = xx;
-        l2 = yy;
-        l3 = zz;
-    } else {
-        float q = (xx + yy + zz) / 3; // Trace/3
-        float p2 = (xx - q)*(xx - q) + (yy - q)*(yy - q) + (zz - q)*(zz - q) + 2*p1;
-        float p = sqrt(p2 / 6);
+    // Set up characteristic equation:   det( A - lambda I ) = 0
+    //    as a cubic in lambda:  a.lambda^3 + b.lambda^2 + c.lambda + d = 0
+    std::complex<double> a = -1.0;                 // -1
+    std::complex<double> b = xx + yy + zz;         // trace
+    std::complex<double> c = yz * yz - yy * zz     // -sum of diagonal minors
+            + xz * xz - zz * xx
+            + xy * xy - xx * yy;
+    std::complex<double> d = xx*yy*zz + 2*xy*yz*xz - xx*yz*yz - yy*xz*xz - zz*xy*xy;
 
-        // Construct entries of symmetric matrix B = (1/p) * (A - q*E)
-        float bxx = (xx - q)/p;
-        float byy = (yy - q)/p;
-        float bzz = (zz - q)/p;
-        float bxy = xy/p;
-        float bxz = xz/p;
-        float byz = yz/p;
+    // Solve cubic by Cardano's method (easier in complex numbers!)
+    std::complex<double> p = ( b * b - 3.0 * a * c ) / ( 9.0 * a * a );
+    std::complex<double> q = ( 9.0 * a * b * c - 27.0 * a * a * d - 2.0 * b * b * b ) / ( 54.0 * a * a * a );
+    std::complex<double> delta = q * q - p * p * p;
+    std::complex<double> g1 = pow( q + sqrt( delta ), 1.0 / 3.0 );     // warning: exponents and sqrt of complex
+    std::complex<double> g2 = pow( q - sqrt( delta ), 1.0 / 3.0 );
+    std::complex<double> offset = -b / ( 3.0 * a );
+    std::complex<double> omega = std::complex<double>( -0.5, 0.5 * sqrt( 3.0 ) );     // complex cube root of unity
+    std::complex<double> omega2 = omega * omega;
 
-        // Now determine the determinant
-        float detB = bxx*byy*bzz + 2*bxy*byz*bxz - bxx*byz*byz - byy*bxz*bxz - bzz*bxy*bxy;
-        float r = detB / 2;
+    std::complex<double> cl1 = g1          + g2          + offset;
+    std::complex<double> cl2 = g1 * omega  + g2 * omega2 + offset;
+    std::complex<double> cl3 = g1 * omega2 + g2 * omega  + offset;
 
-        float phi;
-        if(r <= -1.f) {
-            phi = tgt::PIf / 3;
-        } else if(r >= -1.f) {
-            phi = 0;
-        } else {
-            phi = std::acos(r) / 3;
-        }
+    tgtAssert(std::abs(cl1.imag()) < 0.001*std::abs(cl1.real()), "Invalid eigenvalue for symmat");
+    tgtAssert(std::abs(cl2.imag()) < 0.001*std::abs(cl2.real()), "Invalid eigenvalue for symmat");
+    tgtAssert(std::abs(cl3.imag()) < 0.001*std::abs(cl3.real()), "Invalid eigenvalue for symmat");
 
-        // The eigenvalues are sorted l3 <= l2 <= l1... However we want them sorted after their absolute value :(
-        l1 = q + 2*p*std::cos(phi);
-        l3 = q + 2*p*std::cos(phi + (2*tgt::PIf/3));
-        l2 = 3 * q - l1 - l3;
-    }
+    l1=cl1.real();
+    l2=cl2.real();
+    l3=cl3.real();
 }
 
 /*
@@ -454,7 +449,7 @@ tgt::mat3 SymMat3::toTgtMat() const {
 // VesselnessFeatureExtractor ---------------------------------------------------------------------------------------------------------
 //
 
-VesselnessFeatureExtractor::VesselnessFeatureExtractor(float /*alpha*/, float /*beta*/, float /*c*/, const tgt::ivec3& extent, const tgt::vec3 standardDeviation, const SamplingStrategy<float>& samplingStrategy, const std::string sliceBaseType)
+VesselnessFeatureExtractor::VesselnessFeatureExtractor(float /*alpha*/, float /*beta*/, float /*c*/, const tgt::ivec3& extent, const tgt::vec3 standardDeviation, const SamplingStrategy<float>& samplingStrategy, const std::string sliceBaseType, float scale)
     : samplingStrategy_(samplingStrategy)
     , sliceBaseType_(sliceBaseType)
     , extent_(extent)
@@ -467,6 +462,7 @@ VesselnessFeatureExtractor::VesselnessFeatureExtractor(float /*alpha*/, float /*
     , yyKernel_(SeparableKernel::deriveYY(extent, standardDeviation))
     , yzKernel_(SeparableKernel::deriveYZ(extent, standardDeviation))
     , zzKernel_(SeparableKernel::deriveZZ(extent, standardDeviation))
+    , scale_(scale)
 {
     tgtAssert(tgt::hand(tgt::greaterThan(extent, tgt::ivec3::zero)), "Invalid extent");
 }
@@ -541,7 +537,7 @@ std::unique_ptr<VolumeRAM> VesselnessFeatureExtractor::getFilteredSlice(const Ca
         }
     }
 
-    std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create("Vector4(" + sliceBaseType_ + ")", tgt::svec3(dim.xy(), 1)));
+    std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(sliceBaseType_, tgt::svec3(dim.xy(), 1)));
 
     // x
     #pragma omp parallel for
@@ -560,10 +556,12 @@ std::unique_ptr<VolumeRAM> VesselnessFeatureExtractor::getFilteredSlice(const Ca
                 accumulator.zz += zzKernel_.xKernelAt(dx)*sample.zz;
             }
             tgt::vec4 output = computeVesselnessFeatureVector(accumulator);
-            outputSlice->setVoxelNormalized(output.x, tgt::svec3(x,y,0), 0);
-            outputSlice->setVoxelNormalized(output.y, tgt::svec3(x,y,0), 1);
-            outputSlice->setVoxelNormalized(output.z, tgt::svec3(x,y,0), 2);
-            outputSlice->setVoxelNormalized(output.w, tgt::svec3(x,y,0), 3);
+            //outputSlice->setVoxelNormalized(output.x, tgt::svec3(x,y,0), 0);
+            //outputSlice->setVoxelNormalized(output.y, tgt::svec3(x,y,0), 1);
+            //outputSlice->setVoxelNormalized(output.z, tgt::svec3(x,y,0), 2);
+            //outputSlice->setVoxelNormalized(output.w, tgt::svec3(x,y,0), 3);
+
+            outputSlice->setVoxelNormalized(output.w * scale_, tgt::svec3(x,y,0));
         }
     }
     return outputSlice;
@@ -578,7 +576,7 @@ size_t VesselnessFeatureExtractor::getNumInputChannels() const {
 }
 
 size_t VesselnessFeatureExtractor::getNumOutputChannels() const {
-    return 4;
+    return 1;
 }
 
 const std::string& VesselnessFeatureExtractor::getSliceBaseType() const {
@@ -857,11 +855,12 @@ static void voxelwiseMax(SliceReader& reader, HDF5FileVolume& file, ProgressRepo
 }
 
 static std::unique_ptr<SliceReader> buildStack(const VolumeBase& input, const tgt::vec3& standardDeviationVec, const std::string& baseType) {
-    tgt::ivec3 dirVesselnessExtent = tgt::ivec3::one;
+    //tgt::ivec3 dirVesselnessExtent = tgt::ivec3::one;
+    float scale = tgt::length(standardDeviationVec);
 
     return VolumeFilterStackBuilder(input)
-        .addLayer(std::unique_ptr<VolumeFilter>(new VesselnessFeatureExtractor(PLANE_REJECTOR_WEIGHT, BLOB_REJECTOR_WEIGHT, INTENSITY_THRESHOLD, suitableExtent(standardDeviationVec), standardDeviationVec, SamplingStrategy<float>::MIRROR, baseType)))
-        .addLayer(std::unique_ptr<VolumeFilter>(new VesselnessFinalizer(dirVesselnessExtent, SamplingStrategy<ParallelFilterValue4D>::MIRROR, baseType)))
+        .addLayer(std::unique_ptr<VolumeFilter>(new VesselnessFeatureExtractor(PLANE_REJECTOR_WEIGHT, BLOB_REJECTOR_WEIGHT, INTENSITY_THRESHOLD, suitableExtent(standardDeviationVec), standardDeviationVec, SamplingStrategy<float>::MIRROR, baseType, scale)))
+        //.addLayer(std::unique_ptr<VolumeFilter>(new VesselnessFinalizer(dirVesselnessExtent, SamplingStrategy<ParallelFilterValue4D>::MIRROR, baseType)))
         .build(0);
 }
 

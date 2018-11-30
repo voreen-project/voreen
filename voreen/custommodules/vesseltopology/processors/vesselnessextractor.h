@@ -81,7 +81,20 @@ struct VesselnessExtractorInput {
 
     tgt::vec3 getStandardDeviationForStep(int step) const {
         float alpha = static_cast<float>(step)/(scaleSpaceSteps-1);
-        return minStandardDeviationVec*(1.0f - alpha) + maxStandardDeviationVec*alpha;
+        tgt::vec3 minLog(
+                std::log(minStandardDeviationVec.x),
+                std::log(minStandardDeviationVec.y),
+                std::log(minStandardDeviationVec.z));
+        tgt::vec3 maxLog(
+                std::log(maxStandardDeviationVec.x),
+                std::log(maxStandardDeviationVec.y),
+                std::log(maxStandardDeviationVec.z));
+
+        tgt::vec3 interLog = minLog*(1.0f - alpha) + maxLog*alpha;
+        return tgt::vec3(
+                std::exp(interLog.x),
+                std::exp(interLog.y),
+                std::exp(interLog.z));
     }
 };
 
