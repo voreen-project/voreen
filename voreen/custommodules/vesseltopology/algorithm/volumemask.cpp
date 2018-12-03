@@ -345,23 +345,6 @@ bool VolumeMask::isEulerInvariantVoxel(const tgt::svec3& pos) const {
     }
     return eulerVal == 0;
 }
-bool VolumeMask::hasObjectBehind(const tgt::svec3& pos, ScrapeIterationDescriptor descriptor) const {
-    tgt::ivec3 begin(-1);
-    tgt::ivec3 end(1);
-    begin[descriptor.dim] = -descriptor.dir;
-    end[descriptor.dim] = -descriptor.dir;
-    for(int dz = begin.z; dz<=end.z; ++dz) {
-        for(int dy = begin.y; dy<=end.y; ++dy) {
-            for(int dx = begin.x; dx<=end.x; ++dx) {
-                tgt::ivec3 p(pos.x + dx, pos.y + dy, pos.z + dz);
-                if(get(p, VolumeMaskValue::OBJECT)==VolumeMaskValue::OBJECT) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
 bool VolumeMask::isSimple(const tgt::svec3& pos) const {
     if(get(pos)==VolumeMaskValue::BACKGROUND) {
         return false;
