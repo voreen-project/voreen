@@ -116,9 +116,9 @@ NetmetsResult netmets_compare_networks(const voreen::VesselGraph& groundtruthNet
     tnm = tnm.compare(gtnm, sigma, netmetsCudaDevice);                // compare the test case to the ground truth - store errors in T
 
     NetmetsResult result;
-    //calculate the metrics
-    result.fpr = gtnm.average();
-    result.fnr = tnm.average();
+    //calculate the metrics TODO: Make sure that fnr/fpr are in the right order here
+    result.fnr = gtnm.average();
+    result.fpr = tnm.average();
 
     return result;
 }
