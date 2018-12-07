@@ -77,6 +77,7 @@ boost::optional<uint32_t> readId(const TiXmlElement* element, const std::string&
 }
 
 #define GRAPH_UNIT_TO_MM 0.04f // Don't ask...
+#define SEGMENT_VOXEL_SPACING 0.02f // 4mm/200voxels, also: Don't ask
 
 void VascuSynthGraphLoader::process() {
     const std::string path = graphFilePath_.get();
@@ -176,23 +177,26 @@ void VascuSynthGraphLoader::process() {
 
                             radius *= GRAPH_UNIT_TO_MM;
 
-                            VesselGraphEdgePathProperties properties;
-                            properties.length_ = tgt::distance(output->getNode(graphFromId).pos_, output->getNode(graphToId).pos_);
-                            properties.volume_ = properties.length_*radius*radius;
-                            properties.minRadiusAvg_ = radius;
-                            properties.minRadiusStdDeviation_ = 0;
-                            properties.maxRadiusAvg_ = radius;
-                            properties.maxRadiusStdDeviation_ = 0;
-                            properties.maxRadiusMax_ = 0;
-                            properties.avgRadiusAvg_ = radius;
-                            properties.avgRadiusStdDeviation_ = 0;
-                            properties.roundnessAvg_ = 1;
-                            properties.roundnessStdDeviation_ = 0;
-                            properties.innerLengthNode1_ = 0;
-                            properties.innerLengthNode2_ = 0;
-                            properties.tipRadiusNode1_ = 0;
-                            properties.tipRadiusNode2_ = 0;
-                            output->insertEdge(graphFromId, graphToId, properties);
+                            const auto& node1 = output->getNode(graphFromId);
+                            const auto& node2 = output->getNode(graphToId);
+
+                            float distance = tgt::distance(node1.pos_, node2.pos_);
+                            float volume = radius*radius * distance;
+                            std::vector<VesselSkeletonVoxel> voxels;
+                            size_t num_voxels = distance / SEGMENT_VOXEL_SPACING;
+                            float volumePerVoxel = volume/num_voxels;
+                            for(size_t i=1; i<=num_voxels; ++i) {
+                                float alpha = static_cast<float>(i)/(num_voxels+1);
+                                float one_minus_alpha = static_cast<float>(num_voxels+1-i)/(num_voxels+1);
+                                tgt::vec3 pos = alpha * node2.pos_ + one_minus_alpha * node1.pos_;
+
+                                tgtAssert(0 < alpha && alpha < 1, "Invalid alpha");
+                                tgtAssert(0 < one_minus_alpha && one_minus_alpha < 1, "Invalid one_minus_alpha");
+
+                                voxels.emplace_back(pos, radius, radius, radius, 0, volumePerVoxel, false);
+                            }
+
+                            output->insertEdge(graphFromId, graphToId, voxels);
                         } catch(...) {
                             LERROR("graph without matching node");
                             continue;
