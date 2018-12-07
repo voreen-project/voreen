@@ -175,7 +175,8 @@ void VascuSynthGraphLoader::process() {
                             const VGNodeID graphFromId = idMap.at(fromId);
                             const VGNodeID graphToId = idMap.at(toId);
 
-                            radius *= GRAPH_UNIT_TO_MM;
+                            // Apparently are the radii in the correct unit (mm) already...
+                            //radius *= GRAPH_UNIT_TO_MM;
 
                             const auto& node1 = output->getNode(graphFromId);
                             const auto& node2 = output->getNode(graphToId);
