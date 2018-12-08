@@ -67,6 +67,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/segmentationquantification.cpp
     ${MOD_DIR}/processors/volumebricksave.cpp
     ${MOD_DIR}/processors/volumebricksource.cpp
+    ${MOD_DIR}/processors/volumefilterlist.cpp
     ${MOD_DIR}/processors/volumeresampletransformation.cpp
 
     # Volumefiltering
@@ -75,6 +76,9 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/volumefiltering/gaussianfilter.cpp
     ${MOD_DIR}/volumefiltering/medianfilter.cpp
     ${MOD_DIR}/volumefiltering/binarymedianfilter.cpp
+
+    # Properties
+    ${MOD_DIR}/properties/interactivelistproperty.cpp
 )
 IF(VRN_MODULE_PLOTTING)
     LIST(APPEND MOD_CORE_SOURCES
@@ -91,6 +95,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/segmentationquantification.h
     ${MOD_DIR}/processors/volumebricksave.h
     ${MOD_DIR}/processors/volumebricksource.h
+    ${MOD_DIR}/processors/volumefilterlist.h
     ${MOD_DIR}/processors/volumeresampletransformation.h
 
     # Volumefiltering
@@ -100,9 +105,36 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/volumefiltering/gaussianfilter.h
     ${MOD_DIR}/volumefiltering/medianfilter.h
     ${MOD_DIR}/volumefiltering/binarymedianfilter.h
+
+    # Properties
+    ${MOD_DIR}/properties/interactivelistproperty.h
 )
 IF(VRN_MODULE_PLOTTING)
     LIST(APPEND MOD_CORE_HEADERS
         ${MOD_DIR}/processors/segmentationslicedensity.h
     )
 ENDIF()
+
+###############################################################################
+# Qt module resources
+################################################################################
+SET(MOD_QT_MODULECLASS BigDataImageProcessingModuleQt)
+
+SET(MOD_QT_SOURCES
+        #Factories
+        ${MOD_DIR}/qt/properties/bigdataimageprocessingpropertywidgetfactory.cpp
+
+        #Properties
+        ${MOD_DIR}/qt/properties/interactivelistpropertywidget.cpp
+        )
+
+SET(MOD_QT_HEADERS
+        #Factories
+        ${MOD_DIR}/qt/properties/bigdataimageprocessingpropertywidgetfactory.h
+
+        #Properties
+        ${MOD_DIR}/qt/properties/interactivelistpropertywidget.h
+        )
+
+SET(MOD_QT_HEADERS_NONMOC
+        )

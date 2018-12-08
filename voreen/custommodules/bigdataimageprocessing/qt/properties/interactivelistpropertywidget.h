@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
- * Department of Computer Science.                                                 *
+ * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
+ * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -23,45 +23,50 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "bigdataimageprocessingmodule.h"
-#include "processors/binarymedian.h"
-#include "processors/connectedcomponentanalysis.h"
-#include "processors/largevolumeformatconversion.h"
-#include "processors/segmentationquantification.h"
-#include "processors/volumeresampletransformation.h"
+#ifndef VRN_INTERACTIVELISTPROPERTYWIDGET_H
+#define VRN_INTERACTIVELISTPROPERTYWIDGET_H
 
-#ifdef VRN_MODULE_PLOTTING
-#include "processors/segmentationslicedensity.h"
-#endif
+#include "voreen/qt/widgets/property/qpropertywidget.h"
 
-#include "processors/volumebricksource.h"
-#include "processors/volumebricksave.h"
-#include "processors/volumefilterlist.h"
-
-#include "io/lz4slicevolumefilereader.h"
+class QListWidget;
 
 namespace voreen {
 
-BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& modulePath)
-    : VoreenModule(modulePath)
-{
-    setID("bigdataimageprocessing");
-    setGuiName("Big Data Image Processing");
+class InteractiveListProperty;
+class ItemListWidget;
+class InstanceListWidget;
 
-    registerProcessor(new BinaryMedian());
-    registerProcessor(new ConnectedComponentAnalysis());
-    registerProcessor(new LargeVolumeFormatConversion());
-    registerProcessor(new SegmentationQuantification());
-    registerProcessor(new VolumeFilterList());
-    registerProcessor(new VolumeResampleTransformation());
-#ifdef VRN_MODULE_PLOTTING
-    registerProcessor(new SegmentationSliceDensity());
-#endif
+class InteractiveListPropertyWidget : public QPropertyWidget {
+Q_OBJECT
+public:
+    InteractiveListPropertyWidget(InteractiveListProperty* prop, QWidget* parent = nullptr);
+    virtual ~InteractiveListPropertyWidget();
 
-    registerProcessor(new VolumeBrickSource());
-    registerProcessor(new VolumeBrickSave());
+    //----------------
+    //  Overrides
+    //----------------
+protected slots:
+    /** @see QPropertyWidget */
+    virtual void updateFromPropertySlot();
 
-    registerVolumeReader(new LZ4SliceVolumeFileReader());
-}
+protected slots:
+    //----------------
+    //  Helpers
+    //----------------
+    /** Updates the table depending on the TableUpdateFlags. */
+    void updateTable();
+
+private:
+    //----------------
+    //  Members
+    //----------------
+    ItemListWidget* itemTable_;
+    InstanceListWidget* instanceTable_;
+
+    InteractiveListProperty* property_; ///< associated property
+
+};
 
 } // namespace
+
+#endif // VRN_INTERACTIVELISTPROPERTYWIDGET_H

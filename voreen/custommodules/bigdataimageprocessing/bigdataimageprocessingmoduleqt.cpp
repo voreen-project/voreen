@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
- * Department of Computer Science.                                                 *
+ * Copyright (C) 2005-2017 University of Muenster, Germany.                        *
+ * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -23,45 +23,21 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "bigdataimageprocessingmodule.h"
-#include "processors/binarymedian.h"
-#include "processors/connectedcomponentanalysis.h"
-#include "processors/largevolumeformatconversion.h"
-#include "processors/segmentationquantification.h"
-#include "processors/volumeresampletransformation.h"
+#include "bigdataimageprocessingmoduleqt.h"
 
-#ifdef VRN_MODULE_PLOTTING
-#include "processors/segmentationslicedensity.h"
-#endif
-
-#include "processors/volumebricksource.h"
-#include "processors/volumebricksave.h"
-#include "processors/volumefilterlist.h"
-
-#include "io/lz4slicevolumefilereader.h"
+#include "qt/properties/bigdataimageprocessingpropertywidgetfactory.h"
 
 namespace voreen {
 
-BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& modulePath)
-    : VoreenModule(modulePath)
+const std::string BigDataImageProcessingModuleQt::loggerCat_("voreen.qt.BigDataImageProcessing");
+
+BigDataImageProcessingModuleQt::BigDataImageProcessingModuleQt(const std::string& modulePath)
+    : VoreenModuleQt(modulePath)
 {
-    setID("bigdataimageprocessing");
-    setGuiName("Big Data Image Processing");
-
-    registerProcessor(new BinaryMedian());
-    registerProcessor(new ConnectedComponentAnalysis());
-    registerProcessor(new LargeVolumeFormatConversion());
-    registerProcessor(new SegmentationQuantification());
-    registerProcessor(new VolumeFilterList());
-    registerProcessor(new VolumeResampleTransformation());
-#ifdef VRN_MODULE_PLOTTING
-    registerProcessor(new SegmentationSliceDensity());
-#endif
-
-    registerProcessor(new VolumeBrickSource());
-    registerProcessor(new VolumeBrickSave());
-
-    registerVolumeReader(new LZ4SliceVolumeFileReader());
+    setID("BigDataImageProcessing (Qt)");
+    setGuiName("BigDataImageProcessing (Qt)");
+    
+    registerPropertyWidgetFactory(new BigDataImageProcessingPropertyWidgetFactory());
 }
 
 } // namespace
