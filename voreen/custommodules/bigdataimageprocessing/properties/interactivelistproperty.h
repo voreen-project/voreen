@@ -34,17 +34,17 @@
 namespace voreen {
 
 /**
- * This property provides a single list of items which can be configured interactively
+ * This property provides a list of items which can be configured interactively
  * using a second list storing available items.
- * Items can be transferred from one list to the other and even duplicated in the output list.
+ * Items can be transferred from one list to the other and vice-versa.
  */
 class VRN_CORE_API InteractiveListProperty : public Property {
 public:
 
     struct Instance {
-        int itemId_;
-        int instanceId_;
-        std::string name_;
+        int itemId_;        ///< id of assiciated item
+        int instanceId_;    ///< unique instance id
+        std::string name_;  ///< representative name
     };
 
     InteractiveListProperty(const std::string& id, const std::string& guiText, bool allowDuplication = false,
@@ -73,7 +73,7 @@ public:
     /**
      * Returns the number of items.
      *
-     * @return number of times
+     * @return number of itmes
      */
     size_t getNumItems() const;
 
@@ -87,15 +87,15 @@ public:
 
     /**
      * Adds a single item to the input list.
-     * The output list will stay untouched.
-     * The item must not be added beforehand.
+     * The instance list will stay untouched.
+     * The item must not have been added beforehand.
      *
      * @param item Item to be added
      */
     void addItem(const std::string& item);
 
     /**
-     * Removes a single item. This will reset input and output list!
+     * Removes a single item. This will reset input and instance list and the selection!
      * @note if the item is not available, the call will be silently ignored.
      *
      * @param item Item to be removed
@@ -114,27 +114,31 @@ public:
      * The order is implied by the returned list of getItems().
      * In case duplicates are allowed, this list always contains
      * all indices in ascending order.
+     *
+     * @return indices of available items
      */
     const std::vector<int>& getInputIndices() const;
 
     /**
-     * Returns all instances in the output list.
+     * Returns all instances of the item list.
      * @note in case duplicates are allowed, the items will have the format "Input#1"
-     * @return
+     * @return all instances of the item list
      */
     const std::vector<Instance>& getInstances() const;
 
     /**
      * Returns all instances in the output list of a specific item.
      * @note in case duplicates are allowed, the items will have the format "Input#1"
-     * @return
+     * @param item item of which all instances should be returned
+     * @return all instances of the specified item
      */
     std::vector<Instance> getInstances(const std::string& item) const;
 
     /**
-     * Moves a single item from input to the desired position of output.
+     * Moves a single item from input to the desired position of the instance list.
      * @note if duplicates are allowed, the item will be copied
      * @note invalid items will be silently ignored
+     * @note selection will be updated accordingly
      * @param item item to be moved
      * @param pos position the item should be moved (end, if not specified)
      */
@@ -143,34 +147,36 @@ public:
     /**
      * Removes a single instance.
      * @note invalid instances will be ignored silently
-     * @param item instance to be removed
+     * @note selection will be update accordingly
+     * @param instanceId instance to be removed
      */
-    void removeInstance(const std::string& instanceName);
     void removeInstance(int instanceId);
+    void removeInstance(const std::string& instanceName);
 
     /**
      * Moves a single instance to a new position.
-     * @param instanceName instance to be moved
+     * @note selection will be update accordingly
+     * @param instanceId instance to be moved
      * @param pos position to be moved to
      */
-    void moveInstance(const std::string& instanceName, int pos);
     void moveInstance(int instanceId, int pos);
+    void moveInstance(const std::string& instanceName, int pos);
 
     /**
-     * Determines, if the specified item is currently part of output.
+     * Determines, if the specified item has at least one instance.
      * @param item item to be checked
      * @return true, if the specified item is part of the output, false otherwise
      */
     bool hasInstance(const std::string& item) const;
 
     /**
-     * Returns whether items can be chosen multiple times.
+     * Returns whether items can have multiple instances.
      */
     bool isDuplicationAllowed() const;
 
     /**
      * Sets if duplication is allowed or not.
-     * This will reset input and output lists to their defaults.
+     * This will reset input and instance lists to their defaults.
      */
     void setDuplicationAllowed(bool enabled);
 
@@ -191,6 +197,7 @@ public:
 private:
 
     int getIndexOfItem(const std::string& item) const;
+    int getIndexOfInstance(int instanceId) const;
     std::vector<int> getInstanceIds(const std::string& name) const;
     Instance createInstance(int itemId) const;
 

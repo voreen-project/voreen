@@ -48,11 +48,10 @@ public:
 
     virtual std::string getVolumeFilterName() const = 0;
     virtual void adjustPropertiesToInput(const VolumeBase& input) = 0;
-    virtual VolumeFilter* getVolumeFilter(const VolumeBase& volume) const = 0;
+    virtual VolumeFilter* getVolumeFilter(const VolumeBase& volume, const std::string& name) const = 0;
     virtual void applyInstance(const std::string& name) = 0;
     virtual void storeInstance(const std::string& name) = 0;
     virtual void removeInstance(const std::string& name) = 0;
-    virtual std::vector<std::string> getInstances() const = 0;
 
     virtual ~FilterProperties() {}
 
@@ -65,9 +64,12 @@ protected:
     }
 
     std::vector<Property*> properties_;
+
+    static const std::string loggerCat_;
 };
 
 const std::string FilterProperties::DEFAULT_SETTINGS = "__default__";
+const std::string FilterProperties::loggerCat_ = "FilterProperties";
 
 class BinaryMedianFilterProperties : public FilterProperties {
 public:
@@ -109,17 +111,23 @@ public:
         binarizationThreshold_.adaptDecimalsToRange(2);
     }
 
-    virtual VolumeFilter* getVolumeFilter(const VolumeBase& volume) const {
+    virtual VolumeFilter* getVolumeFilter(const VolumeBase& volume, const std::string& name) const {
+        Settings settings = instanceSettings_.at(DEFAULT_SETTINGS);
+        if(instanceSettings_.find(name) != instanceSettings_.end()) {
+            settings = instanceSettings_.at(name);
+        }
+        else {
+            LWARNING("Filter '" + name + "' has not been configured yet");
+        }
         RealWorldMapping rwm;
         if(volume.hasMetaData("RealWorldMapping")) {
             rwm = volume.getRealWorldMapping();
         }
-        float normalizedBinarizationThreshold = rwm.realWorldToNormalized(binarizationThreshold_.get());
         return new BinaryMedianFilter(
-                tgt::ivec3(extentX_.get(), extentY_.get(), extentZ_.get()),
-                normalizedBinarizationThreshold,
-                objectVoxelThreshold_.get(),
-                SamplingStrategy<float>(samplingStrategyType_.getValue(), static_cast<float>(outsideVolumeValue_.get()))
+                tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
+                rwm.realWorldToNormalized(settings.binarizationThreshold_),
+                settings.objectVoxelThreshold_,
+                SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_))
         );
     }
     virtual void applyInstance(const std::string& name) {
@@ -150,15 +158,6 @@ public:
     virtual void removeInstance(const std::string& name) {
         instanceSettings_.erase(name);
     }
-    virtual std::vector<std::string> getInstances() const {
-        std::vector<std::string> instances;
-        for(const auto& settings : instanceSettings_) {
-            if(settings.first != DEFAULT_SETTINGS) {
-                instances.push_back(settings.first);
-            }
-        }
-        return instances;
-    }
     virtual void addProperties() {
         properties_.push_back(&extentX_);
         properties_.push_back(&extentY_);
@@ -169,10 +168,24 @@ public:
         properties_.push_back(&objectVoxelThreshold_);
     }
     virtual void serialize(Serializer& s) const {
-        //s.serializeBinaryBlob("settings", instanceSettings_);
+        std::vector<std::string> names;
+        std::vector<Settings> settings;
+        for(const auto& pair : instanceSettings_) {
+            names.push_back(pair.first);
+            settings.push_back(pair.second);
+        }
+        s.serializeBinaryBlob("names", names);
+        s.serializeBinaryBlob("settings", settings);
     }
     virtual void deserialize(Deserializer& s) {
-        //s.deserializeBinaryBlob("settings", instanceSettings_);
+        std::vector<std::string> names;
+        std::vector<Settings> settings;
+        s.deserializeBinaryBlob("names", names);
+        s.deserializeBinaryBlob("settings", settings);
+        tgtAssert(names.size() == settings.size(), "number of keys and values does not match");
+        for(size_t i = 0; i < names.size(); i++) {
+            instanceSettings_[names[i]] = settings[i];
+        }
     }
 
 private:
@@ -195,6 +208,109 @@ private:
     FloatProperty binarizationThreshold_;
     OptionProperty<SamplingStrategyType> samplingStrategyType_;
     IntProperty objectVoxelThreshold_;
+};
+
+class MedianFilterProperties : public FilterProperties {
+public:
+    MedianFilterProperties()
+            : extent_(getId("extent"), "Extent", 1, 1, 10)
+            , outsideVolumeValue_(getId("outsideVolumeValue"), "Outside Volume Value", 0, 0, 1)
+            , samplingStrategyType_(getId("samplingStrategyType"), "Sampling Strategy", SamplingStrategyType::CLAMP_T)
+    {
+        samplingStrategyType_.addOption("clamp", "Clamp", SamplingStrategyType::CLAMP_T);
+        samplingStrategyType_.addOption("mirror", "Mirror", SamplingStrategyType::MIRROR_T);
+        samplingStrategyType_.addOption("set", "Set", SamplingStrategyType::SET_T);
+        ON_CHANGE_LAMBDA(samplingStrategyType_, [this] () {
+            outsideVolumeValue_.setVisibleFlag(samplingStrategyType_.getValue() == SamplingStrategyType::SET_T);
+        });
+
+        // Store default settings.
+        storeInstance(DEFAULT_SETTINGS);
+
+        // Add properties to list.
+        addProperties();
+    }
+
+    virtual std::string getVolumeFilterName() const {
+        return "Median Filter";
+    }
+
+    virtual void adjustPropertiesToInput(const VolumeBase& input) {
+        // unused
+    }
+
+    virtual VolumeFilter* getVolumeFilter(const VolumeBase& volume, const std::string& name) const {
+        Settings settings = instanceSettings_.at(DEFAULT_SETTINGS);
+        if(instanceSettings_.find(name) != instanceSettings_.end()) {
+            settings = instanceSettings_.at(name);
+        }
+        else {
+            LWARNING("Filter '" + name + "' has not been configured yet");
+        }
+        return new MedianFilter(
+                settings.extent_,
+                SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_)),
+                volume.getBaseType()
+        );
+    }
+    virtual void applyInstance(const std::string& name) {
+        auto iter = instanceSettings_.find(name);
+        if(iter == instanceSettings_.end()) {
+            instanceSettings_[name] = instanceSettings_[DEFAULT_SETTINGS];
+        }
+
+        Settings settings = instanceSettings_[name];
+        extent_.set(settings.extent_);
+        outsideVolumeValue_.set(settings.outsideVolumeValue_);
+        samplingStrategyType_.selectByValue(settings.samplingStrategyType_);
+    }
+    virtual void storeInstance(const std::string& name) {
+        Settings& settings = instanceSettings_[name];
+        settings.extent_ = extent_.get();
+        settings.outsideVolumeValue_ = outsideVolumeValue_.get();
+        settings.samplingStrategyType_ = samplingStrategyType_.getValue();
+    }
+    virtual void removeInstance(const std::string& name) {
+        instanceSettings_.erase(name);
+    }
+    virtual void addProperties() {
+        properties_.push_back(&extent_);
+        properties_.push_back(&outsideVolumeValue_);
+        properties_.push_back(&samplingStrategyType_);
+    }
+    virtual void serialize(Serializer& s) const {
+        std::vector<std::string> names;
+        std::vector<Settings> settings;
+        for(const auto& pair : instanceSettings_) {
+            names.push_back(pair.first);
+            settings.push_back(pair.second);
+        }
+        s.serializeBinaryBlob("names", names);
+        s.serializeBinaryBlob("settings", settings);
+    }
+    virtual void deserialize(Deserializer& s) {
+        std::vector<std::string> names;
+        std::vector<Settings> settings;
+        s.deserializeBinaryBlob("names", names);
+        s.deserializeBinaryBlob("settings", settings);
+        tgtAssert(names.size() == settings.size(), "number of keys and values does not match");
+        for(size_t i = 0; i < names.size(); i++) {
+            instanceSettings_[names[i]] = settings[i];
+        }
+    }
+
+private:
+
+    struct Settings {
+        int extent_;
+        int outsideVolumeValue_;
+        SamplingStrategyType samplingStrategyType_;
+    };
+    std::map<std::string, Settings> instanceSettings_;
+
+    IntProperty extent_;
+    IntProperty outsideVolumeValue_;
+    OptionProperty<SamplingStrategyType> samplingStrategyType_;
 };
 
 class GaussianFilterProperties : public FilterProperties {
@@ -225,11 +341,18 @@ public:
         // unused
     }
 
-    virtual VolumeFilter* getVolumeFilter(const VolumeBase& volume) const {
+    virtual VolumeFilter* getVolumeFilter(const VolumeBase& volume, const std::string& name) const {
+        Settings settings = instanceSettings_.at(DEFAULT_SETTINGS);
+        if(instanceSettings_.find(name) != instanceSettings_.end()) {
+            settings = instanceSettings_.at(name);
+        }
+        else {
+            LWARNING("Filter '" + name + "' has not been configured yet");
+        }
         return new GaussianFilter(
-                tgt::ivec3(extentX_.get(), extentY_.get(), extentZ_.get()),
-                SamplingStrategy<float>(samplingStrategyType_.getValue(), static_cast<float>(outsideVolumeValue_.get())),
-                VolumeGeneratorFloat().getBaseType()
+                tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
+                SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_)),
+                volume.getBaseType()
         );
     }
     virtual void applyInstance(const std::string& name) {
@@ -256,15 +379,6 @@ public:
     virtual void removeInstance(const std::string& name) {
         instanceSettings_.erase(name);
     }
-    virtual std::vector<std::string> getInstances() const {
-        std::vector<std::string> instances;
-        for(const auto& settings : instanceSettings_) {
-            if(settings.first != DEFAULT_SETTINGS) {
-                instances.push_back(settings.first);
-            }
-        }
-        return instances;
-    }
     virtual void addProperties() {
         properties_.push_back(&extentX_);
         properties_.push_back(&extentY_);
@@ -273,10 +387,24 @@ public:
         properties_.push_back(&samplingStrategyType_);
     }
     virtual void serialize(Serializer& s) const {
-        //s.serializeBinaryBlob("settings", instanceSettings_);
+        std::vector<std::string> names;
+        std::vector<Settings> settings;
+        for(const auto& pair : instanceSettings_) {
+            names.push_back(pair.first);
+            settings.push_back(pair.second);
+        }
+        s.serializeBinaryBlob("names", names);
+        s.serializeBinaryBlob("settings", settings);
     }
     virtual void deserialize(Deserializer& s) {
-        //s.deserializeBinaryBlob("settings", instanceSettings_);
+        std::vector<std::string> names;
+        std::vector<Settings> settings;
+        s.deserializeBinaryBlob("names", names);
+        s.deserializeBinaryBlob("settings", settings);
+        tgtAssert(names.size() == settings.size(), "number of keys and values does not match");
+        for(size_t i = 0; i < names.size(); i++) {
+            instanceSettings_[names[i]] = settings[i];
+        }
     }
 
 private:
@@ -290,7 +418,6 @@ private:
     };
     std::map<std::string, Settings> instanceSettings_;
 
-    FloatProperty standardDeviation_;
     IntProperty extentX_;
     IntProperty extentY_;
     IntProperty extentZ_;
@@ -330,7 +457,9 @@ VolumeFilterList::VolumeFilterList()
 
     setPropertyGroupGuiName("output", "Output");
 
+    // Add filters.
     addFilter(new BinaryMedianFilterProperties());
+    addFilter(new MedianFilterProperties());
     addFilter(new GaussianFilterProperties());
 }
 
@@ -416,7 +545,7 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
 
     VolumeFilterStackBuilder builder(inputVolume);
     for(const InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
-        VolumeFilter* filter = filterProperties_[instance.itemId_]->getVolumeFilter(inputVolume);
+        VolumeFilter* filter = filterProperties_[instance.itemId_]->getVolumeFilter(inputVolume, instance.name_);
         builder.addLayer(std::unique_ptr<VolumeFilter>(filter));
     }
 
@@ -468,7 +597,7 @@ void VolumeFilterList::adjustPropertiesToInput() {
 
 void VolumeFilterList::onFilterListChange() {
 
-    // Check if instance was deleted or added.
+    // Check if instance was deleted.
     bool numInstancesChanged = filterList_.getInstances().size() != numInstances_;
     if(numInstancesChanged) {
         // Handle removal.

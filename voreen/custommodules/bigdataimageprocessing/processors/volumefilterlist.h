@@ -91,7 +91,6 @@ protected:
     void setDescriptions() {
         setDescription(
                 "This processor allows to apply multiple filters onto an input volume."
-                "The order of filters in general is not neglectable."
         );
     }
 

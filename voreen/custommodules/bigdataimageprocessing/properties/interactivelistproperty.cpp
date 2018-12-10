@@ -68,6 +68,7 @@ void InteractiveListProperty::clear() {
     items_.clear();
     inputItemIds_.clear();
     instances_.clear();
+    selectedInstance_ = -1;
 }
 
 void InteractiveListProperty::setItems(const std::vector<std::string>& items) {
@@ -78,6 +79,8 @@ void InteractiveListProperty::setItems(const std::vector<std::string>& items) {
     for(size_t i=0; i<getNumItems(); i++) {
         inputItemIds_.push_back(static_cast<int>(i));
     }
+
+    selectedInstance_ = -1;
 
     invalidate();
 }
@@ -164,13 +167,7 @@ void InteractiveListProperty::removeInstance(const std::string& instanceName) {
 
 void InteractiveListProperty::removeInstance(int instanceId) {
 
-    int idx = -1;
-    for(size_t i = 0; i < instances_.size(); i++) {
-        if(instances_[i].instanceId_ == instanceId) {
-            idx = static_cast<int>(i);
-        }
-    }
-
+    int idx = getIndexOfInstance(instanceId);
     if(idx == -1)
         return;
 
@@ -180,8 +177,8 @@ void InteractiveListProperty::removeInstance(int instanceId) {
 
     if(!allowDuplication_) {
         size_t pos = 0;
-        while(pos < items_.size() && items_[pos] != items_[itemId]) pos++;
-        inputItemIds_.insert(inputItemIds_.begin()+pos, idx);
+        while(pos < inputItemIds_.size() && inputItemIds_[pos] < itemId) pos++;
+        inputItemIds_.insert(inputItemIds_.begin()+pos, itemId);
     }
 
     if(selectedInstance_ > -1
@@ -205,13 +202,7 @@ void InteractiveListProperty::moveInstance(const std::string& instanceName, int 
 void InteractiveListProperty::moveInstance(int instanceId, int pos) {
     tgtAssert(pos >= 0 && pos < static_cast<int>(instances_.size()), "Position out of range");
 
-    int idx = -1;
-    for(size_t i = 0; i < instances_.size(); i++) {
-        if(instances_[i].instanceId_ == instanceId) {
-            idx = static_cast<int>(i);
-        }
-    }
-
+    int idx = getIndexOfInstance(instanceId);
     tgtAssert(idx != -1, "Instance not available");
     if(idx == -1)
         return;
@@ -261,6 +252,15 @@ int InteractiveListProperty::getIndexOfItem(const std::string& item) const {
     for(int i = 0; items_.begin() + i != items_.end(); i++) {
         if(*(items_.begin() + i) == item) {
             return i;
+        }
+    }
+    return -1;
+}
+
+int InteractiveListProperty::getIndexOfInstance(int instanceId) const {
+    for(size_t i = 0; i < instances_.size(); i++) {
+        if(instances_[i].instanceId_ == instanceId) {
+            return static_cast<int>(i);
         }
     }
     return -1;
