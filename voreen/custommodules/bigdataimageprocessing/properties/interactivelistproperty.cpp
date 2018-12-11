@@ -156,15 +156,6 @@ void InteractiveListProperty::addInstance(const std::string& item, int pos) {
     invalidate();
 }
 
-void InteractiveListProperty::removeInstance(const std::string& instanceName) {
-    for(const Instance& instance : instances_) {
-        if(instance.name_ == instanceName) {
-            removeInstance(instance.instanceId_);
-            return;
-        }
-    }
-}
-
 void InteractiveListProperty::removeInstance(int instanceId) {
 
     int idx = getIndexOfInstance(instanceId);
@@ -190,15 +181,6 @@ void InteractiveListProperty::removeInstance(int instanceId) {
     invalidate();
 }
 
-void InteractiveListProperty::moveInstance(const std::string& instanceName, int pos) {
-    for(const Instance& instance : instances_) {
-        if(instance.name_ == instanceName) {
-            moveInstance(instance.instanceId_, pos);
-            return;
-        }
-    }
-}
-
 void InteractiveListProperty::moveInstance(int instanceId, int pos) {
     tgtAssert(pos >= 0 && pos < static_cast<int>(instances_.size()), "Position out of range");
 
@@ -207,11 +189,8 @@ void InteractiveListProperty::moveInstance(int instanceId, int pos) {
     if(idx == -1)
         return;
 
-    auto iter = instances_.begin() + idx;
-    Instance instance = *iter;
-
     // Swap positions.
-    std::iter_swap(iter, instances_.begin() + pos);
+    std::iter_swap(instances_.begin() + idx, instances_.begin() + pos);
 
     // Update selection.
     if(selectedInstance_ == idx) {
@@ -287,13 +266,19 @@ InteractiveListProperty::Instance InteractiveListProperty::createInstance(int it
     }
     instance.instanceId_++;
 
-    instance.name_ = items_[itemId];
-
-    if(allowDuplication_) {
-        instance.name_ += " #" + std::to_string(instance.instanceId_);
-    }
+    //instance.name_ = createInstanceName(instance);
 
     return instance;
+}
+
+std::string InteractiveListProperty::getInstanceName(const voreen::InteractiveListProperty::Instance& instance) const {
+    std::string name = items_[instance.itemId_];
+
+    if(allowDuplication_) {
+        name += " #" + std::to_string(instance.instanceId_);
+    }
+
+    return name;
 }
 
 } // namespace voreen

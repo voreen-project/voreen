@@ -42,9 +42,8 @@ class VRN_CORE_API InteractiveListProperty : public Property {
 public:
 
     struct Instance {
-        int itemId_;        ///< id of assiciated item
+        int itemId_;        ///< id of associated item
         int instanceId_;    ///< unique instance id
-        std::string name_;  ///< representative name
     };
 
     InteractiveListProperty(const std::string& id, const std::string& guiText, bool allowDuplication = false,
@@ -151,7 +150,6 @@ public:
      * @param instanceId instance to be removed
      */
     void removeInstance(int instanceId);
-    void removeInstance(const std::string& instanceName);
 
     /**
      * Moves a single instance to a new position.
@@ -160,7 +158,6 @@ public:
      * @param pos position to be moved to
      */
     void moveInstance(int instanceId, int pos);
-    void moveInstance(const std::string& instanceName, int pos);
 
     /**
      * Determines, if the specified item has at least one instance.
@@ -193,6 +190,12 @@ public:
      * @param index index to be selected
      */
     void setSelectedInstance(int index);
+
+    /**
+     * This function is used to generate names for instances.
+     * To specify a new naming scheme, override this function.
+     */
+    virtual std::string getInstanceName(const Instance& instance) const;
 
 private:
 

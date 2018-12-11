@@ -35,7 +35,6 @@
 #include <QDropEvent>
 #include <QMimeData>
 #include <QDrag>
-#include <QAbstractItemModel>
 
 namespace voreen {
 
@@ -45,7 +44,6 @@ public:
     ItemListWidget(InteractiveListProperty* property, QWidget* parent)
         : QListWidget(parent)
         , property_(property)
-        , partner_(nullptr)
     {
         setAcceptDrops(true);
         setMinimumHeight(150);
@@ -82,15 +80,19 @@ public:
         if(!selectedItem)
             return;
 
+        QByteArray data;
+        QDataStream dataStream(&data, QIODevice::WriteOnly);
+        dataStream << row(selectedItem);
+
         QDrag* drag = new QDrag(this);
         QMimeData* mimeData = new QMimeData;
-        mimeData->setText(selectedItem->text());
+        mimeData->setData("filter/item", data);
         drag->setMimeData(mimeData);
         drag->exec();
     }
 
     void dragEnterEvent(QDragEnterEvent* event) {
-        if (event->mimeData()->hasText() && event->source() == partner_) {
+        if (event->mimeData()->hasFormat("filter/instance")) {
             event->acceptProposedAction();
         }
         else {
@@ -99,7 +101,7 @@ public:
     }
 
     void dragMoveEvent(QDragMoveEvent* event) {
-        if (event->mimeData()->hasText() && event->source() == partner_ ) {
+        if (event->mimeData()->hasFormat("filter/instance")) {
             event->acceptProposedAction();
         }
         else {
@@ -108,10 +110,13 @@ public:
     }
 
     void dropEvent(QDropEvent* event) {
-        if(event->mimeData()->hasText() && event->source() == partner_) {
-            //event->setDropAction(Qt::CopyAction);
+        if(event->mimeData()->hasFormat("filter/instance")) {
+            int instance = 0;
+            QByteArray data = event->mimeData()->data("filter/instance");
+            QDataStream dataStream(&data, QIODevice::ReadOnly);
+            dataStream >> instance;
             event->acceptProposedAction();
-            property_->removeInstance(event->mimeData()->text().toStdString());
+            property_->removeInstance(property_->getInstances()[instance].instanceId_);
         }
         else {
             event->ignore();
@@ -126,14 +131,9 @@ public:
         QListWidget::keyPressEvent(event);
     }
 
-    void setPartner(QWidget* partner) {
-        partner_ = partner;
-    }
-
 private:
 
     InteractiveListProperty* property_;
-    QWidget* partner_;
     QPoint dragStartPosition_;
 };
 
@@ -142,7 +142,6 @@ public:
     InstanceListWidget(InteractiveListProperty* property, QWidget* parent)
         : QListWidget(parent)
         , property_(property)
-        , partner_(nullptr)
     {
         setAcceptDrops(true);
         setMinimumHeight(150);
@@ -152,7 +151,7 @@ public:
         clear();
 
         for (const InteractiveListProperty::Instance& instance : property_->getInstances()) {
-            QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(instance.name_));
+            QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(property_->getInstanceName(instance)));
             addItem(item);
         }
         setCurrentRow(property_->getSelectedInstance());
@@ -182,15 +181,19 @@ public:
         if(!selectedItem)
             return;
 
+        QByteArray data;
+        QDataStream dataStream(&data, QIODevice::WriteOnly);
+        dataStream << row(selectedItem);
+
         QDrag* drag = new QDrag(this);
         QMimeData* mimeData = new QMimeData;
-        mimeData->setText(selectedItem->text());
+        mimeData->setData("filter/instance", data);
         drag->setMimeData(mimeData);
         drag->exec();
     }
 
     void dragEnterEvent(QDragEnterEvent* event) {
-        if (event->mimeData()->hasText() && (event->source() == partner_ || event->source() == this)) {
+        if (event->mimeData()->hasFormat("filter/item") || event->mimeData()->hasFormat("filter/instance")) {
             event->acceptProposedAction();
         }
         else {
@@ -199,7 +202,7 @@ public:
     }
 
     void dragMoveEvent(QDragMoveEvent* event) {
-        if (event->mimeData()->hasText() && (event->source() == partner_ || event->source() == this)) {
+        if (event->mimeData()->hasFormat("filter/item") || event->mimeData()->hasFormat("filter/instance")) {
             event->acceptProposedAction();
         }
         else {
@@ -208,19 +211,28 @@ public:
     }
 
     void dropEvent(QDropEvent* event) {
-        if(event->mimeData()->hasText()) {
-            if(event->source() == this) {
-                int position = row(itemAt(event->pos()));
-                if(position == -1) {
-                    event->ignore();
-                    return;
-                }
-                property_->moveInstance(event->mimeData()->text().toStdString(), position);
-            }
-            else {
-                property_->addInstance(event->mimeData()->text().toStdString());
+        if(event->mimeData()->hasFormat("filter/instance")) {
+            int position = row(itemAt(event->pos()));
+            if(position == -1) {
+                event->ignore();
+                return;
             }
 
+            int instance = 0;
+            QByteArray data = event->mimeData()->data("filter/instance");
+            QDataStream dataStream(&data, QIODevice::ReadOnly);
+            dataStream >> instance;
+
+            property_->moveInstance(property_->getInstances()[instance].instanceId_, position);
+            event->acceptProposedAction();
+        }
+        else if(event->mimeData()->hasFormat("filter/item")) {
+            int item = 0;
+            QByteArray data = event->mimeData()->data("filter/item");
+            QDataStream dataStream(&data, QIODevice::ReadOnly);
+            dataStream >> item;
+
+            property_->addInstance(property_->getItems()[item]);
             event->acceptProposedAction();
         }
         else {
@@ -266,14 +278,9 @@ public:
         }
     }
 
-    void setPartner(QWidget* partner) {
-        partner_ = partner;
-    }
-
 private:
 
     InteractiveListProperty* property_;
-    QWidget* partner_;
     QPoint dragStartPosition_;
 };
 
@@ -291,10 +298,6 @@ InteractiveListPropertyWidget::InteractiveListPropertyWidget(InteractiveListProp
 
     itemTable_->setToolTip(tr("Use Drag and Drop or press RETURN to add an instance of the selected item"));
     instanceTable_->setToolTip(tr("Use Drag and Drop or CTRL + UP/Down to move items"));
-
-    // Reference partners.
-    itemTable_->setPartner(instanceTable_);
-    instanceTable_->setPartner(itemTable_);
 
     // Add widgets.
     addWidget(itemTable_);
