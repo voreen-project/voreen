@@ -181,7 +181,7 @@ void setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
 void getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                  UnitConverter<T,DESCRIPTOR>& converter, int iT,
                  Dynamics<T, DESCRIPTOR>& bulkDynamics,
-                 SuperGeometry3D<T>& superGeometry, Timer<T>& timer, STLreader<T>& stlReader ) {
+                 SuperGeometry3D<T>& superGeometry, STLreader<T>& stlReader ) {
 
     OstreamManager clout( std::cout,"getResults" );
 
@@ -218,10 +218,6 @@ void getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     // Writes output on the console
     if ( iT%statIter==0 ) {
-        // Timer console output
-        timer.update( iT );
-        timer.printStep();
-
         // Lattice statistics console output
         sLattice.getStatistics().print( iT,converter.getPhysTime( iT ) );
 
@@ -272,9 +268,12 @@ FlowSimulation::FlowSimulation()
     // ports
     , inport_(Port::INPORT, "input", "Geometry Input", false)
     , outport_(Port::OUTPORT, "outport", "Time Series Output")
+    , geometry_("geometryFile", "Geometry File", "Open Geometry File", VoreenApplication::app()->getUserDataPath(), "Geometry (*.stl);;STL (*.stl);;")
 {
     addPort(inport_);
     addPort(outport_);
+
+    addProperty(geometry_);
 }
 
 FlowSimulation::~FlowSimulation() {
@@ -285,6 +284,17 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     if (!inputVolume) {
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
     }
+
+    return FlowSimulationInput(
+    );
+}
+
+FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, ProgressReporter& progressReporter) const {
+
+    // Needs to be initialized in each new thread to be used.
+    olb::olbInit(nullptr, nullptr);
+
+    progressReporter.setProgress(0.0f);
 
     UnitConverter<T,DESCRIPTOR> converter(
             (T)   0.02246/N,     // physDeltaX: spacing between two lattice cells in __m__
@@ -303,7 +313,7 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
     // Instantiation of the STLreader class
     // file name, voxel size in meter, stl unit in meter, outer voxel no., inner voxel no.
-    STLreader<T> stlReader( "aorta3d.stl", converter.getConversionFactorLength(), 0.001, 0, true );
+    STLreader<T> stlReader( geometry_.get(), converter.getConversionFactorLength(), 0.001, 0, true );
     IndicatorLayer3D<T> extendedDomain( stlReader, converter.getConversionFactorLength() );
 
     // Instantiation of a cuboidGeometry with weights
@@ -336,20 +346,11 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     sOffLatticeBoundaryCondition3D<T, DESCRIPTOR> sOffBoundaryCondition( sLattice );
     createBouzidiBoundaryCondition3D<T, DESCRIPTOR> ( sOffBoundaryCondition );
 
-    Timer<T> timer1( converter.getLatticeTime( maxPhysT ), superGeometry.getStatistics().getNvoxel() );
-    timer1.start();
-
     prepareLattice( sLattice, converter, bulkDynamics,
                     sBoundaryCondition, sOffBoundaryCondition,
                     stlReader, superGeometry );
 
-    timer1.stop();
-    timer1.printSummary();
-
-    // === 4th Step: Main Loop with Timer ===
-    Timer<T> timer( converter.getLatticeTime( maxPhysT ), superGeometry.getStatistics().getNvoxel() );
-    timer.start();
-
+    // === 4th Step: Main Loop ===
     for ( int iT = 0; iT <= converter.getLatticeTime( maxPhysT ); iT++ ) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
@@ -359,17 +360,13 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
         sLattice.collideAndStream();
 
         // === 7th Step: Computation and Output of the Results ===
-        getResults( sLattice, converter, iT, bulkDynamics, superGeometry, timer, stlReader );
+        getResults( sLattice, converter, iT, bulkDynamics, superGeometry, stlReader );
+
+        float progress = iT / (converter.getLatticeTime( maxPhysT ) + 1.0f);
+        progressReporter.setProgress(progress);
     }
 
-    timer.stop();
-    timer.printSummary();
-
-    return FlowSimulationInput(
-    );
-}
-
-FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, ProgressReporter& progressReporter) const {
+    progressReporter.setProgress(1.0f);
 
     // Done.
     return FlowSimulationOutput(

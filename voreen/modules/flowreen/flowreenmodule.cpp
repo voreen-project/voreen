@@ -38,13 +38,12 @@
 #include "processors/streamline/streamlinetoboundingbox.h"
 
 #ifdef FLOWREEN_USE_OPENLB
-#include "processors/flowsimulation.h"
-
 #ifdef VRN_MODULE_OPENMP
 #define PARALLEL_MODE_OMP
 #endif
 #include <olb3D.h>
-//DO NOT INCLUDE Implementation here, it leads to multiple definitions!
+
+#include "processors/flowsimulation.h"
 #endif
 
 #ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
@@ -112,8 +111,7 @@ void FlowreenModule::initialize() {
     VoreenModule::initialize();
 
 #ifdef FLOWREEN_USE_OPENLB
-    olb::olbInit(nullptr, nullptr);
-    olb::singleton::directories().setOutputDir(VoreenApplication::app()->getTemporaryPath("simulation"));
+    olb::singleton::directories().setOutputDir(VoreenApplication::app()->getTemporaryPath("simulation")+"/");
 #endif
 }
 

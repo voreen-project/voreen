@@ -31,6 +31,8 @@
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/ports/volumeport.h"
 
+#include "voreen/core/properties/filedialogproperty.h"
+
 namespace voreen {
 
 
@@ -67,6 +69,8 @@ protected:
 private:
     GeometryPort inport_;
     VolumeListPort outport_;
+
+    FileDialogProperty geometry_;
 
     static const std::string loggerCat_;
 };

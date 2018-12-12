@@ -42,6 +42,8 @@ CXXFLAGS        := $(OPTIM)
 # works in gcc 4.3 and later, source https://gcc.gnu.org/projects/cxx0x.html
 #CXXFLAGS        += -std=c++0x
 # works in gcc 4.7 and later (recommended)
+#CXXFLAGS        += -std=c++11
+# Voreen modi
 CXXFLAGS        += -std=c++11 -fPIC #fPIC is necessary!!!
 
 # optional for gcc 4.9 and newer

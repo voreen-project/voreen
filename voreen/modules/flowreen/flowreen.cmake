@@ -117,6 +117,10 @@ IF(VRN_FLOWREEN_BUILD_OPENLB)
         MESSAGE(FATAL_ERROR "OpenLB currently not supported by MSVC")
     ENDIF()
 
+    IF(NOT VRN_MODULE_OPENMP)
+        MESSAGE(FATAL_ERROR "Flowreen Module with OpenLB requires OpenMP Module")
+    ENDIF()
+
     SET(OpenLB_DIR ${MOD_DIR}/ext/openlb)
     SET(OpenLB_INCLUDE_DIR ${OpenLB_DIR}/src)
     SET(OpenLB_LIBRARY_PATH ${OpenLB_DIR}/build/generic/lib/libolb.a)
