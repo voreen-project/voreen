@@ -35,6 +35,9 @@ class FlowreenModule : public VoreenModule {
 public:
     FlowreenModule(const std::string& modulePath);
 
+    virtual void initialize();
+    virtual void deinitialize();
+
     virtual std::string getDescription() const {
         return "Flow visualization and input/output functionality for flow data.";
     }

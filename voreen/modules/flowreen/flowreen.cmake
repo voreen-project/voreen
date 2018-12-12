@@ -1,6 +1,10 @@
+################################################################################
+# Core module resources
+################################################################################
 SET(MOD_CORE_MODULECLASS FlowreenModule)
 
 SET(MOD_CORE_SOURCES
+    ${MOD_CORE_SOURCES}
     ${MOD_DIR}/flowreenmodule.cpp
     ${MOD_DIR}/datastructures/streamline.cpp
     ${MOD_DIR}/datastructures/streamlinebundle.cpp
@@ -75,7 +79,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/utils/pathlinecreatorbackgroundthread.h
 )
  
- IF(VRN_OPENGL_COMPATIBILITY_PROFILE)
+IF(VRN_OPENGL_COMPATIBILITY_PROFILE)
     #check if core profile compatible or port
     LIST(APPEND MOD_CORE_HEADERS
         ${MOD_DIR}/datastructures/deprecated/flow2d.h
@@ -101,7 +105,38 @@ SET(MOD_CORE_HEADERS
         ${MOD_DIR}/utils/flowmath.h
     )
 ENDIF()
- 
+
+################################################################################
+# External dependency: OpenLB library
+################################################################################
+
+OPTION(VRN_FLOWREEN_BUILD_OPENLB "Build OpenLB?" ON)
+IF(VRN_FLOWREEN_BUILD_OPENLB)
+    IF(VRN_MSVC)
+        # OpenLB was developed on and for POSIX systems, therefore, windows and MSVC are not supported.
+        MESSAGE(FATAL_ERROR "OpenLB currently not supported by MSVC")
+    ENDIF()
+
+    SET(OpenLB_DIR ${MOD_DIR}/ext/openlb)
+    SET(OpenLB_INCLUDE_DIR ${OpenLB_DIR}/src)
+    SET(OpenLB_LIBRARY_PATH ${OpenLB_DIR}/build/generic/lib/libolb.a)
+    LIST(APPEND MOD_INCLUDE_DIRECTORIES ${OpenLB_INCLUDE_DIR})
+    LIST(APPEND MOD_LIBRARIES ${OpenLB_LIBRARY_PATH})
+
+    ADD_CUSTOM_TARGET(OpenLB COMMAND make WORKING_DIRECTORY ${OpenLB_DIR})
+    ADD_DEFINITIONS("-DFLOWREEN_USE_OPENLB")
+ENDIF()
+
+IF(VRN_FLOWREEN_BUILD_OPENLB)
+    SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
+            ${MOD_DIR}/processors/flowsimulation.h
+            )
+    SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
+            ${MOD_DIR}/processors/flowsimulation.cpp
+            )
+ENDIF()
+
+# Deployment
 SET(MOD_INSTALL_DIRECTORIES
     ${MOD_DIR}/glsl
     ${MOD_DIR}/data

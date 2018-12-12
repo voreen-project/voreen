@@ -37,6 +37,16 @@
 #include "processors/streamline/streamlinesource.h"
 #include "processors/streamline/streamlinetoboundingbox.h"
 
+#ifdef FLOWREEN_USE_OPENLB
+#include "processors/flowsimulation.h"
+
+#ifdef VRN_MODULE_OPENMP
+#define PARALLEL_MODE_OMP
+#endif
+#include <olb3D.h>
+//DO NOT INCLUDE Implementation here, it leads to multiple definitions!
+#endif
+
 #ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
     #include "processors/flowarrowrenderer2d.h"
     #include "processors/flowarrowrenderer3d.h"
@@ -76,6 +86,10 @@ FlowreenModule::FlowreenModule(const std::string& modulePath)
     registerSerializableType(new StreamlineSource());
     registerSerializableType(new StreamlineToBoundingBox());
 
+#ifdef FLOWREEN_USE_OPENLB
+    registerSerializableType(new FlowSimulation());
+#endif
+
 #ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
     registerSerializableType(new FlowArrowRenderer2D);
     registerSerializableType(new FlowArrowRenderer3D);
@@ -93,5 +107,19 @@ FlowreenModule::FlowreenModule(const std::string& modulePath)
 #endif
 
 }
+
+void FlowreenModule::initialize() {
+    VoreenModule::initialize();
+
+#ifdef FLOWREEN_USE_OPENLB
+    olb::olbInit(nullptr, nullptr);
+    olb::singleton::directories().setOutputDir(VoreenApplication::app()->getTemporaryPath("simulation"));
+#endif
+}
+
+void FlowreenModule::deinitialize() {
+    VoreenModule::deinitialize();
+}
+
 
 } // namespace
