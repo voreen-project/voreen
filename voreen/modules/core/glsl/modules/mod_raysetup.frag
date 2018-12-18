@@ -75,33 +75,14 @@ bool earlyRayTermination(inout float opacity1, inout float opacity2, inout float
 
 // Does the hardware support a shader program length that allows us to use a single loop or do
 // we need two nested loops?
-#ifdef VRN_MAX_PROGRAM_LOOP_COUNT
-    // - ATI preprocessor doesn't support shortcut evaluation)
-    // - Mac/GeForce 9400M reports integer 'constant overflow'
-    #if (VRN_MAX_PROGRAM_LOOP_COUNT >= 256*256) && !defined(VRN_OS_APPLE)
-        #define USE_SINGLE_LOOP
-    #endif
-#endif
-
-#ifdef USE_SINGLE_LOOP
-    // Nvidia seems to support a loop count > 256 only for
-    // for-loops and not for while-loops on Geforce 8800 GTX.
-    // On GTX280 a for-loop is still slightly faster than a while-loop. joerg
-    // Reduced loop count to 255*255 due to NVIDIA hang-up bug with driver version > 275.33 (jsp)
-    #if defined(VRN_MAX_PROGRAM_LOOP_COUNT)
-        #define RAYCASTING_LOOP_COUNT 255*255
-        //#define RAYCASTING_LOOP_COUNT VRN_MAX_PROGRAM_LOOP_COUNT
-    #else
-        #define RAYCASTING_LOOP_COUNT 255*255
-    #endif
-
-    #define WHILE(keepGoing) for (int loop=0; keepGoing && loop<RAYCASTING_LOOP_COUNT; loop++) {
-
-    #define END_WHILE }
-#else
+#if VRN_MAX_PROGRAM_LOOP_COUNT < 256*256
     // Use two nested loops, should be supported everywhere
     #define WHILE(keepGoing) for (int loop0=0; keepGoing && loop0<255; loop0++) { for (int loop1=0; keepGoing && loop1<255; loop1++) {
 
     #define END_WHILE } }
+#else
+    #define WHILE(keepGoing) for (int loop=0; keepGoing && loop<VRN_MAX_PROGRAM_LOOP_COUNT; loop++) {
+
+    #define END_WHILE }
 #endif
 
