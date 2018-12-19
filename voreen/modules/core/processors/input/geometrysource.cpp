@@ -54,7 +54,7 @@ const std::string GeometrySource::loggerCat_("voreen.core.GeometrySource");
 
 GeometrySource::GeometrySource()
     : Processor()
-    , geometryFile_("geometryFile", "Geometry File", "Open Geometry File", VoreenApplication::app()->getUserDataPath(), "Geometry (*.vge *.ply *.obj);;Voreen Geometry (*.vge);;PLY mesh (*.ply);;OBJ mesh (*.obj);;ASCII point lists (*.txt)")
+    , geometryFile_("geometryFile", "Geometry File", "Open Geometry File", VoreenApplication::app()->getUserDataPath(), "Geometry (*.vge *.ply *.obj *.stl);;Voreen Geometry (*.vge);;PLY mesh (*.ply);;OBJ mesh (*.obj);;STL mesh (*.stl);;ASCII point lists (*.txt)")
     , geometryType_("geometryType", "Geometry Type")
     , skipItemCount_("skipItems", "Items to skip after each point", 0, 0, 100)
     , loadGeometry_("loadGeometry", "Load Geometry")
@@ -145,7 +145,7 @@ void GeometrySource::readGeometry() {
         else if(endsWith(filename, ".obj")) {
             LINFO("Reading Wavefront obj file.");
             try {
-                Geometry* geometry = 0;
+                Geometry *geometry = 0;
                 if (addColorToOBJ_.get())
                     geometry = readOBJGeometryWithColor(filename, objColor_.get());
                 else
@@ -154,14 +154,31 @@ void GeometrySource::readGeometry() {
                 outport_.setData(geometry);
                 setProgress(1.f);
             }
-            catch (VoreenException& e) {
+            catch (VoreenException &e) {
                 LERROR(e.what());
                 setProgress(0.f);
             }
-            catch (tgt::CorruptedFileException& e) {
+            catch (tgt::CorruptedFileException &e) {
                 LERROR(e.what());
                 setProgress(0.f);
             }
+        }
+        else if(endsWith(filename, ".stl")) {
+                LINFO("Reading STL file.");
+                try {
+                    Geometry* geometry = readSTLGeometry(filename);
+                    tgtAssert(geometry, "null pointer returned (exception expected)");
+                    outport_.setData(geometry);
+                    setProgress(1.f);
+                }
+                catch (VoreenException& e) {
+                    LERROR(e.what());
+                    setProgress(0.f);
+                }
+                catch (tgt::CorruptedFileException& e) {
+                    LERROR(e.what());
+                    setProgress(0.f);
+                }
         } else {
             try {
                 Geometry* geometry = readVoreenGeometry(geometryFile_.get());
@@ -771,6 +788,103 @@ Geometry* GeometrySource::readOBJGeometryWithColor(const std::string& filename, 
     return mesh;
 }
 
+Geometry* GeometrySource::readSTLGeometry(const std::string& filename) {
+
+    std::ifstream f(filename.c_str(), std::ios::in);
+    if (!f.good()) {
+        throw std::runtime_error("STL File not valid.");
+    }
+
+    std::unique_ptr<GlMeshGeometryUInt32Normal> mesh(new GlMeshGeometryUInt32Normal());
+
+    char buf[6];
+    buf[5] = 0;
+    f.read(buf, 5);
+    const std::string asciiHeader = "solid";
+    if (std::string(buf) == asciiHeader) {
+        f.seekg(0, std::ios::beg);
+        if (f.good()) {
+            std::string s0, s1;
+            while (!f.eof()) {
+                f >> s0;
+                if (s0 == "facet") {
+                    tgt::vec3 normal;
+                    GlMeshGeometryUInt16Normal::VertexType v1, v2, v3;
+                    f >> s1 >> normal.x >> normal.y >> normal.z;
+                    f >> s0 >> s1;
+                    f >> s0 >> v1.pos_.x >> v1.pos_.y >> v1.pos_.z;
+                    f >> s0 >> v2.pos_.x >> v2.pos_.y >> v2.pos_.z;
+                    f >> s0 >> v3.pos_.x >> v3.pos_.y >> v3.pos_.z;
+                    f >> s0;
+                    f >> s0;
+
+                    // TODO: calculate smooth normals.
+                    v1.normal_ = v2.normal_ = v3.normal_ = normal;
+
+                    mesh->addVertex(v1);
+                    mesh->addVertex(v2);
+                    mesh->addVertex(v3);
+
+                } else if (s0 == "endsolid") {
+                    break;
+                }
+            }
+        }
+    } else {
+        f.close();
+        f.open(filename.c_str(), std::ios::in | std::ios::binary);
+        char comment[80];
+        f.read(comment, 80);
+
+        if (!f.good()) {
+            throw tgt::CorruptedFileException("STL File not valid.");
+        }
+
+        comment[79] = 0;
+        int32_t nFacets;
+        f.read(reinterpret_cast<char *>(&nFacets), sizeof(int32_t));
+
+        if (!f.good()) {
+            throw tgt::CorruptedFileException("STL File not valid.");
+        }
+
+        float v[12];
+        unsigned short uint16;
+        for (int32_t i = 0; i < nFacets; ++i) {
+            for (unsigned int j = 0; j < 12; ++j) {
+                f.read(reinterpret_cast<char *>(&v[j]), sizeof(float));
+            }
+            f.read(reinterpret_cast<char *>(&uint16), sizeof(unsigned short));
+
+            tgt::vec3 normal;
+            GlMeshGeometryUInt16Normal::VertexType v1, v2, v3;
+
+            normal.x = v[0];
+            normal.y = v[1];
+            normal.z = v[2];
+            v1.pos_.x = v[3];
+            v1.pos_.y = v[4];
+            v1.pos_.z = v[5];
+            v2.pos_.x = v[6];
+            v2.pos_.y = v[7];
+            v2.pos_.z = v[8];
+            v3.pos_.x = v[9];
+            v3.pos_.y = v[10];
+            v3.pos_.z = v[11];
+
+            // TODO: calculate smooth normals.
+            v1.normal_ = v2.normal_ = v3.normal_ = normal;
+
+            mesh->addVertex(v1);
+            mesh->addVertex(v2);
+            mesh->addVertex(v3);
+        }
+    }
+    f.close();
+
+    return mesh.release();
+}
+
 Geometry* GeometrySource::readVoreenGeometry(const std::string& filename) {
     // read Voreen geometry serialization (.vge)
     std::ifstream stream;
@@ -820,24 +934,27 @@ Geometry* GeometrySource::readPointList(const std::string& filename, PointListTy
         int segID;
 
         if (!(inFile >> point.x))
-            goto end;
+            break;
 
         if (!(inFile >> point.y))
-            goto end;
+            break;
 
         if (!(inFile >> point.z))
-            goto end;
+            break;
 
         if (listType == SegmentedPointList) {
             if (!(inFile >> segID))
-                goto end;
+                break;
         }
 
         // skip items according to property
-        for (int i=0; i<skipItems; ++i) {
-            if (!(inFile >> dummy))
-                goto end;
+        bool error = false;
+        for (int i=0; i<skipItems && !error; ++i) {
+            error = !(inFile >> dummy);
         }
+
+        if(error)
+            break;
 
         if (listType == SegmentedPointList) {
             // if new segment started, append vector for it
@@ -854,8 +971,6 @@ Geometry* GeometrySource::readPointList(const std::string& filename, PointListTy
             pointListGeometry->addPoint(point);
         }
     }
-
-end:
 
     if (listType == SegmentedPointList) {
         size_t numPoints = 0;

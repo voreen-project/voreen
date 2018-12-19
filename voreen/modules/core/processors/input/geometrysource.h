@@ -95,6 +95,8 @@ private:
 
     Geometry* readOBJGeometryWithColor(const std::string& filename, tgt::vec4 color);
 
+    Geometry* readSTLGeometry(const std::string& filename);
+
     /**
      * Reads a point list or point segment list from a text file.
      *
