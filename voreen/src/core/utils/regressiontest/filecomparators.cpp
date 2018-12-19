@@ -1282,12 +1282,25 @@ static bool compareH5Location(
         report = "Number of attributes at /" + path + " differ (" + std::to_string(l1.getNumAttrs()) + "!=" + std::to_string(l2.getNumAttrs()) + ")";
         return false;
     }
+    std::vector<std::pair<int, std::string>> attributes1;
+    std::vector<std::pair<int, std::string>> attributes2;
     for(int i=0; i<l1.getNumAttrs(); ++i) {
-        // Assuming order of attributes is fixed!
         H5::Attribute a1 = l1.openAttribute(i);
         H5::Attribute a2 = l2.openAttribute(i);
+        attributes1.push_back({i, a1.getName()});
+        attributes2.push_back({i, a2.getName()});
+    }
+    auto sortAttributes = [] (const std::pair<int, std::string>& a1, const std::pair<int, std::string>& a2) {
+        return a1.second < a2.second;
+    };
+    std::sort(attributes1.begin(), attributes1.end(), sortAttributes);
+    std::sort(attributes2.begin(), attributes2.end(), sortAttributes);
+    tgtAssert(attributes1.size() == attributes2.size(), "attr list size missmatch");
+    for(int i=0; i<l1.getNumAttrs(); ++i) {
+        H5::Attribute a1 = l1.openAttribute(attributes1[i].first);
+        H5::Attribute a2 = l2.openAttribute(attributes2[i].first);
         if(a1.getName() != a2.getName()) {
-            report = "Names of attributes " + std::to_string(i) + " at /" + path + " differ (" + a1.getName() + "!=" + a2.getName() + ")";
+            report = "Names of " + std::to_string(i) + "'th attributes " + std::to_string(i) + " at /" + path + " differ (" + a1.getName() + "!=" + a2.getName() + ")";
             return false;
         }
         if(!compareH5Attribute(a1, a2, path + ":" + a1.getName(), report)) {
