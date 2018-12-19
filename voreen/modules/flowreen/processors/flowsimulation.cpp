@@ -96,7 +96,7 @@ std::unique_ptr<STLreader<T>> convertGeometryToSTL(const Geometry* geometry) {
                 const VertexBase& v1 = vertices[indices[i+1]];
                 const VertexBase& v2 = vertices[indices[i+2]];
 
-                tgt::vec3 normal = tgt::cross(v0.pos_-v1.pos_, v0.pos_-v2.pos_);
+                tgt::vec3 normal = tgt::normalize(tgt::cross(v0.pos_-v1.pos_, v0.pos_-v2.pos_));
 
                 f << "facet normal " << normal[0] << " "
                   << normal[1] << " " << normal[2] << "\n";
@@ -122,7 +122,7 @@ std::unique_ptr<STLreader<T>> convertGeometryToSTL(const Geometry* geometry) {
                 const VertexBase& v1 = vertices[i+1];
                 const VertexBase& v2 = vertices[i+2];
 
-                tgt::vec3 normal = tgt::cross(v0.pos_-v1.pos_, v0.pos_-v2.pos_);
+                tgt::vec3 normal = tgt::normalize(tgt::cross(v0.pos_-v1.pos_, v0.pos_-v2.pos_));
 
                 f << "facet normal " << normal[0] << " "
                   << normal[1] << " " << normal[2] << "\n";
@@ -145,7 +145,7 @@ std::unique_ptr<STLreader<T>> convertGeometryToSTL(const Geometry* geometry) {
 
         std::unique_ptr<STLreader<T>> reader;
         try {
-            reader.reset(new STLreader<T>(fullName, 1.0f, 0.001f));
+            reader.reset(new STLreader<T>(fullName, 1.0f));
         }
         catch(const std::runtime_error& error) {
             std::cout << error.what() << std::endl;
@@ -304,6 +304,8 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
 FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, ProgressReporter& progressReporter) const {
 
+    progressReporter.setProgress(0.0f);
+
     std::unique_ptr<VolumeList> output = nullptr;//std::move(input.outputVolumes);
 
     // Needs to be initialized in each new thread to be used.
@@ -343,7 +345,6 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
                     *input.stlReader, superGeometry );
 
     // === 4th Step: Main Loop ===
-    progressReporter.setProgress(0.0f);
     for ( int iT = 0; iT <= input.converter.getLatticeTime( input.simulationTime ); iT++ ) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
