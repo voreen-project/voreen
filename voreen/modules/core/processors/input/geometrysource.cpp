@@ -37,6 +37,7 @@
 #include "tgt/filesystem.h"
 #include "tgt/exception.h"
 #include "ext/tinyobj/tiny_obj_loader.h"
+#include "ext/halfedge/trimesh.h"
 
 #include <algorithm>
 #include <vector>
@@ -795,7 +796,7 @@ Geometry* GeometrySource::readSTLGeometry(const std::string& filename) {
         throw std::runtime_error("STL File not valid.");
     }
 
-    std::unique_ptr<GlMeshGeometryUInt32Normal> mesh(new GlMeshGeometryUInt32Normal());
+    std::unique_ptr<GlMeshGeometryUInt32Normal> geometry(new GlMeshGeometryUInt32Normal());
 
     char buf[6];
     buf[5] = 0;
@@ -821,9 +822,9 @@ Geometry* GeometrySource::readSTLGeometry(const std::string& filename) {
                     // TODO: calculate smooth normals.
                     v1.normal_ = v2.normal_ = v3.normal_ = normal;
 
-                    mesh->addVertex(v1);
-                    mesh->addVertex(v2);
-                    mesh->addVertex(v3);
+                    geometry->addVertex(v1);
+                    geometry->addVertex(v2);
+                    geometry->addVertex(v3);
 
                 } else if (s0 == "endsolid") {
                     break;
@@ -875,14 +876,72 @@ Geometry* GeometrySource::readSTLGeometry(const std::string& filename) {
             // TODO: calculate smooth normals.
             v1.normal_ = v2.normal_ = v3.normal_ = normal;
 
-            mesh->addVertex(v1);
-            mesh->addVertex(v2);
-            mesh->addVertex(v3);
+            geometry->addVertex(v1);
+            geometry->addVertex(v2);
+            geometry->addVertex(v3);
         }
     }
     f.close();
 
-    return mesh.release();
+    /*
+    // Postprocessing
+    bool closeHoles = true;
+    bool postProcessingNeeded = closeHoles || calculateNormals_.get();
+    if(postProcessingNeeded) {
+        std::vector<trimesh::triangle_t> triangles(geometry->getNumVertices() / 3);
+
+        for (size_t i = 0; i < geometry->getNumVertices(); i += 3) {
+            trimesh::triangle_t triangle;
+            triangle.v[0] = i + 0;
+            triangle.v[1] = i + 1;
+            triangle.v[2] = i + 2;
+            triangles[i / 3] = triangle;
+        }
+
+        std::vector<trimesh::edge_t> edges;
+        trimesh::unordered_edges_from_triangles(triangles.size(), &triangles[0], edges);
+
+        trimesh::trimesh_t mesh;
+        mesh.build(geometry->getNumVertices(), triangles.size(), &triangles[0], edges.size(), &edges[0]);
+
+        // Close holes by performing an edge loop around the null-pointing faces.
+        if (closeHoles) {
+            std::set<trimesh::index_t> boundary;
+            {
+                std::vector<trimesh::index_t> boundary_tmp = mesh.boundary_vertices();
+                std::swap_ranges(boundary_tmp.begin(), boundary_tmp.end(), boundary.begin());
+            }
+
+            // Outer loop iterates holes.
+            auto start = boundary.begin();
+            while (start != boundary.end()) {
+
+                // Inner loop iterates vertices for each hole.
+                std::vector<trimesh::index_t> ring;
+                ring.push_back(*start);
+                boundary.erase(*start);
+
+                //GlMeshGeometryUInt32Normal::VertexType center = geometry->getVertex(mesh.halfedge(current).to_vertex);
+                do {
+                    ring.push_back(mesh.halfedge(ring.back()).edge);
+                    boundary.erase(ring.back());
+
+                } while (ring.back() != *start);
+
+
+                geometry->addVertex(geometry->getVertex());
+                geometry->addVertex(geometry->getVertex());
+                geometry->addVertex(geometry->getVertex());
+            }
+        }
+
+        if (calculateNormals_.get()) {
+
+        }
+    }
+     */
+
+    return geometry.release();
 }
 
 Geometry* GeometrySource::readVoreenGeometry(const std::string& filename) {
