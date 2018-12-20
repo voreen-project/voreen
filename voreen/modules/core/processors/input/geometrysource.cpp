@@ -883,33 +883,34 @@ Geometry* GeometrySource::readSTLGeometry(const std::string& filename) {
     }
     f.close();
 
-    /*
     // Postprocessing
     bool closeHoles = true;
     bool postProcessingNeeded = closeHoles || calculateNormals_.get();
     if(postProcessingNeeded) {
-        std::vector<trimesh::triangle_t> triangles(geometry->getNumVertices() / 3);
-
-        for (size_t i = 0; i < geometry->getNumVertices(); i += 3) {
-            trimesh::triangle_t triangle;
-            triangle.v[0] = i + 0;
-            triangle.v[1] = i + 1;
-            triangle.v[2] = i + 2;
-            triangles[i / 3] = triangle;
-        }
-
-        std::vector<trimesh::edge_t> edges;
-        trimesh::unordered_edges_from_triangles(triangles.size(), &triangles[0], edges);
-
         trimesh::trimesh_t mesh;
-        mesh.build(geometry->getNumVertices(), triangles.size(), &triangles[0], edges.size(), &edges[0]);
+        {
+            std::vector<trimesh::triangle_t> triangles(geometry->getNumVertices() / 3);
+
+            for (size_t i = 0; i < geometry->getNumVertices(); i += 3) {
+                trimesh::triangle_t triangle;
+                triangle.v[0] = i + 0;
+                triangle.v[1] = i + 1;
+                triangle.v[2] = i + 2;
+                triangles[i / 3] = triangle;
+            }
+
+            std::vector<trimesh::edge_t> edges;
+            trimesh::unordered_edges_from_triangles(triangles.size(), &triangles[0], edges);
+
+            mesh.build(geometry->getNumVertices(), triangles.size(), &triangles[0], edges.size(), &edges[0]);
+        }
 
         // Close holes by performing an edge loop around the null-pointing faces.
         if (closeHoles) {
             std::set<trimesh::index_t> boundary;
             {
                 std::vector<trimesh::index_t> boundary_tmp = mesh.boundary_vertices();
-                std::swap_ranges(boundary_tmp.begin(), boundary_tmp.end(), boundary.begin());
+                boundary.insert(boundary_tmp.begin(), boundary_tmp.end());
             }
 
             // Outer loop iterates holes.
@@ -920,26 +921,44 @@ Geometry* GeometrySource::readSTLGeometry(const std::string& filename) {
                 std::vector<trimesh::index_t> ring;
                 ring.push_back(*start);
                 boundary.erase(*start);
+                tgt::vec3 center = tgt::vec3::zero;
 
-                //GlMeshGeometryUInt32Normal::VertexType center = geometry->getVertex(mesh.halfedge(current).to_vertex);
                 do {
-                    ring.push_back(mesh.halfedge(ring.back()).edge);
-                    boundary.erase(ring.back());
 
+                    trimesh::trimesh_t::halfedge_t halfEdge;
+                    std::vector<trimesh::index_t> neighbours = mesh.vertex_vertex_neighbors(ring.back());
+                    for(trimesh::index_t neighbour : neighbours) {
+                        if(mesh.vertex_is_boundary(neighbour)) {
+                            trimesh::index_t halfEdgeIndex = mesh.directed_edge2he_index(ring.back(), neighbour);
+                            halfEdge = mesh.halfedge(halfEdgeIndex);
+                            halfEdge = mesh.halfedge(halfEdge.opposite_he);
+                            break;
+                        }
+                    }
+
+                    ring.push_back(halfEdge.to_vertex);
+                    tgtAssert(boundary.find(ring.back()) != boundary.end(), "Not part of boundary");
+                    boundary.erase(ring.back());
+                    center += geometry->getVertex(ring.back()).pos_;
                 } while (ring.back() != *start);
 
+                center /= static_cast<float>(ring.size());
+                for(size_t i=0; i < ring.size(); i++) {
+                    geometry->addVertex(geometry->getVertex(i+0));
+                    geometry->addVertex(geometry->getVertex(i+1));
+                    geometry->addVertex(center);
+                }
 
-                geometry->addVertex(geometry->getVertex());
-                geometry->addVertex(geometry->getVertex());
-                geometry->addVertex(geometry->getVertex());
+                start = boundary.begin();
             }
+
+            tgtAssert(boundary.empty(), "Some boundary vertices left");
         }
 
         if (calculateNormals_.get()) {
-
+            // TODO: implement
         }
     }
-     */
 
     return geometry.release();
 }
