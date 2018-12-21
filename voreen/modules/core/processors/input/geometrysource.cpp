@@ -919,33 +919,43 @@ Geometry* GeometrySource::readSTLGeometry(const std::string& filename) {
 
                 // Inner loop iterates vertices for each hole.
                 std::vector<trimesh::index_t> ring;
-                ring.push_back(*start);
-                boundary.erase(*start);
-                tgt::vec3 center = tgt::vec3::zero;
+                trimesh::index_t current = *start;
+                tgt::vec3 center(0.0f);
 
                 do {
+                    tgtAssert(boundary.find(current) != boundary.end(), "Not part of boundary");
+                    tgtAssert(mesh.vertex_is_boundary(current), "Not part of boundary");
 
-                    trimesh::trimesh_t::halfedge_t halfEdge;
-                    std::vector<trimesh::index_t> neighbours = mesh.vertex_vertex_neighbors(ring.back());
+                    // Update ring.
+                    ring.push_back(current);
+                    boundary.erase(current);
+
+                    // Update center.
+                    center += geometry->getVertex(current).pos_;
+
+                    // Find the next appropriate halfedge.
+                    trimesh::index_t halfEdgeIndex = -1;
+                    std::vector<trimesh::index_t> neighbours = mesh.vertex_vertex_neighbors(current);
                     for(trimesh::index_t neighbour : neighbours) {
-                        if(mesh.vertex_is_boundary(neighbour)) {
-                            trimesh::index_t halfEdgeIndex = mesh.directed_edge2he_index(ring.back(), neighbour);
-                            halfEdge = mesh.halfedge(halfEdgeIndex);
-                            halfEdge = mesh.halfedge(halfEdge.opposite_he);
-                            break;
+                        if(boundary.find(neighbour) != boundary.end()) {
+                            trimesh::index_t candidateHalfEdgeIndex = mesh.directed_edge2he_index(current, neighbour);
+                            if(mesh.halfedge(candidateHalfEdgeIndex).face == -1) {
+                                tgtAssert(halfEdgeIndex == -1, "more than one candidate found");
+                                halfEdgeIndex = candidateHalfEdgeIndex;
+                                //halfEdgeIndex = mesh.halfedge(candidateHalfEdgeIndex).opposite_he;
+                            }
                         }
                     }
+                    tgtAssert(halfEdgeIndex >= 0, "No halfedge found");
 
-                    ring.push_back(halfEdge.to_vertex);
-                    tgtAssert(boundary.find(ring.back()) != boundary.end(), "Not part of boundary");
-                    boundary.erase(ring.back());
-                    center += geometry->getVertex(ring.back()).pos_;
-                } while (ring.back() != *start);
+                    // Update current.
+                    current = mesh.halfedge(halfEdgeIndex).to_vertex;
+                } while (current != *start);
 
                 center /= static_cast<float>(ring.size());
                 for(size_t i=0; i < ring.size(); i++) {
-                    geometry->addVertex(geometry->getVertex(i+0));
-                    geometry->addVertex(geometry->getVertex(i+1));
+                    geometry->addVertex(geometry->getVertex(ring[i]));
+                    geometry->addVertex(geometry->getVertex(ring[(i+1) % ring.size()]));
                     geometry->addVertex(center);
                 }
 
