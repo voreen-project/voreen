@@ -73,18 +73,17 @@ bool PlaneGeometryCreator::isReady() const {
 }
 
 void PlaneGeometryCreator::process() {
-    LGL_ERROR;
 
-    if(normal_.get() == tgt::vec3(0.f)) {
+    if(normal_.get() == tgt::vec3::zero) {
         LERROR ("Plane normal of (0,0,0) is not allowed! No output gererated!");
-        geomOutport_.setData(0);
+        geomOutport_.setData(nullptr);
         return;
     }
 
     tgt::vec3 n = normalize(normal_.get());
 
     tgt::vec3 temp = tgt::vec3(1.0, 0.0, 0.0);
-    if(fabsf(dot(temp, n)) > 0.9)
+    if(std::abs(dot(temp, n)) > 0.9)
         temp = tgt::vec3(0.0, 1.0, 0.0);
 
     tgt::vec3 inPlaneA = normalize(cross(n, temp)) * 0.5f * size_.get();
@@ -97,8 +96,6 @@ void PlaneGeometryCreator::process() {
                    VertexNormal(base - inPlaneA + inPlaneB, base - inPlaneA + inPlaneB),
                    VertexNormal(base - inPlaneA - inPlaneB, base - inPlaneA - inPlaneB),
                    VertexNormal(base + inPlaneA - inPlaneB, base + inPlaneA - inPlaneB));
-
-    LGL_ERROR;
 
     geomOutport_.setData(plane);
 }
