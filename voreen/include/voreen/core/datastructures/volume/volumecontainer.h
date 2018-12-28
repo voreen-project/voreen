@@ -56,26 +56,6 @@ public:
      */
     virtual ~VolumeContainer();
 
-   /**
-    * Adds the passed Volume to the container,
-    * if it is not already contained.
-    *
-    * In contrast to the base class VolumeList the VolumeContainer
-    * does take ownership of the added Volume and therefore
-    * deletes it on its own destruction.
-    */
-    virtual void add(VolumeBase* volumeHandle);
-
-   /**
-    * Adds VolumeHandles contained by the passed VolumeList
-    * to the collection, if they are not already contained.
-    *
-    * In contrast to the base class VolumeList the VolumeContainer
-    * does take ownership of the added VolumeHandles and therefore
-    * deletes them on its own destruction.
-    */
-    virtual void add(const VolumeList* volumeList);
-
     /**
      * Deletes the passed Volume and removes it
      * from the container. If the passed handle is not contained

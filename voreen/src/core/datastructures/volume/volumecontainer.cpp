@@ -38,15 +38,7 @@ VolumeContainer::VolumeContainer() :
 {}
 
 VolumeContainer::~VolumeContainer() {
-    clear();
-}
-
-void VolumeContainer::add(VolumeBase* volumeHandle) {
-    VolumeList::add(volumeHandle);
-}
-
-void VolumeContainer::add(const VolumeList* volumeList) {
-    VolumeList::add(volumeList);
+    //clear(); // Clear is called in super class destructor.
 }
 
 void VolumeContainer::remove(const VolumeBase* handle) {
