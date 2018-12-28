@@ -69,6 +69,7 @@ void InteractiveListProperty::clear() {
     inputItemIds_.clear();
     instances_.clear();
     selectedInstance_ = -1;
+    invalidate();
 }
 
 void InteractiveListProperty::setItems(const std::vector<std::string>& items) {
@@ -265,8 +266,6 @@ InteractiveListProperty::Instance InteractiveListProperty::createInstance(int it
         instance.instanceId_ = std::max(other.instanceId_, instance.instanceId_);
     }
     instance.instanceId_++;
-
-    //instance.name_ = createInstanceName(instance);
 
     return instance;
 }
