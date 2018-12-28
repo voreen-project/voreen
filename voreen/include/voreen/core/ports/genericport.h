@@ -245,21 +245,18 @@ template <typename T>
 void GenericPort<T>::setData(const T* data, bool takeOwnership) {
     tgtAssert(isOutport(), "called setData on inport!");
 
-    bool dataChanges = (data != portData_);
-    if(dataChanges) {
+    if(data != portData_) {
         notifyDataWillChange();
-    }
 
-    //delete previous data
-    if (ownsData_)
-        delete portData_;
+        //delete previous data
+        if (ownsData_)
+            delete portData_;
 
-    portData_ = data;
-    ownsData_ = takeOwnership;
-
-    if(dataChanges) {
+        portData_ = data;
         notifyDataHasChanged();
     }
+
+    ownsData_ = takeOwnership;
 
     invalidatePort();
 }
