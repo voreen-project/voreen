@@ -91,6 +91,13 @@ protected:
     void setDescriptions() {
         setDescription(
                 "This processor allows to apply multiple filters onto an input volume."
+                "<br>"
+                "The left list provides all available filters. "
+                "Use drag and drop or the keyboard to add/move/delete filters. "
+                "The right list provides all added filters. "
+                "Clicking on one of them allows to configure the filter's settings."
+                "<br><br>"
+                "Note that the order of application is from top to bottom!"
         );
     }
 
@@ -99,6 +106,7 @@ protected:
 private:
 
     void onFilterListChange();
+    void onFilterPropertyChange();
 
     void addFilter(FilterProperties* filterProperties);
 
