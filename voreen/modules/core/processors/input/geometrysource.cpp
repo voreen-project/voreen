@@ -887,22 +887,26 @@ Geometry* GeometrySource::readSTLGeometry(const std::string& filename) {
     bool closeHoles = true;
     bool postProcessingNeeded = closeHoles || calculateNormals_.get();
     if(postProcessingNeeded) {
+
+        // Ensure the indices are set correctly.
+        geometry->createIndices(true);
+
+        // Build the mesh.
         trimesh::trimesh_t mesh;
         {
-            std::vector<trimesh::triangle_t> triangles(geometry->getNumVertices() / 3);
-
-            for (size_t i = 0; i < geometry->getNumVertices(); i += 3) {
+            std::vector<trimesh::triangle_t> triangles(geometry->getNumIndices() / 3);
+            for (size_t i = 0; i < geometry->getNumIndices(); i += 3) {
                 trimesh::triangle_t triangle;
-                triangle.v[0] = i + 0;
-                triangle.v[1] = i + 1;
-                triangle.v[2] = i + 2;
+                triangle.v[0] = geometry->getIndices()[i + 0];
+                triangle.v[1] = geometry->getIndices()[i + 1];
+                triangle.v[2] = geometry->getIndices()[i + 2];
                 triangles[i / 3] = triangle;
             }
 
             std::vector<trimesh::edge_t> edges;
             trimesh::unordered_edges_from_triangles(triangles.size(), &triangles[0], edges);
 
-            mesh.build(geometry->getNumVertices(), triangles.size(), &triangles[0], edges.size(), &edges[0]);
+            mesh.build(geometry->getNumIndices(), triangles.size(), &triangles[0], edges.size(), &edges[0]);
         }
 
         // Close holes by performing an edge loop around the null-pointing faces.
@@ -914,24 +918,25 @@ Geometry* GeometrySource::readSTLGeometry(const std::string& filename) {
             }
 
             // Outer loop iterates holes.
+            size_t numHoles = 0;
             auto start = boundary.begin();
             while (start != boundary.end()) {
 
                 // Inner loop iterates vertices for each hole.
                 std::vector<trimesh::index_t> ring;
                 trimesh::index_t current = *start;
-                tgt::vec3 center(0.0f);
+                VertexNormal center;
 
-                do {
+                while(true) {
                     tgtAssert(boundary.find(current) != boundary.end(), "Not part of boundary");
-                    tgtAssert(mesh.vertex_is_boundary(current), "Not part of boundary");
 
                     // Update ring.
                     ring.push_back(current);
                     boundary.erase(current);
 
                     // Update center.
-                    center += geometry->getVertex(current).pos_;
+                    center.pos_ += geometry->getVertex(current).pos_;
+                    center.normal_ += geometry->getVertex(current).normal_;
 
                     // Find the next appropriate halfedge.
                     trimesh::index_t halfEdgeIndex = -1;
@@ -942,27 +947,37 @@ Geometry* GeometrySource::readSTLGeometry(const std::string& filename) {
                             if(mesh.halfedge(candidateHalfEdgeIndex).face == -1) {
                                 tgtAssert(halfEdgeIndex == -1, "more than one candidate found");
                                 halfEdgeIndex = candidateHalfEdgeIndex;
-                                //halfEdgeIndex = mesh.halfedge(candidateHalfEdgeIndex).opposite_he;
                             }
                         }
                     }
-                    tgtAssert(halfEdgeIndex >= 0, "No halfedge found");
+
+                    // TODO: Having found no halfedge could also be caused by an incorrect data structure
+                    //tgtAssert(halfEdgeIndex >= 0, "No halfedge found");
+                    if(halfEdgeIndex == -1)
+                        break;
 
                     // Update current.
                     current = mesh.halfedge(halfEdgeIndex).to_vertex;
-                } while (current != *start);
+                }
 
-                center /= static_cast<float>(ring.size());
-                for(size_t i=0; i < ring.size(); i++) {
+                center.pos_ /= static_cast<float>(ring.size());
+                center.normal_ = tgt::normalize(center.normal_);
+                for (size_t i = 0; i < ring.size(); i++) {
                     geometry->addVertex(geometry->getVertex(ring[i]));
-                    geometry->addVertex(geometry->getVertex(ring[(i+1) % ring.size()]));
+                    geometry->addVertex(geometry->getVertex(ring[(i + 1) % ring.size()]));
                     geometry->addVertex(center);
                 }
 
                 start = boundary.begin();
+                numHoles++;
             }
 
             tgtAssert(boundary.empty(), "Some boundary vertices left");
+
+            // Remove indices.
+            geometry->setIndices(std::vector<uint32_t>());
+
+            LINFO("Automatically closed " << numHoles << " holes.");
         }
 
         if (calculateNormals_.get()) {
