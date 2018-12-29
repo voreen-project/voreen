@@ -133,6 +133,18 @@ public:
     virtual void clear() = 0;
 
     /**
+     * Creates indices for this mesh, if not already available.
+     * This will enable indexed drawing.
+     * The vertices stay untouched, such that non-indexed drawing yields the same result.
+     *
+     * The indices can be optimized such that duplicated vertices will have
+     * the very same index pointing to them.
+     *
+     * @param optimize determines, whether indices should be optimized
+     */
+    virtual void createIndices(bool optimize) = 0;
+
+    /**
      * Different vertex attribute layouts are supported. However, the order and vertex attribute locations in the shader are fixed as follows:
      *
      * layout(location = 0) in vec4 vertexPosition;
@@ -301,6 +313,18 @@ public:
      * Clears both the vertices and the indices. Will also disable indexed drawing (until new indices are added).
      */
     virtual void clear();
+
+    /**
+     * Creates indices for this mesh, if not already available.
+     * This will enable indexed drawing.
+     * The vertices stay untouched, such that non-indexed drawing yields the same result.
+     *
+     * The indices can be optimized such that duplicated vertices will have
+     * the very same index pointing to them.
+     *
+     * @param optimize determines, whether indices should be optimized
+     */
+    virtual void createIndices(bool optimize);
 
     /**
      * Renders the mesh using OpenGL by binding the buffer, settings appropriate vertex attribute pointers and calling glDrawArrays or glDrawElements, depending on if an index buffer is used.
@@ -708,6 +732,52 @@ void GlMeshGeometry<I, V>::clear() {
 }
 
 template <class I, class V>
+void GlMeshGeometry<I, V>::createIndices(bool optimize) {
+
+    // Add trivial indices.
+    if(indices_.empty()) {
+        for(size_t i = 0; i < vertices_.size(); i++) {
+            indices_.push_back(static_cast<IndexType>(indices_.size()));
+        }
+        usesIndexedDrawing_ = true;
+    }
+
+    if(optimize) {
+
+        struct comp {
+            bool operator()(const V& x, const V& y) const {
+                if(x.equals(y, std::numeric_limits<float>::epsilon())) { // considers epsilon.
+                    return false;
+                }
+
+                // We need a proper one-way function to map positions to unique 'hashes'.
+                tgt::vec3 diag(1000.0f); //TODO: make use of actual bounds.
+                float iX = x.pos_.z*diag.x*diag.y + x.pos_.y*diag.x + x.pos_.x;
+                float iY = y.pos_.z*diag.x*diag.y + y.pos_.y*diag.x + y.pos_.x;
+
+                return iX < iY;
+            }
+        };
+
+        std::map<V, I, comp> uniqueVertices;
+
+        for (size_t i = 0; i < indices_.size(); i++) {
+            I& index = indices_[i];
+            const V& vertex = vertices_[index];
+
+            auto iter = uniqueVertices.find(vertex);
+            if (iter == uniqueVertices.end()) {
+                std::tie(iter, std::ignore) = uniqueVertices.insert(std::make_pair(vertex, index));
+            }
+
+            index = iter->second;
+        }
+    }
+
+    invalidate();
+}
+
+template <class I, class V>
 void GlMeshGeometry<I, V>::render() const {
     render(primitiveType_);
 }
@@ -874,8 +944,7 @@ template <class I, class V>
 void GlMeshGeometry<I, V>::serialize(Serializer& s) const {
     GlMeshGeometryBase::serialize(s);
     s.serializeBinaryBlob("vertices", vertices_);
-    //if (!indices_.empty())
-        s.serializeBinaryBlob("indices", indices_);
+    s.serializeBinaryBlob("indices", indices_);
 
     s.serialize("primitiveRestartEnabled", primitiveRestartEnabled_);
     s.serialize("primitiveRestartIndex", primitiveRestartIndex_);
@@ -885,7 +954,6 @@ template <class I, class V>
 void GlMeshGeometry<I, V>::deserialize(Deserializer& d) {
     GlMeshGeometryBase::deserialize(d);
     d.deserializeBinaryBlob("vertices", vertices_);
-    //std::vector<I> defaultIndices;
     d.deserializeBinaryBlob("indices", indices_);
 
     d.deserialize("primitiveRestartEnabled", primitiveRestartEnabled_);
