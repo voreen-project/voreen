@@ -31,13 +31,13 @@
 
 namespace voreen {
 
-const std::string GeometryClose::loggerCat_("voreen.base.GeometryClose");
+const std::string GeometryClose::loggerCat_("voreen.flowreen.GeometryClose");
 
-    GeometryClose::GeometryClose()
-        : Processor()
-        , inport_(Port::INPORT, "geometry.geometry", "Geometry Input")
-        , outport_(Port::OUTPORT, "geometry.clippedgeometry", "Clipped Geometry Output")
-        , enabled_("enabled", "Enable", true)
+GeometryClose::GeometryClose()
+    : Processor()
+    , inport_(Port::INPORT, "geometry.geometry", "Geometry Input")
+    , outport_(Port::OUTPORT, "geometry.clippedgeometry", "Clipped Geometry Output")
+    , enabled_("enabled", "Enable", true)
 {
     addPort(inport_);
     addPort(outport_);
@@ -170,9 +170,15 @@ void GeometryClose::process() {
     }
     tgtAssert(boundary.empty(), "Some boundary vertices unprocessed");
 
-    LINFO("Automatically closed " << numHoles << " holes.");
-
-    outport_.setData(outputGeometry.release());
+    if(numHoles > 0) {
+        LINFO("Automatically closed " << numHoles << ((numHoles > 1) ? " holes." : "hole."));
+        outport_.setData(outputGeometry.release());
+    }
+    else {
+        LINFO("No holes found.");
+        outport_.setData(inputGeometry, false);
+        // outputGeometry will be removed automatically.
+    }
 }
 
 }  //namespace
