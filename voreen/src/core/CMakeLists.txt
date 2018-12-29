@@ -682,7 +682,7 @@ SET(VRN_CORE_SOURCES_EXT
     # tinyobj
     ../../ext/tinyobj/tiny_obj_loader.cc
 
-        # tinyxml
+    # tinyxml
     ../../ext/tinyxml/tinyxml.cpp
     ../../ext/tinyxml/tinyxml.cpp
     ../../ext/tinyxml/tinystr.cpp
@@ -691,9 +691,6 @@ SET(VRN_CORE_SOURCES_EXT
 
     # md5
     ../../ext/md5/md5.cpp
-
-    # halfedge
-	../../ext/halfedge/trimesh.cpp
 )
 
 SET(VRN_CORE_HEADERS_EXT
@@ -706,10 +703,6 @@ SET(VRN_CORE_HEADERS_EXT
 
     # md5
     ../../ext/md5/md5.h
-
-    # halfedge
-    ../../ext/halfedge/trimesh.h
-    ../../ext/halfedge/trimesh_types.h
 )
 
 # add module sources and headers

@@ -4,17 +4,23 @@
 SET(MOD_CORE_MODULECLASS FlowreenModule)
 
 SET(MOD_CORE_SOURCES
-    ${MOD_CORE_SOURCES}
     ${MOD_DIR}/flowreenmodule.cpp
+
+    # datastructures
     ${MOD_DIR}/datastructures/streamline.cpp
     ${MOD_DIR}/datastructures/streamlinebundle.cpp
     ${MOD_DIR}/datastructures/streamlinelist.cpp
     ${MOD_DIR}/datastructures/streamlinelistbase.cpp
     ${MOD_DIR}/datastructures/streamlinelistdecorator.cpp
     ${MOD_DIR}/datastructures/streamlinelistobserver.cpp
+
+    # ports
     ${MOD_DIR}/ports/streamlinelistport.cpp
+
+    # processors
     ${MOD_DIR}/processors/flowdirectionoverlay.cpp
     ${MOD_DIR}/processors/streamlinerenderer3d.cpp
+    ${MOD_DIR}/processors/geometry/geometryclose.cpp
     ${MOD_DIR}/processors/streamline/streamlinecombine.cpp
     ${MOD_DIR}/processors/streamline/streamlinecreator.cpp
     ${MOD_DIR}/processors/streamline/streamlinerotation.cpp
@@ -23,6 +29,8 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/streamline/streamlinesource.cpp
     ${MOD_DIR}/processors/streamline/streamlinetoboundingbox.cpp
     ${MOD_DIR}/processors/streamline/pathlinecreator.cpp
+
+    # utils
     ${MOD_DIR}/utils/streamlinebundledetectorbackgroundthread.cpp
     ${MOD_DIR}/utils/streamlinecreatorbackgroundthread.cpp
     ${MOD_DIR}/utils/pathlinecreatorbackgroundthread.cpp
@@ -31,13 +39,18 @@ SET(MOD_CORE_SOURCES
 IF(VRN_OPENGL_COMPATIBILITY_PROFILE)
     #check if core profile compatible or port
     LIST(APPEND MOD_CORE_SOURCES
+        # datastructures
         ${MOD_DIR}/datastructures/deprecated/flow2d.cpp
         ${MOD_DIR}/datastructures/deprecated/flow3d.cpp
         ${MOD_DIR}/datastructures/deprecated/simpletexture.cpp
         ${MOD_DIR}/datastructures/deprecated/streamlinetexture.cpp
         ${MOD_DIR}/datastructures/deprecated/volumeflow3d.cpp
         ${MOD_DIR}/datastructures/deprecated/volumeoperatorflowmagnitude.cpp
+
+        # io
         ${MOD_DIR}/io/flowreader.cpp
+
+        # processors
         ${MOD_DIR}/processors/flowarrowrenderer2d.cpp
         ${MOD_DIR}/processors/flowarrowrenderer3d.cpp
         ${MOD_DIR}/processors/flowmagnitudes3d.cpp
@@ -50,6 +63,8 @@ IF(VRN_OPENGL_COMPATIBILITY_PROFILE)
         ${MOD_DIR}/processors/flowstreamlinestexture3d.cpp
         ${MOD_DIR}/processors/pathlinerenderer3d.cpp
         ${MOD_DIR}/processors/pathlinerenderer3d.cpp
+
+        # utils
         ${MOD_DIR}/utils/colorcodingability.cpp
         ${MOD_DIR}/utils/flowmath.cpp
     )
@@ -57,15 +72,22 @@ ENDIF()
     
 SET(MOD_CORE_HEADERS
     ${MOD_DIR}/flowreenmodule.h
+
+    # datastructures
     ${MOD_DIR}/datastructures/streamline.h
     ${MOD_DIR}/datastructures/streamlinebundle.h
     ${MOD_DIR}/datastructures/streamlinelist.h
     ${MOD_DIR}/datastructures/streamlinelistbase.h
     ${MOD_DIR}/datastructures/streamlinelistdecorator.h
     ${MOD_DIR}/datastructures/streamlinelistobserver.h
+
+    # ports
     ${MOD_DIR}/ports/streamlinelistport.h
+
+    # processors
     ${MOD_DIR}/processors/flowdirectionoverlay.h
     ${MOD_DIR}/processors/streamlinerenderer3d.h
+    ${MOD_DIR}/processors/geometry/geometryclose.h
     ${MOD_DIR}/processors/streamline/streamlinecombine.h
     ${MOD_DIR}/processors/streamline/streamlinecreator.h
     ${MOD_DIR}/processors/streamline/streamlinerotation.h
@@ -74,6 +96,8 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/streamline/streamlinesource.h
     ${MOD_DIR}/processors/streamline/streamlinetoboundingbox.h
     ${MOD_DIR}/processors/streamline/pathlinecreator.h
+
+    # utils
     ${MOD_DIR}/utils/streamlinebundledetectorbackgroundthread.h
     ${MOD_DIR}/utils/streamlinecreatorbackgroundthread.h
     ${MOD_DIR}/utils/pathlinecreatorbackgroundthread.h
@@ -82,6 +106,7 @@ SET(MOD_CORE_HEADERS
 IF(VRN_OPENGL_COMPATIBILITY_PROFILE)
     #check if core profile compatible or port
     LIST(APPEND MOD_CORE_HEADERS
+        # # datastructures
         ${MOD_DIR}/datastructures/deprecated/flow2d.h
         ${MOD_DIR}/datastructures/deprecated/flow3d.h
         ${MOD_DIR}/datastructures/deprecated/simpletexture.h
@@ -89,7 +114,11 @@ IF(VRN_OPENGL_COMPATIBILITY_PROFILE)
         ${MOD_DIR}/datastructures/deprecated/volumeflow3d.h
         ${MOD_DIR}/datastructures/deprecated/volumeoperatorflowmagnitude.h
         ${MOD_DIR}/datastructures/deprecated/volumeoperatorintensitymask.h
+
+        # io
         ${MOD_DIR}/io/flowreader.h
+
+        # processors
         ${MOD_DIR}/processors/flowarrowrenderer2d.h
         ${MOD_DIR}/processors/flowarrowrenderer3d.h
         ${MOD_DIR}/processors/flowmagnitudes3d.h
@@ -101,6 +130,8 @@ IF(VRN_OPENGL_COMPATIBILITY_PROFILE)
         ${MOD_DIR}/processors/flowslicerenderer3d.h
         ${MOD_DIR}/processors/flowstreamlinestexture3d.h
         ${MOD_DIR}/processors/pathlinerenderer3d.h
+
+        # utils
         ${MOD_DIR}/utils/colorcodingability.h
         ${MOD_DIR}/utils/flowmath.h
     )
@@ -133,12 +164,30 @@ ENDIF()
 
 IF(VRN_FLOWREEN_BUILD_OPENLB)
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
-            ${MOD_DIR}/processors/flowsimulation.h
-            )
+        ${MOD_DIR}/processors/flowsimulation.h
+    )
     SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
-            ${MOD_DIR}/processors/flowsimulation.cpp
-            )
+        ${MOD_DIR}/processors/flowsimulation.cpp
+    )
 ENDIF()
+
+################################################################################
+# External dependency: halfedge
+################################################################################
+
+SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
+    ${MOD_DIR}/processors/flowsimulation.h
+    ${MOD_DIR}/ext/halfedge/trimesh.h
+    ${MOD_DIR}/ext/halfedge/trimesh_types.h
+)
+SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
+    ${MOD_DIR}/ext/halfedge/trimesh.cpp
+)
+
+SET(MOD_INSTALL_FILES
+    ${MOD_DIR}/ext/halfedge/README
+)
+
 
 # Deployment
 SET(MOD_INSTALL_DIRECTORIES
