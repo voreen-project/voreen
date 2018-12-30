@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2016 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -25,18 +25,20 @@
 
 #include "vesselgraphperturbation.h"
 #include "voreen/core/datastructures/callback/lambdacallback.h"
-#include "../algorithm/vesselgraphnormalization.h"
+#include "../algorithm/vesselgraphrefinement.h"
 
 #include <unordered_set>
 #include <set>
 #include <unordered_map>
 
+
+namespace {
+    typedef std::mt19937 random_engine_type;
+}
 namespace voreen {
 
-const std::string VesselGraphPerturbation::loggerCat_("voreen.vesselgraphnormalizer");
+const std::string VesselGraphPerturbation::loggerCat_("voreen.vesselgraphperturbation");
 
-
-typedef std::mt19937 random_engine_type;
 
 VesselGraphPerturbation::VesselGraphPerturbation()
     : Processor()
@@ -321,8 +323,8 @@ static std::unique_ptr<VesselGraph> addEdges(const VesselGraph& input, float amo
     return addEdgesToNodesWithUUIDs(input, get_node_uuids(input), amount, random_engine);
 }
 struct NodeSplitEdgeConfiguration {
-    size_t node1_id;
-    size_t node2_id;
+    VGNodeID node1_id;
+    VGNodeID node2_id;
     NodeSplitEdgeConfiguration(const VesselGraphEdge& edge)
         : node1_id(edge.getNodeID1())
         , node2_id(edge.getNodeID2())
@@ -348,7 +350,7 @@ static std::unique_ptr<VesselGraph> splitNodesWithUUIDs(const VesselGraph& input
         const auto& node = *node_ptr;
         //TODO: we should consider to "nudge" the node a little bit, if we want to support splitting with
         //other configurations than n=2+s (see below).
-        size_t split_node_id = output->insertNode(node);
+        VGNodeID split_node_id = output->insertNode(node);
 
         auto edges_to_split_off = draw_n(node.getEdges(), 2, random_engine);
 
@@ -392,7 +394,7 @@ static std::unique_ptr<VesselGraph> splitNodesWithUUIDs(const VesselGraph& input
     }
 
     for(auto& edge : input.getEdges()) {
-        size_t node1_id, node2_id;
+        VGNodeID node1_id, node2_id;
         if(split_off_edges.count(&edge) > 0) {
             NodeSplitEdgeConfiguration& edgeconf = split_off_edges.at(&edge);
             node1_id = edgeconf.node1_id;
@@ -402,11 +404,10 @@ static std::unique_ptr<VesselGraph> splitNodesWithUUIDs(const VesselGraph& input
             node2_id = edge.getNodeID2();
         }
         tgtAssert(edge.getLength() > 0, "Invalid edge length");
-        std::vector<VesselSkeletonVoxel> path(edge.getVoxels());
-        output->insertEdge(node1_id, node2_id, std::move(path), edge.getUUID());
+        output->insertEdge(node1_id, node2_id, edge.getVoxels(), edge.getUUID());
     }
 
-    return VesselGraphNormalization::removeDregree2Nodes(*output);
+    return VesselGraphRefinement::removeDregree2Nodes(*output);
 }
 static std::unique_ptr<VesselGraph> splitNodes(const VesselGraph& input, float amount, random_engine_type random_engine) {
     return splitNodesWithUUIDs(input, get_node_uuids(input), amount, random_engine);
@@ -498,7 +499,7 @@ static std::unique_ptr<VesselGraph> subdivideEdgesWithUUIDs(const VesselGraph& i
         ContinuousPathPos split(edge, random_engine);
         tgt::vec3 split_pos = split.splitLocation();
 
-        size_t split_node_id = output->insertNode(split_pos, std::vector<tgt::vec3>(), 0.0f, false);
+        VGNodeID split_node_id = output->insertNode(split_pos, std::vector<tgt::vec3>(), 0.0f, false);
 
         // First path part
         auto split_left = split.splitPathLeft();
@@ -534,7 +535,7 @@ static std::unique_ptr<VesselGraph> subdivideEdgesWithUUIDs(const VesselGraph& i
         tgt::vec3 new_direction = generate_random_direction(random_engine);
 
         tgt::vec3 new_node_pos = split_pos + new_direction*new_length;
-        size_t new_node_id = output->insertNode(new_node_pos, std::vector<tgt::vec3>(), 0.0f, false);
+        VGNodeID new_node_id = output->insertNode(new_node_pos, std::vector<tgt::vec3>(), 0.0f, false);
 
         VesselGraphEdgePathProperties new_edge_properties = edge.getPathProperties();
         // Again, we assume that radius, roundness, etc. do not change
@@ -543,7 +544,7 @@ static std::unique_ptr<VesselGraph> subdivideEdgesWithUUIDs(const VesselGraph& i
         tgtAssert(new_edge_properties.length_ >= 0, "Invalid length");
         new_edge_properties.volume_ = new_edge_properties.length_*edge.getAvgCrossSection();
         //tgtAssert(new_edge_properties.hasValidData(), "invalid new edge data");
-        size_t inserted = output->insertEdge(split_node_id, new_node_id, new_edge_properties);
+        output->insertEdge(split_node_id, new_node_id, new_edge_properties);
     }
     return output;
 }
@@ -590,7 +591,7 @@ static std::unique_ptr<VesselGraph> splitEdgesWithUUIDs(const VesselGraph& input
         {
             // First path part
             tgt::vec3 split_pos_l = split_l.splitLocation();
-            size_t split_node_id_l = output->insertNode(split_pos_l, std::vector<tgt::vec3>(), 0.0f, false);
+            VGNodeID split_node_id_l = output->insertNode(split_pos_l, std::vector<tgt::vec3>(), 0.0f, false);
 
             auto path_left = split_l.splitPathLeft();
             if(path_left.empty()) {
@@ -609,7 +610,7 @@ static std::unique_ptr<VesselGraph> splitEdgesWithUUIDs(const VesselGraph& input
         {
             // Second path part
             tgt::vec3 split_pos_r = split_r.splitLocation();
-            size_t split_node_id_r = output->insertNode(split_pos_r, std::vector<tgt::vec3>(), 0.0f, false);
+            VGNodeID split_node_id_r = output->insertNode(split_pos_r, std::vector<tgt::vec3>(), 0.0f, false);
 
             auto path_right = split_r.splitPathRight();
             if(path_right.empty()) {

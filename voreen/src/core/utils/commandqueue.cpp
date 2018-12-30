@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -33,69 +33,92 @@
 
 namespace voreen {
 
+CommandQueueElement::CommandQueueElement(const void* owner, std::unique_ptr<Callback>&& callback)
+    : owner_(owner)
+    , callback_(std::move(callback))
+    , mutex_()
+{
+}
+CommandQueueElement::CommandQueueElement(CommandQueueElement&& other)
+    : owner_(other.owner_)
+    , callback_(std::move(other.callback_))
+    , mutex_()
+{
+}
+CommandQueueElement& CommandQueueElement::operator=(CommandQueueElement&& other) {
+    owner_ = other.owner_;
+    callback_ = std::move(other.callback_);
+    return *this;
+}
+
 CommandQueue::CommandQueue()
 {}
 
 CommandQueue::~CommandQueue() {
-    boost::lock_guard<boost::recursive_mutex> lock(mutex_);
-    tgtAssert(commands_.empty(), "Some unexecuted commands are left in command queue");
-}
-
-void CommandQueue::execute() {
-
-    Callback* callback = nullptr;
-    {
-        boost::lock_guard<boost::recursive_mutex> lock(mutex_);
-
-        if (commands_.empty())
-            return;
-
-        callback = commands_.front().second.release();
-        commands_.pop_front();
+    boost::lock_guard<boost::shared_mutex> lock(queueMutex_);
+    boost::lock_guard<boost::shared_mutex> nlock(nextMutex_);
+    for(auto& command : commands_) {
+        tgtAssert(!command.callback_, "Unexecuted commands are left in command queue");
     }
-    tgtAssert(callback, "Callback was null");
-
-    // Execute callback without holding lock to prevent deadlock.
-    callback->exec();
+    for(auto& command : nextCommands_) {
+        tgtAssert(!command.callback_, "Unexecuted commands are left in next command queue");
+    }
 }
 
 void CommandQueue::executeAll() {
-    boost::lock_guard<boost::recursive_mutex> lock(mutex_);
+    // Read access to queue in order to read (and execute) all callbacks
+    boost::upgrade_lock<boost::shared_mutex> rlock(queueMutex_);
 
-    while (!commands_.empty()) {
-        Callback* callback = commands_.front().second.release();
-        commands_.pop_front();
-
-        // Execute callback without holding lock to prevent deadlock.
-        mutex_.unlock();
-
-        tgtAssert(callback, "Callback was null");
-        callback->exec();
-
-        // Lock mutex again for next iteration.
-        mutex_.lock();
-    }
-}
-
-void CommandQueue::enqueue(void* owner, const Callback& command) {
-    boost::lock_guard<boost::recursive_mutex> lock(mutex_);
-
-    commands_.push_back(std::make_pair(owner, std::unique_ptr<Callback>(command.clone())));
-}
-
-void CommandQueue::removeAll(void* owner) {
-    boost::lock_guard<boost::recursive_mutex> lock(mutex_);
-
-    if (owner) {
-        for (auto iter = commands_.begin(); iter != commands_.end(); ) {
-            if (iter->first == owner)
-                iter = commands_.erase(iter);
-            else
-                iter++;
+    for(auto& elm : commands_) {
+        boost::lock_guard<boost::mutex> lock(elm.mutex_);
+        if(elm.callback_) {
+            elm.callback_->exec();
         }
     }
-    else
-        commands_.clear();
+
+    // Upgrade to write access to queue (and grab write access for nextQueue) in order to
+    // clear and move elements from next to the current queue
+    boost::upgrade_to_unique_lock<boost::shared_mutex> wlock(rlock);
+    boost::unique_lock<boost::shared_mutex> nlock(nextMutex_);
+    std::swap(commands_, nextCommands_);
+    nextCommands_.clear();
+}
+
+void CommandQueue::enqueue(const void* owner, const Callback& command) {
+    // Write access to next queue in order to push a new element
+    boost::unique_lock<boost::shared_mutex> lock(nextMutex_);
+
+    nextCommands_.push_back(CommandQueueElement(owner, std::unique_ptr<Callback>(command.clone())));
+}
+
+void CommandQueue::removeAll(const void* owner) {
+    // Read access to current and next queue in order to clear callbacks associated with owner
+    boost::shared_lock<boost::shared_mutex> lock(queueMutex_);
+    boost::shared_lock<boost::shared_mutex> nlock(nextMutex_);
+
+    if (owner) {
+        for(auto& elm : commands_) {
+            if (elm.owner_ == owner) {
+                boost::lock_guard<boost::mutex> lock(elm.mutex_);
+                elm.callback_.reset();
+            }
+        }
+        for(auto& elm : nextCommands_) {
+            if (elm.owner_ == owner) {
+                boost::lock_guard<boost::mutex> lock(elm.mutex_);
+                elm.callback_.reset();
+            }
+        }
+    } else {
+        for(auto& elm : commands_) {
+            boost::lock_guard<boost::mutex> lock(elm.mutex_);
+            elm.callback_.reset();
+        }
+        for(auto& elm : nextCommands_) {
+            boost::lock_guard<boost::mutex> lock(elm.mutex_);
+            elm.callback_.reset();
+        }
+    }
 }
 
 } // namespace

@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -245,21 +245,18 @@ template <typename T>
 void GenericPort<T>::setData(const T* data, bool takeOwnership) {
     tgtAssert(isOutport(), "called setData on inport!");
 
-    bool dataChanges = (data != portData_);
-    if(dataChanges) {
+    if(data != portData_) {
         notifyDataWillChange();
-    }
 
-    //delete previous data
-    if (ownsData_)
-        delete portData_;
+        //delete previous data
+        if (ownsData_)
+            delete portData_;
 
-    portData_ = data;
-    ownsData_ = takeOwnership;
-
-    if(dataChanges) {
+        portData_ = data;
         notifyDataHasChanged();
     }
+
+    ownsData_ = takeOwnership;
 
     invalidatePort();
 }

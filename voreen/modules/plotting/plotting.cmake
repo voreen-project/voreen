@@ -9,6 +9,8 @@ SET(MOD_INSTALL_FILES
 # sample data
 SET(MOD_INSTALL_DIRECTORIES
     ${MOD_DIR}/data
+    ${MOD_DIR}/glsl
+    ${MOD_DIR}/workspaces
 )
 
 ################################################################################

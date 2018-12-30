@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -55,18 +55,19 @@ void VolumeSelector::process() {
     // processor is only ready, if inport contains a volumelist
     // but the list can be empty
     if(volumeID_.get() == -1) {
-        outport_.setData(0);
+        outport_.setData(nullptr);
     } else {
         outport_.setData(inport_.getData()->at(volumeID_.get()), false);
     }
 }
 
-void VolumeSelector::initialize() {
-    Processor::initialize();
-}
-
 void VolumeSelector::invalidate(int inv/*inv = INVALID_RESULT*/) {
     Processor::invalidate(inv);
+    // FIXME: uncommenting the following line might lead to crashes. Find out why!
+    //       To reproduce, open volumelistspacing test workspace, mark and delete everything at once.
+    //       Not having it enabled, however, might lead to selection not updated properly.
+    //       Watch UI updating (not) correctly when input changes, maybe in context with deserialization.
+    //       This is refered to in bug #169.
     //adjustToVolumeList();
 }
 
@@ -82,7 +83,7 @@ void VolumeSelector::adjustToVolumeList() {
     volumeID_.setMinValue(std::min(0,static_cast<int>(collection->size())-1));
     volumeID_.setMaxValue(static_cast<int>(collection->size())-1);
     // set to first volume if no volume was present earlier
-    if (collection->size() && volumeID_.get() == -1)
+    if (!collection->empty() && volumeID_.get() == -1)
         volumeID_.set(0);
 }
 

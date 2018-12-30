@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -55,26 +55,6 @@ public:
      * @see releaseAll
      */
     virtual ~VolumeContainer();
-
-   /**
-    * Adds the passed Volume to the container,
-    * if it is not already contained.
-    *
-    * In contrast to the base class VolumeList the VolumeContainer
-    * does take ownership of the added Volume and therefore
-    * deletes it on its own destruction.
-    */
-    virtual void add(VolumeBase* volumeHandle);
-
-   /**
-    * Adds VolumeHandles contained by the passed VolumeList
-    * to the collection, if they are not already contained.
-    *
-    * In contrast to the base class VolumeList the VolumeContainer
-    * does take ownership of the added VolumeHandles and therefore
-    * deletes them on its own destruction.
-    */
-    virtual void add(const VolumeList* volumeList);
 
     /**
      * Deletes the passed Volume and removes it

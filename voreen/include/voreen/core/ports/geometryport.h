@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -39,7 +39,7 @@ class VRN_CORE_API GeometryPort : public GenericPort<Geometry> {
 public:
     GeometryPort(PortDirection direction, const std::string& id, const std::string& guiName = "",
                  bool allowMultipleConnections = false,
-                 Processor::InvalidationLevel invalidationLevel = Processor::INVALID_PROGRAM);
+                 Processor::InvalidationLevel invalidationLevel = Processor::INVALID_RESULT);
 
     virtual std::string getClassName() const {return "GeometryPort";}
     virtual Port* create(PortDirection direction, const std::string& id, const std::string& guiName = "") const {return new GeometryPort(direction,id,guiName);}

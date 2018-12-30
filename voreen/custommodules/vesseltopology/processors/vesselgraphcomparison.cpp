@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2016 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -39,6 +39,9 @@
 #include "tgt/filesystem.h"
 #include "tgt/immediatemode/immediatemode.h"
 
+#include "custommodules/vesseltopology/ext/netmets/lib.h"
+
+//#include "stim/network.h"
 
 namespace munkres {
 #include "../ext/munkres-cpp/src/munkres.h"
@@ -80,6 +83,8 @@ VesselGraphComparison::VesselGraphComparison()
     , nodeMatchRatio_("nodeMatchRatio", "Node Match Ratio", 0.0f, 0.0f, 1.0f)
     , edgeMatchRatio_("edgeMatchRatio", "Edge Match Ratio", 0.0f, 0.0f, 1.0f)
     , lengthSimilarity_("lengthSimilarity", "Length Similarity", 0.0f, 0.0f, 1.0f)
+    , netmetsFNR_("netmetsFNR", "Netmets FNR", 0.0f, 0.0f, 1.0f)
+    , netmetsFPR_("netmetsFPR", "Netmets FPR", 0.0f, 0.0f, 1.0f)
     , nodeMatchingCost_("nodeMatchingCost", "Node Matching Cost (if available)", -1.0f, -1.0f, std::numeric_limits<float>::max())
     , crossRadius_("crossRadius", "Cross Radius", 0.0f, 0.0f, 1.0f)
     , lastEdgeMatching_(nullptr)
@@ -111,6 +116,10 @@ VesselGraphComparison::VesselGraphComparison()
         edgeMatchRatio_.setReadOnlyFlag(true);
     addProperty(lengthSimilarity_);
         lengthSimilarity_.setReadOnlyFlag(true);
+    addProperty(netmetsFNR_);
+        netmetsFNR_.setReadOnlyFlag(true);
+    addProperty(netmetsFPR_);
+        netmetsFPR_.setReadOnlyFlag(true);
     addProperty(nodeMatchingCost_);
         nodeMatchingCost_.setReadOnlyFlag(true);
 
@@ -138,6 +147,10 @@ void VesselGraphComparison::process() {
 
 bool VesselGraphComparison::isReady() const {
     return isInitialized() && inport1_.isReady() && inport2_.isReady();
+}
+
+bool VesselGraphComparison::isEndProcessor() const {
+    return true;
 }
 
 // ----------------------------------------------------------
@@ -359,7 +372,7 @@ struct ThresholdedEdgeDistance {
 // VesselGraphComparison Implementation
 // ----------------------------------------------------------
 
-const VesselGraphNode* findClosest(const VesselGraphNode& n, const std::vector<VesselGraphNode>& candidates) {
+const VesselGraphNode* findClosest(const VesselGraphNode& n, const DiskArray<VesselGraphNode>& candidates) {
     const VesselGraphNode* closest = nullptr;
     float closest_dist_sq = std::numeric_limits<float>::max();
     for(const auto& candidate : candidates) {
@@ -374,8 +387,8 @@ const VesselGraphNode* findClosest(const VesselGraphNode& n, const std::vector<V
 
 Matching<VesselGraphNode> VesselGraphComparison::matchNodesMutualNN(const VesselGraph& g1, const VesselGraph& g2) const {
     Matching<VesselGraphNode> output;
-    const std::vector<VesselGraphNode>& n1 = g1.getNodes();
-    const std::vector<VesselGraphNode>& n2 = g2.getNodes();
+    auto n1 = g1.getNodes();
+    auto n2 = g2.getNodes();
     for(const auto& node : n1) {
         const VesselGraphNode* closest_in_2 = findClosest(node, n2);
         tgtAssert(closest_in_2, "No closest node");
@@ -448,8 +461,8 @@ const VesselGraphEdge* findBestEdgeMatch(
 
 Matching<VesselGraphEdge> VesselGraphComparison::matchEdgesViaNodes(const VesselGraph& g1, const VesselGraph& g2, const Matching<VesselGraphNode>& node_matching) const {
     Matching<VesselGraphEdge> output;
-    const std::vector<VesselGraphEdge>& e1 = g1.getEdges();
-    const std::vector<VesselGraphEdge>& e2 = g2.getEdges();
+    auto e1 = g1.getEdges();
+    auto e2 = g2.getEdges();
 
     std::unordered_map<const VesselGraphNode*, const VesselGraphNode*> matched_nodes_1_to_2;
     std::unordered_map<const VesselGraphNode*, const VesselGraphNode*> matched_nodes_2_to_1;
@@ -665,8 +678,8 @@ struct NodeModificationCost {
 // Munkres version (slow)
 template<class D>
 Matching<VesselGraphEdge> VesselGraphComparison::matchEdgesViaHungarianAlgorithm(const VesselGraph& g1, const VesselGraph& g2, D distance) const {
-    const std::vector<VesselGraphEdge>& e1 = g1.getEdges();
-    const std::vector<VesselGraphEdge>& e2 = g2.getEdges();
+    auto e1 = g1.getEdges();
+    auto e2 = g2.getEdges();
     munkres::Matrix<float> dist_mat(e1.size(), e2.size());
 
     {
@@ -728,8 +741,8 @@ Matching<VesselGraphEdge> VesselGraphComparison::matchEdgesViaHungarianAlgorithm
 // Lemon version (faster, hopefully)
 template<class D>
 Matching<VesselGraphEdge> VesselGraphComparison::matchEdgesLAP(const VesselGraph& g1, const VesselGraph& g2, D distance) const {
-    const std::vector<VesselGraphEdge>& e1 = g1.getEdges();
-    const std::vector<VesselGraphEdge>& e2 = g2.getEdges();
+    auto e1 = g1.getEdges();
+    auto e2 = g2.getEdges();
     munkres::Matrix<float> dist_mat(e1.size(), e2.size());
 
     typedef lemon::SmartGraph Graph;
@@ -799,6 +812,17 @@ Matching<VesselGraphEdge> VesselGraphComparison::matchEdgesLAP(const VesselGraph
     return output;
 }
 
+NetmetsResult compareNetmets(const VesselGraph& templateGraph, const VesselGraph& testGraph) {
+#ifdef VESSELTOPOLOGY_USE_NETMETS
+    return netmets_compare_networks(templateGraph, testGraph);
+#else
+    NetmetsResult result;
+    result.fpr = std::numeric_limits<float>::quiet_NaN();
+    result.fnr = std::numeric_limits<float>::quiet_NaN();
+    return result;
+#endif
+}
+
 
 /*
 template<class T, class S>
@@ -823,8 +847,8 @@ void putPlotMatchingData(PlotPort& port, const VesselGraph& g1, const VesselGrap
 
 template<class D>
 float quantilThreshold(const VesselGraph& g1, const VesselGraph& g2, D distanceFunc, size_t threshold_index) {
-    const std::vector<VesselGraphEdge>& e1 = g1.getEdges();
-    const std::vector<VesselGraphEdge>& e2 = g2.getEdges();
+    auto e1 = g1.getEdges();
+    auto e2 = g2.getEdges();
 
     // This is a quick and dirty implementation with room for (performance) improvements.
     std::vector<float> distances;
@@ -909,6 +933,12 @@ void VesselGraphComparison::compare(const VesselGraph& g1, const VesselGraph& g2
     // 3. step: Compute measure based on properties of matches
     lengthSimilarity_.set(edge_matching.matchRatio()*(1.0f-compareMatches<LengthProperty, RelativeError>(edge_matching.matches_)));
 
+    // 4. (orthogonal) step: Compare geometry of networks using netmets
+    NetmetsResult netmetsResult = compareNetmets(g1 /*template!*/, g2);
+
+    netmetsFNR_.set(netmetsResult.fnr);
+    netmetsFPR_.set(netmetsResult.fpr);
+
     const std::string statExportFileName = statExportFile_.get();
 
     if(statExportFileName.empty()) {
@@ -931,6 +961,7 @@ void VesselGraphComparison::compare(const VesselGraph& g1, const VesselGraph& g2
                 , float, float, float
                 , float, float, float
                 , float, float, float
+                , float, float
                     > writer(statExportFileName, ';', writeMode);
             if(truncate) {
                 writer.writeHeader("identifier", "node match ratio", "edge match ratio", "node matching cost"
@@ -947,6 +978,7 @@ void VesselGraphComparison::compare(const VesselGraph& g1, const VesselGraph& g2
                     , "maxRadiusStd abs error", "maxRadiusStd rel error", "maxRadiusStd exp similarity"
                     , "roundnessMean abs error", "roundnessMean rel error", "roundnessMean exp similarity"
                     , "roundnessStd abs error", "roundnessStd rel error", "roundnessStd exp similarity"
+                    , "netmets_FNR", "netmets_FPR"
                     );
             }
             writer.write(
@@ -993,6 +1025,8 @@ void VesselGraphComparison::compare(const VesselGraph& g1, const VesselGraph& g2
                     , compareMatches<RoundnessStdProperty, AbsoluteError>(edge_matching.matches_)
                     , compareMatches<RoundnessStdProperty, RelativeError>(edge_matching.matches_)
                     , compareMatches<RoundnessStdProperty, ExpSimilarity>(edge_matching.matches_)
+                    , netmetsResult.fnr
+                    , netmetsResult.fpr
                     );
             LINFO("Writing edge stats: " << statExportFileName);
         } catch(tgt::IOException& e) {

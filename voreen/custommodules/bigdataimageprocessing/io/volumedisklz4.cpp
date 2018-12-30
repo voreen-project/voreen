@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -26,6 +26,9 @@
 #include "volumedisklz4.h"
 
 #include "voreen/core/utils/hashing.h"
+#include "voreen/core/datastructures/volume/volumefactory.h"
+#include "voreen/core/utils/stringutils.h"
+#include <memory>
 
 
 namespace voreen {
@@ -58,8 +61,32 @@ VolumeRAM* VolumeDiskLZ4::loadSlices(const size_t firstZSlice, const size_t last
     return volume_->loadBaseSlab(firstZSlice, lastZSlice+1).release();
 }
 
+template<typename Voxel>
+static void createBrick(const tgt::svec3& offset, const tgt::svec3& dimensions, LZ4SliceVolumeBase& volume, std::unique_ptr<VolumeRAM>& res) {
+    tgtAssert(tgt::hand(tgt::lessThan(offset+dimensions, volume.getDimensions())), "Invalid brick range");
+
+    VolumeAtomic<Voxel> output(dimensions);
+
+    auto vol = dynamic_cast<LZ4SliceVolume<Voxel>*>(&volume);
+
+    for(size_t z=0; z<dimensions.z; ++z) {
+        auto slice = vol->loadSlice(z+offset.z);
+        for(size_t y=0; y<dimensions.y; ++y) {
+            for(size_t x=0; x<dimensions.x; ++x) {
+                output.voxel(x, y, z) = slice.voxel(x+offset.x,y+offset.y,0);
+            }
+        }
+    }
+
+    res.reset(new VolumeAtomic<Voxel>(std::move(output)));
+}
+
 VolumeRAM* VolumeDiskLZ4::loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const {
-    throw tgt::Exception("loadBrick is not supported");
+    std::unique_ptr<VolumeRAM> res;
+
+    DISPATCH_FOR_FORMAT(volume_->getMetaData().getFormat(), createBrick, offset, dimensions, *volume_, res);
+
+    return res.release();
 }
 
 } // namespace voreen

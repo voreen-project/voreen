@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -37,6 +37,7 @@
 #include "pyvoreen.h"
 
 #include "voreen/core/voreenapplication.h"
+#include "voreen/core/version.h"
 
 #include "voreen/core/properties/boolproperty.h"
 #include "voreen/core/properties/boundingboxproperty.h"
@@ -1462,6 +1463,10 @@ static PyObject* voreen_getBasePath(PyObject* /*self*/, PyObject* /*args*/) {
     return arg;
 }
 
+static PyObject* voreen_getRevision(PyObject* /*self*/, PyObject* /*args*/) {
+    return Py_BuildValue("s", VoreenVersion::getRevision().c_str());
+}
+
 static PyObject* voreen_info(PyObject* /*self*/, PyObject* /*args*/) {
     return printModuleInfo("voreen",  true, 0, false, true);
 }
@@ -1645,8 +1650,15 @@ static PyMethodDef voreen_methods[] = {
         METH_VARARGS,
         "getBasePath() -> path\n\n"
         "Returns the absolute Voreen base path."
-   },
-   {
+    },
+    {
+        "getRevision",
+        voreen_getRevision,
+        METH_VARARGS,
+        "getRevision() -> string\n\n"
+        "Returns the revision of the Voreen binary."
+    },
+    {
         "info",
         voreen_info,
         METH_VARARGS,

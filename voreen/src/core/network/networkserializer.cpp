@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -118,6 +118,8 @@ void NetworkSerializer::process(TiXmlDocument& document) {
         case 18:
             NetworkConverter18to19().convert(processorNetworkNode);
         case 19:
+            NetworkConverter19to20().convert(processorNetworkNode);
+        case 20:
             break;
 
         default:

@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -26,22 +26,82 @@
 #ifndef VRN_OCTREECREATOR_H
 #define VRN_OCTREECREATOR_H
 
-#include "voreen/core/processors/volumeprocessor.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
+
+#include "voreen/core/datastructures/octree/volumeoctreebase.h"
 
 #include "voreen/core/ports/volumeport.h"
 #include "voreen/core/properties/boolproperty.h"
 #include "voreen/core/properties/intproperty.h"
 #include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/optionproperty.h"
-#include "voreen/core/properties/progressproperty.h"
 #include "voreen/core/properties/filedialogproperty.h"
 #include "voreen/core/properties/stringproperty.h"
 
 namespace voreen {
 
+class OctreeBrickPoolManagerBase;
 class VolumeOctreeBase;
 
-class VRN_CORE_API OctreeCreator : public VolumeProcessor {
+struct OctreeCreatorInput {
+    bool loadCached;
+    std::vector<const VolumeBase*> input;
+    OctreeBrickPoolManagerBase* brickPoolManager;
+    float homogeneityThreshold;
+    size_t brickDim;
+    int numThreads;
+
+    OctreeCreatorInput(
+        bool loadCached
+        , const std::vector<const VolumeBase*>& input
+        , OctreeBrickPoolManagerBase* brickPoolManager
+        , float homogeneityThreshold
+        , size_t brickDim
+        , int numThreads
+    )
+        : loadCached(loadCached)
+        , input(input)
+        , brickPoolManager(brickPoolManager)
+        , homogeneityThreshold(homogeneityThreshold)
+        , brickDim(brickDim)
+        , numThreads(numThreads)
+    {
+    }
+
+    OctreeCreatorInput(const OctreeCreatorInput&) = delete;
+    OctreeCreatorInput(OctreeCreatorInput&& old)
+        : loadCached(old.loadCached)
+        , input(old.input)
+        , brickPoolManager(std::move(old.brickPoolManager))
+        , homogeneityThreshold(old.homogeneityThreshold)
+        , brickDim(old.brickDim)
+        , numThreads(old.numThreads)
+    {
+    }
+};
+
+struct OctreeCreatorOutput {
+    std::unique_ptr<VolumeOctreeBase> octree;
+    std::string errorMessage;
+
+    OctreeCreatorOutput(
+        std::unique_ptr<VolumeOctreeBase> octree
+        , const std::string& errorMessage
+    )
+        : octree(std::move(octree))
+        , errorMessage(errorMessage)
+    {
+    }
+
+    OctreeCreatorOutput(const OctreeCreatorOutput&) = delete;
+    OctreeCreatorOutput(OctreeCreatorOutput&& old)
+        : octree(std::move(old.octree))
+        , errorMessage(old.errorMessage)
+    {
+    }
+};
+
+class VRN_CORE_API OctreeCreator : public AsyncComputeProcessor<OctreeCreatorInput, OctreeCreatorOutput> {
 
     friend class VoreenApplication;
 
@@ -54,16 +114,17 @@ public:
     virtual std::string getCategory() const   { return "Octree";                }
     virtual CodeState getCodeState() const    { return CODE_STATE_STABLE;       }
 
-    virtual bool usesExpensiveComputation() const { return true; }
     virtual bool isReady() const;
+
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
 
 protected:
     virtual void setDescriptions() {
         setDescription("Creates an octree volume representation from up to four input volumes. If a multi-channel octree is created, all input channel volumes have to match in dimension, spacing, offset and data type."
                        "<p><strong>Note</strong>: The maximum amount of CPU RAM to be used by the octree as well as the disk storage path of its brick pool are defined globally via application settings.</p>");
     }
-
-    virtual void process();
 
     virtual void initialize();
     virtual void deinitialize();
@@ -73,7 +134,6 @@ protected:
     //void saveOctreeToVVOD();
 
 private:
-    VolumeOctreeBase* generateOctree();
 
     std::string getOctreeStoragePath() const;
     std::string getConfigurationHash() const;
@@ -81,9 +141,10 @@ private:
     void storeOctreeToCache(const VolumeOctreeBase* octree) const;
     VolumeOctreeBase* restoreOctreeFromCache() const;
     void clearOctree();
-    void forceRegenerate();
 
     void updatePropertyConfiguration();
+
+    void updateStatusMessage(const std::string& message) const;
 
     /**
      * Limits the memory used by the octree cache to the specified cache size
@@ -107,12 +168,7 @@ private:
     VolumePort volumeInport3_;
     VolumePort volumeInport4_;
     VolumePort volumeOutport_;
-
-    ButtonProperty generateOctreeButton_;
-    StringProperty statusProperty_;
-    ProgressProperty progressProperty_;
-    BoolProperty autogenerateOctree_;
-
+    
     //FileDialogProperty saveOctreeFile_;
     //ButtonProperty saveOctreeButton_;
 
@@ -127,10 +183,11 @@ private:
     IntProperty numThreads_;
 
     ButtonProperty clearOctree_;
+    StringProperty currentConfigurationHash_;
+    // StatusMessage needs to be mutable, since it's being modified within compute().
+    // This causes no trouble, however, since the property is readOnly and the invalidation level is VALID.
+    mutable StringProperty statusMessage_;
 
-    bool forceGenerate_;
-
-    std::string currentConfigurationHash_;
 
     static const std::string loggerCat_;
 };

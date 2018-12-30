@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -30,6 +30,7 @@
 #include "voreen/core/ports/volumeport.h"
 
 #include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/datastructures/volume/volumeminmax.h"
 
 namespace voreen {
 
@@ -198,11 +199,11 @@ bool PortConditionVolumeValueRange<T>::acceptsPortData() const
     if (!volumePort_ || !volumePort_->hasData())
         return false;
 
-    const VolumeAtomic<T>* volume = dynamic_cast<const VolumeAtomic<T>*>(volumePort_->getData()->getRepresentation<VolumeRAM>());
-    if (!volume)
+    VolumeMinMax* minMax = volumePort_->getData()->getDerivedData<VolumeMinMax>();
+    if(!minMax)
         return false;
 
-    return (volume->min() >= minValue_ && volume->max() <= maxValue_);
+    return (minMax->getMin() >= minValue_ && minMax->getMax() <= maxValue_);
 }
 
 template <typename T>

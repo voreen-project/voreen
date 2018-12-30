@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
-    <Workspace version="2" readonly="false" GlobalDescription="">
+    <Workspace version="2" readonly="true" GlobalDescription='&lt;font color=&quot;#808080&quot;&gt;&lt;h4&gt;Landmark Registration Template Workspace&lt;/h4&gt; &lt;p&gt;This workspace demonstrates automatic volume registration using the VolumeLandmarkRegistration as well as the VolumePicking processor.&lt;/p&gt;&lt;p&gt;Landmarks can be placed using the mouse. The registration will be performed automatically.&lt;/p&gt;&lt;/font&gt;'>
         <ProcessorNetwork version="19">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
@@ -14,9 +14,9 @@
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="450.536102295" y="36.718784332" />
+                    <value x="450.5" y="36.5" />
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.89697057" />
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.898196578" />
                 <MetaItem name="autoLinkCameras" type="BoolMetaData" value="false" />
             </MetaData>
             <Processors>
@@ -30,7 +30,7 @@
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../../../../../voreen-development/voreen/resource/voreenve/volumes/walnut-transformed.vvd" />
+                                        <item value="../../volumes/walnut-transformed.vvd" />
                                         <item value="resource/voreenve/volumes/walnut-transformed.vvd" />
                                         <item value="C:/voreen-development/voreen/resource/voreenve/volumes/walnut-transformed.vvd" />
                                     </paths>
@@ -56,7 +56,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref28">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="282" y="530" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="284" y="225" width="1600" height="900" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="304" y="144" width="1600" height="900" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="8" y="8" />
@@ -73,7 +73,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="284" y="225" />
+                            <value x="304" y="144" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1600" y="900" />
@@ -115,7 +115,7 @@
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../../../../../voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="../../volumes/walnut.vvd" />
                                         <item value="resource/voreenve/volumes/walnut.vvd" />
                                         <item value="C:/voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
@@ -390,7 +390,7 @@
                             <TransferFunction type="TransFuncIntensityGradient" alphaMode="1" filter="1" dataType="5126">
                                 <texDimensions x="1024" y="1024" z="1" />
                                 <gammaValues x="1" y="1" />
-                                <domains x="0" y="1" z="0" w="1" />
+                                <domains x="0" y="18867" z="0" w="513452.875" />
                                 <thresholds x="0" y="1" z="0" w="1" />
                                 <Primitives />
                             </TransferFunction>
@@ -608,12 +608,12 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLightAttenuation" name="applyLightAttenuation" value="false" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="927.25402832" minValue="0.01854508" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="930.96307373" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.023723535" id="ref39">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="927.25402832" minValue="0.01854508" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="930.96307373" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.023723347" id="ref39">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="879" y="488" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-1.267352104" y="1.433017731" z="-3.748738766" />
+                            <position x="-1.267352104" y="1.433017731" z="-3.748739243" />
                             <focus x="0.003566623" y="-0.006628036" z="0.003670096" />
                             <upVector x="0.239546761" y="0.886516511" z="0.395860821" />
                             <trackball moveCenter="false">
@@ -695,9 +695,9 @@
                             <MetaData>
                                 <MetaItem name="FollowCamera" type="BoolMetaData" value="false" />
                             </MetaData>
-                            <value x="1.363861084" y="0.884642243" z="0.894981861" w="1" />
+                            <value x="1.363860965" y="0.884642184" z="0.894981861" w="1" />
                             <Center x="0.003566623" y="-0.006628036" z="0.003670096" />
-                            <LightPos x="-0.869055748" y="1.369458795" z="-0.899180591" w="1" />
+                            <LightPos x="-0.869055569" y="1.369458437" z="-0.899180532" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -925,12 +925,12 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="1117" y="-71" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="927.25402832" minValue="0.01854508" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="930.96307373" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.023723535" id="ref40">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="927.25402832" minValue="0.01854508" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="930.96307373" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.023723347" id="ref40">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="879" y="488" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-1.267352104" y="1.433017731" z="-3.748738766" />
+                            <position x="-1.267352104" y="1.433017731" z="-3.748739243" />
                             <focus x="0.003566623" y="-0.006628036" z="0.003670096" />
                             <upVector x="0.239546791" y="0.886516631" z="0.395860881" />
                             <trackball moveCenter="false">
@@ -1226,7 +1226,7 @@
                             <value x="74.244628906" y="13.406821251" z="124.879943848" />
                         </Property>
                         <Property mapKey="numPicked" name="numPicked" value="3" />
-                        <Property mapKey="outCoordinateSystem" name="outCoordinateSystem" value="voxel" />
+                        <Property mapKey="outCoordinateSystem" name="outCoordinateSystem" guiName="Transformed Output Coordinate System" value="voxel" />
                         <Property mapKey="pickEvent" name="pickEvent" enabled="true" mouseAction="2" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
                     </Properties>
                     <Inports>
@@ -1509,7 +1509,7 @@
                             <TransferFunction type="TransFuncIntensityGradient" alphaMode="1" filter="1" dataType="5126">
                                 <texDimensions x="1024" y="1024" z="1" />
                                 <gammaValues x="1" y="1" />
-                                <domains x="0" y="1" z="0" w="1" />
+                                <domains x="0" y="22526" z="0" w="682266" />
                                 <thresholds x="0" y="1" z="0" w="1" />
                                 <Primitives />
                             </TransferFunction>
@@ -1732,7 +1732,7 @@
                             <value x="122.812210083" y="17.467765808" z="112.848266602" />
                         </Property>
                         <Property mapKey="numPicked" name="numPicked" value="3" />
-                        <Property mapKey="outCoordinateSystem" name="outCoordinateSystem" value="voxel" />
+                        <Property mapKey="outCoordinateSystem" name="outCoordinateSystem" guiName="Reference Output Coordinate System" value="voxel" />
                         <Property mapKey="pickEvent" name="pickEvent" enabled="true" mouseAction="2" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
                     </Properties>
                     <Inports>
@@ -1923,12 +1923,12 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="false" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="927.25402832" minValue="0.01854508" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="930.96307373" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.023723535" id="ref43">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="927.25402832" minValue="0.01854508" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="930.96307373" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.023723347" id="ref43">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="879" y="488" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-1.267352104" y="1.433017731" z="-3.748738766" />
+                            <position x="-1.267352104" y="1.433017731" z="-3.748739243" />
                             <focus x="0.003566623" y="-0.006628036" z="0.003670096" />
                             <upVector x="0.239546761" y="0.886516511" z="0.395860821" />
                             <trackball moveCenter="false">
@@ -2111,12 +2111,12 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="876" y="-68" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="927.25402832" minValue="0.01854508" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="930.96307373" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.023723535" id="ref65">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="927.25402832" minValue="0.01854508" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="930.96307373" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.023723347" id="ref65">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="879" y="488" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-1.267352104" y="1.433017731" z="-3.748738766" />
+                            <position x="-1.267352104" y="1.433017731" z="-3.748739243" />
                             <focus x="0.003566623" y="-0.006628036" z="0.003670096" />
                             <upVector x="0.239546791" y="0.886516631" z="0.395860881" />
                             <trackball moveCenter="false">
@@ -2181,12 +2181,12 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="614" y="-72" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="927.25402832" minValue="0.01854508" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="930.96307373" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.023723535" id="ref66">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="927.25402832" minValue="0.01854508" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="930.96307373" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.023723347" id="ref66">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="879" y="488" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-1.267352104" y="1.433017731" z="-3.748738766" />
+                            <position x="-1.267352104" y="1.433017731" z="-3.748739243" />
                             <focus x="0.003566623" y="-0.006628036" z="0.003670096" />
                             <upVector x="0.239546791" y="0.886516631" z="0.395860881" />
                             <trackball moveCenter="false">
@@ -3312,8 +3312,342 @@
         </ProcessorNetwork>
         <Animation />
         <ApplicationModeConfig MainCanvas="Canvas::Canvas">
-            <PropertyGroups />
-            <GroupMembership />
+            <PropertyGroups>
+                <item value="Reference Volume" />
+                <item value="Transformed Volume" />
+                <item value="Ray-Casting Options Reference" />
+                <item value="Ray-Casting Options Transformed" />
+                <item value="Ray-Casting Options Combined" />
+                <item value="Volume Picking" />
+                <item value="Registration" />
+                <item value="Result" />
+            </PropertyGroups>
+            <GroupMembership>
+                <value key="MultiVolumeRaycaster.classification">
+                    <First value="Ray-Casting Options Combined" />
+                    <Second value="6" />
+                </value>
+                <value key="MultiVolumeRaycaster.classification2">
+                    <First value="Ray-Casting Options Combined" />
+                    <Second value="7" />
+                </value>
+                <value key="MultiVolumeRaycaster.gradient">
+                    <First value="Ray-Casting Options Combined" />
+                    <Second value="3" />
+                </value>
+                <value key="MultiVolumeRaycaster.interQuality">
+                    <First value="Ray-Casting Options Combined" />
+                    <Second value="1" />
+                </value>
+                <value key="MultiVolumeRaycaster.renderingQuality">
+                    <First value="Ray-Casting Options Combined" />
+                    <Second value="0" />
+                </value>
+                <value key="MultiVolumeRaycaster.samplingRate">
+                    <First value="Ray-Casting Options Combined" />
+                    <Second value="2" />
+                </value>
+                <value key="MultiVolumeRaycaster.shading1">
+                    <First value="Ray-Casting Options Combined" />
+                    <Second value="4" />
+                </value>
+                <value key="MultiVolumeRaycaster.shading2">
+                    <First value="Ray-Casting Options Combined" />
+                    <Second value="5" />
+                </value>
+                <value key="MultiVolumeRaycaster.transferFunction1">
+                    <First value="Ray-Casting Options Combined" />
+                    <Second value="8" />
+                </value>
+                <value key="MultiVolumeRaycaster.transferFunction2">
+                    <First value="Ray-Casting Options Combined" />
+                    <Second value="9" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.classification">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="4" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.gradient">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="3" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.interQuality">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="1" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.renderingQuality">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="0" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.samplingRate">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="2" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.shading">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="5" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.transFunc2D">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="11" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.transFunc2D_2">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="12" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.transFunc2D_3">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="13" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.transFunc2D_4">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="14" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.transFuncGaussian1">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="15" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.transFuncGaussian2">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="16" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.transFuncGaussian3">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="17" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.transFuncGaussian4">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="18" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.transFuncType">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="6" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.transferFunction">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="7" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.transferFunction1">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="8" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.transferFunction2">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="9" />
+                </value>
+                <value key="SingleVolumeRaycaster Ref.transferFunction3">
+                    <First value="Ray-Casting Options Reference" />
+                    <Second value="10" />
+                </value>
+                <value key="SingleVolumeRaycaster.classification">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="4" />
+                </value>
+                <value key="SingleVolumeRaycaster.gradient">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="3" />
+                </value>
+                <value key="SingleVolumeRaycaster.interQuality">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="1" />
+                </value>
+                <value key="SingleVolumeRaycaster.renderingQuality">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="0" />
+                </value>
+                <value key="SingleVolumeRaycaster.samplingRate">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="2" />
+                </value>
+                <value key="SingleVolumeRaycaster.shading">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="5" />
+                </value>
+                <value key="SingleVolumeRaycaster.transFunc2D">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="11" />
+                </value>
+                <value key="SingleVolumeRaycaster.transFunc2D_2">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="12" />
+                </value>
+                <value key="SingleVolumeRaycaster.transFunc2D_3">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="13" />
+                </value>
+                <value key="SingleVolumeRaycaster.transFunc2D_4">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="14" />
+                </value>
+                <value key="SingleVolumeRaycaster.transFuncGaussian1">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="15" />
+                </value>
+                <value key="SingleVolumeRaycaster.transFuncGaussian2">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="16" />
+                </value>
+                <value key="SingleVolumeRaycaster.transFuncGaussian3">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="17" />
+                </value>
+                <value key="SingleVolumeRaycaster.transFuncGaussian4">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="18" />
+                </value>
+                <value key="SingleVolumeRaycaster.transFuncType">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="6" />
+                </value>
+                <value key="SingleVolumeRaycaster.transferFunction">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="7" />
+                </value>
+                <value key="SingleVolumeRaycaster.transferFunction1">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="8" />
+                </value>
+                <value key="SingleVolumeRaycaster.transferFunction2">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="9" />
+                </value>
+                <value key="SingleVolumeRaycaster.transferFunction3">
+                    <First value="Ray-Casting Options Transformed" />
+                    <Second value="10" />
+                </value>
+                <value key="VolumeLandmarkRegistration.enableProcessing">
+                    <First value="Registration" />
+                    <Second value="0" />
+                </value>
+                <value key="VolumeLandmarkRegistration.landmarkSpecification">
+                    <First value="Registration" />
+                    <Second value="2" />
+                </value>
+                <value key="VolumeLandmarkRegistration.p1">
+                    <First value="Registration" />
+                    <Second value="3" />
+                </value>
+                <value key="VolumeLandmarkRegistration.p2">
+                    <First value="Registration" />
+                    <Second value="5" />
+                </value>
+                <value key="VolumeLandmarkRegistration.p3">
+                    <First value="Registration" />
+                    <Second value="7" />
+                </value>
+                <value key="VolumeLandmarkRegistration.p4">
+                    <First value="Registration" />
+                    <Second value="9" />
+                </value>
+                <value key="VolumeLandmarkRegistration.ref_p1">
+                    <First value="Registration" />
+                    <Second value="4" />
+                </value>
+                <value key="VolumeLandmarkRegistration.ref_p2">
+                    <First value="Registration" />
+                    <Second value="6" />
+                </value>
+                <value key="VolumeLandmarkRegistration.ref_p3">
+                    <First value="Registration" />
+                    <Second value="8" />
+                </value>
+                <value key="VolumeLandmarkRegistration.ref_p4">
+                    <First value="Registration" />
+                    <Second value="10" />
+                </value>
+                <value key="VolumeLandmarkRegistration.registrationMatrix">
+                    <First value="Registration" />
+                    <Second value="11" />
+                </value>
+                <value key="VolumeLandmarkRegistration.registrationMode">
+                    <First value="Registration" />
+                    <Second value="1" />
+                </value>
+                <value key="VolumePicking Ref.clearAll">
+                    <First value="Volume Picking" />
+                    <Second value="4" />
+                </value>
+                <value key="VolumePicking Ref.clearLast">
+                    <First value="Volume Picking" />
+                    <Second value="3" />
+                </value>
+                <value key="VolumePicking Ref.lastPicked">
+                    <First value="Volume Picking" />
+                    <Second value="2" />
+                </value>
+                <value key="VolumePicking Ref.numPicked">
+                    <First value="Volume Picking" />
+                    <Second value="1" />
+                </value>
+                <value key="VolumePicking Ref.outCoordinateSystem">
+                    <First value="Volume Picking" />
+                    <Second value="0" />
+                </value>
+                <value key="VolumePicking Ref.pickEvent">
+                    <First value="Volume Picking" />
+                    <Second value="5" />
+                </value>
+                <value key="VolumePicking.clearAll">
+                    <First value="Volume Picking" />
+                    <Second value="10" />
+                </value>
+                <value key="VolumePicking.clearLast">
+                    <First value="Volume Picking" />
+                    <Second value="9" />
+                </value>
+                <value key="VolumePicking.lastPicked">
+                    <First value="Volume Picking" />
+                    <Second value="8" />
+                </value>
+                <value key="VolumePicking.numPicked">
+                    <First value="Volume Picking" />
+                    <Second value="7" />
+                </value>
+                <value key="VolumePicking.outCoordinateSystem">
+                    <First value="Volume Picking" />
+                    <Second value="6" />
+                </value>
+                <value key="VolumePicking.pickEvent">
+                    <First value="Volume Picking" />
+                    <Second value="11" />
+                </value>
+                <value key="VolumeSave.continousSave">
+                    <First value="Result" />
+                    <Second value="3" />
+                </value>
+                <value key="VolumeSave.outputFilename">
+                    <First value="Result" />
+                    <Second value="0" />
+                </value>
+                <value key="VolumeSave.save">
+                    <First value="Result" />
+                    <Second value="1" />
+                </value>
+                <value key="VolumeSave.saveOnPathChange">
+                    <First value="Result" />
+                    <Second value="2" />
+                </value>
+                <value key="VolumeSave.volumeInfo">
+                    <First value="Result" />
+                    <Second value="4" />
+                </value>
+                <value key="VolumeSource Ref.volumeInfo">
+                    <First value="Reference Volume" />
+                    <Second value="1" />
+                </value>
+                <value key="VolumeSource Ref.volumeURL">
+                    <First value="Reference Volume" />
+                    <Second value="0" />
+                </value>
+                <value key="VolumeSource.volumeInfo">
+                    <First value="Transformed Volume" />
+                    <Second value="1" />
+                </value>
+                <value key="VolumeSource.volumeURL">
+                    <First value="Transformed Volume" />
+                    <Second value="0" />
+                </value>
+            </GroupMembership>
             <MenuEntityVisibility />
         </ApplicationModeConfig>
     </Workspace>

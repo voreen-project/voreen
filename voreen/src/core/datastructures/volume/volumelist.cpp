@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -28,8 +28,6 @@
 #include "voreen/core/datastructures/volume/volume.h"
 #include "voreen/core/utils/hashing.h"
 
-using std::vector;
-
 namespace voreen {
 
 const std::string VolumeList::loggerCat_ = "voreen.VolumeList";
@@ -44,7 +42,6 @@ VolumeList::~VolumeList() {
 }
 
 void VolumeList::add(VolumeBase* volume) {
-
     tgtAssert(volume, "Null pointer as Volume passed");
     if (!contains(volume)) {
         notifyPendingDataInvalidation();
@@ -56,7 +53,6 @@ void VolumeList::add(VolumeBase* volume) {
 }
 
 void VolumeList::add(const VolumeList* volumeList) {
-
     tgtAssert(volumeList, "Unexpected null pointer");
     for (size_t i=0; i<volumeList->size(); ++i) {
         add(volumeList->at(i));
@@ -108,7 +104,6 @@ void VolumeList::clear() {
 }
 
 VolumeList* VolumeList::selectModality(const Modality& modality) const {
-
     VolumeList* collection = new VolumeList();
     for (size_t i=0; i<volumes_.size(); ++i) {
         if (volumes_[i]->getModality() == modality)
@@ -165,20 +160,19 @@ std::string VolumeList::getHash() const {
 }
 
 void VolumeList::notifyVolumeAdded(const VolumeBase* handle) {
-    const vector<VolumeListObserver*> observers = Observable<VolumeListObserver>::getObservers();
+    std::vector<VolumeListObserver*> observers = Observable<VolumeListObserver>::getObservers();
     for (size_t i=0; i<observers.size(); ++i)
         observers[i]->volumeAdded(this, handle);
-
 }
 
 void VolumeList::notifyVolumeRemoved(const VolumeBase* handle) {
-    const vector<VolumeListObserver*> observers = Observable<VolumeListObserver>::getObservers();
+    std::vector<VolumeListObserver*> observers = Observable<VolumeListObserver>::getObservers();
     for (size_t i=0; i<observers.size(); ++i)
         observers[i]->volumeRemoved(this, handle);
 }
 
 void VolumeList::notifyVolumeChanged(const VolumeBase* handle) {
-    const vector<VolumeListObserver*> observers = Observable<VolumeListObserver>::getObservers();
+    std::vector<VolumeListObserver*> observers = Observable<VolumeListObserver>::getObservers();
     for (size_t i=0; i<observers.size(); ++i)
         observers[i]->volumeChanged(this, handle);
 }
@@ -187,7 +181,6 @@ void VolumeList::notifyVolumeChanged(const VolumeBase* handle) {
 void VolumeList::volumeChange(const VolumeBase* handle) {
     if (contains(handle))
         notifyVolumeChanged(handle);
-
 }
 
 // implementation of VolumeObserver interface

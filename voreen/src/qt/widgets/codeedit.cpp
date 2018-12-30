@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -175,6 +175,16 @@ void CodeEdit::paintEvent(QPaintEvent* e) {
     QTextBrowser::paintEvent(e);
 
     statusArea_->update();
+}
+
+void CodeEdit::wheelEvent(QWheelEvent* event) {
+
+    // Block zoom since it would break font size.
+    if (event->modifiers() & Qt::ControlModifier) {
+        event->setModifiers(event->modifiers() & ~Qt::ControlModifier);
+    }
+
+    QTextBrowser::wheelEvent(event);
 }
 
 void CodeEdit::highlightCurrentLine() {

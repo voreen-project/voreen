@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -52,11 +52,6 @@ public:
     virtual CodeState getCodeState() const   { return CODE_STATE_STABLE;     }
 
     /**
-     * Issues a reload of the sequence during next beforeProcess(), if the directory path has changed.
-     */
-    virtual void invalidate(int inv = INVALID_RESULT);
-
-    /**
      * Loads all images contained by the passed directory.
      *
      * @note The processor must have been initialized
@@ -79,11 +74,6 @@ public:
      */
     const ImageSequence* getImageSequence() const;
 
-    /**
-     * Issues a reload of the image sequence during next beforeProcess() call.
-     */
-    virtual void reloadImageSequence();
-
 protected:
     virtual void setDescriptions() {
         setDescription("Loads all images from the specified directory and puts them out as image sequence containing one OpenGL texture per image.\
@@ -100,18 +90,18 @@ protected:
      * @note The processor must have been initialized
      *       before calling this function.
      */
-    virtual void clearSequence();
+    void clearSequence();
 
     /**
      * Enforces a reload of the current image sequence during next beforeProcess() call.
      */
-    virtual void forceReload();
+    void forceReload();
 
     /**
      * Sets the imageDirectory_ property to an empty string,
      * thereby causing the sequence to be cleared during next beforeProcess().
      */
-    virtual void unsetDirectoryName();
+    void unsetDirectoryName();
 
     ImageSequencePort outport_;         ///< The port the generated image sequence is written to.
 
@@ -130,6 +120,7 @@ protected:
     bool sequenceOwner_;
 
     bool forceReload_;
+
     static const std::string loggerCat_;
 };
 

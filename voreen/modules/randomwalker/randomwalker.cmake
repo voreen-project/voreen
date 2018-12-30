@@ -44,3 +44,8 @@ SET(MOD_QT_HEADERS
 SET(MOD_QT_HEADERS_NONMOC
     ${MOD_DIR}/qt/randomwalkerprocessorwidgetfactory.h
 )
+
+# deployment
+SET(MOD_INSTALL_DIRECTORIES
+    ${MOD_DIR}/workspaces
+)

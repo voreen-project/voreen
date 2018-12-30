@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -39,8 +39,9 @@ struct ParallelFilterValue {
     // constructor with uninitialized value
     ParallelFilterValue<T>();
 
-    // implicit conversions to wrapped type
-    ParallelFilterValue<T>(T val);
+    // implicit conversions to wrapped type (via constructor)
+    template<class U>
+    ParallelFilterValue<T>(U val);
     operator T();
 
     float& operator[](size_t channel);
@@ -174,12 +175,15 @@ ParallelFilterValue<T>::operator T() {
 
 template<typename T>
 inline
-ParallelFilterValue<T>::ParallelFilterValue() {
+ParallelFilterValue<T>::ParallelFilterValue()
+    : ParallelFilterValue(0)
+{
 }
 
 template<typename T>
+template<typename U>
 inline
-ParallelFilterValue<T>::ParallelFilterValue(T val)
+ParallelFilterValue<T>::ParallelFilterValue(U val)
     : val_(val)
 {
 }
@@ -193,7 +197,7 @@ float& ParallelFilterValue<T>::operator[](size_t channel) {
 
 template<>
 inline
-float& ParallelFilterValue<float>::operator[](size_t channel) {
+float& ParallelFilterValue<float>::operator[](size_t) {
     //tgtAssert(channel < ParallelFilterValue<float>::dim, "invalid channel");
     return val_;
 }

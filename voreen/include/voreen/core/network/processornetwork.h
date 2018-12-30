@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -52,6 +52,14 @@ template class VRN_CORE_API Observable<ProcessorNetworkObserver>;
  */
 class VRN_CORE_API ProcessorNetwork : public Serializable, public ProcessorObserver, public Observable<ProcessorNetworkObserver> {
 public:
+
+    /// Current Network version. Used to check for incompatible versions.
+    static const int NETWORK_VERSION;
+    /// All imported networks whose version is lower than defined by this constant will emit a warning.
+    static const int WARNING_VERSION;
+    /// Voreen version corresponding to the WARNING_VERSION network version
+    static const std::string WARNING_VERSION_STRING;
+
     ProcessorNetwork();
     ~ProcessorNetwork();
 

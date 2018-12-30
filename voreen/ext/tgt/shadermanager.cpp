@@ -2,9 +2,8 @@
  *                                                                    *
  * tgt - Tiny Graphics Toolbox                                        *
  *                                                                    *
- * Copyright (C) 2005-2018 Visualization and Computer Graphics Group, *
- * Department of Computer Science, University of Muenster, Germany.   *
- * <http://viscg.uni-muenster.de>                                     *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,           *
+ * Department of Computer Science.                                    *
  *                                                                    *
  * This file is part of the tgt library. This library is free         *
  * software; you can redistribute it and/or modify it under the terms *
@@ -1185,6 +1184,10 @@ void Shader::setIgnoreUnsetUniform(const std::string& name) {
 }
 
 GLint Shader::useUniform(const std::string& name) {
+    if(!isLinked_) {
+        return -1;
+    }
+
     tgtAssert(isActivated(), "Shader not currently active");
 
     GLint l = getUniformLocation(name);
@@ -1197,6 +1200,7 @@ GLint Shader::useUniform(const std::string& name) {
 
 GLint Shader::getUniformLocation(const string& name) {
     // Look for cached location.
+    // TODO: this might be slower than not having cached in the first place?
     std::string trimmed = name.substr(0, name.find_first_of('[')); // Cut of array brackets.
     auto location = uniformLocations_.find(trimmed);
     if (location != uniformLocations_.end())

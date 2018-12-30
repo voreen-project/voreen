@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -61,11 +61,23 @@ private:
         if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_3xUInt16))
             return calcGradientMagnitudesGeneric<tgt::Vector3<uint16_t>, U >(srcVolume);
         else
+        if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_3xInt8))
+            return calcGradientMagnitudesGeneric<tgt::Vector3<int8_t>, U>(srcVolume);
+        else
+        if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_3xInt16))
+            return calcGradientMagnitudesGeneric<tgt::Vector3<int16_t>, U >(srcVolume);
+        else
         if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_4xUInt8))
             return calcGradientMagnitudesGeneric<tgt::Vector4<uint8_t>, U>(srcVolume);
         else
         if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_4xUInt16))
             return calcGradientMagnitudesGeneric<tgt::Vector4<uint16_t>, U>(srcVolume);
+        else
+        if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_4xInt8))
+            return calcGradientMagnitudesGeneric<tgt::Vector4<int8_t>, U>(srcVolume);
+        else
+        if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_4xInt16))
+            return calcGradientMagnitudesGeneric<tgt::Vector4<int16_t>, U >(srcVolume);
         else
         if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_3xFloat))
             return calcGradientMagnitudesGeneric<tgt::Vector3<float>, U>(srcVolume);
@@ -88,65 +100,60 @@ private:
 //---------------------------------------------------------------------------------------------
     template<typename T, typename U>
     Volume* VolumeOperatorMagnitude::calcGradientMagnitudesGeneric(const VolumeBase* handle) {
+        // get RAM representation of the input volume and relevant meta data
         const VolumeAtomic<T>* input = dynamic_cast<const VolumeAtomic<T>*>(handle->getRepresentation<VolumeRAM>());
+        RealWorldMapping rwm = handle->getRealWorldMapping();  
+        tgt::svec3 dim = input->getDimensions();
 
-        VolumeAtomic<U>* result = new VolumeAtomic<U>(input->getDimensions());
+        // create the output volume
+        VolumeAtomic<U>* result = new VolumeAtomic<U>(dim);
 
-        //float maxValueT;
-        //if ( typeid(*input) == typeid(VolumeRAM_3xUInt8)  ||
-             //typeid(*input) == typeid(VolumeRAM_3xUInt16) ||
-             //typeid(*input) == typeid(VolumeRAM_4xUInt8)  ||
-             //typeid(*input) == typeid(VolumeRAM_4xUInt16)    ) {
-             //int bitsT = input->getBitsStored() / input->getNumChannels();
-            //maxValueT = static_cast<float>( (1 << bitsT) - 1);
-        //}
-        //else if ( typeid(*input) == typeid(VolumeRAM_3xFloat) || typeid(*input) == typeid(VolumeRAM_3xDouble) ||
-            //typeid(*input) == typeid(VolumeRAM_4xFloat) || typeid(*input) == typeid(VolumeRAM_4xDouble) ) {
-            //maxValueT = 1.f;
-        //}
-        //else {
-            //LERRORC("calcGradientMagnitudes", "Unknown or unsupported input volume type");
-            //tgtAssert(false, "Unknown or unsupported input volume type");
-            //return result;
-        //}
-
-        float maxValueU;
-        if ( typeid(*result) == typeid(VolumeRAM_UInt8)  ||
-             typeid(*result) == typeid(VolumeRAM_UInt16) ||
-             typeid(*result) == typeid(VolumeRAM_UInt32) )
-            maxValueU = static_cast<float>( (1 << result->getBitsAllocated()) - 1);
-        else if ( typeid(*result) == typeid(VolumeRAM_Float) || typeid(*result) == typeid(VolumeRAM_Double))
-            maxValueU = 1.f;
-        else {
-            LERRORC("calcGradientMagnitudes", "Unknown or unsupported output volume type");
-            tgtAssert(false, "Unknown or unsupported output volume type");
-            return new Volume(result,handle);
-        }
-
-
-        tgt::ivec3 pos;
-        tgt::ivec3 dim = input->getDimensions();
+        // we need to find out the max vector magnitude of the input first
+        float maxMagnitude = 0.f;
+        tgt::svec3 pos;
         for (pos.z = 0; pos.z < dim.z; pos.z++) {
             for (pos.y = 0; pos.y < dim.y; pos.y++) {
                 for (pos.x = 0; pos.x < dim.x; pos.x++) {
-
+                    // get value of all three channels for x, y, and z vector values and transform using real-world mapping
                     tgt::vec3 gradient;
-                    gradient.x = input->getVoxelNormalized(pos, 0);
-                    gradient.y = input->getVoxelNormalized(pos, 1);
-                    gradient.z = input->getVoxelNormalized(pos, 2);
-
-                    // input value range is [0:maxValue] with (maxValue/2.f) corresponding to zero
-                    gradient = (gradient*2.f)-1.f;
+                    gradient.x = rwm.normalizedToRealWorld(input->getVoxelNormalized(pos, 0));
+                    gradient.y = rwm.normalizedToRealWorld(input->getVoxelNormalized(pos, 1));
+                    gradient.z = rwm.normalizedToRealWorld(input->getVoxelNormalized(pos, 2));
 
                     float gradientMagnitude = tgt::length(gradient);
-
-                    //result->voxel(pos) = static_cast<U>( ( (derivative / maxValueT) / 2.f + 0.5f ) * maxValueU );
-                    result->voxel(pos) = static_cast<U>( gradientMagnitude * maxValueU );
-
+                    
+                    maxMagnitude = std::max(maxMagnitude, gradientMagnitude);
                 }
             }
         }
-        return new Volume(result,handle);
+
+        LDEBUGC("calcGradientMagnitudes", "Found max. magnitude of " << maxMagnitude);
+
+        // now we can normalize magnitudes to the range [0, 1] for storing floats
+        for (pos.z = 0; pos.z < dim.z; pos.z++) {
+            for (pos.y = 0; pos.y < dim.y; pos.y++) {
+                for (pos.x = 0; pos.x < dim.x; pos.x++) {
+                    tgt::vec3 gradient;
+                    gradient.x = rwm.normalizedToRealWorld(input->getVoxelNormalized(pos, 0));
+                    gradient.y = rwm.normalizedToRealWorld(input->getVoxelNormalized(pos, 1));
+                    gradient.z = rwm.normalizedToRealWorld(input->getVoxelNormalized(pos, 2));
+
+                    float gradientMagnitude = tgt::length(gradient);
+
+                    // magnitude is always positive, so we can just normalize using the maximum
+                    result->setVoxelNormalized(gradientMagnitude / maxMagnitude, pos);
+                }
+            }
+        }
+
+        // we do not want to use a constructor which copies the meta data since we do not want to use the old real-world mapping
+        Volume* magnitudeVolume = new Volume(result, handle->getSpacing(), handle->getOffset(), handle->getPhysicalToWorldMatrix());
+        
+        // now we set a real-world mapping to rescale the normalized values
+        RealWorldMapping rescaleMapping(maxMagnitude, 0.f, "");
+        magnitudeVolume->setRealWorldMapping(rescaleMapping);
+
+        return  magnitudeVolume;
     }
 
 } // namespace

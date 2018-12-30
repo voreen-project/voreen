@@ -153,3 +153,10 @@ SET(MOD_QT_HEADERS_NONMOC
     ${MOD_DIR}/qt/experimentalprocessorwidgetfactory.h
     ${MOD_DIR}/qt/experimentalpropertywidgetfactory.h
 )
+
+
+# Deployment
+SET(MOD_INSTALL_DIRECTORIES
+    ${MOD_DIR}/glsl
+)
+

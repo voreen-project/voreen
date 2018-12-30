@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -51,7 +51,7 @@ const std::string HDF5FileVolume::REPRESENTATION_HISTOGRAMINTENSITYGRADIENT_ATTR
 const std::string HDF5FileVolume::REPRESENTATION_HISTOGRAMINTENSITYGRADIENT_METADATA_ATTRIBUTE_NAME("representation_histogramintensitygradient_metadata");
 const std::string HDF5FileVolume::REPRESENTATION_PREVIEW_ATTRIBUTE_NAME("representation_preview");
 const std::string HDF5FileVolume::REPRESENTATION_PREVIEW_METADATA_ATTRIBUTE_NAME("representation_preview_metadata");
-// Convention seems to be to use µm. => 0.001 mm per µm.
+// Convention seems to use µm. => 0.001 mm per µm.
 const float HDF5FileVolume::MM_PER_HDF5_UNIT_OF_LENGTH(0.001f);
 
 std::unique_ptr<HDF5FileVolume> HDF5FileVolume::openVolume(const std::string& fileName, const std::string& volumeLocation, bool readOnly) {

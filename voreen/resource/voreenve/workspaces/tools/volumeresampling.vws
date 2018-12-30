@@ -1,10 +1,15 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
-    <Workspace version="2" readonly="true" GlobalDescription="">
+    <Workspace version="2" readonly="true" GlobalDescription='&lt;font color=&quot;#808080&quot;&gt;&lt;h4&gt;This workspace does not have an application mode configuration.&lt;/h4&gt; &lt;p&gt;You can use this workspace for resampling a volume dataset.&lt;/p&gt;&lt;p&gt;Load your volume using the &quot;VolumeSource&quot; processor, then use &quot;VolumeResample&quot; to adjust the resampling settings (you might want to disable the processor by unchecking the &quot;Enable&quot; property until you adjusted the processor to your desired settings). You can then save the resampled data using the &quot;VolumeSave&quot; processor.&lt;/p&gt;&lt;/font&gt;'>
         <ProcessorNetwork version="19">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="VolumeResample" ref="ref1" />
+                    </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="0.5" y="-98" />
@@ -84,8 +89,8 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="" />
-                                    <item value="../../Users/Simon/ownCloud/work/workspaces/tools" />
-                                    <item value="C:/Users/Simon/ownCloud/work/workspaces/tools" />
+                                    <item value="resource/voreenve/workspaces/tools" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreenve/workspaces/tools" />
                                 </paths>
                             </paths>
                         </Property>

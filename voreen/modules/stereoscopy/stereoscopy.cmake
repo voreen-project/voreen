@@ -36,4 +36,5 @@ SET(MOD_QT_HEADERS_NONMOC
 ################################################################################
 SET(MOD_INSTALL_DIRECTORIES
     ${MOD_DIR}/glsl
+    ${MOD_DIR}/workspaces
 )

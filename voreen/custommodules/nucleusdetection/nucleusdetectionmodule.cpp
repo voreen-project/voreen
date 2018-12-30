@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -48,6 +48,7 @@
 // caffe classification
 #ifdef VRN_NUCLEUSDETECTION_CAFFE_FOUND
 #include "processors/patchcaffeclassifier.h"
+#include "processors/tilecaffeclassifier.h"
 #endif
 
 #include "processors/roidetector.h"
@@ -75,6 +76,7 @@ NucleusDetectionModule::NucleusDetectionModule(const std::string& modulePath)
 
 #ifdef VRN_NUCLEUSDETECTION_CAFFE_FOUND
     registerProcessor(new PatchCaffeClassifier());
+    registerProcessor(new TileCaffeClassifier());
 #endif
 
     registerProcessor(new RoiDetector());

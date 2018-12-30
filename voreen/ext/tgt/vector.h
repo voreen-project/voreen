@@ -2,9 +2,8 @@
  *                                                                    *
  * tgt - Tiny Graphics Toolbox                                        *
  *                                                                    *
- * Copyright (C) 2005-2018 Visualization and Computer Graphics Group, *
- * Department of Computer Science, University of Muenster, Germany.   *
- * <http://viscg.uni-muenster.de>                                     *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,           *
+ * Department of Computer Science.                                    *
  *                                                                    *
  * This file is part of the tgt library. This library is free         *
  * software; you can redistribute it and/or modify it under the terms *
@@ -27,8 +26,9 @@
 
 #ifdef __linux__
 // Add a .debug_gdb_scripts section within the binary with information for gdb.
-// When gdb is started at the root of the repository it should now find the script(s),
-// execute it and thus be able to print vectors in a compact manner.
+// When gdb is started (possibly only at the root of the repository) it should
+// now find the script(s), execute it and thus be able to print vectors in a
+// compact manner.
 //
 // It may be necessary to add the following line to your .gdbinit file:
 // add-auto-load-safe-path /some/path/to/voreen/repository
@@ -40,7 +40,15 @@
      .popsection \n\
      ");
 
+#ifdef VRN_BASE_PATH
+// If possible, also set the global path of the pretty printers script, thus enabling
+// pretty printing independet from the directory voreen was started in.
+DEFINE_GDB_SCRIPT(VRN_BASE_PATH "/tools/gdb/gdb-vector-pretty-printers.py")
+#else
+// Otherwise, refer to the pretty printers script relative from the project root.
 DEFINE_GDB_SCRIPT("voreen/tools/gdb/gdb-vector-pretty-printers.py")
+#endif
+
 #endif
 
 #include <iostream>
@@ -215,9 +223,11 @@ struct Vector2 {
             elem[i] = v;
     }
     /// Init from array with equal size
-    explicit Vector2(const T* v) {
+    static Vector2 fromPointer(const T* v) {
+        Vector2 vec;
         for (size_t i = 0; i < size; ++i)
-            elem[i] = v[i];
+            vec.elem[i] = v[i];
+        return vec;
     }
     /// Init componentwisely
     Vector2(T t1, T t2) {
@@ -309,9 +319,11 @@ struct Vector3 {
             elem[i] = v;
     }
     /// Init from array with equal size
-    explicit Vector3(const T* v) {
+    static Vector3 fromPointer(const T* v) {
+        Vector3 vec;
         for (size_t i = 0; i < size; ++i)
-            elem[i] = v[i];
+            vec.elem[i] = v[i];
+        return vec;
     }
     /// Init componentwisely
     Vector3(T t1, T t2, T t3) {
@@ -438,9 +450,11 @@ struct Vector4 {
             elem[i] = init;
     }
     /// Init from array with equal size
-    explicit Vector4(const T* init) {
+    static Vector4 fromPointer(const T* v) {
+        Vector4 vec;
         for (size_t i = 0; i < size; ++i)
-            elem[i] = init[i];
+            vec.elem[i] = v[i];
+        return vec;
     }
     /// Init componentwisely
     Vector4(T t1, T t2, T t3, T t4) {
@@ -1316,19 +1330,19 @@ inline float length(const Vector4<int>& v) {
 /// output Vector2d to stream
 template<typename T>
 std::ostream& operator << (std::ostream& s, const Vector2<T>& v) {
-    return (s << "[" << v.elem[0] << " " << v.elem[1] << "]");
+    return (s << "[" << +v.elem[0] << " " << +v.elem[1] << "]");
 }
 
 /// output Vector3d to stream
 template<typename T>
 std::ostream& operator << (std::ostream& s, const Vector3<T>& v) {
-    return (s << "[" << v.elem[0] << " " << v.elem[1] << " " << v.elem[2] << "]");
+    return (s << "[" << +v.elem[0] << " " << +v.elem[1] << " " << +v.elem[2] << "]");
 }
 
 /// output Vector4d to stream
 template<typename T>
 std::ostream& operator << (std::ostream& s, const Vector4<T>& v) {
-    return (s << "[" << v.elem[0] << " " << v.elem[1] << " " << v.elem[2] << " " << v.elem[3] << "]");
+    return (s << "[" << +v.elem[0] << " " << +v.elem[1] << " " << +v.elem[2] << " " << +v.elem[3] << "]");
 }
 
 // specialication for (unsigned) int, to make it output numbers and not characters

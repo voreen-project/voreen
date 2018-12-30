@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -39,13 +39,12 @@
 
 namespace voreen {
 
-VolumePort::VolumePort(PortDirection direction, const std::string& id, const std::string& guiName,
-      bool allowMultipleConnections)
-      : GenericPort<VolumeBase>(direction, id, guiName, allowMultipleConnections, direction == INPORT ? Processor::INVALID_RESULT : /* OUTPORT -> */ Processor::VALID)
-      , VolumeObserver()
-      , texFilterMode_("textureFilterMode_", "Texture Filtering",Processor::INVALID_RESULT,false,Property::LOD_ADVANCED)
-      , texClampMode_("textureClampMode_", "Texture Clamp",Processor::INVALID_RESULT,false,Property::LOD_ADVANCED)
-      , texBorderIntensity_("textureBorderIntensity", "Texture Border Intensity", 0.f,0.f,1.f,Processor::INVALID_RESULT,
+VolumePort::VolumePort(PortDirection direction, const std::string& id, const std::string& guiName, bool allowMultipleConnections)
+    : GenericPort<VolumeBase>(direction, id, guiName, allowMultipleConnections, direction == INPORT ? Processor::INVALID_RESULT : /* OUTPORT -> */ Processor::VALID)
+    , VolumeObserver()
+    , texFilterMode_("textureFilterMode_", "Texture Filtering",Processor::INVALID_RESULT,false,Property::LOD_ADVANCED)
+    , texClampMode_("textureClampMode_", "Texture Clamp",Processor::INVALID_RESULT,false,Property::LOD_ADVANCED)
+    , texBorderIntensity_("textureBorderIntensity", "Texture Border Intensity", 0.f,0.f,1.f,Processor::INVALID_RESULT,
                             NumericProperty<float>::STATIC, Property::LOD_ADVANCED)
 {
     construct(id, guiName);
@@ -61,7 +60,6 @@ VolumePort::VolumePort(PortDirection direction, const std::string& id, const std
                           NumericProperty<float>::STATIC, Property::LOD_ADVANCED)
 {
     construct(id, guiName);
-
 }
 
 std::string VolumePort::getContentDescription() const {
@@ -125,11 +123,11 @@ bool VolumePort::isReady() const {
     if (isOutport()) {
         return isConnected();
     } else {
-        bool validData = true;
-        if(const VolumeDecoratorIdentity* tmp = dynamic_cast<const VolumeDecoratorIdentity*>(getData())) {
-            validData = tmp->getDecorated(); // false if base volume is 0
+        const VolumeBase* volume = getData();
+        while(const VolumeDecoratorIdentity* tmp = dynamic_cast<const VolumeDecoratorIdentity*>(volume)) {
+            volume = tmp->getDecorated();
         }
-        return (hasData() && validData && areConditionsMet());
+        return (volume && areConditionsMet());
     }
 }
 

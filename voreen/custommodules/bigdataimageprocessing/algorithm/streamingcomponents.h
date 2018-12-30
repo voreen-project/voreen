@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -30,69 +30,194 @@
 #include "voreen/core/datastructures/volume/volumefactory.h"
 
 #include <fstream>
+#include <queue>
+#include <unordered_map>
+#include <boost/iostreams/device/mapped_file.hpp>
 
 
 #include "tgt/vector.h"
 
 namespace voreen {
-#define SC_TEMPLATE template<int ADJACENCY, typename MetaData>
-#define SC_NS StreamingComponents<ADJACENCY, MetaData>
+#define SC_TEMPLATE template<int ADJACENCY, typename MetaData, typename ClassID, typename SliceType>
+#define SC_NS StreamingComponents<ADJACENCY, MetaData, ClassID, SliceType>
+
+struct CCAVoidLabel {
+    CCAVoidLabel() { }
+    static boost::optional<CCAVoidLabel> some() {
+        return boost::optional<CCAVoidLabel>(CCAVoidLabel());
+    }
+    bool operator==(const CCAVoidLabel&) const {
+        return true;
+    }
+    bool operator!=(const CCAVoidLabel&) const {
+        return false;
+    }
+};
 
 struct StreamingComponentsStats {
     uint32_t numComponents;
     uint64_t numVoxels;
 };
 
-SC_TEMPLATE
+class CCARunID {
+public:
+    CCARunID(uint64_t id)
+        : id_(id)
+        , written_(false)
+        , meetsConstraints_(false)
+    {
+        tgtAssert((id >> 62) == 0, "Invalid id, must be smaller than 2^63");
+    }
+    uint64_t id() const {
+        return id_;
+    }
+    void markWritten() {
+        written_ = 1;
+    }
+    bool written() const {
+        return written_ > 0;
+    }
+    void setMeetsConstraints(bool v) {
+        meetsConstraints_ = v;
+    }
+    bool meetsConstraints() const {
+        return meetsConstraints_;
+    }
+private:
+    uint64_t id_ : 62;
+    uint64_t written_: 1;
+    uint64_t meetsConstraints_: 1;
+};
+
+template<int ADJACENCY, typename MetaData, typename ClassID, typename SliceType=VolumeRAM>
 class StreamingComponents {
 
+private:
+    class RootFile;
 public:
-    typedef std::function<bool(const VolumeRAM* vol, tgt::svec3 pos)> getBinVoxel;
+    typedef std::function<boost::optional<ClassID>(const SliceType& vol, tgt::svec3 pos)> getClassFunc;
     typedef std::function<bool(const MetaData&)> componentConstraintTest;
     typedef std::function<void(uint32_t id, const MetaData&)> ComponentCompletionCallback;
 
     template<typename InputType, typename OutputType>
-    StreamingComponentsStats cca(const InputType& input, OutputType& output, ComponentCompletionCallback componentCompletionCallback, getBinVoxel isOne, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress) const;
+    StreamingComponentsStats cca(const InputType& input, OutputType& output, ComponentCompletionCallback componentCompletionCallback, getClassFunc getClass, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress) const;
 private:
     class RowStorage; // Forward declaration
 
-    template<typename outputBaseType, typename OutputType>
-    void writeRowsToStorage(RowStorage& rows, OutputType& output, ComponentCompletionCallback componentCompletionCallback, componentConstraintTest meetsComponentConstraints, bool applyLabeling, uint32_t& idCounter, uint64_t& voxelCounter, ProgressReporter& progress) const;
+    template<typename outputBaseType, typename InputType, typename OutputType>
+    void writeOutputVolume(const RootFile& rootFile, const InputType& input, OutputType& output, getClassFunc getClass, uint64_t& voxelCounter, ProgressReporter& progress) const;
 
 
 protected:
     static const std::string loggerCat_;
 
 private:
+    struct MergerInfo {
+        CCARunID idRoot;
+        CCARunID idOther;
+
+        bool notesSingleNonConnectedComponent() {
+            return idRoot.id() == idOther.id();
+        }
+    };
+    class MergerFile {
+    public:
+        MergerFile(const std::string& filename)
+            : output_(filename, std::fstream::binary | std::fstream::in | std::fstream::out | std::fstream::trunc)
+            , filename_(filename)
+            , numMergers_(0)
+            , metadata_()
+        {
+        }
+        MergerFile(MergerFile&& other)
+            : output_(std::move(other.output_))
+            , filename_(other.filename_)
+            , numMergers_(other.numMergers_)
+            , metadata_(std::move(other.metadata_))
+        {
+            other.filename_ = "";
+            other.numMergers_ = -1;
+        }
+        ~MergerFile() {
+            output_.close();
+            tgt::FileSystem::deleteFile(filename_);
+        }
+        void noteMerger(MergerInfo e, MetaData metadata) {
+            uint64_t rootid = e.idRoot.id();
+            uint64_t otherid = e.idOther.id();
+            metadata_[rootid] = metadata;
+            if(!e.notesSingleNonConnectedComponent()) {
+                metadata_.erase(otherid);
+            }
+            output_.write(reinterpret_cast<char*>(&e), sizeof(e));
+            tgtAssert(output_.good(), "Write failed");
+            ++numMergers_;
+        }
+        std::fstream& getFile() & {
+            output_.flush();
+            return output_;
+        }
+        uint64_t getNumMergers() const {
+            return numMergers_;
+        }
+
+        const std::unordered_map<uint64_t, MetaData>& getMetadata() const {
+            return metadata_;
+        }
+    private:
+        std::fstream output_;
+        std::string filename_;
+        uint64_t numMergers_;
+        // Metadata of all root components, mapped via the runid
+        std::unordered_map<uint64_t, MetaData> metadata_;
+    };
+    class RootFile {
+    public:
+        RootFile(MergerFile&& mergerFile, const std::string& filename, uint64_t numUsedIds, ComponentCompletionCallback cccallback);
+        ~RootFile();
+        uint32_t getRootID(uint64_t) const;
+        uint32_t getMaxRootId() const;
+    private:
+        boost::iostreams::mapped_file file_;
+        std::string filename_;
+        uint32_t maxRootID_;
+    };
+
     class RunComposition;
     class Node {
     public:
-        Node();
+        Node(CCARunID id);
         virtual ~Node();
         virtual MetaData getMetaData() const = 0;
         virtual void addNode(Node* newRoot) = 0;
-        virtual uint32_t getRootAptitude() const = 0;
 
         typename SC_NS::Node* getRootNode();
-        uint32_t assignID(uint32_t& idCounter);
         void setParent(RunComposition* parent);
+        RunComposition* getParent() const;
+        CCARunID getComponentIdForMerger() {
+            CCARunID res = id_;
+            id_.markWritten();
+            return res;
+        }
+        uint64_t getId() const {
+            return id_.id();
+        }
 
     protected:
         RunComposition* parent_;
-        uint32_t id_;
+        CCARunID id_;
     };
 
     class Run;
     class RunComposition final : public Node {
     public:
-        RunComposition(Node* r1, Node* r2);
+        RunComposition(CCARunID id, Node* r1, Node* r2);
         ~RunComposition() {}
-        void addNode(Node* newRoot);
+        void addNode(Node* other);
         MetaData getMetaData() const;
         typename SC_NS::RunComposition* getRoot();
         void ref();
         void unref();
-        uint32_t getRootAptitude() const;
     private:
         MetaData metaData_;
         uint32_t refCount_;
@@ -100,29 +225,31 @@ private:
 
     class Run final : public Node {
     public:
-        Run(tgt::svec2 yzPos_, size_t lowerBound_, size_t upperBound_);
+        Run(uint64_t id, tgt::svec2 yzPos_, size_t lowerBound_, size_t upperBound_, ClassID cls);
         ~Run();
 
+        // If merge between runs is successfull, return the mergerInfo and the metadata
         template<int ROW_MH_DIST>
-        void tryMerge(Run& other);
+        boost::optional<std::pair<MergerInfo, MetaData>> tryMerge(Run& other, const componentConstraintTest& cctest);
 
         MetaData getMetaData() const;
-        void addNode(Node* newRoot);
-        uint32_t getRootAptitude() const;
+        void addNode(Node* other);
 
         const tgt::svec2 yzPos_;
         const size_t lowerBound_;
         const size_t upperBound_;
+        const ClassID class_;
     };
 
     class Row {
     public:
-        void init(const VolumeRAM* slice, size_t sliceNum, size_t rowNum, getBinVoxel isOne);
+        void finalize(MergerFile& mergerFile, const componentConstraintTest& cctest);
+        void init(const SliceType& slice, size_t sliceNum, size_t rowNum, getClassFunc getClass, uint64_t& idCounter);
         Row();
         ~Row() {}
 
         template<int ROWADJACENCY>
-        void connect(Row& other);
+        void connect(typename SC_NS::Row& other, MergerFile& mergerFile, const componentConstraintTest& cctest);
         std::vector<Run>& getRuns();
     private:
         std::vector<Run> runs_; ///< Sorted!
@@ -130,9 +257,9 @@ private:
 
     class RowStorage {
     public:
-        RowStorage(const tgt::svec3& volumeDimensions, getBinVoxel isOne);
+        RowStorage(const tgt::svec3& volumeDimensions, MergerFile& mergerFile, getClassFunc getClass, componentConstraintTest cctest);
         ~RowStorage();
-        void add(const VolumeRAM* slice, size_t sliceNum, size_t row);
+        void add(const SliceType& slice, size_t sliceNum, size_t row, uint64_t& idCounter);
         Row& latest() const;
 
         template<int DY, int DZ>
@@ -148,8 +275,10 @@ private:
 
         const size_t storageSize_;
         const size_t rowsPerSlice_;
-        const getBinVoxel isOne_;
+        const getClassFunc getClass_;
+        const componentConstraintTest cctest_;
         Row* rows_;
+        MergerFile& mergerFile_;
         size_t storagePos_;
     };
 
@@ -160,114 +289,134 @@ SC_TEMPLATE
 const std::string SC_NS::loggerCat_("voreen.bigdataimageprocessing.streamingcomponents");
 
 SC_TEMPLATE
-template<typename outputBaseType, typename OutputType>
-void SC_NS::writeRowsToStorage(RowStorage& rows, OutputType& output, ComponentCompletionCallback componentCompletionCallback, componentConstraintTest meetsComponentConstraints, bool applyLabeling, uint32_t& idCounter, uint64_t& voxelCounter, ProgressReporter& progress) const {
-
-    const tgt::svec3 dim = output.getDimensions();
-    VolumeAtomic<outputBaseType> slice(tgt::vec3(dim.x, dim.y, 1));
-
+template<typename outputBaseType, typename InputType, typename OutputType>
+void SC_NS::writeOutputVolume(const RootFile& rootFile, const InputType& input, OutputType& output, getClassFunc getClass, uint64_t& voxelCounter, ProgressReporter& progress) const
+{
+    uint64_t runIdCounter = 1;
+    tgt::svec3 dim = output.getDimensions();
     for(size_t z = 0; z<dim.z; ++z) {
-        progress.setProgress(static_cast<float>(z)/dim.z);
-        // Initialize slice with 0s
-        slice.clear();
+        progress.setProgress(static_cast<float>(z) / static_cast<float>(dim.z));
+        std::unique_ptr<const SliceType> activeLayer(dynamic_cast<const SliceType*>(input.getSlice(z)));
+        VolumeAtomic<outputBaseType> slice(tgt::vec3(dim.x, dim.y, 1));
+        slice.clear(); //Default initialize with zeros (background)
+        tgtAssert(activeLayer, "No slice or invalid type");
         for(size_t y = 0; y<dim.y; ++y) {
-            Row& currentRow = rows.getRows()[z*dim.y+y];
-            for(auto& run : currentRow.getRuns()) {
-                uint32_t id = 0;
-                Node* n = run.getRootNode();
-                MetaData metaData = n->getMetaData();
-                if(meetsComponentConstraints(metaData)) {
-                    uint32_t prevIdCounter = idCounter;
-                    id = n->assignID(idCounter);
+            Row row;
+            row.init(*activeLayer.get(), z, y, getClass, runIdCounter);
+            auto& runs = row.getRuns();
+            auto run = runs.begin();
+            for(size_t x = 0; x<dim.x;) {
+                if(run == runs.end()) {
+                    break;
+                }
 
-                    // This can be moved into the destructor of the nodes if we ever decide not to hold all rows in memory
-                    if(prevIdCounter != idCounter) {
-                        componentCompletionCallback(id, metaData);
-                    }
+                uint32_t id;
+                tgtAssert(run->upperBound_ > x, "overlapping runs");
+                if(run->lowerBound_ <= x) {
+                    id = rootFile.getRootID(run->getId());
+                    ++voxelCounter;
+                } else {
+                    id = 0;
+                }
+                if(std::is_same<outputBaseType, uint32_t>::value) {
+                    slice.voxel(x,y,0) = id;
+                } else {
+                    tgtAssert((std::is_same<outputBaseType, uint8_t>::value), "invalid output type for binary volume");
+                    slice.voxel(x,y,0) = id > 0;
+                }
 
-                    for(size_t x = run.lowerBound_; x < run.upperBound_; ++x) {
-                        slice.voxel(x,y,0) = applyLabeling ? id : 1;
-                        ++voxelCounter;
-                    }
-
+                ++x;
+                if(x >= run->upperBound_) {
+                    tgtAssert(run->upperBound_ == x, "we lost the correct run somehow");
+                    ++run;
                 }
             }
         }
         output.writeSlices(&slice, z);
     }
+    progress.setProgress(1.0f);
 }
-
 SC_TEMPLATE
 template<typename InputType, typename OutputType>
-StreamingComponentsStats SC_NS::cca(const InputType& input, OutputType& output, ComponentCompletionCallback componentCompletionCallback, getBinVoxel isOne, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress) const {
+StreamingComponentsStats SC_NS::cca(const InputType& input, OutputType& output, ComponentCompletionCallback componentCompletionCallback, getClassFunc getClass, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress) const {
     const tgt::svec3 dim = input.getDimensions();
     tgtAssert(input.getDimensions() == output.getDimensions(), "dimensions of input and output differ");
     tgtAssert(tgt::hand(tgt::greaterThan(input.getDimensions(), tgt::svec3::one)), "Degenerated volume dimensions");
 
     progress.setProgressRange(tgt::vec2(0, 0.5));
 
-    RowStorage rows(dim, isOne);
-    // First layer
+    uint64_t runIdCounter = 1;
+    std::string mergerFileName = VoreenApplication::app()->getUniqueTmpFilePath(".merger");
+    MergerFile mergers(mergerFileName);
+
     {
-        std::unique_ptr<const VolumeRAM> activeLayer(input.getSlice(0));
-        rows.add(activeLayer.get(), 0, 0);
-        for(size_t y = 1; y<dim.y; ++y) {
-            // Create new row at z=0
-            rows.add(activeLayer.get(), 0, y);
+        RowStorage rows(dim, mergers, getClass, meetsComponentConstraints);
+        // First layer
+        {
+            std::unique_ptr<const SliceType> activeLayer(dynamic_cast<const SliceType*>(input.getSlice(0)));
+            tgtAssert(activeLayer, "No slice or invalid slice format");
+            rows.add(*activeLayer.get(), 0, 0, runIdCounter);
+            for(size_t y = 1; y<dim.y; ++y) {
+                // Create new row at z=0
+                rows.add(*activeLayer.get(), 0, y, runIdCounter);
 
-            // merge with row (-1, 0)
-            rows.template connectLatestWith<-1, 0>();
+                // merge with row (-1, 0)
+                rows.template connectLatestWith<-1, 0>();
+            }
         }
-    }
 
-    // The rest of the layers
-    for(size_t z = 1; z<dim.z; ++z) {
-        progress.setProgress(static_cast<float>(z)/dim.z);
-        std::unique_ptr<const VolumeRAM> activeLayer(input.getSlice(z));
+        // The rest of the layers
+        for(size_t z = 1; z<dim.z; ++z) {
+            progress.setProgress(static_cast<float>(z)/dim.z);
+            std::unique_ptr<const SliceType> activeLayer(dynamic_cast<const SliceType*>(input.getSlice(z)));
+            tgtAssert(activeLayer, "No slice or invalid type");
 
-        // Create new row at y=0
-        rows.add(activeLayer.get(), z, 0);
+            // Create new row at y=0
+            rows.add(*activeLayer.get(), z, 0, runIdCounter);
 
-        // merge with row (0, -1)
-        rows.template connectLatestWith< 0,-1>();
-
-        // merge with row ( 1,-1)
-        rows.template connectLatestWith< 1,-1>();
-
-        for(size_t y = 1; y<dim.y; ++y) {
-            // Create new row
-            rows.add(activeLayer.get(), z, y);
-
-            // merge with row (-1, 0)
-            rows.template connectLatestWith<-1, 0>();
-
-            // merge with row ( 0,-1)
+            // merge with row (0, -1)
             rows.template connectLatestWith< 0,-1>();
 
-            if(y != dim.y-1) {
-                // merge with row ( 1,-1), but only if we are not at the end of the slice
-                rows.template connectLatestWith< 1,-1>();
-            }
+            // merge with row ( 1,-1)
+            rows.template connectLatestWith< 1,-1>();
 
-            // merge with row (-1,-1)
-            rows.template connectLatestWith<-1,-1>();
+            for(size_t y = 1; y<dim.y; ++y) {
+                // Create new row
+                rows.add(*activeLayer.get(), z, y, runIdCounter);
+
+                // merge with row (-1, 0)
+                rows.template connectLatestWith<-1, 0>();
+
+                // merge with row ( 0,-1)
+                rows.template connectLatestWith< 0,-1>();
+
+                if(y != dim.y-1) {
+                    // merge with row ( 1,-1), but only if we are not at the end of the slice
+                    rows.template connectLatestWith< 1,-1>();
+                }
+
+                // merge with row (-1,-1)
+                rows.template connectLatestWith<-1,-1>();
+            }
         }
+        // RowStorage is destructed and all remaining row info is written.
     }
 
-    uint32_t idCounter = 1;
-    uint64_t voxelCounter = 0;
+    RootFile rootFile(std::move(mergers), VoreenApplication::app()->getUniqueTmpFilePath(".root"), runIdCounter-1, componentCompletionCallback);
 
+    uint64_t voxelCounter = 0;
     progress.setProgressRange(tgt::vec2(0.5, 1));
+
     if(applyLabeling) {
         tgtAssert(output.getBaseType() == "uint32", "data type mismatch");
-        writeRowsToStorage<uint32_t>(rows, output, componentCompletionCallback, meetsComponentConstraints, applyLabeling, idCounter, voxelCounter, progress);
+        writeOutputVolume<uint32_t>(rootFile, input, output, getClass, voxelCounter, progress);
     } else {
         tgtAssert(output.getBaseType() == "uint8", "data type mismatch");
-        writeRowsToStorage<uint8_t>(rows, output, componentCompletionCallback, meetsComponentConstraints, applyLabeling, idCounter, voxelCounter, progress);
+        writeOutputVolume<uint8_t>(rootFile, input, output, getClass, voxelCounter, progress);
     }
     progress.setProgress(1.0f);
 
-    const uint32_t numComponents = idCounter - 1;
+    const uint32_t numComponents = rootFile.getMaxRootId();
     const float minValue = voxelCounter < tgt::hmul(dim) ? 0.0f : 1.0f; // Check if there are any background voxels at all
     const float maxValue = voxelCounter > 0 ? (applyLabeling ? numComponents : 1.0f) : 0.0f; // Check if there are any foreground voxels, if there are, check if we applied labeling
     std::unique_ptr<VolumeRAM> helper(VolumeFactory().create(output.getBaseType(), tgt::vec3(1))); // Used to get element range
@@ -286,24 +435,150 @@ StreamingComponentsStats SC_NS::cca(const InputType& input, OutputType& output, 
     };
 }
 
+struct NodeWithId {
+    const CCARunID id;
+    NodeWithId* parent;
+
+    uint32_t finalId;
+
+    NodeWithId(CCARunID id)
+        : id(id)
+        , parent(nullptr)
+        , finalId(0)
+    {
+    }
+
+    NodeWithId* getRoot() {
+        NodeWithId* root = this;
+        while(root->parent) {
+            root = root->parent;
+        }
+        return root;
+    }
+
+    uint32_t getFinalId(uint32_t& finalIdCounter) {
+        if(id.meetsConstraints() && finalId == 0) {
+            finalId = finalIdCounter++;
+        }
+        return finalId;
+    }
+};
+struct NodeWithIdMaxHeapComp {
+    bool operator()(NodeWithId* lhs, NodeWithId* rhs) {
+        tgtAssert(lhs, "Nullptr in heap");
+        tgtAssert(rhs, "Nullptr in heap");
+        return lhs->id.id() < rhs->id.id();
+    }
+};
+
 SC_TEMPLATE
-SC_NS::Node::Node()
+SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t numUsedIds, ComponentCompletionCallback cccallback)
+    : file_()
+    , filename_(filename)
+{
+    auto next_finalized_node_id = numUsedIds;
+
+    size_t fileSize = next_finalized_node_id * sizeof(next_finalized_node_id);
+
+    // Ensure that fileSize is > 0 so that we create and do not try to open it.
+    fileSize = std::max<size_t>(1, fileSize);
+
+    boost::iostreams::mapped_file_params openParams;
+    openParams.path = filename_;
+    openParams.mode = std::ios::in | std::ios::out;
+    openParams.length = fileSize;
+    openParams.new_file_size = fileSize; // Option: Do create the file (overwrite if it does not exist)!
+
+    file_.open(openParams);
+
+    uint32_t* data = reinterpret_cast<uint32_t*>(file_.data());
+
+    MergerFile tmp(std::move(in));
+    std::fstream& mergerFile = tmp.getFile();
+    const auto& metadataMap = tmp.getMetadata();
+
+    MergerInfo mergerIds{0, 0};
+    NodeWithId* nodes[2];
+
+    std::unordered_map<uint64_t, NodeWithId*> hash;
+    std::priority_queue<NodeWithId*, std::vector<NodeWithId*>, NodeWithIdMaxHeapComp> prior;
+
+    uint32_t finalIdCounter = 1;
+    for(int64_t next_merger_id = tmp.getNumMergers()-1; next_merger_id >= 0; next_merger_id--) {
+        mergerFile.seekg(next_merger_id*sizeof(mergerIds));
+        mergerFile.read(reinterpret_cast<char*>(&mergerIds), sizeof(mergerIds));
+        tgtAssert(mergerFile.good(), "Read error");
+
+        if (mergerIds.notesSingleNonConnectedComponent()) {
+            prior.push(new NodeWithId(mergerIds.idRoot));
+        } else {
+            auto handleId = [&] (const CCARunID& id, NodeWithId*& node) {
+                auto possibleNode = hash.find(id.id());
+                if (possibleNode != hash.end()) {
+                    node = possibleNode->second;
+                } else {
+                    node = new NodeWithId(id);
+                    hash.insert({id.id(), node});
+                }
+                if (!id.written()) {
+                    hash.erase(id.id());
+                    prior.push(node);
+                }
+            };
+            tgtAssert(mergerIds.idRoot.id() < mergerIds.idOther.id(), "Invalid merge");
+            handleId(mergerIds.idOther, nodes[1]);
+            handleId(mergerIds.idRoot, nodes[0]);
+            nodes[1]->parent = nodes[0];
+        }
+        while (next_finalized_node_id > 0 && !prior.empty() && prior.top()->id.id() == next_finalized_node_id) {
+            NodeWithId* node = prior.top();
+            prior.pop();
+            NodeWithId* root = node->getRoot();
+            uint32_t finalid = root->getFinalId(finalIdCounter);
+            if(root == node) {
+                // Node is a root => a finished component
+                uint64_t runid = root->id.id();
+                const auto& entry = metadataMap.find(runid);
+                tgtAssert(entry != metadataMap.end(), "No metadata for runid");
+                cccallback(finalid, entry->second);
+            }
+            data[next_finalized_node_id] = finalid;
+            delete node;
+            next_finalized_node_id--;
+        }
+    }
+    maxRootID_ = finalIdCounter - 1;
+    tgtAssert(prior.empty(), "Queue not empty");
+}
+
+SC_TEMPLATE
+SC_NS::RootFile::~RootFile() {
+    file_.close();
+    tgt::FileSystem::deleteFile(filename_);
+}
+
+SC_TEMPLATE
+uint32_t SC_NS::RootFile::getRootID(uint64_t id) const {
+    uint32_t* data = reinterpret_cast<uint32_t*>(file_.data());
+    return data[id];
+}
+
+SC_TEMPLATE
+uint32_t SC_NS::RootFile::getMaxRootId() const {
+    return maxRootID_;
+}
+
+SC_TEMPLATE
+SC_NS::Node::Node(CCARunID id)
     : parent_(nullptr)
-    , id_(0)
+    , id_(id)
 {
 }
 SC_TEMPLATE
 SC_NS::Node::~Node() {
     if(parent_) {
         parent_->unref();
-    } else {
-        // TODO output something
-        //std::cout << "Node with volume " << volume_ << std::endl;
     }
-}
-SC_TEMPLATE
-uint32_t SC_NS::RunComposition::getRootAptitude() const {
-    return refCount_;
 }
 
 SC_TEMPLATE
@@ -313,14 +588,6 @@ typename SC_NS::Node* SC_NS::Node::getRootNode() {
     }
     setParent(parent_->getRoot());
     return parent_;
-}
-
-SC_TEMPLATE
-uint32_t SC_NS::Node::assignID(uint32_t& idCounter) {
-    if(id_ == 0) {
-        id_ = idCounter++;
-    }
-    return id_;
 }
 
 SC_TEMPLATE
@@ -337,6 +604,11 @@ void SC_NS::Node::setParent(typename SC_NS::RunComposition* newParent) {
 }
 
 SC_TEMPLATE
+typename SC_NS::RunComposition* SC_NS::Node::getParent() const {
+    return parent_;
+}
+
+SC_TEMPLATE
 void SC_NS::RunComposition::addNode(Node* other) {
     tgtAssert(other, "newroot is null");
     tgtAssert(!this->parent_, "Parent not null");
@@ -345,11 +617,11 @@ void SC_NS::RunComposition::addNode(Node* other) {
 }
 
 SC_TEMPLATE
-SC_NS::RunComposition::RunComposition(Node* r1, Node* r2)
-    : metaData_() //using default constructor
+SC_NS::RunComposition::RunComposition(CCARunID id, Node* r1, Node* r2)
+    : Node(id)
+    , metaData_() //using default constructor
     , refCount_(0)
 {
-    //TODO just do this in a metadataconstructor?
     addNode(r1);
     addNode(r2);
 }
@@ -380,10 +652,12 @@ void SC_NS::RunComposition::unref() {
 }
 
 SC_TEMPLATE
-SC_NS::Run::Run(tgt::svec2 yzPos, size_t lowerBound, size_t upperBound)
-    : yzPos_(yzPos)
+SC_NS::Run::Run(uint64_t id, tgt::svec2 yzPos, size_t lowerBound, size_t upperBound, ClassID cls)
+    : Node(id)
+    , yzPos_(yzPos)
     , lowerBound_(lowerBound) // first voxel part of run
     , upperBound_(upperBound) // first voxel not part of run
+    , class_(cls)
 {
 }
 
@@ -404,37 +678,54 @@ void SC_NS::Run::addNode(Node* other) {
     tgtAssert(other, "newroot is null");
     tgtAssert(!this->parent_, "parent is not null");
     // Construct a new root
-    RunComposition* newRoot = new RunComposition(this, other);
+    RunComposition* newRoot = new RunComposition(Node::id_, this, other);
 }
 
 SC_TEMPLATE
 template<int ROW_MH_DIST>
-void SC_NS::Run::tryMerge(Run& other) {
+boost::optional<std::pair<typename SC_NS::MergerInfo, MetaData>> SC_NS::Run::tryMerge(Run& other, const componentConstraintTest& cctest) {
+    if(class_ != other.class_) {
+        return boost::none;
+    }
+
     static const int MAX_MH_DIST = 3 - ADJACENCY;
 
     // The two rows are already too far apart in the yz-dimension
     if(MAX_MH_DIST - ROW_MH_DIST <  0) {
-        return;
+        return boost::none;
     }
     // The two rows are almost to far in the xy-dimension apart, so they have to actually overlap in the x dimension
     if(MAX_MH_DIST - ROW_MH_DIST == 0 && (lowerBound_ >= other.upperBound_ || other.lowerBound_ >= upperBound_)) {
-        return;
+        return boost::none;
     }
     // The two rows close enough in the yz-dimension, so that they only need to be next to each other in the x dimension
     if(MAX_MH_DIST - ROW_MH_DIST >  0 && (lowerBound_ > other.upperBound_ || other.lowerBound_ > upperBound_)) {
-        return;
+        return boost::none;
     }
 
     Node* thisRoot = this->getRootNode();
     Node* otherRoot = other.getRootNode();
     if(thisRoot == otherRoot) {
-        return;
+        return boost::none;
     }
-    if(thisRoot->getRootAptitude() > otherRoot->getRootAptitude()) {
-        thisRoot->addNode(otherRoot);
+    // Note: It is important for the creation of the root file that the component with the lower id is the new root!
+    Node* root;
+    Node* child;
+    if(thisRoot->getId() < otherRoot->getId()) {
+        root = thisRoot;
+        child = otherRoot;
     } else {
-        otherRoot->addNode(thisRoot);
+        root = otherRoot;
+        child = thisRoot;
     }
+    auto rootId = root->getComponentIdForMerger();
+    auto childId = child->getComponentIdForMerger();
+    root->addNode(child);
+    rootId.setMeetsConstraints(cctest(root->getMetaData()));
+    return std::make_pair(MergerInfo {
+        rootId,
+        childId,
+    }, root->getMetaData());
 }
 
 SC_TEMPLATE
@@ -443,34 +734,46 @@ MetaData SC_NS::Run::getMetaData() const {
 }
 
 SC_TEMPLATE
-void SC_NS::Row::init(const VolumeRAM* slice, size_t sliceNum, size_t rowNum, getBinVoxel isOne)
+void SC_NS::Row::finalize(MergerFile& mergerFile, const componentConstraintTest& cctest)
 {
-    // Finalize previous:
-    runs_.clear();
-
-    // Insert new runs
-    bool inRun = false;
-    size_t runStart = 0;
-    size_t rowLength = slice->getDimensions().x;
-    tgt::svec2 yzPos(rowNum, sliceNum);
-    for(size_t x = 0; x < rowLength; ++x) {
-        bool one = isOne(slice, tgt::svec3(x, rowNum, 0));
-        if(inRun && !one) {
-            runs_.emplace_back(yzPos, runStart, x);
-            inRun = false;
-        } else if(!inRun && one) {
-            runStart = x;
-            inRun = true;
+    for(auto& run : runs_) {
+        if(run.Node::getParent() == nullptr) {
+            // Run is not connected to anything
+            CCARunID id = run.getComponentIdForMerger();
+            const auto& metadata = run.getMetaData();
+            id.setMeetsConstraints(cctest(metadata));
+            mergerFile.noteMerger(MergerInfo {
+                    id,
+                    id
+                    }, metadata);
         }
     }
-    if(inRun) {
-        runs_.emplace_back(yzPos, runStart, rowLength);
-    }
+    runs_.clear();
 }
 
 SC_TEMPLATE
-uint32_t SC_NS::Run::getRootAptitude() const {
-    return 0;
+void SC_NS::Row::init(const SliceType& slice, size_t sliceNum, size_t rowNum, getClassFunc getClass, uint64_t& idCounter)
+{
+    // Insert new runs
+    boost::optional<ClassID> prevClass = boost::none;
+    size_t runStart = 0;
+    size_t rowLength = slice.getDimensions().x;
+    tgt::svec2 yzPos(rowNum, sliceNum);
+    for(size_t x = 0; x < rowLength; ++x) {
+        auto currentClass = getClass(slice, tgt::svec3(x, rowNum, 0));
+        if(prevClass != currentClass) {
+            if(prevClass) {
+                runs_.emplace_back(idCounter++, yzPos, runStart, x, *prevClass);
+            }
+            if(currentClass) {
+                runStart = x;
+            }
+        }
+        prevClass = currentClass;
+    }
+    if(prevClass) {
+        runs_.emplace_back(idCounter++, yzPos, runStart, rowLength, *prevClass);
+    }
 }
 
 
@@ -482,11 +785,14 @@ SC_NS::Row::Row()
 
 SC_TEMPLATE
 template<int ROW_MH_DIST>
-void SC_NS::Row::connect(typename SC_NS::Row& other) {
+void SC_NS::Row::connect(typename SC_NS::Row& other, MergerFile& mergerFile, const componentConstraintTest& cctest) {
     auto thisRun = runs_.begin();
     auto otherRun = other.runs_.begin();
     while(thisRun != runs_.end() && otherRun != other.runs_.end()) {
-        thisRun->template tryMerge<ROW_MH_DIST>(*otherRun);
+        auto mergeEvent = thisRun->template tryMerge<ROW_MH_DIST>(*otherRun, cctest);
+        if(mergeEvent) {
+            mergerFile.noteMerger(mergeEvent->first, mergeEvent->second);
+        }
 
         // Advance the run that cannot overlap with the follower of the current other
         // If both end on the voxel, we can advance both.
@@ -507,26 +813,32 @@ std::vector<typename SC_NS::Run>& SC_NS::Row::getRuns() {
 }
 
 SC_TEMPLATE
-SC_NS::RowStorage::RowStorage(const tgt::svec3& volumeDimensions, getBinVoxel isOne)
-    //: storageSize_(volumeDimensions.y + 2)
-    : storageSize_(tgt::hmul(volumeDimensions.yz()))
+SC_NS::RowStorage::RowStorage(const tgt::svec3& volumeDimensions, MergerFile& mergerFile, getClassFunc getClass, componentConstraintTest cctest)
+    : storageSize_(volumeDimensions.y + 2)
+    //: storageSize_(tgt::hmul(volumeDimensions.yz()))
     , rowsPerSlice_(volumeDimensions.y)
     , rows_(new Row[storageSize_])
     , storagePos_(-1)
-    , isOne_(isOne)
+    , mergerFile_(mergerFile)
+    , getClass_(getClass)
+    , cctest_(cctest)
 {
 }
 
 SC_TEMPLATE
 SC_NS::RowStorage::~RowStorage() {
+    for(size_t i=0; i<storageSize_; ++i) {
+        rows_[i].finalize(mergerFile_, cctest_);
+    }
     delete[] rows_;
 }
 
 
 SC_TEMPLATE
-void SC_NS::RowStorage::add(const VolumeRAM* slice, size_t sliceNum, size_t rowNum) {
+void SC_NS::RowStorage::add(const SliceType& slice, size_t sliceNum, size_t rowNum, uint64_t& idCounter) {
     storagePos_ = (storagePos_ + 1)%storageSize_;
-    rows_[storagePos_].init(slice, sliceNum, rowNum, isOne_);
+    rows_[storagePos_].finalize(mergerFile_, cctest_);
+    rows_[storagePos_].init(slice, sliceNum, rowNum, getClass_, idCounter);
 }
 
 SC_TEMPLATE
@@ -545,7 +857,7 @@ typename SC_NS::Row& SC_NS::RowStorage::latest_DP() const {
 SC_TEMPLATE
 template<int DY, int DZ>
 void SC_NS::RowStorage::connectLatestWith() {
-    latest().template connect<DY*DY+DZ*DZ>(latest_DP<DY,DZ>());
+    latest().template connect<DY*DY+DZ*DZ>(latest_DP<DY,DZ>(), mergerFile_, cctest_);
 }
 
 SC_TEMPLATE

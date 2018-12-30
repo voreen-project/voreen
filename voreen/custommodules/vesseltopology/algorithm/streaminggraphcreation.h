@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2016 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -33,9 +33,9 @@
 
 #include "../datastructures/vesselgraph.h"
 #include "../datastructures/protovesselgraph.h"
+#include "../datastructures/diskarraystorage.h"
 #include "../algorithm/volumemask.h"
 #include "../util/tasktimelogger.h"
-#include "../util/kdtreebuilder.h"
 #include "custommodules/bigdataimageprocessing/volumefiltering/slicereader.h"
 #include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 
@@ -140,9 +140,6 @@ class NeighborCountVoxelClassifier : public SkeletonClassReader {
 public:
     NeighborCountVoxelClassifier(const VolumeMask& skeleton);
     virtual ~NeighborCountVoxelClassifier();
-
-    // 0: no predefined id
-    uint32_t getPredefinedComponentId(const tgt::ivec2& xypos) const;
 };
 
 /// NeighborCountAndBranchSegmentationVoxelClassifier --------------------------------------
@@ -160,8 +157,6 @@ public:
     // Get the class of the specified voxel within the active slice
     uint8_t getClass(const tgt::ivec2& xypos) const;
     const tgt::svec3& getDimensions() const;
-    // 0: no predefined id
-    uint32_t getPredefinedComponentId(const tgt::ivec2& xypos) const;
 
     void advance();
 private:
@@ -178,7 +173,7 @@ private:
 // Metadata for end voxel components
 struct EndData {
     EndData(EndData&&, EndData&&);
-    EndData(const RunPosition&, uint32_t predeterminedComponentId);
+    EndData(const RunPosition&);
     void consume(EndData&& rhs);
 
     tgt::svec3 pos_;
@@ -187,7 +182,7 @@ struct EndData {
 // Metadata for branch voxel components
 struct BranchData {
     BranchData(BranchData&&, BranchData&&);
-    BranchData(const RunPosition&, uint32_t predeterminedComponentId);
+    BranchData(const RunPosition&);
 
     BranchData(const BranchData&) = delete;
     BranchData(BranchData&& other);
@@ -200,7 +195,7 @@ struct BranchData {
 // Metadata for regular voxel components
 struct RegularData {
     RegularData(RegularData&&, RegularData&&);
-    RegularData(const RunPosition&, uint32_t predeterminedComponentId);
+    RegularData(const RunPosition&);
 
     RegularData(const RegularData&) = delete;
     RegularData(RegularData&& other);
@@ -210,273 +205,13 @@ struct RegularData {
     std::unique_ptr<RunTree> voxels_; //Invariant: voxels_ is ordered so that voxels_[i] and voxels_[i+1] are neighbros in the volume!
     tgt::svec3 leftEnd_;
     tgt::svec3 rightEnd_;
-    uint32_t predeterminedComponentId_;
-};
-
-/// ----------------------------------------------------------------------------
-/// Helper classes for fast KDTree based finding of skeleton voxels ------------
-/// ----------------------------------------------------------------------------
-struct VesselSkeletonVoxelRef {
-    VesselSkeletonVoxelRef(tgt::vec3 rwPos, VesselSkeletonVoxel* voxel, uint32_t predeterminedComponentId)
-        : rwPos(rwPos)
-        , voxel(voxel)
-        , predeterminedComponentId_(predeterminedComponentId)
-    {
-    }
-
-    typedef tgt::vec3 VoxelType;
-
-    tgt::vec3 rwPos; // Cached for better performance
-    VesselSkeletonVoxel* voxel; //May be null => not part of skeleton
-    uint32_t predeterminedComponentId_; // Id assigned to skeleton voxels from other knowledge
-
-    inline typename VoxelType::ElemType at(int dim) const {
-        return rwPos[dim];
-    }
-};
-
-struct VoxelRefResultSetBase {
-    typedef size_t IndexType;
-    typedef float DistanceType;
-
-    std::vector<VesselSkeletonVoxelRef>* storage_;
-    std::vector<size_t> closestIDs_;
-    float currentDist_;
-
-    VoxelRefResultSetBase()
-        : storage_(nullptr)
-        , closestIDs_()
-        , currentDist_(std::numeric_limits<float>::infinity())
-    {
-    }
-
-    inline bool found() {
-        return currentDist_ < std::numeric_limits<float>::infinity();
-    }
-
-    inline void init() {
-        clear();
-    }
-
-    inline void clear() {
-        closestIDs_.clear();
-    }
-
-    inline size_t size() const {
-        return closestIDs_.size();
-    }
-
-    inline bool full() const {
-        //Not sure what to do here...
-        //This is analogous to the implementation of the max radius set of nanoflann
-        return true;
-    }
-
-    void setStorageRef(std::vector<VesselSkeletonVoxelRef>& storage) {
-        storage_ = &storage;
-    }
-
-    inline DistanceType worstDist() const {
-        return currentDist_*1.001;
-    }
-
-    std::vector<const VesselSkeletonVoxelRef*> getVoxels() const {
-        tgtAssert(storage_, "Storage ref not initialized");
-        std::vector<const VesselSkeletonVoxelRef*> result;
-        for(auto id : closestIDs_) {
-            result.push_back(&getSkeletonVoxelRef(id));
-        }
-        return result;
-    }
-
-    std::vector<VesselSkeletonVoxelRef*> getVoxels() {
-        tgtAssert(storage_, "Storage ref not initialized");
-        std::vector<VesselSkeletonVoxelRef*> result;
-        for(auto id : closestIDs_) {
-            result.push_back(&getSkeletonVoxelRef(id));
-        }
-        return result;
-    }
-
-    const VesselSkeletonVoxelRef& getSkeletonVoxelRef(size_t id) const {
-        tgtAssert(storage_, "Storage ref not initialized");
-        return storage_->at(id);
-    }
-
-    VesselSkeletonVoxelRef& getSkeletonVoxelRef(size_t id) {
-        tgtAssert(storage_, "Storage ref not initialized");
-        return storage_->at(id);
-    }
-
-    /**
-     * Find the worst result (furtherest neighbor) without copying or sorting
-     * Pre-conditions: size() > 0
-     */
-    std::pair<IndexType,DistanceType> worst_item() const
-    {
-        if (closestIDs_.empty()) throw std::runtime_error("Cannot invoke RadiusResultSet::worst_item() on an empty list of results.");
-        size_t id = closestIDs_[0];
-        return std::make_pair<IndexType,DistanceType>(std::move(id), worstDist());
-    }
-};
-
-struct ClosestVoxelsAdaptor : public VoxelRefResultSetBase {
-    ClosestVoxelsAdaptor()
-        : VoxelRefResultSetBase()
-    {
-    }
-
-    /**
-     * Called during search to add an element matching the criteria.
-     * @return true if the search should be continued, false if the results are sufficient
-     */
-    inline bool addPoint(float dist, size_t index)
-    {
-        const VesselSkeletonVoxelRef& voxel = getSkeletonVoxelRef(index);
-        if(dist <= currentDist_) {
-            if(dist < currentDist_) {
-                closestIDs_.clear();
-            }
-            currentDist_ = dist;
-            if(voxel.voxel) {
-                closestIDs_.push_back(index);
-            }
-        }
-        return true;
-    }
-};
-
-struct ClosestVoxelsAdaptorWithPredeterminedID : public VoxelRefResultSetBase {
-    size_t wantedID_;
-
-    ClosestVoxelsAdaptorWithPredeterminedID(size_t wantedID)
-        : VoxelRefResultSetBase()
-        , wantedID_(wantedID)
-    {
-    }
-
-    /**
-     * Called during search to add an element matching the criteria.
-     * @return true if the search should be continued, false if the results are sufficient
-     */
-    inline bool addPoint(float dist, size_t index)
-    {
-        const VesselSkeletonVoxelRef& voxel = getSkeletonVoxelRef(index);
-        if(voxel.predeterminedComponentId_ != wantedID_) {
-            return true;
-        }
-        if(dist <= currentDist_) {
-            if(dist < currentDist_) {
-                closestIDs_.clear();
-            }
-            currentDist_ = dist;
-            if(voxel.voxel) {
-                closestIDs_.push_back(index);
-            }
-        }
-        return true;
-    }
-};
-
-/// A reader for the initial graph extraction from a generic input segmentation
-/// It will be binarized on-the-fly
-struct InitialSegmentationSliceReader : public CachingSliceReader {
-    InitialSegmentationSliceReader(const VolumeBase& volume, float normalizedThreshold, int extent = 1)
-        : CachingSliceReader(std::unique_ptr<VolumeSliceReader>(new VolumeSliceReader(volume)), extent)
-        , normalizedThreshold_(normalizedThreshold)
-        , volume_(volume)
-    {
-        seek(-1);
-    }
-    bool isObject(const tgt::ivec3& pos) const {
-        return getVoxelNormalized(pos) >= normalizedThreshold_;
-    }
-    bool mayBeBranchObject(const tgt::ivec3& pos) const {
-        //return isObject(pos);
-        return true;
-    }
-    ClosestVoxelsAdaptor createVoxelFindingResultSet(const tgt::ivec3& pos) {
-        return ClosestVoxelsAdaptor();
-    }
-    bool shouldFindSkeletonVoxelsToAnySurfaceVoxel() const {
-        return true;
-    }
-
-    tgt::vec3 getSpacing() const {
-        return volume_.getSpacing();
-    }
-
-    tgt::mat4 getVoxelToWorldMatrix() const {
-        return volume_.getVoxelToWorldMatrix();
-    }
-
-    float normalizedThreshold_;
-    const VolumeBase& volume_;
-};
-
-struct CCASegmentationSliceReader {
-    CCASegmentationSliceReader(const VolumeBase& segmentation, const VolumeBase& branchIdVolume, float segmentationBinarizationThreshold)
-        : segmentationReader_(tgt::make_unique<VolumeSliceReader>(segmentation), 1)
-        , branchIdReader_(tgt::make_unique<VolumeSliceReader>(branchIdVolume), 1)
-        , segmentationBinarizationThreshold_(segmentationBinarizationThreshold)
-        , branchIdVolume_(branchIdVolume)
-    {
-        tgtAssert(branchIdVolume.getFormat() == "uint32", "Invalid volume format");
-        tgtAssert(branchIdVolume.getDimensions() == branchIdVolume.getDimensions(), "Dimension mismatch");
-        segmentationReader_.seek(-1);
-        branchIdReader_.seek(-1);
-    }
-    uint32_t getId(const tgt::ivec3& pos) const {
-        tgtAssert(pos.z >= 0 && pos.z < getDimensions().z, "Invalid z pos");
-        int dz = pos.z - branchIdReader_.getCurrentZPos();
-        auto slice = dynamic_cast<const VolumeRAM_UInt32*>(branchIdReader_.getSlice(dz));
-        tgtAssert(slice, "Invalid slice type");
-        return slice->voxel(pos.x, pos.y, 0);
-    }
-    void advance() {
-        segmentationReader_.advance();
-        branchIdReader_.advance();
-    }
-    const tgt::svec3& getDimensions() const {
-        return segmentationReader_.getDimensions();
-    }
-
-    bool isObject(const tgt::ivec3& pos) const {
-        return segmentationReader_.getVoxelNormalized(pos) >= segmentationBinarizationThreshold_;
-    }
-    bool mayBeBranchObject(const tgt::ivec3& pos) const {
-        return getId(pos) != 0;
-    }
-    ClosestVoxelsAdaptorWithPredeterminedID createVoxelFindingResultSet(const tgt::ivec3& pos) {
-        return ClosestVoxelsAdaptorWithPredeterminedID(getId(pos));
-    }
-    bool shouldFindSkeletonVoxelsToAnySurfaceVoxel() const {
-        return false;
-    }
-
-    tgt::vec3 getSpacing() const {
-        return branchIdVolume_.getSpacing();
-    }
-
-    tgt::mat4 getVoxelToWorldMatrix() const {
-        return branchIdVolume_.getVoxelToWorldMatrix();
-    }
-
-    CachingSliceReader segmentationReader_;
-    CachingSliceReader branchIdReader_;
-    const VolumeBase& branchIdVolume_;
-    float segmentationBinarizationThreshold_;
 };
 
 /// MetaDataCollector -------------------------------------------------------------------------------------------------------------
-struct RegularSequence {
-    RegularSequence(std::vector<tgt::svec3> voxels, uint32_t predeterminedComponentId);
-
-    std::vector<tgt::svec3> voxels_;
-    uint32_t predeterminedComponentId_;
-};
 // Helper that is used to collect finalized (end, regular, or branch) voxel components and creates the feature-annotated VesselGraph
 struct MetaDataCollector {
+    MetaDataCollector();
+
     // Collect metadata from finalized voxel components
     void collect(EndData&&);
     void collect(RegularData&&);
@@ -487,9 +222,12 @@ struct MetaDataCollector {
     // sampleMask may be null
     std::unique_ptr<ProtoVesselGraph> createProtoVesselGraph(tgt::svec3 dimensions, const tgt::mat4& toRwMatrix, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress);
 
+
     std::vector<tgt::svec3> endPoints_;
-    std::vector<RegularSequence> regularSequences_;
     std::vector<std::vector<tgt::svec3>> branchPoints_;
+
+    DiskArrayStorage<tgt::svec3> voxelStorage_;
+    std::vector<DiskArray<tgt::svec3>> regularSequences_;
 
     static const std::string loggerCat_;
 };
@@ -554,7 +292,7 @@ const uint32_t UNDEFINED_COMPONENT_ID = 0;
 template<typename MetaData>
 class Run final : public Node<MetaData> {
 public:
-    Run(MetaDataCollector&, tgt::svec2 yzPos_, size_t lowerBound_, size_t upperBound_, uint32_t  predeterminedComponentId = UNDEFINED_COMPONENT_ID);
+    Run(MetaDataCollector&, tgt::svec2 yzPos_, size_t lowerBound_, size_t upperBound_);
     ~Run();
 
     // Try to merge with another run.
@@ -565,7 +303,6 @@ public:
     uint32_t getRootAptitude() const;
 
     const RunPosition pos_;
-    const uint32_t predeterminedComponentId_;
 };
 
 // A row within a binary volume, it stores runs of end, regular, and branch voxels.
@@ -652,63 +389,6 @@ static bool isAtSampleBorder(const tgt::svec3& p, const tgt::svec3& volumedim) {
     return p.x == 0             || p.y == 0             || p.z == 0
         || p.x >= volumedim.x-1 || p.y >= volumedim.y-1 || p.z >= volumedim.z-1;
 }
-
-struct VoxelKDElement {
-    typedef tgt::ivec3 VoxelType;
-
-    VoxelKDElement(tgt::ivec3 pos, uint64_t nodeID)
-        : pos_(pos)
-        , nodeID_(nodeID)
-    {
-    }
-
-    inline typename VoxelType::ElemType at(int dim) const {
-        return pos_[dim];
-    }
-
-    VoxelType pos_;
-    uint64_t nodeID_;
-};
-
-template<typename E>
-class KDTreeNeighborhoodFinder {
-public:
-    typedef nanoflann::KDTreeSingleIndexAdaptor<
-		nanoflann::L2_Simple_Adaptor<typename KDTreeBuilder<E>::coord_t, KDTreeBuilder<E>>,
-		KDTreeBuilder<E>,
-		3 /* dim */
-		> Index;
-
-    KDTreeNeighborhoodFinder(KDTreeBuilder<E>&& builder)
-        : adaptor_(std::move(builder))
-        , index_(3 /*dim */, adaptor_, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* recommended as a sensible value by library creator */))
-    {
-        index_.buildIndex();
-    }
-
-    std::vector<const E*> find_26_neighbors(const typename E::VoxelType& pos) {
-        auto search_radius = static_cast<typename KDTreeBuilder<E>::coord_t>(4); // (L2 distance)^2 < 4 <=> 26_neighbors (or equal)
-
-        nanoflann::SearchParams params;
-        params.sorted = false;
-
-        std::vector<std::pair<size_t, typename KDTreeBuilder<E>::coord_t> > index_results;
-        index_.radiusSearch(pos.elem, search_radius, index_results, params);
-
-        std::vector<const E*> results;
-        for(const auto& index_result : index_results) {
-            const E& p = adaptor_.points()[index_result.first];
-            if(p.pos_ != pos) {
-                results.push_back(&p);
-            }
-        }
-        return results;
-    }
-
-private:
-    KDTreeBuilder<E> adaptor_;
-    Index index_;
-};
 
 #ifdef _MSC_VER
 #define RELEASE_ASSERT(assertion, errormsg) \
@@ -834,10 +514,9 @@ void RunComposition<MetaData>::unref() {
 
 
 template<typename MetaData>
-Run<MetaData>::Run(MetaDataCollector& mdc, tgt::svec2 yzPos, size_t lowerBound, size_t upperBound, uint32_t predeterminedComponentId)
+Run<MetaData>::Run(MetaDataCollector& mdc, tgt::svec2 yzPos, size_t lowerBound, size_t upperBound)
     : Node<MetaData>(mdc)
     , pos_(yzPos, lowerBound, upperBound)
-    , predeterminedComponentId_(predeterminedComponentId)
 {
 }
 
@@ -877,7 +556,7 @@ void Run<MetaData>::tryMerge(Run& other) {
 
 template<typename MetaData>
 MetaData Run<MetaData>::getMetaData() {
-    return std::move(MetaData(pos_, predeterminedComponentId_));
+    return std::move(MetaData(pos_));
 }
 
 template<typename MetaData>
@@ -909,7 +588,7 @@ void Row::init(const S& slice, MetaDataCollector& mdc, size_t sliceNum, size_t r
                     endRuns_.emplace_back(mdc, yzPos, runStart, x);
                     break;
                 case 2:
-                    regularRuns_.emplace_back(mdc, yzPos, runStart, x, slice.getPredefinedComponentId(tgt::ivec2(runStart, rowNum)));
+                    regularRuns_.emplace_back(mdc, yzPos, runStart, x);
                     break;
                 case 3:
                     branchRuns_.emplace_back(mdc, yzPos, runStart, x);
@@ -924,7 +603,7 @@ void Row::init(const S& slice, MetaDataCollector& mdc, size_t sliceNum, size_t r
             endRuns_.emplace_back(mdc, yzPos, runStart, rowLength);
             break;
         case 2:
-            regularRuns_.emplace_back(mdc, yzPos, runStart, rowLength, slice.getPredefinedComponentId(tgt::ivec2(runStart, rowNum)));
+            regularRuns_.emplace_back(mdc, yzPos, runStart, rowLength);
             break;
         case 3:
             branchRuns_.emplace_back(mdc, yzPos, runStart, rowLength);

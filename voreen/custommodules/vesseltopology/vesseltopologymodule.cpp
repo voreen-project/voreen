@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2015 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -36,7 +36,7 @@
 #endif
 #include "processors/vesselgraphcreator.h"
 #include "processors/vesselgraphglobalstats.h"
-#include "processors/vesselgraphnormalizer.h"
+#include "processors/vesselgraphrefiner.h"
 #include "processors/vesselgraphperturbation.h"
 #include "processors/vesselgraphrenderer.h"
 #include "processors/vesselgraphsave.h"
@@ -53,6 +53,7 @@
 #include "processors/volumemultiplier.h"
 #include "processors/volumemultithreshold.h"
 #include "processors/volumeslicepadding.h"
+#include "processors/volumesurfacenoise.h"
 #include "processors/volumethinning.h"
 
 #include "processors/volumelistloopinitiator.h"
@@ -80,7 +81,7 @@ VesselTopologyModule::VesselTopologyModule(const std::string& modulePath)
 #endif
     registerProcessor(new VesselGraphCreator());
     registerProcessor(new VesselGraphGlobalStats());
-    registerProcessor(new VesselGraphNormalizer());
+    registerProcessor(new VesselGraphRefiner());
     registerProcessor(new VesselGraphPerturbation());
     registerProcessor(new VesselGraphRenderer());
     registerProcessor(new VesselGraphSave());
@@ -97,6 +98,7 @@ VesselTopologyModule::VesselTopologyModule(const std::string& modulePath)
     registerProcessor(new VolumeMultiThreshold());
     registerProcessor(new VolumeMultiplier());
     registerProcessor(new VolumeSlicePadding());
+    registerProcessor(new VolumeSurfaceNoise());
     registerProcessor(new VolumeThinning());
 
     registerProcessor(new VolumeListLoopInitiator());

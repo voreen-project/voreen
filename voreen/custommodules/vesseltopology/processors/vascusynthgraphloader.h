@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2016 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -30,6 +30,7 @@
 
 #include "../ports/vesselgraphport.h"
 #include "voreen/core/properties/filedialogproperty.h"
+#include "voreen/core/properties/vectorproperty.h"
 
 namespace voreen {
 
@@ -53,6 +54,7 @@ protected:
 
     // properties
     FileDialogProperty graphFilePath_;
+    FloatVec3Property spacing_;
 
 
     static const std::string loggerCat_;

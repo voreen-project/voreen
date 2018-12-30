@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -358,7 +358,11 @@ VolumeAtomic<Voxel> LZ4SliceVolume<Voxel>::loadSlab(size_t beginZ, size_t endZ) 
 
 template<typename Voxel>
 VolumeAtomic<Voxel> LZ4SliceVolume<Voxel>::loadSlice(size_t sliceNumber) const {
-    std::ifstream compressedFile(getSliceFilePath(sliceNumber), std::ifstream::binary);
+    std::string sliceFileName = getSliceFilePath(sliceNumber);
+    std::ifstream compressedFile(sliceFileName, std::ifstream::binary);
+    if(compressedFile.fail()) {
+        throw std::system_error(errno, std::system_category(), "Failed to open lz4 slice file "+sliceFileName);
+    }
 
     compressedFile.seekg(0,compressedFile.end); // Seek to end
     size_t compressedFileSize = compressedFile.tellg(); // end file position == file size
@@ -386,8 +390,9 @@ void LZ4SliceVolume<Voxel>::writeSlice(const VolumeAtomic<Voxel>& slice, size_t 
 
     const size_t sliceMemorySize = getSliceMemorySize();
 
-    std::unique_ptr<char[]> compressedBuffer(new char[sliceMemorySize]);
-    size_t compressedSize = LZ4_compress_default((const char *)(slice.getData()), compressedBuffer.get(), sliceMemorySize, sliceMemorySize);
+    const size_t dstSize = LZ4_compressBound(sliceMemorySize);
+    std::unique_ptr<char[]> compressedBuffer(new char[dstSize]);
+    size_t compressedSize = LZ4_compress_default((const char *)(slice.getData()), compressedBuffer.get(), sliceMemorySize, dstSize);
     tgtAssert(compressedSize > 0, "Compression failed");
 
     std::ofstream outStream(getSliceFilePath(sliceNumber), std::ofstream::binary);
@@ -468,7 +473,7 @@ const LZ4SliceVolume<Voxel>& LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::ge
 template<typename Voxel, uint64_t neighborhoodExtent>
 const boost::optional<VolumeAtomic<Voxel>>& LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::getSlice(int sliceNumber) const {
     int sliceStorageIndex = slicePosOffsetToSliceStorageIndex(sliceNumber - pos_);
-    if(0 <= sliceStorageIndex && sliceStorageIndex < neighborhoodSize) {
+    if(0 <= sliceStorageIndex && sliceStorageIndex < static_cast<int>(neighborhoodSize)) {
         return slices_[sliceStorageIndex];
     } else {
         return NO_SLICE;
@@ -478,8 +483,13 @@ const boost::optional<VolumeAtomic<Voxel>>& LZ4SliceVolumeReader<Voxel, neighbor
 template<typename Voxel, uint64_t neighborhoodExtent>
 boost::optional<Voxel> LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::getVoxel(tgt::ivec3 pos) const {
     const auto& slice = getSlice(pos.z);
+    tgt::ivec3 dim(volume_.getDimensions());
     if(slice) {
-        return slice->voxel(pos.x, pos.y, 0);
+        if(pos.x < 0 || pos.x >= dim.x || pos.y < 0 || pos.y >= dim.y) {
+            return boost::none;
+        } else {
+            return slice->voxel(pos.x, pos.y, 0);
+        }
     } else {
         return boost::none;
     }
@@ -489,7 +499,11 @@ boost::optional<Voxel> LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::getVoxel
     tgtAssert(-static_cast<int>(neighborhoodExtent) <= sliceOffset && sliceOffset <= static_cast<int>(neighborhoodExtent), "Invalid slice offset");
     const auto& slice = getSlice(pos_ + sliceOffset);
     if(slice) {
-        return slice->voxel(slicePos.x, slicePos.y, 0);
+        if(slicePos.x < 0 || slicePos.x >= volume_.getDimensions().x || slicePos.y < 0 || slicePos.y >= volume_.getDimensions().y) {
+            return boost::none;
+        } else {
+            return slice->voxel(slicePos.x, slicePos.y, 0);
+        }
     } else {
         return boost::none;
     }
@@ -497,7 +511,7 @@ boost::optional<Voxel> LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::getVoxel
 
 template<typename Voxel, uint64_t neighborhoodExtent>
 boost::optional<VolumeAtomic<Voxel>> LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::loadSliceFromVolume(int sliceNumber) const {
-    if(0 <= sliceNumber && sliceNumber < volume_.getNumSlices()) {
+    if(0 <= sliceNumber && sliceNumber < static_cast<int>(volume_.getNumSlices())) {
         return volume_.loadSlice(sliceNumber);
     } else {
         return boost::none;

@@ -1,5 +1,5 @@
-if(VRN_MSVC2012)
-    MESSAGE(FATAL_ERROR "Big Data Image Processing Module does NOT compile with MSVC 2012 - use any compiler supporting the c++11 standard completely")
+if(VRN_MSVC2012 OR VRN_MSVC2013)
+    MESSAGE(FATAL_ERROR "Big Data Image Processing Module does NOT compile with MSVC 2012 and MSVC 2013 - use MSVC 2015 or higher")
 ENDIF()
 
 IF(NOT VRN_MODULE_HDF5)
@@ -9,15 +9,45 @@ ENDIF()
 ################################################################################
 # External dependency: lz4 library
 ################################################################################
-MESSAGE(STATUS "Trying to find lz4 libraries")
-FIND_PACKAGE(LZ4)
+
+IF(VRN_MSVC)
+
+    SET(LZ4_INCLUDE_DIR ${MOD_DIR}/ext/lz4/include)
+    SET(LZ4_LIBRARIES liblz4)
+    SET(LZ4_FOUND TRUE)
+    
+    SET(MOD_INSTALL_FILES
+        ${MOD_DIR}/ext/lz4/LICENSE
+    )
+
+ELSE()
+
+    # Add path for additional cmake find scripts
+    LIST(APPEND CMAKE_MODULE_PATH "${MOD_DIR}/ext/")
+
+    MESSAGE(STATUS "Trying to find lz4 libraries")
+    FIND_PACKAGE(LZ4)
+
+ENDIF()
+
 IF(LZ4_FOUND)
     MESSAGE(STATUS "  - Found lz4 library")
 
     MESSAGE(STATUS "Include Directories: " ${LZ4_INCLUDE_DIR})
     MESSAGE(STATUS "Libraries: " ${LZ4_LIBRARIES})
     LIST(APPEND MOD_INCLUDE_DIRECTORIES ${LZ4_INCLUDE_DIR})
-    LIST(APPEND MOD_LIBRARIES ${LZ4_LIBRARIES})
+    
+    IF(VRN_MSVC)
+        FOREACH(elem ${LZ4_LIBRARIES})
+            # Don't copy both debug and release binaries, since they are named the same. Prefer debug.
+            #LIST(APPEND MOD_RELEASE_DLLS ${LZ4_INCLUDE_DIR}/../lib/${elem}.dll)
+            #LIST(APPEND MOD_RELEASE_LIBRARIES ${LZ4_INCLUDE_DIR}/../lib/${elem}.lib)
+            LIST(APPEND MOD_DEBUG_DLLS ${LZ4_INCLUDE_DIR}/../lib/${elem}.dll)
+            LIST(APPEND MOD_DEBUG_LIBRARIES ${LZ4_INCLUDE_DIR}/../lib/${elem}.lib)
+        ENDFOREACH()
+    ELSE()
+        LIST(APPEND MOD_LIBRARIES ${LZ4_LIBRARIES})
+    ENDIF()
 ELSE()
     MESSAGE(FATAL_ERROR "Could not find lz4 Library.")
 ENDIF()
@@ -33,6 +63,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/io/volumedisklz4.cpp
     ${MOD_DIR}/processors/binarymedian.cpp
     ${MOD_DIR}/processors/connectedcomponentanalysis.cpp
+    ${MOD_DIR}/processors/fatcellquantification.cpp
     ${MOD_DIR}/processors/largevolumeformatconversion.cpp
     ${MOD_DIR}/processors/segmentationquantification.cpp
     ${MOD_DIR}/processors/volumebricksave.cpp
@@ -57,6 +88,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/io/volumedisklz4.h
     ${MOD_DIR}/processors/binarymedian.cpp
     ${MOD_DIR}/processors/connectedcomponentanalysis.h
+    ${MOD_DIR}/processors/fatcellquantification.h
     ${MOD_DIR}/processors/largevolumeformatconversion.h
     ${MOD_DIR}/processors/segmentationquantification.h
     ${MOD_DIR}/processors/volumebricksave.h

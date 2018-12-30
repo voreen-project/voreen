@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -73,18 +73,17 @@ bool PlaneGeometryCreator::isReady() const {
 }
 
 void PlaneGeometryCreator::process() {
-    LGL_ERROR;
 
-    if(normal_.get() == tgt::vec3(0.f)) {
+    if(normal_.get() == tgt::vec3::zero) {
         LERROR ("Plane normal of (0,0,0) is not allowed! No output gererated!");
-        geomOutport_.setData(0);
+        geomOutport_.setData(nullptr);
         return;
     }
 
     tgt::vec3 n = normalize(normal_.get());
 
     tgt::vec3 temp = tgt::vec3(1.0, 0.0, 0.0);
-    if(fabsf(dot(temp, n)) > 0.9)
+    if(std::abs(dot(temp, n)) > 0.9)
         temp = tgt::vec3(0.0, 1.0, 0.0);
 
     tgt::vec3 inPlaneA = normalize(cross(n, temp)) * 0.5f * size_.get();
@@ -97,8 +96,6 @@ void PlaneGeometryCreator::process() {
                    VertexNormal(base - inPlaneA + inPlaneB, base - inPlaneA + inPlaneB),
                    VertexNormal(base - inPlaneA - inPlaneB, base - inPlaneA - inPlaneB),
                    VertexNormal(base + inPlaneA - inPlaneB, base + inPlaneA - inPlaneB));
-
-    LGL_ERROR;
 
     geomOutport_.setData(plane);
 }
@@ -126,7 +123,7 @@ void PlaneGeometryCreator::onVolumePortChangeCallback() {
 void PlaneGeometryCreator::onResetClickedCallback() {
     normal_.set(tgt::vec3(0.f,1.f,0.f));
 
-    if(tgt::hmul(tgt::greaterThanEqual(position_.getMaxValue(),tgt::vec3(1000000.f - 1.f)))) //default (-"epsilon")
+    if(tgt::hand(tgt::greaterThanEqual(position_.getMaxValue(),tgt::vec3(1000000.f - 1.f)))) //default (-"epsilon")
         position_.set(tgt::vec3::zero);
     else
         position_.set((position_.getMinValue() + position_.getMaxValue()) / 2.f);

@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2016 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -332,8 +332,8 @@ void VesselGraphRenderer::adaptToNewInput() {
     activeEdgeID_.setMaxValue(static_cast<int>(graph->getEdges().size()) - 1);
 
 
-    const std::vector<VesselGraphNode>& nodes = graph->getNodes();
-    const std::vector<VesselGraphEdge>& edges = graph->getEdges();
+    auto nodes = graph->getNodes();
+    auto edges = graph->getEdges();
 
     nodeDegreeTF_.setData(nodes.begin(), nodes.end());
 

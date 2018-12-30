@@ -1,10 +1,15 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="true" GlobalDescription='&lt;font color=&quot;#808080&quot;&gt;&lt;h4&gt;Large Data Exploration&lt;/h4&gt; &lt;p&gt;This workspace allows to handle large data sets exceeding the graphics memory (or even main memory).&lt;/p&gt;&lt;p&gt;Multiple data channels can be added to the volume using the &quot;Data Input&quot; section of the property list. Afterwards an octree data structure has to be constructed for the input volumes.&lt;/p&gt;&lt;p&gt;The workspace allows 2D- and 3D-rendering of the data and provides both axis-aligned and arbitrary clipping planes for the 3D view.&lt;/p&gt;&lt;p&gt;&lt;h5&gt;Note:&lt;/h5&gt;It is necessary to configure Voreen using the Settings dialog in the menu bar at the top to set the octree cache directory and available cache size as well as the main memory which can be used for the octree handling (this should be set to at least 1-2 GB lower than the actually available main memory). The settings also provide a list of all available OpenCL devices where a selection can be performed.&lt;/p&gt;&lt;/font&gt;'>
-        <ProcessorNetwork version="19">
+        <ProcessorNetwork version="20">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="OctreeCreator" ref="ref1" />
+                    </values>
                 </MetaItem>
                 <MetaItem name="Zoom" type="ZoomMetaData">
                     <transform.row0 x="0.8929131031036377" y="0" z="0" />
@@ -28,9 +33,9 @@
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../../../../voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="../volumes/walnut.vvd" />
                                         <item value="resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="C:/voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -61,9 +66,9 @@
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../../../../voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="../volumes/walnut.vvd" />
                                         <item value="resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="C:/voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -94,9 +99,9 @@
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../../../../voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="../volumes/walnut.vvd" />
                                         <item value="resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="C:/voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -167,7 +172,7 @@
                         <Property mapKey="useCulling" name="useCulling" value="true" />
                     </Properties>
                     <Inports>
-                        <Port name="proxgeometry.geometry" direction="1" portID="proxgeometry.geometry" guiName="Proxy Geometry Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="proxgeometry.geometry" direction="1" portID="proxgeometry.geometry" guiName="Proxy Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                     </Inports>
@@ -216,16 +221,20 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-385" y="-463" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="autogenerateOctree" name="autogenerateOctree" value="false" />
                         <Property mapKey="brickDimensions" name="brickDimensions" value="treeDepth" />
                         <Property mapKey="brickPoolManager" name="brickPoolManager" value="brickPoolManagerDisk" />
                         <Property mapKey="clearOctree" name="clearOctree" />
-                        <Property mapKey="generateOctree" name="generateOctree" guiName="Load Octree" />
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="false" />
                         <Property mapKey="homogeneityThreshold" name="homogeneityThreshold" value="0" tracking="false" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="numThreads" name="numThreads" value="8" />
-                        <Property mapKey="progressProperty" name="progressProperty" />
+                        <Property mapKey="octreeHash" name="octreeHash" value="" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="progressMessage" name="progressMessage" value="Octree found in cache!" />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
-                        <Property mapKey="statusProperty" name="statusProperty" value="Octree generated." />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="treeDepth" name="treeDepth" value="6" tracking="false" />
                         <Property mapKey="useRelativeThreshold" name="useRelativeThreshold" value="true" />
                     </Properties>
@@ -392,7 +401,7 @@
                         <Property mapKey="showLegend" name="showLegend" value="true" />
                     </Properties>
                     <Inports>
-                        <Port name="geometry" direction="1" portID="geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="geometry" direction="1" portID="geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                         <Port name="volume" direction="1" portID="volume" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -649,7 +658,7 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="proxygeometry.geometry" direction="0" portID="proxygeometry.geometry" guiName="Proxy Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="proxygeometry.geometry" direction="0" portID="proxygeometry.geometry" guiName="Proxy Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -688,9 +697,9 @@
                         <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../voreen-development/voreen/resource/voreenve/workspaces" />
+                                    <item value="" />
                                     <item value="resource/voreenve/workspaces" />
-                                    <item value="C:/voreen-development/voreen/resource/voreenve/workspaces" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreenve/workspaces" />
                                 </paths>
                             </paths>
                         </Property>
@@ -714,13 +723,13 @@
                 <Processor type="Canvas" name="Canvas" id="ref19">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="134" y="175" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="358" y="128" width="1024" height="1024" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="323" y="92" width="1024" height="1024" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
-                            <value x="8" y="8" />
+                            <value x="0" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
-                            <value x="2012" y="1326" />
+                            <value x="1280" y="1086" />
                         </MetaItem>
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
@@ -731,7 +740,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="358" y="128" />
+                            <value x="323" y="92" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1024" y="1024" />
@@ -776,12 +785,12 @@
                         <Property mapKey="planePosition" name="planePosition" value="0" id="ref27" />
                     </Properties>
                     <Inports>
-                        <Port name="geometry.geometry" direction="1" portID="geometry.geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="geometry.geometry" direction="1" portID="geometry.geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="geometry.clippedgeometry" direction="0" portID="geometry.clippedgeometry" guiName="Clipped Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.clippedgeometry" direction="0" portID="geometry.clippedgeometry" guiName="Clipped Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -866,7 +875,7 @@
                         <Property mapKey="resetplane" name="resetplane" />
                     </Properties>
                     <Inports>
-                        <Port name="geometry" direction="1" portID="geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="geometry" direction="1" portID="geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                         <Port name="volume" direction="1" portID="volume" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -1283,7 +1292,7 @@
                         <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number Z" value="57" id="ref59" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
-                            <value x="2" y="59" z="57" />
+                            <value x="124" y="41" z="57" />
                         </Property>
                         <Property mapKey="textureMode" name="textureMode" value="2d-texture" id="ref70" />
                         <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true" id="ref42">
@@ -1530,9 +1539,9 @@
                             </MetaData>
                             <programFilenamePaths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="../../../modules/opencl/cl/singleoctreeraycaster.cl" />
                                     <item value="modules/opencl/cl/singleoctreeraycaster.cl" />
-                                    <item value="C:/voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="/data/home/a_sche26/voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                 </paths>
                             </programFilenamePaths>
                         </Property>
@@ -2383,15 +2392,19 @@
                     <First value="Octree Construction" />
                     <Second value="10" />
                 </value>
-                <value key="Octree Creator.generateOctree">
-                    <First value="Octree Construction" />
-                    <Second value="2" />
-                </value>
                 <value key="Octree Creator.homogeneityThreshold">
                     <First value="Octree Construction" />
                     <Second value="12" />
                 </value>
-                <value key="Octree Creator.progressProperty">
+                <value key="Octree Creator.manualUpdateButton_">
+                    <First value="Octree Construction" />
+                    <Second value="1" />
+                </value>
+                <value key="Octree Creator.progressDisplay">
+                    <First value="Octree Construction" />
+                    <Second value="3" />
+                </value>
+                <value key="Octree Creator.progressMessage">
                     <First value="Octree Construction" />
                     <Second value="5" />
                 </value>
@@ -2399,9 +2412,13 @@
                     <First value="Octree Construction" />
                     <Second value="15" />
                 </value>
-                <value key="Octree Creator.statusProperty">
+                <value key="Octree Creator.statusDisplay">
                     <First value="Octree Construction" />
-                    <Second value="4" />
+                    <Second value="6" />
+                </value>
+                <value key="Octree Creator.stopUpdateButton">
+                    <First value="Octree Construction" />
+                    <Second value="2" />
                 </value>
                 <value key="Octree Creator.treeDepth">
                     <First value="Octree Construction" />

@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="VesselGraphNormalizer" ref="ref19" />
+                        <item type="VesselGraphRefiner" ref="ref19" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -966,7 +966,7 @@
                         </Handler>
                     </InteractionHandlers>
                 </Processor>
-                <Processor type="VesselGraphNormalizer" name="VesselGraphNormalizer" id="ref1">
+                <Processor type="VesselGraphRefiner" name="VesselGraphRefiner" id="ref1">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-175" y="-582" />
                     </MetaData>
@@ -1253,7 +1253,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VesselGraphNormalizer" name="VesselGraphNormalizer 2" id="ref19">
+                <Processor type="VesselGraphRefiner" name="VesselGraphRefiner 2" id="ref19">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="185" y="-576" />
                     </MetaData>
@@ -1789,7 +1789,7 @@
                         <Processor type="VesselGraphCreator" ref="ref0" />
                     </Outport>
                     <Inport name="graph.input">
-                        <Processor type="VesselGraphNormalizer" ref="ref1" />
+                        <Processor type="VesselGraphRefiner" ref="ref1" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -1850,7 +1850,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="graph.output">
-                        <Processor type="VesselGraphNormalizer" ref="ref1" />
+                        <Processor type="VesselGraphRefiner" ref="ref1" />
                     </Outport>
                     <Inport name="graph.input1">
                         <Processor type="VesselGraphComparison" ref="ref11" />
@@ -1858,7 +1858,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="graph.output">
-                        <Processor type="VesselGraphNormalizer" ref="ref1" />
+                        <Processor type="VesselGraphRefiner" ref="ref1" />
                     </Outport>
                     <Inport name="graph.input">
                         <Processor type="VesselGraphRenderer" ref="ref12" />
@@ -1866,7 +1866,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="graph.output">
-                        <Processor type="VesselGraphNormalizer" ref="ref1" />
+                        <Processor type="VesselGraphRefiner" ref="ref1" />
                     </Outport>
                     <Inport name="graph.input">
                         <Processor type="VesselGraphGlobalStats" ref="ref13" />
@@ -1917,12 +1917,12 @@
                         <Processor type="VesselGraphCreator" ref="ref15" />
                     </Outport>
                     <Inport name="graph.input">
-                        <Processor type="VesselGraphNormalizer" ref="ref19" />
+                        <Processor type="VesselGraphRefiner" ref="ref19" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="graph.output">
-                        <Processor type="VesselGraphNormalizer" ref="ref19" />
+                        <Processor type="VesselGraphRefiner" ref="ref19" />
                     </Outport>
                     <Inport name="graph.input2">
                         <Processor type="VesselGraphComparison" ref="ref11" />
@@ -1930,7 +1930,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="graph.output">
-                        <Processor type="VesselGraphNormalizer" ref="ref19" />
+                        <Processor type="VesselGraphRefiner" ref="ref19" />
                     </Outport>
                     <Inport name="graph.input">
                         <Processor type="VesselGraphRenderer" ref="ref20" />
@@ -1938,7 +1938,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="graph.output">
-                        <Processor type="VesselGraphNormalizer" ref="ref19" />
+                        <Processor type="VesselGraphRefiner" ref="ref19" />
                     </Outport>
                     <Inport name="graph.input">
                         <Processor type="VesselGraphGlobalStats" ref="ref21" />

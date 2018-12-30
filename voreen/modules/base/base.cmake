@@ -46,7 +46,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/image/loopcompositor.cpp
     ${MOD_DIR}/processors/image/mean.cpp
     ${MOD_DIR}/processors/image/median.cpp
-    ${MOD_DIR}/processors/image/multiview.cpp
     ${MOD_DIR}/processors/image/nonminmaxsuppression.cpp
     ${MOD_DIR}/processors/image/orientationoverlay.cpp
     ${MOD_DIR}/processors/image/quadview.cpp
@@ -177,7 +176,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/image/loopcompositor.h
     ${MOD_DIR}/processors/image/mean.h
     ${MOD_DIR}/processors/image/median.h
-    ${MOD_DIR}/processors/image/multiview.h
     ${MOD_DIR}/processors/image/nonminmaxsuppression.h
     ${MOD_DIR}/processors/image/orientationoverlay.h
     ${MOD_DIR}/processors/image/quadview.h

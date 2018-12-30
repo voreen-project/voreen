@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="false" GlobalDescription="">
-        <ProcessorNetwork version="17">
+        <ProcessorNetwork version="20">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
@@ -12,9 +12,9 @@
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-710.78820801" y="106.2640152" />
+                    <value x="-710.788208008" y="106.264015198" />
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.42347354" />
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.423473537" />
             </MetaData>
             <Processors>
                 <Processor type="VolumeSource" name="walnut" id="ref0">
@@ -23,11 +23,24 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="input/walnut_medium.vvd?preferredReader=VvdVolumeReader" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="">
+                                <path noPathSet="false">
+                                    <paths>
+                                        <item value="input/walnut_medium.vvd" />
+                                        <item value="../../voreen-testdata/voreen-testdata/input/walnut_medium.vvd" />
+                                        <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/input/walnut_medium.vvd" />
+                                    </paths>
+                                </path>
+                                <searchParameters>
+                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                </searchParameters>
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -43,19 +56,19 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="continousSave" name="continousSave" value="false" />
-                        <Property mapKey="file" name="file">
+                        <Property mapKey="file" name="file" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/octreepg.vge" />
-                                    <item value="../../voreen-test/voreen-testdata/output/octreepg.vge" />
-                                    <item value="/home/a_sche26/voreen-test/voreen-testdata/output/octreepg.vge" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/octreepg.vge" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/octreepg.vge" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="save" name="save" />
                     </Properties>
                     <Inports>
-                        <Port name="inport" direction="1" portID="inport" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="inport" direction="1" portID="inport" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                     </Inports>
@@ -69,16 +82,19 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-828" y="-243" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="autogenerateOctree" name="autogenerateOctree" value="true" />
                         <Property mapKey="brickDimensions" name="brickDimensions" value="treeDepth" />
                         <Property mapKey="brickPoolManager" name="brickPoolManager" value="brickPoolManagerRAM" />
                         <Property mapKey="clearOctree" name="clearOctree" />
-                        <Property mapKey="generateOctree" name="generateOctree" guiName="Generate Octree" />
-                        <Property mapKey="homogeneityThreshold" name="homogeneityThreshold" value="0.05" tracking="false" />
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
+                        <Property mapKey="homogeneityThreshold" name="homogeneityThreshold" value="0.050000001" tracking="false" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="numThreads" name="numThreads" value="8" />
-                        <Property mapKey="progressProperty" name="progressProperty" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="progressMessage" name="progressMessage" value="" />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
-                        <Property mapKey="statusProperty" name="statusProperty" value="Octree generated." />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
                         <Property mapKey="treeDepth" name="treeDepth" value="7" />
                         <Property mapKey="useRelativeThreshold" name="useRelativeThreshold" value="true" />
                     </Properties>
@@ -113,7 +129,7 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="volumeOutport" direction="0" portID="volumeOutport" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumeOutport" direction="0" portID="volumeOutport" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -129,12 +145,13 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="clipRegion">
-                            <llf x="0" y="0" z="0" />
-                            <urb x="127" y="95" z="113" />
+                            <bounds.llf x="0" y="0" z="0" />
+                            <bounds.urb x="127" y="95" z="113" />
                             <minValue x="0" y="0" z="0" />
                             <maxValue x="127" y="95" z="113" />
                             <minRange x="0" y="0" z="0" />
                             <maxRange x="2147483647" y="2147483647" z="2147483647" />
+                            <stepping x="1" y="1" z="1" />
                         </Property>
                         <Property mapKey="modeString" name="modeString" value="volumeoctree" />
                         <Property mapKey="resetClipPlanes" name="resetClipPlanes" />
@@ -142,17 +159,17 @@
                         <Property mapKey="resolutionMode" name="resolutionMode" value="subdivide" />
                         <Property mapKey="resolutionvoxel" name="resolutionvoxel" value="3" />
                         <Property mapKey="threshold" name="threshold" value="1" />
-                        <Property mapKey="transferfunction" name="transferfunction" domainFittingStrategy="1">
+                        <Property mapKey="transferfunction" name="transferfunction" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
-                                    <value x="23" y="29.0151825" />
+                                    <value x="23" y="29.015182495" />
                                 </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="23.41723824" y="29.0151825" />
+                                <domain x="23.417238235" y="29.015182495" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -164,7 +181,7 @@
                                 </Keys>
                             </TransferFunction>
                         </Property>
-                        <Property mapKey="transferfunction2" name="transferfunction2" domainFittingStrategy="1">
+                        <Property mapKey="transferfunction2" name="transferfunction2" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
@@ -183,7 +200,7 @@
                                 </Keys>
                             </TransferFunction>
                         </Property>
-                        <Property mapKey="transferfunction3" name="transferfunction3" domainFittingStrategy="1">
+                        <Property mapKey="transferfunction3" name="transferfunction3" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
@@ -202,7 +219,7 @@
                                 </Keys>
                             </TransferFunction>
                         </Property>
-                        <Property mapKey="transferfunction4" name="transferfunction4" domainFittingStrategy="1">
+                        <Property mapKey="transferfunction4" name="transferfunction4" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
@@ -234,7 +251,7 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="proxygeometry.geometry" direction="0" portID="proxygeometry.geometry" guiName="Proxy Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="proxygeometry.geometry" direction="0" portID="proxygeometry.geometry" guiName="Proxy Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -250,12 +267,13 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="clipRegion">
-                            <llf x="0" y="0" z="0" />
-                            <urb x="127" y="95" z="113" />
+                            <bounds.llf x="0" y="0" z="0" />
+                            <bounds.urb x="127" y="95" z="113" />
                             <minValue x="0" y="0" z="0" />
                             <maxValue x="127" y="95" z="113" />
                             <minRange x="0" y="0" z="0" />
                             <maxRange x="2147483647" y="2147483647" z="2147483647" />
+                            <stepping x="1" y="1" z="1" />
                         </Property>
                         <Property mapKey="modeString" name="modeString" value="volumeoctreeouterfaces" />
                         <Property mapKey="resetClipPlanes" name="resetClipPlanes" />
@@ -263,17 +281,17 @@
                         <Property mapKey="resolutionMode" name="resolutionMode" value="subdivide" />
                         <Property mapKey="resolutionvoxel" name="resolutionvoxel" value="3" />
                         <Property mapKey="threshold" name="threshold" value="1" />
-                        <Property mapKey="transferfunction" name="transferfunction" domainFittingStrategy="1">
+                        <Property mapKey="transferfunction" name="transferfunction" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
-                                    <value x="23" y="29.0151825" />
+                                    <value x="23" y="29.015182495" />
                                 </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="23.43462372" y="29.0151825" />
+                                <domain x="23.434623718" y="29.015182495" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -285,7 +303,7 @@
                                 </Keys>
                             </TransferFunction>
                         </Property>
-                        <Property mapKey="transferfunction2" name="transferfunction2" domainFittingStrategy="1">
+                        <Property mapKey="transferfunction2" name="transferfunction2" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
@@ -304,7 +322,7 @@
                                 </Keys>
                             </TransferFunction>
                         </Property>
-                        <Property mapKey="transferfunction3" name="transferfunction3" domainFittingStrategy="1">
+                        <Property mapKey="transferfunction3" name="transferfunction3" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
@@ -323,7 +341,7 @@
                                 </Keys>
                             </TransferFunction>
                         </Property>
-                        <Property mapKey="transferfunction4" name="transferfunction4" domainFittingStrategy="1">
+                        <Property mapKey="transferfunction4" name="transferfunction4" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
@@ -355,7 +373,7 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="proxygeometry.geometry" direction="0" portID="proxygeometry.geometry" guiName="Proxy Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="proxygeometry.geometry" direction="0" portID="proxygeometry.geometry" guiName="Proxy Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -371,19 +389,19 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="continousSave" name="continousSave" value="false" />
-                        <Property mapKey="file" name="file">
+                        <Property mapKey="file" name="file" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/octreeouterfacespg.vge" />
-                                    <item value="../../voreen-test/voreen-testdata/output/octreeouterfacespg.vge" />
-                                    <item value="/home/a_sche26/voreen-test/voreen-testdata/output/octreeouterfacespg.vge" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/octreeouterfacespg.vge" />
+                                    <item value="/data/home/a_sche26/voreen-testdata/voreen-testdata/output/octreeouterfacespg.vge" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="save" name="save" />
                     </Properties>
                     <Inports>
-                        <Port name="inport" direction="1" portID="inport" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="inport" direction="1" portID="inport" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                     </Inports>

@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -59,24 +59,6 @@ const int WINDOW_STATE_VERSION = 15;  // V4.0
 } // namespace
 
 ////////// VoreenVEMainWindow ////////////////////////////////////////////////////////////
-
-namespace {
-
-// Add glass highlight effect to standard menubar
-class FancyMenuBar : public QMenuBar {
-protected:
-    void paintEvent(QPaintEvent* event) {
-        QMenuBar::paintEvent(event);
-
-        // draw semi-transparent glass highlight over upper half of menubar
-        QPainter painter(this);
-        painter.setBrush(QColor(255, 255, 255, 76));
-        painter.setPen(Qt::NoPen);
-        painter.drawRect(0, 0, rect().width(), rect().height() / 2);
-    }
-};
-
-} // namespace
 
 const std::string VoreenVEMainWindow::loggerCat_("voreenve.VoreenVEMainWindow");
 

@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -196,8 +196,8 @@ void TransFuncPropertyBase::volumeChange(const VolumeBase* source) {
     }
 }
 
-void TransFuncPropertyBase::derivedDataThreadFinished(const VolumeBase* source, const VolumeDerivedData* derivedData) {
-    if (dynamic_cast<const VolumeMinMax*>(derivedData) && volume_ == source &&
+void TransFuncPropertyBase::derivedDataThreadFinished(const VolumeBase* source) {
+    if (source->hasDerivedData<VolumeMinMax>() && volume_ == source &&
         isDomainFittingEnabled()) {
         applyDomainFromData();
     }

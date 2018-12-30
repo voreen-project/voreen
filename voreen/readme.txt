@@ -4,15 +4,17 @@ http://voreen.uni-muenster.de
 
 About
 -----
-Voreen is an open source rapid application development framework for the interactive visualization
+Voreen is an open source rapid application development framework for the interactive visualization 
 and analysis of multi-modal volumetric data sets. It provides GPU-based volume rendering and data 
 analysis techniques and offers high flexibility when developing new analysis workflows in 
 collaboration with domain experts. The Voreen framework consists of a multi-platform C++ library, 
-which can be easily integrated into existing applications, and a Qt-based stand-alone application.
-It is licensed under the terms of the GNU General Public License version 2. 
-The Voreen project has been initiated and is maintained by the Visualization & Computer Graphics 
-Research Group at the University of Münster as part of the central project Z1 of the collaborative 
-research center SFB 656 MoBil.
+which can be easily integrated into existing applications, and a Qt-based stand-alone application. 
+It is licensed under the terms of the GNU General Public License version 2.
+
+The Voreen project has been initiated and was originally maintained by the Visualization & Computer 
+Graphics Research Group at the University of Münster as part of the collaborative research center 
+SFB 656 MoBil (Project Z1, Project Ö). Since 2018, Voreen is collaboratively developed by the Pattern 
+Recognition and Image Analysis (PRIA) Research Group and the VISualization & graphIX (VISIX) Research Group.
 
 For build instructions and further information, please refer to the project website.
 

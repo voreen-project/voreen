@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2016 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -59,6 +59,7 @@ public:
     virtual CodeState getCodeState() const { return Processor::CODE_STATE_EXPERIMENTAL; }
     virtual Processor* create() const { return new VesselGraphComparison(); }
     virtual bool isReady() const;
+    virtual bool isEndProcessor() const;
 
     //Render matches
     virtual void render();
@@ -111,6 +112,8 @@ protected:
     FloatProperty nodeMatchRatio_;
     FloatProperty edgeMatchRatio_;
     FloatProperty lengthSimilarity_;
+    FloatProperty netmetsFNR_;
+    FloatProperty netmetsFPR_;
     FloatProperty nodeMatchingCost_;
 
     // (Non-)Match Rendering

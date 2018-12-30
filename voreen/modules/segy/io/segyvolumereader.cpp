@@ -240,11 +240,6 @@ namespace voreen {
 
     } // readSlices
 
-    VolumeList* SEGYVolumeReader::readBrick(const std::string& /*fileName*/, tgt::ivec3 /*brickStartPos*/, int /*brickSize*/) {
-        std::cout << ">>>>>>>>>>>>> ops! requested readBrick()!!! Not ready yet. \n"; // >>>>>>>>>>>>> TESTING >>>>>>>>>>>
-        return 0;
-    } // readBrick
-
     /**********************************************************
      * ::::::::::::::::::: Helper Methods ::::::::::::::::::: *
      **********************************************************/
@@ -278,7 +273,9 @@ namespace voreen {
 
         // copy the data, i.e. number of samples per trace:
         result = fread (&samplesPerDataTrace_,sizeof(samplesPerDataTrace_),1,fin);
-        if (result != 1) {fputs ("Reading error",stderr); exit (3);}
+        if (result != 1) {
+            throw tgt::CorruptedFileException("SEGY: Reading error");
+        }
 
         // convert to little-endian:
         endian_swap_16(&samplesPerDataTrace_);
@@ -292,7 +289,9 @@ namespace voreen {
 
         // copy the data, i.e. number of samples per trace:
         result = fread (&dataSampleFormat_,sizeof(dataSampleFormat_),1,fin);
-        if (result != 1) {fputs ("Reading error",stderr); exit (3);}
+        if (result != 1) {
+            throw tgt::CorruptedFileException("SEGY: Reading error");
+        }
 
         // convert to little-endian:
         endian_swap_16(&dataSampleFormat_);
@@ -316,8 +315,7 @@ namespace voreen {
         }//else if
 
         else {
-            fputs ("wrong format",stderr); exit (3);
-            // throw tgt::CorruptedFileException("Unsupported format code # " + dataSampleFormat_, fileName);
+            throw tgt::CorruptedFileException("SEGY: Unsupported format code # " + std::to_string(dataSampleFormat_), fileName);
         }//else
 
 
@@ -349,7 +347,6 @@ namespace voreen {
             result = fread (&traceSeqNum,sizeof(traceSeqNum),1,fin);
             if (result != 1) {
                 //fputs ("Reading error",stderr);
-                //exit (3);
                 break;
             }
 
@@ -390,9 +387,9 @@ namespace voreen {
 
         // print result:
         // >>>>>>>>>>>>>>> Remove Later >>>>>>>>>>>>>
-        std::cout << "No. of samples per trace: " << samplesPerDataTrace_ << "\n";
-        std::cout << "No. of in-lines: " << inLine << "\n";
-        std::cout << "No. of cross-lines: " << xLine << "\n";
+        //std::cout << "No. of samples per trace: " << samplesPerDataTrace_ << "\n";
+        //std::cout << "No. of in-lines: " << inLine << "\n";
+        //std::cout << "No. of cross-lines: " << xLine << "\n";
 
     } //readHeaderInfo
 

@@ -1,20 +1,46 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
-    <Workspace version="2" GlobalDescription="">
-        <ProcessorNetwork version="11">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="20">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="VolumeSave" ref="ref13" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-593.578125" y="-683" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.90618813" />
+            </MetaData>
             <Processors>
                 <Processor type="VolumeCreate" name="Cornell" id="ref0">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-1090" y="-768" />
                     </MetaData>
                     <Properties>
-                        <Property name="dimension" value="64" />
-                        <Property name="keepShapes" value="false" />
-                        <Property name="numShapes" value="4" />
-                        <Property name="numSubdivisions" value="1" />
-                        <Property name="operation" value="cornell" />
-                        <Property name="regenerate" />
+                        <Property mapKey="dimension" name="dimension">
+                            <value x="64" y="64" z="64" />
+                        </Property>
+                        <Property mapKey="keepShapes" name="keepShapes" value="false" />
+                        <Property mapKey="numShapes" name="numShapes" value="4" />
+                        <Property mapKey="numSubdivisions" name="numSubdivisions" value="1" />
+                        <Property mapKey="operation" name="operation" value="cornell" />
+                        <Property mapKey="regenerate" name="regenerate" />
                     </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.output" direction="0" portID="volumehandle.output" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="VolumeCreate" name="Blobs" id="ref2">
@@ -22,13 +48,25 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-940" y="-769" />
                     </MetaData>
                     <Properties>
-                        <Property name="dimension" value="64" />
-                        <Property name="keepShapes" value="false" />
-                        <Property name="numShapes" value="4" />
-                        <Property name="numSubdivisions" value="1" />
-                        <Property name="operation" value="blobs" />
-                        <Property name="regenerate" />
+                        <Property mapKey="dimension" name="dimension">
+                            <value x="64" y="64" z="64" />
+                        </Property>
+                        <Property mapKey="keepShapes" name="keepShapes" value="false" />
+                        <Property mapKey="numShapes" name="numShapes" value="4" />
+                        <Property mapKey="numSubdivisions" name="numSubdivisions" value="1" />
+                        <Property mapKey="operation" name="operation" value="blobs" />
+                        <Property mapKey="regenerate" name="regenerate" />
                     </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.output" direction="0" portID="volumehandle.output" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="VolumeCreate" name="Sphere" id="ref4">
@@ -36,13 +74,25 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-789" y="-769" />
                     </MetaData>
                     <Properties>
-                        <Property name="dimension" value="64" />
-                        <Property name="keepShapes" value="false" />
-                        <Property name="numShapes" value="4" />
-                        <Property name="numSubdivisions" value="1" />
-                        <Property name="operation" value="sphere" />
-                        <Property name="regenerate" />
+                        <Property mapKey="dimension" name="dimension">
+                            <value x="64" y="64" z="64" />
+                        </Property>
+                        <Property mapKey="keepShapes" name="keepShapes" value="false" />
+                        <Property mapKey="numShapes" name="numShapes" value="4" />
+                        <Property mapKey="numSubdivisions" name="numSubdivisions" value="1" />
+                        <Property mapKey="operation" name="operation" value="sphere" />
+                        <Property mapKey="regenerate" name="regenerate" />
                     </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.output" direction="0" portID="volumehandle.output" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="VolumeCreate" name="Torus" id="ref6">
@@ -50,13 +100,25 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-639" y="-770" />
                     </MetaData>
                     <Properties>
-                        <Property name="dimension" value="64" />
-                        <Property name="keepShapes" value="false" />
-                        <Property name="numShapes" value="4" />
-                        <Property name="numSubdivisions" value="1" />
-                        <Property name="operation" value="torus" />
-                        <Property name="regenerate" />
+                        <Property mapKey="dimension" name="dimension">
+                            <value x="64" y="64" z="64" />
+                        </Property>
+                        <Property mapKey="keepShapes" name="keepShapes" value="false" />
+                        <Property mapKey="numShapes" name="numShapes" value="4" />
+                        <Property mapKey="numSubdivisions" name="numSubdivisions" value="1" />
+                        <Property mapKey="operation" name="operation" value="torus" />
+                        <Property mapKey="regenerate" name="regenerate" />
                     </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.output" direction="0" portID="volumehandle.output" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="VolumeCreate" name="DoubleTorus" id="ref8">
@@ -64,13 +126,25 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-497" y="-770" />
                     </MetaData>
                     <Properties>
-                        <Property name="dimension" value="64" />
-                        <Property name="keepShapes" value="false" />
-                        <Property name="numShapes" value="4" />
-                        <Property name="numSubdivisions" value="1" />
-                        <Property name="operation" value="doubletorus" />
-                        <Property name="regenerate" />
+                        <Property mapKey="dimension" name="dimension">
+                            <value x="64" y="64" z="64" />
+                        </Property>
+                        <Property mapKey="keepShapes" name="keepShapes" value="false" />
+                        <Property mapKey="numShapes" name="numShapes" value="4" />
+                        <Property mapKey="numSubdivisions" name="numSubdivisions" value="1" />
+                        <Property mapKey="operation" name="operation" value="doubletorus" />
+                        <Property mapKey="regenerate" name="regenerate" />
                     </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.output" direction="0" portID="volumehandle.output" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="VolumeCreate" name="BumpySphere" id="ref10">
@@ -78,13 +152,25 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-360" y="-771" />
                     </MetaData>
                     <Properties>
-                        <Property name="dimension" value="64" />
-                        <Property name="keepShapes" value="false" />
-                        <Property name="numShapes" value="4" />
-                        <Property name="numSubdivisions" value="1" />
-                        <Property name="operation" value="bumpysphere" />
-                        <Property name="regenerate" />
+                        <Property mapKey="dimension" name="dimension">
+                            <value x="64" y="64" z="64" />
+                        </Property>
+                        <Property mapKey="keepShapes" name="keepShapes" value="false" />
+                        <Property mapKey="numShapes" name="numShapes" value="4" />
+                        <Property mapKey="numSubdivisions" name="numSubdivisions" value="1" />
+                        <Property mapKey="operation" name="operation" value="bumpysphere" />
+                        <Property mapKey="regenerate" name="regenerate" />
                     </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.output" direction="0" portID="volumehandle.output" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="VolumeCreate" name="DoubleSphere" id="ref12">
@@ -92,13 +178,25 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-207" y="-772" />
                     </MetaData>
                     <Properties>
-                        <Property name="dimension" value="64" />
-                        <Property name="keepShapes" value="false" />
-                        <Property name="numShapes" value="4" />
-                        <Property name="numSubdivisions" value="1" />
-                        <Property name="operation" value="doublesphere" />
-                        <Property name="regenerate" />
+                        <Property mapKey="dimension" name="dimension">
+                            <value x="64" y="64" z="64" />
+                        </Property>
+                        <Property mapKey="keepShapes" name="keepShapes" value="false" />
+                        <Property mapKey="numShapes" name="numShapes" value="4" />
+                        <Property mapKey="numSubdivisions" name="numSubdivisions" value="1" />
+                        <Property mapKey="operation" name="operation" value="doublesphere" />
+                        <Property mapKey="regenerate" name="regenerate" />
                     </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.output" direction="0" portID="volumehandle.output" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave" id="ref1">
@@ -106,10 +204,32 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-1091" y="-656" />
                     </MetaData>
                     <Properties>
-                        <Property name="continousSave" value="false" />
-                        <Property name="outputFilename" value="output/cornell.vvd" />
-                        <Property name="save" />
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/cornell.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/cornell.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/cornell.vvd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="saveOnPathChange" name="saveOnPathChange" value="true" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
                     </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave 2" id="ref3">
@@ -117,10 +237,32 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-945" y="-655" />
                     </MetaData>
                     <Properties>
-                        <Property name="continousSave" value="false" />
-                        <Property name="outputFilename" value="output/blobs.vvd" />
-                        <Property name="save" />
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/blobs.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/blobs.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/blobs.vvd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="saveOnPathChange" name="saveOnPathChange" value="true" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
                     </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave 3" id="ref5">
@@ -128,10 +270,32 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-795" y="-655" />
                     </MetaData>
                     <Properties>
-                        <Property name="continousSave" value="false" />
-                        <Property name="outputFilename" value="output/sphere.vvd" />
-                        <Property name="save" />
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/sphere.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/sphere.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/sphere.vvd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="saveOnPathChange" name="saveOnPathChange" value="true" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
                     </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave 4" id="ref7">
@@ -139,10 +303,32 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-644" y="-655" />
                     </MetaData>
                     <Properties>
-                        <Property name="continousSave" value="false" />
-                        <Property name="outputFilename" value="output/torus.vvd" />
-                        <Property name="save" />
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/torus.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/torus.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/torus.vvd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="saveOnPathChange" name="saveOnPathChange" value="true" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
                     </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave 5" id="ref9">
@@ -150,10 +336,32 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-503" y="-654" />
                     </MetaData>
                     <Properties>
-                        <Property name="continousSave" value="false" />
-                        <Property name="outputFilename" value="output/doubletorus.vvd" />
-                        <Property name="save" />
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/doubletorus.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/doubletorus.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/doubletorus.vvd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="saveOnPathChange" name="saveOnPathChange" value="true" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
                     </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave 6" id="ref11">
@@ -161,10 +369,32 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-360" y="-654" />
                     </MetaData>
                     <Properties>
-                        <Property name="continousSave" value="false" />
-                        <Property name="outputFilename" value="output/bumpysphere.vvd" />
-                        <Property name="save" />
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/bumpysphere.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/bumpysphere.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/bumpysphere.vvd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="saveOnPathChange" name="saveOnPathChange" value="true" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
                     </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave 7" id="ref13">
@@ -172,10 +402,32 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-208" y="-655" />
                     </MetaData>
                     <Properties>
-                        <Property name="continousSave" value="false" />
-                        <Property name="outputFilename" value="output/doublesphere.vvd" />
-                        <Property name="save" />
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/doublesphere.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/doublesphere.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/doublesphere.vvd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="saveOnPathChange" name="saveOnPathChange" value="true" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
                     </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
             </Processors>
@@ -239,10 +491,12 @@
             </Connections>
             <CoProcessorConnections />
             <PropertyLinks />
-            <PropertyStateCollections />
-            <PropertyStateFileReferences />
-            <PropertyStateDirectoryReferences />
         </ProcessorNetwork>
         <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
     </Workspace>
 </VoreenData>

@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -25,7 +25,6 @@
 
 #include "volumelistspacing.h"
 
-//#include "voreen/core/datastructures/volume/volumeram.h"
 #include "voreen/core/datastructures/volume/volumedecorator.h"
 #include "voreen/core/datastructures/meta/templatemetadata.h"
 
@@ -137,6 +136,10 @@ void VolumeListSpacing::process() {
             new VolumeDecoratorReplaceSpacing(inputVolume, spacing);
 
         outputList->add(outputVolume);
+
+        // Workaround: Using a VolumeContainer would be more convenient.
+        // However, this is currently not possible due to bug #168.
+        decorators_.push_back(std::unique_ptr<VolumeBase>(outputVolume));
     }
     currentVolumeList_ = outputList;
     outport_.setData(outputList, false);
@@ -146,22 +149,10 @@ void VolumeListSpacing::process() {
 }
 
 void VolumeListSpacing::clearVolumeList() {
-    if (!currentVolumeList_)
-        return;
-
-    // delete all volumes
-    while(!currentVolumeList_->empty()) {
-        VolumeBase* v = const_cast<VolumeBase*>(currentVolumeList_->first());
-        currentVolumeList_->remove(v);
-        delete v;
-    }
-
-    // clear the list
-    currentVolumeList_->clear();
-
     // delete the list
     delete currentVolumeList_;
-    currentVolumeList_ = 0;
+    currentVolumeList_ = nullptr;
+    decorators_.clear();
 }
 
 void VolumeListSpacing::spacingChanged(int dim) {

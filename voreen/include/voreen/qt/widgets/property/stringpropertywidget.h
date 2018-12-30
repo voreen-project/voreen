@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -39,6 +39,9 @@ public:
     StringPropertyWidget(StringProperty* prop, QWidget* parent = 0);
 
     virtual ~StringPropertyWidget() {}
+
+    virtual void updateViewFlags(Property::ViewFlags flags);
+    virtual CustomLabel* getOrCreateNameLabel() const;
 
 public slots:
     void setProperty(const QString& text);

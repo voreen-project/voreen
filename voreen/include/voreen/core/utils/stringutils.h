@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -266,6 +266,16 @@ template<> \
 inline std::string getFormatFromType<tgt::Vector4<TYPE ## _t>>() { \
     return "Vector4(" #TYPE ")"; \
 }\
+
+// MSVC 2012 lacks float_t and double_t
+#if (_MSC_VER <= 1700)
+#ifndef float_t
+#define float_t float
+#endif
+#ifndef double_t
+#define double_t double
+#endif
+#endif
 
 IMPL_FORMAT_CONVERSION_FOR_TYPE(uint8)
 IMPL_FORMAT_CONVERSION_FOR_TYPE(uint16)

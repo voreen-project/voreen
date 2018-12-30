@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2016 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -65,7 +65,7 @@ boost::optional<float> readFloat(const TiXmlElement* element) {
 }
 
 // This is very specific to the vascusynth graph files!
-boost::optional<size_t> readId(const TiXmlElement* element, const std::string& name) {
+boost::optional<uint32_t> readId(const TiXmlElement* element, const std::string& name) {
     if(!element) {
         return boost::none;
     }
@@ -75,6 +75,9 @@ boost::optional<size_t> readId(const TiXmlElement* element, const std::string& n
     }
     return ::atoi(id_str+1); //Again, very specific to vascusynth files
 }
+
+#define GRAPH_UNIT_TO_MM 0.04f // Don't ask...
+#define SEGMENT_VOXEL_SPACING 0.02f // 4mm/200voxels, also: Don't ask
 
 void VascuSynthGraphLoader::process() {
     const std::string path = graphFilePath_.get();
@@ -94,14 +97,14 @@ void VascuSynthGraphLoader::process() {
             LERROR("Could not find graphNode");
         }
         output.reset(new VesselGraph());
-        std::map<size_t, size_t> idMap;
+        std::map<VGNodeID, VGNodeID> idMap;
         for(const TiXmlElement* graphElement = graphNode->FirstChildElement(); graphElement; graphElement = graphElement->NextSiblingElement()) {
             if(std::string(graphElement->Value()) == "node") {
                 auto maybeNodeId = readId(graphElement, "id");
                 if(!maybeNodeId) {
                     LERROR("No node id");
                 }
-                size_t nodeId = *maybeNodeId;
+                VGNodeID nodeId = *maybeNodeId;
                 for(const TiXmlElement* attributeElement = graphElement->FirstChildElement(); attributeElement; attributeElement = attributeElement->NextSiblingElement()) {
                     const char* attrName = attributeElement->Attribute("name");
                     if(attrName && std::string(attrName) == " position") {
@@ -134,14 +137,14 @@ void VascuSynthGraphLoader::process() {
                             continue;
                         }
                         pos.z = *z;
-                        pos /= 1000.0f; // Asuming uniform spacing 0.001mm.
+                        pos *= GRAPH_UNIT_TO_MM;
                         if(tgt::isNaN(pos)) {
                             LERROR("pos is nan: " << pos);
                             continue;
                         }
                         std::vector<tgt::vec3> voxels;
                         voxels.push_back(pos);
-                        size_t id = output->insertNode(pos, std::move(voxels), 0.0f, false);
+                        VGNodeID id = output->insertNode(pos, std::move(voxels), 0.0f, false);
                         idMap.insert({nodeId, id});
                     }
                 }
@@ -156,7 +159,7 @@ void VascuSynthGraphLoader::process() {
                 if(!maybeToId) {
                     LERROR("No to id");
                 }
-                size_t toId = *maybeToId;
+                VGNodeID toId = *maybeToId;
 
                 for(const TiXmlElement* attributeElement = graphElement->FirstChildElement(); attributeElement; attributeElement = attributeElement->NextSiblingElement()) {
                     const char* attrName = attributeElement->Attribute("name");
@@ -169,23 +172,32 @@ void VascuSynthGraphLoader::process() {
                         }
                         float radius = *maybeRadius;
                         try {
-                            const size_t graphFromId = idMap.at(fromId);
-                            const size_t graphToId = idMap.at(toId);
+                            const VGNodeID graphFromId = idMap.at(fromId);
+                            const VGNodeID graphToId = idMap.at(toId);
 
-                            radius /= 1000; //Assuming uniform spacing 0.001mm.
+                            // Apparently are the radii in the correct unit (mm) already...
+                            //radius *= GRAPH_UNIT_TO_MM;
 
-                            VesselGraphEdgePathProperties properties;
-                            properties.length_ = tgt::distance(output->getNode(graphFromId).pos_, output->getNode(graphToId).pos_);
-                            properties.volume_ = properties.length_*radius*radius;
-                            properties.minRadiusAvg_ = radius;
-                            properties.minRadiusStdDeviation_ = 0;
-                            properties.maxRadiusAvg_ = radius;
-                            properties.maxRadiusStdDeviation_ = 0;
-                            properties.avgRadiusAvg_ = radius;
-                            properties.avgRadiusStdDeviation_ = 0;
-                            properties.roundnessAvg_ = 1;
-                            properties.roundnessStdDeviation_ = 0;
-                            output->insertEdge(graphFromId, graphToId, properties);
+                            const auto& node1 = output->getNode(graphFromId);
+                            const auto& node2 = output->getNode(graphToId);
+
+                            float distance = tgt::distance(node1.pos_, node2.pos_);
+                            float volume = radius*radius * distance;
+                            std::vector<VesselSkeletonVoxel> voxels;
+                            size_t num_voxels = distance / SEGMENT_VOXEL_SPACING;
+                            float volumePerVoxel = volume/num_voxels;
+                            for(size_t i=1; i<=num_voxels; ++i) {
+                                float alpha = static_cast<float>(i)/(num_voxels+1);
+                                float one_minus_alpha = static_cast<float>(num_voxels+1-i)/(num_voxels+1);
+                                tgt::vec3 pos = alpha * node2.pos_ + one_minus_alpha * node1.pos_;
+
+                                tgtAssert(0 < alpha && alpha < 1, "Invalid alpha");
+                                tgtAssert(0 < one_minus_alpha && one_minus_alpha < 1, "Invalid one_minus_alpha");
+
+                                voxels.emplace_back(pos, radius, radius, radius, 0, volumePerVoxel, false);
+                            }
+
+                            output->insertEdge(graphFromId, graphToId, voxels);
                         } catch(...) {
                             LERROR("graph without matching node");
                             continue;

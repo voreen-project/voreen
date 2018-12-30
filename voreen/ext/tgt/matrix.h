@@ -2,9 +2,8 @@
  *                                                                    *
  * tgt - Tiny Graphics Toolbox                                        *
  *                                                                    *
- * Copyright (C) 2005-2018 Visualization and Computer Graphics Group, *
- * Department of Computer Science, University of Muenster, Germany.   *
- * <http://viscg.uni-muenster.de>                                     *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,           *
+ * Department of Computer Science.                                    *
  *                                                                    *
  * This file is part of the tgt library. This library is free         *
  * software; you can redistribute it and/or modify it under the terms *
@@ -1319,7 +1318,7 @@ Vector3<T> operator * (const Matrix4<T>& m, const Vector3<T>& v) {
     Vector4<T> v4(v, 1);
     v4 = m * v4;
     v4 /= v4.w;
-    return Vector3<T>(v4.elem);
+    return v4.xyz();
 }
 
 // addtional matrix functions

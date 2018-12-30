@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -154,10 +154,20 @@ VolumeBase* HDF5VolumeReader::read(const VolumeURL& origin) {
     // Set explicitly stored meta data and prioritize them.
     Vec3MetaData* spacingMetaData = dynamic_cast<Vec3MetaData*>(metaData.getMetaData(VolumeBase::META_DATA_NAME_SPACING));
     if (spacing.get()) {
-        vol->setSpacing(*spacing);
-        if (spacingMetaData && spacingMetaData->getValue() != *spacing)
-            LWARNING("Spacing has been stored explicitly (" << *spacing << ") and differs from value stored in MetaDataContainer (" << spacingMetaData->getValue() << "). Taking explicit one.");
-        metaData.removeMetaData(VolumeBase::META_DATA_NAME_SPACING);
+        // If both are available we take meta data value since the HDF5 spacing may suffer from precision loss.
+        if (spacingMetaData) {
+            tgt::vec3 relativeError = tgt::abs((spacingMetaData->getValue() - *spacing) / spacingMetaData->getValue());
+            if(tgt::hor(tgt::greaterThan(relativeError, tgt::vec3(HDF5FileVolume::MM_PER_HDF5_UNIT_OF_LENGTH)))) {
+                LWARNING("Spacing has been stored explicitly (" << *spacing
+                                                                << ") and differs from value stored in MetaDataContainer ("
+                                                                << spacingMetaData->getValue()
+                                                                << "). Taking Spacing from MetaDataContainer.");
+            }
+            vol->setSpacing(spacingMetaData->getValue());
+            metaData.removeMetaData(VolumeBase::META_DATA_NAME_SPACING);
+        }
+        else
+            vol->setSpacing(*spacing);
     }
     else if (!spacingMetaData)
         LWARNING("HDF5 File contains no spacing information. Assuming (1, 1, 1)");
@@ -165,8 +175,11 @@ VolumeBase* HDF5VolumeReader::read(const VolumeURL& origin) {
     Vec3MetaData* offsetMetaData = dynamic_cast<Vec3MetaData*>(metaData.getMetaData(VolumeBase::META_DATA_NAME_OFFSET));
     if (offset.get()) {
         vol->setOffset(*offset);
-        if (offsetMetaData && offsetMetaData->getValue() != *offset)
-            LWARNING("Offset has been stored explicitly (" << *offset << ") and differs from value stored in MetaDataContainer (" << offsetMetaData->getValue() << "). Taking explicit one.");
+        if (offsetMetaData && offsetMetaData->getValue() != *offset) {
+            LWARNING("Offset has been stored explicitly (" << *offset
+                                                           << ") and differs from value stored in MetaDataContainer ("
+                                                           << offsetMetaData->getValue() << "). Taking explicit one.");
+        }
         metaData.removeMetaData(VolumeBase::META_DATA_NAME_OFFSET);
     }
     else if (!offsetMetaData)
@@ -175,8 +188,12 @@ VolumeBase* HDF5VolumeReader::read(const VolumeURL& origin) {
     Mat4MetaData* physicalToWorldTransformationMetaData = dynamic_cast<Mat4MetaData*>(metaData.getMetaData(VolumeBase::META_DATA_NAME_TRANSFORMATION));
     if (physicalToWorldTransformation.get()) {
         vol->setPhysicalToWorldMatrix(*physicalToWorldTransformation);
-        if (physicalToWorldTransformationMetaData && physicalToWorldTransformationMetaData->getValue() != *physicalToWorldTransformation)
-            LWARNING("Offset has been stored explicitly (" << *physicalToWorldTransformation << ") and differs from value stored in MetaDataContainer (" << physicalToWorldTransformationMetaData->getValue() << "). Taking explicit one.");
+        if (physicalToWorldTransformationMetaData && physicalToWorldTransformationMetaData->getValue() != *physicalToWorldTransformation) {
+            LWARNING("Offset has been stored explicitly (" << *physicalToWorldTransformation
+                                                           << ") and differs from value stored in MetaDataContainer ("
+                                                           << physicalToWorldTransformationMetaData->getValue()
+                                                           << "). Taking explicit one.");
+        }
         metaData.removeMetaData(VolumeBase::META_DATA_NAME_TRANSFORMATION);
     }
     else if (!physicalToWorldTransformationMetaData)

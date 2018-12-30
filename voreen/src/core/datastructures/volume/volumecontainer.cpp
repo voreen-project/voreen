@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -38,15 +38,7 @@ VolumeContainer::VolumeContainer() :
 {}
 
 VolumeContainer::~VolumeContainer() {
-    clear();
-}
-
-void VolumeContainer::add(VolumeBase* volumeHandle) {
-    VolumeList::add(volumeHandle);
-}
-
-void VolumeContainer::add(const VolumeList* volumeList) {
-    VolumeList::add(volumeList);
+    //clear(); // Clear is called in super class destructor.
 }
 
 void VolumeContainer::remove(const VolumeBase* handle) {

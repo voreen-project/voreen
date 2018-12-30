@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -113,12 +113,7 @@ string findWithSubDir(const string& path, const string& subdir, int iterations =
 #define VRN_STRINGIFY(s) #s
 
 string findBasePath(const string& path) {
-    string p;
-
-    if (p.empty())
-        p = findWithSubDir(path, "resource/voreencore", 7);
-
-    return p;
+    return findWithSubDir(path, "resource/voreencore", 7);
 }
 
 #ifdef __APPLE__
@@ -549,9 +544,7 @@ void VoreenApplication::initialize() {
     }
 #endif
 
-    // detect base path based on program location
-    // (program path is available before command line parser execution
-    string programPath = cmdParser_->getProgramPath();
+    std::string programPath = getProgramPath();
 
 #if defined(__APPLE__) && defined(VRN_DEPLOYMENT)
     basePath_ = findAppBundleResourcesPath() + "/voreenRoot";
@@ -566,12 +559,13 @@ void VoreenApplication::initialize() {
             basePath_ = tgt::FileSystem::cleanupPath(basePath_);
         }
     #else // else try to find base path starting at program path
-        basePath_ = ".";
-        // cut path from program location
-        string::size_type p = programPath.find_last_of("/\\");
-        if (p != string::npos) {
-            basePath_ = programPath.substr(0, p);
-            //programPath = programPath.substr(p + 1);
+
+        // detect base path based on program location
+        // (program path is available before command line parser execution)
+        basePath_ = programPath;
+        // If we failed to find the program path for whatever reason we fall back to the current directory
+        if(basePath_.empty()) {
+            basePath_ = ".";
         }
 
         // try to find base path starting at program path
@@ -1144,7 +1138,9 @@ std::string VoreenApplication::getCachePath(const std::string& filename) const {
 
 std::string VoreenApplication::getProgramPath() const {
     tgtAssert(cmdParser_, "no command line parser");
-    return tgt::FileSystem::dirName(cmdParser_->getProgramPath());
+    // Resolve symlinks and thus (hopefully) get the actual path to the voreen binary
+    std::string binaryPath = tgt::FileSystem::absolutePath(cmdParser_->getProgramPath());
+    return tgt::FileSystem::dirName(binaryPath);
 }
 
 void VoreenApplication::cleanCache() const {

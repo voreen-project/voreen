@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -325,10 +325,9 @@ bool Platform::ClVersion::parseVersionString(const std::string& st) {
 
     //ignore vendor specific part of the string:
     size_t spacePos = str.find_first_of(" ");
-    if (spacePos != std::string::npos)
+    if (spacePos != std::string::npos) {
         str = str.substr(0, spacePos);
-    else
-        str = str;
+    }
 
     //explode version string with delimiter ".":
     std::vector<std::string> exploded;

@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -33,7 +33,7 @@ namespace voreen {
 StringProperty::StringProperty(const std::string& id, const std::string& guiText,
                        const std::string& value, int invalidationLevel, Property::LevelOfDetail lod)
     : TemplateProperty<std::string>(id, guiText, value, invalidationLevel, lod)
-    , readOnly_(false)
+    , editable_(true)
     , instantUpdate_(true)
 {
 }
@@ -64,25 +64,23 @@ Property* StringProperty::create() const {
     return new StringProperty();
 }
 
-void StringProperty::setReadOnly(bool readOnly) {
-    readOnly_ = readOnly;
+void StringProperty::setEditable(bool editable) {
+    editable_ = editable;
     updateWidgets();
 }
 
-bool StringProperty::isReadOnly() const {
-    return readOnly_;
+bool StringProperty::isEditable() const {
+    return editable_;
 }
 
-void StringProperty::setInstantUpdate(bool instantUpdate)
-{
+void StringProperty::setInstantUpdate(bool instantUpdate) {
     if (instantUpdate != instantUpdate_){
         instantUpdate_ = instantUpdate;
         invalidate();
     }
 }
 
-bool StringProperty::getInstantUpdate() const
-{
+bool StringProperty::getInstantUpdate() const {
     return instantUpdate_;
 }
 

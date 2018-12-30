@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -46,7 +46,7 @@ TriangleMeshConverter::TriangleMeshConverter()
     addProperty(enabled_);
 
     addProperty(inputMesh_);
-        inputMesh_.setReadOnly(true);
+        inputMesh_.setEditable(false);
     addProperty(targetMesh_);
         targetMesh_.addOption("simple", "Simple", TriangleMeshGeometryBase::SIMPLE);
         targetMesh_.addOption("vertexvec3", "VertexNormal", TriangleMeshGeometryBase::NORMAL);

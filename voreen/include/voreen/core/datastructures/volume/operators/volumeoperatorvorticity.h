@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -152,12 +152,12 @@ Volume* VolumeOperatorVorticity::apply(const VolumeBase* srcVolume, VolumeOperat
         Volume* xvh = voOpGr.apply<U>(xValsVol, gt);
         delete xValsVol;
         const VolumeAtomic<tgt::Vector3<U> >* xGrad = xvh->getRepresentation<VolumeAtomic<tgt::Vector3<U> > >();
-        delete yValsVol;
         Volume* yvh = voOpGr.apply<U>(yValsVol, gt);
+        delete yValsVol;
         const VolumeAtomic<tgt::Vector3<U> >* yGrad = yvh->getRepresentation<VolumeAtomic<tgt::Vector3<U> > >();
         Volume* zvh = voOpGr.apply<U>(zValsVol, gt);
-        const VolumeAtomic<tgt::Vector3<U> >* zGrad = zvh->getRepresentation<VolumeAtomic<tgt::Vector3<U> > >();
         delete zValsVol;
+        const VolumeAtomic<tgt::Vector3<U> >* zGrad = zvh->getRepresentation<VolumeAtomic<tgt::Vector3<U> > >();
 
         for (pos.z = 0; pos.z < dim.z; pos.z++) {
             for (pos.y = 0; pos.y < dim.y; pos.y++) {

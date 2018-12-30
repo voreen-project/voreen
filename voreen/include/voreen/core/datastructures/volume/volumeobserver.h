@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -60,8 +60,9 @@ public:
 
     /**
      * This method is called by the observed Volume after a VolumeDerivedDataThread has finished.
+     * Then the observer itself needs to check if the derived data has changed.
      */
-    virtual void derivedDataThreadFinished(const VolumeBase* source, const VolumeDerivedData* derivedData) {}
+    virtual void derivedDataThreadFinished(const VolumeBase* source) {}
 
     /**
      * This method is called when removing a representation (e.g., VolumeRAM) from the volume.

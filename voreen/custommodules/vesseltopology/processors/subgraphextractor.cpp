@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2016 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -28,7 +28,7 @@
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 #include "voreen/core/datastructures/geometry/pointlistgeometry.h"
-#include "../algorithm/vesselgraphnormalization.h"
+#include "../algorithm/vesselgraphrefinement.h"
 
 #include <numeric>
 #include <queue>
@@ -106,9 +106,9 @@ namespace {
     struct SubGraphNode {
         const VesselGraphNode& node;
         const uint32_t depth;
-        const size_t new_id;
+        const VGNodeID new_id;
 
-        SubGraphNode(const VesselGraphNode& node, uint32_t depth, size_t new_id)
+        SubGraphNode(const VesselGraphNode& node, uint32_t depth, VGNodeID new_id)
             : node(node)
             , depth(depth)
             , new_id(new_id)
@@ -120,7 +120,7 @@ namespace {
 
 static std::unique_ptr<VesselGraph> extractSubgraph(const VesselGraph& input, const tgt::vec3& starting_point, uint32_t max_edge_distance, bool keepBounds) {
     std::unique_ptr<VesselGraph> output(keepBounds ? new VesselGraph(input.getBounds()) : new VesselGraph());
-    auto& nodes = input.getNodes();
+    auto nodes = input.getNodes();
     if(nodes.empty()) {
         return output;
     }
@@ -138,10 +138,10 @@ static std::unique_ptr<VesselGraph> extractSubgraph(const VesselGraph& input, co
         return output;
     }
     std::unordered_set<const VesselGraphEdge*> added_edges;
-    std::unordered_map<const VesselGraphNode*, size_t> added_nodes;
+    std::unordered_map<const VesselGraphNode*, VGNodeID> added_nodes;
 
     std::queue<SubGraphNode> node_queue;
-    size_t starting_node_id = output->insertNode(*starting_node);
+    VGNodeID starting_node_id = output->insertNode(*starting_node);
     added_nodes.insert({ starting_node, starting_node_id });
 
     node_queue.push(SubGraphNode(*starting_node, 0, starting_node_id));
@@ -149,7 +149,7 @@ static std::unique_ptr<VesselGraph> extractSubgraph(const VesselGraph& input, co
     while(!node_queue.empty()) {
         const VesselGraphNode& node = node_queue.front().node;
         uint32_t depth = node_queue.front().depth;
-        size_t node_id = node_queue.front().new_id;
+        VGNodeID node_id = node_queue.front().new_id;
         node_queue.pop();
 
         if(depth >= max_edge_distance) {
@@ -162,7 +162,7 @@ static std::unique_ptr<VesselGraph> extractSubgraph(const VesselGraph& input, co
                 const VesselGraphNode& n2 = edge.get().getNode2();
 
                 const VesselGraphNode& new_node = &node == &n1 ? n2 : n1;
-                size_t new_node_id = -1;
+                VGNodeID new_node_id;
 
                 auto added_node = added_nodes.find(&new_node);
                 if(added_node != added_nodes.end()) {

@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -165,10 +165,10 @@ T SamplingStrategy<T>::sample(const tgt::ivec3& p, const tgt::ivec3& dim, const 
                 return getValue(p);
             case ASSERT_FALSE_T:
                 tgtAssert(false, "Sampled outside volume");
-                return T();
+                return T(0);
             default:
                 tgtAssert(false, "Unimplemented sampling strategy type");
-                return T();
+                return T(0);
         }
     } else {
         return getValue(p);

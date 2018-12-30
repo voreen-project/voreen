@@ -6,15 +6,20 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="407" y="30" />
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="VesselGraphCreator" ref="ref7" />
+                    </values>
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1" />
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="538.48828125" y="75" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.179762125" />
             </MetaData>
             <Processors>
                 <Processor type="VolumeSource" name="VolumeSource" id="ref0">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="141" y="-46" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="313" y="-105" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
@@ -27,7 +32,9 @@
                                         <item value="/git/voreen-testdata/voreen-testdata/input/cow.vvd" />
                                     </paths>
                                 </path>
-                                <searchParameters />
+                                <searchParameters>
+                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                </searchParameters>
                             </urls>
                         </Property>
                     </Properties>
@@ -45,16 +52,16 @@
                 </Processor>
                 <Processor type="VesselGraphSave" name="VesselGraphSave" id="ref3">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="13" y="194" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="20" y="195" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="continousSave" name="continousSave" value="true" />
                         <Property mapKey="graphFilePath" name="graphFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cow_graph_it0.vvg.gz" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cow_graph_it0.vvg.gz" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/cow_graph_it0.vvg.gz" />
+                                    <item value="output/cow_graph_it0.vvg.gz" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/cow_graph_it0.vvg.gz" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/cow_graph_it0.vvg.gz" />
                                 </paths>
                             </paths>
                         </Property>
@@ -73,7 +80,7 @@
                 </Processor>
                 <Processor type="VesselGraphCreator" name="VesselGraphCreator" id="ref1">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="20" y="80" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="13" y="95" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="binarizationThresholdSegmentation" name="binarizationThresholdSegmentation" value="0.5" />
@@ -84,6 +91,7 @@
                         <Property mapKey="minVoxelLength" name="minVoxelLength" value="0" />
                         <Property mapKey="numRefinementIterations" name="numRefinementIterations" value="0" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="saveDebugData" name="saveDebugData" value="false" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
@@ -109,6 +117,11 @@
                         </Port>
                     </Inports>
                     <Outports>
+                        <Port name="generatedGraphs.outport" direction="0" portID="generatedGraphs.outport" guiName="Generated Graphs" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
                         <Port name="generatedSkeletons.outport" direction="0" portID="generatedSkeletons.outport" guiName="Generated Skeletons" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
@@ -136,7 +149,7 @@
                 </Processor>
                 <Processor type="VesselGraphSave" name="VesselGraphSave 2" id="ref4">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="263" y="195" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="314" y="195" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="continousSave" name="continousSave" value="true" />
@@ -164,17 +177,18 @@
                 </Processor>
                 <Processor type="VesselGraphCreator" name="VesselGraphCreator 2" id="ref2">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="250" y="81" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="308" y="95" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="binarizationThresholdSegmentation" name="binarizationThresholdSegmentation" value="0.5" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
-                        <Property mapKey="minBulgeSize" name="minBulgeSize" value="1.5" />
+                        <Property mapKey="minBulgeSize" name="minBulgeSize" value="1" />
                         <Property mapKey="minElongation" name="minElongation" value="0" />
                         <Property mapKey="minVoxelLength" name="minVoxelLength" value="0" />
-                        <Property mapKey="numRefinementIterations" name="numRefinementIterations" value="1" />
+                        <Property mapKey="numRefinementIterations" name="numRefinementIterations" value="100" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="saveDebugData" name="saveDebugData" value="false" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
@@ -200,6 +214,11 @@
                         </Port>
                     </Inports>
                     <Outports>
+                        <Port name="generatedGraphs.outport" direction="0" portID="generatedGraphs.outport" guiName="Generated Graphs" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
                         <Port name="generatedSkeletons.outport" direction="0" portID="generatedSkeletons.outport" guiName="Generated Skeletons" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
@@ -227,17 +246,18 @@
                 </Processor>
                 <Processor type="VesselGraphCreator" name="VesselGraphCreator 3" id="ref5">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="500" y="78" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="908" y="95" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="binarizationThresholdSegmentation" name="binarizationThresholdSegmentation" value="0.5" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
-                        <Property mapKey="minBulgeSize" name="minBulgeSize" value="1" />
+                        <Property mapKey="minBulgeSize" name="minBulgeSize" value="3" />
                         <Property mapKey="minElongation" name="minElongation" value="0" />
                         <Property mapKey="minVoxelLength" name="minVoxelLength" value="0" />
                         <Property mapKey="numRefinementIterations" name="numRefinementIterations" value="0" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="saveDebugData" name="saveDebugData" value="false" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
@@ -263,6 +283,11 @@
                         </Port>
                     </Inports>
                     <Outports>
+                        <Port name="generatedGraphs.outport" direction="0" portID="generatedGraphs.outport" guiName="Generated Graphs" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
                         <Port name="generatedSkeletons.outport" direction="0" portID="generatedSkeletons.outport" guiName="Generated Skeletons" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
@@ -290,7 +315,7 @@
                 </Processor>
                 <Processor type="VesselGraphSave" name="VesselGraphSave 3" id="ref8">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="734" y="190" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="614" y="195" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="continousSave" name="continousSave" value="true" />
@@ -318,17 +343,18 @@
                 </Processor>
                 <Processor type="VesselGraphCreator" name="VesselGraphCreator 4" id="ref7">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="729" y="78" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="608" y="95" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="binarizationThresholdSegmentation" name="binarizationThresholdSegmentation" value="0.5" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
-                        <Property mapKey="minBulgeSize" name="minBulgeSize" value="1.5" />
+                        <Property mapKey="minBulgeSize" name="minBulgeSize" value="3" />
                         <Property mapKey="minElongation" name="minElongation" value="0" />
                         <Property mapKey="minVoxelLength" name="minVoxelLength" value="0" />
-                        <Property mapKey="numRefinementIterations" name="numRefinementIterations" value="1" />
+                        <Property mapKey="numRefinementIterations" name="numRefinementIterations" value="100" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="saveDebugData" name="saveDebugData" value="false" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
@@ -354,6 +380,11 @@
                         </Port>
                     </Inports>
                     <Outports>
+                        <Port name="generatedGraphs.outport" direction="0" portID="generatedGraphs.outport" guiName="Generated Graphs" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
                         <Port name="generatedSkeletons.outport" direction="0" portID="generatedSkeletons.outport" guiName="Generated Skeletons" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
@@ -381,16 +412,16 @@
                 </Processor>
                 <Processor type="VesselGraphSave" name="VesselGraphSave 4" id="ref6">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="492" y="192" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="914" y="195" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="continousSave" name="continousSave" value="true" />
                         <Property mapKey="graphFilePath" name="graphFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/aneurism_graph_it0.vvg.gz" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/aneurism_graph_it0.vvg.gz" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/aneurism_graph_it0.vvg.gz" />
+                                    <item value="output/aneurism_graph_it0.vvg.gz" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/aneurism_graph_it0.vvg.gz" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/aneurism_graph_it0.vvg.gz" />
                                 </paths>
                             </paths>
                         </Property>
@@ -409,7 +440,7 @@
                 </Processor>
                 <Processor type="VolumeSource" name="VolumeSource 2" id="ref9">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="620" y="-49" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="607" y="-105" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />

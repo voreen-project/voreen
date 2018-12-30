@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -617,7 +617,7 @@ bool SingleOctreeRaycasterCL::isReady() const {
 }
 
 void SingleOctreeRaycasterCL::beforeProcess() {
-    RenderProcessor::beforeProcess();
+    OpenCLProcessor::beforeProcess();
 
     const VolumeBase* sourceVolume = volumeInport_.getData();
     if (!sourceVolume || !sourceVolume->hasRepresentation<VolumeOctreeBase>())
@@ -905,7 +905,7 @@ void SingleOctreeRaycasterCL::process() {
 }
 
 void SingleOctreeRaycasterCL::afterProcess() {
-    RenderProcessor::afterProcess();
+    OpenCLProcessor::afterProcess();
 
     if(QualityMode.isInteractionMode())
         processedInInteraction_ = true;

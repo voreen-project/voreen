@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2016 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -28,7 +28,7 @@
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 #include "voreen/core/datastructures/geometry/pointlistgeometry.h"
-#include "../algorithm/vesselgraphnormalization.h"
+#include "../algorithm/vesselgraphrefinement.h"
 
 #include "tgt/tgt_math.h"
 #include "tgt/quaternion.h"
@@ -409,14 +409,16 @@ struct NodePath {
         const VesselGraphNode* current_tail = tail_;
         for(const VesselGraphEdge* edge: edges_) {
             const VesselGraphNode* current_head;
-            auto new_voxels = edge->getVoxels();
+            const auto& new_voxels = edge->getVoxels();
             if(&edge->getNode1() == current_tail) {
                 current_head = &edge->getNode2();
                 output.insert(output.end(), new_voxels.begin(), new_voxels.end());
             } else {
                 tgtAssert(&edge->getNode2() == current_tail, "invalid node path");
                 current_head = &edge->getNode1();
-                output.insert(output.end(), new_voxels.rbegin(), new_voxels.rend());
+                for(auto it = edge->getVoxels().rbegin(); it != edge->getVoxels().rend(); ++it) {
+                    output.push_back(*it);
+                }
             }
 
             current_tail = current_head;
@@ -697,7 +699,7 @@ std::pair<std::vector<NodePath>, BranchSearchCone> UnprocessedBranch::find_all_f
 }
 
 static const VesselGraphNode* find_starting_node(const VesselGraph& graph, const tgt::vec3& starting_point) {
-    auto& nodes = graph.getNodes();
+    auto nodes = graph.getNodes();
     float min_dist_sq = std::numeric_limits<float>::infinity();
     const VesselGraphNode* starting_node = nullptr;
     for(auto& node : nodes) {
@@ -716,9 +718,9 @@ static void fillGraph(PathTreeNode* root, VesselGraph& output) {
     std::vector<const NodePath*> paths;
     root->collect_tree_components(nodes_to_keep, paths);
 
-    std::unordered_map<const VesselGraphNode*, size_t> nodes_to_new_index;
+    std::unordered_map<const VesselGraphNode*, VGNodeID> nodes_to_new_index;
     for(auto node : nodes_to_keep) {
-        size_t index = output.insertNode(*node);
+        VGNodeID index = output.insertNode(*node);
         nodes_to_new_index.insert(std::make_pair(node, index));
     }
 

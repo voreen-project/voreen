@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -211,6 +211,15 @@ public:
  * - ...
  */
 class NetworkConverter18to19 : public NetworkConverter {
+public:
+    virtual void convert(TiXmlElement* networkElem);
+};
+
+/**
+ * Converter for Voreen 5.1
+ * - Make OctreeCreator inherit AsyncComputeProcessor
+ */
+class NetworkConverter19to20 : public NetworkConverter {
 public:
     virtual void convert(TiXmlElement* networkElem);
 };

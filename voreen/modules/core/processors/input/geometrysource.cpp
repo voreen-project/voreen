@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -53,27 +53,30 @@ namespace voreen {
 const std::string GeometrySource::loggerCat_("voreen.core.GeometrySource");
 
 GeometrySource::GeometrySource()
-  : Processor(),
-    geometryFile_("geometryFile", "Geometry File", "Open Geometry File", VoreenApplication::app()->getUserDataPath(), "Geometry (*.vge *.ply *.obj);;Voreen Geometry (*.vge);;PLY mesh (*.ply);;OBJ mesh (*.obj);;ASCII point lists (*.txt)"),
-    geometryType_("geometryType", "Geometry Type"),
-    skipItemCount_("skipItems", "Items to skip after each point", 0),
-    loadGeometry_("loadGeometry", "Load Geometry"),
-    clearGeometry_("clearGeometry", "Clear Geometry"),
-    //useIndexedGeometry_("useIndexed", "Prefer indexed geometry for external formats", false),
-    calculateNormals_("calcNormals", "Calculate missing normals for external formats", false),
-    addColorToOBJ_("addobjcolor", "Add Color to OBJ", false),
-    objColor_("objcolor", "OBJ color", tgt::vec4::one),
-    outport_(Port::OUTPORT, "geometry.pointlist", "PointList Output", false, Processor::VALID)
+    : Processor()
+    , geometryFile_("geometryFile", "Geometry File", "Open Geometry File", VoreenApplication::app()->getUserDataPath(), "Geometry (*.vge *.ply *.obj);;Voreen Geometry (*.vge);;PLY mesh (*.ply);;OBJ mesh (*.obj);;ASCII point lists (*.txt)")
+    , geometryType_("geometryType", "Geometry Type")
+    , skipItemCount_("skipItems", "Items to skip after each point", 0, 0, 100)
+    , loadGeometry_("loadGeometry", "Load Geometry")
+    , clearGeometry_("clearGeometry", "Clear Geometry")
+    //, useIndexedGeometry_("useIndexed", "Prefer indexed geometry for external formats", false)
+    , calculateNormals_("calcNormals", "Calculate missing normals for external formats", false)
+    , addColorToOBJ_("addobjcolor", "Add Color to OBJ", false)
+    , objColor_("objcolor", "OBJ color", tgt::vec4::one)
+    , outport_(Port::OUTPORT, "geometry.pointlist", "PointList Output", false)
+    , forceReload_(false)
 {
+    addPort(outport_);
+
     geometryType_.addOption("geometry", "Voreen Geometry (.vge)");
     geometryType_.addOption("pointlist", "Pointlist");
     geometryType_.addOption("segmentlist", "Segmented Pointlist");
 
-    loadGeometry_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::readGeometry));
-    clearGeometry_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::clearGeometry));
-    geometryFile_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::updatePropertyVisibility));
+    geometryFile_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::forceReload));
     geometryType_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::updatePropertyVisibility));
-    //useIndexedGeometry_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::readGeometry));
+    loadGeometry_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::forceReload));
+    clearGeometry_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::clearGeometry));
+    //useIndexedGeometry_.onChange(MemberFunctionCallback<GeometrySource>(this, &GeometrySource::forceReload));
 
     addProperty(geometryFile_);
     addProperty(geometryType_);
@@ -86,8 +89,6 @@ GeometrySource::GeometrySource()
 
     addProperty(addColorToOBJ_);
     addProperty(objColor_);
-
-    addPort(outport_);
 }
 
 Processor* GeometrySource::create() const {
@@ -95,19 +96,21 @@ Processor* GeometrySource::create() const {
 }
 
 void GeometrySource::process() {
-    if (geometryFile_.get() != "") {
+    if (geometryFile_.get() != "" && forceReload_) {
         try {
             readGeometry();
         }
         catch (tgt::FileNotFoundException& f) {
             LERROR(f.what());
         }
+        forceReload_ = false;
+        updatePropertyVisibility();
     }
-    updatePropertyVisibility();
 }
 
 void GeometrySource::initialize() {
     Processor::initialize();
+    forceReload_ = true;
 }
 
 void GeometrySource::readGeometry() {
@@ -337,7 +340,8 @@ Geometry* GeometrySource::readPLYGeometry(const std::string& filename) {
             if(faceVertexNum != 3)
                 throw tgt::CorruptedFileException("Faces with number of vertices != 3 currently not supported", filename);
 
-            tgt::ivec3 faceIndices(reinterpret_cast<int*>(curOffset + 1));
+            int* elms = reinterpret_cast<int*>(curOffset + 1);
+            tgt::ivec3 faceIndices(elms[0], elms[1], elms[2]);
             if(format == BINARY_BIG_ENDIAN) {
                 unsigned char *memp = reinterpret_cast<unsigned char*>(&faceIndices);
                 std::reverse(memp, memp + sizeof(int));
@@ -536,16 +540,16 @@ Geometry* GeometrySource::readOBJGeometry(const std::string& filename) {
 
         bool hasNormals   = !shapes[i].mesh.normals.empty();
         for (size_t v = 0; v < shapes[i].mesh.positions.size() / 3; v++) {
-            vertices.push_back(VertexNormalTexCoord(tgt::vec3(&shapes[i].mesh.positions[3*v]),
-                                              hasNormals  ? tgt::vec3(&(shapes[i].mesh.normals[3*v])) : tgt::vec3(0.0),
-                                              useTextures ? tgt::vec2(tgt::vec2(&(shapes[i].mesh.texcoords[2*v]))) : tgt::vec2(0.f),
+            vertices.push_back(VertexNormalTexCoord(tgt::vec3::fromPointer(&shapes[i].mesh.positions[3*v]),
+                                              hasNormals  ? tgt::vec3::fromPointer(&(shapes[i].mesh.normals[3*v])) : tgt::vec3(0.0),
+                                              useTextures ? tgt::vec2::fromPointer(&(shapes[i].mesh.texcoords[2*v])) : tgt::vec2(0.f),
                                               useTextures ? tgt::ivec2(requiredTextures, actualTextureFunctions) : tgt::ivec2(0)
                                               )
                               );
         }
 
         for (size_t v = 0; v < shapes[i].mesh.indices.size() / 3; v++) {
-            tgt::ivec3 curFace = tgt::ivec3(tgt::Vector3<unsigned int>(&shapes[i].mesh.indices[3*v])) + baseIndex;
+            tgt::ivec3 curFace = tgt::ivec3(tgt::Vector3<unsigned int>::fromPointer(&shapes[i].mesh.indices[3*v])) + baseIndex;
             faces.push_back(curFace);
         }
 
@@ -718,17 +722,17 @@ Geometry* GeometrySource::readOBJGeometryWithColor(const std::string& filename, 
 
         bool hasNormals   = !shapes[i].mesh.normals.empty();
         for (size_t v = 0; v < shapes[i].mesh.positions.size() / 3; v++) {
-            vertices.push_back(VertexColorNormalTexCoord(tgt::vec3(&shapes[i].mesh.positions[3*v]),
+            vertices.push_back(VertexColorNormalTexCoord(tgt::vec3::fromPointer(&shapes[i].mesh.positions[3*v]),
                                               objColor_.get(),
-                                              hasNormals  ? tgt::vec3(&(shapes[i].mesh.normals[3*v])) : tgt::vec3(0.0),
-                                              useTextures ? tgt::vec2(tgt::vec2(&(shapes[i].mesh.texcoords[2*v]))) : tgt::vec2(0.f),
+                                              hasNormals  ? tgt::vec3::fromPointer(&(shapes[i].mesh.normals[3*v])) : tgt::vec3(0.0),
+                                              useTextures ? tgt::vec2::fromPointer(&(shapes[i].mesh.texcoords[2*v])) : tgt::vec2(0.f),
                                               useTextures ? tgt::ivec2(requiredTextures, actualTextureFunctions) : tgt::ivec2(0)
                                               )
                               );
         }
 
         for (size_t v = 0; v < shapes[i].mesh.indices.size() / 3; v++) {
-            tgt::ivec3 curFace = tgt::ivec3(tgt::Vector3<unsigned int>(&shapes[i].mesh.indices[3*v])) + baseIndex;
+            tgt::ivec3 curFace = tgt::ivec3(tgt::Vector3<unsigned int>::fromPointer(&shapes[i].mesh.indices[3*v])) + baseIndex;
             faces.push_back(curFace);
         }
 
@@ -880,6 +884,11 @@ void GeometrySource::clearGeometry() {
     outport_.setData(0);
     geometryFile_.set("");
     updatePropertyVisibility();
+}
+
+void GeometrySource::forceReload() {
+    forceReload_ = true;
+    invalidate();
 }
 
 void GeometrySource::updatePropertyVisibility() {

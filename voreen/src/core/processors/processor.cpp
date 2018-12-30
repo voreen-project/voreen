@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -386,10 +386,20 @@ void Processor::resetPerformanceRecord() {
 void Processor::invalidate(int inv) {
     PropertyOwner::invalidate(inv);
 
-    if (inv == Processor::VALID)
+    if (!isInitialized())
         return;
 
-    if (!isInitialized())
+    // Update processor state if ready state has changed
+    bool ready = isReady();
+    if(ready && (processorState_ == PROCESSOR_STATE_NOT_READY)){
+        processorState_ = PROCESSOR_STATE_READY;
+        notifyStateChanged();
+    } else if(!ready && (processorState_ == PROCESSOR_STATE_READY)) {
+        processorState_ = PROCESSOR_STATE_NOT_READY;
+        notifyStateChanged();
+    }
+
+    if (inv == Processor::VALID)
         return;
 
     if (!invalidationVisited_) {
@@ -402,15 +412,6 @@ void Processor::invalidate(int inv) {
 
         tgtAssert(VoreenApplication::app(), "VoreenApplication not instantiated");
         VoreenApplication::app()->scheduleNetworkProcessing();
-    }
-    //check, if is ready (isInitialized)
-    bool ready = isReady();
-    if(ready && (processorState_ == PROCESSOR_STATE_NOT_READY)){
-        processorState_ = PROCESSOR_STATE_READY;
-        notifyStateChanged();
-    } else if(!ready && (processorState_ == PROCESSOR_STATE_READY)) {
-        processorState_ = PROCESSOR_STATE_NOT_READY;
-        notifyStateChanged();
     }
 }
 

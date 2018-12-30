@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -215,8 +215,8 @@ public:
         // values.
         float min = getMinValue();
         float max = getMaxValue();
-        setMaxValue(std::numeric_limits<float>::lowest());
-        setMinValue(std::numeric_limits<float>::max());
+        setMinValue(std::numeric_limits<float>::lowest());
+        setMaxValue(std::numeric_limits<float>::max());
         setMinValue(min);
         setMaxValue(max);
     }

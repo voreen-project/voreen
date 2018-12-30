@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -57,17 +57,17 @@ public:
     virtual std::string getContentDescriptionHTML() const;
 
     /**
+     * Returns true, if the port contains a Volume object
+     * and the Volume has a valid volume.
+     */
+    virtual bool isReady() const;
+
+    /**
      * Assigns the passed volume to the port.
      * Also removes/adds VolumeObservers to data
      *
      */
     virtual void setData(const VolumeBase* handle, bool takeOwnership = true);
-
-    /**
-     * Returns true, if the port contains a Volume object
-     * and the Volume has a valid volume.
-     */
-    virtual bool isReady() const;
 
     /**
      * Implementation of VolumeObserver interface.
@@ -80,7 +80,6 @@ public:
      * VolumePort needs to overwrite this method, since it should not call volumeDelete (as in the oiginal implementation).
      */
     virtual void volumeDataDelete(const VolumeBase* source);
-
 
     /**
      * Implementation of VolumeObserver interface.

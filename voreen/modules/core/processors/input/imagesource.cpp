@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -42,23 +42,27 @@ namespace voreen {
 const std::string ImageSource::loggerCat_("voreen.core.ImageSource");
 
 ImageSource::ImageSource()
-    : RenderProcessor(),
-      outport_(Port::OUTPORT, "image.out", "Image Output"),
-      imageFile_("imageFile", "Image File", "Image File", VoreenApplication::app()->getUserDataPath()),
-      clearImage_("clearButton", "Clear Image"),
-      imageSize_("imageSize", "Image Size", tgt::ivec2(0), tgt::ivec2(0), tgt::ivec2(1 << 12), VALID),
-      texture_(0),
-      shader_(0),
-      textureOwner_(false),
-      forceReload_(false)
+    : RenderProcessor()
+    , outport_(Port::OUTPORT, "image.out", "Image Output", false)
+    , imageFile_("imageFile", "Image File", "Image File", VoreenApplication::app()->getUserDataPath())
+    , reloadImage_("reloadImage", "Reload Image")
+    , clearImage_("clearButton", "Clear Image")
+    , imageSize_("imageSize", "Image Size", tgt::ivec2(0), tgt::ivec2(0), tgt::ivec2(1 << 12), Processor::VALID)
+    , texture_(0)
+    , shader_(0)
+    , textureOwner_(false)
+    , forceReload_(false)
 {
     addPort(outport_);
 
-    clearImage_.onChange(MemberFunctionCallback<ImageSource>(this, &ImageSource::clearImage));
-    imageSize_.setReadOnlyFlag(true);
     addProperty(imageFile_);
+    ON_CHANGE(imageFile_, ImageSource, forceReload);
+    addProperty(reloadImage_);
+    ON_CHANGE(reloadImage_, ImageSource, forceReload);
     addProperty(clearImage_);
+    ON_CHANGE(clearImage_, ImageSource, clearImage);
     addProperty(imageSize_);
+    imageSize_.setReadOnlyFlag(true);
 }
 
 ImageSource::~ImageSource() {
@@ -70,9 +74,9 @@ Processor* ImageSource::create() const {
 
 void ImageSource::beforeProcess() {
 
-    // perform enforced reload
     if (forceReload_) {
         loadImage(imageFile_.get());
+        forceReload_ = false;
         LGL_ERROR;
     }
 
@@ -202,6 +206,11 @@ void ImageSource::clearImage() {
     imageSize_.set(tgt::ivec2(0));
 }
 
+void ImageSource::forceReload() {
+    forceReload_ = true;
+    invalidate();
+}
+
 void ImageSource::setImage(tgt::Texture* texture) {
 
     if (!isInitialized()) {
@@ -221,18 +230,6 @@ void ImageSource::setImage(tgt::Texture* texture) {
 
 const tgt::Texture* ImageSource::getImage() const {
     return texture_;
-}
-
-void ImageSource::invalidate(int inv) {
-
-    if (!isInitialized())
-        return;
-
-    if (!texture_ || (imageFile_.get() != texture_->getOptionalName())) {
-        loadImage(imageFile_.get());
-    }
-
-    RenderProcessor::invalidate(inv);
 }
 
 } // namespace

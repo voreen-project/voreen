@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -1271,7 +1271,7 @@ static bool compareH5Attribute(const H5::Attribute& a1, const H5::Attribute& a2,
  * @returns Whether the two objects can be considered the same.
  */
 static bool compareH5Location(
-#if H5_VERSION_GE(1, 10, 1)
+#ifdef H5_STUPID_LOCATION_API_CHANGES
         const H5::H5Object& l1, const H5::H5Object& l2,
 #else
         const H5::H5Location& l1, const H5::H5Location& l2,
@@ -1282,12 +1282,25 @@ static bool compareH5Location(
         report = "Number of attributes at /" + path + " differ (" + std::to_string(l1.getNumAttrs()) + "!=" + std::to_string(l2.getNumAttrs()) + ")";
         return false;
     }
+    std::vector<std::pair<int, std::string>> attributes1;
+    std::vector<std::pair<int, std::string>> attributes2;
     for(int i=0; i<l1.getNumAttrs(); ++i) {
-        // Assuming order of attributes is fixed!
         H5::Attribute a1 = l1.openAttribute(i);
         H5::Attribute a2 = l2.openAttribute(i);
+        attributes1.push_back({i, a1.getName()});
+        attributes2.push_back({i, a2.getName()});
+    }
+    auto sortAttributes = [] (const std::pair<int, std::string>& a1, const std::pair<int, std::string>& a2) {
+        return a1.second < a2.second;
+    };
+    std::sort(attributes1.begin(), attributes1.end(), sortAttributes);
+    std::sort(attributes2.begin(), attributes2.end(), sortAttributes);
+    tgtAssert(attributes1.size() == attributes2.size(), "attr list size missmatch");
+    for(int i=0; i<l1.getNumAttrs(); ++i) {
+        H5::Attribute a1 = l1.openAttribute(attributes1[i].first);
+        H5::Attribute a2 = l2.openAttribute(attributes2[i].first);
         if(a1.getName() != a2.getName()) {
-            report = "Names of attributes " + std::to_string(i) + " at /" + path + " differ (" + a1.getName() + "!=" + a2.getName() + ")";
+            report = "Names of " + std::to_string(i) + "'th attributes " + std::to_string(i) + " at /" + path + " differ (" + a1.getName() + "!=" + a2.getName() + ")";
             return false;
         }
         if(!compareH5Attribute(a1, a2, path + ":" + a1.getName(), report)) {
@@ -1340,7 +1353,7 @@ static bool compareH5DataSet(const H5::DataSet& d1, const H5::DataSet& d2, const
  * @returns Whether the two objects can be considered the same.
  */
 static bool compareH5CommonFG(
-#if H5_VERSION_GE(1, 10, 1)
+#ifdef H5_STUPID_LOCATION_API_CHANGES
         const H5::Group& g1, const H5::Group& g2,
 #else
         const H5::CommonFG& g1, const H5::CommonFG& g2,

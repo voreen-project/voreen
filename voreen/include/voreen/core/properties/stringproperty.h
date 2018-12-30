@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -56,17 +56,29 @@ public:
      */
     virtual void deserialize(Deserializer& s);
 
-    void setReadOnly(bool readOnly);
+    /**
+     * Sets, whether the contained text can be modified by the user.
+     * This is not to be confused with setReadyOnlyFlag, however!
+     */
+    void setEditable(bool editable);
 
-    bool isReadOnly() const;
+    /**
+     * Determines, whether the contained text can be modified by the user.
+     * This is not to be confused with isReadOnlyFlagSet, however!
+     * This function may return true, even if readOnlyFlag was set to true.
+     * The differentiation is made only for giving visual feedback by the user.
+     * Example: A Property might be temporarily disabled (readOnlyFlag set to true)
+     *          but the property is usually modifiable.
+     */
+    bool isEditable() const;
 
     void setInstantUpdate(bool instantUpdate);
     bool getInstantUpdate() const;
 
 protected:
-    bool readOnly_;
-    bool instantUpdate_;
 
+    bool editable_;
+    bool instantUpdate_;
 };
 
 }
