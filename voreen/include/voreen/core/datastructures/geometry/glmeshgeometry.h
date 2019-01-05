@@ -744,22 +744,20 @@ void GlMeshGeometry<I, V>::createIndices(bool optimize) {
 
     if(optimize) {
 
-        struct comp {
-            bool operator()(const V& x, const V& y) const {
-                if(x.equals(y, std::numeric_limits<float>::epsilon())) { // considers epsilon.
-                    return false;
-                }
-
-                // We need a proper one-way function to map positions to unique 'hashes'.
-                tgt::vec3 diag(1000.0f); //TODO: make use of actual bounds.
-                float iX = x.pos_.z*diag.x*diag.y + x.pos_.y*diag.x + x.pos_.x;
-                float iY = y.pos_.z*diag.x*diag.y + y.pos_.y*diag.x + y.pos_.x;
-
-                return iX < iY;
+        tgt::vec3 diag = tgt::vec3(1000.0f);// getBoundingBox(false).diagonal(); // HACK: scale necessary for some geometries?
+        auto comp = [diag] (const V& x, const V& y) {
+            if(x.equals(y, std::numeric_limits<float>::epsilon())) {
+                return false;
             }
+
+            // We need a proper one-way function to map positions to unique 'hashes'.
+            float hashX = x.pos_.z*diag.x*diag.y + x.pos_.y*diag.x + x.pos_.x;
+            float hashY = y.pos_.z*diag.x*diag.y + y.pos_.y*diag.x + y.pos_.x;
+
+            return hashX < hashY;
         };
 
-        std::map<V, I, comp> uniqueVertices;
+        std::map<V, I, std::function<bool(const V&, const V&)>> uniqueVertices(comp);
 
         for (size_t i = 0; i < indices_.size(); i++) {
             I& index = indices_[i];
