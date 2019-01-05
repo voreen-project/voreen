@@ -32,6 +32,9 @@
 #include<algorithm>
 #include<utilities/vectorHelpers.h>
 
+// HACK: need to include here for prebuild + omp
+#include "communication/ompManager.h"
+
 // patch due to ploblems with older compilers
 namespace std {
 template<typename T>
