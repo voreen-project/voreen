@@ -21,6 +21,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/flowdirectionoverlay.cpp
     ${MOD_DIR}/processors/streamlinerenderer3d.cpp
     ${MOD_DIR}/processors/geometry/geometryclose.cpp
+    ${MOD_DIR}/processors/geometry/geometryoffsetremove.cpp
     ${MOD_DIR}/processors/streamline/streamlinecombine.cpp
     ${MOD_DIR}/processors/streamline/streamlinecreator.cpp
     ${MOD_DIR}/processors/streamline/streamlinerotation.cpp
@@ -88,6 +89,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/flowdirectionoverlay.h
     ${MOD_DIR}/processors/streamlinerenderer3d.h
     ${MOD_DIR}/processors/geometry/geometryclose.h
+    ${MOD_DIR}/processors/geometry/geometryoffsetremove.h
     ${MOD_DIR}/processors/streamline/streamlinecombine.h
     ${MOD_DIR}/processors/streamline/streamlinecreator.h
     ${MOD_DIR}/processors/streamline/streamlinerotation.h
@@ -148,13 +150,15 @@ IF(VRN_FLOWREEN_BUILD_OPENLB)
         MESSAGE(FATAL_ERROR "OpenLB currently not supported by MSVC")
     ENDIF()
 
-    IF(NOT VRN_MODULE_OPENMP)
-        MESSAGE(FATAL_ERROR "Flowreen Module with OpenLB requires OpenMP Module")
+    IF(VRN_MODULE_OPENMP)
+        ADD_DEFINITIONS("-DPARALLEL_MODE_OMP")
+    ELSE()
+        MESSAGE(WARNING "OpenMP module strongly recommended!")
     ENDIF()
 
     SET(OpenLB_DIR ${MOD_DIR}/ext/openlb)
     SET(OpenLB_INCLUDE_DIR ${OpenLB_DIR}/src)
-    SET(OpenLB_LIBRARY_PATH ${OpenLB_DIR}/build/generic/lib/libolb.a)
+    SET(OpenLB_LIBRARY_PATH ${OpenLB_DIR}/build/precompiled/lib/libolb.a)
     LIST(APPEND MOD_INCLUDE_DIRECTORIES ${OpenLB_INCLUDE_DIR})
     LIST(APPEND MOD_LIBRARIES ${OpenLB_LIBRARY_PATH})
 
@@ -165,9 +169,15 @@ ENDIF()
 IF(VRN_FLOWREEN_BUILD_OPENLB)
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
         ${MOD_DIR}/processors/flowsimulation.h
+        ${MOD_DIR}/processors/geometry/implicitrepresentation.h
+
+        ${MOD_DIR}/utils/geometryconverter.h
     )
     SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
         ${MOD_DIR}/processors/flowsimulation.cpp
+        ${MOD_DIR}/processors/geometry/implicitrepresentation.cpp
+
+        ${MOD_DIR}/utils/geometryconverter.cpp
     )
 ENDIF()
 

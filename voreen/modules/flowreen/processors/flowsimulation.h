@@ -33,17 +33,14 @@
 
 #include "modules/hdf5/io/hdf5filevolume.h"
 
-#ifdef VRN_MODULE_OPENMP
-#define PARALLEL_MODE_OMP
-#endif
 #include <olb3D.h>
 #define DESCRIPTOR D3Q19Descriptor
-
-namespace voreen {
 
 using namespace olb;
 using namespace olb::descriptors;
 typedef double T;
+
+namespace voreen {
 
 struct FlowSimulationInput {
     float simulationTime;
@@ -53,7 +50,7 @@ struct FlowSimulationInput {
 };
 
 struct FlowSimulationOutput {
-    std::unique_ptr<VolumeList> outputVolumes;
+    //std::unique_ptr<VolumeList> outputVolumes;
 };
 
 /**
@@ -110,6 +107,7 @@ private:
     FloatProperty characteristicLength_;
     FloatProperty viscosity_;
     FloatProperty density_;
+    BoolProperty  bouzidi_;
 
     static const std::string loggerCat_;
 };

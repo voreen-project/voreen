@@ -23,6 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
+#include "flowsimulation.h"
+
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
@@ -31,133 +33,9 @@
 #include "modules/hdf5/io/hdf5volumereader.h"
 #include "modules/hdf5/io/hdf5volumewriter.h"
 
-//NOTE: has to be included at the end due to definitions made in volumeatomic.h!
-#include "flowsimulation.h"
-
-#ifndef OLB_PRECOMPILED
-#include <olb3D.hh>
-#endif
+#include "modules/flowreen/utils/geometryconverter.h"
 
 namespace voreen {
-
-/**
- * Helper function to convert a Voreen geometry into an olb STLreader.
- * This is achieved by creating a temporary STL file.
- */
-std::unique_ptr<STLreader<T>> convertGeometryToSTL(const Geometry* geometry) {
-
-    if(const GlMeshGeometryBase* data = dynamic_cast<const GlMeshGeometryBase*>(geometry)) {
-
-        if(data->getPrimitiveType() != GL_TRIANGLES) {
-            std::cout << "Currently only triangular meshes allowed" << std::endl;
-            return nullptr;
-        }
-
-        if(!(data->getVertexLayout() & VertexBase::VertexLayout::NORMAL)) {
-            std::cout << "Geometry needs to have normals" << std::endl;
-            return nullptr;
-        }
-
-        // TODO: add this converter to GlMeshGeometry class?
-        std::vector<VertexBase> vertices(data->getNumVertices());
-        std::vector<uint32_t> indices;
-        if(const GlMeshGeometryUInt32Simple* geom = dynamic_cast<const GlMeshGeometryUInt32Simple*>(geometry)) {
-            vertices = geom->getVertices();
-            indices = geom->getIndices();
-        } else if(const GlMeshGeometryUInt32Normal* geom = dynamic_cast<const GlMeshGeometryUInt32Normal*>(geometry)) {
-            std::copy(geom->getVertices().begin(), geom->getVertices().end(), vertices.begin());
-            indices = geom->getIndices();
-        } else if(const GlMeshGeometryUInt32NormalTexCoord* geom = dynamic_cast<const GlMeshGeometryUInt32NormalTexCoord*>(geometry)) {
-            std::copy(geom->getVertices().begin(), geom->getVertices().end(), vertices.begin());
-            indices = geom->getIndices();
-        } else if(const GlMeshGeometryUInt32ColorNormal* geom = dynamic_cast<const GlMeshGeometryUInt32ColorNormal*>(geometry)) {
-            std::copy(geom->getVertices().begin(), geom->getVertices().end(), vertices.begin());
-            indices = geom->getIndices();
-        } else if(const GlMeshGeometryUInt32TexCoord* geom = dynamic_cast<const GlMeshGeometryUInt32TexCoord*>(geometry)) {
-            std::copy(geom->getVertices().begin(), geom->getVertices().end(), vertices.begin());
-            indices = geom->getIndices();
-        } else if(const GlMeshGeometryUInt32ColorNormalTexCoord* geom = dynamic_cast<const GlMeshGeometryUInt32ColorNormalTexCoord*>(geometry)) {
-            std::copy(geom->getVertices().begin(), geom->getVertices().end(), vertices.begin());
-            indices = geom->getIndices();
-        } else {
-            std::cout << "Unsupported geometry" << std::endl;
-            return nullptr;
-        }
-
-        std::string fullName = VoreenApplication::app()->getUniqueTmpFilePath(".stl");
-        std::ofstream f(fullName.c_str());
-        f << "solid ascii " << fullName << "\n";
-
-        if(data->usesIndexedDrawing()) {
-            tgtAssert(data->getNumIndices() % 3 == 0, "No triangle mesh");
-            for (size_t i = 0; i < data->getNumIndices() / 3; i+=3) {
-
-                const VertexBase& v0 = vertices[indices[i+0]];
-                const VertexBase& v1 = vertices[indices[i+1]];
-                const VertexBase& v2 = vertices[indices[i+2]];
-
-                tgt::vec3 normal = tgt::normalize(tgt::cross(v0.pos_-v1.pos_, v0.pos_-v2.pos_));
-
-                f << "facet normal " << normal[0] << " "
-                  << normal[1] << " " << normal[2] << "\n";
-                f << "    outer loop\n";
-                f << "        vertex " << vertices[indices[i+0]].pos_[0] << " "
-                  << vertices[indices[i+0]].pos_[1] << " " << vertices[indices[i]].pos_[2]
-                  << "\n";
-                f << "        vertex " << vertices[indices[i+1]].pos_[0] << " "
-                  << vertices[indices[i+1]].pos_[1] << " " << vertices[indices[i]].pos_[2]
-                  << "\n";
-                f << "        vertex " << vertices[indices[i+2]].pos_[0] << " "
-                  << vertices[indices[i+1]].pos_[1] << " " << vertices[indices[i]].pos_[2]
-                  << "\n";
-                f << "    endloop\n";
-                f << "endfacet\n";
-            }
-        }
-        else {
-            tgtAssert(data->getNumVertices() % 3 == 0, "No triangle mesh");
-            for (size_t i = 0; i < data->getNumVertices() / 3; i+=3) {
-
-                const VertexBase& v0 = vertices[i+0];
-                const VertexBase& v1 = vertices[i+1];
-                const VertexBase& v2 = vertices[i+2];
-
-                tgt::vec3 normal = tgt::normalize(tgt::cross(v0.pos_-v1.pos_, v0.pos_-v2.pos_));
-
-                f << "facet normal " << normal[0] << " "
-                  << normal[1] << " " << normal[2] << "\n";
-                f << "    outer loop\n";
-                f << "        vertex " << vertices[i+0].pos_[0] << " "
-                  << vertices[i+0].pos_[1] << " " << vertices[i].pos_[2]
-                  << "\n";
-                f << "        vertex " << vertices[i+1].pos_[0] << " "
-                  << vertices[i+1].pos_[1] << " " << vertices[i].pos_[2]
-                  << "\n";
-                f << "        vertex " << vertices[i+2].pos_[0] << " "
-                  << vertices[i+1].pos_[1] << " " << vertices[i].pos_[2]
-                  << "\n";
-                f << "    endloop\n";
-                f << "endfacet\n";
-            }
-        }
-
-        f.close();
-
-        std::unique_ptr<STLreader<T>> reader;
-        try {
-            reader.reset(new STLreader<T>(fullName, 1.0f));
-        }
-        catch(const std::runtime_error& error) {
-            std::cout << error.what() << std::endl;
-        }
-        return reader;
-    }
-    else {
-        std::cout << "Geometry not supported!" << std::endl;
-        return nullptr;
-    }
-}
-
 
 const std::string FlowSimulation::loggerCat_("voreen.flowreen.FlowSimulation");
 
@@ -170,8 +48,9 @@ FlowSimulation::FlowSimulation()
     , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 10.0f)
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 30.0f)
     , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 22.46f, 1.0f, 100.0f)
-    , viscosity_("viscosity", "Viscosity (m^2/s)", 3.5e-10, 3e-10, 4e-10)
+    , viscosity_("viscosity", "Viscosity (e-6 m^2/s)", 3.5, 3, 4)
     , density_("density", "Density (kg/m^3)", 1000.0f, 1000.0f, 1100.0f)
+    , bouzidi_("bounzidi", "Bounzidi", true)
 {
     addPort(geometryDataPort_);
     addPort(measuredDataPort_);
@@ -182,6 +61,7 @@ FlowSimulation::FlowSimulation()
     addProperty(characteristicLength_);
     addProperty(viscosity_);
     addProperty(density_);
+    addProperty(bouzidi_);
 }
 
 FlowSimulation::~FlowSimulation() {
@@ -249,13 +129,14 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
     // === 1st Step: Initialization ===
     UnitConverter<T,DESCRIPTOR> converter(
-            (T)   volumeT0->getSpacing().x,             // physDeltaX: spacing between two lattice cells in __m__
-            (T)   temporalResolution_.get(),            // physDeltaT: time step in __s__
-            (T)   characteristicLength_.get(),          // charPhysLength: reference length of simulation geometry
-            (T)   maxVelocityMagnitude/1000.0,          // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
-            (T)   viscosity_.get(),                     // physViscosity: physical kinematic viscosity in __m^2 / s__
-            (T)   density_.get()                        // physDensity: physical density in __kg / m^3__
+            (T)   volumeT0->getSpacing().x,                 // physDeltaX: spacing between two lattice cells in __m__
+            (T)   temporalResolution_.get(),                // physDeltaT: time step in __s__
+            (T)   characteristicLength_.get(),              // charPhysLength: reference length of simulation geometry
+            (T)   maxVelocityMagnitude/1000.0,              // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
+            (T)   viscosity_.get()/1e-10,                   // physViscosity: physical kinematic viscosity in __m^2 / s__
+            (T)   density_.get()                            // physDensity: physical density in __kg / m^3__
     );
+
     // Prints the converter log as console output
     converter.print();
     // Writes the converter log in a file
@@ -269,7 +150,7 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     if(!stlReader) {
         throw InvalidInputException("Geometry could not be initialized", InvalidInputException::S_ERROR);
     }
-    //STLreader<T> stlReader( geometryFile_.get(), converter.getConversionFactorLength(), 0.001, 0, true );
+
 /*
     const std::string volumeLocation = HDF5VolumeWriter::VOLUME_DATASET_NAME;
     const std::string baseType = volumeT0->getBaseType();
@@ -314,7 +195,11 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
     IndicatorLayer3D<T> extendedDomain( *input.stlReader, input.converter.getConversionFactorLength() );
 
     // Instantiation of a cuboidGeometry with weights
+#ifdef PARALLEL_MODE_MPI
+    const int noOfCuboids = std::min( 16*N,2*singleton::mpi().getSize() );
+#else
     const int noOfCuboids = 2;
+#endif
     CuboidGeometry3D<T> cuboidGeometry( extendedDomain, input.converter.getConversionFactorLength(), noOfCuboids );
 
     // Instantiation of a loadBalancer
@@ -365,7 +250,7 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
 
     // Done.
     return FlowSimulationOutput{
-            std::move(output)
+            //std::move(output)
     };
 }
 
@@ -378,7 +263,34 @@ void FlowSimulation::prepareGeometry( UnitConverter<T,DESCRIPTOR> const& convert
 
     LINFO("Prepare Geometry ...");
 
-    // TODO
+    superGeometry.rename( 0,2,indicator );
+    superGeometry.rename( 2,1,stlReader );
+
+    superGeometry.clean();
+
+    // TODO: these have to be set via Voreen - interface!
+    // Set material number for inflow
+    IndicatorCircle3D<T> inflow(  0.218125 ,0.249987 ,0.0234818, 0., 1.,0., 0.0112342 );
+    IndicatorCylinder3D<T> layerInflow( inflow, 2.*converter.getConversionFactorLength() );
+    superGeometry.rename( 2,3,1,layerInflow );
+
+    // Set material number for outflow0
+    //IndicatorCircle3D<T> outflow0(0.2053696,0.0900099,0.0346537,  2.5522,5.0294,-1.5237, 0.0054686 );
+    IndicatorCircle3D<T> outflow0( 0.2053696,0.0900099,0.0346537, 0.,-1.,0., 0.0054686 );
+    IndicatorCylinder3D<T> layerOutflow0( outflow0, 2.*converter.getConversionFactorLength() );
+    superGeometry.rename( 2,4,1,layerOutflow0 );
+
+    // Set material number for outflow1
+    //IndicatorCircle3D<T> outflow1(0.2388403,0.0900099,0.0343228, -1.5129,5.1039,-2.8431, 0.0058006 );
+    IndicatorCircle3D<T> outflow1( 0.2388403,0.0900099,0.0343228, 0.,-1.,0., 0.0058006 );
+    IndicatorCylinder3D<T> layerOutflow1( outflow1, 2.*converter.getConversionFactorLength() );
+    superGeometry.rename( 2,5,1,layerOutflow1 );
+
+    // Removes all not needed boundary voxels outside the surface
+    superGeometry.clean();
+    // Removes all not needed boundary voxels inside the surface
+    superGeometry.innerClean( 3 );
+    superGeometry.checkForErrors();
 
     LINFO("Prepare Geometry ... OK");
 }
@@ -393,7 +305,52 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
 
     LINFO("Prepare Lattice ...");
 
-    // TODO
+    const T omega = converter.getLatticeRelaxationFrequency();
+
+    // material=0 --> do nothing
+    lattice.defineDynamics( superGeometry,0,&instances::getNoDynamics<T, DESCRIPTOR>() );
+
+    // material=1 --> bulk dynamics
+    lattice.defineDynamics( superGeometry,1,&bulkDynamics );
+
+    if ( bouzidi_.get() ) {
+        // material=2 --> no dynamics + bouzidi zero velocity
+        lattice.defineDynamics( superGeometry,2,&instances::getNoDynamics<T,DESCRIPTOR>() );
+        offBc.addZeroVelocityBoundary( superGeometry,2,stlReader );
+        // material=3 --> no dynamics + bouzidi velocity (inflow)
+        lattice.defineDynamics( superGeometry,3,&instances::getNoDynamics<T,DESCRIPTOR>() );
+        offBc.addVelocityBoundary( superGeometry,3,stlReader );
+    } else {
+        // material=2 --> bounceBack dynamics
+        lattice.defineDynamics( superGeometry, 2, &instances::getBounceBack<T, DESCRIPTOR>() );
+        // material=3 --> bulk dynamics + velocity (inflow)
+        lattice.defineDynamics( superGeometry,3,&bulkDynamics );
+        bc.addVelocityBoundary( superGeometry,3,omega );
+    }
+
+    // material=4,5 --> bulk dynamics + pressure (outflow)
+    lattice.defineDynamics( superGeometry,4,&bulkDynamics );
+    lattice.defineDynamics( superGeometry,5,&bulkDynamics );
+    bc.addPressureBoundary( superGeometry,4,omega );
+    bc.addPressureBoundary( superGeometry,5,omega );
+
+    // Initial conditions
+    AnalyticalConst3D<T,T> rhoF( 1 );
+    std::vector<T> velocity( 3,T() );
+    AnalyticalConst3D<T,T> uF( velocity );
+
+    // Initialize all values of distribution functions to their local equilibrium
+    lattice.defineRhoU( superGeometry,1,rhoF,uF );
+    lattice.iniEquilibrium( superGeometry,1,rhoF,uF );
+    lattice.defineRhoU( superGeometry,3,rhoF,uF );
+    lattice.iniEquilibrium( superGeometry,3,rhoF,uF );
+    lattice.defineRhoU( superGeometry,4,rhoF,uF );
+    lattice.iniEquilibrium( superGeometry,4,rhoF,uF );
+    lattice.defineRhoU( superGeometry,5,rhoF,uF );
+    lattice.iniEquilibrium( superGeometry,5,rhoF,uF );
+
+    // Lattice initialize
+    lattice.initialize();
 
     LINFO("Prepare Lattice ... OK");
 }
@@ -403,7 +360,26 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                         sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
                                         UnitConverter<T,DESCRIPTOR> const& converter, int iT,
                                         SuperGeometry3D<T>& superGeometry ) const {
-    // TODO
+    // No of time steps for smooth start-up
+    int iTperiod = converter.getLatticeTime( 0.5 );
+    int iTupdate = 50;
+
+    if ( iT%iTupdate == 0 ) {
+        // Smooth start curve, sinus
+        SinusStartScale<T,int> nSinusStartScale( iTperiod,converter.getCharLatticeVelocity() );
+
+        // Creates and sets the Poiseuille inflow profile using functors
+        int iTvec[1]= {iT};
+        T maxVelocity[1]= {T()};
+        nSinusStartScale( maxVelocity,iTvec );
+        CirclePoiseuille3D<T> velocity( superGeometry,3,maxVelocity[0] );
+
+        if ( bouzidi_.get() ) {
+            offBc.defineU( superGeometry,3,velocity );
+        } else {
+            sLattice.defineU( superGeometry,3,velocity );
+        }
+    }
 }
 
 // Computes flux at inflow and outflow
@@ -419,21 +395,32 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
     vtmWriter.addFunctor( pressure );
 
     const int vtkIter  = converter.getLatticeTime( .1 );
-    const int statIter = converter.getLatticeTime( .1 );
+
+    /*
+    if ( iT==0 ) {
+        // Writes the geometry, cuboid no. and rank no. as vti file for visualization
+        SuperLatticeGeometry3D<T, DESCRIPTOR> geometry( sLattice, superGeometry );
+        SuperLatticeCuboid3D<T, DESCRIPTOR> cuboid( sLattice );
+        SuperLatticeRank3D<T, DESCRIPTOR> rank( sLattice );
+        vtmWriter.write( geometry );
+        vtmWriter.write( cuboid );
+        vtmWriter.write( rank );
+
+        vtmWriter.createMasterFile();
+    }
+     */
 
     // Writes the vtk files
     if ( iT%vtkIter==0 ) {
-        // TODO
-        //sLattice.get(0, 0, 0, 0).computeU();
+        vtmWriter.write( iT );
+
+        SuperEuklidNorm3D<T, DESCRIPTOR> normVel( velocity );
+        BlockReduction3D2D<T> planeReduction( normVel, {0,0,1}, 600, BlockDataSyncMode::ReduceOnly );
+        // write output as JPEG
+        heatmap::write(planeReduction, iT);
     }
 
-    /*
-    if ( sLattice.getStatistics().getMaxU() > 0.3 ) {
-        clout << "PROBLEM uMax=" << sLattice.getStatistics().getMaxU() << std::endl;
-        vtmWriter.write( iT );
-        std::exit( 0 );
-    }
-    */
+    return true;
 }
 
 }   // namespace

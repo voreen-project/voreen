@@ -28,6 +28,7 @@
 // processors
 #include "processors/flowdirectionoverlay.h"
 #include "processors/geometry/geometryclose.h"
+#include "processors/geometry/geometryoffsetremove.h"
 #include "processors/streamline/pathlinecreator.h"
 #include "processors/streamline/streamlinecombine.h"
 #include "processors/streamline/streamlinecreator.h"
@@ -39,12 +40,10 @@
 #include "processors/streamline/streamlinetoboundingbox.h"
 
 #ifdef FLOWREEN_USE_OPENLB
-#ifdef VRN_MODULE_OPENMP
-#define PARALLEL_MODE_OMP
-#endif
 #include <olb3D.h>
 
 #include "processors/flowsimulation.h"
+#include "processors/geometry/implicitrepresentation.h"
 #endif
 
 #ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
@@ -78,6 +77,7 @@ FlowreenModule::FlowreenModule(const std::string& modulePath)
     registerSerializableType(new FlowDirectionOverlay());
     registerSerializableType(new PathlineCreator());
     registerSerializableType(new GeometryClose());
+    registerSerializableType(new GeometryOffsetRemove());
     registerSerializableType(new StreamlineCombine());
     registerSerializableType(new StreamlineRenderer3D());
     registerSerializableType(new StreamlineCreator());
@@ -86,8 +86,8 @@ FlowreenModule::FlowreenModule(const std::string& modulePath)
     registerSerializableType(new StreamlineSelector());
     registerSerializableType(new StreamlineSource());
     registerSerializableType(new StreamlineToBoundingBox());
-
 #ifdef FLOWREEN_USE_OPENLB
+    registerSerializableType(new ImplicitRepresentation());
     registerSerializableType(new FlowSimulation());
 #endif
 
@@ -113,6 +113,7 @@ void FlowreenModule::initialize() {
     VoreenModule::initialize();
 
 #ifdef FLOWREEN_USE_OPENLB
+    olb::olbInit(nullptr, nullptr);
     olb::singleton::directories().setOutputDir(VoreenApplication::app()->getTemporaryPath("simulation")+"/");
 #endif
 }
