@@ -27,7 +27,7 @@
 
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 
-#include "../../ext/halfedge/trimesh.h"
+#include "modules/flowreen/ext/halfedge/trimesh.h"
 
 namespace voreen {
 
@@ -171,7 +171,7 @@ void GeometryClose::process() {
     tgtAssert(boundary.empty(), "Some boundary vertices unprocessed");
 
     if(numHoles > 0) {
-        LINFO("Automatically closed " << numHoles << ((numHoles > 1) ? " holes." : "hole."));
+        LINFO("Automatically closed " << numHoles << ((numHoles > 1) ? " holes." : " hole."));
         outport_.setData(outputGeometry.release());
     }
     else {
