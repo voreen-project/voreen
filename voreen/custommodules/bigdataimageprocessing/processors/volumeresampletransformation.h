@@ -135,7 +135,7 @@ protected:
                 );
     }
 
-    void adjustPropertiesToInput();
+    virtual void adjustPropertiesToInput();
 
 private:
     void recalculateOutputProperties();
