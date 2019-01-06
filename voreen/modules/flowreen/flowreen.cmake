@@ -22,6 +22,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/streamlinerenderer3d.cpp
     ${MOD_DIR}/processors/geometry/geometryclose.cpp
     ${MOD_DIR}/processors/geometry/geometryoffsetremove.cpp
+    ${MOD_DIR}/processors/render/unalignedsliceviewer.cpp
     ${MOD_DIR}/processors/streamline/streamlinecombine.cpp
     ${MOD_DIR}/processors/streamline/streamlinecreator.cpp
     ${MOD_DIR}/processors/streamline/streamlinerotation.cpp
@@ -90,6 +91,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/streamlinerenderer3d.h
     ${MOD_DIR}/processors/geometry/geometryclose.h
     ${MOD_DIR}/processors/geometry/geometryoffsetremove.h
+    ${MOD_DIR}/processors/render/unalignedsliceviewer.h
     ${MOD_DIR}/processors/streamline/streamlinecombine.h
     ${MOD_DIR}/processors/streamline/streamlinecreator.h
     ${MOD_DIR}/processors/streamline/streamlinerotation.h
