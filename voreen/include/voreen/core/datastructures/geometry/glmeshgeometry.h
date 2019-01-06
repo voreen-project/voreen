@@ -744,7 +744,8 @@ void GlMeshGeometry<I, V>::createIndices(bool optimize) {
 
     if(optimize) {
 
-        tgt::vec3 diag = tgt::vec3(1000.0f);// getBoundingBox(false).diagonal(); // HACK: scale necessary for some geometries?
+        // TODO: heuristic binning, to avoid false positives
+        tgt::vec3 diag = tgt::vec3(1000.0f);//getBoundingBox(false);
         auto comp = [diag] (const V& x, const V& y) {
             if(x.equals(y, std::numeric_limits<float>::epsilon())) {
                 return false;
