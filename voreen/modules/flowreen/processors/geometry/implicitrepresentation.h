@@ -46,6 +46,18 @@ public:
 
 protected:
 
+    virtual void setDescriptions() {
+        setDescription("Creates an implicit representation of the incoming geometry."
+                       "Ensure that the geometry has been converted to mm!");
+        method_.setDescription("Method to be used for inside/outside test."
+                               "Fast requires the geometry to be a close mesh."
+                               "Accucate, however, can take a while to calculate.");
+        dimensions_.setDescription("Dimensions (cubed) of the output volume.");
+        path_.setDescription("Path where the input geometry will be stored."
+                             "It is also possible to open an existing file for the"
+                             "calculation. In this case, the input geometry will be ignored.");
+    }
+
     virtual bool isReady() const;
     virtual void process();
 
