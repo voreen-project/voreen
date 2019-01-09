@@ -67,10 +67,11 @@ struct ProtoVesselGraphEdgeElement {
 };
 
 struct ProtoVesselGraph;
+struct ProtoVesselGraphNode;
 
 struct ProtoVesselGraphEdge {
     typedef static_kdtree::Tree<ProtoVesselGraphEdgeElement, static_kdtree::SharedNodeStorage<ProtoVesselGraphEdgeElement>> ElementTree;
-    ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, const DiskArray<tgt::svec3>& voxels, ProtoVesselGraph& graph);
+    ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, const ProtoVesselGraphNode& node1, const ProtoVesselGraphNode& node2, const DiskArray<tgt::svec3>& voxels, ProtoVesselGraph& graph);
     static_kdtree::SearchNearestResultSet<ProtoVesselGraphEdgeElement> findClosestVoxelIndex(tgt::vec3) const;
     DiskArray<tgt::vec3>& voxels() {
         return voxelsRw_;
@@ -82,8 +83,8 @@ struct ProtoVesselGraphEdge {
     VGEdgeID id_;
     VGNodeID node1_;
     VGNodeID node2_;
-    DiskArray<tgt::svec3> voxels_;
-    DiskArray<tgt::vec3> voxelsRw_;
+    DiskArray<tgt::svec3> voxels_; //Voxel position of the original centerline
+    DiskArray<tgt::vec3> voxelsRw_; //Smoothed centerline in real world coordinates
     ElementTree tree_;
 };
 

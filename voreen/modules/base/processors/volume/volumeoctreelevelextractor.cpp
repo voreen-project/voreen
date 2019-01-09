@@ -47,7 +47,6 @@ VolumeOctreeLevelExtractor::VolumeOctreeLevelExtractor()
     , automaticallyComputeOnChange_("automaticallycompute", "Automatically Update Output on Change", false, Processor::VALID)
     , buttonPressed_(false)
 {
-    inport_.onChange(MemberFunctionCallback<VolumeOctreeLevelExtractor>(this, &VolumeOctreeLevelExtractor::adjustPropertiesToInput));
     inport_.onChange(MemberFunctionCallback<VolumeOctreeLevelExtractor>(this, &VolumeOctreeLevelExtractor::adjustPropertyActivationState));
     enableProcessing_.onChange(MemberFunctionCallback<VolumeOctreeLevelExtractor>(this, &VolumeOctreeLevelExtractor::adjustPropertyActivationState));
     addPort(inport_);

@@ -26,6 +26,7 @@
 #include "vesselgraph.h"
 #include <functional>
 #include <numeric>
+
 #include "voreen/core/voreenapplication.h"
 
 #include "tgt/logmanager.h"

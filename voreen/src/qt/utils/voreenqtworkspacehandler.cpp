@@ -63,6 +63,8 @@ VoreenQtWorkspaceHandler::VoreenQtWorkspaceHandler()
 }
 
 VoreenQtWorkspaceHandler::~VoreenQtWorkspaceHandler() {
+    // Ensure network evaluator is unlocked for deinitialization.
+    evaluator_->unlock();
     propagateWorkspace(0);
     delete workspace_;
     workspace_ = 0;

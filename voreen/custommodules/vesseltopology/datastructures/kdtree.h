@@ -293,7 +293,7 @@ std::tuple<ElementArrayView<Element>, Element, ElementArrayView<Element>> Elemen
     tgtAssert(dist > 0, "tried to split empty array view");
     partitionAtMedian(dimension);
     Element* center = begin_ + dist/2;
-    return {
+    return std::tuple<ElementArrayView<Element>, Element, ElementArrayView<Element>>{
         ElementArrayView(begin_, center),
         *center,
         ElementArrayView(center+1, end_)
@@ -309,7 +309,7 @@ size_t ElementArrayView<Element>::size() const {
 template<typename Element, int dim>
 struct SortElementsInDim {
     bool operator()(const Element& e1, const Element& e2) {
-        static_assert(0 <= dim <= 2, "invalid dim");
+        static_assert(0 <= dim && dim <= 2, "invalid dim");
         return e1.getPos().elem[dim] < e2.getPos().elem[dim];
     }
 };

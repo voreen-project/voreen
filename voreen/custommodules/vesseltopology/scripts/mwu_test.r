@@ -1,9 +1,8 @@
 ################################################################################################################
-# This R-script is used to compare VesselGraphs (see vesselgraph.h) datasets by visualizing the distribution
-# of properties as density functions and boxplot diagrams.
+# This R-script performs a wilcox test to decide whether there is a statistical significant difference
+# between distribution of edge properties in vessel graphs.
 #
-# All input files are expected to be named "edges.csv" and "nodes.csv". The arguments supplied must be folders
-# that contain such csv files. The basename of the folder is used to name the dataset.
+# Paths to the edges.csv datasets that are to be compared are expected as parameters.
 ################################################################################################################
 normalize_edge_data <- function(data) {
     n_data <- data
@@ -24,10 +23,9 @@ normalize_edge_data <- function(data) {
 }
 
 args <- commandArgs(trailingOnly = TRUE)
-if(length(args)!=3){
-    stop("Expected parameters: dataset1 dataset2 property")
+if(length(args)!=2){
+    stop("Expected parameters: dataset1 dataset2")
 }
-property = args[[3]]
 alldata1 = normalize_edge_data(read.csv(file=file.path(args[[1]]), header=TRUE, sep=";"))
 alldata2 = normalize_edge_data(read.csv(file=file.path(args[[2]]), header=TRUE, sep=";"))
 
@@ -35,12 +33,16 @@ alldata1$straightness = 1/alldata1$curveness
 alldata2$straightness = 1/alldata2$curveness
 
 
-dataset1 = alldata1[[property]]
-dataset2 = alldata2[[property]]
+props = c('length','distance','curveness','straightness','volume','avgCrossSection','minRadiusAvg','minRadiusStd','avgRadiusAvg','avgRadiusStd','maxRadiusAvg','maxRadiusStd','roundnessAvg','roundnessStd')
 
+print("Performing Mann–Whitney U test:")
 
-shapiro.test(dataset1)
-shapiro.test(dataset2)
-#t.test(dataset1, dataset2, var.equal=FALSE, conf.level=0.95)
+for (prop in props) {
+    dataset1 = alldata1[[prop]]
+    dataset2 = alldata2[[prop]]
 
-wilcox.test(dataset1, dataset2)
+    test = wilcox.test(dataset1, dataset2, exact=TRUE)
+    p_value = test$p.value*length(props) #Bonferroni correction
+    s = sprintf('%s: p=%e', prop, p_value)
+    print(s)
+}

@@ -112,6 +112,8 @@ protected:
     FloatProperty nodeMatchRatio_;
     FloatProperty edgeMatchRatio_;
     FloatProperty lengthSimilarity_;
+    FloatProperty netmetsFNR_;
+    FloatProperty netmetsFPR_;
     FloatProperty nodeMatchingCost_;
 
     // (Non-)Match Rendering

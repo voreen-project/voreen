@@ -31,10 +31,14 @@
 #include "tgt/vector.h"
 #include "tgt/matrix.h"
 #include "tgt/bounds.h"
+
+#include "../datastructures/diskarraystorage.h"
+
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
 #include "voreen/core/io/serialization/serialization.h"
 #include "voreen/core/io/serialization/serializer.h"
 #include "voreen/core/io/serialization/deserializer.h"
-#include "../datastructures/diskarraystorage.h"
+#endif
 
 #include <boost/uuid/uuid.hpp>
 #include <functional>
@@ -88,6 +92,7 @@ private:
     VesselSkeletonVoxel();
 };
 
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
 struct VesselSkeletonVoxelSerializable : public Serializable {
     VesselSkeletonVoxelSerializable(VesselSkeletonVoxel);
     VesselSkeletonVoxel inner_;
@@ -99,6 +104,7 @@ private:
     friend class Deserializer;
     VesselSkeletonVoxelSerializable();
 };
+#endif
 
 class VGNodeID {
     uint32_t internal_;
@@ -198,6 +204,7 @@ private:
     friend struct VesselGraphNodeDeserializable;
 };
 
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
 struct VesselGraphNodeSerializable : public Serializable {
     VesselGraphNodeSerializable(const VesselGraphNode&);
     const VesselGraphNode& inner_;
@@ -207,6 +214,8 @@ struct VesselGraphNodeSerializable : public Serializable {
 private:
     friend class Deserializer;
 };
+#endif
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
 struct VesselGraphNodeDeserializable : public Serializable {
     VGNodeID id_;
     tgt::vec3 pos_;
@@ -217,6 +226,7 @@ struct VesselGraphNodeDeserializable : public Serializable {
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
 };
+#endif
 
 struct VesselGraphEdgePathProperties {
     const static float INVALID_DATA;
@@ -244,6 +254,7 @@ struct VesselGraphEdgePathProperties {
     bool hasValidData() const;
 };
 
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
 struct VesselGraphEdgePathPropertiesSerializable : public Serializable {
     VesselGraphEdgePathProperties inner_;
 
@@ -252,6 +263,7 @@ struct VesselGraphEdgePathPropertiesSerializable : public Serializable {
 
     VesselGraphEdgePathPropertiesSerializable();
 };
+#endif
 
 // An edge within a vessel graph.
 // It stores references to its nodes, properties of the associated branch of the vessel network, as well as the medial
@@ -355,6 +367,7 @@ private:
     VesselGraphEdge();
 };
 
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
 struct VesselGraphEdgeSerializable : public Serializable {
     VesselGraphEdgeSerializable(const VesselGraphEdge&);
     const VesselGraphEdge& inner_;
@@ -366,6 +379,8 @@ private:
     friend class Deserializer;
     //VesselGraphEdgeSerializable();
 };
+#endif
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
 struct VesselGraphEdgeDeserializable : public Serializable {
     VGEdgeID id_;
     VGNodeID node1_;
@@ -377,13 +392,18 @@ struct VesselGraphEdgeDeserializable : public Serializable {
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
 };
+#endif
 
 // The vessel graph itself. it stores nodes as well as edges.
 // References between nodes and edges are stored within the substrucutres.
 //
 // To avoid pointer/reference invalidation nodes and edges can only be added to the graph,
 // but not removed.
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
 class VesselGraph : public Serializable {
+#else
+class VesselGraph {
+#endif
 public:
     // Create a graph with predetermined bounds
     VesselGraph(const tgt::Bounds& bounds);
@@ -432,8 +452,10 @@ public:
     // Get a bounding box that encompasses all nodes within the graph.
     const tgt::Bounds& getBounds() const;
 
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
+#endif
 
 private:
     // Note: No need to worry about pointer invalidation here because we do not store pointers
