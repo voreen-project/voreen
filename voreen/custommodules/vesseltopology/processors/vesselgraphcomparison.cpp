@@ -39,9 +39,7 @@
 #include "tgt/filesystem.h"
 #include "tgt/immediatemode/immediatemode.h"
 
-#ifdef VESSELTOPOLOGY_USE_NETMETS
 #include "custommodules/vesseltopology/ext/netmets/lib.h"
-#endif
 
 //#include "stim/network.h"
 

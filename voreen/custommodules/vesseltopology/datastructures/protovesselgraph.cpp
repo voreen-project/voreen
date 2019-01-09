@@ -62,11 +62,34 @@ ProtoVesselGraphNode::ProtoVesselGraphNode(VGNodeID id, DiskArray<tgt::svec3>&& 
     voxelPos_ = tgt::vec3(voxelSum)/static_cast<float>(voxels_.size());
 }
 
-static std::vector<tgt::vec3> transformVoxels(const tgt::mat4& toRWMatrix, const DiskArray<tgt::svec3>& voxels) {
-    std::vector<tgt::vec3> output;
+static std::vector<tgt::vec3> transformAndSmoothVoxels(const tgt::mat4& toRWMatrix, const DiskArray<tgt::svec3>& voxels, tgt::vec3 node1VoxelPos, tgt::vec3 node2VoxelPos) {
+    std::vector<tgt::vec3> controlPoints;
+    controlPoints.push_back(toRWMatrix.transform(node1VoxelPos));
     for(const auto& v: voxels) {
-        output.push_back(toRWMatrix.transform(tgt::vec3(v)));
+        controlPoints.push_back(toRWMatrix.transform(tgt::vec3(v)));
     }
+    controlPoints.push_back(toRWMatrix.transform(node2VoxelPos));
+
+
+    std::vector<tgt::vec3> output;
+    int numPoints = voxels.size();
+    for(int i=1; i<=numPoints; ++i) {
+        // Local Bezier curve of degree 2 (i.e., mix the neighbors):
+        //tgt::vec3 result = 0.5f*controlPoints[i];
+        //result += 0.25f*controlPoints[i-1];
+        //result += 0.25f*controlPoints[i+1];
+
+        // Local Bezier curve of degree 4 (i.e., mix the neighbors):
+        tgt::vec3 result = 6.0f*controlPoints[i];
+        result += 4.0f*controlPoints[i-1];
+        result += 4.0f*controlPoints[i+1];
+        result += controlPoints[std::max(i-2, 0)];
+        result += controlPoints[std::min(i+2, numPoints+1)];
+        result /= 16.0f;
+
+        output.push_back(result);
+    }
+
     return output;
 }
 
@@ -80,12 +103,12 @@ static ProtoVesselGraphEdge::ElementTree buildTree(const DiskArray<tgt::vec3>& v
     return treeBuilder.buildTree(std::move(builder));
 }
 
-ProtoVesselGraphEdge::ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, VGNodeID node1, VGNodeID node2, const DiskArray<tgt::svec3>& voxels, ProtoVesselGraph& graph)
+ProtoVesselGraphEdge::ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID id, const ProtoVesselGraphNode& node1, const ProtoVesselGraphNode& node2, const DiskArray<tgt::svec3>& voxels, ProtoVesselGraph& graph)
     : id_(id)
-    , node1_(node1)
-    , node2_(node2)
+    , node1_(node1.id_)
+    , node2_(node2.id_)
     , voxels_(graph.voxelStorage_.store(voxels))
-    , voxelsRw_(graph.rwvoxelStorage_.store(transformVoxels(toRWMatrix, voxels)))
+    , voxelsRw_(graph.rwvoxelStorage_.store(transformAndSmoothVoxels(toRWMatrix, voxels, node1.voxelPos_, node2.voxelPos_)))
     , tree_(buildTree(voxelsRw_, graph.treeBuilder_))
 {
 }
@@ -109,7 +132,7 @@ VGEdgeID ProtoVesselGraph::insertEdge(VGNodeID node1, VGNodeID node2, const Disk
 
     VGEdgeID edgeID = edges_.size();
     //edges_.push_back(ProtoVesselGraphEdge(toRWMatrix_, edgeID, node1, node2, std::move(voxels)));
-    size_t storageId = edges_.storeElement(ProtoVesselGraphEdge(toRWMatrix_, edgeID, node1, node2, voxels, *this));
+    size_t storageId = edges_.storeElement(ProtoVesselGraphEdge(toRWMatrix_, edgeID, n1, n2, voxels, *this));
     tgtAssert(edgeID.raw() == storageId, "invalid storage id");
 
     n1.edges_.push(edgeID);
@@ -190,13 +213,14 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
         skeletonVoxelLists.storeElement(DiskArray<VesselSkeletonVoxel>(std::move(builder).finalize()));
     }
 
-    for(int z = 0; z < dimensions.z; ++z) {
+    tgt::ivec3 idim = dimensions;
+    for(int z = 0; z < idim.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dimensions.z);
         segmentedVolumeReader.advance();
         boost::optional<VolumeAtomic<uint8_t>> sampleMaskSlice = sampleMask ? boost::optional<VolumeAtomic<uint8_t>>(sampleMask->loadSlice(z)) : boost::none;
 
-        for(int y = 0; y < dimensions.y; ++y) {
-            for(int x = 0; x < dimensions.x; ++x) {
+        for(int y = 0; y < idim.y; ++y) {
+            for(int x = 0; x < idim.x; ++x) {
 
                 tgt::ivec3 ipos(x, y, z);
                 VGEdgeID id = segmentedVolumeReader.getEdgeId(ipos);
@@ -223,11 +247,11 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
                 // Only consider those that have a background 6-neighbor
                 bool isSurfaceVoxel =
                         !( (x == 0              || segmentedVolumeReader.isObject(tgt::ivec3(x-1, y  , z  )))
-                        && (x == dimensions.x-1 || segmentedVolumeReader.isObject(tgt::ivec3(x+1, y  , z  )))
+                        && (x == idim.x-1 || segmentedVolumeReader.isObject(tgt::ivec3(x+1, y  , z  )))
                         && (y == 0              || segmentedVolumeReader.isObject(tgt::ivec3(x  , y-1, z  )))
-                        && (y == dimensions.y-1 || segmentedVolumeReader.isObject(tgt::ivec3(x  , y+1, z  )))
+                        && (y == idim.y-1 || segmentedVolumeReader.isObject(tgt::ivec3(x  , y+1, z  )))
                         && (z == 0              || segmentedVolumeReader.isObject(tgt::ivec3(x  , y  , z-1)))
-                        && (z == dimensions.z-1 || segmentedVolumeReader.isObject(tgt::ivec3(x  , y  , z+1))));
+                        && (z == idim.z-1 || segmentedVolumeReader.isObject(tgt::ivec3(x  , y  , z+1))));
 
                 // The rest is only relevant for surface voxels, so...
                 if(!isSurfaceVoxel) {

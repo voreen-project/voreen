@@ -473,7 +473,7 @@ const LZ4SliceVolume<Voxel>& LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::ge
 template<typename Voxel, uint64_t neighborhoodExtent>
 const boost::optional<VolumeAtomic<Voxel>>& LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::getSlice(int sliceNumber) const {
     int sliceStorageIndex = slicePosOffsetToSliceStorageIndex(sliceNumber - pos_);
-    if(0 <= sliceStorageIndex && sliceStorageIndex < neighborhoodSize) {
+    if(0 <= sliceStorageIndex && sliceStorageIndex < static_cast<int>(neighborhoodSize)) {
         return slices_[sliceStorageIndex];
     } else {
         return NO_SLICE;
@@ -483,8 +483,9 @@ const boost::optional<VolumeAtomic<Voxel>>& LZ4SliceVolumeReader<Voxel, neighbor
 template<typename Voxel, uint64_t neighborhoodExtent>
 boost::optional<Voxel> LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::getVoxel(tgt::ivec3 pos) const {
     const auto& slice = getSlice(pos.z);
+    tgt::ivec3 dim(volume_.getDimensions());
     if(slice) {
-        if(pos.x < 0 || pos.x >= volume_.getDimensions().x || pos.y < 0 || pos.y >= volume_.getDimensions().y) {
+        if(pos.x < 0 || pos.x >= dim.x || pos.y < 0 || pos.y >= dim.y) {
             return boost::none;
         } else {
             return slice->voxel(pos.x, pos.y, 0);
@@ -510,7 +511,7 @@ boost::optional<Voxel> LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::getVoxel
 
 template<typename Voxel, uint64_t neighborhoodExtent>
 boost::optional<VolumeAtomic<Voxel>> LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::loadSliceFromVolume(int sliceNumber) const {
-    if(0 <= sliceNumber && sliceNumber < volume_.getNumSlices()) {
+    if(0 <= sliceNumber && sliceNumber < static_cast<int>(volume_.getNumSlices())) {
         return volume_.loadSlice(sliceNumber);
     } else {
         return boost::none;

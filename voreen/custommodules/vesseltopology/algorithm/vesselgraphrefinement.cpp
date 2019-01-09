@@ -418,16 +418,47 @@ struct FutureEdge {
         } else {
             tgtAssert(edges_.type() == typeid(std::deque<const VesselGraphEdge*>), "Invalid edges type");
             auto& thisq = boost::get<std::deque<const VesselGraphEdge*>>(edges_);
+            tgtAssert(thisq.size() >= 2, "Single edge in queue");
+
+            const VesselGraphEdge* firstEdge = thisq.front();
+            const VesselGraphEdge* lastEdge = thisq.back();
+
+            auto pushVoxel = [&output, firstEdge, lastEdge] (const VesselGraphEdge& edge, size_t voxelIndex) {
+                // We want all voxels to be outer if they are between the start of the first and the end of the last edge
+                bool isFutureOuter =
+                        (&edge != firstEdge || voxelIndex >= edge.outerPathBeginIndex_)
+                     || (&edge != lastEdge || voxelIndex < edge.outerPathEndIndex_);
+
+                const VesselSkeletonVoxel& voxel = edge.getVoxels()[voxelIndex];
+                if(isFutureOuter && voxel.isInner()) {
+                    VesselSkeletonVoxel newVoxel(voxel); //copy
+                    newVoxel.nearOtherEdge_ = false;
+
+                    if(!voxel.hasValidData()) {
+                        // We need to fix up the properties, as this voxel is supposed to be an outer voxel
+                        // Best bet are the average values of the edge itself.
+                        newVoxel.minDistToSurface_ = edge.getMinRadiusAvg();
+                        newVoxel.avgDistToSurface_ = edge.getAvgRadiusAvg();
+                        newVoxel.maxDistToSurface_ = edge.getMaxRadiusAvg();
+                    }
+
+                    output.push_back(newVoxel);
+                } else {
+                    output.push_back(voxel);
+                }
+            };
 
             for(const VesselGraphEdge* edge : thisq) {
                 // We know (and use the fact that): edge.getVoxels() are ordered from edge.getNode1() to edge.getNode2()
                 if(current_start_voxel == &edge->getNode1()) {
-                    output.insert(output.end(), edge->getVoxels().begin(), edge->getVoxels().end());
+                    for(size_t i=0; i < edge->getVoxels().size(); ++i) {
+                        pushVoxel(*edge, i);
+                    }
                     current_start_voxel = &edge->getNode2();
                 } else {
                     tgtAssert(current_start_voxel == &edge->getNode2(), "edges_ are not ordered!");
-                    for(auto it = edge->getVoxels().rbegin(); it != edge->getVoxels().rend(); ++it) {
-                        output.push_back(*it);
+                    for(size_t i = edge->getVoxels().size(); i!=0; --i) {
+                        pushVoxel(*edge, i-1);
                     }
                     current_start_voxel = &edge->getNode1();
                 }

@@ -23,75 +23,83 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VOLUMELISTSPACING_H
-#define VRN_VOLUMELISTSPACING_H
+#ifndef VRN_FATCELLQUANTIFICATION_H
+#define VRN_FATCELLQUANTIFICATION_H
 
-#include <string>
-#include "voreen/core/processors/volumeprocessor.h"
-#include "voreen/core/properties/boolproperty.h"
-#include "voreen/core/properties/intproperty.h"
-#include "voreen/core/properties/floatproperty.h"
-#include "voreen/core/properties/vectorproperty.h"
-#include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/processors/processor.h"
+
+#include "voreen/core/ports/volumeport.h"
+
+
+#include "voreen/core/properties/buttonproperty.h"
+#include "voreen/core/properties/progressproperty.h"
+#include "voreen/core/properties/boundingboxproperty.h"
+
+#include "voreen/core/properties/filedialogproperty.h"
+
+#include "voreen/core/datastructures/volume/volumeatomic.h"
+
+#include "modules/plotting/ports/plotport.h"
 
 namespace voreen {
 
-class Volume;
+/**
+ * Allows the quantification of the volume of a single (binary) segmentation or the quantification of two segmentation volumes (including the density of one within the other). 
+ * The density is computed per slice and the output is given as plot data.
+ */
+class VRN_CORE_API FatCellQuantification : public Processor {
 
-class VRN_CORE_API VolumeListSpacing : public VolumeProcessor {
 public:
-    VolumeListSpacing();
+    FatCellQuantification();
     virtual Processor* create() const;
 
-    virtual std::string getCategory() const   { return "Volume Processing"; }
-    virtual std::string getClassName() const  { return "VolumeListSpacing"; }
-    virtual CodeState getCodeState() const    { return CODE_STATE_TESTING;  }
+    virtual std::string getClassName() const { return "FatCellQuantification";     }
+    virtual std::string getCategory() const  { return "Quantification";         }
+    virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL;  }
+
+    // progress is shown during quantification
+    virtual bool usesExpensiveComputation() const { return true;    }
+
+    virtual bool isEndProcessor() const {return true;   }
+
+    virtual bool isReady() const;
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Modifies the volumes' voxel spacing, either by replacing or scaling it, for each volume in the list. The output is a new VolumeList, but each of the volumes still references the volume of the original list, so that memory requirements are not doubled. The volumes' transformation matrix is not changed.");
+        setDescription("Specialized quantification of haegerling fat cells");
     }
-
-    virtual void initialize();
-
-    /// deletes the volume list and the decorator volumes
-    virtual void deinitialize();
 
     virtual void process();
 
-    virtual void updateCurrentlySelected();
 
-    virtual void clearVolumeList();
+    //BoolProperty useClipRegion_;
+    //IntBoundingBoxProperty clipRegion_;
 
-    virtual void adjustToVolumeList();
+    FileDialogProperty csvSaveFile_;
+    //ButtonProperty saveToCsv_;
+
+    // quantification results
+   // size_t numVoxelsTotal_;
+    //size_t numVoxelsInOne_;
+   // size_t numVoxelsInTwo_;
+   // size_t numVoxelsInBoth_;
+
+    /// plotting port for quantification results
+    //PlotPort quantificationPlot_;
+
+    VolumePort firstSegmentationVolume_;
+    //VolumePort secondSegmentationVolume_;
+
+    static const std::string loggerCat_;
 
 private:
-    void spacingChanged(int dim);
-    void uniformScalingChanged();
-    void resetSpacing();
 
-    void adjustPropertyVisibility();
+    //void useClipRegionChanged();
 
-    VolumeListPort inport_;
-    VolumeListPort outport_;
-
-    BoolProperty enableProcessing_;
-    StringOptionProperty mode_;
-    BoolProperty uniformSpacing_;
-    FloatProperty spacingX_;
-    FloatProperty spacingY_;
-    FloatProperty spacingZ_;
-    ButtonProperty reset_;
-
-    IntProperty currentlySelected_;
-    FloatVec3Property spacingDisplay_;
-
-    VolumeList* currentVolumeList_;
-    std::vector<std::unique_ptr<VolumeBase>> decorators_;
-
-    static const std::string loggerCat_; ///< category used in logging
+    void adjustToInputVolumes();
 };
 
-}   //namespace
 
-#endif // VRN_VOLUMELISTSPACING_H
+} // namespace
+
+#endif

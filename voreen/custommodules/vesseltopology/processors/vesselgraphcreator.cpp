@@ -877,7 +877,7 @@ std::unique_ptr<VesselGraph> refineVesselGraph(VesselGraphCreatorProcessedInput&
     auto isEdgeDeletable = [&input] (const VesselGraphEdge& edge) {
         return !edge.hasValidData() || edge.getVoxels().size() < input.minVoxelLength || edge.getElongation() < input.minElongation || edge.getRelativeBulgeSize() < input.minBulgeSize;
     };
-    std::unique_ptr<VesselGraph> normalizedGraph = VesselGraphRefinement::removeEndEdgesRecursively(prevGraph, isEdgeDeletable, 1);
+    std::unique_ptr<VesselGraph> normalizedGraph = VesselGraphRefinement::removeEndEdgesRecursively(prevGraph, isEdgeDeletable);
 
     tgt::mat4 rwToVoxel;
     bool inverted = input.segmentation.getMetaData().getVoxelToWorldMatrix().invert(rwToVoxel);

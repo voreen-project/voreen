@@ -63,6 +63,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/io/volumedisklz4.cpp
     ${MOD_DIR}/processors/binarymedian.cpp
     ${MOD_DIR}/processors/connectedcomponentanalysis.cpp
+    ${MOD_DIR}/processors/fatcellquantification.cpp
     ${MOD_DIR}/processors/largevolumeformatconversion.cpp
     ${MOD_DIR}/processors/segmentationquantification.cpp
     ${MOD_DIR}/processors/volumebricksave.cpp
@@ -91,6 +92,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/io/volumedisklz4.h
     ${MOD_DIR}/processors/binarymedian.cpp
     ${MOD_DIR}/processors/connectedcomponentanalysis.h
+    ${MOD_DIR}/processors/fatcellquantification.h
     ${MOD_DIR}/processors/largevolumeformatconversion.h
     ${MOD_DIR}/processors/segmentationquantification.h
     ${MOD_DIR}/processors/volumebricksave.h

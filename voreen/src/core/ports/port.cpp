@@ -128,6 +128,18 @@ void Port::disconnect(Port* other) {
 
             connectedPorts_.erase(connectedPorts_.begin() + i);
             other->disconnect(this);
+
+            // After disconnection the outport does not hold any data anymore. This is also explicitly handled
+            // in methods higher in the call chain, but these fail (potentially) if this port does not own
+            // the data, is removed after another port connection (that does own the data) which then does not
+            // pass the information that the data was cleared on to this outport.
+            //
+            // Yeah, that sounds complicated, which is another great reason to just make sure that the outport
+            // does store any (potentially) soon to be invalidated pointers right here:
+            // Disconnected outports just don't hold any data!
+            if(isOutport()) {
+                clear();
+            }
             getProcessor()->invalidate(invalidationLevel_);
 
             if(isInport())
