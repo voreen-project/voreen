@@ -59,6 +59,8 @@ protected:
     virtual void initialize();
     virtual void deinitialize();
 
+    virtual void adjustPropertiesToInput();
+
 protected:
     enum TextureMode {
         TEXTURE_2D,
@@ -70,7 +72,6 @@ protected:
     }
 
     virtual void renderSlice(SliceAlignment sliceAlign, int sliceNo, tgt::TextureUnit& texUnit);
-    virtual void updatePropertyConfiguration();
 
     virtual std::string generateHeader(const tgt::GpuCapabilities::GlVersion* version = 0);
 

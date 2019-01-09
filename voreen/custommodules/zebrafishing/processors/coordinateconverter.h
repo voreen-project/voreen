@@ -83,8 +83,6 @@ protected:
 
     static const std::string loggerCat_;
 
-    // adjust minimum range max value, adjust range of time step max value
-    //void adjustToInputData();
     FloatMat4Property transformMatrix_;
 };
 

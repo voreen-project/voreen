@@ -55,6 +55,7 @@ protected:
     }
 
     virtual void process();
+    virtual void adjustPropertiesToInput();
 
     /// Inport for the volume list.
     VolumeListPort inport_;
@@ -75,10 +76,6 @@ protected:
     FloatProperty elapsedTime_;
 
     static const std::string loggerCat_;
-
-private:
-
-    void adjustToVolumeList();
 
 };
 

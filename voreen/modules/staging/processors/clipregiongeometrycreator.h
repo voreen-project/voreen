@@ -58,7 +58,7 @@ protected:
 
     virtual void process();
 
-    virtual void adjustToInputVolume();
+    virtual void adjustPropertiesToInput();
 
     VolumePort inport_;
     GeometryPort outport_;

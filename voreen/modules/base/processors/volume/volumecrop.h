@@ -63,7 +63,6 @@ private:
     /// Crops the input volume according to the property values
     /// and writes the result to the outport.
     void crop();
-    void inportChanged();
     void updateInfoPropertys();
 
 

@@ -40,7 +40,6 @@ CellTrackConverter::CellTrackConverter()
     , minimumLength_("minLength", "Minimum Track Length (in steps)", 1, 1, 1, Processor::INVALID_RESULT, NumericProperty<int>::DYNAMIC)
     , columnRange_("timeInterval", "Time step interval")
 {
-    ON_CHANGE(inport_, CellTrackConverter, adjustToInputData);
     addPort(inport_);
     addPort(outport_);
 
@@ -99,7 +98,7 @@ void CellTrackConverter::process() {
     outport_.setData(segmentList, true);
 }
 
-void CellTrackConverter::adjustToInputData() {
+void CellTrackConverter::adjustPropertiesToInput() {
     if (!inport_.getData())
         return;
     const PlotData* data = dynamic_cast<const PlotData*>(inport_.getData());

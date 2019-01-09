@@ -60,6 +60,9 @@ protected:
 
     virtual void process();
 
+    // adjust minimum range max value, adjust range of time step max value
+    virtual void adjustPropertiesToInput();
+
     /// Inport for the plot data.
     PlotPort inport_;
 
@@ -74,9 +77,6 @@ protected:
 
 
     static const std::string loggerCat_;
-
-    // adjust minimum range max value, adjust range of time step max value
-    void adjustToInputData();
 
 };
 

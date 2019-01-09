@@ -161,6 +161,12 @@ protected:
 
     virtual void process();
 
+    /// callback for changes on input volume port
+    virtual void adjustPropertiesToInput();
+
+    /// adjust properties to changed or new volume (only call if an input volume is present)
+    void onVolumeChange();
+
     /// Is the volume region structure invalid (needed for visible bricks / minimal visible bounding box modes)?
     bool structureInvalid() const;
 
@@ -170,12 +176,6 @@ protected:
     void setStructureInvalid(bool value = true);
 
     void setGeometryInvalid(bool value = true);
-
-    /// callback for changes on input volume port
-    void onInportChange();
-
-    /// adjust properties to changed or new volume (only call if an input volume is present)
-    void onVolumeChange();
 
     /// Sets the number of bricks in every direction for the current volume structure.
     void setVolStructureSize(tgt::ivec3 size);

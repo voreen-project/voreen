@@ -89,8 +89,6 @@ VolumeListSpacing::VolumeListSpacing()
     uniformSpacing_.onChange(MemberFunctionCallback<VolumeListSpacing>(this, &VolumeListSpacing::uniformScalingChanged));
 
     currentlySelected_.onChange(MemberFunctionCallback<VolumeListSpacing>(this, &VolumeListSpacing::updateCurrentlySelected));
-
-    ON_CHANGE(inport_, VolumeListSpacing, adjustToVolumeList);
 }
 
 Processor* VolumeListSpacing::create() const {
@@ -182,7 +180,7 @@ void VolumeListSpacing::uniformScalingChanged() {
         spacingChanged(0);
 }
 
-void VolumeListSpacing::adjustToVolumeList() {
+void VolumeListSpacing::adjustPropertiesToInput() {
     const VolumeList* inputList = inport_.getData();
     int max = ((inputList != 0) ? static_cast<int>(inputList->size() - 1) : 0);
     currentlySelected_.setMaxValue(std::max(0,max)); // the spacing is automatically adjusted afterwards

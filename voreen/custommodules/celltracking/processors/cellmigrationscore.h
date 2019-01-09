@@ -80,6 +80,8 @@ protected:
     virtual void process();
     virtual void initialize();
 
+    virtual void adjustPropertiesToInput();
+
     virtual void computeQuantification();
 
     /// check if the VolumeList represents a time series, i.e., if every volume has the same dimensions, spacing, offset, data type, voxel-to-world matrix, and has a VolumeDisk representation
@@ -131,7 +133,6 @@ protected:
     static const std::string loggerCat_;
 
 private:
-    void adjustToVolumeList();
 
     void useClipRegionChanged();
 

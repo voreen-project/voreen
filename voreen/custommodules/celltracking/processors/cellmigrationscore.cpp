@@ -74,8 +74,6 @@ CellMigrationScore::CellMigrationScore()
     addProperty(channel_);
     addProperty(cylinderSubdivisions_);
 
-    ON_CHANGE(inport_, CellMigrationScore, adjustToVolumeList);
-
     ON_CHANGE(useClipRegion_, CellMigrationScore, useClipRegionChanged);
 
     ON_CHANGE(startComputation_, CellMigrationScore, computeQuantification);
@@ -160,7 +158,7 @@ void CellMigrationScore::process() {
 void CellMigrationScore::initialize() {
     Processor::initialize();
 
-    adjustToVolumeList();
+    adjustPropertiesToInput();
 }
 
 bool CellMigrationScore::checkVolumeList(const VolumeList* collection) const {
@@ -410,7 +408,7 @@ void CellMigrationScore::computeQuantification() {
     normalizedQuantificationPlot_.setData(normalizedPlotData, true);
 }
 
-void CellMigrationScore::adjustToVolumeList() {
+void CellMigrationScore::adjustPropertiesToInput() {
     //if (!outport_.isInitialized())
     //    return;
 

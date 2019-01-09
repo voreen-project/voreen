@@ -50,14 +50,14 @@ public:
     virtual CodeState getCodeState() const   { return CODE_STATE_STABLE; }
     virtual bool isUtility() const           { return true; }
 
-    virtual void invalidate(int inv = INVALID_RESULT);
-
 protected:
     virtual void setDescriptions() {
         setDescription("Selects a single volume from the input list.");
     }
 
     virtual void process();
+
+    virtual void adjustPropertiesToInput();
 
     IntProperty volumeID_;
 
@@ -68,9 +68,6 @@ protected:
     VolumePort outport_;
 
     static const std::string loggerCat_;
-
-private:
-    void adjustToVolumeList();
 
 };
 
