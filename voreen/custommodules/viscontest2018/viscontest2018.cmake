@@ -4,7 +4,7 @@
 
 # Dependencies
 IF(NOT VRN_MODULE_PYTHON) # for converting
-    MESSAGE(FATAL_ERROR "VisContest2018 Module requires Python Module")
+    MESSAGE(WARNING "VisContest2018 Module requires Python Module for converter scripts")
 ENDIF()
 IF(NOT VRN_MODULE_HDF5) # for volume reading
     MESSAGE(FATAL_ERROR "VisContest2018 Module requires HDF5 Module")
@@ -27,7 +27,7 @@ IF(${VRN_USE_VTK})
         SET(MOD_LIBRARIES ${VTK_LIBRARIES})
     ELSE()
 
-        SET(VRN_VTK_VERSION 8.0)
+        SET(VRN_VTK_VERSION 8.1)
 
         LIST(APPEND VTK_LIB_NAMES #add missing
             "CommonCore" "CommonDataModel" "CommonMisc" "CommonSystem" "CommonTransforms"

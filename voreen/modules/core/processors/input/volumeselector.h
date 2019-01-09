@@ -58,7 +58,6 @@ protected:
     }
 
     virtual void process();
-    virtual void initialize();
 
     IntProperty volumeID_;
 

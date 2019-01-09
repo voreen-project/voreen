@@ -30,6 +30,7 @@
 
 #include "voreen/core/properties/optionproperty.h"
 #include "voreen/core/properties/intproperty.h"
+#include "voreen/core/properties/vectorproperty.h"
 #include "voreen/core/properties/buttonproperty.h"
 #include "voreen/core/properties/boolproperty.h"
 
@@ -82,7 +83,7 @@ private:
     static const std::string loggerCat_; ///< category used in logging
 
     StringOptionProperty operation_;
-    IntProperty dimension_;
+    IntVec3Property dimension_;
     ButtonProperty regenerate_;
     IntProperty numShapes_;
     BoolProperty keepCurrentShapes_;

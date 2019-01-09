@@ -45,6 +45,7 @@
 #include "voreen/core/datastructures/meta/templatemetadata.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/volume/volumeminmax.h"
+#include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 
 namespace voreen {
 
@@ -108,7 +109,7 @@ VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
     std::string channel = origin.getSearchParameter("scalar");
     float min, max;
 
-    VolumeRAM_Float* dataset;
+    VolumeRAM* dataset;
     try {
         // Try to retrieve data array.
         vtkDataArray* array = imageData->GetPointData()->GetArray(channel.c_str());
@@ -116,10 +117,25 @@ VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
             throw tgt::IOException("Field " + channel + " could not be read.");
 
         // Allocate volume.
-        dataset = new VolumeRAM_Float(dimensions);
+        switch (array->GetNumberOfComponents()) {
+        case 1:
+            dataset = new VolumeRAM_Float(dimensions);
+            break;
+        case 2:
+            dataset = new VolumeRAM_2xFloat(dimensions);
+            break;
+        case 3:
+            dataset = new VolumeRAM_3xFloat(dimensions);
+            break;
+        case 4:
+            dataset = new VolumeRAM_4xFloat(dimensions);
+            break;
+        default:
+            throw tgt::IOException("Unsupported number of components");
+        }
 
         // Export data.
-        array->ExportToVoidPointer(dataset->voxel());
+        array->ExportToVoidPointer(dataset->getData());
 
         // Extract range.
         double range[2];
@@ -140,7 +156,12 @@ VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
     }
 
     Volume* volumeHandle = new Volume(dataset, spacing, tgt::vec3::zero);
-    volumeHandle->addDerivedData(new VolumeMinMax(min, max, min, max));
+    if (volumeHandle->getNumChannels() == 1) {
+        volumeHandle->addDerivedData(new VolumeMinMax(min, max, min, max));
+    }
+    else {
+        volumeHandle->addDerivedData(new VolumeMinMaxMagnitude(min, max));
+    }
     volumeHandle->setOrigin(origin);
     volumeHandle->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping(volumeHandle->getBaseType()));
     volumeHandle->getMetaDataContainer().addMetaData("Scalar", new StringMetaData(channel));

@@ -53,6 +53,7 @@
 #include "processors/volumemultiplier.h"
 #include "processors/volumemultithreshold.h"
 #include "processors/volumeslicepadding.h"
+#include "processors/volumesurfacenoise.h"
 #include "processors/volumethinning.h"
 
 #include "processors/volumelistloopinitiator.h"
@@ -97,6 +98,7 @@ VesselTopologyModule::VesselTopologyModule(const std::string& modulePath)
     registerProcessor(new VolumeMultiThreshold());
     registerProcessor(new VolumeMultiplier());
     registerProcessor(new VolumeSlicePadding());
+    registerProcessor(new VolumeSurfaceNoise());
     registerProcessor(new VolumeThinning());
 
     registerProcessor(new VolumeListLoopInitiator());

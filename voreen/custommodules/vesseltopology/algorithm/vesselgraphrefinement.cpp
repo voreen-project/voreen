@@ -37,10 +37,10 @@
 
 namespace voreen {
 
-std::unique_ptr<VesselGraph> VesselGraphRefinement::removeEndEdgesRecursively(const VesselGraph& input, RemovableEdgeCheck isRemovableEdge) {
+std::unique_ptr<VesselGraph> VesselGraphRefinement::removeEndEdgesRecursively(const VesselGraph& input, RemovableEdgeCheck isRemovableEdge, size_t maxIterations) {
     size_t num_removed_this_it = 0;
     auto output = removeEndEdges(input, isRemovableEdge, num_removed_this_it);
-    while(num_removed_this_it > 0) {
+    for(size_t i=1; num_removed_this_it > 0 && i<maxIterations; ++i) {
         num_removed_this_it = 0;
         output = removeEndEdges(*output, isRemovableEdge, num_removed_this_it);
     }
@@ -78,10 +78,11 @@ static std::vector<const VesselGraphEdge*> findDeletable(const VesselGraphNode& 
     if(num_kept >= 2) {
         return potentially_deletable; // We are deleting all candidates, as we retain >= 2 nodes anyways
     } if(num_kept == 1) {
-        float highest_length = 0;
+        float highest_length = -std::numeric_limits<float>::infinity();
         const VesselGraphEdge* longest = nullptr;
         for(auto edge : potentially_deletable) {
-            float l = edge->getLength();
+            float l = edge->getRelativeBulgeSize();
+            //tgtAssert(l >= 0, "Invalid bulge size");
             if(l > highest_length) {
                 highest_length = l;
                 longest = edge;
@@ -96,12 +97,13 @@ static std::vector<const VesselGraphEdge*> findDeletable(const VesselGraphNode& 
         tgtAssert(deletable.size() == potentially_deletable.size() - 1, "Invalid number of edges deleted"); // We are deleting exactly all except one candidate
         return deletable;
     } else { // => num_kept == 0
-        float highest_length = 0;
-        float second_highest_length = 0;
+        float highest_length = -std::numeric_limits<float>::infinity();
+        float second_highest_length = -std::numeric_limits<float>::infinity();
         const VesselGraphEdge* longest = nullptr;
         const VesselGraphEdge* second_longest = nullptr;
         for(auto edge : potentially_deletable) {
-            float l = edge->getLength();
+            float l = edge->getRelativeBulgeSize();
+            //tgtAssert(l >= 0, "Invalid bulge size");
             if(l > highest_length) {
                 second_highest_length = highest_length;
                 second_longest = longest;
@@ -416,16 +418,47 @@ struct FutureEdge {
         } else {
             tgtAssert(edges_.type() == typeid(std::deque<const VesselGraphEdge*>), "Invalid edges type");
             auto& thisq = boost::get<std::deque<const VesselGraphEdge*>>(edges_);
+            tgtAssert(thisq.size() >= 2, "Single edge in queue");
+
+            const VesselGraphEdge* firstEdge = thisq.front();
+            const VesselGraphEdge* lastEdge = thisq.back();
+
+            auto pushVoxel = [&output, firstEdge, lastEdge] (const VesselGraphEdge& edge, size_t voxelIndex) {
+                // We want all voxels to be outer if they are between the start of the first and the end of the last edge
+                bool isFutureOuter =
+                        (&edge != firstEdge || voxelIndex >= edge.outerPathBeginIndex_)
+                     || (&edge != lastEdge || voxelIndex < edge.outerPathEndIndex_);
+
+                const VesselSkeletonVoxel& voxel = edge.getVoxels()[voxelIndex];
+                if(isFutureOuter && voxel.isInner()) {
+                    VesselSkeletonVoxel newVoxel(voxel); //copy
+                    newVoxel.nearOtherEdge_ = false;
+
+                    if(!voxel.hasValidData()) {
+                        // We need to fix up the properties, as this voxel is supposed to be an outer voxel
+                        // Best bet are the average values of the edge itself.
+                        newVoxel.minDistToSurface_ = edge.getMinRadiusAvg();
+                        newVoxel.avgDistToSurface_ = edge.getAvgRadiusAvg();
+                        newVoxel.maxDistToSurface_ = edge.getMaxRadiusAvg();
+                    }
+
+                    output.push_back(newVoxel);
+                } else {
+                    output.push_back(voxel);
+                }
+            };
 
             for(const VesselGraphEdge* edge : thisq) {
                 // We know (and use the fact that): edge.getVoxels() are ordered from edge.getNode1() to edge.getNode2()
                 if(current_start_voxel == &edge->getNode1()) {
-                    output.insert(output.end(), edge->getVoxels().begin(), edge->getVoxels().end());
+                    for(size_t i=0; i < edge->getVoxels().size(); ++i) {
+                        pushVoxel(*edge, i);
+                    }
                     current_start_voxel = &edge->getNode2();
                 } else {
                     tgtAssert(current_start_voxel == &edge->getNode2(), "edges_ are not ordered!");
-                    for(auto it = edge->getVoxels().rbegin(); it != edge->getVoxels().rend(); ++it) {
-                        output.push_back(*it);
+                    for(size_t i = edge->getVoxels().size(); i!=0; --i) {
+                        pushVoxel(*edge, i-1);
                     }
                     current_start_voxel = &edge->getNode1();
                 }
@@ -533,8 +566,6 @@ std::unique_ptr<VesselGraph> VesselGraphRefinement::removeDregree2Nodes(const Ve
         tgtAssert(output->getEdge(inserted_edge).getLength() > 0, "Invalid edge length");
     }
 
-
-    //TODO check order of voxels in edges when merging!
     return output;
 }
 } // namespace voreen

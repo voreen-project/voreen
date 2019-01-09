@@ -87,6 +87,7 @@ private:
     FloatVec3Property spacingDisplay_;
 
     VolumeList* currentVolumeList_;
+    std::vector<std::unique_ptr<VolumeBase>> decorators_;
 
     static const std::string loggerCat_; ///< category used in logging
 };

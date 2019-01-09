@@ -617,7 +617,7 @@ bool SingleOctreeRaycasterCL::isReady() const {
 }
 
 void SingleOctreeRaycasterCL::beforeProcess() {
-    RenderProcessor::beforeProcess();
+    OpenCLProcessor::beforeProcess();
 
     const VolumeBase* sourceVolume = volumeInport_.getData();
     if (!sourceVolume || !sourceVolume->hasRepresentation<VolumeOctreeBase>())
@@ -905,7 +905,7 @@ void SingleOctreeRaycasterCL::process() {
 }
 
 void SingleOctreeRaycasterCL::afterProcess() {
-    RenderProcessor::afterProcess();
+    OpenCLProcessor::afterProcess();
 
     if(QualityMode.isInteractionMode())
         processedInInteraction_ = true;

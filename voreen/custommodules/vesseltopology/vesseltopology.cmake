@@ -98,6 +98,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/volumemultiplier.cpp
     ${MOD_DIR}/processors/volumemultithreshold.cpp
     ${MOD_DIR}/processors/volumeslicepadding.cpp
+    ${MOD_DIR}/processors/volumesurfacenoise.cpp
     ${MOD_DIR}/processors/volumethinning.cpp
     ${MOD_DIR}/util/tasktimelogger.cpp
 )
@@ -143,6 +144,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volumemultiplier.h
     ${MOD_DIR}/processors/volumemultithreshold.h
     ${MOD_DIR}/processors/volumeslicepadding.h
+    ${MOD_DIR}/processors/volumesurfacenoise.h
     ${MOD_DIR}/processors/volumethinning.h
     ${MOD_DIR}/util/tasktimelogger.h
 )
@@ -155,14 +157,22 @@ IF(${VRN_VESSELTOPOLOGY_BUILD_VRAS})
     TARGET_LINK_LIBRARIES(${core_app_we} VascResc)
     ADD_DEFINITIONS("-DVESSELTOPOLOGY_USE_VRAS")
 ENDIF()
+OPTION(VRN_VESSELTOPOLOGY_BUILD_NETMETS "Build Netmets Library? (Requires cuda)" OFF)
+IF(${VRN_VESSELTOPOLOGY_BUILD_NETMETS})
+    SET(VRN_NETMETS_VRN_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+    SET(VRN_NETMETS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/custommodules/${module_dir}/ext/netmets)
+    ADD_SUBDIRECTORY(${VRN_NETMETS_DIRECTORY})
+    LIST(APPEND MOD_LIBRARIES "netmets")
+    ADD_DEFINITIONS("-DVESSELTOPOLOGY_USE_NETMETS")
+ENDIF()
 
 IF(VRN_LEMON_FOUND)
-SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
-    ${MOD_DIR}/processors/vesselgraphcomparison.h
-)
-SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
-    ${MOD_DIR}/processors/vesselgraphcomparison.cpp
-)
+    SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
+        ${MOD_DIR}/processors/vesselgraphcomparison.h
+    )
+    SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
+        ${MOD_DIR}/processors/vesselgraphcomparison.cpp
+    )
 ENDIF()
 
 # Deployment

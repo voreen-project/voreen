@@ -63,7 +63,7 @@ PatchTrainingDataExtractor::PatchTrainingDataExtractor()
 
     computeButton_.onChange(MemberFunctionCallback<PatchTrainingDataExtractor>(this, &PatchTrainingDataExtractor::computePatches));
 
-    timeEstimation_.setReadOnly(true);
+    timeEstimation_.setEditable(false);
     //timeEstimation_.setInstantUpdate(true);
     addProperty(timeEstimation_);
 

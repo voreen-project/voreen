@@ -61,13 +61,14 @@ void VolumeSelector::process() {
     }
 }
 
-void VolumeSelector::initialize() {
-    Processor::initialize();
-}
-
 void VolumeSelector::invalidate(int inv/*inv = INVALID_RESULT*/) {
     Processor::invalidate(inv);
-    adjustToVolumeList();
+    // FIXME: uncommenting the following line might lead to crashes. Find out why!
+    //       To reproduce, open volumelistspacing test workspace, mark and delete everything at once.
+    //       Not having it enabled, however, might lead to selection not updated properly.
+    //       Watch UI updating (not) correctly when input changes, maybe in context with deserialization.
+    //       This is refered to in bug #169.
+    //adjustToVolumeList();
 }
 
 void VolumeSelector::adjustToVolumeList() {

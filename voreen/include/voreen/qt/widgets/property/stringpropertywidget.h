@@ -40,6 +40,9 @@ public:
 
     virtual ~StringPropertyWidget() {}
 
+    virtual void updateViewFlags(Property::ViewFlags flags);
+    virtual CustomLabel* getOrCreateNameLabel() const;
+
 public slots:
     void setProperty(const QString& text);
     void textHasChanged(const QString& text);

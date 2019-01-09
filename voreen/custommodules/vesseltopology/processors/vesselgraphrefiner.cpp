@@ -41,6 +41,7 @@ VesselGraphRefiner::VesselGraphRefiner()
     , outport_(Port::OUTPORT, "graph.output", "Normalized Graph Output", false, Processor::VALID)
     , enabled_("enabled", "Enabled", true)
     , refinementMethod_("refinementMethod", "Refinement Method")
+    , maxIterations_("maxIterations", "Max Iterations", 1000, 1, 1000)
     , minVoxelLength_("minVoxelLength", "Min Voxel Length", 0, 0, 50)
     , minElongation_("minElongation", "Minimum Elongation", 0, 0, 5)
     , minBulgeSize_("minBulgeSize", "Minimum Bulge Size", 0, 0, 10)
@@ -58,6 +59,7 @@ VesselGraphRefiner::VesselGraphRefiner()
         refinementMethod_.addOption("all", "All", ALL);
         refinementMethod_.addOption("end_recursive", "End Recursive", END_RECURSIVE);
         refinementMethod_.selectByValue(END_RECURSIVE);
+    addProperty(maxIterations_);
 }
 
 VesselGraphRefiner::~VesselGraphRefiner() {
@@ -80,7 +82,7 @@ void VesselGraphRefiner::process() {
             output = VesselGraphRefinement::removeAllEdges(*input, createRemovableEdgePredicate());
             break;
         case END_RECURSIVE:
-            output = VesselGraphRefinement::removeEndEdgesRecursively(*input, createRemovableEdgePredicate());
+            output = VesselGraphRefinement::removeEndEdgesRecursively(*input, createRemovableEdgePredicate(), maxIterations_.get());
             break;
     }
 

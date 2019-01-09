@@ -82,21 +82,21 @@ struct OctreeCreatorInput {
 
 struct OctreeCreatorOutput {
     std::unique_ptr<VolumeOctreeBase> octree;
-    std::string message;
+    std::string errorMessage;
 
     OctreeCreatorOutput(
         std::unique_ptr<VolumeOctreeBase> octree
-        , const std::string& message
+        , const std::string& errorMessage
     )
         : octree(std::move(octree))
-        , message(message)
+        , errorMessage(errorMessage)
     {
     }
 
     OctreeCreatorOutput(const OctreeCreatorOutput&) = delete;
     OctreeCreatorOutput(OctreeCreatorOutput&& old)
         : octree(std::move(old.octree))
-        , message(old.message)
+        , errorMessage(old.errorMessage)
     {
     }
 };
@@ -131,8 +131,6 @@ protected:
 
     virtual void adjustPropertiesToInput();
 
-    virtual void setProgressMessage(const std::string& message);
-
     //void saveOctreeToVVOD();
 
 private:
@@ -145,6 +143,8 @@ private:
     void clearOctree();
 
     void updatePropertyConfiguration();
+
+    void updateStatusMessage(const std::string& message) const;
 
     /**
      * Limits the memory used by the octree cache to the specified cache size
@@ -183,10 +183,11 @@ private:
     IntProperty numThreads_;
 
     ButtonProperty clearOctree_;
+    StringProperty currentConfigurationHash_;
+    // StatusMessage needs to be mutable, since it's being modified within compute().
+    // This causes no trouble, however, since the property is readOnly and the invalidation level is VALID.
+    mutable StringProperty statusMessage_;
 
-    StringProperty progressMessage_;
-
-    std::string currentConfigurationHash_;
 
     static const std::string loggerCat_;
 };

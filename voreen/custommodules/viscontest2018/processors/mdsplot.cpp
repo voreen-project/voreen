@@ -466,7 +466,7 @@ void MDSPlot::renderingPass(bool picking) {
         tgt::vec3 scale = tgt::vec3::one;
         if(scaleToMagnitude_.get()) {
             // Scale each axis to it's eigenvalues size.
-            scale = tgt::vec3(&mdsData.eigenvalues_[0]);
+            scale = tgt::vec3::fromPointer(&mdsData.eigenvalues_[0]);
             scale /= tgt::vec3(mdsData.eigenvalues_[0]);
         }
 
@@ -481,13 +481,13 @@ void MDSPlot::renderingPass(bool picking) {
             IMode.begin(tgt::ImmediateMode::LINE_STRIP);
             for(size_t j=0; j<numTimeSteps; j++) {
                 IMode.color(getColor(runIdx, j, picking));
-                IMode.vertex(tgt::vec3(&mdsData.nVectors_[j+runOffset][0]) * scale);
+                IMode.vertex(tgt::vec3::fromPointer(&mdsData.nVectors_[j+runOffset][0]) * scale);
             }
             IMode.end();
 
             if(!picking && numTimeSteps > 0) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
-                drawTimeStepSelection(runIdx, selectedTimeStep, tgt::vec3(&mdsData.nVectors_[runOffset+selectedTimeStep][0])*scale);
+                drawTimeStepSelection(runIdx, selectedTimeStep, tgt::vec3::fromPointer(&mdsData.nVectors_[runOffset+selectedTimeStep][0])*scale);
             }
         }
 

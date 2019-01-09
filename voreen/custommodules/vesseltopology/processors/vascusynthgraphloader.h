@@ -30,6 +30,7 @@
 
 #include "../ports/vesselgraphport.h"
 #include "voreen/core/properties/filedialogproperty.h"
+#include "voreen/core/properties/vectorproperty.h"
 
 namespace voreen {
 
@@ -53,6 +54,7 @@ protected:
 
     // properties
     FileDialogProperty graphFilePath_;
+    FloatVec3Property spacing_;
 
 
     static const std::string loggerCat_;

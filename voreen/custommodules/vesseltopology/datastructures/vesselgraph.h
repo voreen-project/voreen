@@ -31,10 +31,14 @@
 #include "tgt/vector.h"
 #include "tgt/matrix.h"
 #include "tgt/bounds.h"
+
+#include "../datastructures/diskarraystorage.h"
+
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
 #include "voreen/core/io/serialization/serialization.h"
 #include "voreen/core/io/serialization/serializer.h"
 #include "voreen/core/io/serialization/deserializer.h"
-#include "../datastructures/diskarraystorage.h"
+#endif
 
 #include <boost/uuid/uuid.hpp>
 #include <functional>
@@ -56,7 +60,7 @@ typedef boost::uuids::uuid VesselGraphNodeUUID;
 
 // A single voxel in a branch in the vessel graph
 struct VesselSkeletonVoxel {
-    VesselSkeletonVoxel(const tgt::vec3& pos, float minDistToSurface, float maxDistToSurface, float avgDistToSurface, uint32_t numSurfaceVoxels, float volume);
+    VesselSkeletonVoxel(const tgt::vec3& pos, float minDistToSurface, float maxDistToSurface, float avgDistToSurface, uint32_t numSurfaceVoxels, float volume, bool nearOtherEdge);
 
     tgt::vec3 pos_;
     float minDistToSurface_;
@@ -67,17 +71,28 @@ struct VesselSkeletonVoxel {
                              // skeleton voxel.
                              // float, because an object voxel might be closest
                              // to multiple skeleton voxels => volume will be split.
+                             //
+
+    // Whether or not this skeleton voxel has associated surface points that are adjacent
+    // to voxels of other edges.
+    bool nearOtherEdge_;
 
     // Compute the roundness, i.e. minDistToSurface_/maxDistToSurface_
     float roundness() const;
     // Determine whether this voxel has valid data, i.e., has any associated
     // surface voxels that were used to compute the distances and other data.
     bool hasValidData() const;
+
+    // Is a voxel contained in an intersection
+    bool isInner() const;
+    // .. or not
+    bool isOuter() const;
 private:
     friend struct VesselSkeletonVoxelSerializable;
     VesselSkeletonVoxel();
 };
 
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
 struct VesselSkeletonVoxelSerializable : public Serializable {
     VesselSkeletonVoxelSerializable(VesselSkeletonVoxel);
     VesselSkeletonVoxel inner_;
@@ -89,6 +104,7 @@ private:
     friend class Deserializer;
     VesselSkeletonVoxelSerializable();
 };
+#endif
 
 class VGNodeID {
     uint32_t internal_;
@@ -188,6 +204,7 @@ private:
     friend struct VesselGraphNodeDeserializable;
 };
 
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
 struct VesselGraphNodeSerializable : public Serializable {
     VesselGraphNodeSerializable(const VesselGraphNode&);
     const VesselGraphNode& inner_;
@@ -197,6 +214,8 @@ struct VesselGraphNodeSerializable : public Serializable {
 private:
     friend class Deserializer;
 };
+#endif
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
 struct VesselGraphNodeDeserializable : public Serializable {
     VGNodeID id_;
     tgt::vec3 pos_;
@@ -207,6 +226,7 @@ struct VesselGraphNodeDeserializable : public Serializable {
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
 };
+#endif
 
 struct VesselGraphEdgePathProperties {
     const static float INVALID_DATA;
@@ -225,10 +245,16 @@ struct VesselGraphEdgePathProperties {
     float roundnessAvg_;
     float roundnessStdDeviation_;
 
-    static VesselGraphEdgePathProperties fromPath(const VesselGraphNode& begin, const VesselGraphNode& end, const DiskArray<VesselSkeletonVoxel>& path);
+    float innerLengthNode1_;
+    float innerLengthNode2_;
+    float tipRadiusNode1_;
+    float tipRadiusNode2_;
+
+    static VesselGraphEdgePathProperties fromPath(const VesselGraphNode& begin, const VesselGraphNode& end, const DiskArray<VesselSkeletonVoxel>& path, size_t outerPathBeginIndex, size_t outerPathEndIndex);
     bool hasValidData() const;
 };
 
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
 struct VesselGraphEdgePathPropertiesSerializable : public Serializable {
     VesselGraphEdgePathProperties inner_;
 
@@ -237,6 +263,7 @@ struct VesselGraphEdgePathPropertiesSerializable : public Serializable {
 
     VesselGraphEdgePathPropertiesSerializable();
 };
+#endif
 
 // An edge within a vessel graph.
 // It stores references to its nodes, properties of the associated branch of the vessel network, as well as the medial
@@ -274,6 +301,7 @@ struct VesselGraphEdge {
     float getRoundnessAvg() const;
     float getRoundnessStdDeviation() const;
     const DiskArray<VesselSkeletonVoxel>& getVoxels() const;
+    DiskArray<VesselSkeletonVoxel> getOuterVoxels() const;
 
     float getElongation() const;
     float getEffectiveLength() const;
@@ -307,6 +335,9 @@ struct VesselGraphEdge {
     bool isEndStanding() const;
     size_t getNumValidVoxels() const;
 
+    size_t outerPathBeginIndex_;
+    size_t outerPathEndIndex_;
+
 private:
     VGEdgeID id_; //within the graph
     VGNodeID node1_;
@@ -336,6 +367,7 @@ private:
     VesselGraphEdge();
 };
 
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
 struct VesselGraphEdgeSerializable : public Serializable {
     VesselGraphEdgeSerializable(const VesselGraphEdge&);
     const VesselGraphEdge& inner_;
@@ -347,6 +379,8 @@ private:
     friend class Deserializer;
     //VesselGraphEdgeSerializable();
 };
+#endif
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
 struct VesselGraphEdgeDeserializable : public Serializable {
     VGEdgeID id_;
     VGNodeID node1_;
@@ -358,13 +392,18 @@ struct VesselGraphEdgeDeserializable : public Serializable {
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
 };
+#endif
 
 // The vessel graph itself. it stores nodes as well as edges.
 // References between nodes and edges are stored within the substrucutres.
 //
 // To avoid pointer/reference invalidation nodes and edges can only be added to the graph,
 // but not removed.
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
 class VesselGraph : public Serializable {
+#else
+class VesselGraph {
+#endif
 public:
     // Create a graph with predetermined bounds
     VesselGraph(const tgt::Bounds& bounds);
@@ -413,8 +452,10 @@ public:
     // Get a bounding box that encompasses all nodes within the graph.
     const tgt::Bounds& getBounds() const;
 
+#ifndef VRN_VESSELTOPOLOGY_MINIMAL_VESSELGRAPH
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
+#endif
 
 private:
     // Note: No need to worry about pointer invalidation here because we do not store pointers

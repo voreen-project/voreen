@@ -36,7 +36,7 @@ namespace voreen {
 struct VesselGraphRefinement {
     typedef std::function<bool(const VesselGraphEdge&)> RemovableEdgeCheck;
 
-    static std::unique_ptr<VesselGraph> removeEndEdgesRecursively(const VesselGraph& input, RemovableEdgeCheck isRemovableEdge);
+    static std::unique_ptr<VesselGraph> removeEndEdgesRecursively(const VesselGraph& input, RemovableEdgeCheck isRemovableEdge, size_t maxIterations = std::numeric_limits<size_t>::max());
 
     // Remove edges if they are individually deletable (according to isRemoveableEdge)
     static std::unique_ptr<VesselGraph> removeAllEdges(const VesselGraph&, RemovableEdgeCheck);

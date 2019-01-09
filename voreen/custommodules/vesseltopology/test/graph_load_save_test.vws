@@ -54,7 +54,7 @@
                         <Property mapKey="graphFilePath" name="graphFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cow.vvg.gz" />
+                                    <item value="output/cow.vvg.gz" />
                                     <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cow.vvg.gz" />
                                     <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/cow.vvg.gz" />
                                 </paths>

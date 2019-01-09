@@ -26,6 +26,7 @@
 #include "vesselgraph.h"
 #include <functional>
 #include <numeric>
+
 #include "voreen/core/voreenapplication.h"
 
 #include "tgt/logmanager.h"
@@ -33,13 +34,14 @@
 namespace voreen {
 
 // VesselSkeletonVoxel -------------------------------------------------------------------------
-VesselSkeletonVoxel::VesselSkeletonVoxel(const tgt::vec3& pos, float minDistToSurface, float maxDistToSurface, float avgDistToSurface, uint32_t numSurfaceVoxels, float volume)
+VesselSkeletonVoxel::VesselSkeletonVoxel(const tgt::vec3& pos, float minDistToSurface, float maxDistToSurface, float avgDistToSurface, uint32_t numSurfaceVoxels, float volume, bool nearOtherEdge)
     : pos_(pos)
     , minDistToSurface_(minDistToSurface)
     , maxDistToSurface_(maxDistToSurface)
     , avgDistToSurface_(avgDistToSurface)
     , numSurfaceVoxels_(numSurfaceVoxels)
     , volume_(volume)
+    , nearOtherEdge_(nearOtherEdge)
 {
 }
 
@@ -50,11 +52,20 @@ VesselSkeletonVoxel::VesselSkeletonVoxel()
     , avgDistToSurface_(0)
     , numSurfaceVoxels_(0)
     , volume_(0)
+    , nearOtherEdge_(false)
 {
 }
 
 bool VesselSkeletonVoxel::hasValidData() const {
     return std::isfinite(minDistToSurface_);
+}
+
+bool VesselSkeletonVoxel::isInner() const {
+    return !hasValidData() || nearOtherEdge_;
+}
+
+bool VesselSkeletonVoxel::isOuter() const {
+    return !isInner();
 }
 
 float VesselSkeletonVoxel::roundness() const {
@@ -71,6 +82,7 @@ void VesselSkeletonVoxelSerializable::serialize(Serializer& s) const {
     s.serialize("avgDistToSurface", inner_.avgDistToSurface_);
     s.serialize("numSurfaceVoxels", inner_.numSurfaceVoxels_);
     s.serialize("volume", inner_.volume_);
+    s.serialize("nearOtherEdge", inner_.nearOtherEdge_);
 }
 void VesselSkeletonVoxelSerializable::deserialize(Deserializer& s) {
     s.deserialize("pos", inner_.pos_);
@@ -79,6 +91,7 @@ void VesselSkeletonVoxelSerializable::deserialize(Deserializer& s) {
     s.deserialize("avgDistToSurface", inner_.avgDistToSurface_);
     s.deserialize("numSurfaceVoxels", inner_.numSurfaceVoxels_);
     s.deserialize("volume", inner_.volume_);
+    s.deserialize("nearOtherEdge", inner_.nearOtherEdge_);
 }
 VesselSkeletonVoxelSerializable::VesselSkeletonVoxelSerializable()
     : inner_()
@@ -257,6 +270,10 @@ VesselGraphEdgePathProperties::VesselGraphEdgePathProperties()
     , avgRadiusStdDeviation_(INVALID_DATA)
     , roundnessAvg_(INVALID_DATA)
     , roundnessStdDeviation_(INVALID_DATA)
+    , innerLengthNode1_(INVALID_DATA)
+    , innerLengthNode2_(INVALID_DATA)
+    , tipRadiusNode1_(INVALID_DATA)
+    , tipRadiusNode2_(INVALID_DATA)
 {
 }
 
@@ -275,20 +292,50 @@ bool VesselGraphEdgePathProperties::hasValidData() const {
 }
 
 
-VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const VesselGraphNode& begin, const VesselGraphNode& end, const DiskArray<VesselSkeletonVoxel>& path) {
+VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const VesselGraphNode& begin, const VesselGraphNode& end, const DiskArray<VesselSkeletonVoxel>& path, size_t outerPathBeginIndex, size_t outerPathEndIndex) {
     VesselGraphEdgePathProperties output;
 
     // Compute length
     output.length_ = 0;
+    float distFromLastOuter = 0;
+    float distToFirstOuter = 0;
+
     if(path.empty()) {
-        output.length_ = tgt::distance(begin.pos_, end.pos_);
+        float dist = tgt::distance(begin.pos_, end.pos_);
+        output.length_ = dist;
+        distFromLastOuter = 0.0;
+        distToFirstOuter = 0.0;
+
+        output.tipRadiusNode1_ = 0.0;
+        output.tipRadiusNode2_ = 0.0;
     } else {
+        float beginDist = tgt::distance(begin.pos_, path.front().pos_);
+        output.length_ += beginDist;
+        distFromLastOuter = 0.0;
+        distToFirstOuter = beginDist;
+
         for(size_t i=0; i < path.size()-1; ++i) {
-            output.length_ += tgt::distance(path[i].pos_, path[i+1].pos_);
+            float dist = tgt::distance(path[i].pos_, path[i+1].pos_);
+            output.length_ += dist;
+
+            if(i < outerPathBeginIndex) {
+                distToFirstOuter += dist;
+            }
+            if(i >= outerPathEndIndex) {
+                distFromLastOuter += dist;
+            }
         }
-        output.length_ += tgt::distance(begin.pos_, path.front().pos_);
-        output.length_ += tgt::distance(path.back().pos_, end.pos_);
+
+        float endDist = tgt::distance(path.back().pos_, end.pos_);
+        output.length_ += endDist;
+        distFromLastOuter += endDist;
+
+        output.tipRadiusNode1_ = path.front().minDistToSurface_;
+        output.tipRadiusNode2_ = path.back().minDistToSurface_;
     }
+
+    output.innerLengthNode1_ = distToFirstOuter;
+    output.innerLengthNode2_ = distFromLastOuter;
 
     // Compute volume
     if(path.size() > 0) {
@@ -297,6 +344,8 @@ VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const Vess
             output.volume_ += voxel.volume_;
         }
     }
+
+    //auto outerPath = path.slice(outerPathBeginIndex, outerPathEndIndex);
 
     // Compute min radius vals
     statisticalAnalysis<DiskArray<VesselSkeletonVoxel>, VesselSkeletonVoxel>(path, [] (const VesselSkeletonVoxel& v) {
@@ -344,6 +393,10 @@ void VesselGraphEdgePathPropertiesSerializable::serialize(Serializer& s) const {
     s.serialize("avgRadiusStdDeviation", inner_.avgRadiusStdDeviation_);
     s.serialize("roundnessAvg", inner_.roundnessAvg_);
     s.serialize("roundnessStdDeviation", inner_.roundnessStdDeviation_);
+    s.serialize("innerLengthNode1", inner_.innerLengthNode1_);
+    s.serialize("innerLengthNode2", inner_.innerLengthNode2_);
+    s.serialize("tipRadiusNode1_", inner_.tipRadiusNode1_);
+    s.serialize("tipRadiusNode2_", inner_.tipRadiusNode2_);
 }
 void VesselGraphEdgePathPropertiesSerializable::deserialize(Deserializer& s) {
     s.deserialize("length", inner_.length_);
@@ -356,6 +409,8 @@ void VesselGraphEdgePathPropertiesSerializable::deserialize(Deserializer& s) {
     s.deserialize("avgRadiusStdDeviation", inner_.avgRadiusStdDeviation_);
     s.deserialize("roundnessAvg", inner_.roundnessAvg_);
     s.deserialize("roundnessStdDeviation", inner_.roundnessStdDeviation_);
+    s.deserialize("tipRadiusNode1_", inner_.tipRadiusNode1_);
+    s.deserialize("tipRadiusNode2_", inner_.tipRadiusNode2_);
 }
 
 VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, VGEdgeID id, VGNodeID node1ID, VGNodeID node2ID, DiskArray<VesselSkeletonVoxel>&& voxels, VesselGraphEdgeUUID uuid)
@@ -373,8 +428,21 @@ VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, VGEdgeID id, VGNodeID node1
     // Compute distance
     distance_ = tgt::distance(node1.pos_, node2.pos_);
 
+    size_t lastOuter = voxels_.size()-1;
+    size_t firstOuter = voxels_.size();
+    for(size_t i=0; i < voxels_.size(); ++i) {
+        if(voxels_[i].isOuter()) {
+            if(firstOuter == voxels_.size()) {
+                firstOuter = i;
+            }
+            lastOuter = i;
+        }
+    }
+    outerPathBeginIndex_ = firstOuter;
+    outerPathEndIndex_   = lastOuter + 1;
+
     // Compute path properties
-    pathProps_ = VesselGraphEdgePathProperties::fromPath(node1, node2, voxels_);
+    pathProps_ = VesselGraphEdgePathProperties::fromPath(node1, node2, voxels_, outerPathBeginIndex_, outerPathEndIndex_);
 
     tgtAssert(!std::isnan(getLength()), "Invalid length");
 }
@@ -561,10 +629,6 @@ float VesselGraphEdge::getElongation() const {
     }
 }
 
-float VesselGraphEdge::getEffectiveLength() const {
-    return std::max(0.0f, getLength() - getNode1().getRadius() - getNode2().getRadius());
-}
-
 float VesselGraphEdge::getRelativeBulgeSize() const {
     //float edge_length_contributed_length = std::max(getNode1().estimatedRadius(), getNode2().estimatedRadius());
     //return std::max(0.0f,(getLength() / edge_length_contributed_length) - 1);
@@ -572,21 +636,20 @@ float VesselGraphEdge::getRelativeBulgeSize() const {
         if(getNode1().isEndNode() == getNode2().isEndNode()) {
             return -1;
         }
-        //const VesselGraphNode* endNode;
-        const VesselGraphNode* branchNode;
+        float innerLength;
+        float tipRadius;
         if(getNode1().isEndNode()) {
-            //endNode = &getNode1();
-            branchNode = &getNode2();
+            innerLength = pathProps_.innerLengthNode2_;
+            tipRadius = pathProps_.tipRadiusNode1_;
         } else {
-            //endNode = &getNode2();
-            branchNode = &getNode1();
+            innerLength = pathProps_.innerLengthNode1_;
+            tipRadius = pathProps_.tipRadiusNode2_;
         }
-        float parentVesselRadius = getMaxRadiusMax();
-        if(branchNode->getRadius() > 0) {
-            parentVesselRadius = std::min(parentVesselRadius, branchNode->getRadius());
-        }
-        tgtAssert(parentVesselRadius > 0, "Invalid parent vessel radius");
-        return getLength() / parentVesselRadius;
+        float radius = getAvgRadiusAvg();
+        float outerLength = getLength() - innerLength + tipRadius;
+        tgtAssert(radius > 0, "Invalid vessel radius");
+        tgtAssert(outerLength >= 0, "Invalid outer length");
+        return outerLength / (2*radius);
     } else {
         return -1;
     }
@@ -598,6 +661,9 @@ bool VesselGraphEdge::isLoop() const {
 
 const DiskArray<VesselSkeletonVoxel>& VesselGraphEdge::getVoxels() const {
     return voxels_;
+}
+DiskArray<VesselSkeletonVoxel> VesselGraphEdge::getOuterVoxels() const {
+    return voxels_.slice(outerPathBeginIndex_, outerPathEndIndex_);
 }
 VGEdgeID VesselGraphEdge::getID() const {
     return id_;

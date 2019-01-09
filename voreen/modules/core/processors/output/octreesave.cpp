@@ -226,7 +226,7 @@ OctreeSave::OctreeSave()
             ON_CHANGE(outputFormat_, OctreeSave, outputFormatChanged);
         addProperty(outputProp_);
             outputProp_.setGroupID("saving");
-            outputProp_.setReadOnly(true);
+            outputProp_.setEditable(false);
             adjustOutputProperty();
         addProperty(progressProp_);
             progressProp_.setGroupID("saving");

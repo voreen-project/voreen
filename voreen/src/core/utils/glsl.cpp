@@ -348,7 +348,7 @@ std::string GLSL::generateStandardShaderHeader(const tgt::GpuCapabilities::GlVer
     if (useVersion >= GpuCapabilities::GlVersion::SHADER_VERSION_110)
         header += "#define GLSL_VERSION_110\n";
 
-// COREPORT_TODO
+    bool couldReadMaxLoopCount = false;
 #ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
     if (GLEW_NV_fragment_program2) {
         GLint i = -1;
@@ -357,9 +357,13 @@ std::string GLSL::generateStandardShaderHeader(const tgt::GpuCapabilities::GlVer
             std::ostringstream o;
             o << i;
             header += "#define VRN_MAX_PROGRAM_LOOP_COUNT " + o.str() + "\n";
+            couldReadMaxLoopCount = true;
         }
     }
 #endif
+    if(!couldReadMaxLoopCount) {
+        header += "#define VRN_MAX_PROGRAM_LOOP_COUNT 256*256\n";
+    }
 
     //
     // add some defines needed for workarounds in the shader code

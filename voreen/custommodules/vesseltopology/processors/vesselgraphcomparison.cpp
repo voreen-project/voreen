@@ -39,6 +39,9 @@
 #include "tgt/filesystem.h"
 #include "tgt/immediatemode/immediatemode.h"
 
+#include "custommodules/vesseltopology/ext/netmets/lib.h"
+
+//#include "stim/network.h"
 
 namespace munkres {
 #include "../ext/munkres-cpp/src/munkres.h"
@@ -80,6 +83,8 @@ VesselGraphComparison::VesselGraphComparison()
     , nodeMatchRatio_("nodeMatchRatio", "Node Match Ratio", 0.0f, 0.0f, 1.0f)
     , edgeMatchRatio_("edgeMatchRatio", "Edge Match Ratio", 0.0f, 0.0f, 1.0f)
     , lengthSimilarity_("lengthSimilarity", "Length Similarity", 0.0f, 0.0f, 1.0f)
+    , netmetsFNR_("netmetsFNR", "Netmets FNR", 0.0f, 0.0f, 1.0f)
+    , netmetsFPR_("netmetsFPR", "Netmets FPR", 0.0f, 0.0f, 1.0f)
     , nodeMatchingCost_("nodeMatchingCost", "Node Matching Cost (if available)", -1.0f, -1.0f, std::numeric_limits<float>::max())
     , crossRadius_("crossRadius", "Cross Radius", 0.0f, 0.0f, 1.0f)
     , lastEdgeMatching_(nullptr)
@@ -111,6 +116,10 @@ VesselGraphComparison::VesselGraphComparison()
         edgeMatchRatio_.setReadOnlyFlag(true);
     addProperty(lengthSimilarity_);
         lengthSimilarity_.setReadOnlyFlag(true);
+    addProperty(netmetsFNR_);
+        netmetsFNR_.setReadOnlyFlag(true);
+    addProperty(netmetsFPR_);
+        netmetsFPR_.setReadOnlyFlag(true);
     addProperty(nodeMatchingCost_);
         nodeMatchingCost_.setReadOnlyFlag(true);
 
@@ -138,6 +147,10 @@ void VesselGraphComparison::process() {
 
 bool VesselGraphComparison::isReady() const {
     return isInitialized() && inport1_.isReady() && inport2_.isReady();
+}
+
+bool VesselGraphComparison::isEndProcessor() const {
+    return true;
 }
 
 // ----------------------------------------------------------
@@ -799,6 +812,17 @@ Matching<VesselGraphEdge> VesselGraphComparison::matchEdgesLAP(const VesselGraph
     return output;
 }
 
+NetmetsResult compareNetmets(const VesselGraph& templateGraph, const VesselGraph& testGraph) {
+#ifdef VESSELTOPOLOGY_USE_NETMETS
+    return netmets_compare_networks(templateGraph, testGraph);
+#else
+    NetmetsResult result;
+    result.fpr = std::numeric_limits<float>::quiet_NaN();
+    result.fnr = std::numeric_limits<float>::quiet_NaN();
+    return result;
+#endif
+}
+
 
 /*
 template<class T, class S>
@@ -909,6 +933,12 @@ void VesselGraphComparison::compare(const VesselGraph& g1, const VesselGraph& g2
     // 3. step: Compute measure based on properties of matches
     lengthSimilarity_.set(edge_matching.matchRatio()*(1.0f-compareMatches<LengthProperty, RelativeError>(edge_matching.matches_)));
 
+    // 4. (orthogonal) step: Compare geometry of networks using netmets
+    NetmetsResult netmetsResult = compareNetmets(g1 /*template!*/, g2);
+
+    netmetsFNR_.set(netmetsResult.fnr);
+    netmetsFPR_.set(netmetsResult.fpr);
+
     const std::string statExportFileName = statExportFile_.get();
 
     if(statExportFileName.empty()) {
@@ -931,6 +961,7 @@ void VesselGraphComparison::compare(const VesselGraph& g1, const VesselGraph& g2
                 , float, float, float
                 , float, float, float
                 , float, float, float
+                , float, float
                     > writer(statExportFileName, ';', writeMode);
             if(truncate) {
                 writer.writeHeader("identifier", "node match ratio", "edge match ratio", "node matching cost"
@@ -947,6 +978,7 @@ void VesselGraphComparison::compare(const VesselGraph& g1, const VesselGraph& g2
                     , "maxRadiusStd abs error", "maxRadiusStd rel error", "maxRadiusStd exp similarity"
                     , "roundnessMean abs error", "roundnessMean rel error", "roundnessMean exp similarity"
                     , "roundnessStd abs error", "roundnessStd rel error", "roundnessStd exp similarity"
+                    , "netmets_FNR", "netmets_FPR"
                     );
             }
             writer.write(
@@ -993,6 +1025,8 @@ void VesselGraphComparison::compare(const VesselGraph& g1, const VesselGraph& g2
                     , compareMatches<RoundnessStdProperty, AbsoluteError>(edge_matching.matches_)
                     , compareMatches<RoundnessStdProperty, RelativeError>(edge_matching.matches_)
                     , compareMatches<RoundnessStdProperty, ExpSimilarity>(edge_matching.matches_)
+                    , netmetsResult.fnr
+                    , netmetsResult.fpr
                     );
             LINFO("Writing edge stats: " << statExportFileName);
         } catch(tgt::IOException& e) {

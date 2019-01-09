@@ -194,6 +194,7 @@ void DynamicCLProcessor::buildAndInit() {
     }
 
     portResized();
+    invalidate(Processor::INVALID_PROGRAM);
 }
 
 void DynamicCLProcessor::beforeProcess() {

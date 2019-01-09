@@ -40,11 +40,12 @@
 #include "../algorithm/volumemask.h"
 #include "../algorithm/idvolume.h"
 #include "../algorithm/vesselgraphrefinement.h"
-#include "../algorithm/boundshierarchy.h"
 #include "../datastructures/kdtree.h"
 
 #include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 #include "custommodules/bigdataimageprocessing/processors/connectedcomponentanalysis.h"
+
+#include "../ext/intervaltree/IntervalTree.h"
 
 #include "tgt/bounds.h"
 #include "tgt/filesystem.h"
@@ -234,10 +235,6 @@ static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath
 
     const auto voxelToRw = input.segmentation.getMetaData().getVoxelToWorldMatrix();
     const auto dimensions = input.segmentation.getDimensions();
-    const float criticalVoxelDistDiff = 1.001f*tgt::length(input.segmentation.getMetaData().getSpacing());
-
-    const std::string format = "uint8";
-    const tgt::svec3 slicedim(dimensions.xy(), 1);
 
     static_kdtree::ElementArrayBuilder<EdgeVoxelRef> finderBuilder(VoreenApplication::app()->getUniqueTmpFilePath(".kdtreestorage"));
 
@@ -265,11 +262,20 @@ static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath
                     tgt::ivec3 ipos(x,y,z);
                     tgt::vec3 rwpos = transform(voxelToRw, ipos);
 
-                    auto result = finder.findNearest(rwpos);
+                    auto result = finder.findAllNearest(rwpos);
                     if(!result.found()) {
                         label = 0xFEEDBEEF; //Doesn't really matter. only happens in edge cases anyway
                     } else {
-                        label = result.element_->edge->id_.raw();
+                        auto min_elm = std::min_element(result.elements_.begin(), result.elements_.end(), [] (const EdgeVoxelRef*& e1, const EdgeVoxelRef*& e2) {
+                            auto p1 = e1->getPos();
+                            auto p2 = e2->getPos();
+                            float cmp = p1.x - p2.x;
+                            cmp = (cmp == 0) ? p1.y - p2.y : cmp;
+                            cmp = (cmp == 0) ? p1.z - p2.z : cmp;
+                            return cmp < 0;
+                        });
+                        tgtAssert(min_elm != result.elements_.end(), "Empty result set");
+                        label = (*min_elm)->edge->id_.raw();
                     }
                 } else {
                     label = IdVolume::BACKGROUND_VALUE;
@@ -461,30 +467,50 @@ static void initializeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4Sl
     tgt::svec3 dim = branchIds.getDimensions();
     tgtAssert(holeIds.getDimensions() == dim, "Volume dimension mismatch");
 
+
+    std::vector<Interval<size_t, IdVolumeInitializer*>> intervals;
+    for(auto& initializer: initializers) {
+        tgt::SBounds full_bounds = initializer.getBounds();
+        intervals.emplace_back(full_bounds.getLLF().z, full_bounds.getURB().z, &initializer);
+    }
+    IntervalTree<size_t, IdVolumeInitializer*> ztree(std::move(intervals));
+
     for(size_t z=0; z < dim.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dim.z);
         initializationReader.advance();
 
-        std::vector<std::pair<IdVolumeInitializer*, tgt::SBounds>> initializer_finder_init;
-        for(auto& initializer: initializers) {
-            tgt::SBounds full_bounds = initializer.getBounds();
-            if(full_bounds.getLLF().z <= z && z <= full_bounds.getURB().z) {
-                tgt::SBounds bounds(tgt::svec3(full_bounds.getLLF().xy(), 0), tgt::svec3(full_bounds.getURB().xy(), 1 /* [0,1] => volume >= 0 */));
-                initializer_finder_init.emplace_back(&initializer, bounds);
-            }
+        std::vector<Interval<size_t, IdVolumeInitializer*>> intervals;
+
+        for(auto interval: ztree.findOverlapping(z, z)) {
+            auto& initializer = interval.value;
+            tgt::SBounds full_bounds = initializer->getBounds();
+            intervals.emplace_back(full_bounds.getLLF().y, full_bounds.getURB().y, initializer);
         }
-        if(initializer_finder_init.empty()) {
+        if(intervals.empty()) {
             continue;
         }
-
-        BoundsHierarchy<size_t, IdVolumeInitializer*> initializer_finder(std::move(initializer_finder_init));
+        IntervalTree<size_t, IdVolumeInitializer*> ytree(std::move(intervals));
 
         for(size_t y=0; y < dim.y; ++y) {
+
+            std::vector<Interval<size_t, IdVolumeInitializer*>> intervals;
+
+            for(auto& interval: ytree.findOverlapping(y, y)) {
+                auto& initializer = interval.value;
+                tgt::SBounds full_bounds = initializer->getBounds();
+                intervals.emplace_back(full_bounds.getLLF().x, full_bounds.getURB().x, initializer);
+            }
+            if(intervals.empty()) {
+                continue;
+            }
+            IntervalTree<size_t, IdVolumeInitializer*> xtree(std::move(intervals));
+
             for(size_t x=0; x < dim.x; ++x) {
                 tgt::svec3 pos(x,y,z);
 
                 tgt::svec3 slicePos(x,y,0);
-                for(IdVolumeInitializer* initializer : initializer_finder.findBounds(slicePos)) {
+                for(auto& interval : xtree.findOverlapping(x,x)) {
+                    auto& initializer = interval.value;
                     uint32_t label;
 
                     if(initializationReader.isObject(pos, initializer->id_)) {
@@ -592,31 +618,49 @@ static void finalizeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4Slic
 
     const tgt::svec3 dim = branchIds.getDimensions();
 
+    std::vector<Interval<size_t, IdVolumeFinalizer*>> intervals;
+    for(auto& finalizer: finalizers) {
+        tgt::SBounds full_bounds = finalizer.getBounds();
+        intervals.emplace_back(full_bounds.getLLF().z, full_bounds.getURB().z, &finalizer);
+    }
+    IntervalTree<size_t, IdVolumeFinalizer*> ztree(std::move(intervals));
+
     for(size_t z=0; z < dim.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dim.z);
 
-        std::vector<std::pair<IdVolumeFinalizer*, tgt::SBounds>> finalizer_finder_init;
-        for(auto& finalizer: finalizers) {
-            tgt::SBounds full_bounds = finalizer.getBounds();
-            if(full_bounds.getLLF().z <= z && z <= full_bounds.getURB().z) {
-                tgt::SBounds bounds(tgt::svec3(full_bounds.getLLF().xy(), 0), tgt::svec3(full_bounds.getURB().xy(), 1/* [0,1] => volume >= 0 */));
-                finalizer_finder_init.emplace_back(&finalizer, bounds);
-            }
+        std::vector<Interval<size_t, IdVolumeFinalizer*>> intervals;
+        for(auto interval: ztree.findOverlapping(z, z)) {
+            auto& finalizer = interval.value;
+            tgt::SBounds full_bounds = finalizer->getBounds();
+            intervals.emplace_back(full_bounds.getLLF().y, full_bounds.getURB().y, finalizer);
         }
-        if(finalizer_finder_init.empty()) {
+        if(intervals.empty()) {
             continue;
         }
-        BoundsHierarchy<size_t, IdVolumeFinalizer*> finalizer_finder(std::move(finalizer_finder_init));
+        IntervalTree<size_t, IdVolumeFinalizer*> ytree(std::move(intervals));
 
         auto branchSlice = branchIds.getWritableSlice(z);
         auto holeSlice = holeIds.loadSlice(z);
 
         for(size_t y=0; y < dim.y; ++y) {
+
+            std::vector<Interval<size_t, IdVolumeFinalizer*>> intervals;
+            for(auto& interval: ytree.findOverlapping(y, y)) {
+                auto& finalizer = interval.value;
+                tgt::SBounds full_bounds = finalizer->getBounds();
+                intervals.emplace_back(full_bounds.getLLF().x, full_bounds.getURB().x, finalizer);
+            }
+            if(intervals.empty()) {
+                continue;
+            }
+            IntervalTree<size_t, IdVolumeFinalizer*> xtree(std::move(intervals));
+
             for(size_t x=0; x < dim.x; ++x) {
                 tgt::svec3 pos(x,y,z);
                 tgt::svec3 slicePos(x,y,0);
 
-                for(IdVolumeFinalizer* finalizer : finalizer_finder.findBounds(slicePos)) {
+                for(auto& interval : xtree.findOverlapping(x, x)) {
+                    auto& finalizer = interval.value;
                     if(holeSlice.voxel(x,y,0) == finalizer->id_) {
                         uint32_t floodedId = finalizer->getValue(pos);
                         tgtAssert(floodedId != IdVolume::BACKGROUND_VALUE, "flooded label is background");
@@ -682,6 +726,7 @@ struct UnfinishedRegions {
 };
 
 static void mapEdgeIds(LZ4SliceVolume<uint32_t>& regions, size_t numComponents, ProtoVesselGraph& graph, ProgressReporter& progress) {
+    TaskTimeLogger _("Map CCA to edge IDs", tgt::Info);
     std::vector<uint32_t> ccaToEdgeIdTable(numComponents+1, IdVolume::UNLABELED_FOREGROUND_VALUE);
     ccaToEdgeIdTable[0] = IdVolume::BACKGROUND_VALUE;
 
