@@ -29,19 +29,28 @@ in vec2 frag_texcoord;
 
 uniform sampler3D plotData_;
 uniform int renderedRuns_[NUM_RUNS]; // NUM_RUNS will be defined by host program.
+uniform vec2 rangeX_;
+uniform vec2 rangeY_;
 
 // transfer functions
 uniform TF_SAMPLER_TYPE transFuncTex_;
 uniform TransFuncParameters transFuncParams_;
 
+float mapRange(float valA, float minA, float maxA, float minB, float maxB) {
+    return (minB + (maxB - minB) * (valA - minA) / (maxA - minA));
+}
+
 void main() {
+
+    float x = mapRange(frag_texcoord.x, 0.0, 1.0, rangeX_.x, rangeX_.y);
+    float y = mapRange(frag_texcoord.y, 0.0, 1.0, rangeY_.x, rangeY_.y);
 
     // Aggregate intensities of all rendered runs.
     float intensity = 0.0;
     int numActive = 0;
     for(int i=0; i < NUM_RUNS; i++) {
         if(renderedRuns_[i] != 0) {
-            intensity += texture(plotData_, vec3(frag_texcoord, (i+0.5) / NUM_RUNS)).r;
+            intensity += texture(plotData_, vec3(x, y, (i+0.5) / NUM_RUNS)).r;
             numActive++;
         }
     }

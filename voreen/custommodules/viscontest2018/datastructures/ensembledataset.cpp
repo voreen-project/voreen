@@ -82,6 +82,8 @@ void EnsembleDataset::addRun(const Run& run) {
     minNumTimeSteps_ = std::min(run.timeSteps_.size(), minNumTimeSteps_);
     maxNumTimeSteps_ = std::max(run.timeSteps_.size(), maxNumTimeSteps_);
     totalNumTimeSteps_ += run.timeSteps_.size();
+    startTime_ = std::min(startTime_, run.timeSteps_.front().time_);
+    endTime_   = std::max(endTime_,   run.timeSteps_.back().time_);
 
     RunMetaData metaData;
     runMetaData_.push_back(metaData);
@@ -156,9 +158,6 @@ void EnsembleDataset::addRun(const Run& run) {
             maxTimeStepDuration_ = std::max(maxTimeStepDuration_, run.timeSteps_[t].duration_);
             minTimeStepDuration_ = std::min(minTimeStepDuration_, run.timeSteps_[t].duration_);
         }
-
-        startTime_ = std::min(startTime_, run.timeSteps_[t].time_);
-        endTime_   = std::max(endTime_,   run.timeSteps_[t].time_+run.timeSteps_[t].duration_);
     }
 
     commonTimeInterval_.x = std::max(commonTimeInterval_.x, run.timeSteps_.front().time_);

@@ -69,6 +69,8 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
     , timeInterval_("timeInterval", "Selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
     , selectedRuns_("selectedRuns", "Selected Runs")
     , hasLogarithmicDensity_("logarithmicDensity", "Logarithmic Density", false, Processor::VALID)
+    , zoomX_("zoomX", "Zoom X", tgt::vec2(0.0, 1.0), 0.0f, 1.0f)
+    , zoomY_("zoomY", "Zoom Y", tgt::vec2(0.0, 1.0), 0.0f, 1.0f)
     , xUnit_("xUnit", "x-Unit", "time")
     , yUnit_("yUnit", "y-Unit", "value")
     , fontSize_("fontSize", "Font Size", 10, 1, 30)
@@ -100,6 +102,10 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
     addProperty(hasLogarithmicDensity_);
         hasLogarithmicDensity_.setGroupID("rendering");
         ON_CHANGE_LAMBDA(hasLogarithmicDensity_, [this] { requirePlotDataUpdate_ = true; });
+    addProperty(zoomX_);
+        zoomX_.setGroupID("rendering");
+    addProperty(zoomY_);
+        zoomY_.setGroupID("rendering");
     addProperty(xUnit_);
         xUnit_.setGroupID("rendering");
     addProperty(yUnit_);
@@ -255,6 +261,7 @@ bool FieldParallelPlotViewer::checkConsistency() {
 
     // Compare hashes.
     if (EnsembleHash(*dataset).getHash() != ensembleHash->toString())
+        //LERROR("HASH does not match - currently ignored, application likely to crash");
         return false;
 
     renderedChannel_.blockCallbacks(true);
@@ -292,8 +299,8 @@ void FieldParallelPlotViewer::applyThreshold(VolumeRAM_Float* volume) {
                 float& voxel = volume->voxel(x, y, z);
                 if(voxel < valueRange_.get().x || voxel > valueRange_.get().y)
                     voxel = 0.0f;
-                if(hasLogarithmicDensity_.get() && voxel != 0.0f)
-                    voxel = voxel > 0 ? std::log(voxel) : -std::log(std::abs(voxel));
+                else if(hasLogarithmicDensity_.get())
+                    voxel = std::log(voxel+1); // shift the function such that we obtain only positive values
             }
         }
     }
@@ -403,11 +410,15 @@ void FieldParallelPlotViewer::renderPlot() {
     setGlobalShaderParameters(shader);
     LGL_ERROR;
 
-    // Setup plot texture
+    // Setup plot texture.
     tgt::TextureUnit plotUnit;
     plotUnit.activate();
     plotTexture_->bind();
     shader->setUniform("plotData_", plotUnit.getUnitNumber());
+
+    // Set zoom region.
+    shader->setUniform("rangeX_", zoomX_.get());
+    shader->setUniform("rangeY_", zoomY_.get());
 
     // Setup selection.
     std::vector<GLint> runs(ensembleInport_.getData()->getRuns().size());
@@ -454,8 +465,11 @@ void FieldParallelPlotViewer::renderAxes() {
     plotLib_->setMinimumScaleStep(32, PlotLibrary::X_AXIS);
     plotLib_->setMinimumScaleStep(32, PlotLibrary::Y_AXIS);
     tgt::vec2 valueRange = ensembleInport_.getData()->getValueRange(renderedChannel_.get());
-    plotLib_->setDomain(Interval<plot_t>(timeInterval_.getMinValue(), timeInterval_.getMaxValue()), PlotLibrary::X_AXIS);
-    plotLib_->setDomain(Interval<plot_t>(valueRange.x, valueRange.y), PlotLibrary::Y_AXIS);
+    tgt::vec2 zoomedTimeRange = applyZoomToRange(tgt::vec2(timeInterval_.getMinValue(), timeInterval_.getMaxValue()), zoomX_.get());
+    tgt::vec2 zoomedValueRange = applyZoomToRange(tgt::vec2(valueRange.x, valueRange.y), zoomY_.get());
+
+    plotLib_->setDomain(Interval<plot_t>(zoomedTimeRange.x, zoomedTimeRange.y), PlotLibrary::X_AXIS);
+    plotLib_->setDomain(Interval<plot_t>(zoomedValueRange.x, zoomedValueRange.y), PlotLibrary::Y_AXIS);
 
     if (plotLib_->setRenderStatus()) {
         plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
@@ -503,7 +517,7 @@ void FieldParallelPlotViewer::renderAxes() {
         glDepthFunc(GL_ALWAYS);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_BLEND);
-        IMode.color(1.0f, 1.0f, 1.0f, 0.2f);
+        IMode.color(0.0f, 0.0f, 0.0f, 0.3f);
         IMode.begin(tgt::ImmediateMode::QUADS);
             IMode.vertex(selectionStart_.x, selectionStart_.y);
             IMode.vertex(selectionEnd_.x, selectionStart_.y);
@@ -513,34 +527,42 @@ void FieldParallelPlotViewer::renderAxes() {
         glDisable(GL_BLEND);
         glDepthFunc(GL_LESS);
         glBlendFunc(GL_ONE, GL_ZERO);
-    }
 
-    // draw time lines.
-    float startTime = ensembleInport_.getData()->getStartTime();
-    float endTime = ensembleInport_.getData()->getEndTime();
-    if(timeInterval_.get().x != startTime || timeInterval_.get().y != endTime) {
-        tgt::vec2 timeBounds = mapRange(timeInterval_.get(), tgt::vec2(startTime), tgt::vec2(endTime), -tgt::vec2::one, tgt::vec2::one);
+        if(!isSelectionMode_) {
 
-        // Apply margins
-        timeBounds *= ((outport_.getSize().x - 2.0f*MARGINS.x) / outport_.getSize().x);
+            float startTime = zoomedTimeRange.x;
+            float endTime = zoomedTimeRange.y;
+            tgt::vec2 timeBounds = mapRange(timeInterval_.get(), tgt::vec2(startTime), tgt::vec2(endTime), -tgt::vec2::one, tgt::vec2::one);
 
-        // draw time min and max lines
-        glDepthFunc(GL_ALWAYS);
-        IMode.color(1.0f, 1.0f, 1.0f, 1.0f);
-        IMode.begin(tgt::ImmediateMode::LINES);
-            IMode.vertex(timeBounds.x, yMinMarginNDC);
-            IMode.vertex(timeBounds.x, yMaxMarginNDC);
-            IMode.vertex(timeBounds.y, yMaxMarginNDC);
-            IMode.vertex(timeBounds.y, yMinMarginNDC);
-        IMode.end();
-        glLineWidth(1.0f);
-        glDepthFunc(GL_LESS);
+            // Apply margins
+            timeBounds *= ((outport_.getSize().x - 2.0f*MARGINS.x) / outport_.getSize().x);
+
+            // draw time min and max lines
+            glDepthFunc(GL_ALWAYS);
+            IMode.color(0.0f, 0.0f, 0.0f, 1.0f);
+            glLineWidth(3.0f);
+            IMode.begin(tgt::ImmediateMode::LINES);
+                IMode.vertex(timeBounds.x, yMinMarginNDC);
+                IMode.vertex(timeBounds.x, yMaxMarginNDC);
+                IMode.vertex(timeBounds.y, yMaxMarginNDC);
+                IMode.vertex(timeBounds.y, yMinMarginNDC);
+            IMode.end();
+            glLineWidth(1.0f);
+            glDepthFunc(GL_LESS);
+        }
+
     }
 
     // Reset state.
     IMode.color(1.0f, 1.0f, 1.0f, 1.0f);
     outport_.deactivateTarget();
     LGL_ERROR;
+}
+
+tgt::vec2 FieldParallelPlotViewer::applyZoomToRange(const tgt::vec2& range, const tgt::vec2& zoom) {
+    float lowerLimit = range.x + (range.y - range.x) * zoom.x;
+    float upperLimit = range.y * zoom.y;
+    return tgt::vec2(lowerLimit, upperLimit);
 }
 
 void FieldParallelPlotViewer::updateSelection() {
@@ -600,19 +622,24 @@ void FieldParallelPlotViewer::updateSelection() {
     float startTime = ensembleInport_.getData()->getStartTime();
     float endTime = ensembleInport_.getData()->getEndTime();
 
-    tgt::vec2 selectedTime(startTime, endTime);
+    tgt::vec2 zoomedTimeRange = applyZoomToRange(tgt::vec2(startTime, endTime), zoomX_.get());
+    startTime = zoomedTimeRange.x;
+    endTime = zoomedTimeRange.y;
+
     if(selecting) {
-        selectedTime = mapRange(selectionX, -tgt::vec2::one, tgt::vec2::one, tgt::vec2(startTime), tgt::vec2(endTime));
+        tgt::vec2 selectedTime = mapRange(selectionX, -tgt::vec2::one, tgt::vec2::one, tgt::vec2(startTime), tgt::vec2(endTime));
+        timeInterval_.set(selectedTime);
     }
-    timeInterval_.set(selectedTime);
 
     /**
      * update volume transfer function
      */
-    if (selecting)
+    if (selecting) {
         volumeTransferFunc_.get()->setThreshold(mapRange(selectionY, -tgt::vec2::one, tgt::vec2::one, tgt::vec2::zero, tgt::vec2::one));
-    else
+    }
+    else {
         volumeTransferFunc_.get()->setThreshold(0.0f, 1.0f);
+    }
     volumeTransferFunc_.invalidate();
 }
 

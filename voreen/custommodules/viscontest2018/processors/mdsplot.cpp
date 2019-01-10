@@ -323,7 +323,7 @@ void MDSPlot::renderAxes() {
                 case 1:
                     plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "t [s]");
                     if (principalComponent_.get() == 1)
-                        plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "1th PC");
+                        plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "1st PC");
                     else if (principalComponent_.get() == 2)
                         plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "2nd PC");
                     else
@@ -339,7 +339,7 @@ void MDSPlot::renderAxes() {
                     plotLib_->renderAxisLabel(PlotLibrary::Z_AXIS, "3rd PC");
                     // Fallthrough
                 case 2:
-                    plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "1th PC");
+                    plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "1st PC");
                     plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "2nd PC");
                     break;
             }

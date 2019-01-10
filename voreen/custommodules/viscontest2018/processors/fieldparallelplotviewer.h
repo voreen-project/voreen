@@ -95,6 +95,8 @@ protected:
     void mouseEvent(tgt::MouseEvent* e);
     void updateSelection();
 
+    tgt::vec2 applyZoomToRange(const tgt::vec2& range, const tgt::vec2& zoom);
+
     virtual void setDescriptions() {
         setDescription("");
     }
@@ -114,6 +116,8 @@ protected:
     FloatIntervalProperty timeInterval_;
     StringListProperty selectedRuns_;
     BoolProperty hasLogarithmicDensity_;
+    FloatIntervalProperty zoomX_;
+    FloatIntervalProperty zoomY_;
     StringProperty xUnit_;
     StringProperty yUnit_;
     IntProperty fontSize_;
