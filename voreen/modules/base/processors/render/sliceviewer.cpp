@@ -60,6 +60,8 @@ SliceViewer::SliceViewer()
     , transferFunc3_("transferFunction3", "Transfer Function 3")
     , transferFunc4_("transferFunction4", "Transfer Function 4")
     , sliceAlignment_("sliceAlignmentProp", "Slice Alignment")
+    , planeNormal_("planeNormal", "Plane Normal", tgt::vec3(0, 1, 0), -tgt::vec3::one, tgt::vec3::one)
+    , planeDistance_("planeDistance", "Plane Distance", 0, -1000.0f, 1000.0f)
     , sliceIndex_("sliceIndex", "Slice Number ", 0, 0, 10000)
     , numGridRows_("numSlicesPerRow", "Num Rows", 1, 1, 5)
     , numGridCols_("numSlicesPerCol", "Num Columns", 1, 1, 5)
@@ -160,9 +162,13 @@ SliceViewer::SliceViewer()
     sliceAlignment_.addOption("xy-plane", "XY-Plane (axial)", XY_PLANE);
     sliceAlignment_.addOption("xz-plane", "XZ-Plane (coronal)", XZ_PLANE);
     sliceAlignment_.addOption("yz-plane", "YZ-Plane (sagittal)", YZ_PLANE);
+    sliceAlignment_.addOption("unaligned-plane", "Unaligned plane", UNALIGNED_PLANE);
     sliceAlignment_.onChange(
         MemberFunctionCallback<SliceViewer>(this, &SliceViewer::onSliceAlignmentChange) );
     addProperty(sliceAlignment_);
+
+    addProperty(planeNormal_);
+    addProperty(planeDistance_);
 
     addProperty(sliceIndex_);
     addProperty(numGridRows_);
@@ -176,6 +182,8 @@ SliceViewer::SliceViewer()
 
     // group slice arrangement properties
     sliceAlignment_.setGroupID("sliceArrangement");
+    planeNormal_.setGroupID("sliceArrangement");
+    planeDistance_.setGroupID("sliceArrangement");
     sliceIndex_.setGroupID("sliceArrangement");
     numGridRows_.setGroupID("sliceArrangement");
     numGridCols_.setGroupID("sliceArrangement");
@@ -367,8 +375,16 @@ void SliceViewer::updatePropertyConfiguration() {
     tgt::svec3 volumeDim = inport_.getData()->getDimensions();
     size_t numChannels = inport_.getData()->getNumChannels();
 
-    tgtAssert(sliceAlignment_.getValue() >= 0 && sliceAlignment_.getValue() <= 2, "Invalid alignment value");
-    size_t numSlices = volumeDim[sliceAlignment_.getValue()];
+    bool unalignedPlane = sliceAlignment_.getValue() == UNALIGNED_PLANE;
+    planeNormal_.setVisibleFlag(unalignedPlane);
+    planeDistance_.setVisibleFlag(unalignedPlane);
+    sliceIndex_.setVisibleFlag(!unalignedPlane);
+    numGridCols_.setVisibleFlag(!unalignedPlane);
+    numGridRows_.setVisibleFlag(!unalignedPlane);
+    selectCenterSliceOnInputChange_.setVisibleFlag(!unalignedPlane);
+
+    tgtAssert(sliceAlignment_.getValue() >= 0 && sliceAlignment_.getValue() <= 3, "Invalid alignment value");
+    size_t numSlices = unalignedPlane ? 1 : volumeDim[sliceAlignment_.getValue()];
     if (numSlices == 0)
         return;
 
@@ -422,7 +438,7 @@ void SliceViewer::process() {
 
     // make sure VolumeGL is available in 3D texture mode
     if (texMode_.isSelected("3d-texture")) {
-        if (!volume->getRepresentation<VolumeGL>()) {
+        if (sliceAlignment_.getValue() == UNALIGNED_PLANE || !volume->getRepresentation<VolumeGL>()) {
             LERROR("3D texture could not be created. Falling back to 2D texture mode.");
             texMode_.select("2d-texture");
             rebuildShader();
@@ -439,7 +455,7 @@ void SliceViewer::process() {
     const SliceAlignment alignment = sliceAlignment_.getValue();
     // get voxel volume dimensions
     tgt::ivec3 volDim = volume->getDimensions();
-    int numSlices = volDim[alignment];
+    int numSlices = alignment == UNALIGNED_PLANE ? 1 : volDim[alignment];
 
     // get the textures dimensions
     tgt::vec3 urf = inport_.getData()->getURB();
@@ -500,6 +516,12 @@ void SliceViewer::process() {
 
             toSliceCoordMatrix.t00 = 1.f;
             toSliceCoordMatrix.t11 = 1.f;
+        case UNALIGNED_PLANE:
+            texDim2D.x = texDim.x;
+            texDim2D.y = texDim.y;
+            textureMatrix_ = tgt::mat4::identity;
+            toSliceCoordMatrix = tgt::mat4::identity;
+            break;
         default:
             break;
     }   // switch
@@ -639,17 +661,6 @@ void SliceViewer::process() {
     for (int pos = 0, x = 0, y = 0; pos < (numSlicesCol * numSlicesRow);
         ++pos, x = pos % numSlicesCol, y = pos / numSlicesCol)
     {
-        int sliceNumber = (pos + static_cast<const int>(sliceIndex));
-        if (sliceNumber >= numSlices)
-            break;
-
-        // compute depth in texture coordinates and check if it is not below the first or above the last slice
-        depth = (static_cast<float>(sliceNumber) + 0.5f) / static_cast<float>(volume->getDimensions()[alignment]);
-        float minDepth = 0.5f / static_cast<float>(volume->getDimensions()[alignment]);
-        float maxDepth = (static_cast<float>(volume->getDimensions()[alignment]) - 0.5f) / static_cast<float>(volume->getDimensions()[alignment]);
-        if ((depth < minDepth) || depth > maxDepth)
-            continue;
-
         MatStack.loadIdentity();
         MatStack.translate(sliceLowerLeft_.x + (x * sliceSize_.x),
             sliceLowerLeft_.y + ((numSlicesRow - (y + 1)) * sliceSize_.y), 0.0f);
@@ -661,52 +672,88 @@ void SliceViewer::process() {
         setGlobalShaderParameters(sliceShader_);
 
         // extract 2D slice
+        SliceTexture* slice = nullptr;
         if (texMode_.isSelected("2d-texture")) {
 
-            const size_t sliceID = tgt::iround(depth * volume->getDimensions()[alignment] - 0.5f);
-
             bool singleSliceComplete = true;
-            SliceTexture* slice = 0;
-            int* shiftArray = 0;
-            if(applyChannelShift_.get()) {
-                //create shift array
-                shiftArray = new int[volume->getNumChannels()];
-                switch(volume->getNumChannels()) {
-                case 4:
-                    shiftArray[3] = channelShift4_.get()[alignment];
-                    //no break;
-                case 3:
-                    shiftArray[2] = channelShift3_.get()[alignment];
-                    //no break;
-                case 2:
-                    shiftArray[1] = channelShift2_.get()[alignment];
-                    //no break;
-                case 1:
-                    shiftArray[0] = channelShift1_.get()[alignment];
-                    break;
-                default:
-                    tgtAssert(false,"unsupported channel count!");
-                }
-            }
-            switch(QualityMode.getQuality()) {
-            case VoreenQualityMode::RQ_INTERACTIVE:
-                slice = sliceCache_.getVolumeSlice(volume, alignment, sliceID, shiftArray, interactionLevelOfDetail_.get(),
-                    static_cast<clock_t>(sliceExtractionTimeLimit_.get()), &singleSliceComplete, false);
-            break;
-            case VoreenQualityMode::RQ_DEFAULT:
-                slice = sliceCache_.getVolumeSlice(volume, alignment, sliceID, shiftArray, sliceLevelOfDetail_.get(),
-                    static_cast<clock_t>(sliceExtractionTimeLimit_.get()), &singleSliceComplete, false);
-            break;
-            case VoreenQualityMode::RQ_HIGH:
-                //no time limit, octree level 0
-                slice = sliceCache_.getVolumeSlice(volume, alignment, sliceID, shiftArray, 0,
-                    static_cast<clock_t>(0), &singleSliceComplete, false);
-            break;
-            default:
-                tgtAssert(false,"unknown rendering quality");
-            }
 
-            delete[] shiftArray;
+            if(alignment != UNALIGNED_PLANE) {
+
+                int sliceNumber = (pos + static_cast<const int>(sliceIndex));
+                if (sliceNumber >= numSlices)
+                    break;
+
+                // compute depth in texture coordinates and check if it is not below the first or above the last slice
+                depth = (static_cast<float>(sliceNumber) + 0.5f) / static_cast<float>(volume->getDimensions()[alignment]);
+                float minDepth = 0.5f / static_cast<float>(volume->getDimensions()[alignment]);
+                float maxDepth = (static_cast<float>(volume->getDimensions()[alignment]) - 0.5f) / static_cast<float>(volume->getDimensions()[alignment]);
+                if (depth < minDepth || depth > maxDepth)
+                    continue;
+
+                const size_t sliceID = tgt::iround(depth * volume->getDimensions()[alignment] - 0.5f);
+                int* shiftArray = 0;
+                if (applyChannelShift_.get()) {
+                    //create shift array
+                    shiftArray = new int[volume->getNumChannels()];
+                    switch (volume->getNumChannels()) {
+                        case 4:
+                            shiftArray[3] = channelShift4_.get()[alignment];
+                            //no break;
+                        case 3:
+                            shiftArray[2] = channelShift3_.get()[alignment];
+                            //no break;
+                        case 2:
+                            shiftArray[1] = channelShift2_.get()[alignment];
+                            //no break;
+                        case 1:
+                            shiftArray[0] = channelShift1_.get()[alignment];
+                            break;
+                        default:
+                            tgtAssert(false, "unsupported channel count!");
+                    }
+                }
+                switch (QualityMode.getQuality()) {
+                    case VoreenQualityMode::RQ_INTERACTIVE:
+                        slice = sliceCache_.getVolumeSlice(volume, alignment, sliceID, shiftArray,
+                                                           interactionLevelOfDetail_.get(),
+                                                           static_cast<clock_t>(sliceExtractionTimeLimit_.get()),
+                                                           &singleSliceComplete, false);
+                        break;
+                    case VoreenQualityMode::RQ_DEFAULT:
+                        slice = sliceCache_.getVolumeSlice(volume, alignment, sliceID, shiftArray,
+                                                           sliceLevelOfDetail_.get(),
+                                                           static_cast<clock_t>(sliceExtractionTimeLimit_.get()),
+                                                           &singleSliceComplete, false);
+                        break;
+                    case VoreenQualityMode::RQ_HIGH:
+                        //no time limit, octree level 0
+                        slice = sliceCache_.getVolumeSlice(volume, alignment, sliceID, shiftArray, 0,
+                                                           static_cast<clock_t>(0), &singleSliceComplete, false);
+                        break;
+                    default:
+                        tgtAssert(false, "unknown rendering quality");
+                }
+
+                delete[] shiftArray;
+            }
+            else {
+
+                tgt::plane plane(planeNormal_.get(), planeDistance_.get());
+                switch (QualityMode.getQuality()) {
+                    case VoreenQualityMode::RQ_INTERACTIVE:
+                        slice = SliceHelper::getVolumeSlice(volume, plane, 0.25f);
+                        break;
+                    case VoreenQualityMode::RQ_DEFAULT:
+                        slice = SliceHelper::getVolumeSlice(volume, plane, 1.0f);
+                        break;
+                    case VoreenQualityMode::RQ_HIGH:
+                        slice = SliceHelper::getVolumeSlice(volume, plane, 2.0f);
+                        break;
+                    default:
+                        tgtAssert(false, "unknown rendering quality");
+                }
+                singleSliceComplete = slice != nullptr;
+            }
 
             sliceComplete_ &= singleSliceComplete;
 
@@ -738,6 +785,11 @@ void SliceViewer::process() {
             tgt::vec4(texUpperRight.x, texLowerLeft.y, depth, 1.f),
             tgt::vec4(texUpperRight.x, texUpperRight.y, depth, 1.f),
             tgt::vec4(texLowerLeft.x, texUpperRight.y, depth, 1.f));
+
+        // Arbitrary slices will not be cached, so we have to delete them.
+        if(alignment == UNALIGNED_PLANE) {
+            delete slice;
+        }
 
     }   // textured slices
 
@@ -946,7 +998,7 @@ void SliceViewer::renderInfoTexts() const {
     tgtAssert(inport_.getData(), "No volume");
     const VolumeBase* volume = inport_.getData();
     tgt::ivec3 volDim = volume->getDimensions();
-    int numSlices = volDim[sliceAlignment_.getValue()];
+    int numSlices = sliceAlignment_.getValue() == UNALIGNED_PLANE ? 1 : volDim[sliceAlignment_.getValue()];
 
     glDisable(GL_DEPTH_TEST);
 
@@ -1208,7 +1260,7 @@ void SliceViewer::renderInfoTexts() const {
         LGL_ERROR;
     }
 
-    if (showSliceNumber_.get()) {
+    if (showSliceNumber_.get() && sliceAlignment_.getValue() != UNALIGNED_PLANE) {
         // note: the font size may not be smaller than 8
         tgt::Font fontSliceNumber(VoreenApplication::app()->getFontPath(fontName_));
         fontSliceNumber.setFontSize(fontSize_.get());
@@ -1373,6 +1425,9 @@ void SliceViewer::onSliceAlignmentChange() {
             break;
         case YZ_PLANE:
             voxelPosPermutation_ = tgt::ivec3(2, 1, 0);
+            break;
+        case UNALIGNED_PLANE:
+            voxelPosPermutation_ = tgt::ivec3(0, 1, 2);
             break;
         default:
             break;

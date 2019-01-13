@@ -29,7 +29,6 @@
 #include "processors/flowdirectionoverlay.h"
 #include "processors/geometry/geometryclose.h"
 #include "processors/geometry/geometryoffsetremove.h"
-#include "processors/render/unalignedsliceviewer.h"
 #include "processors/streamline/pathlinecreator.h"
 #include "processors/streamline/streamlinecombine.h"
 #include "processors/streamline/streamlinecreator.h"
@@ -87,7 +86,6 @@ FlowreenModule::FlowreenModule(const std::string& modulePath)
     registerSerializableType(new StreamlineSelector());
     registerSerializableType(new StreamlineSource());
     registerSerializableType(new StreamlineToBoundingBox());
-    registerSerializableType(new UnalignedSliceViewer());
 #ifdef FLOWREEN_USE_OPENLB
     registerSerializableType(new ImplicitRepresentation());
     registerSerializableType(new FlowSimulation());

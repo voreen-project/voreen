@@ -64,7 +64,7 @@ bool ImplicitRepresentation::isReady() const {
         setNotReadyErrorMessage("Not initialized.");
         return false;
     }
-    bool fileExists = std::ifstream(path_.get().c_str(), std::ios::binary).good();
+    bool fileExists = false;//std::ifstream(path_.get().c_str(), std::ios::binary).good();
     if(!inport_.isReady() && !fileExists) {
         setNotReadyErrorMessage("No input.");
         return false;
