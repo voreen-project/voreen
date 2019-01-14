@@ -304,7 +304,7 @@ void SliceViewer::adjustPropertiesToInput() {
     const VolumeBase* inputVolume = inport_.getData();
 
     if (selectCenterSliceOnInputChange_.get() && !firstProcessAfterDeserialization()/* && sliceIndex_.get() == 0*/) {
-        if (inputVolume) {
+        if (inputVolume && sliceAlignment_.getValue() != UNALIGNED_PLANE) {
             int alignmentIndex = sliceAlignment_.getValue();
             tgtAssert(alignmentIndex >= 0 && alignmentIndex <= 2, "invalid alignment index");
             int centerSlice = (int)inputVolume->getDimensions()[alignmentIndex] / 2;
