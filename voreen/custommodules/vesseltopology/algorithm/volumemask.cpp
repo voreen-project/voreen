@@ -213,7 +213,6 @@ VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional
 
     tgtAssert(!sampleMask || dimensions == sampleMask->getDimensions(), "Sample mask dimension mismatch");
 
-    /*
     auto calc_num_chunks = [] (size_t dim, size_t size) {
         if((dim % size) == 0) {
             return dim/size;
@@ -285,38 +284,6 @@ VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional
             }
         }
     }
-    */
-
-
-    // Initialize volumetric data (data_)
-    for(size_t z = 0; z<dimensions.z; ++z) {
-        subtaskReporters.get<0>().setProgress(static_cast<float>(z)/dimensions.z);
-        auto volSlice = vol.loadSlice(z);
-        boost::optional<VolumeAtomic<uint8_t>> sampleMaskSlice = sampleMask ? boost::optional<VolumeAtomic<uint8_t>>(sampleMask->loadSlice(z)) : boost::none;
-        for(size_t y = 0; y<dimensions.y; ++y) {
-            for(size_t x = 0; x<dimensions.x; ++x) {
-                const tgt::svec3 p(x,y,z);
-                const tgt::svec3 slicePos(x,y,0);
-                VolumeMaskValue val;
-                if(sampleMaskSlice && sampleMaskSlice->voxel(slicePos) == 0) {
-                    val = VolumeMaskValue::OUTSIDE_VOLUME;
-                } else if(volSlice.getVoxelNormalized(slicePos) > 0) {
-                    val = VolumeMaskValue::OBJECT;
-                    ++numOriginalForegroundVoxels_;
-                } else {
-                    val = VolumeMaskValue::BACKGROUND;
-                }
-                // NOTE! This is a shortcut that only works under the assumption that newly created
-                // files are filled with zeros, which I'm PRETTY sure of, but not 100% certain.
-                if(val != VolumeMaskValue::BACKGROUND) {
-                    data_.set(p, val);
-                } else {
-                    tgtAssert(data_.get(p) == VolumeMaskValue::BACKGROUND, "File was not zeroed before filling");
-                }
-            }
-        }
-    }
-
 
     // Initialize surface
     SurfaceBuilder builder;
