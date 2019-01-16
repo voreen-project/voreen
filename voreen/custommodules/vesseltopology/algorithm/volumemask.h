@@ -137,8 +137,7 @@ public:
         IMPROVED_NO_LINE_PRESERVATION,
     };
 
-    template<class F>
-    VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, F&& fixedForegroundReader, ProgressReporter& progress);
+    VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress);
     VolumeMask(VolumeMask&& other);
     ~VolumeMask();
 
@@ -206,68 +205,6 @@ struct NoFixedForeground {
 // Implementation -----------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------
 
-
-template<class F>
-VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, F&& fixedForegroundReader, ProgressReporter& progress)
-    : data_(VoreenApplication::app()->getUniqueTmpFilePath(), vol.getDimensions())
-    , surfaceFile_("", 0)
-    , numOriginalForegroundVoxels_(0)
-    , spacing_(vol.getMetaData().getSpacing())
-{
-    TaskTimeLogger _("Create VolumeMask", tgt::Info);
-    SubtaskProgressReporterCollection<2> subtaskReporters(progress);
-    tgt::svec3 dimensions = vol.getDimensions();
-
-    tgtAssert(!sampleMask || dimensions == sampleMask->getDimensions(), "Sample mask dimension mismatch");
-
-    // Initialize volumetric data (data_)
-    for(size_t z = 0; z<dimensions.z; ++z) {
-        subtaskReporters.get<0>().setProgress(static_cast<float>(z)/dimensions.z);
-        auto volSlice = vol.loadSlice(z);
-        boost::optional<VolumeAtomic<uint8_t>> sampleMaskSlice = sampleMask ? boost::optional<VolumeAtomic<uint8_t>>(sampleMask->loadSlice(z)) : boost::none;
-        fixedForegroundReader.advance();
-        for(size_t y = 0; y<dimensions.y; ++y) {
-            for(size_t x = 0; x<dimensions.x; ++x) {
-                const tgt::svec3 p(x,y,z);
-                const tgt::svec3 slicePos(x,y,0);
-                VolumeMaskValue val;
-                if(sampleMaskSlice && sampleMaskSlice->voxel(slicePos) == 0) {
-                    val = VolumeMaskValue::OUTSIDE_VOLUME;
-                } else if(fixedForegroundReader.isForeground(x, y)) {
-                    val = VolumeMaskValue::FIXED_OBJECT;
-                } else if(volSlice.getVoxelNormalized(slicePos) > 0) {
-                    val = VolumeMaskValue::OBJECT;
-                    ++numOriginalForegroundVoxels_;
-                } else {
-                    val = VolumeMaskValue::BACKGROUND;
-                }
-                // NOTE! This is a shortcut that only works under the assumption that newly created
-                // files are filled with zeros, which I'm PRETTY sure of, but not 100% certain.
-                if(val != VolumeMaskValue::BACKGROUND) {
-                    data_.set(p, val);
-                } else {
-                    tgtAssert(data_.get(p) == VolumeMaskValue::BACKGROUND, "File was not zeroed before filling");
-                }
-            }
-        }
-    }
-
-    // Initialize surface
-    SurfaceBuilder builder;
-    for(size_t z = 0; z<dimensions.z; ++z) {
-        subtaskReporters.get<1>().setProgress(static_cast<float>(z)/dimensions.z);
-        for(size_t y = 0; y<dimensions.y; ++y) {
-            for(size_t x = 0; x<dimensions.x; ++x) {
-                const tgt::svec3 p(x,y,z);
-                if(get(p, VolumeMaskValue::BACKGROUND) == VolumeMaskValue::OBJECT && isSurfaceVoxel(p)) {
-                    builder.push(toLinearPos(p));
-                }
-            }
-        }
-    }
-    surfaceFile_ = std::move(builder).finalize();
-    progress.setProgress(1.0f);
-}
 
 
 template<class L>

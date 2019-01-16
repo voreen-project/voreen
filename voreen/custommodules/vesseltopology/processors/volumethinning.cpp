@@ -106,7 +106,6 @@ void VolumeThinning::process() {
             std::move(sampleMask
                 ? boost::optional<LZ4SliceVolume<uint8_t>>(binarizeVolume(*sampleMask, 0.5, SubtaskProgressReporter(subtaskReporters.get<0>(), tgt::vec2(0.5,1.0))))
                 : boost::none),
-            NoFixedForeground(),
             subtaskReporters.get<1>());
     switch(thinningAlgorithm_.getValue()) {
         case VolumeMask::MA:

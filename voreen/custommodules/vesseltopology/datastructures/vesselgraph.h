@@ -111,7 +111,7 @@ class VGNodeID {
 public:
     const static VGNodeID INVALID;
     VGNodeID()
-        : internal_(-1)
+        : internal_((uint32_t)-1)
     {
     }
 
@@ -141,7 +141,7 @@ class VGEdgeID {
 public:
     const static VGEdgeID INVALID;
     VGEdgeID()
-        : internal_(-1)
+        : internal_((uint32_t)-1)
     {
     }
     VGEdgeID(uint32_t i)

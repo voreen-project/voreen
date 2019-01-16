@@ -166,39 +166,14 @@ struct SparseBinaryVolume {
     tgt::svec3 dimensions_;
 };
 
-struct EndNodeVoxelExtractor {
-    static void addVoxels(std::vector<tgt::svec3>& voxels, const VesselGraphNode& node, const tgt::mat4& rwToVoxel) {
+static void fixEndVoxelsInMask(const VesselGraph& graph, const tgt::mat4& rwToVoxel, VolumeMask& mask) {
+    for(auto& node : graph.getNodes()) {
         if(node.isEndNode()) {
-            voxels.push_back(tgt::round(transform(rwToVoxel, node.pos_)));
+            auto p = tgt::iround(transform(rwToVoxel, node.pos_));
+            mask.set(tgt::svec3(p), VolumeMaskValue::FIXED_OBJECT);
         }
     }
-};
-
-struct GraphNodeVoxelReader {
-    template<class S>
-    static GraphNodeVoxelReader create(const VesselGraph& graph, const tgt::mat4& rwToVoxel, const tgt::svec3& dimensions) {
-        std::vector<tgt::svec3> voxels;
-
-        for(auto& node : graph.getNodes()) {
-            S::addVoxels(voxels, node, rwToVoxel);
-        }
-        return GraphNodeVoxelReader(SparseBinaryVolume(voxels, dimensions));
-    }
-
-    GraphNodeVoxelReader(SparseBinaryVolume&& vol)
-        : nodeVoxels_(std::move(vol))
-        , z_(-1)
-    {
-    }
-    void advance() {
-        ++z_;
-    }
-    bool isForeground(size_t x, size_t y) {
-        return nodeVoxels_.isObject(tgt::svec3(x, y, static_cast<size_t>(z_)));
-    }
-    SparseBinaryVolume nodeVoxels_;
-    int z_;
-};
+}
 
 struct EdgeVoxelRef {
     typedef float CoordType;
@@ -748,12 +723,12 @@ static void mapEdgeIds(LZ4SliceVolume<uint32_t>& regions, size_t numComponents, 
         reader.seek(0);
         for(auto& pair : query_positions) {
             tgt::svec3& p = pair.second;
-            if(p.z == -1) {
+            if(p.z == (size_t)-1) {
                 continue;
             }
 
-            tgtAssert(p.z >= reader.getCurrentZPos(), "invalid reader pos");
-            while(p.z > reader.getCurrentZPos()) {
+            tgtAssert(p.z >= (size_t)reader.getCurrentZPos(), "invalid reader pos");
+            while(p.z > (size_t)reader.getCurrentZPos()) {
                 reader.advance();
             }
             auto ccaindex = reader.getVoxelRelative(p.xy(), 0);
@@ -875,17 +850,19 @@ std::unique_ptr<VesselGraph> refineVesselGraph(VesselGraphCreatorProcessedInput&
 
     // Refine previous graph
     auto isEdgeDeletable = [&input] (const VesselGraphEdge& edge) {
-        return !edge.hasValidData() || edge.getVoxels().size() < input.minVoxelLength || edge.getElongation() < input.minElongation || edge.getRelativeBulgeSize() < input.minBulgeSize;
+        return !edge.hasValidData() || edge.getVoxels().size() < (size_t)input.minVoxelLength || edge.getElongation() < input.minElongation || edge.getRelativeBulgeSize() < input.minBulgeSize;
     };
-    std::unique_ptr<VesselGraph> normalizedGraph = VesselGraphRefinement::removeEndEdgesRecursively(prevGraph, isEdgeDeletable);
+    std::unique_ptr<VesselGraph> refinedGraph = VesselGraphRefinement::removeEndEdgesRecursively(prevGraph, isEdgeDeletable);
 
     tgt::mat4 rwToVoxel;
     bool inverted = input.segmentation.getMetaData().getVoxelToWorldMatrix().invert(rwToVoxel);
     tgtAssert(inverted, "Matrix inversion failed!");
 
     // Create new voxelmask
-    auto fixedForegroundMaskOnlyEndvoxels = GraphNodeVoxelReader::create<EndNodeVoxelExtractor>(*normalizedGraph, rwToVoxel, input.segmentation.getMetaData().getDimensions());
-    VolumeMask mask(input.segmentation, input.sampleMask, fixedForegroundMaskOnlyEndvoxels, subtaskReporters.get<0>());
+    VolumeMask mask(input.segmentation, input.sampleMask, subtaskReporters.get<0>());
+
+    fixEndVoxelsInMask(*refinedGraph, rwToVoxel, mask);
+    refinedGraph.reset(); // free graph (and associated ressources) early
     addFixedForegroundPointsToMask(input.fixedForegroundPoints, mask);
 
     // Skeletonize new mask
@@ -899,7 +876,7 @@ std::unique_ptr<VesselGraph> createInitialVesselGraph(VesselGraphCreatorProcesse
     SubtaskProgressReporterCollection<3> subtaskReporters(progress);
     progress.setProgress(0.0f);
 
-    VolumeMask mask(input.segmentation, input.sampleMask, NoFixedForeground(), subtaskReporters.get<0>());
+    VolumeMask mask(input.segmentation, input.sampleMask, subtaskReporters.get<0>());
     addFixedForegroundPointsToMask(input.fixedForegroundPoints, mask);
     mask.skeletonize<VolumeMask::IMPROVED>(std::numeric_limits<size_t>::max(), subtaskReporters.get<1>());
 
