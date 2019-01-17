@@ -304,17 +304,18 @@ size_t LZ4SliceVolume<Voxel>::getSliceMemorySize() const {
 
 template<typename Voxel>
 LZ4SliceVolume<Voxel>::LZ4SliceVolume(LZ4SliceVolume<Voxel>&& other)
-    : LZ4SliceVolumeBase(other.filePath_, std::move(other.metadata_))
+    : LZ4SliceVolumeBase(std::move(other.filePath_), std::move(other.metadata_))
 {
-    other.filePath_ = "";
 }
 
 template<typename Voxel>
 LZ4SliceVolume<Voxel>& LZ4SliceVolume<Voxel>::operator=(LZ4SliceVolume<Voxel>&& other) {
-    // Destruct the current object, but keep the memory.
-    this->~LZ4SliceVolume();
-    // Call the move constructor on the memory region of the current object.
-    new(this) LZ4SliceVolume(std::move(other));
+    if(this != &other) {
+        // Destruct the current object, but keep the memory.
+        this->~LZ4SliceVolume();
+        // Call the move constructor on the memory region of the current object.
+        new(this) LZ4SliceVolume(std::move(other));
+    }
 
     return *this;
 }
