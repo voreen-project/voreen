@@ -23,22 +23,50 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_MEDIANFILTER_H
-#define VRN_MEDIANFILTER_H
+#ifndef VRN_MORPHOLOGYFILTER_H
+#define VRN_MORPHOLOGYFILTER_H
 
-#include "parallelvolumefilter.h"
+#include "volumefilter.h"
 
 namespace voreen {
 
-class MedianFilter : public ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue1D> {
+enum MorphologyOperatorType {
+    DILATION_T,
+    EROSION_T,
+};
+
+enum MorphologyOperatorShape {
+    CUBE_T,
+    SPHERE_T,
+};
+
+class MorphologyFilter : public VolumeFilter {
 public:
-    MedianFilter(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string sliceBaseType);
-    virtual ~MedianFilter();
-    ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos) const;
+    MorphologyFilter(const tgt::ivec3& extent, MorphologyOperatorType type, MorphologyOperatorShape shape, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType);
+    virtual ~MorphologyFilter() {}
+
+    int zExtent() const;
+    const std::string& getSliceBaseType() const;
+
+    std::unique_ptr<VolumeRAM> getFilteredSlice(const CachingSliceReader* src, int z) const;
+
+    // For now we only support single channel volumes
+    size_t getNumInputChannels() const { return 1; };
+    size_t getNumOutputChannels() const { return 1; };
+
 private:
-    tgt::ivec3 extent_;
+
+    std::unique_ptr<VolumeRAM> getFilteredSliceCubeMorphology(const std::function<float(float, float)>& typeFunc, const CachingSliceReader* src, int z) const;
+    std::unique_ptr<VolumeRAM> getFilteredSliceSphereMorphology (const std::function<float(float, float)>& typeFunc, const CachingSliceReader* src, int z) const;
+
+    const tgt::ivec3 extent_;
+
+    const MorphologyOperatorType type_;
+    const MorphologyOperatorShape shape_;
+    const SamplingStrategy<float> samplingStrategy_;
+    const std::string sliceBaseType_;
 };
 
 } // namespace voreen
 
-#endif // VRN_MEDIANFILTER_H
+#endif // VRN_MORPHOLOGYFILTER_H

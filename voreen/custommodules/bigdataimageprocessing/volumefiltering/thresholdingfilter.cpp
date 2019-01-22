@@ -23,22 +23,65 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_MEDIANFILTER_H
-#define VRN_MEDIANFILTER_H
+#include "thresholdingfilter.h"
 
-#include "parallelvolumefilter.h"
+#include "slicereader.h"
 
 namespace voreen {
 
-class MedianFilter : public ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue1D> {
-public:
-    MedianFilter(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string sliceBaseType);
-    virtual ~MedianFilter();
-    ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos) const;
-private:
-    tgt::ivec3 extent_;
-};
+ThresholdingFilter::ThresholdingFilter(float threshold, float replacement, ThresholdingStrategyType thresholdingStrategyType, const std::string& sliceBaseType)
+    : threshold_(threshold)
+    , replacement_(replacement)
+    , thresholdingStrategyType_(thresholdingStrategyType)
+    , sliceBaseType_(sliceBaseType)
+{
+}
+
+ThresholdingFilter::~ThresholdingFilter() {
+}
+
+int ThresholdingFilter::zExtent() const {
+    return 1;
+}
+
+const std::string& ThresholdingFilter::getSliceBaseType() const {
+    return sliceBaseType_;
+}
+
+std::unique_ptr<VolumeRAM> ThresholdingFilter::getFilteredSlice(const CachingSliceReader* src, int z) const {
+    tgtAssert(z >= 0 && z < src->getSignedDimensions().z, "Invalid z pos in slice request");
+
+    static const auto LOWER_THRESHOLD_FUNC = [](float a, float b) { return a < b; };
+    static const auto UPPER_THRESHOLD_FUNC = [](float a, float b) { return a > b; };
+
+    std::function<bool(float, float)> strategy;
+    switch (thresholdingStrategyType_) {
+    case LOWER_T:
+        strategy = LOWER_THRESHOLD_FUNC;
+        break;
+    case UPPER_T:
+        strategy = UPPER_THRESHOLD_FUNC;
+        break;
+    default:
+        tgtAssert(false, "Unimplemented Thresholding Strategy")
+        break;
+    }
+
+    const tgt::ivec3& dim = src->getSignedDimensions();
+    std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(sliceBaseType_, tgt::svec3(dim.xy(), 1)));
+
+    #pragma omp parallel for
+    for (int y = 0; y < dim.y; ++y) {
+        for (int x = 0; x < dim.x; ++x) {
+            float value = src->getVoxelNormalized(tgt::ivec3(x, y, z));
+            bool replace = strategy(value, threshold_);
+            if (replace) {
+                value = replacement_;
+            }
+            outputSlice->setVoxelNormalized(value, x, y, 0);
+        }
+    }
+    return outputSlice;
+}
 
 } // namespace voreen
-
-#endif // VRN_MEDIANFILTER_H

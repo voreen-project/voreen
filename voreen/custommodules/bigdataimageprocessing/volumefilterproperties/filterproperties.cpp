@@ -23,22 +23,37 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_MEDIANFILTER_H
-#define VRN_MEDIANFILTER_H
+#include "filterproperties.h"
 
-#include "parallelvolumefilter.h"
+#include <boost/algorithm/string.hpp>
 
 namespace voreen {
 
-class MedianFilter : public ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue1D> {
-public:
-    MedianFilter(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string sliceBaseType);
-    virtual ~MedianFilter();
-    ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos) const;
-private:
-    tgt::ivec3 extent_;
-};
+const int FilterProperties::DEFAULT_SETTINGS = -1;
+const std::string FilterProperties::loggerCat_ = "voreen.base.VolumeFilterList";
 
-} // namespace voreen
+FilterProperties::~FilterProperties() {
+}
 
-#endif // VRN_MEDIANFILTER_H
+const std::vector<Property*> FilterProperties::getProperties() const {
+    return properties_;
+}
+
+void FilterProperties::storeVisibility() {
+    for (Property* property : properties_) {
+        visibilityMap_[property] = property->isVisibleFlagSet();
+    }
+}
+void FilterProperties::restoreVisibility() {
+    for (Property* property : properties_) {
+        property->setVisibleFlag(visibilityMap_[property]);
+    }
+}
+
+std::string FilterProperties::getId(const std::string& id) const {
+    std::string name = getVolumeFilterName();
+    boost::algorithm::replace_all(name, " ", "_");
+    return name + "_" + id;
+}
+
+}

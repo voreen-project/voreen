@@ -23,22 +23,52 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_MEDIANFILTER_H
-#define VRN_MEDIANFILTER_H
+#ifndef VRN_FILTERPROPERTIES_H
+#define VRN_FILTERPROPERTIES_H
 
-#include "parallelvolumefilter.h"
+#include "voreen/core/io/serialization/serializable.h"
+#include "voreen/core/properties/property.h"
+#include "../volumefiltering/volumefilter.h"
+
+#include <vector>
+#include <map>
 
 namespace voreen {
 
-class MedianFilter : public ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue1D> {
+class VolumeBase;
+class VolumeFilter;
+
+class FilterProperties : public Serializable {
 public:
-    MedianFilter(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string sliceBaseType);
-    virtual ~MedianFilter();
-    ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos) const;
-private:
-    tgt::ivec3 extent_;
+
+    static const int DEFAULT_SETTINGS;
+
+    virtual ~FilterProperties();
+
+    const std::vector<Property*> getProperties() const;
+
+    void storeVisibility();
+    void restoreVisibility();
+
+    virtual std::string getVolumeFilterName() const = 0;
+    virtual void adjustPropertiesToInput(const VolumeBase& input) = 0;
+    virtual VolumeFilter* getVolumeFilter(const VolumeBase& volume, int instanceId) const = 0;
+    virtual void storeInstance(int instanceId) = 0;
+    virtual void restoreInstance(int instanceId) = 0;
+    virtual void removeInstance(int instanceId) = 0;
+
+protected:
+
+    virtual void addProperties() = 0;
+
+    std::string getId(const std::string& id) const;
+
+    std::vector<Property*> properties_;
+    std::map<Property*, bool> visibilityMap_;
+
+    static const std::string loggerCat_;
 };
 
-} // namespace voreen
+}
 
-#endif // VRN_MEDIANFILTER_H
+#endif

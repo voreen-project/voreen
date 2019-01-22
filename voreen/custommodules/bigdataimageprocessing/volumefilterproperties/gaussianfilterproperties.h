@@ -23,22 +23,49 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_MEDIANFILTER_H
-#define VRN_MEDIANFILTER_H
+#ifndef VRN_GAUSSIANFILTERPROPERTIES_H
+#define VRN_GAUSSIANFILTERPROPERTIES_H
 
-#include "parallelvolumefilter.h"
+#include "filterproperties.h"
+
+#include "../volumefiltering/gaussianfilter.h"
 
 namespace voreen {
 
-class MedianFilter : public ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue1D> {
+class GaussianFilterProperties : public FilterProperties {
 public:
-    MedianFilter(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string sliceBaseType);
-    virtual ~MedianFilter();
-    ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos) const;
+    GaussianFilterProperties();
+
+    virtual std::string getVolumeFilterName() const;
+
+    virtual void adjustPropertiesToInput(const VolumeBase& input);
+
+    virtual VolumeFilter* getVolumeFilter(const VolumeBase& volume, int instanceId) const;
+    virtual void restoreInstance(int instanceId);
+    virtual void storeInstance(int instanceId);
+    virtual void removeInstance(int instanceId);
+    virtual void addProperties();
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+
 private:
-    tgt::ivec3 extent_;
+
+    struct Settings {
+        int extentX_;
+        int extentY_;
+        int extentZ_;
+        SamplingStrategyType samplingStrategyType_;
+        int outsideVolumeValue_;
+    };
+    std::map<int, Settings> instanceSettings_;
+
+    IntProperty extentX_;
+    IntProperty extentY_;
+    IntProperty extentZ_;
+    OptionProperty<SamplingStrategyType> samplingStrategyType_;
+    IntProperty outsideVolumeValue_;
 };
 
-} // namespace voreen
+}
 
-#endif // VRN_MEDIANFILTER_H
+#endif
