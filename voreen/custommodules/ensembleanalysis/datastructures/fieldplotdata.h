@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2015 University of Muenster, Germany.                        *
+ * Copyright (C) 2005-2017 University of Muenster, Germany.                        *
  * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -23,23 +23,44 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VISCONTEST2018MODULE_H
-#define VRN_VISCONTEST2018MODULE_H
+#ifndef VRN_FIELDPLOTDATA_H
+#define VRN_FIELDPLOTDATA_H
 
-#include "voreen/core/voreenmodule.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 
 namespace voreen {
 
-class VisContest2018Module: public VoreenModule {
+class Volume;
 
+class FieldPlotData : public Serializable
+{
 public:
-    VisContest2018Module(const std::string& modulePath);
 
-    virtual std::string getDescription() const {
-        return "Module for SciVis Contest 2018 (Asteroid impact)";
-    }
+    FieldPlotData(int width, int height, int numSlices);
+    FieldPlotData(Volume* volume); // Creates a local copy! TODO: temporarily, remove
+    ~FieldPlotData();
+
+    //add connection between two points x1 and x2 with corresponding values v1 and v2
+    void drawConnection(int x1, int x2, float v1, float v2, float minValue, float maxValue, int sliceNumber);
+    //add single value v at certain x
+    void putSingleMass(int x, float v, float minValue, float maxValue, int sliceNumber);
+
+    /// Retrieve plot data prepared for the use of a transfer function
+    Volume* getVolume() const;
+
+    int getWidth()  const;
+    int getHeight() const;
+
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+
+private:
+
+    //the content of the plot (one float value per pixel)
+    Volume* plotData_;
+    VolumeRAM_Float* representation_;
 };
 
-} // namespace
+}
 
 #endif

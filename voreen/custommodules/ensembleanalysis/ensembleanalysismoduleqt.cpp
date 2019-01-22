@@ -23,20 +23,21 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "viscontest2018propertywidgetfactory.h"
+#include "ensembleanalysismoduleqt.h"
 
-#include "stringlistpropertywidget.h"
-#include "../../properties/stringlistproperty.h"
+#include "qt/properties/ensembleanalysispropertywidgetfactory.h"
 
 namespace voreen {
 
-PropertyWidget* VisContest2018PropertyWidgetFactory::createAssociatedWidget(Property* prop) const {
+const std::string EnsembleAnalysisModuleQt::loggerCat_("voreen.qt.EnsembleAnalysisModuleQt");
 
-    if (typeid(*prop) == typeid(StringListProperty))
-        return new StringListPropertyWidget(static_cast<StringListProperty*>(prop), 0);
-
-    return 0;
+EnsembleAnalysisModuleQt::EnsembleAnalysisModuleQt(const std::string& modulePath)
+    : VoreenModuleQt(modulePath)
+{
+    setID("EnsembleAnalysis (Qt)");
+    setGuiName("EnsembleAnalysis (Qt)");
+    
+    registerPropertyWidgetFactory(new EnsembleAnalysisPropertyWidgetFactory());
 }
 
-} // namespace voreen
-
+} // namespace

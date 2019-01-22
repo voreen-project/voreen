@@ -23,18 +23,22 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VISCONTEST2018PROPERTYWIDGETFACTORY_H
-#define VRN_VISCONTEST2018PROPERTYWIDGETFACTORY_H
+#ifndef VRN_ENSEMBLEANALYSISMODULE_QT_H
+#define VRN_ENSEMBLEANALYSISMODULE_QT_H
 
-#include "voreen/core/properties/propertywidgetfactory.h"
+#include "voreen/qt/voreenmoduleqt.h"
 
 namespace voreen {
 
-class VisContest2018PropertyWidgetFactory : public PropertyWidgetFactory {
+class EnsembleAnalysisModuleQt : public VoreenModuleQt {
+
 public:
-    virtual PropertyWidget* createAssociatedWidget(Property*) const;
+    EnsembleAnalysisModuleQt(const std::string& modulePath);
+
+protected:
+    static const std::string loggerCat_;
 };
 
 } // namespace
 
-#endif // VRN_VISCONTEST2018PROPERTYWIDGETFACTORY_H
+#endif // VRN_ENSEMBLEANALYSISMODULE_QT_H

@@ -23,22 +23,20 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VISCONTEST2018MODULE_QT_H
-#define VRN_VISCONTEST2018MODULE_QT_H
+#include "ensembleanalysispropertywidgetfactory.h"
 
-#include "voreen/qt/voreenmoduleqt.h"
+#include "stringlistpropertywidget.h"
+#include "../../properties/stringlistproperty.h"
 
 namespace voreen {
 
-class VisContest2018ModuleQt : public VoreenModuleQt {
+PropertyWidget* EnsembleAnalysisPropertyWidgetFactory::createAssociatedWidget(Property* prop) const {
 
-public:
-    VisContest2018ModuleQt(const std::string& modulePath);
+    if (typeid(*prop) == typeid(StringListProperty))
+        return new StringListPropertyWidget(static_cast<StringListProperty*>(prop), 0);
 
-protected:
-    static const std::string loggerCat_;
-};
+    return 0;
+}
 
-} // namespace
+} // namespace voreen
 
-#endif // VRN_VISCONTEST2018MODULE_QT_H

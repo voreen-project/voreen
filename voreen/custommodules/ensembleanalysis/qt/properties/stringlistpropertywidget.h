@@ -23,21 +23,52 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "viscontest2018moduleqt.h"
+#ifndef VRN_STRINGLISTPROPERTYWIDGET_H
+#define VRN_STRINGLISTPROPERTYWIDGET_H
 
-#include "qt/properties/viscontest2018propertywidgetfactory.h"
+#include "voreen/qt/widgets/property/qpropertywidget.h"
+
+class QListWidget;
 
 namespace voreen {
 
-const std::string VisContest2018ModuleQt::loggerCat_("voreen.qt.Viscontest2018ModuleQt");
+class StringListProperty;
 
-VisContest2018ModuleQt::VisContest2018ModuleQt(const std::string& modulePath)
-    : VoreenModuleQt(modulePath)
-{
-    setID("VisContest2018 (Qt)");
-    setGuiName("VisContest2018 (Qt)");
-    
-    registerPropertyWidgetFactory(new VisContest2018PropertyWidgetFactory());
-}
+class StringListPropertyWidget : public QPropertyWidget {
+Q_OBJECT
+public:
+    StringListPropertyWidget(StringListProperty* prop, QWidget* parent = 0);
+    virtual ~StringListPropertyWidget();
+
+    //----------------
+    //  Overrides
+    //----------------
+protected slots:
+    /** @see QPropertyWidget */
+    virtual void updateFromPropertySlot();
+
+
+protected:
+    //----------------
+    //  Helpers
+    //----------------
+    /** Updates the table depending on the TableUpdateFlags. */
+    void updateTable();
+
+protected slots:
+    /** Triggered, if the selection has changed */
+    void selectionOnChange();
+
+private:
+    //----------------
+    //  Members
+    //----------------
+    QListWidget* table_;
+
+    StringListProperty* property_; ///< associated property
+
+};
 
 } // namespace
+
+#endif // VRN_STRINGLISTPROPERTYWIDGET_H

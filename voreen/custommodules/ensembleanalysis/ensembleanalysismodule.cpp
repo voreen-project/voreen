@@ -23,7 +23,7 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "viscontest2018module.h"
+#include "ensembleanalysismodule.h"
 
 #include "processors/ensembledatasource.h"
 #include "processors/ensemblefilter.h"
@@ -51,11 +51,11 @@
 
 namespace voreen {
 
-VisContest2018Module::VisContest2018Module(const std::string& modulePath)
+EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     : VoreenModule(modulePath)
 {
-    setID("VisContest2018");
-    setGuiName("VisContest2018");
+    setID("EnsembleAnalysis");
+    setGuiName("EnsembleAnalysis");
 
     addShaderPath(getModulePath("glsl"));
 

@@ -4,16 +4,16 @@
 
 # Dependencies
 IF(NOT VRN_MODULE_PYTHON) # for converting
-    MESSAGE(WARNING "VisContest2018 Module requires Python Module for converter scripts")
+    MESSAGE(WARNING "EnsembleAnalysis Module requires Python Module for converter scripts")
 ENDIF()
 IF(NOT VRN_MODULE_HDF5) # for volume reading
-    MESSAGE(FATAL_ERROR "VisContest2018 Module requires HDF5 Module")
+    MESSAGE(FATAL_ERROR "EnsembleAnalysis Module requires HDF5 Module")
 ENDIF()
 IF(NOT VRN_MODULE_PLOTTING) # for plotting
-    MESSAGE(FATAL_ERROR "VisContest2018 Module requires Plotting Module")
+    MESSAGE(FATAL_ERROR "EnsembleAnalysis Module requires Plotting Module")
 ENDIF()
 
-SET(MOD_CORE_MODULECLASS VisContest2018Module)
+SET(MOD_CORE_MODULECLASS EnsembleAnalysisModule)
 SET(MOD_OPENGL_CORE_PROFILE_COMPATIBLE ON)
 
 # External libraries
@@ -153,11 +153,11 @@ ENDIF()
 ###############################################################################
 # Qt module resources 
 ################################################################################
-SET(MOD_QT_MODULECLASS VisContest2018ModuleQt)
+SET(MOD_QT_MODULECLASS EnsembleAnalysisModuleQt)
 
 SET(MOD_QT_SOURCES
     #Factories
-    ${MOD_DIR}/qt/properties/viscontest2018propertywidgetfactory.cpp
+    ${MOD_DIR}/qt/properties/ensembleanalysispropertywidgetfactory.cpp
 
     #Properties
     ${MOD_DIR}/qt/properties/stringlistpropertywidget.cpp
@@ -165,7 +165,7 @@ SET(MOD_QT_SOURCES
     
 SET(MOD_QT_HEADERS
     #Factories
-    ${MOD_DIR}/qt/properties/viscontest2018propertywidgetfactory.h
+    ${MOD_DIR}/qt/properties/ensembleanalysispropertywidgetfactory.h
     
     #Properties
     ${MOD_DIR}/qt/properties/stringlistpropertywidget.h

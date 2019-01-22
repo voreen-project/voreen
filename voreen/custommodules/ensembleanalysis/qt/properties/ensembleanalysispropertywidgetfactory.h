@@ -23,52 +23,18 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_StringListPROPERTYWIDGET_H
-#define VRN_StringListPROPERTYWIDGET_H
+#ifndef VRN_ENSEMBLEANALYSISPROPERTYWIDGETFACTORY_H
+#define VRN_ENSEMBLEANALYSISPROPERTYWIDGETFACTORY_H
 
-#include "voreen/qt/widgets/property/qpropertywidget.h"
-
-class QListWidget;
+#include "voreen/core/properties/propertywidgetfactory.h"
 
 namespace voreen {
 
-class StringListProperty;
-
-class StringListPropertyWidget : public QPropertyWidget {
-Q_OBJECT
+class EnsembleAnalysisPropertyWidgetFactory : public PropertyWidgetFactory {
 public:
-    StringListPropertyWidget(StringListProperty* prop, QWidget* parent = 0);
-    virtual ~StringListPropertyWidget();
-
-    //----------------
-    //  Overrides
-    //----------------
-protected slots:
-    /** @see QPropertyWidget */
-    virtual void updateFromPropertySlot();
-
-
-protected:
-    //----------------
-    //  Helpers
-    //----------------
-    /** Updates the table depending on the TableUpdateFlags. */
-    void updateTable();
-
-protected slots:
-    /** Triggered, if the selection has changed */
-    void selectionOnChange();
-
-private:
-    //----------------
-    //  Members
-    //----------------
-    QListWidget* table_;
-
-    StringListProperty* property_; ///< associated property
-
+    virtual PropertyWidget* createAssociatedWidget(Property*) const;
 };
 
 } // namespace
 
-#endif // VRN_StringListPROPERTYWIDGET_H
+#endif // VRN_ENSEMBLEANALYSISPROPERTYWIDGETFACTORY_H
