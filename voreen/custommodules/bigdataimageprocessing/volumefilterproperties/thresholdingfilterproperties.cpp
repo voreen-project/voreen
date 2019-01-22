@@ -74,8 +74,8 @@ VolumeFilter* ThresholdingFilterProperties::getVolumeFilter(const VolumeBase& vo
         rwm = volume.getRealWorldMapping();
     }
     return new ThresholdingFilter(
-        rwm.realWorldToNormalized(thresholdValue_.get()),
-        rwm.realWorldToNormalized(replacementValue_.get()),
+        rwm.realWorldToNormalized(settings.thresholdValue_),
+        rwm.realWorldToNormalized(settings.replacementValue_),
         settings.thresholdingStrategyType_,
         volume.getBaseType()
     );
