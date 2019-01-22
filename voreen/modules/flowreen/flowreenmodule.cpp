@@ -27,7 +27,6 @@
 
 // processors
 #include "processors/flowdirectionoverlay.h"
-#include "processors/streamline/pathlinecreator.h"
 #include "processors/streamline/streamlinecombine.h"
 #include "processors/streamline/streamlinecreator.h"
 #include "processors/streamlinerenderer3d.h"
@@ -66,7 +65,6 @@ FlowreenModule::FlowreenModule(const std::string& modulePath)
 
     // processors
     registerSerializableType(new FlowDirectionOverlay());
-    registerSerializableType(new PathlineCreator());
     registerSerializableType(new StreamlineCombine());
     registerSerializableType(new StreamlineRenderer3D());
     registerSerializableType(new StreamlineCreator());

@@ -10,18 +10,16 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/datastructures/streamlinelistobserver.cpp
     ${MOD_DIR}/ports/streamlinelistport.cpp
     ${MOD_DIR}/processors/flowdirectionoverlay.cpp
-    ${MOD_DIR}/processors/streamlinerenderer3d.cpp
-    ${MOD_DIR}/processors/streamline/streamlinecombine.cpp
+    ${MOD_DIR}/processors/streamline/streamlinecombine.cpp   
     ${MOD_DIR}/processors/streamline/streamlinecreator.cpp
+    ${MOD_DIR}/processors/streamlinerenderer3d.cpp
     ${MOD_DIR}/processors/streamline/streamlinerotation.cpp
     ${MOD_DIR}/processors/streamline/streamlinesave.cpp
     ${MOD_DIR}/processors/streamline/streamlineselector.cpp
     ${MOD_DIR}/processors/streamline/streamlinesource.cpp
     ${MOD_DIR}/processors/streamline/streamlinetoboundingbox.cpp
-    ${MOD_DIR}/processors/streamline/pathlinecreator.cpp
     ${MOD_DIR}/utils/streamlinebundledetectorbackgroundthread.cpp
     ${MOD_DIR}/utils/streamlinecreatorbackgroundthread.cpp
-    ${MOD_DIR}/utils/pathlinecreatorbackgroundthread.cpp
 )
 
 IF(VRN_OPENGL_COMPATIBILITY_PROFILE)
@@ -61,18 +59,16 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/datastructures/streamlinelistobserver.h
     ${MOD_DIR}/ports/streamlinelistport.h
     ${MOD_DIR}/processors/flowdirectionoverlay.h
-    ${MOD_DIR}/processors/streamlinerenderer3d.h
     ${MOD_DIR}/processors/streamline/streamlinecombine.h
     ${MOD_DIR}/processors/streamline/streamlinecreator.h
+    ${MOD_DIR}/processors/streamlinerenderer3d.h
     ${MOD_DIR}/processors/streamline/streamlinerotation.h
     ${MOD_DIR}/processors/streamline/streamlinesave.h
     ${MOD_DIR}/processors/streamline/streamlineselector.h
     ${MOD_DIR}/processors/streamline/streamlinesource.h
     ${MOD_DIR}/processors/streamline/streamlinetoboundingbox.h
-    ${MOD_DIR}/processors/streamline/pathlinecreator.h
-    ${MOD_DIR}/utils/streamlinebundledetectorbackgroundthread.h
-    ${MOD_DIR}/utils/streamlinecreatorbackgroundthread.h
-    ${MOD_DIR}/utils/pathlinecreatorbackgroundthread.h
+    ${MOD_DIR}/utils/streamlinebundledetectorbackgroundthread.cpp
+    ${MOD_DIR}/utils/streamlinecreatorbackgroundthread.cpp
 )
  
  IF(VRN_OPENGL_COMPATIBILITY_PROFILE)

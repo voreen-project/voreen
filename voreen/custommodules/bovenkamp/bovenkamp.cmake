@@ -24,18 +24,12 @@ SET(MOD_INSTALL_DIRECTORIES
 )
     
 SET(MOD_CORE_SOURCES
-    #IO
-    ${MOD_DIR}/io/volumediskpb.cpp
-    
     #Processors
     ${MOD_DIR}/processors/pbreader.cpp
     ${MOD_DIR}/processors/pblinkcontrol.cpp
 )
 
 SET(MOD_CORE_HEADERS
-    #IO
-    ${MOD_DIR}/io/volumediskpb.h
-
     #Processors
     ${MOD_DIR}/processors/pbreader.h
     ${MOD_DIR}/processors/pblinkcontrol.h
