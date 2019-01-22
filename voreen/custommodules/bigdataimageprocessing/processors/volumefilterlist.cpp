@@ -161,7 +161,7 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
 
     outputVolume->writeSpacing(inputVolume.getSpacing());
     outputVolume->writeOffset(inputVolume.getOffset());
-    outputVolume->writeRealWorldMapping(RealWorldMapping(1,0,""));
+    outputVolume->writeRealWorldMapping(inputVolume.getRealWorldMapping());
     // For all zero or all one volumes the following is not correct,
     // and we cannot easily get the real min/max values without iterating
     // through the whole resulting volume.
