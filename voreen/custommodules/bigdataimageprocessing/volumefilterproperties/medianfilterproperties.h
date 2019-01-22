@@ -23,47 +23,49 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "bigdataimageprocessingmodule.h"
-#include "processors/binarymedian.h"
-#include "processors/connectedcomponentanalysis.h"
-#include "processors/fatcellquantification.h"
-#include "processors/largevolumeformatconversion.h"
-#include "processors/segmentationquantification.h"
-#include "processors/volumeresampletransformation.h"
+#ifndef VRN_MEDIANFILTERPROPERTIES_H
+#define VRN_MEDIANFILTERPROPERTIES_H
 
-#ifdef VRN_MODULE_PLOTTING
-#include "processors/segmentationslicedensity.h"
-#endif
+#include "filterproperties.h"
 
-#include "processors/volumebricksource.h"
-#include "processors/volumebricksave.h"
-#include "processors/volumefilterlist.h"
-
-#include "io/lz4slicevolumefilereader.h"
+#include "../volumefiltering/medianfilter.h"
 
 namespace voreen {
 
-BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& modulePath)
-    : VoreenModule(modulePath)
-{
-    setID("bigdataimageprocessing");
-    setGuiName("Big Data Image Processing");
+class MedianFilterProperties : public FilterProperties {
+public:
+    MedianFilterProperties();
 
-    registerProcessor(new BinaryMedian());
-    registerProcessor(new ConnectedComponentAnalysis());
-    registerProcessor(new FatCellQuantification());
-    registerProcessor(new LargeVolumeFormatConversion());
-    registerProcessor(new SegmentationQuantification());
-    registerProcessor(new VolumeFilterList());
-    registerProcessor(new VolumeResampleTransformation());
-#ifdef VRN_MODULE_PLOTTING
-    registerProcessor(new SegmentationSliceDensity());
-#endif
+    virtual std::string getVolumeFilterName() const;
 
-    registerProcessor(new VolumeBrickSource());
-    registerProcessor(new VolumeBrickSave());
+    virtual void adjustPropertiesToInput(const VolumeBase& input);
 
-    registerVolumeReader(new LZ4SliceVolumeFileReader());
+    virtual VolumeFilter* getVolumeFilter(const VolumeBase& volume, int instanceId) const;
+    virtual void restoreInstance(int instanceId);
+    virtual void storeInstance(int instanceId);
+    virtual void removeInstance(int instanceId);
+    virtual void addProperties();
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+
+private:
+
+    struct Settings {
+        int extentX_;
+        int extentY_;
+        int extentZ_;
+        SamplingStrategyType samplingStrategyType_;
+        int outsideVolumeValue_;
+    };
+    std::map<int, Settings> instanceSettings_;
+
+    IntProperty extentX_;
+    IntProperty extentY_;
+    IntProperty extentZ_;
+    IntProperty outsideVolumeValue_;
+    OptionProperty<SamplingStrategyType> samplingStrategyType_;
+};
+
 }
 
-} // namespace
+#endif

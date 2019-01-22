@@ -23,47 +23,50 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "bigdataimageprocessingmodule.h"
-#include "processors/binarymedian.h"
-#include "processors/connectedcomponentanalysis.h"
-#include "processors/fatcellquantification.h"
-#include "processors/largevolumeformatconversion.h"
-#include "processors/segmentationquantification.h"
-#include "processors/volumeresampletransformation.h"
+#ifndef VRN_MORPHOLOGYFILTER_H
+#define VRN_MORPHOLOGYFILTER_H
 
-#ifdef VRN_MODULE_PLOTTING
-#include "processors/segmentationslicedensity.h"
-#endif
-
-#include "processors/volumebricksource.h"
-#include "processors/volumebricksave.h"
-#include "processors/volumefilterlist.h"
-
-#include "io/lz4slicevolumefilereader.h"
+#include "volumefilter.h"
 
 namespace voreen {
 
-BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& modulePath)
-    : VoreenModule(modulePath)
-{
-    setID("bigdataimageprocessing");
-    setGuiName("Big Data Image Processing");
+enum MorphologyOperatorType {
+    DILATION_T,
+    EROSION_T,
+};
 
-    registerProcessor(new BinaryMedian());
-    registerProcessor(new ConnectedComponentAnalysis());
-    registerProcessor(new FatCellQuantification());
-    registerProcessor(new LargeVolumeFormatConversion());
-    registerProcessor(new SegmentationQuantification());
-    registerProcessor(new VolumeFilterList());
-    registerProcessor(new VolumeResampleTransformation());
-#ifdef VRN_MODULE_PLOTTING
-    registerProcessor(new SegmentationSliceDensity());
-#endif
+enum MorphologyOperatorShape {
+    CUBE_T,
+    SPHERE_T,
+};
 
-    registerProcessor(new VolumeBrickSource());
-    registerProcessor(new VolumeBrickSave());
+class MorphologyFilter : public VolumeFilter {
+public:
+    MorphologyFilter(const tgt::ivec3& extent, MorphologyOperatorType type, MorphologyOperatorShape shape, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType);
+    virtual ~MorphologyFilter() {}
 
-    registerVolumeReader(new LZ4SliceVolumeFileReader());
-}
+    int zExtent() const;
+    const std::string& getSliceBaseType() const;
 
-} // namespace
+    std::unique_ptr<VolumeRAM> getFilteredSlice(const CachingSliceReader* src, int z) const;
+
+    // For now we only support single channel volumes
+    size_t getNumInputChannels() const { return 1; };
+    size_t getNumOutputChannels() const { return 1; };
+
+private:
+
+    std::unique_ptr<VolumeRAM> getFilteredSliceCubeMorphology(const std::function<float(float, float)>& typeFunc, const CachingSliceReader* src, int z) const;
+    std::unique_ptr<VolumeRAM> getFilteredSliceSphereMorphology (const std::function<float(float, float)>& typeFunc, const CachingSliceReader* src, int z) const;
+
+    const tgt::ivec3 extent_;
+
+    const MorphologyOperatorType type_;
+    const MorphologyOperatorShape shape_;
+    const SamplingStrategy<float> samplingStrategy_;
+    const std::string sliceBaseType_;
+};
+
+} // namespace voreen
+
+#endif // VRN_MORPHOLOGYFILTER_H

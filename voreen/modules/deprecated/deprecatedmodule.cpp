@@ -26,17 +26,18 @@
 #include "deprecatedmodule.h"
 
 #include "processors/buttonoverlayprocessor.h"
+#include "processors/canny.h"
 #include "processors/cubeproxygeometry.h"
 #include "processors/geometryclippingwidget.h"
 #include "processors/multiview.h"
 #include "processors/textseriessource.h"
-#include "processors/volumeseriessource.h"
 #include "processors/rawtexturesource.h"
 #include "processors/rawtexturesave.h"
 #include "processors/targettotexture.h"
 #include "processors/texturetotarget.h"
 #include "processors/volumenormalization.h"
-#include "processors/canny.h"
+#include "processors/volumeseriessource.h"
+#include "processors/volume/volumefiltering.h"
 
 #include "io/philipsusvolumereader.h"
 
@@ -53,6 +54,8 @@ DeprecatedModule::DeprecatedModule(const std::string& modulePath)
     addShaderPath(getModulePath("glsl"));
 
     registerSerializableType(new ButtonOverlayProcessor());
+    registerSerializableType(new Canny());
+    registerSerializableType(new CubeProxyGeometry());
     registerSerializableType(new GeometryClippingWidget());
     registerSerializableType(new MultiView());
     registerSerializableType(new TextSeriesSource());
@@ -60,10 +63,9 @@ DeprecatedModule::DeprecatedModule(const std::string& modulePath)
     registerSerializableType(new RawTextureSave());
     registerSerializableType(new TargetToTexture);
     registerSerializableType(new TextureToTarget());
+    registerSerializableType(new VolumeFiltering());
     registerSerializableType(new VolumeNormalization());
-    registerSerializableType(new Canny());
     registerSerializableType(new VolumeSeriesSource());
-    registerSerializableType(new CubeProxyGeometry());
     registerVolumeReader(new PhilipsUSVolumeReader());
 
     INST_SCALAR_TYPES(VolumeOperatorNormalize, VolumeOperatorNormalizeGeneric)

@@ -23,47 +23,37 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "bigdataimageprocessingmodule.h"
-#include "processors/binarymedian.h"
-#include "processors/connectedcomponentanalysis.h"
-#include "processors/fatcellquantification.h"
-#include "processors/largevolumeformatconversion.h"
-#include "processors/segmentationquantification.h"
-#include "processors/volumeresampletransformation.h"
+#include "filterproperties.h"
 
-#ifdef VRN_MODULE_PLOTTING
-#include "processors/segmentationslicedensity.h"
-#endif
-
-#include "processors/volumebricksource.h"
-#include "processors/volumebricksave.h"
-#include "processors/volumefilterlist.h"
-
-#include "io/lz4slicevolumefilereader.h"
+#include <boost/algorithm/string.hpp>
 
 namespace voreen {
 
-BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& modulePath)
-    : VoreenModule(modulePath)
-{
-    setID("bigdataimageprocessing");
-    setGuiName("Big Data Image Processing");
+const int FilterProperties::DEFAULT_SETTINGS = -1;
+const std::string FilterProperties::loggerCat_ = "voreen.base.VolumeFilterList";
 
-    registerProcessor(new BinaryMedian());
-    registerProcessor(new ConnectedComponentAnalysis());
-    registerProcessor(new FatCellQuantification());
-    registerProcessor(new LargeVolumeFormatConversion());
-    registerProcessor(new SegmentationQuantification());
-    registerProcessor(new VolumeFilterList());
-    registerProcessor(new VolumeResampleTransformation());
-#ifdef VRN_MODULE_PLOTTING
-    registerProcessor(new SegmentationSliceDensity());
-#endif
-
-    registerProcessor(new VolumeBrickSource());
-    registerProcessor(new VolumeBrickSave());
-
-    registerVolumeReader(new LZ4SliceVolumeFileReader());
+FilterProperties::~FilterProperties() {
 }
 
-} // namespace
+const std::vector<Property*> FilterProperties::getProperties() const {
+    return properties_;
+}
+
+void FilterProperties::storeVisibility() {
+    for (Property* property : properties_) {
+        visibilityMap_[property] = property->isVisibleFlagSet();
+    }
+}
+void FilterProperties::restoreVisibility() {
+    for (Property* property : properties_) {
+        property->setVisibleFlag(visibilityMap_[property]);
+    }
+}
+
+std::string FilterProperties::getId(const std::string& id) const {
+    std::string name = getVolumeFilterName();
+    boost::algorithm::replace_all(name, " ", "_");
+    return name + "_" + id;
+}
+
+}

@@ -99,7 +99,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/volume/volumecubify.cpp
     ${MOD_DIR}/processors/volume/volumedecomposer.cpp
     ${MOD_DIR}/processors/volume/volumedistancetransform.cpp
-    ${MOD_DIR}/processors/volume/volumefiltering.cpp
     ${MOD_DIR}/processors/volume/volumeformatconversion.cpp
     ${MOD_DIR}/processors/volume/volumegradient.cpp
     ${MOD_DIR}/processors/volume/volumehalfsample.cpp
@@ -229,7 +228,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volume/volumecubify.h
     ${MOD_DIR}/processors/volume/volumedecomposer.h
     ${MOD_DIR}/processors/volume/volumedistancetransform.h
-    ${MOD_DIR}/processors/volume/volumefiltering.h
     ${MOD_DIR}/processors/volume/volumeformatconversion.h
     ${MOD_DIR}/processors/volume/volumegradient.h
     ${MOD_DIR}/processors/volume/volumehalfsample.h

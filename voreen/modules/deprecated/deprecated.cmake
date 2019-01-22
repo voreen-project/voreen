@@ -25,6 +25,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/texturetotarget.cpp
     ${MOD_DIR}/processors/volumenormalization.cpp
     ${MOD_DIR}/processors/volumeseriessource.cpp
+    ${MOD_DIR}/processors/volume/volumefiltering.cpp
     
     ${MOD_DIR}/io/philipsusvolumereader.cpp
     ${MOD_DIR}/io/visiblehumanreader.cpp
@@ -46,7 +47,8 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volumeseriessource.h
     ${MOD_DIR}/processors/rawtexturesource.h
     ${MOD_DIR}/processors/rawtexturesave.h
-    ${MOD_DIR}/processors/volumenormalization.h 
+    ${MOD_DIR}/processors/volumenormalization.h
+    ${MOD_DIR}/processors/volume/volumefiltering.h
 
     ${MOD_DIR}/io/philipsusvolumereader.h
     ${MOD_DIR}/io/visiblehumanreader.h

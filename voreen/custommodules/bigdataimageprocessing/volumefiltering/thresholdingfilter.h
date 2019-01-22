@@ -23,47 +23,43 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "bigdataimageprocessingmodule.h"
-#include "processors/binarymedian.h"
-#include "processors/connectedcomponentanalysis.h"
-#include "processors/fatcellquantification.h"
-#include "processors/largevolumeformatconversion.h"
-#include "processors/segmentationquantification.h"
-#include "processors/volumeresampletransformation.h"
+#ifndef VRN_THRESHOLDINGFILTER_H
+#define VRN_THRESHOLDINGFILTER_H
 
-#ifdef VRN_MODULE_PLOTTING
-#include "processors/segmentationslicedensity.h"
-#endif
+#include "volumefilter.h"
 
-#include "processors/volumebricksource.h"
-#include "processors/volumebricksave.h"
-#include "processors/volumefilterlist.h"
-
-#include "io/lz4slicevolumefilereader.h"
+#include <functional>
 
 namespace voreen {
 
-BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& modulePath)
-    : VoreenModule(modulePath)
-{
-    setID("bigdataimageprocessing");
-    setGuiName("Big Data Image Processing");
+enum ThresholdingStrategyType {
+    LOWER_T,
+    UPPER_T,
+};
 
-    registerProcessor(new BinaryMedian());
-    registerProcessor(new ConnectedComponentAnalysis());
-    registerProcessor(new FatCellQuantification());
-    registerProcessor(new LargeVolumeFormatConversion());
-    registerProcessor(new SegmentationQuantification());
-    registerProcessor(new VolumeFilterList());
-    registerProcessor(new VolumeResampleTransformation());
-#ifdef VRN_MODULE_PLOTTING
-    registerProcessor(new SegmentationSliceDensity());
-#endif
+class ThresholdingFilter : public VolumeFilter {
+public:
 
-    registerProcessor(new VolumeBrickSource());
-    registerProcessor(new VolumeBrickSave());
+    ThresholdingFilter(float threshold, float replacement, ThresholdingStrategyType thresholdingStrategyType, const std::string& sliceBaseType);
+    virtual ~ThresholdingFilter();
 
-    registerVolumeReader(new LZ4SliceVolumeFileReader());
-}
+    int zExtent() const;
+    const std::string& getSliceBaseType() const;
 
-} // namespace
+    // For now we only support single channel volumes
+    size_t getNumInputChannels() const { return 1; };
+    size_t getNumOutputChannels() const { return 1; };
+
+    std::unique_ptr<VolumeRAM> getFilteredSlice(const CachingSliceReader* src, int z) const;
+
+private:
+
+    const float threshold_;
+    const float replacement_;
+    const ThresholdingStrategyType thresholdingStrategyType_;
+    const std::string sliceBaseType_;
+};
+
+} // namespace voreen
+
+#endif // VRN_THRESHOLDINGFILTER_H

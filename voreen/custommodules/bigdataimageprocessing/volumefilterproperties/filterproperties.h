@@ -23,47 +23,56 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "bigdataimageprocessingmodule.h"
-#include "processors/binarymedian.h"
-#include "processors/connectedcomponentanalysis.h"
-#include "processors/fatcellquantification.h"
-#include "processors/largevolumeformatconversion.h"
-#include "processors/segmentationquantification.h"
-#include "processors/volumeresampletransformation.h"
+#ifndef VRN_FILTERPROPERTIES_H
+#define VRN_FILTERPROPERTIES_H
 
-#ifdef VRN_MODULE_PLOTTING
-#include "processors/segmentationslicedensity.h"
-#endif
+#include "voreen/core/io/serialization/serializable.h"
+#include "voreen/core/properties/property.h"
+#include "../volumefiltering/volumefilter.h"
+#include "voreen/core/properties/intproperty.h"
+#include "voreen/core/properties/floatproperty.h"
+#include "voreen/core/properties/boolproperty.h"
+#include "voreen/core/properties/optionproperty.h"
 
-#include "processors/volumebricksource.h"
-#include "processors/volumebricksave.h"
-#include "processors/volumefilterlist.h"
-
-#include "io/lz4slicevolumefilereader.h"
+#include <vector>
+#include <map>
 
 namespace voreen {
 
-BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& modulePath)
-    : VoreenModule(modulePath)
-{
-    setID("bigdataimageprocessing");
-    setGuiName("Big Data Image Processing");
+class VolumeBase;
+class VolumeFilter;
 
-    registerProcessor(new BinaryMedian());
-    registerProcessor(new ConnectedComponentAnalysis());
-    registerProcessor(new FatCellQuantification());
-    registerProcessor(new LargeVolumeFormatConversion());
-    registerProcessor(new SegmentationQuantification());
-    registerProcessor(new VolumeFilterList());
-    registerProcessor(new VolumeResampleTransformation());
-#ifdef VRN_MODULE_PLOTTING
-    registerProcessor(new SegmentationSliceDensity());
-#endif
+class FilterProperties : public Serializable {
+public:
 
-    registerProcessor(new VolumeBrickSource());
-    registerProcessor(new VolumeBrickSave());
+    static const int DEFAULT_SETTINGS;
 
-    registerVolumeReader(new LZ4SliceVolumeFileReader());
+    virtual ~FilterProperties();
+
+    const std::vector<Property*> getProperties() const;
+
+    void storeVisibility();
+    void restoreVisibility();
+
+    virtual std::string getVolumeFilterName() const = 0;
+    virtual void adjustPropertiesToInput(const VolumeBase& input) = 0;
+    virtual VolumeFilter* getVolumeFilter(const VolumeBase& volume, int instanceId) const = 0;
+    virtual void storeInstance(int instanceId) = 0;
+    virtual void restoreInstance(int instanceId) = 0;
+    virtual void removeInstance(int instanceId) = 0;
+
+protected:
+
+    virtual void addProperties() = 0;
+
+    std::string getId(const std::string& id) const;
+
+    std::vector<Property*> properties_;
+    std::map<Property*, bool> visibilityMap_;
+
+    static const std::string loggerCat_;
+};
+
 }
 
-} // namespace
+#endif

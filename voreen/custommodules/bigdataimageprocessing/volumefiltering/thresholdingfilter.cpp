@@ -23,47 +23,65 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "bigdataimageprocessingmodule.h"
-#include "processors/binarymedian.h"
-#include "processors/connectedcomponentanalysis.h"
-#include "processors/fatcellquantification.h"
-#include "processors/largevolumeformatconversion.h"
-#include "processors/segmentationquantification.h"
-#include "processors/volumeresampletransformation.h"
+#include "thresholdingfilter.h"
 
-#ifdef VRN_MODULE_PLOTTING
-#include "processors/segmentationslicedensity.h"
-#endif
-
-#include "processors/volumebricksource.h"
-#include "processors/volumebricksave.h"
-#include "processors/volumefilterlist.h"
-
-#include "io/lz4slicevolumefilereader.h"
+#include "slicereader.h"
 
 namespace voreen {
 
-BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& modulePath)
-    : VoreenModule(modulePath)
+ThresholdingFilter::ThresholdingFilter(float threshold, float replacement, ThresholdingStrategyType thresholdingStrategyType, const std::string& sliceBaseType)
+    : threshold_(threshold)
+    , replacement_(replacement)
+    , thresholdingStrategyType_(thresholdingStrategyType)
+    , sliceBaseType_(sliceBaseType)
 {
-    setID("bigdataimageprocessing");
-    setGuiName("Big Data Image Processing");
-
-    registerProcessor(new BinaryMedian());
-    registerProcessor(new ConnectedComponentAnalysis());
-    registerProcessor(new FatCellQuantification());
-    registerProcessor(new LargeVolumeFormatConversion());
-    registerProcessor(new SegmentationQuantification());
-    registerProcessor(new VolumeFilterList());
-    registerProcessor(new VolumeResampleTransformation());
-#ifdef VRN_MODULE_PLOTTING
-    registerProcessor(new SegmentationSliceDensity());
-#endif
-
-    registerProcessor(new VolumeBrickSource());
-    registerProcessor(new VolumeBrickSave());
-
-    registerVolumeReader(new LZ4SliceVolumeFileReader());
 }
 
-} // namespace
+ThresholdingFilter::~ThresholdingFilter() {
+}
+
+int ThresholdingFilter::zExtent() const {
+    return 1;
+}
+
+const std::string& ThresholdingFilter::getSliceBaseType() const {
+    return sliceBaseType_;
+}
+
+std::unique_ptr<VolumeRAM> ThresholdingFilter::getFilteredSlice(const CachingSliceReader* src, int z) const {
+    tgtAssert(z >= 0 && z < src->getSignedDimensions().z, "Invalid z pos in slice request");
+
+    static const auto LOWER_THRESHOLD_FUNC = [](float a, float b) { return a < b; };
+    static const auto UPPER_THRESHOLD_FUNC = [](float a, float b) { return a > b; };
+
+    std::function<bool(float, float)> strategy;
+    switch (thresholdingStrategyType_) {
+    case LOWER_T:
+        strategy = LOWER_THRESHOLD_FUNC;
+        break;
+    case UPPER_T:
+        strategy = UPPER_THRESHOLD_FUNC;
+        break;
+    default:
+        tgtAssert(false, "Unimplemented Thresholding Strategy")
+        break;
+    }
+
+    const tgt::ivec3& dim = src->getSignedDimensions();
+    std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(sliceBaseType_, tgt::svec3(dim.xy(), 1)));
+
+    #pragma omp parallel for
+    for (int y = 0; y < dim.y; ++y) {
+        for (int x = 0; x < dim.x; ++x) {
+            float value = src->getVoxelNormalized(tgt::ivec3(x, y, z));
+            bool replace = strategy(value, threshold_);
+            if (replace) {
+                value = replacement_;
+            }
+            outputSlice->setVoxelNormalized(value, x, y, 0);
+        }
+    }
+    return outputSlice;
+}
+
+} // namespace voreen
