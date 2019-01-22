@@ -40,7 +40,6 @@ TimestepDuration::TimestepDuration()
     , currentTimestep_("currenttimestep", "Current timestep", 0, 0, 1, Processor::INVALID_RESULT, NumericProperty<int>::DYNAMIC)
     , elapsedTime_("elapsedtime", "Elapsed time (seconds)", 0.f, -FLT_MAX, FLT_MAX, Processor::VALID)
 {
-    ON_CHANGE(inport_, TimestepDuration, adjustToVolumeList);
     addPort(inport_);
     addPort(outport_);
 
@@ -74,7 +73,7 @@ void TimestepDuration::process() {
     outport_.setData(s.str());
 }
 
-void TimestepDuration::adjustToVolumeList() {
+void TimestepDuration::adjustPropertiesToInput() {
 
     const VolumeList* collection = inport_.getData();
     int max = ((collection != 0) ? static_cast<int>(collection->size()) : 0);

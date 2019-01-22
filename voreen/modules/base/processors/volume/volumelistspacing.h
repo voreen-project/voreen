@@ -59,11 +59,11 @@ protected:
 
     virtual void process();
 
+    virtual void adjustPropertiesToInput();
+
     virtual void updateCurrentlySelected();
 
     virtual void clearVolumeList();
-
-    virtual void adjustToVolumeList();
 
 private:
     void spacingChanged(int dim);

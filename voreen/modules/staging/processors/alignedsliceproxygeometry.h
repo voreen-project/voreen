@@ -59,13 +59,14 @@ public:
     virtual void process();
     virtual bool isReady() const;
 
+    virtual void adjustPropertiesToInput();
+
 protected:
     virtual void setDescriptions() {
         setDescription("Generates a proxy-geometry representing slices in a volume. Use in combination with MultiSliceRenderer.");
     }
 
     /// Adapts the min/max ranges of the respective properties to the dimensions of the currently connected volume.
-    void updateSliceProperties();
     void alignCamera();
 
     void indexChanged();

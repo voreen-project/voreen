@@ -264,6 +264,7 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
                     VesselSkeletonVoxel& voxel = skeletonVoxelLists[id.raw()].at(element->voxelIndex_);
 
                     float dist = std::sqrt(surfaceDistanceSq(voxel.pos_, rwVoxel, spacing));
+                    tgtAssert(dist >= 0, "Invalid voxel distance");
 
                     if(dist > voxel.maxDistToSurface_) {
                         voxel.maxDistToSurface_ = dist;

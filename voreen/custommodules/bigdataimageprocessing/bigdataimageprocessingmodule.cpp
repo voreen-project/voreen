@@ -37,6 +37,7 @@
 
 #include "processors/volumebricksource.h"
 #include "processors/volumebricksave.h"
+#include "processors/volumefilterlist.h"
 
 #include "io/lz4slicevolumefilereader.h"
 
@@ -53,6 +54,7 @@ BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& mo
     registerProcessor(new FatCellQuantification());
     registerProcessor(new LargeVolumeFormatConversion());
     registerProcessor(new SegmentationQuantification());
+    registerProcessor(new VolumeFilterList());
     registerProcessor(new VolumeResampleTransformation());
 #ifdef VRN_MODULE_PLOTTING
     registerProcessor(new SegmentationSliceDensity());

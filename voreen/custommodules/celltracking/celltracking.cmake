@@ -8,7 +8,7 @@ ENDIF()
 #    MESSAGE(FATAL_ERROR "Celltracking module requires the HDF5 module")
 #ENDIF()
 IF (NOT VRN_MODULE_PLOTTING)
-    MESSAGE(FATAL_ERROR "Celltracking module requires the HDF5 module")
+    MESSAGE(FATAL_ERROR "Celltracking module requires the Plotting module")
 ENDIF()
 
 # module's core source files, path relative to module dir

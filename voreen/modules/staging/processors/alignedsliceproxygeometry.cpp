@@ -58,7 +58,7 @@ AlignedSliceProxyGeometry::AlignedSliceProxyGeometry()
     sliceAlignment_.addOption("xy-plane", "XY-Plane (axial)", XY_PLANE);
     sliceAlignment_.addOption("xz-plane", "XZ-Plane (coronal)", XZ_PLANE);
     sliceAlignment_.addOption("yz-plane", "YZ-Plane (sagittal)", YZ_PLANE);
-    sliceAlignment_.onChange( MemberFunctionCallback<AlignedSliceProxyGeometry>(this, &AlignedSliceProxyGeometry::updateSliceProperties) );
+    sliceAlignment_.onChange( MemberFunctionCallback<AlignedSliceProxyGeometry>(this, &AlignedSliceProxyGeometry::adjustPropertiesToInput) );
     addProperty(sliceAlignment_);
 
     addProperty(sliceIndex_);
@@ -81,7 +81,6 @@ AlignedSliceProxyGeometry::AlignedSliceProxyGeometry()
     addPort(secondaryVolumePort_);
     addPort(geomPort_);
     addPort(textPort_);
-    ON_CHANGE(inport_, AlignedSliceProxyGeometry, updateSliceProperties);
 }
 
 AlignedSliceProxyGeometry::~AlignedSliceProxyGeometry() {
@@ -127,7 +126,7 @@ void AlignedSliceProxyGeometry::update() {
     geomPort_.setData(slice);
 }
 
-void AlignedSliceProxyGeometry::updateSliceProperties() {
+void AlignedSliceProxyGeometry::adjustPropertiesToInput() {
     tgt::ivec3 volumeDim(0);
     if (inport_.getData() && inport_.getData()->getRepresentation<VolumeRAM>())
         volumeDim = inport_.getData()->getRepresentation<VolumeRAM>()->getDimensions();

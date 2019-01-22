@@ -55,7 +55,6 @@ VolumeResampleTransformation::VolumeResampleTransformation()
     , outputSizeMB_("outputSizeMB", "Output size (MB)")
 {
     addPort(inport_);
-        ON_CHANGE(inport_, VolumeResampleTransformation, adjustPropertiesToInput);
     addPort(outport_);
 
         addProperty(spacingHandling_);

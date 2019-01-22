@@ -83,10 +83,13 @@ std::vector<std::vector<Processor*> > NWEGL_Base::getGraphLayer(std::vector<Proc
 
             std::vector<Port*> out = proc[i]->getOutports();
             for (size_t k = 0; k < out.size(); k++) {
-                std::vector<const Port*> in = out[k]->getConnected();
-                for (size_t l = 0; l < in.size(); l++) {
-                    Processor* connect = in[l]->getProcessor();
-                    connProc.push_back(connect);
+                // Ignore loop ports.
+                if(!out[k]->isLoopPort()) {
+                    std::vector<const Port *> in = out[k]->getConnected();
+                    for (size_t l = 0; l < in.size(); l++) {
+                        Processor *connect = in[l]->getProcessor();
+                        connProc.push_back(connect);
+                    }
                 }
             }
 
@@ -118,17 +121,18 @@ std::vector<std::vector<Processor*> > NWEGL_Base::getGraphLayer(std::vector<Proc
         for (size_t layerIt = 0; layerIt < actLayer.size(); layerIt++) {
             ports = actLayer[layerIt]->getInports();
             for (size_t portIt = 0; portIt < ports.size(); portIt++) {
-                connPort = ports[portIt]->getConnected();
-                for (size_t procIt = 0; procIt < connPort.size(); procIt++) {
-
-                    //erase if same processor is inside layer multiple times (and only if processor is a selected one)
-                    if(std::find(proc.begin(), proc.end(), connPort[procIt]->getProcessor())!=proc.end()) {
-                        for(size_t it = 0; it <connProc.size(); it++) {
-                            if (connPort[procIt]->getProcessor() == connProc[it]) {
-                                connProc.erase(connProc.begin() + it);
+                if(!ports[portIt]->isLoopPort()) {
+                    connPort = ports[portIt]->getConnected();
+                    for (size_t procIt = 0; procIt < connPort.size(); procIt++) {
+                        //erase if same processor is inside layer multiple times (and only if processor is a selected one)
+                        if (std::find(proc.begin(), proc.end(), connPort[procIt]->getProcessor()) != proc.end()) {
+                            for (size_t it = 0; it < connProc.size(); it++) {
+                                if (connPort[procIt]->getProcessor() == connProc[it]) {
+                                    connProc.erase(connProc.begin() + it);
+                                }
                             }
+                            connProc.push_back(connPort[procIt]->getProcessor());
                         }
-                        connProc.push_back(connPort[procIt]->getProcessor());
                     }
                 }
             }
@@ -160,7 +164,6 @@ std::vector<std::vector<Processor*> > NWEGL_Base::getGraphLayer(std::vector<Proc
         //reset helping variables
         connProc.clear();
         ports.clear();
-        connPort.clear();
     }
     return layerList;
 

@@ -201,6 +201,108 @@ VolumeMask::VolumeMask(VolumeMask&& other)
 {
 }
 
+VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress)
+    : data_(VoreenApplication::app()->getUniqueTmpFilePath(), vol.getDimensions())
+    , surfaceFile_("", 0)
+    , numOriginalForegroundVoxels_(0)
+    , spacing_(vol.getMetaData().getSpacing())
+{
+    TaskTimeLogger _("Create VolumeMask", tgt::Info);
+    SubtaskProgressReporterCollection<2> subtaskReporters(progress);
+    tgt::svec3 dimensions = vol.getDimensions();
+
+    tgtAssert(!sampleMask || dimensions == sampleMask->getDimensions(), "Sample mask dimension mismatch");
+
+    auto calc_num_chunks = [] (size_t dim, size_t size) {
+        if((dim % size) == 0) {
+            return dim/size;
+        } else {
+            return dim/size+1;
+        }
+    };
+
+    auto calc_chunk_size = [&] (size_t chunk, size_t num_chunks, size_t max_chunk_size, size_t dimensions) {
+        size_t size = chunk != num_chunks - 1 || (dimensions % max_chunk_size == 0) ? max_chunk_size : dimensions % max_chunk_size; //TODO check
+        tgtAssert(size > 0, "Invalid chunk size");
+        return size;
+    };
+
+    const size_t max_chunk_size_x = VOLUME_MASK_STORAGE_BLOCK_SIZE_X;
+    const size_t num_chunks_x = calc_num_chunks(dimensions.x, max_chunk_size_x);
+    const size_t max_chunk_size_y = VOLUME_MASK_STORAGE_BLOCK_SIZE_Y;
+    const size_t num_chunks_y = calc_num_chunks(dimensions.y, max_chunk_size_y);
+    const size_t max_chunk_size_z = VOLUME_MASK_STORAGE_BLOCK_SIZE_Z;
+    const size_t num_chunks_z = calc_num_chunks(dimensions.z, max_chunk_size_z);
+
+    // Initialize volumetric data (data_) in chunks_z (more friendly to disk layout)
+    for(size_t chunk_z = 0; chunk_z < num_chunks_z; ++chunk_z) {
+        subtaskReporters.get<0>().setProgress(static_cast<float>(chunk_z)/num_chunks_z);
+
+        const size_t chunk_size_z = calc_chunk_size(chunk_z, num_chunks_z, max_chunk_size_z, dimensions.z);
+
+        size_t slab_begin = chunk_z*max_chunk_size_z;
+        size_t slab_end = slab_begin + chunk_size_z;
+        auto volSlab = vol.loadSlab(slab_begin, slab_end);
+        boost::optional<VolumeAtomic<uint8_t>> sampleMaskSlab = sampleMask ? boost::optional<VolumeAtomic<uint8_t>>(sampleMask->loadSlab(slab_begin, slab_end)) : boost::none;
+
+        for(size_t chunk_y = 0; chunk_y < num_chunks_y; ++chunk_y) {
+            const size_t chunk_size_y = calc_chunk_size(chunk_y, num_chunks_y, max_chunk_size_y, dimensions.y);
+
+            for(size_t chunk_x = 0; chunk_x < num_chunks_x; ++chunk_x) {
+                const size_t chunk_size_x = calc_chunk_size(chunk_x, num_chunks_x, max_chunk_size_x, dimensions.x);
+
+                for(size_t dz = 0; dz<chunk_size_z; ++dz) {
+                    size_t z = chunk_z*max_chunk_size_z + dz;
+
+                    for(size_t dy = 0; dy<chunk_size_y; ++dy) {
+                        size_t y = chunk_y*max_chunk_size_y + dy;
+
+                        for(size_t dx = 0; dx<chunk_size_x; ++dx) {
+                            size_t x = chunk_x*max_chunk_size_x + dx;
+
+                            const tgt::svec3 p(x,y,z);
+                            const tgt::svec3 slabPos(x,y, dz);
+                            VolumeMaskValue val;
+                            if(sampleMaskSlab && sampleMaskSlab->voxel(slabPos) == 0) {
+                                val = VolumeMaskValue::OUTSIDE_VOLUME;
+                            } else if(volSlab.getVoxelNormalized(slabPos) > 0) {
+                                val = VolumeMaskValue::OBJECT;
+                                ++numOriginalForegroundVoxels_;
+                            } else {
+                                val = VolumeMaskValue::BACKGROUND;
+                            }
+                            // NOTE! This is a shortcut that only works under the assumption that newly created
+                            // files are filled with zeros, which I'm PRETTY sure of, but not 100% certain.
+                            if(val != VolumeMaskValue::BACKGROUND) {
+                                data_.set(p, val);
+                            } else {
+                                tgtAssert(data_.get(p) == VolumeMaskValue::BACKGROUND, "File was not zeroed before filling");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Initialize surface
+    SurfaceBuilder builder;
+    for(size_t z = 0; z<dimensions.z; ++z) {
+        subtaskReporters.get<1>().setProgress(static_cast<float>(z)/dimensions.z);
+        for(size_t y = 0; y<dimensions.y; ++y) {
+            for(size_t x = 0; x<dimensions.x; ++x) {
+                const tgt::svec3 p(x,y,z);
+                if(get(p, VolumeMaskValue::BACKGROUND) == VolumeMaskValue::OBJECT && isSurfaceVoxel(p)) {
+                    builder.push(toLinearPos(p));
+                }
+            }
+        }
+    }
+    surfaceFile_ = std::move(builder).finalize();
+    progress.setProgress(1.0f);
+}
+
+
 VolumeMask::~VolumeMask() {
     tgt::FileSystem::deleteFile(surfaceFile_.filename_);
 }

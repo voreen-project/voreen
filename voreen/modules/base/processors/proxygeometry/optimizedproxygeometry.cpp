@@ -100,7 +100,6 @@ OptimizedProxyGeometry::OptimizedProxyGeometry()
     geometry_ = new TriangleMeshGeometryColorNormal();
     tmpGeometry_ = new TriangleMeshGeometryColorNormal();
 
-    ON_CHANGE(inport_, OptimizedProxyGeometry, onInportChange);
     addPort(inport_);
     addPort(outport_);
 
@@ -181,7 +180,7 @@ Processor* OptimizedProxyGeometry::create() const {
     return new OptimizedProxyGeometry();
 }
 
-void OptimizedProxyGeometry::onInportChange() {
+void OptimizedProxyGeometry::adjustPropertiesToInput() {
 
     // interrupt background thread
     if (backgroundThread_) {

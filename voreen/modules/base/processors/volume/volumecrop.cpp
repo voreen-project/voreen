@@ -57,7 +57,6 @@ VolumeCrop::VolumeCrop()
 
     button_.onChange(MemberFunctionCallback<VolumeCrop>(this, &VolumeCrop::crop));
     clipRegion_.onChange(MemberFunctionCallback<VolumeCrop>(this, &VolumeCrop::updateInfoPropertys));
-    inport_.onChange(MemberFunctionCallback<VolumeCrop>(this, &VolumeCrop::inportChanged));
 
     addProperty(clipRegion_);
     addProperty(continuousCropping_);
@@ -152,17 +151,14 @@ void VolumeCrop::adjustPropertiesToInput() {
             clipRegion_.setReadOnlyFlag(false);
         }
     }
+
+    isCropped_ = false;
+    outport_.setData(0);
 }
 
 void VolumeCrop::updateInfoPropertys()
 {
     clipRegionMatchesCroppedRegion_.set(clipRegion_.get()==croppedRegion_ && isCropped_);
-}
-
-void VolumeCrop::inportChanged()
-{
-    isCropped_ = false;
-    outport_.setData(0);
 }
 
 }   // namespace

@@ -127,7 +127,7 @@ public:
     LZ4SliceVolumeBase(std::string filePath, LZ4SliceVolumeMetadataFull metadata);
     virtual ~LZ4SliceVolumeBase() { }
 
-    virtual std::unique_ptr<VolumeRAM> loadBaseSlab(size_t beginZ, size_t endZ) const = 0;
+    virtual std::unique_ptr<VolumeRAM> loadBaseSlab(size_t beginZ, size_t endZ /*exclusive*/) const = 0;
     virtual std::unique_ptr<LZ4SliceVolumeBase> moveToHeap() && = 0;
 
     std::unique_ptr<Volume> toVolume() &&;
@@ -153,10 +153,10 @@ public:
     LZ4SliceVolume<Voxel>& operator=(LZ4SliceVolume<Voxel>&& other);
     //LZ4SliceVolume(const LZ4SliceVolume& other) = delete; //Disable
 
-    std::unique_ptr<VolumeRAM> loadBaseSlab(size_t beginZ, size_t endZ) const;
+    std::unique_ptr<VolumeRAM> loadBaseSlab(size_t beginZ, size_t endZ /*exclusive*/) const;
     virtual std::unique_ptr<LZ4SliceVolumeBase> moveToHeap() &&;
 
-    VolumeAtomic<Voxel> loadSlab(size_t beginZ, size_t endZ) const;
+    VolumeAtomic<Voxel> loadSlab(size_t beginZ, size_t endZ /*exclusive*/) const;
     VolumeAtomic<Voxel> loadSlice(size_t sliceNumber) const;
     void writeSlice(const VolumeAtomic<Voxel>& slice, size_t sliceNumber);
     LZ4WriteableSlice<Voxel> getWritableSlice(size_t sliceNumber);
@@ -304,17 +304,18 @@ size_t LZ4SliceVolume<Voxel>::getSliceMemorySize() const {
 
 template<typename Voxel>
 LZ4SliceVolume<Voxel>::LZ4SliceVolume(LZ4SliceVolume<Voxel>&& other)
-    : LZ4SliceVolumeBase(other.filePath_, std::move(other.metadata_))
+    : LZ4SliceVolumeBase(std::move(other.filePath_), std::move(other.metadata_))
 {
-    other.filePath_ = "";
 }
 
 template<typename Voxel>
 LZ4SliceVolume<Voxel>& LZ4SliceVolume<Voxel>::operator=(LZ4SliceVolume<Voxel>&& other) {
-    // Destruct the current object, but keep the memory.
-    this->~LZ4SliceVolume();
-    // Call the move constructor on the memory region of the current object.
-    new(this) LZ4SliceVolume(std::move(other));
+    if(this != &other) {
+        // Destruct the current object, but keep the memory.
+        this->~LZ4SliceVolume();
+        // Call the move constructor on the memory region of the current object.
+        new(this) LZ4SliceVolume(std::move(other));
+    }
 
     return *this;
 }
@@ -358,6 +359,8 @@ VolumeAtomic<Voxel> LZ4SliceVolume<Voxel>::loadSlab(size_t beginZ, size_t endZ) 
 
 template<typename Voxel>
 VolumeAtomic<Voxel> LZ4SliceVolume<Voxel>::loadSlice(size_t sliceNumber) const {
+    tgtAssert(sliceNumber < getDimensions().z, "Invalid slice number");
+
     std::string sliceFileName = getSliceFilePath(sliceNumber);
     std::ifstream compressedFile(sliceFileName, std::ifstream::binary);
     if(compressedFile.fail()) {
@@ -499,7 +502,7 @@ boost::optional<Voxel> LZ4SliceVolumeReader<Voxel, neighborhoodExtent>::getVoxel
     tgtAssert(-static_cast<int>(neighborhoodExtent) <= sliceOffset && sliceOffset <= static_cast<int>(neighborhoodExtent), "Invalid slice offset");
     const auto& slice = getSlice(pos_ + sliceOffset);
     if(slice) {
-        if(slicePos.x < 0 || slicePos.x >= volume_.getDimensions().x || slicePos.y < 0 || slicePos.y >= volume_.getDimensions().y) {
+        if(slicePos.x < 0 || slicePos.x >= (int)volume_.getDimensions().x || slicePos.y < 0 || slicePos.y >= (int)volume_.getDimensions().y) {
             return boost::none;
         } else {
             return slice->voxel(slicePos.x, slicePos.y, 0);

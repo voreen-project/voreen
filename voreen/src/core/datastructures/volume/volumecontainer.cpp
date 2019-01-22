@@ -38,7 +38,7 @@ VolumeContainer::VolumeContainer() :
 {}
 
 VolumeContainer::~VolumeContainer() {
-    //clear(); // Clear is called in super class destructor.
+    clear(); // Need to call it here because parent class destructor cannot call functions of this object
 }
 
 void VolumeContainer::remove(const VolumeBase* handle) {

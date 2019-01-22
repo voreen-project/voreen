@@ -127,7 +127,6 @@
 #include "processors/volume/volumecombine.h"
 #include "processors/volume/volumecomposer.h"
 #include "processors/volume/volumedecomposer.h"
-#include "processors/volume/volumefiltering.h"
 #include "processors/volume/volumeformatconversion.h"
 #include "processors/volume/volumegradient.h"
 #include "processors/volume/volumeinputswitch.h"
@@ -273,7 +272,6 @@ BaseModule::BaseModule(const std::string& modulePath) : VoreenModule(modulePath)
     registerSerializableType(new VolumeCubify());
     registerSerializableType(new VolumeDecomposer());
     registerSerializableType(new VolumeDistanceTransform());
-    registerSerializableType(new VolumeFiltering());
     registerSerializableType(new VolumeFormatConversion());
     registerSerializableType(new VolumeGradient());
     registerSerializableType(new VolumeHalfsample());

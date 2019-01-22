@@ -64,10 +64,10 @@ protected:
     virtual void process();
     virtual void initialize();
     virtual void deinitialize();
+    virtual void adjustPropertiesToInput();
 
     void decomposeVolume();
     void clearSliceSequence();
-    void adjustToInputVolume();
 
     void startSliceChanged();
     void endSliceChanged();

@@ -293,7 +293,7 @@ std::tuple<ElementArrayView<Element>, Element, ElementArrayView<Element>> Elemen
     tgtAssert(dist > 0, "tried to split empty array view");
     partitionAtMedian(dimension);
     Element* center = begin_ + dist/2;
-    return {
+    return std::tuple<ElementArrayView<Element>, Element, ElementArrayView<Element>>{
         ElementArrayView(begin_, center),
         *center,
         ElementArrayView(center+1, end_)

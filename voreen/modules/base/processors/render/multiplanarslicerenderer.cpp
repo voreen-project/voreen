@@ -74,7 +74,6 @@ MultiplanarSliceRenderer::MultiplanarSliceRenderer()
 
     //inport_.addCondition(new PortConditionVolumeTypeGL());
     //inport_.showTextureAccessProperties(true);
-    ON_CHANGE(inport_, MultiplanarSliceRenderer, updatePropertyConfiguration);
     addPort(inport_);
     addPort(outport_);
 
@@ -345,7 +344,7 @@ void MultiplanarSliceRenderer::renderSlice(SliceAlignment sliceAlign, int sliceN
     IMode.end();
 }
 
-void MultiplanarSliceRenderer::updatePropertyConfiguration() {
+void MultiplanarSliceRenderer::adjustPropertiesToInput() {
     // get volume
     const VolumeBase* inputVolume = inport_.getData();
 
