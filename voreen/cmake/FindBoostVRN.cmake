@@ -16,7 +16,7 @@ LIST(APPEND Boost_DYNAMIC_NAMES
    "locale" "log_setup" "log" "math_c99f" "math_c99l"
    "math_c99" "math_tr1f" "math_tr1l" "math_tr1" "prg_exec_monitor"
    "program_options" "random" "regex" "serialization"
-   "signals" "system" "thread" "timer" "unit_test_framework"
+   "system" "thread" "timer" "unit_test_framework"
    "wave" "wserialization"
 )
 
