@@ -237,18 +237,13 @@ template<typename T, int ND>
         }
 
         int mapValueToBucket(T v, int dim) const {
-            if(v < minValues_[dim]) {
-                //TODO: out of range
+            int bucket =  static_cast<int>(bucketCounts_[dim] * ((v - minValues_[dim])/ (maxValues_[dim] - minValues_[dim])));
+            if(bucket < 0) {
                 return 0;
-            }
-            else if(v > maxValues_[dim]) {
-                //TODO: out of range
+            } else if(bucket >= bucketCounts_[dim]) {
                 return (bucketCounts_[dim] - 1);
-            }
-            else {
-                v -= minValues_[dim];
-                return static_cast<int>(bucketCounts_[dim] * (v / (maxValues_[dim] - minValues_[dim])));
-                //TODO: clamp?
+            } else {
+                return bucket;
             }
         }
 
