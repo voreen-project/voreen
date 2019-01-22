@@ -29,6 +29,10 @@
 #include "voreen/core/io/serialization/serializable.h"
 #include "voreen/core/properties/property.h"
 #include "../volumefiltering/volumefilter.h"
+#include "voreen/core/properties/intproperty.h"
+#include "voreen/core/properties/floatproperty.h"
+#include "voreen/core/properties/boolproperty.h"
+#include "voreen/core/properties/optionproperty.h"
 
 #include <vector>
 #include <map>
