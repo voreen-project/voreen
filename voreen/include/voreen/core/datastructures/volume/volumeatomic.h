@@ -331,7 +331,7 @@ typedef VolumeAtomic<Tensor2<float> >  VolumeRAM_Tensor2Float;
  */
 
 template<class T>
-VolumeAtomic<T>::VolumeAtomic(const tgt::svec3& dimensions, bool allocMem) 
+VolumeAtomic<T>::VolumeAtomic(const tgt::svec3& dimensions, bool allocMem)
     : VolumeRAM(dimensions)
     , data_(0)
     , ownsData_(true)

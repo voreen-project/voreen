@@ -71,6 +71,7 @@
 
 // core module is always available
 #include "modules/core/processors/input/volumesource.h"
+#include "modules/core/processors/input/volumelistsource.h"
 #include "modules/core/processors/output/canvasrenderer.h"
 
 #ifdef VRN_MODULE_BASE
@@ -1138,6 +1139,48 @@ static PyObject* voreen_loadVolume(PyObject* /*self*/, PyObject* args) {
     }
 }
 
+static PyObject* voreen_loadVolumes(PyObject* /*self*/, PyObject* args) {
+
+    const char* filename = 0;
+    bool selected = true;
+    bool clear = false;
+    const char* procStr = 0;
+    if (!PyArg_ParseTuple(args, "sbb|s:loadVolumes", &filename, &selected, &clear, &procStr))
+        return 0;
+
+    ProcessorNetwork* network = getProcessorNetwork("loadVolumes");
+    if (!network)
+        return 0;
+
+    VolumeListSource* volumeListSource = 0;
+    if (!procStr) {
+        // select first volumesource in network
+        std::vector<VolumeListSource*> sources = network->getProcessorsByType<VolumeListSource>();
+        if (sources.empty()) {
+            PyErr_SetString(PyExc_RuntimeError, "loadVolumes() Network does not contain a VolumeListSource.");
+            return 0;
+        }
+        volumeListSource = sources.front();
+    }
+    else {
+        // retrieve volumelistsource with given name from network
+        volumeListSource = getTypedProcessor<VolumeListSource>(std::string(procStr), "VolumeListSource", "loadVolumes");
+        if (!volumeListSource)
+            return 0;
+    }
+    tgtAssert(volumeListSource, "no source proc");
+
+    try {
+        volumeListSource->loadVolumes(std::string(filename), selected, clear);
+        Py_RETURN_NONE;
+    }
+    catch (std::exception &e) {
+        PyErr_SetString(PyExc_RuntimeError, std::string("loadVolumes() Failed to load data set '" +
+            std::string(filename) + "': " + e.what()).c_str());
+        return 0;
+    }
+}
+
 static PyObject* voreen_loadTransferFunction(PyObject* /*self*/, PyObject* args) {
 
     // parse arguments
@@ -1511,6 +1554,15 @@ static PyMethodDef voreen_methods[] = {
         METH_VARARGS,
         "loadVolume(filename, [volume source])\n\n"
         "Loads a volume data set and assigns it to a VolumeSource processor.\n"
+        "If no processor name is passed, the first volume source in the\n"
+        "network is chosen."
+    },
+    {
+        "loadVolumes",
+        voreen_loadVolumes,
+        METH_VARARGS,
+        "loadVolumes(filename, selected, clear, [volume list source])\n\n"
+        "Loads all volumes and assigns them to a VolumeListSource processor.\n"
         "If no processor name is passed, the first volume source in the\n"
         "network is chosen."
     },

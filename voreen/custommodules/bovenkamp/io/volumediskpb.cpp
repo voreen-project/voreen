@@ -73,8 +73,8 @@ std::string VolumeDiskPB::getHash() const {
     configStr += std::to_string(timeStep_) + "#";
 
     // don't add the following to hash because it's not worth loading the volume again.
-    //configStr += invertPostion_ + +"#"; 
-    //configStr += invertVelocity_ + "#";
+    //configStr += VoreenHash::getHash(&invertPosition_[0], invertPosition_.size) + "#";
+    //configStr += VoreenHash::getHash(&invertVelocity_[0], invertVelocity_.size) + "#";
 
     return VoreenHash::getHash(configStr);
 }
@@ -99,9 +99,9 @@ VolumeRAM* VolumeDiskPB::loadBrick(const tgt::svec3& offset, const tgt::svec3& d
 
     VolumeRAM* result = nullptr;
     if (getNumChannels() == 1)
-        result = new VolumeRAM_Float(dimensions, true);
+        result = new VolumeRAM_Float(dimensions);
     else if (getNumChannels() == 3)
-        result = new VolumeRAM_3xFloat(dimensions, true);
+        result = new VolumeRAM_3xFloat(dimensions);
 
     tgtAssert(result, "Unhandled channel count");
 
@@ -153,13 +153,13 @@ void VolumeDiskPB::readFile(const std::string& filename, VolumeRAM* volume, size
 
                 // retrieve
                 getline(line, tmp, '\t');
-                float value = (float)atof(tmp.c_str());
+                float value = static_cast<float>(atof(tmp.c_str()));
 
                 // Invert value if desired.
                 if (numChannels == 3 &&
-                   (channel == 0 && invertVelocity_.x) ||
-                   (channel == 1 && invertVelocity_.y) ||
-                   (channel == 2 && invertVelocity_.z))
+                  ((channel == 0 && invertVelocity_.x) ||
+                  (channel == 1 && invertVelocity_.y) ||
+                  (channel == 2 && invertVelocity_.z)))
                     value = -value;
 
                 // Calculate index.

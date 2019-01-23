@@ -32,9 +32,11 @@ namespace voreen {
 
 class MedianFilter : public ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue1D> {
 public:
-    MedianFilter(int extent, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string sliceBaseType);
+    MedianFilter(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string sliceBaseType);
     virtual ~MedianFilter();
     ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos) const;
+private:
+    tgt::ivec3 extent_;
 };
 
 } // namespace voreen

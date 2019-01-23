@@ -92,6 +92,10 @@ private:
     VolumeListPort magnitudeOutport_;   //< port containing the magnitude volume of all time steps
     VolumeListPort velocityOutport_;    //< port containing the velocity (vec3) volume of all time steps
 
+    // Memory
+    std::vector<std::unique_ptr<Volume>> magnitudeVolumes_; //< owning list for magnitude volumes
+    std::vector<std::unique_ptr<Volume>> velocityVolumes_;  //< owning list for velocity volumes
+
     /// Properties
     FileDialogProperty folderProp_;     //< file dialog to select the folder containing the data files in pb-format
     ButtonProperty loadButtonProp_;     //< loads the data, if a valid folder is selected
@@ -106,7 +110,6 @@ private:
 
     // Member
     bool loadFiles_;    //< if true, the process function will load the data set
-    bool stopLoading_;  //< if true, the current loading is aborted
 
     bool isMagnitudeDataPresent_; //< load magnitude volume
     bool isVelocityDataPresent_;  //< load velocity volume

@@ -209,9 +209,9 @@ void IdVolume::floodIteration(size_t& numberOfFloodedVoxels, ProgressReporter& p
             tgt::ivec3 npos = pos;
             npos += offset;
             if(
-                       npos.x >= 0 && npos.x < dimensions.x
-                    && npos.y >= 0 && npos.y < dimensions.y
-                    && npos.z >= 0 && npos.z < dimensions.z
+                       npos.x >= 0 && npos.x < (int)dimensions.x
+                    && npos.y >= 0 && npos.y < (int)dimensions.y
+                    && npos.z >= 0 && npos.z < (int)dimensions.z
               ) {
                 if(data_->get(npos) == UNLABELED_FOREGROUND_VALUE) {
                     data_->set(npos, current_label);

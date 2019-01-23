@@ -56,7 +56,7 @@ protected:
     virtual void initialize();
     virtual void deinitialize();
 
-    virtual void invalidate(int inv = INVALID_RESULT);
+    virtual void adjustPropertiesToInput();
 
     ImageSequencePort inport_;   ///< Inport for the image sequence.
     RenderPort outport_;         ///< The render port the selected image is written to.
@@ -68,10 +68,6 @@ protected:
     tgt::Shader* shader_;        ///< Shader program used for rendering the selected image to the outport.
 
     static const std::string loggerCat_;
-
-private:
-    void adjustToImageSequence();
-
 };
 
 } // namespace

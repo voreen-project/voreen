@@ -99,7 +99,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/volume/volumecubify.cpp
     ${MOD_DIR}/processors/volume/volumedecomposer.cpp
     ${MOD_DIR}/processors/volume/volumedistancetransform.cpp
-    ${MOD_DIR}/processors/volume/volumefiltering.cpp
     ${MOD_DIR}/processors/volume/volumeformatconversion.cpp
     ${MOD_DIR}/processors/volume/volumegradient.cpp
     ${MOD_DIR}/processors/volume/volumehalfsample.cpp
@@ -109,7 +108,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/volume/volumelistspacing.cpp
     ${MOD_DIR}/processors/volume/volumemasking.cpp
     ${MOD_DIR}/processors/volume/volumemirror.cpp
-    ${MOD_DIR}/processors/volume/volumemorphology.cpp
     ${MOD_DIR}/processors/volume/volumeoctreelevelextractor.cpp
     ${MOD_DIR}/processors/volume/volumeresample.cpp
     ${MOD_DIR}/processors/volume/volumespacing.cpp
@@ -229,7 +227,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volume/volumecubify.h
     ${MOD_DIR}/processors/volume/volumedecomposer.h
     ${MOD_DIR}/processors/volume/volumedistancetransform.h
-    ${MOD_DIR}/processors/volume/volumefiltering.h
     ${MOD_DIR}/processors/volume/volumeformatconversion.h
     ${MOD_DIR}/processors/volume/volumegradient.h
     ${MOD_DIR}/processors/volume/volumehalfsample.h
@@ -239,7 +236,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volume/volumelistspacing.h
     ${MOD_DIR}/processors/volume/volumemasking.h
     ${MOD_DIR}/processors/volume/volumemirror.h
-    ${MOD_DIR}/processors/volume/volumemorphology.h
     ${MOD_DIR}/processors/volume/volumeoctreelevelextractor.h
     ${MOD_DIR}/processors/volume/volumeresample.h
     ${MOD_DIR}/processors/volume/volumespacing.h

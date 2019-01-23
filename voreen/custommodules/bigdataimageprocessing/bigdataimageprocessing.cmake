@@ -68,14 +68,28 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/segmentationquantification.cpp
     ${MOD_DIR}/processors/volumebricksave.cpp
     ${MOD_DIR}/processors/volumebricksource.cpp
+    ${MOD_DIR}/processors/volumefilterlist.cpp
     ${MOD_DIR}/processors/volumeresampletransformation.cpp
 
     # Volumefiltering
     ${MOD_DIR}/volumefiltering/slicereader.cpp
     ${MOD_DIR}/volumefiltering/parallelvolumefilter.cpp
+    ${MOD_DIR}/volumefiltering/binarymedianfilter.cpp
     ${MOD_DIR}/volumefiltering/gaussianfilter.cpp
     ${MOD_DIR}/volumefiltering/medianfilter.cpp
-    ${MOD_DIR}/volumefiltering/binarymedianfilter.cpp
+    ${MOD_DIR}/volumefiltering/morphologyfilter.cpp
+    ${MOD_DIR}/volumefiltering/thresholdingfilter.cpp
+    
+    # Filter Properties
+    ${MOD_DIR}/volumefilterproperties/filterproperties.cpp
+    ${MOD_DIR}/volumefilterproperties/binarymedianfilterproperties.cpp
+    ${MOD_DIR}/volumefilterproperties/gaussianfilterproperties.cpp
+    ${MOD_DIR}/volumefilterproperties/medianfilterproperties.cpp
+    ${MOD_DIR}/volumefilterproperties/morphologyfilterproperties.cpp
+    ${MOD_DIR}/volumefilterproperties/thresholdingfilterproperties.cpp
+
+    # Properties
+    ${MOD_DIR}/properties/interactivelistproperty.cpp
 )
 IF(VRN_MODULE_PLOTTING)
     LIST(APPEND MOD_CORE_SOURCES
@@ -93,18 +107,56 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/segmentationquantification.h
     ${MOD_DIR}/processors/volumebricksave.h
     ${MOD_DIR}/processors/volumebricksource.h
+    ${MOD_DIR}/processors/volumefilterlist.h
     ${MOD_DIR}/processors/volumeresampletransformation.h
 
     # Volumefiltering
     ${MOD_DIR}/volumefiltering/slicereader.h
     ${MOD_DIR}/volumefiltering/volumefilter.h
     ${MOD_DIR}/volumefiltering/parallelvolumefilter.h
+    ${MOD_DIR}/volumefiltering/binarymedianfilter.h
     ${MOD_DIR}/volumefiltering/gaussianfilter.h
     ${MOD_DIR}/volumefiltering/medianfilter.h
-    ${MOD_DIR}/volumefiltering/binarymedianfilter.h
+    ${MOD_DIR}/volumefiltering/morphologyfilter.h
+    ${MOD_DIR}/volumefiltering/thresholdingfilter.h
+    
+    # Filter Properties
+    ${MOD_DIR}/volumefilterproperties/filterproperties.h
+    ${MOD_DIR}/volumefilterproperties/binarymedianfilterproperties.h
+    ${MOD_DIR}/volumefilterproperties/gaussianfilterproperties.h
+    ${MOD_DIR}/volumefilterproperties/medianfilterproperties.h
+    ${MOD_DIR}/volumefilterproperties/morphologyfilterproperties.h
+    ${MOD_DIR}/volumefilterproperties/thresholdingfilterproperties.h
+
+    # Properties
+    ${MOD_DIR}/properties/interactivelistproperty.h
 )
 IF(VRN_MODULE_PLOTTING)
     LIST(APPEND MOD_CORE_HEADERS
         ${MOD_DIR}/processors/segmentationslicedensity.h
     )
 ENDIF()
+
+###############################################################################
+# Qt module resources
+################################################################################
+SET(MOD_QT_MODULECLASS BigDataImageProcessingModuleQt)
+
+SET(MOD_QT_SOURCES
+        #Factories
+        ${MOD_DIR}/qt/properties/bigdataimageprocessingpropertywidgetfactory.cpp
+
+        #Properties
+        ${MOD_DIR}/qt/properties/interactivelistpropertywidget.cpp
+        )
+
+SET(MOD_QT_HEADERS
+        #Factories
+        ${MOD_DIR}/qt/properties/bigdataimageprocessingpropertywidgetfactory.h
+
+        #Properties
+        ${MOD_DIR}/qt/properties/interactivelistpropertywidget.h
+        )
+
+SET(MOD_QT_HEADERS_NONMOC
+        )

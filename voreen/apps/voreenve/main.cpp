@@ -22,7 +22,6 @@
  * contact the authors.                                                            *
  *                                                                                 *
  ***********************************************************************************/
-
 //VOREEN_VE
 
 #ifdef VRN_MODULE_PYTHON
@@ -35,6 +34,7 @@
 #include "voreenvesplashscreen.h"
 
 #include "tgt/filesystem.h"
+
 #include "tgt/logmanager.h"
 
 #include "voreen/core/version.h"

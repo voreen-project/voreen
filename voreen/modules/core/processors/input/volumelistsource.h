@@ -70,8 +70,9 @@ public:
      * If the data set could not be successfully loaded, an exception is thrown.
      *
      * @param selected if true, the loaded volumes will be selected
+     * @param clear if true, all old volumes will be removed beforehand
      */
-    void loadVolumes(const std::string& url, bool selected = true);
+    void loadVolumes(const std::string& url, bool selected = true, bool clear = false);
 
 protected:
     virtual void setDescriptions() {

@@ -516,6 +516,8 @@ void SliceViewer::process() {
 
             toSliceCoordMatrix.t00 = 1.f;
             toSliceCoordMatrix.t11 = 1.f;
+            break;
+
         case UNALIGNED_PLANE:
             texDim2D.x = texDim.x;
             texDim2D.y = texDim.y;
@@ -661,6 +663,19 @@ void SliceViewer::process() {
     for (int pos = 0, x = 0, y = 0; pos < (numSlicesCol * numSlicesRow);
         ++pos, x = pos % numSlicesCol, y = pos / numSlicesCol)
     {
+        if(alignment != UNALIGNED_PLANE) {
+            int sliceNumber = (pos + static_cast<const int>(sliceIndex));
+            if (sliceNumber >= numSlices)
+                break;
+
+            // compute depth in texture coordinates and check if it is not below the first or above the last slice
+            depth = (static_cast<float>(sliceNumber) + 0.5f) / static_cast<float>(volume->getDimensions()[alignment]);
+            float minDepth = 0.5f / static_cast<float>(volume->getDimensions()[alignment]);
+            float maxDepth = (static_cast<float>(volume->getDimensions()[alignment]) - 0.5f) / static_cast<float>(volume->getDimensions()[alignment]);
+            if (depth < minDepth || depth > maxDepth)
+                continue;
+        }
+
         MatStack.loadIdentity();
         MatStack.translate(sliceLowerLeft_.x + (x * sliceSize_.x),
             sliceLowerLeft_.y + ((numSlicesRow - (y + 1)) * sliceSize_.y), 0.0f);
@@ -678,17 +693,6 @@ void SliceViewer::process() {
             bool singleSliceComplete = true;
 
             if(alignment != UNALIGNED_PLANE) {
-
-                int sliceNumber = (pos + static_cast<const int>(sliceIndex));
-                if (sliceNumber >= numSlices)
-                    break;
-
-                // compute depth in texture coordinates and check if it is not below the first or above the last slice
-                depth = (static_cast<float>(sliceNumber) + 0.5f) / static_cast<float>(volume->getDimensions()[alignment]);
-                float minDepth = 0.5f / static_cast<float>(volume->getDimensions()[alignment]);
-                float maxDepth = (static_cast<float>(volume->getDimensions()[alignment]) - 0.5f) / static_cast<float>(volume->getDimensions()[alignment]);
-                if (depth < minDepth || depth > maxDepth)
-                    continue;
 
                 const size_t sliceID = tgt::iround(depth * volume->getDimensions()[alignment] - 0.5f);
                 int* shiftArray = 0;
@@ -854,8 +858,8 @@ void SliceViewer::renderSliceGeometry(const tgt::vec4& t0, const tgt::vec4& t1, 
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(VertexHelper), &(*buffer.begin()), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, false, sizeof(VertexHelper), 0);
-    glVertexAttribPointer(3, 4, GL_FLOAT, false, sizeof(VertexHelper), (void*)sizeof(tgt::vec2));
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexHelper), 0);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(VertexHelper), (void*)sizeof(tgt::vec2));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(3);
 
@@ -1339,7 +1343,7 @@ tgt::vec3 SliceViewer::screenToVoxelPos(tgt::ivec2 screenPos) const {
         voxPos = texCoordsTransformed * (volumeDim) - tgt::vec3(0.5f);
     }
 
-    voxPos = tgt::clamp(voxPos, tgt::vec3(0.f), tgt::vec3(volumeDim - 1.f));
+    voxPos = tgt::clamp(voxPos, tgt::vec3::zero, volumeDim - tgt::vec3::one);
     return voxPos;
 }
 

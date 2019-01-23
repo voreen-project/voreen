@@ -75,6 +75,11 @@ ipch/
 *.pdb
 *.idb
 
+# qt creator files
+*.cxx_parameters
+*.cbp
+CMakeLists.txt.user
+
 bin
 data
 config.txt

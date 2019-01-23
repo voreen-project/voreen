@@ -35,7 +35,6 @@ ClipRegionGeometryCreator::ClipRegionGeometryCreator()
     , outport_(Port::OUTPORT, "geometryoutport", "Mesh Outport")
     , boundingBox_("boundingbox", "Bounding Box (Clip Region)", tgt::IntBounds(tgt::ivec3(0), tgt::ivec3(1)), tgt::ivec3(0), tgt::ivec3(1))
 {
-    ON_CHANGE(inport_, ClipRegionGeometryCreator, adjustToInputVolume);
     addPort(inport_);
     addPort(outport_);
 
@@ -112,7 +111,7 @@ void ClipRegionGeometryCreator::process() {
     outport_.setData(mesh, true);
 }
 
-void ClipRegionGeometryCreator::adjustToInputVolume() {
+void ClipRegionGeometryCreator::adjustPropertiesToInput() {
     if (inport_.getData()){
         tgt::svec3 oldVolumeDimensions = tgt::svec3(boundingBox_.getMaxValue()) + tgt::svec3::one;
 

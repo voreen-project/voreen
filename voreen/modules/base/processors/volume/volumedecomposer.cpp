@@ -51,7 +51,6 @@ VolumeDecomposer::VolumeDecomposer()
     addProperty(startSlice_);
     addProperty(endSlice_);
     addProperty(convertMultiChannelToGrayscale_);
-    ON_CHANGE(inport_, VolumeDecomposer, adjustToInputVolume);
 }
 
 VolumeDecomposer::~VolumeDecomposer() {}
@@ -214,7 +213,7 @@ void VolumeDecomposer::clearSliceSequence() {
     }
 }
 
-void VolumeDecomposer::adjustToInputVolume() {
+void VolumeDecomposer::adjustPropertiesToInput() {
 
     if (startSlice_.get() > endSlice_.get()) {
         tgtAssert(false, "Start slice index greater than end slice index");

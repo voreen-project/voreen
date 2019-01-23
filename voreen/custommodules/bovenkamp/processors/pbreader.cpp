@@ -33,7 +33,7 @@
 #include "voreen/core/datastructures/volume/volume.h"
 #include "voreen/core/datastructures/volume/volumeram.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
-#include "voreen/core/datastructures/volume/volumecontainer.h"
+#include "voreen/core/datastructures/volume/volumelist.h"
 
 #include <iostream>
 #include <fstream>
@@ -65,8 +65,9 @@ PBReader::PBReader()
     , invertXVelocityProp_("invertXVelocityProp","Invert Velocity X",false,Processor::VALID)
     , invertYVelocityProp_("invertYVelocityProp","Invert Velocity Y",false,Processor::VALID)
     , invertZVelocityProp_("invertZVelocityProp","Invert Velocity Z",false,Processor::VALID)
-    , loadFiles_(false), stopLoading_(false)
-    , isMagnitudeDataPresent_(false), isVelocityDataPresent_(false)
+    , loadFiles_(false)
+    , isMagnitudeDataPresent_(false)
+    , isVelocityDataPresent_(false)
     {
     // add ports
     addPort(magnitudeOutport_);
@@ -123,8 +124,9 @@ void PBReader::process() {
 
         //reset everything
         loadFiles_ = false;
-        stopLoading_ = false;
+        magnitudeVolumes_.clear();
         magnitudeOutport_.clear();
+        velocityVolumes_.clear();
         velocityOutport_.clear();
 
         //get parameters
@@ -141,17 +143,19 @@ void PBReader::process() {
 
         //load magnitude
         tgt::bvec3 invertPosition(invertXInputProp_.get(), invertYInputProp_.get(), invertZInputProp_.get());
-        VolumeContainer* magnitudeContainer = new VolumeContainer();
+        VolumeList* magnitudeList = new VolumeList();
         if(isMagnitudeDataPresent_) {
             for (int t = 0; t < timesteps; t++) {
                 VolumeDiskPB* magnitude = new VolumeDiskPB(folderProp_.get() + "/" + FILE_MAGNITUDE, invertPosition, dimensions, t);
-                magnitudeContainer->add(new Volume(magnitude, spacing, tgt::vec3::zero));
+                Volume* volume = new Volume(magnitude, spacing, tgt::vec3::zero);
+                magnitudeList->add(volume);
+                magnitudeVolumes_.push_back(std::unique_ptr<Volume>(volume));
             }
         }
-        magnitudeOutport_.setData(magnitudeContainer);
+        magnitudeOutport_.setData(magnitudeList);
 
         //load velocity
-        VolumeContainer* velocityContainer = new VolumeContainer();
+        VolumeList* velocityList = new VolumeList();
         if(isVelocityDataPresent_) {
             tgt::bvec3 invertVelocity(invertXVelocityProp_.get(), invertYVelocityProp_.get(), invertZVelocityProp_.get());
             for (int t = 0; t < timesteps; t++) {
@@ -161,10 +165,12 @@ void PBReader::process() {
                     folderProp_.get() + "/" + FILE_VELOCITYZ,
                     invertPosition, invertVelocity,
                     dimensions, t);
-                velocityContainer->add(new Volume(velocity, spacing, tgt::vec3::zero));
+                Volume* volume = new Volume(velocity, spacing, tgt::vec3::zero);
+                velocityList->add(volume);
+                velocityVolumes_.push_back(std::unique_ptr<Volume>(volume));
             }
         }
-        velocityOutport_.setData(velocityContainer);
+        velocityOutport_.setData(velocityList);
     }
 }
 
@@ -193,9 +199,10 @@ void PBReader::invertVelocityOnChange() {
 void PBReader::clearOutput() {
     //clear evrything
     loadFiles_ = false;
+    magnitudeVolumes_.clear();
     magnitudeOutport_.clear();
+    velocityVolumes_.clear();
     velocityOutport_.clear();
-    stopLoading_ = true;
     isMagnitudeDataPresent_ = false;
     isVelocityDataPresent_ = false;
 }
@@ -208,7 +215,7 @@ void PBReader::load() {
     isVelocityDataPresent_ = false;
 
     //no folder => return
-    if(folderProp_.get() == "") {
+    if(folderProp_.get().empty()) {
         LWARNING("No data folder is selected!");
         return;
     }
@@ -251,14 +258,13 @@ void PBReader::load() {
 
     //file will be loaded during next process
     loadFiles_ = true;
-    stopLoading_ = true;
 }
 
 void PBReader::readParameters(tgt::svec3& dimensions, tgt::vec3& spacing, int& timesteps) {
     //open file
     std::ifstream ifs((folderProp_.get() + "/" + FILE_PARAMETER).c_str());
     if (ifs.fail()) {
-        throw VoreenException("Parameter file: \"" + folderProp_.get() + "/" + FILE_PARAMETER + "\" could not be opened");
+        throw VoreenException("Parameter file: '" + folderProp_.get() + "/" + FILE_PARAMETER + "' could not be opened");
     }
     //TODO: checks
     std::string tmp;

@@ -48,6 +48,7 @@ void CallbackManager::execute() {
     if(blockCallbacks_) return;
 
     for(size_t i = 0; i != callbacks_.size(); i++){
+
         callbacks_[i]->exec();
     }
 }

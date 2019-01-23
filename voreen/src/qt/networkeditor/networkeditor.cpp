@@ -233,6 +233,9 @@ NetworkEditor::NetworkEditor(QWidget* parent, NetworkEvaluator* evaluator)
 
     //context menu
     createContextMenuActions();
+
+    // Signal that this widget accepts drop events (e.g., dropping a processor from the list onto the canvas).
+    setAcceptDrops(true);
 }
 
 NetworkEditor::~NetworkEditor() {
@@ -2308,6 +2311,12 @@ void NetworkEditor::dragMoveEvent(QDragMoveEvent* event) {
     }
 
     selectedItem_ = nullptr;
+
+    // Case of dragging a processor (or possibly text files) onto the canvas:
+    // Qt >= 5.12 apparently requires accepting every single DragMoveEvent.
+    if (event->mimeData()->hasText()) {
+        event->accept();
+    }
 }
 
 void NetworkEditor::dragLeaveEvent(QDragLeaveEvent*) {}

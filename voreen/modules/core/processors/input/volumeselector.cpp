@@ -40,7 +40,6 @@ VolumeSelector::VolumeSelector()
       inport_(Port::INPORT, "volumecollection", "VolumeList Input", false),
       outport_(Port::OUTPORT, "volumehandle.volumehandle", "Volume Output", false)
 {
-    ON_CHANGE(inport_, VolumeSelector, adjustToVolumeList);
     addPort(inport_);
     addPort(outport_);
 
@@ -61,19 +60,7 @@ void VolumeSelector::process() {
     }
 }
 
-void VolumeSelector::invalidate(int inv/*inv = INVALID_RESULT*/) {
-    Processor::invalidate(inv);
-    // FIXME: uncommenting the following line might lead to crashes. Find out why!
-    //       To reproduce, open volumelistspacing test workspace, mark and delete everything at once.
-    //       Not having it enabled, however, might lead to selection not updated properly.
-    //       Watch UI updating (not) correctly when input changes, maybe in context with deserialization.
-    //       This is refered to in bug #169.
-    //adjustToVolumeList();
-}
-
-void VolumeSelector::adjustToVolumeList() {
-    if(!isInitialized()) return;
-
+void VolumeSelector::adjustPropertiesToInput() {
     const VolumeList* collection = inport_.getData();
 
     //if inport is empty, do nothing

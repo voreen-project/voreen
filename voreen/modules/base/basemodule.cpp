@@ -127,7 +127,6 @@
 #include "processors/volume/volumecombine.h"
 #include "processors/volume/volumecomposer.h"
 #include "processors/volume/volumedecomposer.h"
-#include "processors/volume/volumefiltering.h"
 #include "processors/volume/volumeformatconversion.h"
 #include "processors/volume/volumegradient.h"
 #include "processors/volume/volumeinputswitch.h"
@@ -137,7 +136,6 @@
 #include "processors/volume/volumeoffset.h"
 #include "processors/volume/volumetransformation.h"
 #include "processors/volume/volumemasking.h"
-#include "processors/volume/volumemorphology.h"
 #include "processors/volume/volumeresample.h"
 #include "processors/volume/volumecreate.h"
 #include "processors/volume/volumecubify.h"
@@ -273,7 +271,6 @@ BaseModule::BaseModule(const std::string& modulePath) : VoreenModule(modulePath)
     registerSerializableType(new VolumeCubify());
     registerSerializableType(new VolumeDecomposer());
     registerSerializableType(new VolumeDistanceTransform());
-    registerSerializableType(new VolumeFiltering());
     registerSerializableType(new VolumeFormatConversion());
     registerSerializableType(new VolumeGradient());
     registerSerializableType(new VolumeHalfsample());
@@ -283,7 +280,6 @@ BaseModule::BaseModule(const std::string& modulePath) : VoreenModule(modulePath)
     registerSerializableType(new VolumeListSpacing());
     registerSerializableType(new VolumeMasking());
     registerSerializableType(new VolumeMirror());
-    registerSerializableType(new VolumeMorphology());
     registerSerializableType(new VolumeOctreeLevelExtractor());
     registerSerializableType(new VolumeResample());
     registerSerializableType(new VolumeSpacing());

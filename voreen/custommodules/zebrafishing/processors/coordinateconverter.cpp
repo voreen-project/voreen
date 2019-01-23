@@ -49,7 +49,6 @@ CoordinateConverter::CoordinateConverter()
     //, minimumLength_("minLength", "Minimum Track Length (in steps)", 1, 1, 1, Processor::INVALID_RESULT, NumericProperty<int>::DYNAMIC)
     //, columnRange_("timeInterval", "Time step interval")
 {
-    //ON_CHANGE(inport_, CoordinateConverter, adjustToInputData);
     addPort(inport_);
     addPort(volumeInport_);
 

@@ -185,7 +185,7 @@ struct DiskArrayBackedListConstIter {
     }
 
     DiskArrayBackedListConstIter& operator++() {
-        if(index_ != -1) {
+        if(index_ != (size_t)-1) {
             const Element& elm = storage_[index_];
             index_ = elm.next_;
         }
@@ -198,11 +198,11 @@ struct DiskArrayBackedListConstIter {
         return index_ != other.index_;
     }
     const T& operator*() {
-        tgtAssert(index_ != -1, "Iterator at invalid index");
+        tgtAssert(index_ != (size_t)-1, "Iterator at invalid index");
         return storage_[index_].element_;
     }
     const T* operator->() {
-        tgtAssert(index_ != -1, "Iterator at invalid index");
+        tgtAssert(index_ != (size_t)-1, "Iterator at invalid index");
         return &storage_[index_].element_;
     }
 };
@@ -214,8 +214,8 @@ struct DiskArrayBackedList {
     typedef DiskArrayBackedListConstIter<T> const_iterator;
 
     DiskArrayBackedList(Storage& storage)
-        : head_(-1)
-        , tail_(-1)
+        : head_((size_t)-1)
+        , tail_((size_t)-1)
         , numElements_(0)
         , storage_(storage)
     {
@@ -226,7 +226,7 @@ struct DiskArrayBackedList {
     void push(T&& elm) {
         size_t oldTail = tail_;
         tail_ = storage_.storeElement(Element(std::move(elm), -1));
-        if(oldTail == -1) {
+        if(oldTail == (size_t)-1) {
             head_ = tail_;
         } else {
             storage_[oldTail].next_ = tail_;
@@ -552,5 +552,7 @@ size_t DiskArrayBuilder<Element>::push(const Element& elm) {
 template<typename Element>
 DiskArray<Element> DiskArrayBuilder<Element>::finalize() && {
     auto tmp = std::move(*this);
+    //Mark variable as used. We do not actually use it because we want to destroy it at the end of this scope
+    (void)tmp;
     return DiskArray<Element>(&storage_.file_, begin_, end_);
 }

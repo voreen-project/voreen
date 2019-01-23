@@ -27,8 +27,9 @@
 
 namespace voreen {
 
-MedianFilter::MedianFilter(int extent, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string sliceBaseType)
-    : ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue1D>(extent, samplingStrategy, sliceBaseType)
+MedianFilter::MedianFilter(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string sliceBaseType)
+    : ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue1D>(extent.z, samplingStrategy, sliceBaseType)
+    , extent_(extent)
 {
 }
 
@@ -36,13 +37,12 @@ MedianFilter::~MedianFilter() {
 }
 
 ParallelFilterValue1D MedianFilter::getValue(const Sample& sample, const tgt::ivec3& pos) const {
-    int extent = zExtent();
     std::vector<float> values;
-    values.reserve(extent*extent*extent);
+    values.reserve(tgt::hmul(extent_));
 
-    for(int z = pos.z-extent; z <= pos.z+extent; ++z) {
-        for(int y = pos.y-extent; y <= pos.y+extent; ++y) {
-            for(int x = pos.x-extent; x <= pos.x+extent; ++x) {
+    for(int z = pos.z-extent_.z; z <= pos.z+extent_.z; ++z) {
+        for(int y = pos.y-extent_.y; y <= pos.y+extent_.y; ++y) {
+            for(int x = pos.x-extent_.x; x <= pos.x+extent_.x; ++x) {
                 values.push_back(sample(tgt::ivec3(x,y,z)));
             }
         }

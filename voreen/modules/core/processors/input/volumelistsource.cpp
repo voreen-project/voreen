@@ -81,7 +81,7 @@ VolumeList* VolumeListSource::getVolumeList() const {
     return volumeURLList_.getVolumes(false);
 }
 
-void VolumeListSource::loadVolumes(const std::string& url, bool selected /*= true*/) {
+void VolumeListSource::loadVolumes(const std::string& url, bool selected /*= true*/, bool clear /*= false*/) {
     tgtAssert(!url.empty(), "passed url is empty");
 
     // load volumes
@@ -103,6 +103,10 @@ void VolumeListSource::loadVolumes(const std::string& url, bool selected /*= tru
         throw tgt::FileException(e.what(), url);
     }
     tgtAssert(volumeList && !volumeList->empty(), "no volumes loaded");
+
+    // Clear old volumes on demand.
+    if(clear)
+        volumeURLList_.clear();
 
     // add loaded volumes
     for (size_t i=0; i<volumeList->size(); i++) {

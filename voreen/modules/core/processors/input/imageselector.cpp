@@ -42,7 +42,6 @@ ImageSelector::ImageSelector()
       shader_(0)
 {
     addPort(inport_);
-    ON_CHANGE(inport_, ImageSelector, adjustToImageSequence);
     addPort(outport_);
 
     addProperty(imageID_);
@@ -110,7 +109,7 @@ void ImageSelector::initialize() {
     shader_ = ShdrMgr.loadSeparate("passthrough.vert", "copyimage.frag",
         generateHeader() + "#define NO_DEPTH_TEX\n", false);
 
-    adjustToImageSequence();
+    adjustPropertiesToInput();
 }
 
 void ImageSelector::deinitialize() {
@@ -120,12 +119,7 @@ void ImageSelector::deinitialize() {
     RenderProcessor::deinitialize();
 }
 
-void ImageSelector::invalidate(int inv) {
-    RenderProcessor::invalidate(inv);
-    adjustToImageSequence();
-}
-
-void ImageSelector::adjustToImageSequence() {
+void ImageSelector::adjustPropertiesToInput() {
 
     const ImageSequence* sequence = inport_.getData();
 

@@ -43,11 +43,15 @@ VesselSkeletonVoxel::VesselSkeletonVoxel(const tgt::vec3& pos, float minDistToSu
     , volume_(volume)
     , nearOtherEdge_(nearOtherEdge)
 {
+    tgtAssert(minDistToSurface_ >= 0, "invalid mindist");
+    tgtAssert(avgDistToSurface_ >= 0, "invalid avgdist");
+    tgtAssert(maxDistToSurface_ >= 0, "invalid maxdist");
+    tgtAssert(volume_ >= 0, "invalid volume");
 }
 
 VesselSkeletonVoxel::VesselSkeletonVoxel()
     : pos_(tgt::vec3::zero)
-    , minDistToSurface_(0)
+    , minDistToSurface_(std::numeric_limits<float>::infinity())
     , maxDistToSurface_(0)
     , avgDistToSurface_(0)
     , numSurfaceVoxels_(0)
@@ -57,7 +61,7 @@ VesselSkeletonVoxel::VesselSkeletonVoxel()
 }
 
 bool VesselSkeletonVoxel::hasValidData() const {
-    return std::isfinite(minDistToSurface_);
+    return numSurfaceVoxels_ > 0;
 }
 
 bool VesselSkeletonVoxel::isInner() const {
@@ -231,6 +235,7 @@ static void statisticalAnalysis(const T& voxels, std::function<float(const E&)> 
     for(auto& voxel : voxels) {
         if(voxel.hasValidData()) {
             float val = getVoxelValue(voxel);
+            tgtAssert(val >= 0, "Invalid val");
             sum += val;
             ++numValidVoxels;
         }
