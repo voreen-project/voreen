@@ -738,20 +738,22 @@ void SliceViewer::process() {
             }
             else {
 
-                tgt::plane plane(planeNormal_.get(), planeDistance_.get());
                 switch (QualityMode.getQuality()) {
                     case VoreenQualityMode::RQ_INTERACTIVE:
-                        slice = SliceHelper::getVolumeSlice(volume, plane, 0.25f);
+                        samplingRate_ = 0.5f;
                         break;
                     case VoreenQualityMode::RQ_DEFAULT:
-                        slice = SliceHelper::getVolumeSlice(volume, plane, 1.0f);
+                        samplingRate_ = 1.0f;
                         break;
                     case VoreenQualityMode::RQ_HIGH:
-                        slice = SliceHelper::getVolumeSlice(volume, plane, 2.0f);
+                        samplingRate_ = 2.0f;
                         break;
                     default:
                         tgtAssert(false, "unknown rendering quality");
                 }
+                // TODO: clean.
+                updatePlane();
+                slice = getVolumeSlice();
                 singleSliceComplete = slice != nullptr;
             }
 
@@ -1091,107 +1093,43 @@ void SliceViewer::renderInfoTexts() const {
                         switch(i) {
                         case 0:
                             tmp = lastPickingPosition_ + tgt::ivec3(channelShift1_.get());
-                            if(tgt::max(tgt::lessThan(tmp,tgt::ivec3::zero) + tgt::lessThan(tgt::ivec3(volume->getDimensions())-tgt::ivec3::one,tmp)))
-                                oss << rwm.normalizedToRealWorld(0.f);
-                            else {
-                                if (volume->hasRepresentation<VolumeRAM>()) {
-                                    const VolumeRAM* volume = inport_.getData()->getRepresentation<VolumeRAM>();
-                                    oss << volume->getVoxelValueAsString(tmp, &rwm,i);
-                                }
-                                else if (volume->hasRepresentation<VolumeOctreeBase>()) {
-                                    const VolumeOctreeBase* octree = volume->getRepresentation<VolumeOctreeBase>();
-                                    oss << rwm.normalizedToRealWorld(octree->getVoxel(tmp, i) / 65535.f);
-                                }
-                                else if (volume->hasRepresentation<VolumeDisk>()) {
-                                    VolumeRAM* volume = inport_.getData()->getRepresentation<VolumeDisk>()->loadBrick(tmp,tgt::svec3::one);
-                                    oss << volume->getVoxelValueAsString(tgt::svec3::zero, &rwm,i);
-                                    delete volume;
-                                }
-                                else if (volume->hasRepresentation<VolumeGL>()) {
-                                    oss << "volume gl not supported yet";
-                                }
-                                else
-                                    oss << "unknown volume representation";
-                            }
                             break;
                         case 1:
                             tmp = lastPickingPosition_ + tgt::ivec3(channelShift2_.get());
-                            if(tgt::max(tgt::lessThan(tmp,tgt::ivec3::zero) + tgt::lessThan(tgt::ivec3(volume->getDimensions())-tgt::ivec3::one,tmp)))
-                                oss << rwm.normalizedToRealWorld(0.f);
-                            else {
-                                if (volume->hasRepresentation<VolumeRAM>()) {
-                                    const VolumeRAM* volume = inport_.getData()->getRepresentation<VolumeRAM>();
-                                    oss << volume->getVoxelValueAsString(tmp, &rwm,i);
-                                }
-                                else if (volume->hasRepresentation<VolumeOctreeBase>()) {
-                                    const VolumeOctreeBase* octree = volume->getRepresentation<VolumeOctreeBase>();
-                                    oss << rwm.normalizedToRealWorld(octree->getVoxel(tmp, i) / 65535.f);
-                                }
-                                else if (volume->hasRepresentation<VolumeDisk>()) {
-                                    VolumeRAM* volume = inport_.getData()->getRepresentation<VolumeDisk>()->loadBrick(tmp,tgt::svec3::one);
-                                    oss << volume->getVoxelValueAsString(tgt::svec3::zero, &rwm,i);
-                                    delete volume;
-                                }
-                                else if (volume->hasRepresentation<VolumeGL>()) {
-                                    oss << "volume gl not supported yet";
-                                }
-                                else
-                                    oss << "unknown volume representation";
-                            }
                             break;
                         case 2:
                             tmp = lastPickingPosition_ + tgt::ivec3(channelShift3_.get());
-                            if(tgt::max(tgt::lessThan(tmp,tgt::ivec3::zero) + tgt::lessThan(tgt::ivec3(volume->getDimensions())-tgt::ivec3::one,tmp)))
-                                oss << rwm.normalizedToRealWorld(0.f);
-                            else {
-                                if (volume->hasRepresentation<VolumeRAM>()) {
-                                    const VolumeRAM* volume = inport_.getData()->getRepresentation<VolumeRAM>();
-                                    oss << volume->getVoxelValueAsString(tmp, &rwm,i);
-                                }
-                                else if (volume->hasRepresentation<VolumeOctreeBase>()) {
-                                    const VolumeOctreeBase* octree = volume->getRepresentation<VolumeOctreeBase>();
-                                    oss << rwm.normalizedToRealWorld(octree->getVoxel(tmp, i) / 65535.f);
-                                }
-                                else if (volume->hasRepresentation<VolumeDisk>()) {
-                                    VolumeRAM* volume = inport_.getData()->getRepresentation<VolumeDisk>()->loadBrick(tmp,tgt::svec3::one);
-                                    oss << volume->getVoxelValueAsString(tgt::svec3::zero, &rwm,i);
-                                    delete volume;
-                                }
-                                else if (volume->hasRepresentation<VolumeGL>()) {
-                                    oss << "volume gl not supported yet";
-                                }
-                                else
-                                    oss << "unknown volume representation";
-                            }
                             break;
                         case 3:
                             tmp = lastPickingPosition_ + tgt::ivec3(channelShift4_.get());
-                            if(tgt::max(tgt::lessThan(tmp,tgt::ivec3::zero) + tgt::lessThan(tgt::ivec3(volume->getDimensions())-tgt::ivec3::one,tmp)))
-                                oss << rwm.normalizedToRealWorld(0.f);
-                            else {
-                                if (volume->hasRepresentation<VolumeRAM>()) {
-                                    const VolumeRAM* volume = inport_.getData()->getRepresentation<VolumeRAM>();
-                                    oss << volume->getVoxelValueAsString(tmp, &rwm,i);
-                                }
-                                else if (volume->hasRepresentation<VolumeOctreeBase>()) {
-                                    const VolumeOctreeBase* octree = volume->getRepresentation<VolumeOctreeBase>();
-                                    oss << rwm.normalizedToRealWorld(octree->getVoxel(tmp, i) / 65535.f);
-                                }
-                                else if (volume->hasRepresentation<VolumeDisk>()) {
-                                    VolumeRAM* volume = inport_.getData()->getRepresentation<VolumeDisk>()->loadBrick(tmp,tgt::svec3::one);
-                                    oss << volume->getVoxelValueAsString(tgt::svec3::zero, &rwm,i);
-                                    delete volume;
-                                }
-                                else if (volume->hasRepresentation<VolumeGL>()) {
-                                    oss << "volume gl not supported yet";
-                                }
-                                else
-                                    oss << "unknown volume representation";
-                            }
                             break;
                         default:
                             tgtAssert(false,"Should not get here");
                         }
+
+                        if(tgt::max(tgt::lessThan(tmp,tgt::ivec3::zero) + tgt::lessThan(tgt::ivec3(volume->getDimensions())-tgt::ivec3::one,tmp)))
+                            oss << rwm.normalizedToRealWorld(0.f);
+                        else {
+                            if (volume->hasRepresentation<VolumeRAM>()) {
+                                const VolumeRAM* volume = inport_.getData()->getRepresentation<VolumeRAM>();
+                                oss << volume->getVoxelValueAsString(tmp, &rwm,i);
+                            }
+                            else if (volume->hasRepresentation<VolumeOctreeBase>()) {
+                                const VolumeOctreeBase* octree = volume->getRepresentation<VolumeOctreeBase>();
+                                oss << rwm.normalizedToRealWorld(octree->getVoxel(tmp, i) / 65535.f);
+                            }
+                            else if (volume->hasRepresentation<VolumeDisk>()) {
+                                VolumeRAM* volume = inport_.getData()->getRepresentation<VolumeDisk>()->loadBrick(tmp,tgt::svec3::one);
+                                oss << volume->getVoxelValueAsString(tgt::svec3::zero, &rwm,i);
+                                delete volume;
+                            }
+                            else if (volume->hasRepresentation<VolumeGL>()) {
+                                oss << "volume gl not supported yet";
+                            }
+                            else
+                                oss << "unknown volume representation";
+                        }
+
                         //add empty space
                         if (i < numChannels-1)
                             oss << " ";
@@ -1338,10 +1276,12 @@ void SliceViewer::renderInfoTexts() const {
 
 tgt::vec3 SliceViewer::screenToVoxelPos(tgt::ivec2 screenPos) const {
 
-    if (!inport_.getData() || !outport_.getRenderTarget())
+    const VolumeBase* volume = inport_.getData();
+
+    if (!volume || !outport_.getRenderTarget())
         return tgt::vec3(-1.f);
 
-    tgt::vec3 volumeDim(inport_.getData()->getDimensions());
+    tgt::vec3 volumeDim(volume->getDimensions());
     tgt::ivec2 screenDim = outport_.getSize();
 
     tgt::ivec2 p(0, 0);
@@ -1354,38 +1294,52 @@ tgt::vec3 SliceViewer::screenToVoxelPos(tgt::ivec2 screenPos) const {
 
     const int numSlicesRow = numGridRows_.get();
     const int numSlicesCol = numGridCols_.get();
+
     const tgt::ivec2 sliceSizeInt = static_cast<tgt::ivec2>(sliceSize_);
 
     // if coordinates are greater than the number of slices per direction
     // times their extension in that direction, no slice could be hit either
     if ((p.x >= (sliceSizeInt.x * numSlicesCol)) || (p.y >= (sliceSizeInt.y * numSlicesRow)))
-        return tgt::vec3(-1.f);
-
-    // determine the picked slice
-    const int sliceColID = p.x / sliceSizeInt.x;
-    const int sliceRowID = (numSlicesRow-1) - (p.y / sliceSizeInt.y);
-    const int slice = sliceColID + (sliceRowID * numSlicesCol) + sliceIndex_.get();
+        return tgt::vec3(-1.0f);
 
     // calculate the normalized position within the picked slice
     tgt::vec2 posWithinSlice(
-        static_cast<float>(p.x % sliceSizeInt.x),
-        static_cast<float>(p.y % sliceSizeInt.y));
+            static_cast<float>(p.x % sliceSizeInt.x),
+            static_cast<float>(p.y % sliceSizeInt.y));
     posWithinSlice /= sliceSize_;
 
-    // calculate the normalized depth of the picked slice (texture z coordinate)
-    float depth = (static_cast<float>(slice) + 0.5f) / std::max(volumeDim[voxelPosPermutation_.z], 1.f);
+    tgt::vec3 voxPos;
+    if (sliceAlignment_.getValue() == UNALIGNED_PLANE) {
+        tgt::vec2 sp(tgt::min(volume->getSpacing()) / samplingRate_);
+        tgt::vec3 fetchX = normalize(xVec_) * sp.x;
+        tgt::vec3 fetchY = normalize(yVec_) * sp.y;
+        tgt::vec3 fetchOrigin = origin_ + (0.5f * fetchX) + (0.5f * fetchY);
+        tgt::mat4 wToV = volume->getWorldToVoxelMatrix();
+        voxPos = fetchOrigin + (static_cast<float>(p.x) * fetchX) + (static_cast<float>(p.y) * fetchY);
+        voxPos = wToV * voxPos;
+    }
+    else {
 
-    // now we have the assigned texture coordinates of the picked fragment
-    tgt::vec4 texCoords(posWithinSlice, depth, 1.f);
-    texCoords = tgt::clamp(texCoords, tgt::vec4(0.f), tgt::vec4(1.f));
+        // determine the picked slice
+        const int sliceColID = p.x / sliceSizeInt.x;
+        const int sliceRowID = (numSlicesRow - 1) - (p.y / sliceSizeInt.y);
+        const int slice = sliceColID + (sliceRowID * numSlicesCol) + sliceIndex_.get();
 
-    // apply current texture matrix to assigned tex coords
-    tgt::vec3 texCoordsTransformed = (textureMatrix_ * texCoords).xyz();
+        // calculate the normalized depth of the picked slice (texture z coordinate)
+        float depth = (static_cast<float>(slice) + 0.5f) / std::max(volumeDim[voxelPosPermutation_.z], 1.f);
 
-    // transform final tex coords into volume coordinates
-    tgt::vec3 voxPos = texCoordsTransformed * (volumeDim) - tgt::vec3(0.5f);
-    voxPos = tgt::clamp(voxPos, tgt::vec3(0.f), tgt::vec3(volumeDim-1.f));
+        // now we have the assigned texture coordinates of the picked fragment
+        tgt::vec4 texCoords(posWithinSlice, depth, 1.f);
+        texCoords = tgt::clamp(texCoords, tgt::vec4(0.f), tgt::vec4(1.f));
 
+        // apply current texture matrix to assigned tex coords
+        tgt::vec3 texCoordsTransformed = (textureMatrix_ * texCoords).xyz();
+
+        // transform final tex coords into volume coordinates
+        voxPos = texCoordsTransformed * (volumeDim) - tgt::vec3(0.5f);
+    }
+
+    voxPos = tgt::clamp(voxPos, tgt::vec3(0.f), tgt::vec3(volumeDim - 1.f));
     return voxPos;
 }
 
@@ -1411,6 +1365,109 @@ tgt::mat4 SliceViewer::generatePickingMatrix() const {
     // compose transformation matrix
     tgt::mat4 result = volumeScale * textureMatrix_ * sliceScale * originTranslation;
 
+    return result;
+}
+
+void SliceViewer::updatePlane() {
+
+    const VolumeBase* volume = inport_.getData();
+
+    plane_ = tgt::plane(planeNormal_.get(), planeDistance_.get());
+
+    tgt::vec3 urb = volume->getURB();
+    tgt::vec3 llf = volume->getLLF();
+    tgt::vec3 center = (urb + llf) * 0.5f;
+
+    tgt::vec3 xMax = center;
+    xMax.x = urb.x;
+    tgt::vec3 yMax = center;
+    yMax.y = urb.y;
+    tgt::vec3 zMax = center;
+    zMax.z = urb.z;
+
+    // transform to world coordinates:
+    tgt::mat4 pToW = volume->getPhysicalToWorldMatrix();
+    center = pToW * center;
+    xMax = pToW * xMax;
+    yMax = pToW * yMax;
+    zMax = pToW * zMax;
+
+    // project to plane:
+    float d = plane_.distance(center);
+    center = center - (plane_.n * d);
+    d = plane_.distance(xMax);
+    xMax = xMax - (plane_.n * d);
+    d = plane_.distance(yMax);
+    yMax = yMax - (plane_.n * d);
+    d = plane_.distance(zMax);
+    zMax = zMax - (plane_.n * d);
+
+    // find max axis in plane:
+    tgt::vec3 maxVec = xMax - center;
+    if(distance(yMax, center) > length(maxVec))
+        maxVec = yMax - center;
+    if(distance(zMax, center) > length(maxVec))
+        maxVec = zMax - center;
+
+    maxVec = normalize(maxVec);
+    tgt::vec3 temp = normalize(cross(maxVec, plane_.n));
+
+    // construct transformation to temporary system:
+    tgt::mat4 m(maxVec.x, temp.x, plane_.n.x, center.x,
+                maxVec.y, temp.y, plane_.n.y, center.y,
+                maxVec.z, temp.z, plane_.n.z, center.z,
+                0.0f,     0.0f,   0.0f,   1.0f);
+    tgt::mat4 mInv = tgt::mat4::identity;
+    m.invert(mInv);
+
+    // transform bounds to temp system in order to construct new coordinate frame
+    tgt::Bounds b(volume->getLLF(), volume->getURB());
+    b = b.transform(mInv*pToW);
+
+    // construct new coordinate frame:
+    origin_ = center;
+    origin_ += b.getLLF().x * maxVec;
+    origin_ += b.getLLF().y * temp;
+
+    tgt::vec2 sp(tgt::min(volume->getSpacing()) / samplingRate_);
+    resolution_ = tgt::ivec2(tgt::iceil(b.diagonal().x / sp.x), tgt::iceil(b.diagonal().y / sp.y));
+
+    xVec_ = maxVec * (sp.x * resolution_.x);
+    yVec_ = temp * (sp.y * resolution_.y);
+}
+
+SliceTexture* SliceViewer::getVolumeSlice() const {
+
+    const VolumeBase* volume = inport_.getData();
+    const VolumeRAM* vol = volume->getRepresentation<VolumeRAM>();
+    if(!vol)
+        return 0;
+
+    float* sliceData = new float[resolution_.x*resolution_.y]; //SliceTexture gets ownership and deletes the array
+
+    tgt::vec2 sp(tgt::min(volume->getSpacing()) / samplingRate_);
+    tgt::vec3 fetchX = normalize(xVec_) * sp.x;
+    tgt::vec3 fetchY = normalize(yVec_) * sp.y;
+    tgt::vec3 fetchOrigin = origin_ + (0.5f * fetchX) + (0.5f * fetchY);
+
+    tgt::mat4 wToV = volume->getWorldToVoxelMatrix();
+    tgt::vec3 dims = volume->getDimensions();
+    for(int x=0; x<resolution_.x; x++) {
+        for(int y=0; y<resolution_.y; y++) {
+            tgt::vec3 pos = fetchOrigin + ((float)x * fetchX) + ((float)y * fetchY);
+            pos = wToV * pos;
+            float valueFloat = 10.0f;
+            if(hand(greaterThanEqual(pos, tgt::vec3::zero)) && hand(lessThanEqual(pos, dims)))
+                valueFloat = vol->getVoxelNormalizedLinear(pos);
+
+            sliceData[x+y*resolution_.x] = valueFloat;
+        }
+    }
+
+    SliceTexture* result = new SliceTexture(resolution_, UNALIGNED_PLANE, volume->getFormat(), volume->getBaseType(),
+                                            origin_, xVec_, yVec_, volume->getRealWorldMapping(),static_cast<void*>(sliceData), GL_RED, GL_R32F, GL_FLOAT);
+
+    LGL_ERROR;
     return result;
 }
 

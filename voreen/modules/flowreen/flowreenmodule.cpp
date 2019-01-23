@@ -42,7 +42,7 @@
 #ifdef FLOWREEN_USE_OPENLB
 #include <olb3D.h>
 
-#include "processors/flowsimulation.h"
+#include "processors/simulation/flowsimulation.h"
 #include "processors/geometry/implicitrepresentation.h"
 #endif
 

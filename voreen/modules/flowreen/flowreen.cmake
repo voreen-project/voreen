@@ -168,13 +168,13 @@ ENDIF()
 
 IF(VRN_FLOWREEN_BUILD_OPENLB)
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
-        ${MOD_DIR}/processors/flowsimulation.h
+        ${MOD_DIR}/processors/simulation/flowsimulation.h
         ${MOD_DIR}/processors/geometry/implicitrepresentation.h
 
         ${MOD_DIR}/utils/geometryconverter.h
     )
     SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
-        ${MOD_DIR}/processors/flowsimulation.cpp
+        ${MOD_DIR}/processors/simulation/flowsimulation.cpp
         ${MOD_DIR}/processors/geometry/implicitrepresentation.cpp
 
         ${MOD_DIR}/utils/geometryconverter.cpp
@@ -186,7 +186,6 @@ ENDIF()
 ################################################################################
 
 SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
-    ${MOD_DIR}/processors/flowsimulation.h
     ${MOD_DIR}/ext/halfedge/trimesh.h
     ${MOD_DIR}/ext/halfedge/trimesh_types.h
 )

@@ -248,11 +248,20 @@ protected:
     bool sliceComplete_;                ///< is set in process() and specifies whether the current slice has been created in full LOD,
                                         ///< if not, an invalidation is triggered in afterProcess().
 
+    tgt::plane plane_;
+    tgt::vec3 xVec_;
+    tgt::vec3 yVec_;
+    tgt::vec3 origin_;
+    float samplingRate_;
+    tgt::ivec2 resolution_;
+
     static const std::string fontName_; ///< path and name of the font used for text-rendering
 
     static const std::string loggerCat_;
 
 private:
+    void updatePlane();
+    SliceTexture* getVolumeSlice() const;
     void renderSliceGeometry(const tgt::vec4& t0, const tgt::vec4& t1, const tgt::vec4& t2, const tgt::vec4& t3) const;
 
     mutable tgt::ivec2 mousePosition_;          ///< Current mouse position
