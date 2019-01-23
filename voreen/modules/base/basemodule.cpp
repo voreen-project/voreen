@@ -136,7 +136,6 @@
 #include "processors/volume/volumeoffset.h"
 #include "processors/volume/volumetransformation.h"
 #include "processors/volume/volumemasking.h"
-#include "processors/volume/volumemorphology.h"
 #include "processors/volume/volumeresample.h"
 #include "processors/volume/volumecreate.h"
 #include "processors/volume/volumecubify.h"
@@ -281,7 +280,6 @@ BaseModule::BaseModule(const std::string& modulePath) : VoreenModule(modulePath)
     registerSerializableType(new VolumeListSpacing());
     registerSerializableType(new VolumeMasking());
     registerSerializableType(new VolumeMirror());
-    registerSerializableType(new VolumeMorphology());
     registerSerializableType(new VolumeOctreeLevelExtractor());
     registerSerializableType(new VolumeResample());
     registerSerializableType(new VolumeSpacing());
