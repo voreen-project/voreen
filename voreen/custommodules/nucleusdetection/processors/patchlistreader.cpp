@@ -28,7 +28,6 @@
 #include "voreen/core/datastructures/volume/volumebase.h"
 #include "voreen/core/datastructures/volume/volumeram.h"
 
-#include "voreen/core/datastructures/volume/volumecontainer.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 
 #include "tgt/filesystem.h"
@@ -48,6 +47,7 @@ PatchListReader::PatchListReader()
     , allowAdditionalFeaturesAtEnd_("allowAtEnd", "Allow additional two trailing features", true) 
     , loadButton_("load", "Load")
     , autoCompute_("autoLoad", "Auto Load", false)
+    , outputList_(0)
 {
     addPort(outport_);
 
@@ -65,7 +65,31 @@ Processor* PatchListReader::create() const {
     return new PatchListReader();
 }
 
+void PatchListReader::deinitialize() {
+    clearOutputList();
+    VolumeProcessor::deinitialize();
+}
+
+void PatchListReader::clearOutputList() {
+    if (!outputList_)
+        return;
+
+    if (outport_.getData())
+        outport_.setData(0);
+
+    // delete all volumes and delete list
+    while (!outputList_->empty()) {
+        VolumeBase* v = outputList_->first();
+        outputList_->remove(v);
+        delete v;
+    }
+    
+    delete outputList_;
+    outputList_ = 0;
+}
+
 void PatchListReader::process() {
+    //clearOutputList();
     if (autoCompute_.get())
         loadPatches();
 }
@@ -78,6 +102,9 @@ void PatchListReader::loadPatches() {
         LERROR("no filename");
         return;
     }
+
+    if (outputList_)
+        clearOutputList();
 
     std::string filename = tgt::FileSystem::cleanupPath(filename_.get());
     std::string datasetName = "filters";
@@ -132,7 +159,9 @@ void PatchListReader::loadPatches() {
     file.close();
     
     size_t numFeatures = dims[1];
-    size_t edgeLength = std::pow(numFeatures, 1.0/3.0); // std::cbrt(numFeatures) not supported prior to MSVC2013
+    //size_t edgeLength = std::pow(numFeatures, 1.0/3.0); // std::cbrt(numFeatures) not supported prior to MSVC2013
+    size_t edgeLength = std::cbrt(numFeatures);
+
     size_t numFeaturesResultingFromEdgeLength = std::pow(edgeLength, 3);
     size_t featureDifference = numFeatures - numFeaturesResultingFromEdgeLength;
     
@@ -154,7 +183,7 @@ void PatchListReader::loadPatches() {
 
     size_t numPatches = dims[0];
 
-    VolumeContainer* outputList = new VolumeContainer();
+    outputList_ = new VolumeList();
 
     for (size_t i = 0; i < numPatches; ++i) {
         VolumeRAM_Float* volumeRAM = new VolumeRAM_Float(tgt::svec3(edgeLength), true);
@@ -196,12 +225,12 @@ void PatchListReader::loadPatches() {
             }
         }
         Volume* outputVolume = new Volume(volumeRAM, tgt::vec3(1.f), tgt::vec3(0.f));
-        outputList->add(outputVolume);
+        outputList_->add(outputVolume);
     }
 
     delete[] patches;
 
-    outport_.setData(outputList, true);
+    outport_.setData(outputList_, false);
 }
 
 } // namespace

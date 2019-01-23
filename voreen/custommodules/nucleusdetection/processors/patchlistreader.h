@@ -32,6 +32,8 @@
 #include "voreen/core/properties/volumeinfoproperty.h"
 #include "voreen/core/properties/boolproperty.h"
 
+#include "voreen/core/datastructures/volume/volumelist.h"
+
 namespace voreen {
 
 class VRN_CORE_API PatchListReader : public VolumeProcessor {
@@ -49,13 +51,20 @@ protected:
         setDescription("Reads 7x7x7 (normalized) float patches from an input binary raw file and outputs them as a VolumeList.");
     }
 
+    virtual void deinitialize();
+
     virtual void process();
 
     virtual void loadPatches();
 
+    virtual void clearOutputList();
+
+
 private:
 
     VolumeListPort outport_;
+
+    VolumeList* outputList_;    ///< list containing all output volumes (memory management is handled by processor)
 
     FileDialogProperty filename_;
     BoolProperty normalizePatches_; // normalizes the patches with mean 0 and standard deviation 1
