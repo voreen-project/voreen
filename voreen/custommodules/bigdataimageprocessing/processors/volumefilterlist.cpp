@@ -58,7 +58,6 @@ VolumeFilterList::VolumeFilterList()
     , numInstances_(0)
 {
     addPort(inport_);
-        ON_CHANGE(inport_, VolumeFilterList, adjustPropertiesToInput);
     addPort(outport_);
 
     addProperty(filterList_);

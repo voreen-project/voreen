@@ -25,9 +25,6 @@
 
 #include "binarymedianfilterproperties.h"
 
-#include "voreen/core/datastructures/callback/lambdacallback.h"
-#include "voreen/core/datastructures/volume/volumeminmax.h"
-
 namespace voreen {
 
 BinaryMedianFilterProperties::BinaryMedianFilterProperties()

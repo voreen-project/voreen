@@ -52,12 +52,14 @@ private:
 
     struct Settings {
         float thresholdValue_;
+        bool binarize_;
         float replacementValue_;
         ThresholdingStrategyType thresholdingStrategyType_;
     };
     std::map<int, Settings> instanceSettings_;
 
     FloatProperty thresholdValue_;
+    BoolProperty binarize_;
     FloatProperty replacementValue_;
     OptionProperty<ThresholdingStrategyType> thresholdingStrategyType_;
 };

@@ -41,6 +41,7 @@ class ThresholdingFilter : public VolumeFilter {
 public:
 
     ThresholdingFilter(float threshold, float replacement, ThresholdingStrategyType thresholdingStrategyType, const std::string& sliceBaseType);
+    ThresholdingFilter(float threshold, ThresholdingStrategyType thresholdingStrategyType);
     virtual ~ThresholdingFilter();
 
     int zExtent() const;
@@ -52,8 +53,13 @@ public:
 
     std::unique_ptr<VolumeRAM> getFilteredSlice(const CachingSliceReader* src, int z) const;
 
+    ThresholdingStrategyType getThresholdingStrategyType() const;
+
 private:
 
+    std::function<bool(float, float)> strategy_;
+
+    bool binarize_;
     const float threshold_;
     const float replacement_;
     const ThresholdingStrategyType thresholdingStrategyType_;

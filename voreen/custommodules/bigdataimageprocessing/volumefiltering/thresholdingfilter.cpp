@@ -27,14 +27,55 @@
 
 #include "slicereader.h"
 
+namespace {
+    static const auto LOWER_THRESHOLD_FUNC = [](float a, float b) { return a < b; };
+    static const auto UPPER_THRESHOLD_FUNC = [](float a, float b) { return a > b; };
+}
+
 namespace voreen {
 
+static const std::string BINARIZATION_SLICE_BASE_TYPE = "uint8";
+static const float BINARIZATION_OUT_VALUE = 0.0f;
+static const float BINARIZATION_IN_VALUE = 1.0f;
+
 ThresholdingFilter::ThresholdingFilter(float threshold, float replacement, ThresholdingStrategyType thresholdingStrategyType, const std::string& sliceBaseType)
-    : threshold_(threshold)
+    : binarize_(false)
+    , threshold_(threshold)
     , replacement_(replacement)
     , thresholdingStrategyType_(thresholdingStrategyType)
     , sliceBaseType_(sliceBaseType)
 {
+    switch (thresholdingStrategyType_) {
+    case LOWER_T:
+        strategy_ = LOWER_THRESHOLD_FUNC;
+        break;
+    case UPPER_T:
+        strategy_ = UPPER_THRESHOLD_FUNC;
+        break;
+    default:
+        tgtAssert(false, "Unimplemented Thresholding Strategy")
+            break;
+    }
+}
+
+ThresholdingFilter::ThresholdingFilter(float threshold, ThresholdingStrategyType thresholdingStrategyType)
+    : binarize_(true)
+    , threshold_(threshold)
+    , replacement_(BINARIZATION_OUT_VALUE)
+    , thresholdingStrategyType_(thresholdingStrategyType)
+    , sliceBaseType_(BINARIZATION_SLICE_BASE_TYPE)
+{
+    switch (thresholdingStrategyType_) {
+    case LOWER_T:
+        strategy_ = LOWER_THRESHOLD_FUNC;
+        break;
+    case UPPER_T:
+        strategy_ = UPPER_THRESHOLD_FUNC;
+        break;
+    default:
+        tgtAssert(false, "Unimplemented Thresholding Strategy")
+            break;
+    }
 }
 
 ThresholdingFilter::~ThresholdingFilter() {
@@ -51,22 +92,6 @@ const std::string& ThresholdingFilter::getSliceBaseType() const {
 std::unique_ptr<VolumeRAM> ThresholdingFilter::getFilteredSlice(const CachingSliceReader* src, int z) const {
     tgtAssert(z >= 0 && z < src->getSignedDimensions().z, "Invalid z pos in slice request");
 
-    static const auto LOWER_THRESHOLD_FUNC = [](float a, float b) { return a < b; };
-    static const auto UPPER_THRESHOLD_FUNC = [](float a, float b) { return a > b; };
-
-    std::function<bool(float, float)> strategy;
-    switch (thresholdingStrategyType_) {
-    case LOWER_T:
-        strategy = LOWER_THRESHOLD_FUNC;
-        break;
-    case UPPER_T:
-        strategy = UPPER_THRESHOLD_FUNC;
-        break;
-    default:
-        tgtAssert(false, "Unimplemented Thresholding Strategy")
-        break;
-    }
-
     const tgt::ivec3& dim = src->getSignedDimensions();
     std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(sliceBaseType_, tgt::svec3(dim.xy(), 1)));
 
@@ -74,14 +99,21 @@ std::unique_ptr<VolumeRAM> ThresholdingFilter::getFilteredSlice(const CachingSli
     for (int y = 0; y < dim.y; ++y) {
         for (int x = 0; x < dim.x; ++x) {
             float value = src->getVoxelNormalized(tgt::ivec3(x, y, z));
-            bool replace = strategy(value, threshold_);
+            bool replace = strategy_(value, threshold_);
             if (replace) {
                 value = replacement_;
+            }
+            else if (binarize_) {
+                value = BINARIZATION_IN_VALUE;
             }
             outputSlice->setVoxelNormalized(value, x, y, 0);
         }
     }
     return outputSlice;
+}
+
+ThresholdingStrategyType ThresholdingFilter::getThresholdingStrategyType() const {
+    return thresholdingStrategyType_;
 }
 
 } // namespace voreen

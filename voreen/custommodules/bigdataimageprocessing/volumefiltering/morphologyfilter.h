@@ -54,13 +54,17 @@ public:
     size_t getNumInputChannels() const { return 1; };
     size_t getNumOutputChannels() const { return 1; };
 
+    MorphologyOperatorType getMorphologyOperatorType() const;
+    MorphologyOperatorShape getMorphologyOperatorShape() const;
+
 private:
 
-    std::unique_ptr<VolumeRAM> getFilteredSliceCubeMorphology(const std::function<float(float, float)>& typeFunc, const CachingSliceReader* src, int z) const;
-    std::unique_ptr<VolumeRAM> getFilteredSliceSphereMorphology (const std::function<float(float, float)>& typeFunc, const CachingSliceReader* src, int z) const;
+    std::unique_ptr<VolumeRAM> getFilteredSliceCubeMorphology(const CachingSliceReader* src, int z) const;
+    std::unique_ptr<VolumeRAM> getFilteredSliceSphereMorphology (const CachingSliceReader* src, int z) const;
+
+    std::function<float(float, float)> morphFunc_;
 
     const tgt::ivec3 extent_;
-
     const MorphologyOperatorType type_;
     const MorphologyOperatorShape shape_;
     const SamplingStrategy<float> samplingStrategy_;

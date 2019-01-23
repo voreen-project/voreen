@@ -25,18 +25,20 @@
 
 #include "thresholdingfilterproperties.h"
 
-#include "voreen/core/datastructures/callback/lambdacallback.h"
-#include "voreen/core/datastructures/volume/volumeminmax.h"
-
 namespace voreen {
 
 ThresholdingFilterProperties::ThresholdingFilterProperties()
     : thresholdValue_(getId("thresholdValue"), "Threshold Value", 0, 0, 1)
-    , thresholdingStrategyType_(getId("thresholdingStrategyType"), "Thresholding Strategy", ThresholdingStrategyType::LOWER_T)
+    , binarize_(getId("binarize"), "Binarize?", false)
     , replacementValue_(getId("replacementValue"), "Replacement Value", 0, 0, 1)
+    , thresholdingStrategyType_(getId("thresholdingStrategyType"), "Thresholding Strategy", ThresholdingStrategyType::LOWER_T)
 {
     thresholdingStrategyType_.addOption("lower", "Lower", ThresholdingStrategyType::LOWER_T);
     thresholdingStrategyType_.addOption("upper", "Upper", ThresholdingStrategyType::UPPER_T);
+
+    ON_CHANGE_LAMBDA(binarize_, [this]() {
+        replacementValue_.setVisibleFlag(!binarize_.get());
+    });
 
     // Update property state.
     thresholdingStrategyType_.invalidate();
@@ -73,12 +75,20 @@ VolumeFilter* ThresholdingFilterProperties::getVolumeFilter(const VolumeBase& vo
     if (volume.hasMetaData("RealWorldMapping")) {
         rwm = volume.getRealWorldMapping();
     }
-    return new ThresholdingFilter(
-        rwm.realWorldToNormalized(settings.thresholdValue_),
-        rwm.realWorldToNormalized(settings.replacementValue_),
-        settings.thresholdingStrategyType_,
-        volume.getBaseType()
-    );
+    if (binarize_.get()) {
+        return new ThresholdingFilter(
+            rwm.realWorldToNormalized(settings.thresholdValue_),
+            settings.thresholdingStrategyType_
+        );
+    }
+    else {
+        return new ThresholdingFilter(
+            rwm.realWorldToNormalized(settings.thresholdValue_),
+            rwm.realWorldToNormalized(settings.replacementValue_),
+            settings.thresholdingStrategyType_,
+            volume.getBaseType()
+        );
+    }
 }
 void ThresholdingFilterProperties::restoreInstance(int instanceId) {
     auto iter = instanceSettings_.find(instanceId);
@@ -88,12 +98,14 @@ void ThresholdingFilterProperties::restoreInstance(int instanceId) {
 
     Settings settings = instanceSettings_[instanceId];
     thresholdValue_.set(settings.thresholdValue_);
+    binarize_.set(settings.binarize_);
     replacementValue_.set(settings.replacementValue_);
     thresholdingStrategyType_.selectByValue(settings.thresholdingStrategyType_);
 }
 void ThresholdingFilterProperties::storeInstance(int instanceId) {
     Settings& settings = instanceSettings_[instanceId];
     settings.thresholdValue_ = thresholdValue_.get();
+    settings.binarize_ = binarize_.get();
     settings.replacementValue_ = replacementValue_.get();
     settings.thresholdingStrategyType_ = thresholdingStrategyType_.getValue();
 }
@@ -102,6 +114,7 @@ void ThresholdingFilterProperties::removeInstance(int instanceId) {
 }
 void ThresholdingFilterProperties::addProperties() {
     properties_.push_back(&thresholdValue_);
+    properties_.push_back(&binarize_);
     properties_.push_back(&replacementValue_);
     properties_.push_back(&thresholdingStrategyType_);
 }

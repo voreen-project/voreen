@@ -27,8 +27,13 @@
 #define VRN_FILTERPROPERTIES_H
 
 #include "voreen/core/io/serialization/serializable.h"
-#include "voreen/core/properties/property.h"
+
 #include "../volumefiltering/volumefilter.h"
+
+#include "voreen/core/datastructures/callback/lambdacallback.h"
+#include "voreen/core/datastructures/volume/volumeminmax.h"
+
+#include "voreen/core/properties/property.h"
 #include "voreen/core/properties/intproperty.h"
 #include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/boolproperty.h"

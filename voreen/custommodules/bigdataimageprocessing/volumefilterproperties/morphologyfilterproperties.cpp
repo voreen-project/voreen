@@ -25,9 +25,6 @@
 
 #include "morphologyfilterproperties.h"
 
-#include "voreen/core/datastructures/callback/lambdacallback.h"
-#include "voreen/core/datastructures/volume/volumeminmax.h"
-
 namespace voreen {
 
 MorphologyFilterProperties::MorphologyFilterProperties()
