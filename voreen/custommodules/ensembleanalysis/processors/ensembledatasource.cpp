@@ -65,7 +65,6 @@ EnsembleDataSource::EnsembleDataSource()
 }
 
 EnsembleDataSource::~EnsembleDataSource() {
-    clearEnsembleDataset();
 }
 
 Processor* EnsembleDataSource::create() const {
@@ -79,6 +78,11 @@ void EnsembleDataSource::process() {
 void EnsembleDataSource::initialize() {
     Processor::initialize();
     //buildEnsembleDataset();
+}
+
+void EnsembleDataSource::deinitialize() {
+    clearEnsembleDataset();
+    Processor::deinitialize();
 }
 
 void EnsembleDataSource::clearEnsembleDataset() {

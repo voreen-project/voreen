@@ -65,6 +65,7 @@ protected:
 
     void process();
     virtual void initialize();
+    virtual void deinitialize();
 
     void clearEnsembleDataset();
     void buildEnsembleDataset();
