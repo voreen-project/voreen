@@ -28,7 +28,6 @@
 #include "voreen/core/datastructures/volume/volume.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
 #include "voreen/core/datastructures/volume/volumedisk.h"
-#include "voreen/core/datastructures/volume/volumecontainer.h"
 #include "voreen/core/datastructures/octree/volumeoctree.h"
 #include "voreen/core/voreenapplication.h"
 #include "voreen/core/datastructures/geometry/pointlistgeometry.h"
@@ -783,7 +782,7 @@ static UnfinishedRegions collectUnfinishedRegions(const LZ4SliceVolume<uint32_t>
     };
 }
 
-std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInput& input, VolumeMask&& skeleton, VolumeList& generatedVolumes, ProgressReporter& progress) {
+std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInput& input, VolumeMask&& skeleton, std::vector<std::unique_ptr<VolumeBase>>& generatedVolumes, ProgressReporter& progress) {
     SubtaskProgressReporterCollection<8> subtaskReporters(progress);
 
     // Create new protograph
@@ -810,7 +809,7 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
     size_t numComponents;
     LZ4SliceVolume<uint32_t> branchIdSegmentation = createCCAVolume(closestIDs, VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION), numComponents, subtaskReporters.get<3>());
     if(input.saveDebugData) {
-        generatedVolumes.add(std::move(closestIDs).toVolume().release());
+        generatedVolumes.push_back(std::move(closestIDs).toVolume());
     } else {
         std::move(closestIDs).deleteFromDisk();
     }
@@ -825,7 +824,7 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
     unfinishedRegions.floodAllRegions(branchIdSegmentation, subtaskReporters.get<6>());
 
     if(input.saveDebugData) {
-        generatedVolumes.add(std::move(unfinishedRegions.holeIds).toVolume().release());
+        generatedVolumes.push_back(std::move(unfinishedRegions.holeIds).toVolume());
     } else {
         std::move(unfinishedRegions.holeIds).deleteFromDisk();
     }
@@ -834,7 +833,7 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
     //  6. Create better VesselGraph from protograph and the edge-id-segmentation
     auto output = protograph->createVesselGraph(branchIdReader, input.sampleMask, subtaskReporters.get<7>());
     if(input.saveDebugData) {
-        generatedVolumes.add(std::move(branchIdSegmentation).toVolume().release());
+        generatedVolumes.push_back(std::move(branchIdSegmentation).toVolume());
     } else {
         std::move(branchIdSegmentation).deleteFromDisk();
     }
@@ -842,7 +841,7 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
     return output;
 }
 
-std::unique_ptr<VesselGraph> refineVesselGraph(VesselGraphCreatorProcessedInput& input, const VesselGraph& prevGraph, VolumeList& generatedVolumes, ProgressReporter& progress) {
+std::unique_ptr<VesselGraph> refineVesselGraph(VesselGraphCreatorProcessedInput& input, const VesselGraph& prevGraph, std::vector<std::unique_ptr<VolumeBase>>& generatedVolumes, ProgressReporter& progress) {
     TaskTimeLogger _("Refinement iteration", tgt::Info);
 
     SubtaskProgressReporterCollection<3> subtaskReporters(progress);
@@ -871,7 +870,7 @@ std::unique_ptr<VesselGraph> refineVesselGraph(VesselGraphCreatorProcessedInput&
     return createGraphFromMask(input, std::move(mask), generatedVolumes, subtaskReporters.get<2>());
 }
 
-std::unique_ptr<VesselGraph> createInitialVesselGraph(VesselGraphCreatorProcessedInput& input, VolumeList& generatedVolumes, ProgressReporter& progress) {
+std::unique_ptr<VesselGraph> createInitialVesselGraph(VesselGraphCreatorProcessedInput& input, std::vector<std::unique_ptr<VolumeBase>>& generatedVolumes, ProgressReporter& progress) {
     TaskTimeLogger _("Create initial VesselGraph", tgt::Info);
     SubtaskProgressReporterCollection<3> subtaskReporters(progress);
     progress.setProgress(0.0f);
@@ -951,7 +950,7 @@ static bool iterationMadeProgress(const VesselGraph& before, const VesselGraph& 
 VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput input, ProgressReporter& progressReporter) const {
     LINFO("Starting graph extraction from volume '" << input.segmentation.getOrigin().getURL() << "' (dimensions: " << input.segmentation.getDimensions() << ")");
 
-    std::unique_ptr<VolumeList> generatedVolumes(new VolumeContainer());
+    std::vector<std::unique_ptr<VolumeBase>> generatedVolumes;
     std::unique_ptr<std::vector<VesselGraph>> generatedGraphs(new std::vector<VesselGraph>());
     std::unique_ptr<VesselGraph> graph(nullptr);
     try {
@@ -963,7 +962,7 @@ VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput inp
         float progressPerIteration = 1.0f/(input.numRefinementIterations+1);
         SubtaskProgressReporter initialProgress(progressCollection.get<1>(), tgt::vec2(0, progressPerIteration));
 
-        graph = createInitialVesselGraph(processedInput, *generatedVolumes, initialProgress);
+        graph = createInitialVesselGraph(processedInput, generatedVolumes, initialProgress);
         LINFO("Inital graph: " << graph->getNodes().size() << " Nodes, " << graph->getEdges().size() << " Edges.");
 
         for(int i=0; i < input.numRefinementIterations; ++i) {
@@ -972,7 +971,7 @@ VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput inp
             if(input.saveDebugData) {
                 generatedGraphs->push_back(graph->clone());
             }
-            std::unique_ptr<VesselGraph> next_graph = refineVesselGraph(processedInput, *graph, *generatedVolumes, refinementProgress);
+            std::unique_ptr<VesselGraph> next_graph = refineVesselGraph(processedInput, *graph, generatedVolumes, refinementProgress);
 
             bool done = !iterationMadeProgress(*graph, *next_graph);
 
@@ -1032,7 +1031,12 @@ void VesselGraphCreator::processComputeOutput(VesselGraphCreatorOutput output) {
         nodeOutport_.setData(nullptr);
         edgeOutport_.setData(nullptr);
     }
-    generatedVolumesOutport_.setData(output.generatedVolumes.release());
+    lastGeneratedVolumes_ = std::move(output.generatedVolumes);
+    VolumeList* volList = new VolumeList();
+    for(auto& vol : lastGeneratedVolumes_) {
+        volList->add(vol.get());
+    }
+    generatedVolumesOutport_.setData(volList);
     generatedGraphsOutport_.setData(output.generatedGraphs.release());
 }
 void VesselGraphCreator::adjustPropertiesToInput() {
