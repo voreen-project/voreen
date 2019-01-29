@@ -213,6 +213,7 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(BranchIdVolumeR
         skeletonVoxelLists.storeElement(DiskArray<VesselSkeletonVoxel>(std::move(builder).finalize()));
     }
 
+    // TODO: block wise?
     tgt::ivec3 idim = dimensions;
     for(int z = 0; z < idim.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dimensions.z);

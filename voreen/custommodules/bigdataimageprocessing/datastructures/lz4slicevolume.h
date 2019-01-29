@@ -95,28 +95,29 @@ class LZ4SliceVolumeBuilder;
 template<typename Voxel>
 class LZ4SliceVolume;
 
-template<typename Voxel>
-class LZ4WriteableSlice {
-public:
-    VolumeAtomic<Voxel>& operator*() { return slice_; }
-    VolumeAtomic<Voxel>* operator->() { return &slice_; }
 
-    LZ4WriteableSlice(LZ4WriteableSlice&& other)
+template<typename Voxel>
+class LZ4WriteableSlab {
+public:
+    VolumeAtomic<Voxel>& operator*() { return slab_; }
+    VolumeAtomic<Voxel>* operator->() { return &slab_; }
+
+    LZ4WriteableSlab(LZ4WriteableSlab&& other)
         : volume_(other.volume_)
-        , sliceNum_(other.sliceNum_)
-        , slice_(std::move(other.slice_))
+        , zBegin_(other.zBegin_)
+        , slab_(std::move(other.slab_))
     {
     }
-    ~LZ4WriteableSlice();
+    ~LZ4WriteableSlab();
 
 private:
-    LZ4WriteableSlice(LZ4SliceVolume<Voxel>& volume, size_t sliceNum, VolumeAtomic<Voxel>&& slice);
+    LZ4WriteableSlab(LZ4SliceVolume<Voxel>& volume, size_t sliceNum, VolumeAtomic<Voxel>&& slice);
 
     friend class LZ4SliceVolume<Voxel>;
     friend class LZ4SliceVolumeBuilder<Voxel>;
     LZ4SliceVolume<Voxel>& volume_; //MUST live longer than this object
-    size_t sliceNum_;
-    VolumeAtomic<Voxel> slice_;
+    size_t zBegin_;
+    VolumeAtomic<Voxel> slab_;
 };
 
 class LZ4SliceVolumeBase {
@@ -159,7 +160,8 @@ public:
     VolumeAtomic<Voxel> loadSlab(size_t beginZ, size_t endZ /*exclusive*/) const;
     VolumeAtomic<Voxel> loadSlice(size_t sliceNumber) const;
     void writeSlice(const VolumeAtomic<Voxel>& slice, size_t sliceNumber);
-    LZ4WriteableSlice<Voxel> getWritableSlice(size_t sliceNumber);
+    void writeSlab(const VolumeAtomic<Voxel>& slice, size_t sliceNumber);
+    LZ4WriteableSlab<Voxel> getWriteableSlice(size_t sliceNumber);
 
 private:
     friend class LZ4SliceVolumeBuilder<Voxel>;
@@ -222,7 +224,8 @@ public:
     LZ4SliceVolumeBuilder(std::string filePath, LZ4SliceVolumeMetadata metadata);
     LZ4SliceVolumeBuilder(LZ4SliceVolumeBuilder&& other);
 
-    LZ4WriteableSlice<Voxel> getNextWritableSlice();
+    LZ4WriteableSlab<Voxel> getNextWriteableSlice();
+    LZ4WriteableSlab<Voxel> getNextWriteableSlab(size_t zSize);
     void pushSlice(const VolumeAtomic<Voxel>& slice);
 
     LZ4SliceVolume<Voxel> finalize() &&;
@@ -256,19 +259,19 @@ LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizat
 LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized, ProgressReporter& progress);
 LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized, ProgressReporter&& progress);
 
-/// LZ4WritableSlice -----------------------------------------------------------
+/// LZ4WriteableSlab -----------------------------------------------------------
 
 template<typename Voxel>
-LZ4WriteableSlice<Voxel>::LZ4WriteableSlice(LZ4SliceVolume<Voxel>& volume, size_t sliceNum, VolumeAtomic<Voxel>&& slice)
+LZ4WriteableSlab<Voxel>::LZ4WriteableSlab(LZ4SliceVolume<Voxel>& volume, size_t zBegin, VolumeAtomic<Voxel>&& slab)
     : volume_(volume)
-    , sliceNum_(sliceNum)
-    , slice_(std::move(slice))
+    , zBegin_(zBegin)
+    , slab_(std::move(slab))
 {
 }
 
 template<typename Voxel>
-LZ4WriteableSlice<Voxel>::~LZ4WriteableSlice() {
-    volume_.writeSlice(slice_, sliceNum_);
+LZ4WriteableSlab<Voxel>::~LZ4WriteableSlab() {
+    volume_.writeSlab(slab_, zBegin_);
 }
 
 /// LZ4SliceVolume -------------------------------------------------------------
@@ -403,8 +406,20 @@ void LZ4SliceVolume<Voxel>::writeSlice(const VolumeAtomic<Voxel>& slice, size_t 
 }
 
 template<typename Voxel>
-LZ4WriteableSlice<Voxel> LZ4SliceVolume<Voxel>::getWritableSlice(size_t sliceNumber) {
-    return LZ4WriteableSlice<Voxel>(*this, sliceNumber, loadSlice(sliceNumber));
+void LZ4SliceVolume<Voxel>::writeSlab(const VolumeAtomic<Voxel>& slab, size_t zBegin) {
+    tgtAssert(slab.getDimensions().xy() == getSliceDimensions().xy(), "Invalid slab dimensions");
+    tgtAssert(zBegin + slab.getDimensions().z <= getNumSlices(), "Invalid slab begin");
+
+    for(size_t dz=0; dz<slab.getDimensions().z; ++dz) {
+        Voxel* sliceStart = const_cast<Voxel*>(&slab.voxel(0,0,dz)); //This is fine because we create a const volumeatomic from it
+        const VolumeAtomic<Voxel> slice(sliceStart, getSliceDimensions(), false /*do not take ownership*/);
+        writeSlice(slice, zBegin + dz);
+    }
+}
+
+template<typename Voxel>
+LZ4WriteableSlab<Voxel> LZ4SliceVolume<Voxel>::getWriteableSlice(size_t sliceNumber) {
+    return LZ4WriteableSlab<Voxel>(*this, sliceNumber, loadSlice(sliceNumber));
 }
 
 /// LZ4SliceVolumeSliceCacher --------------------------------------------------
@@ -538,10 +553,16 @@ LZ4SliceVolumeBuilder<Voxel>::LZ4SliceVolumeBuilder(LZ4SliceVolumeBuilder&& othe
 }
 
 template<typename Voxel>
-LZ4WriteableSlice<Voxel> LZ4SliceVolumeBuilder<Voxel>::getNextWritableSlice() {
+LZ4WriteableSlab<Voxel> LZ4SliceVolumeBuilder<Voxel>::getNextWriteableSlice() {
+    return getNextWriteableSlab(1);
+}
+
+template<typename Voxel>
+LZ4WriteableSlab<Voxel> LZ4SliceVolumeBuilder<Voxel>::getNextWriteableSlab(size_t zSize) {
     tgtAssert(numSlicesPushed_ < volumeInConstruction_.getNumSlices(), "Cannot push more slices");
-    ++numSlicesPushed_;
-    return LZ4WriteableSlice<Voxel>(volumeInConstruction_, numSlicesPushed_-1, VolumeAtomic<Voxel>(tgt::svec3(volumeInConstruction_.getDimensions().xy(), 1)));
+    size_t begin = numSlicesPushed_;
+    numSlicesPushed_ += zSize;
+    return LZ4WriteableSlab<Voxel>(volumeInConstruction_, begin, VolumeAtomic<Voxel>(tgt::svec3(volumeInConstruction_.getDimensions().xy(), zSize)));
 }
 
 template<typename Voxel>

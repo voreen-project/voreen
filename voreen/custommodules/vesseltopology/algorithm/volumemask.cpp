@@ -222,7 +222,7 @@ VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional
     };
 
     auto calc_chunk_size = [&] (size_t chunk, size_t num_chunks, size_t max_chunk_size, size_t dimensions) {
-        size_t size = chunk != num_chunks - 1 || (dimensions % max_chunk_size == 0) ? max_chunk_size : dimensions % max_chunk_size; //TODO check
+        size_t size = chunk != num_chunks - 1 || (dimensions % max_chunk_size == 0) ? max_chunk_size : dimensions % max_chunk_size;
         tgtAssert(size > 0, "Invalid chunk size");
         return size;
     };

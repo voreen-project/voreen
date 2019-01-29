@@ -222,39 +222,78 @@ static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath
 
     LZ4SliceVolumeBuilder<uint32_t> outputIDs(tmpPath, input.segmentation.getMetaData().withRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint32_t>()));
 
-    for(size_t z = 0; z<dimensions.z; ++z) {
-        progress.setProgress(static_cast<float>(z)/dimensions.z);
-        auto slice = input.segmentation.loadSlice(z);
+    const size_t max_chunk_size = 32;
 
-        auto outputSlice = outputIDs.getNextWritableSlice();
+    auto calc_num_chunks = [] (size_t dim, size_t size) {
+        if((dim % size) == 0) {
+            return dim/size;
+        } else {
+            return dim/size+1;
+        }
+    };
 
-        for(size_t y = 0; y<dimensions.y; ++y) {
-            for(size_t x = 0; x<dimensions.x; ++x) {
-                const tgt::svec3 p(x,y,0);
-                uint32_t label;
-                if(slice.voxel(p) > 0) {
-                    tgt::ivec3 ipos(x,y,z);
-                    tgt::vec3 rwpos = transform(voxelToRw, ipos);
+    auto calc_chunk_size = [&] (size_t chunk, size_t num_chunks, size_t dimensions) {
+        size_t size = chunk != num_chunks - 1 || (dimensions % max_chunk_size == 0) ? max_chunk_size : dimensions % max_chunk_size;
+        tgtAssert(size > 0, "Invalid chunk size");
+        return size;
+    };
 
-                    auto result = finder.findAllNearest(rwpos);
-                    if(!result.found()) {
-                        label = 0xFEEDBEEF; //Doesn't really matter. only happens in edge cases anyway
-                    } else {
-                        auto min_elm = std::min_element(result.elements_.begin(), result.elements_.end(), [] (const EdgeVoxelRef*& e1, const EdgeVoxelRef*& e2) {
-                            auto p1 = e1->getPos();
-                            auto p2 = e2->getPos();
-                            float cmp = p1.x - p2.x;
-                            cmp = (cmp == 0) ? p1.y - p2.y : cmp;
-                            cmp = (cmp == 0) ? p1.z - p2.z : cmp;
-                            return cmp < 0;
-                        });
-                        tgtAssert(min_elm != result.elements_.end(), "Empty result set");
-                        label = (*min_elm)->edge->id_.raw();
+    const size_t num_chunks_x = calc_num_chunks(dimensions.x, max_chunk_size);
+    const size_t num_chunks_y = calc_num_chunks(dimensions.y, max_chunk_size);
+    const size_t num_chunks_z = calc_num_chunks(dimensions.z, max_chunk_size);
+
+    for(size_t chunk_z = 0; chunk_z < num_chunks_z; ++chunk_z) {
+        progress.setProgress(static_cast<float>(chunk_z)/num_chunks_z);
+
+        const size_t chunk_size_z = calc_chunk_size(chunk_z, num_chunks_z, dimensions.z);
+        auto outputSlab = outputIDs.getNextWriteableSlab(chunk_size_z);
+
+        size_t slab_begin = chunk_z*max_chunk_size;
+        size_t slab_end = slab_begin + chunk_size_z;
+        auto slab = input.segmentation.loadSlab(slab_begin, slab_end);
+
+        for(size_t chunk_y = 0; chunk_y < num_chunks_y; ++chunk_y) {
+            const size_t chunk_size_y = calc_chunk_size(chunk_y, num_chunks_y, dimensions.y);
+
+            for(size_t chunk_x = 0; chunk_x < num_chunks_x; ++chunk_x) {
+                const size_t chunk_size_x = calc_chunk_size(chunk_x, num_chunks_x, dimensions.x);
+                for(size_t dz = 0; dz<chunk_size_z; ++dz) {
+                    size_t z = chunk_z*max_chunk_size + dz;
+
+                    for(size_t dy = 0; dy<chunk_size_y; ++dy) {
+                        size_t y = chunk_y*max_chunk_size + dy;
+
+                        for(size_t dx = 0; dx<chunk_size_x; ++dx) {
+                            size_t x = chunk_x*max_chunk_size + dx;
+
+                            const tgt::svec3 p(x,y,dz);
+                            uint32_t label;
+                            if(slab.voxel(p) > 0) {
+                                tgt::ivec3 ipos(x,y,z);
+                                tgt::vec3 rwpos = transform(voxelToRw, ipos);
+
+                                auto result = finder.findAllNearest(rwpos);
+                                if(!result.found()) {
+                                    label = 0xFEEDBEEF; //Doesn't really matter. only happens in edge cases anyway
+                                } else {
+                                    auto min_elm = std::min_element(result.elements_.begin(), result.elements_.end(), [] (const EdgeVoxelRef*& e1, const EdgeVoxelRef*& e2) {
+                                            auto p1 = e1->getPos();
+                                            auto p2 = e2->getPos();
+                                            float cmp = p1.x - p2.x;
+                                            cmp = (cmp == 0) ? p1.y - p2.y : cmp;
+                                            cmp = (cmp == 0) ? p1.z - p2.z : cmp;
+                                            return cmp < 0;
+                                            });
+                                    tgtAssert(min_elm != result.elements_.end(), "Empty result set");
+                                    label = (*min_elm)->edge->id_.raw();
+                                }
+                            } else {
+                                label = IdVolume::BACKGROUND_VALUE;
+                            }
+                            outputSlab->voxel(p) = label;
+                        }
                     }
-                } else {
-                    label = IdVolume::BACKGROUND_VALUE;
                 }
-                outputSlice->voxel(p) = label;
             }
         }
     }
@@ -613,7 +652,7 @@ static void finalizeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4Slic
         }
         IntervalTree<size_t, IdVolumeFinalizer*> ytree(std::move(intervals));
 
-        auto branchSlice = branchIds.getWritableSlice(z);
+        auto branchSlice = branchIds.getWriteableSlice(z);
         auto holeSlice = holeIds.loadSlice(z);
 
         for(size_t y=0; y < dim.y; ++y) {
@@ -742,7 +781,7 @@ static void mapEdgeIds(LZ4SliceVolume<uint32_t>& regions, size_t numComponents, 
     // Map ids in regions inplace
     auto dim = regions.getDimensions();
     for(size_t z=0; z<dim.z; ++z) {
-        auto slice = regions.getWritableSlice(z);
+        auto slice = regions.getWriteableSlice(z);
         for(size_t y=0; y<dim.y; ++y) {
             for(size_t x=0; x<dim.x; ++x) {
                 tgt::svec3 p(x,y,0);

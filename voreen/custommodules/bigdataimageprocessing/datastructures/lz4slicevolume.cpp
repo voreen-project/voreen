@@ -205,7 +205,7 @@ LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizat
         }
 
         std::unique_ptr<const VolumeRAM> inSlice(volume.getSlice(z));
-        auto outSlice(builder.getNextWritableSlice());
+        auto outSlice(builder.getNextWriteableSlice());
 
         for(size_t y = 0; y<dimensions.y; ++y) {
             for(size_t x = 0; x<dimensions.x; ++x) {
