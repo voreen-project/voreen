@@ -40,7 +40,7 @@
 
 namespace voreen {
 
-const std::string FieldParallelPlotCreator::loggerCat_("voreen.viscontest2018.FieldParallelPlotCreator");
+const std::string FieldParallelPlotCreator::loggerCat_("voreen.ensembleanalysis.FieldParallelPlotCreator");
 
 const std::string FieldParallelPlotCreator::META_DATA_HASH("EnsembleHash");
 

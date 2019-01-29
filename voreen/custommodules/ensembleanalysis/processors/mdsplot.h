@@ -173,6 +173,8 @@ private:
     void renderedChannelsChanged();
     void save();
     void load();
+
+    static const std::string loggerCat_;
 };
 
 

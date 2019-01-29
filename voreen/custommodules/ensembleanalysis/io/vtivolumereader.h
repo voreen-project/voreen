@@ -28,8 +28,6 @@
 
 #include "voreen/core/io/volumereader.h"
 
-#include "tgt/vector.h"
-
 #include <vtkSmartPointer.h>
 #include <vtkXMLImageDataReader.h>
 
@@ -43,7 +41,7 @@ public:
     VTIVolumeReader(ProgressBar* progress = 0);
 
     virtual std::string getClassName() const { return "VTIVolumeReader"; }
-    virtual std::string getFormatDescription() const { return "VTK imagedata format"; }
+    virtual std::string getFormatDescription() const { return "VTK ImageData format"; }
 
     virtual VolumeReader* create(ProgressBar* progress = 0) const;
 

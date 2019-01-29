@@ -42,7 +42,7 @@ namespace voreen {
 static const tgt::ivec2 MARGINS(50);
 static const tgt::vec2 NO_SELECTION(-1.0f, 1.0f);
 
-const std::string FieldParallelPlotHistogram::loggerCat_("voreen.viscontest2018.FieldParallelPlotHistogram");
+const std::string FieldParallelPlotHistogram::loggerCat_("voreen.ensembleanalysis.FieldParallelPlotHistogram");
 
 FieldParallelPlotHistogram::FieldParallelPlotHistogram()
         : RenderProcessor()

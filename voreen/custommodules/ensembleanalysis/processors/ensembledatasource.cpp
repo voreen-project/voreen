@@ -37,7 +37,7 @@ namespace voreen {
 
 const std::string EnsembleDataSource::SCALAR_FIELD_NAME = "Scalar";
 const std::string EnsembleDataSource::SIMULATED_TIME_NAME = "simulated_time";
-const std::string EnsembleDataSource::loggerCat_("voreen.viscontest2018.EnsembleDataSource");
+const std::string EnsembleDataSource::loggerCat_("voreen.ensembleanalysis.EnsembleDataSource");
 
 EnsembleDataSource::EnsembleDataSource()
     : Processor()

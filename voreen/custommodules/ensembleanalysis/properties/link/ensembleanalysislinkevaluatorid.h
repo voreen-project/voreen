@@ -23,67 +23,19 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_SIMILARITYDATASOURCE_H
-#define VRN_SIMILARITYDATASOURCE_H
+#ifndef VRN_ENSEMBLEANALYSISLINKEVALUATORID_H
+#define VRN_ENSEMBLEANALYSISLINKEVALUATORID_H
 
-#include "voreen/core/processors/processor.h"
-
-#include "voreen/core/io/volumeserializerpopulator.h"
-#include "voreen/core/ports/genericport.h"
-#include "voreen/core/properties/buttonproperty.h"
-#include "voreen/core/properties/filedialogproperty.h"
-#include "voreen/core/properties/progressproperty.h"
-#include "voreen/core/properties/intproperty.h"
-
-#include "voreen/core/properties/optionproperty.h"
-
-#include "../ports/similaritydataport.h"
+#include "voreen/core/properties/link/linkevaluatorid.h"
 
 namespace voreen {
 
-/**
- * Loads multiple volumes and provides them
- * as VolumeList through its outport.
- */
-class VRN_CORE_API SimilarityDataSource : public Processor {
-
-    static const std::string SCALAR_FIELD_NAME;
-    static const std::string SIMULATED_TIME_NAME;
-
+class VRN_CORE_API LinkEvaluatorIntListId : public LinkEvaluatorIdGeneric<std::vector<int>> {
 public:
-    SimilarityDataSource();
-    virtual ~SimilarityDataSource();
-    virtual Processor* create() const;
-
-    virtual std::string getClassName() const  { return "SimilarityDataSource";    }
-    virtual std::string getCategory() const   { return "Input";                 }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
-    virtual bool usesExpensiveComputation() const { return true;  }
-
-protected:
-    virtual void setDescriptions() {
-        setDescription("Loads multiple volumes and provides them as VolumeList.");
-    }
-
-    void process();
-    virtual void initialize();
-
-    void clearSimilarityData();
-    void buildSimilarityData();
-
-    VolumeSerializerPopulator populator_;
-
-    FileDialogProperty similarityPath_;
-    ButtonProperty loadSimilarityDataButton_;
-    StringOptionProperty loadedChannels_;
-    IntProperty selectedTimeStep_;
-
-    /// The structure of the ensemble data.
-    SimilarityDataPort outport_;
-
-    static const std::string loggerCat_;
+    virtual std::string getClassName() const { return "LinkEvaluatorIntListId"; }
+    virtual LinkEvaluatorBase* create() const { return new LinkEvaluatorIntListId(); }
 };
 
 } // namespace
 
-#endif
+#endif // VRN_ENSEMBLEANALYSISLINKEVALUATORID_H

@@ -36,7 +36,7 @@
 
 namespace voreen {
 
-const std::string EnsembleSimilarityPlot::loggerCat_("voreen.viscontest2018.EnsembleSimilarityPlot");
+const std::string EnsembleSimilarityPlot::loggerCat_("voreen.ensembleanalysis.EnsembleSimilarityPlot");
 
 EnsembleSimilarityPlot::EnsembleSimilarityPlot()
         : RenderProcessor()

@@ -35,19 +35,17 @@
 #include "processors/mdsplot.h"
 #include "processors/volumeintensityfilter.h"
 #include "processors/probabilityvolumecreator.h"
-#include "processors/similaritydatasource.h"
 #include "processors/similaritydatavolume.h"
 #include "processors/volumelistmerger.h"
 #include "processors/waveheightextractor.h"
 
 #include "io/fieldplotsave.h"
 #include "io/fieldplotsource.h"
-#include "io/similaritydatasave.h"
 #ifdef VRN_USE_VTK
 #include "io/vtivolumereader.h"
 #endif
 
-#include "properties/link/viscontest2018linkevaluatorid.h"
+#include "custommodules/ensembleanalysis/properties/link/ensembleanalysislinkevaluatorid.h"
 
 namespace voreen {
 
@@ -62,7 +60,6 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     // Processors
     registerProcessor(new EnsembleDataSource());
     registerProcessor(new EnsembleFilter);
-    registerProcessor(new SimilarityDataSource());
     registerProcessor(new SimilartyDataVolume());
 
     // Plotting
@@ -77,7 +74,6 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     // IO
     registerProcessor(new FieldPlotSave());
     registerProcessor(new FieldPlotSource());
-    registerProcessor(new SimilarityDataSave());
 #ifdef VRN_USE_VTK
     registerVolumeReader(new VTIVolumeReader());
 #endif
