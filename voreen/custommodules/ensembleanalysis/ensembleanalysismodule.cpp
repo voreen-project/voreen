@@ -43,6 +43,7 @@
 #include "io/fieldplotsource.h"
 #ifdef VRN_USE_VTK
 #include "io/vtivolumereader.h"
+#include "io/vtmvolumereader.h"
 #endif
 
 #include "custommodules/ensembleanalysis/properties/link/ensembleanalysislinkevaluatorid.h"
@@ -76,6 +77,7 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     registerProcessor(new FieldPlotSource());
 #ifdef VRN_USE_VTK
     registerVolumeReader(new VTIVolumeReader());
+    registerVolumeReader(new VTMVolumeReader());
 #endif
     
     // Properties

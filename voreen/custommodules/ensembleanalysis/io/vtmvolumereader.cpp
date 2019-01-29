@@ -23,7 +23,7 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "vtivolumereader.h"
+#include "vtmvolumereader.h"
 
 #include <limits>
 
@@ -34,8 +34,13 @@
 #include <vtkIntArray.h>
 #include <vtkImageData.h>
 #include <vtkPointData.h>
-#include <vtkSmartPointer.h>
+#include <vtkMultiBlockDataSet.h>
 #include <vtkXMLImageDataReader.h>
+#include <vtkCompositeDataIterator.h>
+
+#include <vtkSmartPointer.h>
+#include <vtkXMLMultiBlockDataReader.h>
+#include <vtkInformation.h>
 
 #include "tgt/exception.h"
 #include "tgt/logmanager.h"
@@ -49,61 +54,74 @@
 
 namespace voreen {
 
-const std::string VTIVolumeReader::loggerCat_ = "voreen.io.VolumeReader.vti";
+const std::string VTMVolumeReader::loggerCat_ = "voreen.io.VolumeReader.vtm";
 
-VTIVolumeReader::VTIVolumeReader(ProgressBar* progress)
+VTMVolumeReader::VTMVolumeReader(ProgressBar* progress)
     : VolumeReader(progress)
 {
-    extensions_.push_back("vti");
+    extensions_.push_back("vtm");
 }
 
-std::vector<VolumeURL> VTIVolumeReader::listVolumes(const std::string& url) const {
+std::vector<VolumeURL> VTMVolumeReader::listVolumes(const std::string& url) const {
     std::vector<VolumeURL> result;
 
     VolumeURL urlOrigin(url);
 
-    if(!reader_.Get())
-        reader_ = vtkXMLImageDataReader::New();
+    vtkSmartPointer<vtkXMLMultiBlockDataReader> reader = vtkXMLMultiBlockDataReader::New();
+    if(reader->CanReadFile(urlOrigin.getPath().c_str())) {
+        reader->SetFileName(urlOrigin.getPath().c_str());
+        reader->Update();
 
-    if(reader_->CanReadFile(urlOrigin.getPath().c_str())) {
-        reader_->SetFileName(urlOrigin.getPath().c_str());
-        reader_->Update();
+        vtkSmartPointer<vtkMultiBlockDataSet> blockData = vtkMultiBlockDataSet::SafeDownCast(reader->GetOutput());
 
-        for(int i = 0; i < reader_->GetNumberOfPointArrays(); i++) {
-            VolumeURL subURL("vti", url, "");
-            const char* channel = reader_->GetPointArrayName(i);
-            subURL.addSearchParameter("scalar", channel);
-            result.push_back(subURL);
-            volumeURLs_[urlOrigin.getPath()].insert(subURL.getURL());
+        int blockIdx = 0;
+        vtkSmartPointer<vtkCompositeDataIterator> iter = blockData->NewIterator();
+        for (iter->InitTraversal(); !iter->IsDoneWithTraversal(); iter->GoToNextItem()) {
+            vtkSmartPointer<vtkImageData> block = vtkImageData::SafeDownCast(iter->GetCurrentDataObject());
+
+            for (int i = 0; i < block->GetPointData()->GetNumberOfArrays(); i++) {
+                VolumeURL subURL("vtm", url, "");
+                const char *channel = block->GetPointData()->GetArrayName(i);
+                subURL.addSearchParameter("scalar", channel);
+                subURL.addSearchParameter("block", std::to_string(blockIdx));
+                result.push_back(subURL);
+            }
+
+            blockIdx++;
         }
     }
 
     return result;
 }
 
-VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
+VolumeBase* VTMVolumeReader::read(const VolumeURL& origin) {
 
     std::string fileName = origin.getPath();
-    if (volumeURLs_.find(fileName) == volumeURLs_.end())
-        throw tgt::IOException("URL " + origin.getURL() + " no yet captured");
-
-    volumeURLs_[fileName].erase(origin.getURL());
     LINFO("Reading " << origin.getURL());
 
-    if(!reader_.Get())
-        reader_ = vtkXMLImageDataReader::New();
+    vtkSmartPointer<vtkXMLMultiBlockDataReader> reader = vtkXMLMultiBlockDataReader::New();
 
-    if(!reader_->CanReadFile(fileName.c_str())) {
-        clearReaderData();
+    if(!reader->CanReadFile(fileName.c_str())) {
         throw tgt::IOException();
     }
 
-    if(reader_->GetFileName() != fileName) {
-        reader_->SetFileName(fileName.c_str());
-        reader_->Update();
-    }
+    reader->SetFileName(fileName.c_str());
+    reader->Update();
 
-    vtkSmartPointer<vtkImageData> imageData = reader_->GetOutput();
+    vtkSmartPointer<vtkMultiBlockDataSet> blockData = vtkMultiBlockDataSet::SafeDownCast(reader->GetOutput());
+    unsigned int blockIdx = static_cast<unsigned int>(std::stoi(origin.getSearchParameter("block")));
+    tgtAssert(blockIdx < blockData->GetNumberOfBlocks(), "Invalid block index");
+
+    vtkSmartPointer<vtkMultiBlockDataSet> block = vtkMultiBlockDataSet::SafeDownCast(blockData->GetBlock(blockIdx));
+    if(!block || block->GetNumberOfBlocks() == 0)
+        throw tgt::IOException("Block could not be read.");
+
+    if(block->GetNumberOfBlocks() > 1)
+        LWARNING("Dataset contains more than one block. Ignoring.");
+
+    vtkSmartPointer<vtkImageData> imageData = vtkImageData::SafeDownCast(block->GetBlock(0));
+
+    // NOTE: the following code is copied from VTIVolumerReader::read !
     tgt::svec3 dimensions = tgt::ivec3::fromPointer(imageData->GetDimensions());
     tgt::vec3 spacing = tgt::dvec3::fromPointer(imageData->GetSpacing());
     tgt::vec3 offset = tgt::dvec3::fromPointer(imageData->GetOrigin());
@@ -119,20 +137,20 @@ VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
 
         // Allocate volume.
         switch (array->GetNumberOfComponents()) {
-        case 1:
-            dataset = new VolumeRAM_Float(dimensions);
-            break;
-        case 2:
-            dataset = new VolumeRAM_2xFloat(dimensions);
-            break;
-        case 3:
-            dataset = new VolumeRAM_3xFloat(dimensions);
-            break;
-        case 4:
-            dataset = new VolumeRAM_4xFloat(dimensions);
-            break;
-        default:
-            throw tgt::IOException("Unsupported number of components");
+            case 1:
+                dataset = new VolumeRAM_Float(dimensions);
+                break;
+            case 2:
+                dataset = new VolumeRAM_2xFloat(dimensions);
+                break;
+            case 3:
+                dataset = new VolumeRAM_3xFloat(dimensions);
+                break;
+            case 4:
+                dataset = new VolumeRAM_4xFloat(dimensions);
+                break;
+            default:
+                throw tgt::IOException("Unsupported number of components");
         }
 
         // Export data.
@@ -145,15 +163,7 @@ VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
         max = static_cast<float>(range[1]);
 
     } catch (std::bad_alloc&) {
-        clearReaderData();
         throw; // throw it to the caller
-    }
-
-    // Clean up - finally deletes the reader if all fields have been read.
-    // Ensure that all fields DO have been read!
-    if(volumeURLs_[fileName].empty()) {
-        volumeURLs_.erase(fileName);
-        clearReaderData();
     }
 
     Volume* volumeHandle = new Volume(dataset, spacing, offset);
@@ -173,18 +183,18 @@ VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
 
         MetaDataBase* metaData = nullptr;
         switch (array->GetDataType()) {
-        case VTK_INT:
-            metaData = new IntMetaData(vtkIntArray::FastDownCast(array)->GetValue(0));
-            break;
-        case VTK_FLOAT:
-            metaData = new FloatMetaData(vtkFloatArray::FastDownCast(array)->GetValue(0));
-            break;
-        case VTK_DOUBLE:
-            metaData = new DoubleMetaData(vtkDoubleArray::FastDownCast(array)->GetValue(0));
-            break;
-        default:
-            //LWARNING("Unsupported Meta Data found: " << array->GetName());
-            break;
+            case VTK_INT:
+                metaData = new IntMetaData(vtkIntArray::FastDownCast(array)->GetValue(0));
+                break;
+            case VTK_FLOAT:
+                metaData = new FloatMetaData(vtkFloatArray::FastDownCast(array)->GetValue(0));
+                break;
+            case VTK_DOUBLE:
+                metaData = new DoubleMetaData(vtkDoubleArray::FastDownCast(array)->GetValue(0));
+                break;
+            default:
+                //LWARNING("Unsupported Meta Data found: " << array->GetName());
+                break;
         }
 
         if(!metaData)
@@ -196,7 +206,7 @@ VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
     return volumeHandle;
 }
 
-VolumeList* VTIVolumeReader::read(const std::string &url) {
+VolumeList* VTMVolumeReader::read(const std::string &url) {
     std::vector<VolumeURL> urls = listVolumes(url);
     VolumeList* volumeList = new VolumeList();
 
@@ -215,14 +225,8 @@ VolumeList* VTIVolumeReader::read(const std::string &url) {
     return volumeList;
 }
 
-VolumeReader* VTIVolumeReader::create(ProgressBar* progress) const {
-    return new VTIVolumeReader(progress);
-}
-
-void VTIVolumeReader::clearReaderData() {
-    reader_->Delete();
-    reader_ = nullptr;
-    LINFO("Finally deleting vtkXMLImageDataReader");
+VolumeReader* VTMVolumeReader::create(ProgressBar* progress) const {
+    return new VTMVolumeReader(progress);
 }
 
 } // namespace voreen

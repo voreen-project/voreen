@@ -138,8 +138,14 @@ SET(MOD_CORE_HEADERS
 )
 
 IF(${VRN_USE_VTK})
-    SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES} ${MOD_DIR}/io/vtivolumereader.cpp)
-    SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS} ${MOD_DIR}/io/vtivolumereader.h)
+    LIST(APPEND MOD_CORE_SOURCES
+        ${MOD_DIR}/io/vtivolumereader.cpp
+        ${MOD_DIR}/io/vtmvolumereader.cpp
+    )
+    LIST(APPEND MOD_CORE_HEADERS
+        ${MOD_DIR}/io/vtivolumereader.h
+        ${MOD_DIR}/io/vtmvolumereader.h
+    )
 ENDIF()
 
 ###############################################################################

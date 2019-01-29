@@ -23,25 +23,22 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VTIVOLUMEREADER_H
-#define VRN_VTIVOLUMEREADER_H
+#ifndef VRN_VTMVOLUMEREADER_H
+#define VRN_VTMVOLUMEREADER_H
 
 #include "voreen/core/io/volumereader.h"
-
-#include <vtkSmartPointer.h>
-#include <vtkXMLImageDataReader.h>
 
 namespace voreen {
 
 /**
  * This reader is capable of reading vti files specified by the VTK library.
  */
-class VRN_CORE_API VTIVolumeReader : public VolumeReader {
+class VRN_CORE_API VTMVolumeReader : public VolumeReader {
 public:
-    VTIVolumeReader(ProgressBar* progress = 0);
+    VTMVolumeReader(ProgressBar* progress = 0);
 
-    virtual std::string getClassName() const { return "VTIVolumeReader"; }
-    virtual std::string getFormatDescription() const { return "VTK ImageData format"; }
+    virtual std::string getClassName() const { return "VTMVolumeReader"; }
+    virtual std::string getFormatDescription() const { return "vtkMultiBlockDataSet format"; }
 
     virtual VolumeReader* create(ProgressBar* progress = 0) const;
 
@@ -50,11 +47,6 @@ public:
     virtual VolumeBase* read(const VolumeURL& origin);
 
 private:
-    void clearReaderData();
-
-    // TODO: Don't cache reader but improve performance!
-    mutable vtkSmartPointer<vtkXMLImageDataReader> reader_;
-    mutable std::map<std::string, std::set<std::string> > volumeURLs_;
     static const std::string loggerCat_;
 };
 
