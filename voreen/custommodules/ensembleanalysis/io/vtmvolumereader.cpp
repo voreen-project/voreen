@@ -60,6 +60,7 @@ VTMVolumeReader::VTMVolumeReader(ProgressBar* progress)
     : VolumeReader(progress)
 {
     extensions_.push_back("vtm");
+    protocols_.push_back("vtm");
 }
 
 std::vector<VolumeURL> VTMVolumeReader::listVolumes(const std::string& url) const {

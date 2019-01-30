@@ -55,6 +55,7 @@ VTIVolumeReader::VTIVolumeReader(ProgressBar* progress)
     : VolumeReader(progress)
 {
     extensions_.push_back("vti");
+    protocols_.push_back("vti");
 }
 
 std::vector<VolumeURL> VTIVolumeReader::listVolumes(const std::string& url) const {
