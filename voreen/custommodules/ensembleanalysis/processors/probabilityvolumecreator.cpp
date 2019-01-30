@@ -95,9 +95,13 @@ ProbabilityVolumeCreatorOutput ProbabilityVolumeCreator::compute(ProbabilityVolu
         tgt::vec3 nearest; // stores the new position of the target volume
 
 #ifdef VRN_MODULE_OPENMP
+        int dimZ = static_cast<int>(newDims.z);
         #pragma omp parallel for
-#endif
+        for(long pz = 0; pz < dimZ; pz++) {
+            pos.z = static_cast<int>(pz);
+#else
         for (pos.z = 0; pos.z < newDims.z; ++pos.z) {
+#endif
             nearest.z = (static_cast<float>(pos.z) - d_a.z) * ratio.z + d_b.z;
 
             for (pos.y = 0; pos.y < newDims.y; ++pos.y) {
