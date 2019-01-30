@@ -63,19 +63,16 @@ std::vector<VolumeURL> VTIVolumeReader::listVolumes(const std::string& url) cons
 
     VolumeURL urlOrigin(url);
 
-    if(!reader_.Get())
-        reader_ = vtkXMLImageDataReader::New();
+    vtkSmartPointer<vtkXMLImageDataReader> reader = vtkXMLImageDataReader::New();
+    if(reader->CanReadFile(urlOrigin.getPath().c_str())) {
+        reader->SetFileName(urlOrigin.getPath().c_str());
+        reader->Update();
 
-    if(reader_->CanReadFile(urlOrigin.getPath().c_str())) {
-        reader_->SetFileName(urlOrigin.getPath().c_str());
-        reader_->Update();
-
-        for(int i = 0; i < reader_->GetNumberOfPointArrays(); i++) {
+        for(int i = 0; i < reader->GetNumberOfPointArrays(); i++) {
             VolumeURL subURL("vti", url, "");
-            const char* channel = reader_->GetPointArrayName(i);
+            const char* channel = reader->GetPointArrayName(i);
             subURL.addSearchParameter("scalar", channel);
             result.push_back(subURL);
-            volumeURLs_[urlOrigin.getPath()].insert(subURL.getURL());
         }
     }
 
@@ -85,26 +82,17 @@ std::vector<VolumeURL> VTIVolumeReader::listVolumes(const std::string& url) cons
 VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
 
     std::string fileName = origin.getPath();
-    if (volumeURLs_.find(fileName) == volumeURLs_.end())
-        throw tgt::IOException("URL " + origin.getURL() + " no yet captured");
-
-    volumeURLs_[fileName].erase(origin.getURL());
     LINFO("Reading " << origin.getURL());
 
-    if(!reader_.Get())
-        reader_ = vtkXMLImageDataReader::New();
-
-    if(!reader_->CanReadFile(fileName.c_str())) {
-        clearReaderData();
+    vtkSmartPointer<vtkXMLImageDataReader> reader = vtkXMLImageDataReader::New();
+    if(!reader->CanReadFile(fileName.c_str())) {
         throw tgt::IOException();
     }
 
-    if(reader_->GetFileName() != fileName) {
-        reader_->SetFileName(fileName.c_str());
-        reader_->Update();
-    }
+    reader->SetFileName(fileName.c_str());
+    reader->Update();
 
-    vtkSmartPointer<vtkImageData> imageData = reader_->GetOutput();
+    vtkSmartPointer<vtkImageData> imageData = reader->GetOutput();
     tgt::svec3 dimensions = tgt::ivec3::fromPointer(imageData->GetDimensions());
     tgt::vec3 spacing = tgt::dvec3::fromPointer(imageData->GetSpacing());
     tgt::vec3 offset = tgt::dvec3::fromPointer(imageData->GetOrigin());
@@ -146,15 +134,7 @@ VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
         max = static_cast<float>(range[1]);
 
     } catch (std::bad_alloc&) {
-        clearReaderData();
         throw; // throw it to the caller
-    }
-
-    // Clean up - finally deletes the reader if all fields have been read.
-    // Ensure that all fields DO have been read!
-    if(volumeURLs_[fileName].empty()) {
-        volumeURLs_.erase(fileName);
-        clearReaderData();
     }
 
     Volume* volumeHandle = new Volume(dataset, spacing, offset);
@@ -218,12 +198,6 @@ VolumeList* VTIVolumeReader::read(const std::string &url) {
 
 VolumeReader* VTIVolumeReader::create(ProgressBar* progress) const {
     return new VTIVolumeReader(progress);
-}
-
-void VTIVolumeReader::clearReaderData() {
-    reader_->Delete();
-    reader_ = nullptr;
-    LINFO("Finally deleting vtkXMLImageDataReader");
 }
 
 } // namespace voreen

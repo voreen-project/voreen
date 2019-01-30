@@ -31,14 +31,14 @@
 namespace voreen {
 
 /**
- * This reader is capable of reading vti files specified by the VTK library.
+ * This reader is capable of reading vtm files specified by the VTK library.
  */
 class VRN_CORE_API VTMVolumeReader : public VolumeReader {
 public:
     VTMVolumeReader(ProgressBar* progress = 0);
 
     virtual std::string getClassName() const { return "VTMVolumeReader"; }
-    virtual std::string getFormatDescription() const { return "vtkMultiBlockDataSet format"; }
+    virtual std::string getFormatDescription() const { return "VTK MultiBlockDataSet format"; }
 
     virtual VolumeReader* create(ProgressBar* progress = 0) const;
 

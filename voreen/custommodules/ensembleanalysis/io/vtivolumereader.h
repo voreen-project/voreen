@@ -28,9 +28,6 @@
 
 #include "voreen/core/io/volumereader.h"
 
-#include <vtkSmartPointer.h>
-#include <vtkXMLImageDataReader.h>
-
 namespace voreen {
 
 /**
@@ -50,11 +47,7 @@ public:
     virtual VolumeBase* read(const VolumeURL& origin);
 
 private:
-    void clearReaderData();
 
-    // TODO: Don't cache reader but improve performance!
-    mutable vtkSmartPointer<vtkXMLImageDataReader> reader_;
-    mutable std::map<std::string, std::set<std::string> > volumeURLs_;
     static const std::string loggerCat_;
 };
 
