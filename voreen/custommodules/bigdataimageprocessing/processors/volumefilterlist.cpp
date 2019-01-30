@@ -161,11 +161,6 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
     outputVolume->writeSpacing(inputVolume.getSpacing());
     outputVolume->writeOffset(inputVolume.getOffset());
     outputVolume->writeRealWorldMapping(inputVolume.getRealWorldMapping());
-    // For all zero or all one volumes the following is not correct,
-    // and we cannot easily get the real min/max values without iterating
-    // through the whole resulting volume.
-    //const VolumeMinMax vmm(0, 1, 0, 1);
-    //outputVolume->writeVolumeMinMax(&vmm);
 
     VolumeFilterStackBuilder builder(inputVolume);
     for(const InteractiveListProperty::Instance& instance : filterList_.getInstances()) {

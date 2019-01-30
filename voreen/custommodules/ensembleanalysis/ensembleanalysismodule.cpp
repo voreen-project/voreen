@@ -37,6 +37,7 @@
 #include "processors/probabilityvolumecreator.h"
 #include "processors/similaritydatavolume.h"
 #include "processors/volumelistmerger.h"
+#include "processors/volumemerger.h"
 #include "processors/waveheightextractor.h"
 
 #include "io/fieldplotsave.h"
@@ -87,6 +88,7 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     registerProcessor(new WaveHeightExtractor());
     registerProcessor(new EnsembleVolumeExtractor());
     registerProcessor(new VolumeListMerger());
+    registerProcessor(new VolumeMerger());
 }
 
 } // namespace

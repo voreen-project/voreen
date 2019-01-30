@@ -23,41 +23,58 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VOLUMELISTMERGER_H
-#define VRN_VOLUMELISTMERGER_H
+#ifndef VRN_VOLUMEMERGER_H
+#define VRN_VOLUMEMERGER_H
 
-#include "voreen/core/processors/processor.h"
-#include "voreen/core/ports/genericport.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
+#include "voreen/core/ports/volumeport.h"
+#include "voreen/core/properties/temppathproperty.h"
+
+#include "modules/hdf5/io/hdf5filevolume.h"
 
 namespace voreen {
 
+struct VolumeMergerComputeInput {
+    const VolumeList* inputVolumes;
+    tgt::vec3 spacing;
+    tgt::vec3 offset;
+    std::unique_ptr<VolumeRAM> outputVolume;
+};
+
+struct VolumeMergerComputeOutput{
+    tgt::vec3 spacing;
+    tgt::vec3 offset;
+    std::unique_ptr<VolumeRAM> outputVolume;
+};
+
 /**
- * This processor merges multiple lists into a single one.
+ *
  */
-class VRN_CORE_API VolumeListMerger : public Processor {
+class VRN_CORE_API VolumeMerger : public AsyncComputeProcessor<VolumeMergerComputeInput, VolumeMergerComputeOutput>  {
 public:
-    VolumeListMerger();
-    virtual ~VolumeListMerger();
+    VolumeMerger();
+    virtual ~VolumeMerger();
     virtual Processor* create() const;
 
-    virtual std::string getClassName() const  { return "VolumeListMerger";      }
+    virtual std::string getClassName() const  { return "VolumeMerger";      }
     virtual std::string getCategory() const   { return "Volume Processing";     }
     virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
 
 protected:
     virtual void setDescriptions() {
-        setDescription("This processor merges incoming Lists into one single List. <br>"
-                       "Given two lists [a1, a2, a3] and [b1, b2], this results in: <br>"
-                       "[a1, b1, a2, b2], since the length of the shortest list will be taken."
-        );
+        setDescription("Merges incoming volumes into a single one. No overlap allowed");
     }
 
-    virtual void process();
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
 
 private:
 
     VolumeListPort inport_;
-    VolumeListPort outport_;
+    VolumePort outport_;
+
+    BoolProperty allowIntersections_;
 };
 
 }   //namespace
