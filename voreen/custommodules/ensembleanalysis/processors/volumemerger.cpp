@@ -102,18 +102,18 @@ VolumeMergerComputeInput VolumeMerger::prepareComputeInput() {
     const std::string format = inputVolumes.first()->getFormat();
     const tgt::svec3 dim = globalBounds.diagonal() / spacing;
 
-    std::unique_ptr<VolumeRAM> outputVolume = nullptr;
+    VolumeRAM* outputVolumeData = nullptr;
     try {
-        outputVolume.reset(VolumeFactory().create(format, dim));
+        outputVolumeData = VolumeFactory().create(format, dim);
     }
     catch (const std::bad_alloc& ) {
         throw InvalidInputException("Could not create output volume.", InvalidInputException::S_ERROR);
     }
 
+    std::unique_ptr<Volume> outputVolume(new Volume(outputVolumeData, spacing, globalBounds.getLLF()));
+
     return VolumeMergerComputeInput{
             inputVolPtr,
-            spacing,
-            globalBounds.getLLF(),
             std::move(outputVolume)
     };
 }
@@ -122,8 +122,12 @@ VolumeMergerComputeOutput VolumeMerger::compute(VolumeMergerComputeInput input, 
     tgtAssert(input.outputVolume, "No outputVolume");
 
     const VolumeList* inputVolumes = input.inputVolumes;
-    std::unique_ptr<VolumeRAM> outputVolume = std::move(input.outputVolume);
-    outputVolume->clear();
+    std::unique_ptr<Volume> outputVolume = std::move(input.outputVolume);
+    VolumeRAM* outputVolumeData = outputVolume->getWritableRepresentation<VolumeRAM>();
+    outputVolumeData->clear();
+
+    const tgt::vec3 spacing = outputVolume->getSpacing();
+    const tgt::vec3 llf = outputVolume->getLLF();
 
     float progressPerVolume = 1.0f / inputVolumes->size();
     for(size_t i=0; i<inputVolumes->size(); i++) {
@@ -133,7 +137,7 @@ VolumeMergerComputeOutput VolumeMerger::compute(VolumeMergerComputeInput input, 
         const VolumeRAM* volumeData = volume->getRepresentation<VolumeRAM>();
 
         const tgt::svec3& dim = volumeData->getDimensions();
-        const tgt::svec3 offset((volume->getLLF() - input.offset) / input.spacing);
+        const tgt::svec3 offset((volume->getLLF() - llf) / spacing);
 
 #ifdef VRN_MODULE_OPENMP
         long dimZ = static_cast<long>(dim.z);
@@ -147,7 +151,7 @@ VolumeMergerComputeOutput VolumeMerger::compute(VolumeMergerComputeInput input, 
                 for(size_t x=0; x<dim.x; x++) {
                     for(size_t channel=0; channel < volumeData->getNumChannels(); channel++) {
                         float value = volumeData->getVoxelNormalized(x, y, z, channel);
-                        outputVolume->setVoxelNormalized(value, x+offset.x, y+offset.y, z+offset.z, channel);
+                        outputVolumeData->setVoxelNormalized(value, x+offset.x, y+offset.y, z+offset.z, channel);
                     }
                 }
             }
@@ -157,14 +161,11 @@ VolumeMergerComputeOutput VolumeMerger::compute(VolumeMergerComputeInput input, 
     progressReporter.setProgress(1.0f);
 
     return {
-        input.offset,
-        input.spacing,
         std::move(outputVolume)
     };
 }
 void VolumeMerger::processComputeOutput(VolumeMergerComputeOutput output) {
-    Volume* vol =  new Volume(output.outputVolume.release(), output.spacing, output.offset);
-    outport_.setData(vol);
+    outport_.setData(output.outputVolume.release());
 }
 
 }   // namespace

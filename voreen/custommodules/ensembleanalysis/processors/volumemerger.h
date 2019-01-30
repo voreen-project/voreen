@@ -36,15 +36,11 @@ namespace voreen {
 
 struct VolumeMergerComputeInput {
     const VolumeList* inputVolumes;
-    tgt::vec3 spacing;
-    tgt::vec3 offset;
-    std::unique_ptr<VolumeRAM> outputVolume;
+    std::unique_ptr<Volume> outputVolume;
 };
 
 struct VolumeMergerComputeOutput{
-    tgt::vec3 spacing;
-    tgt::vec3 offset;
-    std::unique_ptr<VolumeRAM> outputVolume;
+    std::unique_ptr<Volume> outputVolume;
 };
 
 /**
