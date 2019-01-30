@@ -52,4 +52,4 @@ private:
 
 } // namespace voreen
 
-#endif // VRN_VTIVOLUMEREADER_H
+#endif // VRN_VTMVOLUMEREADER_H

@@ -28,7 +28,12 @@
 
 #include "voreen/core/io/volumereader.h"
 
+#include <vtkSmartPointer.h>
+#include <vtkImageData.h>
+
 namespace voreen {
+
+Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vtkImageData> data);
 
 /**
  * This reader is capable of reading vti files specified by the VTK library.

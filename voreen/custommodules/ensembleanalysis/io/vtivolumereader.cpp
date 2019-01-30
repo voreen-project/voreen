@@ -49,6 +49,94 @@
 
 namespace voreen {
 
+Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vtkImageData> imageData) {
+    tgtAssert(imageData, "ImageData null");
+
+    tgt::svec3 dimensions = tgt::ivec3::fromPointer(imageData->GetDimensions());
+    tgt::vec3 spacing = tgt::dvec3::fromPointer(imageData->GetSpacing());
+    tgt::vec3 offset = tgt::dvec3::fromPointer(imageData->GetOrigin());
+    std::string channel = origin.getSearchParameter("scalar");
+    float min, max;
+
+    VolumeRAM* dataset;
+    try {
+        // Try to retrieve data array.
+        vtkDataArray* array = imageData->GetPointData()->GetArray(channel.c_str());
+        if(!array)
+            throw tgt::IOException("Field " + channel + " could not be read.");
+
+        // Allocate volume.
+        switch (array->GetNumberOfComponents()) {
+            case 1:
+                dataset = new VolumeRAM_Float(dimensions);
+                break;
+            case 2:
+                dataset = new VolumeRAM_2xFloat(dimensions);
+                break;
+            case 3:
+                dataset = new VolumeRAM_3xFloat(dimensions);
+                break;
+            case 4:
+                dataset = new VolumeRAM_4xFloat(dimensions);
+                break;
+            default:
+                throw tgt::IOException("Unsupported number of components");
+        }
+
+        // Export data.
+        array->ExportToVoidPointer(dataset->getData());
+
+        // Extract range.
+        double range[2];
+        array->GetRange(range);
+        min = static_cast<float>(range[0]);
+        max = static_cast<float>(range[1]);
+
+    } catch (std::bad_alloc&) {
+        throw; // throw it to the caller
+    }
+
+    Volume* volumeHandle = new Volume(dataset, spacing, offset);
+    if (volumeHandle->getNumChannels() == 1) {
+        volumeHandle->addDerivedData(new VolumeMinMax(min, max, min, max));
+    }
+    else {
+        volumeHandle->addDerivedData(new VolumeMinMaxMagnitude(min, max));
+    }
+    volumeHandle->setOrigin(origin);
+    volumeHandle->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping(volumeHandle->getBaseType()));
+    volumeHandle->getMetaDataContainer().addMetaData("Scalar", new StringMetaData(channel));
+
+    // Read meta data.
+    for(int i = 0; i < imageData->GetFieldData()->GetNumberOfArrays(); i++) {
+        vtkAbstractArray* array = imageData->GetFieldData()->GetAbstractArray(i);
+
+        MetaDataBase* metaData = nullptr;
+        switch (array->GetDataType()) {
+            case VTK_INT:
+                metaData = new IntMetaData(vtkIntArray::FastDownCast(array)->GetValue(0));
+                break;
+            case VTK_FLOAT:
+                metaData = new FloatMetaData(vtkFloatArray::FastDownCast(array)->GetValue(0));
+                break;
+            case VTK_DOUBLE:
+                metaData = new DoubleMetaData(vtkDoubleArray::FastDownCast(array)->GetValue(0));
+                break;
+            default:
+                //LWARNING("Unsupported Meta Data found: " << array->GetName());
+                break;
+        }
+
+        if(!metaData)
+            continue;
+
+        volumeHandle->getMetaDataContainer().addMetaData(array->GetName(), metaData);
+    }
+
+    return volumeHandle;
+}
+
+
 const std::string VTIVolumeReader::loggerCat_ = "voreen.io.VolumeReader.vti";
 
 VTIVolumeReader::VTIVolumeReader(ProgressBar* progress)
@@ -92,89 +180,7 @@ VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
     reader->SetFileName(fileName.c_str());
     reader->Update();
 
-    vtkSmartPointer<vtkImageData> imageData = reader->GetOutput();
-    tgt::svec3 dimensions = tgt::ivec3::fromPointer(imageData->GetDimensions());
-    tgt::vec3 spacing = tgt::dvec3::fromPointer(imageData->GetSpacing());
-    tgt::vec3 offset = tgt::dvec3::fromPointer(imageData->GetOrigin());
-    std::string channel = origin.getSearchParameter("scalar");
-    float min, max;
-
-    VolumeRAM* dataset;
-    try {
-        // Try to retrieve data array.
-        vtkDataArray* array = imageData->GetPointData()->GetArray(channel.c_str());
-        if(!array)
-            throw tgt::IOException("Field " + channel + " could not be read.");
-
-        // Allocate volume.
-        switch (array->GetNumberOfComponents()) {
-        case 1:
-            dataset = new VolumeRAM_Float(dimensions);
-            break;
-        case 2:
-            dataset = new VolumeRAM_2xFloat(dimensions);
-            break;
-        case 3:
-            dataset = new VolumeRAM_3xFloat(dimensions);
-            break;
-        case 4:
-            dataset = new VolumeRAM_4xFloat(dimensions);
-            break;
-        default:
-            throw tgt::IOException("Unsupported number of components");
-        }
-
-        // Export data.
-        array->ExportToVoidPointer(dataset->getData());
-
-        // Extract range.
-        double range[2];
-        array->GetRange(range);
-        min = static_cast<float>(range[0]);
-        max = static_cast<float>(range[1]);
-
-    } catch (std::bad_alloc&) {
-        throw; // throw it to the caller
-    }
-
-    Volume* volumeHandle = new Volume(dataset, spacing, offset);
-    if (volumeHandle->getNumChannels() == 1) {
-        volumeHandle->addDerivedData(new VolumeMinMax(min, max, min, max));
-    }
-    else {
-        volumeHandle->addDerivedData(new VolumeMinMaxMagnitude(min, max));
-    }
-    volumeHandle->setOrigin(origin);
-    volumeHandle->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping(volumeHandle->getBaseType()));
-    volumeHandle->getMetaDataContainer().addMetaData("Scalar", new StringMetaData(channel));
-
-    // Read meta data.
-    for(int i = 0; i < imageData->GetFieldData()->GetNumberOfArrays(); i++) {
-        vtkAbstractArray* array = imageData->GetFieldData()->GetAbstractArray(i);
-
-        MetaDataBase* metaData = nullptr;
-        switch (array->GetDataType()) {
-        case VTK_INT:
-            metaData = new IntMetaData(vtkIntArray::FastDownCast(array)->GetValue(0));
-            break;
-        case VTK_FLOAT:
-            metaData = new FloatMetaData(vtkFloatArray::FastDownCast(array)->GetValue(0));
-            break;
-        case VTK_DOUBLE:
-            metaData = new DoubleMetaData(vtkDoubleArray::FastDownCast(array)->GetValue(0));
-            break;
-        default:
-            //LWARNING("Unsupported Meta Data found: " << array->GetName());
-            break;
-        }
-
-        if(!metaData)
-            continue;
-
-        volumeHandle->getMetaDataContainer().addMetaData(array->GetName(), metaData);
-    }
-
-    return volumeHandle;
+    return createVolumeFromVtkImageData(origin, reader->GetOutput());
 }
 
 VolumeList* VTIVolumeReader::read(const std::string &url) {
