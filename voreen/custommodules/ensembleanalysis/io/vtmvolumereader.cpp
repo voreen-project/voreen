@@ -54,29 +54,40 @@ std::vector<VolumeURL> VTMVolumeReader::listVolumes(const std::string& url) cons
     std::vector<VolumeURL> result;
 
     VolumeURL urlOrigin(url);
+    std::string filterName = urlOrigin.getSearchParameter("name");
+    std::string filterBlock = urlOrigin.getSearchParameter("block");
 
-    vtkSmartPointer<vtkXMLMultiBlockDataReader> reader = vtkXMLMultiBlockDataReader::New();
+    vtkSmartPointer<vtkXMLMultiBlockDataReader> reader = vtkSmartPointer<vtkXMLMultiBlockDataReader>::New();
     if(reader->CanReadFile(urlOrigin.getPath().c_str())) {
         reader->SetFileName(urlOrigin.getPath().c_str());
         reader->Update();
 
-        vtkSmartPointer<vtkMultiBlockDataSet> blockData = vtkMultiBlockDataSet::SafeDownCast(reader->GetOutput());
+        vtkMultiBlockDataSet* blockData = vtkMultiBlockDataSet::SafeDownCast(reader->GetOutput());
 
         int blockIdx = 0;
-        vtkSmartPointer<vtkCompositeDataIterator> iter = blockData->NewIterator();
+        vtkCompositeDataIterator* iter = blockData->NewIterator();
         for (iter->InitTraversal(); !iter->IsDoneWithTraversal(); iter->GoToNextItem()) {
-            vtkSmartPointer<vtkImageData> block = vtkImageData::SafeDownCast(iter->GetCurrentDataObject());
+            vtkImageData* block = vtkImageData::SafeDownCast(iter->GetCurrentDataObject());
+
+            std::string blockIdxString = std::to_string(blockIdx);
+            if(!filterBlock.empty() && filterBlock != blockIdxString)
+                continue;
 
             for (int i = 0; i < block->GetPointData()->GetNumberOfArrays(); i++) {
-                VolumeURL subURL("vtm", url, "");
-                const char *channel = block->GetPointData()->GetArrayName(i);
-                subURL.addSearchParameter("scalar", channel);
-                subURL.addSearchParameter("block", std::to_string(blockIdx));
+
+                const char* name = block->GetPointData()->GetArrayName(i);
+                if (!filterName.empty() && filterName != name)
+                    continue;
+
+                VolumeURL subURL("vtm", urlOrigin.getPath(), "");
+                subURL.addSearchParameter("name", name);
+                subURL.addSearchParameter("block", blockIdxString);
                 result.push_back(subURL);
             }
 
             blockIdx++;
         }
+        iter->Delete();
     }
 
     return result;
@@ -87,20 +98,19 @@ VolumeBase* VTMVolumeReader::read(const VolumeURL& origin) {
     std::string fileName = origin.getPath();
     LINFO("Reading " << origin.getURL());
 
-    vtkSmartPointer<vtkXMLMultiBlockDataReader> reader = vtkXMLMultiBlockDataReader::New();
-
+    vtkSmartPointer<vtkXMLMultiBlockDataReader> reader = vtkSmartPointer<vtkXMLMultiBlockDataReader>::New();
     if(!reader->CanReadFile(fileName.c_str())) {
-        throw tgt::IOException();
+        throw tgt::IOException("File can't be read!");
     }
 
     reader->SetFileName(fileName.c_str());
     reader->Update();
 
-    vtkSmartPointer<vtkMultiBlockDataSet> blockData = vtkMultiBlockDataSet::SafeDownCast(reader->GetOutput());
+    vtkMultiBlockDataSet* blockData = vtkMultiBlockDataSet::SafeDownCast(reader->GetOutput());
     unsigned int blockIdx = static_cast<unsigned int>(std::stoi(origin.getSearchParameter("block")));
     tgtAssert(blockIdx < blockData->GetNumberOfBlocks(), "Invalid block index");
 
-    vtkSmartPointer<vtkMultiBlockDataSet> block = vtkMultiBlockDataSet::SafeDownCast(blockData->GetBlock(blockIdx));
+    vtkMultiBlockDataSet* block = vtkMultiBlockDataSet::SafeDownCast(blockData->GetBlock(blockIdx));
     if(!block || block->GetNumberOfBlocks() == 0)
         throw tgt::IOException("Block could not be read.");
 
@@ -120,8 +130,9 @@ VolumeList* VTMVolumeReader::read(const std::string &url) {
         }
     } catch(tgt::FileException e) {
         while(!volumeList->empty()) {
-            delete volumeList->first();
-            volumeList->remove(volumeList->first());
+            VolumeBase* volume = volumeList->first();
+            volumeList->remove(volume);
+            delete volume;
         }
         delete volumeList;
         throw;

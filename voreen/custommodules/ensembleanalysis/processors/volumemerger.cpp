@@ -34,6 +34,8 @@
 
 namespace voreen {
 
+const std::string VolumeMerger::loggerCat_ = "voreen.ensembleanalysis.VolumeMerger";
+
 VolumeMerger::VolumeMerger()
     : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
     , inport_(Port::INPORT, "volumelist.input", "Volume List Input", false)
@@ -100,7 +102,7 @@ VolumeMergerComputeInput VolumeMerger::prepareComputeInput() {
     outport_.setData(nullptr);
 
     const std::string format = inputVolumes.first()->getFormat();
-    const tgt::svec3 dim = globalBounds.diagonal() / spacing;
+    const tgt::svec3 dim = tgt::iround(globalBounds.diagonal() / spacing);
 
     VolumeRAM* outputVolumeData = nullptr;
     try {
@@ -137,7 +139,7 @@ VolumeMergerComputeOutput VolumeMerger::compute(VolumeMergerComputeInput input, 
         const VolumeRAM* volumeData = volume->getRepresentation<VolumeRAM>();
 
         const tgt::svec3& dim = volumeData->getDimensions();
-        const tgt::svec3 offset((volume->getLLF() - llf) / spacing);
+        const tgt::svec3 offset = tgt::iround((volume->getLLF() - llf) / spacing);
 
 #ifdef VRN_MODULE_OPENMP
         long dimZ = static_cast<long>(dim.z);

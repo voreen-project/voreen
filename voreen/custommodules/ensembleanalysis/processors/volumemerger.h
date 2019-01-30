@@ -71,6 +71,8 @@ private:
     VolumePort outport_;
 
     BoolProperty allowIntersections_;
+
+    static const std::string loggerCat_;
 };
 
 }   //namespace

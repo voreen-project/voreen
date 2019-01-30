@@ -45,7 +45,8 @@ namespace voreen {
  */
 class VRN_CORE_API EnsembleDataSource : public Processor {
 
-    static const std::string SCALAR_FIELD_NAME;
+    static const std::string SCALAR_FIELD_NAME; // Deprecated!
+    static const std::string NAME_FIELD_NAME;
     static const std::string SIMULATED_TIME_NAME;
 
 public:

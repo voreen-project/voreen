@@ -1,4 +1,3 @@
-# Sample script for loading volume data.
 import voreen
 import voreenqt
 import os
@@ -21,11 +20,11 @@ for vtiFile in files:
     fullInputPath = inputPath + vtiFile
     fullOutputPath = outputPath + vtiFile.replace(".vti", ".hdf5")
 
-    print "Converting %s to %s (%s of %s)" % (fullInputPath, fullOutputPath, fileCounter, len(files))
+    print ("Converting %s to %s (%s of %s)" % fullInputPath, fullOutputPath, fileCounter, len(files))
     fileCounter += 1
 
     if os.path.isfile(fullOutputPath):
-        print "File %s already exists. Continuing" % (fullOutputPath) 
+        print ("File %s already exists. Continuing" % (fullOutputPath))
         voreenqt.processEvents()
         continue
 
@@ -34,7 +33,7 @@ for vtiFile in files:
     voreen.setPropertyValue("VolumeListSave", "fileNameHDF5", fullOutputPath)
     voreen.loadVolumes(fullInputPath, True, True, "VolumeListSource")
     
-    print "Converting file took %s seconds" % (time.time() - subStartTime)
+    print ("Converting file took %s seconds" % (time.time() - subStartTime))
     voreenqt.processEvents()
 
-print "The whole dataset was converted in %s seconds" % (time.time() - startTime)
+print ("The whole dataset was converted in %s seconds" % (time.time() - startTime))
