@@ -868,9 +868,8 @@ std::unique_ptr<VesselGraph> createGraphFromMask(VesselGraphCreatorProcessedInpu
         std::move(unfinishedRegions.holeIds).deleteFromDisk();
     }
 
-    BranchIdVolumeReader branchIdReader(branchIdSegmentation);
     //  6. Create better VesselGraph from protograph and the edge-id-segmentation
-    auto output = protograph->createVesselGraph(branchIdReader, input.sampleMask, subtaskReporters.get<7>());
+    auto output = protograph->createVesselGraph(branchIdSegmentation, input.sampleMask, subtaskReporters.get<7>());
     if(input.saveDebugData) {
         generatedVolumes.push_back(std::move(branchIdSegmentation).toVolume());
     } else {
