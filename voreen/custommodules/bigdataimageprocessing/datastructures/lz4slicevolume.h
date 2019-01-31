@@ -254,6 +254,17 @@ private:
     size_t numVoxelsPushed_;
 };
 
+template<typename Voxel, int SLAB_SIZE, int OVERLAP>
+struct OverlappingSlabReader {
+    OverlappingSlabReader(const LZ4SliceVolume<Voxel>& volume);
+    boost::optional<Voxel> getVoxel(const tgt::ivec3& globalPos) const;
+    void advance();
+
+    const LZ4SliceVolume<Voxel>& volume_;
+    VolumeAtomic<Voxel> currentSlab_;
+    int currentSlabStart_;
+};
+
 
 LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized, ProgressReporter* progress = nullptr);
 LZ4SliceVolume<uint8_t> binarizeVolume(const VolumeBase& volume, float binarizationThresholdSegmentationNormalized, ProgressReporter& progress);
@@ -630,6 +641,44 @@ LZ4SliceVolume<Voxel> LZ4SliceVolumeVoxelBuilder<Voxel>::finalize() && {
 template<typename Voxel>
 tgt::svec3 LZ4SliceVolumeVoxelBuilder<Voxel>::getDimensions() const {
     return builder_.getDimensions();
+}
+
+
+/// OverlappingSlabReader ------------------------------------------------------
+
+template<typename Voxel, int SLAB_SIZE, int OVERLAP>
+OverlappingSlabReader<Voxel, SLAB_SIZE, OVERLAP>::OverlappingSlabReader(const LZ4SliceVolume<Voxel>& volume)
+    : volume_(volume)
+    , currentSlab_(tgt::svec3(0), false)
+    , currentSlabStart_(-SLAB_SIZE)
+{
+}
+template<typename Voxel, int SLAB_SIZE, int OVERLAP>
+boost::optional<Voxel> OverlappingSlabReader<Voxel, SLAB_SIZE, OVERLAP>::getVoxel(const tgt::ivec3& globalPos) const {
+    int slabZ = globalPos.z - currentSlabStart_ +
+        (currentSlabStart_ == 0 ?
+        0 :
+        /*we have one additional slice! */ OVERLAP);
+    if(     0 <= slabZ && slabZ < static_cast<int>(currentSlab_.getDimensions().z)
+         && 0 <= globalPos.x && globalPos.x < static_cast<int>(currentSlab_.getDimensions().x)
+         && 0 <= globalPos.y && globalPos.y < static_cast<int>(currentSlab_.getDimensions().y))
+    {
+        tgt::ivec3 pos(globalPos.xy(), slabZ);
+        return currentSlab_.voxel(pos);
+    } else {
+        return boost::none;
+    }
+}
+
+template<typename Voxel, int SLAB_SIZE, int OVERLAP>
+void OverlappingSlabReader<Voxel, SLAB_SIZE, OVERLAP>::advance() {
+    currentSlabStart_ += SLAB_SIZE;
+    int begin = std::max(currentSlabStart_ - OVERLAP, 0);
+    int end = std::min(
+            currentSlabStart_+SLAB_SIZE+ 2*OVERLAP,
+            static_cast<int>(volume_.getDimensions().z));
+
+    currentSlab_ = volume_.loadSlab(begin, end);
 }
 
 }

@@ -141,7 +141,7 @@ public:
     VolumeMask(VolumeMask&& other);
     ~VolumeMask();
 
-    void set(const tgt::svec3& pos, VolumeMaskValue val);
+    void set(const tgt::svec3& pos, VolumeMaskValue val); //TODO should not be public, as it may invalidate surface information. Instead: use something like "fix" which can only act on foreground voxels
     VolumeMaskValue get(const tgt::ivec3& pos, VolumeMaskValue outsideVolumeValue = VolumeMaskValue::OBJECT) const;
 
     // Creates a VolumeRAM using the provided format and the contents of this mask.

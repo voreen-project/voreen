@@ -166,75 +166,26 @@ struct ProtoNodeRef {
 
 const int MAX_CHUNK_SIZE = 32;
 
-struct BranchIdVolumeReader {
-    BranchIdVolumeReader(const LZ4SliceVolume<uint32_t>& ccaVolume)
-        : ccaVolume_(ccaVolume)
-        , currentSlab_(tgt::svec3(0), false)
-        , currentSlabStart_(-MAX_CHUNK_SIZE)
-    {
-    }
+typedef OverlappingSlabReader<uint32_t, MAX_CHUNK_SIZE, 1> BranchIdVolumeReader;
 
-    boost::optional<tgt::ivec3> toSlabPos(tgt::ivec3 globalPos) const {
-        int slabZ = globalPos.z - currentSlabStart_ +
-            (currentSlabStart_ == 0 ?
-            0 :
-            /*we have one additional slice! */1);
-        if(     0 <= slabZ && slabZ < static_cast<int>(currentSlab_.getDimensions().z)
-             && 0 <= globalPos.x && globalPos.x < static_cast<int>(currentSlab_.getDimensions().x)
-             && 0 <= globalPos.y && globalPos.y < static_cast<int>(currentSlab_.getDimensions().y))
-        {
-            return tgt::ivec3(globalPos.xy(), slabZ);
-        } else {
-            return boost::none;
-        }
-    }
+static bool isValidEdgeId(VGEdgeID id) {
+    return id.raw() != IdVolume::UNLABELED_FOREGROUND_VALUE && id.raw() != IdVolume::BACKGROUND_VALUE;
+}
 
-    VGEdgeID getEdgeId(const tgt::ivec3& pos) const {
-        auto slabPos = toSlabPos(pos);
-        tgtAssert(slabPos, "Invalid voxel position");
-        return currentSlab_.voxel(*slabPos);
-    }
+static bool isObject(const BranchIdVolumeReader& r, const tgt::ivec3& pos) {
+    auto voxel = r.getVoxel(pos);
+    return voxel && *voxel != IdVolume::BACKGROUND_VALUE;
+}
 
-    void advance() {
-        currentSlabStart_ += MAX_CHUNK_SIZE;
-        int begin = std::max(currentSlabStart_ -1 /*one slice at begin*/, 0);
-        int end = std::min(
-                currentSlabStart_+MAX_CHUNK_SIZE+1 /*one slice at begin*/ + 1 /*one slice at end*/,
-                static_cast<int>(ccaVolume_.getDimensions().z));
+static VGEdgeID getEdgeId(const BranchIdVolumeReader& r, const tgt::ivec3& pos) {
+    auto voxel = r.getVoxel(pos);
+    tgtAssert(voxel, "Invalid voxel position");
+    return *voxel;
+}
 
-        currentSlab_ = ccaVolume_.loadSlab(begin, end);
-    }
-
-    bool isValidEdgeId(VGEdgeID id) const {
-        return id.raw() != IdVolume::UNLABELED_FOREGROUND_VALUE && id.raw() != IdVolume::BACKGROUND_VALUE;
-    }
-
-    bool isObject(const tgt::ivec3& pos) const {
-        auto slabPos = toSlabPos(pos);
-        return slabPos && currentSlab_.voxel(*slabPos) != IdVolume::BACKGROUND_VALUE;
-    }
-
-    tgt::vec3 getSpacing() const {
-        return ccaVolume_.getMetaData().getSpacing();
-    }
-
-    tgt::mat4 getVoxelToWorldMatrix() const {
-        return ccaVolume_.getMetaData().getVoxelToWorldMatrix();
-    }
-
-    tgt::svec3 getDimensions() const {
-        return ccaVolume_.getDimensions();
-    }
-
-    const LZ4SliceVolume<uint32_t>& ccaVolume_;
-    VolumeAtomic<uint32_t> currentSlab_;
-    int currentSlabStart_;
-};
-
-
-static boost::optional<VGEdgeID> findNearOtherEdgeID(const BranchIdVolumeReader& segmentedVolumeReader, const tgt::ivec3& currentPos, VGEdgeID centerID) {
+static boost::optional<VGEdgeID> findNearOtherEdgeID(const BranchIdVolumeReader& segmentedVolumeReader, const tgt::ivec3& dimensions, const tgt::ivec3& currentPos, VGEdgeID centerID) {
     tgt::ivec3 minPos = tgt::max(tgt::ivec3::zero, currentPos - tgt::ivec3(1, 1, 1));
-    tgt::ivec3 maxPos = tgt::min(tgt::ivec3(segmentedVolumeReader.getDimensions()), currentPos + tgt::ivec3(2,2,2));
+    tgt::ivec3 maxPos = tgt::min(dimensions, currentPos + tgt::ivec3(2,2,2));
     for(int z = minPos.z; z < maxPos.z; ++z) {
         for(int y = minPos.y; y < maxPos.y; ++y) {
             for(int x = minPos.x; x < maxPos.x; ++x) {
@@ -242,8 +193,8 @@ static boost::optional<VGEdgeID> findNearOtherEdgeID(const BranchIdVolumeReader&
                 if (pos == currentPos) {
                     continue;
                 }
-                VGEdgeID id = segmentedVolumeReader.getEdgeId(pos);
-                if(id != centerID && segmentedVolumeReader.isValidEdgeId(id)) {
+                VGEdgeID id = getEdgeId(segmentedVolumeReader, pos);
+                if(id != centerID && isValidEdgeId(id)) {
                     return id;
                 }
             }
@@ -255,13 +206,15 @@ static boost::optional<VGEdgeID> findNearOtherEdgeID(const BranchIdVolumeReader&
 std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(const LZ4SliceVolume<uint32_t>& ccaVolume, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress) {
     TaskTimeLogger _("Extract edge features", tgt::Info);
 
+
+    const tgt::svec3 dimensions = ccaVolume.getDimensions();
+    const tgt::vec3 spacing = ccaVolume.getMetaData().getSpacing();
+    const tgt::mat4 toRWMatrix = ccaVolume.getMetaData().getVoxelToWorldMatrix();
+
     BranchIdVolumeReader segmentedVolumeReader(ccaVolume);
 
-    const tgt::vec3 spacing = segmentedVolumeReader.getSpacing();
-    const tgt::svec3 dimensions = segmentedVolumeReader.getDimensions();
     //std::unique_ptr<VesselGraph> graph(new VesselGraph(skeleton.getBoundingBox().getBoundingBox()));
     std::unique_ptr<VesselGraph> graph(new VesselGraph());
-    const tgt::mat4 toRWMatrix = segmentedVolumeReader.getVoxelToWorldMatrix();
 
     tgtAssert(!sampleMask || sampleMask->getDimensions() == dimensions, "Invalid segmentation volume dimensions");
 
@@ -330,8 +283,8 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(const LZ4SliceV
                             int x = chunk_x*MAX_CHUNK_SIZE + dx;
 
                             tgt::ivec3 ipos(x, y, z);
-                            VGEdgeID id = segmentedVolumeReader.getEdgeId(ipos);
-                            if(!segmentedVolumeReader.isValidEdgeId(id)) {
+                            VGEdgeID id = getEdgeId(segmentedVolumeReader, ipos);
+                            if(!isValidEdgeId(id)) {
                                 continue;
                             }
 
@@ -353,19 +306,19 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(const LZ4SliceV
                             // Determine if it is a surface voxel:
                             // Only consider those that have a background 6-neighbor
                             bool isSurfaceVoxel =
-                                !( (x == 0        || segmentedVolumeReader.isObject(tgt::ivec3(x-1, y  , z  )))
-                                && (x == idim.x-1 || segmentedVolumeReader.isObject(tgt::ivec3(x+1, y  , z  )))
-                                && (y == 0        || segmentedVolumeReader.isObject(tgt::ivec3(x  , y-1, z  )))
-                                && (y == idim.y-1 || segmentedVolumeReader.isObject(tgt::ivec3(x  , y+1, z  )))
-                                && (z == 0        || segmentedVolumeReader.isObject(tgt::ivec3(x  , y  , z-1)))
-                                && (z == idim.z-1 || segmentedVolumeReader.isObject(tgt::ivec3(x  , y  , z+1))));
+                                !( (x == 0        || isObject(segmentedVolumeReader, tgt::ivec3(x-1, y  , z  )))
+                                && (x == idim.x-1 || isObject(segmentedVolumeReader, tgt::ivec3(x+1, y  , z  )))
+                                && (y == 0        || isObject(segmentedVolumeReader, tgt::ivec3(x  , y-1, z  )))
+                                && (y == idim.y-1 || isObject(segmentedVolumeReader, tgt::ivec3(x  , y+1, z  )))
+                                && (z == 0        || isObject(segmentedVolumeReader, tgt::ivec3(x  , y  , z-1)))
+                                && (z == idim.z-1 || isObject(segmentedVolumeReader, tgt::ivec3(x  , y  , z+1))));
 
                             // The rest is only relevant for surface voxels, so...
                             if(!isSurfaceVoxel) {
                                 continue;
                             }
 
-                            auto otherNearEdgeID = findNearOtherEdgeID(segmentedVolumeReader, ipos, id);
+                            auto otherNearEdgeID = findNearOtherEdgeID(segmentedVolumeReader, idim, ipos, id);
 
                             for(auto element : neared_result.elements_) {
                                 VesselSkeletonVoxel& voxel = skeletonVoxelLists[id.raw()].at(element->voxelIndex_);
