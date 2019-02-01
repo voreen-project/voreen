@@ -213,6 +213,11 @@ VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional
 
     tgtAssert(!sampleMask || dimensions == sampleMask->getDimensions(), "Sample mask dimension mismatch");
 
+    SurfaceBuilder builder;
+
+    OverlappingSlabReader<uint8_t, VOLUME_MASK_STORAGE_BLOCK_SIZE_Z, 1> volReader(vol);
+    boost::optional<OverlappingSlabReader<uint8_t, VOLUME_MASK_STORAGE_BLOCK_SIZE_Z, 1>> maskReader = sampleMask ? boost::optional<OverlappingSlabReader<uint8_t, VOLUME_MASK_STORAGE_BLOCK_SIZE_Z, 1>>(*sampleMask) : boost::none;
+
     auto calc_num_chunks = [] (size_t dim, size_t size) {
         if((dim % size) == 0) {
             return dim/size;
@@ -240,10 +245,12 @@ VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional
 
         const size_t chunk_size_z = calc_chunk_size(chunk_z, num_chunks_z, max_chunk_size_z, dimensions.z);
 
-        size_t slab_begin = chunk_z*max_chunk_size_z;
-        size_t slab_end = slab_begin + chunk_size_z;
-        auto volSlab = vol.loadSlab(slab_begin, slab_end);
-        boost::optional<VolumeAtomic<uint8_t>> sampleMaskSlab = sampleMask ? boost::optional<VolumeAtomic<uint8_t>>(sampleMask->loadSlab(slab_begin, slab_end)) : boost::none;
+        std::vector<uint64_t> surfaceSlab;
+
+        volReader.advance();
+        if(maskReader) {
+            maskReader->advance();
+        }
 
         for(size_t chunk_y = 0; chunk_y < num_chunks_y; ++chunk_y) {
             const size_t chunk_size_y = calc_chunk_size(chunk_y, num_chunks_y, max_chunk_size_y, dimensions.y);
@@ -260,12 +267,12 @@ VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional
                         for(size_t dx = 0; dx<chunk_size_x; ++dx) {
                             size_t x = chunk_x*max_chunk_size_x + dx;
 
-                            const tgt::svec3 p(x,y,z);
-                            const tgt::svec3 slabPos(x,y, dz);
+                            const tgt::ivec3 p(x,y,z);
+
                             VolumeMaskValue val;
-                            if(sampleMaskSlab && sampleMaskSlab->voxel(slabPos) == 0) {
+                            if(maskReader && *maskReader->getVoxel(p) == 0) {
                                 val = VolumeMaskValue::OUTSIDE_VOLUME;
-                            } else if(volSlab.getVoxelNormalized(slabPos) > 0) {
+                            } else if(*volReader.getVoxel(p) > 0) {
                                 val = VolumeMaskValue::OBJECT;
                                 ++numOriginalForegroundVoxels_;
                             } else {
@@ -275,6 +282,35 @@ VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional
                             // files are filled with zeros, which I'm PRETTY sure of, but not 100% certain.
                             if(val != VolumeMaskValue::BACKGROUND) {
                                 data_.set(p, val);
+
+                                // Check if voxel is on surface
+                                auto isBackground = [&] (int dx, int dy, int dz) {
+                                    auto voxel = volReader.getVoxel(tgt::ivec3(p.x+dx, p.y+dy, p.z+dz));
+                                    if(!voxel) {
+                                        return false;
+                                    }
+                                    if(*voxel == 0) {
+                                        return true;
+                                    }
+                                    if(maskReader) {
+                                        auto maskVoxel = maskReader->getVoxel(p);
+                                        if(maskVoxel && *maskVoxel == 0) {
+                                            return true;
+                                        }
+                                    }
+                                    return false;
+                                };
+                                bool onSurface = false;
+                                onSurface |= isBackground( 1, 0, 0);
+                                onSurface |= isBackground(-1, 0, 0);
+                                onSurface |= isBackground( 0, 1, 0);
+                                onSurface |= isBackground( 0,-1, 0);
+                                onSurface |= isBackground( 0, 0, 1);
+                                onSurface |= isBackground( 0, 0,-1);
+
+                                if(onSurface) {
+                                    surfaceSlab.push_back(toLinearPos(p));
+                                }
                             } else {
                                 tgtAssert(data_.get(p) == VolumeMaskValue::BACKGROUND, "File was not zeroed before filling");
                             }
@@ -283,21 +319,10 @@ VolumeMask::VolumeMask(const LZ4SliceVolume<uint8_t>& vol, const boost::optional
                 }
             }
         }
+        std::sort(surfaceSlab.begin(), surfaceSlab.end());
+        builder.push_all(surfaceSlab);
     }
 
-    // Initialize surface
-    SurfaceBuilder builder;
-    for(size_t z = 0; z<dimensions.z; ++z) {
-        subtaskReporters.get<1>().setProgress(static_cast<float>(z)/dimensions.z);
-        for(size_t y = 0; y<dimensions.y; ++y) {
-            for(size_t x = 0; x<dimensions.x; ++x) {
-                const tgt::svec3 p(x,y,z);
-                if(get(p, VolumeMaskValue::BACKGROUND) == VolumeMaskValue::OBJECT && isSurfaceVoxel(p)) {
-                    builder.push(toLinearPos(p));
-                }
-            }
-        }
-    }
     surfaceFile_ = std::move(builder).finalize();
     progress.setProgress(1.0f);
 }
