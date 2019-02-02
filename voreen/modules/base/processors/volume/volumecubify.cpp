@@ -52,45 +52,63 @@ void VolumeCubify::process() {
         return;
     }
 
+    // Clear old data.
+    outport_.setData(nullptr);
+
     const VolumeRAM* inputVolume = inport_.getData()->getRepresentation<VolumeRAM>();
-    VolumeRAM* outputVolume = 0;
+    if(!inputVolume) {
+        LERROR("No RAM representation available");
+        return;
+    }
 
-    tgt::ivec3 oldims = inputVolume->getDimensions();
-    tgt::ivec3 newdims = tgt::ivec3(tgt::max(oldims));
-    tgt::ivec3 llf = (newdims - oldims) / 2;
-    tgt::ivec3 urb = (newdims + oldims) / 2;
+    const tgt::svec3 oldDims = inputVolume->getDimensions();
+    const tgt::svec3 newDims(tgt::max(oldDims));
+    if(oldDims == newDims) {
+        LINFO("Volume already is a cube");
+        outport_.setData(inport_.getData(), false);
+        return;
+    }
 
-    if(dynamic_cast<const VolumeRAM_UInt8*>(inputVolume))
-        outputVolume = new VolumeRAM_UInt8(newdims);
-    else if(dynamic_cast<const VolumeRAM_UInt16*>(inputVolume))
-        outputVolume = new VolumeRAM_UInt16(newdims);
-    else
-        LERROR("Unsupported value for getBitsStored()");
+    const tgt::svec3 llf = (newDims - oldDims) / static_cast<size_t>(2);
+    const tgt::svec3 urb = (newDims + oldDims) / static_cast<size_t>(2);
+    const size_t numChannels = inputVolume->getNumChannels();
 
-    for (int voxel_z=0; voxel_z < newdims.z; voxel_z++) {
-        for (int voxel_y=0; voxel_y < newdims.y; voxel_y++) {
-            for (int voxel_x=0; voxel_x < newdims.x; voxel_x++) {
+    VolumeRAM* outputVolume = inputVolume->createNew(newDims, true);
+    if(!outputVolume) {
+        LERROR("Output volume could not be created");
+        return;
+    }
 
-                tgt::ivec3 pos = tgt::ivec3(voxel_x, voxel_y, voxel_z);
-
-                if(tgt::hor(tgt::lessThan(pos, llf)) || tgt::hor(tgt::greaterThanEqual(pos, urb)))
-                    outputVolume->setVoxelNormalized(0.f, pos);
+#ifdef VRN_MODULE_OPENMP
+    long newDimsZ = static_cast<long>(newDims.z);
+    #pragma omp parallel for
+    for (long voxel_zP=0; voxel_zP < newDimsZ; voxel_zP++) {
+        size_t voxel_z = static_cast<size_t>(voxel_zP);
+#else
+    for (size_t voxel_z=0; voxel_z < newDims.z; voxel_z++) {
+#endif
+        for (size_t voxel_y=0; voxel_y < newDims.y; voxel_y++) {
+            for (size_t voxel_x=0; voxel_x < newDims.x; voxel_x++) {
+                tgt::svec3 pos(voxel_x, voxel_y, voxel_z);
+                if (tgt::hor(tgt::lessThan(pos, llf)) || tgt::hor(tgt::greaterThanEqual(pos, urb))) {
+                    for(size_t channel=0; channel < numChannels; channel++) {
+                        outputVolume->setVoxelNormalized(0.f, pos, channel);
+                    }
+                }
                 else {
                     tgt::ivec3 oldPos = pos - llf;
-                    outputVolume->setVoxelNormalized(inputVolume->getVoxelNormalized(oldPos), pos);
+                    for(size_t channel=0; channel < numChannels; channel++) {
+                        outputVolume->setVoxelNormalized(inputVolume->getVoxelNormalized(oldPos), pos);
+                    }
                 }
             }
         }
     }
 
     // assign computed volume to outport
-    if (outputVolume) {
-        Volume* h = new Volume(outputVolume, inport_.getData());
-        h->setOffset(h->getOffset() - (tgt::vec3(llf) * h->getSpacing()));
-        outport_.setData(h);
-    }
-    else
-        outport_.setData(0);
+    Volume* volume = new Volume(outputVolume, inport_.getData());
+    volume->setOffset(volume->getOffset() - (tgt::vec3(llf) * volume->getSpacing()));
+    outport_.setData(volume);
 }
 
 }   // namespace
