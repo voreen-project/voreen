@@ -25,6 +25,8 @@
 
 #include "volumefilterlist.h"
 
+#include "voreen/core/ports/conditions/portconditionvolumetype.h"
+
 #include "modules/hdf5/io/hdf5volumereader.h"
 #include "modules/hdf5/io/hdf5volumewriter.h"
 #include "modules/hdf5/io/hdf5filevolume.h"
@@ -58,6 +60,8 @@ VolumeFilterList::VolumeFilterList()
     , numInstances_(0)
 {
     addPort(inport_);
+        // Currently, only single channel volumes are supported.
+        inport_.addCondition(new PortConditionVolumeChannelCount(1));
     addPort(outport_);
 
     addProperty(filterList_);
@@ -139,12 +143,31 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
         throw InvalidInputException("Input volume has multiple channels, but a single channel volume is expected!", InvalidInputException::S_ERROR);
     }
 
+    VolumeFilterStackBuilder builder(inputVolume);
+    std::string baseType = inputVolume.getBaseType();
+    for(const InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
+        VolumeFilter* filter = filterProperties_[instance.itemId_]->getVolumeFilter(inputVolume, instance.instanceId_);
+        if(!filter) {
+            LWARNING("Filter: '" << filterList_.getInstanceName(instance)
+                                 << "' has not been configured yet. Taking default.");
+            filter = filterProperties_[instance.itemId_]->getVolumeFilter(inputVolume,
+                                                                          FilterProperties::DEFAULT_SETTINGS);
+        }
+        tgtAssert(filter, "filter was null");
+
+        // Base type of output volume is determined by last filter output type.
+        baseType = filter->getSliceBaseType();
+
+        builder.addLayer(std::unique_ptr<VolumeFilter>(filter));
+    }
+
+    std::unique_ptr<SliceReader> sliceReader = builder.build(0);
+
     // Reset output volume to make sure it (and the hdf5filevolume) are not used any more
     outport_.setData(nullptr);
 
     const std::string volumeFilePath = outputVolumeFilePath_.get();
     const std::string volumeLocation = HDF5VolumeWriter::VOLUME_DATASET_NAME;
-    const std::string baseType = "uint8";
     const tgt::svec3 dim = inputVolume.getDimensions();
 
     if(volumeFilePath.empty()) {
@@ -161,20 +184,6 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
     outputVolume->writeSpacing(inputVolume.getSpacing());
     outputVolume->writeOffset(inputVolume.getOffset());
     outputVolume->writeRealWorldMapping(inputVolume.getRealWorldMapping());
-
-    VolumeFilterStackBuilder builder(inputVolume);
-    for(const InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
-        VolumeFilter* filter = filterProperties_[instance.itemId_]->getVolumeFilter(inputVolume, instance.instanceId_);
-        if(!filter) {
-            LWARNING("Filter: '" << filterList_.getInstanceName(instance)
-                                 << "' has not been configured yet. Taking default.");
-            filter = filterProperties_[instance.itemId_]->getVolumeFilter(inputVolume,
-                                                                          FilterProperties::DEFAULT_SETTINGS);
-        }
-        builder.addLayer(std::unique_ptr<VolumeFilter>(filter));
-    }
-
-    std::unique_ptr<SliceReader> sliceReader = builder.build(0);
 
     return VolumeFilterListInput(
             std::move(sliceReader),
