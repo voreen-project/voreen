@@ -100,7 +100,7 @@ struct VesselGraphCreatorInput {
 };
 struct VesselGraphCreatorOutput {
     std::unique_ptr<VesselGraph> graph;
-    std::unique_ptr<VolumeList> generatedVolumes;
+    std::vector<std::unique_ptr<VolumeBase>> generatedVolumes;
     std::unique_ptr<std::vector<VesselGraph>> generatedGraphs;
 };
 
@@ -140,6 +140,7 @@ private:
     GeometryPort nodeOutport_;
     GeometryPort edgeOutport_;
     VolumeListPort generatedVolumesOutport_; //For debug purposes
+    std::vector<std::unique_ptr<VolumeBase>> lastGeneratedVolumes_; //owns volumes as generated volumes only holds references
     VesselGraphListPort generatedGraphsOutport_; //For debug purposes
 
     // Binarization

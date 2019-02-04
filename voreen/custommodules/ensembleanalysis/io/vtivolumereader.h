@@ -28,12 +28,12 @@
 
 #include "voreen/core/io/volumereader.h"
 
-#include "tgt/vector.h"
-
 #include <vtkSmartPointer.h>
-#include <vtkXMLImageDataReader.h>
+#include <vtkImageData.h>
 
 namespace voreen {
+
+Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vtkImageData> data);
 
 /**
  * This reader is capable of reading vti files specified by the VTK library.
@@ -43,7 +43,7 @@ public:
     VTIVolumeReader(ProgressBar* progress = 0);
 
     virtual std::string getClassName() const { return "VTIVolumeReader"; }
-    virtual std::string getFormatDescription() const { return "VTK imagedata format"; }
+    virtual std::string getFormatDescription() const { return "VTK ImageData format"; }
 
     virtual VolumeReader* create(ProgressBar* progress = 0) const;
 
@@ -52,10 +52,7 @@ public:
     virtual VolumeBase* read(const VolumeURL& origin);
 
 private:
-    void clearReaderData();
 
-    mutable vtkSmartPointer<vtkXMLImageDataReader> reader_;
-    mutable std::map<std::string, std::set<std::string> > volumeURLs_;
     static const std::string loggerCat_;
 };
 

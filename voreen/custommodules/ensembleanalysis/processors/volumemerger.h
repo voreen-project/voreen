@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2017 University of Muenster, Germany.                        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
  * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -23,67 +23,58 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_SIMILARITYDATASOURCE_H
-#define VRN_SIMILARITYDATASOURCE_H
+#ifndef VRN_VOLUMEMERGER_H
+#define VRN_VOLUMEMERGER_H
 
-#include "voreen/core/processors/processor.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
+#include "voreen/core/ports/volumeport.h"
+#include "voreen/core/properties/temppathproperty.h"
 
-#include "voreen/core/io/volumeserializerpopulator.h"
-#include "voreen/core/ports/genericport.h"
-#include "voreen/core/properties/buttonproperty.h"
-#include "voreen/core/properties/filedialogproperty.h"
-#include "voreen/core/properties/progressproperty.h"
-#include "voreen/core/properties/intproperty.h"
-
-#include "voreen/core/properties/optionproperty.h"
-
-#include "../ports/similaritydataport.h"
+#include "modules/hdf5/io/hdf5filevolume.h"
 
 namespace voreen {
 
+struct VolumeMergerComputeInput {
+    const VolumeList* inputVolumes;
+    std::unique_ptr<Volume> outputVolume;
+};
+
+struct VolumeMergerComputeOutput{
+    std::unique_ptr<Volume> outputVolume;
+};
+
 /**
- * Loads multiple volumes and provides them
- * as VolumeList through its outport.
+ *
  */
-class VRN_CORE_API SimilarityDataSource : public Processor {
-
-    static const std::string SCALAR_FIELD_NAME;
-    static const std::string SIMULATED_TIME_NAME;
-
+class VRN_CORE_API VolumeMerger : public AsyncComputeProcessor<VolumeMergerComputeInput, VolumeMergerComputeOutput>  {
 public:
-    SimilarityDataSource();
-    virtual ~SimilarityDataSource();
+    VolumeMerger();
+    virtual ~VolumeMerger();
     virtual Processor* create() const;
 
-    virtual std::string getClassName() const  { return "SimilarityDataSource";    }
-    virtual std::string getCategory() const   { return "Input";                 }
+    virtual std::string getClassName() const  { return "VolumeMerger";      }
+    virtual std::string getCategory() const   { return "Volume Processing";     }
     virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
-    virtual bool usesExpensiveComputation() const { return true;  }
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Loads multiple volumes and provides them as VolumeList.");
+        setDescription("Merges incoming volumes into a single one. No overlap allowed");
     }
 
-    void process();
-    virtual void initialize();
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
 
-    void clearSimilarityData();
-    void buildSimilarityData();
+private:
 
-    VolumeSerializerPopulator populator_;
+    VolumeListPort inport_;
+    VolumePort outport_;
 
-    FileDialogProperty similarityPath_;
-    ButtonProperty loadSimilarityDataButton_;
-    StringOptionProperty loadedChannels_;
-    IntProperty selectedTimeStep_;
-
-    /// The structure of the ensemble data.
-    SimilarityDataPort outport_;
+    BoolProperty allowIntersections_;
 
     static const std::string loggerCat_;
 };
 
-} // namespace
+}   //namespace
 
 #endif

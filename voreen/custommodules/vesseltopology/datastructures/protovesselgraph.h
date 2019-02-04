@@ -99,8 +99,6 @@ struct ProtoVesselGraphNode {
     DiskArrayBackedList<VGEdgeID> edges_;
 };
 
-struct BranchIdVolumeReader;
-
 struct ProtoVesselGraph {
     typedef static_kdtree::SharedMemoryTreeBuilder<ProtoVesselGraphEdgeElement> TreeBuilder;
     ProtoVesselGraph(tgt::mat4 toRWMatrix);
@@ -108,7 +106,7 @@ struct ProtoVesselGraph {
     VGNodeID insertNode(const std::vector<tgt::svec3>& voxels, bool atSampleBorder);
     VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const DiskArray<tgt::svec3>& voxels);
 
-    std::unique_ptr<VesselGraph> createVesselGraph(BranchIdVolumeReader& segmentedVolumeReader, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress);
+    std::unique_ptr<VesselGraph> createVesselGraph(const LZ4SliceVolume<uint32_t>& ccaVolume, const boost::optional<LZ4SliceVolume<uint8_t>>& sampleMask, ProgressReporter& progress);
 
     DiskArrayStorage<ProtoVesselGraphNode> nodes_;
     DiskArrayStorage<ProtoVesselGraphEdge> edges_;
@@ -122,47 +120,6 @@ struct ProtoVesselGraph {
 
     tgt::mat4 toRWMatrix_;
     TreeBuilder treeBuilder_;
-};
-
-struct BranchIdVolumeReader {
-    BranchIdVolumeReader(const LZ4SliceVolume<uint32_t>& ccaVolume)
-        : branchIdReader_(ccaVolume)
-    {
-        branchIdReader_.seek(-1);
-    }
-
-    VGEdgeID getEdgeId(const tgt::ivec3& xypos) const {
-        auto vox = branchIdReader_.getVoxel(xypos);
-        tgtAssert(vox, "Invalid voxel positions");
-        return *vox;
-    }
-
-    void advance() {
-        branchIdReader_.advance();
-    }
-    bool isValidEdgeId(VGEdgeID id) const {
-        return id.raw() != IdVolume::UNLABELED_FOREGROUND_VALUE && id.raw() != IdVolume::BACKGROUND_VALUE;
-    }
-
-    bool isObject(const tgt::ivec3& pos) const {
-        auto voxel = branchIdReader_.getVoxel(pos);
-        return voxel && *voxel != IdVolume::BACKGROUND_VALUE;
-    }
-
-    tgt::vec3 getSpacing() const {
-        return branchIdReader_.getVolume().getMetaData().getSpacing();
-    }
-
-    tgt::mat4 getVoxelToWorldMatrix() const {
-        return branchIdReader_.getVolume().getMetaData().getVoxelToWorldMatrix();
-    }
-
-    tgt::svec3 getDimensions() const {
-        return branchIdReader_.getVolume().getDimensions();
-    }
-
-
-    LZ4SliceVolumeReader<uint32_t, 1> branchIdReader_;
 };
 
 }

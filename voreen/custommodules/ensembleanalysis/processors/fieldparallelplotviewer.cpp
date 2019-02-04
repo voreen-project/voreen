@@ -52,7 +52,7 @@ static const int PIXEL_BRUSH_ENABLE_DISTANCE = 3;
 static const tgt::ivec2 MARGINS(75, 50);
 static const tgt::vec2 NO_SELECTION(-2.0f); // needs to be any value not inside range [-1, 1]
 
-const std::string FieldParallelPlotViewer::loggerCat_("voreen.viscontest2018.FieldParallelPlotViewer");
+const std::string FieldParallelPlotViewer::loggerCat_("voreen.ensembleanalysis.FieldParallelPlotViewer");
 
 FieldParallelPlotViewer::FieldParallelPlotViewer()
     : RenderProcessor()

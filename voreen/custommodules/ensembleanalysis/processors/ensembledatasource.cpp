@@ -36,8 +36,9 @@
 namespace voreen {
 
 const std::string EnsembleDataSource::SCALAR_FIELD_NAME = "Scalar";
+const std::string EnsembleDataSource::NAME_FIELD_NAME = "name";
 const std::string EnsembleDataSource::SIMULATED_TIME_NAME = "simulated_time";
-const std::string EnsembleDataSource::loggerCat_("voreen.viscontest2018.EnsembleDataSource");
+const std::string EnsembleDataSource::loggerCat_("voreen.ensembleanalysis.EnsembleDataSource");
 
 EnsembleDataSource::EnsembleDataSource()
     : Processor()
@@ -65,7 +66,6 @@ EnsembleDataSource::EnsembleDataSource()
 }
 
 EnsembleDataSource::~EnsembleDataSource() {
-    clearEnsembleDataset();
 }
 
 Processor* EnsembleDataSource::create() const {
@@ -79,6 +79,11 @@ void EnsembleDataSource::process() {
 void EnsembleDataSource::initialize() {
     Processor::initialize();
     //buildEnsembleDataset();
+}
+
+void EnsembleDataSource::deinitialize() {
+    clearEnsembleDataset();
+    Processor::deinitialize();
 }
 
 void EnsembleDataSource::clearEnsembleDataset() {
@@ -155,11 +160,16 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 else if (timeStep.time_ != time->getValue())
                     LWARNING("Meta data '" << SIMULATED_TIME_NAME << "' not equal channel-wise in t=" << timeSteps.size() << " of run" << run);
 
-                const MetaDataBase* scalar = volumeHandle->getMetaData(SCALAR_FIELD_NAME);
-                if(!scalar) {
-                    delete volumeHandle;
-                    LERROR("Meta data '" << SCALAR_FIELD_NAME << "' not present for " << subURL.getPath());
-                    break;
+                const MetaDataBase* name = volumeHandle->getMetaData(NAME_FIELD_NAME);
+                if(!name) {
+                    LWARNING("Trying old deserialization");
+
+                    name = volumeHandle->getMetaData(SCALAR_FIELD_NAME);
+                    if(!name) {
+                        delete volumeHandle;
+                        LERROR("Meta data '" << NAME_FIELD_NAME << "' not present for " << subURL.getPath());
+                        break;
+                    }
                 }
 
                 // Add additional information gained reading the file structure.
@@ -167,7 +177,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 tgtAssert(volume, "volumeHandle must be volume");
                 volume->getMetaDataContainer().addMetaData("run_name", new StringMetaData(run));
 
-                timeStep.channels_[scalar->toString()] = volumeHandle;
+                timeStep.channels_[name->toString()] = volumeHandle;
             }
 
             // Calculate duration the current timeStep is valid.

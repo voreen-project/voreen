@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VISCONTEST2018LINKEVALUATORID_H
-#define VRN_VISCONTEST2018LINKEVALUATORID_H
+#ifndef VRN_ENSEMBLEANALYSISLINKEVALUATORID_H
+#define VRN_ENSEMBLEANALYSISLINKEVALUATORID_H
 
 #include "voreen/core/properties/link/linkevaluatorid.h"
 
@@ -38,4 +38,4 @@ public:
 
 } // namespace
 
-#endif // VRN_VISCONTEST2018LINKEVALUATORID_H
+#endif // VRN_ENSEMBLEANALYSISLINKEVALUATORID_H

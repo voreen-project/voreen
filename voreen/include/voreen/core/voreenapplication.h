@@ -39,6 +39,9 @@
 
 #include <string>
 #include <boost/interprocess/sync/file_lock.hpp>
+
+// Get rid of annoying boost deprecated warning (TODO: remove once boost 1.70 has been released)
+#define BOOST_ALLOW_DEPRECATED_HEADERS true
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 

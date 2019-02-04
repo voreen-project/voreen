@@ -23,42 +23,33 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "similaritydataport.h"
+#ifndef VRN_VTMVOLUMEREADER_H
+#define VRN_VTMVOLUMEREADER_H
+
+#include "voreen/core/io/volumereader.h"
 
 namespace voreen {
 
-SimilarityDataPort::SimilarityDataPort(PortDirection direction, const std::string& id, const std::string& guiName, bool allowMultipleConnections, Processor::InvalidationLevel invalidationLevel)
-    : GenericPort<SimilarityData>(direction, id, guiName, allowMultipleConnections, invalidationLevel) {
-}
+/**
+ * This reader is capable of reading vtm files specified by the VTK library.
+ */
+class VRN_CORE_API VTMVolumeReader : public VolumeReader {
+public:
+    VTMVolumeReader(ProgressBar* progress = 0);
 
-std::string SimilarityDataPort::getClassName() const {
-    return "SimilarityDataPort";
-}
+    virtual std::string getClassName() const { return "VTMVolumeReader"; }
+    virtual std::string getFormatDescription() const { return "VTK MultiBlockDataSet format"; }
 
-Port* SimilarityDataPort::create(PortDirection direction, const std::string& id, const std::string& guiName) const {
-    return new SimilarityDataPort(direction,id,guiName);
-}
+    virtual VolumeReader* create(ProgressBar* progress = 0) const;
 
-tgt::col3 SimilarityDataPort::getColorHint() const {
-    return tgt::col3(25, 172, 204);
-}
+    virtual std::vector<VolumeURL> listVolumes(const std::string& url) const;
+    virtual VolumeList* read(const std::string& url);
+    virtual VolumeBase* read(const VolumeURL& origin);
 
-std::string SimilarityDataPort::getContentDescription() const {
-    std::stringstream strstr;
-    strstr << Port::getContentDescription();
-    if(hasData()) {
-        strstr << std::endl << "TODO";
-    }
-    return strstr.str();
-}
+private:
+    static const std::string loggerCat_;
+};
 
-std::string SimilarityDataPort::getContentDescriptionHTML() const {
-    std::stringstream strstr;
-    strstr << Port::getContentDescriptionHTML();
-    if(hasData()) {
-        strstr << "<br>" << "TODO";
-    }
-    return strstr.str();
-}
+} // namespace voreen
 
-} // namespace
+#endif // VRN_VTMVOLUMEREADER_H

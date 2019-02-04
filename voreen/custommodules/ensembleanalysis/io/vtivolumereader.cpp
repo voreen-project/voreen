@@ -49,89 +49,38 @@
 
 namespace voreen {
 
-const std::string VTIVolumeReader::loggerCat_ = "voreen.io.VolumeReader.vti";
+Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vtkImageData> imageData) {
+    tgtAssert(imageData, "ImageData null");
 
-VTIVolumeReader::VTIVolumeReader(ProgressBar* progress)
-    : VolumeReader(progress)
-{
-    extensions_.push_back("vti");
-}
-
-std::vector<VolumeURL> VTIVolumeReader::listVolumes(const std::string& url) const {
-    std::vector<VolumeURL> result;
-
-    VolumeURL urlOrigin(url);
-
-    if(!reader_.Get())
-        reader_ = vtkXMLImageDataReader::New();
-
-    if(reader_->CanReadFile(urlOrigin.getPath().c_str())) {
-        reader_->SetFileName(urlOrigin.getPath().c_str());
-        reader_->Update();
-
-        for(int i = 0; i < reader_->GetNumberOfPointArrays(); i++) {
-            VolumeURL subURL("vti", url, "");
-            const char* channel = reader_->GetPointArrayName(i);
-            subURL.addSearchParameter("scalar", channel);
-            result.push_back(subURL);
-            volumeURLs_[urlOrigin.getPath()].insert(subURL.getURL());
-        }
-    }
-
-    return result;
-}
-
-VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
-
-    std::string fileName = origin.getPath();
-    if (volumeURLs_.find(fileName) == volumeURLs_.end())
-        throw tgt::IOException("URL " + origin.getURL() + " no yet captured");
-
-    volumeURLs_[fileName].erase(origin.getURL());
-    LINFO("Reading " << origin.getURL());
-
-    if(!reader_.Get())
-        reader_ = vtkXMLImageDataReader::New();
-
-    if(!reader_->CanReadFile(fileName.c_str())) {
-        clearReaderData();
-        throw tgt::IOException();
-    }
-
-    if(reader_->GetFileName() != fileName) {
-        reader_->SetFileName(fileName.c_str());
-        reader_->Update();
-    }
-
-    vtkSmartPointer<vtkImageData> imageData = reader_->GetOutput();
-    tgt::svec3 dimensions(imageData->GetDimensions()[0], imageData->GetDimensions()[1], imageData->GetDimensions()[2]);
-    tgt::vec3 spacing(imageData->GetSpacing()[0], imageData->GetSpacing()[1], imageData->GetSpacing()[2]);
-    std::string channel = origin.getSearchParameter("scalar");
+    tgt::svec3 dimensions = tgt::ivec3::fromPointer(imageData->GetDimensions());
+    tgt::vec3 spacing = tgt::dvec3::fromPointer(imageData->GetSpacing());
+    tgt::vec3 offset = tgt::dvec3::fromPointer(imageData->GetOrigin());
+    std::string name = origin.getSearchParameter("name");
     float min, max;
 
     VolumeRAM* dataset;
     try {
         // Try to retrieve data array.
-        vtkDataArray* array = imageData->GetPointData()->GetArray(channel.c_str());
+        vtkDataArray* array = imageData->GetPointData()->GetArray(name.c_str());
         if(!array)
-            throw tgt::IOException("Field " + channel + " could not be read.");
+            throw tgt::IOException("Field " + name + " could not be read.");
 
         // Allocate volume.
         switch (array->GetNumberOfComponents()) {
-        case 1:
-            dataset = new VolumeRAM_Float(dimensions);
-            break;
-        case 2:
-            dataset = new VolumeRAM_2xFloat(dimensions);
-            break;
-        case 3:
-            dataset = new VolumeRAM_3xFloat(dimensions);
-            break;
-        case 4:
-            dataset = new VolumeRAM_4xFloat(dimensions);
-            break;
-        default:
-            throw tgt::IOException("Unsupported number of components");
+            case 1:
+                dataset = new VolumeRAM_Float(dimensions);
+                break;
+            case 2:
+                dataset = new VolumeRAM_2xFloat(dimensions);
+                break;
+            case 3:
+                dataset = new VolumeRAM_3xFloat(dimensions);
+                break;
+            case 4:
+                dataset = new VolumeRAM_4xFloat(dimensions);
+                break;
+            default:
+                throw tgt::IOException("Unsupported number of components");
         }
 
         // Export data.
@@ -144,18 +93,10 @@ VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
         max = static_cast<float>(range[1]);
 
     } catch (std::bad_alloc&) {
-        clearReaderData();
         throw; // throw it to the caller
     }
 
-    // Clean up - finally deletes the reader if all fields have been read.
-    // Ensure that all fields DO have been read!
-    if(volumeURLs_[fileName].empty()) {
-        volumeURLs_.erase(fileName);
-        clearReaderData();
-    }
-
-    Volume* volumeHandle = new Volume(dataset, spacing, tgt::vec3::zero);
+    Volume* volumeHandle = new Volume(dataset, spacing, offset);
     if (volumeHandle->getNumChannels() == 1) {
         volumeHandle->addDerivedData(new VolumeMinMax(min, max, min, max));
     }
@@ -164,7 +105,7 @@ VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
     }
     volumeHandle->setOrigin(origin);
     volumeHandle->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping(volumeHandle->getBaseType()));
-    volumeHandle->getMetaDataContainer().addMetaData("Scalar", new StringMetaData(channel));
+    volumeHandle->getMetaDataContainer().addMetaData("name", new StringMetaData(name));
 
     // Read meta data.
     for(int i = 0; i < imageData->GetFieldData()->GetNumberOfArrays(); i++) {
@@ -172,18 +113,18 @@ VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
 
         MetaDataBase* metaData = nullptr;
         switch (array->GetDataType()) {
-        case VTK_INT:
-            metaData = new IntMetaData(vtkIntArray::FastDownCast(array)->GetValue(0));
-            break;
-        case VTK_FLOAT:
-            metaData = new FloatMetaData(vtkFloatArray::FastDownCast(array)->GetValue(0));
-            break;
-        case VTK_DOUBLE:
-            metaData = new DoubleMetaData(vtkDoubleArray::FastDownCast(array)->GetValue(0));
-            break;
-        default:
-            //LWARNING("Unsupported Meta Data found: " << array->GetName());
-            break;
+            case VTK_INT:
+                metaData = new IntMetaData(vtkIntArray::FastDownCast(array)->GetValue(0));
+                break;
+            case VTK_FLOAT:
+                metaData = new FloatMetaData(vtkFloatArray::FastDownCast(array)->GetValue(0));
+                break;
+            case VTK_DOUBLE:
+                metaData = new DoubleMetaData(vtkDoubleArray::FastDownCast(array)->GetValue(0));
+                break;
+            default:
+                //LWARNING("Unsupported Meta Data found: " << array->GetName());
+                break;
         }
 
         if(!metaData)
@@ -195,6 +136,59 @@ VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
     return volumeHandle;
 }
 
+
+const std::string VTIVolumeReader::loggerCat_ = "voreen.io.VolumeReader.vti";
+
+VTIVolumeReader::VTIVolumeReader(ProgressBar* progress)
+    : VolumeReader(progress)
+{
+    extensions_.push_back("vti");
+    protocols_.push_back("vti");
+}
+
+std::vector<VolumeURL> VTIVolumeReader::listVolumes(const std::string& url) const {
+    std::vector<VolumeURL> result;
+
+    VolumeURL urlOrigin(url);
+    std::string filterName = urlOrigin.getSearchParameter("name");
+
+    vtkSmartPointer<vtkXMLImageDataReader> reader = vtkSmartPointer<vtkXMLImageDataReader>::New();
+    if(reader->CanReadFile(urlOrigin.getPath().c_str())) {
+        reader->SetFileName(urlOrigin.getPath().c_str());
+        reader->Update();
+
+        for(int i = 0; i < reader->GetNumberOfPointArrays(); i++) {
+
+            const char* name = reader->GetPointArrayName(i);
+
+            if(!filterName.empty() && filterName != name)
+                continue;
+
+            VolumeURL subURL("vti", urlOrigin.getPath(), "");
+            subURL.addSearchParameter("name", name);
+            result.push_back(subURL);
+        }
+    }
+
+    return result;
+}
+
+VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
+
+    std::string fileName = origin.getPath();
+    LINFO("Reading " << origin.getURL());
+
+    vtkSmartPointer<vtkXMLImageDataReader> reader = vtkSmartPointer<vtkXMLImageDataReader>::New();
+    if(!reader->CanReadFile(fileName.c_str())) {
+        throw tgt::IOException("File can't be read!");
+    }
+
+    reader->SetFileName(fileName.c_str());
+    reader->Update();
+
+    return createVolumeFromVtkImageData(origin, reader->GetOutput());
+}
+
 VolumeList* VTIVolumeReader::read(const std::string &url) {
     std::vector<VolumeURL> urls = listVolumes(url);
     VolumeList* volumeList = new VolumeList();
@@ -204,20 +198,19 @@ VolumeList* VTIVolumeReader::read(const std::string &url) {
             volumeList->add(read(url));
         }
     } catch(tgt::FileException e) {
+        while(!volumeList->empty()) {
+            VolumeBase* volume = volumeList->first();
+            volumeList->remove(volume);
+            delete volume;
+        }
         delete volumeList;
-        throw e;
+        throw;
     }
     return volumeList;
 }
 
 VolumeReader* VTIVolumeReader::create(ProgressBar* progress) const {
     return new VTIVolumeReader(progress);
-}
-
-void VTIVolumeReader::clearReaderData() {
-    reader_->Delete();
-    reader_ = nullptr;
-    LINFO("Finally deleting vtkXMLImageDataReader");
 }
 
 } // namespace voreen

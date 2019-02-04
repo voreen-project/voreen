@@ -32,7 +32,7 @@
 namespace voreen {
 
 /**
- *
+ * This processor merges multiple lists into a single one.
  */
 class VRN_CORE_API VolumeListMerger : public Processor {
 public:
@@ -46,7 +46,10 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Merges incoming Lists into one single List.");
+        setDescription("This processor merges incoming Lists into one single List. <br>"
+                       "Given two lists [a1, a2, a3] and [b1, b2], this results in: <br>"
+                       "[a1, b1, a2, b2], since the length of the shortest list will be taken."
+        );
     }
 
     virtual void process();

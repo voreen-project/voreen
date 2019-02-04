@@ -115,7 +115,7 @@ void processDispatch(const VolumeBase& input, std::unique_ptr<Volume>& output, c
     for(size_t z = 0; z < dim.z; ++z) {
         progressReporter.setProgress(static_cast<float>(z)/dim.z);
         std::unique_ptr<VolumeRAM> inputSlice(input.getSlice(z));
-        auto outputSlice = builder.getNextWritableSlice();
+        auto outputSlice = builder.getNextWriteableSlice();
         for(size_t y = 0; y < dim.y; ++y) {
             for(size_t x = 0; x < dim.x; ++x) {
                 tgt::svec3 slicePos(x,y,0);

@@ -292,7 +292,7 @@ void NetworkEvaluator::process() {
     const std::vector<NetworkEvaluatorObserver*> observers = getObservers();
     for (size_t j = 0; j < observers.size(); ++j)
         observers[j]->beforeNetworkProcess();
-    if (glMode_) LGL_ERROR;
+    if (glMode_) { LGL_ERROR }
 
     // Iterate over processing in rendering order
     for (size_t i = 0; i < renderingOrder_.size(); ++i) {
@@ -331,7 +331,7 @@ void NetworkEvaluator::process() {
                 // notify observers
                 for (size_t j=0; j < observers.size(); ++j)
                     observers[j]->beforeProcess(currentProcessor);
-                if (glMode_) LGL_ERROR;
+                if (glMode_) { LGL_ERROR }
 
                 try {
                     currentProcessor->performanceRecord_.setName(currentProcessor->getID());
@@ -341,13 +341,13 @@ void NetworkEvaluator::process() {
                         ProfilingBlock block("beforeprocess", currentProcessor->performanceRecord_);
                         currentProcessor->beforeProcess();
                     }
-                    if (glMode_) LGL_ERROR;
+                    if (glMode_) { LGL_ERROR }
 
                     if(currentProcessor->getInvalidationLevel() >= Processor::INVALID_PORTS) {
                         currentProcessor->unlockMutex();
                         unlock();
 
-                        if (glMode_) LGL_ERROR;
+                        if (glMode_) { LGL_ERROR }
 
                         onNetworkChange();
                         currentProcessor->invalidate();
@@ -367,7 +367,8 @@ void NetworkEvaluator::process() {
 #ifdef VRN_PRINT_PROFILING
                     currentProcessor->performanceRecord_.getLastSample()->print(0, currentProcessor->getID()+".");
 #endif
-                    if (glMode_) LGL_ERROR;
+                    if (glMode_) { LGL_ERROR }
+
                     {
                         ProfilingBlock block("afterprocess", currentProcessor->performanceRecord_);
                         currentProcessor->afterProcess();
@@ -375,7 +376,7 @@ void NetworkEvaluator::process() {
 #ifdef VRN_PRINT_PROFILING
                     currentProcessor->performanceRecord_.getLastSample()->print(0, currentProcessor->getID()+".");
 #endif
-                    if (glMode_) LGL_ERROR;
+                    if (glMode_) { LGL_ERROR }
 
                     currentProcessor->unlockMutex();
                 }
@@ -395,7 +396,7 @@ void NetworkEvaluator::process() {
                 // notify observers
                 for (size_t j = 0; j < observers.size(); ++j)
                     observers[j]->afterProcess(currentProcessor);
-                if (glMode_) LGL_ERROR;
+                if (glMode_) { LGL_ERROR }
 
                 // break loop if network topology has changed (due to changes in loop port configurations)
                 if (checkForInvalidPorts()) {
@@ -404,7 +405,7 @@ void NetworkEvaluator::process() {
                     // notify observers
                     for (size_t j = 0; j < observers.size(); ++j)
                         observers[j]->afterNetworkProcess();
-                    if (glMode_) LGL_ERROR;
+                    if (glMode_) { LGL_ERROR }
 
                     onNetworkChange();
                     return;
@@ -423,12 +424,12 @@ void NetworkEvaluator::process() {
 
     }   // for (rendering order)
 
-    if (glMode_) LGL_ERROR;
+    if (glMode_) { LGL_ERROR }
 
     // notify observers
     for (size_t j = 0; j < observers.size(); ++j)
         observers[j]->afterNetworkProcess();
-    if (glMode_) LGL_ERROR;
+    if (glMode_) { LGL_ERROR }
 
     LDEBUG("Finished network evaluation");
 
@@ -450,7 +451,7 @@ void NetworkEvaluator::process() {
         }
     }
 
-    if (glMode_) LGL_ERROR;
+    if (glMode_) { LGL_ERROR }
 }
 
 void NetworkEvaluator::setProcessorNetwork(ProcessorNetwork* network, bool deinitializeCurrent) {

@@ -79,7 +79,7 @@ ProbabilityVolumeCreatorOutput ProbabilityVolumeCreator::compute(ProbabilityVolu
     tgt::vec3 ratio(1.0f / input.resampleFactor);
     tgt::ivec3 newDims = input.volumeData->getDimensions();
 
-    float progressIncrement = 0.95f / (input.dataset.getRuns().size() * newDims.z);
+    float progressIncrement = 0.95f / (input.dataset.getRuns().size());
 
     float max = 0.0f;
     for(const EnsembleDataset::Run& run : input.dataset.getRuns()) {
@@ -94,7 +94,14 @@ ProbabilityVolumeCreatorOutput ProbabilityVolumeCreator::compute(ProbabilityVolu
         tgt::ivec3 pos = tgt::ivec3::zero; // iteration variable
         tgt::vec3 nearest; // stores the new position of the target volume
 
+#ifdef VRN_MODULE_OPENMP
+        int dimZ = static_cast<int>(newDims.z);
+        #pragma omp parallel for
+        for(long pz = 0; pz < dimZ; pz++) {
+            pos.z = static_cast<int>(pz);
+#else
         for (pos.z = 0; pos.z < newDims.z; ++pos.z) {
+#endif
             nearest.z = (static_cast<float>(pos.z) - d_a.z) * ratio.z + d_b.z;
 
             for (pos.y = 0; pos.y < newDims.y; ++pos.y) {
@@ -108,10 +115,10 @@ ProbabilityVolumeCreatorOutput ProbabilityVolumeCreator::compute(ProbabilityVolu
                     max = std::max(max, voxel);
                 }
             }
-
-            // Update progress.
-            progress.setProgress(std::min(progress.getProgress() + progressIncrement, 1.0f));
         }
+
+        // Update progress.
+        progress.setProgress(std::min(progress.getProgress() + progressIncrement, 1.0f));
     }
 
     // Normalize to range [0, 1].

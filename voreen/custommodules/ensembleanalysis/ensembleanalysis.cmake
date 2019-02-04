@@ -56,13 +56,11 @@ SET(MOD_CORE_SOURCES
     #Datastructures
     ${MOD_DIR}/datastructures/ensembledataset.cpp
     ${MOD_DIR}/datastructures/fieldplotdata.cpp
-    ${MOD_DIR}/datastructures/similaritydata.cpp
-    
+
     #IO
     ${MOD_DIR}/io/fieldplotsave.cpp
     ${MOD_DIR}/io/fieldplotsource.cpp
-    ${MOD_DIR}/io/similaritydatasave.cpp
-    
+
     #Processors
     ${MOD_DIR}/processors/ensembledatasource.cpp
     ${MOD_DIR}/processors/ensemblefilter.cpp
@@ -74,9 +72,9 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/mdsplot.cpp
     ${MOD_DIR}/processors/volumeintensityfilter.cpp
     ${MOD_DIR}/processors/probabilityvolumecreator.cpp
-    ${MOD_DIR}/processors/similaritydatasource.cpp
     ${MOD_DIR}/processors/similaritydatavolume.cpp
     ${MOD_DIR}/processors/volumelistmerger.cpp
+    ${MOD_DIR}/processors/volumemerger.cpp
     ${MOD_DIR}/processors/waveheightextractor.cpp
 
     #Properties
@@ -85,7 +83,6 @@ SET(MOD_CORE_SOURCES
     #Ports
     ${MOD_DIR}/ports/ensembledatasetport.cpp
     ${MOD_DIR}/ports/fieldplotdataport.cpp
-    ${MOD_DIR}/ports/similaritydataport.cpp
 
     #Conditions
     ${MOD_DIR}/ports/conditions/portconditionensemble.cpp
@@ -102,12 +99,10 @@ SET(MOD_CORE_HEADERS
     #Datastructures
     ${MOD_DIR}/datastructures/ensembledataset.h
     ${MOD_DIR}/datastructures/fieldplotdata.h
-    ${MOD_DIR}/datastructures/similaritydata.h
 
     #IO
     ${MOD_DIR}/io/fieldplotsave.h
     ${MOD_DIR}/io/fieldplotsource.h
-    ${MOD_DIR}/io/similaritydatasave.h
 
     #Processors
     ${MOD_DIR}/processors/ensembledatasource.h
@@ -121,18 +116,17 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volumeintensityfilter.h
     ${MOD_DIR}/processors/probabilityvolumecreator.h
     ${MOD_DIR}/processors/similaritydatavolume.h
-    ${MOD_DIR}/processors/similaritydatasource.h
     ${MOD_DIR}/processors/volumelistmerger.h
+    ${MOD_DIR}/processors/volumemerger.h
     ${MOD_DIR}/processors/waveheightextractor.h
 
     #Properties
     ${MOD_DIR}/properties/stringlistproperty.h
-    ${MOD_DIR}/properties/link/viscontest2018linkevaluatorid.h
+    ${MOD_DIR}/properties/link/ensembleanalysislinkevaluatorid.h
 
     #Ports
     ${MOD_DIR}/ports/ensembledatasetport.h
     ${MOD_DIR}/ports/fieldplotdataport.h
-    ${MOD_DIR}/ports/similaritydataport.h
 
     #Conditions
     ${MOD_DIR}/ports/conditions/portconditionensemble.h
@@ -146,8 +140,14 @@ SET(MOD_CORE_HEADERS
 )
 
 IF(${VRN_USE_VTK})
-    SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES} ${MOD_DIR}/io/vtivolumereader.cpp)
-    SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS} ${MOD_DIR}/io/vtivolumereader.h)
+    LIST(APPEND MOD_CORE_SOURCES
+        ${MOD_DIR}/io/vtivolumereader.cpp
+        ${MOD_DIR}/io/vtmvolumereader.cpp
+    )
+    LIST(APPEND MOD_CORE_HEADERS
+        ${MOD_DIR}/io/vtivolumereader.h
+        ${MOD_DIR}/io/vtmvolumereader.h
+    )
 ENDIF()
 
 ###############################################################################

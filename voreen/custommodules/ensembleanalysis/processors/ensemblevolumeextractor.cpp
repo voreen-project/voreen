@@ -31,7 +31,7 @@
 
 namespace voreen {
 
-const std::string EnsembleVolumeExtractor::loggerCat_("voreen.viscontest2018.EnsembleVolumeExtractor");
+const std::string EnsembleVolumeExtractor::loggerCat_("voreen.ensembleanalysis.EnsembleVolumeExtractor");
 
 EnsembleVolumeExtractor::EnsembleVolumeExtractor()
     : Processor()

@@ -59,6 +59,8 @@ static const tgt::vec3 MIN_DURATION_COLOR = tgt::vec3(1.0f, 0.0f, 0.0f);
 static const tgt::vec3 MAX_DURATION_COLOR = tgt::vec3(0.0f, 0.0f, 1.0f);
 static const tgt::vec3 FADE_OUT_COLOR = tgt::vec3::one;
 
+const std::string MDSPlot::loggerCat_("voreen.ensembleanalysis.MDSPlot");
+
 void MDSPlot::MDSData::serialize(Serializer& s) const {
     s.serialize("nVectors", nVectors_);
     s.serialize("eigenvalues", eigenvalues_);
