@@ -154,7 +154,7 @@ void VolumeURLListPropertyWidget::updateFromPropertySlot() {
         qtwi->setFlags(static_cast<Qt::ItemFlags>(Qt::ItemIsUserCheckable | Qt::ItemIsSelectable | Qt::ItemIsEnabled));
 
         // set tree widget to checked, if the corresponding volume is contained by the property's collection
-        bool selected = urlListProperty_->isSelected(url) ? Qt::Checked : Qt::Unchecked;
+        bool selected = urlListProperty_->isSelected(url);
         qtwi->setCheckState(0, selected ? Qt::Checked : Qt::Unchecked);
         if (selected)
             numSelected++;
