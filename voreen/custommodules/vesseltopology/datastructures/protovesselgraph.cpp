@@ -164,7 +164,7 @@ struct ProtoNodeRef {
     }
 };
 
-const int MAX_CHUNK_SIZE = 32;
+const int MAX_CHUNK_SIZE = 64;
 
 typedef OverlappingSlabReader<uint32_t, MAX_CHUNK_SIZE, 1> BranchIdVolumeReader;
 
