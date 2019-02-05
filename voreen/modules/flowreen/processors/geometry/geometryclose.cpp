@@ -70,7 +70,7 @@ void GeometryClose::process() {
 
     // Ensure the indices are set correctly.
     bool usesIndices = geometry->getNumIndices() > 0;
-    geometry->createIndices(true);
+    createIndices(geometry, true);
 
     // Build the mesh.
     trimesh::trimesh_t mesh;
@@ -133,6 +133,9 @@ void GeometryClose::process() {
                     if(mesh.halfedge(candidateHalfEdgeIndex).face == -1) {
                         tgtAssert(halfEdgeIndex == -1, "more than one candidate found");
                         halfEdgeIndex = candidateHalfEdgeIndex;
+#ifndef VRN_DEBUG
+                        break;
+#endif
                     }
                 }
             }
@@ -179,6 +182,80 @@ void GeometryClose::process() {
         outport_.setData(inputGeometry, false);
         // outputGeometry will be removed automatically.
     }
+}
+
+void GeometryClose::createIndices(GlMeshGeometryUInt32Normal* geometry, bool optimize) const {
+
+    typedef GlMeshGeometryUInt32Normal::VertexType V;
+    typedef uint32_t I;
+
+    std::vector<I> indices = geometry->getIndices();
+    const std::vector<V> vertices = geometry->getVertices();
+
+    // Add trivial indices.
+    if(indices.empty()) {
+        for(size_t i = 0; i < vertices.size(); i++) {
+            indices.push_back(static_cast<I>(indices.size()));
+        }
+    }
+
+    if(optimize) {
+
+        //*
+        std::vector<std::pair<V, I>> uniqueVertices;
+
+        for (size_t i = 0; i < indices.size(); i++) {
+            I& index = indices[i];
+            const V& vertex = vertices[index];
+
+            auto iter = uniqueVertices.begin();
+            while(iter != uniqueVertices.end()) {
+                if(vertex.equals(iter->first)) {
+                    break;
+                }
+                iter++;
+            }
+
+            if (iter == uniqueVertices.end()) {
+                uniqueVertices.emplace_back(std::make_pair(vertex, index));
+            }
+            else {
+                index = iter->second;
+            }
+        }
+
+        /*/
+        // TODO: heuristic binning, to avoid false positives
+        tgt::vec3 diag = tgt::vec3(1000.0f);//getBoundingBox(false);
+        auto comp = [diag] (const V& x, const V& y) {
+            if(x.equals(y, std::numeric_limits<float>::epsilon())) {
+                return false;
+            }
+
+            // We need a proper one-way function to map positions to unique 'hashes'.
+            float hashX = x.pos_.z*diag.x*diag.y + x.pos_.y*diag.x + x.pos_.x;
+            float hashY = y.pos_.z*diag.x*diag.y + y.pos_.y*diag.x + y.pos_.x;
+
+            return hashX < hashY;
+        };
+
+        std::map<V, I, std::function<bool(const V&, const V&)>> uniqueVertices(comp);
+
+        for (size_t i = 0; i < indices.size(); i++) {
+            I & index = indices[i];
+            const V& vertex = vertices[index];
+
+            auto iter = uniqueVertices.find(vertex);
+            if (iter == uniqueVertices.end()) {
+                std::tie(iter, std::ignore) = uniqueVertices.insert(std::make_pair(vertex, index));
+            }
+
+            index = iter->second;
+        }
+        //*/
+    }
+
+    geometry->setIndices(indices);
 }
 
 }  //namespace

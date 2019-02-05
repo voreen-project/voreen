@@ -34,6 +34,8 @@
 
 namespace voreen {
 
+class GlMeshGeometryUInt32Normal;
+
 /**
  * Closes all holes of the input geometry.
  */
@@ -53,6 +55,19 @@ protected:
     }
 
     virtual void process();
+
+    /**
+     * Creates indices for this mesh, if not already available.
+     * This will enable indexed drawing.
+     * The vertices stay untouched, such that non-indexed drawing yields the same result.
+     *
+     * The indices can be optimized such that duplicated vertices will have
+     * the very same index pointing to them.
+     *
+     * @param geometry Geometry for that indices shall be created
+     * @param optimize determines, whether indices should be optimized
+     */
+    void createIndices(GlMeshGeometryUInt32Normal* geometry, bool optimize) const;
 
     GeometryPort inport_;        ///< Inport for a list of mesh geometries to close.
     GeometryPort outport_;       ///< Outport for a list of mesh geometries that were closed.
