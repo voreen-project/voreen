@@ -102,6 +102,7 @@ SliceViewer::SliceViewer()
     , mouseIsPressed_(false)
     , lastPickingPosition_(-1, -1, -1)
     , sliceComplete_(true)
+    , planeNeedsUpdate_(true)
 {
     // texture mode (2D/3D)
     texMode_.addOption("2d-texture", "2D Textures", TEXTURE_2D);
@@ -146,9 +147,16 @@ SliceViewer::SliceViewer()
         tgt::MouseEvent::PRESSED | tgt::MouseEvent::RELEASED | tgt::MouseEvent::WHEEL | tgt::MouseEvent::MOTION, tgt::Event::MODIFIER_NONE,
         true);
 
+    mouseEventSelect_ = new EventProperty<SliceViewer>("mouseEvent.cursorPositionSelect", "Cursor Position Press",
+                                                      this, &SliceViewer::selectRegion,
+                                                      static_cast<tgt::MouseEvent::MouseButtons>(tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_MIDDLE),
+                                                      tgt::MouseEvent::PRESSED, tgt::Event::SHIFT,
+                                                      true);
+
     addEventProperty(mouseEventPress_);
     addEventProperty(mouseEventMove_);
     addEventProperty(mouseEventShift_);
+    addEventProperty(mouseEventSelect_);
 
     addInteractionHandler(mwheelCycleHandler_);
     addInteractionHandler(mwheelZoomHandler_);
@@ -168,7 +176,9 @@ SliceViewer::SliceViewer()
     addProperty(sliceAlignment_);
 
     addProperty(planeNormal_);
+    ON_CHANGE_LAMBDA(planeNormal_, [this]{ planeNeedsUpdate_ = true; })
     addProperty(planeDistance_);
+    ON_CHANGE_LAMBDA(planeDistance_, [this]{ planeNeedsUpdate_ = true; })
 
     addProperty(sliceIndex_);
     addProperty(numGridRows_);
@@ -458,16 +468,14 @@ void SliceViewer::process() {
     int numSlices = alignment == UNALIGNED_PLANE ? 1 : volDim[alignment];
 
     // get the textures dimensions
-    tgt::vec3 urf = inport_.getData()->getURB();
-    tgt::vec3 llb = inport_.getData()->getLLF();
+    tgt::vec3 urf = volume->getURB();
+    tgt::vec3 llb = volume->getLLF();
 
     // Re-calculate texture dimensions, urf, llb and center of the texture
     // for it might be a NPOT texture and therefore might have been inflated.
     // In that case, the inflating need to be undone and the volume texture
     // needs to be "cropped" to its original measures.
     const tgt::vec3 texDim = urf - llb;
-    urf = texDim / 2.f;
-    llb = texDim / -2.f;
 
     // Use OpenGL's ability of multiplying texture coordinate vectors with a matrix
     // on the texture matrix stack to permute the components of the texture
@@ -519,10 +527,12 @@ void SliceViewer::process() {
             break;
 
         case UNALIGNED_PLANE:
-            texDim2D.x = texDim.x;
-            texDim2D.y = texDim.y;
+            texDim2D.x = resolution_.x;
+            texDim2D.y = resolution_.y;
             textureMatrix_ = tgt::mat4::identity;
-            toSliceCoordMatrix = tgt::mat4::identity;
+
+            toSliceCoordMatrix.t00 = 1.f;
+            toSliceCoordMatrix.t11 = 1.f;
             break;
         default:
             break;
@@ -742,6 +752,13 @@ void SliceViewer::process() {
             }
             else {
 
+                // Update plane, if necessary.
+                //if(planeNeedsUpdate_) //TODO: find out why this needs to be done each call of process().
+                {
+                    updatePlane();
+                    planeNeedsUpdate_ = false;
+                }
+
                 switch (QualityMode.getQuality()) {
                     case VoreenQualityMode::RQ_INTERACTIVE:
                         samplingRate_ = 0.5f;
@@ -755,9 +772,7 @@ void SliceViewer::process() {
                     default:
                         tgtAssert(false, "unknown rendering quality");
                 }
-                // TODO: clean.
-                updatePlane();
-                slice = getVolumeSlice();
+                slice = sliceCache_.getVolumeSlice(volume, plane_, samplingRate_);
                 singleSliceComplete = slice != nullptr;
             }
 
@@ -791,11 +806,6 @@ void SliceViewer::process() {
             tgt::vec4(texUpperRight.x, texLowerLeft.y, depth, 1.f),
             tgt::vec4(texUpperRight.x, texUpperRight.y, depth, 1.f),
             tgt::vec4(texLowerLeft.x, texUpperRight.y, depth, 1.f));
-
-        // Arbitrary slices will not be cached, so we have to delete them.
-        if(alignment == UNALIGNED_PLANE) {
-            delete slice;
-        }
 
     }   // textured slices
 
@@ -858,7 +868,7 @@ void SliceViewer::renderSliceGeometry(const tgt::vec4& t0, const tgt::vec4& t1, 
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(VertexHelper), &(*buffer.begin()), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexHelper), 0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexHelper), nullptr);
     glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(VertexHelper), (void*)sizeof(tgt::vec2));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(3);
@@ -1314,12 +1324,13 @@ tgt::vec3 SliceViewer::screenToVoxelPos(tgt::ivec2 screenPos) const {
 
     tgt::vec3 voxPos;
     if (sliceAlignment_.getValue() == UNALIGNED_PLANE) {
+        tgt::vec2 pos = posWithinSlice * tgt::vec2(resolution_);
         tgt::vec2 sp(tgt::min(volume->getSpacing()) / samplingRate_);
         tgt::vec3 fetchX = normalize(xVec_) * sp.x;
         tgt::vec3 fetchY = normalize(yVec_) * sp.y;
         tgt::vec3 fetchOrigin = origin_ + (0.5f * fetchX) + (0.5f * fetchY);
         tgt::mat4 wToV = volume->getWorldToVoxelMatrix();
-        voxPos = fetchOrigin + (static_cast<float>(p.x) * fetchX) + (static_cast<float>(p.y) * fetchY);
+        voxPos = fetchOrigin + (pos.x * fetchX) + (pos.y * fetchY);
         voxPos = wToV * voxPos;
     }
     else {
@@ -1440,6 +1451,7 @@ void SliceViewer::updatePlane() {
     yVec_ = temp * (sp.y * resolution_.y);
 }
 
+/*
 SliceTexture* SliceViewer::getVolumeSlice() const {
 
     const VolumeBase* volume = inport_.getData();
@@ -1460,7 +1472,7 @@ SliceTexture* SliceViewer::getVolumeSlice() const {
         for(int y=0; y<resolution_.y; y++) {
             tgt::vec3 pos = fetchOrigin + ((float)x * fetchX) + ((float)y * fetchY);
             pos = wToV * pos;
-            float valueFloat = 10.0f;
+            float valueFloat = 0.0f;
             if(hand(greaterThanEqual(pos, tgt::vec3::zero)) && hand(lessThanEqual(pos, dims)))
                 valueFloat = vol->getVoxelNormalizedLinear(pos);
 
@@ -1474,6 +1486,51 @@ SliceTexture* SliceViewer::getVolumeSlice() const {
     LGL_ERROR;
     return result;
 }
+ */
+/*
+SliceViewer::Circle SliceViewer::estimateCircle(const tgt::ivec2& texCoord) const {
+
+    tgtAssert(slice_, "Slice null");
+    tgtAssert(slice_->getCpuTextureData(), "Slice data null");
+
+    // Use floodfill (4-neighborhood) to estimate radius.
+    tgt::IntBounds bounds;
+    std::stack<tgt::ivec2> next;
+    next.push(texCoord);
+    while(!next.empty()) {
+        tgt::ivec2 pos = next.top();
+        if(pos.x >= 0 && pos.y >= 0 &&
+           pos.y < resolution_.y && pos.y < resolution_.y &&
+           slice_->texel<float>(next.top()) > 0.0f)
+        {
+            bounds.addPoint(tgt::vec3(pos.x, pos.y, 0));
+
+            next.push(pos + tgt::ivec2(-1,  0));
+            next.push(pos + tgt::ivec2( 1,  0));
+            next.push(pos + tgt::ivec2( 0, -1));
+            next.push(pos + tgt::ivec2( 0,  1));
+        }
+        next.pop();
+    }
+
+    if(!bounds.isDefined()) {
+        // Zero radius determines invalid pick.
+        return Circle();
+    }
+
+    // DEBUG
+    slice_->texel<float>(bounds.getLLF().xy()) = 10.0f;
+    slice_->texel<float>(bounds.getURB().xy()) = 10.0f;
+    // !DEBUG
+
+    Circle circle;
+    circle.radius_ = tgt::distance(screenToVoxelPos(bounds.getLLF().xy()), screenToVoxelPos(bounds.getURB().xy()))/2.0f;
+    circle.center_ = screenToVoxelPos(bounds.center().xy());
+    circle.normal_ = plane_.n;
+
+    return circle;
+}
+ */
 
 void SliceViewer::onSliceAlignmentChange() {
     sliceAlignment_.getValue();
@@ -1562,6 +1619,21 @@ void SliceViewer::shiftEvent(tgt::MouseEvent* e) {
 
     mousePosition_ = e->coord();
     e->accept();
+}
+
+void SliceViewer::selectRegion(tgt::MouseEvent* e) {
+    /*
+    if(e->modifiers() & tgt::MouseEvent::SHIFT) {
+        tgt::ivec2 texCoords;
+        texCoords.x = resolution_.x * e->x() / e->viewport().x;
+        texCoords.y = resolution_.y * e->y() / e->viewport().y;
+
+        circles_.push_back(estimateCircle(texCoords));
+    }
+    else {
+        circles_.clear();
+    }
+     */
 }
 
 bool SliceViewer::singleSliceMode() const {

@@ -233,6 +233,7 @@ protected:
     EventProperty<SliceViewer>* mouseEventPress_;
     EventProperty<SliceViewer>* mouseEventMove_;
     EventProperty<SliceViewer>* mouseEventShift_;
+    EventProperty<SliceViewer>* mouseEventSelect_;
 
     MWheelNumPropInteractionHandler<int> mwheelCycleHandler_;
     MWheelNumPropInteractionHandler<float> mwheelZoomHandler_;
@@ -248,6 +249,12 @@ protected:
     bool sliceComplete_;                ///< is set in process() and specifies whether the current slice has been created in full LOD,
                                         ///< if not, an invalidation is triggered in afterProcess().
 
+    static const std::string fontName_; ///< path and name of the font used for text-rendering
+
+    static const std::string loggerCat_;
+
+// ADDITIONAL:
+private:
     tgt::plane plane_;
     tgt::vec3 xVec_;
     tgt::vec3 yVec_;
@@ -255,13 +262,22 @@ protected:
     float samplingRate_;
     tgt::ivec2 resolution_;
 
-    static const std::string fontName_; ///< path and name of the font used for text-rendering
+    struct Circle {
+        tgt::vec3 center_;
+        tgt::vec3 normal_;
+        float radius_ = 0.0f;
+    };
 
-    static const std::string loggerCat_;
+    bool planeNeedsUpdate_;
+    void updatePlane();
+    //Circle estimateCircle(const tgt::ivec2& texCoord) const;
+    //SliceTexture* getVolumeSlice() const;
+    void selectRegion(tgt::MouseEvent* e);
+
+    //std::vector<Circle> circles_;
 
 private:
-    void updatePlane();
-    SliceTexture* getVolumeSlice() const;
+
     void renderSliceGeometry(const tgt::vec4& t0, const tgt::vec4& t1, const tgt::vec4& t2, const tgt::vec4& t3) const;
 
     mutable tgt::ivec2 mousePosition_;          ///< Current mouse position
