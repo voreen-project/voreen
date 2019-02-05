@@ -30,6 +30,7 @@
 
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/ports/volumeport.h"
+#include "modules/flowreen/ports/flowparametrizationport.h"
 
 #include "modules/hdf5/io/hdf5filevolume.h"
 
@@ -44,9 +45,14 @@ namespace voreen {
 
 struct FlowSimulationInput {
     float simulationTime;
-    UnitConverter<T,DESCRIPTOR> converter;
+    bool bouzidi;
+    std::unique_ptr<UnitConverter<T,DESCRIPTOR>> converter;
     std::unique_ptr<STLreader<T>> stlReader;
-    //std::unique_ptr<VolumeList> outputVolumes;
+    std::unique_ptr<SuperLattice3D<T, DESCRIPTOR>> superLattice;
+    std::unique_ptr<SuperGeometry3D<T>> superGeometry;
+    std::unique_ptr<sOnLatticeBoundaryCondition3D<T,DESCRIPTOR>> onBoundaryCondition;
+    std::unique_ptr<sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>> offBoundaryCondition;
+    std::string simulationResultPath;
 };
 
 struct FlowSimulationOutput {
@@ -54,7 +60,7 @@ struct FlowSimulationOutput {
 };
 
 /**
- * This processor TODO.
+ * This processor performs simulations using a parameter set and as input. TODO.
  */
 class VRN_CORE_API FlowSimulation : public AsyncComputeProcessor<FlowSimulationInput, FlowSimulationOutput> {
 public:
@@ -70,8 +76,10 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("This processor TODO.");
+        setDescription("This processor performs simulations using a parameter set and as input. TODO.");
     }
+
+    virtual void adjustPropertiesToInput();
 
     virtual ComputeInput prepareComputeInput();
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
@@ -87,27 +95,26 @@ private:
                             Dynamics<T, DESCRIPTOR>& bulkDynamics,
                             sOnLatticeBoundaryCondition3D<T, DESCRIPTOR>& bc,
                             sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
-                            STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry) const;
+                            STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry,
+                            bool bouzidi) const;
 
     void setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                             sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
                             UnitConverter<T,DESCRIPTOR> const& converter, int iT,
-                            SuperGeometry3D<T>& superGeometry) const;
+                            SuperGeometry3D<T>& superGeometry, bool bouzidi) const;
 
     bool getResults(        SuperLattice3D<T, DESCRIPTOR>& sLattice,
                             UnitConverter<T,DESCRIPTOR>& converter, int iT,
-                            VolumeList* volumeList) const;
+                            const std::string& simulationOutputPath) const;
 
     GeometryPort geometryDataPort_;
     VolumeListPort measuredDataPort_;
-    VolumeListPort outport_;
+    FlowParametrizationPort parameterPort_;
 
-    FloatProperty simulationTime_;
-    FloatProperty temporalResolution_;
-    FloatProperty characteristicLength_;
-    FloatProperty viscosity_;
-    FloatProperty density_;
-    BoolProperty  bouzidi_;
+    FileDialogProperty simulationResults_;
+
+    BoolProperty simulateAllParametrizations_;
+    IntProperty selectedParametrization_;
 
     static const std::string loggerCat_;
 };

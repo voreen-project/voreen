@@ -42,7 +42,9 @@
 #ifdef FLOWREEN_USE_OPENLB
 #include <olb3D.h>
 
+#include "modules/flowreen/processors/simulation/flowparametrization.h"
 #include "processors/simulation/flowsimulation.h"
+#include "processors/simulation/flowsimulationcluster.h"
 #include "processors/geometry/implicitrepresentation.h"
 #endif
 
@@ -88,7 +90,9 @@ FlowreenModule::FlowreenModule(const std::string& modulePath)
     registerSerializableType(new StreamlineToBoundingBox());
 #ifdef FLOWREEN_USE_OPENLB
     registerSerializableType(new ImplicitRepresentation());
+    registerSerializableType(new FlowParametrization());
     registerSerializableType(new FlowSimulation());
+    registerSerializableType(new FlowSimulationCluster());
 #endif
 
 #ifdef VRN_OPENGL_COMPATIBILITY_PROFILE

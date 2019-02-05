@@ -44,24 +44,22 @@ FlowSimulation::FlowSimulation()
     // ports
     , geometryDataPort_(Port::INPORT, "geometryDataPort", "Geometry Input", false)
     , measuredDataPort_(Port::INPORT, "measuredDataPort", "Measured Data Input", false)
-    , outport_(Port::OUTPORT, "outport", "Time Series Output")
-    , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 10.0f)
-    , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 30.0f)
-    , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 22.46f, 1.0f, 100.0f)
-    , viscosity_("viscosity", "Viscosity (e-6 m^2/s)", 3.5, 3, 4)
-    , density_("density", "Density (kg/m^3)", 1000.0f, 1000.0f, 1100.0f)
-    , bouzidi_("bounzidi", "Bounzidi", true)
+    , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
+    , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", VoreenApplication::app()->getTemporaryPath(), "", FileDialogProperty::DIRECTORY, Processor::VALID)
+    , simulateAllParametrizations_("simulateAllParametrizations", "Simulate all Parametrizations?", false)
+    , selectedParametrization_("selectedSimulation", "Selected Parametrization", 0, 0, 1)
 {
     addPort(geometryDataPort_);
     addPort(measuredDataPort_);
-    addPort(outport_);
+    addPort(parameterPort_);
 
-    addProperty(simulationTime_);
-    addProperty(temporalResolution_);
-    addProperty(characteristicLength_);
-    addProperty(viscosity_);
-    addProperty(density_);
-    addProperty(bouzidi_);
+    addProperty(simulationResults_);
+
+    addProperty(simulateAllParametrizations_);
+    ON_CHANGE_LAMBDA(simulateAllParametrizations_, [this]{
+        selectedParametrization_.setReadOnlyFlag(simulateAllParametrizations_.get());
+    });
+    addProperty(selectedParametrization_);
 }
 
 FlowSimulation::~FlowSimulation() {
@@ -76,20 +74,47 @@ bool FlowSimulation::isReady() const {
         setNotReadyErrorMessage("Geometry Port not ready.");
         return false;
     }
+
     // Note: measuredDataPort ist optional!
+
+    if(!parameterPort_.isReady()) {
+        setNotReadyErrorMessage("Parameter Port not ready.");
+        return false;
+    }
+
     return true;
 }
 
+void FlowSimulation::adjustPropertiesToInput() {
+    const FlowParametrizationList* flowParameterList = parameterPort_.getThreadSafeData();
+    if(!flowParameterList) {
+        selectedParametrization_.setMinValue(-1);
+        selectedParametrization_.setMaxValue(-1);
+    }
+    else {
+        selectedParametrization_.setMinValue(0);
+        selectedParametrization_.setMaxValue(static_cast<int>(flowParameterList->size()));
+        selectedParametrization_.set(0);
+    }
+}
+
 FlowSimulationInput FlowSimulation::prepareComputeInput() {
-    const Geometry* geometryData = geometryDataPort_.getData();
+    const Geometry* geometryData = geometryDataPort_.getThreadSafeData();
     if (!geometryData) {
-        throw InvalidInputException("No input", InvalidInputException::S_WARNING);
+        throw InvalidInputException("No simulation geometry", InvalidInputException::S_WARNING);
     }
 
-    const VolumeList* measuredData = measuredDataPort_.getData();
+    const VolumeList* measuredData = measuredDataPort_.getThreadSafeData();
     if(!measuredData || measuredData->empty()) {
         throw InvalidInputException("Unsteered simulations currently not supported", InvalidInputException::S_ERROR);
     }
+
+    const FlowParametrizationList* flowParameterList = parameterPort_.getThreadSafeData();
+    if(!flowParameterList || flowParameterList->empty()) {
+        throw InvalidInputException("No parameterization", InvalidInputException::S_ERROR);
+    }
+
+    const FlowParameters& flowParameters = flowParameterList->at(selectedParametrization_.get());
 
     LINFO("Configuring a steered simulation");
 
@@ -128,19 +153,19 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     }
 
     // === 1st Step: Initialization ===
-    UnitConverter<T,DESCRIPTOR> converter(
+    std::unique_ptr<UnitConverter<T,DESCRIPTOR>> converter(new UnitConverter<T,DESCRIPTOR>(
             (T)   volumeT0->getSpacing().x,                 // physDeltaX: spacing between two lattice cells in __m__
-            (T)   temporalResolution_.get(),                // physDeltaT: time step in __s__
-            (T)   characteristicLength_.get(),              // charPhysLength: reference length of simulation geometry
+            (T)   flowParameters.getTemporalResolution(),  // physDeltaT: time step in __s__
+            (T)   flowParameters.getCharacteristicLength(),// charPhysLength: reference length of simulation geometry
             (T)   maxVelocityMagnitude/1000.0,              // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
-            (T)   viscosity_.get()/1e-10,                   // physViscosity: physical kinematic viscosity in __m^2 / s__
-            (T)   density_.get()                            // physDensity: physical density in __kg / m^3__
-    );
+            (T)   flowParameters.getViscosity()/1e-10,     // physViscosity: physical kinematic viscosity in __m^2 / s__
+            (T)   flowParameters.getDensity()              // physDensity: physical density in __kg / m^3__
+    ));
 
     // Prints the converter log as console output
-    converter.print();
+    converter->print();
     // Writes the converter log in a file
-    converter.write("aorta3d");
+    converter->write("aorta3d");
 
     // === 2nd Step: Prepare Geometry ===
 
@@ -175,11 +200,45 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
         outputVolumes.emplace_back(std::move(outputDim));
     }
 */
+    std::unique_ptr<IndicatorLayer3D<T>> extendedDomain( new IndicatorLayer3D<T>(*stlReader, converter->getConversionFactorLength() ));
+
+    // Instantiation of a cuboidGeometry with weights
+    const int noOfCuboids = 2;
+    std::unique_ptr<CuboidGeometry3D<T>> cuboidGeometry( new CuboidGeometry3D<T>( *extendedDomain, converter->getConversionFactorLength(), noOfCuboids ));
+    std::unique_ptr<HeuristicLoadBalancer<T>> loadBalancer( new HeuristicLoadBalancer<T>(*cuboidGeometry));
+    std::unique_ptr<SuperGeometry3D<T>> superGeometry( new SuperGeometry3D<T>(*cuboidGeometry, *loadBalancer, 2 ));
+
+    prepareGeometry( *converter, *extendedDomain, *stlReader, *superGeometry );
+
+    // === 3rd Step: Prepare Lattice ===
+    std::unique_ptr<SuperLattice3D<T, DESCRIPTOR>> sLattice(new SuperLattice3D<T, DESCRIPTOR>(*superGeometry));
+
+    SmagorinskyBGKdynamics<T, DESCRIPTOR> bulkDynamics(
+            converter->getLatticeRelaxationFrequency(),
+            instances::getBulkMomenta<T, DESCRIPTOR>(), 0.1 );
+
+    // choose between local and non-local boundary condition
+    std::unique_ptr<sOnLatticeBoundaryCondition3D<T,DESCRIPTOR>> sBoundaryCondition( new sOnLatticeBoundaryCondition3D<T,DESCRIPTOR>(*sLattice));
+    createInterpBoundaryCondition3D<T,DESCRIPTOR>( *sBoundaryCondition );
+    // createLocalBoundaryCondition3D<T,DESCRIPTOR>(sBoundaryCondition);
+
+    std::unique_ptr<sOffLatticeBoundaryCondition3D<T, DESCRIPTOR>> sOffBoundaryCondition( new sOffLatticeBoundaryCondition3D<T, DESCRIPTOR>(*sLattice));
+    createBouzidiBoundaryCondition3D<T, DESCRIPTOR> ( *sOffBoundaryCondition );
+
+    prepareLattice( *sLattice, *converter, bulkDynamics,
+                    *sBoundaryCondition, *sOffBoundaryCondition,
+                    *stlReader, *superGeometry, flowParameters.getBouzidi() );
+
     return FlowSimulationInput{
-            simulationTime_.get(),
-            converter,
+            flowParameters.getSimulationTime(),
+            flowParameters.getBouzidi(),
+            std::move(converter),
             std::move(stlReader),
-            //outputVolumes
+            std::move(sLattice),
+            std::move(superGeometry),
+            std::move(sBoundaryCondition),
+            std::move(sOffBoundaryCondition),
+            simulationResults_.get()
     };
 }
 
@@ -187,63 +246,31 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
 
     progressReporter.setProgress(0.0f);
 
-    std::unique_ptr<VolumeList> output = nullptr;//std::move(input.outputVolumes);
+    std::unique_ptr<UnitConverter<T,DESCRIPTOR>> converter = std::move(input.converter);
+    std::unique_ptr<SuperLattice3D<T, DESCRIPTOR>> superLattice = std::move(input.superLattice);
+    std::unique_ptr<SuperGeometry3D<T>> superGeometry = std::move(input.superGeometry);
+    std::unique_ptr<sOnLatticeBoundaryCondition3D<T,DESCRIPTOR>> onBoundaryCondition = std::move(input.onBoundaryCondition);
+    std::unique_ptr<sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>> offBoundaryCondition = std::move(input.offBoundaryCondition);
+
 
     // Needs to be initialized in each new thread to be used.
     olb::olbInit(nullptr, nullptr);
 
-    IndicatorLayer3D<T> extendedDomain( *input.stlReader, input.converter.getConversionFactorLength() );
-
-    // Instantiation of a cuboidGeometry with weights
-#ifdef PARALLEL_MODE_MPI
-    const int noOfCuboids = std::min( 16*N,2*singleton::mpi().getSize() );
-#else
-    const int noOfCuboids = 2;
-#endif
-    CuboidGeometry3D<T> cuboidGeometry( extendedDomain, input.converter.getConversionFactorLength(), noOfCuboids );
-
-    // Instantiation of a loadBalancer
-    HeuristicLoadBalancer<T> loadBalancer( cuboidGeometry );
-
-    // Instantiation of a superGeometry
-    SuperGeometry3D<T> superGeometry( cuboidGeometry, loadBalancer, 2 );
-
-    prepareGeometry( input.converter, extendedDomain, *input.stlReader, superGeometry );
-
-    // === 3rd Step: Prepare Lattice ===
-    SuperLattice3D<T, DESCRIPTOR> sLattice(superGeometry);
-
-    SmagorinskyBGKdynamics<T, DESCRIPTOR> bulkDynamics(
-            input.converter.getLatticeRelaxationFrequency(),
-            instances::getBulkMomenta<T, DESCRIPTOR>(), 0.1 );
-
-    // choose between local and non-local boundary condition
-    sOnLatticeBoundaryCondition3D<T,DESCRIPTOR> sBoundaryCondition( sLattice );
-    createInterpBoundaryCondition3D<T,DESCRIPTOR>( sBoundaryCondition );
-    // createLocalBoundaryCondition3D<T,DESCRIPTOR>(sBoundaryCondition);
-
-    sOffLatticeBoundaryCondition3D<T, DESCRIPTOR> sOffBoundaryCondition( sLattice );
-    createBouzidiBoundaryCondition3D<T, DESCRIPTOR> ( sOffBoundaryCondition );
-
-    prepareLattice( sLattice, input.converter, bulkDynamics,
-                    sBoundaryCondition, sOffBoundaryCondition,
-                    *input.stlReader, superGeometry );
-
     // === 4th Step: Main Loop ===
-    for ( int iT = 0; iT <= input.converter.getLatticeTime( input.simulationTime ); iT++ ) {
+    for ( int iT = 0; iT <= converter->getLatticeTime( input.simulationTime ); iT++ ) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
-        setBoundaryValues( sLattice, sOffBoundaryCondition, input.converter, iT, superGeometry );
+        setBoundaryValues( *superLattice, *offBoundaryCondition, *converter, iT, *superGeometry, input.bouzidi);
 
         // === 6th Step: Collide and Stream Execution ===
-        sLattice.collideAndStream();
+        superLattice->collideAndStream();
 
         // === 7th Step: Computation and Output of the Results ===
-        bool success = getResults(sLattice, input.converter, iT, output.get());
+        bool success = getResults(*superLattice, *converter, iT, input.simulationResultPath);
         if(!success)
             break;
 
-        float progress = iT / (input.converter.getLatticeTime( input.simulationTime ) + 1.0f);
+        float progress = iT / (converter->getLatticeTime( input.simulationTime ) + 1.0f);
         progressReporter.setProgress(progress);
     }
     progressReporter.setProgress(1.0f);
@@ -301,7 +328,8 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
                                      Dynamics<T, DESCRIPTOR>& bulkDynamics,
                                      sOnLatticeBoundaryCondition3D<T, DESCRIPTOR>& bc,
                                      sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
-                                     STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry ) const {
+                                     STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry,
+                                     bool bouzidi) const {
 
     LINFO("Prepare Lattice ...");
 
@@ -313,7 +341,7 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
     // material=1 --> bulk dynamics
     lattice.defineDynamics( superGeometry,1,&bulkDynamics );
 
-    if ( bouzidi_.get() ) {
+    if ( bouzidi ) {
         // material=2 --> no dynamics + bouzidi zero velocity
         lattice.defineDynamics( superGeometry,2,&instances::getNoDynamics<T,DESCRIPTOR>() );
         offBc.addZeroVelocityBoundary( superGeometry,2,stlReader );
@@ -359,7 +387,7 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
 void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                         sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
                                         UnitConverter<T,DESCRIPTOR> const& converter, int iT,
-                                        SuperGeometry3D<T>& superGeometry ) const {
+                                        SuperGeometry3D<T>& superGeometry, bool bouzidi ) const {
     // No of time steps for smooth start-up
     int iTperiod = converter.getLatticeTime( 0.5 );
     int iTupdate = 50;
@@ -374,7 +402,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
         nSinusStartScale( maxVelocity,iTvec );
         CirclePoiseuille3D<T> velocity( superGeometry,3,maxVelocity[0] );
 
-        if ( bouzidi_.get() ) {
+        if ( bouzidi ) {
             offBc.defineU( superGeometry,3,velocity );
         } else {
             sLattice.defineU( superGeometry,3,velocity );
@@ -385,7 +413,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
 // Computes flux at inflow and outflow
 bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                  UnitConverter<T,DESCRIPTOR>& converter, int iT,
-                                 VolumeList* volumeList ) const {
+                                 const std::string& simulationOutputPath ) const {
     OstreamManager clout( std::cout,"getResults" );
 
     SuperVTMwriter3D<T> vtmWriter( "aorta3d" );

@@ -164,19 +164,42 @@ IF(VRN_FLOWREEN_BUILD_OPENLB)
 
     ADD_CUSTOM_TARGET(OpenLB COMMAND make WORKING_DIRECTORY ${OpenLB_DIR})
     ADD_DEFINITIONS("-DFLOWREEN_USE_OPENLB")
-ENDIF()
 
-IF(VRN_FLOWREEN_BUILD_OPENLB)
+    # TODO: Add mailio or alternative to parse palma feedback sent per mail.
+    #SET(VRN_MAILIO_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/modules/${module_dir}/ext/mailio)
+    #ADD_SUBDIRECTORY(${VRN_MAILIO_DIRECTORY})
+    #LIST(APPEND MOD_LIBRARIES "mailio")
+
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
+        # datastructures
+        ${MOD_DIR}/datastructures/flowparameters.h
+
+        # ports
+        ${MOD_DIR}/ports/flowparametrizationport.h
+
+        # processors
+        ${MOD_DIR}/processors/simulation/flowparametrization.h
         ${MOD_DIR}/processors/simulation/flowsimulation.h
+        ${MOD_DIR}/processors/simulation/flowsimulationcluster.h
         ${MOD_DIR}/processors/geometry/implicitrepresentation.h
 
+        # utils
         ${MOD_DIR}/utils/geometryconverter.h
     )
     SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
+        # datastructures
+        ${MOD_DIR}/datastructures/flowparameters.cpp
+
+        # ports
+        ${MOD_DIR}/ports/flowparametrizationport.cpp
+
+        # processors
+        ${MOD_DIR}/processors/simulation/flowparametrization.cpp
         ${MOD_DIR}/processors/simulation/flowsimulation.cpp
+        ${MOD_DIR}/processors/simulation/flowsimulationcluster.cpp
         ${MOD_DIR}/processors/geometry/implicitrepresentation.cpp
 
+        # utils
         ${MOD_DIR}/utils/geometryconverter.cpp
     )
 ENDIF()
