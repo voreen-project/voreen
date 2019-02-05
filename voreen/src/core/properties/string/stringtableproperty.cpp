@@ -126,4 +126,11 @@ void StringTableProperty::addRow(const std::vector<std::string>& row) {
     updateWidgets();
 }
 
+void StringTableProperty::removeRow(int rowIndex) {
+    tgtAssert(static_cast<unsigned int>(rowIndex) < getNumRows(), "row index out of bounds");
+    values_.erase(values_.begin() + rowIndex);
+    neededTableUpdates_ |= UPDATE_ROWS;
+    updateWidgets();
+}
+
 }   // namespace

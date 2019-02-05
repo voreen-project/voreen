@@ -106,6 +106,8 @@ public:
     virtual void reset();
     /** Adds a new row to the end of the table. */
     void addRow(const std::vector<std::string>& row);
+    /** Removes the specified row. */
+    void removeRow(int rowIndex);
     /** Get the selected row index or -1 if nothing is selected */
     int getSelectedRowIndex() const;
     /** Selects a new row. */
