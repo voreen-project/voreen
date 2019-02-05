@@ -117,10 +117,16 @@ size_t toLinear(const tgt::svec3& dim, size_t x, size_t y, size_t z) {
 
 void VolumeDiskPB::readFile(const std::string& filename, VolumeRAM* volume, size_t channel, const tgt::svec3& brickOffset, const tgt::svec3& brickDimensions) const {
 
+    // TODO: fix arbitrary slice/brick reading!
+    if(brickOffset != tgt::svec3::zero || brickDimensions != dimensions_) {
+        throw VoreenException("Reading anything other than the whole volume at once from disk might yield wrong results!");
+        //LERROR("Reading anything other than the whole volume at once from disk might yield wrong results!");
+    }
+
     // Open file.
     std::ifstream ifs(filename.c_str());
     if (ifs.fail())
-        throw VoreenException("File: \"" + filename + "\" could not be opened");
+        throw VoreenException("File: '" + filename + "' could not be opened");
 
     // Seek required offset. This operation is quite expensive.
     const size_t timeStepOffset = brickDimensions.x*brickDimensions.z*timeStep_;
