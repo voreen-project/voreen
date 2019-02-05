@@ -94,7 +94,7 @@ class TemplateBounds {
     *   Returns the center of this box
     */
     tgt::Vector3<T> center() const {
-        return (diagonal() * 0.5f + llf_);
+        return (diagonal() / T(2) + llf_);
     }
 
     /**
