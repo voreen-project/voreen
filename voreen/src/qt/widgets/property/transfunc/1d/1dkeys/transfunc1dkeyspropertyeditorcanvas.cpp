@@ -760,8 +760,6 @@ void TransFunc1DKeysPropertyEditorCanvas::drawMappingKeys(QPainter* painter) {
     pen.setWidthF(1.5f);
     painter->setPen(pen);
 
-    tgt::vec2 origin = wtos(tgt::vec2(0.f));
-
     tgt::vec2 old(0.0f);
     for (int i=0; i<tfProp_->get()->getNumKeys(); ++i) {
         TransFuncMappingKey *key = tfProp_->get()->getKey(i);
