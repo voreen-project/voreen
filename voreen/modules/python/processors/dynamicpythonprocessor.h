@@ -2,8 +2,8 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany.                        *
- * Visualization and Computer Graphics Group <http://viscg.uni-muenster.de>        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
  * This file is part of the Voreen software package. Voreen is free software:      *
@@ -23,60 +23,49 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VOLUMEMERGER_H
-#define VRN_VOLUMEMERGER_H
+#ifndef VRN_DYNAMICPYTHONPROCESSOR_H
+#define VRN_DYNAMICPYTHONPROCESSOR_H
 
-#include "voreen/core/processors/asynccomputeprocessor.h"
+#include "voreen/core/processors/processor.h"
+
 #include "voreen/core/ports/volumeport.h"
-#include "voreen/core/properties/temppathproperty.h"
 
-#include "modules/hdf5/io/hdf5filevolume.h"
+#include "custommodules/bigdataimageprocessing/properties/interactivelistproperty.h"
 
 namespace voreen {
 
-struct VolumeMergerComputeInput {
-    const VolumeList* inputVolumes;
-    size_t padding_;
-    std::unique_ptr<Volume> outputVolume;
-};
-
-struct VolumeMergerComputeOutput{
-    std::unique_ptr<Volume> outputVolume;
-};
-
-/**
- *
- */
-class VRN_CORE_API VolumeMerger : public AsyncComputeProcessor<VolumeMergerComputeInput, VolumeMergerComputeOutput>  {
+class DynamicPythonProcessor : public Processor {
 public:
-    VolumeMerger();
-    virtual ~VolumeMerger();
+    DynamicPythonProcessor();
+    ~DynamicPythonProcessor();
+
     virtual Processor* create() const;
 
-    virtual std::string getClassName() const  { return "VolumeMerger";      }
-    virtual std::string getCategory() const   { return "Volume Processing";     }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
+    virtual std::string getClassName() const  { return "DynamicPythonProcessor"; }
+    virtual std::string getCategory() const   { return "Python";                 }
+    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;  }
 
 protected:
-    virtual void setDescriptions() {
-        setDescription("Merges incoming volumes into a single one. No overlap allowed");
-    }
 
-    virtual ComputeInput prepareComputeInput();
-    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
-    virtual void processComputeOutput(ComputeOutput output);
+    virtual void process();
+    virtual void initialize();
+    virtual void deinitialize();
 
 private:
 
-    VolumeListPort inport_;
-    VolumePort outport_;
+    void onPortListChange();
 
-    BoolProperty allowIntersections_;
-    IntProperty padding_;
+    void addPortItem(Port* port);
+
+    std::vector<std::unique_ptr<Port>> portItems_;
+
+    InteractiveListProperty portList_;
+    boost::optional<InteractiveListProperty::Instance> selectedInstance_;
+    size_t numInstances_;
 
     static const std::string loggerCat_;
 };
 
-}   //namespace
+} // namespace
 
-#endif
+#endif // VRN_DYNAMICGLSLPROCESSOR_H

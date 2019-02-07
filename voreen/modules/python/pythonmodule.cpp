@@ -30,6 +30,8 @@
 #include "voreen/core/voreenapplication.h"
 #include "voreen/core/utils/stringutils.h"
 
+#include "processors/dynamicpythonprocessor.h"
+
 namespace voreen {
 
 char* PyUnicodeAsString(PyObject* object) {
@@ -122,6 +124,8 @@ PythonModule::PythonModule(const std::string& modulePath)
     setID("Python");
     setGuiName("Python");
     instance_ = this;
+
+    registerProcessor(new DynamicPythonProcessor());
 }
 
 PythonModule::~PythonModule() {

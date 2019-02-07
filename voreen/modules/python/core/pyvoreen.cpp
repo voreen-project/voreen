@@ -62,6 +62,10 @@
 //#include "voreen/core/properties/color/colorswitchproperty.h" // covered by ColorProperty
 #include "voreen/core/properties/transfunc/1d/1dkeys/transfunc1dkeysproperty.h"
 
+#include "voreen/core/ports/volumeport.h"
+//#include "voreen/core/ports/geometryport.h" // TODO: implement
+#include "voreen/core/datastructures/volume/volumefactory.h"
+
 #include "voreen/core/datastructures/transfunc/1d/1dkeys/transfunc1dkeys.h"
 #include "voreen/core/network/processornetwork.h"
 
@@ -85,6 +89,25 @@
 // internal helper functions
 
 namespace {
+/*
+typedef struct {
+    PyObject_HEAD
+
+    int dimX, dimY, dimZ;
+    float* data;
+
+} VolumeObject;
+
+static PyTypeObject VolumeDataType = {
+        PyVarObject_HEAD_INIT(NULL, 0)
+        .tp_name = "Volume",
+        .tp_doc = "Volume",
+        .tp_basicsize = sizeof(VolumeObject),
+        .tp_itemsize = 0,
+        .tp_flags = Py_TPFLAGS_DEFAULT,
+        .tp_new = PyType_GenericNew,
+};
+*/
 
 /**
  * Retrieves the current processor network.
@@ -160,6 +183,64 @@ bool setPropertyValue(const std::string& processorName, const std::string& prope
 template<typename PropertyType, typename ValueType>
 bool setPropertyValue(PropertyType* property, const ValueType& value,
                       const std::string& functionName);
+
+/**
+ * Retrieves a port with the specified ID of a certain processor.
+ */
+voreen::Port* getPort(const std::string& processorName, const std::string& portID,
+                      const std::string& functionName);
+
+/**
+ * Retrieves the port with the specified ID, if it matches the template parameter.
+ */
+template<typename T>
+T* getTypedPort(const std::string& processorName, const std::string& portID,
+                const std::string& portTypeString, const std::string& functionName);
+
+/**
+ * Assigns the passed data to the TemplatePort with the specified ID
+ * that is owned by the processor with the specified name.
+ *
+ * @tparam PortType the type of the port the data is to be assigned to
+ * @tparam DataType the type of the data to assign
+ *
+ * @param processorName the name of the processor that owns the property
+ * @param portID the id of the port to modify
+ * @param data the data to set
+ * @param portTypeString the value's typename, e.g. "Float" (included in Python exception)
+ * @param functionName name of the calling function, e.g. "setFloatProperty" (included in Python exception)
+ *
+ * TODO:
+ * Failure cases:
+ *  - if processor or property do not exist, a PyExc_NameError is raised
+ *  - if property type does not match, a PyExc_TypeError is raised
+ *  - if property validation fails, a PyExc_ValueError with the corresponding validation message is raised
+ *
+ * @return true if property manipulation has been successful
+ */
+template<typename PortType, typename DataType>
+bool setPortData(const std::string& processorName, const std::string& portID, const DataType& value,
+                 const std::string& portTypeString, const std::string& functionName);
+
+/**
+ * Assigns the passed data to the passed TemplatePort.
+ *
+ * @tparam PortType the type of the port the data is to be assigned to
+ * @tparam DataType the type of the data to assign
+ *
+ * @param port the port to manipulate
+ * @param data the data to set
+ * @param functionName name of the calling function, e.g. "setVolumePort" (included in Python exception)
+ *
+ * TODO:
+ * Failure cases:
+ *  - if port validation fails, a PyExc_ValueError with the corresponding validation message is raised
+ *
+ * @return true if property manipulation has been successful
+ */
+template<typename PortType, typename DataType>
+bool setPortData(PortType* port, const DataType& data,
+                 const std::string& functionName);
 
 /**
  * Uses the apihelper.py script to print documentation
@@ -1030,6 +1111,108 @@ static PyObject* voreen_getPropertyMaxValue(PyObject* /*self*/, PyObject* args) 
     return result;
 }
 
+static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
+
+    // check length of tuple
+    if (PyTuple_Size(args) != 3) {
+        std::ostringstream errStr;
+        errStr << "setPropertyValue() takes exactly 3 arguments: processor name, port id, data";
+        errStr << " (" << PyTuple_Size(args) << " given)";
+        PyErr_SetString(PyExc_TypeError, errStr.str().c_str());
+        return 0;
+    }
+
+    // check parameter 1 and 2, if they are strings
+    if (!PyUnicode_Check(PyTuple_GetItem(args, 0)) || !PyUnicode_Check(PyTuple_GetItem(args, 1))) {
+        PyErr_SetString(PyExc_TypeError, "setPropertyValue() arguments 1 and 2 must be strings");
+        return 0;
+    }
+
+    // read processor name and port id
+    char* processorName = PyUnicodeAsString(PyTuple_GetItem(args, 0));
+    char* portID = PyUnicodeAsString(PyTuple_GetItem(args, 1));
+    if (!processorName || !portID) {
+        PyErr_SetString(PyExc_TypeError, "setPortData() arguments 1 and 2 must be strings");
+        return 0;
+    }
+
+    // fetch port
+    Port* port = getPort(std::string(processorName), std::string(portID), "setPortData");
+    if (!port)
+        return 0;
+
+    // determine port type, convert and assign value
+    if (VolumePort* typedPort = dynamic_cast<VolumePort*>(port)) {
+        /*
+         * TODO
+        VolumeData data;
+        if (!PyArg_ParseTuple(args, "ssO:setPortData", &processorName, &portID, &data))
+            return 0;
+
+        VolumeRAM* volume = VolumeFactory().create("", );
+        Volume* data = new Volume(volumeData);
+        if (setPortData<VolumePort, Volume>(typedPort, data, "setPropertyValue"))
+            Py_RETURN_NONE;
+        */
+    }
+    /*
+    else if (GeometryPort* typedPort = dynamic_cast<GeometryPort*>(port)) {
+
+        Py_RETURN_NONE;
+    }
+     */
+
+
+    // we only get here, if port value assignment has failed or
+    // the port type is not supported at all
+
+    if (!PyErr_Occurred()) {
+        // no error so far => unknown port type
+        std::ostringstream errStr;
+        errStr << "setPropertyValue() Property '" << port->getQualifiedName() << "'";
+        errStr << " has unsupported type: '" << port->getClassName() << "'";
+        PyErr_SetString(PyExc_ValueError, errStr.str().c_str());
+    }
+
+    return 0; //< indicates failure
+}
+
+static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
+
+    // Parse passed arguments: processor name, property ID
+    char *processorName, *portID;
+    PyArg_ParseTuple(args, "ss:getPortValue", &processorName, &portID);
+    if (PyErr_Occurred())
+        return 0;
+
+    // fetch property
+    Port* port = getPort(std::string(processorName), std::string(portID), "getPort");
+    if (!port)
+        return 0;
+
+    // determine property type and return value, if type compatible
+    PyObject* result = (PyObject*)-1; //< to determine whether Py_BuildValue has been executed
+    /*
+     * TODO
+    if (VolumePort* typedProp = dynamic_cast<VolumePort*>(port))
+        result = Py_BuildValue("i", typedProp->getMaxValue());
+    else if (GeometryPort* typedProp = dynamic_cast<GeometryPort*>(port))
+        result = Py_BuildValue("f", typedProp->getMaxValue());
+
+    // if result is still -1, Py_BuildValue has not been executed
+    if (result == (PyObject*)-1) {
+        std::ostringstream errStr;
+        errStr << "getPropertyMaxValue() Property '" << port->getQualifiedName() << "'";
+        errStr << " has unsupported type: '" << port->getTypeDescription() << "'";
+        PyErr_SetString(PyExc_ValueError, errStr.str().c_str());
+        return 0;
+    }
+    */
+
+    return result;
+
+}
+
 static PyObject* voreen_setCameraPosition(PyObject* /*self*/, PyObject* args) {
 
     // parse arguments
@@ -1525,6 +1708,21 @@ static PyMethodDef voreen_methods[] = {
         "depending on the property's cardinality."
     },
     {
+            "setPortData",
+            voreen_setPortData,
+            METH_VARARGS,
+            "setPortData(processor name, port id, data)\n\n"
+            "Assigns data to a processor port. The data has to be passed\n"
+    },
+    {
+            "getPortData",
+            voreen_getPortData,
+            METH_VARARGS,
+            "getPortData(processor name, port id) -> data\n\n"
+            "Returns the data of a processor port as scalar or tuple,\n"
+            "depending on the port's type. See: setPortData"
+    },
+    {
         "setCameraPosition",
         voreen_setCameraPosition,
         METH_VARARGS,
@@ -1563,7 +1761,7 @@ static PyMethodDef voreen_methods[] = {
         METH_VARARGS,
         "loadVolumes(filename, selected, clear, [volume list source])\n\n"
         "Loads all volumes and assigns them to a VolumeListSource processor.\n"
-        "If no processor name is passed, the first volume source in the\n"
+        "If no processor name is passed, the first volume list source in the\n"
         "network is chosen."
     },
     {
@@ -1829,6 +2027,81 @@ bool setPropertyValue(PropertyType* property, const ValueType& value,
     std::string errorMsg;
     if (property->isValidValue(value, errorMsg)) {
         property->set(value);
+        return true;
+    }
+    else {
+        // define Python exception
+        PyErr_SetString(PyExc_ValueError, (functionName + std::string("() ") + errorMsg).c_str());
+        return false;
+    }
+}
+
+Port* getPort(const std::string& processorName, const std::string& portID, const std::string& functionName) {
+
+    // fetch processor
+    Processor* processor = getProcessor(processorName, functionName);
+    if (!processor)
+        return 0;
+
+    // find property
+    Port* port = processor->getPort(portID);
+    if (!port) {
+        PyErr_SetString(PyExc_NameError, std::string(functionName + "() Processor '" +
+                                                     processorName + "' has no port '" + portID + "'").c_str());
+        return 0;
+    }
+
+    return port;
+}
+
+template<typename T>
+T* getTypedPort(const std::string& processorName, const std::string& portID,
+                const std::string& portTypeString, const std::string& functionName) {
+
+    // fetch port
+    Port* port = getPort(processorName, portID, functionName);
+    if (!port)
+        return 0;
+
+    // check type
+    if (T* cProp = dynamic_cast<T*>(port))
+        return cProp;
+    else {
+        PyErr_SetString(PyExc_TypeError, std::string(functionName + "() Port '" +
+                                                     port->getQualifiedName() + "' is not of type " +
+                                                     portTypeString).c_str());
+        return 0;
+    }
+}
+
+template<typename PortType, typename DataType>
+bool setPortData(const std::string& processorName, const std::string& portID, const DataType& value,
+                  const std::string& portTypeString, const std::string& functionName) {
+
+    if (PortType* property = getTypedPort<PortType>(
+            processorName, portID, portTypeString, functionName)) {
+        std::string errorMsg;
+        if (property->isValidValue(value, errorMsg)) {
+            property->setData(value);
+            return true;
+        }
+        else {
+            // define Python exception
+            PyErr_SetString(PyExc_ValueError, (functionName + std::string("() ") + errorMsg).c_str());
+            return false;
+        }
+    }
+    return false;
+}
+
+template<typename PortType, typename DataType>
+bool setPortData(PortType* port, const DataType& value,
+                      const std::string& functionName) {
+    tgtAssert(port, "Null pointer passed");
+
+    std::string errorMsg;
+    if (port->isValidValue(value, errorMsg)) {
+        port->set(value);
         return true;
     }
     else {
