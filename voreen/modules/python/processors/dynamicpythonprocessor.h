@@ -51,6 +51,9 @@ protected:
     virtual void initialize();
     virtual void deinitialize();
 
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+
 private:
 
     void onPortListChange();
@@ -60,8 +63,6 @@ private:
     std::vector<std::unique_ptr<Port>> portItems_;
 
     InteractiveListProperty portList_;
-    boost::optional<InteractiveListProperty::Instance> selectedInstance_;
-    size_t numInstances_;
 
     static const std::string loggerCat_;
 };

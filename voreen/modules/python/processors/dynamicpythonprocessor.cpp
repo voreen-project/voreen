@@ -34,7 +34,7 @@ const std::string DynamicPythonProcessor::loggerCat_("voreen.DynamicPythonProces
 
 DynamicPythonProcessor::DynamicPythonProcessor()
     : Processor()
-    , portList_("portList", "Port List")
+    , portList_("portList", "Port List", true)
 {
     // Add available ports.
     addPortItem(new VolumePort(Port::INPORT, ""));
@@ -44,9 +44,15 @@ DynamicPythonProcessor::DynamicPythonProcessor()
 
     // Add properties.
     addProperty(portList_);
+    ON_CHANGE(portList_, DynamicPythonProcessor, onPortListChange);
 }
 
 DynamicPythonProcessor::~DynamicPythonProcessor() {
+    while(!getPorts().empty()) {
+        Port* port = getPorts().front();
+        removePort(port);
+        delete port;
+    }
 }
 
 Processor* DynamicPythonProcessor::create() const {
@@ -64,50 +70,53 @@ void DynamicPythonProcessor::deinitialize() {
 void DynamicPythonProcessor::process() {
 }
 
+void DynamicPythonProcessor::serialize(Serializer& s) const {
+    Processor::serialize(s);
+    //portList_.serialize(s);
+}
+void DynamicPythonProcessor::deserialize(Deserializer& s) {
+    //portList_.deserialize(s);
+    Processor::deserialize(s);
+    onPortListChange();
+}
+
 // private methods
 //
 
 void DynamicPythonProcessor::onPortListChange() {
 
-    // Check if instance was deleted.
-    bool numInstancesChanged = portList_.getInstances().size() != numInstances_;
-    if(numInstancesChanged) {
-        // Handle removal.
-        if(numInstances_ > portList_.getInstances().size() && selectedInstance_) {
-            // Assumes that only the selected item can be removed!
-            tgtAssert(numInstances_ == portList_.getInstances().size() + 1, "Only single instance removal allowed!");
-            Port* port = getPort(portList_.getInstanceName(*selectedInstance_));
-            if(port) {
-                removePort(port);
-                port->deinitialize();
-                delete port;
+    // Gather orphaned ports.
+    std::vector<Port*> deletedPorts;
+    std::vector<InteractiveListProperty::Instance> newPorts = portList_.getInstances();
+    for(Port* port : getPorts()) {
+        bool found = false;
+        for(auto iter = newPorts.begin(); iter != newPorts.end(); iter++) {
+            if(portList_.getInstanceName(*iter) == port->getID()) {
+                found = true;
+                newPorts.erase(iter);
+                break;
             }
-            selectedInstance_.reset();
-        } else if(numInstances_ < portList_.getInstances().size() && selectedInstance_) {
-            // Assumes that only the selected item can be added!
-            tgtAssert(numInstances_ == portList_.getInstances().size() - 1, "Only single instance addition allowed!");
-            Port* item = portItems_[selectedInstance_->itemId_].get();
-            Port* port = item->create(item->isInport() ? Port::INPORT : Port::OUTPORT, portList_.getInstanceName(*selectedInstance_));
-            port->initialize();
-            addPort(port);
         }
-        numInstances_ = portList_.getInstances().size();
+
+        if(!found) {
+            deletedPorts.push_back(port);
+        }
     }
 
-    // Hide old group.
-    if(selectedInstance_) {
-        // We need to reset here, because otherwise onFilterPropertyChange
-        // will be triggered while the current instance is restored.
-        selectedInstance_.reset();
+    // Delete orphaned ports.
+    for(Port* port : deletedPorts) {
+        port->deinitialize();
+        removePort(port);
+        delete port;
     }
 
-    // Show new group.
-    boost::optional<InteractiveListProperty::Instance> currentInstance;
-    if(portList_.getSelectedInstance() != -1) {
-        currentInstance = portList_.getInstances()[portList_.getSelectedInstance()];
+    // Create new Ports.
+    for(auto iter = newPorts.begin(); iter != newPorts.end(); iter++) {
+        Port* item = portItems_[iter->itemId_].get();
+        Port* port = item->create(item->isInport() ? Port::INPORT : Port::OUTPORT, portList_.getInstanceName(*iter));
+        port->initialize();
+        addPort(port);
     }
-
-    selectedInstance_ = currentInstance;
 }
 
 void DynamicPythonProcessor::addPortItem(Port* port) {

@@ -32,6 +32,7 @@
 
 // Do this at very first
 #include <Python.h>
+#include <structmember.h>
 #include "../pythonmodule.h"
 
 #include "pyvoreen.h"
@@ -88,26 +89,143 @@
 //-------------------------------------------------------------------------------------------------
 // internal helper functions
 
+// type conversion macros
+#define VecToPyVec(VARIABLE, CONVERTER, GETVEC, SIZE, VALUEPOSTFIX) \
+    VARIABLE = PyList_New(SIZE); \
+    for(unsigned int i=0; i<SIZE; i++){ \
+        PyList_SetItem(VARIABLE, i, CONVERTER(GETVEC[i]VALUEPOSTFIX)); \
+    }
+
+#define PyVecToVec(PYVEC, CONVERTER, VEC) \
+{ \
+    PyObject* pyList = PYVEC; \
+    for(int i=0; i < PyList_Size(pyList); i++) { \
+        VEC[i] = (CONVERTER(PyList_GetItem(pyList, i))); \
+    } \
+}
+
 namespace {
-/*
+
 typedef struct {
     PyObject_HEAD
-
+    PyObject* data;
     int dimX, dimY, dimZ;
-    float* data;
+    float spacingX, spacingY, spacingZ;
+    float offsetX, offsetY, offsetZ;
 
 } VolumeObject;
 
-static PyTypeObject VolumeDataType = {
-        PyVarObject_HEAD_INIT(NULL, 0)
-        .tp_name = "Volume",
-        .tp_doc = "Volume",
-        .tp_basicsize = sizeof(VolumeObject),
-        .tp_itemsize = 0,
-        .tp_flags = Py_TPFLAGS_DEFAULT,
-        .tp_new = PyType_GenericNew,
+
+void VolumeObject_dealloc(VolumeObject *self) {
+    Py_XDECREF(self->data);
+    Py_TYPE(self)->tp_free((PyObject *) self);
+}
+
+PyObject* VolumeObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    VolumeObject *self;
+    self = (VolumeObject *) type->tp_alloc(type, 0);
+    if (self != NULL) {
+        self->data = PyList_New(0);
+        if (self->data == NULL) {
+            Py_DECREF(self);
+            return NULL;
+        }
+        self->dimX = self->dimY = self->dimZ = 0;
+        self->spacingX = self->spacingY = self->spacingZ = 0.0f;
+        self->offsetX = self->offsetY = self->offsetZ = 0.0f;
+    }
+    return (PyObject *) self;
+}
+
+int VolumeObject_init(VolumeObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"data", "dimension", "spacing", "offset", NULL};
+    PyObject *data = NULL, *tmp;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O(iii)(fff)(fff)", kwlist,
+                                     &data,
+                                     &self->dimX, &self->dimY, &self->dimZ,
+                                     &self->spacingX, &self->spacingY, &self->spacingZ,
+                                     &self->offsetX, &self->offsetY, &self->offsetZ))
+        return -1;
+
+    if (data) {
+        tmp = self->data;
+        Py_INCREF(data);
+        self->data = data;
+        Py_XDECREF(tmp);
+    }
+    else {
+
+    }
+    return 0;
+}
+
+static PyMemberDef VolumeObject_members[] = {
+    {"data", T_OBJECT_EX, offsetof(VolumeObject, data), 0, "data"},
+    {"dimX", T_INT, offsetof(VolumeObject, dimX), 0, "Dimension X"},
+    {"dimY", T_INT, offsetof(VolumeObject, dimY), 0, "Dimension Y"},
+    {"dimZ", T_INT, offsetof(VolumeObject, dimZ), 0, "Dimension Z"},
+    {"spacingX", T_FLOAT, offsetof(VolumeObject, spacingX), 0, "Spacing X"},
+    {"spacingY", T_FLOAT, offsetof(VolumeObject, spacingY), 0, "Spacing Y"},
+    {"spacingZ", T_FLOAT, offsetof(VolumeObject, spacingZ), 0, "Spacing Z"},
+    {"offsetX", T_FLOAT, offsetof(VolumeObject, offsetX), 0, "Offset X"},
+    {"offsetY", T_FLOAT, offsetof(VolumeObject, offsetY), 0, "Offset Y"},
+    {"offsetZ", T_FLOAT, offsetof(VolumeObject, offsetZ), 0, "Offset Z"},
+    {NULL}  /* Sentinel */
 };
-*/
+
+
+static PyTypeObject VolumeObjectType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "Volume",                               /*tp_name*/
+    sizeof(VolumeObject),                   /*tp_basicsize*/
+    0,                                      /*tp_itemsize*/
+    (destructor) VolumeObject_dealloc,      /*tp_dealloc*/
+    NULL,                                   /*tp_print*/
+    NULL,                                   /*tp_getattr*/
+    NULL,                                   /*tp_setattr*/
+    NULL,                                   /*tp_as_async*/
+    NULL,                                   /*tp_repr*/
+    NULL,                                   /*tp_as_number*/
+    NULL,                                   /*tp_as_sequence*/
+    NULL,                                   /*tp_as_mapping*/
+    NULL,                                   /*tp_hash*/
+    NULL,                                   /*tp_call*/
+    NULL,                                   /*tp_str*/
+    NULL,                                   /*tp_getattro*/
+    NULL,                                   /*tp_setattro*/
+    NULL,                                   /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT,                     /*tp_flags*/
+    "Volume object, contained by a port",   /*tp_doc*/
+    NULL,                                   /*tp_traverse*/
+    NULL,                                   /*tp_clear*/
+    NULL,                                   /*tp_richcompare*/
+    0,                                      /*tp_weaklistoffset*/
+    NULL,                                   /*tp_iter*/
+    NULL,                                   /*tp_iternext*/
+    NULL,                                   /*tp_methods*/
+    VolumeObject_members,                   /*tp_members*/
+    NULL,                                   /*tp_getset*/
+    NULL,                                   /*tp_base*/
+    NULL,                                   /*tp_dict*/
+    NULL,                                   /*tp_descr_get*/
+    NULL,                                   /*tp_descr_set*/
+    0,                                      /*tp_dictoffset*/
+    (initproc) VolumeObject_init,           /*tp_init*/
+    NULL,                                   /*tp_alloc*/
+    VolumeObject_new,                       /*tp_new*/
+    NULL,                                   /*tp_free*/
+    NULL,                                   /*tp_is_gc*/
+    NULL,                                   /*tp_bases*/
+    NULL,                                   /*tp_mro*/
+    NULL,                                   /*tp_cache*/
+    NULL,                                   /*tp_subclasses*/
+    NULL,                                   /*tp_weaklist*/
+    NULL,                                   /*tp_del*/
+    0,                                      /*tp_version_tag*/
+    NULL                                    /*tp_finalize*/
+};
 
 /**
  * Retrieves the current processor network.
@@ -248,21 +366,6 @@ bool setPortData(PortType* port, const DataType& data,
  */
 static PyObject* printModuleInfo(const std::string& moduleName, bool omitFunctionName = false,
                                  int spacing = 0, bool collapse = false, bool blanklines = false);
-
-// type conversion macros
-#define VecToPyVec(VARIABLE, CONVERTER, GETVEC, SIZE, VALUEPOSTFIX) \
-    VARIABLE = PyList_New(SIZE); \
-    for(unsigned int i=0; i<SIZE; i++){ \
-    PyList_SetItem(VARIABLE, i, CONVERTER(GETVEC[i]VALUEPOSTFIX)); \
-    }
-
-#define PyVecToVec(PYVEC, CONVERTER, VEC) \
-{ \
-    PyObject* pyList = PYVEC; \
-    for(int i=0; i < PyList_Size(pyList); i++) { \
-    VEC[i] = (CONVERTER(PyList_GetItem(pyList, i))); \
-    } \
-}
 
 } // namespace anonymous
 
@@ -1198,16 +1301,15 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
         result = Py_BuildValue("i", typedProp->getMaxValue());
     else if (GeometryPort* typedProp = dynamic_cast<GeometryPort*>(port))
         result = Py_BuildValue("f", typedProp->getMaxValue());
-
+*/
     // if result is still -1, Py_BuildValue has not been executed
     if (result == (PyObject*)-1) {
         std::ostringstream errStr;
-        errStr << "getPropertyMaxValue() Property '" << port->getQualifiedName() << "'";
-        errStr << " has unsupported type: '" << port->getTypeDescription() << "'";
+        errStr << "getPropertyMaxValue() Port '" << port->getQualifiedName() << "'";
+        errStr << " has unsupported type";//: '" << port->getTypeDescription() << "'";
         PyErr_SetString(PyExc_ValueError, errStr.str().c_str());
         return 0;
     }
-    */
 
     return result;
 
@@ -1708,19 +1810,19 @@ static PyMethodDef voreen_methods[] = {
         "depending on the property's cardinality."
     },
     {
-            "setPortData",
-            voreen_setPortData,
-            METH_VARARGS,
-            "setPortData(processor name, port id, data)\n\n"
-            "Assigns data to a processor port. The data has to be passed\n"
+        "setPortData",
+        voreen_setPortData,
+        METH_VARARGS,
+        "setPortData(processor name, port id, data)\n\n"
+        "Assigns data to a processor port. The data has to be passed\n"
     },
     {
-            "getPortData",
-            voreen_getPortData,
-            METH_VARARGS,
-            "getPortData(processor name, port id) -> data\n\n"
-            "Returns the data of a processor port as scalar or tuple,\n"
-            "depending on the port's type. See: setPortData"
+        "getPortData",
+        voreen_getPortData,
+        METH_VARARGS,
+        "getPortData(processor name, port id) -> data\n\n"
+        "Returns the data of a processor port as scalar or tuple,\n"
+        "depending on the port's type. See: setPortData"
     },
     {
         "setCameraPosition",
@@ -1877,7 +1979,16 @@ static struct PyModuleDef voreenModuleDef =
 PyMODINIT_FUNC
 PyInit_voreenModule(void)
 {
-    return PyModule_Create(&voreenModuleDef);
+    if (PyType_Ready(&VolumeObjectType) < 0)
+        return NULL;
+
+    PyObject* m = PyModule_Create(&voreenModuleDef);
+    if(m == NULL)
+        return NULL;
+
+    Py_INCREF(&VolumeObjectType);
+    PyModule_AddObject(m, "VolumeObject", (PyObject *) &VolumeObjectType);
+    return m;
 }
 
 namespace voreen {
@@ -2078,11 +2189,11 @@ template<typename PortType, typename DataType>
 bool setPortData(const std::string& processorName, const std::string& portID, const DataType& value,
                   const std::string& portTypeString, const std::string& functionName) {
 
-    if (PortType* property = getTypedPort<PortType>(
+    if (PortType* port = getTypedPort<PortType>(
             processorName, portID, portTypeString, functionName)) {
         std::string errorMsg;
-        if (property->isValidValue(value, errorMsg)) {
-            property->setData(value);
+        if (port->isValidValue(value, errorMsg)) {
+            port->setData(value);
             return true;
         }
         else {
