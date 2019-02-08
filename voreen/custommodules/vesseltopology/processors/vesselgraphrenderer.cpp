@@ -340,7 +340,7 @@ void VesselGraphRenderer::adaptToNewInput() {
     // Only use valid edges for TFs (otherwise e.g. a mean maxRadius of -1 (symbolic)
     // will mess up the TF range and thus its precision)
     auto is_valid_edge = [] (const VesselGraphEdge& e) {
-        return e.getMinRadiusAvg() >= 0;
+        return e.hasValidData();
     };
 
     for(auto& pair : edgeTFs_) {
