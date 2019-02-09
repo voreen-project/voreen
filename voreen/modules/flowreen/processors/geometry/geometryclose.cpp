@@ -201,7 +201,7 @@ void GeometryClose::createIndices(GlMeshGeometryUInt32Normal* geometry, bool opt
 
     if(optimize) {
 
-        //*
+        /*
         std::vector<std::pair<V, I>> uniqueVertices;
 
         for (size_t i = 0; i < indices.size(); i++) {
