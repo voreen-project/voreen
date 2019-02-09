@@ -39,8 +39,8 @@ DynamicPythonProcessor::DynamicPythonProcessor()
     // Add available ports.
     addPortItem(new VolumePort(Port::INPORT, ""));
     addPortItem(new VolumePort(Port::OUTPORT, ""));
-    addPortItem(new GeometryPort(Port::INPORT, ""));
-    addPortItem(new GeometryPort(Port::OUTPORT, ""));
+    //addPortItem(new GeometryPort(Port::INPORT, ""));
+    //addPortItem(new GeometryPort(Port::OUTPORT, ""));
 
     // Add properties.
     addProperty(portList_);
@@ -120,7 +120,7 @@ void DynamicPythonProcessor::onPortListChange() {
 }
 
 void DynamicPythonProcessor::addPortItem(Port* port) {
-    std::string name = port->getClassName() + (port->isInport() ? " Inport" : " Outport");
+    std::string name = port->getClassName() + (port->isInport() ? "-in" : "-out");
     portList_.addItem(name);
     portItems_.push_back(std::unique_ptr<Port>(port));
 }

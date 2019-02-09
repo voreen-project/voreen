@@ -89,48 +89,39 @@
 //-------------------------------------------------------------------------------------------------
 // internal helper functions
 
-// type conversion macros
-#define VecToPyVec(VARIABLE, CONVERTER, GETVEC, SIZE, VALUEPOSTFIX) \
-    VARIABLE = PyList_New(SIZE); \
-    for(unsigned int i=0; i<SIZE; i++){ \
-        PyList_SetItem(VARIABLE, i, CONVERTER(GETVEC[i]VALUEPOSTFIX)); \
-    }
-
-#define PyVecToVec(PYVEC, CONVERTER, VEC) \
-{ \
-    PyObject* pyList = PYVEC; \
-    for(int i=0; i < PyList_Size(pyList); i++) { \
-        VEC[i] = (CONVERTER(PyList_GetItem(pyList, i))); \
-    } \
-}
-
 namespace {
 
 typedef struct {
     PyObject_HEAD
+    PyObject* format;
     PyObject* data;
-    int dimX, dimY, dimZ;
+    unsigned int dimX, dimY, dimZ;
     float spacingX, spacingY, spacingZ;
     float offsetX, offsetY, offsetZ;
-
 } VolumeObject;
 
 
 void VolumeObject_dealloc(VolumeObject *self) {
+    Py_XDECREF(self->format);
     Py_XDECREF(self->data);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-PyObject* VolumeObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+PyObject* VolumeObject_new(PyTypeObject *type, PyObject */*args*/, PyObject */*kwds*/) {
     VolumeObject *self;
     self = (VolumeObject *) type->tp_alloc(type, 0);
     if (self != NULL) {
+        self->format = PyUnicode_FromString("");
+        if (self->format == NULL) {
+            Py_DECREF(self);
+            return NULL;
+        }
         self->data = PyList_New(0);
         if (self->data == NULL) {
             Py_DECREF(self);
             return NULL;
         }
-        self->dimX = self->dimY = self->dimZ = 0;
+        self->dimX = self->dimY = self->dimZ = 0u;
         self->spacingX = self->spacingY = self->spacingZ = 0.0f;
         self->offsetX = self->offsetY = self->offsetZ = 0.0f;
     }
@@ -139,46 +130,62 @@ PyObject* VolumeObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 
 int VolumeObject_init(VolumeObject *self, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"data", "dimension", "spacing", "offset", NULL};
-    PyObject *data = NULL, *tmp;
+    static const char *kwlist[] = {"format", "data", "dimension", "spacing", "offset", NULL};
+    PyObject *format = NULL, *data = NULL, *tmp;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O(iii)(fff)(fff)", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OO(III)(fff)(fff)", (char**) kwlist,
+                                     &format,
                                      &data,
                                      &self->dimX, &self->dimY, &self->dimZ,
                                      &self->spacingX, &self->spacingY, &self->spacingZ,
                                      &self->offsetX, &self->offsetY, &self->offsetZ))
         return -1;
 
+    if (format) {
+        tmp = self->format;
+        Py_INCREF(format);
+        self->format = format;
+        Py_XDECREF(tmp);
+    }
     if (data) {
         tmp = self->data;
         Py_INCREF(data);
         self->data = data;
         Py_XDECREF(tmp);
     }
-    else {
-
-    }
     return 0;
 }
 
+/*
+ * The following struct defines the python equivalents the members of the VolumeObject struct.
+ */
 static PyMemberDef VolumeObject_members[] = {
-    {"data", T_OBJECT_EX, offsetof(VolumeObject, data), 0, "data"},
-    {"dimX", T_INT, offsetof(VolumeObject, dimX), 0, "Dimension X"},
-    {"dimY", T_INT, offsetof(VolumeObject, dimY), 0, "Dimension Y"},
-    {"dimZ", T_INT, offsetof(VolumeObject, dimZ), 0, "Dimension Z"},
-    {"spacingX", T_FLOAT, offsetof(VolumeObject, spacingX), 0, "Spacing X"},
-    {"spacingY", T_FLOAT, offsetof(VolumeObject, spacingY), 0, "Spacing Y"},
-    {"spacingZ", T_FLOAT, offsetof(VolumeObject, spacingZ), 0, "Spacing Z"},
-    {"offsetX", T_FLOAT, offsetof(VolumeObject, offsetX), 0, "Offset X"},
-    {"offsetY", T_FLOAT, offsetof(VolumeObject, offsetY), 0, "Offset Y"},
-    {"offsetZ", T_FLOAT, offsetof(VolumeObject, offsetZ), 0, "Offset Z"},
+    {(char*)"format",      T_OBJECT_EX,    offsetof(VolumeObject, format),     0, (char*)"format"     },
+    {(char*)"data",        T_OBJECT_EX,    offsetof(VolumeObject, data),       0, (char*)"data"       },
+    {(char*)"dimX",        T_INT,          offsetof(VolumeObject, dimX),       0, (char*)"Dimension X"},
+    {(char*)"dimY",        T_INT,          offsetof(VolumeObject, dimY),       0, (char*)"Dimension Y"},
+    {(char*)"dimZ",        T_INT,          offsetof(VolumeObject, dimZ),       0, (char*)"Dimension Z"},
+    {(char*)"spacingX",    T_FLOAT,        offsetof(VolumeObject, spacingX),   0, (char*)"Spacing X"  },
+    {(char*)"spacingY",    T_FLOAT,        offsetof(VolumeObject, spacingY),   0, (char*)"Spacing Y"  },
+    {(char*)"spacingZ",    T_FLOAT,        offsetof(VolumeObject, spacingZ),   0, (char*)"Spacing Z"  },
+    {(char*)"offsetX",     T_FLOAT,        offsetof(VolumeObject, offsetX),    0, (char*)"Offset X"   },
+    {(char*)"offsetY",     T_FLOAT,        offsetof(VolumeObject, offsetY),    0, (char*)"Offset Y"   },
+    {(char*)"offsetZ",     T_FLOAT,        offsetof(VolumeObject, offsetZ),    0, (char*)"Offset Z"   },
     {NULL}  /* Sentinel */
 };
 
-
+/*
+ * The following struct defines the python equivalent for a Voreen Volume.
+ * Currently, the implementation is very rudamentary and only supports:
+ *   - format
+ *   - data (single channel, float, only!)
+ *   - dimension
+ *   - spacing
+ *   - offset
+ */
 static PyTypeObject VolumeObjectType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "Volume",                               /*tp_name*/
+    "voreen.Volume",                        /*tp_name*/
     sizeof(VolumeObject),                   /*tp_basicsize*/
     0,                                      /*tp_itemsize*/
     (destructor) VolumeObject_dealloc,      /*tp_dealloc*/
@@ -197,7 +204,7 @@ static PyTypeObject VolumeObjectType = {
     NULL,                                   /*tp_setattro*/
     NULL,                                   /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT,                     /*tp_flags*/
-    "Volume object, contained by a port",   /*tp_doc*/
+    "Volume, contained by a port",          /*tp_doc*/
     NULL,                                   /*tp_traverse*/
     NULL,                                   /*tp_clear*/
     NULL,                                   /*tp_richcompare*/
@@ -314,51 +321,6 @@ voreen::Port* getPort(const std::string& processorName, const std::string& portI
 template<typename T>
 T* getTypedPort(const std::string& processorName, const std::string& portID,
                 const std::string& portTypeString, const std::string& functionName);
-
-/**
- * Assigns the passed data to the TemplatePort with the specified ID
- * that is owned by the processor with the specified name.
- *
- * @tparam PortType the type of the port the data is to be assigned to
- * @tparam DataType the type of the data to assign
- *
- * @param processorName the name of the processor that owns the property
- * @param portID the id of the port to modify
- * @param data the data to set
- * @param portTypeString the value's typename, e.g. "Float" (included in Python exception)
- * @param functionName name of the calling function, e.g. "setFloatProperty" (included in Python exception)
- *
- * TODO:
- * Failure cases:
- *  - if processor or property do not exist, a PyExc_NameError is raised
- *  - if property type does not match, a PyExc_TypeError is raised
- *  - if property validation fails, a PyExc_ValueError with the corresponding validation message is raised
- *
- * @return true if property manipulation has been successful
- */
-template<typename PortType, typename DataType>
-bool setPortData(const std::string& processorName, const std::string& portID, const DataType& value,
-                 const std::string& portTypeString, const std::string& functionName);
-
-/**
- * Assigns the passed data to the passed TemplatePort.
- *
- * @tparam PortType the type of the port the data is to be assigned to
- * @tparam DataType the type of the data to assign
- *
- * @param port the port to manipulate
- * @param data the data to set
- * @param functionName name of the calling function, e.g. "setVolumePort" (included in Python exception)
- *
- * TODO:
- * Failure cases:
- *  - if port validation fails, a PyExc_ValueError with the corresponding validation message is raised
- *
- * @return true if property manipulation has been successful
- */
-template<typename PortType, typename DataType>
-bool setPortData(PortType* port, const DataType& data,
-                 const std::string& functionName);
 
 /**
  * Uses the apihelper.py script to print documentation
@@ -1219,7 +1181,7 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
     // check length of tuple
     if (PyTuple_Size(args) != 3) {
         std::ostringstream errStr;
-        errStr << "setPropertyValue() takes exactly 3 arguments: processor name, port id, data";
+        errStr << "setPortData() takes exactly 3 arguments: processor name, port id, data";
         errStr << " (" << PyTuple_Size(args) << " given)";
         PyErr_SetString(PyExc_TypeError, errStr.str().c_str());
         return 0;
@@ -1227,7 +1189,7 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
 
     // check parameter 1 and 2, if they are strings
     if (!PyUnicode_Check(PyTuple_GetItem(args, 0)) || !PyUnicode_Check(PyTuple_GetItem(args, 1))) {
-        PyErr_SetString(PyExc_TypeError, "setPropertyValue() arguments 1 and 2 must be strings");
+        PyErr_SetString(PyExc_TypeError, "setPortData() arguments 1 and 2 must be strings");
         return 0;
     }
 
@@ -1244,35 +1206,63 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
     if (!port)
         return 0;
 
-    // determine port type, convert and assign value
-    if (VolumePort* typedPort = dynamic_cast<VolumePort*>(port)) {
-        /*
-         * TODO
-        VolumeData data;
-        if (!PyArg_ParseTuple(args, "ssO:setPortData", &processorName, &portID, &data))
-            return 0;
+    // Delete old data first.
+    port->clear();
 
-        VolumeRAM* volume = VolumeFactory().create("", );
-        Volume* data = new Volume(volumeData);
-        if (setPortData<VolumePort, Volume>(typedPort, data, "setPropertyValue"))
-            Py_RETURN_NONE;
-        */
+    // determine port type, convert and assign data
+    if (VolumePort* typedPort = dynamic_cast<VolumePort*>(port)) {
+        PyObject* object = NULL;
+        if (!PyArg_ParseTuple(args, "ssO!:setPortData", &processorName, &portID, &VolumeObjectType, &object))
+            return 0;
+        tgtAssert(object, "parsing VolumeObject failed");
+
+        const VolumeObject& volumeObject = *((VolumeObject*) object);
+
+        // TODO: handle multiple channels and formats!
+        std::string format = PyUnicodeAsString(volumeObject.format);
+        VolumeRAM* volume = nullptr;
+        try {
+            volume = VolumeFactory().create(format, tgt::svec3(volumeObject.dimX, volumeObject.dimY, volumeObject.dimZ));
+        } catch(const std::bad_alloc& error) {
+            PyErr_SetString(PyExc_ValueError, "Could not allocate memory for volume");
+            return 0;
+        }
+        if(!volume) {
+            std::string error = "Volume of format '" + format + "' could not be created.";
+            PyErr_SetString(PyExc_ValueError, error.c_str());
+            return 0;
+        }
+
+        // Set voxel values.
+        for(size_t i=0; i<volume->getNumVoxels(); i++) {
+            PyObject* p = PyList_GetItem(volumeObject.data, i);
+            float value = static_cast<float>(PyFloat_AsDouble(p));
+            volume->setVoxelNormalized(value, i);
+        }
+
+        // Set meta data.
+        tgt::vec3 spacing(volumeObject.spacingX, volumeObject.spacingY, volumeObject.spacingZ);
+        tgt::vec3 offset(volumeObject.offsetX, volumeObject.offsetY, volumeObject.offsetZ);
+
+        Volume* data = new Volume(volume, spacing, offset);
+        typedPort->setData(data, true);
+
+        Py_DECREF(object);
+        Py_RETURN_NONE;
     }
     /*
     else if (GeometryPort* typedPort = dynamic_cast<GeometryPort*>(port)) {
-
         Py_RETURN_NONE;
     }
-     */
+    */
 
-
-    // we only get here, if port value assignment has failed or
+    // we only get here, if port data assignment has failed or
     // the port type is not supported at all
 
     if (!PyErr_Occurred()) {
         // no error so far => unknown port type
         std::ostringstream errStr;
-        errStr << "setPropertyValue() Property '" << port->getQualifiedName() << "'";
+        errStr << "setPortData() Port '" << port->getQualifiedName() << "'";
         errStr << " has unsupported type: '" << port->getClassName() << "'";
         PyErr_SetString(PyExc_ValueError, errStr.str().c_str());
     }
@@ -1284,29 +1274,70 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
 
     // Parse passed arguments: processor name, property ID
     char *processorName, *portID;
-    PyArg_ParseTuple(args, "ss:getPortValue", &processorName, &portID);
+    PyArg_ParseTuple(args, "ss:getPortData", &processorName, &portID);
     if (PyErr_Occurred())
         return 0;
 
-    // fetch property
+    // fetch port
     Port* port = getPort(std::string(processorName), std::string(portID), "getPort");
     if (!port)
         return 0;
 
-    // determine property type and return value, if type compatible
-    PyObject* result = (PyObject*)-1; //< to determine whether Py_BuildValue has been executed
+    if(!port->hasData()) {
+        std::ostringstream errStr;
+        errStr << "getPortData() Port '" << port->getQualifiedName() << "' has no data.";
+        PyErr_SetString(PyExc_ValueError, errStr.str().c_str());
+        return 0;
+    }
+
+    PyObject* result = (PyObject*)-1;
+    if (VolumePort* typedPort = dynamic_cast<VolumePort*>(port)) {
+
+        const VolumeBase* data = typedPort->getData();
+        tgtAssert(data, "volume was null");
+        const VolumeRAM* volume = data->getRepresentation<VolumeRAM>();
+        if(!volume)
+            return 0;
+
+        // Create new volume object.
+        VolumeObject* volumeObject = (VolumeObject*) VolumeObject_new(&VolumeObjectType, NULL, NULL);
+        if(!volumeObject)
+            return 0;
+
+        // TODO: handle multiple channels and formats!
+        Py_DECREF(volumeObject->format); // Format will be overwritten.
+        volumeObject->format = PyUnicode_FromString(volume->getFormat().c_str());
+
+        for(size_t i=0; i<volume->getNumVoxels(); i++) {
+            PyObject* value = PyFloat_FromDouble(volume->getVoxelNormalized(i));
+            tgtAssert(value, "value null");
+            PyList_Append(volumeObject->data, value);
+        }
+
+        volumeObject->dimX = data->getDimensions().x;
+        volumeObject->dimY = data->getDimensions().y;
+        volumeObject->dimZ = data->getDimensions().z;
+
+        volumeObject->spacingX = data->getSpacing().x;
+        volumeObject->spacingY = data->getSpacing().y;
+        volumeObject->spacingZ = data->getSpacing().z;
+
+        volumeObject->offsetX = data->getOffset().x;
+        volumeObject->offsetY = data->getOffset().y;
+        volumeObject->offsetZ = data->getOffset().z;
+
+        result = (PyObject*) volumeObject;
+        Py_INCREF(result); // FIXME: memory leak
+    }
     /*
-     * TODO
-    if (VolumePort* typedProp = dynamic_cast<VolumePort*>(port))
-        result = Py_BuildValue("i", typedProp->getMaxValue());
     else if (GeometryPort* typedProp = dynamic_cast<GeometryPort*>(port))
-        result = Py_BuildValue("f", typedProp->getMaxValue());
-*/
-    // if result is still -1, Py_BuildValue has not been executed
+        result = ...
+    */
+
     if (result == (PyObject*)-1) {
         std::ostringstream errStr;
-        errStr << "getPropertyMaxValue() Port '" << port->getQualifiedName() << "'";
-        errStr << " has unsupported type";//: '" << port->getTypeDescription() << "'";
+        errStr << "getPortData() Port '" << port->getQualifiedName() << "'";
+        errStr << " has unsupported type: '" << port->getClassName() << "'";
         PyErr_SetString(PyExc_ValueError, errStr.str().c_str());
         return 0;
     }
@@ -1814,14 +1845,14 @@ static PyMethodDef voreen_methods[] = {
         voreen_setPortData,
         METH_VARARGS,
         "setPortData(processor name, port id, data)\n\n"
-        "Assigns data to a processor port. The data has to be passed\n"
+        "Assigns data to a processor port.\n"
     },
     {
         "getPortData",
         voreen_getPortData,
         METH_VARARGS,
         "getPortData(processor name, port id) -> data\n\n"
-        "Returns the data of a processor port as scalar or tuple,\n"
+        "Returns the data of a processor port,\n"
         "depending on the port's type. See: setPortData"
     },
     {
@@ -1986,8 +2017,10 @@ PyInit_voreenModule(void)
     if(m == NULL)
         return NULL;
 
+    // Register custom objects.
     Py_INCREF(&VolumeObjectType);
-    PyModule_AddObject(m, "VolumeObject", (PyObject *) &VolumeObjectType);
+    PyModule_AddObject(m, "Volume", (PyObject *) &VolumeObjectType);
+
     return m;
 }
 
@@ -2182,43 +2215,6 @@ T* getTypedPort(const std::string& processorName, const std::string& portID,
                                                      port->getQualifiedName() + "' is not of type " +
                                                      portTypeString).c_str());
         return 0;
-    }
-}
-
-template<typename PortType, typename DataType>
-bool setPortData(const std::string& processorName, const std::string& portID, const DataType& value,
-                  const std::string& portTypeString, const std::string& functionName) {
-
-    if (PortType* port = getTypedPort<PortType>(
-            processorName, portID, portTypeString, functionName)) {
-        std::string errorMsg;
-        if (port->isValidValue(value, errorMsg)) {
-            port->setData(value);
-            return true;
-        }
-        else {
-            // define Python exception
-            PyErr_SetString(PyExc_ValueError, (functionName + std::string("() ") + errorMsg).c_str());
-            return false;
-        }
-    }
-    return false;
-}
-
-template<typename PortType, typename DataType>
-bool setPortData(PortType* port, const DataType& value,
-                      const std::string& functionName) {
-    tgtAssert(port, "Null pointer passed");
-
-    std::string errorMsg;
-    if (port->isValidValue(value, errorMsg)) {
-        port->set(value);
-        return true;
-    }
-    else {
-        // define Python exception
-        PyErr_SetString(PyExc_ValueError, (functionName + std::string("() ") + errorMsg).c_str());
-        return false;
     }
 }
 
