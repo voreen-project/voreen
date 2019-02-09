@@ -60,6 +60,7 @@ private:
     void addParametrization();
     void removeParametrization();
     void clearParametrizations();
+    void autoGenerateEnsemble();
 
     std::vector<FlowParameters> flowParameters_;
 
@@ -76,14 +77,8 @@ private:
     ButtonProperty addParametrization_;
     ButtonProperty removeParametrization_;
     ButtonProperty clearParametrizations_;
-/*
-    FloatIntervalProperty simulationTimeInterval_;
-    FloatIntervalProperty temporalResolutionInterval_;
-    FloatIntervalProperty characteristicLengthInterval_;
-    FloatIntervalProperty viscosityInterval_;
-    FloatIntervalProperty densityInterval_;
-    BoolProperty bouzidi_;
-*/
+    ButtonProperty autoGenerateParametrizations_;
+
     StringProperty ensembleName_;
     StringTableProperty parametrizations_;
 
