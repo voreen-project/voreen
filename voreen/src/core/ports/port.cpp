@@ -573,7 +573,7 @@ void Port::notifyBeforeConnectionRemoved(const Port* connectedPort) {
     for (size_t i = 0; i < observers.size(); ++i)
         observers[i]->beforeConnectionRemoved(this, connectedPort);
 
-    if(isInport()/* && hasData()*/) {   // hasData() can lead to pure virtual function call if this is called when subclass (e.g., VolumePort) has already been destroyed 
+    if(isInport() && hasData()) {   
         notifyDataWillChange();
     }
 }
