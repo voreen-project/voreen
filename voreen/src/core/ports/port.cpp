@@ -70,11 +70,13 @@ Port::~Port() {
         delete conditions_.at(i);
     conditions_.clear();
 
+    tgtAssert(!initialized_, "Port destructor called before deinitialization");
     if (isInitialized()) {
-        LWARNING("~Port() '" << getQualifiedName() << "' has not been deinitialized");
+        LERROR("~Port() '" << getQualifiedName() << "' has not been deinitialized");
     }
 
-    disconnectAll();
+    // moved to deinitialize as it should be called before destruction anyway to omit pure virtual function calls
+    //disconnectAll();
 }
 
 Port* Port::create() const {
@@ -456,14 +458,10 @@ void Port::initialize() {
 
 void Port::deinitialize() {
 
-    if (!isInitialized()) {
-        /*std::string id;
-        if (getProcessor())
-            id = getProcessor()->getName() + ".";
-        id += getName();
-        LWARNING("deinitialize(): '" << id << "' not initialized"); */
+    if (!isInitialized()) 
         return;
-    }
+
+    disconnectAll();
 
     initialized_ = false;
 }
