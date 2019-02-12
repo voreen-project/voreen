@@ -54,12 +54,6 @@ std::string TextPort::getContentDescriptionHTML() const {
     return strstr.str();
 }
 
-void TextPort::forwardData() const{
-    for(std::vector<Port*>::const_iterator it = forwardPorts_.begin(); it != forwardPorts_.end(); ++it){
-        dynamic_cast<TextPort*>(*it)->setData(getData());
-    }
-}
-
 void TextPort::setData(const std::string& data) {
     tgtAssert(isOutport(), "called setData on inport!");
     notifyDataWillChange();

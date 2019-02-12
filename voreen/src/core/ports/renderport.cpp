@@ -154,27 +154,6 @@ std::string RenderPort::getContentDescriptionHTML() const {
     return strstr.str();
 }
 
-void RenderPort::forwardData() const{
-    RenderPort *rp = 0;
-    for(std::vector<Port*>::const_iterator it = forwardPorts_.begin(); it != forwardPorts_.end(); ++it){
-        if((rp = dynamic_cast<RenderPort*>(*it))){
-            rp->setSharedRenderTarget(const_cast<RenderTarget*>(getRenderTarget()));
-            rp->validResult_ = hasValidResult();
-            rp->invalidatePort();
-        }
-    }
-}
-
-void RenderPort::addForwardPort(Port* port){
-    Port::addForwardPort(port);
-    dynamic_cast<RenderPort*>(port)->setRenderTargetSharing(true);
-}
-
-bool RenderPort::removeForwardPort(Port* port){
-    dynamic_cast<RenderPort*>(port)->setRenderTargetSharing(false);
-    return Port::removeForwardPort(port);
-}
-
 void RenderPort::setProcessor(Processor* p) {
     Port::setProcessor(p);
 

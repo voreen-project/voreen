@@ -329,7 +329,6 @@ void Port::invalidatePort() {
     }
     else {
         getProcessor()->invalidate(invalidationLevel_);
-        forwardData();
     }
 
     // Perform condition check.
@@ -523,23 +522,6 @@ tgt::col3 Port::getColorHint() const {
     return tgt::col3(0, 0, 0);
 }
 
-void Port::addForwardPort(Port* port){
-    tgtAssert(port->isOutport(), "Only outports can get forwared data!");
-    tgtAssert(!port->getClassName().compare(getClassName()),"Forward ports have to be the same type as this class!");
-
-    forwardPorts_.push_back(port);
-}
-
-bool Port::removeForwardPort(Port* port){
-    for(std::vector<Port*>::iterator it = forwardPorts_.begin(); it != forwardPorts_.end(); it++){
-        if(*it == port){
-            forwardPorts_.erase(it);
-            return true;
-        }
-    }
-    return false;
-}
-
 void Port::serialize(Serializer& s) const {
     PropertyOwner::serialize(s);
 
@@ -593,7 +575,7 @@ void Port::notifyBeforeConnectionRemoved(const Port* connectedPort) {
     for (size_t i = 0; i < observers.size(); ++i)
         observers[i]->beforeConnectionRemoved(this, connectedPort);
 
-    if(isInport() && hasData()) {
+    if(isInport()/* && hasData()*/) {   // hasData() can lead to pure virtual function call if this is called when subclass (e.g., VolumePort) has already been destroyed 
         notifyDataWillChange();
     }
 }

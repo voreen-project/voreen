@@ -86,8 +86,6 @@ public:
                          Processor::InvalidationLevel invalidationLevel = Processor::INVALID_RESULT);
     virtual ~GenericPort();
 
-    virtual void forwardData() const;
-
     /**
      * Set data stored in this port. Can only be called on outports.
      * @param takeOwnership If true, the data will be deleted by the port.
@@ -232,13 +230,6 @@ GenericPort<T>::~GenericPort() {
     portData_ = nullptr;
 
     notifyDataHasChanged();
-}
-
-template <typename T>
-void GenericPort<T>::forwardData() const{
-    for(std::vector<Port*>::const_iterator it = forwardPorts_.begin(); it != forwardPorts_.end(); ++it){
-        dynamic_cast<GenericPort<T>*>(*it)->setData(getData(), false);
-    }
 }
 
 template <typename T>

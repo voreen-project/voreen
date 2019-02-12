@@ -42,7 +42,6 @@ public:
     virtual std::string getClassName() const {return "TextPort";}
     virtual std::string getContentDescription() const;
     virtual std::string getContentDescriptionHTML() const;
-    virtual void forwardData() const;
 
     virtual void setData(const std::string& str);
 
