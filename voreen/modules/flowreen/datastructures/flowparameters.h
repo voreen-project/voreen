@@ -63,18 +63,6 @@ public:
      */
     const std::string& getName() const;
 
-    float getSimulationTime() const;
-    void setSimulationTime(float simulationTime);
-
-    float getTemporalResolution() const;
-    void setTemporalResolution(float temporalResolution);
-
-    void addFlowIndicator(const FlowIndicator& flowIndicator);
-    const std::vector<FlowIndicator>& getFlowIndicators() const;
-
-    //----------------
-    //  Access
-    //----------------
     float getCharacteristicLength() const;
     void setCharacteristicLength(float characteristicLength);
 
@@ -87,30 +75,13 @@ public:
     bool getBouzidi() const;
     void setBouzidi(bool bouzidi);
 
-    //----------------
-    //  Storage
-    //----------------
-    /** Used to save as CSV file. */
-    std::string toCSVString() const;
-    /** @override */
     virtual void serialize(Serializer& s) const;
-    /** @override */
     virtual void deserialize(Deserializer& s);
 
-    //----------------
-    //  Members
-    //----------------
 private:
 
     // Identifier of the parameterization.
     std::string name_;
-
-    // Time specification.
-    float simulationTime_;
-    float temporalResolution_;
-
-    // Flow indication (in-/out flow).
-    std::vector<FlowIndicator> flowIndicators_;
 
     // All other relevant parameters.
     float characteristicLength_;
@@ -120,15 +91,27 @@ private:
 };
 
 /**
- * Very simple list wrapper for FlowParameters, implementing thread safety for AsyncComputeProcessor.
- * This does not contain any special functionality other than that.
+ * Parametrization List, implementing thread safety for AsyncComputeProcessor.
  */
 class VRN_CORE_API FlowParametrizationList : public DataInvalidationObservable, public Serializable {
+
+    static const int VERSION;
+
 public:
 
     explicit FlowParametrizationList(const std::string& name);
+    FlowParametrizationList(const FlowParametrizationList& origin);
 
     const std::string& getName() const;
+
+    float getSimulationTime() const;
+    void setSimulationTime(float simulationTime);
+
+    float getTemporalResolution() const;
+    void setTemporalResolution(float temporalResolution);
+
+    void addFlowIndicator(const FlowIndicator& flowIndicator);
+    const std::vector<FlowIndicator>& getFlowIndicators() const;
 
     void addFlowParameters(const FlowParameters& parameters);
     const std::vector<FlowParameters>& getFlowParametrizations() const;
@@ -138,12 +121,25 @@ public:
     size_t size() const;
     const FlowParameters& at(size_t index) const;
 
+    /** Used to save as CSV file. */
+    std::string toCSVString() const;
+    std::string toJSONString() const;
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
 
 private:
 
+    // Ensemble name.
     std::string name_;
+
+    // Time specification.
+    float simulationTime_;
+    float temporalResolution_;
+
+    // Flow indication (in-/out flow).
+    std::vector<FlowIndicator> flowIndicators_;
+
+    // Actual parameters.
     std::vector<FlowParameters> flowParametrizations_;
 };
 

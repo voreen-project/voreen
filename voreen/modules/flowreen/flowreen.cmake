@@ -178,6 +178,8 @@ IF(VRN_FLOWREEN_BUILD_OPENLB)
         ${MOD_DIR}/ports/flowparametrizationport.h
 
         # processors
+        ${MOD_DIR}/processors/simulation/flowindicatorselection.h
+        ${MOD_DIR}/processors/simulation/flowindicatorrenderer.h
         ${MOD_DIR}/processors/simulation/flowparametrization.h
         ${MOD_DIR}/processors/simulation/flowsimulation.h
         ${MOD_DIR}/processors/simulation/flowsimulationcluster.h
@@ -194,6 +196,8 @@ IF(VRN_FLOWREEN_BUILD_OPENLB)
         ${MOD_DIR}/ports/flowparametrizationport.cpp
 
         # processors
+        ${MOD_DIR}/processors/simulation/flowindicatorselection.cpp
+        ${MOD_DIR}/processors/simulation/flowindicatorrenderer.cpp
         ${MOD_DIR}/processors/simulation/flowparametrization.cpp
         ${MOD_DIR}/processors/simulation/flowsimulation.cpp
         ${MOD_DIR}/processors/simulation/flowsimulationcluster.cpp
@@ -202,6 +206,16 @@ IF(VRN_FLOWREEN_BUILD_OPENLB)
         # utils
         ${MOD_DIR}/utils/geometryconverter.cpp
     )
+
+    IF(VRN_MODULE_VESSELTOPOLOGY)
+        SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
+            ${MOD_DIR}/processors/simulation/flowindicatorselection.h
+        )
+        SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
+            ${MOD_DIR}/processors/simulation/flowindicatordetection.cpp
+        )
+    ENDIF()
+
 ENDIF()
 
 ################################################################################

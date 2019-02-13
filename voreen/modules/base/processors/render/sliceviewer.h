@@ -233,7 +233,6 @@ protected:
     EventProperty<SliceViewer>* mouseEventPress_;
     EventProperty<SliceViewer>* mouseEventMove_;
     EventProperty<SliceViewer>* mouseEventShift_;
-    EventProperty<SliceViewer>* mouseEventSelect_;
 
     MWheelNumPropInteractionHandler<int> mwheelCycleHandler_;
     MWheelNumPropInteractionHandler<float> mwheelZoomHandler_;
@@ -262,19 +261,8 @@ private:
     float samplingRate_;
     tgt::ivec2 resolution_;
 
-    struct Circle {
-        tgt::vec3 center_;
-        tgt::vec3 normal_;
-        float radius_ = 0.0f;
-    };
-
     bool planeNeedsUpdate_;
     void updatePlane();
-    //Circle estimateCircle(const tgt::ivec2& texCoord) const;
-    //SliceTexture* getVolumeSlice() const;
-    void selectRegion(tgt::MouseEvent* e);
-
-    //std::vector<Circle> circles_;
 
 private:
 

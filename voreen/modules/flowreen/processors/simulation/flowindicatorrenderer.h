@@ -23,75 +23,53 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_FLOWPARAMETRIZATION_H
-#define VRN_FLOWPARAMETRIZATION_H
+#ifndef VRN_FLOWINDICATORRENDERER_H
+#define VRN_FLOWINDICATORRENDERER_H
 
-#include "voreen/core/processors/processor.h"
+#include "voreen/core/processors/geometryrendererbase.h"
 
-#include "voreen/core/properties/stringproperty.h"
-#include "voreen/core/properties/numeric/intervalproperty.h"
-#include "voreen/core/properties/string/stringtableproperty.h"
+#include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 
 #include "modules/flowreen/ports/flowparametrizationport.h"
 
 namespace voreen {
 
 /**
- * This processor is being used to parametrize a simulation.
+ * Used to render points in 3D. Must be linked to a SlicePointRenderer2D.
  */
-class VRN_CORE_API FlowParametrization : public Processor {
+class VRN_CORE_API FlowIndicatorRenderer : public GeometryRendererBase {
 public:
-    FlowParametrization();
-    virtual Processor* create() const         { return new FlowParametrization(); }
+    FlowIndicatorRenderer();
 
-    virtual std::string getClassName() const  { return "FlowParametrization";     }
-    virtual std::string getCategory() const   { return "Simulation";              }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;  }
+    virtual Processor* create() const { return new FlowIndicatorRenderer(); }
+    virtual std::string getCategory() const  { return "Geometry"; }
+    virtual std::string getClassName() const { return "FlowIndicatorRenderer"; }
+    virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL; }
 
-    virtual bool isReady() const;
-    virtual void process();
+    virtual void render();
+
+    virtual tgt::Bounds getBoundingBox() const;
 
 protected:
-
-    virtual void adjustPropertiesToInput();
-
     virtual void setDescriptions() {
-        setDescription("This processor is being used to parameterize a simulation.");
+        setDescription("Render Points at the position selected by the SlicePointRenderer2D. Use in combination with the SliceViewer.");
     }
+
+    void process();
+
+    virtual void initialize();
+    virtual void deinitialize();
 
 private:
 
-    void addParametrization();
-    void removeParametrization();
-    void clearParametrizations();
-    void autoGenerateEnsemble();
-
-    std::vector<FlowParameters> flowParameters_;
-
     FlowParametrizationPort inport_;
-    FlowParametrizationPort outport_;
 
-    StringProperty ensembleName_;
-    FloatProperty simulationTime_;
-    FloatProperty temporalResolution_;
+    BoolProperty enable_;
 
-    StringProperty parametrizationName_;
-    FloatProperty characteristicLength_;
-    FloatProperty viscosity_;
-    FloatProperty density_;
-    BoolProperty  bouzidi_;
-
-    ButtonProperty addParametrization_;
-    ButtonProperty removeParametrization_;
-    ButtonProperty clearParametrizations_;
-    ButtonProperty autoGenerateParametrizations_;
-
-    StringTableProperty parametrizations_;
-    StringTableProperty flowIndicators_;
-
-    static const std::string loggerCat_;
+    GlMeshGeometryUInt16Simple* geometry_;
 };
 
-}   //namespace
+}
 
 #endif
+

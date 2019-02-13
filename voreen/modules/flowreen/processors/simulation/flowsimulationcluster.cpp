@@ -110,6 +110,16 @@ void FlowSimulationCluster::process() {
         return;
     }
 
+    // 1. Create parameter configuration file and commit to cluster.
+    std::string parameterFilename = VoreenApplication::app()->getUniqueTmpFilePath(".json");
+    std::ofstream parameterFile(parameterFilename);
+    if (!parameterFile.good()) {
+        LERROR("Could not write parameter file");
+        return;
+    }
+    parameterFile << flowParametrization->toJSONString();
+    parameterFile.close();
+
     std::string username = username_.get();
     std::string clusterAddress = clusterAddress_.get();
 
@@ -120,16 +130,6 @@ void FlowSimulationCluster::process() {
             LERROR("Could not create output directory: " << directory);
             continue;
         }
-
-        // 1. Create parameter configuration file and commit to cluster.
-        std::string parameterFilename = VoreenApplication::app()->getUniqueTmpFilePath(".txt");
-        std::ofstream parameterFile(parameterFilename);
-        if (!parameterFile.good()) {
-            LERROR("Could not write parameter file");
-            continue;
-        }
-        parameterFile << flowParameters.toCSVString();
-        parameterFile.close();
 
         std::string destination = username + "@" + clusterAddress + ":/scratch/tmp/" + username +
                                   "/simulation_test/parameter.txt";

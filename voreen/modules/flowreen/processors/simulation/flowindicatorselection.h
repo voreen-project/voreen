@@ -23,71 +23,65 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_FLOWPARAMETRIZATION_H
-#define VRN_FLOWPARAMETRIZATION_H
+#ifndef VRN_FLOWINDICATORSELECTION_H
+#define VRN_FLOWINDICATORSELECTION_H
 
-#include "voreen/core/processors/processor.h"
+#include "voreen/core/processors/renderprocessor.h"
 
-#include "voreen/core/properties/stringproperty.h"
-#include "voreen/core/properties/numeric/intervalproperty.h"
-#include "voreen/core/properties/string/stringtableproperty.h"
+#include "voreen/core/properties/filedialogproperty.h"
+#include "voreen/core/properties/matrixproperty.h"
 
+#include "modules/flowreen/datastructures/flowparameters.h"
 #include "modules/flowreen/ports/flowparametrizationport.h"
 
 namespace voreen {
 
-/**
- * This processor is being used to parametrize a simulation.
- */
-class VRN_CORE_API FlowParametrization : public Processor {
-public:
-    FlowParametrization();
-    virtual Processor* create() const         { return new FlowParametrization(); }
 
-    virtual std::string getClassName() const  { return "FlowParametrization";     }
-    virtual std::string getCategory() const   { return "Simulation";              }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;  }
+/**
+ * This processor is being used to select in and out flow.
+ */
+class VRN_CORE_API FlowIndicatorSelection : public RenderProcessor {
+public:
+    FlowIndicatorSelection();
+    virtual Processor* create() const         { return new FlowIndicatorSelection();    }
+
+    virtual std::string getClassName() const  { return "FlowIndicatorSelection";        }
+    virtual std::string getCategory() const   { return "Simulation";                    }
+    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;         }
 
     virtual bool isReady() const;
     virtual void process();
 
 protected:
-
-    virtual void adjustPropertiesToInput();
-
     virtual void setDescriptions() {
-        setDescription("This processor is being used to parameterize a simulation.");
+        setDescription("This processor is being used to select in and out flow.");
     }
 
 private:
 
-    void addParametrization();
-    void removeParametrization();
-    void clearParametrizations();
-    void autoGenerateEnsemble();
+    void selectRegion(tgt::MouseEvent* e);
 
-    std::vector<FlowParameters> flowParameters_;
+    RenderPort renderInport_;
+    RenderPort renderOutport_;
 
-    FlowParametrizationPort inport_;
-    FlowParametrizationPort outport_;
+    FlowParametrizationPort flowParametrizationPort_;
 
     StringProperty ensembleName_;
     FloatProperty simulationTime_;
     FloatProperty temporalResolution_;
 
-    StringProperty parametrizationName_;
-    FloatProperty characteristicLength_;
-    FloatProperty viscosity_;
-    FloatProperty density_;
-    BoolProperty  bouzidi_;
+    FloatMat4Property pickingMatrix_;       ///< Picking matrix from SliceViewer
 
-    ButtonProperty addParametrization_;
-    ButtonProperty removeParametrization_;
-    ButtonProperty clearParametrizations_;
-    ButtonProperty autoGenerateParametrizations_;
+    tgt::plane plane_;
+    tgt::vec3 xVec_;
+    tgt::vec3 yVec_;
+    tgt::vec3 origin_;
+    float samplingRate_;
+    tgt::ivec2 resolution_;
 
-    StringTableProperty parametrizations_;
-    StringTableProperty flowIndicators_;
+    std::vector<FlowIndicator> flowIndicators_;
+
+    bool rebuildOutput_;
 
     static const std::string loggerCat_;
 };

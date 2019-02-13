@@ -23,32 +23,34 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_FLOWPARAMETRIZATION_H
-#define VRN_FLOWPARAMETRIZATION_H
+#ifndef VRN_FLOWINDICATORDETECTION_H
+#define VRN_FLOWINDICATORDETECTION_H
 
 #include "voreen/core/processors/processor.h"
 
-#include "voreen/core/properties/stringproperty.h"
-#include "voreen/core/properties/numeric/intervalproperty.h"
+#include "voreen/core/properties/filedialogproperty.h"
+#include "voreen/core/properties/matrixproperty.h"
 #include "voreen/core/properties/string/stringtableproperty.h"
 
+#include "modules/flowreen/datastructures/flowparameters.h"
 #include "modules/flowreen/ports/flowparametrizationport.h"
+
+#include "custommodules/vesseltopology/ports/vesselgraphport.h"
 
 namespace voreen {
 
 /**
- * This processor is being used to parametrize a simulation.
+ * This processor is being used to select in and out flow.
  */
-class VRN_CORE_API FlowParametrization : public Processor {
+class VRN_CORE_API FlowIndicatorDetection : public Processor {
 public:
-    FlowParametrization();
-    virtual Processor* create() const         { return new FlowParametrization(); }
+    FlowIndicatorDetection();
+    virtual Processor* create() const         { return new FlowIndicatorDetection();    }
 
-    virtual std::string getClassName() const  { return "FlowParametrization";     }
-    virtual std::string getCategory() const   { return "Simulation";              }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;  }
+    virtual std::string getClassName() const  { return "FlowIndicatorDetection";        }
+    virtual std::string getCategory() const   { return "Simulation";                    }
+    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;         }
 
-    virtual bool isReady() const;
     virtual void process();
 
 protected:
@@ -56,38 +58,28 @@ protected:
     virtual void adjustPropertiesToInput();
 
     virtual void setDescriptions() {
-        setDescription("This processor is being used to parameterize a simulation.");
+        setDescription("This processor is being used to select in and out flow.");
     }
 
 private:
 
-    void addParametrization();
-    void removeParametrization();
-    void clearParametrizations();
-    void autoGenerateEnsemble();
+    void onSelectionChange();
+    void onConfigChange();
+    void onVesselGraphChange();
+    void buildTable();
+    VesselGraphPort vesselGraphPort_;
 
-    std::vector<FlowParameters> flowParameters_;
-
-    FlowParametrizationPort inport_;
-    FlowParametrizationPort outport_;
+    std::vector<FlowIndicator> flowIndicators_;
+    FlowParametrizationPort flowParametrizationPort_;
 
     StringProperty ensembleName_;
     FloatProperty simulationTime_;
     FloatProperty temporalResolution_;
 
-    StringProperty parametrizationName_;
-    FloatProperty characteristicLength_;
-    FloatProperty viscosity_;
-    FloatProperty density_;
-    BoolProperty  bouzidi_;
+    OptionProperty<FlowDirection> flowDirection_;
+    FloatProperty radius_;
 
-    ButtonProperty addParametrization_;
-    ButtonProperty removeParametrization_;
-    ButtonProperty clearParametrizations_;
-    ButtonProperty autoGenerateParametrizations_;
-
-    StringTableProperty parametrizations_;
-    StringTableProperty flowIndicators_;
+    StringTableProperty flowIndicatorTable_;
 
     static const std::string loggerCat_;
 };

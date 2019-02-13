@@ -31,7 +31,8 @@ const std::string FlowParametrization::loggerCat_("voreen.flowreen.FlowParametri
 
 FlowParametrization::FlowParametrization()
     : Processor()
-    , outport_(Port::OUTPORT, "outport", "Parameter Port")
+    , inport_(Port::INPORT, "inport", "Parameter Inport")
+    , outport_(Port::OUTPORT, "outport", "Parameter Inport")
     , parametrizationName_("parametrizationName", "Parametrization Name", "test_parametrization")
     , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 10.0f)
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 30.0f)
@@ -45,15 +46,21 @@ FlowParametrization::FlowParametrization()
     , autoGenerateParametrizations_("autoGenerateParametrizations", "auto-generate parametrizations")
     , ensembleName_("ensembleName", "Ensemble Name", "test_ensemble")
     , parametrizations_("parametrizations", "Parametrizations", 5, Processor::VALID)
+
 {
+    addPort(inport_);
     addPort(outport_);
+
+    addProperty(ensembleName_);
+        ensembleName_.setGroupID("ensemble");
+    addProperty(simulationTime_);
+        simulationTime_.setGroupID("ensemble");
+    addProperty(temporalResolution_);
+        temporalResolution_.setGroupID("ensemble");
+    setPropertyGroupGuiName("ensemble", "Ensemble");
 
     addProperty(parametrizationName_);
         parametrizationName_.setGroupID("parameters");
-    addProperty(simulationTime_);
-        simulationTime_.setGroupID("parameters");
-    addProperty(temporalResolution_);
-        temporalResolution_.setGroupID("parameters");
     addProperty(characteristicLength_);
         characteristicLength_.setGroupID("parameters");
     addProperty(viscosity_);
@@ -62,7 +69,6 @@ FlowParametrization::FlowParametrization()
         density_.setGroupID("parameters");
     addProperty(bouzidi_);
         bouzidi_.setGroupID("parameters");
-
     setPropertyGroupGuiName("parameters", "Parameters");
 
     addProperty(addParametrization_);
@@ -75,7 +81,6 @@ FlowParametrization::FlowParametrization()
     addProperty(autoGenerateParametrizations_);
     ON_CHANGE(autoGenerateParametrizations_, FlowParametrization, autoGenerateEnsemble);
 
-    addProperty(ensembleName_);
     addProperty(parametrizations_);
     parametrizations_.setColumnLabel(0, "Name");
     parametrizations_.setColumnLabel(1, "Char. Len.");
@@ -95,8 +100,6 @@ void FlowParametrization::addParametrization() {
     }
 
     FlowParameters parameters(parametrizationName_.get());
-    parameters.setSimulationTime(simulationTime_.get());
-    parameters.setTemporalResolution(temporalResolution_.get());
     parameters.setCharacteristicLength(characteristicLength_.get());
     parameters.setViscosity(viscosity_.get());
     parameters.setDensity(density_.get());
@@ -112,7 +115,7 @@ void FlowParametrization::addParametrization() {
     parametrizations_.addRow(row);
 }
 void FlowParametrization::removeParametrization() {
-    if(parametrizations_.getNumRows() > 0 && parametrizations_.getSelectedRowIndex() != -1) {
+    if(parametrizations_.getNumRows() > 0 && parametrizations_.getSelectedRowIndex() >= 0) {
         parametrizations_.removeRow(parametrizations_.getSelectedRowIndex());
         flowParameters_.erase(flowParameters_.begin() + parametrizations_.getSelectedRowIndex());
     }
@@ -140,8 +143,7 @@ void FlowParametrization::autoGenerateEnsemble() {
                 for(bool bouzidi : {true, false}) {
                     std::string name = "run_l=" + std::to_string(characteristicLength) + "_v=" + std::to_string(viscosity) + "_d=" + std::to_string(density) + "_b=" + std::to_string(bouzidi);
                     FlowParameters parameters(name);
-                    parameters.setSimulationTime(simulationTime_.get());
-                    parameters.setTemporalResolution(temporalResolution_.get());
+
                     parameters.setCharacteristicLength(characteristicLength);
                     parameters.setViscosity(viscosity);
                     parameters.setDensity(density);
@@ -161,16 +163,33 @@ void FlowParametrization::autoGenerateEnsemble() {
     }
 }
 
+void FlowParametrization::adjustPropertiesToInput() {
+    setPropertyGroupVisible("ensemble", !inport_.hasData());
+}
+
+bool FlowParametrization::isReady() const {
+    // Ignore inport!
+    return outport_.isReady();
+}
+
 void FlowParametrization::process() {
 
-    FlowParametrizationList* flowParametrizationList = new FlowParametrizationList(ensembleName_.get());
+    FlowParametrizationList* flowParametrizationList = nullptr;
 
-    for(const FlowParameters& flowParameters : flowParameters_) {
+    if(inport_.isReady()) {
+        flowParametrizationList = new FlowParametrizationList(*inport_.getData());
+    }
+    else {
+        flowParametrizationList = new FlowParametrizationList(ensembleName_.get());
+        flowParametrizationList->setSimulationTime(simulationTime_.get());
+        flowParametrizationList->setTemporalResolution(temporalResolution_.get());
+    }
+
+    for (const FlowParameters &flowParameters : flowParameters_) {
         flowParametrizationList->addFlowParameters(flowParameters);
     }
 
     outport_.setData(flowParametrizationList);
-
 }
 
 }   // namespace

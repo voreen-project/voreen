@@ -154,12 +154,12 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
     // === 1st Step: Initialization ===
     std::unique_ptr<UnitConverter<T,DESCRIPTOR>> converter(new UnitConverter<T,DESCRIPTOR>(
-            (T)   volumeT0->getSpacing().x,                 // physDeltaX: spacing between two lattice cells in __m__
-            (T)   flowParameters.getTemporalResolution(),  // physDeltaT: time step in __s__
-            (T)   flowParameters.getCharacteristicLength(),// charPhysLength: reference length of simulation geometry
-            (T)   maxVelocityMagnitude/1000.0,              // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
-            (T)   flowParameters.getViscosity()/1e-10,     // physViscosity: physical kinematic viscosity in __m^2 / s__
-            (T)   flowParameters.getDensity()              // physDensity: physical density in __kg / m^3__
+            (T)   volumeT0->getSpacing().x,                   // physDeltaX: spacing between two lattice cells in __m__
+            (T)   flowParameterList->getTemporalResolution(), // physDeltaT: time step in __s__
+            (T)   flowParameters.getCharacteristicLength(),   // charPhysLength: reference length of simulation geometry
+            (T)   maxVelocityMagnitude/1000.0,                // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
+            (T)   flowParameters.getViscosity()/1e-10,        // physViscosity: physical kinematic viscosity in __m^2 / s__
+            (T)   flowParameters.getDensity()                 // physDensity: physical density in __kg / m^3__
     ));
 
     // Prints the converter log as console output
@@ -230,7 +230,7 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
                     *stlReader, *superGeometry, flowParameters.getBouzidi() );
 
     return FlowSimulationInput{
-            flowParameters.getSimulationTime(),
+            flowParameterList->getSimulationTime(),
             flowParameters.getBouzidi(),
             std::move(converter),
             std::move(stlReader),
