@@ -57,6 +57,7 @@ SET(MOD_CORE_MODULECLASS PythonModule)
 SET(MOD_CORE_SOURCES
     ${MOD_DIR}/core/pythonscript.cpp
     ${MOD_DIR}/core/pyvoreen.cpp
+    ${MOD_DIR}/core/pyvoreenobjects.cpp
 
     ${MOD_DIR}/processors/dynamicpythonprocessor.cpp
 )
@@ -64,6 +65,7 @@ SET(MOD_CORE_SOURCES
 SET(MOD_CORE_HEADERS
     ${MOD_DIR}/core/pythonscript.h
     ${MOD_DIR}/core/pyvoreen.h
+    ${MOD_DIR}/core/pyvoreenobjects.h
 
     ${MOD_DIR}/processors/dynamicpythonprocessor.h
 )

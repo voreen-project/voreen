@@ -27,13 +27,14 @@
 
 #include "voreen/core/ports/volumeport.h"
 #include "voreen/core/ports/geometryport.h"
+#include "voreen/core/ports/renderport.h"
 
 namespace voreen {
 
 const std::string DynamicPythonProcessor::loggerCat_("voreen.DynamicPythonProcessor");
 
 DynamicPythonProcessor::DynamicPythonProcessor()
-    : Processor()
+    : RenderProcessor()
     , portList_("portList", "Port List", true)
 {
     // Add available ports.
@@ -41,13 +42,29 @@ DynamicPythonProcessor::DynamicPythonProcessor()
     addPortItem(new VolumePort(Port::OUTPORT, ""));
     //addPortItem(new GeometryPort(Port::INPORT, ""));
     //addPortItem(new GeometryPort(Port::OUTPORT, ""));
+    addPortItem(new RenderPort(Port::INPORT, ""));
+    addPortItem(new RenderPort(Port::OUTPORT, ""));
 
     // Add properties.
     addProperty(portList_);
     ON_CHANGE(portList_, DynamicPythonProcessor, onPortListChange);
+
+    /*
+    // TODO: define naming schema!
+    // Name Generator spitting out "<PortType>(<instance>)"
+    InteractiveListProperty::NameGenerator nameGenerator =
+            [this] (const InteractiveListProperty::Instance& instance) {
+                std::string name = portList_.getItems()[instance.itemId_];
+                name += "(" + std::to_string(portInstances_[name].size()) + ")";
+                return name;
+            };
+
+    portList_.setNameGenerator(nameGenerator);
+    */
 }
 
 DynamicPythonProcessor::~DynamicPythonProcessor() {
+    portInstances_.clear();
     while(!getPorts().empty()) {
         Port* port = getPorts().front();
         removePort(port);
@@ -60,23 +77,23 @@ Processor* DynamicPythonProcessor::create() const {
 }
 
 void DynamicPythonProcessor::initialize() {
-    Processor::initialize();
+    RenderProcessor::initialize();
 }
 
 void DynamicPythonProcessor::deinitialize() {
-    Processor::deinitialize();
+    RenderProcessor::deinitialize();
 }
 
 void DynamicPythonProcessor::process() {
 }
 
 void DynamicPythonProcessor::serialize(Serializer& s) const {
-    Processor::serialize(s);
+    RenderProcessor::serialize(s);
     //portList_.serialize(s);
 }
 void DynamicPythonProcessor::deserialize(Deserializer& s) {
     //portList_.deserialize(s);
-    Processor::deserialize(s);
+    RenderProcessor::deserialize(s);
     onPortListChange();
 }
 
@@ -105,17 +122,20 @@ void DynamicPythonProcessor::onPortListChange() {
 
     // Delete orphaned ports.
     for(Port* port : deletedPorts) {
+        //std::vector<Port*>& ports = portInstances_[port->getClassName() + (port->isInport() ? "-in" : "-out")]; // TODO: remove!!
+        //ports.erase(std::find(ports.begin(), ports.end(), port));
         port->deinitialize();
         removePort(port);
         delete port;
     }
 
     // Create new Ports.
-    for(auto iter = newPorts.begin(); iter != newPorts.end(); iter++) {
-        Port* item = portItems_[iter->itemId_].get();
-        Port* port = item->create(item->isInport() ? Port::INPORT : Port::OUTPORT, portList_.getInstanceName(*iter));
-        port->initialize();
+    for (auto& newPort : newPorts) {
+        Port* item = portItems_[newPort.itemId_].get();
+        Port* port = item->create(item->isInport() ? Port::INPORT : Port::OUTPORT, portList_.getInstanceName(newPort));
         addPort(port);
+        port->initialize();
+        //portInstances_[portList_.getItems()[newPort.itemId_]].push_back(port);
     }
 }
 

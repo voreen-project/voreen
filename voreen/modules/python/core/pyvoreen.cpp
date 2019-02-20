@@ -32,7 +32,9 @@
 
 // Do this at very first
 #include <Python.h>
-#include <structmember.h>
+
+#include "pyvoreenobjects.h"
+
 #include "../pythonmodule.h"
 
 #include "pyvoreen.h"
@@ -91,148 +93,7 @@
 
 namespace {
 
-typedef struct {
-    PyObject_HEAD
-    PyObject* format;
-    PyObject* data;
-    unsigned int dimX, dimY, dimZ;
-    float spacingX, spacingY, spacingZ;
-    float offsetX, offsetY, offsetZ;
-} VolumeObject;
 
-
-void VolumeObject_dealloc(VolumeObject *self) {
-    Py_XDECREF(self->format);
-    Py_XDECREF(self->data);
-    Py_TYPE(self)->tp_free((PyObject *) self);
-}
-
-PyObject* VolumeObject_new(PyTypeObject *type, PyObject */*args*/, PyObject */*kwds*/) {
-    VolumeObject *self;
-    self = (VolumeObject *) type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->format = PyUnicode_FromString("");
-        if (self->format == NULL) {
-            Py_DECREF(self);
-            return NULL;
-        }
-        self->data = PyList_New(0);
-        if (self->data == NULL) {
-            Py_DECREF(self);
-            return NULL;
-        }
-        self->dimX = self->dimY = self->dimZ = 0u;
-        self->spacingX = self->spacingY = self->spacingZ = 0.0f;
-        self->offsetX = self->offsetY = self->offsetZ = 0.0f;
-    }
-    return (PyObject *) self;
-}
-
-int VolumeObject_init(VolumeObject *self, PyObject *args, PyObject *kwds)
-{
-    static const char *kwlist[] = {"format", "data", "dimension", "spacing", "offset", NULL};
-    PyObject *format = NULL, *data = NULL, *tmp;
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OO(III)(fff)(fff)", (char**) kwlist,
-                                     &format,
-                                     &data,
-                                     &self->dimX, &self->dimY, &self->dimZ,
-                                     &self->spacingX, &self->spacingY, &self->spacingZ,
-                                     &self->offsetX, &self->offsetY, &self->offsetZ))
-        return -1;
-
-    if (format) {
-        tmp = self->format;
-        Py_INCREF(format);
-        self->format = format;
-        Py_XDECREF(tmp);
-    }
-    if (data) {
-        tmp = self->data;
-        Py_INCREF(data);
-        self->data = data;
-        Py_XDECREF(tmp);
-    }
-    return 0;
-}
-
-/*
- * The following struct defines the python equivalents the members of the VolumeObject struct.
- */
-static PyMemberDef VolumeObject_members[] = {
-    {(char*)"format",      T_OBJECT_EX,    offsetof(VolumeObject, format),     0, (char*)"format"     },
-    {(char*)"data",        T_OBJECT_EX,    offsetof(VolumeObject, data),       0, (char*)"data"       },
-    {(char*)"dimX",        T_INT,          offsetof(VolumeObject, dimX),       0, (char*)"Dimension X"},
-    {(char*)"dimY",        T_INT,          offsetof(VolumeObject, dimY),       0, (char*)"Dimension Y"},
-    {(char*)"dimZ",        T_INT,          offsetof(VolumeObject, dimZ),       0, (char*)"Dimension Z"},
-    {(char*)"spacingX",    T_FLOAT,        offsetof(VolumeObject, spacingX),   0, (char*)"Spacing X"  },
-    {(char*)"spacingY",    T_FLOAT,        offsetof(VolumeObject, spacingY),   0, (char*)"Spacing Y"  },
-    {(char*)"spacingZ",    T_FLOAT,        offsetof(VolumeObject, spacingZ),   0, (char*)"Spacing Z"  },
-    {(char*)"offsetX",     T_FLOAT,        offsetof(VolumeObject, offsetX),    0, (char*)"Offset X"   },
-    {(char*)"offsetY",     T_FLOAT,        offsetof(VolumeObject, offsetY),    0, (char*)"Offset Y"   },
-    {(char*)"offsetZ",     T_FLOAT,        offsetof(VolumeObject, offsetZ),    0, (char*)"Offset Z"   },
-    {NULL}  /* Sentinel */
-};
-
-/*
- * The following struct defines the python equivalent for a Voreen Volume.
- * Currently, the implementation is very rudamentary and only supports:
- *   - format
- *   - data (single channel, float, only!)
- *   - dimension
- *   - spacing
- *   - offset
- */
-static PyTypeObject VolumeObjectType = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "voreen.Volume",                        /*tp_name*/
-    sizeof(VolumeObject),                   /*tp_basicsize*/
-    0,                                      /*tp_itemsize*/
-    (destructor) VolumeObject_dealloc,      /*tp_dealloc*/
-    NULL,                                   /*tp_print*/
-    NULL,                                   /*tp_getattr*/
-    NULL,                                   /*tp_setattr*/
-    NULL,                                   /*tp_as_async*/
-    NULL,                                   /*tp_repr*/
-    NULL,                                   /*tp_as_number*/
-    NULL,                                   /*tp_as_sequence*/
-    NULL,                                   /*tp_as_mapping*/
-    NULL,                                   /*tp_hash*/
-    NULL,                                   /*tp_call*/
-    NULL,                                   /*tp_str*/
-    NULL,                                   /*tp_getattro*/
-    NULL,                                   /*tp_setattro*/
-    NULL,                                   /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT,                     /*tp_flags*/
-    "Volume, contained by a port",          /*tp_doc*/
-    NULL,                                   /*tp_traverse*/
-    NULL,                                   /*tp_clear*/
-    NULL,                                   /*tp_richcompare*/
-    0,                                      /*tp_weaklistoffset*/
-    NULL,                                   /*tp_iter*/
-    NULL,                                   /*tp_iternext*/
-    NULL,                                   /*tp_methods*/
-    VolumeObject_members,                   /*tp_members*/
-    NULL,                                   /*tp_getset*/
-    NULL,                                   /*tp_base*/
-    NULL,                                   /*tp_dict*/
-    NULL,                                   /*tp_descr_get*/
-    NULL,                                   /*tp_descr_set*/
-    0,                                      /*tp_dictoffset*/
-    (initproc) VolumeObject_init,           /*tp_init*/
-    NULL,                                   /*tp_alloc*/
-    VolumeObject_new,                       /*tp_new*/
-    NULL,                                   /*tp_free*/
-    NULL,                                   /*tp_is_gc*/
-    NULL,                                   /*tp_bases*/
-    NULL,                                   /*tp_mro*/
-    NULL,                                   /*tp_cache*/
-    NULL,                                   /*tp_subclasses*/
-    NULL,                                   /*tp_weaklist*/
-    NULL,                                   /*tp_del*/
-    0,                                      /*tp_version_tag*/
-    NULL                                    /*tp_finalize*/
-};
 
 /**
  * Retrieves the current processor network.

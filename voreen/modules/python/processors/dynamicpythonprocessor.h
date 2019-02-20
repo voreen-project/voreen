@@ -26,7 +26,7 @@
 #ifndef VRN_DYNAMICPYTHONPROCESSOR_H
 #define VRN_DYNAMICPYTHONPROCESSOR_H
 
-#include "voreen/core/processors/processor.h"
+#include "voreen/core/processors/renderprocessor.h"
 
 #include "voreen/core/ports/volumeport.h"
 
@@ -34,7 +34,7 @@
 
 namespace voreen {
 
-class DynamicPythonProcessor : public Processor {
+class DynamicPythonProcessor : public RenderProcessor {
 public:
     DynamicPythonProcessor();
     ~DynamicPythonProcessor();
@@ -61,6 +61,7 @@ private:
     void addPortItem(Port* port);
 
     std::vector<std::unique_ptr<Port>> portItems_;
+    std::map<std::string, std::vector<Port*>> portInstances_;
 
     InteractiveListProperty portList_;
 
