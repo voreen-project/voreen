@@ -30,6 +30,7 @@
 
 #include <vector>
 #include <string>
+#include <functional>
 
 namespace voreen {
 
@@ -45,6 +46,8 @@ public:
         int itemId_;        ///< id of associated item
         int instanceId_;    ///< unique instance id
     };
+
+    typedef std::function<std::string(const Instance&)> NameGenerator;
 
     InteractiveListProperty(const std::string& id, const std::string& guiText, bool allowDuplication = false,
                         int invalidationLevel=Processor::INVALID_RESULT, Property::LevelOfDetail lod = Property::LOD_DEFAULT);
@@ -193,9 +196,19 @@ public:
 
     /**
      * This function is used to generate names for instances.
-     * To specify a new naming scheme, override this function.
+     * To specify a new naming scheme, use setNameGenerator.
      */
-    virtual std::string getInstanceName(const Instance& instance) const;
+    std::string getInstanceName(const Instance& instance) const;
+
+    /**
+     * Sets the name generator for instance name generation.
+     */
+    void setNameGenerator(const NameGenerator& nameGenerator);
+
+    /**
+     * Returns the name generator for instance name generation.
+     */
+    const NameGenerator& getNameGenerator() const;
 
 private:
 
@@ -207,6 +220,7 @@ private:
     //------------------
     //  Member
     //------------------
+    NameGenerator nameGenerator_;
     std::vector<std::string> items_;
     std::vector<int> inputItemIds_;
     std::vector<Instance> instances_;
