@@ -98,13 +98,15 @@ PyObject* RenderTargetObject_new(PyTypeObject *type, PyObject */*args*/, PyObjec
     RenderTargetObject *self;
     self = (RenderTargetObject *) type->tp_alloc(type, 0);
     if (self != NULL) {
-        self->format = PyUnicode_FromString("");
-        if (self->format == NULL) {
+        self->internalColorFormat = -1;
+        self->internalDepthFormat = -1;
+        self->colorTexture = PyList_New(0);
+        if (self->colorTexture == NULL) {
             Py_DECREF(self);
             return NULL;
         }
-        self->data = PyList_New(0);
-        if (self->data == NULL) {
+        self->depthTexture = PyList_New(0);
+        if (self->depthTexture == NULL) {
             Py_DECREF(self);
             return NULL;
         }
@@ -114,34 +116,36 @@ PyObject* RenderTargetObject_new(PyTypeObject *type, PyObject */*args*/, PyObjec
 }
 
 int RenderTargetObject_init(RenderTargetObject *self, PyObject *args, PyObject *kwds) {
-    static const char *kwlist[] = {"format", "data", "dimension", NULL};
-    PyObject *format = NULL, *data = NULL, *tmp;
+    static const char *kwlist[] = {"internalColorFormat", "internalDepthFormat", "colorTexture", "depthTexture", "width", "height", NULL};
+    PyObject *colorTexture = NULL, *depthTexture = NULL, *tmp;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO(II)", (char **) kwlist,
-                                     &format,
-                                     &data,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiOO(II)", (char **) kwlist,
+                                     &self->internalColorFormat,
+                                     &self->internalDepthFormat,
+                                     &colorTexture,
+                                     &depthTexture,
                                      &self->width, &self->height
                                      ))
         return -1;
 
-    if (format) {
-        tmp = self->format;
-        Py_INCREF(format);
-        self->format = format;
+    if (colorTexture) {
+        tmp = self->colorTexture;
+        Py_INCREF(colorTexture);
+        self->colorTexture = colorTexture;
         Py_XDECREF(tmp);
     }
-    if (data) {
-        tmp = self->data;
-        Py_INCREF(data);
-        self->data = data;
+    if (depthTexture) {
+        tmp = self->depthTexture;
+        Py_INCREF(depthTexture);
+        self->depthTexture = depthTexture;
         Py_XDECREF(tmp);
     }
     return 0;
 }
 
 void RenderTargetObject_dealloc(RenderTargetObject *self) {
-    Py_XDECREF(self->format);
-    Py_XDECREF(self->data);
+    Py_XDECREF(self->colorTexture);
+    Py_XDECREF(self->depthTexture);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 

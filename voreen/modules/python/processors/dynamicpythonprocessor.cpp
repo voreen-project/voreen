@@ -43,7 +43,7 @@ DynamicPythonProcessor::DynamicPythonProcessor()
     //addPortItem(new GeometryPort(Port::INPORT, ""));
     //addPortItem(new GeometryPort(Port::OUTPORT, ""));
     addPortItem(new RenderPort(Port::INPORT, ""));
-    addPortItem(new RenderPort(Port::OUTPORT, ""));
+    addPortItem(new RenderPort(Port::OUTPORT, "")); // Add properties to be able to set format!
 
     // Add properties.
     addProperty(portList_);

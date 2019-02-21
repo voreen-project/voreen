@@ -1079,6 +1079,14 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
 
         const VolumeObject& volumeObject = *((VolumeObject*) object);
 
+        unsigned int numVoxels = volumeObject.dimX * volumeObject.dimY * volumeObject.dimZ;
+        Py_ssize_t size = PyList_Size(volumeObject.data);
+        if(size != numVoxels) {
+            std::string error = "Volume data has invalid size '" + std::to_string(size) + "', must be '" + std::to_string(numVoxels) + "') according to dimensions";
+            PyErr_SetString(PyExc_ValueError, error.c_str());
+            return 0;
+        }
+
         // TODO: handle multiple channels and formats!
         std::string format = PyUnicodeAsString(volumeObject.format);
         VolumeRAM* volume = nullptr;
@@ -1095,10 +1103,64 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
         }
 
         // Set voxel values.
-        for(size_t i=0; i<volume->getNumVoxels(); i++) {
+        bool error = false;
+        for(size_t i=0; i<volume->getNumVoxels() && !error; i++) {
             PyObject* p = PyList_GetItem(volumeObject.data, i);
-            float value = static_cast<float>(PyFloat_AsDouble(p));
-            volume->setVoxelNormalized(value, i);
+
+            // TODO: remove! DEBUG
+            FILE* file = fopen("/home/root_visix/Schreibtisch/object.txt", "w");
+            PyObject_Print(p, file, Py_PRINT_RAW);
+            fclose(file);
+
+            /*
+            PyObject* tupleObj;
+            if (!PyArg_ParseTuple( p, "O!", &PyTuple_Type, &tupleObj)) {
+                error = true;
+                break;
+            }
+
+            if(volume->getNumChannels() != PyTuple_Size(tupleObj)) {
+                error = true;
+                break;
+            }
+
+            for(size_t channel = 0; channel < volume->getNumChannels(); channel++) {
+                PyObject* d = PyList_GetItem(tupleObj, channel);
+                float value = static_cast<float>(PyFloat_AsDouble(d));
+                volume->setVoxelNormalized(value, i, channel);
+            }
+
+            /*/
+            tgt::vec4 value = tgt::vec4::zero;
+            switch(volume->getNumChannels()) {
+            case 1:
+                value.x = static_cast<float>(PyFloat_AsDouble(p));
+                error |= PyErr_Occurred() != nullptr;
+                break;
+            case 2:
+                error |= !PyArg_ParseTuple(p, "ff", &value.x, &value.y);
+                break;
+            case 3:
+                error |= !PyArg_ParseTuple(p, "[fff]", &value.x, &value.y, &value.z);
+                break;
+            case 4:
+                error |= !PyArg_ParseTuple(p, "(ffff)", &value.x, &value.y, &value.z, &value.w);
+                break;
+            default:
+                tgtAssert(false, "unsupported channel count");
+            }
+
+            for(size_t channel = 0; channel < volume->getNumChannels(); channel++) {
+                volume->setVoxelNormalized(value[channel], i, channel);
+            }
+            //*/
+        }
+
+        if(error) {
+            delete volume;
+            std::string message = "Volume contains invalid values.";
+            PyErr_SetString(PyExc_ValueError, message.c_str());
+            return 0;
         }
 
         // Set meta data.
@@ -1107,6 +1169,84 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
 
         Volume* data = new Volume(volume, spacing, offset);
         typedPort->setData(data, true);
+
+        Py_DECREF(object);
+        Py_RETURN_NONE;
+    }
+    else if (RenderPort* typedPort = dynamic_cast<RenderPort*>(port)) {
+        PyObject* object = NULL;
+        if (!PyArg_ParseTuple(args, "ssO!:setPortData", &processorName, &portID, &RenderTargetObjectType, &object))
+            return 0;
+        tgtAssert(object, "parsing RenderTargetObject failed");
+
+        const RenderTargetObject& renderTargetObject = *((RenderTargetObject*) object);
+
+        // TODO: handle multiple channels and formats!
+        RenderTarget* renderTarget = typedPort->getRenderTarget();
+        if(!renderTarget) {
+            std::string error = "Port has no valid RenderTarget";
+            PyErr_SetString(PyExc_ValueError, error.c_str());
+            return 0;
+        }
+
+        unsigned int numPixels = renderTargetObject.width * renderTargetObject.height;
+        Py_ssize_t colorTextureSize = PyList_Size(renderTargetObject.colorTexture);
+        if(colorTextureSize != numPixels) {
+            std::string error = "Color texture data has invalid size '" + std::to_string(colorTextureSize) + "', must be '" + std::to_string(numPixels) + "') according to dimensions";
+            PyErr_SetString(PyExc_ValueError, error.c_str());
+            return 0;
+        }
+
+        Py_ssize_t depthTextureSize = PyList_Size(renderTargetObject.depthTexture);
+        if(depthTextureSize != numPixels) {
+            std::string error = "Depth texture data has invalid size '" + std::to_string(depthTextureSize) + "', must be '" + std::to_string(numPixels) + "') according to dimensions";
+            PyErr_SetString(PyExc_ValueError, error.c_str());
+            return 0;
+        }
+
+        auto textureUpdate = [renderTargetObject, numPixels] (tgt::Texture* texture) {
+            std::vector<float> textureData;
+
+            bool error = false;
+            for(size_t i=0; i<numPixels && !error; i++) {
+                PyObject *p = PyList_GetItem(renderTargetObject.depthTexture, i);
+                tgt::vec4 value;
+                switch (texture->getNumChannels()) {
+                    case 1:
+                        error |= !PyArg_ParseTuple(p, "f", &value.x);
+                        break;
+                    case 2:
+                        error |= !PyArg_ParseTuple(p, "(ff)", &value.x, &value.y);
+                        break;
+                    case 3:
+                        error |= !PyArg_ParseTuple(p, "(fff)", &value.x, &value.y, &value.z);
+                        break;
+                    case 4:
+                        error |= !PyArg_ParseTuple(p, "(ffff)", &value.x, &value.y, &value.z, &value.w);
+                        break;
+                }
+                for (size_t channel = 0; channel < texture->getNumChannels(); channel++) {
+                    textureData.push_back(value[channel]);
+                }
+            }
+
+            if(error)
+                return false;
+
+            texture->setCpuTextureData(reinterpret_cast<GLubyte*>(textureData.data()), true);
+            texture->uploadTexture(); // TODO: Context active here? Otherwise, use GlContextStateGuard!
+
+            return true;
+        };
+
+        bool error = textureUpdate(renderTarget->getColorTexture());
+        if (!error)  textureUpdate(renderTarget->getDepthTexture());
+
+        if(error || PyErr_Occurred()) {
+            std::string error = "Pixel data contains invalid values.";
+            PyErr_SetString(PyExc_ValueError, error.c_str());
+            return 0;
+        }
 
         Py_DECREF(object);
         Py_RETURN_NONE;
@@ -1170,9 +1310,31 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
         volumeObject->format = PyUnicode_FromString(volume->getFormat().c_str());
 
         for(size_t i=0; i<volume->getNumVoxels(); i++) {
-            PyObject* value = PyFloat_FromDouble(volume->getVoxelNormalized(i));
-            tgtAssert(value, "value null");
-            PyList_Append(volumeObject->data, value);
+            tgt::vec4 value = tgt::vec4::zero;
+            for(size_t channel = 0; channel < volume->getNumChannels(); channel++) {
+                value[channel] = volume->getVoxelNormalized(i, channel);
+            }
+
+            PyObject* p = NULL;
+            switch(volume->getNumChannels()) {
+            case 1:
+                p = PyFloat_FromDouble(value.x);
+                break;
+            case 2:
+                p = Py_BuildValue("[ff]", value.x, value.y);
+                break;
+            case 3:
+                p = Py_BuildValue("[fff]", value.x, value.y, value.z);
+                break;
+            case 4:
+                p = Py_BuildValue("[ffff]", value.x, value.y, value.z, value.w);
+                break;
+            default:
+                tgtAssert(false, "unsupported channel count");
+            }
+
+            tgtAssert(p, "value null");
+            PyList_Append(volumeObject->data, p);
         }
 
         volumeObject->dimX = data->getDimensions().x;
@@ -1190,6 +1352,8 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
         result = (PyObject*) volumeObject;
         Py_INCREF(result); // FIXME: memory leak
     }
+
+    // TODO: implement RenderPort!
     /*
     else if (GeometryPort* typedProp = dynamic_cast<GeometryPort*>(port))
         result = ...

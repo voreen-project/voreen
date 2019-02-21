@@ -38,6 +38,7 @@ namespace voreen {
 typedef struct {
     PyObject_HEAD
     PyObject* format;
+    //unsigned int numChannels;
     PyObject* data;
     unsigned int dimX, dimY, dimZ;
     float spacingX, spacingY, spacingZ;
@@ -50,7 +51,8 @@ typedef struct {
  * The following struct defines the python equivalents the members of the VolumeObject struct.
  */
 static PyMemberDef VolumeObject_members[] = {
-    {(char*)"format",      T_OBJECT_EX,    offsetof(VolumeObject, format),     0, (char*)"format"     },
+    {(char*)"format",      T_OBJECT_EX,    offsetof(VolumeObject, format),     0, (char*)"Format: (Vector(2|3|4))?(float | double | u?int(8|16|32|64))" },
+    //{(char*)"numChannels", T_OBJECT_EX,    offsetof(VolumeObject, numChannels),0, (char*)"Number of Channels [1, 4]"},
     {(char*)"data",        T_OBJECT_EX,    offsetof(VolumeObject, data),       0, (char*)"data"       },
     {(char*)"dimX",        T_UINT,         offsetof(VolumeObject, dimX),       0, (char*)"Dimension X"},
     {(char*)"dimY",        T_UINT,         offsetof(VolumeObject, dimY),       0, (char*)"Dimension Y"},
@@ -142,19 +144,23 @@ static PyTypeObject VolumeObjectType = {
 
 typedef struct {
     PyObject_HEAD
-    PyObject* format;
-    PyObject* data;
+    int internalColorFormat;
+    int internalDepthFormat;
+    PyObject* colorTexture;
+    PyObject* depthTexture;
     unsigned int width, height;
 } RenderTargetObject;
 
 /*
- * The following struct defines the python equivalents the members of the VolumeObject struct.
+ * The following struct defines the python equivalents the members of the RenderTargetObject struct.
  */
 static PyMemberDef RenderTargetObject_members[] = {
-    {(char*)"format",        T_OBJECT_EX,    offsetof(RenderTargetObject, format),  0, (char*)"format"     },
-    {(char*)"data",          T_OBJECT_EX,    offsetof(RenderTargetObject, data),    0, (char*)"data"       },
-    {(char*)"width",         T_UINT,         offsetof(RenderTargetObject, width),   0, (char*)"Width"      },
-    {(char*)"height",        T_UINT,         offsetof(RenderTargetObject, height),  0, (char*)"Height"     },
+    {(char*)"internalColorFormat",  T_OBJECT_EX,    offsetof(RenderTargetObject, internalColorFormat),  0, (char*)"Internal color format"   },
+    {(char*)"internalDepthFormat",  T_OBJECT_EX,    offsetof(RenderTargetObject, internalDepthFormat),  0, (char*)"Internal depth format"   },
+    {(char*)"colorTexture",         T_OBJECT_EX,    offsetof(RenderTargetObject, colorTexture),         0, (char*)"Color Texture data"      },
+    {(char*)"depthTexture",         T_OBJECT_EX,    offsetof(RenderTargetObject, depthTexture),         0, (char*)"Depth Texture data"      },
+    {(char*)"width",                T_UINT,         offsetof(RenderTargetObject, width),                0, (char*)"Width"                   },
+    {(char*)"height",               T_UINT,         offsetof(RenderTargetObject, height),               0, (char*)"Height"                  },
     {NULL}  /* Sentinel */
 };
 
@@ -166,7 +172,7 @@ int RenderTargetObject_init(RenderTargetObject *self, PyObject *args, PyObject *
 void RenderTargetObject_dealloc(RenderTargetObject *self);
 
 /*
- * The following struct defines the python equivalent for a Voreen Volume.
+ * The following struct defines the python equivalent for a Voreen RenderTarget.
  * Currently, the implementation is very rudimentary and only supports:
  *   - format
  *   - data (single channel, float, only!)
