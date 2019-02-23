@@ -192,4 +192,16 @@ void FlowParametrization::process() {
     outport_.setData(flowParametrizationList);
 }
 
+void FlowParametrization::serialize(Serializer& s) const {
+    Processor::serialize(s);
+    s.serialize("flowParameters", flowParameters_);
+}
+
+void FlowParametrization::deserialize(Deserializer& s) {
+    Processor::deserialize(s);
+    s.deserialize("flowParameters", flowParameters_,
+                  XmlSerializationConstants::ITEMNODE,
+                  std::function<FlowParameters()>([]{ return FlowParameters(""); }));
+}
+
 }   // namespace

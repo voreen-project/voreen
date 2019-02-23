@@ -51,6 +51,9 @@ public:
     virtual bool isReady() const;
     virtual void process();
 
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+
 protected:
 
     virtual void adjustPropertiesToInput();

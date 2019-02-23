@@ -70,7 +70,7 @@ private:
     void enqueueSimulations();
     void fetchResults();
     int executeCommand(const std::string& command) const;
-    std::string generateEnqueueScript(const std::string& parametrizationName) const;
+    std::string generateEnqueueScript(const std::string& parametrizationPath) const;
     std::string generateSubmissionScript(const std::string& parametrizationName) const;
 
     GeometryPort geometryDataPort_;

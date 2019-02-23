@@ -163,7 +163,7 @@ void FlowSimulationCluster::enqueueSimulations() {
     //      * all simulations have already been compiled
     //      * the result will be saved to /scratch/tmp/<user>/simulations/<simulation_name>/<run_name>
 
-    std::string simulationPathSource = VoreenApplication::app()->getTemporaryPath("parametrization") + "/";
+    std::string simulationPathSource = VoreenApplication::app()->getTemporaryPath(flowParametrization->getName()) + "/";
     tgt::FileSystem::createDirectoryRecursive(simulationPathSource);
     std::string simulationPathDest = username_.get() + "@" + clusterAddress_.get() + ":" + simulationPath_.get() + "/" +
                                      simulationType_.get() + "/";
@@ -229,13 +229,16 @@ void FlowSimulationCluster::enqueueSimulations() {
     }
 
     // Copy data to cluster.
-    std::string command = "scp -r " + simulationPathSource + " " + simulationPathDest; // TODO: do NOT copy parent folder of simulationPathDest
+    std::string command = "scp -r " + simulationPathSource + " " + simulationPathDest;
     int ret = executeCommand(command);
     if (ret != EXIT_SUCCESS) {
         VoreenApplication::app()->showMessageBox("Error", "Data could not be copied!", true);
         LERROR("Could not fetch results");
         return;
     }
+
+    // Delete local data.
+    tgt::FileSystem::deleteDirectoryRecursive(simulationPathSource);
 
     // Enqueue simulations.
     for(size_t i=0; i<flowParametrization->size(); i++) {
@@ -246,7 +249,9 @@ void FlowSimulationCluster::enqueueSimulations() {
             LERROR("Could not write enqueue script file");
             continue;
         }
-        enqueueScriptFile << generateEnqueueScript(flowParametrization->at(i).getName());
+        std::string localSimulationPath = simulationPath_.get() + "/" + simulationType_.get() + "/" +
+                                          flowParametrization->getName() + "/" + flowParametrization->at(i).getName();
+        enqueueScriptFile << generateEnqueueScript(localSimulationPath);
         enqueueScriptFile.close();
 
         // Enqueue job.
@@ -297,7 +302,7 @@ void FlowSimulationCluster::fetchResults() {
 
         if(!failed.empty()) {
             VoreenApplication::app()->showMessageBox("Error", "Some data could not be fetched. See log for details.", true);
-            LERROR("Could not fetch results of: \n" << strJoin(failed, "\n* "));
+            LERROR("Could not fetch results of: \n* " << strJoin(failed, "\n* "));
         }
     }
     else {
@@ -308,8 +313,8 @@ void FlowSimulationCluster::fetchResults() {
             LERROR("Could not fetch results");
             return;
         }
+        VoreenApplication::app()->showMessageBox("Fetching Done", "Fetching data was successful!");
     }
-    VoreenApplication::app()->showMessageBox("Fetching Done", "Fetching data was successful!");
 
 
 #if 0//#ifdef VRN_MODULE_ENSEMBLEANALYSIS
@@ -407,12 +412,12 @@ int FlowSimulationCluster::executeCommand(const std::string& command) const {
     return pclose(pipe);
 }
 
-std::string FlowSimulationCluster::generateEnqueueScript(const std::string& parametrizationName) const {
+std::string FlowSimulationCluster::generateEnqueueScript(const std::string& parametrizationPath) const {
     std::stringstream script;
 
     script << "#!/bin/bash" << std::endl;
     script << "module add intel/2018a" << std::endl;
-    script << "cd " << simulationPath_.get() << "/" << parametrizationName << std::endl;
+    script << "cd " << parametrizationPath << std::endl;
     script << "sbatch submit.cmd" << std::endl;
 
     return script.str();
@@ -457,7 +462,7 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     script << "#SBATCH --mail-user=" + username_.get() + "@uni-muenster.de" << std::endl;
     script << std::endl;
     script << "# run the application" << std::endl;
-    script << "OMP_NUM_THREADS= " << configCPUsPerTask_.get() << " "
+    script << "OMP_NUM_THREADS=" << configCPUsPerTask_.get() << " "
            << "mpirun ~/" + simulationPath_.get() + "/" + simulationType_.get() + "/" + simulationType_.get() << " "
            << parametrizationName << std::endl;
 
