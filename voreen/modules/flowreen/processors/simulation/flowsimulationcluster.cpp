@@ -65,6 +65,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     , configCPUsPerTask_("configCPUsPerTask", "CPUs per Task", 4, 1, 72)
     , configMemory_("configMemory", "Memory (GB/Node)", 16, 1, 32)
     , configPartition_("configPartition", "Partition")
+    , configTime_("configTime", "Max. Time (x 1/4h)", 1, 1, 4*10)
     , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", VoreenApplication::app()->getTemporaryPath("simulations"), "", FileDialogProperty::DIRECTORY, Processor::VALID)
     , triggerEnqueueSimulations_("triggerEnqueueSimulations", "Enqueue Simulations", Processor::VALID)
     , triggerFetchResults_("triggerFetchResults", "Fetch Results", Processor::VALID)
@@ -86,7 +87,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     simulationPath_.setGroupID("cluster-general");
     addProperty(simulationType_);
     simulationType_.setGroupID("cluster-general");
-    simulationType_.addOption("default", "Default");
+    simulationType_.addOption("default", "default");
     //simulationType_.addOption("steered", "Steered"); // TODO: implement!
     simulationType_.addOption("aorta3d", "aorta3d");
     setPropertyGroupGuiName("cluster-general", "General Cluster Config");
@@ -105,6 +106,8 @@ FlowSimulationCluster::FlowSimulationCluster()
     configPartition_.addOption("normal", "normal");
     configPartition_.addOption("express", "express");
     configPartition_.setGroupID("cluster-resources");
+    addProperty(configTime_);
+    configTime_.setGroupID("cluster-resources");
     setPropertyGroupGuiName("cluster-resources", "Cluster Resource Config");
 
     addProperty(simulationResults_);
@@ -427,6 +430,11 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     tgtAssert(parameterPort_.hasData(), "no data");
     std::stringstream script;
 
+    int quarters = configTime_.get();
+    int minutes = quarters * 15;
+    int hours = minutes / 60;
+    minutes = minutes % 60;
+
     script << "#!/bin/bash" << std::endl;
     script << std::endl;
     script << "# set the number of nodes" << std::endl;
@@ -447,7 +455,7 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     script << "#SBATCH --partition " << configPartition_.get() << std::endl;
     script << std::endl;
     script << "# set max wallclock time" << std::endl;
-    script << "#SBATCH --time=00:20:00" << std::endl;
+    script << "#SBATCH --time=" << std::setw(2) << std::setfill('0') << hours << ":" << std::setw(2) << std::setfill('0') << minutes << ":00" << std::endl;
     script << std::endl;
     script << "# set name of job" << std::endl;
     script << "#SBATCH --job-name=" + parameterPort_.getData()->getName() + "-" + parametrizationName << std::endl;
@@ -463,8 +471,8 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     script << std::endl;
     script << "# run the application" << std::endl;
     script << "OMP_NUM_THREADS=" << configCPUsPerTask_.get() << " "
-           << "mpirun ~/" + simulationPath_.get() + "/" + simulationType_.get() + "/" + simulationType_.get() << " "
-           << parametrizationName << std::endl;
+           << "mpirun " + simulationPath_.get() + "/" + simulationType_.get() + "/" + simulationType_.get() << " "
+           << parameterPort_.getData()->getName() << "" << parametrizationName << std::endl;
 
     return script.str();
 }
