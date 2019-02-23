@@ -472,7 +472,7 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     script << "# run the application" << std::endl;
     script << "OMP_NUM_THREADS=" << configCPUsPerTask_.get() << " "
            << "mpirun " + simulationPath_.get() + "/" + simulationType_.get() + "/" + simulationType_.get() << " "
-           << parameterPort_.getData()->getName() << "" << parametrizationName << std::endl;
+           << parameterPort_.getData()->getName() << " " << parametrizationName << std::endl;
 
     return script.str();
 }

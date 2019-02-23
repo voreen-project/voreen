@@ -77,6 +77,7 @@ private:
     StringProperty ensembleName_;
     FloatProperty simulationTime_;
     FloatProperty temporalResolution_;
+    IntProperty spatialResolution_;
 
     StringProperty parametrizationName_;
     FloatProperty characteristicLength_;

@@ -136,6 +136,7 @@ FlowParametrizationList::FlowParametrizationList(const std::string& name)
     : name_(name)
     , simulationTime_(0.0f)
     , temporalResolution_(0.0f)
+    , spatialResolution_(0)
 {
 }
 
@@ -143,6 +144,7 @@ FlowParametrizationList::FlowParametrizationList(const FlowParametrizationList& 
     : name_(origin.name_)
     , simulationTime_(origin.simulationTime_)
     , temporalResolution_(origin.temporalResolution_)
+    , spatialResolution_(origin.spatialResolution_)
 {
 }
 
@@ -166,6 +168,15 @@ float FlowParametrizationList::getTemporalResolution() const {
 void FlowParametrizationList::setTemporalResolution(float temporalResolution) {
     notifyPendingDataInvalidation();
     temporalResolution_ = temporalResolution;
+}
+
+int FlowParametrizationList::getSpatialResolution() const {
+    return spatialResolution_;
+}
+
+void FlowParametrizationList::setSpatialResolution(int spatialResolution) {
+    notifyPendingDataInvalidation();
+    spatialResolution_ = spatialResolution;
 }
 
 void FlowParametrizationList::addFlowIndicator(const FlowIndicator& flowIndicator) {
@@ -203,21 +214,24 @@ std::string FlowParametrizationList::toCSVString(size_t param) const {
     output << ", " << simulationTime_;
     output << ", " << temporalResolution_;
 
-    /*
-    output << ", " << flowParametrizations_.size();
-    for(const FlowParameters& flowParameters : flowParametrizations_) {
-        output << ", " << flowParameters.getCharacteristicLength();
-        output << ", " << flowParameters.getCharacteristicVelocity();
-        output << ", " << flowParameters.getViscosity();
-        output << ", " << flowParameters.getDensity();
-        output << ", " << flowParameters.getBouzidi();
+    if(param == ALL_PARAMETRIZATIONS) {
+        output << ", " << flowParametrizations_.size();
+        for (const FlowParameters& flowParameters : flowParametrizations_) {
+            output << ", " << flowParameters.getCharacteristicLength();
+            output << ", " << flowParameters.getCharacteristicVelocity();
+            output << ", " << flowParameters.getViscosity();
+            output << ", " << flowParameters.getDensity();
+            output << ", " << flowParameters.getBouzidi();
+        }
     }
-    */
-    output << ", " << flowParametrizations_[param].getCharacteristicLength();
-    output << ", " << flowParametrizations_[param].getCharacteristicVelocity();
-    output << ", " << flowParametrizations_[param].getViscosity();
-    output << ", " << flowParametrizations_[param].getDensity();
-    output << ", " << flowParametrizations_[param].getBouzidi();
+    else {
+        output << ", " << 1;
+        output << ", " << flowParametrizations_[param].getCharacteristicLength();
+        output << ", " << flowParametrizations_[param].getCharacteristicVelocity();
+        output << ", " << flowParametrizations_[param].getViscosity();
+        output << ", " << flowParametrizations_[param].getDensity();
+        output << ", " << flowParametrizations_[param].getBouzidi();
+    }
 
     output << ", " << flowIndicators_.size();
     for(const FlowIndicator& flowIndicator : flowIndicators_) {
@@ -256,6 +270,7 @@ void FlowParametrizationList::deserialize(Deserializer& s) {
     s.deserialize("name", name_);
     s.deserialize("simulationTime", simulationTime_);
     s.deserialize("temporalResolution", temporalResolution_);
+    s.deserialize("spatialResolution", spatialResolution_);
     s.deserialize("flowIndicators", flowIndicators_);
     s.deserialize("flowParametrizations", flowParametrizations_,
                   XmlSerializationConstants::ITEMNODE,
@@ -266,6 +281,7 @@ void FlowParametrizationList::serializeInternal(Serializer& s, size_t param) con
     s.serialize("name", name_);
     s.serialize("simulationTime", simulationTime_);
     s.serialize("temporalResolution", temporalResolution_);
+    s.serialize("spatialResolution", spatialResolution_);
     s.serialize("flowIndicators", flowIndicators_);
     if(param == ALL_PARAMETRIZATIONS) {
         s.serialize("flowParametrizations", flowParametrizations_);

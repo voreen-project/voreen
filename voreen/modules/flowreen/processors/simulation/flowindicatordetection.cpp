@@ -36,6 +36,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , ensembleName_("ensembleName", "Ensemble Name", "test_ensemble")
     , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 10.0f)
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 30.0f)
+    , spatialResolution_("spatialResolution", "Spatial Resolution", 128, 32, 1024)
     , flowDirection_("flowDirection", "Flow Direction")
     , radius_("radius", "Radius", 1.0f, 0.0f, 10.0f)
     , flowIndicatorTable_("flowIndicators", "Flow Indicators", 4)
@@ -50,6 +51,8 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         simulationTime_.setGroupID("ensemble");
     addProperty(temporalResolution_);
         temporalResolution_.setGroupID("ensemble");
+    addProperty(spatialResolution_);
+        spatialResolution_.setGroupID("ensemble");
     setPropertyGroupGuiName("ensemble", "Ensemble");
 
     addProperty(flowDirection_);
@@ -84,6 +87,7 @@ void FlowIndicatorDetection::process() {
     FlowParametrizationList* flowParametrizationList = new FlowParametrizationList(ensembleName_.get());
     flowParametrizationList->setSimulationTime(simulationTime_.get());
     flowParametrizationList->setTemporalResolution(temporalResolution_.get());
+    flowParametrizationList->setSpatialResolution(spatialResolution_.get());
 
     for(const FlowIndicator& indicator : flowIndicators_) {
         flowParametrizationList->addFlowIndicator(indicator);

@@ -36,6 +36,7 @@ FlowParametrization::FlowParametrization()
     , parametrizationName_("parametrizationName", "Parametrization Name", "test_parametrization")
     , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 10.0f)
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 30.0f)
+    , spatialResolution_("spatialResolution", "Spatial Resolution", 128, 32, 1024)
     , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 22.46f, 1.0f, 100.0f)
     , viscosity_("viscosity", "Viscosity (e-6 m^2/s)", 3.5, 3, 4)
     , density_("density", "Density (kg/m^3)", 1000.0f, 1000.0f, 1100.0f)
@@ -57,6 +58,8 @@ FlowParametrization::FlowParametrization()
         simulationTime_.setGroupID("ensemble");
     addProperty(temporalResolution_);
         temporalResolution_.setGroupID("ensemble");
+    addProperty(spatialResolution_);
+        spatialResolution_.setGroupID("ensemble");
     setPropertyGroupGuiName("ensemble", "Ensemble");
 
     addProperty(parametrizationName_);
@@ -183,6 +186,7 @@ void FlowParametrization::process() {
         flowParametrizationList = new FlowParametrizationList(ensembleName_.get());
         flowParametrizationList->setSimulationTime(simulationTime_.get());
         flowParametrizationList->setTemporalResolution(temporalResolution_.get());
+        flowParametrizationList->setSpatialResolution(spatialResolution_.get());
     }
 
     for (const FlowParameters &flowParameters : flowParameters_) {

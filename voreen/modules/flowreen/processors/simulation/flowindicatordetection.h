@@ -75,6 +75,7 @@ private:
     StringProperty ensembleName_;
     FloatProperty simulationTime_;
     FloatProperty temporalResolution_;
+    IntProperty spatialResolution_;
 
     OptionProperty<FlowDirection> flowDirection_;
     FloatProperty radius_;

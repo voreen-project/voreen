@@ -120,6 +120,9 @@ public:
     float getTemporalResolution() const;
     void setTemporalResolution(float temporalResolution);
 
+    int getSpatialResolution() const;
+    void setSpatialResolution(int spatialResolution);
+
     void addFlowIndicator(const FlowIndicator& flowIndicator);
     const std::vector<FlowIndicator>& getFlowIndicators() const;
 
@@ -146,9 +149,10 @@ private:
     // Ensemble name.
     std::string name_;
 
-    // Time specification.
+    // Configuration.
     float simulationTime_;
     float temporalResolution_;
+    int spatialResolution_;
 
     // Flow indication (in-/out flow).
     std::vector<FlowIndicator> flowIndicators_;
