@@ -32,6 +32,31 @@
 
 namespace voreen {
 
+FlowIndicator::FlowIndicator()
+    : direction_(NONE)
+    , center_(tgt::vec3::zero)
+    , normal_(tgt::vec3::zero)
+    , radius_(0.0f)
+{
+}
+
+void FlowIndicator::serialize(Serializer& s) const {
+    s.serialize("direction", direction_);
+    s.serialize("center", center_);
+    s.serialize("normal", normal_);
+    s.serialize("radius", radius_);
+}
+
+void FlowIndicator::deserialize(Deserializer& s) {
+    int direction = -1;
+    s.deserialize("direction", direction);
+    direction_ = static_cast<FlowDirection>(direction);
+    s.deserialize("center", center_);
+    s.deserialize("normal", normal_);
+    s.deserialize("radius", radius_);
+}
+
+
 FlowParameters::FlowParameters(const std::string& name)
     : name_(name)
     , characteristicLength_(0.0f)
@@ -51,6 +76,14 @@ float FlowParameters::getCharacteristicLength() const {
 
 void FlowParameters::setCharacteristicLength(float characteristicLength) {
     characteristicLength_ = characteristicLength;
+}
+
+float FlowParameters::getCharacteristicVelocity() const {
+    return characteristicVelocity_;
+}
+
+void FlowParameters::setCharacteristicVelocity(float characteristicVelocity) {
+    characteristicVelocity_ = characteristicVelocity;
 }
 
 float FlowParameters::getViscosity() const {
@@ -80,6 +113,7 @@ void FlowParameters::setBouzidi(bool bouzidi) {
 void FlowParameters::serialize(Serializer& s) const {
     s.serialize("name", name_);
     s.serialize("characteristicLength", characteristicLength_);
+    s.serialize("characteristicVelocity", characteristicVelocity_);
     s.serialize("viscosity", viscosity_);
     s.serialize("density", density_);
     s.serialize("bouzidi", bouzidi_);
@@ -88,6 +122,7 @@ void FlowParameters::serialize(Serializer& s) const {
 void FlowParameters::deserialize(Deserializer& s) {
     s.deserialize("name", name_);
     s.deserialize("characteristicLength", characteristicLength_);
+    s.deserialize("characteristicVelocity", characteristicVelocity_);
     s.deserialize("viscosity", viscosity_);
     s.deserialize("density", density_);
     s.deserialize("bouzidi", bouzidi_);
@@ -95,6 +130,7 @@ void FlowParameters::deserialize(Deserializer& s) {
 
 
 const int FlowParametrizationList::VERSION = 1;
+const size_t FlowParametrizationList::ALL_PARAMETRIZATIONS = static_cast<size_t>(-1);
 
 FlowParametrizationList::FlowParametrizationList(const std::string& name)
     : name_(name)
@@ -160,20 +196,28 @@ const FlowParameters& FlowParametrizationList::at(size_t index) const {
     return flowParametrizations_.at(index);
 }
 
-std::string FlowParametrizationList::toCSVString() const {
+std::string FlowParametrizationList::toCSVString(size_t param) const {
     std::stringstream output;
 
     output << VERSION;
     output << ", " << simulationTime_;
     output << ", " << temporalResolution_;
 
+    /*
     output << ", " << flowParametrizations_.size();
     for(const FlowParameters& flowParameters : flowParametrizations_) {
         output << ", " << flowParameters.getCharacteristicLength();
+        output << ", " << flowParameters.getCharacteristicVelocity();
         output << ", " << flowParameters.getViscosity();
-        output << ", "<< flowParameters.getDensity();
-        output << ", "<< flowParameters.getBouzidi();
+        output << ", " << flowParameters.getDensity();
+        output << ", " << flowParameters.getBouzidi();
     }
+    */
+    output << ", " << flowParametrizations_[param].getCharacteristicLength();
+    output << ", " << flowParametrizations_[param].getCharacteristicVelocity();
+    output << ", " << flowParametrizations_[param].getViscosity();
+    output << ", " << flowParametrizations_[param].getDensity();
+    output << ", " << flowParametrizations_[param].getBouzidi();
 
     output << ", " << flowIndicators_.size();
     for(const FlowIndicator& flowIndicator : flowIndicators_) {
@@ -186,31 +230,49 @@ std::string FlowParametrizationList::toCSVString() const {
     return output.str();
 }
 
-std::string FlowParametrizationList::toJSONString() const {
+std::string FlowParametrizationList::toJSONString(size_t param) const {
     std::stringstream stream;
     JsonSerializer json;
     Serializer s(json);
-    serialize(s);
+    serializeInternal(s, param);
     json.write(stream, true, false);
     return stream.str();
 }
 
+std::string FlowParametrizationList::toXMLString(size_t param) const {
+    std::stringstream stream;
+    XmlSerializer xml;
+    Serializer s(xml);
+    serializeInternal(s, param);
+    xml.write(stream);
+    return stream.str();
+}
+
 void FlowParametrizationList::serialize(Serializer& s) const {
-    s.serialize("name", name_);
-    s.serialize("simulationTime", simulationTime_);
-    s.serialize("temporalResolution", temporalResolution_);
-    s.serializeBinaryBlob("flowIndicators", flowIndicators_);
-    s.serialize("flowParametrizations", flowParametrizations_);
+    serializeInternal(s, ALL_PARAMETRIZATIONS);
 }
 
 void FlowParametrizationList::deserialize(Deserializer& s) {
     s.deserialize("name", name_);
     s.deserialize("simulationTime", simulationTime_);
     s.deserialize("temporalResolution", temporalResolution_);
-    s.deserializeBinaryBlob("flowIndicators", flowIndicators_);
+    s.deserialize("flowIndicators", flowIndicators_);
     s.deserialize("flowParametrizations", flowParametrizations_,
                   XmlSerializationConstants::ITEMNODE,
                   std::function<FlowParameters()>([]{ return FlowParameters(""); }));
+}
+
+void FlowParametrizationList::serializeInternal(Serializer& s, size_t param) const {
+    s.serialize("name", name_);
+    s.serialize("simulationTime", simulationTime_);
+    s.serialize("temporalResolution", temporalResolution_);
+    s.serialize("flowIndicators", flowIndicators_);
+    if(param == ALL_PARAMETRIZATIONS) {
+        s.serialize("flowParametrizations", flowParametrizations_);
+    }
+    else {
+        s.serialize("flowParameters", flowParametrizations_[param]);
+    }
 }
 
 }   // namespace

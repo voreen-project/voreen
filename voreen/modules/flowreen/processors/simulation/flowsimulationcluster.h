@@ -36,6 +36,8 @@
 #endif
 
 #include "voreen/core/properties/stringproperty.h"
+#include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/progressproperty.h"
 
 #include "modules/hdf5/io/hdf5filevolume.h"
 
@@ -65,10 +67,11 @@ protected:
 
 private:
 
-    // TODO: Create submit.cmd script in this processor and make setup configurable via UI.
-
+    void enqueueSimulations();
     void fetchResults();
     int executeCommand(const std::string& command) const;
+    std::string generateEnqueueScript(const std::string& parametrizationName) const;
+    std::string generateSubmissionScript(const std::string& parametrizationName) const;
 
     GeometryPort geometryDataPort_;
     VolumeListPort measuredDataPort_; // TODO: Currently ignored.
@@ -79,8 +82,20 @@ private:
 
     StringProperty username_;
     StringProperty clusterAddress_;
+    StringProperty simulationPath_;
+    StringOptionProperty simulationType_;
+
+    IntProperty configNodes_;
+    IntProperty configTasks_;
+    IntProperty configTasksPerNode_;
+    IntProperty configCPUsPerTask_;
+    IntProperty configMemory_;
+    StringOptionProperty configPartition_;
+
     FileDialogProperty simulationResults_;
+    ButtonProperty triggerEnqueueSimulations_;
     ButtonProperty triggerFetchResults_;
+    ProgressProperty progress_;
 
     static const std::string loggerCat_;
 };

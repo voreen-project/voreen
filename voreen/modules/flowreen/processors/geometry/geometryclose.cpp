@@ -35,8 +35,8 @@ const std::string GeometryClose::loggerCat_("voreen.flowreen.GeometryClose");
 
 GeometryClose::GeometryClose()
     : Processor()
-    , inport_(Port::INPORT, "geometry.geometry", "Geometry Input")
-    , outport_(Port::OUTPORT, "geometry.clippedgeometry", "Clipped Geometry Output")
+    , inport_(Port::INPORT, "geometry.input", "Geometry Input")
+    , outport_(Port::OUTPORT, "geometry.output", "Geometry Output")
     , enabled_("enabled", "Enable", true)
 {
     addPort(inport_);

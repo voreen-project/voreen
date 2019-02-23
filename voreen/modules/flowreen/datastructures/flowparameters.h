@@ -42,11 +42,16 @@ enum FlowDirection {
 };
 
 // Indicates flux through an arbitrary, circle-shaped area.
-struct VRN_CORE_API FlowIndicator {
-    FlowDirection   direction_      { NONE };
-    tgt::vec3       center_         { tgt::vec3::zero };
-    tgt::vec3       normal_         { tgt::vec3::zero };
-    float           radius_         { 0.0f };
+struct VRN_CORE_API FlowIndicator : public Serializable {
+    FlowDirection   direction_;
+    tgt::vec3       center_;
+    tgt::vec3       normal_;
+    float           radius_;
+
+    FlowIndicator();
+
+    virtual void serialize(Serializer& s) const override;
+    virtual void deserialize(Deserializer& s) override;
 };
 
 /**
@@ -65,6 +70,9 @@ public:
 
     float getCharacteristicLength() const;
     void setCharacteristicLength(float characteristicLength);
+
+    float getCharacteristicVelocity() const;
+    void setCharacteristicVelocity(float characteristicVelocity);
 
     float getViscosity() const;
     void setViscosity(float viscosity);
@@ -85,6 +93,7 @@ private:
 
     // All other relevant parameters.
     float characteristicLength_;
+    float characteristicVelocity_;
     float viscosity_;
     float density_;
     bool bouzidi_;
@@ -96,6 +105,7 @@ private:
 class VRN_CORE_API FlowParametrizationList : public DataInvalidationObservable, public Serializable {
 
     static const int VERSION;
+    static const size_t ALL_PARAMETRIZATIONS;
 
 public:
 
@@ -121,13 +131,17 @@ public:
     size_t size() const;
     const FlowParameters& at(size_t index) const;
 
-    /** Used to save as CSV file. */
-    std::string toCSVString() const;
-    std::string toJSONString() const;
+    /** Used to export parametrization file. */
+    std::string toCSVString(size_t param = ALL_PARAMETRIZATIONS) const;
+    std::string toJSONString(size_t param = ALL_PARAMETRIZATIONS) const;
+    std::string toXMLString(size_t param = ALL_PARAMETRIZATIONS) const;
+
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
 
 private:
+
+    void serializeInternal(Serializer& s, size_t param) const;
 
     // Ensemble name.
     std::string name_;
