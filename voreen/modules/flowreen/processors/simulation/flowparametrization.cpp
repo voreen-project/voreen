@@ -38,6 +38,7 @@ FlowParametrization::FlowParametrization()
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 30.0f)
     , spatialResolution_("spatialResolution", "Spatial Resolution", 128, 32, 1024)
     , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 22.46f, 1.0f, 100.0f)
+    , characteristicVelocity_("characteristicVelocity", "Characteristic Velocity (mm/s)", 10.0f, 1.0f, 100.0f)
     , viscosity_("viscosity", "Viscosity (e-6 m^2/s)", 3.5, 3, 4)
     , density_("density", "Density (kg/m^3)", 1000.0f, 1000.0f, 1100.0f)
     , bouzidi_("bounzidi", "Bounzidi", true)
@@ -46,7 +47,7 @@ FlowParametrization::FlowParametrization()
     , clearParametrizations_("clearParametrizations", "Clear Parametrizations")
     , autoGenerateParametrizations_("autoGenerateParametrizations", "auto-generate parametrizations")
     , ensembleName_("ensembleName", "Ensemble Name", "test_ensemble")
-    , parametrizations_("parametrizations", "Parametrizations", 5, Processor::VALID)
+    , parametrizations_("parametrizations", "Parametrizations", 6, Processor::VALID)
 
 {
     addPort(inport_);
@@ -66,6 +67,8 @@ FlowParametrization::FlowParametrization()
         parametrizationName_.setGroupID("parameters");
     addProperty(characteristicLength_);
         characteristicLength_.setGroupID("parameters");
+    addProperty(characteristicVelocity_);
+        characteristicVelocity_.setGroupID("parameters");
     addProperty(viscosity_);
         viscosity_.setGroupID("parameters");
     addProperty(density_);
@@ -87,9 +90,10 @@ FlowParametrization::FlowParametrization()
     addProperty(parametrizations_);
     parametrizations_.setColumnLabel(0, "Name");
     parametrizations_.setColumnLabel(1, "Char. Len.");
-    parametrizations_.setColumnLabel(2, "Viscosity");
-    parametrizations_.setColumnLabel(3, "Density");
-    parametrizations_.setColumnLabel(4, "Bouzidi");
+    parametrizations_.setColumnLabel(2, "Char. Vel.");
+    parametrizations_.setColumnLabel(3, "Viscosity");
+    parametrizations_.setColumnLabel(4, "Density");
+    parametrizations_.setColumnLabel(5, "Bouzidi");
 }
 
 void FlowParametrization::addParametrization() {
@@ -104,17 +108,19 @@ void FlowParametrization::addParametrization() {
 
     FlowParameters parameters(parametrizationName_.get());
     parameters.setCharacteristicLength(characteristicLength_.get());
+    parameters.setCharacteristicVelocity(characteristicVelocity_.get());
     parameters.setViscosity(viscosity_.get());
     parameters.setDensity(density_.get());
     parameters.setBouzidi(bouzidi_.get());
     flowParameters_.push_back(parameters);
 
-    std::vector <std::string> row(5);
+    std::vector <std::string> row(6);
     row[0] = parameters.getName();
     row[1] = std::to_string(parameters.getCharacteristicLength());
-    row[2] = std::to_string(parameters.getViscosity());
-    row[3] = std::to_string(parameters.getDensity());
-    row[4] = std::to_string(parameters.getBouzidi());
+    row[2] = std::to_string(parameters.getCharacteristicVelocity());
+    row[3] = std::to_string(parameters.getViscosity());
+    row[4] = std::to_string(parameters.getDensity());
+    row[5] = std::to_string(parameters.getBouzidi());
     parametrizations_.addRow(row);
 }
 void FlowParametrization::removeParametrization() {
@@ -138,28 +144,35 @@ void FlowParametrization::autoGenerateEnsemble() {
     std::vector<float> characteristicLengths;
     for(size_t i=0; i<split; i++) {
         float characteristicLength = characteristicLength_.getMinValue() + (characteristicLength_.getMaxValue() - characteristicLength_.getMinValue()) * i / split;
-        for(size_t j=0; j<split; j++) {
-            float viscosity = viscosity_.getMinValue() + (viscosity_.getMaxValue() - viscosity_.getMinValue()) * j / split;
-            for(size_t k=0; k<split; k++) {
-                float density = density_.getMinValue() + (density_.getMaxValue() - density_.getMinValue()) * k / split;
+        for(size_t l=0; l<split; l++) {
+            float characteristicVelocity = characteristicVelocity_.getMinValue() + (characteristicVelocity_.getMaxValue() - characteristicVelocity_.getMinValue()) * l / split;
+            for(size_t j=0; j<split; j++) {
+                float viscosity = viscosity_.getMinValue() + (viscosity_.getMaxValue() - viscosity_.getMinValue()) * j / split;
+                for (size_t k = 0; k < split; k++) {
+                    float density = density_.getMinValue() + (density_.getMaxValue() - density_.getMinValue()) * k / split;
 
-                for(bool bouzidi : {true, false}) {
-                    std::string name = "run_l=" + std::to_string(characteristicLength) + "_v=" + std::to_string(viscosity) + "_d=" + std::to_string(density) + "_b=" + std::to_string(bouzidi);
-                    FlowParameters parameters(name);
+                    for (bool bouzidi : {true, false}) {
+                        std::string name =
+                                "run_len=" + std::to_string(characteristicLength) + "_vel=" + std::to_string(characteristicVelocity) +
+                                "_v=" + std::to_string(viscosity) + "_d=" + std::to_string(density) + "_b=" + std::to_string(bouzidi);
+                        FlowParameters parameters(name);
 
-                    parameters.setCharacteristicLength(characteristicLength);
-                    parameters.setViscosity(viscosity);
-                    parameters.setDensity(density);
-                    parameters.setBouzidi(bouzidi);
-                    flowParameters_.push_back(parameters);
+                        parameters.setCharacteristicLength(characteristicLength);
+                        parameters.setCharacteristicVelocity(characteristicVelocity);
+                        parameters.setViscosity(viscosity);
+                        parameters.setDensity(density);
+                        parameters.setBouzidi(bouzidi);
+                        flowParameters_.push_back(parameters);
 
-                    std::vector <std::string> row(5);
-                    row[0] = parameters.getName();
-                    row[1] = std::to_string(parameters.getCharacteristicLength());
-                    row[2] = std::to_string(parameters.getViscosity());
-                    row[3] = std::to_string(parameters.getDensity());
-                    row[4] = std::to_string(parameters.getBouzidi());
-                    parametrizations_.addRow(row);
+                        std::vector<std::string> row(6);
+                        row[0] = parameters.getName();
+                        row[1] = std::to_string(parameters.getCharacteristicLength());
+                        row[2] = std::to_string(parameters.getCharacteristicVelocity());
+                        row[3] = std::to_string(parameters.getViscosity());
+                        row[4] = std::to_string(parameters.getDensity());
+                        row[5] = std::to_string(parameters.getBouzidi());
+                        parametrizations_.addRow(row);
+                    }
                 }
             }
         }

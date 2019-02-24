@@ -71,7 +71,7 @@ T characteristicLength = 0.0;
 T characteristicVelocity = 0.0;
 T viscosity = 0.0;
 T density = 0.0;
-int bouzidiOn = 0;
+bool bouzidiOn = false;
 //////////////////////////////////////
 
 
@@ -280,38 +280,51 @@ int main(int argc, char* argv[]) {
     std::cout << "Ensemble:" << ensemble << std::endl;
     std::cout << "Run: " << run << std::endl;
 
+    // === 0th Step: Create output directory.
+    __mode_t mode = ACCESSPERMS;
+    std::string output = "/scratch/tmp/s_leis06/simulations/";
+    output += simulation + "/";
+    mkdir(output.c_str(), mode);
+    output += ensemble + "/";
+    mkdir(output.c_str(), mode);
+    output += run + "/";
+    if(mkdir(output.c_str(), mode) != 0) {
+        std::cout << "Could not create output directory!" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    // === 1st Step: Initialization ===
+    singleton::directories().setOutputDir(output.c_str());
+    olbInit(&argc, &argv);
+    OstreamManager clout(std::cout, "main");
+    // don't display messages from every single mpi process
+    clout.setMultiOutput(false);
+
     XMLreader config("config.xml");
-    config.print(0); // TODO: remove!
-    config["simulationTime"].read(simulationTime);
-    config["temporalResolution"].read(temporalResolution);
-    config["spatialResolution"].read(spatialResolution);
+    simulationTime = std::atof(config["simulationTime"].getAttribute("value").c_str());
+    temporalResolution = std::atof(config["temporalResolution"].getAttribute("value").c_str());
+    spatialResolution = std::atoi(config["spatialResolution"].getAttribute("value").c_str());
 
     XMLreader parameters = config["flowParameters"];
-    parameters["characteristicLength"].read(characteristicLength);
-    parameters["characteristicVelocity"].read(characteristicVelocity);
-    parameters["viscosity"].read(viscosity);
-    parameters["density"].read(density);
-    parameters["bouzidi"].read(bouzidiOn);
+    characteristicLength = std::atof(parameters["characteristicLength"].getAttribute("value").c_str());
+    characteristicVelocity = std::atof(parameters["characteristicVelocity"].getAttribute("value").c_str());
+    viscosity = std::atof(parameters["viscosity"].getAttribute("value").c_str());
+    density = std::atof(parameters["density"].getAttribute("value").c_str());
+    bouzidiOn = parameters["bouzidi"].getAttribute("value") == "true";
 
     XMLreader indicators = config["flowIndicators"];
     for(auto iter : indicators) {
         FlowIndicator indicator;
-        int direction = -1;
-        (*iter)["direction"].read(direction);
-        indicator.direction_ = static_cast<FlowDirection>(direction);
-        (*iter)["radius"].read(indicator.radius_);
-        // TODO!!!!!
-
+        indicator.direction_ = static_cast<FlowDirection>(std::atoi((*iter)["direction"].getAttribute("value").c_str()));
+        indicator.center_[0] = std::atof((*iter)["center"].getAttribute("x").c_str());
+        indicator.center_[1] = std::atof((*iter)["center"].getAttribute("y").c_str());
+        indicator.center_[2] = std::atof((*iter)["center"].getAttribute("z").c_str());
+        indicator.normal_[0] = std::atof((*iter)["normal"].getAttribute("x").c_str());
+        indicator.normal_[1] = std::atof((*iter)["normal"].getAttribute("y").c_str());
+        indicator.normal_[2] = std::atof((*iter)["normal"].getAttribute("z").c_str());
+        indicator.radius_ = std::atof((*iter)["radius"].getAttribute("value").c_str());
         flowIndicators.push_back(indicator);
     }
-
-    // === 1st Step: Initialization ===
-    std::string output = "/scratch/tmp/s_leis06/simulations/" + simulation + "/" + ensemble + "/" + run + "/";
-    olbInit(&argc, &argv);
-    singleton::directories().setOutputDir(output.c_str());
-    OstreamManager clout(std::cout, "main");
-    // display messages from every single mpi process
-    //clout.setMultiOutput(true);
 
     const int N = spatialResolution;
     UnitConverter<T, DESCRIPTOR> converter(
@@ -331,7 +344,7 @@ int main(int argc, char* argv[]) {
 
     // Instantiation of the STLreader class
     // file name, voxel size in meter, stl unit in meter, outer voxel no., inner voxel no.
-    std::string geometryFileName = "./" + ensemble + "/" + "geometry/geometry.stl";
+    std::string geometryFileName = "../geometry/geometry.stl";
     STLreader<T> stlReader(geometryFileName.c_str(), converter.getConversionFactorLength(), 1.0f, 0, true);
     IndicatorLayer3D<T> extendedDomain(stlReader, converter.getConversionFactorLength());
 

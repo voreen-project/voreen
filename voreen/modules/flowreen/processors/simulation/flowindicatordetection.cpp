@@ -115,10 +115,11 @@ void FlowIndicatorDetection::onConfigChange() {
 
 void FlowIndicatorDetection::onVesselGraphChange() {
 
+    flowIndicators_.clear();
+
     const VesselGraph* vesselGraph = vesselGraphPort_.getData();
     if(!vesselGraph) {
         flowParametrizationPort_.clear();
-        flowIndicators_.clear();
         buildTable();
         return;
     }

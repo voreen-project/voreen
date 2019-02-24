@@ -81,6 +81,7 @@ private:
 
     StringProperty parametrizationName_;
     FloatProperty characteristicLength_;
+    FloatProperty characteristicVelocity_;
     FloatProperty viscosity_;
     FloatProperty density_;
     BoolProperty  bouzidi_;

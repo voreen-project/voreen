@@ -49,6 +49,7 @@ std::string FlowParametrizationPort::getContentDescription() const {
     if(hasData()) {
         strstr << std::endl << "Name: " << getData()->getName();
         strstr << std::endl << "Members: " << getData()->getFlowParametrizations().size();
+        strstr << std::endl << "Indicators: " << getData()->getFlowIndicators().size();
     }
     return strstr.str();
 }
@@ -59,6 +60,7 @@ std::string FlowParametrizationPort::getContentDescriptionHTML() const {
     if(hasData()) {
         strstr << "<br>" << "Name: " << getData()->getName();
         strstr << "<br>" << "Members: " << getData()->getFlowParametrizations().size();
+        strstr << "<br>" << "Indicators: " << getData()->getFlowIndicators().size();
     }
     return strstr.str();
 }

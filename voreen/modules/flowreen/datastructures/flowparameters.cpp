@@ -60,6 +60,7 @@ void FlowIndicator::deserialize(Deserializer& s) {
 FlowParameters::FlowParameters(const std::string& name)
     : name_(name)
     , characteristicLength_(0.0f)
+    , characteristicVelocity_(0.0f)
     , viscosity_(0.0f)
     , density_(0.0f)
     , bouzidi_(false)
@@ -145,6 +146,8 @@ FlowParametrizationList::FlowParametrizationList(const FlowParametrizationList& 
     , simulationTime_(origin.simulationTime_)
     , temporalResolution_(origin.temporalResolution_)
     , spatialResolution_(origin.spatialResolution_)
+    , flowIndicators_(origin.flowIndicators_)
+    , flowParametrizations_(origin.flowParametrizations_)
 {
 }
 

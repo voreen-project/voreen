@@ -286,7 +286,7 @@ void FlowSimulationCluster::fetchResults() {
         return;
     }
 
-    std::string source = username + "@" + clusterAddress + ":/scratch/tmp/" + username + "/simulations";
+    std::string source = username + "@" + clusterAddress + ":/scratch/tmp/" + username + "/simulations/" + simulationType_.get();
     const FlowParametrizationList* parametrizationList = parameterPort_.getData();
     if (parametrizationList) {
         std::string paramPath = "/" + parametrizationList->getName() + "/";
