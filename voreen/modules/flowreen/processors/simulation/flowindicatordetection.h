@@ -52,6 +52,8 @@ public:
     virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;         }
 
     virtual void process();
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
 
 protected:
 

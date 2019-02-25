@@ -82,6 +82,16 @@ void FlowIndicatorDetection::adjustPropertiesToInput() {
     radius_.setMaxValue(tgt::length(vesselGraphPort_.getData()->getBounds().diagonal() / 2.0f));
 }
 
+void FlowIndicatorDetection::serialize(Serializer& s) const {
+    Processor::serialize(s);
+    s.serialize("flowIndicators", flowIndicators_);
+}
+
+void FlowIndicatorDetection::deserialize(Deserializer& s) {
+    Processor::deserialize(s);
+    s.optionalDeserialize("flowIndicators", flowIndicators_, flowIndicators_);
+}
+
 void FlowIndicatorDetection::process() {
 
     FlowParametrizationList* flowParametrizationList = new FlowParametrizationList(ensembleName_.get());
@@ -90,7 +100,10 @@ void FlowIndicatorDetection::process() {
     flowParametrizationList->setSpatialResolution(spatialResolution_.get());
 
     for(const FlowIndicator& indicator : flowIndicators_) {
-        flowParametrizationList->addFlowIndicator(indicator);
+        // NONE means invalid or not being selected for output.
+        if(indicator.direction_ != NONE) {
+            flowParametrizationList->addFlowIndicator(indicator);
+        }
     }
 
     flowParametrizationPort_.setData(flowParametrizationList);
