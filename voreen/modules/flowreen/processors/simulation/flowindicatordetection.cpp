@@ -61,7 +61,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         flowDirection_.addOption("out", "OUT", FlowDirection::OUT);
         flowDirection_.setGroupID("indicator");
         ON_CHANGE(flowDirection_, FlowIndicatorDetection, onConfigChange);
-    addProperty(radius_);
+    //addProperty(radius_);
         radius_.setGroupID("indicator");
         ON_CHANGE(radius_, FlowIndicatorDetection, onConfigChange);
     setPropertyGroupGuiName("indicator", "Indicator");
@@ -107,7 +107,7 @@ void FlowIndicatorDetection::onConfigChange() {
 
         FlowIndicator& indicator = flowIndicators_[flowIndicatorTable_.getSelectedRowIndex()];
         indicator.direction_ = flowDirection_.getValue();
-        indicator.radius_ = radius_.get();
+        //indicator.radius_ = radius_.get(); // Estimate is quite accurate.
 
         buildTable();
     }
@@ -127,10 +127,17 @@ void FlowIndicatorDetection::onVesselGraphChange() {
     for(const VesselGraphNode& node : vesselGraph->getNodes()) {
         // Look for end-nodes.
         if(node.getDegree() == 1) {
+
+            const VesselGraphEdge& edge = node.getEdges().back().get();
+
+            const VesselSkeletonVoxel& end = edge.getVoxels().back();
+            size_t n = std::min<size_t>(5, edge.getVoxels().size());
+            const VesselSkeletonVoxel& ref = edge.getVoxels().at(edge.getVoxels().size() - n);
+
             FlowIndicator indicator;
-            indicator.center_ = node.pos_;
-            indicator.normal_ = tgt::normalize(node.pos_ - node.getNeighbors().front()->pos_);
-            indicator.radius_ = node.radius_;
+            indicator.center_ = end.pos_;
+            indicator.normal_ = tgt::normalize(end.pos_ - ref.pos_);
+            indicator.radius_ = end.avgDistToSurface_;
             indicator.direction_ = FlowDirection::NONE;
             flowIndicators_.push_back(indicator);
         }
