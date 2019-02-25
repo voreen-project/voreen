@@ -1107,30 +1107,6 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
         for(size_t i=0; i<volume->getNumVoxels() && !error; i++) {
             PyObject* p = PyList_GetItem(volumeObject.data, i);
 
-            // TODO: remove! DEBUG
-            FILE* file = fopen("/home/root_visix/Schreibtisch/object.txt", "w");
-            PyObject_Print(p, file, Py_PRINT_RAW);
-            fclose(file);
-
-            /*
-            PyObject* tupleObj;
-            if (!PyArg_ParseTuple( p, "O!", &PyTuple_Type, &tupleObj)) {
-                error = true;
-                break;
-            }
-
-            if(volume->getNumChannels() != PyTuple_Size(tupleObj)) {
-                error = true;
-                break;
-            }
-
-            for(size_t channel = 0; channel < volume->getNumChannels(); channel++) {
-                PyObject* d = PyList_GetItem(tupleObj, channel);
-                float value = static_cast<float>(PyFloat_AsDouble(d));
-                volume->setVoxelNormalized(value, i, channel);
-            }
-
-            /*/
             tgt::vec4 value = tgt::vec4::zero;
             switch(volume->getNumChannels()) {
             case 1:
@@ -1141,10 +1117,10 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
                 error |= !PyArg_ParseTuple(p, "ff", &value.x, &value.y);
                 break;
             case 3:
-                error |= !PyArg_ParseTuple(p, "[fff]", &value.x, &value.y, &value.z);
+                error |= !PyArg_ParseTuple(p, "fff", &value.x, &value.y, &value.z);
                 break;
             case 4:
-                error |= !PyArg_ParseTuple(p, "(ffff)", &value.x, &value.y, &value.z, &value.w);
+                error |= !PyArg_ParseTuple(p, "ffff", &value.x, &value.y, &value.z, &value.w);
                 break;
             default:
                 tgtAssert(false, "unsupported channel count");
@@ -1153,7 +1129,6 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
             for(size_t channel = 0; channel < volume->getNumChannels(); channel++) {
                 volume->setVoxelNormalized(value[channel], i, channel);
             }
-            //*/
         }
 
         if(error) {
@@ -1216,13 +1191,13 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
                         error |= !PyArg_ParseTuple(p, "f", &value.x);
                         break;
                     case 2:
-                        error |= !PyArg_ParseTuple(p, "(ff)", &value.x, &value.y);
+                        error |= !PyArg_ParseTuple(p, "ff", &value.x, &value.y);
                         break;
                     case 3:
-                        error |= !PyArg_ParseTuple(p, "(fff)", &value.x, &value.y, &value.z);
+                        error |= !PyArg_ParseTuple(p, "fff", &value.x, &value.y, &value.z);
                         break;
                     case 4:
-                        error |= !PyArg_ParseTuple(p, "(ffff)", &value.x, &value.y, &value.z, &value.w);
+                        error |= !PyArg_ParseTuple(p, "ffff", &value.x, &value.y, &value.z, &value.w);
                         break;
                 }
                 for (size_t channel = 0; channel < texture->getNumChannels(); channel++) {
@@ -1321,13 +1296,13 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
                 p = PyFloat_FromDouble(value.x);
                 break;
             case 2:
-                p = Py_BuildValue("[ff]", value.x, value.y);
+                p = Py_BuildValue("(ff)", value.x, value.y);
                 break;
             case 3:
-                p = Py_BuildValue("[fff]", value.x, value.y, value.z);
+                p = Py_BuildValue("(fff)", value.x, value.y, value.z);
                 break;
             case 4:
-                p = Py_BuildValue("[ffff]", value.x, value.y, value.z, value.w);
+                p = Py_BuildValue("(ffff)", value.x, value.y, value.z, value.w);
                 break;
             default:
                 tgtAssert(false, "unsupported channel count");
