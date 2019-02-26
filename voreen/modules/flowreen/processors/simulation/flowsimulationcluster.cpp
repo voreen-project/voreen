@@ -67,6 +67,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     , configPartition_("configPartition", "Partition")
     , configTime_("configTime", "Max. Time (x 1/4h)", 1, 1, 4*10)
     , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", VoreenApplication::app()->getTemporaryPath("simulations"), "", FileDialogProperty::DIRECTORY, Processor::VALID)
+    , uploadDataPath_("uploadDataPath", "Upload Data Path", "Path", VoreenApplication::app()->getTemporaryPath(), "", FileDialogProperty::DIRECTORY, Processor::VALID)
     , triggerEnqueueSimulations_("triggerEnqueueSimulations", "Enqueue Simulations", Processor::VALID)
     , triggerFetchResults_("triggerFetchResults", "Fetch Results", Processor::VALID)
     , progress_("progress", "Progress")
@@ -111,6 +112,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     setPropertyGroupGuiName("cluster-resources", "Cluster Resource Config");
 
     addProperty(simulationResults_);
+    addProperty(uploadDataPath_);
     addProperty(triggerEnqueueSimulations_);
     ON_CHANGE(triggerEnqueueSimulations_, FlowSimulationCluster, enqueueSimulations);
     addProperty(triggerFetchResults_);
@@ -131,7 +133,7 @@ bool FlowSimulationCluster::isReady() const {
         return false;
     }
 
-    // Note: measuredDataPort is currently ignored!
+    // Note: measuredDataPort is optional!
 
     if(!parameterPort_.isReady()) {
         setNotReadyErrorMessage("Parameter Port not ready.");
@@ -142,6 +144,7 @@ bool FlowSimulationCluster::isReady() const {
 }
 
 void FlowSimulationCluster::process() {
+    // Everything to process is done using callbacks.
 }
 
 void FlowSimulationCluster::enqueueSimulations() {
@@ -166,7 +169,7 @@ void FlowSimulationCluster::enqueueSimulations() {
     //      * all simulations have already been compiled
     //      * the result will be saved to /scratch/tmp/<user>/simulations/<simulation_name>/<run_name>
 
-    std::string simulationPathSource = VoreenApplication::app()->getTemporaryPath(flowParametrization->getName()) + "/";
+    std::string simulationPathSource = uploadDataPath_.get() + "/" + flowParametrization->getName() + "/";
     tgt::FileSystem::createDirectoryRecursive(simulationPathSource);
     std::string simulationPathDest = username_.get() + "@" + clusterAddress_.get() + ":" + simulationPath_.get() + "/" +
                                      simulationType_.get() + "/";
@@ -240,8 +243,8 @@ void FlowSimulationCluster::enqueueSimulations() {
         return;
     }
 
-    // Delete local data.
-    tgt::FileSystem::deleteDirectoryRecursive(simulationPathSource);
+    // Don't delete data, will be handled by Voreen Temp. data!
+    //tgt::FileSystem::deleteDirectoryRecursive(simulationPathSource);
 
     // Enqueue simulations.
     for(size_t i=0; i<flowParametrization->size(); i++) {
@@ -403,7 +406,7 @@ int FlowSimulationCluster::executeCommand(const std::string& command) const {
     }
 
     while (!feof(pipe)) {
-        if (fgets(buffer.data(), 128, pipe) != nullptr) {
+        if (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
             result += buffer.data();
         }
     }

@@ -38,8 +38,7 @@
 #include "voreen/core/properties/stringproperty.h"
 #include "voreen/core/properties/optionproperty.h"
 #include "voreen/core/properties/progressproperty.h"
-
-#include "modules/hdf5/io/hdf5filevolume.h"
+#include "voreen/core/properties/temppathproperty.h"
 
 namespace voreen {
 
@@ -74,7 +73,7 @@ private:
     std::string generateSubmissionScript(const std::string& parametrizationName) const;
 
     GeometryPort geometryDataPort_;
-    VolumeListPort measuredDataPort_; // TODO: Currently ignored.
+    VolumeListPort measuredDataPort_;
     FlowParametrizationPort parameterPort_;
 #ifdef VRN_MODULE_ENSEMBLEANALYSIS
     EnsembleDatasetPort ensemblePort_;
@@ -94,6 +93,7 @@ private:
     StringOptionProperty configPartition_;
 
     FileDialogProperty simulationResults_;
+    FileDialogProperty uploadDataPath_;
     ButtonProperty triggerEnqueueSimulations_;
     ButtonProperty triggerFetchResults_;
     ProgressProperty progress_;
