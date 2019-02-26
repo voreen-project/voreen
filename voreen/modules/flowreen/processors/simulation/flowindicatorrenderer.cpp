@@ -56,11 +56,15 @@ FlowIndicatorRenderer::FlowIndicatorRenderer()
     : GeometryRendererBase()
     , inport_(Port::INPORT, "parametrization", "Parametrization Input")
     , enable_("enable", "Enable", true)
+    , inFlowColor_("inFlowColor", "In-Flow Color", tgt::vec4(1.0f, 0.0f, 0.0f, 0.8f))
+    , outFlowColor_("outFlowColor", "Out-Flow Color", tgt::vec4(0.0f, 0.0f, 1.0f, 0.8f))
     , geometry_(nullptr)
 {
     addPort(inport_);
 
     addProperty(enable_);
+    addProperty(inFlowColor_);
+    addProperty(outFlowColor_);
 }
 
 void FlowIndicatorRenderer::initialize() {
@@ -88,8 +92,6 @@ void FlowIndicatorRenderer::render() {
     if (!inport_.isReady() || !enable_.get())
         return;
 
-    // TODO: set color dependend on in-/ outflow
-
     for(const FlowIndicator& indicator : inport_.getData()->getFlowIndicators()) {
 
         MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
@@ -97,10 +99,19 @@ void FlowIndicatorRenderer::render() {
         MatStack.multMatrix(createTransformationMatrix(indicator.center_, indicator.normal_));
         MatStack.scale(tgt::vec3(indicator.radius_));
 
+        if(indicator.direction_ == IN)
+            IMode.color(inFlowColor_.get());
+        else if(indicator.direction_ == OUT)
+            IMode.color(outFlowColor_.get());
+        else
+            IMode.color(tgt::vec4::zero);
+
         geometry_->render();
 
         MatStack.popMatrix();
     }
+
+    IMode.color(tgt::vec4::one);
 }
 
 }

@@ -28,6 +28,7 @@
 
 #include "voreen/core/processors/geometryrendererbase.h"
 
+#include "voreen/core/properties/colorproperty.h"
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 
 #include "modules/flowreen/ports/flowparametrizationport.h"
@@ -65,6 +66,8 @@ private:
     FlowParametrizationPort inport_;
 
     BoolProperty enable_;
+    ColorProperty inFlowColor_;
+    ColorProperty outFlowColor_;
 
     GlMeshGeometryUInt16Simple* geometry_;
 };
