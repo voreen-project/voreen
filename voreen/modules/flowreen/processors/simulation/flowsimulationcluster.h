@@ -31,9 +31,6 @@
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/ports/volumeport.h"
 #include "modules/flowreen/ports/flowparametrizationport.h"
-#ifdef VRN_MODULE_ENSEMBLEANALYSIS
-#include "custommodules/ensembleanalysis/ports/ensembledatasetport.h"
-#endif
 
 #include "voreen/core/properties/stringproperty.h"
 #include "voreen/core/properties/optionproperty.h"
@@ -75,9 +72,6 @@ private:
     GeometryPort geometryDataPort_;
     VolumeListPort measuredDataPort_;
     FlowParametrizationPort parameterPort_;
-#ifdef VRN_MODULE_ENSEMBLEANALYSIS
-    EnsembleDatasetPort ensemblePort_;
-#endif
 
     StringProperty username_;
     StringProperty clusterAddress_;
