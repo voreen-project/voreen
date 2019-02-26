@@ -99,9 +99,9 @@ void prepareGeometry(UnitConverter<T, DESCRIPTOR> const& converter, IndicatorF3D
         T radius = flowIndicators[i].radius_;
 
         // Set material number for inflow
-        IndicatorCircle3D<T> inflow(center[0], center[1], center[2], normal[0], normal[1], normal[2], radius);
-        IndicatorCylinder3D<T> layerInflow(inflow, 2. * converter.getConversionFactorLength());
-        superGeometry.rename(2, materialId, 1, layerInflow);
+        IndicatorCircle3D<T> flow(center[0], center[1], center[2], normal[0], normal[1], normal[2], radius);
+        IndicatorCylinder3D<T> layerFlow(inflow, 2. * converter.getConversionFactorLength());
+        superGeometry.rename(2, materialId, 1, layerFlow);
         flowIndicators[i].materialId_ = materialId;
         materialId++;
     }
@@ -167,10 +167,13 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
     std::vector<T> velocity(3, T());
     AnalyticalConst3D<T, T> uF(velocity);
 
+    lattice.defineRhoU( superGeometry,1,rhoF,uF );
+    lattice.iniEquilibrium( superGeometry,1,rhoF,uF );
+
     // Initialize all values of distribution functions to their local equilibrium
-    for(int i=1; i< static_cast<int>(flowIndicators.size())+3; i++) {
-        lattice.defineRhoU(superGeometry, i, rhoF, uF);
-        lattice.iniEquilibrium(superGeometry, i, rhoF, uF);
+    for(const FlowIndicator& indicator : flowIndicators) {
+        lattice.defineRhoU(superGeometry, indicator.materialId_, rhoF, uF);
+        lattice.iniEquilibrium(superGeometry, indicator.materialId_, rhoF, uF);
     }
 
     // Lattice initialize
@@ -190,17 +193,18 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
     int iTupdate = 50;
 
     if (iT % iTupdate == 0) {
-        // Smooth start curve, sinus
-        SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getCharLatticeVelocity());
-
-        // Creates and sets the Poiseuille inflow profile using functors
-        int iTvec[1] = {iT};
-        T maxVelocity[1] = {T()};
-        nSinusStartScale(maxVelocity, iTvec);
-        CirclePoiseuille3D<T> velocity(superGeometry, 3, maxVelocity[0]);
-
-        for(const FlowIndicator& indicator : flowIndicators) {
+        for(const FlowIndicatorMaterial& indicator : flowIndicators) {
             if (indicator.direction_ == IN) {
+
+                // Smooth start curve, sinus
+                SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getCharLatticeVelocity());
+
+                // Creates and sets the Poiseuille inflow profile using functors
+                int iTvec[1] = {iT};
+                T maxVelocity[1] = {T()};
+                nSinusStartScale(maxVelocity, iTvec);
+
+                CirclePoiseuille3D<T> velocity(superGeometry, indicator.materialId_, maxVelocity[0]);
                 if (bouzidiOn) {
                     offBc.defineU(superGeometry, indicator.materialId_, velocity);
                 } else {
@@ -219,7 +223,7 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     OstreamManager clout(std::cout, "getResults");
 
-    SuperVTMwriter3D<T> vtmWriter(simulation.c_str());
+    SuperVTMwriter3D<T> vtmWriter(simulationName);
     SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
     SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
     vtmWriter.addFunctor(velocity);
@@ -228,45 +232,44 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
     const int vtkIter = converter.getLatticeTime(.1);
     const int statIter = converter.getLatticeTime(.1);
 
-    if (iT == 0) {
-        // Writes the geometry, cuboid no. and rank no. as vti file for visualization
-        SuperLatticeGeometry3D<T, DESCRIPTOR> geometry(sLattice, superGeometry);
-        SuperLatticeCuboid3D<T, DESCRIPTOR> cuboid(sLattice);
-        SuperLatticeRank3D<T, DESCRIPTOR> rank(sLattice);
-        vtmWriter.write(geometry);
-        vtmWriter.write(cuboid);
-        vtmWriter.write(rank);
-
-        vtmWriter.createMasterFile();
-    }
-
-    // Writes the vtk files
     if (iT % vtkIter == 0) {
-        vtmWriter.write(iT);
+        //vtmWriter.write(iT);
 
-        SuperEuklidNorm3D<T, DESCRIPTOR> normVel(velocity);
-        BlockReduction3D2D<T> planeReduction(normVel, {0, 0, 1}, 600, BlockDataSyncMode::ReduceOnly);
-        // write output as JPEG
-        heatmap::write(planeReduction, iT);
+        const int resolution = converter.getResolution();
+        const T len = converter.getCharPhysLength();
+        std::vector<float> rawVelocityData;
+        rawVelocityData.reserve(static_cast<size_t>(resolution * resolution * resolution * 3));
+
+        AnalyticalFfromSuperF3D<T> interpolateVelocity(velocity, true);
+        for(int z=0; z<resolution; z++) {
+            for(int y=0; y<resolution; y++) {
+                for(int x=0; x<resolution; x++) {
+                    T pos[3] = {x*len, y*len, z*len};
+                    T u[3] = {0.0, 0.0, 0.0};
+
+                    interpolateVelocity(u, pos);
+
+                    // Downgrade to float.
+                    rawVelocityData.push_back(static_cast<float>(u[0]));
+                    rawVelocityData.push_back(static_cast<float>(u[1]));
+                    rawVelocityData.push_back(static_cast<float>(u[2]));
+                }
+            }
+        }
+
+        std::string velocityFilename = singleton::directories().getVtkOutDir() + "/velocity_" + std::to_string(iT) + ".raw";
+        std::fstream velocityFile(velocityFilename.c_str(), std::ios::out | std::ios::binary);
+        size_t numBytes = rawVelocityData.size() * sizeof(float) / sizeof(char);
+        velocityFile.write(reinterpret_cast<const char*>(rawVelocityData.data()), numBytes);
+        if (!velocityFile.good()) {
+            clout << "Could not write velocity file" << std::endl;
+        }
     }
 
     // Writes output on the console
     if (iT % statIter == 0) {
-        // Timer console output
-        timer.update(iT);
-        timer.printStep();
-
         // Lattice statistics console output
         sLattice.getStatistics().print(iT, converter.getPhysTime(iT));
-
-        if (bouzidiOn) {
-            SuperLatticeYplus3D<T, DESCRIPTOR> yPlus(sLattice, converter, superGeometry, stlReader, 3);
-            SuperMax3D<T> yPlusMaxF(yPlus, superGeometry, 1);
-            int input[4] = {};
-            T yPlusMax[1];
-            yPlusMaxF(yPlusMax, input);
-            clout << "yPlusMax=" << yPlusMax[0] << std::endl;
-        }
     }
 
     if (sLattice.getStatistics().getMaxU() > 0.3) {
@@ -360,7 +363,7 @@ int main(int argc, char* argv[]) {
     // Instantiation of the STLreader class
     // file name, voxel size in meter, stl unit in meter, outer voxel no., inner voxel no.
     std::string geometryFileName = "../geometry/geometry.stl";
-    STLreader<T> stlReader(geometryFileName.c_str(), converter.getConversionFactorLength(), 1.0f, 0, true);
+    STLreader<T> stlReader(geometryFileName.c_str(), converter.getConversionFactorLength(), 1.0, 0, true);
     IndicatorLayer3D<T> extendedDomain(stlReader, converter.getConversionFactorLength());
 
     // Instantiation of a cuboidGeometry with weights

@@ -44,14 +44,9 @@ typedef double T;
 namespace voreen {
 
 struct FlowSimulationInput {
-    float simulationTime;
-    bool bouzidi;
-    std::unique_ptr<UnitConverter<T,DESCRIPTOR>> converter;
-    std::unique_ptr<STLreader<T>> stlReader;
-    std::unique_ptr<SuperLattice3D<T, DESCRIPTOR>> superLattice;
-    std::unique_ptr<SuperGeometry3D<T>> superGeometry;
-    std::unique_ptr<sOnLatticeBoundaryCondition3D<T,DESCRIPTOR>> onBoundaryCondition;
-    std::unique_ptr<sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>> offBoundaryCondition;
+    std::string geometryPath;
+    FlowParametrizationList parametrizationList;
+    size_t selectedParametrization;
     std::string simulationResultPath;
 };
 
@@ -87,8 +82,18 @@ protected:
 
 private:
 
+    static const T VOREEN_LENGTH_TO_SI;
+    static const std::string simulationName;
+
+    struct FlowIndicatorMaterial : public FlowIndicator {
+        int materialId_{0};
+    };
+
     void prepareGeometry(   UnitConverter<T,DESCRIPTOR> const& converter, IndicatorF3D<T>& indicator,
-                            STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry) const;
+                            STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry,
+                            const FlowParametrizationList& parametrizationList,
+                            size_t selectedParametrization,
+                            std::vector<FlowIndicatorMaterial>& flowIndicators) const;
 
     void prepareLattice(    SuperLattice3D<T, DESCRIPTOR>& lattice,
                             UnitConverter<T,DESCRIPTOR> const& converter,
@@ -96,16 +101,26 @@ private:
                             sOnLatticeBoundaryCondition3D<T, DESCRIPTOR>& bc,
                             sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
                             STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry,
-                            bool bouzidi) const;
+                            const FlowParametrizationList& parametrizationList,
+                            size_t selectedParametrization,
+                            std::vector<FlowIndicatorMaterial>& flowIndicators) const;
 
     void setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                             sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
                             UnitConverter<T,DESCRIPTOR> const& converter, int iT,
-                            SuperGeometry3D<T>& superGeometry, bool bouzidi) const;
+                            SuperGeometry3D<T>& superGeometry,
+                            const FlowParametrizationList& parametrizationList,
+                            size_t selectedParametrization,
+                            std::vector<FlowIndicatorMaterial>& flowIndicators) const;
 
     bool getResults(        SuperLattice3D<T, DESCRIPTOR>& sLattice,
                             UnitConverter<T,DESCRIPTOR>& converter, int iT,
-                            const std::string& simulationOutputPath) const;
+                            Dynamics<T, DESCRIPTOR>& bulkDynamics,
+                            SuperGeometry3D<T>& superGeometry,
+                            const FlowParametrizationList& parametrizationList,
+                            size_t selectedParametrization,
+                            std::vector<FlowIndicatorMaterial>& flowIndicators,
+                            const std::string& simulationResultPath) const;
 
     GeometryPort geometryDataPort_;
     VolumeListPort measuredDataPort_;

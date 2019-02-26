@@ -198,7 +198,7 @@ void FlowSimulationCluster::enqueueSimulations() {
             std::fstream velocityFile(velocityFilename.c_str(), std::ios::out | std::ios::binary);
 
             const VolumeRAM* volume = volumeList->at(i)->getRepresentation<VolumeRAM>();
-            velocityFile.write(static_cast<const char*>(volume->getData()), volume->getNumBytes());
+            velocityFile.write(reinterpret_cast<const char*>(volume->getData()), volume->getNumBytes());
             if (!velocityFile.good()) {
                 LERROR("Could not write velocity file");
                 continue;

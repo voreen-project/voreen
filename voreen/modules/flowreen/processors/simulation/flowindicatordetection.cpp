@@ -110,13 +110,14 @@ void FlowIndicatorDetection::process() {
 }
 
 void FlowIndicatorDetection::onSelectionChange() {
-    setPropertyGroupVisible("indicator", flowIndicatorTable_.getSelectedRowIndex() >= 0);
+    flowDirection_.setReadOnlyFlag(flowIndicatorTable_.getSelectedRowIndex() < 0);
+    //setPropertyGroupVisible("indicator", flowIndicatorTable_.getSelectedRowIndex() >= 0);
 }
 
 void FlowIndicatorDetection::onConfigChange() {
     if(flowIndicatorTable_.getNumRows() > 0 &&
        flowIndicatorTable_.getSelectedRowIndex() >= 0 &&
-       flowIndicatorTable_.getSelectedRowIndex() < flowIndicators_.size() ) {
+       flowIndicatorTable_.getSelectedRowIndex() < static_cast<int>(flowIndicators_.size()) ) {
 
         FlowIndicator& indicator = flowIndicators_[flowIndicatorTable_.getSelectedRowIndex()];
         indicator.direction_ = flowDirection_.getValue();
