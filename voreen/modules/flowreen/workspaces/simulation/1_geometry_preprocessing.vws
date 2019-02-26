@@ -37,13 +37,7 @@
                         <Property mapKey="calcNormals" name="calcNormals" value="false" />
                         <Property mapKey="clearGeometry" name="clearGeometry" />
                         <Property mapKey="geometryFile" name="geometryFile" watchMode="1" fileWatchEnabled="false">
-                            <paths noPathSet="false">
-                                <paths>
-                                    <item value="../../ownCloud/shares/flow-data/Datensätze_Aneurysmen/a2.stl" />
-                                    <item value="../../../ownCloud/shares/flow-data/Datensätze_Aneurysmen/a2.stl" />
-                                    <item value="/home/spider/ownCloud/shares/flow-data/Datensätze_Aneurysmen/a2.stl" />
-                                </paths>
-                            </paths>
+                            <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="geometryType" name="geometryType" value="geometry" />
                         <Property mapKey="loadGeometry" name="loadGeometry" />
@@ -74,9 +68,9 @@
                         <Property mapKey="path" name="path" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../programming/voreen-development/voreen/data/tmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd.stl" />
-                                    <item value="../../voreen-development/voreen/data/tmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd.stl" />
-                                    <item value="/home/spider/programming/voreen-development/voreen/data/tmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd.stl" />
+                                    <item value="../../../../../../voreen-development/voreen/data/tmp/6919ceca-add4-40e0-ab4b-a1f58809f080/970e0f64-111f-41e3-9f5a-fb0d0f6fa101.stl" />
+                                    <item value="../../voreen-development/voreen/data/tmp/6919ceca-add4-40e0-ab4b-a1f58809f080/970e0f64-111f-41e3-9f5a-fb0d0f6fa101.stl" />
+                                    <item value="/home/spider/programming.local/voreen-development/voreen/data/tmp/6919ceca-add4-40e0-ab4b-a1f58809f080/970e0f64-111f-41e3-9f5a-fb0d0f6fa101.stl" />
                                 </paths>
                             </paths>
                         </Property>
@@ -105,12 +99,12 @@
                         <Property mapKey="enabled" name="enabled" value="true" />
                     </Properties>
                     <Inports>
-                        <Port name="geometry.geometry" direction="1" portID="geometry.geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
+                        <Port name="geometry.input" direction="1" portID="geometry.input" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="geometry.clippedgeometry" direction="0" portID="geometry.clippedgeometry" guiName="Clipped Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="geometry.output" direction="0" portID="geometry.output" guiName="Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -185,7 +179,7 @@
                             </MetaData>
                             <position x="21.543951035" y="-94.660385132" z="42.870418549" />
                             <focus x="34.498886108" y="34.498886108" z="34.566532135" />
-                            <upVector x="0.010771994" y="0.18427527" z="0.982815623" />
+                            <upVector x="0.010771994" y="0.184275284" z="0.982815742" />
                             <trackball moveCenter="false">
                                 <center x="34.498886108" y="34.498886108" z="34.566532135" />
                             </trackball>
@@ -273,10 +267,10 @@
                 <Processor type="Canvas" name="Canvas" id="ref12">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-338" y="524" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="2657" y="34" width="1579" height="901" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="47" y="129" width="1579" height="901" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="2657" y="34" />
+                            <value x="47" y="129" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1579" y="901" />
@@ -365,7 +359,7 @@
                             </MetaData>
                             <position x="21.543951035" y="-94.660385132" z="42.870418549" />
                             <focus x="34.498886108" y="34.498886108" z="34.566532135" />
-                            <upVector x="0.010771994" y="0.184275284" z="0.982815742" />
+                            <upVector x="0.010771993" y="0.18427527" z="0.982815623" />
                             <trackball moveCenter="false">
                                 <center x="34.498886108" y="34.498886108" z="34.566532135" />
                             </trackball>
@@ -407,7 +401,7 @@
                         <Property mapKey="gammaValue" name="gammaValue" value="0" />
                         <Property mapKey="gammaValue1" name="gammaValue1" value="0" />
                         <Property mapKey="gammaValue2" name="gammaValue2" value="0" />
-                        <Property mapKey="gradient" name="gradient" value="central-differences">
+                        <Property mapKey="gradient" name="gradient" value="sobel">
                             <Options>
                                 <Option Key="none" Description="none" Value="none">
                                     <GuiColor r="0" g="0" b="0" a="0" />
@@ -867,7 +861,7 @@
                             </MetaData>
                             <position x="21.543951035" y="-94.660385132" z="42.870418549" />
                             <focus x="34.498886108" y="34.498886108" z="34.566532135" />
-                            <upVector x="0.010771994" y="0.184275284" z="0.982815742" />
+                            <upVector x="0.010771993" y="0.18427527" z="0.982815623" />
                             <trackball moveCenter="false">
                                 <center x="34.498886108" y="34.498886108" z="34.566532135" />
                             </trackball>
@@ -1090,7 +1084,7 @@
                     </Inport>
                 </Connection>
                 <Connection>
-                    <Outport name="geometry.clippedgeometry">
+                    <Outport name="geometry.output">
                         <Processor type="GeometryClose" ref="ref7" />
                     </Outport>
                     <Inport name="flowgeomertysource.inport">
@@ -1098,7 +1092,7 @@
                     </Inport>
                 </Connection>
                 <Connection>
-                    <Outport name="geometry.clippedgeometry">
+                    <Outport name="geometry.output">
                         <Processor type="GeometryClose" ref="ref7" />
                     </Outport>
                     <Inport name="inport">
@@ -1106,7 +1100,7 @@
                     </Inport>
                 </Connection>
                 <Connection>
-                    <Outport name="geometry.clippedgeometry">
+                    <Outport name="geometry.output">
                         <Processor type="GeometryClose" ref="ref7" />
                     </Outport>
                     <Inport name="inport.geometry">
@@ -1117,7 +1111,7 @@
                     <Outport name="geometry.output">
                         <Processor type="GeometryTransformation" ref="ref10" />
                     </Outport>
-                    <Inport name="geometry.geometry">
+                    <Inport name="geometry.input">
                         <Processor type="GeometryClose" ref="ref7" />
                     </Inport>
                 </Connection>
