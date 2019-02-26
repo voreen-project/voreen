@@ -32,6 +32,7 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
+#include <dirent.h>
 
 using namespace olb;
 using namespace olb::descriptors;
@@ -51,14 +52,16 @@ enum FlowDirection {
 // This code is adapted from the voreen host code.
 struct FlowIndicator {
     FlowDirection   direction_{NONE};
-    T           center_[3]{0.0};
-    T           normal_[3]{0.0};
-    T              radius_{0.0};
+    T               center_[3]{0.0};
+    T               normal_[3]{0.0};
+    T               radius_{0.0};
+    int             materialId_{0};
 };
 
 ////////// Globals //////////////////
 // Meta
-std::string simulation = "default";
+static const std::string simulation = "default";
+static const std::string base = "/scratch/tmp/s_leis06/simulations/";
 
 // Config
 T simulationTime = 0.0;
@@ -99,6 +102,7 @@ void prepareGeometry(UnitConverter<T, DESCRIPTOR> const& converter, IndicatorF3D
         IndicatorCircle3D<T> inflow(center[0], center[1], center[2], normal[0], normal[1], normal[2], radius);
         IndicatorCylinder3D<T> layerInflow(inflow, 2. * converter.getConversionFactorLength());
         superGeometry.rename(2, materialId, 1, layerInflow);
+        flowIndicators[i].materialId_ = materialId;
         materialId++;
     }
 
@@ -134,22 +138,29 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
         // material=2 --> no dynamics + bouzidi zero velocity
         lattice.defineDynamics(superGeometry, 2, &instances::getNoDynamics<T, DESCRIPTOR>());
         offBc.addZeroVelocityBoundary(superGeometry, 2, stlReader);
-        // material=3 --> no dynamics + bouzidi velocity (inflow)
-        lattice.defineDynamics(superGeometry, 3, &instances::getNoDynamics<T, DESCRIPTOR>());
-        offBc.addVelocityBoundary(superGeometry, 3, stlReader);
     } else {
         // material=2 --> bounceBack dynamics
         lattice.defineDynamics(superGeometry, 2, &instances::getBounceBack<T, DESCRIPTOR>());
-        // material=3 --> bulk dynamics + velocity (inflow)
-        lattice.defineDynamics(superGeometry, 3, &bulkDynamics);
-        bc.addVelocityBoundary(superGeometry, 3, omega);
     }
 
-    // material=4,5 --> bulk dynamics + pressure (outflow)
-    lattice.defineDynamics(superGeometry, 4, &bulkDynamics);
-    lattice.defineDynamics(superGeometry, 5, &bulkDynamics);
-    bc.addPressureBoundary(superGeometry, 4, omega);
-    bc.addPressureBoundary(superGeometry, 5, omega);
+    for(const FlowIndicator& indicator : flowIndicators) {
+        if(indicator.direction_ == IN) {
+            if(bouzidiOn) {
+                // material=3 --> no dynamics + bouzidi velocity (inflow)
+                lattice.defineDynamics(superGeometry, indicator.materialId_, &instances::getNoDynamics<T, DESCRIPTOR>());
+                offBc.addVelocityBoundary(superGeometry, indicator.materialId_, stlReader);
+            }
+            else {
+                // material=3 --> bulk dynamics + velocity (inflow)
+                lattice.defineDynamics(superGeometry, indicator.materialId_, &bulkDynamics);
+                bc.addVelocityBoundary(superGeometry, indicator.materialId_, omega);
+            }
+        }
+        else if(indicator.direction_ == OUT) {
+            lattice.defineDynamics(superGeometry, indicator.materialId_, &bulkDynamics);
+            bc.addPressureBoundary(superGeometry, indicator.materialId_, omega);
+        }
+    }
 
     // Initial conditions
     AnalyticalConst3D<T, T> rhoF(1);
@@ -157,14 +168,10 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
     AnalyticalConst3D<T, T> uF(velocity);
 
     // Initialize all values of distribution functions to their local equilibrium
-    lattice.defineRhoU(superGeometry, 1, rhoF, uF);
-    lattice.iniEquilibrium(superGeometry, 1, rhoF, uF);
-    lattice.defineRhoU(superGeometry, 3, rhoF, uF);
-    lattice.iniEquilibrium(superGeometry, 3, rhoF, uF);
-    lattice.defineRhoU(superGeometry, 4, rhoF, uF);
-    lattice.iniEquilibrium(superGeometry, 4, rhoF, uF);
-    lattice.defineRhoU(superGeometry, 5, rhoF, uF);
-    lattice.iniEquilibrium(superGeometry, 5, rhoF, uF);
+    for(int i=1; i< static_cast<int>(flowIndicators.size())+3; i++) {
+        lattice.defineRhoU(superGeometry, i, rhoF, uF);
+        lattice.iniEquilibrium(superGeometry, i, rhoF, uF);
+    }
 
     // Lattice initialize
     lattice.initialize();
@@ -192,10 +199,14 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
         nSinusStartScale(maxVelocity, iTvec);
         CirclePoiseuille3D<T> velocity(superGeometry, 3, maxVelocity[0]);
 
-        if (bouzidiOn) {
-            offBc.defineU(superGeometry, 3, velocity);
-        } else {
-            sLattice.defineU(superGeometry, 3, velocity);
+        for(const FlowIndicator& indicator : flowIndicators) {
+            if (indicator.direction_ == IN) {
+                if (bouzidiOn) {
+                    offBc.defineU(superGeometry, indicator.materialId_, velocity);
+                } else {
+                    sLattice.defineU(superGeometry, indicator.materialId_, velocity);
+                }
+            }
         }
     }
 }
@@ -267,8 +278,14 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
 int main(int argc, char* argv[]) {
 
+    // === 1st Step: Initialization ===
+    olbInit(&argc, &argv);
+    OstreamManager clout(std::cout, "main");
+    // don't display messages from every single mpi process
+    clout.setMultiOutput(false);
+
     if(argc != 3) {
-        std::cout << "Invalid number of arguments!" << std::endl;
+        clout << "Invalid number of arguments!" << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -276,29 +293,26 @@ int main(int argc, char* argv[]) {
     std::string ensemble = argv[1];
     std::string run = argv[2];
 
-    std::cout << "Running: " << simulation << std::endl;
-    std::cout << "Ensemble:" << ensemble << std::endl;
-    std::cout << "Run: " << run << std::endl;
+    clout << "Running: " << simulation << std::endl;
+    clout << "Ensemble:" << ensemble << std::endl;
+    clout << "Run: " << run << std::endl;
 
-    // === 0th Step: Create output directory.
     __mode_t mode = ACCESSPERMS;
-    std::string output = "/scratch/tmp/s_leis06/simulations/";
-    output += simulation + "/";
-    mkdir(output.c_str(), mode);
-    output += ensemble + "/";
-    mkdir(output.c_str(), mode);
-    output += run + "/";
-    if(mkdir(output.c_str(), mode) != 0) {
-        std::cout << "Could not create output directory!" << std::endl;
-        return EXIT_FAILURE;
+    std::string output = base;
+    if (DIR* dir = opendir(output.c_str())) {
+        closedir(dir);
+    } else {
+        output += simulation + "/";
+        mkdir(output.c_str(), mode); // ignore result
+        output += ensemble + "/";
+        mkdir(output.c_str(), mode); // ignore result
+        output += run + "/";
+        if (mkdir(output.c_str(), mode) != 0) {
+            clout << "Could not create output directory: '" << output << "'" << std::endl;
+            return EXIT_FAILURE;
+        }
     }
-
-    // === 1st Step: Initialization ===
     singleton::directories().setOutputDir(output.c_str());
-    olbInit(&argc, &argv);
-    OstreamManager clout(std::cout, "main");
-    // don't display messages from every single mpi process
-    clout.setMultiOutput(false);
 
     XMLreader config("config.xml");
     simulationTime = std::atof(config["simulationTime"].getAttribute("value").c_str());
@@ -325,6 +339,7 @@ int main(int argc, char* argv[]) {
         indicator.radius_ = std::atof((*iter)["radius"].getAttribute("value").c_str());
         flowIndicators.push_back(indicator);
     }
+    std::cout << "Found " << flowIndicators.size() << " Flow Indicators";
 
     const int N = spatialResolution;
     UnitConverter<T, DESCRIPTOR> converter(
