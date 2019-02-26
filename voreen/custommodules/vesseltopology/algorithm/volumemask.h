@@ -474,7 +474,6 @@ void VolumeMask::skeletonize(size_t maxIterations, ProgressReporter& progress) {
 
 template<class L>
 void VolumeMask::thinnerByLee(ScrapeIterationDescriptor& scrapeDescriptor, size_t& numberOfDeletedVoxels, ProgressReporter& progress) {
-    numberOfDeletedVoxels = 0;
     std::vector<tgt::svec3> marked;
     tgt::ivec3 dim = getDimensions();
     for(int z = 0; z<dim.z; ++z) {
@@ -482,7 +481,8 @@ void VolumeMask::thinnerByLee(ScrapeIterationDescriptor& scrapeDescriptor, size_
             for(int x = 0; x<dim.x; ++x) {
                 tgt::svec3 pos = tgt::svec3(x,y,z);
 
-                if(L::deletableScraping(*this, pos)
+                if(get(pos) == VolumeMaskValue::OBJECT
+                        && L::deletableScraping(*this, pos)
                         && get(scrapeDescriptor.getNeightbor(pos), VolumeMaskValue::OBJECT) == VolumeMaskValue::BACKGROUND) {
                     marked.push_back(pos);
                 }
@@ -490,8 +490,7 @@ void VolumeMask::thinnerByLee(ScrapeIterationDescriptor& scrapeDescriptor, size_
         }
     }
 
-    size_t deletedThisIt;
-    deletedThisIt = 0;
+    size_t deletedThisIt = 0;
     for(auto& pos : marked) {
         if(isSimple(pos)) {
             set(pos, VolumeMaskValue::BACKGROUND);
