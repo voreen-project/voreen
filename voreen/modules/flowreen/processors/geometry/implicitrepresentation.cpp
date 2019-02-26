@@ -64,7 +64,7 @@ bool ImplicitRepresentation::isReady() const {
         setNotReadyErrorMessage("Not initialized.");
         return false;
     }
-    bool fileExists = false;//std::ifstream(path_.get().c_str(), std::ios::binary).good();
+    bool fileExists = std::ifstream(path_.get().c_str(), std::ios::binary).good();
     if(!inport_.isReady() && !fileExists) {
         setNotReadyErrorMessage("No input.");
         return false;
@@ -75,12 +75,13 @@ bool ImplicitRepresentation::isReady() const {
 void ImplicitRepresentation::process() {
 
     const Geometry* inputGeometry = inport_.getData();
-    if(inputGeometry && !exportGeometryToSTL(inputGeometry, path_.get())) {
+    bool fileExists = std::ifstream(path_.get().c_str(), std::ios::binary).good();
+    tgtAssert(inputGeometry || fileExists, "No input");
+    if (!fileExists && !exportGeometryToSTL(inputGeometry, path_.get())) {
         LERROR("Failed to export mesh.");
         outport_.setData(nullptr);
         return;
     }
-    tgtAssert(inputGeometry, "no input geometry");
 
     T spacing = tgt::max(inputGeometry->getBoundingBox(true).diagonal()) / dimensions_.get();
     STLreader<T> stlReader(path_.get(), spacing, 1.0, method_.getValue());
