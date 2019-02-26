@@ -110,7 +110,14 @@ void FlowIndicatorDetection::process() {
 }
 
 void FlowIndicatorDetection::onSelectionChange() {
-    flowDirection_.setReadOnlyFlag(flowIndicatorTable_.getSelectedRowIndex() < 0);
+    if(flowIndicatorTable_.getNumRows() > 0 && flowIndicatorTable_.getSelectedRowIndex() >= 0) {
+        size_t index = static_cast<size_t>(flowIndicatorTable_.getSelectedRowIndex());
+        flowDirection_.selectByValue(flowIndicators_.at(index).direction_);
+        flowDirection_.setReadOnlyFlag(false);
+    }
+    else {
+        flowDirection_.setReadOnlyFlag(true);
+    }
     //setPropertyGroupVisible("indicator", flowIndicatorTable_.getSelectedRowIndex() >= 0);
 }
 
@@ -144,14 +151,22 @@ void FlowIndicatorDetection::onVesselGraphChange() {
 
             const VesselGraphEdge& edge = node.getEdges().back().get();
 
-            const VesselSkeletonVoxel& end = edge.getVoxels().back();
-            size_t n = std::min<size_t>(5, edge.getVoxels().size());
-            const VesselSkeletonVoxel& ref = edge.getVoxels().at(edge.getVoxels().size() - n);
+            size_t n = std::min<size_t>(5, edge.getVoxels().size()-1);
+            const VesselSkeletonVoxel* end = nullptr;
+            const VesselSkeletonVoxel* ref = nullptr;
+            if(edge.getNode1().getID() == node.getID()) {
+                end = &edge.getVoxels().front();
+                ref = &edge.getVoxels().at(n);
+            }
+            else {
+                end = &edge.getVoxels().back();
+                ref = &edge.getVoxels().at(edge.getVoxels().size() - n - 1);
+            }
 
             FlowIndicator indicator;
-            indicator.center_ = end.pos_;
-            indicator.normal_ = tgt::normalize(end.pos_ - ref.pos_);
-            indicator.radius_ = end.avgDistToSurface_;
+            indicator.center_ = end->pos_;
+            indicator.normal_ = tgt::normalize(end->pos_ - ref->pos_);
+            indicator.radius_ = end->avgDistToSurface_;
             indicator.direction_ = FlowDirection::NONE;
             flowIndicators_.push_back(indicator);
         }
@@ -161,6 +176,7 @@ void FlowIndicatorDetection::onVesselGraphChange() {
 }
 
 void FlowIndicatorDetection::buildTable() {
+    int selectedIndex = flowIndicatorTable_.getSelectedRowIndex();
     flowIndicatorTable_.reset();
 
     for(const FlowIndicator& indicator : flowIndicators_) {
@@ -173,6 +189,10 @@ void FlowIndicatorDetection::buildTable() {
                  std::to_string(indicator.normal_.z) + ")";
         row[3] = std::to_string(indicator.radius_);
         flowIndicatorTable_.addRow(row);
+    }
+
+    if(selectedIndex < static_cast<int>(flowIndicatorTable_.getNumRows())) {
+        flowIndicatorTable_.setSelectedRowIndex(selectedIndex);
     }
 }
 

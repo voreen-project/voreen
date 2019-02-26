@@ -350,7 +350,7 @@ int main(int argc, char* argv[]) {
             (T) temporalResolution,        // physDeltaT: time step in __s__
             (T) characteristicLength,      // charPhysLength: reference length of simulation geometry
             (T) characteristicVelocity,    // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
-            (T) viscosity,                 // physViscosity: physical kinematic viscosity in __m^2 / s__
+            (T) viscosity*1e-6,                 // physViscosity: physical kinematic viscosity in __m^2 / s__
             (T) density                    // physDensity: physical density in __kg / m^3__
     );
     // Prints the converter log as console output
