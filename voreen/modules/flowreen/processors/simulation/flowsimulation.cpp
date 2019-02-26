@@ -89,13 +89,13 @@ bool FlowSimulation::isReady() const {
 
 void FlowSimulation::adjustPropertiesToInput() {
     const FlowParametrizationList* flowParameterList = parameterPort_.getThreadSafeData();
-    if(!flowParameterList) {
+    if(!flowParameterList || flowParameterList->empty()) {
         selectedParametrization_.setMinValue(-1);
         selectedParametrization_.setMaxValue(-1);
     }
     else {
         selectedParametrization_.setMinValue(0);
-        selectedParametrization_.setMaxValue(static_cast<int>(flowParameterList->size()));
+        selectedParametrization_.setMaxValue(static_cast<int>(flowParameterList->size())-1);
         selectedParametrization_.set(0);
     }
 }
