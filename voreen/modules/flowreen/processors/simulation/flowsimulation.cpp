@@ -251,7 +251,7 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
         sLattice.collideAndStream();
 
         // === 7th Step: Computation and Output of the Results ===
-        bool success = getResults(sLattice, converter, iT, bulkDynamics, superGeometry,
+        bool success = getResults(sLattice, converter, iT, bulkDynamics, superGeometry, stlReader,
                                   parametrizationList, input.selectedParametrization, flowIndicators,
                                   input.simulationResultPath);
         if(!success)
@@ -423,6 +423,7 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                  UnitConverter<T,DESCRIPTOR>& converter, int iT,
                                  Dynamics<T, DESCRIPTOR>& bulkDynamics,
                                  SuperGeometry3D<T>& superGeometry,
+                                 STLreader<T>& stlReader,
                                  const FlowParametrizationList& parametrizationList,
                                  size_t selectedParametrization,
                                  std::vector<FlowIndicatorMaterial>& flowIndicators,
@@ -439,10 +440,13 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
     const int statIter = converter.getLatticeTime(.1);
 
     if (iT % vtkIter == 0) {
-        //vtmWriter.write(iT);
+        //vtmWriter.write(iT); // TODO: finally replace by RAW
+
+        const Vector<T, 3>& min = stlReader.getMin();
+        const Vector<T, 3>& max = stlReader.getMax();
 
         const int resolution = converter.getResolution();
-        const T len = converter.getCharPhysLength();
+        const Vector<T, 3> len = max - min;//converter.getCharPhysLength();
         std::vector<float> rawVelocityData;
         rawVelocityData.reserve(static_cast<size_t>(resolution * resolution * resolution * 3));
 
@@ -450,10 +454,13 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
         for(int z=0; z<resolution; z++) {
             for(int y=0; y<resolution; y++) {
                 for(int x=0; x<resolution; x++) {
-                    T pos[3] = {x*len, y*len, z*len};
+
+                    T pos[3] = {min[0]+x*len[0]/resolution, min[1]+y*len[1]/resolution, min[2]+z*len[2]/resolution};
                     T u[3] = {0.0, 0.0, 0.0};
 
-                    interpolateVelocity(u, pos);
+                    if(pos[0] >= min[0] && pos[1] >= min[1] && pos[2] >= min[2] &&
+                       pos[0] <= max[0] && pos[1] <= max[1] && pos[2] <= max[2])
+                        interpolateVelocity(u, pos);
 
                     // Downgrade to float.
                     rawVelocityData.push_back(static_cast<float>(u[0]/VOREEN_LENGTH_TO_SI));

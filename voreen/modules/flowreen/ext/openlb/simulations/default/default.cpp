@@ -100,7 +100,7 @@ void prepareGeometry(UnitConverter<T, DESCRIPTOR> const& converter, IndicatorF3D
 
         // Set material number for inflow
         IndicatorCircle3D<T> flow(center[0], center[1], center[2], normal[0], normal[1], normal[2], radius);
-        IndicatorCylinder3D<T> layerFlow(inflow, 2. * converter.getConversionFactorLength());
+        IndicatorCylinder3D<T> layerFlow(flow, 2. * converter.getConversionFactorLength());
         superGeometry.rename(2, materialId, 1, layerFlow);
         flowIndicators[i].materialId_ = materialId;
         materialId++;
@@ -193,7 +193,7 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
     int iTupdate = 50;
 
     if (iT % iTupdate == 0) {
-        for(const FlowIndicatorMaterial& indicator : flowIndicators) {
+        for(const FlowIndicator& indicator : flowIndicators) {
             if (indicator.direction_ == IN) {
 
                 // Smooth start curve, sinus
@@ -223,7 +223,7 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     OstreamManager clout(std::cout, "getResults");
 
-    SuperVTMwriter3D<T> vtmWriter(simulationName);
+    SuperVTMwriter3D<T> vtmWriter(simulation);
     SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
     SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
     vtmWriter.addFunctor(velocity);
@@ -235,8 +235,11 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
     if (iT % vtkIter == 0) {
         //vtmWriter.write(iT);
 
+        const Vector<T, 3>& min = stlReader.getMin();
+        const Vector<T, 3>& max = stlReader.getMax();
+
         const int resolution = converter.getResolution();
-        const T len = converter.getCharPhysLength();
+        const Vector<T, 3> len = max - min;//converter.getCharPhysLength();
         std::vector<float> rawVelocityData;
         rawVelocityData.reserve(static_cast<size_t>(resolution * resolution * resolution * 3));
 
@@ -244,10 +247,13 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
         for(int z=0; z<resolution; z++) {
             for(int y=0; y<resolution; y++) {
                 for(int x=0; x<resolution; x++) {
-                    T pos[3] = {x*len, y*len, z*len};
+
+                    T pos[3] = {min[0]+x*len[0]/resolution, min[1]+y*len[1]/resolution, min[2]+z*len[2]/resolution};
                     T u[3] = {0.0, 0.0, 0.0};
 
-                    interpolateVelocity(u, pos);
+                    if(pos[0] >= min[0] && pos[1] >= min[1] && pos[2] >= min[2] &&
+                       pos[0] <= max[0] && pos[1] <= max[1] && pos[2] <= max[2])
+                        interpolateVelocity(u, pos);
 
                     // Downgrade to float.
                     rawVelocityData.push_back(static_cast<float>(u[0]));

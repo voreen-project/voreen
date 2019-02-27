@@ -117,6 +117,7 @@ private:
                             UnitConverter<T,DESCRIPTOR>& converter, int iT,
                             Dynamics<T, DESCRIPTOR>& bulkDynamics,
                             SuperGeometry3D<T>& superGeometry,
+                            STLreader<T>& stlReader,
                             const FlowParametrizationList& parametrizationList,
                             size_t selectedParametrization,
                             std::vector<FlowIndicatorMaterial>& flowIndicators,
