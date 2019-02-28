@@ -47,7 +47,7 @@ FlowSimulation::FlowSimulation()
     , geometryDataPort_(Port::INPORT, "geometryDataPort", "Geometry Input", false)
     , measuredDataPort_(Port::INPORT, "measuredDataPort", "Measured Data Input", false)
     , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
-    , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", VoreenApplication::app()->getTemporaryPath("simulation"), "", FileDialogProperty::DIRECTORY, Processor::VALID)
+    , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", VoreenApplication::app()->getTemporaryPath("simulation"), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , simulateAllParametrizations_("simulateAllParametrizations", "Simulate all Parametrizations?", false)
     , selectedParametrization_("selectedSimulation", "Selected Parametrization", 0, 0, 1)
 {
@@ -157,11 +157,22 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
         throw InvalidInputException("Geometry could not be initialized", InvalidInputException::S_ERROR);
     }
 
+    if(simulationResults_.get().empty()) {
+        throw InvalidInputException("No output directory selected", InvalidInputException::S_WARNING);
+    }
+
+    size_t selectedParametrization = static_cast<size_t>(selectedParametrization_.get());
+    std::string simulationPath = simulationResults_.get() + "/" + flowParameterList->getName() + "/";
+    simulationPath += flowParameterList->at(selectedParametrization).getName() + "/";
+    if(!tgt::FileSystem::createDirectoryRecursive(simulationPath)) {
+        throw InvalidInputException("Output directory could not be created", InvalidInputException::S_ERROR);
+    }
+
     return FlowSimulationInput{
             geometryPath,
             FlowParametrizationList(*flowParameterList),
-            static_cast<size_t>(selectedParametrization_.get()),
-            simulationResults_.get()
+            selectedParametrization,
+            simulationPath
     };
 }
 
@@ -470,7 +481,7 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
             }
         }
 
-        std::string velocityFilename = simulationOutputPath + "/velocity_" + std::to_string(iT) + ".raw";
+        std::string velocityFilename = simulationOutputPath + "velocity_" + std::to_string(iT) + ".raw"; // TODO: encode simulated time.
         std::fstream velocityFile(velocityFilename.c_str(), std::ios::out | std::ios::binary);
         size_t numBytes = rawVelocityData.size() * sizeof(float) / sizeof(char);
         velocityFile.write(reinterpret_cast<const char*>(rawVelocityData.data()), numBytes);
