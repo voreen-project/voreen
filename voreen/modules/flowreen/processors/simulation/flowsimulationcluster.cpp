@@ -236,7 +236,7 @@ void FlowSimulationCluster::enqueueSimulations() {
     // Enqueue simulations.
     for(size_t i=0; i<flowParametrization->size(); i++) {
 
-        std::string enqueueScriptFilename = VoreenApplication::app()->getTemporaryPath("submit.sh");
+        std::string enqueueScriptFilename = VoreenApplication::app()->getUniqueTmpFilePath(".sh");
         std::ofstream enqueueScriptFile(enqueueScriptFilename);
         if (!enqueueScriptFile.good()) {
             LERROR("Could not write enqueue script file");

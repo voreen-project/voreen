@@ -188,12 +188,12 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
 
     const int N = parametrizationList.getSpatialResolution();
     UnitConverter<T, DESCRIPTOR> converter(
-            (T) parameters.getCharacteristicLength() * VOREEN_LENGTH_TO_SI / N,   // physDeltaX: spacing between two lattice cells in __m__
-            (T) parametrizationList.getTemporalResolution() / 1000.0,// physDeltaT: time step in __s__
-            (T) parameters.getCharacteristicLength() * VOREEN_LENGTH_TO_SI,       // charPhysLength: reference length of simulation geometry
-            (T) parameters.getCharacteristicVelocity() * VOREEN_LENGTH_TO_SI,     // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
-            (T) parameters.getViscosity() * 1e-6,                  // physViscosity: physical kinematic viscosity in __m^2 / s__
-            (T) parameters.getDensity()                     // physDensity: physical density in __kg / m^3__
+            (T) parameters.getCharacteristicLength() * VOREEN_LENGTH_TO_SI / N, // physDeltaX: spacing between two lattice cells in __m__
+            (T) parametrizationList.getTemporalResolution() / 1000.0,           // physDeltaT: time step in __s__
+            (T) parameters.getCharacteristicLength() * VOREEN_LENGTH_TO_SI,     // charPhysLength: reference length of simulation geometry
+            (T) parameters.getCharacteristicVelocity() * VOREEN_LENGTH_TO_SI,   // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
+            (T) parameters.getViscosity() * 1e-6,                               // physViscosity: physical kinematic viscosity in __m^2 / s__
+            (T) parameters.getDensity()                                         // physDensity: physical density in __kg / m^3__
     );
     // Prints the converter log as console output
     converter.print();
