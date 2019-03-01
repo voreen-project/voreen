@@ -62,6 +62,8 @@ struct FlowIndicator {
 // Meta
 static const std::string simulation = "default";
 static const std::string base = "/scratch/tmp/s_leis06/simulations/";
+static const T VOREEN_LENGTH_TO_SI = 0.001;
+static const T VOREEN_TIME_TO_SI = 0.001;
 
 // Config
 T simulationTime = 0.0;
@@ -99,7 +101,9 @@ void prepareGeometry(UnitConverter<T, DESCRIPTOR> const& converter, IndicatorF3D
         T radius = flowIndicators[i].radius_;
 
         // Set material number for inflow
-        IndicatorCircle3D<T> flow(center[0], center[1], center[2], normal[0], normal[1], normal[2], radius);
+        IndicatorCircle3D<T> flow(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
+                                  normal[0], normal[1], normal[2],
+                                  radius*VOREEN_LENGTH_TO_SI);
         IndicatorCylinder3D<T> layerFlow(flow, 2. * converter.getConversionFactorLength());
         superGeometry.rename(2, materialId, 1, layerFlow);
         flowIndicators[i].materialId_ = materialId;
@@ -196,6 +200,8 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
         for(const FlowIndicator& indicator : flowIndicators) {
             if (indicator.direction_ == IN) {
 
+                // TODO: select different flow -> constant, sinus, ..
+
                 // Smooth start curve, sinus
                 SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getCharLatticeVelocity());
 
@@ -232,9 +238,11 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
     const int vtkIter = converter.getLatticeTime(.1);
     const int statIter = converter.getLatticeTime(.1);
 
-    if (iT % vtkIter == 0) {
-        //vtmWriter.write(iT);
-
+    int rank = 0;
+#ifdef PARALLEL_MODE_MPI
+    rank = singleton::mpi().rank;
+#endif
+    if (rank == 0 && iT % vtkIter == 0) {
         const Vector<T, 3>& min = stlReader.getMin();
         const Vector<T, 3>& max = stlReader.getMax();
 
@@ -256,9 +264,9 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                         interpolateVelocity(u, pos);
 
                     // Downgrade to float.
-                    rawVelocityData.push_back(static_cast<float>(u[0]));
-                    rawVelocityData.push_back(static_cast<float>(u[1]));
-                    rawVelocityData.push_back(static_cast<float>(u[2]));
+                    rawVelocityData.push_back(static_cast<float>(u[0]/VOREEN_LENGTH_TO_SI));
+                    rawVelocityData.push_back(static_cast<float>(u[1]/VOREEN_LENGTH_TO_SI));
+                    rawVelocityData.push_back(static_cast<float>(u[2]/VOREEN_LENGTH_TO_SI));
                 }
             }
         }
@@ -280,7 +288,6 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     if (sLattice.getStatistics().getMaxU() > 0.3) {
         clout << "PROBLEM uMax=" << sLattice.getStatistics().getMaxU() << std::endl;
-        vtmWriter.write(iT);
         std::exit(0);
     }
 }
@@ -306,22 +313,28 @@ int main(int argc, char* argv[]) {
     clout << "Ensemble:" << ensemble << std::endl;
     clout << "Run: " << run << std::endl;
 
-    __mode_t mode = ACCESSPERMS;
-    std::string output = base;
-    if (DIR* dir = opendir(output.c_str())) {
-        closedir(dir);
-    } else {
-        output += simulation + "/";
-        mkdir(output.c_str(), mode); // ignore result
-        output += ensemble + "/";
-        mkdir(output.c_str(), mode); // ignore result
-        output += run + "/";
-        if (mkdir(output.c_str(), mode) != 0) {
-            clout << "Could not create output directory: '" << output << "'" << std::endl;
-            return EXIT_FAILURE;
+    int rank = 0;
+#ifdef PARALLEL_MODE_MPI
+    rank = singleton::mpi().rank;
+#endif
+    if(rank == 0) {
+        __mode_t mode = ACCESSPERMS;
+        std::string output = base;
+        if (DIR* dir = opendir(output.c_str())) {
+            closedir(dir);
+        } else {
+            output += simulation + "/";
+            mkdir(output.c_str(), mode); // ignore result
+            output += ensemble + "/";
+            mkdir(output.c_str(), mode); // ignore result
+            output += run + "/";
+            if (mkdir(output.c_str(), mode) != 0) {
+                clout << "Could not create output directory: '" << output << "'" << std::endl;
+                return EXIT_FAILURE;
+            }
         }
+        singleton::directories().setOutputDir(output.c_str());
     }
-    singleton::directories().setOutputDir(output.c_str());
 
     XMLreader config("config.xml");
     simulationTime = std::atof(config["simulationTime"].getAttribute("value").c_str());
@@ -352,12 +365,12 @@ int main(int argc, char* argv[]) {
 
     const int N = spatialResolution;
     UnitConverter<T, DESCRIPTOR> converter(
-            (T) characteristicLength / N,  // physDeltaX: spacing between two lattice cells in __m__
-            (T) temporalResolution,        // physDeltaT: time step in __s__
-            (T) characteristicLength,      // charPhysLength: reference length of simulation geometry
-            (T) characteristicVelocity,    // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
-            (T) viscosity*1e-6,                 // physViscosity: physical kinematic viscosity in __m^2 / s__
-            (T) density                    // physDensity: physical density in __kg / m^3__
+            (T) characteristicLength * VOREEN_LENGTH_TO_SI / N,  // physDeltaX: spacing between two lattice cells in __m__
+            (T) temporalResolution * VOREEN_TIME_TO_SI,          // physDeltaT: time step in __s__
+            (T) characteristicLength * VOREEN_LENGTH_TO_SI,      // charPhysLength: reference length of simulation geometry
+            (T) characteristicVelocity * VOREEN_LENGTH_TO_SI,    // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
+            (T) viscosity * 1e-6,                                // physViscosity: physical kinematic viscosity in __m^2 / s__
+            (T) density                                          // physDensity: physical density in __kg / m^3__
     );
     // Prints the converter log as console output
     converter.print();
@@ -369,7 +382,7 @@ int main(int argc, char* argv[]) {
     // Instantiation of the STLreader class
     // file name, voxel size in meter, stl unit in meter, outer voxel no., inner voxel no.
     std::string geometryFileName = "../geometry/geometry.stl";
-    STLreader<T> stlReader(geometryFileName.c_str(), converter.getConversionFactorLength(), 1.0, 0, true);
+    STLreader<T> stlReader(geometryFileName.c_str(), converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI, 0, true);
     IndicatorLayer3D<T> extendedDomain(stlReader, converter.getConversionFactorLength());
 
     // Instantiation of a cuboidGeometry with weights

@@ -38,6 +38,7 @@
 namespace voreen {
 
 const T FlowSimulation::VOREEN_LENGTH_TO_SI = 0.001;
+const T FlowSimulation::VOREEN_TIME_TO_SI = 0.001;
 const std::string FlowSimulation::simulationName("default-local");
 const std::string FlowSimulation::loggerCat_("voreen.flowreen.FlowSimulation");
 
@@ -189,7 +190,7 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
     const int N = parametrizationList.getSpatialResolution();
     UnitConverter<T, DESCRIPTOR> converter(
             (T) parameters.getCharacteristicLength() * VOREEN_LENGTH_TO_SI / N, // physDeltaX: spacing between two lattice cells in __m__
-            (T) parametrizationList.getTemporalResolution() / 1000.0,           // physDeltaT: time step in __s__
+            (T) parametrizationList.getTemporalResolution() * VOREEN_TIME_TO_SI,// physDeltaT: time step in __s__
             (T) parameters.getCharacteristicLength() * VOREEN_LENGTH_TO_SI,     // charPhysLength: reference length of simulation geometry
             (T) parameters.getCharacteristicVelocity() * VOREEN_LENGTH_TO_SI,   // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
             (T) parameters.getViscosity() * 1e-6,                               // physViscosity: physical kinematic viscosity in __m^2 / s__
@@ -410,6 +411,8 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
         for(const FlowIndicatorMaterial& indicator : flowIndicators) {
             if (indicator.direction_ == IN) {
 
+                // TODO: select different flow -> constant, sinus, ..
+
                 // Smooth start curve, sinus
                 SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getCharLatticeVelocity());
 
@@ -451,7 +454,6 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
     const int statIter = converter.getLatticeTime(.1);
 
     if (iT % vtkIter == 0) {
-        //vtmWriter.write(iT); // TODO: finally replace by RAW
 
         const Vector<T, 3>& min = stlReader.getMin();
         const Vector<T, 3>& max = stlReader.getMax();
@@ -498,7 +500,6 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     if (sLattice.getStatistics().getMaxU() > 0.3) {
         clout << "PROBLEM uMax=" << sLattice.getStatistics().getMaxU() << std::endl;
-        vtmWriter.write(iT);
         return false;
     }
 
