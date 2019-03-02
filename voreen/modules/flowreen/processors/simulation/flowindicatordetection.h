@@ -79,6 +79,7 @@ private:
     FloatProperty temporalResolution_;
     IntProperty spatialResolution_;
 
+    OptionProperty<FlowFunction> flowFunction_;
     OptionProperty<FlowDirection> flowDirection_;
     FloatProperty radius_;
 

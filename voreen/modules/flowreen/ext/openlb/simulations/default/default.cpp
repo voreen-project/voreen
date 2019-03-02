@@ -43,15 +43,22 @@ typedef double T;
 #define DESCRIPTOR D3Q19Descriptor
 
 enum FlowDirection {
-    NONE = -1,
-    IN   =  0,
-    OUT  =  1,
+    FD_NONE = -1,
+    FD_IN   =  0,
+    FD_OUT  =  1,
+};
+
+enum FlowFunction {
+    FF_NONE     = -1,
+    FF_CONSTANT =  0,
+    FF_SINUS    =  1,
 };
 
 // Indicates flux through an arbitrary, circle-shaped area.
 // This code is adapted from the voreen host code.
 struct FlowIndicator {
-    FlowDirection   direction_{NONE};
+    FlowDirection   direction_{FD_NONE};
+    FlowFunction    function_{FF_NONE};
     T               center_[3]{0.0};
     T               normal_[3]{0.0};
     T               radius_{0.0};
@@ -148,7 +155,7 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
     }
 
     for(const FlowIndicator& indicator : flowIndicators) {
-        if(indicator.direction_ == IN) {
+        if(indicator.direction_ == FD_IN) {
             if(bouzidiOn) {
                 // material=3 --> no dynamics + bouzidi velocity (inflow)
                 lattice.defineDynamics(superGeometry, indicator.materialId_, &instances::getNoDynamics<T, DESCRIPTOR>());
@@ -160,7 +167,7 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
                 bc.addVelocityBoundary(superGeometry, indicator.materialId_, omega);
             }
         }
-        else if(indicator.direction_ == OUT) {
+        else if(indicator.direction_ == FD_OUT) {
             lattice.defineDynamics(superGeometry, indicator.materialId_, &bulkDynamics);
             bc.addPressureBoundary(superGeometry, indicator.materialId_, omega);
         }
@@ -198,17 +205,29 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     if (iT % iTupdate == 0) {
         for(const FlowIndicator& indicator : flowIndicators) {
-            if (indicator.direction_ == IN) {
+            if (indicator.direction_ == FD_IN) {
 
-                // TODO: select different flow -> constant, sinus, ..
-
-                // Smooth start curve, sinus
-                SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getCharLatticeVelocity());
-
-                // Creates and sets the Poiseuille inflow profile using functors
                 int iTvec[1] = {iT};
                 T maxVelocity[1] = {T()};
-                nSinusStartScale(maxVelocity, iTvec);
+
+                switch(indicator.function_) {
+                case FF_CONSTANT:
+                {
+                    AnalyticalConst1D<T, int> nConstantStartScale(converter.getCharLatticeVelocity());
+                    nConstantStartScale(maxVelocity, iTvec);
+                    break;
+                }
+                case FF_SINUS:
+                {
+                    SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getCharLatticeVelocity());
+                    nSinusStartScale(maxVelocity, iTvec);
+                    break;
+                }
+                case FF_NONE:
+                default:
+                    // Skip!
+                    continue;
+                }
 
                 CirclePoiseuille3D<T> velocity(superGeometry, indicator.materialId_, maxVelocity[0]);
                 if (bouzidiOn) {
@@ -240,7 +259,7 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     int rank = 0;
 #ifdef PARALLEL_MODE_MPI
-    rank = singleton::mpi().rank;
+    //rank = singleton::mpi().getRank();
 #endif
     if (rank == 0 && iT % vtkIter == 0) {
         const Vector<T, 3>& min = stlReader.getMin();
@@ -313,28 +332,22 @@ int main(int argc, char* argv[]) {
     clout << "Ensemble:" << ensemble << std::endl;
     clout << "Run: " << run << std::endl;
 
-    int rank = 0;
-#ifdef PARALLEL_MODE_MPI
-    rank = singleton::mpi().rank;
-#endif
-    if(rank == 0) {
-        __mode_t mode = ACCESSPERMS;
-        std::string output = base;
-        if (DIR* dir = opendir(output.c_str())) {
-            closedir(dir);
-        } else {
-            output += simulation + "/";
-            mkdir(output.c_str(), mode); // ignore result
-            output += ensemble + "/";
-            mkdir(output.c_str(), mode); // ignore result
-            output += run + "/";
-            if (mkdir(output.c_str(), mode) != 0) {
-                clout << "Could not create output directory: '" << output << "'" << std::endl;
-                return EXIT_FAILURE;
-            }
+    __mode_t mode = ACCESSPERMS;
+    std::string output = base;
+    if (DIR* dir = opendir(output.c_str())) {
+        closedir(dir);
+    } else {
+        output += simulation + "/";
+        mkdir(output.c_str(), mode); // ignore result
+        output += ensemble + "/";
+        mkdir(output.c_str(), mode); // ignore result
+        output += run + "/";
+        if (mkdir(output.c_str(), mode) != 0) {
+            clout << "Could not create output directory: '" << output << "'" << std::endl;
+            return EXIT_FAILURE;
         }
-        singleton::directories().setOutputDir(output.c_str());
     }
+    singleton::directories().setOutputDir(output.c_str());
 
     XMLreader config("config.xml");
     simulationTime = std::atof(config["simulationTime"].getAttribute("value").c_str());
@@ -352,6 +365,7 @@ int main(int argc, char* argv[]) {
     for(auto iter : indicators) {
         FlowIndicator indicator;
         indicator.direction_ = static_cast<FlowDirection>(std::atoi((*iter)["direction"].getAttribute("value").c_str()));
+        indicator.function_  = static_cast<FlowFunction>(std::atoi((*iter)["function"].getAttribute("value").c_str()));
         indicator.center_[0] = std::atof((*iter)["center"].getAttribute("x").c_str());
         indicator.center_[1] = std::atof((*iter)["center"].getAttribute("y").c_str());
         indicator.center_[2] = std::atof((*iter)["center"].getAttribute("z").c_str());
@@ -427,6 +441,7 @@ int main(int argc, char* argv[]) {
 
     // === 4th Step: Main Loop with Timer ===
     clout << "starting simulation..." << std::endl;
+    util::ValueTracer<T> converge(converter.getLatticeTime(1.0), 1e-5);
     Timer<T> timer(converter.getLatticeTime(simulationTime), superGeometry.getStatistics().getNvoxel());
     timer.start();
 
@@ -440,6 +455,13 @@ int main(int argc, char* argv[]) {
 
         // === 7th Step: Computation and Output of the Results ===
         getResults(sLattice, converter, iT, bulkDynamics, superGeometry, timer, stlReader);
+
+        // === 8th Step: Check for convergence.
+        converge.takeValue(sLattice.getStatistics().getAverageEnergy(), true);
+        if(converge.hasConverged()) {
+            clout << "Simulation converged!";
+            break;
+        }
     }
 
     timer.stop();

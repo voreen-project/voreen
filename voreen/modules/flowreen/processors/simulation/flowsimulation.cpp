@@ -251,8 +251,9 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
                    parametrizationList, input.selectedParametrization,
                    flowIndicators);
 
-    // === 4th Step: Main Loop with Timer ===
-    LINFO("starting simulation...");
+    // === 4th Step: Main Loop  ===
+    util::ValueTracer<T> converge( converter.getLatticeTime(1.0), 1e-5 );
+    LINFO("Starting simulation...");
     for (int iT = 0; iT <= converter.getLatticeTime(parametrizationList.getSimulationTime()); iT++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
@@ -266,14 +267,22 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
         bool success = getResults(sLattice, converter, iT, bulkDynamics, superGeometry, stlReader,
                                   parametrizationList, input.selectedParametrization, flowIndicators,
                                   input.simulationResultPath);
-        if(!success)
+        if(!success) {
             break;
+        }
+
+        // Check for convergence.
+        converge.takeValue(sLattice.getStatistics().getAverageEnergy(), true);
+        if(converge.hasConverged()) {
+            LINFO("Simulation converged!");
+            break;
+        }
 
         float progress = iT / (converter.getLatticeTime( parametrizationList.getSimulationTime() ) + 1.0f);
         progressReporter.setProgress(progress);
     }
     progressReporter.setProgress(1.0f);
-    LINFO("finished simulation...");
+    LINFO("Finished simulation...");
 
     // Done.
     return FlowSimulationOutput{
@@ -356,7 +365,7 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
     }
 
     for(const FlowIndicatorMaterial& indicator : flowIndicators) {
-        if(indicator.direction_ == IN) {
+        if(indicator.direction_ == FD_IN) {
             if(bouzidiOn) {
                 // material=3 --> no dynamics + bouzidi velocity (inflow)
                 lattice.defineDynamics(superGeometry, indicator.materialId_, &instances::getNoDynamics<T, DESCRIPTOR>());
@@ -368,7 +377,7 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
                 bc.addVelocityBoundary(superGeometry, indicator.materialId_, omega);
             }
         }
-        else if(indicator.direction_ == OUT) {
+        else if(indicator.direction_ == FD_OUT) {
             lattice.defineDynamics(superGeometry, indicator.materialId_, &bulkDynamics);
             bc.addPressureBoundary(superGeometry, indicator.materialId_, omega);
         }
@@ -409,17 +418,29 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     if (iT % iTupdate == 0) {
         for(const FlowIndicatorMaterial& indicator : flowIndicators) {
-            if (indicator.direction_ == IN) {
+            if (indicator.direction_ == FD_IN) {
 
-                // TODO: select different flow -> constant, sinus, ..
-
-                // Smooth start curve, sinus
-                SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getCharLatticeVelocity());
-
-                // Creates and sets the Poiseuille inflow profile using functors
                 int iTvec[1] = {iT};
                 T maxVelocity[1] = {T()};
-                nSinusStartScale(maxVelocity, iTvec);
+
+                switch(indicator.function_) {
+                case FF_CONSTANT:
+                {
+                    AnalyticalConst1D<T, int> nConstantStartScale(converter.getCharLatticeVelocity());
+                    nConstantStartScale(maxVelocity, iTvec);
+                    break;
+                }
+                case FF_SINUS:
+                {
+                    SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getCharLatticeVelocity());
+                    nSinusStartScale(maxVelocity, iTvec);
+                    break;
+                }
+                case FF_NONE:
+                default:
+                    // Skip!
+                    continue;
+                }
 
                 CirclePoiseuille3D<T> velocity(superGeometry, indicator.materialId_, maxVelocity[0]);
                 if (bouzidiOn) {
@@ -442,7 +463,6 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                  size_t selectedParametrization,
                                  std::vector<FlowIndicatorMaterial>& flowIndicators,
                                  const std::string& simulationOutputPath) const {
-    OstreamManager clout( std::cout,"getResults" );
 
     SuperVTMwriter3D<T> vtmWriter(simulationName);
     SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
@@ -459,7 +479,9 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
         const Vector<T, 3>& max = stlReader.getMax();
 
         const int resolution = converter.getResolution();
-        const Vector<T, 3> len = max - min;//converter.getCharPhysLength();
+        const Vector<T, 3> len = max - min;
+        const T maxLen = std::max(len[0], std::max(len[1], len[2]));
+        const Vector<T, 3> offset = (len - maxLen) * 0.5;
         std::vector<float> rawVelocityData;
         rawVelocityData.reserve(static_cast<size_t>(resolution * resolution * resolution * 3));
 
@@ -468,7 +490,7 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
             for(int y=0; y<resolution; y++) {
                 for(int x=0; x<resolution; x++) {
 
-                    T pos[3] = {min[0]+x*len[0]/resolution, min[1]+y*len[1]/resolution, min[2]+z*len[2]/resolution};
+                    T pos[3] = {offset[0]+x*maxLen/resolution, offset[1]+y*maxLen/resolution, offset[2]+z*maxLen/resolution};
                     T u[3] = {0.0, 0.0, 0.0};
 
                     if(pos[0] >= min[0] && pos[1] >= min[1] && pos[2] >= min[2] &&
@@ -488,18 +510,24 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
         size_t numBytes = rawVelocityData.size() * sizeof(float) / sizeof(char);
         velocityFile.write(reinterpret_cast<const char*>(rawVelocityData.data()), numBytes);
         if (!velocityFile.good()) {
-            clout << "Could not write velocity file" << std::endl;
+            LERROR("Could not write velocity file");
         }
     }
 
     // Writes output on the console
     if (iT % statIter == 0) {
         // Lattice statistics console output
+        LINFO("step="     << iT << "; " <<
+              "t="        << converter.getPhysTime(iT) << "; " <<
+              "uMax="     << sLattice.getStatistics().getMaxU() << "; " <<
+              "avEnergy=" << sLattice.getStatistics().getAverageEnergy() << "; " <<
+              "avRho="    << sLattice.getStatistics().getAverageRho()
+              );
         sLattice.getStatistics().print(iT, converter.getPhysTime(iT));
     }
 
     if (sLattice.getStatistics().getMaxU() > 0.3) {
-        clout << "PROBLEM uMax=" << sLattice.getStatistics().getMaxU() << std::endl;
+        LERROR("PROBLEM uMax=" << sLattice.getStatistics().getMaxU());
         return false;
     }
 

@@ -78,6 +78,7 @@ private:
     FloatProperty simulationTime_;
     FloatProperty temporalResolution_;
     IntProperty spatialResolution_;
+    OptionProperty<FlowFunction> flowFunction_;
 
     StringProperty parametrizationName_;
     FloatProperty characteristicLength_;

@@ -99,9 +99,9 @@ void FlowIndicatorRenderer::render() {
         MatStack.multMatrix(createTransformationMatrix(indicator.center_, indicator.normal_));
         MatStack.scale(tgt::vec3(indicator.radius_));
 
-        if(indicator.direction_ == IN)
+        if(indicator.direction_ == FD_IN)
             IMode.color(inFlowColor_.get());
-        else if(indicator.direction_ == OUT)
+        else if(indicator.direction_ == FD_OUT)
             IMode.color(outFlowColor_.get());
         else
             IMode.color(tgt::vec4::zero);

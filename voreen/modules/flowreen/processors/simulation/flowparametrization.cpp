@@ -37,11 +37,12 @@ FlowParametrization::FlowParametrization()
     , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 10.0f)
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 30.0f)
     , spatialResolution_("spatialResolution", "Spatial Resolution", 128, 32, 1024)
+    , flowFunction_("flowFunction", "Flow Function")
     , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 22.46f, 1.0f, 100.0f)
     , characteristicVelocity_("characteristicVelocity", "Characteristic Velocity (mm/s)", 10.0f, 1.0f, 100.0f)
     , viscosity_("viscosity", "Viscosity (e-6 m^2/s)", 3.5, 3, 4)
     , density_("density", "Density (kg/m^3)", 1000.0f, 1000.0f, 1100.0f)
-    , bouzidi_("bounzidi", "Bounzidi", true)
+    , bouzidi_("bouzidi", "Bouzidi", true)
     , addParametrization_("addParametrization", "Add Parametrization")
     , removeParametrization_("removeParametrization", "Remove Parametrization")
     , clearParametrizations_("clearParametrizations", "Clear Parametrizations")
@@ -61,6 +62,11 @@ FlowParametrization::FlowParametrization()
         temporalResolution_.setGroupID("ensemble");
     addProperty(spatialResolution_);
         spatialResolution_.setGroupID("ensemble");
+    addProperty(flowFunction_);
+        flowFunction_.addOption("none", "NONE", FlowFunction::FF_NONE); // get's selected automatically
+        flowFunction_.addOption("constant", "CONSTANT", FlowFunction ::FF_CONSTANT);
+        flowFunction_.addOption("sinus", "SINUS", FlowFunction::FF_SINUS);
+        flowFunction_.setGroupID("ensemble");
     setPropertyGroupGuiName("ensemble", "Ensemble");
 
     addProperty(parametrizationName_);
@@ -200,6 +206,7 @@ void FlowParametrization::process() {
         flowParametrizationList->setSimulationTime(simulationTime_.get());
         flowParametrizationList->setTemporalResolution(temporalResolution_.get());
         flowParametrizationList->setSpatialResolution(spatialResolution_.get());
+        flowParametrizationList->setFlowFunction(flowFunction_.getValue());
     }
 
     for (const FlowParameters &flowParameters : flowParameters_) {

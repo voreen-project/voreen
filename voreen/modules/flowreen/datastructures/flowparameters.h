@@ -36,14 +36,21 @@
 namespace voreen {
 
 enum FlowDirection {
-    NONE = -1,
-    IN   =  0,
-    OUT  =  1,
+    FD_NONE = -1,
+    FD_IN   =  0,
+    FD_OUT  =  1,
+};
+
+enum FlowFunction {
+    FF_NONE     = -1,
+    FF_CONSTANT =  0,
+    FF_SINUS    =  1,
 };
 
 // Indicates flux through an arbitrary, circle-shaped area.
 struct VRN_CORE_API FlowIndicator : public Serializable {
     FlowDirection   direction_;
+    FlowFunction    function_;
     tgt::vec3       center_;
     tgt::vec3       normal_;
     float           radius_;
@@ -122,6 +129,9 @@ public:
 
     int getSpatialResolution() const;
     void setSpatialResolution(int spatialResolution);
+
+    /** Overrides flow function for each inflow indicator. Therefore, not getter exists */
+    void setFlowFunction(FlowFunction flowFunction);
 
     void addFlowIndicator(const FlowIndicator& flowIndicator);
     const std::vector<FlowIndicator>& getFlowIndicators() const;

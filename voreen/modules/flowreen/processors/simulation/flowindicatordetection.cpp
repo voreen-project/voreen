@@ -37,6 +37,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 10.0f)
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 30.0f)
     , spatialResolution_("spatialResolution", "Spatial Resolution", 128, 32, 1024)
+    , flowFunction_("flowFunction", "Flow Function")
     , flowDirection_("flowDirection", "Flow Direction")
     , radius_("radius", "Radius", 1.0f, 0.0f, 10.0f)
     , flowIndicatorTable_("flowIndicators", "Flow Indicators", 4)
@@ -55,10 +56,15 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         spatialResolution_.setGroupID("ensemble");
     setPropertyGroupGuiName("ensemble", "Ensemble");
 
+    addProperty(flowFunction_);
+        flowFunction_.addOption("none", "NONE", FlowFunction::FF_NONE);
+        flowFunction_.addOption("constant", "CONSTANT", FlowFunction ::FF_CONSTANT);
+        flowFunction_.addOption("sinus", "SINUS", FlowFunction::FF_SINUS);
+        flowFunction_.setGroupID("indicator");
     addProperty(flowDirection_);
-        flowDirection_.addOption("none", "NONE", FlowDirection::NONE);
-        flowDirection_.addOption("in", "IN", FlowDirection::IN);
-        flowDirection_.addOption("out", "OUT", FlowDirection::OUT);
+        flowDirection_.addOption("none", "NONE", FlowDirection::FD_NONE);
+        flowDirection_.addOption("in", "IN", FlowDirection::FD_IN);
+        flowDirection_.addOption("out", "OUT", FlowDirection::FD_OUT);
         flowDirection_.setGroupID("indicator");
         ON_CHANGE(flowDirection_, FlowIndicatorDetection, onConfigChange);
     //addProperty(radius_);
@@ -101,10 +107,11 @@ void FlowIndicatorDetection::process() {
 
     for(const FlowIndicator& indicator : flowIndicators_) {
         // NONE means invalid or not being selected for output.
-        if(indicator.direction_ != NONE) {
+        if(indicator.direction_ != FD_NONE) {
             flowParametrizationList->addFlowIndicator(indicator);
         }
     }
+    flowParametrizationList->setFlowFunction(flowFunction_.getValue());
 
     flowParametrizationPort_.setData(flowParametrizationList);
 }
@@ -167,7 +174,8 @@ void FlowIndicatorDetection::onVesselGraphChange() {
             indicator.center_ = end->pos_;
             indicator.normal_ = tgt::normalize(end->pos_ - ref->pos_);
             indicator.radius_ = end->avgDistToSurface_;
-            indicator.direction_ = FlowDirection::NONE;
+            indicator.direction_ = FlowDirection::FD_NONE;
+            indicator.function_  = FlowFunction::FF_NONE;
             flowIndicators_.push_back(indicator);
         }
     }
@@ -181,7 +189,7 @@ void FlowIndicatorDetection::buildTable() {
 
     for(const FlowIndicator& indicator : flowIndicators_) {
         std::vector<std::string> row(4);
-        row[0] = indicator.direction_ == FlowDirection::IN ? "IN" : (indicator.direction_ == FlowDirection::OUT
+        row[0] = indicator.direction_ == FlowDirection::FD_IN ? "IN" : (indicator.direction_ == FlowDirection::FD_OUT
                                                                      ? "OUT" : "NONE");
         row[1] = "(" + std::to_string(indicator.center_.x) + ", " + std::to_string(indicator.center_.y) + ", " +
                  std::to_string(indicator.center_.z) + ")";

@@ -33,7 +33,8 @@
 namespace voreen {
 
 FlowIndicator::FlowIndicator()
-    : direction_(NONE)
+    : direction_(FD_NONE)
+    , function_(FF_NONE)
     , center_(tgt::vec3::zero)
     , normal_(tgt::vec3::zero)
     , radius_(0.0f)
@@ -42,15 +43,19 @@ FlowIndicator::FlowIndicator()
 
 void FlowIndicator::serialize(Serializer& s) const {
     s.serialize("direction", direction_);
+    s.serialize("function", function_);
     s.serialize("center", center_);
     s.serialize("normal", normal_);
     s.serialize("radius", radius_);
 }
 
 void FlowIndicator::deserialize(Deserializer& s) {
-    int direction = -1;
+    int direction = FD_NONE;
     s.deserialize("direction", direction);
     direction_ = static_cast<FlowDirection>(direction);
+    int function = FF_NONE;
+    s.deserialize("function", function);
+    function_ = static_cast<FlowFunction>(function);
     s.deserialize("center", center_);
     s.deserialize("normal", normal_);
     s.deserialize("radius", radius_);
@@ -180,6 +185,14 @@ int FlowParametrizationList::getSpatialResolution() const {
 void FlowParametrizationList::setSpatialResolution(int spatialResolution) {
     notifyPendingDataInvalidation();
     spatialResolution_ = spatialResolution;
+}
+
+void FlowParametrizationList::setFlowFunction(FlowFunction flowFunction) {
+    for(FlowIndicator& flowIndicator : flowIndicators_) {
+        if(flowIndicator.direction_ == FD_IN) {
+            flowIndicator.function_ = flowFunction;
+        }
+    }
 }
 
 void FlowParametrizationList::addFlowIndicator(const FlowIndicator& flowIndicator) {
