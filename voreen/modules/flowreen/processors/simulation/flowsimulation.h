@@ -84,7 +84,6 @@ private:
 
     static const T VOREEN_LENGTH_TO_SI;
     static const T VOREEN_TIME_TO_SI;
-    static const std::string simulationName;
 
     struct FlowIndicatorMaterial : public FlowIndicator {
         int materialId_{0};

@@ -29,6 +29,7 @@
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
 #include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
+#include "voreen/core/ports/conditions/portconditionvolumetype.h"
 
 #include "modules/hdf5/io/hdf5volumereader.h"
 #include "modules/hdf5/io/hdf5volumewriter.h"
@@ -39,12 +40,10 @@ namespace voreen {
 
 const T FlowSimulation::VOREEN_LENGTH_TO_SI = 0.001;
 const T FlowSimulation::VOREEN_TIME_TO_SI = 0.001;
-const std::string FlowSimulation::simulationName("default-local");
 const std::string FlowSimulation::loggerCat_("voreen.flowreen.FlowSimulation");
 
 FlowSimulation::FlowSimulation()
     : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
-    // ports
     , geometryDataPort_(Port::INPORT, "geometryDataPort", "Geometry Input", false)
     , measuredDataPort_(Port::INPORT, "measuredDataPort", "Measured Data Input", false)
     , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
@@ -54,6 +53,7 @@ FlowSimulation::FlowSimulation()
 {
     addPort(geometryDataPort_);
     addPort(measuredDataPort_);
+    measuredDataPort_.addCondition(new PortConditionVolumeList(new PortConditionVolumeType3xFloat()));
     addPort(parameterPort_);
 
     addProperty(simulationResults_);
@@ -122,10 +122,6 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     // TODO: create new data-/port- type which resamples all contained volume into a cube or at least performs the checks below.
     // Check for volume compatibility
     VolumeBase* volumeT0 = measuredData->first();
-    // Currently only 3xFloat Volumes are considered. This condition could be relaxed in the future.
-    if(volumeT0->getFormat() != VolumeGenerator3xFloat().getFormat()) {
-        throw InvalidInputException("Measured data contains volume different from 3xFloat", InvalidInputException::S_ERROR);
-    }
     if(volumeT0->getDimensions() != tgt::svec3(volumeT0->getDimensions().x)) {
         throw InvalidInputException("Measured data must have dimensions: n x n x n", InvalidInputException::S_ERROR);
     }
@@ -143,9 +139,8 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
     for(size_t i=1; i<measuredData->size(); i++) {
         VolumeBase* volumeTi = measuredData->at(i);
-        if(volumeT0->getFormat() != volumeTi->getFormat()
-            || volumeT0->getDimensions() != volumeTi->getDimensions()
-            || volumeT0->getSpacing() != volumeTi->getSpacing()) {
+        if (volumeT0->getDimensions() != volumeTi->getDimensions() ||
+            volumeT0->getSpacing() != volumeTi->getSpacing()) {
             throw InvalidInputException("Measured data contains different kinds of volumes.", InvalidInputException::S_ERROR);
         }
 
@@ -413,10 +408,10 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                         std::vector<FlowIndicatorMaterial>& flowIndicators) const {
     // No of time steps for smooth start-up
     int iTperiod = converter.getLatticeTime(0.5);
-    int iTupdate = 50;
+    //int iTupdate = 50;
     bool bouzidiOn = parametrizationList.at(selectedParametrization).getBouzidi();
 
-    if (iT % iTupdate == 0) {
+    //if (iT % iTupdate == 0) {
         for(const FlowIndicatorMaterial& indicator : flowIndicators) {
             if (indicator.direction_ == FD_IN) {
 
@@ -450,7 +445,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 }
             }
         }
-    }
+    //}
 }
 
 // Computes flux at inflow and outflow
@@ -464,11 +459,8 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                  std::vector<FlowIndicatorMaterial>& flowIndicators,
                                  const std::string& simulationOutputPath) const {
 
-    SuperVTMwriter3D<T> vtmWriter(simulationName);
     SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
     SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
-    vtmWriter.addFunctor(velocity);
-    vtmWriter.addFunctor(pressure);
 
     const int vtkIter = converter.getLatticeTime(.1);
     const int statIter = converter.getLatticeTime(.1);
@@ -480,7 +472,7 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
         const int resolution = converter.getResolution();
         const Vector<T, 3> len = max - min;
-        const T maxLen = std::max(len[0], std::max(len[1], len[2]));
+        const T maxLen = std::max({len[0], len[1], len[2]});
         const Vector<T, 3> offset = (len - maxLen) * 0.5;
         std::vector<float> rawVelocityData;
         rawVelocityData.reserve(static_cast<size_t>(resolution * resolution * resolution * 3));

@@ -93,7 +93,6 @@ private:
     ButtonProperty autoGenerateParametrizations_;
 
     StringTableProperty parametrizations_;
-    StringTableProperty flowIndicators_;
 
     static const std::string loggerCat_;
 };

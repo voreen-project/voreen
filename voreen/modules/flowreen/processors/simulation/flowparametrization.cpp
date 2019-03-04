@@ -161,8 +161,8 @@ void FlowParametrization::autoGenerateEnsemble() {
                         std::string name =
                                 "run_len=" + std::to_string(characteristicLength) + "_vel=" + std::to_string(characteristicVelocity) +
                                 "_v=" + std::to_string(viscosity) + "_d=" + std::to_string(density) + "_b=" + std::to_string(bouzidi);
-                        FlowParameters parameters(name);
 
+                        FlowParameters parameters(name);
                         parameters.setCharacteristicLength(characteristicLength);
                         parameters.setCharacteristicVelocity(characteristicVelocity);
                         parameters.setViscosity(viscosity);

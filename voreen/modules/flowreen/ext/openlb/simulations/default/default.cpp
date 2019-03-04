@@ -248,11 +248,8 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     OstreamManager clout(std::cout, "getResults");
 
-    SuperVTMwriter3D<T> vtmWriter(simulation);
     SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
     SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
-    vtmWriter.addFunctor(velocity);
-    vtmWriter.addFunctor(pressure);
 
     const int vtkIter = converter.getLatticeTime(.1);
     const int statIter = converter.getLatticeTime(.1);
