@@ -36,7 +36,7 @@
 namespace voreen {
 
 /**
- * Used to render points in 3D. Must be linked to a SlicePointRenderer2D.
+ * Used to render in and out flow locations.
  */
 class VRN_CORE_API FlowIndicatorRenderer : public GeometryRendererBase {
 public:
@@ -53,7 +53,7 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Render Points at the position selected by the SlicePointRenderer2D. Use in combination with the SliceViewer.");
+        setDescription("Used to render in and out flow locations.");
     }
 
     void process();

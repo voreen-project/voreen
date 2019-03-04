@@ -80,10 +80,16 @@ void FlowIndicatorRenderer::deinitialize() {
 }
 
 tgt::Bounds FlowIndicatorRenderer::getBoundingBox() const {
-    if (geometry_)
-        return geometry_->getBoundingBox();
 
-    return GeometryRendererBase::getBoundingBox();
+    tgt::Bounds bounds;
+    if (inport_.hasData()) {
+        for (const FlowIndicator &indicator : inport_.getData()->getFlowIndicators()) {
+            bounds.addPoint(indicator.center_ - indicator.radius_);
+            bounds.addPoint(indicator.center_ + indicator.radius_);
+        }
+    }
+
+    return bounds;
 }
 
 void FlowIndicatorRenderer::process() {}
