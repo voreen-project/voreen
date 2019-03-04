@@ -178,6 +178,7 @@ IF(VRN_FLOWREEN_BUILD_OPENLB)
         ${MOD_DIR}/ports/flowparametrizationport.h
 
         # processors
+        ${MOD_DIR}/processors/simulation/flowcharacteristics.h
         ${MOD_DIR}/processors/simulation/flowindicatorselection.h
         ${MOD_DIR}/processors/simulation/flowindicatorrenderer.h
         ${MOD_DIR}/processors/simulation/flowparametrization.h
@@ -196,6 +197,7 @@ IF(VRN_FLOWREEN_BUILD_OPENLB)
         ${MOD_DIR}/ports/flowparametrizationport.cpp
 
         # processors
+        ${MOD_DIR}/processors/simulation/flowcharacteristics.cpp
         ${MOD_DIR}/processors/simulation/flowindicatorselection.cpp
         ${MOD_DIR}/processors/simulation/flowindicatorrenderer.cpp
         ${MOD_DIR}/processors/simulation/flowparametrization.cpp

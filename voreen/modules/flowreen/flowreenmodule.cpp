@@ -45,6 +45,7 @@
 #ifdef VRN_MODULE_VESSELTOPOLOGY
 #include "modules/flowreen/processors/simulation/flowindicatordetection.h"
 #endif
+#include "processors/simulation/flowcharacteristics.h"
 #include "processors/simulation/flowindicatorselection.h"
 #include "processors/simulation/flowindicatorrenderer.h"
 #include "processors/simulation/flowsimulation.h"
@@ -95,6 +96,7 @@ FlowreenModule::FlowreenModule(const std::string& modulePath)
     registerSerializableType(new StreamlineToBoundingBox());
 #ifdef FLOWREEN_USE_OPENLB
     registerSerializableType(new ImplicitRepresentation());
+    registerSerializableType(new FlowCharacteristics());
 #ifdef VRN_MODULE_VESSELTOPOLOGY
     registerSerializableType(new FlowIndicatorDetection());
 #endif
