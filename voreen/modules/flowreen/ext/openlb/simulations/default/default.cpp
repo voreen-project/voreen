@@ -42,6 +42,13 @@ using namespace olb::util;
 typedef double T;
 #define DESCRIPTOR D3Q19Descriptor
 
+enum Material {
+    MAT_EMPTY  = 0,
+    MAT_LIQUID = 1,
+    MAT_WALL   = 2,
+    MAT_COUNT,
+};
+
 enum FlowDirection {
     FD_NONE = -1,
     FD_IN   =  0,
@@ -94,12 +101,12 @@ void prepareGeometry(UnitConverter<T, DESCRIPTOR> const& converter, IndicatorF3D
     OstreamManager clout(std::cout, "prepareGeometry");
     clout << "Prepare Geometry ..." << std::endl;
 
-    superGeometry.rename(0, 2, indicator);
-    superGeometry.rename(2, 1, stlReader);
+    superGeometry.rename(MAT_EMPTY, MAT_WALL,   indicator);
+    superGeometry.rename(MAT_WALL,  MAT_LIQUID, stlReader);
 
     superGeometry.clean();
 
-    int materialId = 3; // 0=empty, 1=liquid, 2=walls
+    int materialId = MAT_COUNT;
 
     for (size_t i = 0; i < flowIndicators.size(); i++) {
 
@@ -112,7 +119,7 @@ void prepareGeometry(UnitConverter<T, DESCRIPTOR> const& converter, IndicatorF3D
                                   normal[0], normal[1], normal[2],
                                   radius*VOREEN_LENGTH_TO_SI);
         IndicatorCylinder3D<T> layerFlow(flow, 2. * converter.getConversionFactorLength());
-        superGeometry.rename(2, materialId, 1, layerFlow);
+        superGeometry.rename(MAT_WALL, materialId, MAT_LIQUID, layerFlow);
         flowIndicators[i].materialId_ = materialId;
         materialId++;
     }
@@ -140,18 +147,18 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
     const T omega = converter.getLatticeRelaxationFrequency();
 
     // material=0 --> do nothing
-    lattice.defineDynamics(superGeometry, 0, &instances::getNoDynamics<T, DESCRIPTOR>());
+    lattice.defineDynamics(superGeometry, MAT_EMPTY, &instances::getNoDynamics<T, DESCRIPTOR>());
 
     // material=1 --> bulk dynamics
-    lattice.defineDynamics(superGeometry, 1, &bulkDynamics);
+    lattice.defineDynamics(superGeometry, MAT_LIQUID, &bulkDynamics);
 
     if (bouzidiOn) {
         // material=2 --> no dynamics + bouzidi zero velocity
-        lattice.defineDynamics(superGeometry, 2, &instances::getNoDynamics<T, DESCRIPTOR>());
-        offBc.addZeroVelocityBoundary(superGeometry, 2, stlReader);
+        lattice.defineDynamics(superGeometry, MAT_WALL, &instances::getNoDynamics<T, DESCRIPTOR>());
+        offBc.addZeroVelocityBoundary(superGeometry, MAT_WALL, stlReader);
     } else {
         // material=2 --> bounceBack dynamics
-        lattice.defineDynamics(superGeometry, 2, &instances::getBounceBack<T, DESCRIPTOR>());
+        lattice.defineDynamics(superGeometry, MAT_WALL, &instances::getBounceBack<T, DESCRIPTOR>());
     }
 
     for(const FlowIndicator& indicator : flowIndicators) {
@@ -178,8 +185,8 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
     std::vector<T> velocity(3, T());
     AnalyticalConst3D<T, T> uF(velocity);
 
-    lattice.defineRhoU( superGeometry,1,rhoF,uF );
-    lattice.iniEquilibrium( superGeometry,1,rhoF,uF );
+    lattice.defineRhoU( superGeometry,MAT_LIQUID,rhoF,uF );
+    lattice.iniEquilibrium( superGeometry,MAT_LIQUID,rhoF,uF );
 
     // Initialize all values of distribution functions to their local equilibrium
     for(const FlowIndicator& indicator : flowIndicators) {
