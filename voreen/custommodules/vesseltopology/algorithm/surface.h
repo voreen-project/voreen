@@ -62,6 +62,27 @@ private:
     std::ofstream file_;
 };
 
+// Like SurfaceBuilder, but does not keep a file open all the time
+class NoFileSurfaceBuilder {
+public:
+    NoFileSurfaceBuilder();
+
+    NoFileSurfaceBuilder(NoFileSurfaceBuilder&& other);
+
+    StoredSurface finalize() &&;
+
+    ~NoFileSurfaceBuilder();
+
+    void push(uint64_t linearVoxelPos);
+
+private:
+    void flush();
+
+    std::string filename_;
+    size_t numVoxelsStored_;
+    std::vector<uint64_t> unwrittenVoxels_;
+};
+
 class SurfaceReader {
 public:
     SurfaceReader(StoredSurface surface);

@@ -61,11 +61,61 @@ void SurfaceBuilder::push_all(SurfaceSlice linearVoxelPositions) {
     numVoxelsStored_ += linearVoxelPositions.size();
     file_.write(reinterpret_cast<char*>(linearVoxelPositions.data()), sizeof(uint64_t) * linearVoxelPositions.size());
 }
+
+/// NoFileSurfaceBuilder ---------------------------------------------
+
+#define MAX_UNWRITEN_SURFACE_VOXELS 0xffff
+NoFileSurfaceBuilder::NoFileSurfaceBuilder()
+    : filename_(VoreenApplication::app()->getUniqueTmpFilePath())
+    , numVoxelsStored_(0)
+    , unwrittenVoxels_()
+{
+    // Precreate and truncate surface file
+    std::ofstream file_(filename_, std::ios::binary | std::ios::trunc);
+}
+
+NoFileSurfaceBuilder::NoFileSurfaceBuilder(NoFileSurfaceBuilder&& other)
+    : filename_(other.filename_)
+    , numVoxelsStored_(other.numVoxelsStored_)
+    , unwrittenVoxels_(std::move(other.unwrittenVoxels_))
+{
+}
+
+NoFileSurfaceBuilder::~NoFileSurfaceBuilder() {
+    flush();
+}
+
+StoredSurface NoFileSurfaceBuilder::finalize() && {
+    StoredSurface ret(filename_, numVoxelsStored_);
+    NoFileSurfaceBuilder _ = std::move(*this); //destroy builder and thus flush the file
+    return ret;
+}
+
+void NoFileSurfaceBuilder::flush() {
+    if(unwrittenVoxels_.empty()) {
+        return;
+    }
+    std::ofstream file_(filename_, std::ios::binary | std::ios::app);
+    file_.write(reinterpret_cast<char*>(unwrittenVoxels_.data()), sizeof(uint64_t) * unwrittenVoxels_.size());
+
+    unwrittenVoxels_.clear();
+}
+
+void NoFileSurfaceBuilder::push(uint64_t linearVoxelPos) {
+    ++numVoxelsStored_;
+    unwrittenVoxels_.push_back(linearVoxelPos);
+    if(unwrittenVoxels_.size() >= MAX_UNWRITEN_SURFACE_VOXELS) {
+        flush();
+    }
+}
+
+
 /// SurfaceReader ----------------------------------------------
 SurfaceReader::SurfaceReader(StoredSurface surface)
     : surface_(surface)
     , file_(surface.filename_, std::ifstream::binary)
 {
+    tgtAssert(file_.good(), "Opened bad surface file");
 }
 
 SurfaceReader::~SurfaceReader() {
