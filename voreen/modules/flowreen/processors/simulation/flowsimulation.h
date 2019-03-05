@@ -45,7 +45,8 @@ namespace voreen {
 
 struct FlowSimulationInput {
     std::string geometryPath;
-    FlowParametrizationList parametrizationList;
+    const VolumeList* measuredData;
+    const FlowParametrizationList* parametrizationList;
     size_t selectedParametrization;
     std::string simulationResultPath;
 };
@@ -85,8 +86,15 @@ private:
     static const T VOREEN_LENGTH_TO_SI;
     static const T VOREEN_TIME_TO_SI;
 
+    enum Material {
+        MAT_EMPTY  = 0,
+        MAT_LIQUID = 1,
+        MAT_WALL   = 2,
+        MAT_COUNT,
+    };
+
     struct FlowIndicatorMaterial : public FlowIndicator {
-        int materialId_{0};
+        int materialId_{MAT_EMPTY};
     };
 
     void prepareGeometry(   UnitConverter<T,DESCRIPTOR> const& converter, IndicatorF3D<T>& indicator,
@@ -101,6 +109,7 @@ private:
                             sOnLatticeBoundaryCondition3D<T, DESCRIPTOR>& bc,
                             sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
                             STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry,
+                            const VolumeList* measuredData,
                             const FlowParametrizationList& parametrizationList,
                             size_t selectedParametrization,
                             std::vector<FlowIndicatorMaterial>& flowIndicators) const;
@@ -122,6 +131,12 @@ private:
                             size_t selectedParametrization,
                             std::vector<FlowIndicatorMaterial>& flowIndicators,
                             const std::string& simulationResultPath) const;
+
+    void writeResult(       STLreader<T>& stlReader,
+                            UnitConverter<T,DESCRIPTOR>& converter, int iT,
+                            SuperLatticePhysF3D<T, DESCRIPTOR>& property,
+                            const std::string& simulationOutputPath,
+                            const std::string& name) const;
 
     GeometryPort geometryDataPort_;
     VolumeListPort measuredDataPort_;

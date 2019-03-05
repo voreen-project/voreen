@@ -49,7 +49,7 @@ FlowSimulation::FlowSimulation()
     , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
     , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", VoreenApplication::app()->getTemporaryPath("simulation"), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , simulateAllParametrizations_("simulateAllParametrizations", "Simulate all Parametrizations?", false)
-    , selectedParametrization_("selectedSimulation", "Selected Parametrization", 0, 0, 1)
+    , selectedParametrization_("selectedSimulation", "Selected Parametrization", 0, 0, 0)
 {
     addPort(geometryDataPort_);
     addPort(measuredDataPort_);
@@ -107,45 +107,44 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
         throw InvalidInputException("No simulation geometry", InvalidInputException::S_WARNING);
     }
 
-    auto measuredData = measuredDataPort_.getThreadSafeData();
-    if(!measuredData || measuredData->empty()) {
-        throw InvalidInputException("Unsteered simulations currently not supported", InvalidInputException::S_ERROR);
-    }
+    tgtAssert(measuredDataPort_.isDataInvalidationObservable(), "VolumeListPort must be DataInvalidationObservable!");
+    const VolumeList* measuredData = measuredDataPort_.getThreadSafeData();
 
-    auto flowParameterList = parameterPort_.getThreadSafeData();
+    tgtAssert(parameterPort_.isDataInvalidationObservable(), "FlowParametrizationPort must be DataInvalidationObservable!");
+    const FlowParametrizationList* flowParameterList = parameterPort_.getThreadSafeData();
     if(!flowParameterList || flowParameterList->empty()) {
         throw InvalidInputException("No parameterization", InvalidInputException::S_ERROR);
     }
 
-    LINFO("Configuring a steered simulation");
-
-    // TODO: create new data-/port- type which resamples all contained volume into a cube or at least performs the checks below.
-    // Check for volume compatibility
-    VolumeBase* volumeT0 = measuredData->first();
-    if(volumeT0->getDimensions() != tgt::svec3(volumeT0->getDimensions().x)) {
-        throw InvalidInputException("Measured data must have dimensions: n x n x n", InvalidInputException::S_ERROR);
-    }
-    if(volumeT0->getSpacing() != tgt::vec3(volumeT0->getSpacing().x)) {
-        throw InvalidInputException("Measured data must have spacing: n x n x n", InvalidInputException::S_ERROR);
-    }
-
-    if(!volumeT0->hasDerivedData<VolumeMinMaxMagnitude>()) {
-        LWARNING("Calculating VolumeMinMaxMagnitude. This may take a while...");
-        //throw InvalidInputException("VolumeMinMaxMagnitude not available!", InvalidInputException::S_WARNING);
-    }
-
-    float minVelocityMagnitude = volumeT0->getDerivedData<VolumeMinMaxMagnitude>()->getMinMagnitude();
-    float maxVelocityMagnitude = volumeT0->getDerivedData<VolumeMinMaxMagnitude>()->getMaxMagnitude();
-
-    for(size_t i=1; i<measuredData->size(); i++) {
-        VolumeBase* volumeTi = measuredData->at(i);
-        if (volumeT0->getDimensions() != volumeTi->getDimensions() ||
-            volumeT0->getSpacing() != volumeTi->getSpacing()) {
-            throw InvalidInputException("Measured data contains different kinds of volumes.", InvalidInputException::S_ERROR);
+    if(measuredData && !measuredData->empty()) {
+        LINFO("Configuring a steered simulation");
+        // Check for volume compatibility
+        VolumeBase* volumeT0 = measuredData->first();
+        if (volumeT0->getDimensions() != tgt::svec3(volumeT0->getDimensions().x)) {
+            throw InvalidInputException("Measured data must have dimensions: n x n x n",
+                                        InvalidInputException::S_ERROR);
+        }
+        if (volumeT0->getSpacing() != tgt::vec3(volumeT0->getSpacing().x)) {
+            throw InvalidInputException("Measured data must have spacing: n x n x n", InvalidInputException::S_ERROR);
         }
 
-        minVelocityMagnitude = std::min(minVelocityMagnitude, volumeTi->getDerivedData<VolumeMinMaxMagnitude>()->getMinMagnitude());
-        maxVelocityMagnitude = std::min(maxVelocityMagnitude, volumeTi->getDerivedData<VolumeMinMaxMagnitude>()->getMaxMagnitude());
+        for (size_t i = 1; i < measuredData->size(); i++) {
+            VolumeBase* volumeTi = measuredData->at(i);
+
+            if (measuredData->at(i-1)->getTimestep() >= volumeTi->getTimestep()) {
+                throw InvalidInputException("Time Steps of are not ordered", InvalidInputException::S_ERROR);
+            }
+
+            if (volumeT0->getDimensions() != volumeTi->getDimensions() ||
+                volumeT0->getSpacing() != volumeTi->getSpacing()) {
+                throw InvalidInputException("Measured data contains different kinds of volumes.",
+                                            InvalidInputException::S_ERROR);
+            }
+        }
+    }
+    else {
+        measuredData = nullptr;
+        LINFO("Configuring an unsteered simulation");
     }
 
     std::string geometryPath = VoreenApplication::app()->getUniqueTmpFilePath(".stl");
@@ -166,7 +165,8 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
     return FlowSimulationInput{
             geometryPath,
-            FlowParametrizationList(*flowParameterList),
+            measuredData,
+            flowParameterList,
             selectedParametrization,
             simulationPath
     };
@@ -174,7 +174,8 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
 FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, ProgressReporter& progressReporter) const {
 
-    const FlowParametrizationList& parametrizationList = input.parametrizationList;
+    const VolumeList* measuredData = input.measuredData;
+    const FlowParametrizationList& parametrizationList = *input.parametrizationList;
     const FlowParameters& parameters = parametrizationList.at(input.selectedParametrization);
 
     progressReporter.setProgress(0.0f);
@@ -205,6 +206,7 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
     for(const FlowIndicator& indicator : parametrizationList.getFlowIndicators()) {
         FlowIndicatorMaterial indicatorMaterial;
         indicatorMaterial.direction_ = indicator.direction_;
+        indicatorMaterial.function_  = indicator.function_;
         indicatorMaterial.center_ = indicator.center_;
         indicatorMaterial.normal_ = indicator.normal_;
         indicatorMaterial.radius_ = indicator.radius_;
@@ -243,6 +245,7 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
     prepareLattice(sLattice, converter, bulkDynamics,
                    sBoundaryCondition, sOffBoundaryCondition,
                    stlReader, superGeometry,
+                   measuredData,
                    parametrizationList, input.selectedParametrization,
                    flowIndicators);
 
@@ -297,12 +300,12 @@ void FlowSimulation::prepareGeometry( UnitConverter<T,DESCRIPTOR> const& convert
 
     LINFO("Prepare Geometry ...");
 
-    superGeometry.rename( 0,2,indicator );
-    superGeometry.rename( 2,1,stlReader );
+    superGeometry.rename( MAT_EMPTY, MAT_WALL,  indicator );
+    superGeometry.rename( MAT_WALL,  MAT_LIQUID, stlReader );
 
     superGeometry.clean();
 
-    int materialId = 3; // 0=empty, 1=liquid, 2=walls
+    int materialId = MAT_COUNT;
 
     for (size_t i = 0; i < flowIndicators.size(); i++) {
 
@@ -314,7 +317,7 @@ void FlowSimulation::prepareGeometry( UnitConverter<T,DESCRIPTOR> const& convert
         IndicatorCircle3D<T> flow(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
                                   normal[0], normal[1], normal[2], radius*VOREEN_LENGTH_TO_SI);
         IndicatorCylinder3D<T> layerFlow(flow, 2. * converter.getConversionFactorLength());
-        superGeometry.rename(2, materialId, 1, layerFlow);
+        superGeometry.rename(MAT_WALL, materialId, MAT_LIQUID, layerFlow);
         flowIndicators[i].materialId_ = materialId;
         materialId++;
     }
@@ -335,6 +338,7 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
                                      sOnLatticeBoundaryCondition3D<T, DESCRIPTOR>& bc,
                                      sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
                                      STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry,
+                                     const VolumeList* measuredData,
                                      const FlowParametrizationList& parametrizationList,
                                      size_t selectedParametrization,
                                      std::vector<FlowIndicatorMaterial>& flowIndicators) const {
@@ -345,18 +349,18 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
     const T omega = converter.getLatticeRelaxationFrequency();
 
     // material=0 --> do nothing
-    lattice.defineDynamics(superGeometry, 0, &instances::getNoDynamics<T, DESCRIPTOR>());
+    lattice.defineDynamics(superGeometry, MAT_EMPTY, &instances::getNoDynamics<T, DESCRIPTOR>());
 
     // material=1 --> bulk dynamics
-    lattice.defineDynamics(superGeometry, 1, &bulkDynamics);
+    lattice.defineDynamics(superGeometry, MAT_LIQUID, &bulkDynamics);
 
     if (bouzidiOn) {
         // material=2 --> no dynamics + bouzidi zero velocity
-        lattice.defineDynamics(superGeometry, 2, &instances::getNoDynamics<T, DESCRIPTOR>());
-        offBc.addZeroVelocityBoundary(superGeometry, 2, stlReader);
+        lattice.defineDynamics(superGeometry, MAT_WALL, &instances::getNoDynamics<T, DESCRIPTOR>());
+        offBc.addZeroVelocityBoundary(superGeometry, MAT_WALL, stlReader);
     } else {
         // material=2 --> bounceBack dynamics
-        lattice.defineDynamics(superGeometry, 2, &instances::getBounceBack<T, DESCRIPTOR>());
+        lattice.defineDynamics(superGeometry, MAT_WALL, &instances::getBounceBack<T, DESCRIPTOR>());
     }
 
     for(const FlowIndicatorMaterial& indicator : flowIndicators) {
@@ -378,18 +382,63 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
         }
     }
 
-    // Initial conditions
-    AnalyticalConst3D<T, T> rhoF(1);
-    std::vector<T> velocity(3, T());
-    AnalyticalConst3D<T, T> uF(velocity);
+    // Unsteered simulation.
+    if(!measuredData) {
 
-    lattice.defineRhoU( superGeometry,1,rhoF,uF );
-    lattice.iniEquilibrium( superGeometry,1,rhoF,uF );
+        // Initial conditions
+        AnalyticalConst3D<T, T> rhoF(1);
+        std::vector<T> velocity(3, T());
+        AnalyticalConst3D<T, T> uF(velocity);
 
-    // Initialize all values of distribution functions to their local equilibrium
-    for(const FlowIndicatorMaterial& indicator : flowIndicators) {
-        lattice.defineRhoU(superGeometry, indicator.materialId_, rhoF, uF);
-        lattice.iniEquilibrium(superGeometry, indicator.materialId_, rhoF, uF);
+        lattice.defineRhoU(superGeometry, MAT_LIQUID, rhoF, uF);
+        lattice.iniEquilibrium(superGeometry, MAT_LIQUID, rhoF, uF);
+
+        // Initialize all values of distribution functions to their local equilibrium
+        for (const FlowIndicatorMaterial &indicator : flowIndicators) {
+            lattice.defineRhoU(superGeometry, indicator.materialId_, rhoF, uF);
+            lattice.iniEquilibrium(superGeometry, indicator.materialId_, rhoF, uF);
+        }
+    }
+    // Steered simulation.
+    else {
+
+        // TODO: Move elsewhere!
+        class MeasuredDataMapper : public AnalyticalF3D<T, T> {
+        public:
+            MeasuredDataMapper(const VolumeBase* volume)
+                : AnalyticalF3D<T, T>(3)
+                , volume_(volume)
+            {
+                tgtAssert(volume_, "No volume");
+                tgtAssert(volume_->getNumChannels() == 3, "Num channels != 3");
+                bounds_ = volume_->getBoundingBox(true).getBoundingBox(true);
+            }
+            virtual bool operator() (T output[], const T input[]) {
+                tgt::vec3 rwPos = tgt::Vector3<T>::fromPointer(input) / VOREEN_LENGTH_TO_SI;
+                if (!bounds_.containsPoint(rwPos)) {
+                    return false;
+                }
+
+                const VolumeRAM_3xFloat* initialState = dynamic_cast<const VolumeRAM_3xFloat*>(volume_->getRepresentation<VolumeRAM>());
+                if(!initialState)
+                    return false;
+
+                for(size_t i=0; i < volume_->getNumChannels(); i++) {
+                    tgt::vec3 voxel = initialState->getVoxelLinear(rwPos, 0, false);
+                    output[i] = voxel[i] * VOREEN_LENGTH_TO_SI;
+                }
+
+                return true;
+            }
+
+        private:
+
+            const VolumeBase* volume_;
+            tgt::Bounds bounds_;
+        };
+
+        MeasuredDataMapper mapper(measuredData->first());
+        lattice.defineU(superGeometry, MAT_LIQUID, mapper);
     }
 
     // Lattice initialize
@@ -408,10 +457,10 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                         std::vector<FlowIndicatorMaterial>& flowIndicators) const {
     // No of time steps for smooth start-up
     int iTperiod = converter.getLatticeTime(0.5);
-    //int iTupdate = 50;
+    int iTupdate = 50;
     bool bouzidiOn = parametrizationList.at(selectedParametrization).getBouzidi();
 
-    //if (iT % iTupdate == 0) {
+    if (iT % iTupdate == 0) {
         for(const FlowIndicatorMaterial& indicator : flowIndicators) {
             if (indicator.direction_ == FD_IN) {
 
@@ -445,7 +494,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 }
             }
         }
-    //}
+    }
 }
 
 // Computes flux at inflow and outflow
@@ -459,51 +508,26 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                  std::vector<FlowIndicatorMaterial>& flowIndicators,
                                  const std::string& simulationOutputPath) const {
 
-    SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
-    SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
-
     const int vtkIter = converter.getLatticeTime(.1);
     const int statIter = converter.getLatticeTime(.1);
 
     if (iT % vtkIter == 0) {
+        // Write velocity.
+        SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
+        writeResult(stlReader, converter, iT, velocity, simulationOutputPath, "velocity");
 
-        const Vector<T, 3>& min = stlReader.getMin();
-        const Vector<T, 3>& max = stlReader.getMax();
+        // Write pressure.
+        SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
+        writeResult(stlReader, converter, iT, pressure, simulationOutputPath, "pressure");
 
-        const int resolution = converter.getResolution();
-        const Vector<T, 3> len = max - min;
-        const T maxLen = std::max({len[0], len[1], len[2]});
-        const Vector<T, 3> offset = (len - maxLen) * 0.5;
-        std::vector<float> rawVelocityData;
-        rawVelocityData.reserve(static_cast<size_t>(resolution * resolution * resolution * 3));
+        // Write WallShearStress
+        // TODO: figure out how and estimate somehow from measured data!
+        //SuperLatticePhysWallShearStress3D<T, DESCRIPTOR> wallShearStress(sLattice, superGeometry, MAT_WALL, converter, stlReader);
+        //writeResult(stlReader, converter, iT, wallShearStress, simulationOutputPath, "wallShearStress");
 
-        AnalyticalFfromSuperF3D<T> interpolateVelocity(velocity, true);
-        for(int z=0; z<resolution; z++) {
-            for(int y=0; y<resolution; y++) {
-                for(int x=0; x<resolution; x++) {
-
-                    T pos[3] = {offset[0]+x*maxLen/resolution, offset[1]+y*maxLen/resolution, offset[2]+z*maxLen/resolution};
-                    T u[3] = {0.0, 0.0, 0.0};
-
-                    if(pos[0] >= min[0] && pos[1] >= min[1] && pos[2] >= min[2] &&
-                       pos[0] <= max[0] && pos[1] <= max[1] && pos[2] <= max[2])
-                        interpolateVelocity(u, pos);
-
-                    // Downgrade to float.
-                    rawVelocityData.push_back(static_cast<float>(u[0]/VOREEN_LENGTH_TO_SI));
-                    rawVelocityData.push_back(static_cast<float>(u[1]/VOREEN_LENGTH_TO_SI));
-                    rawVelocityData.push_back(static_cast<float>(u[2]/VOREEN_LENGTH_TO_SI));
-                }
-            }
-        }
-
-        std::string velocityFilename = simulationOutputPath + "velocity_" + std::to_string(iT) + ".raw"; // TODO: encode simulated time.
-        std::fstream velocityFile(velocityFilename.c_str(), std::ios::out | std::ios::binary);
-        size_t numBytes = rawVelocityData.size() * sizeof(float) / sizeof(char);
-        velocityFile.write(reinterpret_cast<const char*>(rawVelocityData.data()), numBytes);
-        if (!velocityFile.good()) {
-            LERROR("Could not write velocity file");
-        }
+        // Write Temperature.
+        //SuperLatticePhysTemperature3D<T, DESCRIPTOR, TODO> temperature(sLattice, converter);
+        //writeResult(stlReader, converter, iT, temperature, simulationOutputPath, "temperature");
     }
 
     // Writes output on the console
@@ -524,6 +548,54 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
     }
 
     return true;
+}
+
+void FlowSimulation::writeResult(STLreader<T>& stlReader,
+                                 UnitConverter<T,DESCRIPTOR>& converter, int iT,
+                                 SuperLatticePhysF3D<T, DESCRIPTOR>& property,
+                                 const std::string& simulationOutputPath,
+                                 const std::string& name) const {
+
+    const Vector<T, 3>& min = stlReader.getMin();
+    const Vector<T, 3>& max = stlReader.getMax();
+
+    const int resolution = converter.getResolution();
+    const Vector<T, 3> len = max - min;
+    const T maxLen = std::max({len[0], len[1], len[2]});
+    const Vector<T, 3> offset = (len - maxLen) * 0.5;
+
+    std::vector<float> rawPropertyData;
+    rawPropertyData.reserve(static_cast<size_t>(resolution * resolution * resolution * property.getTargetDim()));
+    AnalyticalFfromSuperF3D<T> interpolateProperty(property, true);
+
+    for(int z=0; z<resolution; z++) {
+        for(int y=0; y<resolution; y++) {
+            for(int x=0; x<resolution; x++) {
+
+                T pos[3] = {offset[0]+x*maxLen/resolution, offset[1]+y*maxLen/resolution, offset[2]+z*maxLen/resolution};
+                std::vector<T> dat(property.getTargetDim(), 0.0f);
+
+                if(pos[0] >= min[0] && pos[1] >= min[1] && pos[2] >= min[2] &&
+                   pos[0] <= max[0] && pos[1] <= max[1] && pos[2] <= max[2]) {
+                    interpolateProperty(&dat[0], pos);
+                }
+
+                // Downgrade to float.
+                for(int i = 0; i < property.getTargetDim(); i++) {
+                    rawPropertyData.push_back(static_cast<float>(dat[i]/VOREEN_LENGTH_TO_SI));
+                }
+            }
+        }
+    }
+
+    std::string velocityFilename = simulationOutputPath + "velocity_" + std::to_string(iT) + ".raw"; // TODO: encode simulated time.
+    std::fstream velocityFile(velocityFilename.c_str(), std::ios::out | std::ios::binary);
+    size_t numBytes = rawPropertyData.size() * sizeof(float) / sizeof(char);
+    velocityFile.write(reinterpret_cast<const char*>(rawPropertyData.data()), numBytes);
+    if (!velocityFile.good()) {
+        LERROR("Could not write " << name << " file");
+    }
+
 }
 
 }   // namespace
