@@ -73,6 +73,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/appropriatespacinglinker.cpp
     ${MOD_DIR}/processors/aortasegmentation.cpp
     ${MOD_DIR}/processors/localandglobalthreshold.cpp
+    ${MOD_DIR}/processors/lymphatictestvesselgenerator.cpp
     ${MOD_DIR}/processors/segmentationlistvalidation.cpp
     ${MOD_DIR}/processors/subgraphextractor.cpp
     ${MOD_DIR}/processors/templatesubgraphextractor.cpp
@@ -119,6 +120,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/appropriatespacinglinker.h
     ${MOD_DIR}/processors/aortasegmentation.h
     ${MOD_DIR}/processors/localandglobalthreshold.h
+    ${MOD_DIR}/processors/lymphatictestvesselgenerator.h
     ${MOD_DIR}/processors/segmentationlistvalidation.h
     ${MOD_DIR}/processors/subgraphextractor.h
     ${MOD_DIR}/processors/templatesubgraphextractor.h
