@@ -26,8 +26,7 @@
 #ifndef GEOMETRYCONVERTER_H
 #define GEOMETRYCONVERTER_H
 
-#include <olb3D.h>
-typedef double T;
+#include <string>
 
 namespace voreen {
 
@@ -40,12 +39,6 @@ class Geometry;
  * @return true if successful, false otherwise
  */
 bool exportGeometryToSTL(const Geometry* geometry, const std::string& path);
-
-/**
- * Helper function to convert a Voreen geometry into an olb STLreader.
- * This is achieved by creating a temporary STL file.
- */
-std::unique_ptr<olb::STLreader<T>> convertGeometryToSTL(const Geometry* geometry);
 
 }
 

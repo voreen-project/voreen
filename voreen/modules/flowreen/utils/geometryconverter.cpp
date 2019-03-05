@@ -30,10 +30,6 @@
 
 #include <cstdio>
 
-#include <olb3D.h>
-typedef double T;
-using namespace olb;
-
 namespace voreen {
 
 bool exportGeometryToSTL(const Geometry* geometry, const std::string& path) {
@@ -119,28 +115,6 @@ bool exportGeometryToSTL(const Geometry* geometry, const std::string& path) {
     else {
         std::cout << "Geometry not supported!" << std::endl;
         return false;
-    }
-}
-
-std::unique_ptr<STLreader<T>> convertGeometryToSTL(const Geometry* geometry) {
-
-    std::string path = VoreenApplication::app()->getUniqueTmpFilePath(".stl");
-    if(exportGeometryToSTL(geometry, path)) {
-
-        std::unique_ptr<STLreader<T>> reader;
-        try {
-            reader.reset(new STLreader<T>(path, 1.0f));
-        }
-        catch(const std::runtime_error& error) {
-            std::cout << error.what() << std::endl;
-        }
-
-        remove(path.c_str());
-
-        return reader;
-    }
-    else {
-        return nullptr;
     }
 }
 
