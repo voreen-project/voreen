@@ -35,9 +35,9 @@ FlowCharacteristics::FlowCharacteristics()
     : Processor()
     , inport_(Port::INPORT, "parametrization", "Parametrization Input")
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 30.0f, Processor::VALID)
-    , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 22.46f, 1.0f, 100.0f, Processor::VALID)
-    , minVelocity_("minVelocity", "Min. Velocity (mm/s)", 0.0f, 1.0f, 1000.0f, Processor::VALID)
-    , maxVelocity_("maxVelocity", "Max. Velocity (mm/s)", 0.0f, 1.0f, 1000.0f, Processor::VALID)
+    , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 22.46f, 0.1f, 1000.0f, Processor::VALID)
+    , minVelocity_("minVelocity", "Min. Velocity (mm/s)", 0.0f, 0.0f, 1000.0f, Processor::VALID)
+    , maxVelocity_("maxVelocity", "Max. Velocity (mm/s)", 0.0f, 0.0f, 1000.0f, Processor::VALID)
 {
     addPort(inport_);
     inport_.addCondition(new PortConditionVolumeList(new PortConditionVolumeType3xFloat()));
@@ -66,9 +66,9 @@ void FlowCharacteristics::process() {
     }
 
     characteristicLength_.set(maxLength);
-    minVelocity_.setMaxValue(minVelocity * 1.1f);
+    minVelocity_.setMaxValue(maxVelocity * 1.2f); // Allow for 20% adjustments.
     minVelocity_.set(minVelocity);
-    maxVelocity_.setMaxValue(maxVelocity * 1.1f);
+    maxVelocity_.setMaxValue(maxVelocity * 1.2f); // Allow for 20% adjustments.
     maxVelocity_.set(maxVelocity);
 }
 

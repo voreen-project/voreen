@@ -379,7 +379,7 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     script << "#SBATCH --mail-type=ALL" << std::endl;
     script << std::endl;
     script << "# set an output file" << std::endl;
-    script << "#SBATCH --output output.dat" << std::endl;
+    script << "#SBATCH --output output.log" << std::endl;
     script << std::endl;
     script << "# send mail to this address" << std::endl;
     script << "#SBATCH --mail-user=" + username_.get() + "@uni-muenster.de" << std::endl;

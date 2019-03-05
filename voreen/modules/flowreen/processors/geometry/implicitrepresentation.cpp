@@ -42,7 +42,7 @@ ImplicitRepresentation::ImplicitRepresentation()
     , inport_(Port::INPORT, "flowgeomertysource.inport", "")
     , outport_(Port::OUTPORT, "flowgeometrysource.outport", "ID Volume Output", false)
     , method_("method", "Method")
-    , dimensions_("dimensions", "Dimensions", 256, 64, 1024)
+    , dimensions_("dimensions", "Dimensions", 256, 32, 1024)
     , path_("path", "STL geometry", "Path", "", "STL (*.stl)", FileDialogProperty::OPEN_FILE)
 {
     addPort(inport_);
