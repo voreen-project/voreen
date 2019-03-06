@@ -27,8 +27,6 @@
 
 // processors
 #include "processors/flowdirectionoverlay.h"
-#include "processors/geometry/geometryclose.h"
-#include "processors/geometry/geometryoffsetremove.h"
 #include "processors/streamline/pathlinecreator.h"
 #include "processors/streamline/streamlinecombine.h"
 #include "processors/streamline/streamlinecreator.h"
@@ -39,20 +37,6 @@
 #include "processors/streamline/streamlinesource.h"
 #include "processors/streamline/streamlinetoboundingbox.h"
 
-#ifdef FLOWREEN_USE_OPENLB
-#include <olb3D.h>
-
-#ifdef VRN_MODULE_VESSELTOPOLOGY
-#include "modules/flowreen/processors/simulation/flowindicatordetection.h"
-#endif
-#include "processors/simulation/flowcharacteristics.h"
-#include "processors/simulation/flowindicatorselection.h"
-#include "processors/simulation/flowindicatorrenderer.h"
-#include "processors/simulation/flowsimulation.h"
-#include "processors/simulation/flowsimulationcluster.h"
-#include "processors/simulation/flowparametrization.h"
-#include "processors/geometry/implicitrepresentation.h"
-#endif
 
 #ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
     #include "processors/flowarrowrenderer2d.h"
@@ -84,8 +68,6 @@ FlowreenModule::FlowreenModule(const std::string& modulePath)
     // processors
     registerSerializableType(new FlowDirectionOverlay());
     registerSerializableType(new PathlineCreator());
-    registerSerializableType(new GeometryClose());
-    registerSerializableType(new GeometryOffsetRemove());
     registerSerializableType(new StreamlineCombine());
     registerSerializableType(new StreamlineRenderer3D());
     registerSerializableType(new StreamlineCreator());
@@ -94,19 +76,6 @@ FlowreenModule::FlowreenModule(const std::string& modulePath)
     registerSerializableType(new StreamlineSelector());
     registerSerializableType(new StreamlineSource());
     registerSerializableType(new StreamlineToBoundingBox());
-#ifdef FLOWREEN_USE_OPENLB
-    registerSerializableType(new ImplicitRepresentation());
-    registerSerializableType(new FlowCharacteristics());
-#ifdef VRN_MODULE_VESSELTOPOLOGY
-    registerSerializableType(new FlowIndicatorDetection());
-#endif
-    registerSerializableType(new FlowIndicatorSelection());
-    registerSerializableType(new FlowIndicatorRenderer());
-    registerSerializableType(new FlowParametrization());
-    registerSerializableType(new FlowSimulation());
-    registerSerializableType(new FlowSimulationCluster());
-#endif
-
 #ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
     registerSerializableType(new FlowArrowRenderer2D);
     registerSerializableType(new FlowArrowRenderer3D);
@@ -124,19 +93,5 @@ FlowreenModule::FlowreenModule(const std::string& modulePath)
 #endif
 
 }
-
-void FlowreenModule::initialize() {
-    VoreenModule::initialize();
-
-#ifdef FLOWREEN_USE_OPENLB
-    olb::olbInit(nullptr, nullptr);
-    olb::singleton::directories().setOutputDir(VoreenApplication::app()->getTemporaryPath("simulation")+"/");
-#endif
-}
-
-void FlowreenModule::deinitialize() {
-    VoreenModule::deinitialize();
-}
-
 
 } // namespace

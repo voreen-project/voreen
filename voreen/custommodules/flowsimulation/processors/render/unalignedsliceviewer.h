@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_SLICEVIEWER_H
-#define VRN_SLICEVIEWER_H
+#ifndef VRN_UNALIGNEDSLICEVIEWER_H
+#define VRN_UNALIGNEDSLICEVIEWER_H
 
 #include "voreen/core/processors/volumerenderer.h"
 #include "voreen/core/properties/buttonproperty.h"
@@ -45,16 +45,16 @@ namespace voreen {
  * Performs slice rendering of a single or multiple slices
  * along one of the three main axis of the volume.
  */
-class VRN_CORE_API SliceViewer : public VolumeRenderer, public QualityModeObserver {
+class VRN_CORE_API UnalignedSliceViewer : public VolumeRenderer, public QualityModeObserver {
 
 public:
-    SliceViewer();
-    virtual ~SliceViewer();
+    UnalignedSliceViewer();
+    virtual ~UnalignedSliceViewer();
     virtual Processor* create() const;
 
-    virtual std::string getClassName() const    { return "SliceViewer";      }
-    virtual std::string getCategory() const     { return "Slice Rendering";  }
-    virtual CodeState getCodeState() const      { return CODE_STATE_STABLE;  }
+    virtual std::string getClassName() const    { return "UnalignedSliceViewer"; }
+    virtual std::string getCategory() const     { return "Slice Rendering";      }
+    virtual CodeState getCodeState() const      { return CODE_STATE_STABLE;      }
 
     struct VertexHelper {
         VertexHelper(tgt::vec2 pos, tgt::vec4 texCoord) : position_(pos), texCoord_(texCoord) {}
@@ -187,6 +187,8 @@ protected:
 
     /// Property containing the available alignments: xy (axial), xz (coronal), yz (sagittal)
     OptionProperty<SliceAlignment> sliceAlignment_;
+    FloatVec3Property planeNormal_;         ///< Property containing the current plane normal
+    FloatProperty planeDistance_;           ///< Property containing the current plane distance
     IntProperty sliceIndex_;                ///< Property containing the currently selected slice
     IntProperty numGridRows_;               ///< Property containing the current row count of the displayed grid
     IntProperty numGridCols_;               ///< Property containing the current column count of the displayed grid
@@ -228,9 +230,9 @@ protected:
 
     ButtonProperty resetChannelShift_;
 
-    EventProperty<SliceViewer>* mouseEventPress_;
-    EventProperty<SliceViewer>* mouseEventMove_;
-    EventProperty<SliceViewer>* mouseEventShift_;
+    EventProperty<UnalignedSliceViewer>* mouseEventPress_;
+    EventProperty<UnalignedSliceViewer>* mouseEventMove_;
+    EventProperty<UnalignedSliceViewer>* mouseEventShift_;
 
     MWheelNumPropInteractionHandler<int> mwheelCycleHandler_;
     MWheelNumPropInteractionHandler<float> mwheelZoomHandler_;
@@ -250,7 +252,20 @@ protected:
 
     static const std::string loggerCat_;
 
+// ADDITIONAL:
 private:
+    tgt::plane plane_;
+    tgt::vec3 xVec_;
+    tgt::vec3 yVec_;
+    tgt::vec3 origin_;
+    float samplingRate_;
+    tgt::ivec2 resolution_;
+
+    bool planeNeedsUpdate_;
+    void updatePlane();
+
+private:
+
     void renderSliceGeometry(const tgt::vec4& t0, const tgt::vec4& t1, const tgt::vec4& t2, const tgt::vec4& t3) const;
 
     mutable tgt::ivec2 mousePosition_;          ///< Current mouse position
@@ -261,4 +276,4 @@ private:
 
 } // namespace
 
-#endif // VRN_SLICEVIEWER_H
+#endif // VRN_UNALIGNEDSLICEVIEWER_H

@@ -23,23 +23,68 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_FLOWREENMODULE_H
-#define VRN_FLOWREENMODULE_H
+#include "flowsimulationmodule.h"
 
-#include "voreen/core/voreenmodule.h"
+// processors
+#include "processors/geometry/geometryclose.h"
+#include "processors/geometry/geometryoffsetremove.h"
+#include "processors/render/unalignedsliceviewer.h"
+#include "processors/simulation/flowcharacteristics.h"
+#include "processors/simulation/flowindicatorselection.h"
+#include "processors/simulation/flowindicatorrenderer.h"
+#include "processors/simulation/flowparametrization.h"
+#include "processors/simulation/flowsimulationcluster.h"
+
+#ifdef VRN_MODULE_VESSELTOPOLOGY
+#include "processors/simulation/flowindicatordetection.h"
+#endif
+
+#ifdef FLOWREEN_USE_OPENLB
+#include <olb3D.h>
+#include "processors/simulation/flowsimulation.h"
+#include "processors/geometry/implicitrepresentation.h"
+#endif
 
 namespace voreen {
 
-class FlowreenModule : public VoreenModule {
+FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
+    : VoreenModule(modulePath)
+{
+    setID("Flowreen");
+    setGuiName("Flowreen");
 
-public:
-    FlowreenModule(const std::string& modulePath);
+    addShaderPath(getModulePath("glsl"));
 
-    virtual std::string getDescription() const {
-        return "Flow visualization and input/output functionality for flow data.";
-    }
-};
+    // processors
+    registerSerializableType(new GeometryClose());
+    registerSerializableType(new GeometryOffsetRemove());
+    registerSerializableType(new UnalignedSliceViewer());
+    registerSerializableType(new FlowCharacteristics());
+    registerSerializableType(new FlowIndicatorSelection());
+    registerSerializableType(new FlowIndicatorRenderer());
+    registerSerializableType(new FlowParametrization());
+    registerSerializableType(new FlowSimulationCluster());
+#ifdef VRN_MODULE_VESSELTOPOLOGY
+    registerSerializableType(new FlowIndicatorDetection());
+#endif
+#ifdef FLOWREEN_USE_OPENLB
+    registerSerializableType(new ImplicitRepresentation());
+    registerSerializableType(new FlowSimulation());
+#endif
+}
+
+void FlowSimulationModule::initialize() {
+    VoreenModule::initialize();
+
+#ifdef FLOWREEN_USE_OPENLB
+    olb::olbInit(nullptr, nullptr);
+    olb::singleton::directories().setOutputDir(VoreenApplication::app()->getTemporaryPath("simulation")+"/");
+#endif
+}
+
+void FlowSimulationModule::deinitialize() {
+    VoreenModule::deinitialize();
+}
+
 
 } // namespace
-
-#endif // VRN_FLOWREENMODULE_H
