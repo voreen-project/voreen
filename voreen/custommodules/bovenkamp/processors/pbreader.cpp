@@ -24,6 +24,8 @@
  ***********************************************************************************/
 
 #include "pbreader.h"
+#include "../io/volumediskpb.h"
+
 #include "voreen/core/voreenapplication.h"
 
 #include "tgt/filesystem.h"
@@ -31,7 +33,7 @@
 #include "voreen/core/datastructures/volume/volume.h"
 #include "voreen/core/datastructures/volume/volumeram.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
-#include "voreen/core/datastructures/volume/volumecontainer.h"
+#include "voreen/core/datastructures/volume/volumelist.h"
 
 #include <iostream>
 #include <fstream>
@@ -63,8 +65,9 @@ PBReader::PBReader()
     , invertXVelocityProp_("invertXVelocityProp","Invert Velocity X",false,Processor::VALID)
     , invertYVelocityProp_("invertYVelocityProp","Invert Velocity Y",false,Processor::VALID)
     , invertZVelocityProp_("invertZVelocityProp","Invert Velocity Z",false,Processor::VALID)
-    , loadFiles_(false), stopLoading_(false)
-    , isMagnitudeDataPresent_(false), isVelocityDataPresent_(false)
+    , loadFiles_(false)
+    , isMagnitudeDataPresent_(false)
+    , isVelocityDataPresent_(false)
     {
     // add ports
     addPort(magnitudeOutport_);
@@ -118,12 +121,14 @@ bool PBReader::isReady() const {
 
 void PBReader::process() {
     if(loadFiles_) {
-        //reste everything
-        setProgress(0.f);
+
+        //reset everything
         loadFiles_ = false;
-        stopLoading_ = false;
+        magnitudeVolumes_.clear();
         magnitudeOutport_.clear();
+        velocityVolumes_.clear();
         velocityOutport_.clear();
+
         //get parameters
         tgt::svec3 dimensions;
         tgt::vec3 spacing;
@@ -135,71 +140,37 @@ void PBReader::process() {
             LERROR(e.what());
             return;
         }
-        // prepare volume buffer
-        float** magnitudeData = new float*[timesteps];
-        tgt::vec3** velocityData = new tgt::vec3*[timesteps];
-        size_t hMulDim = tgt::hmul(dimensions);
-        for(int t = 0; t < timesteps; t++) {
-            magnitudeData[t] = new float[hMulDim];
-            velocityData[t] = new tgt::vec3[hMulDim];
-        }
+
         //load magnitude
+        tgt::bvec3 invertPosition(invertXInputProp_.get(), invertYInputProp_.get(), invertZInputProp_.get());
+        VolumeList* magnitudeList = new VolumeList();
         if(isMagnitudeDataPresent_) {
-            try {
-                readFile(folderProp_.get() + "/" + FILE_MAGNITUDE,dimensions,timesteps,magnitudeData,0,1,0.f,(isVelocityDataPresent_ ? 0.25f : 1.f));
-            } catch (VoreenException &e) {
-                LERROR(e.what());
-                for(int t = 0; t < timesteps; t++) {
-                    delete[] magnitudeData[t];
-                    delete[] velocityData[t];
-                }
-                delete[] magnitudeData;
-                delete[] velocityData;
-                setProgress(0.f);
-                return;
+            for (int t = 0; t < timesteps; t++) {
+                VolumeDiskPB* magnitude = new VolumeDiskPB(folderProp_.get() + "/" + FILE_MAGNITUDE, invertPosition, dimensions, t);
+                Volume* volume = new Volume(magnitude, spacing, tgt::vec3::zero);
+                magnitudeList->add(volume);
+                magnitudeVolumes_.push_back(std::unique_ptr<Volume>(volume));
             }
         }
+        magnitudeOutport_.setData(magnitudeList);
+
         //load velocity
+        VolumeList* velocityList = new VolumeList();
         if(isVelocityDataPresent_) {
-            try {
-                readFile(folderProp_.get() + "/" + FILE_VELOCITYX,dimensions,timesteps,reinterpret_cast<float**>(velocityData),0,3,0.25f,0.5f);
-                readFile(folderProp_.get() + "/" + FILE_VELOCITYY,dimensions,timesteps,reinterpret_cast<float**>(velocityData),1,3,0.5f,0.75f);
-                readFile(folderProp_.get() + "/" + FILE_VELOCITYZ,dimensions,timesteps,reinterpret_cast<float**>(velocityData),2,3,0.75f,1.f);
-            } catch (VoreenException &e) {
-                LERROR(e.what());
-                for(int t = 0; t < timesteps; t++) {
-                    delete[] magnitudeData[t];
-                    delete[] velocityData[t];
-                }
-                delete[] magnitudeData;
-                delete[] velocityData;
-                setProgress(0.f);
-                return;
+            tgt::bvec3 invertVelocity(invertXVelocityProp_.get(), invertYVelocityProp_.get(), invertZVelocityProp_.get());
+            for (int t = 0; t < timesteps; t++) {
+                VolumeDiskPB* velocity = new VolumeDiskPB(
+                    folderProp_.get() + "/" + FILE_VELOCITYX,
+                    folderProp_.get() + "/" + FILE_VELOCITYY,
+                    folderProp_.get() + "/" + FILE_VELOCITYZ,
+                    invertPosition, invertVelocity,
+                    dimensions, t);
+                Volume* volume = new Volume(velocity, spacing, tgt::vec3::zero);
+                velocityList->add(volume);
+                velocityVolumes_.push_back(std::unique_ptr<Volume>(volume));
             }
         }
-        //set outports
-        VolumeContainer* magnitudeContainer = new VolumeContainer();  //VolumeList does not delete the volumes!!!!
-        VolumeContainer* velocityContainer = new VolumeContainer();
-        
-        if(isMagnitudeDataPresent_) {
-            for(int t = 0; t < timesteps; t++) {
-                VolumeRAM* magnitudeRAM = new VolumeRAM_Float(magnitudeData[t],dimensions);
-                magnitudeContainer->add(new Volume(magnitudeRAM,spacing,tgt::vec3::zero));
-            }
-        }
-
-        if(isVelocityDataPresent_) {
-            for(int t = 0; t < timesteps; t++) {
-                VolumeRAM* velocityRAM = new VolumeRAM_3xFloat(velocityData[t],dimensions);
-                velocityContainer->add(new Volume(velocityRAM,spacing,tgt::vec3::zero));
-            }
-        }
-
-        magnitudeOutport_.setData(magnitudeContainer);
-        velocityOutport_.setData(velocityContainer);
-
-        delete[] magnitudeData;
-        delete[] velocityData;
+        velocityOutport_.setData(velocityList);
     }
 }
 
@@ -227,11 +198,11 @@ void PBReader::invertVelocityOnChange() {
 
 void PBReader::clearOutput() {
     //clear evrything
-    setProgress(0.f);
     loadFiles_ = false;
+    magnitudeVolumes_.clear();
     magnitudeOutport_.clear();
+    velocityVolumes_.clear();
     velocityOutport_.clear();
-    stopLoading_ = true;
     isMagnitudeDataPresent_ = false;
     isVelocityDataPresent_ = false;
 }
@@ -244,7 +215,7 @@ void PBReader::load() {
     isVelocityDataPresent_ = false;
 
     //no folder => return
-    if(folderProp_.get() == "") {
+    if(folderProp_.get().empty()) {
         LWARNING("No data folder is selected!");
         return;
     }
@@ -287,14 +258,13 @@ void PBReader::load() {
 
     //file will be loaded during next process
     loadFiles_ = true;
-    stopLoading_ = true;
 }
 
 void PBReader::readParameters(tgt::svec3& dimensions, tgt::vec3& spacing, int& timesteps) {
     //open file
     std::ifstream ifs((folderProp_.get() + "/" + FILE_PARAMETER).c_str());
     if (ifs.fail()) {
-        throw VoreenException("Parameter file: \"" + folderProp_.get() + "/" + FILE_PARAMETER + "\" could not be opened");
+        throw VoreenException("Parameter file: '" + folderProp_.get() + "/" + FILE_PARAMETER + "' could not be opened");
     }
     //TODO: checks
     std::string tmp;
@@ -323,53 +293,6 @@ void PBReader::readParameters(tgt::svec3& dimensions, tgt::vec3& spacing, int& t
 
     ifs.close();
 };
-
-size_t toLinear(tgt::svec3& dim, size_t x, size_t y, size_t z) {
-    return dim.x*dim.y*z+dim.x*y+x;
-}
-
-void PBReader::readFile(std::string filename, tgt::svec3 dimensions, int timesteps, float** outputArray, size_t currentChannel,
-                        size_t numChannels, float progressMin, float progressMax) {
-    //open file
-    std::ifstream ifs(filename.c_str());
-    if (ifs.fail()) {
-        throw VoreenException("File: \"" + filename + "\" could not be opened");
-    }
-    float progressStep = (progressMax-progressMin)/(float)(dimensions.y*dimensions.z*timesteps);
-    float internalProgress = progressMin;
-    //TODO: checks
-    std::string tmp;
-    for(int t = 0; t < timesteps; t++) {
-        float* currentArray = outputArray[t];
-        for(size_t x = 0; x < dimensions.x; x++) {
-            for(size_t z = 0; z < dimensions.z; z++) {
-                getline(ifs, tmp);
-                std::stringstream line(tmp);
-                //get all values of one row
-                for(size_t y = 0; y < dimensions.y; y++) {
-                    getline(line,tmp,'\t');
-                    float res = (float)atof(tmp.c_str()) * ((numChannels==3) && 
-                                                            ((currentChannel==0 && invertXVelocityProp_.get()) 
-                                                                || (currentChannel==1 && invertYVelocityProp_.get()) 
-                                                                || (currentChannel==2 && invertZVelocityProp_.get()))
-                                                             ? -1.f : 1.f);
-
-                    currentArray[toLinear(dimensions,
-                                         (invertXInputProp_.get() ? dimensions.x - 1 - x : x),
-                                         (invertYInputProp_.get() ? dimensions.y - 1 - y : y),
-                                         (invertZInputProp_.get() ? dimensions.z - 1 - z : z))*numChannels+currentChannel] = res;
-                }
-                //set progress
-                internalProgress += progressStep;
-                setProgress(std::min(internalProgress,1.f)); //rounding problems
-                if(stopLoading_)
-                    throw VoreenException("Loading was canceled by user!");
-            }
-        }
-    }
-    ifs.close();
-    setProgress(progressMax);
-}
 
 } // namespace voreen
 

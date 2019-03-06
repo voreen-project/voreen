@@ -679,19 +679,29 @@ SET(VRN_CORE_HEADERS
 )
 
 SET(VRN_CORE_SOURCES_EXT
+    # tinyobj
     ../../ext/tinyobj/tiny_obj_loader.cc
+
+    # tinyxml
     ../../ext/tinyxml/tinyxml.cpp
     ../../ext/tinyxml/tinyxml.cpp
     ../../ext/tinyxml/tinystr.cpp
     ../../ext/tinyxml/tinyxmlerror.cpp
     ../../ext/tinyxml/tinyxmlparser.cpp
+
+    # md5
     ../../ext/md5/md5.cpp
 )
 
 SET(VRN_CORE_HEADERS_EXT
+    # tinyobj
     ../../ext/tinyobj/tiny_obj_loader.h
+
+    # tinyxml
     ../../ext/tinyxml/tinyxml.h
     ../../ext/tinyxml/tinystr.h
+
+    # md5
     ../../ext/md5/md5.h
 )
 

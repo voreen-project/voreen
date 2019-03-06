@@ -183,6 +183,26 @@ protected:
 };
 
 // ------------------------------------------------------------------------------------------------
+
+/**
+ * Port condition that allows volume lists that fulfill the passed condition for each contained volume.
+ * Node: The condition takes ownership of the specified condition.
+ */
+class VRN_CORE_API PortConditionVolumeList : public PortCondition {
+public:
+    PortConditionVolumeList(PortCondition* condition);
+
+    virtual bool acceptsPortData() const;
+
+protected:
+    virtual void setCheckedPort(const Port* checkedPort);
+
+    std::unique_ptr<PortCondition> condition_;
+    std::unique_ptr<VolumePort> tmpPort_;
+    const VolumeListPort* volumeListPort_;
+};
+
+// ------------------------------------------------------------------------------------------------
 // implementation of PortConditionVolumeValueRange
 
 template <typename T>

@@ -36,6 +36,7 @@
 #include "processors/streamline/streamlinesource.h"
 #include "processors/streamline/streamlinetoboundingbox.h"
 
+
 #ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
     #include "processors/flowarrowrenderer2d.h"
     #include "processors/flowarrowrenderer3d.h"
@@ -73,7 +74,6 @@ FlowreenModule::FlowreenModule(const std::string& modulePath)
     registerSerializableType(new StreamlineSelector());
     registerSerializableType(new StreamlineSource());
     registerSerializableType(new StreamlineToBoundingBox());
-
 #ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
     registerSerializableType(new FlowArrowRenderer2D);
     registerSerializableType(new FlowArrowRenderer3D);

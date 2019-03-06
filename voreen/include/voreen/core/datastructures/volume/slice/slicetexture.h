@@ -52,7 +52,7 @@ class VRN_CORE_API SliceTexture : public tgt::Texture {
 public:
     /** Constructor */
     SliceTexture(const tgt::ivec2& sliceDim, SliceAlignment alignment, const std::string& format, const std::string& baseType,
-                 tgt::vec3 originInWorldSpace, tgt::vec3 xDirectionInWorldSpace, tgt::vec3 yDirectionInWorldSpace, RealWorldMapping rwm,
+                 tgt::vec3 originInWorldSpace, tgt::vec3 xDirectionInWorldSpace, tgt::vec3 yDirectionInWorldSpace, const RealWorldMapping& rwm,
                  void* data, GLint textureFormat, GLint internalFormat, GLenum textureDataType);
     /** Destructor */
     virtual ~SliceTexture() {};
