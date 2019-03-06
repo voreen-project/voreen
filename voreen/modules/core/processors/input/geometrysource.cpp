@@ -164,21 +164,21 @@ void GeometrySource::readGeometry() {
             }
         }
         else if(endsWith(filename, ".stl")) {
-                LINFO("Reading STL file.");
-                try {
-                    Geometry* geometry = readSTLGeometry(filename);
-                    tgtAssert(geometry, "null pointer returned (exception expected)");
-                    outport_.setData(geometry);
-                    setProgress(1.f);
-                }
-                catch (VoreenException& e) {
-                    LERROR(e.what());
-                    setProgress(0.f);
-                }
-                catch (tgt::CorruptedFileException& e) {
-                    LERROR(e.what());
-                    setProgress(0.f);
-                }
+            LINFO("Reading STL file.");
+            try {
+                Geometry* geometry = readSTLGeometry(filename);
+                tgtAssert(geometry, "null pointer returned (exception expected)");
+                outport_.setData(geometry);
+                setProgress(1.f);
+            }
+            catch (VoreenException& e) {
+                LERROR(e.what());
+                setProgress(0.f);
+            }
+            catch (tgt::CorruptedFileException& e) {
+                LERROR(e.what());
+                setProgress(0.f);
+            }
         } else {
             try {
                 Geometry* geometry = readVoreenGeometry(geometryFile_.get());
@@ -809,7 +809,7 @@ Geometry* GeometrySource::readSTLGeometry(const std::string& filename) {
                 f >> s0;
                 if (s0 == "facet") {
                     tgt::vec3 normal;
-                    GlMeshGeometryUInt16Normal::VertexType v1, v2, v3;
+                    GlMeshGeometryUInt32Normal::VertexType v1, v2, v3;
                     f >> s1 >> normal.x >> normal.y >> normal.z;
                     f >> s0 >> s1;
                     f >> s0 >> v1.pos_.x >> v1.pos_.y >> v1.pos_.z;
@@ -857,7 +857,7 @@ Geometry* GeometrySource::readSTLGeometry(const std::string& filename) {
             f.read(reinterpret_cast<char *>(&uint16), sizeof(unsigned short));
 
             tgt::vec3 normal;
-            GlMeshGeometryUInt16Normal::VertexType v1, v2, v3;
+            GlMeshGeometryUInt32Normal::VertexType v1, v2, v3;
 
             normal.x = v[0];
             normal.y = v[1];
