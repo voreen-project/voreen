@@ -27,12 +27,10 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/streamline/streamlineselector.cpp
     ${MOD_DIR}/processors/streamline/streamlinesource.cpp
     ${MOD_DIR}/processors/streamline/streamlinetoboundingbox.cpp
-    ${MOD_DIR}/processors/streamline/pathlinecreator.cpp
 
     # utils
     ${MOD_DIR}/utils/streamlinebundledetectorbackgroundthread.cpp
     ${MOD_DIR}/utils/streamlinecreatorbackgroundthread.cpp
-    ${MOD_DIR}/utils/pathlinecreatorbackgroundthread.cpp
 )
 
 IF(VRN_OPENGL_COMPATIBILITY_PROFILE)
@@ -60,7 +58,6 @@ IF(VRN_OPENGL_COMPATIBILITY_PROFILE)
         ${MOD_DIR}/processors/flowslicerenderer2d.cpp
         ${MOD_DIR}/processors/flowslicerenderer3d.cpp
         ${MOD_DIR}/processors/flowstreamlinestexture3d.cpp
-        ${MOD_DIR}/processors/pathlinerenderer3d.cpp
         ${MOD_DIR}/processors/pathlinerenderer3d.cpp
 
         # utils
@@ -93,12 +90,10 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/streamline/streamlineselector.h
     ${MOD_DIR}/processors/streamline/streamlinesource.h
     ${MOD_DIR}/processors/streamline/streamlinetoboundingbox.h
-    ${MOD_DIR}/processors/streamline/pathlinecreator.h
 
     # utils
     ${MOD_DIR}/utils/streamlinebundledetectorbackgroundthread.h
     ${MOD_DIR}/utils/streamlinecreatorbackgroundthread.h
-    ${MOD_DIR}/utils/pathlinecreatorbackgroundthread.h
 )
  
 IF(VRN_OPENGL_COMPATIBILITY_PROFILE)
