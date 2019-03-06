@@ -105,7 +105,6 @@ SET(VRN_CORE_SOURCES
     datastructures/volume/modality.cpp
     datastructures/volume/volume.cpp
     datastructures/volume/volumebase.cpp
-    datastructures/volume/volumecontainer.cpp
     datastructures/volume/volumedisk.cpp
     datastructures/volume/volumedecorator.cpp
     datastructures/volume/volumederiveddata.cpp
@@ -411,7 +410,6 @@ SET(VRN_CORE_HEADERS
     ../../include/voreen/core/datastructures/volume/volume.h
     ../../include/voreen/core/datastructures/volume/volumeatomic.h
     ../../include/voreen/core/datastructures/volume/volumebase.h
-    ../../include/voreen/core/datastructures/volume/volumecontainer.h
     ../../include/voreen/core/datastructures/volume/volumedisk.h
     ../../include/voreen/core/datastructures/volume/volumedecorator.h
     ../../include/voreen/core/datastructures/volume/volumederiveddata.h
