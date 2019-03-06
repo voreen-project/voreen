@@ -83,34 +83,7 @@ SUBDIRS         := src/boundary \
                    src/particles/boundaries \
                    src/utilities
 
-EXAMPLEDIRS     := examples/aorta3d \
-                   examples/bifurcation3d/eulerEuler \
-                   examples/bifurcation3d/eulerLagrange \
-                   examples/bstep2d \
-                   examples/bstep3d \
-                   examples/cavity2d/sequential \
-                   examples/cavity2d/parallel \
-                   examples/cavity3d/sequential \
-                   examples/cavity3d/parallel \
-                   examples/cylinder2d \
-                   examples/cylinder3d \
-                   examples/multiComponent2d \
-                   examples/multiComponent3d \
-                   examples/nozzle3d \
-                   examples/phaseSeparation2d \
-                   examples/phaseSeparation3d \
-                   examples/poiseuille2d \
-                   examples/poiseuille3d \
-                   examples/porousPoiseuille2d \
-                   examples/powerLaw2d \
-                   examples/tgv3d \
-                   examples/thermalFlows/porousPlate2d \
-                   examples/thermalFlows/porousPlate3d \
-                   examples/thermalFlows/rayleighBenard2d \
-                   examples/thermalFlows/rayleighBenard3d \
-                   examples/thermalFlows/squareCavity2d \
-                   examples/thermalFlows/squareCavity3d \
-                   examples/venturi3d
+EXAMPLEDIRS     := simulations/aorta3d
 
 INCLUDEDIRS     := src \
                    src/ \
