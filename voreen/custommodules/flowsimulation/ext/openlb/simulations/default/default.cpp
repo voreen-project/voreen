@@ -72,6 +72,41 @@ struct FlowIndicator {
     int             materialId_{0};
 };
 
+// Measured data.
+struct MeasuredData {
+    std::vector<float> data;
+    Vector<T, 3> min;
+    Vector<T, 3> max;
+};
+
+class MeasuredDataMapper : public AnalyticalF3D<T, T> {
+public:
+    MeasuredDataMapper(const MeasuredData& data)
+        : AnalyticalF3D<T, T>(3)
+        , data(data)
+    {
+    }
+    virtual bool operator() (T output[], const T input[]) {
+
+        if(input[0] >= data.min[0] && input[1] >= data.min[1] && input[2] >= data.min[2] &&
+           input[0] <= data.max[0] && input[1] <= data.max[1] && input[2] <= data.max[2]) {
+            return false;
+        }
+/*
+        // TODO: implement linear interpolation!
+        for(size_t i=0; i < volume_->getNumChannels(); i++) {
+            tgt::vec3 voxel = initialState->getVoxelLinear(rwPos, 0, false);
+            output[i] = voxel[i] * VOREEN_LENGTH_TO_SI;
+        }
+*/
+        return true;
+    }
+
+private:
+
+    const MeasuredData& data;
+};
+
 ////////// Globals //////////////////
 // Meta
 static const std::string simulation = "default";
@@ -84,6 +119,7 @@ T simulationTime = 0.0;
 T temporalResolution = 0.0;
 int spatialResolution = 1;
 std::vector<FlowIndicator> flowIndicators;
+std::vector<MeasuredData> measuredData;
 
 // Parameters
 T characteristicLength = 0.0;
@@ -180,18 +216,27 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
         }
     }
 
-    // Initial conditions
-    AnalyticalConst3D<T, T> rhoF(1);
-    std::vector<T> velocity(3, T());
-    AnalyticalConst3D<T, T> uF(velocity);
+    // Unsteered simulation.
+    if(measuredData.empty()) {
 
-    lattice.defineRhoU( superGeometry,MAT_LIQUID,rhoF,uF );
-    lattice.iniEquilibrium( superGeometry,MAT_LIQUID,rhoF,uF );
+        // Initial conditions
+        AnalyticalConst3D<T, T> rhoF(1);
+        std::vector<T> velocity(3, T());
+        AnalyticalConst3D<T, T> uF(velocity);
 
-    // Initialize all values of distribution functions to their local equilibrium
-    for(const FlowIndicator& indicator : flowIndicators) {
-        lattice.defineRhoU(superGeometry, indicator.materialId_, rhoF, uF);
-        lattice.iniEquilibrium(superGeometry, indicator.materialId_, rhoF, uF);
+        lattice.defineRhoU(superGeometry, MAT_LIQUID, rhoF, uF);
+        lattice.iniEquilibrium(superGeometry, MAT_LIQUID, rhoF, uF);
+
+        // Initialize all values of distribution functions to their local equilibrium
+        for (const FlowIndicator &indicator : flowIndicators) {
+            lattice.defineRhoU(superGeometry, indicator.materialId_, rhoF, uF);
+            lattice.iniEquilibrium(superGeometry, indicator.materialId_, rhoF, uF);
+        }
+    }
+    // Steered simulation.
+    else {
+        MeasuredDataMapper mapper(measuredData.front());
+        lattice.defineU(superGeometry, MAT_LIQUID, mapper);
     }
 
     // Lattice initialize
@@ -247,6 +292,55 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
     }
 }
 
+// Writes result
+void writeResult(STLreader<T>& stlReader,
+                 UnitConverter<T,DESCRIPTOR>& converter, int iT,
+                 SuperLatticePhysF3D<T, DESCRIPTOR>& property,
+                 const std::string& name) {
+
+    OstreamManager clout(std::cout, "writeResult");
+
+    const Vector<T, 3>& min = stlReader.getMin();
+    const Vector<T, 3>& max = stlReader.getMax();
+
+    const int resolution = converter.getResolution();
+    const Vector<T, 3> len = (max - min);
+    const T maxLen = std::max({len[0], len[1], len[2]});
+    const Vector<T, 3> offset = min + (len - maxLen) * 0.5;
+
+    std::vector<float> rawPropertyData;
+    rawPropertyData.reserve(static_cast<size_t>(resolution * resolution * resolution * property.getTargetDim()));
+    AnalyticalFfromSuperF3D<T> interpolateProperty(property, true);
+
+    for(int z=0; z<resolution; z++) {
+        for(int y=0; y<resolution; y++) {
+            for(int x=0; x<resolution; x++) {
+
+                T pos[3] = {offset[0]+x*maxLen/resolution, offset[1]+y*maxLen/resolution, offset[2]+z*maxLen/resolution};
+                std::vector<T> dat(property.getTargetDim(), 0.0f);
+
+                if(pos[0] >= min[0] && pos[1] >= min[1] && pos[2] >= min[2] &&
+                   pos[0] <= max[0] && pos[1] <= max[1] && pos[2] <= max[2]) {
+                    interpolateProperty(&dat[0], pos);
+                }
+
+                // Downgrade to float.
+                for(int i = 0; i < property.getTargetDim(); i++) {
+                    rawPropertyData.push_back(static_cast<float>(dat[i]/VOREEN_LENGTH_TO_SI));
+                }
+            }
+        }
+    }
+
+    std::string propertyFilename = singleton::directories().getVtkOutDir() + "/" + name + "_" + std::to_string(iT) + ".raw"; // TODO: encode simulated time.
+    std::fstream propertyFile(propertyFilename.c_str(), std::ios::out | std::ios::binary);
+    size_t numBytes = rawPropertyData.size() * sizeof(float) / sizeof(char);
+    propertyFile.write(reinterpret_cast<const char*>(rawPropertyData.data()), numBytes);
+    if (!propertyFile.good()) {
+        clout << "Could not write " << name << " file" << std::endl;
+    }
+}
+
 // Computes flux at inflow and outflow
 void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 UnitConverter<T, DESCRIPTOR>& converter, int iT,
@@ -266,41 +360,22 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
     //rank = singleton::mpi().getRank();
 #endif
     if (rank == 0 && iT % vtkIter == 0) {
-        const Vector<T, 3>& min = stlReader.getMin();
-        const Vector<T, 3>& max = stlReader.getMax();
+        // Write velocity.
+        SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
+        writeResult(stlReader, converter, iT, velocity, "velocity");
 
-        const int resolution = converter.getResolution();
-        const Vector<T, 3> len = max - min;//converter.getCharPhysLength();
-        std::vector<float> rawVelocityData;
-        rawVelocityData.reserve(static_cast<size_t>(resolution * resolution * resolution * 3));
+        // Write pressure.
+        SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
+        writeResult(stlReader, converter, iT, pressure, "pressure");
 
-        AnalyticalFfromSuperF3D<T> interpolateVelocity(velocity, true);
-        for(int z=0; z<resolution; z++) {
-            for(int y=0; y<resolution; y++) {
-                for(int x=0; x<resolution; x++) {
+        // Write WallShearStress
+        // TODO: figure out how and estimate somehow from measured data!
+        //SuperLatticePhysWallShearStress3D<T, DESCRIPTOR> wallShearStress(sLattice, superGeometry, MAT_WALL, converter, stlReader);
+        //writeResult(stlReader, converter, iT, wallShearStress, simulationOutputPath, "wallShearStress");
 
-                    T pos[3] = {min[0]+x*len[0]/resolution, min[1]+y*len[1]/resolution, min[2]+z*len[2]/resolution};
-                    T u[3] = {0.0, 0.0, 0.0};
-
-                    if(pos[0] >= min[0] && pos[1] >= min[1] && pos[2] >= min[2] &&
-                       pos[0] <= max[0] && pos[1] <= max[1] && pos[2] <= max[2])
-                        interpolateVelocity(u, pos);
-
-                    // Downgrade to float.
-                    rawVelocityData.push_back(static_cast<float>(u[0]/VOREEN_LENGTH_TO_SI));
-                    rawVelocityData.push_back(static_cast<float>(u[1]/VOREEN_LENGTH_TO_SI));
-                    rawVelocityData.push_back(static_cast<float>(u[2]/VOREEN_LENGTH_TO_SI));
-                }
-            }
-        }
-
-        std::string velocityFilename = singleton::directories().getVtkOutDir() + "/velocity_" + std::to_string(iT) + ".raw";
-        std::fstream velocityFile(velocityFilename.c_str(), std::ios::out | std::ios::binary);
-        size_t numBytes = rawVelocityData.size() * sizeof(float) / sizeof(char);
-        velocityFile.write(reinterpret_cast<const char*>(rawVelocityData.data()), numBytes);
-        if (!velocityFile.good()) {
-            clout << "Could not write velocity file" << std::endl;
-        }
+        // Write Temperature.
+        //SuperLatticePhysTemperature3D<T, DESCRIPTOR, TODO> temperature(sLattice, converter);
+        //writeResult(stlReader, converter, iT, temperature, simulationOutputPath, "temperature");
     }
 
     // Writes output on the console
@@ -379,7 +454,9 @@ int main(int argc, char* argv[]) {
         indicator.radius_ = std::atof((*iter)["radius"].getAttribute("value").c_str());
         flowIndicators.push_back(indicator);
     }
-    std::cout << "Found " << flowIndicators.size() << " Flow Indicators";
+    clout << "Found " << flowIndicators.size() << " Flow Indicators" << std::endl;
+
+    // TODO: implement measured data support!
 
     const int N = spatialResolution;
     UnitConverter<T, DESCRIPTOR> converter(
@@ -400,7 +477,7 @@ int main(int argc, char* argv[]) {
     // Instantiation of the STLreader class
     // file name, voxel size in meter, stl unit in meter, outer voxel no., inner voxel no.
     std::string geometryFileName = "../geometry/geometry.stl";
-    STLreader<T> stlReader(geometryFileName.c_str(), converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI, 0, true);
+    STLreader<T> stlReader(geometryFileName.c_str(), converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI, 1, true);
     IndicatorLayer3D<T> extendedDomain(stlReader, converter.getConversionFactorLength());
 
     // Instantiation of a cuboidGeometry with weights
@@ -470,4 +547,6 @@ int main(int argc, char* argv[]) {
 
     timer.stop();
     timer.printSummary();
+
+    return EXIT_SUCCESS;
 }

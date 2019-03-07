@@ -86,6 +86,7 @@ private:
     static const T VOREEN_LENGTH_TO_SI;
     static const T VOREEN_TIME_TO_SI;
 
+    // Static material ids.
     enum Material {
         MAT_EMPTY  = 0,
         MAT_LIQUID = 1,
@@ -93,8 +94,20 @@ private:
         MAT_COUNT,
     };
 
+    // Extends FlowIndicator by it's Material id.
     struct FlowIndicatorMaterial : public FlowIndicator {
         int materialId_{MAT_EMPTY};
+    };
+
+    // Allow for simulation lattice initialization by volume data.
+    class MeasuredDataMapper : public AnalyticalF3D<T, T> {
+    public:
+        MeasuredDataMapper(const VolumeBase* volume);
+        virtual bool operator() (T output[], const T input[]);
+
+    private:
+        const VolumeBase* volume_;
+        tgt::Bounds bounds_;
     };
 
     void prepareGeometry(   UnitConverter<T,DESCRIPTOR> const& converter, IndicatorF3D<T>& indicator,

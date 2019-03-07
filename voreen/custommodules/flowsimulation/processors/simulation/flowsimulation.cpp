@@ -42,6 +42,35 @@ const T FlowSimulation::VOREEN_LENGTH_TO_SI = 0.001;
 const T FlowSimulation::VOREEN_TIME_TO_SI = 0.001;
 const std::string FlowSimulation::loggerCat_("voreen.flowreen.FlowSimulation");
 
+
+FlowSimulation::MeasuredDataMapper::MeasuredDataMapper(const VolumeBase* volume)
+    : AnalyticalF3D<T, T>(3)
+    , volume_(volume)
+{
+    tgtAssert(volume_, "No volume");
+    tgtAssert(volume_->getNumChannels() == 3, "Num channels != 3");
+    bounds_ = volume_->getBoundingBox(true).getBoundingBox(true);
+}
+
+bool FlowSimulation::MeasuredDataMapper::operator() (T output[], const T input[]) {
+    tgt::vec3 rwPos = tgt::Vector3<T>::fromPointer(input) / VOREEN_LENGTH_TO_SI;
+    if (!bounds_.containsPoint(rwPos)) {
+        return false;
+    }
+
+    const VolumeRAM_3xFloat* initialState = dynamic_cast<const VolumeRAM_3xFloat*>(volume_->getRepresentation<VolumeRAM>());
+    if(!initialState)
+        return false;
+
+    for(size_t i=0; i < volume_->getNumChannels(); i++) {
+        tgt::vec3 voxel = initialState->getVoxelLinear(rwPos, 0, false);
+        output[i] = voxel[i] * VOREEN_LENGTH_TO_SI;
+    }
+
+    return true;
+}
+
+
 FlowSimulation::FlowSimulation()
     : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
     , geometryDataPort_(Port::INPORT, "geometryDataPort", "Geometry Input", false)
@@ -89,7 +118,7 @@ bool FlowSimulation::isReady() const {
 }
 
 void FlowSimulation::adjustPropertiesToInput() {
-    const FlowParametrizationList* flowParameterList = parameterPort_.getThreadSafeData();
+    const FlowParametrizationList* flowParameterList = parameterPort_.getData();
     if(!flowParameterList || flowParameterList->empty()) {
         selectedParametrization_.setMinValue(-1);
         selectedParametrization_.setMaxValue(-1);
@@ -199,7 +228,7 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
 
     // Instantiation of the STLreader class
     // file name, voxel size in meter, stl unit in meter, outer voxel no., inner voxel no.
-    STLreader<T> stlReader(input.geometryPath, converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI);
+    STLreader<T> stlReader(input.geometryPath, converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI, 1);
     IndicatorLayer3D<T> extendedDomain(stlReader, converter.getConversionFactorLength());
 
     std::vector<FlowIndicatorMaterial> flowIndicators;
@@ -272,8 +301,8 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
         // Check for convergence.
         converge.takeValue(sLattice.getStatistics().getAverageEnergy(), true);
         if(converge.hasConverged()) {
-            LINFO("Simulation converged!");
-            break;
+            //LINFO("Simulation converged!");
+            //break;
         }
 
         float progress = iT / (converter.getLatticeTime( parametrizationList.getSimulationTime() ) + 1.0f);
@@ -283,9 +312,7 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
     LINFO("Finished simulation...");
 
     // Done.
-    return FlowSimulationOutput{
-            //std::move(output)
-    };
+    return FlowSimulationOutput{};
 }
 
 void FlowSimulation::processComputeOutput(FlowSimulationOutput output) {
@@ -401,42 +428,6 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
     }
     // Steered simulation.
     else {
-
-        // TODO: Move elsewhere!
-        class MeasuredDataMapper : public AnalyticalF3D<T, T> {
-        public:
-            MeasuredDataMapper(const VolumeBase* volume)
-                : AnalyticalF3D<T, T>(3)
-                , volume_(volume)
-            {
-                tgtAssert(volume_, "No volume");
-                tgtAssert(volume_->getNumChannels() == 3, "Num channels != 3");
-                bounds_ = volume_->getBoundingBox(true).getBoundingBox(true);
-            }
-            virtual bool operator() (T output[], const T input[]) {
-                tgt::vec3 rwPos = tgt::Vector3<T>::fromPointer(input) / VOREEN_LENGTH_TO_SI;
-                if (!bounds_.containsPoint(rwPos)) {
-                    return false;
-                }
-
-                const VolumeRAM_3xFloat* initialState = dynamic_cast<const VolumeRAM_3xFloat*>(volume_->getRepresentation<VolumeRAM>());
-                if(!initialState)
-                    return false;
-
-                for(size_t i=0; i < volume_->getNumChannels(); i++) {
-                    tgt::vec3 voxel = initialState->getVoxelLinear(rwPos, 0, false);
-                    output[i] = voxel[i] * VOREEN_LENGTH_TO_SI;
-                }
-
-                return true;
-            }
-
-        private:
-
-            const VolumeBase* volume_;
-            tgt::Bounds bounds_;
-        };
-
         MeasuredDataMapper mapper(measuredData->first());
         lattice.defineU(superGeometry, MAT_LIQUID, mapper);
     }
@@ -560,9 +551,9 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
     const Vector<T, 3>& max = stlReader.getMax();
 
     const int resolution = converter.getResolution();
-    const Vector<T, 3> len = max - min;
+    const Vector<T, 3> len = (max - min);
     const T maxLen = std::max({len[0], len[1], len[2]});
-    const Vector<T, 3> offset = (len - maxLen) * 0.5;
+    const Vector<T, 3> offset = min + (len - maxLen) * 0.5;
 
     std::vector<float> rawPropertyData;
     rawPropertyData.reserve(static_cast<size_t>(resolution * resolution * resolution * property.getTargetDim()));
@@ -588,14 +579,13 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
         }
     }
 
-    std::string velocityFilename = simulationOutputPath + "velocity_" + std::to_string(iT) + ".raw"; // TODO: encode simulated time.
-    std::fstream velocityFile(velocityFilename.c_str(), std::ios::out | std::ios::binary);
+    std::string propertyFilename = simulationOutputPath + name + "_" + std::to_string(iT) + ".raw"; // TODO: encode simulated time.
+    std::fstream propertyFile(propertyFilename.c_str(), std::ios::out | std::ios::binary);
     size_t numBytes = rawPropertyData.size() * sizeof(float) / sizeof(char);
-    velocityFile.write(reinterpret_cast<const char*>(rawPropertyData.data()), numBytes);
-    if (!velocityFile.good()) {
+    propertyFile.write(reinterpret_cast<const char*>(rawPropertyData.data()), numBytes);
+    if (!propertyFile.good()) {
         LERROR("Could not write " << name << " file");
     }
-
 }
 
 }   // namespace
