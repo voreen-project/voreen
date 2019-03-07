@@ -549,33 +549,30 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, tgt::plane p
 
     // check whether the plane normal matches one of the main directions of the volume:
     tgt::plane plVoxel = pl.transform(volume->getWorldToVoxelMatrix());
-    if(fabs(fabs(dot(tgt::vec3(1.0f, 0.0f, 0.0f), plVoxel.n)) - 1.0f) < 0.01f) {
-        float sliceNumber = tgt::clamp(tgt::round(plVoxel.d * plVoxel.n.x), 0.0f, dims.x-1.0f);
-
-        float integral = tgt::round(sliceNumber);
-        if(fabs(sliceNumber - integral) < 0.1f)
-            return SliceHelper::getVolumeSlice(volume, YZ_PLANE, static_cast<size_t >(sliceNumber));
-        //else TODO
+    if(fabs(fabs(dot(tgt::vec3(1.0f, 0.0f, 0.0f), plVoxel.n)) - 1.0f) < 0.001f) {
+        float sliceNumber = std::round(plVoxel.d * plVoxel.n.x);
+        if (sliceNumber >= 0.0f && sliceNumber < dims.x) {
+            return SliceHelper::getVolumeSlice(volume, YZ_PLANE, static_cast<size_t>(sliceNumber));
+        }
+        return nullptr;
     }
-    else if(fabs(fabs(dot(tgt::vec3(0.0f, 1.0f, 0.0f), plVoxel.n)) - 1.0f) < 0.01f) {
-        float sliceNumber = tgt::clamp(tgt::round(plVoxel.d * plVoxel.n.y), 0.0f, dims.y-1.0f);
-
-        float integral = tgt::round(sliceNumber);
-        if(fabs(sliceNumber - integral) < 0.1f)
-            return SliceHelper::getVolumeSlice(volume, XZ_PLANE, static_cast<size_t >(sliceNumber));
-        //else TODO
+    else if(fabs(fabs(dot(tgt::vec3(0.0f, 1.0f, 0.0f), plVoxel.n)) - 1.0f) < 0.001f) {
+        float sliceNumber = std::round(plVoxel.d * plVoxel.n.y);
+        if(sliceNumber >= 0.0f && sliceNumber < dims.y) {
+            return SliceHelper::getVolumeSlice(volume, XZ_PLANE, static_cast<size_t>(sliceNumber));
+        }
+        return nullptr;
     }
-    else if(fabs(fabs(dot(tgt::vec3(0.0f, 0.0f, 1.0f), plVoxel.n)) - 1.0f) < 0.01f) {
-        float sliceNumber = tgt::clamp(tgt::round(plVoxel.d * plVoxel.n.z), 0.0f, dims.z-1.0f);
-
-        float integral = tgt::round(sliceNumber);
-        if(fabs(sliceNumber - integral) < 0.1f)
-            return SliceHelper::getVolumeSlice(volume, XY_PLANE, static_cast<size_t >(sliceNumber));
-        //else TODO
+    else if(fabs(fabs(dot(tgt::vec3(0.0f, 0.0f, 1.0f), plVoxel.n)) - 1.0f) < 0.001f) {
+        float sliceNumber = std::round(plVoxel.d * plVoxel.n.z);
+        if(sliceNumber >= 0.0f && sliceNumber < dims.z) {
+            return SliceHelper::getVolumeSlice(volume, XY_PLANE, static_cast<size_t>(sliceNumber));
+        }
+        return nullptr;
     }
     const VolumeRAM* vol = volume->getRepresentation<VolumeRAM>();
     if(!vol)
-        return 0;
+        return nullptr;
 
     // transform to world coordinates:
     tgt::mat4 pToW = volume->getPhysicalToWorldMatrix();

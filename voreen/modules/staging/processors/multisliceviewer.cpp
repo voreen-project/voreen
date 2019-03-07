@@ -536,16 +536,21 @@ void MultiSliceViewer::process() {
                     );
         }
         else {
-            SliceTexture* slice = sliceCache_.getSlice(p, inport1_.getData());
+            if(SliceTexture* slice = sliceCache_.getSlice(p, inport1_.getData())) {
 
-            sh_->setIgnoreUniformLocationError(true); // we do not need all of the information, so we ignore missing uniforms
-            GLSL::setUniform(sh_, "volume1_", "volumeStruct1_", slice, &volUnit1);
-            sh_->setIgnoreUniformLocationError(false);
+                sh_->setIgnoreUniformLocationError(
+                        true); // we do not need all of the information, so we ignore missing uniforms
+                GLSL::setUniform(sh_, "volume1_", "volumeStruct1_", slice, &volUnit1);
+                sh_->setIgnoreUniformLocationError(false);
 
-            sh_->setUniform("volumeStruct1_.worldToTextureMatrix_", slice->getWorldToTextureMatrix());
-            volUnit1.activate();
-            slice->bind();
-            LGL_ERROR;
+                sh_->setUniform("volumeStruct1_.worldToTextureMatrix_", slice->getWorldToTextureMatrix());
+                volUnit1.activate();
+                slice->bind();
+                LGL_ERROR;
+            }
+            else {
+                LERROR("Error retrieving slice for 1st volume");
+            }
         }
     }
     if(inport2_.isReady()) {
@@ -561,15 +566,20 @@ void MultiSliceViewer::process() {
         }
         else {
             volUnit2.activate();
-            SliceTexture* slice = sliceCache_.getSlice(p, inport2_.getData());
+            if(SliceTexture* slice = sliceCache_.getSlice(p, inport2_.getData())) {
 
-            sh_->setIgnoreUniformLocationError(true); // we do not need all of the information, so we ignore missing uniforms
-            GLSL::setUniform(sh_, "volume2_", "volumeStruct2_", slice, &volUnit2);
-            sh_->setIgnoreUniformLocationError(false);
+                sh_->setIgnoreUniformLocationError(
+                        true); // we do not need all of the information, so we ignore missing uniforms
+                GLSL::setUniform(sh_, "volume2_", "volumeStruct2_", slice, &volUnit2);
+                sh_->setIgnoreUniformLocationError(false);
 
-            sh_->setUniform("volumeStruct2_.worldToTextureMatrix_", slice->getWorldToTextureMatrix());
-            slice->bind();
-            LGL_ERROR;
+                sh_->setUniform("volumeStruct2_.worldToTextureMatrix_", slice->getWorldToTextureMatrix());
+                slice->bind();
+                LGL_ERROR;
+            }
+            else {
+                LERROR("Error retrieving slice for 2nd volume");
+            }
         }
     }
     if(inport3_.isReady()) {
@@ -585,15 +595,20 @@ void MultiSliceViewer::process() {
         }
         else {
             volUnit3.activate();
-            SliceTexture* slice = sliceCache_.getSlice(p, inport3_.getData());
+            if(SliceTexture* slice = sliceCache_.getSlice(p, inport3_.getData())) {
 
-            sh_->setIgnoreUniformLocationError(true); // we do not need all of the information, so we ignore missing uniforms
-            GLSL::setUniform(sh_, "volume3_", "volumeStruct3_", slice, &volUnit3);
-            sh_->setIgnoreUniformLocationError(false);
+                sh_->setIgnoreUniformLocationError(
+                        true); // we do not need all of the information, so we ignore missing uniforms
+                GLSL::setUniform(sh_, "volume3_", "volumeStruct3_", slice, &volUnit3);
+                sh_->setIgnoreUniformLocationError(false);
 
-            sh_->setUniform("volumeStruct3_.worldToTextureMatrix_", slice->getWorldToTextureMatrix());
-            slice->bind();
-            LGL_ERROR;
+                sh_->setUniform("volumeStruct3_.worldToTextureMatrix_", slice->getWorldToTextureMatrix());
+                slice->bind();
+                LGL_ERROR;
+            }
+            else {
+                LERROR("Error retrieving slice for 3rd volume");
+            }
         }
     }
     if(inport4_.isReady()) {
@@ -609,15 +624,20 @@ void MultiSliceViewer::process() {
         }
         else {
             volUnit4.activate();
-            SliceTexture* slice = sliceCache_.getSlice(p, inport4_.getData());
+            if(SliceTexture* slice = sliceCache_.getSlice(p, inport4_.getData())) {
 
-            sh_->setIgnoreUniformLocationError(true); // we do not need all of the information, so we ignore missing uniforms
-            GLSL::setUniform(sh_, "volume4_", "volumeStruct4_", slice, &volUnit4);
-            sh_->setIgnoreUniformLocationError(false);
+                sh_->setIgnoreUniformLocationError(
+                        true); // we do not need all of the information, so we ignore missing uniforms
+                GLSL::setUniform(sh_, "volume4_", "volumeStruct4_", slice, &volUnit4);
+                sh_->setIgnoreUniformLocationError(false);
 
-            sh_->setUniform("volumeStruct4_.worldToTextureMatrix_", slice->getWorldToTextureMatrix());
-            slice->bind();
-            LGL_ERROR;
+                sh_->setUniform("volumeStruct4_.worldToTextureMatrix_", slice->getWorldToTextureMatrix());
+                slice->bind();
+                LGL_ERROR;
+            }
+            else {
+                LERROR("Error retrieving slice for 4th volume");
+            }
         }
     }
     LGL_ERROR;
