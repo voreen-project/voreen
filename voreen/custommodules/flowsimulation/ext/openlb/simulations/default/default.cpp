@@ -332,7 +332,7 @@ void writeResult(STLreader<T>& stlReader,
         }
     }
 
-    std::string propertyFilename = singleton::directories().getVtkOutDir() + "/" + name + "_" + std::to_string(iT) + ".raw"; // TODO: encode simulated time.
+    std::string propertyFilename = singleton::directories().getLogOutDir() + "/" + name + "_" + std::to_string(iT) + ".raw"; // TODO: encode simulated time.
     std::fstream propertyFile(propertyFilename.c_str(), std::ios::out | std::ios::binary);
     size_t numBytes = rawPropertyData.size() * sizeof(float) / sizeof(char);
     propertyFile.write(reinterpret_cast<const char*>(rawPropertyData.data()), numBytes);
@@ -408,7 +408,7 @@ int main(int argc, char* argv[]) {
     std::string run = argv[2];
 
     clout << "Running: " << simulation << std::endl;
-    clout << "Ensemble:" << ensemble << std::endl;
+    clout << "Ensemble: " << ensemble << std::endl;
     clout << "Run: " << run << std::endl;
 
     __mode_t mode = ACCESSPERMS;
