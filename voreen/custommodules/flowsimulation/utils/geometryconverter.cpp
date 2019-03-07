@@ -37,7 +37,7 @@ bool exportGeometryToSTL(const Geometry* geometry, const std::string& path) {
     if(const GlMeshGeometryBase* data = dynamic_cast<const GlMeshGeometryBase*>(geometry)) {
 
         if(data->getPrimitiveType() != GL_TRIANGLES) {
-            std::cout << "Currently only triangular meshes allowed" << std::endl;
+            LERRORC("voreen.stlexport", "Currently only triangular meshes allowed");
             return false;
         }
 
@@ -71,7 +71,11 @@ bool exportGeometryToSTL(const Geometry* geometry, const std::string& path) {
 
         tgt::mat4 m = geometry->getTransformationMatrix();
         if(data->usesIndexedDrawing()) {
-            tgtAssert(data->getNumIndices() % 3 == 0, "No triangle mesh");
+            if(data->getNumIndices() % 3 != 0) {
+                LERRORC("voreen.stlexport", "Currently only triangular meshes allowed");
+                return false;
+            }
+
             for (size_t i = 0; i < data->getNumIndices(); i+=3) {
 
                 tgt::vec3 v0 = m * vertices[indices[i+0]].pos_;
@@ -90,7 +94,11 @@ bool exportGeometryToSTL(const Geometry* geometry, const std::string& path) {
             }
         }
         else {
-            tgtAssert(data->getNumVertices() % 3 == 0, "No triangle mesh");
+            if(data->getNumVertices() % 3 != 0) {
+                LERRORC("voreen.stlexport", "Currently only triangular meshes allowed");
+                return false;
+            }
+
             for (size_t i = 0; i < data->getNumVertices(); i+=3) {
 
                 tgt::vec3 v0 = m * vertices[i+0].pos_;
@@ -113,7 +121,7 @@ bool exportGeometryToSTL(const Geometry* geometry, const std::string& path) {
         return true;
     }
     else {
-        std::cout << "Geometry not supported!" << std::endl;
+        LERRORC("voreen.stlexport", "Geometry not supported!");
         return false;
     }
 }
