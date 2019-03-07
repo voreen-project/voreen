@@ -34,22 +34,26 @@ namespace voreen {
 FlowCharacteristics::FlowCharacteristics()
     : Processor()
     , inport_(Port::INPORT, "parametrization", "Parametrization Input")
+    , simulationTime_("simulationTime", "Simulation time (s)", 1.0f, 0.0f, 100.0f, Processor::VALID)
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 30.0f, Processor::VALID)
     , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 22.46f, 0.1f, 1000.0f, Processor::VALID)
     , minVelocity_("minVelocity", "Min. Velocity (mm/s)", 0.0f, 0.0f, 1000.0f, Processor::VALID)
     , maxVelocity_("maxVelocity", "Max. Velocity (mm/s)", 0.0f, 0.0f, 1000.0f, Processor::VALID)
+    , resetButton_("resetButton", "Reset") // Invalidation level -> resets values.
 {
     addPort(inport_);
     inport_.addCondition(new PortConditionVolumeList(new PortConditionVolumeType3xFloat()));
 
+    addProperty(simulationTime_);
     addProperty(temporalResolution_);
     addProperty(characteristicLength_);
     addProperty(minVelocity_);
     addProperty(maxVelocity_);
+    addProperty(resetButton_);
 }
 
 void FlowCharacteristics::process() {
-    const VolumeList *volumeList = inport_.getData();
+    const VolumeList* volumeList = inport_.getData();
     tgtAssert(volumeList, "no data");
 
     float maxLength = 0.0f;
@@ -65,6 +69,7 @@ void FlowCharacteristics::process() {
         maxVelocity = std::max(maxVelocity, minMax->getMaxMagnitude());
     }
 
+    simulationTime_.set(volumeList->size() * temporalResolution_.get());
     characteristicLength_.set(maxLength);
     minVelocity_.setMaxValue(maxVelocity * 1.2f); // Allow for 20% adjustments.
     minVelocity_.set(minVelocity);

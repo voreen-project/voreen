@@ -48,17 +48,19 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Used to extract and set characteristics of a time series.");
+        setDescription("Used to extract and set characteristics of a flow time series.");
     }
 
 private:
 
     VolumeListPort inport_;
 
+    FloatProperty simulationTime_;
     FloatProperty temporalResolution_;
     FloatProperty characteristicLength_;
     FloatProperty minVelocity_;
     FloatProperty maxVelocity_;
+    ButtonProperty resetButton_;
 };
 
 }
