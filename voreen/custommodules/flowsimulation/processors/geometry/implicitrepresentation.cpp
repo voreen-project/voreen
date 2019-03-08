@@ -59,25 +59,11 @@ Processor* ImplicitRepresentation::create() const {
     return new ImplicitRepresentation();
 }
 
-bool ImplicitRepresentation::isReady() const {
-    if(!isInitialized()) {
-        setNotReadyErrorMessage("Not initialized.");
-        return false;
-    }
-    bool fileExists = std::ifstream(path_.get().c_str(), std::ios::binary).good();
-    if(!inport_.isReady() && !fileExists) {
-        setNotReadyErrorMessage("No input.");
-        return false;
-    }
-    return true;
-}
-
 void ImplicitRepresentation::process() {
 
     const Geometry* inputGeometry = inport_.getData();
-    bool fileExists = std::ifstream(path_.get().c_str(), std::ios::binary).good();
-    tgtAssert(inputGeometry || fileExists, "No input");
-    if (!fileExists && !exportGeometryToSTL(inputGeometry, path_.get())) {
+    tgtAssert(inputGeometry, "No input");
+    if (!exportGeometryToSTL(inputGeometry, path_.get())) {
         LERROR("Failed to export mesh.");
         outport_.setData(nullptr);
         return;
@@ -86,11 +72,13 @@ void ImplicitRepresentation::process() {
     T spacing = tgt::max(inputGeometry->getBoundingBox(true).diagonal()) / dimensions_.get();
     STLreader<T> stlReader(path_.get(), spacing, 1.0, method_.getValue());
 
+    tgt::Vector3<T> offset = tgt::Vector3<T>::fromPointer(stlReader.getMin().data);
+
     VolumeRAM_UInt8* idVolume = new VolumeRAM_UInt8(tgt::svec3(dimensions_.get()));
     idVolume->clear(); // Set every voxel to outside (0)
     const uint8_t INSIDE = 1;
 
-    std::vector<Octree<T>* > leafs;
+    std::vector<Octree<T>*> leafs;
     stlReader.getTree()->getLeafs(leafs);
 
     // TODO: loop could be parallelized.
@@ -100,8 +88,8 @@ void ImplicitRepresentation::process() {
             tgt::Vector3<T> center = tgt::Vector3<T>::fromPointer((*it)->getCenter().data);
             T radius = (*it)->getRadius();
 
-            tgt::Vector3<T> min = center - radius;
-            tgt::Vector3<T> max = center + radius;
+            tgt::Vector3<T> min = center - radius - offset;
+            tgt::Vector3<T> max = center + radius - offset;
 
             tgt::svec3 llf = tgt::max(min / spacing, tgt::Vector3<T>::zero);
             tgt::svec3 urb = tgt::min(max / spacing, tgt::Vector3<T>(idVolume->getDimensions()));
@@ -112,7 +100,7 @@ void ImplicitRepresentation::process() {
         }
     }
 
-    Volume* outputVolume = new Volume(idVolume, tgt::vec3(spacing), tgt::vec3::zero);
+    Volume* outputVolume = new Volume(idVolume, tgt::vec3(spacing), offset);
     outport_.setData(outputVolume);
 }
 
