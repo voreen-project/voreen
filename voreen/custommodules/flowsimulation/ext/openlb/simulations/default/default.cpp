@@ -109,10 +109,10 @@ private:
 
 ////////// Globals //////////////////
 // Meta
-static const std::string simulation = "default";
-static const std::string base = "/scratch/tmp/s_leis06/simulations/";
-static const T VOREEN_LENGTH_TO_SI = 0.001;
-static const T VOREEN_TIME_TO_SI = 0.001;
+const std::string simulation = "default";
+const std::string base = "/scratch/tmp/s_leis06/simulations/";
+const T VOREEN_LENGTH_TO_SI = 0.001;
+const T VOREEN_TIME_TO_SI = 0.001;
 
 // Config
 T simulationTime = 0.0;
@@ -411,22 +411,31 @@ int main(int argc, char* argv[]) {
     clout << "Ensemble: " << ensemble << std::endl;
     clout << "Run: " << run << std::endl;
 
-    __mode_t mode = ACCESSPERMS;
     std::string output = base;
-    if (DIR* dir = opendir(output.c_str())) {
-        closedir(dir);
-    } else {
+    int rank = 0;
+#ifdef PARALLEL_MODE_MPI
+    rank = singleton::mpi().getRank();
+#endif
+    if (rank == 0) {
+        __mode_t mode = ACCESSPERMS;
         output += simulation + "/";
         mkdir(output.c_str(), mode); // ignore result
         output += ensemble + "/";
         mkdir(output.c_str(), mode); // ignore result
         output += run + "/";
-        if (mkdir(output.c_str(), mode) != 0) {
+        struct stat statbuf;
+        if (stat(output.c_str(), &statbuf) != 0 && mkdir(output.c_str(), mode) != 0) {
             clout << "Could not create output directory: '" << output << "'" << std::endl;
             return EXIT_FAILURE;
         }
     }
-    singleton::directories().setOutputDir(output.c_str());
+    else {
+        output += simulation + "/";
+        output += ensemble + "/";
+        output += run + "/";
+    }
+    clout << "Setting output directory: " << output << std::endl;
+    singleton::directories().setOutputDir(output);
 
     XMLreader config("config.xml");
     simulationTime = std::atof(config["simulationTime"].getAttribute("value").c_str());
