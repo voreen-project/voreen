@@ -110,6 +110,9 @@ private:
         tgt::Bounds bounds_;
     };
 
+    void runSimulation(     const FlowSimulationInput& input,
+                            ProgressReporter& progressReporter) const;
+
     void prepareGeometry(   UnitConverter<T,DESCRIPTOR> const& converter, IndicatorF3D<T>& indicator,
                             STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry,
                             const FlowParametrizationList& parametrizationList,

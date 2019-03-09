@@ -112,9 +112,10 @@ private:
 class VRN_CORE_API FlowParametrizationList : public DataInvalidationObservable, public Serializable {
 
     static const int VERSION;
-    static const size_t ALL_PARAMETRIZATIONS;
 
 public:
+
+    static const size_t ALL_PARAMETRIZATIONS;
 
     explicit FlowParametrizationList(const std::string& name);
     FlowParametrizationList(const FlowParametrizationList& origin);

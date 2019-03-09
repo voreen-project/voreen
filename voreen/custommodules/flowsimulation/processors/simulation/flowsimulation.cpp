@@ -87,7 +87,7 @@ FlowSimulation::FlowSimulation()
 
     addProperty(simulationResults_);
 
-    //addProperty(simulateAllParametrizations_);
+    addProperty(simulateAllParametrizations_);
     ON_CHANGE_LAMBDA(simulateAllParametrizations_, [this]{
         selectedParametrization_.setReadOnlyFlag(simulateAllParametrizations_.get());
     });
@@ -185,11 +185,14 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
         throw InvalidInputException("No output directory selected", InvalidInputException::S_WARNING);
     }
 
-    size_t selectedParametrization = static_cast<size_t>(selectedParametrization_.get());
     std::string simulationPath = simulationResults_.get() + "/" + flowParameterList->getName() + "/";
-    simulationPath += flowParameterList->at(selectedParametrization).getName() + "/";
-    if(!tgt::FileSystem::createDirectoryRecursive(simulationPath)) {
+    if (!tgt::FileSystem::createDirectoryRecursive(simulationPath)) {
         throw InvalidInputException("Output directory could not be created", InvalidInputException::S_ERROR);
+    }
+
+    size_t selectedParametrization = FlowParametrizationList::ALL_PARAMETRIZATIONS;
+    if(!simulateAllParametrizations_.get()) {
+        selectedParametrization = static_cast<size_t>(selectedParametrization_.get());
     }
 
     return FlowSimulationInput{
@@ -203,14 +206,52 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
 FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, ProgressReporter& progressReporter) const {
 
+    // Needs to be initialized in each new thread to be used.
+    olb::olbInit(nullptr, nullptr);
+
+    // Run either all or just a single simulation.
+    if(input.selectedParametrization == FlowParametrizationList::ALL_PARAMETRIZATIONS) {
+        progressReporter.setProgress(0.0f);
+        size_t numRuns = input.parametrizationList->size();
+        for(size_t i=0; i<numRuns; i++) {
+            // Define run input.
+            FlowSimulationInput runInput = input;
+            runInput.selectedParametrization = i;
+
+            // Run the ith simulation.
+            SubtaskProgressReporter runProgressReporter(progressReporter, tgt::vec2(i, i+1)/tgt::vec2(numRuns));
+            runSimulation(runInput, runProgressReporter);
+        }
+        progressReporter.setProgress(1.0f);
+    }
+    else {
+        // Pass through.
+        runSimulation(input, progressReporter);
+    }
+
+    // Done.
+    return FlowSimulationOutput{};
+}
+
+void FlowSimulation::processComputeOutput(FlowSimulationOutput output) {
+    // Nothing to do.
+}
+
+void FlowSimulation::runSimulation(const FlowSimulationInput& input,
+                                   ProgressReporter& progressReporter) const {
+
     const VolumeList* measuredData = input.measuredData;
     const FlowParametrizationList& parametrizationList = *input.parametrizationList;
     const FlowParameters& parameters = parametrizationList.at(input.selectedParametrization);
 
+    LINFO("Starting simulation run: " << parameters.getName());
     progressReporter.setProgress(0.0f);
 
-    // Needs to be initialized in each new thread to be used.
-    olb::olbInit(nullptr, nullptr);
+    std::string simulationResultPath = input.simulationResultPath + parameters.getName() + "/";
+    if (!tgt::FileSystem::createDirectory(simulationResultPath)) {
+        LERROR("Output directory could not be created");
+        return;
+    }
 
     const int N = parametrizationList.getSpatialResolution();
     UnitConverter<T, DESCRIPTOR> converter(
@@ -280,7 +321,6 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
 
     // === 4th Step: Main Loop  ===
     util::ValueTracer<T> converge( converter.getLatticeTime(1.0), 1e-5 );
-    LINFO("Starting simulation...");
     for (int iT = 0; iT <= converter.getLatticeTime(parametrizationList.getSimulationTime()); iT++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
@@ -293,7 +333,7 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
         // === 7th Step: Computation and Output of the Results ===
         bool success = getResults(sLattice, converter, iT, bulkDynamics, superGeometry, stlReader,
                                   parametrizationList, input.selectedParametrization, flowIndicators,
-                                  input.simulationResultPath);
+                                  simulationResultPath);
         if(!success) {
             break;
         }
@@ -309,13 +349,7 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
         progressReporter.setProgress(progress);
     }
     progressReporter.setProgress(1.0f);
-    LINFO("Finished simulation...");
-
-    // Done.
-    return FlowSimulationOutput{};
-}
-
-void FlowSimulation::processComputeOutput(FlowSimulationOutput output) {
+    LINFO("Finished simulation run: " << parameters.getName());
 }
 
 // Stores data from stl file in geometry in form of material numbers
