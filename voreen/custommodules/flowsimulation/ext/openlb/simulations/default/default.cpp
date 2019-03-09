@@ -418,7 +418,7 @@ int main(int argc, char* argv[]) {
         output += run + "/";
         struct stat statbuf;
         if (stat(output.c_str(), &statbuf) != 0 && mkdir(output.c_str(), mode) != 0) {
-            clout << "Could not create output directory: '" << output << "'" << std::endl;
+            std::cout << "Could not create output directory: '" << output << "'" << std::endl;
             return EXIT_FAILURE;
         }
     }
@@ -427,12 +427,11 @@ int main(int argc, char* argv[]) {
         output += ensemble + "/";
         output += run + "/";
     }
-    clout << "Setting output directory: " << output << std::endl;
     singleton::directories().setOutputDir(output);
 
     OstreamManager clout(std::cout, "main");
-    // don't display messages from every single mpi process
-    clout.setMultiOutput(false);
+    clout.setMultiOutput(false); // don't display messages from every single mpi process.
+    clout << "Set output directory: " << output << std::endl;
 
     clout << "Running: " << simulation << std::endl;
     clout << "Ensemble: " << ensemble << std::endl;
