@@ -394,22 +394,15 @@ int main(int argc, char* argv[]) {
 
     // === 1st Step: Initialization ===
     olbInit(&argc, &argv);
-    OstreamManager clout(std::cout, "main");
-    // don't display messages from every single mpi process
-    clout.setMultiOutput(false);
 
     if(argc != 3) {
-        clout << "Invalid number of arguments!" << std::endl;
+        std::cout << "Invalid number of arguments!" << std::endl;
         return EXIT_FAILURE;
     }
 
     //std::string simulation = argv[0];
     std::string ensemble = argv[1];
     std::string run = argv[2];
-
-    clout << "Running: " << simulation << std::endl;
-    clout << "Ensemble: " << ensemble << std::endl;
-    clout << "Run: " << run << std::endl;
 
     std::string output = base;
     int rank = 0;
@@ -437,6 +430,15 @@ int main(int argc, char* argv[]) {
     clout << "Setting output directory: " << output << std::endl;
     singleton::directories().setOutputDir(output);
 
+    OstreamManager clout(std::cout, "main");
+    // don't display messages from every single mpi process
+    clout.setMultiOutput(false);
+
+    clout << "Running: " << simulation << std::endl;
+    clout << "Ensemble: " << ensemble << std::endl;
+    clout << "Run: " << run << std::endl;
+
+    // Parse XML simulation config.
     XMLreader config("config.xml");
     simulationTime = std::atof(config["simulationTime"].getAttribute("value").c_str());
     temporalResolution = std::atof(config["temporalResolution"].getAttribute("value").c_str());

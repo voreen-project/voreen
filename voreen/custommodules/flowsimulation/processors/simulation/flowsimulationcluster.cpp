@@ -275,13 +275,20 @@ void FlowSimulationCluster::fetchResults() {
     std::string source = username + "@" + clusterAddress + ":/scratch/tmp/" + username + "/simulations/" + simulationType_.get();
     const FlowParametrizationList* parametrizationList = parameterPort_.getData();
     if (parametrizationList) {
-        std::string paramPath = "/" + parametrizationList->getName() + "/";
+        std::string paramPath = "/" + parametrizationList->getName();
         source += paramPath;
+
+        std::string dest = directory + paramPath;
+        if (!tgt::FileSystem::createDirectory(dest)) {
+            LERROR("Could not create ensemble directory: " << dest);
+            return;
+        }
+
         std::vector<std::string> failed;
         for(const FlowParameters& parameters : parametrizationList->getFlowParametrizations()) {
             std::string command = "scp -r ";
-            command += source + parameters.getName() + " ";
-            command += simulationResults_.get() + paramPath + parameters.getName();
+            command += source + "/" + parameters.getName() + " ";
+            command += dest;
 
             int ret = executeCommand(command);
             if (ret != EXIT_SUCCESS) {
