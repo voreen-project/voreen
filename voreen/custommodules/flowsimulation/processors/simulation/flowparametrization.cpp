@@ -145,21 +145,22 @@ void FlowParametrization::clearParametrizations() {
 
 void FlowParametrization::autoGenerateEnsemble() {
     // TODO: implement intelligent heuristic!
-    const size_t split = 3;
+//    const size_t split = 3;
+//    for(size_t i=0; i<split; i++) {
+//        float characteristicLength = characteristicLength_.getMinValue() + (characteristicLength_.getMaxValue() - characteristicLength_.getMinValue()) * i / split;
+//        for(size_t l=0; l<split; l++) {
+//            float characteristicVelocity = characteristicVelocity_.getMinValue() + (characteristicVelocity_.getMaxValue() - characteristicVelocity_.getMinValue()) * l / split;
+            float characteristicLength = characteristicLength_.get();
+            float characteristicVelocity = characteristicVelocity_.get();
+            for(size_t j=0; j<6; j++) {
+                float viscosity = viscosity_.getMinValue() + (viscosity_.getMaxValue() - viscosity_.getMinValue()) * j / 5;
+                for (size_t k = 0; k < 5; k++) {
+                    float density = density_.getMinValue() + (density_.getMaxValue() - density_.getMinValue()) * k / 4;
 
-    std::vector<float> characteristicLengths;
-    for(size_t i=0; i<split; i++) {
-        float characteristicLength = characteristicLength_.getMinValue() + (characteristicLength_.getMaxValue() - characteristicLength_.getMinValue()) * i / split;
-        for(size_t l=0; l<split; l++) {
-            float characteristicVelocity = characteristicVelocity_.getMinValue() + (characteristicVelocity_.getMaxValue() - characteristicVelocity_.getMinValue()) * l / split;
-            for(size_t j=0; j<split; j++) {
-                float viscosity = viscosity_.getMinValue() + (viscosity_.getMaxValue() - viscosity_.getMinValue()) * j / split;
-                for (size_t k = 0; k < split; k++) {
-                    float density = density_.getMinValue() + (density_.getMaxValue() - density_.getMinValue()) * k / split;
-
-                    for (bool bouzidi : {true, false}) {
-                        std::string name =
-                                "run_len=" + std::to_string(characteristicLength) + "_vel=" + std::to_string(characteristicVelocity) +
+//                    for (bool bouzidi : {true, false}) {
+                        bool bouzidi = true;
+                        std::string name = "config"
+//                                "_len=" + std::to_string(characteristicLength) + "_vel=" + std::to_string(characteristicVelocity) +
                                 "_v=" + std::to_string(viscosity) + "_d=" + std::to_string(density) + "_b=" + std::to_string(bouzidi);
 
                         FlowParameters parameters(name);
@@ -178,11 +179,11 @@ void FlowParametrization::autoGenerateEnsemble() {
                         row[4] = std::to_string(parameters.getDensity());
                         row[5] = std::to_string(parameters.getBouzidi());
                         parametrizations_.addRow(row);
-                    }
+//                    }
                 }
             }
-        }
-    }
+//        }
+//    }
 }
 
 void FlowParametrization::adjustPropertiesToInput() {
