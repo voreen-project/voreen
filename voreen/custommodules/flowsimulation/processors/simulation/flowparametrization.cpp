@@ -34,7 +34,7 @@ FlowParametrization::FlowParametrization()
     , inport_(Port::INPORT, "inport", "Parameter Inport")
     , outport_(Port::OUTPORT, "outport", "Parameter Inport")
     , parametrizationName_("parametrizationName", "Parametrization Name", "test_parametrization")
-    , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 10.0f)
+    , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 20.0f)
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 30.0f)
     , spatialResolution_("spatialResolution", "Spatial Resolution", 128, 32, 1024)
     , flowFunction_("flowFunction", "Flow Function")
@@ -157,8 +157,7 @@ void FlowParametrization::autoGenerateEnsemble() {
                 for (size_t k = 0; k < 5; k++) {
                     float density = density_.getMinValue() + (density_.getMaxValue() - density_.getMinValue()) * k / 4;
 
-//                    for (bool bouzidi : {true, false}) {
-                        bool bouzidi = true;
+                    for (bool bouzidi : {true, false}) {
                         std::string name = "config"
 //                                "_len=" + std::to_string(characteristicLength) + "_vel=" + std::to_string(characteristicVelocity) +
                                 "_v=" + std::to_string(viscosity) + "_d=" + std::to_string(density) + "_b=" + std::to_string(bouzidi);
@@ -179,7 +178,7 @@ void FlowParametrization::autoGenerateEnsemble() {
                         row[4] = std::to_string(parameters.getDensity());
                         row[5] = std::to_string(parameters.getBouzidi());
                         parametrizations_.addRow(row);
-//                    }
+                    }
                 }
             }
 //        }

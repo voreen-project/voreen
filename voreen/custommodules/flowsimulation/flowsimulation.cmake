@@ -1,6 +1,11 @@
 ################################################################################
 # Core module resources
 ################################################################################
+
+IF(NOT VRN_MODULE_BIGDATAIMAGEPROCESSING)
+    MESSAGE(FATAL_ERROR "VesselTopology Module requires big data image processing Module")
+ENDIF()
+
 SET(MOD_CORE_MODULECLASS FlowSimulationModule)
 
 SET(MOD_CORE_SOURCES
@@ -8,6 +13,9 @@ SET(MOD_CORE_SOURCES
 
     # datastructures
     ${MOD_DIR}/datastructures/flowparameters.cpp
+
+    # flow features
+    ${MOD_DIR}/flowfeatures/magnitudefeature.cpp
 
     # ports
     ${MOD_DIR}/ports/flowparametrizationport.cpp
@@ -17,6 +25,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/geometry/geometryoffsetremove.cpp
     ${MOD_DIR}/processors/render/unalignedsliceviewer.cpp
     ${MOD_DIR}/processors/simulation/flowcharacteristics.cpp
+    ${MOD_DIR}/processors/simulation/flowensemblecreator.cpp
     ${MOD_DIR}/processors/simulation/flowindicatorselection.cpp
     ${MOD_DIR}/processors/simulation/flowindicatorrenderer.cpp
     ${MOD_DIR}/processors/simulation/flowparametrization.cpp
@@ -33,6 +42,10 @@ SET(MOD_CORE_HEADERS
     # datastructures
     ${MOD_DIR}/datastructures/flowparameters.h
 
+    # flow features
+    ${MOD_DIR}/flowfeatures/flowfeature.h
+    ${MOD_DIR}/flowfeatures/magnitudefeature.h
+
     # ports
     ${MOD_DIR}/ports/flowparametrizationport.h
 
@@ -41,6 +54,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/geometry/geometryoffsetremove.h
     ${MOD_DIR}/processors/render/unalignedsliceviewer.h
     ${MOD_DIR}/processors/simulation/flowcharacteristics.h
+    ${MOD_DIR}/processors/simulation/flowensemblecreator.h
     ${MOD_DIR}/processors/simulation/flowindicatorselection.h
     ${MOD_DIR}/processors/simulation/flowindicatorrenderer.h
     ${MOD_DIR}/processors/simulation/flowparametrization.h
