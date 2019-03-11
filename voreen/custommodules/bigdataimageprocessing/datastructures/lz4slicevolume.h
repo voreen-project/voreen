@@ -412,7 +412,7 @@ void LZ4SliceVolume<Voxel>::writeSlice(const VolumeAtomic<Voxel>& slice, size_t 
     size_t compressedSize = LZ4_compress_default((const char *)(slice.getData()), compressedBuffer.get(), sliceMemorySize, dstSize);
     tgtAssert(compressedSize > 0, "Compression failed");
 
-    std::ofstream outStream(getSliceFilePath(sliceNumber), std::ofstream::binary);
+    std::ofstream outStream(getSliceFilePath(sliceNumber), std::ofstream::binary | std::ofstream::trunc);
     outStream.write(compressedBuffer.get(), compressedSize);
 }
 
@@ -616,7 +616,7 @@ LZ4SliceVolumeVoxelBuilder<Voxel>::LZ4SliceVolumeVoxelBuilder(LZ4SliceVolumeVoxe
 
 template<typename Voxel>
 void LZ4SliceVolumeVoxelBuilder<Voxel>::finalizeCurrentSlice() {
-    tgtAssert(numVoxelsPushed_ == currentSlice_.getNumVoxels(), "no many voxels pushed to slice");
+    tgtAssert(numVoxelsPushed_ == currentSlice_.getNumVoxels(), "too many voxels pushed to slice");
     builder_.pushSlice(currentSlice_);
     currentSlice_.clear();
     numVoxelsPushed_ = 0;
@@ -624,17 +624,17 @@ void LZ4SliceVolumeVoxelBuilder<Voxel>::finalizeCurrentSlice() {
 
 template<typename Voxel>
 void LZ4SliceVolumeVoxelBuilder<Voxel>::pushVoxel(Voxel voxel) {
-    tgtAssert(numVoxelsPushed_ <= currentSlice_.getNumVoxels(), "no many voxels pushed to slice");
+    tgtAssert(numVoxelsPushed_ < currentSlice_.getNumVoxels(), "too many voxels pushed to slice");
+    currentSlice_.voxel(numVoxelsPushed_) = voxel;
+    ++numVoxelsPushed_;
     if(numVoxelsPushed_ == currentSlice_.getNumVoxels()) {
         finalizeCurrentSlice();
     }
-    currentSlice_.voxel(numVoxelsPushed_) = voxel;
-    ++numVoxelsPushed_;
 }
 
 template<typename Voxel>
 LZ4SliceVolume<Voxel> LZ4SliceVolumeVoxelBuilder<Voxel>::finalize() && {
-    finalizeCurrentSlice();
+    tgtAssert(numVoxelsPushed_ == 0, "Unfinished slice");
     auto tmp = std::move(*this);
     return std::move(tmp.builder_).finalize();
 }

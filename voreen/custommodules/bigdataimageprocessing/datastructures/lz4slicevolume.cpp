@@ -125,7 +125,7 @@ LZ4SliceVolumeMetadataFull LZ4SliceVolumeMetadataFull::load(const std::string& x
 void LZ4SliceVolumeMetadataFull::save(const std::string& xmlfile) const {
     XmlSerializer ser;
     ser.serialize(METADATA_ROOT_NODE_STRING, *this);
-    std::ofstream filestream(xmlfile);
+    std::ofstream filestream(xmlfile, std::ofstream::trunc);
     ser.write(filestream);
 }
 
