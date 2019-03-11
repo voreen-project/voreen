@@ -110,13 +110,31 @@ FlowEnsembleCreatorInput FlowEnsembleCreator::prepareComputeInput() {
     };
 }
 FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput input, ProgressReporter& progressReporter) const {
-
 /*
     std::vector<std::string> runs = tgt::FileSystem::listSubDirectories(input.simulationResultPath, true);
-    float progressPerRun = 1.0f / runs.size();
+    float progressPerRun = 1.0f / (runs.size() + input.measuredData->size());
     for(const std::string& run : runs) {
         std::string runPath = input.simulationResultPath + "/" + run;
         std::vector<std::string> fileNames = tgt::FileSystem::readDirectory(runPath, true, false);
+
+        // Only look for .raw files.
+        int maxIteration = 0;
+        std::map<std::string, std::vector<std::string>> properties;
+        for(const std::string& file : fileNames) {
+
+            size_t underscore = file.find_first_of('_');
+            size_t dot = file.find_first_of('.');
+
+            if(underscore != std::string::npos && dot != std::string::npos &&
+                file.substr(dot) == ".raw") {
+
+                std::string property = file.substr(0, underscore);
+                maxIteration = std::max(maxIteration, std::atoi(file.substr(underscore+1, dot).c_str()));
+                properties[property].push_back(file);
+            }
+        }
+
+        SubtaskProgressReporter subProgressReporter(progressReporter, tgt::vec2());
 
     }
 
@@ -162,8 +180,7 @@ FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput 
 
         writeSlicesToHDF5File(*sliceReader, *outputVolume, &progressReporter);
     }
-    */
-
+*/
     return {};
 }
 void FlowEnsembleCreator::processComputeOutput(FlowEnsembleCreatorOutput output) {
