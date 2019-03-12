@@ -28,6 +28,7 @@
 
 #include "voreen/core/processors/asynccomputeprocessor.h"
 #include "voreen/core/properties/filedialogproperty.h"
+#include "voreen/core/properties/vectorproperty.h"
 
 #include "custommodules/bigdataimageprocessing/properties/interactivelistproperty.h"
 #include "custommodules/bigdataimageprocessing/volumefiltering/slicereader.h"
@@ -87,7 +88,12 @@ private:
 
     VolumeListPort inport_;
 
-    // General properties
+    // Input properties.
+    IntProperty spatialResolution_;
+    FloatVec3Property spacing_;
+    FloatVec3Property offset_;
+
+    // Output properties.
     FileDialogProperty simulationResultPath_;
     FileDialogProperty ensembleOutputPath_;
     IntProperty outputVolumeDeflateLevel_;

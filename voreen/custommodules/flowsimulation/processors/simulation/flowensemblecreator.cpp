@@ -45,13 +45,16 @@ FlowEnsembleCreator::FlowEnsembleCreator()
     : AsyncComputeProcessor<FlowEnsembleCreatorInput, FlowEnsembleCreatorOutput>()
     , inport_(Port::INPORT, "volumehandle.input", "Volume Input")
     , deleteOriginalData_("deleteOriginalData", "Delete original Data", false)
+    , spatialResolution_("spatialResolution", "Spatial Resolution", 128, 32, 1024)
+    , spacing_("spacing", "Spacing", tgt::vec3::one, tgt::vec3::zero, tgt::vec3(1000.0f))
+    , offset_("offset", "Offset", tgt::vec3::zero, -tgt::vec3(1000.0f), tgt::vec3(1000.0f))
     , simulationResultPath_("simulationResultPath", "Simulation Result Path", "Path", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , ensembleOutputPath_("ensembleOutputPath", "Ensemble Output Path", "Path", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , outputVolumeDeflateLevel_("outputVolumeDeflateLevel", "Deflate Level", 1, 0, 9, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEFAULT)
     , featureList_("featureList", "Feature List", false)
 {
     addPort(inport_);
-    inport_.addCondition(new PortConditionVolumeList(new PortConditionVolumeType3xFloat()));
+    inport_.addCondition(new PortConditionVolumeList(new PortConditionVolumeTypeFloat()));
 
     addProperty(featureList_);
     featureList_.setGroupID("feature");
@@ -62,9 +65,20 @@ FlowEnsembleCreator::FlowEnsembleCreator()
     //addFeature(new MagnitudeFeature()); // Will always be added implicitly.
     //addFeature(new CurlFeature())
 
+    // Input Properties.
+    addProperty(spatialResolution_);
+    spatialResolution_.setGroupID("input");
+    addProperty(spacing_);
+    spacing_.setGroupID("input");
+    addProperty(offset_);
+    offset_.setGroupID("input");
+    setPropertyGroupGuiName("input", "Input");
+
     // Technical stuff.
     addProperty(deleteOriginalData_);
     deleteOriginalData_.setGroupID("output");
+    addProperty(simulationResultPath_);
+    simulationResultPath_.setGroupID("output");
     addProperty(ensembleOutputPath_);
     ensembleOutputPath_.setGroupID("output");
     addProperty(outputVolumeDeflateLevel_);
@@ -110,7 +124,7 @@ FlowEnsembleCreatorInput FlowEnsembleCreator::prepareComputeInput() {
     };
 }
 FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput input, ProgressReporter& progressReporter) const {
-/*
+
     std::vector<std::string> runs = tgt::FileSystem::listSubDirectories(input.simulationResultPath, true);
     float progressPerRun = 1.0f / (runs.size() + input.measuredData->size());
     for(const std::string& run : runs) {
@@ -119,7 +133,7 @@ FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput 
 
         // Only look for .raw files.
         int maxIteration = 0;
-        std::map<std::string, std::vector<std::string>> properties;
+        std::map<int, std::map<std::string, std::vector<std::string>>> timeSteps;
         for(const std::string& file : fileNames) {
 
             size_t underscore = file.find_first_of('_');
@@ -129,15 +143,68 @@ FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput 
                 file.substr(dot) == ".raw") {
 
                 std::string property = file.substr(0, underscore);
-                maxIteration = std::max(maxIteration, std::atoi(file.substr(underscore+1, dot).c_str()));
-                properties[property].push_back(file);
+                int iteration = std::atoi(file.substr(underscore+1, dot).c_str());
+                maxIteration = std::max(maxIteration, iteration);
+                timeSteps[iteration][property].push_back(file);
             }
         }
 
-        SubtaskProgressReporter subProgressReporter(progressReporter, tgt::vec2());
+        //SubtaskProgressReporter subProgressReporter(progressReporter, tgt::vec2());
+        for(const auto& pair : timeSteps) {
+            int iteration = pair.first;
+            const std::map<std::string, std::vector<std::string>> channels = pair.second;
+
+            const std::string volumeFilePath = input.ensembleOutputPath + "/" + run + std::to_string(iteration) + ".h5";
+            const std::string volumeLocation = HDF5VolumeWriter::VOLUME_DATASET_NAME;
+            const tgt::svec3 dim(spatialResolution_.get());
+
+            if (volumeFilePath.empty()) {
+                throw InvalidInputException("No volume file path specified!", InvalidInputException::S_ERROR);
+            }
+
+            std::unique_ptr<HDF5FileVolume> outputVolume = nullptr;
+            try {
+                outputVolume = std::unique_ptr<HDF5FileVolume>(
+                        HDF5FileVolume::createVolume(volumeFilePath, volumeLocation, "float", dim, channels.size(), true,
+                                                     outputVolumeDeflateLevel_.get(), tgt::svec3(dim.x, dim.y, 1), false));
+            } catch (tgt::IOException e) {
+                throw InvalidInputException("Could not create output volume.", InvalidInputException::S_ERROR);
+            }
+
+            outputVolume->writeSpacing(spacing_.get());
+            outputVolume->writeOffset(offset_.get());
+            //outputVolume->writeRealWorldMapping(volume.getRealWorldMapping());
+
+            size_t idx = 0;
+            for(const auto& channel : channels) {
+
+                const std::string& name = channel.first;
+                const std::vector<std::string>& files = channel.second;
+
+                if(files.size() != 1) {
+                    LWARNING("Multiple channels per property!");
+                }
+
+                std::string propertyFilename = files.front();
+                std::fstream propertyFile(propertyFilename, std::ios::in | std::ios::binary);
+                if(!propertyFile.good()) {
+                    LERROR("Can not read T=" << std::to_string(iteration) << ", Property=" << name);
+                    continue;
+                }
+
+                VolumeRAM* volume = new VolumeRAM_Float(dim, true);
+                propertyFile.read(reinterpret_cast<char*>(volume->getData()), volume->getNumBytes());
+                outputVolume->writeVolume(volume, idx, 1);
+
+                // TODO: use name somehow?
+                idx++;
+                //Volume* volume = new Volume(data, spacing_.get(), offset_.get());
+                //volume->getMetaDataContainer().addMetaData("name", new StringMetaData(channel));
+            }
+        }
 
     }
-
+/*
     for(size_t i=0; i<input.measuredData->size(); i++) {
 
         const VolumeBase& volume = *input.measuredData->at(i);

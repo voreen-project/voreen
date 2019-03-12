@@ -62,7 +62,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerSerializableType(new GeometryOffsetRemove());
     registerSerializableType(new UnalignedSliceViewer());
     registerSerializableType(new FlowCharacteristics());
-    //registerSerializableType(new FlowEnsembleCreator());
+    registerSerializableType(new FlowEnsembleCreator());
     registerSerializableType(new FlowIndicatorSelection());
     registerSerializableType(new FlowIndicatorRenderer());
     registerSerializableType(new FlowParametrization());

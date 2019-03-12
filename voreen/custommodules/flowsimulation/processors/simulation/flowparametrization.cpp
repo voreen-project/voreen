@@ -209,7 +209,7 @@ void FlowParametrization::process() {
         flowParametrizationList->setFlowFunction(flowFunction_.getValue());
     }
 
-    for (const FlowParameters &flowParameters : flowParameters_) {
+    for (const FlowParameters& flowParameters : flowParameters_) {
         flowParametrizationList->addFlowParameters(flowParameters);
     }
 
