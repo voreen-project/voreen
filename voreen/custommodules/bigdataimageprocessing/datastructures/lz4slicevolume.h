@@ -412,8 +412,13 @@ void LZ4SliceVolume<Voxel>::writeSlice(const VolumeAtomic<Voxel>& slice, size_t 
     size_t compressedSize = LZ4_compress_default((const char *)(slice.getData()), compressedBuffer.get(), sliceMemorySize, dstSize);
     tgtAssert(compressedSize > 0, "Compression failed");
 
-    std::ofstream outStream(getSliceFilePath(sliceNumber), std::ofstream::binary | std::ofstream::trunc);
+    std::string sliceFileName = getSliceFilePath(sliceNumber);
+    std::ofstream outStream(sliceFileName, std::ofstream::binary | std::ofstream::trunc);
     outStream.write(compressedBuffer.get(), compressedSize);
+
+    if(outStream.fail()) {
+        throw std::system_error(errno, std::system_category(), "Failed writing lz4 slice file "+sliceFileName);
+    }
 }
 
 template<typename Voxel>
