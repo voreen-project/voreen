@@ -109,17 +109,22 @@ HDF5VolumeReader::HDF5VolumeReader() : VolumeReader()
     protocols_.push_back("hdf5");
 }
 
-VolumeList* HDF5VolumeReader::read(const std::string &url) {
+VolumeList* HDF5VolumeReader::read(const std::string& url) {
     std::vector<VolumeURL> urls = listVolumes(url);
-    VolumeList* volumeList = new VolumeList();
+    std::vector<std::unique_ptr<VolumeBase>> volumes;
 
     try {
         for(const auto& url : urls) {
-            volumeList->add(read(url));
+            volumes.push_back(std::unique_ptr<VolumeBase>(read(url)));
         }
-    } catch(tgt::IOException e) {
-        delete volumeList;
-        throw e;
+    } catch(tgt::IOException& e) {
+        throw;
+    }
+
+    // Transfer ownership to output list.
+    VolumeList* volumeList = new VolumeList();
+    for(auto& volume : volumes) {
+        volumeList->add(volume.release());
     }
     return volumeList;
 }
