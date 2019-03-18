@@ -215,40 +215,4 @@ void PortConditionVolumeChannelCount::setCheckedPort(const Port* checkedPort) {
     }
 }
 
-// ----------------------------------------------------------------------------
-
-PortConditionVolumeList::PortConditionVolumeList(PortCondition* condition)
-    : PortCondition(condition->getDescription())
-    , condition_(condition)
-    , tmpPort_(new VolumePort(Port::OUTPORT, "tmp"))
-{
-    condition->setCheckedPort(tmpPort_.get());
-}
-
-bool PortConditionVolumeList::acceptsPortData() const {
-    if (!volumeListPort_)
-        return false;
-
-    const VolumeList* volumeList = volumeListPort_->getData();
-    if(!volumeList || volumeList->empty())
-        return false;
-
-    for(size_t i = 0; i < volumeList->size(); i++) {
-        tmpPort_->setData(volumeList->at(i), false);
-        if(!condition_->acceptsPortData()) {
-            return false;
-        }
-    }
-    return true;
-}
-
-void PortConditionVolumeList::setCheckedPort(const Port* checkedPort) {
-    if (!dynamic_cast<const VolumeListPort *>(checkedPort)) {
-        LERRORC("voreen.PortConditionVolumeList", "Assigned port is not a volume list port");
-    } else {
-        volumeListPort_ = static_cast<const VolumeListPort*>(checkedPort);
-    }
-}
-
-
 } // namespace

@@ -29,7 +29,7 @@
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
 #include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
-#include "voreen/core/ports/conditions/portconditionvolumetype.h"
+#include "voreen/core/ports/conditions/portconditionvolumelist.h"
 
 #include "modules/core/io/rawvolumereader.h"
 
@@ -64,7 +64,8 @@ FlowSimulationCluster::FlowSimulationCluster()
 {
     addPort(geometryDataPort_);
     addPort(measuredDataPort_); // Currently ignored
-    measuredDataPort_.addCondition(new PortConditionVolumeList(new PortConditionVolumeType3xFloat()));
+    measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
+    measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeType3xFloat()));
     addPort(parameterPort_);
 
     addProperty(username_);
@@ -120,7 +121,11 @@ bool FlowSimulationCluster::isReady() const {
         return false;
     }
 
-    // Note: measuredDataPort is optional!
+    // Note: measuredDataPort ist optional!
+    if(measuredDataPort_.hasData() && !measuredDataPort_.isReady()) {
+        setNotReadyErrorMessage("Measured Data Port not ready.");
+        return false;
+    }
 
     if(!parameterPort_.isReady()) {
         setNotReadyErrorMessage("Parameter Port not ready.");

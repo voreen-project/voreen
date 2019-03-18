@@ -25,7 +25,7 @@
 
 #include "flowensemblecreator.h"
 
-#include "voreen/core/ports/conditions/portconditionvolumetype.h"
+#include "voreen/core/ports/conditions/portconditionvolumelist.h"
 
 #include "modules/hdf5/io/hdf5volumereader.h"
 #include "modules/hdf5/io/hdf5volumewriter.h"
@@ -54,7 +54,8 @@ FlowEnsembleCreator::FlowEnsembleCreator()
     , featureList_("featureList", "Feature List", false)
 {
     addPort(inport_);
-    inport_.addCondition(new PortConditionVolumeList(new PortConditionVolumeTypeFloat()));
+    inport_.addCondition(new PortConditionVolumeListEnsemble());
+    inport_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeTypeFloat()));
 
     addProperty(featureList_);
     featureList_.setGroupID("feature");

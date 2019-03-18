@@ -179,6 +179,7 @@ SET(VRN_CORE_SOURCES
     ports/textport.cpp
     ports/volumeport.cpp
     ports/conditions/portcondition.cpp
+    ports/conditions/portconditionvolumelist.cpp
     ports/conditions/portconditionvolumetype.cpp
 
     processors/asynccomputeprocessor.cpp
@@ -525,6 +526,7 @@ SET(VRN_CORE_HEADERS
     ../../include/voreen/core/ports/volumeport.h
 
     ../../include/voreen/core/ports/conditions/portcondition.h
+    ../../include/voreen/core/ports/conditions/portconditionvolumelist.h
     ../../include/voreen/core/ports/conditions/portconditionvolumetype.h
 
     ../../include/voreen/core/processors/cache.h

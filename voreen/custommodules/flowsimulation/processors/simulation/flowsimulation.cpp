@@ -29,7 +29,7 @@
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
 #include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
-#include "voreen/core/ports/conditions/portconditionvolumetype.h"
+#include "voreen/core/ports/conditions/portconditionvolumelist.h"
 
 #include "../../utils/geometryconverter.h"
 
@@ -82,7 +82,8 @@ FlowSimulation::FlowSimulation()
 {
     addPort(geometryDataPort_);
     addPort(measuredDataPort_);
-    measuredDataPort_.addCondition(new PortConditionVolumeList(new PortConditionVolumeType3xFloat()));
+    measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
+    measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeType3xFloat()));
     addPort(parameterPort_);
 
     addProperty(simulationResults_);
@@ -108,6 +109,10 @@ bool FlowSimulation::isReady() const {
     }
 
     // Note: measuredDataPort ist optional!
+    if(measuredDataPort_.hasData() && !measuredDataPort_.isReady()) {
+        setNotReadyErrorMessage("Measured Data Port not ready.");
+        return false;
+    }
 
     if(!parameterPort_.isReady()) {
         setNotReadyErrorMessage("Parameter Port not ready.");
@@ -162,12 +167,6 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
             if (measuredData->at(i-1)->getTimestep() >= volumeTi->getTimestep()) {
                 throw InvalidInputException("Time Steps of are not ordered", InvalidInputException::S_ERROR);
-            }
-
-            if (volumeT0->getDimensions() != volumeTi->getDimensions() ||
-                volumeT0->getSpacing() != volumeTi->getSpacing()) {
-                throw InvalidInputException("Measured data contains different kinds of volumes.",
-                                            InvalidInputException::S_ERROR);
             }
         }
     }

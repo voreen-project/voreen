@@ -27,7 +27,7 @@
 
 #include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/datastructures/callback/memberfunctioncallback.h"
-#include "voreen/core/ports/conditions/portconditionvolumetype.h"
+#include "voreen/core/ports/conditions/portconditionvolumelist.h"
 
 namespace voreen {
 
@@ -42,7 +42,8 @@ FlowCharacteristics::FlowCharacteristics()
     , resetButton_("resetButton", "Reset") // Invalidation level -> resets values.
 {
     addPort(inport_);
-    inport_.addCondition(new PortConditionVolumeList(new PortConditionVolumeType3xFloat()));
+    inport_.addCondition(new PortConditionVolumeListEnsemble());
+    inport_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeType3xFloat()));
 
     addProperty(simulationTime_);
     addProperty(temporalResolution_);
