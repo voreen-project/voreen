@@ -41,6 +41,15 @@
 
 #include "io/lz4slicevolumefilereader.h"
 
+
+// nuclei cluster splitting
+#include "operators/volumeoperatordistancetransform.h"
+#include "operators/volumeoperatorwatershed.h"
+#include "operators/volumeoperatorgradientdescent.h"
+#include "operators/volumeoperatorfastvolumecombine.h"
+
+#include "processors/nucleiclustersplitting.h"
+
 namespace voreen {
 
 BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& modulePath)
@@ -53,6 +62,7 @@ BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& mo
     registerProcessor(new ConnectedComponentAnalysis());
     registerProcessor(new FatCellQuantification());
     registerProcessor(new LargeVolumeFormatConversion());
+    registerProcessor(new NucleiClusterSplitting());
     registerProcessor(new SegmentationQuantification());
     registerProcessor(new VolumeFilterList());
     registerProcessor(new VolumeResampleTransformation());
@@ -64,6 +74,15 @@ BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& mo
     registerProcessor(new VolumeBrickSave());
 
     registerVolumeReader(new LZ4SliceVolumeFileReader());
+
+    // instantiate volume operators (nuclei cluster splitting)
+    INST_SCALAR_TYPES(VolumeOperatorSquaredEuclideanDistanceTransform, VolumeOperatorSquaredEuclideanDistanceTransformGeneric)
+    INST_SCALAR_TYPES(VolumeOperatorEuclideanDistanceTransform, VolumeOperatorEuclideanDistanceTransformGeneric)
+    //INST_SCALAR_TYPES(VolumeOperatorManhattanDistanceTransform, VolumeOperatorManhattanDistanceTransformGeneric)
+    //INST_SCALAR_TYPES(VolumeOperatorChebychevDistanceTransform, VolumeOperatorChebychevDistanceTransformGeneric)
+    INST_SCALAR_TYPES(VolumeOperatorWatershedTransform, VolumeOperatorWatershedTransformGeneric);
+    INST_SCALAR_TYPES(VolumeOperatorGradientDescent, VolumeOperatorGradientDescentGeneric);
+    INST_SCALAR_TYPES(VolumeOperatorFastVolumeCombine, VolumeOperatorFastVolumeCombineGeneric);
 }
 
 } // namespace
