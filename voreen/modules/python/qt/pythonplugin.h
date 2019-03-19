@@ -23,33 +23,87 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_PYTHONEDITOR_H
-#define VRN_PYTHONEDITOR_H
+#ifndef VRN_PYTHONPLUGIN_H
+#define VRN_PYTHONPLUGIN_H
 
-#include "voreen/qt/mainwindow/menuentities/voreenqtmenuentity.h"
+#include <QWidget>
+#include "../core/pythonoutputlistener.h"
 
-#include <QIcon>
+class QTextEdit;
+class QToolButton;
+class CodeEdit;
 
 namespace voreen {
 
-class PythonPlugin;
+class PythonHighlighter;
+class PythonScript;
+class PythonProperty;
 
-class PythonEditor : public VoreenQtMenuEntity {
+class PythonPlugin : public QWidget, public PythonOutputListener {
+    Q_OBJECT
 public:
-    PythonEditor();
-    ~PythonEditor();
 
-    virtual std::string getName() const { return "Python Scripting"; }
-    virtual QIcon getIcon() const       { return QIcon(":/modules/python/python.png"); }
+    /**
+     * Constructor
+     *
+     * @param script the python property that belongs to this plugin.
+     * @param parent the parent widget
+     */
+    PythonPlugin(PythonProperty* property = nullptr, QWidget* parent = nullptr);
+    ~PythonPlugin();
 
-protected:
-    virtual QWidget* createWidget() const;
+    void clearScript();
+    void updateFromProperty();
 
-    virtual void initialize();
-    virtual void deinitialize();
+    /// Output listener functions.
+    virtual void pyStdout(const std::string& out);
+    virtual void pyStderr(const std::string& err);
+
+public slots:
+    void runScript();
+    void newScript();
+
+signals:
+    void modified();
 
 private:
-    mutable PythonPlugin* pythonWidget_;
+    const QString selectOpenFileName(QString filter);
+    const QString selectSaveFileName(QStringList filters);
+    bool saveScriptInternal(QString filename, QString source);
+    void tryLoadScript(QString fileName);
+
+private slots:
+    void openScript();
+    void reloadScript();
+    void saveScript();
+    void saveScriptAs();
+
+    void increaseFontSize();
+    void decreaseFontSize();
+    void updateFont();
+
+    void updateGuiState();
+
+private:
+    PythonScript* script_;
+    PythonProperty* property_;
+
+    QToolButton* runBt_;
+    QToolButton* newBt_;
+    QToolButton* openBt_;
+    QToolButton* reloadBt_;
+    QToolButton* saveBt_;
+    QToolButton* saveAsBt_;
+
+    QToolButton* increaseFontSizeBt_;
+    QToolButton* decreaseFontSizeBt_;
+
+    CodeEdit* codeEdit_;
+    QTextEdit* compilerLogWidget_;
+    PythonHighlighter* highlighter_;
+
+    int fontSize_;
+    bool scriptOwner_;
 
     static const std::string loggerCat_;
 };

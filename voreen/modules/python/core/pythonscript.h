@@ -29,6 +29,7 @@
 #include <string>
 
 #include "voreen/core/voreencoreapi.h"
+#include "voreen/core/io/serialization/serializable.h"
 
 #ifndef PyObject_HEAD
 struct _object;
@@ -48,7 +49,7 @@ namespace voreen {
  * @note Convenient loading of Python scripts with search path handling
  *  is provided by the PythonModule class.
  */
-class VRN_CORE_API PythonScript {
+class VRN_CORE_API PythonScript : public Serializable {
 
 public:
     PythonScript();
@@ -134,6 +135,26 @@ public:
      * Returns -1, if the last operation has been successful or the col number could not be retrieved.
      */
     int getErrorCol() const;
+
+    /**
+     * @see Property::serialize
+     */
+    virtual void serialize(Serializer& s) const;
+
+    /**
+     * @see Property::deserialize
+     */
+    virtual void deserialize(Deserializer& s);
+
+    /**
+     * Two scripts are considered equal, if both their source and filename are equal.
+     */
+    bool operator==(const PythonScript& other) const;
+
+    /**
+     * Two scripts are not considered equal, if any of their source or filename are not equal.
+     */
+    bool operator!=(const PythonScript& other) const;
 
 private:
     bool checkCompileError(bool logErrors = true);

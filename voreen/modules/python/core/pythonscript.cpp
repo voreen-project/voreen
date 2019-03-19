@@ -176,8 +176,25 @@ int PythonScript::getErrorCol() const {
     return errorCol_;
 }
 
+void PythonScript::serialize(voreen::Serializer& s) const {
+    s.serialize("source", source_);
+    s.serialize("filename", filename_);
+}
+
+void PythonScript::deserialize(voreen::Deserializer& s) {
+    s.deserialize("source", source_);
+    s.deserialize("filename", filename_);
+}
+
+bool PythonScript::operator==(const voreen::PythonScript& other) const {
+    return (filename_ == other.filename_ && source_ == other.source_);
+}
+
+bool PythonScript::operator!=(const voreen::PythonScript& other) const {
+    return !(*this == other);
+}
+
 bool PythonScript::checkCompileError(bool logErrors) {
-    using std::string;
 
     log_ = "";
     errorLine_ = -1;

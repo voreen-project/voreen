@@ -23,37 +23,49 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_PYTHONEDITOR_H
-#define VRN_PYTHONEDITOR_H
+#include "pythonproperty.h"
 
-#include "voreen/qt/mainwindow/menuentities/voreenqtmenuentity.h"
-
-#include <QIcon>
+#include "voreen/core/utils/voreenfilepathhelper.h"
+#include "tgt/filesystem.h"
 
 namespace voreen {
 
-class PythonPlugin;
+const std::string PythonProperty::loggerCat_("voreen.python.PythonProperty");
 
-class PythonEditor : public VoreenQtMenuEntity {
-public:
-    PythonEditor();
-    ~PythonEditor();
+//---------------------------------------------------------------------------------------------------------------
 
-    virtual std::string getName() const { return "Python Scripting"; }
-    virtual QIcon getIcon() const       { return QIcon(":/modules/python/python.png"); }
+PythonProperty::PythonProperty(const std::string& id, const std::string& guiText, Processor::InvalidationLevel invalidationLevel, Property::LevelOfDetail lod)
+    : TemplateProperty<PythonScript>(id, guiText, PythonScript(), invalidationLevel, lod)
+{
+}
 
-protected:
-    virtual QWidget* createWidget() const;
+PythonProperty::PythonProperty()
+{
+}
 
-    virtual void initialize();
-    virtual void deinitialize();
+PythonProperty::~PythonProperty()
+{
+}
 
-private:
-    mutable PythonPlugin* pythonWidget_;
+Property* PythonProperty::create() const {
+    return new PythonProperty();
+}
 
-    static const std::string loggerCat_;
-};
+void PythonProperty::serialize(Serializer& s) const {
+    Property::serialize(s);
+    get().serialize(s);
+}
 
-} // namespace voreen
+void PythonProperty::deserialize(Deserializer& s) {
+    Property::deserialize(s);
 
-#endif // VRN_PYTHONEDITOR_H
+    PythonScript n = get();
+    n.deserialize(s);
+    set(n);
+
+    invalidate();
+    updateWidgets();
+}
+
+
+}   // namespace

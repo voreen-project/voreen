@@ -23,9 +23,9 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="46" y="122" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-2.25521493" y="0.335521698" z="1.269376159" />
+                            <position x="-1.671500206" y="0.074609868" z="1.989853621" />
                             <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
-                            <upVector x="0.21791929" y="-0.761495233" z="0.610439301" />
+                            <upVector x="0.429435521" y="-0.806943178" z="0.405497044" />
                             <trackball moveCenter="false">
                                 <center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             </trackball>
@@ -119,7 +119,7 @@
                                 <MetaItem name="FollowCamera" type="BoolMetaData" value="false" />
                                 <MetaItem name="UseBackHemisphere" type="BoolMetaData" value="false" />
                             </MetaData>
-                            <value x="-1.649739861" y="0.103973061" z="2.646145582" w="1" />
+                            <value x="-0.621085882" y="-0.263315797" z="3.037776709" w="1" />
                             <Center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             <LightPos x="-0.990817606" y="1.147262454" z="2.737164497" w="0" />
                         </Property>
@@ -544,7 +544,7 @@
                 </Processor>
                 <Processor type="VolumeSource" name="VolumeSource" id="ref3">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-511" y="-375" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-495" y="-395" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
@@ -585,9 +585,9 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="721" y="372" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-2.25521493" y="0.335521698" z="1.269376159" />
+                            <position x="-1.671500206" y="0.074609868" z="1.989853621" />
                             <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
-                            <upVector x="0.21791932" y="-0.761495352" z="0.61043936" />
+                            <upVector x="0.429435521" y="-0.806943178" z="0.405497044" />
                             <trackball moveCenter="false">
                                 <center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             </trackball>
@@ -665,7 +665,7 @@
                         <Property mapKey="resolutionMode" name="resolutionMode" value="subdivide" />
                         <Property mapKey="resolutionvoxel" name="resolutionvoxel" value="1" />
                         <Property mapKey="threshold" name="threshold" value="1" />
-                        <Property mapKey="transferfunction" name="transferfunction" domainFittingStrategy="1" computeHistogram="true" id="ref13">
+                        <Property mapKey="transferfunction" name="transferfunction" domainFittingStrategy="2" computeHistogram="true" id="ref13">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
@@ -796,15 +796,17 @@
                 </Processor>
                 <Processor type="DynamicPythonProcessor" name="DynamicPythonProcessor" id="ref4">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-544" y="-273" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-510" y="-284" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="1036" y="533" width="800" height="480" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="enabled" name="enabled" value="true" />
                         <Property mapKey="portList" name="portList" instances.numItems="2" instances.data="AAAAAAEAAAABAAAAAgAAAA==">
                             <items>
-                                <item value="VolumePort Inport" />
-                                <item value="VolumePort Outport" />
-                                <item value="GeometryPort Inport" />
-                                <item value="GeometryPort Outport" />
+                                <item value="VolumePort-in" />
+                                <item value="VolumePort-out" />
+                                <item value="RenderPort-in" />
+                                <item value="RenderPort-out" />
                             </items>
                             <inputItemIds>
                                 <item value="0" />
@@ -813,9 +815,41 @@
                                 <item value="3" />
                             </inputItemIds>
                         </Property>
+                        <Property mapKey="pythonScript" name="pythonScript" filename="">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <source>
+                                <![CDATA[# Voreen Python script
+import voreen
+
+# Fetch port data.
+volume = voreen.getPortData("DynamicPythonProcessor", "VolumePort-in (1)")
+print ("Format: %s " % (volume.format))
+print ("Dimensions: (%i, %i, %i)" % (volume.dimX, volume.dimY, volume.dimZ))
+print ("Spacing: (%f, %f, %f)" % (volume.spacingX, volume.spacingY, volume.spacingZ))
+print ("Offset: (%f, %f, %f)" % (volume.offsetX, volume.offsetY, volume.offsetZ))
+
+# Perform thresholding
+lowerThreshold = 0.0
+upperThreshold = 1.0
+
+for i in range(0, len(volume.data)):
+    if (volume.data[i] < lowerThreshold):
+        volume.data[i] = lowerThreshold
+    if (volume.data[i] > upperThreshold):
+        volume.data[i] = upperThreshold
+
+# Set output format.
+volume.format = "float"
+
+# Set data to port.
+voreen.setPortData("DynamicPythonProcessor", "VolumePort-out (2)", volume);]]>
+                            </source>
+                        </Property>
                     </Properties>
                     <Inports>
-                        <Port name="VolumePort Inport #1" direction="1" portID="VolumePort Inport #1" guiName="" allowMultipleConnections="false" invalidationLevel="1">
+                        <Port name="VolumePort-in (1)" direction="1" portID="VolumePort-in (1)" guiName="" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
                                 <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
@@ -824,7 +858,7 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="VolumePort Outport #2" direction="0" portID="VolumePort Outport #2" guiName="" allowMultipleConnections="true" invalidationLevel="0">
+                        <Port name="VolumePort-out (2)" direction="0" portID="VolumePort-out (2)" guiName="" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -856,7 +890,7 @@
                     <Outport name="volumehandle.volumehandle">
                         <Processor type="VolumeSource" ref="ref3" />
                     </Outport>
-                    <Inport name="VolumePort Inport #1">
+                    <Inport name="VolumePort-in (1)">
                         <Processor type="DynamicPythonProcessor" ref="ref4" />
                     </Inport>
                 </Connection>
@@ -885,7 +919,7 @@
                     </Inport>
                 </Connection>
                 <Connection>
-                    <Outport name="VolumePort Outport #2">
+                    <Outport name="VolumePort-out (2)">
                         <Processor type="DynamicPythonProcessor" ref="ref4" />
                     </Outport>
                     <Inport name="volumehandle.volumehandle">
@@ -893,7 +927,7 @@
                     </Inport>
                 </Connection>
                 <Connection>
-                    <Outport name="VolumePort Outport #2">
+                    <Outport name="VolumePort-out (2)">
                         <Processor type="DynamicPythonProcessor" ref="ref4" />
                     </Outport>
                     <Inport name="volumehandle.volumehandle">

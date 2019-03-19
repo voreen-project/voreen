@@ -23,37 +23,18 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_PYTHONEDITOR_H
-#define VRN_PYTHONEDITOR_H
+#ifndef VRN_PYTHONPROPERTYWIDGETFACTORY_H
+#define VRN_PYTHONPROPERTYWIDGETFACTORY_H
 
-#include "voreen/qt/mainwindow/menuentities/voreenqtmenuentity.h"
-
-#include <QIcon>
+#include "voreen/core/properties/propertywidgetfactory.h"
 
 namespace voreen {
 
-class PythonPlugin;
-
-class PythonEditor : public VoreenQtMenuEntity {
-public:
-    PythonEditor();
-    ~PythonEditor();
-
-    virtual std::string getName() const { return "Python Scripting"; }
-    virtual QIcon getIcon() const       { return QIcon(":/modules/python/python.png"); }
-
+class PythonPropertyWidgetFactory : public PropertyWidgetFactory {
 protected:
-    virtual QWidget* createWidget() const;
-
-    virtual void initialize();
-    virtual void deinitialize();
-
-private:
-    mutable PythonPlugin* pythonWidget_;
-
-    static const std::string loggerCat_;
+    virtual PropertyWidget* createAssociatedWidget(Property*) const;
 };
 
-} // namespace voreen
+} // namespace
 
-#endif // VRN_PYTHONEDITOR_H
+#endif // VRN_PYTHONPROPERTYWIDGETFACTORY_H

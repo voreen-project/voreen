@@ -23,37 +23,75 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_PYTHONEDITOR_H
-#define VRN_PYTHONEDITOR_H
+#include "modules/python/properties/pythonproperty.h"
+#include "modules/python/qt/pythonpropertywidget.h"
+#include "modules/python/qt/pythonplugin.h"
 
-#include "voreen/qt/mainwindow/menuentities/voreenqtmenuentity.h"
+#include "voreen/qt/widgets/voreentoolwindow.h"
+#include "voreen/core/processors/processor.h"
 
-#include <QIcon>
+#include <QPushButton>
 
 namespace voreen {
 
-class PythonPlugin;
+PythonPropertyWidget::PythonPropertyWidget(PythonProperty* prop, QWidget* parent)
+    : QPropertyWidgetWithToolWindow(prop, parent)
+    , plugin_(nullptr)
+    , property_(prop)
+    , editBt_(new QPushButton(tr("edit")))
+{
 
-class PythonEditor : public VoreenQtMenuEntity {
-public:
-    PythonEditor();
-    ~PythonEditor();
+    if (isToolWindowVisibleOnStartup())
+        createToolWindow(Qt::LeftDockWidgetArea, QString::fromStdString(" (original source: " + property_->get().getFilename() + ")"), 700, 700);
 
-    virtual std::string getName() const { return "Python Scripting"; }
-    virtual QIcon getIcon() const       { return QIcon(":/modules/python/python.png"); }
+    addWidget(editBt_);
 
-protected:
-    virtual QWidget* createWidget() const;
+    connect(editBt_, SIGNAL(clicked()), this, SLOT(setProperty()));
+    connect(editBt_, SIGNAL(clicked()), this, SIGNAL(widgetChanged()));
 
-    virtual void initialize();
-    virtual void deinitialize();
+    QFontInfo fontInfo(font());
+    editBt_->setFont(QFont(fontInfo.family(), QPropertyWidget::fontSize_));
+}
 
-private:
-    mutable PythonPlugin* pythonWidget_;
+void PythonPropertyWidget::updateFromPropertySlot() {
+    if (plugin_) {
+        plugin_->updateFromProperty();
+        plugin_->update();
+    }
+}
 
-    static const std::string loggerCat_;
-};
+void PythonPropertyWidget::setProperty() {
+    if (!disconnected_) {
+        // lazy instantiation of shader editor window
+        if (!toolWindow_) {
+            createToolWindow(Qt::LeftDockWidgetArea, QString::fromStdString(" (original source: " + property_->get().getFilename() + ")"), 700, 700);
+
+            tgtAssert(toolWindow_, "Python editor not instantiated");
+        }
+
+        if (toolWindow_->isVisible()) {
+            //close widget
+            toolWindow_->close();
+        }
+        else {
+            //open Widget
+            toolWindow_->showNormal();
+        }
+    }
+}
+
+void PythonPropertyWidget::disconnect() {
+    disconnected_ = true;
+    if (plugin_)
+        plugin_->disconnect();
+}
+
+QWidget* PythonPropertyWidget::createToolWindowWidget() {
+    plugin_ = new PythonPlugin(property_, parentWidget());
+    return plugin_;
+}
+
+void PythonPropertyWidget::customizeToolWindow() {
+}
 
 } // namespace voreen
-
-#endif // VRN_PYTHONEDITOR_H

@@ -29,6 +29,7 @@
 #include "voreen/core/processors/renderprocessor.h"
 
 #include "voreen/core/ports/volumeport.h"
+#include "../properties/pythonproperty.h"
 
 #include "custommodules/bigdataimageprocessing/properties/interactivelistproperty.h"
 
@@ -45,6 +46,12 @@ public:
     virtual std::string getCategory() const   { return "Python";                 }
     virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;  }
 
+    virtual bool isReady() const;
+
+    PythonProperty* getPythonProperty() {
+        return &pythonScript_;
+    }
+
 protected:
 
     virtual void process();
@@ -57,6 +64,7 @@ protected:
 private:
 
     void onPortListChange();
+    void onScriptChange();
 
     void addPortItem(Port* port);
 
@@ -64,6 +72,10 @@ private:
     std::map<std::string, std::vector<Port*>> portInstances_;
 
     InteractiveListProperty portList_;
+    BoolProperty enabled_;
+    PythonProperty pythonScript_;
+
+    bool valid_;
 
     static const std::string loggerCat_;
 };

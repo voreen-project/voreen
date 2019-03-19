@@ -27,6 +27,7 @@
 #define VRN_PYTHONMODULE_H
 
 #include "core/pythonscript.h"
+#include "core/pythonoutputlistener.h"
 #include "core/pyvoreen.h"
 
 #include "voreen/core/voreenmodule.h"
@@ -38,23 +39,6 @@ namespace voreen {
 
 // Helper to convert Unicode PyObject into c-string
 char* PyUnicodeAsString(PyObject* object);
-
-/**
- * Implement this interface in order to receive the output of
- * Python scripts.
- *
- * @see PythonModule::addOutputListener
- */
-class VRN_CORE_API PythonOutputListener {
-public:
-    virtual ~PythonOutputListener() {}
-
-    /// Receives sys.stdout
-    virtual void pyStdout(const std::string& out) = 0;
-
-    /// Receives sys.stderr
-    virtual void pyStderr(const std::string& err) = 0;
-};
 
 #ifdef DLL_TEMPLATE_INST
 template class VRN_CORE_API tgt::ResourceManager<PythonScript>;

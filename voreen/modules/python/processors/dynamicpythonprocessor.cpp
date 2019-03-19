@@ -28,6 +28,7 @@
 #include "voreen/core/ports/volumeport.h"
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/ports/renderport.h"
+#include "voreen/core/processors/processorwidget.h"
 
 namespace voreen {
 
@@ -36,6 +37,8 @@ const std::string DynamicPythonProcessor::loggerCat_("voreen.DynamicPythonProces
 DynamicPythonProcessor::DynamicPythonProcessor()
     : RenderProcessor()
     , portList_("portList", "Port List", true)
+    , enabled_("enabled", "Enabled", true)
+    , pythonScript_("pythonScript", "Python Script")
 {
     // Add available ports.
     addPortItem(new VolumePort(Port::INPORT, ""));
@@ -43,11 +46,15 @@ DynamicPythonProcessor::DynamicPythonProcessor()
     //addPortItem(new GeometryPort(Port::INPORT, ""));
     //addPortItem(new GeometryPort(Port::OUTPORT, ""));
     addPortItem(new RenderPort(Port::INPORT, ""));
-    addPortItem(new RenderPort(Port::OUTPORT, "")); // Add properties to be able to set format!
+    addPortItem(new RenderPort(Port::OUTPORT, "")); // Add properties to be able to set format?
 
     // Add properties.
     addProperty(portList_);
     ON_CHANGE(portList_, DynamicPythonProcessor, onPortListChange);
+
+    addProperty(enabled_);
+    addProperty(pythonScript_);
+    ON_CHANGE(pythonScript_, DynamicPythonProcessor, onScriptChange);
 
     /*
     // TODO: define naming schema!
@@ -78,13 +85,28 @@ Processor* DynamicPythonProcessor::create() const {
 
 void DynamicPythonProcessor::initialize() {
     RenderProcessor::initialize();
+    getProcessorWidget()->updateFromProcessor();
 }
 
 void DynamicPythonProcessor::deinitialize() {
     RenderProcessor::deinitialize();
 }
 
+bool DynamicPythonProcessor::isReady() const {
+
+    if(enabled_.get() && !valid_) {
+        setNotReadyErrorMessage("Script contains invalid code!");
+        return false;
+    }
+
+    return RenderProcessor::isReady();
+}
+
 void DynamicPythonProcessor::process() {
+    if(enabled_.get()) {
+        PythonScript script = pythonScript_.get();
+        script.run(true);
+    }
 }
 
 void DynamicPythonProcessor::serialize(Serializer& s) const {
@@ -122,8 +144,6 @@ void DynamicPythonProcessor::onPortListChange() {
 
     // Delete orphaned ports.
     for(Port* port : deletedPorts) {
-        //std::vector<Port*>& ports = portInstances_[port->getClassName() + (port->isInport() ? "-in" : "-out")]; // TODO: remove!!
-        //ports.erase(std::find(ports.begin(), ports.end(), port));
         port->deinitialize();
         removePort(port);
         delete port;
@@ -135,7 +155,38 @@ void DynamicPythonProcessor::onPortListChange() {
         Port* port = item->create(item->isInport() ? Port::INPORT : Port::OUTPORT, portList_.getInstanceName(newPort));
         addPort(port);
         port->initialize();
-        //portInstances_[portList_.getItems()[newPort.itemId_]].push_back(port);
+    }
+}
+
+void DynamicPythonProcessor::onScriptChange() {
+
+    // Reset valid flag.
+    valid_ = false;
+
+    const std::string functionName = /*"s/g"*/"etPortData";
+
+    // Parse script and search for global modifications.
+    const std::string& source = pythonScript_.get().getSource();
+    size_t portDataPos = source.find(functionName);
+    while(portDataPos != std::string::npos) {
+
+        size_t openQuote = source.find_first_of('"', portDataPos) + 1;
+        size_t endQuote  = source.find_first_of('"', openQuote);
+
+        std::string processorArgumentString = source.substr(openQuote, endQuote-openQuote);
+        if(processorArgumentString != getGuiName()) {
+            LERROR("Within a processor-local python script only the processor's own ports can be modified!");
+            return;
+        }
+
+        portDataPos = source.find(functionName, portDataPos+1);
+    }
+
+    PythonScript script = pythonScript_.get();
+    valid_ = script.compile(true);
+
+    if(valid_) {
+        LINFO("Script successfully saved!");
     }
 }
 

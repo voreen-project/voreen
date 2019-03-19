@@ -23,37 +23,22 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_PYTHONEDITOR_H
-#define VRN_PYTHONEDITOR_H
+#ifndef VRN_PYTHONPROCESSORWIDGETFACTORY_H
+#define VRN_PYTHONPROCESSORWIDGETFACTORY_H
 
-#include "voreen/qt/mainwindow/menuentities/voreenqtmenuentity.h"
-
-#include <QIcon>
+#include "voreen/core/processors/processorwidgetfactory.h"
 
 namespace voreen {
 
-class PythonPlugin;
+/**
+ * Constructs Qt processor widgets for:
+ * - DynamicPythonProcessor (DynamicPythonWidget)
+ */
+    class PythonProcessorWidgetFactory : public ProcessorWidgetFactory {
+    public:
+        virtual ProcessorWidget* createWidget(Processor*) const;
+    };
 
-class PythonEditor : public VoreenQtMenuEntity {
-public:
-    PythonEditor();
-    ~PythonEditor();
+} //namespace voreen
 
-    virtual std::string getName() const { return "Python Scripting"; }
-    virtual QIcon getIcon() const       { return QIcon(":/modules/python/python.png"); }
-
-protected:
-    virtual QWidget* createWidget() const;
-
-    virtual void initialize();
-    virtual void deinitialize();
-
-private:
-    mutable PythonPlugin* pythonWidget_;
-
-    static const std::string loggerCat_;
-};
-
-} // namespace voreen
-
-#endif // VRN_PYTHONEDITOR_H
+#endif

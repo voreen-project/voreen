@@ -26,6 +26,8 @@
 #include "pythonmoduleqt.h"
 
 #include "qt/menuentity/pythoneditor.h"
+#include "qt/pythonprocessorwidgetfactory.h"
+#include "qt/pythonpropertywidgetfactory.h"
 
 namespace voreen {
 
@@ -38,6 +40,8 @@ PythonModuleQt::PythonModuleQt(const std::string& modulePath)
     setGuiName("Python (Qt)");
 
     registerCustomMenuEntity(new PythonEditor());
+    registerPropertyWidgetFactory(new PythonPropertyWidgetFactory());
+    registerProcessorWidgetFactory(new PythonProcessorWidgetFactory());
 }
 
 } // namespace
