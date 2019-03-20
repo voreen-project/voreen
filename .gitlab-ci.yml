@@ -1,5 +1,6 @@
 stages:
   - build
+  - test
 
 image: voreen/ci-ubuntu-16.04
 
