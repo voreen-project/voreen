@@ -181,7 +181,7 @@ Volume* VolumeChannelMerger::mergeVolumes(std::vector<const VolumeBase*> volumes
     std::string format = volumes.at(0)->getFormat();
 
     //volume representation to be created
-    VolumeRAM* mergedData = 0;
+    VolumeRAM* mergedData = nullptr;
 
     //create volume fusion
     if (volumes.at(0)->getFormat() == "uint8")
@@ -202,6 +202,7 @@ Volume* VolumeChannelMerger::mergeVolumes(std::vector<const VolumeBase*> volumes
         mergedData = mergeVolumeRepresentations<double>(volumes);
     else {
         LERROR("Format currently not supported: " << format);
+        return nullptr;
     }
 
     // create volume and copy meta data
