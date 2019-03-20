@@ -7,6 +7,7 @@ image: voreen/ci-ubuntu-16.04
 variables:
   RUN_TESTS_AS_USER: 'test_user'
   COREPROFILE_BUILD_DIR: 'build_coreprofile'
+  GIT_DEPTH: 1 #Makes cloning faster
 
 build_coreprofile:
   stage: build
@@ -23,18 +24,28 @@ build_coreprofile:
 serializertest_coreprofile:
   stage: test
   script:
-    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/serializertest --logLevel=debug --logFile=${COREPROFILE_BUILD_DIR}/serializer.log"
-  artifacts:
-    paths:
+    - pwd
     - ls
     - ls ${COREPROFILE_BUILD_DIR}
+    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/serializertest --logLevel=debug --logFile=${COREPROFILE_BUILD_DIR}/serializer.log"
+    - pwd
+    - ls
+    - ls ${COREPROFILE_BUILD_DIR}
+  artifacts:
+    paths:
     - "${COREPROFILE_BUILD_DIR}/serializer.log"
     expire_in: 1 week
 
 descriptiontest_coreprofile:
   stage: test
   script:
+    - pwd
+    - ls
+    - ls ${COREPROFILE_BUILD_DIR}
     - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/descriptiontest --logLevel=debug --logFile=${COREPROFILE_BUILD_DIR}/descriptiontest.log"
+    - pwd
+    - ls
+    - ls ${COREPROFILE_BUILD_DIR}
   artifacts:
     paths:
     - ls ${COREPROFILE_BUILD_DIR}
@@ -44,7 +55,13 @@ descriptiontest_coreprofile:
 octreetest_coreprofile:
   stage: test
   script:
+    - pwd
+    - ls
+    - ls ${COREPROFILE_BUILD_DIR}
     - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/octreetest --logLevel=debug --logFile=${COREPROFILE_BUILD_DIR}/octreetest.log"
+    - pwd
+    - ls
+    - ls ${COREPROFILE_BUILD_DIR}
   artifacts:
     paths:
     - ls ${COREPROFILE_BUILD_DIR}
