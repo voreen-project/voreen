@@ -3,6 +3,15 @@ IF(NOT COMMONCONF_PROCESSED)
 SET(VRN_HOME ${CMAKE_CURRENT_SOURCE_DIR})
 MESSAGE(STATUS "Voreen Home: ${VRN_HOME}")
 
+# include macros and config
+INCLUDE(${VRN_HOME}/cmake/macros.cmake)
+IF(EXISTS ${VRN_HOME}/config.cmake)
+    MESSAGE(STATUS "Including custom configuration file 'config.cmake'")
+    INCLUDE(${VRN_HOME}/config.cmake)
+ELSE()
+    INCLUDE(${VRN_HOME}/config-default.cmake)
+ENDIF()
+
 # set release mode by default when under unix
 IF(UNIX)
 	if(NOT CMAKE_BUILD_TYPE) 
@@ -67,15 +76,6 @@ ELSEIF(${CMAKE_GENERATOR} MATCHES "Xcode")
     MESSAGE(STATUS "Xcode Build")
 ELSE()
     MESSAGE(FATAL_ERROR "Unsupported or unknown generator: ${CMAKE_GENERATOR}. Please use VC11, VC12 VC14, VC15 or Unix or Xcode.")
-ENDIF()
-
-# include macros and config
-INCLUDE(${VRN_HOME}/cmake/macros.cmake)
-IF(EXISTS ${VRN_HOME}/config.cmake)
-    MESSAGE(STATUS "Including custom configuration file 'config.cmake'")
-    INCLUDE(${VRN_HOME}/config.cmake)
-ELSE()
-    INCLUDE(${VRN_HOME}/config-default.cmake)
 ENDIF()
 
 # common include directories

@@ -45,10 +45,6 @@ SET(VRN_CUSTOM_MODULEDIR        ${VRN_HOME}/custommodules
 ####################################################################################################
 SET(VRN_BINARY_OUTPUT_DIR       ${CMAKE_BINARY_DIR}/bin
     CACHE PATH "Directory where binary files (apps and libraries) are put in" )
-
-MESSAGE(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
-MESSAGE(STATUS "VRN_BINARY_OUTPUT_DIR: ${VRN_BINARY_OUTPUT_DIR}")
-
 IF (UNIX)
 	OPTION(VRN_PRECOMPILED_HEADER   "Use pre-compiled headers?"                                 OFF)
 ELSE()
