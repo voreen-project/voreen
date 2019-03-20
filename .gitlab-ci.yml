@@ -21,8 +21,26 @@ build_coreprofile:
 serializertest_coreprofile:
   stage: test
   script:
-    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/serializertest --logLevel=debug --logFile=serializer.log"
+    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/serializertest --logLevel=debug --logFile=${COREPROFILE_BUILD_DIR}/serializer.log"
   artifacts:
     paths:
-    - "serializer.log"
+    - "{COREPROFILE_BUILD_DIR}/serializer.log"
+    expire_in: 1 week
+
+descriptiontest_coreprofile:
+  stage: test
+  script:
+    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/descriptiontest --logLevel=debug --logFile={COREPROFILE_BUILD_DIR}/descriptiontest.log"
+  artifacts:
+    paths:
+    - "{COREPROFILE_BUILD_DIR}/descriptiontest.log"
+    expire_in: 1 week
+
+octreetest_coreprofile:
+  stage: test
+  script:
+    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/octreetest --logLevel=debug --logFile={COREPROFILE_BUILD_DIR}/octreetest.log"
+  artifacts:
+    paths:
+    - "{COREPROFILE_BUILD_DIR}/octreetest.log"
     expire_in: 1 week
