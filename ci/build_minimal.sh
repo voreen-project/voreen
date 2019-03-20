@@ -3,8 +3,6 @@
 #cd ${VOREEN_ROOT}
 
 # clear build directory (also clears CMake cache)
-
-OLD_DIR=$(pwd)
 BUILD_DIR=$1
 rm -rf $BUILD_DIR
 mkdir $BUILD_DIR
@@ -63,5 +61,3 @@ cmake "${build_options[@]}" ../voreen
 
 N_CORES=$(nproc)
 nice make -j$N_CORES || make
-
-cd $OLD_DIR
