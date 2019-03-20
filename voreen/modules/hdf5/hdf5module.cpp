@@ -32,24 +32,12 @@ namespace voreen {
 
 HDF5Module::HDF5Module(const std::string& modulePath)
     : VoreenModule(modulePath)
-    , separateChannels_("separateChannels", "Separate Channels?", true)
 {
     setID("HDF5");
     setGuiName("HDF5");
 
-    addProperty(separateChannels_);
-    ON_CHANGE_LAMBDA(separateChannels_, []{
-        VoreenApplication::app()->showMessageBox("HDF5 VolumeReader changed", "In order for this change to take affect, the application has to be restarted.");
-    });
-
-    // Note: The order is chosen on purpose, such that the combined reader will be taken as default.
-    // If incompatibilities were observed, swap order!
-    if(separateChannels_.get()) {
-        registerVolumeReader(new HDF5VolumeReader());
-    }
-    else {
-        registerVolumeReader(new HDF5VolumeReaderCombinedChannels());
-    }
+    registerVolumeReader(new HDF5VolumeReaderOriginal());
+    registerVolumeReader(new HDF5VolumeReader());
     registerVolumeWriter(new HDF5VolumeWriter());
 
 }

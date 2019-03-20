@@ -298,13 +298,13 @@ VolumeReader* HDF5VolumeReader::create(ProgressBar* progress) const {
     return new HDF5VolumeReader();
 }
 
-HDF5VolumeReaderCombinedChannels::HDF5VolumeReaderCombinedChannels()
+HDF5VolumeReaderOriginal::HDF5VolumeReaderOriginal()
     : HDF5VolumeReaderBase(false)
 {
 }
 
-VolumeReader* HDF5VolumeReaderCombinedChannels::create(ProgressBar* progress) const {
-    return new HDF5VolumeReaderCombinedChannels();
+VolumeReader* HDF5VolumeReaderOriginal::create(ProgressBar* progress) const {
+    return new HDF5VolumeReaderOriginal();
 }
 
 } // namespace voreen

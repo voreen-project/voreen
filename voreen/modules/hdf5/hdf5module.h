@@ -27,7 +27,6 @@
 #define VRN_HDF5MODULE_H
 
 #include "voreen/core/voreenmodule.h"
-#include "voreen/core/properties/boolproperty.h"
 
 namespace voreen {
 
@@ -39,9 +38,6 @@ public:
     virtual std::string getDescription() const {
         return "Provides a volume reader and writer for HDF5 (*.hdf5 or *.h5) files, using the HDF5 library.";
     }
-private:
-
-    BoolProperty separateChannels_;
 };
 
 } // namespace

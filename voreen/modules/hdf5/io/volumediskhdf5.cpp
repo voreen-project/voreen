@@ -35,7 +35,7 @@ const std::string VolumeDiskHDF5::loggerCat_("voreen.hdf5.VolumeDiskHDF5");
 
 
 VolumeDiskHDF5::VolumeDiskHDF5(std::unique_ptr<HDF5FileVolume> volume, size_t firstChannel, size_t numberOfChannels)
-    : VolumeDisk(VolumeFactory().getFormat(volume->getBaseType(), numberOfChannels-firstChannel), volume->getDimensions())
+    : VolumeDisk(VolumeFactory().getFormat(volume->getBaseType(), numberOfChannels), volume->getDimensions())
     , volume_(std::move(volume))
     , firstChannel_(firstChannel)
     , numberOfChannels_(numberOfChannels)

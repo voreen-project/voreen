@@ -44,7 +44,7 @@ namespace voreen {
 class VRN_CORE_API HDF5VolumeReaderBase : public VolumeReader {
 public:
     HDF5VolumeReaderBase(bool separatedChannels);
-    ~HDF5VolumeReaderBase() {}
+    virtual ~HDF5VolumeReaderBase() {}
 
     /**
      * See VolumeReader.
@@ -81,16 +81,16 @@ public:
     virtual VolumeReader* create(ProgressBar* progress = nullptr) const;
 
     virtual std::string getClassName() const   { return "HDF5VolumeReader"; }
-    virtual std::string getFormatDescription() const { return "3D HDF5 format"; }
+    virtual std::string getFormatDescription() const { return "3D HDF5 format; multi-channel volumes are separated into multiple single-channel volumes."; }
 };
 
-class VRN_CORE_API HDF5VolumeReaderCombinedChannels : public HDF5VolumeReaderBase {
+class VRN_CORE_API HDF5VolumeReaderOriginal : public HDF5VolumeReaderBase {
 public:
-    HDF5VolumeReaderCombinedChannels();
+    HDF5VolumeReaderOriginal();
     virtual VolumeReader* create(ProgressBar* progress = nullptr) const;
 
-    virtual std::string getClassName() const   { return "HDF5VolumeReaderCombinedChannels"; }
-    virtual std::string getFormatDescription() const { return "3D HDF5 format - combining channels within the same location"; }
+    virtual std::string getClassName() const   { return "HDF5VolumeReaderOriginal"; }
+    virtual std::string getFormatDescription() const { return "3D HDF5 format; multi-channel volumes remain untouched."; }
 };
 
 } // namespace voreen
