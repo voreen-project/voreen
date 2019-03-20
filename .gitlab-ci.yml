@@ -6,13 +6,18 @@ image: voreen/ci-ubuntu-16.04
 
 variables:
   RUN_TESTS_AS_USER: 'test_user'
-  COREPROFILE_BUILD_DIR: './build_coreprofile'
+  COREPROFILE_BUILD_DIR: 'build_coreprofile'
 
 build_coreprofile:
   stage: build
   script:
+    - pwd
     - runuser $RUN_TESTS_AS_USER -c "ci/build_minimal.sh ${COREPROFILE_BUILD_DIR}"
       #- runuser $RUN_TESTS_AS_USER -c "ci/build_coreprofile.sh ${COREPROFILE_BUILD_DIR}"
+    - pwd
+    - ls "${COREPROFILE_BUILD_DIR}"
+    - ls "${COREPROFILE_BUILD_DIR}/bin"
+    - ls "${COREPROFILE_BUILD_DIR}/bin/serializertest"
   artifacts:
     paths:
     - "${COREPROFILE_BUILD_DIR}/bin/*"

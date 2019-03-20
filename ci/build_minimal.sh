@@ -3,6 +3,8 @@
 #cd ${VOREEN_ROOT}
 
 # clear build directory (also clears CMake cache)
+
+OLD_DIR=$(pwd)
 BUILD_DIR=$1
 rm -rf $BUILD_DIR
 mkdir $BUILD_DIR
@@ -12,12 +14,12 @@ cd $BUILD_DIR
 build_options=(
     -DVRN_OPENGL_COMPATIBILITY_PROFILE=OFF #required to build some modules
 
-    -DVRN_BUILD_VOREENVE=ON
+    -DVRN_BUILD_VOREENVE=OFF
     -DVRN_BUILD_VOREENTOOL=ON
-    -DVRN_BUILD_SIMPLEGLUT=ON
-    -DVRN_BUILD_SIMPLEQT=ON
+    -DVRN_BUILD_SIMPLEGLUT=OFF
+    -DVRN_BUILD_SIMPLEQT=OFF
     -DVRN_BUILD_TESTAPPS=ON
-    -DVRN_BUILD_BLASTEST=ON
+    -DVRN_BUILD_BLASTEST=OFF
     -DVRN_BUILD_ITKWRAPPER=OFF
     #-DVRN_DEPLOYMENT=ON
 
@@ -61,3 +63,5 @@ cmake "${build_options[@]}" ../voreen
 
 N_CORES=$(nproc)
 nice make -j$N_CORES || make
+
+cd $OLD_DIR
