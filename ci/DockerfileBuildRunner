@@ -1,0 +1,25 @@
+FROM ubuntu:16.04
+
+ENV TZ=Europe/Berlin
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && apt-get update \
+    && apt-get install --no-install-recommends -y \
+            clinfo \
+            cmake \
+            g++ \
+            libglew-dev \
+            libboost-all-dev \
+            libdevil-dev \
+            libgdcm2-dev \
+            libtiff5-dev \
+            libswscale-dev \
+            libavcodec-dev \
+            libavformat-dev \
+            freeglut3-dev \
+            opencl-headers \
+            libhdf5-dev \
+            libhdf5-cpp-11 \
+            liblz4-dev
+
+RUN useradd -ms /bin/bash test_user
