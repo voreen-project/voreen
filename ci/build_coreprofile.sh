@@ -1,0 +1,63 @@
+#!/bin/sh
+
+#cd ${VOREEN_ROOT}
+
+# clear build directory (also clears CMake cache)
+rm -rf buildcoreprofile
+mkdir buildcoreprofile
+cd buildcoreprofile
+
+# build configuration
+build_options=(
+    -DVRN_OPENGL_COMPATIBILITY_PROFILE=OFF #required to build some modules
+
+    -DVRN_BUILD_VOREENVE=ON
+    -DVRN_BUILD_VOREENTOOL=ON
+    -DVRN_BUILD_SIMPLEGLUT=ON
+    -DVRN_BUILD_SIMPLEQT=ON
+    -DVRN_BUILD_TESTAPPS=ON
+    -DVRN_BUILD_BLASTEST=ON
+    -DVRN_BUILD_ITKWRAPPER=ON
+    #-DVRN_DEPLOYMENT=ON
+
+    # public modules
+    -DVRN_MODULE_BASE=ON
+    -DVRN_MODULE_CONNEXE=ON
+    #-DVRN_MODULE_DYNAMICGLSL=ON #Only compatibility
+    #-DVRN_MODULE_EXPERIMENTAL=ON #Only compatibility
+    -DVRN_MODULE_FFMPEG=ON 
+    -DVRN_MODULE_FLOWREEN=ON
+    -DVRN_MODULE_HDF5=ON
+    -DVRN_MODULE_PLOTTING=ON
+    -DVRN_MODULE_POI=ON
+    -DVRN_MODULE_PVM=ON
+    -DVRN_MODULE_RANDOMWALKER=ON
+    -DVRN_MODULE_SEGY=ON
+    -DVRN_MODULE_VOLUMELABELING=OFF 
+    -DVRN_MODULE_DEVIL=ON
+    -DVRN_MODULE_ZIP=ON
+    -DVRN_MODULE_TIFF=ON
+    #-DVRN_MODULE_TOUCHTABLE=ON
+    -DVRN_MODULE_PFSKEL=OFF
+    -DVRN_MODULE_PYTHON=ON
+    -DVRN_MODULE_OPENCL=ON
+    -DVRN_MODULE_OPENMP=ON
+    -DVRN_MODULE_GDCM=ON
+    #-DVRN_MODULE_ITK=ON
+    -DVRN_MODULE_STAGING=ON
+    -DVRN_MODULE_SURFACE=ON
+    #-DVRN_MODULE_DEPRECATED=ON #Only compatibility
+    -DVRN_MODULE_STEREOSCOPY=ON
+
+    # custom modules
+    -DVRN_MODULE_GRAPHLAYOUT=OFF
+
+    -DVRN_PRECOMPILED_HEADER=OFF
+)
+#export CMAKE_PREFIX_PATH=/usr/local/HDF5-1.8.16-Linux/HDF_Group/HDF5/1.8.16/share/cmake/:$CMAKE_PREFIX_PATH
+cmake "${build_options[@]}" ../voreen
+
+# start build once again to make errors (if any) more readable
+
+N_CORES=$(nproc)
+nice make -j$N_CORES || make

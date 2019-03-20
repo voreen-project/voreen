@@ -6,7 +6,7 @@ image: voreen/ci-ubuntu-16.04
 variables:
   RUN_TESTS_AS_USER: 'test_user'
 
-run_test:
+build_coreprofile:
   stage: test
   script:
-    - runuser $RUN_TESTS_AS_USER -c 'ls'
+    - runuser $RUN_TESTS_AS_USER -c 'ci/build_coreprofile.sh'
