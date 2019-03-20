@@ -3,9 +3,9 @@
 #cd ${VOREEN_ROOT}
 
 # clear build directory (also clears CMake cache)
-rm -rf buildcoreprofile
-mkdir buildcoreprofile
-cd buildcoreprofile
+rm -rf $COREPROFILE_DIR
+mkdir $COREPROFILE_DIR
+cd $COREPROFILE_DIR
 
 # build configuration
 build_options=(

@@ -5,7 +5,7 @@ ENV TZ=Europe/Berlin
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
-            clinfo \
+            make \
             cmake \
             g++ \
             libglew-dev \
@@ -17,9 +17,17 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
             libavcodec-dev \
             libavformat-dev \
             freeglut3-dev \
-            opencl-headers \
             libhdf5-dev \
             libhdf5-cpp-11 \
-            liblz4-dev
+            liblz4-dev \
+            qt5-default \
+            libqt5svg5-dev \
+            libvtkgdcm2-dev \
+            opencl-headers \
+            clinfo \
+            ocl-icd-libopencl1 \
+            ocl-icd-opencl-dev \
+            libpython3-all-dev
+
 
 RUN useradd -ms /bin/bash test_user
