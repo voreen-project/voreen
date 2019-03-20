@@ -11,8 +11,10 @@ variables:
 build_coreprofile:
   stage: build
   script:
+    - ls
     - runuser $RUN_TESTS_AS_USER -c "ci/build_minimal.sh ${COREPROFILE_BUILD_DIR}"
       #- runuser $RUN_TESTS_AS_USER -c "ci/build_coreprofile.sh ${COREPROFILE_BUILD_DIR}"
+    - ls
   artifacts:
     paths:
     - "${COREPROFILE_BUILD_DIR}/bin/*"
@@ -24,23 +26,27 @@ serializertest_coreprofile:
     - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/serializertest --logLevel=debug --logFile=${COREPROFILE_BUILD_DIR}/serializer.log"
   artifacts:
     paths:
-    - "{COREPROFILE_BUILD_DIR}/serializer.log"
+    - ls
+    - ls ${COREPROFILE_BUILD_DIR}
+    - "${COREPROFILE_BUILD_DIR}/serializer.log"
     expire_in: 1 week
 
 descriptiontest_coreprofile:
   stage: test
   script:
-    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/descriptiontest --logLevel=debug --logFile={COREPROFILE_BUILD_DIR}/descriptiontest.log"
+    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/descriptiontest --logLevel=debug --logFile=${COREPROFILE_BUILD_DIR}/descriptiontest.log"
   artifacts:
     paths:
-    - "{COREPROFILE_BUILD_DIR}/descriptiontest.log"
+    - ls ${COREPROFILE_BUILD_DIR}
+    - "${COREPROFILE_BUILD_DIR}/descriptiontest.log"
     expire_in: 1 week
 
 octreetest_coreprofile:
   stage: test
   script:
-    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/octreetest --logLevel=debug --logFile={COREPROFILE_BUILD_DIR}/octreetest.log"
+    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/octreetest --logLevel=debug --logFile=${COREPROFILE_BUILD_DIR}/octreetest.log"
   artifacts:
     paths:
-    - "{COREPROFILE_BUILD_DIR}/octreetest.log"
+    - ls ${COREPROFILE_BUILD_DIR}
+    - "${COREPROFILE_BUILD_DIR}/octreetest.log"
     expire_in: 1 week
