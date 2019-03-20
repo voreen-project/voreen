@@ -3,7 +3,7 @@
 ################################################################################
 
 IF(NOT VRN_MODULE_BIGDATAIMAGEPROCESSING)
-    MESSAGE(FATAL_ERROR "VesselTopology Module requires big data image processing Module")
+    MESSAGE(FATAL_ERROR "FlowSimulation Module requires big data image processing Module")
 ENDIF()
 
 SET(MOD_CORE_MODULECLASS FlowSimulationModule)

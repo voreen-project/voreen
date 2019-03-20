@@ -25,6 +25,7 @@
 
 #include "volumediskhdf5.h"
 
+#include "voreen/core/datastructures/volume/volumefactory.h"
 #include "voreen/core/utils/hashing.h"
 
 
@@ -33,10 +34,11 @@ namespace voreen {
 const std::string VolumeDiskHDF5::loggerCat_("voreen.hdf5.VolumeDiskHDF5");
 
 
-VolumeDiskHDF5::VolumeDiskHDF5(std::unique_ptr<HDF5FileVolume> volume, size_t channel)
-    : VolumeDisk(volume->getBaseType(), volume->getDimensions())
+VolumeDiskHDF5::VolumeDiskHDF5(std::unique_ptr<HDF5FileVolume> volume, size_t firstChannel, size_t numberOfChannels)
+    : VolumeDisk(VolumeFactory().getFormat(volume->getBaseType(), numberOfChannels-firstChannel), volume->getDimensions())
     , volume_(std::move(volume))
-    , channel_(channel)
+    , firstChannel_(firstChannel)
+    , numberOfChannels_(numberOfChannels)
 {
 }
 
@@ -48,21 +50,22 @@ std::string VolumeDiskHDF5::getHash() const {
 
     configStr += volume_->getFileName() + "#";
     configStr += volume_->getVolumeLocation() + "#";
-    configStr += std::to_string(channel_) + "#";
+    configStr += std::to_string(firstChannel_) + "#";
+    configStr += std::to_string(numberOfChannels_) + "#";
 
     return VoreenHash::getHash(configStr);
 }
 
 VolumeRAM* VolumeDiskHDF5::loadVolume() const {
-    return volume_->loadBrick(tgt::vec3(0,0,0), dimensions_, channel_);
+    return volume_->loadBrick(tgt::vec3(0,0,0), dimensions_, firstChannel_, numberOfChannels_);
 }
 
 VolumeRAM* VolumeDiskHDF5::loadSlices(const size_t firstZSlice, const size_t lastZSlice) const {
-    return volume_->loadSlices(firstZSlice, lastZSlice, channel_);
+    return volume_->loadSlices(firstZSlice, lastZSlice, firstChannel_, numberOfChannels_);
 }
 
 VolumeRAM* VolumeDiskHDF5::loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const {
-    return volume_->loadBrick(offset, dimensions, channel_);
+    return volume_->loadBrick(offset, dimensions, firstChannel_, numberOfChannels_);
 }
 
 } // namespace voreen

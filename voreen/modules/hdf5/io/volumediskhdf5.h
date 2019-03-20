@@ -39,9 +39,10 @@ public:
     /**
      * Constructor.
      * @param volume The handle for the volume contained in a hdf5 file.
-     * @param channel The channel within the file volume this volumedisk should represent
+     * @param firstChannel The first channel within the file volume this volumedisk should represent
+     * @param numberOfChannels The number of channels
      */
-    VolumeDiskHDF5(std::unique_ptr<HDF5FileVolume> volume, size_t channel=0);
+    VolumeDiskHDF5(std::unique_ptr<HDF5FileVolume> volume, size_t firstChannel = 0, size_t numberOfChannels = 1);
 
     /**
      * Destructor.
@@ -89,7 +90,8 @@ protected:
     /// The volume inside a HDF5 file
     const std::unique_ptr<HDF5FileVolume> volume_;
     /// Channel of the volume
-    const size_t channel_;
+    const size_t firstChannel_;
+    const size_t numberOfChannels_;
 
     static const std::string loggerCat_;
 };

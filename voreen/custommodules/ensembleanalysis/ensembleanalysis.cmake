@@ -7,7 +7,7 @@ IF(NOT VRN_MODULE_PYTHON) # for converting
     MESSAGE(WARNING "EnsembleAnalysis Module requires Python Module for converter scripts")
 ENDIF()
 IF(NOT VRN_MODULE_HDF5) # for volume reading
-    MESSAGE(FATAL_ERROR "EnsembleAnalysis Module requires HDF5 Module")
+    MESSAGE(WARNING "EnsembleAnalysis Module requires HDF5 Module for efficient memory storage")
 ENDIF()
 IF(NOT VRN_MODULE_PLOTTING) # for plotting
     MESSAGE(FATAL_ERROR "EnsembleAnalysis Module requires Plotting Module")

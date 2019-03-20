@@ -39,7 +39,7 @@
 namespace { // anonymous helper functions
 
 /// Try to identify a single volume from the given DataSet and add it to urls
-static void collectVolume(const H5::DataSet& dataSet, const std::string& fileName, const std::string& pathInFile, std::vector<voreen::VolumeURL>& urls) {
+static void collectVolume(const H5::DataSet& dataSet, const std::string& fileName, const std::string& pathInFile, std::vector<voreen::VolumeURL>& urls, bool separated) {
     H5::DataSpace dataSpace = dataSet.getSpace();
     hsize_t dimensions[4];
     dataSpace.getSimpleExtentDims(dimensions);
@@ -54,13 +54,26 @@ static void collectVolume(const H5::DataSet& dataSet, const std::string& fileNam
         default: //Not a suitable DataSet
             return;
     }
-    for(int channel = 0; channel < channels; ++channel) {
+    if(separated) {
+        for (int channel = 0; channel < channels; ++channel) {
+            voreen::VolumeURL subURL("hdf5", fileName, "");
+            subURL.addSearchParameter("channel", std::to_string(channel));
+            subURL.addSearchParameter("path", pathInFile);
+            subURL.getMetaDataContainer().addMetaData("Location", new voreen::StringMetaData(pathInFile));
+            subURL.getMetaDataContainer().addMetaData("Channel", new voreen::IntMetaData(channel));
+            subURL.getMetaDataContainer().addMetaData("Volume Dimensions", new voreen::IVec3MetaData(
+                    static_cast<tgt::ivec3>(voreen::vec3HDF5ToTgt(dimensions))));
+            urls.push_back(subURL);
+        }
+    }
+    else {
         voreen::VolumeURL subURL("hdf5", fileName, "");
-        subURL.addSearchParameter("channel", std::to_string(channel));
         subURL.addSearchParameter("path", pathInFile);
+        subURL.addSearchParameter("channels", std::to_string(channels));
         subURL.getMetaDataContainer().addMetaData("Location", new voreen::StringMetaData(pathInFile));
-        subURL.getMetaDataContainer().addMetaData("Channel", new voreen::IntMetaData(channel));
-        subURL.getMetaDataContainer().addMetaData("Volume Dimensions", new voreen::IVec3MetaData(static_cast<tgt::ivec3>(voreen::vec3HDF5ToTgt(dimensions))));
+        subURL.getMetaDataContainer().addMetaData("Channels", new voreen::IntMetaData(channels));
+        subURL.getMetaDataContainer().addMetaData("Volume Dimensions", new voreen::IVec3MetaData(
+                static_cast<tgt::ivec3>(voreen::vec3HDF5ToTgt(dimensions))));
         urls.push_back(subURL);
     }
 }
@@ -71,20 +84,20 @@ static void collectVolumes(
 #else
         const H5::CommonFG& fg,
 #endif
-        const std::string& fileName, const std::string& pathInFile, std::vector<voreen::VolumeURL>& urls) {
+        const std::string& fileName, const std::string& pathInFile, std::vector<voreen::VolumeURL>& urls, bool separated) {
     for(hsize_t i=0; i<fg.getNumObjs(); ++i) {
         H5O_type_t type = fg.childObjType(i);
         switch(type) {
             case H5O_TYPE_GROUP:
                 {
                     std::string groupName = fg.getObjnameByIdx(i);
-                    collectVolumes(fg.openGroup(groupName), fileName, pathInFile + "/" + groupName, urls);
+                    collectVolumes(fg.openGroup(groupName), fileName, pathInFile + "/" + groupName, urls, separated);
                 }
                 break;
             case H5O_TYPE_DATASET:
                 {
                     std::string dataSetName = fg.getObjnameByIdx(i);
-                    collectVolume(fg.openDataSet(dataSetName), fileName, pathInFile + "/" + dataSetName, urls);
+                    collectVolume(fg.openDataSet(dataSetName), fileName, pathInFile + "/" + dataSetName, urls, separated);
                 }
                 break;
             default:
@@ -99,9 +112,11 @@ static void collectVolumes(
 
 namespace voreen {
 
-const std::string HDF5VolumeReader::loggerCat_ = "voreen.hdf5.HDF5VolumeReader";
+const std::string HDF5VolumeReaderBase::loggerCat_ = "voreen.hdf5.HDF5VolumeReader";
 
-HDF5VolumeReader::HDF5VolumeReader() : VolumeReader()
+HDF5VolumeReaderBase::HDF5VolumeReaderBase(bool separatedChannels)
+    : VolumeReader()
+    , separatedChannels_(separatedChannels)
 {
     extensions_.push_back("hdf5");
     extensions_.push_back("h5");
@@ -109,7 +124,7 @@ HDF5VolumeReader::HDF5VolumeReader() : VolumeReader()
     protocols_.push_back("hdf5");
 }
 
-VolumeList* HDF5VolumeReader::read(const std::string& url) {
+VolumeList* HDF5VolumeReaderBase::read(const std::string& url) {
     std::vector<VolumeURL> urls = listVolumes(url);
     std::vector<std::unique_ptr<VolumeBase>> volumes;
 
@@ -129,19 +144,27 @@ VolumeList* HDF5VolumeReader::read(const std::string& url) {
     return volumeList;
 }
 
-VolumeBase* HDF5VolumeReader::read(const VolumeURL& origin) {
+VolumeBase* HDF5VolumeReaderBase::read(const VolumeURL& origin) {
     std::string fileName = origin.getPath();
     tgtAssert(origin.getSearchParameter("path") != "", "Could not find path in VolumeURL");
     std::string inFilePath = origin.getSearchParameter("path");
-    tgtAssert(origin.getSearchParameter("channel") != "", "Could not find channel in VolumeURL");
-    int channel = std::stoi(origin.getSearchParameter("channel"));
+    int firstChannel = 0;
+    int numberOfChannels = 1;
+    if(separatedChannels_) {
+        tgtAssert(origin.getSearchParameter("channel") != "", "Could not find channel in VolumeURL");
+        firstChannel = std::stoi(origin.getSearchParameter("channel"));
+    }
+    else {
+        tgtAssert(origin.getSearchParameter("channels") != "", "Could not find channels in VolumeURL");
+        numberOfChannels = std::stoi(origin.getSearchParameter("channels"));
+    }
     LINFO("Loading " << fileName);
 
     // Open the in file volume.
     std::unique_ptr<HDF5FileVolume> fileVolume = HDF5FileVolume::openVolume(fileName, inFilePath, true);
 
     // Retrieve all needed information before handing the file volume over to volume disk
-    std::vector<VolumeDerivedData*> derivedData = fileVolume->readDerivedData(channel);
+    std::vector<VolumeDerivedData*> derivedData = fileVolume->readDerivedData(firstChannel); // TODO: how to handle non-separated?
     std::unique_ptr<tgt::vec3> spacing(fileVolume->tryReadSpacing());
     std::unique_ptr<tgt::vec3> offset(fileVolume->tryReadOffset());
     std::unique_ptr<tgt::mat4> physicalToWorldTransformation(fileVolume->tryReadPhysicalToWorldTransformation());
@@ -152,7 +175,7 @@ VolumeBase* HDF5VolumeReader::read(const VolumeURL& origin) {
     MetaDataContainer metaData = fileVolume->readMetaData();
 
     // Now create the VolumeDiskHDF5 by handing over fileVolume...
-    VolumeRepresentation* volume = new VolumeDiskHDF5(std::move(fileVolume), channel);
+    VolumeRepresentation* volume = new VolumeDiskHDF5(std::move(fileVolume), firstChannel, numberOfChannels);
     // ... and construct the Volume.
     Volume* vol = new Volume(volume, tgt::vec3::one, tgt::vec3::zero, tgt::mat4::identity);
 
@@ -244,7 +267,7 @@ VolumeBase* HDF5VolumeReader::read(const VolumeURL& origin) {
     return vol;
 }
 
-std::vector<VolumeURL> HDF5VolumeReader::listVolumes(const std::string& urlStr) const {
+std::vector<VolumeURL> HDF5VolumeReaderBase::listVolumes(const std::string& urlStr) const {
     VolumeURL url(urlStr);
     std::string filepath = url.getPath();
     std::vector<VolumeURL> urls;
@@ -254,7 +277,7 @@ std::vector<VolumeURL> HDF5VolumeReader::listVolumes(const std::string& urlStr) 
         boost::lock_guard<boost::recursive_mutex> lock(hdf5libMutex);
 
         H5::H5File file(filepath, H5F_ACC_RDONLY);
-        collectVolumes(file, filepath, "", urls);
+        collectVolumes(file, filepath, "", urls, separatedChannels_);
     } catch(H5::Exception error) { // catch HDF5 exceptions
         LERROR(error.getFuncName() + ": " + error.getDetailMsg());
         throw tgt::IOException("An Error occured while reading file " + filepath);
@@ -262,12 +285,26 @@ std::vector<VolumeURL> HDF5VolumeReader::listVolumes(const std::string& urlStr) 
     return urls;
 }
 
+bool HDF5VolumeReaderBase::canSupportFileWatching() const {
+    return true;
+}
+
+HDF5VolumeReader::HDF5VolumeReader()
+    : HDF5VolumeReaderBase(true)
+{
+}
+
 VolumeReader* HDF5VolumeReader::create(ProgressBar* progress) const {
     return new HDF5VolumeReader();
 }
 
-bool HDF5VolumeReader::canSupportFileWatching() const {
-    return true;
+HDF5VolumeReaderCombinedChannels::HDF5VolumeReaderCombinedChannels()
+    : HDF5VolumeReaderBase(false)
+{
+}
+
+VolumeReader* HDF5VolumeReaderCombinedChannels::create(ProgressBar* progress) const {
+    return new HDF5VolumeReaderCombinedChannels();
 }
 
 } // namespace voreen
