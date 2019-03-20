@@ -11,7 +11,12 @@ variables:
 build_coreprofile:
   stage: build
   script:
-    - runuser $RUN_TESTS_AS_USER -c "ci/build_coreprofile.sh ${COREPROFILE_BUILD_DIR}"
+    - runuser $RUN_TESTS_AS_USER -c "ci/build_minimal.sh ${COREPROFILE_BUILD_DIR}"
+      #- runuser $RUN_TESTS_AS_USER -c "ci/build_coreprofile.sh ${COREPROFILE_BUILD_DIR}"
+  artifacts:
+    paths:
+    - ${COREPROFILE_BUILD_DIR}/bin/
+    expire_in: 1 day
 
 serializertest_coreprofile:
   stage: test
