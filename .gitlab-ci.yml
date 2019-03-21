@@ -11,8 +11,8 @@ variables:
   RUN_TESTS_AS_USER: 'test_user'
   REPORT_DIR: 'public'
   COREPROFILE_BUILD_DIR: 'build_coreprofile'
-  TEST_DATA_REPOSITORY: 'zivgitlab.uni-muenster.de/voreen-project/voreen-testdata.git'
-  TEST_DATA_DIR: 'test-data'
+  TEST_DATA_DIR: 'test-data/voreen-testdata'
+  #TEST_DATA_REPOSITORY: 'zivgitlab.uni-muenster.de/voreen-project/voreen-testdata.git'
 
 build_coreprofile:
   stage: build
