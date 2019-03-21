@@ -724,8 +724,13 @@ void VoreenApplication::initialize() {
     if (cmdParser_->isOptionSet("logFile")) {
         std::string logFile;
         cmdParser_->getOptionValue("logFile", logFile);
-        if (!logFile.empty())
+        if (!logFile.empty()) {
+            // Resolve non-absolute paths relative to cwd:
+            if(!tgt::FileSystem::isAbsolutePath(logFile)) {
+                logFile = tgt::FileSystem::cleanupPath(tgt::FileSystem::currentDirectory() + "/" + logFile);
+            }
             setLogFile(logFile);
+        }
     }
 
     // reinit logging, if default settings have been overwritten
