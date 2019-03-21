@@ -10,6 +10,8 @@ variables:
   COREPROFILE_BUILD_DIR: 'build_coreprofile'
   GIT_DEPTH: 1 # Make cloning faster
   DOCKER_DRIVER: overlay2 # use overlayfs
+  TEST_DATA_REPOSITORY: 'zivgitlab.uni-muenster.de/voreen-project/voreen-testdata.git'
+  TEST_DATA_DIR: 'test-data'
 
 build_coreprofile:
   stage: build
@@ -64,8 +66,9 @@ processorinittest_coreprofile: #probably needs xserver
 octreetest_coreprofile: #probably need testdata
   stage: test
   script:
+    - git clone --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@${TEST_DATA_REPOSITORY} ${TEST_DATA_DIR}
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
-    - ${COREPROFILE_BUILD_DIR}/bin/octreetest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html
+    - ${COREPROFILE_BUILD_DIR}/bin/octreetest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html --datadir=${TEST_DATA_DIR}
   artifacts:
     paths:
     - "${REPORT_DIR}"
