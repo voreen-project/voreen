@@ -6,16 +6,16 @@ image: voreen/ci-ubuntu-16.04
 
 variables:
   RUN_TESTS_AS_USER: 'test_user'
+  REPORT_DIR: 'public'
   COREPROFILE_BUILD_DIR: 'build_coreprofile'
   GIT_DEPTH: 1 #Makes cloning faster
+  DOCKER_DRIVER: overlay2 #use overlayfs
 
 build_coreprofile:
   stage: build
   script:
-    - ls
     - runuser $RUN_TESTS_AS_USER -c "ci/build_minimal.sh ${COREPROFILE_BUILD_DIR}"
       #- runuser $RUN_TESTS_AS_USER -c "ci/build_coreprofile.sh ${COREPROFILE_BUILD_DIR}"
-    - ls
   artifacts:
     paths:
     - "${COREPROFILE_BUILD_DIR}/bin/*"
@@ -24,46 +24,54 @@ build_coreprofile:
 serializertest_coreprofile:
   stage: test
   script:
-    - pwd
-    - ls
-    - ls ${COREPROFILE_BUILD_DIR}
-    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/serializertest --logLevel=debug --logFile=${COREPROFILE_BUILD_DIR}/serializer.log"
-    - pwd
-    - ls
-    - ls ${COREPROFILE_BUILD_DIR}
+    - ls voreen
+    - ls voreen/data
+    - runuser $RUN_TESTS_AS_USER -c "mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true"
+    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/serializertest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/serializer-log.html"
+    - ls voreen
+    - ls voreen/data
+    - ls voreen/data/tmp
   artifacts:
     paths:
-    - "${COREPROFILE_BUILD_DIR}/serializer.log"
+    - "${REPORT_DIR}"
     expire_in: 1 week
 
 descriptiontest_coreprofile:
   stage: test
   script:
-    - pwd
-    - ls
-    - ls ${COREPROFILE_BUILD_DIR}
-    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/descriptiontest --logLevel=debug --logFile=${COREPROFILE_BUILD_DIR}/descriptiontest.log"
-    - pwd
-    - ls
-    - ls ${COREPROFILE_BUILD_DIR}
+    - ls voreen
+    - ls voreen/data
+    - runuser $RUN_TESTS_AS_USER -c "mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true"
+    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/descriptiontest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/descriptiontest-log.html"
+    - ls voreen
+    - ls voreen/data
+    - ls voreen/data/tmp
   artifacts:
     paths:
-    - ls ${COREPROFILE_BUILD_DIR}
-    - "${COREPROFILE_BUILD_DIR}/descriptiontest.log"
+    - "${REPORT_DIR}"
     expire_in: 1 week
 
 octreetest_coreprofile:
   stage: test
   script:
-    - pwd
-    - ls
-    - ls ${COREPROFILE_BUILD_DIR}
-    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/octreetest --logLevel=debug --logFile=${COREPROFILE_BUILD_DIR}/octreetest.log"
-    - pwd
-    - ls
-    - ls ${COREPROFILE_BUILD_DIR}
+    - ls voreen
+    - ls voreen/data
+    - runuser $RUN_TESTS_AS_USER -c "mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true"
+    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/octreetest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html"
+    - ls voreen
+    - ls voreen/data
+    - ls voreen/data/tmp
   artifacts:
     paths:
-    - ls ${COREPROFILE_BUILD_DIR}
-    - "${COREPROFILE_BUILD_DIR}/octreetest.log"
+    - "${REPORT_DIR}"
     expire_in: 1 week
+
+test_print:
+  stage: build
+  script:
+    - mkdir -p "public" || true
+    - echo "Do some things and write them to public directory" > public/index.html
+  artifacts:
+    paths:
+    - public
+    expire_in: 1 day
