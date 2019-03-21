@@ -24,13 +24,8 @@ build_coreprofile:
 serializertest_coreprofile:
   stage: test
   script:
-    - ls -l voreen
-    - ls -l voreen/data
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
-    - ${COREPROFILE_BUILD_DIR}/bin/serializertest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/serializer-log.html || true
-    - ls -l voreen
-    - ls -l voreen/data
-    - ls -l voreen/data/tmp
+    - ${COREPROFILE_BUILD_DIR}/bin/serializertest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/serializer-log.html
   artifacts:
     paths:
     - "${REPORT_DIR}"
@@ -39,13 +34,8 @@ serializertest_coreprofile:
 descriptiontest_coreprofile:
   stage: test
   script:
-    - ls -l voreen
-    - ls -l voreen/data
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
-    - ${COREPROFILE_BUILD_DIR}/bin/descriptiontest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/descriptiontest-log.html || true
-    - ls -l voreen
-    - ls -l voreen/data
-    - ls -l voreen/data/tmp
+    - ${COREPROFILE_BUILD_DIR}/bin/descriptiontest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/descriptiontest-log.html
   artifacts:
     paths:
     - "${REPORT_DIR}"
@@ -54,13 +44,8 @@ descriptiontest_coreprofile:
 processorcreatetest_coreprofile:
   stage: test
   script:
-    - ls -l voreen
-    - ls -l voreen/data
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
-    - ${COREPROFILE_BUILD_DIR}/bin/processorcreatetest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorcreatetest-log.html || true
-    - ls -l voreen
-    - ls -l voreen/data
-    - ls -l voreen/data/tmp
+    - ${COREPROFILE_BUILD_DIR}/bin/processorcreatetest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorcreatetest-log.html
   artifacts:
     paths:
     - "${REPORT_DIR}"
@@ -69,13 +54,8 @@ processorcreatetest_coreprofile:
 processorinittest_coreprofile:
   stage: test
   script:
-    - ls -l voreen
-    - ls -l voreen/data
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
-    - ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorinittest-log.html || true
-    - ls -l voreen
-    - ls -l voreen/data
-    - ls -l voreen/data/tmp
+    - ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorinittest-log.html
   artifacts:
     paths:
     - "${REPORT_DIR}"
@@ -84,13 +64,8 @@ processorinittest_coreprofile:
 octreetest_coreprofile:
   stage: test
   script:
-    - ls -l voreen
-    - ls -l voreen/data
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
-    - ${COREPROFILE_BUILD_DIR}/bin/octreetest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html || true
-    - ls -l voreen
-    - ls -l voreen/data
-    - ls -l voreen/data/tmp
+    - ${COREPROFILE_BUILD_DIR}/bin/octreetest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html
   artifacts:
     paths:
     - "${REPORT_DIR}"
