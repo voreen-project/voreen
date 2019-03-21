@@ -71,7 +71,7 @@ octreetest_coreprofile: #probably need testdata
     - ls ${TEST_DATA_DIR} || true
     - ls .. || true
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
-    - ${COREPROFILE_BUILD_DIR}/bin/octreetest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html --datadir=${TEST_DATA_DIR}
+    - ${COREPROFILE_BUILD_DIR}/bin/octreetest --log_level=test_suite -- --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html --datadir=${TEST_DATA_DIR}
   artifacts:
     paths:
     - "${REPORT_DIR}"
