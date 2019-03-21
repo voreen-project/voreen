@@ -8,8 +8,8 @@ variables:
   RUN_TESTS_AS_USER: 'test_user'
   REPORT_DIR: 'public'
   COREPROFILE_BUILD_DIR: 'build_coreprofile'
-  GIT_DEPTH: 1 #Makes cloning faster
-  DOCKER_DRIVER: overlay2 #use overlayfs
+  GIT_DEPTH: 1 # Make cloning faster
+  DOCKER_DRIVER: overlay2 # use overlayfs
 
 build_coreprofile:
   stage: build
@@ -51,6 +51,36 @@ descriptiontest_coreprofile:
     - "${REPORT_DIR}"
     expire_in: 1 week
 
+processorcreatetest_coreprofile:
+  stage: test
+  script:
+    - ls voreen
+    - ls voreen/data
+    - runuser $RUN_TESTS_AS_USER -c "mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true"
+    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/processorcreatetest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorcreatetest-log.html"
+    - ls voreen
+    - ls voreen/data
+    - ls voreen/data/tmp
+  artifacts:
+    paths:
+    - "${REPORT_DIR}"
+    expire_in: 1 week
+
+processorinittest_coreprofile:
+  stage: test
+  script:
+    - ls voreen
+    - ls voreen/data
+    - runuser $RUN_TESTS_AS_USER -c "mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true"
+    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorinittest-log.html"
+    - ls voreen
+    - ls voreen/data
+    - ls voreen/data/tmp
+  artifacts:
+    paths:
+    - "${REPORT_DIR}"
+    expire_in: 1 week
+
 octreetest_coreprofile:
   stage: test
   script:
@@ -65,13 +95,3 @@ octreetest_coreprofile:
     paths:
     - "${REPORT_DIR}"
     expire_in: 1 week
-
-test_print:
-  stage: build
-  script:
-    - mkdir -p "public" || true
-    - echo "Do some things and write them to public directory" > public/index.html
-  artifacts:
-    paths:
-    - public
-    expire_in: 1 day
