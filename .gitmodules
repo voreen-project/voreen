@@ -1,0 +1,3 @@
+[submodule "test-data"]
+	path = test-data
+	url = git@zivgitlab.uni-muenster.de:voreen-project/voreen-testdata.git
