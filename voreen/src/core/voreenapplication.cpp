@@ -1119,7 +1119,9 @@ std::string VoreenApplication::getUniqueFilePath(const std::string& root, const 
     do {
         std::string name = boost::lexical_cast<std::string>(generateUUID()) + suffix;
         outputPath = tgt::FileSystem::cleanupPath(root + "/" + name);
+        std::cout << "GEN UNIQUE FILE PATH: " << outputPath << std::endl;
     } while (tgt::FileSystem::fileExists(outputPath) || tgt::FileSystem::dirExists(outputPath));
+    std::cout << "GEN UNIQUE FILE PATH (SUCCESS): " << outputPath << std::endl;
     return outputPath;
 }
 

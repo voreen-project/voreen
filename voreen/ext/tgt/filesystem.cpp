@@ -985,8 +985,10 @@ bool FileSystem::changeDirectory(const std::string& directory) {
 }
 
 bool FileSystem::createDirectory(const std::string& directory) {
-    if (directory.empty())
+    if (directory.empty()) {
+        std::cout << "CREATE TMP EMPTY: " << directory << std::endl;
         return false;
+    }
 
     std::string converted = replaceAllCharacters(directory, badSlash_, goodSlash_);
     removeTrailingCharacters(converted, goodSlash_);
@@ -994,17 +996,24 @@ bool FileSystem::createDirectory(const std::string& directory) {
 #ifdef WIN32
     return (CreateDirectory(converted.c_str(), 0) != 0);
 #else
-    return (mkdir(converted.c_str(), 0777) == 0);
+    int ret =mkdir(converted.c_str(), 0777);
+    if(ret) {
+        std::cout << "MKDIR " << converted << ": " << ret << std::endl;
+    }
+    return ret == 0;
 #endif
 }
 
 bool FileSystem::createDirectoryRecursive(const std::string& directory) {
+  std::cout << "CREATE DIR REC:" << directory << std::endl;
     if(dirExists(directory))
         return true;
     else {
         std::string dir = parentDir(directory);
-        if(dir == directory)
+        if(dir == directory) {
+            std::cout << "CREATE TMP EQ: " << dir << std::endl;
             return false;
+        }
 
         if(createDirectoryRecursive(dir))
             return createDirectory(directory);

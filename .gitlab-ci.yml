@@ -14,7 +14,7 @@ variables:
 build_coreprofile:
   stage: build
   script:
-    - runuser $RUN_TESTS_AS_USER -c "ci/build_minimal.sh ${COREPROFILE_BUILD_DIR}"
+    - ci/build_minimal.sh ${COREPROFILE_BUILD_DIR}
       #- runuser $RUN_TESTS_AS_USER -c "ci/build_coreprofile.sh ${COREPROFILE_BUILD_DIR}"
   artifacts:
     paths:
@@ -24,13 +24,13 @@ build_coreprofile:
 serializertest_coreprofile:
   stage: test
   script:
-    - ls voreen
-    - ls voreen/data
-    - runuser $RUN_TESTS_AS_USER -c "mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true"
-    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/serializertest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/serializer-log.html"
-    - ls voreen
-    - ls voreen/data
-    - ls voreen/data/tmp
+    - ls -l voreen
+    - ls -l voreen/data
+    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - ${COREPROFILE_BUILD_DIR}/bin/serializertest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/serializer-log.html || true
+    - ls -l voreen
+    - ls -l voreen/data
+    - ls -l voreen/data/tmp
   artifacts:
     paths:
     - "${REPORT_DIR}"
@@ -39,13 +39,13 @@ serializertest_coreprofile:
 descriptiontest_coreprofile:
   stage: test
   script:
-    - ls voreen
-    - ls voreen/data
-    - runuser $RUN_TESTS_AS_USER -c "mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true"
-    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/descriptiontest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/descriptiontest-log.html"
-    - ls voreen
-    - ls voreen/data
-    - ls voreen/data/tmp
+    - ls -l voreen
+    - ls -l voreen/data
+    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - ${COREPROFILE_BUILD_DIR}/bin/descriptiontest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/descriptiontest-log.html || true
+    - ls -l voreen
+    - ls -l voreen/data
+    - ls -l voreen/data/tmp
   artifacts:
     paths:
     - "${REPORT_DIR}"
@@ -54,13 +54,13 @@ descriptiontest_coreprofile:
 processorcreatetest_coreprofile:
   stage: test
   script:
-    - ls voreen
-    - ls voreen/data
-    - runuser $RUN_TESTS_AS_USER -c "mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true"
-    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/processorcreatetest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorcreatetest-log.html"
-    - ls voreen
-    - ls voreen/data
-    - ls voreen/data/tmp
+    - ls -l voreen
+    - ls -l voreen/data
+    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - ${COREPROFILE_BUILD_DIR}/bin/processorcreatetest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorcreatetest-log.html || true
+    - ls -l voreen
+    - ls -l voreen/data
+    - ls -l voreen/data/tmp
   artifacts:
     paths:
     - "${REPORT_DIR}"
@@ -69,13 +69,13 @@ processorcreatetest_coreprofile:
 processorinittest_coreprofile:
   stage: test
   script:
-    - ls voreen
-    - ls voreen/data
-    - runuser $RUN_TESTS_AS_USER -c "mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true"
-    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorinittest-log.html"
-    - ls voreen
-    - ls voreen/data
-    - ls voreen/data/tmp
+    - ls -l voreen
+    - ls -l voreen/data
+    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorinittest-log.html || true
+    - ls -l voreen
+    - ls -l voreen/data
+    - ls -l voreen/data/tmp
   artifacts:
     paths:
     - "${REPORT_DIR}"
@@ -84,13 +84,13 @@ processorinittest_coreprofile:
 octreetest_coreprofile:
   stage: test
   script:
-    - ls voreen
-    - ls voreen/data
-    - runuser $RUN_TESTS_AS_USER -c "mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true"
-    - runuser $RUN_TESTS_AS_USER -c "${COREPROFILE_BUILD_DIR}/bin/octreetest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html"
-    - ls voreen
-    - ls voreen/data
-    - ls voreen/data/tmp
+    - ls -l voreen
+    - ls -l voreen/data
+    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - ${COREPROFILE_BUILD_DIR}/bin/octreetest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html || true
+    - ls -l voreen
+    - ls -l voreen/data
+    - ls -l voreen/data/tmp
   artifacts:
     paths:
     - "${REPORT_DIR}"
