@@ -51,7 +51,7 @@ processorcreatetest_coreprofile:
     - "${REPORT_DIR}"
     expire_in: 1 week
 
-processorinittest_coreprofile:
+processorinittest_coreprofile: #probably needs xserver
   stage: test
   script:
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
@@ -61,11 +61,41 @@ processorinittest_coreprofile:
     - "${REPORT_DIR}"
     expire_in: 1 week
 
-octreetest_coreprofile:
+octreetest_coreprofile: #probably need testdata
   stage: test
   script:
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
     - ${COREPROFILE_BUILD_DIR}/bin/octreetest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html
+  artifacts:
+    paths:
+    - "${REPORT_DIR}"
+    expire_in: 1 week
+
+networkevaluatortest_coreprofile:
+  stage: test
+  script:
+    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - ${COREPROFILE_BUILD_DIR}/bin/networkevaluatortest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/networkevaluatortest-log.html
+  artifacts:
+    paths:
+    - "${REPORT_DIR}"
+    expire_in: 1 week
+
+processornetworktest_coreprofile:
+  stage: test
+  script:
+    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - ${COREPROFILE_BUILD_DIR}/bin/processornetworktest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processornetworktest-log.html
+  artifacts:
+    paths:
+    - "${REPORT_DIR}"
+    expire_in: 1 week
+
+volumeorigintest_coreprofile:
+  stage: test
+  script:
+    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - ${COREPROFILE_BUILD_DIR}/bin/volumeorigintest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/volumeorigintest-log.html
   artifacts:
     paths:
     - "${REPORT_DIR}"
