@@ -12,6 +12,7 @@ variables:
   REPORT_DIR: 'public'
   COREPROFILE_BUILD_DIR: 'build_coreprofile'
   TEST_DATA_DIR: 'test-data/voreen-testdata'
+  XVFB_SERVER_ARGS: -screen 0 640x480x24
   #TEST_DATA_REPOSITORY: 'zivgitlab.uni-muenster.de/voreen-project/voreen-testdata.git'
 
 before_script:
@@ -62,9 +63,9 @@ processorinittest_coreprofile: #probably needs xserver
   stage: test
   script:
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
-    - xvfb-run glxinfo || true
-    - Xvfb :99 -ac &
-    - export DISPLAY=:99
+    - xvfb-run -s ${XVFB_SERVER_ARGS} glxinfo || true
+    - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
+    - export DISPLAY=:98
     - glxinfo || true
     - ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorinittest-log.html
   artifacts:
