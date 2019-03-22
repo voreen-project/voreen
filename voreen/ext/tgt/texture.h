@@ -201,95 +201,46 @@ public:
     //-----------------------------------------------------------------------------------------
     // Texel access (only if downloadTexture has been called or cpuTextureData_ is up to date)
     //-----------------------------------------------------------------------------------------
-
-/* 1D access, always possible */
     template <class T>
-    inline T& texel(size_t i) {
-        tgtAssert( sizeof(T) == bpt_, "sizeof(T) != bytes per texel here" );
-        tgtAssert( i < size_t(hmul(dimensions_)), "index out of range" );
-        tgtAssert(cpuTextureData_, "no cpu texture data. Call download texture or set texture data first.");
-        return ((T*) cpuTextureData_)[i];
+    inline T& texel(size_t x, size_t y = 0, size_t z = 0) {
+        return texel<T>(tgt::svec3(x, y, z));
     }
     template <class T>
-    inline const T& texel(size_t i) const {
-        tgtAssert( sizeof(T) == bpt_, "sizeof(T) != bytes per texel here" );
-        tgtAssert( i < size_t(hmul(dimensions_)), "index out of range" );
-        tgtAssert(cpuTextureData_, "no cpu texture data. Call download texture or set texture data first.");
-        return ((T*) cpuTextureData_)[i];
-    }
-
-/* 2D access, only possible when type_ == GL_TEXTURE_2D */
-    template <class T>
-    inline T& texel(size_t x, size_t y) {
-        tgtAssert( sizeof(T) == bpt_, "sizeof(T) != bytes per texel here" );
-        tgtAssert( dimensions_.x * y + x < size_t(hmul(dimensions_)), "index out of range" );
-        tgtAssert( type_ == GL_TEXTURE_2D, "using 2d access, but it's not a GL_TEXTURE_2D");
-        tgtAssert(cpuTextureData_, "no cpu texture data. Call download texture or set texture data first.");
-        return ((T*) cpuTextureData_)[dimensions_.x * y + x];
+    inline const T& texel(size_t x, size_t y = 0, size_t z = 0) const {
+        return texel<T>(tgt::svec3(x, y, z));
     }
     template <class T>
-    inline const T& texel(size_t x, size_t y) const {
-        tgtAssert( sizeof(T) == bpt_, "sizeof(T) != bytes per texel here" );
-        tgtAssert( dimensions_.x * y + x < size_t(hmul(dimensions_)), "index out of range" );
-        tgtAssert( type_ == GL_TEXTURE_2D, "using 2d access, but it's not a GL_TEXTURE_2D");
-        tgtAssert(cpuTextureData_, "no cpu texture data. Call download texture or set texture data first.");
-        return ((T*) cpuTextureData_)[dimensions_.x * y + x];
+    inline T& texel(const svec2& pos) {
+        return texel<T>(tgt::svec3(pos, 0));
     }
     template <class T>
-    inline T& texel(const ivec2& pos) {
-        tgtAssert( sizeof(T) == bpt_, "sizeof(T) != bytes per texel here" );
-        tgtAssert( dimensions_.x * pos.y + pos.x < hmul(dimensions_), "index out of range" );
-        tgtAssert( type_ == GL_TEXTURE_2D, "using 2d access, but it's not a GL_TEXTURE_2D");
-        tgtAssert(cpuTextureData_, "no cpu texture data. Call download texture or set texture data first.");
-        return ((T*) cpuTextureData_)[dimensions_.x * pos.y + pos.x];
+    inline const T& texel(const svec2& pos) const {
+        return texel<T>(tgt::svec3(pos, 0));
     }
     template <class T>
-    inline const T& texel(const ivec2& pos) const {
+    inline T& texel(const svec3& pos) {
         tgtAssert( sizeof(T) == bpt_, "sizeof(T) != bytes per texel here" );
-        tgtAssert( dimensions_.x * pos.y + pos.x < hmul(dimensions_), "index out of range" );
-        tgtAssert( type_ == GL_TEXTURE_2D, "using 2d access, but it's not a GL_TEXTURE_2D");
-        tgtAssert(cpuTextureData_, "no cpu texture data. Call download texture or set texture data first.");
-        return ((T*) cpuTextureData_)[dimensions_.x * pos.y + pos.x];
-    }
-
-/* 3D access, only possible when type_ == GL_TEXTURE_3D */
-    template <class T>
-    inline T& texel(size_t x, size_t y, size_t z) {
-        tgtAssert( sizeof(T) == bpt_, "sizeof(T) != bytes per texel here" );
-        tgtAssert( z*dimensions_.x*dimensions_.y + y*dimensions_.x + x < size_t(hmul(dimensions_)), "index out of range" );
-        tgtAssert( type_ == GL_TEXTURE_3D, "using 3d access, but it's not a GL_TEXTURE_3D");
-        tgtAssert(cpuTextureData_, "no cpu texture data. Call download texture or set texture data first.");
-        return ((T*) cpuTextureData_)[z*dimensions_.x*dimensions_.y + y*dimensions_.x + x];
-    }
-    template <class T>
-    inline const T& texel(size_t x, size_t y, size_t z) const {
-        tgtAssert( sizeof(T) == bpt_, "sizeof(T) != bytes per texel here" );
-        tgtAssert( z*dimensions_.x*dimensions_.y + y*dimensions_.x + x < size_t(hmul(dimensions_)), "index out of range" );
-        tgtAssert( type_ == GL_TEXTURE_3D, "using 3d access, but it's not a GL_TEXTURE_3D");
-        tgtAssert(cpuTextureData_, "no cpu texture data. Call download texture or set texture data first.");
-        return ((T*) cpuTextureData_)[z*dimensions_.x*dimensions_.y + y*dimensions_.x + x];
-    }
-    template <class T>
-    inline T& texel(const ivec3& pos) {
-        tgtAssert( sizeof(T) == bpt_, "sizeof(T) != bytes per texel here" );
-        tgtAssert( pos.z*dimensions_.x*dimensions_.y + pos.y*dimensions_.x + pos.x < hmul(dimensions_), "index out of range" );
-        tgtAssert( type_ == GL_TEXTURE_3D, "using 3d access, but it's not a GL_TEXTURE_3D");
-        tgtAssert(cpuTextureData_, "no cpu texture data. Call download texture or set texture data first.");
+        tgtAssert( type_ == GL_TEXTURE_3D || (type_ == GL_TEXTURE_2D && pos.z == 0) || (type_ == GL_TEXTURE_1D && pos.z == 0 && pos.y == 0), "Accessing more dimensions than available");
+        tgtAssert( pos.z*dimensions_.x*dimensions_.y + pos.y*dimensions_.x + pos.x < size_t(hmul(dimensions_)), "index out of range" );
+        tgtAssert( cpuTextureData_, "no cpu texture data. Call download texture or set texture data first.");
         return ((T*) cpuTextureData_)[pos.z*dimensions_.x*dimensions_.y + pos.y*dimensions_.x + pos.x];
     }
     template <class T>
-    inline const T& texel(const ivec3& pos) const {
+    inline const T& texel(const svec3& pos) const {
         tgtAssert( sizeof(T) == bpt_, "sizeof(T) != bytes per texel here" );
-        tgtAssert( pos.z*dimensions_.x*dimensions_.y + pos.y*dimensions_.x + pos.x < hmul(dimensions_), "index out of range" );
-        tgtAssert( type_ == GL_TEXTURE_3D, "using 3d access, but it's not a GL_TEXTURE_3D");
-        tgtAssert(cpuTextureData_, "no cpu texture data. Call download texture or set texture data first.");
+        tgtAssert( type_ == GL_TEXTURE_3D || (type_ == GL_TEXTURE_2D && pos.z == 0) || (type_ == GL_TEXTURE_1D && pos.z == 0 && pos.y == 0), "Accessing more dimensions than available");
+        tgtAssert( pos.z*dimensions_.x*dimensions_.y + pos.y*dimensions_.x + pos.x < size_t(hmul(dimensions_)), "index out of range" );
+        tgtAssert( cpuTextureData_, "no cpu texture data. Call download texture or set texture data first.");
         return ((T*) cpuTextureData_)[pos.z*dimensions_.x*dimensions_.y + pos.y*dimensions_.x + pos.x];
     }
 
     ///Return texel as tgt::Color (slow!), downloadTexture() needs to be called first
-    tgt::Color texelAsFloat(size_t x) const;
-    tgt::Color texelAsFloat(size_t x, size_t y) const;
+    tgt::Color texelAsFloat(size_t x, size_t y=0) const;
     tgt::Color texelAsFloat(tgt::svec2 p) const { return texelAsFloat(p.x, p.y); }
+
+    ///Sets texel as tgt::Color (slow!), downloadTexture() needs to be called first
+    void texelFromFloat(const tgt::Color& color, size_t x, size_t y=0);
+    void texelFromFloat(const tgt::Color& color, tgt::svec2 p) { texelFromFloat(color, p.x, p.y); }
 
 
     //--------------------------------------------------------------------------------------
