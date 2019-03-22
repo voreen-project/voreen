@@ -121,16 +121,21 @@ regressiontest_coreprofile:
   script:
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
     - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
-    - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-report.html --splitHtmlReport true --junitReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-junit.xml --reportdir ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60
+    - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-report.html --splitHtmlReport true --junitReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-junit.xml --reportdir ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60 || true
+    - tar czf ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files.tar.gz ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files
+    - ls -lh ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files.tar.gz
+    - ls ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/
+    - echo "OIOIOI"
   artifacts:
     paths:
-    - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-report.html
+    - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files.tar.gz
     - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*.txt
     - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*.html
     - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*/*.txt
     - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*/*.html
-    reports:
-      junit: ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-junit.xml
+    - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-report.html
+      #reports:
+      #junit: ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-junit.xml
     expire_in: 1 week
 
 schedule_test:
