@@ -28,7 +28,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
             clinfo \
             ocl-icd-libopencl1 \
             ocl-icd-opencl-dev \
-            libpython3-all-dev
+            libpython3-all-dev \
+            xvfb
 
 
 RUN useradd -ms /bin/bash test_user

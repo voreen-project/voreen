@@ -59,7 +59,8 @@ processorinittest_coreprofile: #probably needs xserver
   stage: test
   script:
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
-    - ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorinittest-log.html
+    - Xvfb :99 -ac &
+    - Display=:99 ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorinittest-log.html
   artifacts:
     paths:
     - "${REPORT_DIR}"
