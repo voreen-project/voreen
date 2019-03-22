@@ -29,7 +29,13 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
             ocl-icd-libopencl1 \
             ocl-icd-opencl-dev \
             libpython3-all-dev \
-            xvfb
-
+            xvfb \
+            mesa-opencl-icd \
+            mesa-utils \
+            libosmesa6 \
+            libgl1-mesa-dev \
+            libgl1-mesa-dri \
+            libgl1-mesa-glx \
+            libglu1-mesa-dev
 
 RUN useradd -ms /bin/bash test_user

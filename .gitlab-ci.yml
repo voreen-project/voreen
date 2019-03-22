@@ -11,8 +11,11 @@ variables:
   RUN_TESTS_AS_USER: 'test_user'
   REPORT_DIR: 'public'
   COREPROFILE_BUILD_DIR: 'build_coreprofile'
-  TEST_DATA_DIR: 'test-data'
+  TEST_DATA_DIR: 'test-data/voreen-testdata'
   #TEST_DATA_REPOSITORY: 'zivgitlab.uni-muenster.de/voreen-project/voreen-testdata.git'
+
+before_script:
+  - export LIBGL_ALWAYS_SOFTWARE="true"
 
 build_coreprofile:
   stage: build
@@ -59,8 +62,11 @@ processorinittest_coreprofile: #probably needs xserver
   stage: test
   script:
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - xvfb-run glxinfo || true
     - Xvfb :99 -ac &
-    - DISPLAY=:99 ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorinittest-log.html
+    - export DISPLAY=:99
+    - glxinfo || true
+    - ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorinittest-log.html
   artifacts:
     paths:
     - "${REPORT_DIR}"
@@ -73,7 +79,7 @@ octreetest_coreprofile: #probably need testdata
     - ls ${TEST_DATA_DIR} || true
     - ls .. || true
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
-    - ${COREPROFILE_BUILD_DIR}/bin/octreetest --log_level=test_suite -- --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html --datadir=${TEST_DATA_DIR}
+    - ${COREPROFILE_BUILD_DIR}/bin/octreetest --log_level=test_suite --datadir ${TEST_DATA_DIR} --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html
   artifacts:
     paths:
     - "${REPORT_DIR}"
@@ -114,7 +120,7 @@ regressiontest_coreprofile:
   script:
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
     - Xvfb :99 -ac &
-    - DISPLAY=:99 ${COREPROFILE_BUILD_DIR}/bin/volumeorigintest --datadir=${TEST_DATA_DIR} -t all --htmlReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-report.html --splitHtmlReport true --junitReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-junit.xml --reportdir ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60
+    - DISPLAY=:99 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --datadir ${TEST_DATA_DIR} -t all --htmlReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-report.html --splitHtmlReport true --junitReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-junit.xml --reportdir ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60
   artifacts:
     paths:
     - "${REPORT_DIR}"
