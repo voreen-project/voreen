@@ -11,7 +11,7 @@ variables:
   RUN_TESTS_AS_USER: 'test_user'
   REPORT_DIR: 'public'
   COREPROFILE_BUILD_DIR: 'build_coreprofile'
-  TEST_DATA_DIR: 'test-data/voreen-testdata'
+  TEST_DATA_DIR: 'test-data'
   #TEST_DATA_REPOSITORY: 'zivgitlab.uni-muenster.de/voreen-project/voreen-testdata.git'
 
 build_coreprofile:
@@ -60,7 +60,7 @@ processorinittest_coreprofile: #probably needs xserver
   script:
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
     - Xvfb :99 -ac &
-    - Display=:99 ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorinittest-log.html
+    - DISPLAY=:99 ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorinittest-log.html
   artifacts:
     paths:
     - "${REPORT_DIR}"
@@ -108,3 +108,13 @@ volumeorigintest_coreprofile:
     paths:
     - "${REPORT_DIR}"
     expire_in: 1 week
+
+    #regressiontest_coreprofile:
+    #  stage: test
+    #  script:
+    #    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    #    - ${COREPROFILE_BUILD_DIR}/bin/volumeorigintest --datadir=${TEST_DATA_DIR} -t all --htmlReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-report.html --splitHtmlReport true --junitReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-junit.xml --reportdir ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60
+    #  artifacts:
+    #    paths:
+    #    - "${REPORT_DIR}"
+    #    expire_in: 1 week
