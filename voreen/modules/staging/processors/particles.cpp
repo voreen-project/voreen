@@ -58,6 +58,7 @@ Particles::Particles()
     , bufferObject_(0)
     , vertexArrayID_(0)
     , time_(0)
+    , timer_(nullptr)
 {
     addPort(outport_);
 
