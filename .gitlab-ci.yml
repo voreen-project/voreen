@@ -127,6 +127,8 @@ regressiontest_coreprofile:
     - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-report.html
     - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*.txt
     - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*.html
+    - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*/*.txt
+    - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*/*.html
     reports:
       junit: ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-junit.xml
     expire_in: 1 week
