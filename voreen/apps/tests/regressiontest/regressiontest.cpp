@@ -486,8 +486,11 @@ int main(int argc, char* argv[]) {
         message += "- Error:   " + itos(testSuite.numError_) + "\n";
         message += "- Skipped: " + itos(testSuite.numSkipped_) + "\n";
         message += "---------------------------";
-        exitSuccess(message);
-
+        if(testSuite.numFailed_ > 0 || testSuite.numError_ > 0) {
+            exitError(message);
+        } else {
+            exitSuccess(message);
+        }
     }
     else { // test coverage mode
 
