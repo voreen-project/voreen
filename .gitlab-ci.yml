@@ -67,7 +67,7 @@ processorinittest_coreprofile: #probably needs xserver
     - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
     - export DISPLAY=:98
     - glxinfo || true
-    - ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorinittest-log.html
+    - ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=info --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorinittest-log.html
   artifacts:
     paths:
     - "${REPORT_DIR}"
@@ -122,7 +122,7 @@ regressiontest_coreprofile:
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
     - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
     - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --datadir ${TEST_DATA_DIR} -t all --htmlReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-report.html --junitReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-junit.xml --reportdir ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60
-    - tar -cvfa ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files.tar.gz ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files
+    - tar czf ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files.tar.gz ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files
     - ls -l ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files.tar.gz
   artifacts:
     paths:
@@ -131,3 +131,13 @@ regressiontest_coreprofile:
     reports:
       junit: ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-junit.xml
     expire_in: 1 week
+
+schedule_test:
+  stage: build
+  only:
+    - schedules
+  script:
+    - echo Schedule ran! > ${REPORT_DIR}
+  artifacts:
+    paths:
+    - ${REPORT_DIR}
