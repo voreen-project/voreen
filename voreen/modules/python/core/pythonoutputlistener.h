@@ -37,10 +37,10 @@
 class VRN_CORE_API PythonOutputListener {
 public:
     /// Receives sys.stdout
-    virtual void pyStdout(const std::string& out) = 0;
+    virtual void pyStdout(const std::string& out, const std::string& id) = 0;
 
     /// Receives sys.stderr
-    virtual void pyStderr(const std::string& err) = 0;
+    virtual void pyStderr(const std::string& err, const std::string& id) = 0;
 };
 
 #endif // VRN_PYTHONOUTPUTLISTENER_H

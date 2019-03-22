@@ -38,7 +38,7 @@ namespace voreen {
 typedef struct {
     PyObject_HEAD
     PyObject* format;
-    //unsigned int numChannels;
+    //unsigned int numChannels; // Encoded in format
     PyObject* data;
     unsigned int dimX, dimY, dimZ;
     float spacingX, spacingY, spacingZ;

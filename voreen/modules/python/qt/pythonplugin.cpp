@@ -64,6 +64,7 @@ PythonPlugin::PythonPlugin(PythonProperty* property, QWidget* parent)
         runBt_->setShortcut(QKeySequence("Ctrl+R"));
         runBt_->setToolTip("Run Script (Ctrl+R)");
         hbox->addWidget(runBt_);
+        QObject::connect(runBt_, SIGNAL(clicked()), this, SLOT(runScript()));
 
         QFrame* sep = new QFrame();
         sep->setFrameShape(QFrame::VLine);
@@ -75,42 +76,58 @@ PythonPlugin::PythonPlugin(PythonProperty* property, QWidget* parent)
         newBt_->setToolTip("New Script");
         hbox->addWidget(newBt_);
 
-        QObject::connect(runBt_, SIGNAL(clicked()), this, SLOT(runScript()));
         QObject::connect(newBt_, SIGNAL(clicked()), this, SLOT(newScript()));
     }
+
     openBt_ = new QToolButton();
     openBt_->setIcon(QIcon(":/qt/icons/open.png"));
     openBt_->setIconSize(QSize(24, 24));
     openBt_->setToolTip("Load Script");
-    reloadBt_ = new QToolButton();
-    reloadBt_->setIcon(QIcon(":/qt/icons/refresh.png"));
-    reloadBt_->setIconSize(QSize(24, 24));
-    reloadBt_->setToolTip("Reload Script from Disk");
+    hbox->addWidget(openBt_);
+    QObject::connect(openBt_, SIGNAL(clicked()), this, SLOT(openScript()));
+
+    if(!property_) {
+        reloadBt_ = new QToolButton();
+        reloadBt_->setIcon(QIcon(":/qt/icons/refresh.png"));
+        reloadBt_->setIconSize(QSize(24, 24));
+        reloadBt_->setToolTip("Reload Script from Disk");
+        hbox->addWidget(reloadBt_);
+        QObject::connect(reloadBt_, SIGNAL(clicked()), this, SLOT(reloadScript()));
+    }
+
     saveBt_ = new QToolButton();
     saveBt_->setIcon(QIcon(":/qt/icons/save.png"));
     saveBt_->setIconSize(QSize(24, 24));
     saveBt_->setToolTip("Save Script");
-    saveAsBt_ = new QToolButton();
-    saveAsBt_->setIcon(QIcon(":/qt/icons/saveas.png"));
-    saveAsBt_->setIconSize(QSize(24, 24));
-    saveAsBt_->setToolTip("Save Script As");
-
-    increaseFontSizeBt_ = new QToolButton();
-    increaseFontSizeBt_->setIcon(QIcon(":/qt/icons/viewmag+.png"));
-    increaseFontSizeBt_->setIconSize(QSize(24, 24));
-    increaseFontSizeBt_->setToolTip("Increase Font Size");
-    decreaseFontSizeBt_ = new QToolButton();
-    decreaseFontSizeBt_->setIcon(QIcon(":/qt/icons/viewmag_.png"));
-    decreaseFontSizeBt_->setIconSize(QSize(24, 24));
-    decreaseFontSizeBt_->setToolTip("Decrease Font Size");
-
-    hbox->addWidget(openBt_);
-    hbox->addWidget(reloadBt_);
     hbox->addWidget(saveBt_);
-    hbox->addWidget(saveAsBt_);
+    QObject::connect(saveBt_, SIGNAL(clicked()), this, SLOT(saveScript()));
+
+    if(!property_) {
+        saveAsBt_ = new QToolButton();
+        saveAsBt_->setIcon(QIcon(":/qt/icons/saveas.png"));
+        saveAsBt_->setIconSize(QSize(24, 24));
+        saveAsBt_->setToolTip("Save Script As");
+        hbox->addWidget(saveAsBt_);
+
+        QObject::connect(saveAsBt_, SIGNAL(clicked()), this, SLOT(saveScriptAs()));
+    }
+
     hbox->addStretch();
-    hbox->addWidget(increaseFontSizeBt_);
-    hbox->addWidget(decreaseFontSizeBt_);
+
+    QToolButton* increaseFontSizeBt = new QToolButton();
+    increaseFontSizeBt->setIcon(QIcon(":/qt/icons/viewmag+.png"));
+    increaseFontSizeBt->setIconSize(QSize(24, 24));
+    increaseFontSizeBt->setToolTip("Increase Font Size");
+    hbox->addWidget(increaseFontSizeBt);
+    QObject::connect(increaseFontSizeBt, SIGNAL(clicked()), this, SLOT(increaseFontSize()));
+
+    QToolButton* decreaseFontSizeBt = new QToolButton();
+    decreaseFontSizeBt->setIcon(QIcon(":/qt/icons/viewmag_.png"));
+    decreaseFontSizeBt->setIconSize(QSize(24, 24));
+    decreaseFontSizeBt->setToolTip("Decrease Font Size");
+    hbox->addWidget(decreaseFontSizeBt);
+    QObject::connect(decreaseFontSizeBt, SIGNAL(clicked()), this, SLOT(decreaseFontSize()));
+
     QWidget* toolButtonBar = new QWidget();
     toolButtonBar->setLayout(hbox);
 
@@ -133,18 +150,22 @@ PythonPlugin::PythonPlugin(PythonProperty* property, QWidget* parent)
     vbox->addWidget(compilerLogWidget_);
     setLayout(vbox);
 
-    QObject::connect(openBt_, SIGNAL(clicked()), this, SLOT(openScript()));
-    QObject::connect(reloadBt_, SIGNAL(clicked()), this, SLOT(reloadScript()));
-    QObject::connect(saveBt_, SIGNAL(clicked()), this, SLOT(saveScript()));
-    QObject::connect(saveAsBt_, SIGNAL(clicked()), this, SLOT(saveScriptAs()));
-    QObject::connect(increaseFontSizeBt_, SIGNAL(clicked()), this, SLOT(increaseFontSize()));
-    QObject::connect(decreaseFontSizeBt_, SIGNAL(clicked()), this, SLOT(decreaseFontSize()));
     QObject::connect(codeEdit_, SIGNAL(textChanged()), this, SIGNAL(modified()));
 
     setMinimumSize(300, 400);
+
+    // Register as output listener.
+    if(PythonModule::getInstance()) {
+        PythonModule::getInstance()->addOutputListener(this);
+    }
 }
 
 PythonPlugin::~PythonPlugin() {
+    if(PythonModule::getInstance()) {
+        PythonModule::getInstance()->removeOutputListener(this);
+    }
+
+    clearScript();
     delete highlighter_;
 }
 
@@ -258,28 +279,39 @@ void PythonPlugin::saveScript() {
     tgtAssert(codeEdit_, "No code editor");
 
     if (property_) {
+
+        // In case we are connected to a property, we only care about the current content of the code editor.
+        // The script based on an actual file from disk, if even available, can be deleted after having stored
+        // the code in the property's script.
         PythonScript script;
         script.setSource(codeEdit_->toPlainText().toStdString());
         property_->set(script);
-        return;
-    }
 
-    if (!script_) {
-        LERROR("No script");
-        return;
-    }
-
-    if (script_->getFilename().empty()) {
-        LERROR("Script has no filename");
-    }
-    else {
-        if (!saveScriptInternal(QString::fromStdString(script_->getFilename()), codeEdit_->toPlainText())) {
-            QString message = tr("Failed to save script to file '%1'").arg(QString::fromStdString(script_->getFilename()));
-            QMessageBox::critical(this, tr("Python Error"), message);
+        // Now, we no longer need the script!
+        if(script_) {
+            clearScript();
+            codeEdit_->setPlainText(QString::fromStdString(script.getSource()));
         }
     }
+    else {
 
-    updateGuiState();
+        if (!script_) {
+            LERROR("No script");
+            return;
+        }
+
+        if (script_->getFilename().empty()) {
+            LERROR("Script has no filename");
+        } else {
+            if (!saveScriptInternal(QString::fromStdString(script_->getFilename()), codeEdit_->toPlainText())) {
+                QString message = tr("Failed to save script to file '%1'").arg(
+                        QString::fromStdString(script_->getFilename()));
+                QMessageBox::critical(this, tr("Python Error"), message);
+            }
+        }
+
+        updateGuiState();
+    }
 }
 
 void PythonPlugin::saveScriptAs() {
@@ -437,7 +469,10 @@ void PythonPlugin::updateFromProperty() {
     std::string windowTitle = "";
     if (property_->getOwner())
         windowTitle += property_->getOwner()->getGuiName() + " - ";
-    windowTitle += property_->getGuiName() + " (" + property_->get().getFilename() + ")";
+    windowTitle += property_->getGuiName();
+    if(!property_->get().getFilename().empty()) {
+        windowTitle += " (" + property_->get().getFilename() + ")";
+    }
     window()->setWindowTitle(QString::fromStdString(windowTitle));
 }
 
@@ -466,31 +501,37 @@ void PythonPlugin::updateGuiState() {
         saveAsBt_->setEnabled(script_);
     }
 
-    QString title;
+    QString title = "Python Script Editor";
     if (property_ || (script_ && !script_->getFilename().empty())) {
         saveBt_->setEnabled(true);
-        title = "Python Script Editor - " + QString::fromStdString(script_->getFilename());
+        if(!script_->getFilename().empty()) {
+            title += QString::fromStdString(script_->getFilename());
+        }
     }
     else {
         saveBt_->setEnabled(false);
-        title = "Python Script Editor";
     }
 
-    //toolWindow_->setWindowTitle(title); // TODO: implement
-    /*if (parentWidget() && parentWidget()->parentWidget())
+    /*
+    // TODO: implement
+    //toolWindow_->setWindowTitle(title);
+    if (parentWidget() && parentWidget()->parentWidget())
         parentWidget()->parentWidget()->setWindowTitle(title);
     else
-        setWindowTitle(title);*/
+        setWindowTitle(title);
+    */
 }
 
-void PythonPlugin::pyStdout(const std::string& out) {
-    if (compilerLogWidget_)
+void PythonPlugin::pyStdout(const std::string& out, const std::string& id) {
+
+    // Check if this actual script has been executed.
+    if(((property_ && property_->get().getId() == id) || (script_ && script_->getId() == id)) && compilerLogWidget_) {
         compilerLogWidget_->append(QString::fromStdString(out));
+    }
 }
 
-void PythonPlugin::pyStderr(const std::string& err){
-    if (compilerLogWidget_)
-        compilerLogWidget_->append(QString::fromStdString(err));
+void PythonPlugin::pyStderr(const std::string& err, const std::string& id) {
+    pyStdout(err, id);
 }
 
 

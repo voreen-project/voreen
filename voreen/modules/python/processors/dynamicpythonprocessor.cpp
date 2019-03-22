@@ -53,7 +53,8 @@ DynamicPythonProcessor::DynamicPythonProcessor()
     ON_CHANGE(portList_, DynamicPythonProcessor, onPortListChange);
 
     addProperty(enabled_);
-    addProperty(pythonScript_);
+    //addProperty(pythonScript_); // Don't add property here, since the editor is included as processor widget!
+    pythonScript_.setOwner(this); // ..but override owner!
     ON_CHANGE(pythonScript_, DynamicPythonProcessor, onScriptChange);
 
     /*
@@ -110,12 +111,39 @@ void DynamicPythonProcessor::process() {
 }
 
 void DynamicPythonProcessor::serialize(Serializer& s) const {
+    const bool usePointerContentSerialization = s.getUsePointerContentSerialization();
+    try {
+
+        std::vector<const Property*> pyVec;
+        pyVec.push_back(&pythonScript_);
+
+        // serialize properties
+        s.setUsePointerContentSerialization(true);
+        s.serialize("PriorityProperty", pyVec, "Property");
+
+    } catch (SerializationException &e) {
+        LWARNING(std::string("OpenCL program serialization failed: ") + e.what());
+    }
+    s.setUsePointerContentSerialization(usePointerContentSerialization);
+
     RenderProcessor::serialize(s);
-    //portList_.serialize(s);
 }
 void DynamicPythonProcessor::deserialize(Deserializer& s) {
-    //portList_.deserialize(s);
     RenderProcessor::deserialize(s);
+
+    const bool usePointerContentSerialization = s.getUsePointerContentSerialization();
+    try {
+        std::vector<Property*> pyVec;
+        pyVec.push_back(&pythonScript_);
+
+        // deserialize property
+        s.setUsePointerContentSerialization(true);
+        s.deserialize("PriorityProperty", pyVec, "Property");
+    } catch (SerializationNoSuchDataException) {
+        s.removeLastError();
+    }
+    s.setUsePointerContentSerialization(usePointerContentSerialization);
+
     onPortListChange();
 }
 
@@ -188,6 +216,11 @@ void DynamicPythonProcessor::onScriptChange() {
     if(valid_) {
         LINFO("Script successfully saved!");
     }
+    else {
+        LERROR(script.getLog());
+    }
+
+    invalidate(Processor::INVALID_PROGRAM);
 }
 
 void DynamicPythonProcessor::addPortItem(Port* port) {

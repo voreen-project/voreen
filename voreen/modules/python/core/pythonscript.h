@@ -62,6 +62,11 @@ public:
     ~PythonScript();
 
     /**
+     * Returns the uuid of the script. This is mainly used for output forwarding.
+     */
+    const std::string& getId() const;
+
+    /**
      * Loads a Python script from file and compiles it to byte code by default.
      *
      * @return true, if the script has been loaded successfully.
@@ -77,7 +82,7 @@ public:
     /**
      * Returns the script's source.
      */
-    std::string getSource() const;
+    const std::string& getSource() const;
 
     /**
      * Assigns a filename to the script. This is optionally,
@@ -90,7 +95,7 @@ public:
      * the name of file the script has been loaded from,
      * but it may have been overwritten or even empty.
      */
-    std::string getFilename() const;
+    const std::string& getFilename() const;
 
     /**
      * Compiles the script source to byte code, which speeds up script execution
@@ -122,7 +127,7 @@ public:
      * Returns the error that has occurred during the last operation (compilation or execution).
      * If the last operation has been successful, an empty string is returned.
      */
-    std::string getLog() const;
+    const std::string& getLog() const;
 
     /**
      * Returns the source line number where the last error has occurred.
@@ -160,6 +165,7 @@ private:
     bool checkCompileError(bool logErrors = true);
     bool checkRuntimeError(bool logErrors = true);
 
+    std::string     id_;
     std::string     source_;
     std::string     filename_;
     PyObject*       byteCode_;

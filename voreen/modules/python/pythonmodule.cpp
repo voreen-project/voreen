@@ -61,20 +61,22 @@ static PyObject* voreen_print(PyObject* /*self*/, PyObject* args) {
     char* msg;
     int len;
     int isStderr;
-    if (!PyArg_ParseTuple(args, "s#i", &msg, &len, &isStderr)) {
+    char* scriptId;
+    if (!PyArg_ParseTuple(args, "s#is", &msg, &len, &isStderr, &scriptId)) {
         LWARNINGC("voreen.Python.voreen_print", "failed to parse log message");
     }
     else {
         if (len > 1 || ((len == 1) && (msg[0] != '\0') && (msg[0] != '\r') && (msg[0] != '\n'))) {
+            std::string id(scriptId);
             std::string message(msg);
             const std::vector<PythonOutputListener*> listeners = PythonModule::getOutputListeners();
             if (!listeners.empty()) {
                 // pass output to listeners
                 for (size_t i=0; i<listeners.size(); i++) {
                     if (isStderr)
-                        listeners[i]->pyStderr(message);
+                        listeners[i]->pyStderr(message, id);
                     else
-                        listeners[i]->pyStdout(message);
+                        listeners[i]->pyStdout(message, id);
                 }
             }
             else {

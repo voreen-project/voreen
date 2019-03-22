@@ -40,6 +40,7 @@ PythonEditor::PythonEditor()
 {}
 
 PythonEditor::~PythonEditor() {
+    delete pythonWidget_;
 }
 
 QWidget* PythonEditor::createWidget() const {
@@ -51,7 +52,6 @@ void PythonEditor::initialize() {
     VoreenQtMenuEntity::initialize();
 
     if (PythonModule::getInstance()) {
-        PythonModule::getInstance()->addOutputListener(pythonWidget_);
         pythonWidget_->newScript();
     }
     else
@@ -60,10 +60,6 @@ void PythonEditor::initialize() {
 
 void PythonEditor::deinitialize() {
     pythonWidget_->clearScript();
-    if (PythonModule::getInstance()) {
-        PythonModule::getInstance()->removeOutputListener(pythonWidget_);
-    }
-    delete pythonWidget_;
 
     VoreenQtMenuEntity::deinitialize();
 }

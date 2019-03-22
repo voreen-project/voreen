@@ -26,6 +26,7 @@
 #include "dynamicpythonwidget.h"
 #include "voreen/qt/voreenapplicationqt.h"
 
+#include "../pythonmodule.h"
 #include <QGridLayout>
 #include <QMainWindow>
 #include <QLabel>

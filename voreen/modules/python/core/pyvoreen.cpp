@@ -1067,6 +1067,11 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
     if (!port)
         return 0;
 
+    if (port->isInport()) {
+        PyErr_SetString(PyExc_TypeError, "setPortData() must be called for outgoing ports");
+        return 0;
+    }
+
     // Delete old data first.
     port->clear();
 
@@ -1087,7 +1092,6 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
             return 0;
         }
 
-        // TODO: handle multiple channels and formats!
         std::string format = PyUnicodeAsString(volumeObject.format);
         VolumeRAM* volume = nullptr;
         try {
@@ -1141,8 +1145,10 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
         // Set meta data.
         tgt::vec3 spacing(volumeObject.spacingX, volumeObject.spacingY, volumeObject.spacingZ);
         tgt::vec3 offset(volumeObject.offsetX, volumeObject.offsetY, volumeObject.offsetZ);
+        RealWorldMapping rwm(volumeObject.rwmScale, volumeObject.rwmOffset, "");
 
         Volume* data = new Volume(volume, spacing, offset);
+        data->setRealWorldMapping(rwm);
         typedPort->setData(data, true);
 
         Py_DECREF(object);
@@ -1156,7 +1162,6 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
 
         const RenderTargetObject& renderTargetObject = *((RenderTargetObject*) object);
 
-        // TODO: handle multiple channels and formats!
         RenderTarget* renderTarget = typedPort->getRenderTarget();
         if(!renderTarget) {
             std::string error = "Port has no valid RenderTarget";
@@ -1179,43 +1184,45 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
             return 0;
         }
 
-        auto textureUpdate = [renderTargetObject, numPixels] (tgt::Texture* texture) {
-            std::vector<float> textureData;
-
+        auto textureUpload = [renderTargetObject] (tgt::Texture* texture) {
             bool error = false;
-            for(size_t i=0; i<numPixels && !error; i++) {
-                PyObject *p = PyList_GetItem(renderTargetObject.depthTexture, i);
-                tgt::vec4 value;
-                switch (texture->getNumChannels()) {
-                    case 1:
-                        error |= !PyArg_ParseTuple(p, "f", &value.x);
-                        break;
-                    case 2:
-                        error |= !PyArg_ParseTuple(p, "ff", &value.x, &value.y);
-                        break;
-                    case 3:
-                        error |= !PyArg_ParseTuple(p, "fff", &value.x, &value.y, &value.z);
-                        break;
-                    case 4:
-                        error |= !PyArg_ParseTuple(p, "ffff", &value.x, &value.y, &value.z, &value.w);
-                        break;
-                }
-                for (size_t channel = 0; channel < texture->getNumChannels(); channel++) {
-                    textureData.push_back(value[channel]);
+
+            for(int y = 0; y < texture->getDimensions().y; y++) {
+                for(int x = 0; x < texture->getDimensions().x; x++) {
+
+                    int index = y * texture->getDimensions().x + x;
+
+                    PyObject *p = PyList_GetItem(renderTargetObject.depthTexture, index);
+                    tgt::Color value;
+                    switch (texture->getNumChannels()) {
+                        case 1:
+                            error |= !PyArg_ParseTuple(p, "f", &value.x);
+                            break;
+                        case 2:
+                            error |= !PyArg_ParseTuple(p, "ff", &value.x, &value.y);
+                            break;
+                        case 3:
+                            error |= !PyArg_ParseTuple(p, "fff", &value.x, &value.y, &value.z);
+                            break;
+                        case 4:
+                            error |= !PyArg_ParseTuple(p, "ffff", &value.x, &value.y, &value.z, &value.w);
+                            break;
+                    }
+
+                    if(error)
+                        return false;
+
+                    texture->texelFromFloat(value, x, y);
                 }
             }
 
-            if(error)
-                return false;
-
-            texture->setCpuTextureData(reinterpret_cast<GLubyte*>(textureData.data()), true);
             texture->uploadTexture(); // TODO: Context active here? Otherwise, use GlContextStateGuard!
 
             return true;
         };
 
-        bool error = textureUpdate(renderTarget->getColorTexture());
-        if (!error)  textureUpdate(renderTarget->getDepthTexture());
+        bool error = textureUpload(renderTarget->getColorTexture());
+        if (!error)  textureUpload(renderTarget->getDepthTexture());
 
         if(error || PyErr_Occurred()) {
             std::string error = "Pixel data contains invalid values.";
@@ -1324,11 +1331,76 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
         volumeObject->offsetY = data->getOffset().y;
         volumeObject->offsetZ = data->getOffset().z;
 
+        volumeObject->rwmScale  = data->getRealWorldMapping().getScale();
+        volumeObject->rwmOffset = data->getRealWorldMapping().getOffset();
+
         result = (PyObject*) volumeObject;
         Py_INCREF(result); // FIXME: memory leak
     }
+    else if (RenderPort* typedPort = dynamic_cast<RenderPort*>(port)) {
 
-    // TODO: implement RenderPort!
+        const RenderTarget* renderTarget = typedPort->getRenderTarget();
+        if(!renderTarget)
+            return 0;
+
+        // Create new volume object.
+        RenderTargetObject* renderTargetObject = (RenderTargetObject*) RenderTargetObject_new(&RenderTargetObjectType, NULL, NULL);
+        if(!renderTargetObject)
+            return 0;
+
+        // TODO: handle multiple channels and formats!
+        renderTargetObject->internalColorFormat = renderTarget->getColorTexture()->getGLInternalFormat();
+        renderTargetObject->internalDepthFormat = renderTarget->getDepthTexture()->getGLInternalFormat();
+        renderTargetObject->width  = renderTarget->getSize().x;
+        renderTargetObject->height = renderTarget->getSize().y;
+
+        auto textureDownload = [] (const tgt::Texture* texture, PyObject* target) {
+
+            texture->downloadTexture(); // TODO: Context active here? Otherwise, use GlContextStateGuard!
+            if(!texture->getCpuTextureData())
+                return false;
+
+            for(int y = 0; y < texture->getDimensions().y; y++) {
+                for(int x = 0; x < texture->getDimensions().x; x++) {
+                    tgt::vec4 value = texture->texelAsFloat(x, y);
+
+                    PyObject* p = NULL;
+                    switch(texture->getNumChannels()) {
+                        case 1:
+                            p = PyFloat_FromDouble(value.x);
+                            break;
+                        case 2:
+                            p = Py_BuildValue("(ff)", value.x, value.y);
+                            break;
+                        case 3:
+                            p = Py_BuildValue("(fff)", value.x, value.y, value.z);
+                            break;
+                        case 4:
+                            p = Py_BuildValue("(ffff)", value.x, value.y, value.z, value.w);
+                            break;
+                        default:
+                            tgtAssert(false, "unsupported channel count");
+                    }
+
+                    tgtAssert(p, "value null");
+                    PyList_Append(target, p);
+                }
+            }
+
+            return true;
+        };
+
+        bool error = textureDownload(renderTarget->getColorTexture(), renderTargetObject->colorTexture);
+        if (!error)  textureDownload(renderTarget->getDepthTexture(), renderTargetObject->depthTexture);
+
+        if(error || PyErr_Occurred()) {
+            PyErr_SetString(PyExc_ValueError, "Texture data could not be downloaded");
+            return 0;
+        }
+
+        result = (PyObject*) renderTargetObject;
+        Py_INCREF(result); // FIXME: memory leak
+    }
     /*
     else if (GeometryPort* typedProp = dynamic_cast<GeometryPort*>(port))
         result = ...

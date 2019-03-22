@@ -56,8 +56,8 @@ public:
     void updateFromProperty();
 
     /// Output listener functions.
-    virtual void pyStdout(const std::string& out);
-    virtual void pyStderr(const std::string& err);
+    virtual void pyStdout(const std::string& out, const std::string& id);
+    virtual void pyStderr(const std::string& err, const std::string& id);
 
 public slots:
     void runScript();
@@ -94,9 +94,6 @@ private:
     QToolButton* reloadBt_;
     QToolButton* saveBt_;
     QToolButton* saveAsBt_;
-
-    QToolButton* increaseFontSizeBt_;
-    QToolButton* decreaseFontSizeBt_;
 
     CodeEdit* codeEdit_;
     QTextEdit* compilerLogWidget_;

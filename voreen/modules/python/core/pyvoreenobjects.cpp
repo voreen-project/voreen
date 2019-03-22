@@ -56,16 +56,14 @@ PyObject* VolumeObject_new(PyTypeObject *type, PyObject */*args*/, PyObject */*k
 }
 
 int VolumeObject_init(VolumeObject *self, PyObject *args, PyObject *kwds) {
-    static const char *kwlist[] = {"format", "data", "dimension", "spacing", "offset", "rwm scale", "rwmoffset", NULL};
+    // Meta data should be set using properties!
+    static const char *kwlist[] = {"format", "data", "dimension", NULL};
     PyObject *format = NULL, *data = NULL, *tmp;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO(III)(fff)(fff)|ff", (char **) kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO(III)", (char **) kwlist,
                                      &format,
                                      &data,
-                                     &self->dimX, &self->dimY, &self->dimZ,
-                                     &self->spacingX, &self->spacingY, &self->spacingZ,
-                                     &self->offsetX, &self->offsetY, &self->offsetZ,
-                                     &self->rwmScale, &self->rwmOffset))
+                                     &self->dimX, &self->dimY, &self->dimZ))
         return -1;
 
     if (format) {

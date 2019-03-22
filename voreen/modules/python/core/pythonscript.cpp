@@ -36,7 +36,12 @@
 #include "pythonscript.h"
 
 #include "tgt/filesystem.h"
+#include "voreen/core/voreenapplication.h"
 #include "voreen/core/utils/stringutils.h"
+
+#include <boost/lexical_cast.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include <traceback.h>
 #include <frameobject.h>
@@ -52,13 +57,21 @@ PythonScript::PythonScript()
     , errorLine_(-1)
     , errorCol_(-1)
     , printErrorsToStdOut_(false)
-{}
+{
+    if(VoreenApplication::app()) {
+        id_ = boost::lexical_cast<std::string>(VoreenApplication::app()->generateUUID());
+    }
+}
 
 PythonScript::~PythonScript() {
     Py_XDECREF(byteCode_);
 }
 
-std::string PythonScript::getLog() const {
+const std::string& PythonScript::getId() const {
+    return id_;
+}
+
+const std::string& PythonScript::getLog() const {
     return log_;
 }
 
@@ -124,6 +137,11 @@ bool PythonScript::run(bool logErrors) {
     PyObject* glb = PyDict_New();
     PyDict_SetItemString(glb, "__builtins__", PyEval_GetBuiltins());
 
+    // Add the script id for correct output redirection.
+    PyObject* id = PyUnicode_FromString(id_.c_str());
+    PyDict_SetItemString(glb, "__voreen_script_id__", id);
+    Py_XDECREF(id);
+
     bool success;
     if (compiled_){
         tgtAssert(byteCode_, "No byte code");
@@ -149,7 +167,7 @@ bool PythonScript::run(bool logErrors) {
     return success;
 }
 
-std::string PythonScript::getSource() const {
+const std::string& PythonScript::getSource() const {
     return source_;
 }
 
@@ -164,7 +182,7 @@ void PythonScript::setFilename(const std::string& filename) {
     filename_ = filename;
 }
 
-std::string PythonScript::getFilename() const {
+const std::string& PythonScript::getFilename() const {
     return filename_;
 }
 
