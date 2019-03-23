@@ -271,9 +271,11 @@ public:
      * Loads the channel/timestep from disk and returns it as VolumeRAM.
      * The caller is responsible for deleting the returned object.
      *
+     * @note firstChannel must be in [0, getNumberOfChannels()-numberOfChannels].
+     * @note numberOfChannels must be in [1, getNumberOfChannels()].
      * @note Locks hdf5libMutex.
      */
-    VolumeRAM* loadVolume(size_t channel = 0) const;
+    VolumeRAM* loadVolume(size_t firstChannel = 0, size_t numberOfChannels = 1) const;
 
     /**
      * Write the data of vol to this file volume.
@@ -298,7 +300,7 @@ public:
      * @note vol's base type must match the one reported by getBaseType()
      * @note Locks hdf5libMutex.
      */
-    void writeVolume(const VolumeRAM* vol, const size_t firstChannel, const size_t numberOfChannels = 1) const;
+    void writeVolume(const VolumeRAM* vol, size_t firstChannel, size_t numberOfChannels = 1) const;
 
     /**
      * Loads a set of consecutive z slices of the HDF5 channel/timestep from disk
@@ -307,10 +309,15 @@ public:
      *
      * @param firstZSlice first slice of the slice range to load (inclusive)
      * @param lastZSlice last slice of the slice range (inclusive)
+     * @param firstChannel The first channel the slices will be read from.
+     * @param numberOfChannels Number of channels to read from.
+     *
+     * @note firstChannel must be in [0, getNumberOfChannels()-numberOfChannels].
+     * @note numberOfChannels must be in [1, getNumberOfChannels()].
      * @note Locks hdf5libMutex.
      *
      */
-    VolumeRAM* loadSlices(const size_t firstZSlice, const size_t lastZSlice, size_t channel = 0) const;
+    VolumeRAM* loadSlices(size_t firstZSlice, size_t lastZSlice, size_t firstChannel = 0, size_t numberOfChannels = 1) const;
 
     /**
      * Write the data of vol as slices to this file volume.
@@ -322,14 +329,14 @@ public:
      * @note vol's base type must match the one reported by getBaseType()
      * @note Locks hdf5libMutex.
      */
-    void writeSlices(const VolumeRAM* vol, const size_t firstSlice) const;
+    void writeSlices(const VolumeRAM* vol, size_t firstSlice) const;
 
     /**
      * Write the data of vol as slices to a range channels of this file volume.
      * @param vol The volume containing the slices (slices in z-Dimension).
      * @param firstSlice z-position the first of the slices will be written to.
      * @param firstChannel The first channel the slices will be written to.
-     * @param numberOfChannels number of channels to write to.
+     * @param numberOfChannels Number of channels to write to.
      *
      * @note vol and this file volume must have the same x and y dimensions.
      * @note The slice must fit into filevolume, i.e.: vol.dimensions.z+firstlice <= filevolume.dimensions.z
@@ -340,7 +347,7 @@ public:
      *
      * @note Locks hdf5libMutex.
      */
-    void writeSlices(const VolumeRAM* vol, const size_t firstSlice, const size_t firstChannel, const size_t numberOfChannels = 1) const;
+    void writeSlices(const VolumeRAM* vol, size_t firstSlice, size_t firstChannel, size_t numberOfChannels = 1) const;
 
     /**
      * Loads a brick of the HDF5 channel/timestep volume from disk and returns it as VolumeRAM.
@@ -348,9 +355,11 @@ public:
      *
      * @param offset lower-left-front corner voxel of the brick to load
      * @param dimensions dimension of the brick to load
+     * @param firstChannel The first channels the brick will be read from.
+     * @param numberOfChannels Number of channels to read from.
      * @note Locks hdf5libMutex.
      */
-    VolumeRAM* loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions, size_t channel = 0) const;
+    VolumeRAM* loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions, size_t firstChannel = 0, size_t numberOfChannels = 1) const;
 
     /**
      * Write the data of vol as a brick to this file volume.
@@ -380,7 +389,7 @@ public:
      * @note vol's base type must match the one reported by getBaseType()
      * @note Locks hdf5libMutex.
      */
-    void writeBrick(const VolumeRAM* vol, const tgt::svec3& offset, const size_t firstChannel, const size_t numberOfChannels = 1) const;
+    void writeBrick(const VolumeRAM* vol, const tgt::svec3& offset, size_t firstChannel, size_t numberOfChannels = 1) const;
 
 private:
 

@@ -70,6 +70,16 @@ public:
         return 0;
     }
 
+    /// Returns the format for a base-type and number of channels
+    std::string getFormat(const std::string& baseType, int numChannels) {
+        for (size_t i = 0; i < generators_.size(); ++i) {
+            if (generators_[i]->getBaseType() == baseType && generators_[i]->getNumChannels() == numChannels)
+                return generators_[i]->getFormat();
+        }
+        LERROR("Failed to determine format for base-type '" << baseType << "'" << " and " << numChannels << " channels");
+        return "";
+    }
+
     /// Returns the base-format for a format
     std::string getBaseType(const std::string& format) const {
         for (size_t i = 0; i < generators_.size(); ++i) {

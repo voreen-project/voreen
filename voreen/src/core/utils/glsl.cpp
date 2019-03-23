@@ -320,9 +320,9 @@ std::string GLSL::generateStandardShaderHeader(const tgt::GpuCapabilities::GlVer
     header += "\n";
 
     if (useVersion >= GpuCapabilities::GlVersion::SHADER_VERSION_450)
-        header += "#define GLSL_VERSION_440\n";
-    if (useVersion >= GpuCapabilities::GlVersion::SHADER_VERSION_440)
         header += "#define GLSL_VERSION_450\n";
+    if (useVersion >= GpuCapabilities::GlVersion::SHADER_VERSION_440)
+        header += "#define GLSL_VERSION_440\n";
     if (useVersion >= GpuCapabilities::GlVersion::SHADER_VERSION_430)
         header += "#define GLSL_VERSION_430\n";
     if (useVersion >= GpuCapabilities::GlVersion::SHADER_VERSION_420)

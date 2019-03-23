@@ -874,8 +874,7 @@ template <class I, class V>
 void GlMeshGeometry<I, V>::serialize(Serializer& s) const {
     GlMeshGeometryBase::serialize(s);
     s.serializeBinaryBlob("vertices", vertices_);
-    //if (!indices_.empty())
-        s.serializeBinaryBlob("indices", indices_);
+    s.serializeBinaryBlob("indices", indices_);
 
     s.serialize("primitiveRestartEnabled", primitiveRestartEnabled_);
     s.serialize("primitiveRestartIndex", primitiveRestartIndex_);
@@ -885,7 +884,6 @@ template <class I, class V>
 void GlMeshGeometry<I, V>::deserialize(Deserializer& d) {
     GlMeshGeometryBase::deserialize(d);
     d.deserializeBinaryBlob("vertices", vertices_);
-    //std::vector<I> defaultIndices;
     d.deserializeBinaryBlob("indices", indices_);
 
     d.deserialize("primitiveRestartEnabled", primitiveRestartEnabled_);

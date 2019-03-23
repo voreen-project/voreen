@@ -63,6 +63,10 @@ ui_aboutbox.h
 # Xcode project files
 *.xcodeproj
 
+# clion project files
+.idea/
+cmake-build-*/
+
 # ctags
 tags
 

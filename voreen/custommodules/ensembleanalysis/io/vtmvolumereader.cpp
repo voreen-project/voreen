@@ -120,22 +120,22 @@ VolumeBase* VTMVolumeReader::read(const VolumeURL& origin) {
     return createVolumeFromVtkImageData(origin, vtkImageData::SafeDownCast(block->GetBlock(0)));
 }
 
-VolumeList* VTMVolumeReader::read(const std::string &url) {
+VolumeList* VTMVolumeReader::read(const std::string& url) {
     std::vector<VolumeURL> urls = listVolumes(url);
-    VolumeList* volumeList = new VolumeList();
+    std::vector<std::unique_ptr<VolumeBase>> volumes;
 
     try {
-        for(const VolumeURL& url : urls) {
-            volumeList->add(read(url));
+        for(const auto& url : urls) {
+            volumes.push_back(std::unique_ptr<VolumeBase>(read(url)));
         }
-    } catch(tgt::FileException e) {
-        while(!volumeList->empty()) {
-            VolumeBase* volume = volumeList->first();
-            volumeList->remove(volume);
-            delete volume;
-        }
-        delete volumeList;
+    } catch(tgt::IOException& e) {
         throw;
+    }
+
+    // Transfer ownership to output list.
+    VolumeList* volumeList = new VolumeList();
+    for(auto& volume : volumes) {
+        volumeList->add(volume.release());
     }
     return volumeList;
 }

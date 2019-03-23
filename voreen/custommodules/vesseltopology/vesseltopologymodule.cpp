@@ -27,6 +27,7 @@
 #include "processors/appropriatespacinglinker.h"
 #include "processors/aortasegmentation.h"
 #include "processors/localandglobalthreshold.h"
+#include "processors/lymphatictestvesselgenerator.h"
 #include "processors/segmentationlistvalidation.h"
 #include "processors/subgraphextractor.h"
 #include "processors/templatesubgraphextractor.h"
@@ -72,6 +73,7 @@ VesselTopologyModule::VesselTopologyModule(const std::string& modulePath)
     registerProcessor(new AppropriateSpacingLinker());
     registerProcessor(new AortaSegmentation());
     registerProcessor(new LocalAndGlobalThreshold());
+    registerProcessor(new LymphaticTestVesselGenerator());
     registerProcessor(new SegmentationListValidation());
     registerProcessor(new SubGraphExtractor());
     registerProcessor(new TemplateSubgraphExtractor());

@@ -133,6 +133,8 @@ public:
     enum ThinningAlgorithm {
         MA,
         CHEN,
+        LEE,
+        LEE_NO_LINE_PRESERVATION,
         IMPROVED,
         IMPROVED_NO_LINE_PRESERVATION,
     };
@@ -171,6 +173,9 @@ public:
     // Remove simple points from the volume. Use with care: This may not preserve
     // topology in all cases.
     void removeSimplePoints(size_t& deleted);
+
+    template<class L>
+    void thinnerByLee(ScrapeIterationDescriptor& scrapeDescriptor, size_t& numberOfDeletedVoxels, ProgressReporter& progress);
 
     // Improved method for volume thinning. Based on the method by Chen et al.
     // This method generally provides the "best" (i.e., least erroneous branches
@@ -425,6 +430,14 @@ void VolumeMask::skeletonize(size_t maxIterations, ProgressReporter& progress) {
             case VolumeMask::CHEN:
                 thinnerByChen(deleted);
                 break;
+            case VolumeMask::LEE:
+                it_info = next.to_string();
+                thinnerByLee<LinePreservingScraping>(next, deleted, progress);
+                break;
+            case VolumeMask::LEE_NO_LINE_PRESERVATION:
+                it_info = next.to_string();
+                thinnerByLee<NoLinePreservingScraping>(next, deleted, progress);
+                break;
             case VolumeMask::IMPROVED:
                 it_info = next.to_string();
                 scrape<LinePreservingScraping>(next, deleted, progress);
@@ -445,6 +458,8 @@ void VolumeMask::skeletonize(size_t maxIterations, ProgressReporter& progress) {
                     exitConditionReached = true;
                 }
                 break;
+            case VolumeMask::LEE:
+            case VolumeMask::LEE_NO_LINE_PRESERVATION:
             case VolumeMask::IMPROVED:
             case VolumeMask::IMPROVED_NO_LINE_PRESERVATION:
                 if(scrapeCoordinator.finishedOnAllAxes()) {
@@ -456,6 +471,36 @@ void VolumeMask::skeletonize(size_t maxIterations, ProgressReporter& progress) {
     progress.setProgress(1.0f);
     LINFO("Thinning iteration finished and deleted " + std::to_string(deleted) + " voxels.");
 }
+
+template<class L>
+void VolumeMask::thinnerByLee(ScrapeIterationDescriptor& scrapeDescriptor, size_t& numberOfDeletedVoxels, ProgressReporter& progress) {
+    std::vector<tgt::svec3> marked;
+    tgt::ivec3 dim = getDimensions();
+    for(int z = 0; z<dim.z; ++z) {
+        for(int y = 0; y<dim.y; ++y) {
+            for(int x = 0; x<dim.x; ++x) {
+                tgt::svec3 pos = tgt::svec3(x,y,z);
+
+                if(get(pos) == VolumeMaskValue::OBJECT
+                        && L::deletableScraping(*this, pos)
+                        && get(scrapeDescriptor.getNeightbor(pos), VolumeMaskValue::OBJECT) == VolumeMaskValue::BACKGROUND) {
+                    marked.push_back(pos);
+                }
+            }
+        }
+    }
+
+    size_t deletedThisIt = 0;
+    for(auto& pos : marked) {
+        if(isSimple(pos)) {
+            set(pos, VolumeMaskValue::BACKGROUND);
+            ++deletedThisIt;
+        }
+    }
+    numberOfDeletedVoxels += deletedThisIt;
+    scrapeDescriptor.deletedLastIteration = deletedThisIt;
+}
+
 
 } // namespace voreen
 

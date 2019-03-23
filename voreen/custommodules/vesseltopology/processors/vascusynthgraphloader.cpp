@@ -194,7 +194,7 @@ void VascuSynthGraphLoader::process() {
                                 tgtAssert(0 < alpha && alpha < 1, "Invalid alpha");
                                 tgtAssert(0 < one_minus_alpha && one_minus_alpha < 1, "Invalid one_minus_alpha");
 
-                                voxels.emplace_back(pos, radius, radius, radius, 0, volumePerVoxel, false);
+                                voxels.emplace_back(pos, radius, radius, radius, 1, volumePerVoxel, false);
                             }
 
                             output->insertEdge(graphFromId, graphToId, voxels);

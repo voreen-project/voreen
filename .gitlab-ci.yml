@@ -1,0 +1,12 @@
+stages:
+  - test
+
+image: voreen/ci-ubuntu-16.04
+
+variables:
+  RUN_TESTS_AS_USER: 'test_user'
+
+run_test:
+  stage: test
+  script:
+    - runuser $RUN_TESTS_AS_USER -c 'ls'

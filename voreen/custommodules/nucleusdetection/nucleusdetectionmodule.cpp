@@ -25,14 +25,6 @@
 
 #include "nucleusdetectionmodule.h"
 
-// nuclei cluster splitting
-#include "operators/volumeoperatordistancetransform.h"
-#include "operators/volumeoperatorwatershed.h"
-#include "operators/volumeoperatorgradientdescent.h"
-#include "operators/volumeoperatorfastvolumecombine.h"
-
-#include "processors/nucleiclustersplitting.h"
-#include "processors/nucleipositionquantification.h"
 
 // patch export, k-means import, caffe training data
 #include "processors/patchextractor.h"
@@ -61,10 +53,6 @@ NucleusDetectionModule::NucleusDetectionModule(const std::string& modulePath)
     setID("nucleusdetection");
     setGuiName("Cell Nucleus Detection");
 
-    registerProcessor(new NucleiClusterSplitting());
-
-    registerProcessor(new NucleiPositionQuantification());
-
     registerProcessor(new PatchExtractor());
     registerProcessor(new PatchListReader());
 
@@ -80,15 +68,6 @@ NucleusDetectionModule::NucleusDetectionModule(const std::string& modulePath)
 #endif
 
     registerProcessor(new RoiDetector());
-
-    // instantiate volume operators
-    INST_SCALAR_TYPES(VolumeOperatorSquaredEuclideanDistanceTransform, VolumeOperatorSquaredEuclideanDistanceTransformGeneric)
-    INST_SCALAR_TYPES(VolumeOperatorEuclideanDistanceTransform, VolumeOperatorEuclideanDistanceTransformGeneric)
-    //INST_SCALAR_TYPES(VolumeOperatorManhattanDistanceTransform, VolumeOperatorManhattanDistanceTransformGeneric)
-    //INST_SCALAR_TYPES(VolumeOperatorChebychevDistanceTransform, VolumeOperatorChebychevDistanceTransformGeneric)
-    INST_SCALAR_TYPES(VolumeOperatorWatershedTransform, VolumeOperatorWatershedTransformGeneric);
-    INST_SCALAR_TYPES(VolumeOperatorGradientDescent, VolumeOperatorGradientDescentGeneric);
-    INST_SCALAR_TYPES(VolumeOperatorFastVolumeCombine, VolumeOperatorFastVolumeCombineGeneric);
 }
 
 } // namespace

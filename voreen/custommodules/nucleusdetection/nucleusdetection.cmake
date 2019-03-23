@@ -86,13 +86,6 @@ ENDIF()
 
 
 SET(MOD_CORE_SOURCES
-    # cell nuclei cluster splitting
-    ${MOD_DIR}/util/clustersplittingthread.cpp
-    ${MOD_DIR}/util/connectedcomponentqueue.cpp
-    ${MOD_DIR}/processors/nucleiclustersplitting.cpp
-
-    # cell nuclei position quantification
-    ${MOD_DIR}/processors/nucleipositionquantification.cpp
 
     # patch export and import for k-means
     ${MOD_DIR}/processors/patchextractor.cpp
@@ -106,18 +99,6 @@ SET(MOD_CORE_SOURCES
 )
 
 SET(MOD_CORE_HEADERS
-    # cell nuclei cluster splitting
-    ${MOD_DIR}/operators/ternaryvolumeoperator.h
-    ${MOD_DIR}/operators/volumeoperatordistancetransform.h
-    ${MOD_DIR}/operators/volumeoperatorfastvolumecombine.h
-    ${MOD_DIR}/operators/volumeoperatorgradientdescent.h
-    ${MOD_DIR}/operators/volumeoperatorwatershed.h
-    ${MOD_DIR}/util/clustersplittingthread.h
-    ${MOD_DIR}/util/connectedcomponentqueue.h
-    ${MOD_DIR}/processors/nucleiclustersplitting.h
-
-    # cell nuclei position quantification
-    ${MOD_DIR}/processors/nucleipositionquantification.h
 
     # patch export and import for k-means
     ${MOD_DIR}/processors/patchextractor.h

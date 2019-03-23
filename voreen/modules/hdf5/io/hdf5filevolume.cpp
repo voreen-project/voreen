@@ -719,40 +719,40 @@ void HDF5FileVolume::writeMetaData(const VolumeBase* vol) const {
     writeStringAttribute(*dataSet_, METADATA_STRING_NAME, stream.str());
 }
 
-VolumeRAM* HDF5FileVolume::loadVolume(size_t channel) const {
-    return loadBrick(tgt::vec3(0,0,0), dimensions_, channel);
+VolumeRAM* HDF5FileVolume::loadVolume(size_t firstChannel, size_t numberOfChannels) const {
+    return loadBrick(tgt::vec3(0,0,0), dimensions_, firstChannel, numberOfChannels);
 }
 
 void HDF5FileVolume::writeVolume(const VolumeRAM* vol) const  {
     writeVolume(vol, 0, getNumberOfChannels());
 }
 
-void HDF5FileVolume::writeVolume(const VolumeRAM* vol, const size_t firstChannel, const size_t numberOfChannels) const  {
+void HDF5FileVolume::writeVolume(const VolumeRAM* vol, size_t firstChannel, size_t numberOfChannels) const  {
     tgtAssert(vol->getDimensions() == dimensions_, "Volume dimensions differ");
     writeBrick(vol, tgt::svec3::zero, firstChannel, numberOfChannels);
 }
 
 
-VolumeRAM* HDF5FileVolume::loadSlices(const size_t firstZSlice, const size_t lastZSlice, size_t channel) const {
+VolumeRAM* HDF5FileVolume::loadSlices(size_t firstZSlice, size_t lastZSlice, size_t firstChannel, size_t numberOfChannels) const {
     tgt::vec3 offset = tgt::vec3(0, 0, firstZSlice);
     tgt::vec3 dimensions = getDimensions();
     // lastZSlice is included => +1
     dimensions.z = lastZSlice - firstZSlice + 1;
-    return loadBrick(offset, dimensions, channel);
+    return loadBrick(offset, dimensions, firstChannel, numberOfChannels);
 }
 
 void HDF5FileVolume::writeSlices(const VolumeRAM* vol, const size_t firstSlice) const {
     writeSlices(vol, firstSlice, 0, getNumberOfChannels());
 }
 
-void HDF5FileVolume::writeSlices(const VolumeRAM* vol, const size_t firstSlice, const size_t firstChannel, const size_t numberOfChannels) const {
+void HDF5FileVolume::writeSlices(const VolumeRAM* vol, size_t firstSlice, size_t firstChannel, size_t numberOfChannels) const {
     tgtAssert(vol->getDimensions().x == dimensions_.x, "Volume dimensions differ in x.");
     tgtAssert(vol->getDimensions().y == dimensions_.y, "Volume dimensions differ in y.");
     tgtAssert(vol->getDimensions().z + firstSlice <= dimensions_.z, "Slices do not fit into file volume with the given offset.");
     writeBrick(vol, tgt::svec3(0, 0, firstSlice), firstChannel, numberOfChannels);
 }
 
-VolumeRAM* HDF5FileVolume::loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions, size_t channel) const {
+VolumeRAM* HDF5FileVolume::loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions, size_t firstChannel, size_t numberOfChannels) const {
     // HDF5-cxx-libs are NOT threadsafe!
     boost::lock_guard<boost::recursive_mutex> lock(hdf5libMutex);
 
@@ -761,7 +761,7 @@ VolumeRAM* HDF5FileVolume::loadBrick(const tgt::svec3& offset, const tgt::svec3&
     tgtAssert(dimensions.z + offset.z <= dimensions_.z, "Brick does not fit into file volume with the given offset in z dimension.");
 
     const size_t numChannels = getNumberOfChannels();
-    tgtAssert(channel < numChannels, "Invalid channel");
+    tgtAssert(firstChannel + numberOfChannels <= numChannels, "Invalid channel range.");
 
     try {
         //Select the hyperslab (Brick + fourth dimension)
@@ -769,21 +769,22 @@ VolumeRAM* HDF5FileVolume::loadBrick(const tgt::svec3& offset, const tgt::svec3&
         //Just in case there are more than one channel: Allocate 4 dimensions.
         //If there is only one channel the 4. dimension will not do anything.
         hsize_t count[4];
-        vec4TgtToHDF5(tgt::svec4(1, dimensions), count);
+        vec4TgtToHDF5(tgt::svec4(numberOfChannels, dimensions), count);
         hsize_t start[4];
-        vec4TgtToHDF5(tgt::svec4(channel, offset), start);
+        vec4TgtToHDF5(tgt::svec4(firstChannel, offset), start);
 
         H5::DataSpace fileSpace(dataSet_->getSpace());
         fileSpace.selectHyperslab(H5S_SELECT_SET, count, start);
 
         //Memory space does not have an offset
-        H5::DataSpace memSpace(3, count);
+        H5::DataSpace memSpace(numChannels == 1 ? 3 : 4, count);
 
         //Create the VolumeRAM and write the dataset selection to it.
         H5::DataType h5type = dataSet_->getDataType();
-        VolumeRAM* data = VolumeFactory().create(getBaseTypeFromDataType(h5type), dimensions);
+        std::string format = VolumeFactory().getFormat(getBaseTypeFromDataType(h5type), numChannels);
+        VolumeRAM* data = VolumeFactory().create(format, dimensions);
         if(!data) {
-            throw tgt::IOException("Could not create VolumeRAM of type " + getBaseTypeFromDataType(h5type));
+            throw tgt::IOException("Could not create VolumeRAM of format " + format);
         }
         dataSet_->read(data->getData(), h5type, memSpace, fileSpace);
         return data;

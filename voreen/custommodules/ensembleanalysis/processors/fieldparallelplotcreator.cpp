@@ -50,7 +50,7 @@ FieldParallelPlotCreator::FieldParallelPlotCreator()
     , outport_(Port::OUTPORT, "fpp.representation", "FieldPlotData Port")
     , numSeedPoints_("numSeedPoints", "Number of Seed Points", 0, 0, 0)
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
-    , verticalResolution_("verticalResolution", "Vertical Resolution", 100, 10, 1000)
+    , verticalResolution_("verticalResolution", "Vertical Resolution", 128, 10, 16384)
     , horizontalResolutionPerTimeUnit_("horizontalResolutionPerTimeUnit", "Horizontal Resolution (Per Time Unit)", 10, 1, 100)
 {    
     addPort(inport_);

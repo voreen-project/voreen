@@ -429,7 +429,7 @@ static uint64_t toLinearPos(const tgt::svec3& pos, const tgt::svec3& dimensions)
 struct IdVolumeInitializer {
     uint32_t id_;
     LZ4SliceVolumeVoxelBuilder<IdVolume::Value> storage_;
-    SurfaceBuilder surface_;
+    NoFileSurfaceBuilder surface_;
     size_t numUnlabeledForegroundVoxels_;
     size_t numTotalVoxels_;
 

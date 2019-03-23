@@ -105,7 +105,6 @@ SET(VRN_CORE_SOURCES
     datastructures/volume/modality.cpp
     datastructures/volume/volume.cpp
     datastructures/volume/volumebase.cpp
-    datastructures/volume/volumecontainer.cpp
     datastructures/volume/volumedisk.cpp
     datastructures/volume/volumedecorator.cpp
     datastructures/volume/volumederiveddata.cpp
@@ -180,6 +179,7 @@ SET(VRN_CORE_SOURCES
     ports/textport.cpp
     ports/volumeport.cpp
     ports/conditions/portcondition.cpp
+    ports/conditions/portconditionvolumelist.cpp
     ports/conditions/portconditionvolumetype.cpp
 
     processors/asynccomputeprocessor.cpp
@@ -411,7 +411,6 @@ SET(VRN_CORE_HEADERS
     ../../include/voreen/core/datastructures/volume/volume.h
     ../../include/voreen/core/datastructures/volume/volumeatomic.h
     ../../include/voreen/core/datastructures/volume/volumebase.h
-    ../../include/voreen/core/datastructures/volume/volumecontainer.h
     ../../include/voreen/core/datastructures/volume/volumedisk.h
     ../../include/voreen/core/datastructures/volume/volumedecorator.h
     ../../include/voreen/core/datastructures/volume/volumederiveddata.h
@@ -527,6 +526,7 @@ SET(VRN_CORE_HEADERS
     ../../include/voreen/core/ports/volumeport.h
 
     ../../include/voreen/core/ports/conditions/portcondition.h
+    ../../include/voreen/core/ports/conditions/portconditionvolumelist.h
     ../../include/voreen/core/ports/conditions/portconditionvolumetype.h
 
     ../../include/voreen/core/processors/cache.h
@@ -679,19 +679,29 @@ SET(VRN_CORE_HEADERS
 )
 
 SET(VRN_CORE_SOURCES_EXT
+    # tinyobj
     ../../ext/tinyobj/tiny_obj_loader.cc
+
+    # tinyxml
     ../../ext/tinyxml/tinyxml.cpp
     ../../ext/tinyxml/tinyxml.cpp
     ../../ext/tinyxml/tinystr.cpp
     ../../ext/tinyxml/tinyxmlerror.cpp
     ../../ext/tinyxml/tinyxmlparser.cpp
+
+    # md5
     ../../ext/md5/md5.cpp
 )
 
 SET(VRN_CORE_HEADERS_EXT
+    # tinyobj
     ../../ext/tinyobj/tiny_obj_loader.h
+
+    # tinyxml
     ../../ext/tinyxml/tinyxml.h
     ../../ext/tinyxml/tinystr.h
+
+    # md5
     ../../ext/md5/md5.h
 )
 

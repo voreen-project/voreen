@@ -55,7 +55,7 @@ VesselGraphRenderer::VesselGraphRenderer()
             })
     , activeEdgeProperty_("activeEdgeProperty", "Active edge property")
     , edgeTFs_()
-    , renderNodeRadii_("renderNodeRadii", "Render Node Radii", true)
+    , renderNodeRadii_("renderNodeRadii", "Render Node Radii", false)
     , activeEdgeID_("activeEdgeID", "Active Edge ID", -1, -1, std::numeric_limits<int>::max()/2) // This is stupid. Somehow Qt divides by 0 if we set INT_MAX and causes a SIGFPE...
     , activeEdgeColor_("activeEdgeColor", "Active Edge Color", tgt::Color(0.25f, 0.75f, 0.f, 1.f))
     , enableLighting_("enableLighting", "Enable Lighting", false)
@@ -340,7 +340,7 @@ void VesselGraphRenderer::adaptToNewInput() {
     // Only use valid edges for TFs (otherwise e.g. a mean maxRadius of -1 (symbolic)
     // will mess up the TF range and thus its precision)
     auto is_valid_edge = [] (const VesselGraphEdge& e) {
-        return e.getMinRadiusAvg() >= 0;
+        return e.hasValidData();
     };
 
     for(auto& pair : edgeTFs_) {

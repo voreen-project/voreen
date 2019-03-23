@@ -163,13 +163,13 @@ void SlicePointRenderer3D::render() {
     // check which speheres should be rendered
     bool visiblePoint0, visiblePoint1, visiblePoint2, visiblePoint3;
     tgt::vec3 pointWolrdPos0, pointWolrdPos1, pointWolrdPos2, pointWolrdPos3;
-    if(visiblePoint0 = renderPoint0_.get() && pointColor0_.get().a > 0.f)
+    if((visiblePoint0 = renderPoint0_.get()) && pointColor0_.get().a > 0.f)
         pointWolrdPos0 = pointPos0_.get();
-    if(visiblePoint1 = renderPoint1_.get() && pointColor1_.get().a > 0.f)
+    if((visiblePoint1 = renderPoint1_.get()) && pointColor1_.get().a > 0.f)
         pointWolrdPos1 = pointPos1_.get();
-    if(visiblePoint2 = renderPoint2_.get() && pointColor2_.get().a > 0.f)
+    if((visiblePoint2 = renderPoint2_.get()) && pointColor2_.get().a > 0.f)
         pointWolrdPos2 = pointPos2_.get();
-    if(visiblePoint3 = renderPoint3_.get() && pointColor3_.get().a > 0.f)
+    if((visiblePoint3 = renderPoint3_.get()) && pointColor3_.get().a > 0.f)
         pointWolrdPos3 = pointPos3_.get();
 
 

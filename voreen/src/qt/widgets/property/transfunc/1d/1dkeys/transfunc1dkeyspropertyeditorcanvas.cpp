@@ -489,7 +489,6 @@ int TransFunc1DKeysPropertyEditorCanvas::isLineHit(const tgt::vec2& pixelCoordin
     tgt::vec2 old;
     for (int i=0; i < tfProp_->get()->getNumKeys(); ++i) {
         TransFuncMappingKey* key = tfProp_->get()->getKey(i);
-        tgt::vec2 p = wtos(tgt::vec2(key->getIntensity(), key->getColorL().a / 255.f));
         if (i > 0) {
             tgt::vec2 p1 = tgt::vec2(old.x + 1.f, old.y);
             tgt::vec2 p2 = tgt::vec2(pixelCoordinates.x - 1.f, pixelCoordinates.y);
@@ -581,7 +580,6 @@ void TransFunc1DKeysPropertyEditorCanvas::drawCheckBoard(QPainter* painter) {
             for (float y = 0.f; y < 1.f - gridSpacing_.y*0.5; y +=gridSpacing_.y) {
                 if((cX+cY) % 2 == 0) {
                     tgt::vec2 start = wtos(tgt::vec2(x, y));
-                    tgt::vec2 tmp = wtos(tgt::vec2(x+gridSpacing_.x, y+gridSpacing_.y));
                     painter->drawRect(start.x, start.y,size.x,size.y);
                 }
                 cY++;
@@ -723,7 +721,7 @@ void TransFunc1DKeysPropertyEditorCanvas::drawHistogram(QPainter* painter) {
 
                 for(size_t i = 0; i < points.size(); ++i){
                     if (count > 0) {
-                        if (i == vi){
+                        if (static_cast<int>(i) == vi){
                             // needed for a closed polygon
                             p = histoWtos(tgt::vec2(0.f, 0.f));
                             points[i][count].rx() = points[i][count -1].rx();

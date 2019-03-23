@@ -55,6 +55,7 @@ VolumeThinning::VolumeThinning()
         thinningAlgorithm_.addOption("improved", "Improved", VolumeMask::IMPROVED);
         thinningAlgorithm_.addOption("ma", "Ma", VolumeMask::MA);
         thinningAlgorithm_.addOption("chen", "Chen", VolumeMask::CHEN);
+        thinningAlgorithm_.addOption("lee", "Lee", VolumeMask::LEE);
         thinningAlgorithm_.selectByValue(VolumeMask::IMPROVED);
     addProperty(maxSteps_);
 }
@@ -113,6 +114,12 @@ void VolumeThinning::process() {
             break;
         case VolumeMask::CHEN:
             m.skeletonize<VolumeMask::CHEN>(maxSteps_.get(), subtaskReporters.get<2>());
+            break;
+        case VolumeMask::LEE:
+            m.skeletonize<VolumeMask::LEE>(maxSteps_.get(), subtaskReporters.get<2>());
+            break;
+        case VolumeMask::LEE_NO_LINE_PRESERVATION:
+            m.skeletonize<VolumeMask::LEE_NO_LINE_PRESERVATION>(maxSteps_.get(), subtaskReporters.get<2>());
             break;
         case VolumeMask::IMPROVED:
             m.skeletonize<VolumeMask::IMPROVED>(maxSteps_.get(), subtaskReporters.get<2>());

@@ -90,6 +90,11 @@ SET(MOD_CORE_SOURCES
 
     # Properties
     ${MOD_DIR}/properties/interactivelistproperty.cpp
+
+    # cell nuclei cluster splitting
+    ${MOD_DIR}/util/clustersplittingthread.cpp
+    ${MOD_DIR}/util/connectedcomponentqueue.cpp
+    ${MOD_DIR}/processors/nucleiclustersplitting.cpp
 )
 IF(VRN_MODULE_PLOTTING)
     LIST(APPEND MOD_CORE_SOURCES
@@ -130,6 +135,16 @@ SET(MOD_CORE_HEADERS
 
     # Properties
     ${MOD_DIR}/properties/interactivelistproperty.h
+
+    # cell nuclei cluster splitting
+    ${MOD_DIR}/operators/ternaryvolumeoperator.h
+    ${MOD_DIR}/operators/volumeoperatordistancetransform.h
+    ${MOD_DIR}/operators/volumeoperatorfastvolumecombine.h
+    ${MOD_DIR}/operators/volumeoperatorgradientdescent.h
+    ${MOD_DIR}/operators/volumeoperatorwatershed.h
+    ${MOD_DIR}/util/clustersplittingthread.h
+    ${MOD_DIR}/util/connectedcomponentqueue.h
+    ${MOD_DIR}/processors/nucleiclustersplitting.h
 )
 IF(VRN_MODULE_PLOTTING)
     LIST(APPEND MOD_CORE_HEADERS

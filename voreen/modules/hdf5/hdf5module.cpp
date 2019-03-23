@@ -36,6 +36,7 @@ HDF5Module::HDF5Module(const std::string& modulePath)
     setID("HDF5");
     setGuiName("HDF5");
 
+    registerVolumeReader(new HDF5VolumeReaderOriginal());
     registerVolumeReader(new HDF5VolumeReader());
     registerVolumeWriter(new HDF5VolumeWriter());
 
