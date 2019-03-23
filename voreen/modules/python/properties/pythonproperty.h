@@ -32,7 +32,7 @@
 namespace voreen {
 
 #ifdef DLL_TEMPLATE_INST
-template class VRN_CORE_API TemplateProperty<OpenCLSource>;
+template class VRN_CORE_API TemplateProperty<PythonScript>;
 #endif
 
 class VRN_CORE_API PythonProperty : public TemplateProperty<PythonScript> {

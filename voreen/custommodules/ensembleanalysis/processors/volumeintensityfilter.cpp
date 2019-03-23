@@ -101,9 +101,13 @@ void VolumeIntensityFilter::maskVolume() {
         v = vol->clone();
 
 #ifdef VRN_MODULE_OPENMP
+        long numVoxels = static_cast<long>(vol->getNumVoxels());
         #pragma omp parallel for
-#endif
+        for(long iP = 0; iP < numVoxels; iP++) {
+            size_t i = static_cast<size_t>(iP);
+#else
         for(size_t i = 0; i < vol->getNumVoxels(); i++) {
+#endif
             float voxelValue = vol->voxel(i);
             if(voxelValue < intensityRange_.get().x || voxelValue > intensityRange_.get().y) {
                 v->voxel(i) = 0.0f;
