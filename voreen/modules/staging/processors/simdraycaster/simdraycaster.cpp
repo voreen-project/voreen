@@ -452,7 +452,7 @@ tgt::vec4* voreen::SIMDRayCaster::getPreintegrateTransFunc(size_t *size, float s
 }
 
 void voreen::SIMDRayCaster::premultiplyAlpha(tgt::vec4* data, size_t elements){
-    for(int i = 0; i != elements; i++){
+    for(size_t i = 0; i != elements; i++){
         vec4 val = data[i];
         if (val.a < 0.0f) val.a = 0.0f;
         if (val.a > 1.0f) val.a = 1.0f;
@@ -473,7 +473,7 @@ void voreen::SIMDRayCaster::precalcOpacityCorrectionAndAlphaPremultiplication(ve
     const float SAMPLING_BASE_INTERVAL_RCP = 200.0f;
     float normalizedStepSize = stepsize/(tgt::max(volumeDimension));
     float correctionExponent = normalizedStepSize * SAMPLING_BASE_INTERVAL_RCP;
-    for(int i = 0; i != elements; i++){
+    for(size_t i = 0; i != elements; i++){
         vec4 val = data[i];
         if (val.a < 0.0f) val.a = 0.0f;
         if (val.a > 1.0f) val.a = 1.0f;

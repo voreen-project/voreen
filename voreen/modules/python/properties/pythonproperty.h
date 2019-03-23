@@ -48,6 +48,8 @@ public:
     virtual std::string getClassName() const       { return "PythonProperty"; }
     virtual std::string getTypeDescription() const { return "Python Script"; }
 
+    virtual void set(const PythonScript& value);
+
     /**
      * @see Property::serialize
      */

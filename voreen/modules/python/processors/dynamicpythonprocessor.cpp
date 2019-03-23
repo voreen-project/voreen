@@ -26,7 +26,6 @@
 #include "dynamicpythonprocessor.h"
 
 #include "voreen/core/ports/volumeport.h"
-#include "voreen/core/ports/geometryport.h"
 #include "voreen/core/ports/renderport.h"
 #include "voreen/core/processors/processorwidget.h"
 
@@ -43,8 +42,6 @@ DynamicPythonProcessor::DynamicPythonProcessor()
     // Add available ports.
     addPortItem(new VolumePort(Port::INPORT, ""));
     addPortItem(new VolumePort(Port::OUTPORT, ""));
-    //addPortItem(new GeometryPort(Port::INPORT, ""));
-    //addPortItem(new GeometryPort(Port::OUTPORT, ""));
     addPortItem(new RenderPort(Port::INPORT, ""));
     addPortItem(new RenderPort(Port::OUTPORT, "")); // Add properties to be able to set format?
 
@@ -73,11 +70,7 @@ DynamicPythonProcessor::DynamicPythonProcessor()
 
 DynamicPythonProcessor::~DynamicPythonProcessor() {
     portInstances_.clear();
-    while(!getPorts().empty()) {
-        Port* port = getPorts().front();
-        removePort(port);
-        delete port;
-    }
+    portList_.clear(); // Will trigger onPortListChange an delete remaining ports.
 }
 
 Processor* DynamicPythonProcessor::create() const {
@@ -111,18 +104,14 @@ void DynamicPythonProcessor::process() {
 }
 
 void DynamicPythonProcessor::serialize(Serializer& s) const {
-    const bool usePointerContentSerialization = s.getUsePointerContentSerialization();
+    bool usePointerContentSerialization = s.getUsePointerContentSerialization();
     try {
-
         std::vector<const Property*> pyVec;
         pyVec.push_back(&pythonScript_);
-
-        // serialize properties
         s.setUsePointerContentSerialization(true);
         s.serialize("PriorityProperty", pyVec, "Property");
-
     } catch (SerializationException &e) {
-        LWARNING(std::string("OpenCL program serialization failed: ") + e.what());
+        LWARNING(std::string("Python Script serialization failed: ") + e.what());
     }
     s.setUsePointerContentSerialization(usePointerContentSerialization);
 
@@ -131,15 +120,13 @@ void DynamicPythonProcessor::serialize(Serializer& s) const {
 void DynamicPythonProcessor::deserialize(Deserializer& s) {
     RenderProcessor::deserialize(s);
 
-    const bool usePointerContentSerialization = s.getUsePointerContentSerialization();
+    bool usePointerContentSerialization = s.getUsePointerContentSerialization();
     try {
         std::vector<Property*> pyVec;
         pyVec.push_back(&pythonScript_);
-
-        // deserialize property
         s.setUsePointerContentSerialization(true);
         s.deserialize("PriorityProperty", pyVec, "Property");
-    } catch (SerializationNoSuchDataException) {
+    } catch (SerializationNoSuchDataException&) {
         s.removeLastError();
     }
     s.setUsePointerContentSerialization(usePointerContentSerialization);
@@ -210,8 +197,10 @@ void DynamicPythonProcessor::onScriptChange() {
         portDataPos = source.find(functionName, portDataPos+1);
     }
 
+    valid_ = true;
+    /*
     PythonScript script = pythonScript_.get();
-    valid_ = script.compile(true);
+    script.compile(true);
 
     if(valid_) {
         LINFO("Script successfully saved!");
@@ -219,6 +208,7 @@ void DynamicPythonProcessor::onScriptChange() {
     else {
         LERROR(script.getLog());
     }
+    */
 
     invalidate(Processor::INVALID_PROGRAM);
 }

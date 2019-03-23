@@ -101,22 +101,22 @@ voreen::BrickedVolume<T>::BrickedVolume(T* volume_data, tgt::svec3 dim, int bric
     // offset in brick
 #define brick_off(x) ((x)%bricksize)
 
-    for(int i = 0; i != dim.x; i++){
+    for(size_t i = 0; i != dim.x; i++){
         offsetx_[i]  = brick_id(i)*bricksize3       + brick_off(i);
     }
-    for(int i = 0; i != dim.y; i++){
+    for(size_t i = 0; i != dim.y; i++){
         offsety_[i] = brick_id(i)*bricksize3*(sx/bricksize)    + brick_off(i)*bricksize;
     }
-    for(int i = 0; i != dim.z; i++){
+    for(size_t i = 0; i != dim.z; i++){
         offsetz_[i] = brick_id(i)*bricksize3*(sx/bricksize)*(sy/bricksize) + brick_off(i)*bricksize2;
     }
 #undef brick_id
 #undef brick_off
 
     // copy volume data to new schema
-    for(int z = 0; z != dim.z; z++){
-        for(int y = 0; y != dim.y; y++){
-            for(int x = 0; x != dim.x; x++){
+    for(size_t z = 0; z != dim.z; z++){
+        for(size_t y = 0; y != dim.y; y++){
+            for(size_t x = 0; x != dim.x; x++){
                 // x dimension most inner, because it has
                 // most cache locality for reading
                 size_t idx = offsetx_[x]+offsety_[y]+offsetz_[z];

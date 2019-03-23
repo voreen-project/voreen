@@ -51,6 +51,11 @@ Property* PythonProperty::create() const {
     return new PythonProperty();
 }
 
+void PythonProperty::set(const PythonScript& value) {
+    TemplateProperty<PythonScript>::set(value);
+    value_.compile(true);
+}
+
 void PythonProperty::serialize(Serializer& s) const {
     Property::serialize(s);
     get().serialize(s);

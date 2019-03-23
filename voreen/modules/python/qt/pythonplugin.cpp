@@ -170,6 +170,8 @@ PythonPlugin::~PythonPlugin() {
 }
 
 void PythonPlugin::runScript() {
+    tgtAssert(!property_, "Invalid function call");
+
     if (!script_)
         return;
 
@@ -512,22 +514,18 @@ void PythonPlugin::updateGuiState() {
         saveBt_->setEnabled(false);
     }
 
-    /*
-    // TODO: implement
-    //toolWindow_->setWindowTitle(title);
-    if (parentWidget() && parentWidget()->parentWidget())
-        parentWidget()->parentWidget()->setWindowTitle(title);
-    else
-        setWindowTitle(title);
-    */
+    if(window()) {
+        window()->setWindowTitle(title);
+    }
 }
 
 void PythonPlugin::pyStdout(const std::string& out, const std::string& id) {
 
     // Check if this actual script has been executed.
-    if(((property_ && property_->get().getId() == id) || (script_ && script_->getId() == id)) && compilerLogWidget_) {
+    //if(((property_ && property_->get().getId() == id) || (script_ && script_->getId() == id)) && compilerLogWidget_) {
+    LWARNING(id);
         compilerLogWidget_->append(QString::fromStdString(out));
-    }
+    //}
 }
 
 void PythonPlugin::pyStderr(const std::string& err, const std::string& id) {

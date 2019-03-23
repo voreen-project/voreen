@@ -52,6 +52,7 @@ const std::string PythonScript::loggerCat_ = "voreen.Python.PythonScript";
 
 PythonScript::PythonScript()
     : source_("")
+    , filename_("")
     , byteCode_(nullptr)
     , compiled_(false)
     , errorLine_(-1)
@@ -65,6 +66,33 @@ PythonScript::PythonScript()
 
 PythonScript::~PythonScript() {
     Py_XDECREF(byteCode_);
+}
+
+PythonScript::PythonScript(const PythonScript& other) {
+    id_ = other.id_;
+    source_ = other.source_;
+    filename_ = other.filename_;
+    byteCode_ = other.byteCode_;
+    Py_XINCREF(byteCode_);
+    compiled_ = other.compiled_;
+    errorLine_ = other.errorLine_;
+    errorCol_ = other.errorCol_;
+    printErrorsToStdOut_ = other.printErrorsToStdOut_;
+}
+
+PythonScript& PythonScript::operator=(const PythonScript& other) {
+    id_ = other.id_;
+    source_ = other.source_;
+    filename_ = other.filename_;
+    Py_XDECREF(byteCode_);
+    byteCode_ = other.byteCode_;
+    Py_XINCREF(byteCode_);
+    compiled_ = other.compiled_;
+    errorLine_ = other.errorLine_;
+    errorCol_ = other.errorCol_;
+    printErrorsToStdOut_ = other.printErrorsToStdOut_;
+
+    return *this;
 }
 
 const std::string& PythonScript::getId() const {
@@ -124,8 +152,7 @@ bool PythonScript::compile(bool logErrors) {
     compiled_ = checkCompileError(logErrors);
 
     if (!compiled_) {
-        Py_XDECREF(byteCode_);
-        byteCode_ = 0;
+        Py_CLEAR(byteCode_);
     }
 
     return compiled_;
@@ -139,8 +166,8 @@ bool PythonScript::run(bool logErrors) {
 
     // Add the script id for correct output redirection.
     PyObject* id = PyUnicode_FromString(id_.c_str());
+    //PyDict_DelItemString(glb, "__voreen_script_id__");
     PyDict_SetItemString(glb, "__voreen_script_id__", id);
-    Py_XDECREF(id);
 
     bool success;
     if (compiled_){
@@ -154,11 +181,13 @@ bool PythonScript::run(bool logErrors) {
     }
     else {
         LDEBUG("Running script '" << getFilename() << "' ...");
-        PyRun_String(source_.c_str(), Py_file_input, glb, glb);
+        PyObject* dum = PyRun_String(source_.c_str(), Py_file_input, glb, glb);
         success = checkRuntimeError(logErrors);
+        Py_XDECREF(dum);
     }
 
-    Py_XDECREF(glb);
+    Py_CLEAR(glb);
+    Py_CLEAR(id);
 
     if (success) {
         LDEBUG("finished.");
@@ -174,8 +203,7 @@ const std::string& PythonScript::getSource() const {
 void PythonScript::setSource(const std::string& source) {
     source_ = source;
     compiled_ = false;
-    Py_XDECREF(byteCode_);
-    byteCode_ = 0;
+    Py_CLEAR(byteCode_);
 }
 
 void PythonScript::setFilename(const std::string& filename) {

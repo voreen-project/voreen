@@ -61,6 +61,9 @@ public:
      */
     ~PythonScript();
 
+    PythonScript(const PythonScript& other);
+    PythonScript& operator=(const PythonScript& other);
+
     /**
      * Returns the uuid of the script. This is mainly used for output forwarding.
      */

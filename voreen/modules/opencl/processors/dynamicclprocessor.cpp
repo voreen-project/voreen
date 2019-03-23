@@ -81,8 +81,10 @@ DynamicCLProcessor::DynamicCLProcessor()
 }
 
 DynamicCLProcessor::~DynamicCLProcessor() {
-    for (Port* port : dynamicPorts_)
+    for (Port* port : dynamicPorts_) {
+        port->deinitialize();
         delete port;
+    }
     dynamicPorts_.clear();
 
     for (Property* property : dynamicProperties_)

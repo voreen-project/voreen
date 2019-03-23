@@ -66,7 +66,6 @@
 #include "voreen/core/properties/transfunc/1d/1dkeys/transfunc1dkeysproperty.h"
 
 #include "voreen/core/ports/volumeport.h"
-//#include "voreen/core/ports/geometryport.h" // TODO: implement
 #include "voreen/core/datastructures/volume/volumefactory.h"
 
 #include "voreen/core/datastructures/transfunc/1d/1dkeys/transfunc1dkeys.h"
@@ -1233,11 +1232,6 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
         Py_DECREF(object);
         Py_RETURN_NONE;
     }
-    /*
-    else if (GeometryPort* typedPort = dynamic_cast<GeometryPort*>(port)) {
-        Py_RETURN_NONE;
-    }
-    */
 
     // we only get here, if port data assignment has failed or
     // the port type is not supported at all
@@ -1287,7 +1281,6 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
         if(!volumeObject)
             return 0;
 
-        // TODO: handle multiple channels and formats!
         Py_DECREF(volumeObject->format); // Format will be overwritten.
         volumeObject->format = PyUnicode_FromString(volume->getFormat().c_str());
 
@@ -1348,7 +1341,6 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
         if(!renderTargetObject)
             return 0;
 
-        // TODO: handle multiple channels and formats!
         renderTargetObject->internalColorFormat = renderTarget->getColorTexture()->getGLInternalFormat();
         renderTargetObject->internalDepthFormat = renderTarget->getDepthTexture()->getGLInternalFormat();
         renderTargetObject->width  = renderTarget->getSize().x;
@@ -1401,10 +1393,6 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
         result = (PyObject*) renderTargetObject;
         Py_INCREF(result); // FIXME: memory leak
     }
-    /*
-    else if (GeometryPort* typedProp = dynamic_cast<GeometryPort*>(port))
-        result = ...
-    */
 
     if (result == (PyObject*)-1) {
         std::ostringstream errStr;
