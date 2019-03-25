@@ -289,7 +289,7 @@ public:
 
 private:
 
-    IntBoundingBoxProperty regionOfInterest_;
+    FloatBoundingBoxProperty regionOfInterest_;
 };
 
 //----------------------------------------

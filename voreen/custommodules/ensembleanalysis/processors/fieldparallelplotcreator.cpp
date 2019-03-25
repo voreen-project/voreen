@@ -28,12 +28,12 @@
 #include "tgt/immediatemode/immediatemode.h"
 #include "tgt/textureunit.h"
 
+#include "voreen/core/voreenapplication.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/io/progressbar.h"
-#include "voreen/core/voreenapplication.h"
+#include "voreen/core/ports/conditions/portconditionvolumetype.h"
 #include "voreen/core/utils/glsl.h"
 
-#include "../ports/conditions/portconditionensemble.h"
 #include "../utils/ensemblehash.h"
 
 #include <random>
@@ -47,6 +47,7 @@ const std::string FieldParallelPlotCreator::META_DATA_HASH("EnsembleHash");
 FieldParallelPlotCreator::FieldParallelPlotCreator()
     : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
     , inport_(Port::INPORT, "volumehandle.volumehandle", "Volume Input")
+    , seedMask_(Port::INPORT, "seedmask", "Seed Mask Input (optional)")
     , outport_(Port::OUTPORT, "fpp.representation", "FieldPlotData Port")
     , numSeedPoints_("numSeedPoints", "Number of Seed Points", 0, 0, 0)
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
@@ -55,6 +56,8 @@ FieldParallelPlotCreator::FieldParallelPlotCreator()
 {    
     addPort(inport_);
     ON_CHANGE(inport_, FieldParallelPlotCreator, adjustToEnsemble);
+    addPort(seedMask_);
+    seedMask_.addCondition(new PortConditionVolumeTypeUInt8());
     addPort(outport_);
 
     addProperty(numSeedPoints_);
@@ -71,7 +74,7 @@ Processor* FieldParallelPlotCreator::create() const {
 }
 
 FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
-    const EnsembleDataset* inputPtr = inport_.getData();
+    const EnsembleDataset* inputPtr = inport_.getThreadSafeData();
     if (!inputPtr)
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
 
@@ -80,24 +83,44 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
 
     const EnsembleDataset& input = *inputPtr;
 
+    const tgt::Bounds& roi = input.getRoi(); // ROI is defined in physical coordinates.
+    if(!roi.isDefined()) {
+        throw InvalidInputException("ROI is not defined", InvalidInputException::S_ERROR);
+    }
+
+    const VolumeBase* seedMask = seedMask_.getThreadSafeData();
+    tgt::Bounds seedMaskBounds;
+    tgt::mat4 seedMaskPhysicalToVoxelMatrix;
+    if(seedMask) {
+        seedMaskBounds = seedMask->getBoundingBox(false).getBoundingBox();
+        seedMaskPhysicalToVoxelMatrix = seedMask->getPhysicalToVoxelMatrix();
+        LINFO("Restricting seed points to volume mask");
+    }
+
     int tHeight = verticalResolution_.get();
     int tWidth = static_cast<int>(input.getMaxTotalDuration() * horizontalResolutionPerTimeUnit_.get()) + 1;
     int depth = static_cast<int>(input.getCommonChannels().size() * input.getRuns().size());
 
-    FieldPlotData* plotData = new FieldPlotData(tWidth, tHeight, depth);
+    std::unique_ptr<FieldPlotData> plotData(new FieldPlotData(tWidth, tHeight, depth));
 
     std::function<float()> rnd(std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
-    const tgt::IntBounds& roi = input.getRoi();
 
     std::vector<tgt::vec3> seedPoints(numSeedPoints_.get());
     for (int k = 0; k<numSeedPoints_.get(); k++) {
         seedPoints[k] = tgt::vec3(rnd(), rnd(), rnd());
         seedPoints[k] = tgt::vec3(roi.getLLF()) + seedPoints[k] * tgt::vec3(roi.diagonal());
+
+        // TODO: very rough and dirty restriction, implement something more intelligent.
+        if (seedMask && (!seedMaskBounds.containsPoint(seedPoints[k]) ||
+          seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoints[k]) == 0.0f)) {
+            k--; // reseed this point.
+            continue;
+        }
     }
 
     return FieldParallelPlotCreatorInput{
             input,
-            plotData,
+            std::move(plotData),
             seedPoints
     };
 }
@@ -106,7 +129,7 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
     progress.setProgress(0.0f);
 
     const EnsembleDataset& data = input.dataset;
-    FieldPlotData* plotData = input.outputPlot;
+    std::unique_ptr<FieldPlotData> plotData = std::move(input.outputPlot);
     std::vector<tgt::vec3> seedPoints = input.seedPoints;
 
     const float progressIncrement = 1.0f / (data.getTotalNumTimeSteps() * data.getCommonChannels().size());
@@ -129,16 +152,16 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
                 const VolumeBase* volumeCurr = run.timeSteps_[t].channels_.at(channel);
 
                 // Request RAM representation for data access.
-                const VolumeRAM_Float* dataPrev = dynamic_cast<const VolumeRAM_Float*>(volumePrev->getRepresentation<VolumeRAM>());
-                const VolumeRAM_Float* dataCurr = dynamic_cast<const VolumeRAM_Float*>(volumeCurr->getRepresentation<VolumeRAM>());
+                const VolumeRAM* dataPrev = volumePrev->getRepresentation<VolumeRAM>();
+                const VolumeRAM* dataCurr = volumeCurr->getRepresentation<VolumeRAM>();
 
                 int x1 = static_cast<int>(pixelOffset);
                 int x2 = static_cast<int>(pixelOffset + pixel);
 
                 for (size_t k = 0; k<seedPoints.size(); k++) {
                     
-                    float voxelPrev = data.pickSample(dataPrev, volumePrev->getSpacing(), seedPoints[k]);
-                    float voxelCurr = data.pickSample(dataCurr, volumeCurr->getSpacing(), seedPoints[k]);
+                    float voxelPrev = dataPrev->getVoxelNormalizedLinear(volumePrev->getPhysicalToVoxelMatrix() * seedPoints[k]);
+                    float voxelCurr = dataCurr->getVoxelNormalizedLinear(volumePrev->getPhysicalToVoxelMatrix() * seedPoints[k]);
 
                     plotData->drawConnection(x1, x2, voxelPrev, voxelCurr, valueRange.x, valueRange.y, sliceNumber);
 
@@ -162,11 +185,11 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
     
     // We're done here.
     progress.setProgress(1.0f);
-    return FieldParallelPlotCreatorOutput{plotData};
+    return FieldParallelPlotCreatorOutput{std::move(plotData)};
 }
 
 void FieldParallelPlotCreator::processComputeOutput(FieldParallelPlotCreatorOutput output) {
-    outport_.setData(output.plotData, true);
+    outport_.setData(output.plotData.release(), true);
 }
 
 void FieldParallelPlotCreator::adjustToEnsemble() {
@@ -177,7 +200,7 @@ void FieldParallelPlotCreator::adjustToEnsemble() {
         return;
 
     numSeedPoints_.setMinValue(1);
-    numSeedPoints_.setMaxValue(tgt::lengthSq(ensemble->getRoi().diagonal()));
+    numSeedPoints_.setMaxValue(131072);
     numSeedPoints_.set(32768);
 }
 
@@ -190,6 +213,9 @@ bool FieldParallelPlotCreator::isReady() const {
         setNotReadyErrorMessage("Inport not ready.");
         return false;
     }
+
+    // Note: Seed Mask is optional!
+
     return true;
 }
 

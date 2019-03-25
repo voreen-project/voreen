@@ -42,7 +42,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="MDSPlot" name="MDSPlot" id="ref4">
+                <Processor type="SimilarityPlot" name="SimilarityPlot" id="ref4">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-173" y="-123" />
                     </MetaData>
@@ -1471,7 +1471,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="outport">
-                        <Processor type="MDSPlot" ref="ref4" />
+                        <Processor type="SimilarityPlot" ref="ref4" />
                     </Outport>
                     <Inport name="image.input">
                         <Processor type="Background" ref="ref5" />
@@ -1479,7 +1479,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="eigenvalueOutport">
-                        <Processor type="MDSPlot" ref="ref4" />
+                        <Processor type="SimilarityPlot" ref="ref4" />
                     </Outport>
                     <Inport name="inport">
                         <Processor type="BarPlot" ref="ref6" />
@@ -1538,7 +1538,7 @@
                         <Processor type="EnsembleFilterChannel" ref="ref2" />
                     </Outport>
                     <Inport name="ensembledatastructurein">
-                        <Processor type="MDSPlot" ref="ref4" />
+                        <Processor type="SimilarityPlot" ref="ref4" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -1744,59 +1744,59 @@
                     <First value="Datasource" />
                     <Second value="3" />
                 </value>
-                <value key="MDSPlot.calculate">
+                <value key="SimilarityPlot.calculate">
                     <First value="MDS" />
                     <Second value="0" />
                 </value>
-                <value key="MDSPlot.fieldSimilarityMeasure">
+                <value key="SimilarityPlot.fieldSimilarityMeasure">
                     <First value="MDS" />
                     <Second value="2" />
                 </value>
-                <value key="MDSPlot.isovalue">
+                <value key="SimilarityPlot.isovalue">
                     <First value="MDS" />
                     <Second value="3" />
                 </value>
-                <value key="MDSPlot.loadButton">
+                <value key="SimilarityPlot.loadButton">
                     <First value="Output" />
                     <Second value="3" />
                 </value>
-                <value key="MDSPlot.loadFile">
+                <value key="SimilarityPlot.loadFile">
                     <First value="Output" />
                     <Second value="2" />
                 </value>
-                <value key="MDSPlot.numDimensions">
+                <value key="SimilarityPlot.numDimensions">
                     <First value="MDS" />
                     <Second value="6" />
                 </value>
-                <value key="MDSPlot.numEigenvalues">
+                <value key="SimilarityPlot.numEigenvalues">
                     <First value="MDS" />
                     <Second value="7" />
                 </value>
-                <value key="MDSPlot.numIterations">
+                <value key="SimilarityPlot.numIterations">
                     <First value="MDS" />
                     <Second value="5" />
                 </value>
-                <value key="MDSPlot.numSeedPoints">
+                <value key="SimilarityPlot.numSeedPoints">
                     <First value="MDS" />
                     <Second value="4" />
                 </value>
-                <value key="MDSPlot.progressBar">
+                <value key="SimilarityPlot.progressBar">
                     <First value="MDS" />
                     <Second value="1" />
                 </value>
-                <value key="MDSPlot.saveButton">
+                <value key="SimilarityPlot.saveButton">
                     <First value="Output" />
                     <Second value="1" />
                 </value>
-                <value key="MDSPlot.saveFileDialog">
+                <value key="SimilarityPlot.saveFileDialog">
                     <First value="Output" />
                     <Second value="0" />
                 </value>
-                <value key="MDSPlot.seedTime">
+                <value key="SimilarityPlot.seedTime">
                     <First value="MDS" />
                     <Second value="8" />
                 </value>
-                <value key="MDSPlot.selectedTimeStep">
+                <value key="SimilarityPlot.selectedTimeStep">
                     <First value="MDS" />
                     <Second value="9" />
                 </value>

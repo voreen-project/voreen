@@ -32,6 +32,7 @@
 
 #include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/vectorproperty.h"
 
 #include "../ports/ensembledatasetport.h"
 #include "../properties/stringlistproperty.h"
@@ -41,8 +42,7 @@ namespace voreen {
 
 struct SimilarityDataVolumeCreatorInput {
     const EnsembleDataset& dataset;
-    VolumeRAM_Float* volumeData;
-    float resampleFactor;
+    std::unique_ptr<VolumeRAM_Float> volumeData;
     float time;
     std::string runGroup1;
     std::string runGroup2;
@@ -50,7 +50,7 @@ struct SimilarityDataVolumeCreatorInput {
 };
 
 struct SimilarityDataVolumeCreatorOutput {
-    VolumeBase* volume;
+    std::unique_ptr<VolumeBase> volume;
 };
 
 /**
@@ -90,7 +90,7 @@ protected:
     EnsembleDatasetPort inport_;
     VolumePort outport_;
 
-    FloatProperty resampleFactor_;
+    IntVec3Property outputDimensions_;
     FloatProperty time_;
 
     StringOptionProperty similarityMethod_;

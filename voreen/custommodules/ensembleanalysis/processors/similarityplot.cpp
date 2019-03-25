@@ -23,7 +23,7 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "mdsplot.h"
+#include "similarityplot.h"
 
 #include "../utils/colorpool.h"
 #include "../utils/ensemblehash.h"
@@ -34,6 +34,7 @@
 #include "voreen/core/datastructures/volume/volume.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/interaction/camerainteractionhandler.h"
+#include "voreen/core/ports/conditions/portconditionvolumetype.h"
 
 #include "modules/plotting/datastructures/plotcell.h"
 #include "modules/plotting/datastructures/plotdata.h"
@@ -59,21 +60,22 @@ static const tgt::vec3 MIN_DURATION_COLOR = tgt::vec3(1.0f, 0.0f, 0.0f);
 static const tgt::vec3 MAX_DURATION_COLOR = tgt::vec3(0.0f, 0.0f, 1.0f);
 static const tgt::vec3 FADE_OUT_COLOR = tgt::vec3::one;
 
-const std::string MDSPlot::loggerCat_("voreen.ensembleanalysis.MDSPlot");
+const std::string SimilarityPlot::loggerCat_("voreen.ensembleanalysis.SimilarityPlot");
 
-void MDSPlot::MDSData::serialize(Serializer& s) const {
+void SimilarityPlot::MDSData::serialize(Serializer& s) const {
     s.serialize("nVectors", nVectors_);
     s.serialize("eigenvalues", eigenvalues_);
 }
 
-void MDSPlot::MDSData::deserialize(Deserializer& s) {
+void SimilarityPlot::MDSData::deserialize(Deserializer& s) {
     s.deserialize("nVectors", nVectors_);
     s.deserialize("eigenvalues", eigenvalues_);
 }
 
-MDSPlot::MDSPlot()
+SimilarityPlot::SimilarityPlot()
     : RenderProcessor()
     , ensembleInport_(Port::INPORT, "ensembledatastructurein", "Ensemble Datastructure Input", false)
+    , seedMaskInport_(Port::INPORT, "seedmask", "Seed Mask Input (optional)")
     , outport_(Port::OUTPORT, "outport", "Outport", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
     , privatePort_(Port::OUTPORT, "image.tmp", "image.tmp", false)
     , pickingBuffer_(Port::OUTPORT, "picking", "Picking", false)
@@ -111,8 +113,10 @@ MDSPlot::MDSPlot()
     */
 {
     // Ports
-    ON_CHANGE(ensembleInport_, MDSPlot, adjustToEnsemble);
+    ON_CHANGE(ensembleInport_, SimilarityPlot, adjustToEnsemble);
     addPort(ensembleInport_);
+    addPort(seedMaskInport_);
+    seedMaskInport_.addCondition(new PortConditionVolumeTypeUInt8());
     addPort(outport_);
     addPort(eigenValueOutport_);
     addPrivateRenderPort(privatePort_);
@@ -122,7 +126,7 @@ MDSPlot::MDSPlot()
     addProperty(calculateButton_);
         calculateButton_.setGroupID("calculation");
         calculateButton_.setReadOnlyFlag(true);
-        ON_CHANGE(calculateButton_, MDSPlot, calculate);
+        ON_CHANGE(calculateButton_, SimilarityPlot, calculate);
     addProperty(progressBar_);
         progressBar_.setGroupID("calculation");
     addProgressBar(&progressBar_);
@@ -186,10 +190,10 @@ MDSPlot::MDSPlot()
         colorCoding_.selectByValue(COLOR_RUN_AND_TIMESTEP);
         colorCoding_.setGroupID("rendering");
     addProperty(renderedChannel_);
-        ON_CHANGE(renderedChannel_, MDSPlot, outputEigenValues);
+        ON_CHANGE(renderedChannel_, SimilarityPlot, outputEigenValues);
         renderedChannel_.setGroupID("rendering");
     addProperty(renderedRuns_);
-        ON_CHANGE(renderedRuns_, MDSPlot, renderedChannelsChanged);
+        ON_CHANGE(renderedRuns_, SimilarityPlot, renderedChannelsChanged);
         renderedRuns_.setGroupID("rendering");
     setPropertyGroupGuiName("rendering", "Rendering");
 
@@ -203,10 +207,10 @@ MDSPlot::MDSPlot()
 
     // IO
     addProperty(saveFileDialog_);
-        ON_CHANGE(saveFileDialog_, MDSPlot, save);
+        ON_CHANGE(saveFileDialog_, SimilarityPlot, save);
         saveFileDialog_.setGroupID("io");
     addProperty(loadFileDialog_);
-        ON_CHANGE(loadFileDialog_, MDSPlot, load);
+        ON_CHANGE(loadFileDialog_, SimilarityPlot, load);
         loadFileDialog_.setGroupID("io");
     setPropertyGroupGuiName("io", "Save/Load MDS Plot");
 
@@ -217,25 +221,25 @@ MDSPlot::MDSPlot()
     addInteractionHandler(cameraHandler_);
 }
 
-MDSPlot::~MDSPlot() {
+SimilarityPlot::~SimilarityPlot() {
     delete cameraHandler_;
 }
 
-Processor* MDSPlot::create() const {
-    return new MDSPlot();
+Processor* SimilarityPlot::create() const {
+    return new SimilarityPlot();
 }
 
-void MDSPlot::initialize() {
+void SimilarityPlot::initialize() {
     RenderProcessor::initialize();
     sphere_.setSphereGeometry(1.0f, tgt::vec3::zero, tgt::vec4::one, 16);
 }
 
-void MDSPlot::deinitialize() {
+void SimilarityPlot::deinitialize() {
     sphere_.clear();
     RenderProcessor::deinitialize();
 }
 
-void MDSPlot::process() {
+void SimilarityPlot::process() {
 
     // Resize frame buffers accordingly.
     if(pickingBuffer_.getSize() != outport_.getSize())
@@ -284,7 +288,7 @@ void MDSPlot::process() {
     IMode.color(tgt::col4::one);
 }
 
-void MDSPlot::renderAxes() {
+void SimilarityPlot::renderAxes() {
 
     outport_.activateTarget();
     outport_.clearTarget();
@@ -379,7 +383,7 @@ void MDSPlot::renderAxes() {
     LGL_ERROR;
 }
 
-bool MDSPlot::isReady() const {
+bool SimilarityPlot::isReady() const {
 
     if(!ensembleInport_.isReady()) {
         setNotReadyErrorMessage("No Ensemble connected");
@@ -394,7 +398,7 @@ bool MDSPlot::isReady() const {
     return true;
 }
 
-void MDSPlot::renderingPass(bool picking) {
+void SimilarityPlot::renderingPass(bool picking) {
 
     // Retrieve dataset.
     const EnsembleDataset* dataset = ensembleInport_.getData();
@@ -506,7 +510,7 @@ void MDSPlot::renderingPass(bool picking) {
     }
 }
 
-void MDSPlot::drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, const tgt::vec3& position) const {
+void SimilarityPlot::drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, const tgt::vec3& position) const {
 
     // Skip rendering, if not visible anyways.
     if(sphereRadius_.get() <= std::numeric_limits<float>::epsilon())
@@ -536,7 +540,7 @@ void MDSPlot::drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, const tgt
     MatStack.popMatrix();
 }
 
-tgt::vec3 MDSPlot::getColor(size_t runIdx, size_t timeStepIdx, bool picking) const {
+tgt::vec3 SimilarityPlot::getColor(size_t runIdx, size_t timeStepIdx, bool picking) const {
 
     const EnsembleDataset* dataset = ensembleInport_.getData();
 
@@ -565,7 +569,7 @@ tgt::vec3 MDSPlot::getColor(size_t runIdx, size_t timeStepIdx, bool picking) con
     }
 }
 
-void MDSPlot::mouseClickEvent(tgt::MouseEvent* e) {
+void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
 
     RenderTarget* target = pickingBuffer_.getRenderTarget();
 
@@ -620,7 +624,7 @@ void MDSPlot::mouseClickEvent(tgt::MouseEvent* e) {
     e->accept();
 }
 
-void MDSPlot::onEvent(tgt::Event* e) {
+void SimilarityPlot::onEvent(tgt::Event* e) {
     tgt::MouseEvent* event = dynamic_cast<tgt::MouseEvent*>(e);
 
     //*
@@ -664,7 +668,7 @@ void MDSPlot::onEvent(tgt::Event* e) {
     //*/
 }
 
-void MDSPlot::adjustToEnsemble() {
+void SimilarityPlot::adjustToEnsemble() {
 
     ensembleHash_.clear();
     mdsData_.clear();
@@ -679,7 +683,7 @@ void MDSPlot::adjustToEnsemble() {
     const EnsembleDataset* dataset = ensembleInport_.getData();
 
     numSeedPoints_.setMinValue(1);
-    numSeedPoints_.setMaxValue(tgt::lengthSq(dataset->getRoi().diagonal()));
+    numSeedPoints_.setMaxValue(131072);
     numSeedPoints_.set(32768);
 
     numEigenvalues_.setMinValue(MAX_NUM_DIMENSIONS);
@@ -708,7 +712,7 @@ void MDSPlot::adjustToEnsemble() {
     calculateButton_.setReadOnlyFlag(false);
 }
 
-void MDSPlot::calculate() {
+void SimilarityPlot::calculate() {
 
     calculateButton_.setReadOnlyFlag(true);
     ensembleHash_.clear();
@@ -735,7 +739,7 @@ void MDSPlot::calculate() {
     invalidate();
 }
 
-MDSPlot::DMMatrix MDSPlot::calculateDistanceMatrixFromField(const std::string& channel) {
+SimilarityPlot::DMMatrix SimilarityPlot::calculateDistanceMatrixFromField(const std::string& channel) {
 
     const float initialProgress = getProgress();
     const float progressPerChannel = 1.0f; // actually less, but good enough.
@@ -759,12 +763,28 @@ MDSPlot::DMMatrix MDSPlot::calculateDistanceMatrixFromField(const std::string& c
 
     // Calculate random seed points.
     std::function<float()> rnd(std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
-    const tgt::IntBounds& roi = dataset->getRoi();
+    const tgt::Bounds& roi = dataset->getRoi();
 
-    std::vector<tgt::vec3> RValues(totalPoints);
+    const VolumeBase* seedMask = seedMaskInport_.getData();
+    tgt::Bounds seedMaskBounds;
+    tgt::mat4 seedMaskPhysicalToVoxelMatrix;
+    if(seedMask) {
+        seedMaskBounds = seedMask->getBoundingBox(false).getBoundingBox();
+        seedMaskPhysicalToVoxelMatrix = seedMask->getPhysicalToVoxelMatrix();
+        LINFO("Restricting seed points to volume mask");
+    }
+
+    std::vector<tgt::vec3> seedPoints(totalPoints);
     for (size_t k=0; k<totalPoints; k++) {
-        RValues[k] = tgt::vec3(rnd(), rnd(), rnd());
-        RValues[k] = tgt::vec3(roi.getLLF()) + RValues[k] * tgt::vec3(roi.diagonal());
+        seedPoints[k] = tgt::vec3(rnd(), rnd(), rnd());
+        seedPoints[k] = tgt::vec3(roi.getLLF()) + seedPoints[k] * tgt::vec3(roi.diagonal());
+
+        // TODO: very rough and dirty restriction, implement something more intelligent.
+        if (seedMask && (!seedMaskBounds.containsPoint(seedPoints[k]) ||
+                         seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoints[k]) == 0.0f)) {
+            k--; // reseed this point.
+            continue;
+        }
     }
 
     setProgress(initialProgress + 0.01f);
@@ -776,10 +796,10 @@ MDSPlot::DMMatrix MDSPlot::calculateDistanceMatrixFromField(const std::string& c
 
             const tgt::vec2& valueRange = dataset->getValueRange(channel);
             const VolumeBase* volume = timeStep.channels_.at(channel);
-            const VolumeRAM_Float* data = dynamic_cast<const VolumeRAM_Float*>(volume->getRepresentation<VolumeRAM>());
+            const VolumeRAM* data = volume->getRepresentation<VolumeRAM>();
 
             for (size_t k=0; k<totalPoints; k++) {
-                float value = dataset->pickSample(data, volume->getSpacing(), RValues[k]);
+                float value = data->getVoxelNormalizedLinear(volume->getPhysicalToVoxelMatrix() * seedPoints[k]);
 
                 switch(fieldSimilarityMeasure_.getValue()) {
                 case MEASURE_ISOSURFACE:
@@ -837,7 +857,7 @@ MDSPlot::DMMatrix MDSPlot::calculateDistanceMatrixFromField(const std::string& c
     return DistanceMatrix;
 }
 
-MDSPlot::MDSData MDSPlot::computeFromDM(const DMMatrix& DistanceMatrix, float epsilon) {
+SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const DMMatrix& DistanceMatrix, float epsilon) {
     using namespace Eigen;
 
     const size_t dimNum = numEigenvalues_.get();
@@ -933,7 +953,7 @@ MDSPlot::MDSData MDSPlot::computeFromDM(const DMMatrix& DistanceMatrix, float ep
     return result;
 }
 
-void MDSPlot::outputEigenValues() {
+void SimilarityPlot::outputEigenValues() {
 
     if (mdsData_.empty()) {
         eigenValueOutport_.setData(nullptr);
@@ -955,7 +975,7 @@ void MDSPlot::outputEigenValues() {
     eigenValueOutport_.setData(data, true);
 }
 
-void MDSPlot::save() {
+void SimilarityPlot::save() {
     if (saveFileDialog_.get().empty()) {
         LWARNING("no filename specified");
         return;
@@ -987,11 +1007,11 @@ void MDSPlot::save() {
     }
 }
 
-void MDSPlot::renderedChannelsChanged() {
+void SimilarityPlot::renderedChannelsChanged() {
     renderingOrder_ = std::deque<int>(renderedRuns_.getSelectedRowIndices().begin(), renderedRuns_.getSelectedRowIndices().end());
 }
 
-void MDSPlot::load() {
+void SimilarityPlot::load() {
     if (loadFileDialog_.get().empty()) {
         LWARNING("no filename specified");
         return;

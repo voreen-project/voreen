@@ -64,18 +64,14 @@ SET(MOD_CORE_SOURCES
     #Processors
     ${MOD_DIR}/processors/ensembledatasource.cpp
     ${MOD_DIR}/processors/ensemblefilter.cpp
-    ${MOD_DIR}/processors/ensemblesimilarityplot.cpp
     ${MOD_DIR}/processors/ensemblevolumeextractor.cpp
     ${MOD_DIR}/processors/fieldparallelplotcreator.cpp
     ${MOD_DIR}/processors/fieldparallelplothistogram.cpp
     ${MOD_DIR}/processors/fieldparallelplotviewer.cpp
-    ${MOD_DIR}/processors/mdsplot.cpp
-    ${MOD_DIR}/processors/volumeintensityfilter.cpp
-    ${MOD_DIR}/processors/probabilityvolumecreator.cpp
+    ${MOD_DIR}/processors/similarityplot.cpp
     ${MOD_DIR}/processors/similaritydatavolume.cpp
     ${MOD_DIR}/processors/volumelistmerger.cpp
     ${MOD_DIR}/processors/volumemerger.cpp
-    ${MOD_DIR}/processors/waveheightextractor.cpp
 
     #Properties
     ${MOD_DIR}/properties/stringlistproperty.cpp
@@ -107,18 +103,14 @@ SET(MOD_CORE_HEADERS
     #Processors
     ${MOD_DIR}/processors/ensembledatasource.h
     ${MOD_DIR}/processors/ensemblefilter.h
-    ${MOD_DIR}/processors/ensemblesimilarityplot.h
     ${MOD_DIR}/processors/ensemblevolumeextractor.h
     ${MOD_DIR}/processors/fieldparallelplotcreator.h
     ${MOD_DIR}/processors/fieldparallelplothistogram.h
     ${MOD_DIR}/processors/fieldparallelplotviewer.h
-    ${MOD_DIR}/processors/mdsplot.h
-    ${MOD_DIR}/processors/volumeintensityfilter.h
-    ${MOD_DIR}/processors/probabilityvolumecreator.h
+    ${MOD_DIR}/processors/similarityplot.h
     ${MOD_DIR}/processors/similaritydatavolume.h
     ${MOD_DIR}/processors/volumelistmerger.h
     ${MOD_DIR}/processors/volumemerger.h
-    ${MOD_DIR}/processors/waveheightextractor.h
 
     #Properties
     ${MOD_DIR}/properties/stringlistproperty.h

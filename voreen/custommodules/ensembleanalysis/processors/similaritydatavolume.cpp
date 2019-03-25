@@ -35,7 +35,7 @@ SimilartyDataVolume::SimilartyDataVolume()
     : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
     , inport_(Port::INPORT, "ensembleinport", "Ensemble Data Input")
     , outport_(Port::OUTPORT, "volumehandle.volumehandle", "Volume Output")
-    , resampleFactor_("resampleFactor", "Resample Factor", 1.0f, 0.1f, 1.0f)
+    , outputDimensions_("outputDimensions", "Output Dimensions", tgt::ivec3(300), tgt::ivec3(10), tgt::ivec3(1000))
     , time_("time", "Time", 0.0f, 0.0f, 1000000.0f)
     , similarityMethod_("similarityMethod", "Similarity Method")
     , selectedChannel_("selectedChannel", "Selected Channel")
@@ -50,7 +50,7 @@ SimilartyDataVolume::SimilartyDataVolume()
     ON_CHANGE(inport_, SimilartyDataVolume, adjustToEnsemble);
     addPort(outport_);
 
-    addProperty(resampleFactor_);
+    addProperty(outputDimensions_);
     addProperty(time_);
     addProperty(similarityMethod_);
     similarityMethod_.addOption("variance", "Variance");
@@ -130,8 +130,8 @@ SimilarityDataVolumeCreatorInput SimilartyDataVolume::prepareComputeInput() {
 
     isReadyToCompute();
 
-    tgt::ivec3 newDims = tgt::vec3(input.getRoi().diagonal() + tgt::ivec3::one) * resampleFactor_.get();
-    VolumeRAM_Float* volumeData = new VolumeRAM_Float(newDims, true);
+    tgt::ivec3 newDims = outputDimensions_.get();
+    std::unique_ptr<VolumeRAM_Float> volumeData(new VolumeRAM_Float(newDims, true));
     memset(volumeData->getData(), 0, volumeData->getNumBytes());
 
     std::string runGroup1;
@@ -144,8 +144,7 @@ SimilarityDataVolumeCreatorInput SimilartyDataVolume::prepareComputeInput() {
 
     return SimilarityDataVolumeCreatorInput{
             input,
-            volumeData,
-            resampleFactor_.get(),
+            std::move(volumeData),
             time_.get(),
             runGroup1,
             runGroup2,
@@ -158,20 +157,20 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
     progress.setProgress(0.0f);
 
     const std::string& channel = input.channel;
-    const tgt::IntBounds& roi = input.dataset.getRoi();
+    const tgt::Bounds& roi = input.dataset.getRoi();
 
-    tgt::vec3 ratio(1.0f / input.resampleFactor);
     tgt::ivec3 newDims = input.volumeData->getDimensions();
+    tgt::vec3 spacing = roi.diagonal() / tgt::vec3(newDims);
+
+    std::unique_ptr<Volume> volume(new Volume(input.volumeData.release(), spacing, roi.getLLF()));
 
     float progressIncrement = 0.95f / newDims.z;
-
     tgt::ivec3 pos = tgt::ivec3::zero; // iteration variable
     for (pos.z = 0; pos.z < newDims.z; ++pos.z) {
         for (pos.y = 0; pos.y < newDims.y; ++pos.y) {
             for (pos.x = 0; pos.x < newDims.x; ++pos.x) {
 
-                tgt::vec3 nearest = roi.getLLF();
-                nearest += tgt::vec3(pos) * ratio;
+                tgt::vec3 sample = volume->getVoxelToPhysicalMatrix() * tgt::vec3(pos);
 
                 std::vector<float> samples(input.dataset.getRuns().size());
                 for(size_t r = 0; r<input.dataset.getRuns().size(); r++) {
@@ -195,8 +194,10 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
                         const VolumeBase* volumeStart = run.timeSteps_[0].channels_.at(channel);
                         const VolumeRAM_Float* volumeDataStart = dynamic_cast<const VolumeRAM_Float*>(volumeStart->getRepresentation<VolumeRAM>());
 
-                        samples[r] = input.dataset.pickSample(volumeData, volume->getSpacing(), nearest);
-                        samples[r+1] = input.dataset.pickSample(volumeDataStart, volumeStart->getSpacing(), nearest);
+
+
+                        samples[r] = volumeData->getVoxelNormalizedLinear(volume->getPhysicalToVoxelMatrix() * sample);
+                        samples[r+1] = volumeDataStart->getVoxelNormalizedLinear(volumeStart->getPhysicalToVoxelMatrix() * sample);
                         break;
                     }
                     else {
@@ -204,7 +205,7 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
                         const VolumeBase* volume = run.timeSteps_[t].channels_.at(channel);
                         const VolumeRAM_Float* volumeData = dynamic_cast<const VolumeRAM_Float*>(volume->getRepresentation<VolumeRAM>());
 
-                        samples[r] = input.dataset.pickSample(volumeData, volume->getSpacing(), nearest);
+                        samples[r] = volumeData->getVoxelNormalizedLinear(volume->getPhysicalToVoxelMatrix() * sample);
                     }
                 }
 
@@ -227,18 +228,17 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
 
     progress.setProgress(1.0f);
 
-    Volume* volume = new Volume(input.volumeData, input.dataset.getSpacing(), tgt::vec3::zero);
     volume->getMetaDataContainer().addMetaData("time", new FloatMetaData(input.time));
     volume->getMetaDataContainer().addMetaData("channel", new StringMetaData(channel));
     std::string group1string = comparisonMethod_.getKey() == "oneToGroup" ? singleRunSelection_.get() : input.runGroup1;
     std::string group2string = comparisonMethod_.getKey() == "selection" ? "" : input.runGroup2;
     volume->getMetaDataContainer().addMetaData("group1", new StringMetaData(group1string));
     volume->getMetaDataContainer().addMetaData("group2", new StringMetaData(group2string));
-    return SimilarityDataVolumeCreatorOutput{volume};
+    return SimilarityDataVolumeCreatorOutput{std::move(volume)};
 }
 
 void SimilartyDataVolume::processComputeOutput(SimilarityDataVolumeCreatorOutput output) {
-    outport_.setData(output.volume, true);
+    outport_.setData(output.volume.release(), true);
 }
 
 void SimilartyDataVolume::updateProperties() {

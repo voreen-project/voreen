@@ -88,25 +88,15 @@ public:
 
     const tgt::vec2& getValueRange(const std::string& channel) const;
 
-    const tgt::svec3& getDimensions() const;
-    const tgt::vec3& getSpacing() const;
+    // Bounds are defined in physical coordinates
+    const tgt::Bounds& getBounds() const;
+    const tgt::Bounds& getCommonBounds() const;
 
-    const tgt::IntBounds& getRoi() const;
-    void setRoi(const tgt::IntBounds& roi);
+    const tgt::Bounds& getRoi() const;
+    void setRoi(const tgt::Bounds& roi);
 
     const std::vector<std::string>& getCommonChannels() const;
     std::vector<const VolumeBase*> getVolumes() const;
-
-    /**
-     * This function takes a sample in voxel space
-     *
-     * @param volume
-     * @param spacing
-     * @param sample
-     * @param filter
-     * @return
-     */
-    float pickSample(const VolumeRAM_Float* volume, const tgt::vec3& spacing, tgt::vec3 sample, VolumeRAM::Filter filter = VolumeRAM::LINEAR) const;
 
     size_t pickTimeStep(size_t runIdx, float time) const;
 
@@ -141,10 +131,9 @@ private:
     float endTime_;
     tgt::vec2 commonTimeInterval_;
 
-    tgt::svec3 dimensions_;
-    tgt::vec3 spacing_;
-
-    tgt::IntBounds roi_;
+    tgt::Bounds bounds_;
+    tgt::Bounds commonBounds_;
+    tgt::Bounds roi_;
 
 };
 

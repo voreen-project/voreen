@@ -41,12 +41,12 @@ namespace voreen {
 
 struct FieldParallelPlotCreatorInput {
     const EnsembleDataset& dataset;
-    FieldPlotData* outputPlot;
+    std::unique_ptr<FieldPlotData> outputPlot;
     std::vector<tgt::vec3> seedPoints;
 };
 
 struct FieldParallelPlotCreatorOutput {
-    FieldPlotData* plotData;
+    std::unique_ptr<FieldPlotData> plotData;
 };
 
 /**
@@ -82,6 +82,7 @@ protected:
     }
 
     EnsembleDatasetPort inport_;
+    VolumePort seedMask_;
     FieldPlotDataPort outport_;
 
     IntProperty numSeedPoints_;

@@ -1265,7 +1265,7 @@ Run: {run_name}
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="MDSPlot" name="MDSPlot" id="ref6">
+                <Processor type="SimilarityPlot" name="SimilarityPlot" id="ref6">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-658" y="157" />
                     </MetaData>
@@ -6240,7 +6240,7 @@ Run: {run_name}
                         <Processor type="EnsembleDataSource" ref="ref5" />
                     </Outport>
                     <Inport name="ensembledatastructurein">
-                        <Processor type="MDSPlot" ref="ref6" />
+                        <Processor type="SimilarityPlot" ref="ref6" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -6405,7 +6405,7 @@ Run: {run_name}
                 </Connection>
                 <Connection>
                     <Outport name="outport">
-                        <Processor type="MDSPlot" ref="ref6" />
+                        <Processor type="SimilarityPlot" ref="ref6" />
                     </Outport>
                     <Inport name="image.input">
                         <Processor type="Background" ref="ref28" />
@@ -6413,7 +6413,7 @@ Run: {run_name}
                 </Connection>
                 <Connection>
                     <Outport name="eigenvalueOutport">
-                        <Processor type="MDSPlot" ref="ref6" />
+                        <Processor type="SimilarityPlot" ref="ref6" />
                     </Outport>
                     <Inport name="inport">
                         <Processor type="BarPlot" ref="ref29" />
@@ -8328,7 +8328,7 @@ Run: {run_name}
                     <properties />
                 </Processor>
                 <Processor>
-                    <processor type="MDSPlot" ref="ref6" />
+                    <processor type="SimilarityPlot" ref="ref6" />
                     <properties />
                 </Processor>
                 <Processor>
@@ -8638,27 +8638,27 @@ Run: {run_name}
                     <First value="FPP Plot" />
                     <Second value="1" />
                 </value>
-                <value key="MDSPlot.colorCoding">
+                <value key="SimilarityPlot.colorCoding">
                     <First value="MDS Plot" />
                     <Second value="3" />
                 </value>
-                <value key="MDSPlot.loadFile">
+                <value key="SimilarityPlot.loadFile">
                     <First value="MDS Plot" />
                     <Second value="0" />
                 </value>
-                <value key="MDSPlot.numDimensions">
+                <value key="SimilarityPlot.numDimensions">
                     <First value="MDS Plot" />
                     <Second value="1" />
                 </value>
-                <value key="MDSPlot.principalComponent">
+                <value key="SimilarityPlot.principalComponent">
                     <First value="MDS Plot" />
                     <Second value="2" />
                 </value>
-                <value key="MDSPlot.renderedRuns">
+                <value key="SimilarityPlot.renderedRuns">
                     <First value="MDS Plot" />
                     <Second value="4" />
                 </value>
-                <value key="MDSPlot.selectedTimeSteps">
+                <value key="SimilarityPlot.selectedTimeSteps">
                     <First value="MDS Plot" />
                     <Second value="5" />
                 </value>

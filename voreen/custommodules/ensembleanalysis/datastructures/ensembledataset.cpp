@@ -39,8 +39,7 @@ EnsembleDataset::EnsembleDataset()
     , startTime_(std::numeric_limits<float>::max())
     , endTime_(0.0f)
     , commonTimeInterval_(endTime_, startTime_)
-    , dimensions_(tgt::svec3::zero)
-    , spacing_(tgt::vec3::zero)
+    , bounds_()
     , roi_()
 {
 }
@@ -95,8 +94,9 @@ void EnsembleDataset::addRun(const Run& run) {
             const std::string& channelName = channel.first;
             channels.push_back(channelName);
 
-            tgtAssert(channel.second->hasDerivedData<VolumeMinMax>(), "Derived data min max not available");
-            VolumeMinMax* minMax = channel.second->getDerivedData<VolumeMinMax>();
+            const VolumeBase* volume = channel.second;
+            tgt::Bounds bounds = volume->getBoundingBox(false).getBoundingBox();
+            VolumeMinMax* minMax = volume->getDerivedData<VolumeMinMax>();
 
             if(channelMetaData_.find(channelName) == channelMetaData_.end()) {
                 channelMetaData_[channelName].valueRange_ = tgt::vec2(minMax->getMin(), minMax->getMax());
@@ -108,29 +108,12 @@ void EnsembleDataset::addRun(const Run& run) {
 
             runMetaData_.back().timeStepDurationStats_.addSample(run.timeSteps_[t].duration_);
 
-            if (runs_.empty()) {
-                dimensions_ = channel.second->getDimensions();
-                spacing_ = channel.second->getSpacing();
+            bounds_.addVolume(bounds);
+            if(!commonBounds_.isDefined()) {
+                commonBounds_.addVolume(bounds);
             }
-
-            /*
-            //TODO: handle shrinking and expanding dimensions at the same time.
-            if(dimensions_ != channel.second->getDimensions())
-                //LWARNINGC("voreen.ensembledataset", "Dimensions of run '" << run.name_ << "' do not match dimension of previously set runs");
-            }
-            */
-            tgtAssert(dimensions_ == channel.second->getDimensions(), "Dimensions do not match!");
-
-            // Assuming dimensions don't change, we can init the roi here.
-            if (!roi_.isDefined()) {
-                roi_.addPoint(tgt::ivec3::zero);
-                roi_.addPoint(tgt::ivec3(dimensions_) - tgt::ivec3::one);
-            }
-
-            const tgt::vec3& spacing = channel.second->getSpacing();
-            if (spacing_ != spacing) {
-                //LWARNINGC("voreen.ensembledataset", "Spacing does not match for run '" << run.name_ << "'");
-                spacing_ = tgt::min(spacing_, spacing);
+            else {
+                commonBounds_.intersectVolume(bounds);
             }
         }
 
@@ -159,6 +142,9 @@ void EnsembleDataset::addRun(const Run& run) {
             minTimeStepDuration_ = std::min(minTimeStepDuration_, run.timeSteps_[t].duration_);
         }
     }
+
+    // Reset roi to current common bounds.
+    roi_ = commonBounds_;
 
     commonTimeInterval_.x = std::max(commonTimeInterval_.x, run.timeSteps_.front().time_);
     commonTimeInterval_.y = std::min(commonTimeInterval_.y, run.timeSteps_.back().time_+run.timeSteps_.back().duration_);
@@ -221,21 +207,26 @@ const tgt::vec2& EnsembleDataset::getCommonTimeInterval() const {
     return commonTimeInterval_;
 }
 
-const tgt::svec3& EnsembleDataset::getDimensions() const {
-    return dimensions_;
+const tgt::Bounds& EnsembleDataset::getBounds() const {
+    return bounds_;
 }
 
-const tgt::vec3& EnsembleDataset::getSpacing() const {
-    return spacing_;
+const tgt::Bounds& EnsembleDataset::getCommonBounds() const {
+    return commonBounds_;
 }
 
-const tgt::IntBounds& EnsembleDataset::getRoi() const {
+const tgt::Bounds& EnsembleDataset::getRoi() const {
     return roi_;
 }
 
-void EnsembleDataset::setRoi(const tgt::IntBounds& roi) {
-    notifyPendingDataInvalidation();
-    roi_ = roi;
+void EnsembleDataset::setRoi(const tgt::Bounds& roi) {
+    if(commonBounds_.containsVolume(roi)) {
+        notifyPendingDataInvalidation();
+        roi_ = roi;
+    }
+    else {
+        LWARNINGC("voreen.EnsembleDataSet", "Roi must lie inside common domain bounds");
+    }
 }
 
 const tgt::vec2& EnsembleDataset::getValueRange(const std::string& channel) const {
@@ -257,53 +248,6 @@ std::vector<const VolumeBase*> EnsembleDataset::getVolumes() const {
         }
     }
     return result;
-}
-
-float EnsembleDataset::pickSample(const VolumeRAM_Float* volume, const tgt::vec3& spacing, tgt::vec3 sample, VolumeRAM::Filter filter) const {
-    tgtAssert(volume, "volume null");
-    tgtAssert(volume->getDimensions() == getDimensions(), "Dimensions do not match");
-
-    tgt::vec3 offset = (spacing - getSpacing()) * tgt::vec3(getDimensions()) / (2.0f * spacing);
-    sample = sample * (getSpacing() / spacing) + offset;
-
-    // switch between filtering options
-    switch (filter) {
-    case VolumeRAM::NEAREST: {
-        tgt::svec3 index = tgt::clamp(tgt::svec3(tgt::iround(sample)), tgt::svec3::zero, volume->getDimensions() - tgt::svec3::one);
-        return volume->voxel(index); // round and do the lookup
-    }
-    case VolumeRAM::LINEAR: {
-        // clamp to volume dimensions
-        sample = tgt::clamp(sample, tgt::vec3::zero, tgt::vec3(volume->getDimensions() - tgt::svec3::one));
-
-        // get decimal part and lower / upper voxel
-        tgt::vec3 p = sample - tgt::floor(sample);
-        tgt::ivec3 llb(sample);
-        tgt::ivec3 urf(tgt::ceil(sample));
-
-        // clamp again for safety so the lookups do not exceed the dimensions
-        llb = tgt::max(llb, tgt::ivec3::zero);
-        urf = tgt::min(urf, tgt::ivec3(volume->getDimensions()) - 1);
-
-        //interpolate linearly
-        return
-                (volume->voxel(llb.x, llb.y, llb.z)) * (1.f-p.x)*(1.f-p.y)*(1.f-p.z)  // llB
-              + (volume->voxel(urf.x, llb.y, llb.z)) * (    p.x)*(1.f-p.y)*(1.f-p.z)  // lrB
-              + (volume->voxel(urf.x, urf.y, llb.z)) * (    p.x)*(    p.y)*(1.f-p.z)  // urB
-              + (volume->voxel(llb.x, urf.y, llb.z)) * (1.f-p.x)*(    p.y)*(1.f-p.z)  // ulB
-              + (volume->voxel(llb.x, llb.y, urf.z)) * (1.f-p.x)*(1.f-p.y)*(    p.z)  // llF
-              + (volume->voxel(urf.x, llb.y, urf.z)) * (    p.x)*(1.f-p.y)*(    p.z)  // lrF
-              + (volume->voxel(urf.x, urf.y, urf.z)) * (    p.x)*(    p.y)*(    p.z)  // urF
-              + (volume->voxel(llb.x, urf.y, urf.z)) * (1.f-p.x)*(    p.y)*(    p.z); // ulF
-    }
-    case VolumeRAM::CUBIC: {
-        // clamp to volume dimensions
-        sample = tgt::clamp(sample, tgt::vec3::zero, tgt::vec3(volume->getDimensions() - tgt::svec3::one));
-        return volume->getVoxelNormalizedCubic(sample);
-    }
-    default:
-        return 0.0f;
-    }
 }
 
 size_t EnsembleDataset::pickTimeStep(size_t runIdx, float time) const {

@@ -28,17 +28,13 @@
 #include "processors/ensembledatasource.h"
 #include "processors/ensemblefilter.h"
 #include "processors/ensemblevolumeextractor.h"
-#include "processors/ensemblesimilarityplot.h"
 #include "processors/fieldparallelplotcreator.h"
 #include "processors/fieldparallelplotviewer.h"
 #include "processors/fieldparallelplothistogram.h"
-#include "processors/mdsplot.h"
-#include "processors/volumeintensityfilter.h"
-#include "processors/probabilityvolumecreator.h"
+#include "custommodules/ensembleanalysis/processors/similarityplot.h"
 #include "processors/similaritydatavolume.h"
 #include "processors/volumelistmerger.h"
 #include "processors/volumemerger.h"
-#include "processors/waveheightextractor.h"
 
 #include "io/fieldplotsave.h"
 #include "io/fieldplotsource.h"
@@ -66,12 +62,9 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
 
     // Plotting
     registerProcessor(new FieldParallelPlotCreator());
-    registerProcessor(new EnsembleSimilarityPlot());
     registerProcessor(new FieldParallelPlotViewer());
     registerProcessor(new FieldParallelPlotHistogram());
-    registerProcessor(new MDSPlot());
-    registerProcessor(new VolumeIntensityFilter());
-    registerProcessor(new ProbabilityVolumeCreator());
+    registerProcessor(new SimilarityPlot());
 
     // IO
     registerProcessor(new FieldPlotSave());
@@ -85,7 +78,6 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     registerSerializableType(new LinkEvaluatorIntListId());
 
     // Misc
-    registerProcessor(new WaveHeightExtractor());
     registerProcessor(new EnsembleVolumeExtractor());
     registerProcessor(new VolumeListMerger());
     registerProcessor(new VolumeMerger());

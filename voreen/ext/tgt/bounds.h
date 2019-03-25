@@ -36,77 +36,84 @@ namespace tgt {
 */
 template<typename T>
 class TemplateBounds {
-    unsigned int points_;   //points added to the box
     typename tgt::Vector3<T> llf_; //lower left front
     typename tgt::Vector3<T> urb_; //upper right back
 
-    public:
+public:
     /**
-    *   Constructs an undefined boundingbox
-    */
-    TemplateBounds() : points_(0), llf_(tgt::Vector3<T>::zero), urb_(tgt::Vector3<T>::one) {}
+     *   Constructs an undefined boundingbox
+     */
+    TemplateBounds() : llf_(tgt::Vector3<T>::zero), urb_(tgt::Vector3<T>::one) {}
 
     /**
-    *   Constructs an undefined boundingbox containing v
-    */
+     *   Constructs an undefined boundingbox containing v
+     */
     TemplateBounds(const typename tgt::Vector3<T>& v)
-      : points_(1),
-        llf_(v),
+      : llf_(v),
         urb_(v)
     {}
 
     /**
-    *   Constructs a bounding box containing v1 and v2
-    */
+     *   Constructs a bounding box containing v1 and v2
+     */
     TemplateBounds(const typename tgt::Vector3<T>& v1, const typename tgt::Vector3<T>& v2)
-      : points_(1),
-        llf_(v1),
+      : llf_(v1),
         urb_(v1) {
 
         addPoint(v2);
     }
 
     /**
-    *   Enlarges the box (if necessary) to contain v
-    */
+     *   Enlarges the box (if necessary) to contain v
+     */
     void addPoint(const typename tgt::Vector3<T>& v);
     void addPoint(const typename tgt::Vector4<T>& v);
 
     /**
-    *   Enlarges the box (if necessary) to contain b
-    */
+     *   Enlarges the box (if necessary) to contain b
+     */
     void addVolume(const TemplateBounds& b) {
         addPoint(b.llf_);
         addPoint(b.urb_);
     }
 
     /**
-    *   Returns the Lower Left Front point
-    */
+     *   Sets the box to the intersection with b.
+     *   This might result in an undefined box,
+     *   if there is no intersection.
+     */
+    void intersectVolume(const TemplateBounds& b) {
+        llf_ = max(llf_, b.llf_);
+        urb_ = min(urb_, b.urb_);
+    }
+
+    /**
+     *   Returns the Lower Left Front point
+     */
     tgt::Vector3<T> getLLF() const { return llf_; }
 
     /**
-    *   Returns the Upper Right Back point
-    */
+     *   Returns the Upper Right Back point
+     */
     tgt::Vector3<T> getURB() const { return urb_; }
 
     /**
-    *   Returns the center of this box
-    */
+     *   Returns the center of this box
+     */
     tgt::Vector3<T> center() const {
         return (diagonal() / T(2) + llf_);
     }
 
     /**
-    *   Returns the diagonal from llf to urb
+     *   Returns the diagonal from llf to urb
     */
-    tgt::Vector3<T> diagonal() const {
+     tgt::Vector3<T> diagonal() const {
         return (urb_ - llf_);
     }
 
     /**
-    *   Returns the volume of this box
-    */
+     *   Returns the volume of this box
+     */
     T volume() const {
         T vol = (urb_.x - llf_.x) * (urb_.y - llf_.y) * (urb_.z - llf_.z);
         tgtAssert(vol >= 0, "Invalid bounds volume");
@@ -114,35 +121,40 @@ class TemplateBounds {
     }
 
     /**
-    *   Returns true if box is defined (not only a point)
-    */
-    bool isDefined() const { return (points_ == 2); }
+     *   Returns true if box is defined (not only a point)
+     */
+    bool isDefined() const {
+        if (llf_.x >= urb_.x) return false;
+        if (llf_.y >= urb_.y) return false;
+        if (llf_.z >= urb_.z) return false;
+        return true;
+    }
 
     /**
-    *   Returns true if box is only a point
-    */
-    bool onlyPoint() const { return (points_ == 1); }
+     *   Returns true if box is only a point
+     */
+    bool onlyPoint() const { return urb_ == llf_; }
 
     /**
-    *   Returns true if point is contained in this box
-    */
+     *   Returns true if point is contained in this box
+     */
     bool containsPoint(const typename tgt::Vector3<T>& p) const {
         return ( (p.x >= llf_.x) && (p.y >= llf_.y) && (p.z >= llf_.z)
                     && (p.x <= urb_.x) && (p.y <= urb_.y) && (p.z <= urb_.z) );
     }
 
     /**
-    *   Returns true if b is contained in this box
-    *   Box has to be defined!
-    */
+     *   Returns true if b is contained in this box
+     *   Box has to be defined!
+     */
     bool containsVolume(const TemplateBounds& b) const {
         return ( containsPoint(b.llf_) && containsPoint(b.urb_) );
     }
 
     /**
-    *   Returns true if the boxes intersect
-    *   Box has to be defined!
-    */
+     *   Returns true if the boxes intersect
+     *   Box has to be defined!
+     */
     bool intersects(const TemplateBounds& b) const {
         // Look for a separating axis on each box for each axis
         if ((llf_.x > b.urb_.x) || (b.llf_.x > urb_.x)) return false;
@@ -171,8 +183,6 @@ class TemplateBounds {
     TemplateBounds transform(const mat4& m) const;
 
     bool operator==(const tgt::TemplateBounds<T>& other) const{
-        if (points_ !=  other.points_)
-            return false;
         if (llf_ != other.llf_)
             return false;
         if (urb_ != other.urb_)
@@ -187,14 +197,6 @@ class TemplateBounds {
 
 template<typename T>
 void TemplateBounds<T>::addPoint(const typename tgt::Vector3<T>& v) {
-    if (points_ < 2) {
-        ++points_;
-        if (points_ == 1) {
-            llf_ = v; urb_ = v;
-            return;
-        }
-    }
-
     llf_ = min(llf_, v);
     urb_ = max(urb_, v);
 }

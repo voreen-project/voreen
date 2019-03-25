@@ -23,11 +23,12 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_MDSPLOT_H
-#define VRN_MDSPLOT_H
+#ifndef VRN_SIMILARITYPLOT_H
+#define VRN_SIMILARITYLOT_H
 
 #include "voreen/core/processors/renderprocessor.h"
 
+#include "voreen/core/ports/volumeport.h"
 #include "voreen/core/properties/buttonproperty.h"
 #include "voreen/core/properties/cameraproperty.h"
 #include "voreen/core/properties/filedialogproperty.h"
@@ -49,7 +50,7 @@ namespace voreen {
 class CameraInteractionHandler;
 class PlotLibrary;
 
-class VRN_CORE_API MDSPlot : public RenderProcessor {
+class VRN_CORE_API SimilarityPlot : public RenderProcessor {
     typedef std::vector<std::vector<float>> DMMatrix;
 
     class MDSData : public Serializable {
@@ -67,11 +68,11 @@ class VRN_CORE_API MDSPlot : public RenderProcessor {
     };
 
 public:
-    MDSPlot();
-    virtual ~MDSPlot();
+    SimilarityPlot();
+    virtual ~SimilarityPlot();
 
     virtual Processor* create() const;
-    virtual std::string getClassName() const        { return "MDSPlot"; }
+    virtual std::string getClassName() const        { return "SimilarityPlot"; }
     virtual std::string getCategory() const         { return "Plotting";              }
     virtual CodeState getCodeState() const          { return CODE_STATE_EXPERIMENTAL; }
     virtual bool usesExpensiveComputation() const   { return true;                    }
@@ -135,6 +136,9 @@ protected:
     /// Inport for the ensemble data structure.
     EnsembleDatasetPort ensembleInport_;
 
+    /// Option Inport
+    VolumePort seedMaskInport_;
+
     /// The whole output.
     RenderPort outport_;
 
@@ -176,8 +180,6 @@ private:
 
     static const std::string loggerCat_;
 };
-
-
 
 } // namespace
 

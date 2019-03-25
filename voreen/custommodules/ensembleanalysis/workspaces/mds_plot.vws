@@ -373,7 +373,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="MDSPlot" name="MDSPlot" id="ref1">
+                <Processor type="SimilarityPlot" name="SimilarityPlot" id="ref1">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-173" y="-122" />
                     </MetaData>
@@ -468,7 +468,7 @@
                         <Processor type="EnsembleDataSource" ref="ref0" />
                     </Outport>
                     <Inport name="ensembledatastructurein">
-                        <Processor type="MDSPlot" ref="ref1" />
+                        <Processor type="SimilarityPlot" ref="ref1" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -497,7 +497,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="outport">
-                        <Processor type="MDSPlot" ref="ref1" />
+                        <Processor type="SimilarityPlot" ref="ref1" />
                     </Outport>
                     <Inport name="image.input">
                         <Processor type="Background" ref="ref5" />
@@ -505,7 +505,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="eigenvalueOutport">
-                        <Processor type="MDSPlot" ref="ref1" />
+                        <Processor type="SimilarityPlot" ref="ref1" />
                     </Outport>
                     <Inport name="inport">
                         <Processor type="BarPlot" ref="ref2" />
