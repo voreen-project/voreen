@@ -9,7 +9,7 @@ variables:
   DOCKER_DRIVER: overlay2 # use overlayfs
   GIT_SUBMODULE_STRATEGY: 'normal' #fetch test data repository
   RUN_TESTS_AS_USER: 'test_user'
-  REPORT_DIR: 'public'
+  REPORT_DIR: 'public_asdf'
   COREPROFILE_BUILD_DIR: 'build_coreprofile'
   TEST_DATA_DIR: 'test-data/voreen-testdata'
   XVFB_SERVER_ARGS: -screen 0 640x480x24
