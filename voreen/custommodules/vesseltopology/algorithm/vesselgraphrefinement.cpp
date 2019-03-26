@@ -440,6 +440,7 @@ struct FutureEdge {
                         newVoxel.minDistToSurface_ = edge.getMinRadiusAvg();
                         newVoxel.avgDistToSurface_ = edge.getAvgRadiusAvg();
                         newVoxel.maxDistToSurface_ = edge.getMaxRadiusAvg();
+                        newVoxel.numSurfaceVoxels_ = 1;
                     }
 
                     output.push_back(newVoxel);
