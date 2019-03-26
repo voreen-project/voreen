@@ -434,7 +434,7 @@ struct FutureEdge {
                     VesselSkeletonVoxel newVoxel(voxel); //copy
                     newVoxel.nearOtherEdge_ = false;
 
-                    if(!voxel.hasValidData()) {
+                    if(!voxel.hasValidData() && edge.hasValidData()) {
                         // We need to fix up the properties, as this voxel is supposed to be an outer voxel
                         // Best bet are the average values of the edge itself.
                         newVoxel.minDistToSurface_ = edge.getMinRadiusAvg();
