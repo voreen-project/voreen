@@ -87,11 +87,8 @@ void EnsembleDataSource::deinitialize() {
 }
 
 void EnsembleDataSource::clearEnsembleDataset() {
-    if(outport_.hasData()) {
-        for(const VolumeBase* volume : outport_.getData()->getVolumes())
-            delete volume;
-        outport_.setData(nullptr);
-    }
+    volumes_.clear();
+    outport_.clear();
     setProgress(0.0f);
     timeStepProgress_.setProgress(0.0f);
     loadedRuns_.reset();
@@ -112,6 +109,8 @@ void EnsembleDataSource::buildEnsembleDataset() {
     std::vector<std::string> runs = tgt::FileSystem::listSubDirectories(ensemblePath_.get(), true);
     float progressPerRun = 1.0f / runs.size();
 
+    VolumeSerializerPopulator populator;
+
     for(const std::string& run : runs) {
         std::string runPath = ensemblePath_.get() + "/" + run;
         std::vector<std::string> fileNames = tgt::FileSystem::readDirectory(runPath, true, false);
@@ -122,7 +121,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
         std::vector<EnsembleDataset::TimeStep> timeSteps;
         for(const std::string& fileName : fileNames) {
             std::string url = runPath + "/" + fileName;
-            std::vector<VolumeReader*> readers = populator_.getVolumeSerializer()->getReaders(url);
+            std::vector<VolumeReader*> readers = populator.getVolumeSerializer()->getReaders(url);
             if(readers.empty()) {
                 LERROR("No valid volume reader found for " << url);
                 break;
@@ -178,6 +177,9 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 volume->getMetaDataContainer().addMetaData("run_name", new StringMetaData(run));
 
                 timeStep.channels_[name->toString()] = volumeHandle;
+
+                // Ownership remains.
+                volumes_.push_back(std::unique_ptr<const VolumeBase>(volume));
             }
 
             // Calculate duration the current timeStep is valid.

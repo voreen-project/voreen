@@ -79,6 +79,8 @@ protected:
         );
     }
 
+    virtual void adjustPropertiesToInput();
+
 private:
 
     void addFeature(FlowFeature* filterProperties);

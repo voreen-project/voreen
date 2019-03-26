@@ -32,13 +32,7 @@
 
 namespace voreen {
 
-class Filter {
-public:
-    virtual ~Filter() {}
-    virtual Property& getProperty() = 0;
-    virtual EnsembleDataset* applyFilter(const EnsembleDataset* ensemble) = 0;
-    virtual void adjustToEnsemble(const EnsembleDataset* ensemble) = 0;
-};
+class Filter;
 
 /**
  * Base class for all processors filtering an ensemble dataset.
@@ -74,7 +68,7 @@ protected:
     EnsembleDatasetPort ensembleOutport_;
 
     /// Filter list
-    std::vector<Filter*> filters_;
+    std::vector<std::unique_ptr<Filter>> filters_;
 
     /// Hash value of last valid data.
     std::string hash_;

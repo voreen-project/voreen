@@ -38,6 +38,13 @@
 
 namespace voreen {
 
+class Filter {
+public:
+    virtual Property& getProperty() = 0;
+    virtual EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) = 0;
+    virtual void adjustToEnsemble(const EnsembleDataset* ensemble) = 0;
+};
+
 //----------------------------------------
 // Filter : Run
 //----------------------------------------
@@ -54,15 +61,16 @@ public:
         return runs_;
     }
 
-    EnsembleDataset* applyFilter(const EnsembleDataset* ensemble) {
+    EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
         
         EnsembleDataset* dataset = new EnsembleDataset();
-        dataset->setRoi(ensemble->getRoi());
 
         for (int row : runs_.getSelectedRowIndices()) {
-            EnsembleDataset::Run run = ensemble->getRuns()[row];
+            EnsembleDataset::Run run = ensemble.getRuns()[row];
             dataset->addRun(run);
         }
+
+        dataset->setRoi(ensemble.getRoi());
 
         return dataset;
     }
@@ -102,12 +110,11 @@ public:
         return timeSteps_;
     }
 
-    EnsembleDataset* applyFilter(const EnsembleDataset* ensemble) {
+    EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
         
         EnsembleDataset* dataset = new EnsembleDataset();
-        dataset->setRoi(ensemble->getRoi());
 
-        for (const EnsembleDataset::Run& run : ensemble->getRuns()) {
+        for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
             if (run.timeSteps_.empty())
                 continue;
 
@@ -119,6 +126,8 @@ public:
 
             dataset->addRun(EnsembleDataset::Run{ run.name_, run.color_, timeSteps });
         }
+
+        dataset->setRoi(ensemble.getRoi());
 
         return dataset;
     }
@@ -157,12 +166,11 @@ public:
         return timeInterval_;
     }
 
-    EnsembleDataset* applyFilter(const EnsembleDataset* ensemble) {
+    EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
 
         EnsembleDataset* dataset = new EnsembleDataset();
-        dataset->setRoi(ensemble->getRoi());
 
-        for (const EnsembleDataset::Run& run : ensemble->getRuns()) {
+        for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
             std::vector<EnsembleDataset::TimeStep> timeSteps;
             for (size_t i = 0; i < run.timeSteps_.size(); i++) {
                 if (run.timeSteps_[i].time_ > timeInterval_.get().y)
@@ -173,6 +181,8 @@ public:
 
             dataset->addRun(EnsembleDataset::Run{ run.name_, run.color_, timeSteps });
         }
+
+        dataset->setRoi(ensemble.getRoi());
 
         return dataset;
     }
@@ -212,12 +222,11 @@ public:
         return channels_;
     }
 
-    EnsembleDataset* applyFilter(const EnsembleDataset* ensemble) {
+    EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
 
         EnsembleDataset* dataset = new EnsembleDataset();
-        dataset->setRoi(ensemble->getRoi());
 
-        for (const EnsembleDataset::Run& run : ensemble->getRuns()) {
+        for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
             std::vector<EnsembleDataset::TimeStep> timesteps;
             for (const EnsembleDataset::TimeStep& timestep : run.timeSteps_) {
                 EnsembleDataset::TimeStep filteredTimeStep = timestep;
@@ -230,6 +239,8 @@ public:
             }
             dataset->addRun(EnsembleDataset::Run{ run.name_, run.color_, timesteps });
         }
+
+        dataset->setRoi(ensemble.getRoi());
 
         return dataset;
     }
@@ -266,7 +277,7 @@ public:
         return regionOfInterest_;
     }
 
-    EnsembleDataset* applyFilter(const EnsembleDataset* ensemble) {
+    EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
         // Clone input data and adjust roi.
         EnsembleDataset* dataset = new EnsembleDataset(ensemble);
         dataset->setRoi(regionOfInterest_.get());
@@ -314,8 +325,6 @@ EnsembleFilter::EnsembleFilter()
 }
 
 EnsembleFilter::~EnsembleFilter() {
-    for (Filter* filter : filters_)
-        delete filter;
 }
 
 Processor* EnsembleFilter::create() const {
@@ -337,7 +346,7 @@ void EnsembleFilter::invalidate(int inv) {
 }
 
 void EnsembleFilter::addFilter(Filter* filter) {
-    filters_.push_back(filter);
+    filters_.push_back(std::unique_ptr<Filter>(filter));
     addProperty(filter->getProperty());
     ON_CHANGE_LAMBDA(filter->getProperty(), [this] { invalidate(Processor::INVALID_RESULT); });
 }
@@ -346,7 +355,7 @@ void EnsembleFilter::adjustToEnsemble() {
     if(ensembleInport_.hasData()) {
         std::string hash = EnsembleHash(*ensembleInport_.getData()).getHash();
         if(hash != hash_) {
-            for (Filter* filter : filters_)
+            for (auto& filter : filters_)
                 filter->adjustToEnsemble(ensembleInport_.getData());
 
             hash_ = hash;
@@ -359,9 +368,9 @@ void EnsembleFilter::applyFilter() {
     ensembleOutport_.setData(nullptr);
 
     if (ensembleInport_.hasData()) {
-        std::unique_ptr<EnsembleDataset> ensemble(new EnsembleDataset(ensembleInport_.getData()));
-        for (Filter* filter : filters_) {
-            ensemble.reset(filter->applyFilter(ensemble.get()));
+        std::unique_ptr<EnsembleDataset> ensemble(new EnsembleDataset(*ensembleInport_.getData()));
+        for (auto& filter : filters_) {
+            ensemble.reset(filter->applyFilter(*ensemble));
         }
 
         ensembleOutport_.setData(ensemble.release(), true);

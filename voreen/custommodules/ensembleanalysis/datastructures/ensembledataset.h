@@ -58,11 +58,8 @@ public:
     };
 
     /** Constructor */
-    explicit EnsembleDataset();
-    explicit EnsembleDataset(const EnsembleDataset& origin);
-    explicit EnsembleDataset(const EnsembleDataset* const origin);
-    /** Destructor */
-    ~EnsembleDataset();
+    EnsembleDataset();
+    EnsembleDataset(const EnsembleDataset& origin);
 
 public:
 
@@ -91,7 +88,6 @@ public:
     // Bounds are defined in physical coordinates
     const tgt::Bounds& getBounds() const;
     const tgt::Bounds& getCommonBounds() const;
-
     const tgt::Bounds& getRoi() const;
     void setRoi(const tgt::Bounds& roi);
 

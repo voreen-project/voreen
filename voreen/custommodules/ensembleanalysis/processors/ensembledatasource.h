@@ -71,7 +71,7 @@ protected:
     void clearEnsembleDataset();
     void buildEnsembleDataset();
 
-    VolumeSerializerPopulator populator_;
+    std::vector<std::unique_ptr<const VolumeBase>> volumes_;
 
     FileDialogProperty ensemblePath_;
     ButtonProperty loadDatasetButton_;

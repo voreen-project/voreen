@@ -40,34 +40,21 @@ EnsembleDataset::EnsembleDataset()
     , endTime_(0.0f)
     , commonTimeInterval_(endTime_, startTime_)
     , bounds_()
+    , commonBounds_()
     , roi_()
 {
 }
 
 EnsembleDataset::EnsembleDataset(const EnsembleDataset& origin)
-    : EnsembleDataset(&origin)
-{
-}
-
-EnsembleDataset::EnsembleDataset(const EnsembleDataset* const origin)
     : EnsembleDataset()
 {
-    tgtAssert(origin, "Origin was null");
+    // Adding runs set's attributes accordingly.
+    for(const Run& run : origin.runs_)
+        addRun(run);
 
     // Set Roi first since it might has been modified.
-    setRoi(origin->getRoi());
-
-    // Adding runs set's attributes accordingly.
-    for(const Run& run : origin->runs_)
-        addRun(run);
+    setRoi(origin.getRoi());
 }
-
-EnsembleDataset::~EnsembleDataset()
-{
-}
-    //----------------
-    //  Access
-    //----------------
 
 void EnsembleDataset::addRun(const Run& run) {
 

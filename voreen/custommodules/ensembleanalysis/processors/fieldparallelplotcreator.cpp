@@ -88,7 +88,7 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
         throw InvalidInputException("ROI is not defined", InvalidInputException::S_ERROR);
     }
 
-    const VolumeBase* seedMask = seedMask_.getThreadSafeData();
+    const VolumeBase* seedMask = seedMask_.getData();
     tgt::Bounds seedMaskBounds;
     tgt::mat4 seedMaskPhysicalToVoxelMatrix;
     if(seedMask) {

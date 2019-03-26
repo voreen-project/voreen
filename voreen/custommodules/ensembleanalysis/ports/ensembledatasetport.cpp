@@ -58,9 +58,9 @@ std::string EnsembleDatasetPort::getContentDescription() const {
             strstr << std::endl << "End Time: " << getData()->getEndTime();
             strstr << std::endl << "Max Total Duration: " << getData()->getMaxTotalDuration();
 
-            tgt::ivec3 llf = getData()->getRoi().getLLF();
+            tgt::vec3 llf = getData()->getRoi().getLLF();
             strstr << std::endl << "ROI LLF: (" << llf.x << ", " << llf.y << ", " << llf.z << ")";
-            tgt::ivec3 urb = getData()->getRoi().getURB();
+            tgt::vec3 urb = getData()->getRoi().getURB();
             strstr << std::endl << "ROI URB: (" << urb.x << ", " << urb.y << ", " << urb.z << ")";
         }
         else
@@ -84,9 +84,9 @@ std::string EnsembleDatasetPort::getContentDescriptionHTML() const {
             strstr << "<br>" << "End Time: " << getData()->getEndTime();
             strstr << "<br>" << "Max Total Duration: " << getData()->getMaxTotalDuration();
 
-            tgt::ivec3 llf = getData()->getRoi().getLLF();
+            tgt::vec3 llf = getData()->getRoi().getLLF();
             strstr << "<br>" << "ROI LLF: (" << llf.x << ", " << llf.y << ", " << llf.z << ")";
-            tgt::ivec3 urb = getData()->getRoi().getURB();
+            tgt::vec3 urb = getData()->getRoi().getURB();
             strstr << "<br>" << "ROI URB: (" << urb.x << ", " << urb.y << ", " << urb.z << ")";
         }
         else
