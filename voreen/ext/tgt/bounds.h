@@ -43,7 +43,7 @@ public:
     /**
      *   Constructs an undefined boundingbox
      */
-    TemplateBounds() : llf_(tgt::Vector3<T>::zero), urb_(tgt::Vector3<T>::one) {}
+    TemplateBounds() : llf_(tgt::Vector3<T>::zero), urb_(tgt::Vector3<T>::zero) {}
 
     /**
      *   Constructs an undefined boundingbox containing v
@@ -121,13 +121,15 @@ public:
     }
 
     /**
-     *   Returns true if box is defined (not only a point)
+     *   Returns true if box is defined:
+     *      * not only a point
+     *      * positive or zero volume
      */
     bool isDefined() const {
-        if (llf_.x >= urb_.x) return false;
-        if (llf_.y >= urb_.y) return false;
-        if (llf_.z >= urb_.z) return false;
-        return true;
+        if (llf_.x > urb_.x) return false;
+        if (llf_.y > urb_.y) return false;
+        if (llf_.z > urb_.z) return false;
+        return !onlyPoint();
     }
 
     /**
