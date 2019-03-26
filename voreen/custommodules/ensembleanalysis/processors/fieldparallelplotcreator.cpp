@@ -97,9 +97,9 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
         LINFO("Restricting seed points to volume mask");
     }
 
-    int tHeight = verticalResolution_.get();
-    int tWidth = static_cast<int>(input.getMaxTotalDuration() * horizontalResolutionPerTimeUnit_.get()) + 1;
-    int depth = static_cast<int>(input.getCommonChannels().size() * input.getRuns().size());
+    size_t tHeight = static_cast<size_t>(verticalResolution_.get());
+    size_t tWidth = static_cast<size_t>(input.getMaxTotalDuration() * horizontalResolutionPerTimeUnit_.get()) + 1;
+    size_t depth = static_cast<size_t>(input.getCommonChannels().size() * input.getRuns().size());
 
     std::unique_ptr<FieldPlotData> plotData(new FieldPlotData(tWidth, tHeight, depth));
 
@@ -134,14 +134,15 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
 
     const float progressIncrement = 1.0f / (data.getTotalNumTimeSteps() * data.getCommonChannels().size());
     const int pixelPerTimeUnit = horizontalResolutionPerTimeUnit_.get();
+    float timeOffset = data.getStartTime();
 
-    int sliceNumber = 0;
+    size_t sliceNumber = 0;
     for (const std::string& channel : data.getCommonChannels()) {
         for (const EnsembleDataset::Run& run : data.getRuns()) {
 
             const tgt::vec2& valueRange = data.getValueRange(channel);
             progress.setProgressMessage("Plotting channel " + channel + " [" + std::to_string(valueRange.x) + ", " + std::to_string(valueRange.y) + "]");
-            float pixelOffset = pixelPerTimeUnit * run.timeSteps_[0].time_;
+            float pixelOffset = pixelPerTimeUnit * (timeOffset + run.timeSteps_[0].time_);
 
             for (size_t t = 1; t < run.timeSteps_.size(); t++) {
 
@@ -155,19 +156,19 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
                 const VolumeRAM* dataPrev = volumePrev->getRepresentation<VolumeRAM>();
                 const VolumeRAM* dataCurr = volumeCurr->getRepresentation<VolumeRAM>();
 
-                int x1 = static_cast<int>(pixelOffset);
-                int x2 = static_cast<int>(pixelOffset + pixel);
+                size_t x1 = static_cast<size_t>(pixelOffset);
+                size_t x2 = static_cast<size_t>(pixelOffset + pixel);
 
                 for (size_t k = 0; k<seedPoints.size(); k++) {
                     
                     float voxelPrev = dataPrev->getVoxelNormalizedLinear(volumePrev->getPhysicalToVoxelMatrix() * seedPoints[k]);
                     float voxelCurr = dataCurr->getVoxelNormalizedLinear(volumePrev->getPhysicalToVoxelMatrix() * seedPoints[k]);
 
-                    plotData->drawConnection(x1, x2, voxelPrev, voxelCurr, valueRange.x, valueRange.y, sliceNumber);
+                    plotData->drawConnection(x1, x2, voxelPrev, voxelCurr, sliceNumber);
 
                     // Add last column separately.
                     if (t == run.timeSteps_.size() - 1) {
-                        plotData->putSingleMass(x2, voxelCurr, valueRange.x, valueRange.y, sliceNumber);
+                        plotData->putSingleMass(x2, voxelCurr, sliceNumber);
                     }
                 }
 

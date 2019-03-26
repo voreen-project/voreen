@@ -340,8 +340,8 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         // Check for convergence.
         converge.takeValue(sLattice.getStatistics().getAverageEnergy(), true);
         if(converge.hasConverged()) {
-            //LINFO("Simulation converged!");
-            //break;
+            LINFO("Simulation converged!");
+            break;
         }
 
         float progress = iT / (converter.getLatticeTime( parametrizationList.getSimulationTime() ) + 1.0f);
