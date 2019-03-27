@@ -43,7 +43,7 @@ public:
     /**
      *   Constructs an undefined boundingbox
      */
-    TemplateBounds() : llf_(tgt::Vector3<T>::zero), urb_(tgt::Vector3<T>::zero) {}
+    TemplateBounds() : llf_(tgt::Vector3<T>(std::numeric_limits<T>::max())), urb_(tgt::Vector3<T>(std::numeric_limits<T>::lowest())) {}
 
     /**
      *   Constructs an undefined boundingbox containing v
