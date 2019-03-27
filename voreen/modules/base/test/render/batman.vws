@@ -1,20 +1,20 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="false" GlobalDescription="">
-        <ProcessorNetwork version="17">
+        <ProcessorNetwork version="20">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="Canvas" ref="ref1" />
+                        <item type="GeometryProcessor" ref="ref4" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-34.59352112" y="12.41818714" />
+                    <value x="-34.593521118" y="12.418187141" />
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.1273787" />
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.127378702" />
             </MetaData>
             <Processors>
                 <Processor type="Background" name="Background" id="ref0">
@@ -26,21 +26,25 @@
                         <Property mapKey="backgroundModeAsString" name="backgroundModeAsString" value="gradient" />
                         <Property mapKey="blendMode" name="blendMode" value="add" />
                         <Property mapKey="color1" name="color1">
-                            <value x="0.15686275" y="0.47843137" z="0.47843137" w="1" />
+                            <value x="0.156862751" y="0.478431374" z="0.478431374" w="1" />
                         </Property>
                         <Property mapKey="color2" name="color2">
-                            <value x="0.70980394" y="0.70980394" z="0.70980394" w="1" />
+                            <value x="0.709803939" y="0.709803939" z="0.709803939" w="1" />
                         </Property>
                         <Property mapKey="enable" name="enable" value="true" />
                         <Property mapKey="randomClouds" name="randomClouds" value="true" />
                         <Property mapKey="repeat" name="repeat" value="1" />
-                        <Property mapKey="shader.program" name="shader.program" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                        <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
+                            </components>
                         </Property>
-                        <Property mapKey="texture" name="texture">
+                        <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                     </Properties>
@@ -84,12 +88,12 @@
                             <value x="972" y="763" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/batman.png" />
-                                    <item value="../../../../voreen-testdata/voreen-testdata/output/batman.png" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/output/batman.png" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/batman.png" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/batman.png" />
+                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/batman.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -116,24 +120,28 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-168" y="-299" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="addobjcolor" name="addobjcolor" value="false" />
                         <Property mapKey="calcNormals" name="calcNormals" value="true" />
                         <Property mapKey="clearGeometry" name="clearGeometry" />
-                        <Property mapKey="geometryFile" name="geometryFile">
+                        <Property mapKey="geometryFile" name="geometryFile" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="input/geometry/Batman/Batman.obj" />
-                                    <item value="../../../../voreen-testdata/voreen-testdata/input/geometry/Batman/Batman.obj" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/input/geometry/Batman/Batman.obj" />
+                                    <item value="../../voreen-testdata/voreen-testdata/input/geometry/Batman/Batman.obj" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/input/geometry/Batman/Batman.obj" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="geometryType" name="geometryType" value="geometry" />
                         <Property mapKey="loadGeometry" name="loadGeometry" />
+                        <Property mapKey="objcolor" name="objcolor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
                         <Property mapKey="skipItems" name="skipItems" value="0" />
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="geometry.pointlist" direction="0" portID="geometry.pointlist" guiName="PointList Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.pointlist" direction="0" portID="geometry.pointlist" guiName="PointList Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -150,11 +158,19 @@
                     <Properties>
                         <Property mapKey="enable.clipping" name="enable.clipping" value="false" />
                         <Property mapKey="enableLighting" name="enableLighting" value="true" />
-                        <Property mapKey="geometry.prg" name="geometry.prg" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
-                            <MetaData>
-                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
-                            </MetaData>
+                        <Property mapKey="geometry_opaque.prg" name="geometry_opaque.prg">
+                            <components>
+                                <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
+                                <item shaderType="2" originalFilename="trianglemesh.geom" modified="false" />
+                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
+                            </components>
+                        </Property>
+                        <Property mapKey="geometry_transparent.prg" name="geometry_transparent.prg">
+                            <components>
+                                <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
+                                <item shaderType="2" originalFilename="trianglemesh.geom" modified="false" />
+                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
+                            </components>
                         </Property>
                         <Property mapKey="lightAmbient" name="lightAmbient">
                             <value x="1" y="1" z="1" w="1" />
@@ -162,15 +178,17 @@
                         <Property mapKey="lightDiffuse" name="lightDiffuse">
                             <value x="1" y="1" z="1" w="1" />
                         </Property>
-                        <Property mapKey="lightPosition" name="lightPosition">
-                            <value x="4.86000013" y="2.83999991" z="4.01000023" w="3" />
+                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="10">
+                            <value x="4.860000134" y="2.839999914" z="4.010000229" w="3" />
+                            <Center x="0" y="0" z="0" />
+                            <LightPos x="4.860000134" y="2.839999914" z="4.010000229" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
-                            <value x="1" y="1" z="0.49803922" w="1" />
+                            <value x="1" y="1" z="0.498039216" w="1" />
                         </Property>
                         <Property mapKey="lineWidth" name="lineWidth" value="1" />
                         <Property mapKey="mapTexture" name="mapTexture" value="true" />
-                        <Property mapKey="materialShininess" name="materialShininess" value="76.33999634" />
+                        <Property mapKey="materialShininess" name="materialShininess" value="76.339996338" />
                         <Property mapKey="plane.distance" name="plane.distance" value="0" />
                         <Property mapKey="plane.normal" name="plane.normal">
                             <value x="0" y="0" z="1" />
@@ -183,7 +201,7 @@
                         <Property mapKey="textureMode" name="textureMode" value="REPLACE" />
                     </Properties>
                     <Inports>
-                        <Port name="inport.geometry" direction="1" portID="inport.geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="inport.geometry" direction="1" portID="inport.geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                         <Port name="inport.texture" direction="1" portID="inport.texture" guiName="Texture Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -206,19 +224,52 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="207" y="-108" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="5000" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="true" orthoZoomFactor="0.00035576">
+                        <Property mapKey="adaptToScene" name="adaptToScene" value="false" />
+                        <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="false" />
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="5000" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="true" orthoZoomFactor="0.00035576">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="1139" y="541" />
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1680" y="0" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="11.78375816" y="150.32147217" z="259.9604187" />
-                            <focus x="-5.31866312" y="104.84601593" z="-16.89322662" />
-                            <upVector x="-0.00075065" y="0.98678339" z="-0.16204365" />
+                            <position x="11.783758163" y="150.321472168" z="259.960418701" />
+                            <focus x="-5.31866312" y="104.84601593" z="-16.893226624" />
+                            <upVector x="-0.00075065" y="0.986783385" z="-0.162043646" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
                             </trackball>
                             <sceneLLF x="0" y="0" z="0" />
                             <sceneURB x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="composeShader" name="composeShader">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
+                            </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
+                            </components>
+                        </Property>
+                        <Property mapKey="forceAdaptToScene" name="forceAdaptToScene" />
+                        <Property mapKey="maxFragmentsPerPixelAvgAbs" minValue="1" maxValue="50" minRange="0" maxRange="2147483647" stepping="1">
+                            <value x="15" y="20" />
+                        </Property>
+                        <Property mapKey="oirAddImageShader" name="oirAddImageShader">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
+                            </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="oit_addimage.frag" modified="false" />
+                            </components>
+                        </Property>
+                        <Property mapKey="oirBlendShader" name="oirBlendShader">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
+                            </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="oit_blend.frag" modified="false" />
+                            </components>
                         </Property>
                         <Property mapKey="renderGeometries" name="renderGeometries" value="true" />
                     </Properties>
@@ -272,24 +323,28 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-4" y="-299" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="addobjcolor" name="addobjcolor" value="false" />
                         <Property mapKey="calcNormals" name="calcNormals" value="true" />
                         <Property mapKey="clearGeometry" name="clearGeometry" />
-                        <Property mapKey="geometryFile" name="geometryFile">
+                        <Property mapKey="geometryFile" name="geometryFile" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="input/geometry/Batman/Cape.obj" />
-                                    <item value="../../../../voreen-testdata/voreen-testdata/input/geometry/Batman/Cape.obj" />
-                                    <item value="/home/a_sche26/voreen-testdata/voreen-testdata/input/geometry/Batman/Cape.obj" />
+                                    <item value="../../voreen-testdata/voreen-testdata/input/geometry/Batman/Cape.obj" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/input/geometry/Batman/Cape.obj" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="geometryType" name="geometryType" value="geometry" />
                         <Property mapKey="loadGeometry" name="loadGeometry" />
+                        <Property mapKey="objcolor" name="objcolor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
                         <Property mapKey="skipItems" name="skipItems" value="0" />
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="geometry.pointlist" direction="0" portID="geometry.pointlist" guiName="PointList Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.pointlist" direction="0" portID="geometry.pointlist" guiName="PointList Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -306,11 +361,19 @@
                     <Properties>
                         <Property mapKey="enable.clipping" name="enable.clipping" value="false" />
                         <Property mapKey="enableLighting" name="enableLighting" value="true" />
-                        <Property mapKey="geometry.prg" name="geometry.prg" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
-                            <MetaData>
-                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
-                            </MetaData>
+                        <Property mapKey="geometry_opaque.prg" name="geometry_opaque.prg">
+                            <components>
+                                <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
+                                <item shaderType="2" originalFilename="trianglemesh.geom" modified="false" />
+                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
+                            </components>
+                        </Property>
+                        <Property mapKey="geometry_transparent.prg" name="geometry_transparent.prg">
+                            <components>
+                                <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
+                                <item shaderType="2" originalFilename="trianglemesh.geom" modified="false" />
+                                <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
+                            </components>
                         </Property>
                         <Property mapKey="lightAmbient" name="lightAmbient">
                             <value x="1" y="1" z="1" w="1" />
@@ -318,15 +381,17 @@
                         <Property mapKey="lightDiffuse" name="lightDiffuse">
                             <value x="1" y="1" z="1" w="1" />
                         </Property>
-                        <Property mapKey="lightPosition" name="lightPosition">
-                            <value x="4.86000013" y="2.83999991" z="4.01000023" w="3" />
+                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="10">
+                            <value x="4.860000134" y="2.839999914" z="4.010000229" w="3" />
+                            <Center x="0" y="0" z="0" />
+                            <LightPos x="4.860000134" y="2.839999914" z="4.010000229" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
-                            <value x="1" y="1" z="0.49803922" w="1" />
+                            <value x="1" y="1" z="0.498039216" w="1" />
                         </Property>
                         <Property mapKey="lineWidth" name="lineWidth" value="1" />
                         <Property mapKey="mapTexture" name="mapTexture" value="true" />
-                        <Property mapKey="materialShininess" name="materialShininess" value="76.33999634" />
+                        <Property mapKey="materialShininess" name="materialShininess" value="76.339996338" />
                         <Property mapKey="plane.distance" name="plane.distance" value="0" />
                         <Property mapKey="plane.normal" name="plane.normal">
                             <value x="0" y="0" z="1" />
@@ -339,7 +404,7 @@
                         <Property mapKey="textureMode" name="textureMode" value="REPLACE" />
                     </Properties>
                     <Inports>
-                        <Port name="inport.geometry" direction="1" portID="inport.geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="inport.geometry" direction="1" portID="inport.geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                         <Port name="inport.texture" direction="1" portID="inport.texture" guiName="Texture Input" allowMultipleConnections="false" invalidationLevel="1">
