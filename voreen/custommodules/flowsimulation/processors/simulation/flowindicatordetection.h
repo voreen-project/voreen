@@ -28,6 +28,7 @@
 
 #include "voreen/core/processors/processor.h"
 
+#include "voreen/core/ports/volumeport.h"
 #include "voreen/core/properties/filedialogproperty.h"
 #include "voreen/core/properties/matrixproperty.h"
 #include "voreen/core/properties/string/stringtableproperty.h"
@@ -51,6 +52,7 @@ public:
     virtual std::string getCategory() const   { return "Simulation";                    }
     virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;         }
 
+    virtual bool isReady() const;
     virtual void process();
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
@@ -67,11 +69,11 @@ private:
 
     void onSelectionChange();
     void onConfigChange();
-    void onVesselGraphChange();
+    void onInputChange();
     void buildTable();
-    VesselGraphPort vesselGraphPort_;
 
-    std::vector<FlowIndicator> flowIndicators_;
+    VesselGraphPort vesselGraphPort_;
+    VolumePort volumePort_;
     FlowParametrizationPort flowParametrizationPort_;
 
     StringProperty ensembleName_;
@@ -84,6 +86,10 @@ private:
     FloatProperty radius_;
 
     StringTableProperty flowIndicatorTable_;
+
+    IntProperty angleThreshold_;
+
+    std::vector<FlowIndicator> flowIndicators_;
 
     static const std::string loggerCat_;
 };

@@ -25,6 +25,8 @@
 
 #include "flowindicatordetection.h"
 
+#include "voreen/core/ports/conditions/portconditionvolumetype.h"
+
 namespace voreen {
 
 const std::string FlowIndicatorDetection::loggerCat_("voreen.flowreen.FlowIndicatorDetection");
@@ -32,6 +34,7 @@ const std::string FlowIndicatorDetection::loggerCat_("voreen.flowreen.FlowIndica
 FlowIndicatorDetection::FlowIndicatorDetection()
     : Processor()
     , vesselGraphPort_(Port::INPORT, "vesselgraph.inport", "Vessel Graph (Optional)")
+    , volumePort_(Port::INPORT, "volume.inport", "Velocity Data Port (Optional)")
     , flowParametrizationPort_(Port::OUTPORT, "flowParametrization.outport", "Flow Parametrization")
     , ensembleName_("ensembleName", "Ensemble Name", "test_ensemble")
     , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 10.0f)
@@ -41,9 +44,13 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , flowDirection_("flowDirection", "Flow Direction")
     , radius_("radius", "Radius", 1.0f, 0.0f, 10.0f)
     , flowIndicatorTable_("flowIndicators", "Flow Indicators", 4)
+    , angleThreshold_("angleThreshold", "Angle Threshold", 15, 0, 90)
 {
     addPort(vesselGraphPort_);
-    ON_CHANGE(vesselGraphPort_, FlowIndicatorDetection, onVesselGraphChange);
+    ON_CHANGE(vesselGraphPort_, FlowIndicatorDetection, onInputChange);
+    addPort(volumePort_);
+    volumePort_.addCondition(new PortConditionVolumeType3xFloat());
+    ON_CHANGE(volumePort_, FlowIndicatorDetection, onInputChange);
     addPort(flowParametrizationPort_);
 
     addProperty(ensembleName_);
@@ -78,6 +85,9 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     flowIndicatorTable_.setColumnLabel(2, "Normal");
     flowIndicatorTable_.setColumnLabel(3, "Radius");
     ON_CHANGE(flowIndicatorTable_, FlowIndicatorDetection, onSelectionChange);
+
+    addProperty(angleThreshold_);
+    ON_CHANGE(angleThreshold_, FlowIndicatorDetection, onInputChange);
 }
 
 void FlowIndicatorDetection::adjustPropertiesToInput() {
@@ -96,6 +106,17 @@ void FlowIndicatorDetection::serialize(Serializer& s) const {
 void FlowIndicatorDetection::deserialize(Deserializer& s) {
     Processor::deserialize(s);
     s.optionalDeserialize("flowIndicators", flowIndicators_, flowIndicators_);
+}
+
+bool FlowIndicatorDetection::isReady() const {
+    if(!isInitialized()) {
+        setNotReadyErrorMessage("Not initialized");
+        return false;
+    }
+
+    // Both inports are optional.
+
+    return true;
 }
 
 void FlowIndicatorDetection::process() {
@@ -141,7 +162,7 @@ void FlowIndicatorDetection::onConfigChange() {
     }
 }
 
-void FlowIndicatorDetection::onVesselGraphChange() {
+void FlowIndicatorDetection::onInputChange() {
 
     flowIndicators_.clear();
 
@@ -151,6 +172,8 @@ void FlowIndicatorDetection::onVesselGraphChange() {
         buildTable();
         return;
     }
+
+    const VolumeBase* volume = volumePort_.getData();
 
     for(const VesselGraphNode& node : vesselGraph->getNodes()) {
         // Look for end-nodes.
@@ -172,10 +195,30 @@ void FlowIndicatorDetection::onVesselGraphChange() {
 
             FlowIndicator indicator;
             indicator.center_ = end->pos_;
-            indicator.normal_ = tgt::normalize(end->pos_ - ref->pos_);
+            indicator.normal_ = tgt::normalize(ref->pos_ - end->pos_);
             indicator.radius_ = end->avgDistToSurface_;
             indicator.direction_ = FlowDirection::FD_NONE;
             indicator.function_  = FlowFunction::FF_NONE;
+
+            // Estimate flow direction based on underlying velocities.
+            if(volume && volume->getRepresentation<VolumeRAM>()) {
+                tgt::svec3 voxel = volume->getWorldToVoxelMatrix() * indicator.center_;
+                auto velocities = dynamic_cast<const VolumeRAM_3xFloat*>(volume->getRepresentation<VolumeRAM>());
+                tgtAssert(velocities, "VolumeRAM_3xFloat required");
+                tgt::vec3 velocity = velocities->voxel(voxel);
+                if(velocity != tgt::vec3::zero) {
+                    velocity = tgt::normalize(velocity);
+                    float threshold = tgt::deg2rad(static_cast<float>(angleThreshold_.get()));
+                    float angle = std::acos(tgt::dot(velocity, indicator.normal_) /
+                                            (tgt::length(velocity) * tgt::length(indicator.normal_)));
+                    if (angle < threshold) {
+                        indicator.direction_ = FlowDirection::FD_IN;
+                    } else if (tgt::PIf - angle < threshold) {
+                        indicator.direction_ = FlowDirection::FD_OUT;
+                    }
+                }
+            }
+
             flowIndicators_.push_back(indicator);
         }
     }
