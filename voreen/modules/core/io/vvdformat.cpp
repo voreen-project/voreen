@@ -164,7 +164,7 @@ VvdObject::VvdObject(const VolumeBase* vb, std::string absRAWPath, bool useExter
         const MetaDataBase* md = vb->getMetaData(keys[i]);
         if(md) {
 
-            if(keys[i] == "Transformation") {
+            if(keys[i] == VolumeBase::META_DATA_NAME_TRANSFORMATION) {
                 const TemplateMetaData<tgt::mat4>* matrixMD = dynamic_cast<const TemplateMetaData<tgt::mat4>*>(md);
                 if(matrixMD) {
                     // write transformation matrix unless it is the identity matrix (default)
@@ -174,7 +174,7 @@ VvdObject::VvdObject(const VolumeBase* vb, std::string absRAWPath, bool useExter
                 }
             }
 
-            if(keys[i] == "Modality") {
+            if(keys[i] == VolumeBase::META_DATA_NAME_MODALITY) {
                 const TemplateMetaData<std::string>* stringMD = dynamic_cast<const TemplateMetaData<std::string>*>(md);
                 if(stringMD) {
                     // write modality unless it is unknown (default)
@@ -185,7 +185,7 @@ VvdObject::VvdObject(const VolumeBase* vb, std::string absRAWPath, bool useExter
                 }
             }
 
-            if(keys[i] == "Timestep") {
+            if(keys[i] == VolumeBase::META_DATA_NAME_TIMESTEP) {
                 const TemplateMetaData<float>* floatMD = dynamic_cast<const TemplateMetaData<float>*>(md);
                 if(floatMD) {
                     // write timestep unless it is 0.0f (default)
