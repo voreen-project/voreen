@@ -32,7 +32,7 @@
 #extension GL_ARB_shading_language_420pack : require
 #extension GL_ARB_shader_atomic_counters : require
 #extension GL_ARB_shader_image_load_store : require
-#extension GL_ARB_gpu_shader5 : require
+#extension GL_ARB_gpu_shader5 : enable
 
 // Append Fragments from an image to linked list
 // Taken from OpenGL programming guide p. 609ff
