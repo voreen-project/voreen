@@ -132,12 +132,12 @@ regressiontest_coreprofile:
     - ls ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/
   artifacts:
     paths:
-    - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files.tar.gz
-    - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*.txt
-    - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*.html
-    - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*/*.txt
-    - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*/*.html
-    - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-report.html
+      #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files.tar.gz
+      #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*.txt
+      #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*.html
+      #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*/*.txt
+      #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*/*.html
+    - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/
       #reports:
       #junit: ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-junit.xml
     expire_in: 1 day
