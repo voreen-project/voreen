@@ -12,7 +12,7 @@ FieldPlotData::FieldPlotData(size_t width, size_t height, size_t numSlices)
 {
     try {
         representation_ = new VolumeRAM_Float(tgt::svec3(width, height, numSlices));
-    } catch(std::bad_alloc e) {
+    } catch(std::bad_alloc& e) {
         LERRORC("voreen.fieldplotdata", "Failed to allocate plot data memory");
         throw;
     }
@@ -37,7 +37,7 @@ void FieldPlotData::drawConnection(size_t x1, size_t x2, float v1, float v2, siz
     long y1 = static_cast<long>(v1 * (getHeight()-1));
     long y2 = static_cast<long>(v2 * (getHeight()-1));
 
-    long dx =  std::abs(x2-x1); //sx = 1;
+    long dx = x2-x1;
     long dy = -std::abs(y2-y1), sy = y1<y2 ? 1 : -1;
     long err = dx+dy;
 
