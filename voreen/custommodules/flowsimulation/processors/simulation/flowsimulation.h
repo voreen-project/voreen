@@ -139,7 +139,7 @@ private:
                             std::vector<FlowIndicatorMaterial>& flowIndicators) const;
 
     bool getResults(        SuperLattice3D<T, DESCRIPTOR>& sLattice,
-                            UnitConverter<T,DESCRIPTOR>& converter, int iT,
+                            UnitConverter<T,DESCRIPTOR>& converter, int ti, int tmax,
                             Dynamics<T, DESCRIPTOR>& bulkDynamics,
                             SuperGeometry3D<T>& superGeometry,
                             STLreader<T>& stlReader,
@@ -149,8 +149,10 @@ private:
                             const std::string& simulationResultPath) const;
 
     void writeResult(       STLreader<T>& stlReader,
-                            UnitConverter<T,DESCRIPTOR>& converter, int iT,
+                            UnitConverter<T,DESCRIPTOR>& converter, int ti, int tmax,
                             SuperLatticePhysF3D<T, DESCRIPTOR>& property,
+                            const FlowParametrizationList& parametrizationList,
+                            size_t selectedParametrization,
                             const std::string& simulationOutputPath,
                             const std::string& name) const;
 

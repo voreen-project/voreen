@@ -50,8 +50,6 @@ public:
 
 private:
 
-    std::function<bool(float, float)> strategy_;
-
     const std::string sliceBaseType_;
 };
 

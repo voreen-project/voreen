@@ -113,6 +113,9 @@ const std::string simulation = "default";
 const std::string base = "/scratch/tmp/s_leis06/simulations/";
 const T VOREEN_LENGTH_TO_SI = 0.001;
 const T VOREEN_TIME_TO_SI = 0.001;
+const std::string META_DATA_NAME_OFFSET = "Offset";
+const std::string META_DATA_NAME_SPACING = "Spacing";
+const std::string META_DATA_NAME_TIMESTEP = "Timestep";
 
 // Config
 T simulationTime = 0.0;
@@ -294,7 +297,7 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
 // Writes result
 void writeResult(STLreader<T>& stlReader,
-                 UnitConverter<T,DESCRIPTOR>& converter, int iT,
+                 UnitConverter<T,DESCRIPTOR>& converter, int ti, int tmax,
                  SuperLatticePhysF3D<T, DESCRIPTOR>& property,
                  const std::string& name) {
 
@@ -307,6 +310,22 @@ void writeResult(STLreader<T>& stlReader,
     const Vector<T, 3> len = (max - min);
     const T maxLen = std::max({len[0], len[1], len[2]});
     const Vector<T, 3> offset = min + (len - maxLen) * 0.5;
+    const Vector<T, 3> spacing(maxLen / resolution);
+
+    // Determine format.
+    // This could be done in a more dynamic way, but the code should be easily portable to the cluster.
+    std::string format;
+    switch(property.getTargetDim()) {
+        case 1:
+            format = "float";
+            break;
+        case 3:
+            format = "Vector3(float)";
+            break;
+        default:
+            clout << "Unhandled target dimensions" << std::endl;
+            return;
+    }
 
     std::vector<float> rawPropertyData;
     rawPropertyData.reserve(static_cast<size_t>(resolution * resolution * resolution * property.getTargetDim()));
@@ -332,18 +351,61 @@ void writeResult(STLreader<T>& stlReader,
         }
     }
 
-    std::string propertyFilename = singleton::directories().getLogOutDir() + "/" + name + "_" + std::to_string(iT) + ".raw"; // TODO: encode simulated time.
-    std::fstream propertyFile(propertyFilename.c_str(), std::ios::out | std::ios::binary);
+    int tmaxLen = static_cast<int>(std::to_string(tmax).length());
+    std::ostringstream suffix;
+    suffix << std::setw(tmaxLen) << std::setfill('0') << ti;
+    std::string propertyFilename = name + "_" + suffix.str();
+    std::string rawFilename = singleton::directories().getLogOutDir() + "/" + propertyFilename + ".raw";
+    std::string vvdFilename = singleton::directories().getLogOutDir() + "/" + propertyFilename + ".vvd";
+
+    const LatticeStatistics<T>& statistics = property.getSuperLattice().getStatistics();
+    std::fstream vvdPropertyFile(vvdFilename.c_str(), std::ios::out);
+    vvdPropertyFile
+            // Header.
+            << "<?xml version=\"1.0\" ?>"
+            << "<VoreenData version=\"1\">"
+            << "<Volumes>"
+            << "<Volume>"
+            // Data.
+            << "<RawData filename=\"" << propertyFilename << ".raw\" format=\"" << format << "\" x=\"" << resolution << "\" y=\""<< resolution << "\" z=\"" << resolution << "\" />"
+            // Mandatory Meta data.
+            << "<MetaData>"
+            << "<MetaItem name=\""<< META_DATA_NAME_OFFSET << "\" type=\"Vec3MetaData\">"
+            << "<value x=\"" << offset[0] << "\" y=\"" << offset[1] << "\" z=\"" << offset[2] << "\" />"
+            << "</MetaItem>"
+            << "<MetaItem name=\"" << META_DATA_NAME_SPACING << "\" type=\"Vec3MetaData\">"
+            << "<value x=\"" << spacing[0] << "\" y=\"" << spacing[1] << "\" z=\"" << spacing[2] << "\" />"
+            << "</MetaItem>"
+            << "<MetaItem name=\"" << META_DATA_NAME_TIMESTEP << "\" type=\"FloatMetaData\" value=\"" << converter.getPhysTime(ti) << "\" />"
+            // Parameters.
+            << "<MetaItem name=\"" << "ParameterCharacteristicLength" << "\" type=\"FloatMetaData\" value=\"" << characteristicLength << "\" />"
+            << "<MetaItem name=\"" << "ParameterCharacteristicVelocity" << "\" type=\"FloatMetaData\" value=\"" << characteristicVelocity << "\" />"
+            << "<MetaItem name=\"" << "ParameterViscosity" << "\" type=\"FloatMetaData\" value=\"" << viscosity << "\" />"
+            << "<MetaItem name=\"" << "ParameterDensity" << "\" type=\"FloatMetaData\" value=\"" << density << "\" />"
+            << "<MetaItem name=\"" << "ParameterBouzidi" << "\" type=\"BoolMetaData\" value=\"" << (bouzidiOn ? "true" : "false") << "\" />"
+            // Additional meta data.
+            << "<MetaItem name=\"" << "StatisticsMaxVelocity" << "\" type=\"FloatMetaData\" value=\"" << statistics.getMaxU() << "\" />"
+            << "<MetaItem name=\"" << "StatisticsAvgEnergy" << "\" type=\"FloatMetaData\" value=\"" << statistics.getAverageEnergy() << "\" />"
+            << "<MetaItem name=\"" << "StatisticsMaxRho" << "\" type=\"FloatMetaData\" value=\"" << statistics.getAverageRho() << "\" />"
+            // Footer.
+            << "</MetaData>"
+            << "</Volume>"
+            << "</Volumes>"
+            << "</VoreenData>";
+
+    vvdPropertyFile.close();
+
+    std::fstream rawPropertyFile(rawFilename.c_str(), std::ios::out | std::ios::binary);
     size_t numBytes = rawPropertyData.size() * sizeof(float) / sizeof(char);
-    propertyFile.write(reinterpret_cast<const char*>(rawPropertyData.data()), numBytes);
-    if (!propertyFile.good()) {
+    rawPropertyFile.write(reinterpret_cast<const char*>(rawPropertyData.data()), numBytes);
+    if (!rawPropertyFile.good()) {
         clout << "Could not write " << name << " file" << std::endl;
     }
 }
 
 // Computes flux at inflow and outflow
 void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
-                UnitConverter<T, DESCRIPTOR>& converter, int iT,
+                UnitConverter<T, DESCRIPTOR>& converter, int ti, int tmax,
                 Dynamics<T, DESCRIPTOR>& bulkDynamics,
                 SuperGeometry3D<T>& superGeometry, Timer<T>& timer, STLreader<T>& stlReader) {
 
@@ -359,29 +421,29 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 #ifdef PARALLEL_MODE_MPI
     //rank = singleton::mpi().getRank();
 #endif
-    if (rank == 0 && iT % vtkIter == 0) {
+    if (rank == 0 && ti % vtkIter == 0) {
         // Write velocity.
         SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
-        writeResult(stlReader, converter, iT, velocity, "velocity");
+        writeResult(stlReader, converter, ti, tmax, velocity, "velocity");
 
         // Write pressure.
         SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
-        writeResult(stlReader, converter, iT, pressure, "pressure");
+        writeResult(stlReader, converter, ti, tmax, pressure, "pressure");
 
         // Write WallShearStress
         // TODO: figure out how and estimate somehow from measured data!
         //SuperLatticePhysWallShearStress3D<T, DESCRIPTOR> wallShearStress(sLattice, superGeometry, MAT_WALL, converter, stlReader);
-        //writeResult(stlReader, converter, iT, wallShearStress, simulationOutputPath, "wallShearStress");
+        //writeResult(stlReader, converter, ti, tmax, wallShearStress, simulationOutputPath, "wallShearStress");
 
         // Write Temperature.
         //SuperLatticePhysTemperature3D<T, DESCRIPTOR, TODO> temperature(sLattice, converter);
-        //writeResult(stlReader, converter, iT, temperature, simulationOutputPath, "temperature");
+        //writeResult(stlReader, converter, ti, tmax, temperature, simulationOutputPath, "temperature");
     }
 
     // Writes output on the console
-    if (iT % statIter == 0) {
+    if (ti % statIter == 0) {
         // Lattice statistics console output
-        sLattice.getStatistics().print(iT, converter.getPhysTime(iT));
+        sLattice.getStatistics().print(ti, converter.getPhysTime(ti));
     }
 
     if (sLattice.getStatistics().getMaxU() > 0.3) {
@@ -536,21 +598,22 @@ int main(int argc, char* argv[]) {
     Timer<T> timer(converter.getLatticeTime(simulationTime), superGeometry.getStatistics().getNvoxel());
     timer.start();
 
-    for (int iT = 0; iT <= converter.getLatticeTime(simulationTime); iT++) {
+    const int tmax = converter.getLatticeTime(simulationTime);
+    for (int ti = 0; ti <= tmax; ti++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
-        setBoundaryValues(sLattice, sOffBoundaryCondition, converter, iT, superGeometry);
+        setBoundaryValues(sLattice, sOffBoundaryCondition, converter, ti, superGeometry);
 
         // === 6th Step: Collide and Stream Execution ===
         sLattice.collideAndStream();
 
         // === 7th Step: Computation and Output of the Results ===
-        getResults(sLattice, converter, iT, bulkDynamics, superGeometry, timer, stlReader);
+        getResults(sLattice, converter, ti, tmax, bulkDynamics, superGeometry, timer, stlReader);
 
         // === 8th Step: Check for convergence.
         converge.takeValue(sLattice.getStatistics().getAverageEnergy(), true);
         if(converge.hasConverged()) {
-            clout << "Simulation converged!";
+            clout << "Simulation converged!" << std::endl;
             break;
         }
     }

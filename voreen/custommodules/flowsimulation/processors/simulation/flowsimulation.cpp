@@ -319,18 +319,19 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
                    flowIndicators);
 
     // === 4th Step: Main Loop  ===
+    const int tmax = converter.getLatticeTime(parametrizationList.getSimulationTime());
     util::ValueTracer<T> converge( converter.getLatticeTime(1.0), 1e-5 );
-    for (int iT = 0; iT <= converter.getLatticeTime(parametrizationList.getSimulationTime()); iT++) {
+    for (int ti = 0; ti <= tmax; ti++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
-        setBoundaryValues(sLattice, sOffBoundaryCondition, converter, iT, superGeometry,
+        setBoundaryValues(sLattice, sOffBoundaryCondition, converter, ti, superGeometry,
                           parametrizationList, input.selectedParametrization, flowIndicators);
 
         // === 6th Step: Collide and Stream Execution ===
         sLattice.collideAndStream();
 
         // === 7th Step: Computation and Output of the Results ===
-        bool success = getResults(sLattice, converter, iT, bulkDynamics, superGeometry, stlReader,
+        bool success = getResults(sLattice, converter, ti, tmax, bulkDynamics, superGeometry, stlReader,
                                   parametrizationList, input.selectedParametrization, flowIndicators,
                                   simulationResultPath);
         if(!success) {
@@ -344,7 +345,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
             break;
         }
 
-        float progress = iT / (converter.getLatticeTime( parametrizationList.getSimulationTime() ) + 1.0f);
+        float progress = ti / (tmax + 1.0f);
         progressReporter.setProgress(progress);
     }
     progressReporter.setProgress(1.0f);
@@ -523,7 +524,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
 // Computes flux at inflow and outflow
 bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
-                                 UnitConverter<T,DESCRIPTOR>& converter, int iT,
+                                 UnitConverter<T,DESCRIPTOR>& converter, int ti, int tmax,
                                  Dynamics<T, DESCRIPTOR>& bulkDynamics,
                                  SuperGeometry3D<T>& superGeometry,
                                  STLreader<T>& stlReader,
@@ -535,35 +536,35 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
     const int vtkIter = converter.getLatticeTime(.1);
     const int statIter = converter.getLatticeTime(.1);
 
-    if (iT % vtkIter == 0) {
+    if (ti % vtkIter == 0) {
         // Write velocity.
         SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
-        writeResult(stlReader, converter, iT, velocity, simulationOutputPath, "velocity");
+        writeResult(stlReader, converter, ti, tmax, velocity, parametrizationList, selectedParametrization, simulationOutputPath, "velocity");
 
         // Write pressure.
         SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
-        writeResult(stlReader, converter, iT, pressure, simulationOutputPath, "pressure");
+        writeResult(stlReader, converter, ti, tmax, pressure, parametrizationList, selectedParametrization, simulationOutputPath, "pressure");
 
         // Write WallShearStress
         // TODO: figure out how and estimate somehow from measured data!
         //SuperLatticePhysWallShearStress3D<T, DESCRIPTOR> wallShearStress(sLattice, superGeometry, MAT_WALL, converter, stlReader);
-        //writeResult(stlReader, converter, iT, wallShearStress, simulationOutputPath, "wallShearStress");
+        //writeResult(stlReader, converter, ti, tmax, wallShearStress, simulationOutputPath, "wallShearStress");
 
         // Write Temperature.
         //SuperLatticePhysTemperature3D<T, DESCRIPTOR, TODO> temperature(sLattice, converter);
-        //writeResult(stlReader, converter, iT, temperature, simulationOutputPath, "temperature");
+        //writeResult(stlReader, converter, ti, tmax, temperature, simulationOutputPath, "temperature");
     }
 
     // Writes output on the console
-    if (iT % statIter == 0) {
+    if (ti % statIter == 0) {
         // Lattice statistics console output
-        LINFO("step="     << iT << "; " <<
-              "t="        << converter.getPhysTime(iT) << "; " <<
+        LINFO("step="     << ti << "; " <<
+              "t="        << converter.getPhysTime(ti) << "; " <<
               "uMax="     << sLattice.getStatistics().getMaxU() << "; " <<
               "avEnergy=" << sLattice.getStatistics().getAverageEnergy() << "; " <<
               "avRho="    << sLattice.getStatistics().getAverageRho()
               );
-        sLattice.getStatistics().print(iT, converter.getPhysTime(iT));
+        sLattice.getStatistics().print(ti, converter.getPhysTime(ti));
     }
 
     if (sLattice.getStatistics().getMaxU() > 0.3) {
@@ -575,8 +576,10 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
 }
 
 void FlowSimulation::writeResult(STLreader<T>& stlReader,
-                                 UnitConverter<T,DESCRIPTOR>& converter, int iT,
+                                 UnitConverter<T,DESCRIPTOR>& converter, int ti, int tmax,
                                  SuperLatticePhysF3D<T, DESCRIPTOR>& property,
+                                 const FlowParametrizationList& parametrizationList,
+                                 size_t selectedParametrization,
                                  const std::string& simulationOutputPath,
                                  const std::string& name) const {
 
@@ -587,6 +590,22 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
     const Vector<T, 3> len = (max - min);
     const T maxLen = std::max({len[0], len[1], len[2]});
     const Vector<T, 3> offset = min + (len - maxLen) * 0.5;
+    const Vector<T, 3> spacing(maxLen / resolution);
+
+    // Determine format.
+    // This could be done in a more dynamic way, but the code should be easily portable to the cluster.
+    std::string format;
+    switch(property.getTargetDim()) {
+    case 1:
+        format = "float";
+        break;
+    case 3:
+        format = "Vector3(float)";
+        break;
+    default:
+        LERROR("Unhandled target dimensions");
+        return;
+    }
 
     std::vector<float> rawPropertyData;
     rawPropertyData.reserve(static_cast<size_t>(resolution * resolution * resolution * property.getTargetDim()));
@@ -612,11 +631,55 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
         }
     }
 
-    std::string propertyFilename = simulationOutputPath + name + "_" + std::to_string(iT) + ".raw"; // TODO: encode simulated time.
-    std::fstream propertyFile(propertyFilename.c_str(), std::ios::out | std::ios::binary);
+    int tmaxLen = static_cast<int>(std::to_string(tmax).length());
+    std::ostringstream suffix;
+    suffix << std::setw(tmaxLen) << std::setfill('0') << ti;
+    std::string propertyFilename = name + "_" + suffix.str();
+    std::string rawFilename = simulationOutputPath + propertyFilename + ".raw";
+    std::string vvdFilename = simulationOutputPath + propertyFilename + ".vvd";
+
+    const FlowParameters& parameters = parametrizationList.at(selectedParametrization);
+    const LatticeStatistics<T>& statistics = property.getSuperLattice().getStatistics();
+    std::fstream vvdPropertyFile(vvdFilename.c_str(), std::ios::out);
+    vvdPropertyFile
+        // Header.
+        << "<?xml version=\"1.0\" ?>"
+        << "<VoreenData version=\"1\">"
+        << "<Volumes>"
+        << "<Volume>"
+        // Data.
+        << "<RawData filename=\"" << propertyFilename << ".raw\" format=\"" << format << "\" x=\"" << resolution << "\" y=\""<< resolution << "\" z=\"" << resolution << "\" />"
+        // Mandatory Meta data.
+        << "<MetaData>"
+        << "<MetaItem name=\""<< VolumeBase::META_DATA_NAME_OFFSET << "\" type=\"Vec3MetaData\">"
+        << "<value x=\"" << offset[0] << "\" y=\"" << offset[1] << "\" z=\"" << offset[2] << "\" />"
+        << "</MetaItem>"
+        << "<MetaItem name=\"" << VolumeBase::META_DATA_NAME_SPACING << "\" type=\"Vec3MetaData\">"
+        << "<value x=\"" << spacing[0] << "\" y=\"" << spacing[1] << "\" z=\"" << spacing[2] << "\" />"
+        << "</MetaItem>"
+        << "<MetaItem name=\"" << VolumeBase::META_DATA_NAME_TIMESTEP << "\" type=\"FloatMetaData\" value=\"" << converter.getPhysTime(ti) << "\" />"
+        // Parameters.
+        << "<MetaItem name=\"" << "ParameterCharacteristicLength" << "\" type=\"FloatMetaData\" value=\"" << parameters.getCharacteristicLength() << "\" />"
+        << "<MetaItem name=\"" << "ParameterCharacteristicVelocity" << "\" type=\"FloatMetaData\" value=\"" << parameters.getCharacteristicVelocity() << "\" />"
+        << "<MetaItem name=\"" << "ParameterViscosity" << "\" type=\"FloatMetaData\" value=\"" << parameters.getViscosity() << "\" />"
+        << "<MetaItem name=\"" << "ParameterDensity" << "\" type=\"FloatMetaData\" value=\"" << parameters.getDensity() << "\" />"
+        << "<MetaItem name=\"" << "ParameterBouzidi" << "\" type=\"BoolMetaData\" value=\"" << (parameters.getBouzidi() ? "true" : "false") << "\" />"
+        // Additional meta data.
+        << "<MetaItem name=\"" << "StatisticsMaxVelocity" << "\" type=\"FloatMetaData\" value=\"" << statistics.getMaxU() << "\" />"
+        << "<MetaItem name=\"" << "StatisticsAvgEnergy" << "\" type=\"FloatMetaData\" value=\"" << statistics.getAverageEnergy() << "\" />"
+        << "<MetaItem name=\"" << "StatisticsMaxRho" << "\" type=\"FloatMetaData\" value=\"" << statistics.getAverageRho() << "\" />"
+        // Footer.
+        << "</MetaData>"
+        << "</Volume>"
+        << "</Volumes>"
+        << "</VoreenData>";
+
+    vvdPropertyFile.close();
+
+    std::fstream rawPropertyFile(rawFilename.c_str(), std::ios::out | std::ios::binary);
     size_t numBytes = rawPropertyData.size() * sizeof(float) / sizeof(char);
-    propertyFile.write(reinterpret_cast<const char*>(rawPropertyData.data()), numBytes);
-    if (!propertyFile.good()) {
+    rawPropertyFile.write(reinterpret_cast<const char*>(rawPropertyData.data()), numBytes);
+    if (!rawPropertyFile.good()) {
         LERROR("Could not write " << name << " file");
     }
 }
