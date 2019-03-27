@@ -103,7 +103,7 @@ namespace voreen {
 
         try {
             HDF5VolumeWriter().write(filenameProp_.get(), fieldPlotInport_.getData()->getVolume());
-        } catch(tgt::FileException e) {
+        } catch(tgt::FileException& e) {
             LERROR(e.what());
             filenameProp_.set("");
         }

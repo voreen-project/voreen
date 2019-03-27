@@ -22,55 +22,31 @@ FieldPlotData::FieldPlotData(size_t width, size_t height, size_t numSlices)
 }
 
 FieldPlotData::FieldPlotData(Volume* volume) {
-    const VolumeRAM* representation = volume->getRepresentation<VolumeRAM>();
-    tgtAssert(representation, "No RAM representation available");
-    representation_ = dynamic_cast<VolumeRAM_Float*>(representation->clone());
-    plotData_ = new Volume(representation_, volume);
-
+    plotData_ = volume;
+    tgtAssert(plotData_, "Volume was null");
+    representation_ = dynamic_cast<VolumeRAM_Float*>(plotData_->getWritableRepresentation<VolumeRAM>());
+    tgtAssert(representation_, "No RAM representation available");
 }
 
 FieldPlotData::~FieldPlotData() {
     delete plotData_;
 }
 
-void FieldPlotData::putSingleMass(size_t x, float v, size_t sliceNumber) {
-
-    float y = v * (getHeight() - 2.0f) + 0.5f;
-
-    size_t xPos = x;
-    float yPos = y;
-
-    size_t yPos1 = static_cast<size_t>(yPos - 0.5f);
-    size_t yPos2 = static_cast<size_t>(yPos + 0.5f);
-
-    if (xPos >= 0 && xPos <= getWidth()-1 && yPos1 >= 0 && yPos2 <= getHeight()-1) {
-        representation_->voxel(xPos, yPos1, sliceNumber) += std::abs(yPos - yPos2);
-        representation_->voxel(xPos, yPos2, sliceNumber) += std::abs(yPos - yPos1);
-    }
-
-}
-
 void FieldPlotData::drawConnection(size_t x1, size_t x2, float v1, float v2, size_t sliceNumber) {
 
-    float y1 = v1 * (getHeight() - 2.0f) + 0.5f;
-    float y2 = v2 * (getHeight() - 2.0f) + 0.5f;
+    long y1 = static_cast<long>(v1 * (getHeight()-1));
+    long y2 = static_cast<long>(v2 * (getHeight()-1));
 
-    float gradient = (y2-y1) / (x2-x1);
-    size_t lineLength = x2 - x1;
+    long dx =  std::abs(x2-x1); //sx = 1;
+    long dy = -std::abs(y2-y1), sy = y1<y2 ? 1 : -1;
+    long err = dx+dy;
 
-    for (size_t i=0; i<lineLength; i++)
-    {
-        size_t xPos = x1 + i;
-        float yPos = y1 + gradient*i;
-
-        size_t yPos1 = static_cast<int>(yPos - 0.5f);
-        size_t yPos2 = static_cast<int>(yPos + 0.5f);
-
-        if (xPos >= 0 && xPos <= getWidth()-1 && yPos1 >= 0 && yPos2 <= getHeight()-1)
-        {
-            representation_->voxel(xPos, yPos1, sliceNumber) += std::abs(yPos - yPos2);
-            representation_->voxel(xPos, yPos2, sliceNumber) += std::abs(yPos - yPos1);
-        }
+    while (true) {
+        representation_->voxel(x1, y1, sliceNumber)++;
+        if (x1==x2 && y1==y2) break;
+        long e2 = 2*err;
+        if (e2 > dy) { err += dy; x1 += 1;  } /* e_xy+e_x > 0 */
+        if (e2 < dx) { err += dx; y1 += sy; } /* e_xy+e_y < 0 */
     }
 }
 
@@ -84,14 +60,6 @@ size_t FieldPlotData::getWidth()  const {
 }
 size_t FieldPlotData::getHeight() const {
     return plotData_->getDimensions().y;
-}
-
-void FieldPlotData::serialize(Serializer& s) const {
-
-}
-
-void FieldPlotData::deserialize(Deserializer& s) {
-
 }
 
 }

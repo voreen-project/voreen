@@ -96,17 +96,12 @@ void FieldPlotSource::loadFieldPlot() {
 
     try {
 
-        VolumeList* list = HDF5VolumeReader().read(filenameProp_.get());
-        tgtAssert(list->size() == 1, "Only one volume expected");
+        std::unique_ptr<VolumeList> list(HDF5VolumeReader().read(filenameProp_.get()));
+        tgtAssert(list->size() == 1, "Exactly one volume expected");
 
-        FieldPlotData* plotData = new FieldPlotData(static_cast<Volume*>(list->first()));
+        FieldPlotData* plotData = new FieldPlotData(dynamic_cast<Volume*>(list->first()));
         fieldPlotOutport_.setData(plotData, true);
-
-        // Delete volumes, since plot data creates a local copy.
-        delete list->first();
-        delete list;
-
-    } catch(tgt::FileException e) {
+    } catch(tgt::FileException& e) {
         LERROR(e.what());
         filenameProp_.set("");
     }

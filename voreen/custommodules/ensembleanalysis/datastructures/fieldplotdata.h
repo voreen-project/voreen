@@ -32,27 +32,22 @@ namespace voreen {
 
 class Volume;
 
-class FieldPlotData : public Serializable
+class FieldPlotData
 {
 public:
 
     FieldPlotData(size_t width, size_t height, size_t numSlices);
-    FieldPlotData(Volume* volume); // Creates a local copy! TODO: temporarily, remove
+    FieldPlotData(Volume* volume); // Takes ownership
     ~FieldPlotData();
 
     //add connection between two points x1 and x2 with corresponding values v1 and v2
     void drawConnection(size_t x1, size_t x2, float v1, float v2, size_t sliceNumber);
-    //add single value v at certain x
-    void putSingleMass(size_t x, float v, size_t sliceNumber);
 
     /// Retrieve plot data prepared for the use of a transfer function
     Volume* getVolume() const;
 
     size_t getWidth()  const;
     size_t getHeight() const;
-
-    virtual void serialize(Serializer& s) const;
-    virtual void deserialize(Deserializer& s);
 
 private:
 

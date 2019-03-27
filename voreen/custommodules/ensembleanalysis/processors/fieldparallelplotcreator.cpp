@@ -143,36 +143,36 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
             const tgt::vec2& valueRange = data.getValueRange(channel);
             progress.setProgressMessage("Plotting channel " + channel + " [" + std::to_string(valueRange.x) + ", " + std::to_string(valueRange.y) + "]");
             float pixelOffset = pixelPerTimeUnit * (timeOffset + run.timeSteps_[0].time_);
+            float pixel = pixelPerTimeUnit * run.timeSteps_[0].duration_;
+
+            const VolumeBase* volumePrev = run.timeSteps_[0].channels_.at(channel);
+            const VolumeRAM* dataPrev = volumePrev->getRepresentation<VolumeRAM>();
+            tgt::mat4 physicalToVoxelMatrixPrev = volumePrev->getPhysicalToVoxelMatrix();
 
             for (size_t t = 1; t < run.timeSteps_.size(); t++) {
 
-                float pixel = pixelPerTimeUnit * run.timeSteps_[t - 1].duration_;
-
-                // Extract Volumes to retrieve spacing.
-                const VolumeBase* volumePrev = run.timeSteps_[t - 1].channels_.at(channel);
                 const VolumeBase* volumeCurr = run.timeSteps_[t].channels_.at(channel);
-
-                // Request RAM representation for data access.
-                const VolumeRAM* dataPrev = volumePrev->getRepresentation<VolumeRAM>();
                 const VolumeRAM* dataCurr = volumeCurr->getRepresentation<VolumeRAM>();
+                tgt::mat4 physicalToVoxelMatrixCurr = volumePrev->getPhysicalToVoxelMatrix();
 
+                // Determine pixel positions.
                 size_t x1 = static_cast<size_t>(pixelOffset);
                 size_t x2 = static_cast<size_t>(pixelOffset + pixel);
 
                 for (size_t k = 0; k<seedPoints.size(); k++) {
-                    
-                    float voxelPrev = dataPrev->getVoxelNormalizedLinear(volumePrev->getPhysicalToVoxelMatrix() * seedPoints[k]);
-                    float voxelCurr = dataCurr->getVoxelNormalizedLinear(volumePrev->getPhysicalToVoxelMatrix() * seedPoints[k]);
+
+                    float voxelPrev = dataPrev->getVoxelNormalizedLinear(physicalToVoxelMatrixPrev * seedPoints[k]);
+                    float voxelCurr = dataCurr->getVoxelNormalizedLinear(physicalToVoxelMatrixCurr * seedPoints[k]);
 
                     plotData->drawConnection(x1, x2, voxelPrev, voxelCurr, sliceNumber);
-
-                    // Add last column separately.
-                    if (t == run.timeSteps_.size() - 1) {
-                        plotData->putSingleMass(x2, voxelCurr, sliceNumber);
-                    }
                 }
 
+                volumePrev = volumeCurr;
+                dataPrev = dataCurr;
+                physicalToVoxelMatrixPrev = physicalToVoxelMatrixCurr;
+
                 pixelOffset = pixelOffset + pixel;
+                pixel = pixelPerTimeUnit * run.timeSteps_[t].duration_;
 
                 // Update progress.
                 progress.setProgress(std::min(progress.getProgress() + progressIncrement, 1.0f));
