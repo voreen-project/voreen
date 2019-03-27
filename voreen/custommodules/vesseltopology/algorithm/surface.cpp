@@ -64,7 +64,7 @@ void SurfaceBuilder::push_all(SurfaceSlice linearVoxelPositions) {
 
 /// NoFileSurfaceBuilder ---------------------------------------------
 
-#define MAX_UNWRITEN_SURFACE_VOXELS 0xffff
+#define MAX_UNWRITTEN_SURFACE_VOXELS 0xffff
 NoFileSurfaceBuilder::NoFileSurfaceBuilder()
     : filename_(VoreenApplication::app()->getUniqueTmpFilePath())
     , numVoxelsStored_(0)
@@ -104,7 +104,7 @@ void NoFileSurfaceBuilder::flush() {
 void NoFileSurfaceBuilder::push(uint64_t linearVoxelPos) {
     ++numVoxelsStored_;
     unwrittenVoxels_.push_back(linearVoxelPos);
-    if(unwrittenVoxels_.size() >= MAX_UNWRITEN_SURFACE_VOXELS) {
+    if(unwrittenVoxels_.size() >= MAX_UNWRITTEN_SURFACE_VOXELS) {
         flush();
     }
 }
