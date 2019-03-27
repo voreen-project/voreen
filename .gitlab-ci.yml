@@ -129,7 +129,7 @@ regressiontest_coreprofile:
     - tar czf ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files.tar.gz ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files
     - ls -lh ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files.tar.gz
     - ls ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/
-    - echo "OIOIOI"
+    - ls ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/
   artifacts:
     paths:
     - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files.tar.gz
