@@ -43,6 +43,7 @@ struct FlowEnsembleCreatorInput {
     std::string simulationResultPath;
     std::string ensembleOutputPath;
     const VolumeList* measuredData;
+    bool deleteOriginalData;
 };
 
 struct FlowEnsembleCreatorOutput {
@@ -74,12 +75,10 @@ public:
 protected:
     void setDescriptions() {
         setDescription(
-                "Creates an ensemble dataset with disk representations (HDF5) from raw simulated data (local or cluster)"
+                "Creates an ensemble dataset with disk representations (VVD) from raw simulated data (local or cluster)"
                 "and adds measured data. The created ensemble can be used by the ensemble analysis module."
         );
     }
-
-    virtual void adjustPropertiesToInput();
 
 private:
 
@@ -90,11 +89,6 @@ private:
 
     VolumeListPort inport_;
 
-    // Input properties.
-    IntProperty spatialResolution_;
-    FloatVec3Property spacing_;
-    FloatVec3Property offset_;
-
     // Output properties.
     FileDialogProperty simulationResultPath_;
     FileDialogProperty ensembleOutputPath_;
@@ -102,6 +96,9 @@ private:
     BoolProperty deleteOriginalData_;
 
     InteractiveListProperty featureList_;
+
+    FloatProperty simulationTime_;
+    FloatProperty temporalResolution_;
 
     static const std::string loggerCat_; ///< category used in logging
 };
