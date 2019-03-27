@@ -145,18 +145,16 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 if (!volumeHandle->hasDerivedData<VolumeMinMax>())
                     LWARNING("Volume does not contain min max information - needs to be calculated");
 
-                const FloatMetaData* time = dynamic_cast<const FloatMetaData*>(volumeHandle->getMetaData(SIMULATED_TIME_NAME));
-                if(!time) {
-                    delete volumeHandle;
-                    LERROR("Meta data '" << SIMULATED_TIME_NAME << "' not present for " << subURL.getPath());
-                    break;
+                float time = volumeHandle->getTimestep();
+                if(volumeHandle->hasMetaData(SIMULATED_TIME_NAME)) {
+                    time = dynamic_cast<const FloatMetaData*>(volumeHandle->getMetaData(SIMULATED_TIME_NAME))->getValue();
                 }
 
                 if (!timeSet) {
-                    timeStep.time_ = time->getValue();
+                    timeStep.time_ = time;
                     timeSet = true;
                 }
-                else if (timeStep.time_ != time->getValue())
+                else if (timeStep.time_ != time)
                     LWARNING("Meta data '" << SIMULATED_TIME_NAME << "' not equal channel-wise in t=" << timeSteps.size() << " of run" << run);
 
                 const MetaDataBase* name = volumeHandle->getMetaData(NAME_FIELD_NAME);
