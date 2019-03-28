@@ -148,6 +148,7 @@ void PBReader::process() {
             for (int t = 0; t < timesteps; t++) {
                 VolumeDiskPB* magnitude = new VolumeDiskPB(folderProp_.get() + "/" + FILE_MAGNITUDE, invertPosition, dimensions, t);
                 Volume* volume = new Volume(magnitude, spacing, tgt::vec3::zero);
+                volume->setMetaDataValue<StringMetaData>("name", "magnitude");
                 magnitudeList->add(volume);
                 magnitudeVolumes_.push_back(std::unique_ptr<Volume>(volume));
             }
@@ -166,6 +167,7 @@ void PBReader::process() {
                     invertPosition, invertVelocity,
                     dimensions, t);
                 Volume* volume = new Volume(velocity, spacing, tgt::vec3::zero);
+                volume->setMetaDataValue<StringMetaData>("name", "velocity");
                 velocityList->add(volume);
                 velocityVolumes_.push_back(std::unique_ptr<Volume>(volume));
             }
