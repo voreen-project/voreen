@@ -120,6 +120,12 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
         std::vector<EnsembleDataset::TimeStep> timeSteps;
         for(const std::string& fileName : fileNames) {
+
+            // Skip raw files. They belong to VVD files or can't be read anyway.
+            if(fileName.substr(fileName.find_last_of('.')) == ".raw") {
+                continue;
+            }
+
             std::string url = runPath + "/" + fileName;
             std::vector<VolumeReader*> readers = populator.getVolumeSerializer()->getReaders(url);
             if(readers.empty()) {

@@ -47,7 +47,7 @@ FlowEnsembleCreator::FlowEnsembleCreator()
     , deleteOriginalData_("deleteOriginalData", "Delete original Data", false)
     , simulationResultPath_("simulationResultPath", "Simulation Result Path", "Path", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , ensembleOutputPath_("ensembleOutputPath", "Ensemble Output Path", "Path", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
-    , setting_("setting", "Setting", "bovenkamp")
+    , setting_("setting", "Setting", "4d_pc_mri")
     , featureList_("featureList", "Feature List", false)
     , simulationTime_("simulationTime", "Simulation Time (Link with FlowCharacteristics)", 1.0f, 0.0f, 20.0f)
     , temporalResolution_("temporalResolution", "Temporal Resolution (Link with FlowCharacteristics", 3.1f, 0.1f, 100.0f)
@@ -126,7 +126,6 @@ FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput 
     // Gather all files.
     std::vector<std::string> ensembles = tgt::FileSystem::listSubDirectories(input.simulationResultPath);
     for(size_t i=0; i<ensembles.size(); i++) {
-
         const std::string& ensemble = ensembles[i];
         std::string ensemblePath = input.simulationResultPath + "/" + ensemble;
         std::vector<std::string> runs = tgt::FileSystem::listSubDirectories(ensemblePath);
@@ -167,15 +166,14 @@ FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput 
                 continue;
             }
 
-            std::string technique = "4d_pc_mri";
             std::string setting = setting_.get();
             std::string channel = numChannels == 1 ? "magnitude" : "velocity";
-            std::string runPath = input.ensembleOutputPath + "/" + channel + "/" + technique + "/" + setting;
+            std::string runPath = input.ensembleOutputPath + "/" + channel + "/" + ensemble + "/" + setting;
 
             tgt::FileSystem::createDirectoryRecursive(runPath);
 
             if (input.measuredData->size() == 1) {
-                const VolumeBase *original = input.measuredData->first();
+                const VolumeBase* original = input.measuredData->first();
                 VvdVolumeWriter().write(runPath + "/t0.vvd", original);
                 std::unique_ptr<VolumeBase> duplicate(new VolumeDecoratorReplaceTimestep(original, 1.0f));
                 VvdVolumeWriter().write(runPath + "/t1.vvd", duplicate.get());
