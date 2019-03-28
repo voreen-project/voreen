@@ -145,11 +145,10 @@ private:
                 }
             }
         }
-
-        // we do not want to use a constructor which copies the meta data since we do not want to use the old real-world mapping
-        Volume* magnitudeVolume = new Volume(result, handle->getSpacing(), handle->getOffset(), handle->getPhysicalToWorldMatrix());
         
-        // now we set a real-world mapping to rescale the normalized values
+        Volume* magnitudeVolume = new Volume(result, handle);
+
+        // Overwrite real-world mapping to rescale the normalized values
         RealWorldMapping rescaleMapping(maxMagnitude, 0.f, "");
         magnitudeVolume->setRealWorldMapping(rescaleMapping);
 
