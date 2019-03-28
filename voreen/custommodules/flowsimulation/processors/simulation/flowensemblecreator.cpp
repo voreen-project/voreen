@@ -47,7 +47,7 @@ FlowEnsembleCreator::FlowEnsembleCreator()
     , deleteOriginalData_("deleteOriginalData", "Delete original Data", false)
     , simulationResultPath_("simulationResultPath", "Simulation Result Path", "Path", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , ensembleOutputPath_("ensembleOutputPath", "Ensemble Output Path", "Path", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
-    , outputVolumeDeflateLevel_("outputVolumeDeflateLevel", "Deflate Level", 1, 0, 9, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEFAULT)
+    , setting_("setting", "Setting", "bovenkamp")
     , featureList_("featureList", "Feature List", false)
     , simulationTime_("simulationTime", "Simulation Time (Link with FlowCharacteristics)", 1.0f, 0.0f, 20.0f)
     , temporalResolution_("temporalResolution", "Temporal Resolution (Link with FlowCharacteristics", 3.1f, 0.1f, 100.0f)
@@ -75,8 +75,8 @@ FlowEnsembleCreator::FlowEnsembleCreator()
     simulationResultPath_.setGroupID("output");
     addProperty(ensembleOutputPath_);
     ensembleOutputPath_.setGroupID("output");
-    addProperty(outputVolumeDeflateLevel_);
-    outputVolumeDeflateLevel_.setGroupID("output");
+    addProperty(setting_);
+    setting_.setGroupID("output");
     setPropertyGroupGuiName("output", "Output");
 
     addProperty(simulationTime_);
@@ -146,14 +146,14 @@ FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput 
                         (file.substr(dot) == ".vvd" || file.substr(dot) == ".raw")) {
 
                     std::string channel = file.substr(0, underscore);
-
-                    std::string iteration = file.substr(underscore + 1, dot);
+                    std::string iteration = file.substr(underscore + 1);
 
                     std::string newPath = input.ensembleOutputPath + "/";
                     newPath += channel   + "/";
                     newPath += ensemble  + "/";
-                    newPath += run       + "/t_";
-                    newPath += iteration + ".vvd";
+                    //newPath += run       + "/t_"; // VVD file contains filename that would have to be changed.
+                    newPath += run  + "/" + channel + "_";
+                    newPath += iteration;
                     files[oldPath] = newPath;
                 }
             }
@@ -167,9 +167,10 @@ FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput 
                 continue;
             }
 
-            std::string run = "4d_pc_mri";
+            std::string technique = "4d_pc_mri";
+            std::string setting = setting_.get();
             std::string channel = numChannels == 1 ? "magnitude" : "velocity";
-            std::string runPath = input.ensembleOutputPath + "/" + channel + "/" + run;
+            std::string runPath = input.ensembleOutputPath + "/" + channel + "/" + technique + "/" + setting;
 
             tgt::FileSystem::createDirectoryRecursive(runPath);
 

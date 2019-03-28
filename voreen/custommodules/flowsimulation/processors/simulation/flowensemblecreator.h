@@ -90,10 +90,10 @@ private:
     VolumeListPort inport_;
 
     // Output properties.
+    BoolProperty deleteOriginalData_;
     FileDialogProperty simulationResultPath_;
     FileDialogProperty ensembleOutputPath_;
-    IntProperty outputVolumeDeflateLevel_;
-    BoolProperty deleteOriginalData_;
+    StringProperty setting_;
 
     InteractiveListProperty featureList_;
 

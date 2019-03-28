@@ -70,7 +70,7 @@ void FlowCharacteristics::process() {
         maxVelocity = std::max(maxVelocity, minMax->getMaxMagnitude());
     }
 
-    simulationTime_.set(volumeList->size() * temporalResolution_.get());
+    //simulationTime_.set(volumeList->size() * temporalResolution_.get());
     characteristicLength_.set(maxLength);
     minVelocity_.setMaxValue(maxVelocity * 1.2f); // Allow for 20% adjustments.
     minVelocity_.set(minVelocity);
