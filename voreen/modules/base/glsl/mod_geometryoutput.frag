@@ -29,9 +29,9 @@
 // framebuffer or OIT buffers:
 #ifdef USE_TRANSPARENCY
 
-#extension GL_ARB_shading_language_420pack : require
-#extension GL_ARB_shader_atomic_counters : require
-#extension GL_ARB_shader_image_load_store : require
+#extension GL_ARB_shading_language_420pack : enable
+#extension GL_ARB_shader_atomic_counters : enable
+#extension GL_ARB_shader_image_load_store : enable
 #extension GL_ARB_gpu_shader5 : enable
 
 // Append Fragments from an image to linked list
