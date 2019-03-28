@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="GeometryProcessor" ref="ref4" />
+                        <item type="Canvas" ref="ref1" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -67,7 +67,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref1">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="86" y="133" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-8" y="89" width="972" height="763" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="102" y="320" width="972" height="763" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="-1680" y="0" />
@@ -77,7 +77,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-8" y="89" />
+                            <value x="102" y="320" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="972" y="763" />
@@ -91,9 +91,9 @@
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/batman.png" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/batman.png" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/batman.png" />
+                                    <item value="output/batman.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/batman.png" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/batman.png" />
                                 </paths>
                             </paths>
                         </Property>
