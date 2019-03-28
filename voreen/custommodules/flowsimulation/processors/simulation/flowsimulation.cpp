@@ -539,7 +539,7 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                  std::vector<FlowIndicatorMaterial>& flowIndicators,
                                  const std::string& simulationOutputPath) const {
 
-    const int outputIter = converter.getLatticeTime(parametrizationList.getSimulationTime() / parametrizationList.getNumTimeSteps());
+    const int outputIter = tmax / parametrizationList.getNumTimeSteps();
 
     if (ti % outputIter == 0) {
         // Write velocity.

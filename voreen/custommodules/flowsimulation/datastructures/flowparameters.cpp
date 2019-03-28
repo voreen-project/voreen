@@ -143,6 +143,7 @@ FlowParametrizationList::FlowParametrizationList(const std::string& name)
     , simulationTime_(0.0f)
     , temporalResolution_(0.0f)
     , spatialResolution_(0)
+    , numTimeSteps_(0)
 {
 }
 
@@ -151,6 +152,7 @@ FlowParametrizationList::FlowParametrizationList(const FlowParametrizationList& 
     , simulationTime_(origin.simulationTime_)
     , temporalResolution_(origin.temporalResolution_)
     , spatialResolution_(origin.spatialResolution_)
+    , numTimeSteps_(origin.numTimeSteps_)
     , flowIndicators_(origin.flowIndicators_)
     , flowParametrizations_(origin.flowParametrizations_)
 {
@@ -187,14 +189,14 @@ void FlowParametrizationList::setSpatialResolution(int spatialResolution) {
     spatialResolution_ = spatialResolution;
 }
 
-    int FlowParametrizationList::getNumTimeSteps() const {
-        return numTimeSteps_;
-    }
+int FlowParametrizationList::getNumTimeSteps() const {
+    return numTimeSteps_;
+}
 
-    void FlowParametrizationList::setNumTimeSteps(int numTimeSteps) {
-        notifyPendingDataInvalidation();
-        numTimeSteps_ = numTimeSteps;
-    }
+void FlowParametrizationList::setNumTimeSteps(int numTimeSteps) {
+    notifyPendingDataInvalidation();
+    numTimeSteps_ = numTimeSteps;
+}
 
 void FlowParametrizationList::setFlowFunction(FlowFunction flowFunction) {
     notifyPendingDataInvalidation();
