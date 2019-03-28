@@ -131,6 +131,9 @@ public:
     int getSpatialResolution() const;
     void setSpatialResolution(int spatialResolution);
 
+    int getNumTimeSteps() const;
+    void setNumTimeSteps(int numTimeSteps);
+
     /** Overrides flow function for each inflow indicator. Therefore, not getter exists */
     void setFlowFunction(FlowFunction flowFunction);
 
@@ -164,6 +167,7 @@ private:
     float simulationTime_;
     float temporalResolution_;
     int spatialResolution_;
+    int numTimeSteps_;
 
     // Flow indication (in-/out flow).
     std::vector<FlowIndicator> flowIndicators_;

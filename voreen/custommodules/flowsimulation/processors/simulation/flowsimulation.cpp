@@ -77,6 +77,7 @@ FlowSimulation::FlowSimulation()
     , measuredDataPort_(Port::INPORT, "measuredDataPort", "Measured Data Input", false)
     , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
     , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", VoreenApplication::app()->getTemporaryPath("simulation"), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
+    , deleteOldSimulations_("deleteOldSimulations", "Delete old Simulations", false)
     , simulateAllParametrizations_("simulateAllParametrizations", "Simulate all Parametrizations?", false)
     , selectedParametrization_("selectedSimulation", "Selected Parametrization", 0, 0, 0)
 {
@@ -87,6 +88,7 @@ FlowSimulation::FlowSimulation()
     addPort(parameterPort_);
 
     addProperty(simulationResults_);
+    addProperty(deleteOldSimulations_);
 
     addProperty(simulateAllParametrizations_);
     ON_CHANGE_LAMBDA(simulateAllParametrizations_, [this]{
@@ -199,7 +201,8 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
             measuredData,
             flowParameterList,
             selectedParametrization,
-            simulationPath
+            simulationPath,
+            deleteOldSimulations_.get()
     };
 }
 
@@ -247,8 +250,11 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     progressReporter.setProgress(0.0f);
 
     std::string simulationResultPath = input.simulationResultPath + parameters.getName() + "/";
+    if (input.deleteOldSimulations && tgt::FileSystem::dirExists(simulationResultPath)) {
+        tgt::FileSystem::deleteDirectoryRecursive(simulationResultPath);
+    }
     if (!tgt::FileSystem::createDirectory(simulationResultPath)) {
-        LERROR("Output directory could not be created");
+        LERROR("Output directory could not be created. It may already exist.");
         return;
     }
 
@@ -481,7 +487,6 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                         size_t selectedParametrization,
                                         std::vector<FlowIndicatorMaterial>& flowIndicators) const {
     // No of time steps for smooth start-up
-    int iTperiod = converter.getLatticeTime(0.5);
     int iTupdate = 50;
     bool bouzidiOn = parametrizationList.at(selectedParametrization).getBouzidi();
 
@@ -501,6 +506,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 }
                 case FF_SINUS:
                 {
+                    int iTperiod = converter.getLatticeTime(0.5);
                     SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getCharLatticeVelocity());
                     nSinusStartScale(maxVelocity, iTvec);
                     break;
@@ -533,10 +539,9 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                  std::vector<FlowIndicatorMaterial>& flowIndicators,
                                  const std::string& simulationOutputPath) const {
 
-    const int vtkIter = converter.getLatticeTime(.1);
-    const int statIter = converter.getLatticeTime(.1);
+    const int outputIter = converter.getLatticeTime(parametrizationList.getSimulationTime() / parametrizationList.getNumTimeSteps());
 
-    if (ti % vtkIter == 0) {
+    if (ti % outputIter == 0) {
         // Write velocity.
         SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
         writeResult(stlReader, converter, ti, tmax, velocity, parametrizationList, selectedParametrization, simulationOutputPath, "velocity");
@@ -553,10 +558,7 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
         // Write Temperature.
         //SuperLatticePhysTemperature3D<T, DESCRIPTOR, TODO> temperature(sLattice, converter);
         //writeResult(stlReader, converter, ti, tmax, temperature, simulationOutputPath, "temperature");
-    }
 
-    // Writes output on the console
-    if (ti % statIter == 0) {
         // Lattice statistics console output
         LINFO("step="     << ti << "; " <<
               "t="        << converter.getPhysTime(ti) << "; " <<

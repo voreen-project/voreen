@@ -68,6 +68,7 @@ private:
     StringProperty ensembleName_;
     FloatProperty simulationTime_;
     FloatProperty temporalResolution_;
+    IntProperty numTimeSteps_;
 
     FloatMat4Property pickingMatrix_;       ///< Picking matrix from SliceViewer
 

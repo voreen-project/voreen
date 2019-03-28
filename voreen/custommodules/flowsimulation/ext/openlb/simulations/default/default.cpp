@@ -121,6 +121,7 @@ const std::string META_DATA_NAME_TIMESTEP = "Timestep";
 T simulationTime = 0.0;
 T temporalResolution = 0.0;
 int spatialResolution = 1;
+int numTimeSteps = 1;
 std::vector<FlowIndicator> flowIndicators;
 std::vector<MeasuredData> measuredData;
 
@@ -255,7 +256,6 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                        SuperGeometry3D<T>& superGeometry) {
 
     // No of time steps for smooth start-up
-    int iTperiod = converter.getLatticeTime(0.5);
     int iTupdate = 50;
 
     if (iT % iTupdate == 0) {
@@ -274,6 +274,7 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 }
                 case FF_SINUS:
                 {
+                    int iTperiod = converter.getLatticeTime(0.5);
                     SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getCharLatticeVelocity());
                     nSinusStartScale(maxVelocity, iTvec);
                     break;
@@ -415,14 +416,13 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
     SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
     SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
 
-    const int vtkIter = converter.getLatticeTime(.1);
-    const int statIter = converter.getLatticeTime(.1);
+    const int outputIter = converter.getLatticeTime(simulationTime / numTimeSteps);
 
     int rank = 0;
 #ifdef PARALLEL_MODE_MPI
     //rank = singleton::mpi().getRank();
 #endif
-    if (rank == 0 && ti % vtkIter == 0) {
+    if (rank == 0 && ti % outputIter == 0) {
         // Write velocity.
         SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
         writeResult(stlReader, converter, ti, tmax, velocity, "velocity");
@@ -439,10 +439,7 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
         // Write Temperature.
         //SuperLatticePhysTemperature3D<T, DESCRIPTOR, TODO> temperature(sLattice, converter);
         //writeResult(stlReader, converter, ti, tmax, temperature, simulationOutputPath, "temperature");
-    }
 
-    // Writes output on the console
-    if (ti % statIter == 0) {
         // Lattice statistics console output
         sLattice.getStatistics().print(ti, converter.getPhysTime(ti));
     }
@@ -505,6 +502,7 @@ int main(int argc, char* argv[]) {
     simulationTime = std::atof(config["simulationTime"].getAttribute("value").c_str());
     temporalResolution = std::atof(config["temporalResolution"].getAttribute("value").c_str());
     spatialResolution = std::atoi(config["spatialResolution"].getAttribute("value").c_str());
+    numTimeSteps = std::atoi(config["numTimeSteps"].getAttribute("value").c_str());
 
     XMLreader parameters = config["flowParameters"];
     characteristicLength = std::atof(parameters["characteristicLength"].getAttribute("value").c_str());

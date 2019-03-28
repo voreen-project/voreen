@@ -37,9 +37,10 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , volumePort_(Port::INPORT, "volume.inport", "Velocity Data Port (Optional)")
     , flowParametrizationPort_(Port::OUTPORT, "flowParametrization.outport", "Flow Parametrization")
     , ensembleName_("ensembleName", "Ensemble Name", "test_ensemble")
-    , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 10.0f)
-    , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 30.0f)
+    , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 20.0f)
+    , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 200.0f)
     , spatialResolution_("spatialResolution", "Spatial Resolution", 128, 32, 1024)
+    , numTimeSteps_("numTimeSteps", "Num. Output Time Steps", 50, 1, 1000)
     , flowFunction_("flowFunction", "Flow Function")
     , flowDirection_("flowDirection", "Flow Direction")
     , radius_("radius", "Radius", 1.0f, 0.0f, 10.0f)
@@ -61,6 +62,8 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         temporalResolution_.setGroupID("ensemble");
     addProperty(spatialResolution_);
         spatialResolution_.setGroupID("ensemble");
+    addProperty(numTimeSteps_);
+        numTimeSteps_.setGroupID("ensemble");
     setPropertyGroupGuiName("ensemble", "Ensemble");
 
     addProperty(flowFunction_);
@@ -123,8 +126,9 @@ void FlowIndicatorDetection::process() {
 
     FlowParametrizationList* flowParametrizationList = new FlowParametrizationList(ensembleName_.get());
     flowParametrizationList->setSimulationTime(simulationTime_.get());
-    flowParametrizationList->setTemporalResolution(temporalResolution_.get());
+    flowParametrizationList->setTemporalResolution(temporalResolution_.get() / 1000.0f); // Convert ms to s
     flowParametrizationList->setSpatialResolution(spatialResolution_.get());
+    flowParametrizationList->setNumTimeSteps(numTimeSteps_.get());
 
     for(const FlowIndicator& indicator : flowIndicators_) {
         // NONE means invalid or not being selected for output.

@@ -80,6 +80,7 @@ private:
     FloatProperty simulationTime_;
     FloatProperty temporalResolution_;
     IntProperty spatialResolution_;
+    IntProperty numTimeSteps_;
 
     OptionProperty<FlowFunction> flowFunction_;
     OptionProperty<FlowDirection> flowDirection_;

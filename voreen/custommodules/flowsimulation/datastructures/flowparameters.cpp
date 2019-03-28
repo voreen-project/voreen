@@ -187,7 +187,17 @@ void FlowParametrizationList::setSpatialResolution(int spatialResolution) {
     spatialResolution_ = spatialResolution;
 }
 
+    int FlowParametrizationList::getNumTimeSteps() const {
+        return numTimeSteps_;
+    }
+
+    void FlowParametrizationList::setNumTimeSteps(int numTimeSteps) {
+        notifyPendingDataInvalidation();
+        numTimeSteps_ = numTimeSteps;
+    }
+
 void FlowParametrizationList::setFlowFunction(FlowFunction flowFunction) {
+    notifyPendingDataInvalidation();
     for(FlowIndicator& flowIndicator : flowIndicators_) {
         if(flowIndicator.direction_ == FD_IN) {
             flowIndicator.function_ = flowFunction;
@@ -286,6 +296,7 @@ void FlowParametrizationList::deserialize(Deserializer& s) {
     s.deserialize("name", name_);
     s.deserialize("simulationTime", simulationTime_);
     s.deserialize("temporalResolution", temporalResolution_);
+    s.deserialize("numTimeSteps", numTimeSteps_);
     s.deserialize("spatialResolution", spatialResolution_);
     s.deserialize("flowIndicators", flowIndicators_);
     s.deserialize("flowParametrizations", flowParametrizations_,
@@ -297,6 +308,7 @@ void FlowParametrizationList::serializeInternal(Serializer& s, size_t param) con
     s.serialize("name", name_);
     s.serialize("simulationTime", simulationTime_);
     s.serialize("temporalResolution", temporalResolution_);
+    s.serialize("numTimeSteps", numTimeSteps_);
     s.serialize("spatialResolution", spatialResolution_);
     s.serialize("flowIndicators", flowIndicators_);
     if(param == ALL_PARAMETRIZATIONS) {

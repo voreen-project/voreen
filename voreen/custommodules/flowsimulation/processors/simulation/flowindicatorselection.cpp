@@ -35,8 +35,9 @@ FlowIndicatorSelection::FlowIndicatorSelection()
     , renderOutport_(Port::OUTPORT, "render.outport", "Render Outport")
     , flowParametrizationPort_(Port::OUTPORT, "flowParametrization.outport", "Flow Parametrization")
     , ensembleName_("ensembleName", "Ensemble Name", "test_ensemble")
-    , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 10.0f)
-    , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 30.0f)
+    , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 20.0f)
+    , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 200.0f)
+    , numTimeSteps_("numTimeSteps", "Num. Output Time Steps", 50, 1, 1000)
     , pickingMatrix_("pickingMatrix", "Picking Matrix (link with SliceViewer)", tgt::mat4::createIdentity(), tgt::mat4(-1e6f), tgt::mat4(1e6f))
     , rebuildOutput_(true)
 {
@@ -50,6 +51,8 @@ FlowIndicatorSelection::FlowIndicatorSelection()
         simulationTime_.setGroupID("ensemble");
     addProperty(temporalResolution_);
         temporalResolution_.setGroupID("ensemble");
+    addProperty(numTimeSteps_);
+        numTimeSteps_.setGroupID("ensemble");
     setPropertyGroupGuiName("ensemble", "Ensemble");
 
     addProperty(pickingMatrix_);
@@ -65,7 +68,8 @@ void FlowIndicatorSelection::process() {
     if(rebuildOutput_) {
         FlowParametrizationList* parametrizationList = new FlowParametrizationList(ensembleName_.get());
         parametrizationList->setSimulationTime(simulationTime_.get());
-        parametrizationList->setTemporalResolution(temporalResolution_.get());
+        parametrizationList->setTemporalResolution(temporalResolution_.get() / 1000.0f); // Convert ms to s
+        parametrizationList->setNumTimeSteps(numTimeSteps_.get());
         for(const FlowIndicator& flowIndicator : flowIndicators_) {
             parametrizationList->addFlowIndicator(flowIndicator);
         }

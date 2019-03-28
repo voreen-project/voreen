@@ -49,6 +49,7 @@ struct FlowSimulationInput {
     const FlowParametrizationList* parametrizationList;
     size_t selectedParametrization;
     std::string simulationResultPath;
+    bool deleteOldSimulations;
 };
 
 struct FlowSimulationOutput {
@@ -161,6 +162,7 @@ private:
     FlowParametrizationPort parameterPort_;
 
     FileDialogProperty simulationResults_;
+    BoolProperty deleteOldSimulations_;
 
     BoolProperty simulateAllParametrizations_;
     IntProperty selectedParametrization_;

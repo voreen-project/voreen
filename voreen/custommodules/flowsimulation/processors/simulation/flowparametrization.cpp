@@ -35,8 +35,9 @@ FlowParametrization::FlowParametrization()
     , outport_(Port::OUTPORT, "outport", "Parameter Inport")
     , parametrizationName_("parametrizationName", "Parametrization Name", "test_parametrization")
     , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 20.0f)
-    , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 30.0f)
+    , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 200.0f)
     , spatialResolution_("spatialResolution", "Spatial Resolution", 128, 32, 1024)
+    , numTimeSteps_("numTimeSteps", "Num. Output Time Steps", 50, 1, 1000)
     , flowFunction_("flowFunction", "Flow Function")
     , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 10.0f, 0.1f, 1000.0f)
     , characteristicVelocity_("characteristicVelocity", "Characteristic Velocity (mm/s)", 10.0f, 0.0f, 1000.0f)
@@ -62,6 +63,8 @@ FlowParametrization::FlowParametrization()
         temporalResolution_.setGroupID("ensemble");
     addProperty(spatialResolution_);
         spatialResolution_.setGroupID("ensemble");
+    addProperty(numTimeSteps_);
+        numTimeSteps_.setGroupID("ensemble");
     addProperty(flowFunction_);
         flowFunction_.addOption("none", "NONE", FlowFunction::FF_NONE); // get's selected automatically
         flowFunction_.addOption("constant", "CONSTANT", FlowFunction ::FF_CONSTANT);
@@ -204,8 +207,9 @@ void FlowParametrization::process() {
     else {
         flowParametrizationList = new FlowParametrizationList(ensembleName_.get());
         flowParametrizationList->setSimulationTime(simulationTime_.get());
-        flowParametrizationList->setTemporalResolution(temporalResolution_.get());
+        flowParametrizationList->setTemporalResolution(temporalResolution_.get() / 1000.0f); // Convert ms to s
         flowParametrizationList->setSpatialResolution(spatialResolution_.get());
+        flowParametrizationList->setNumTimeSteps(numTimeSteps_.get());
         flowParametrizationList->setFlowFunction(flowFunction_.getValue());
     }
 
