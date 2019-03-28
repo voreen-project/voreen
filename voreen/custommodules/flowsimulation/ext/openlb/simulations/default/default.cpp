@@ -416,7 +416,7 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
     SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
     SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
 
-    const int outputIter = tmax / parametrizationList.getNumTimeSteps();
+    const int outputIter = tmax / numTimeSteps;
 
     int rank = 0;
 #ifdef PARALLEL_MODE_MPI
