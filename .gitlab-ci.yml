@@ -122,8 +122,10 @@ regressiontest_coreprofile:
   stage: test
   script:
     - ls -la --file-type
+    - file ${REPORT_DIR} || true
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
     - ls -la --file-type
+    - file ${REPORT_DIR} || true
     - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
     - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-report.html --splitHtmlReport true --junitReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-junit.xml --reportdir ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60 || true
     - tar czf ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}_files.tar.gz ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/
