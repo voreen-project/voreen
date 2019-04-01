@@ -38,6 +38,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
             libgl1-mesa-glx \
             libglu1-mesa-dev \
             iputils-ping \
-            curl
+            curl \
+            file
 
 RUN useradd -ms /bin/bash test_user
