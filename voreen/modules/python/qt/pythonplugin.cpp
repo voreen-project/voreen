@@ -520,12 +520,10 @@ void PythonPlugin::updateGuiState() {
 }
 
 void PythonPlugin::pyStdout(const std::string& out, const std::string& id) {
-
     // Check if this actual script has been executed.
-    //if(((property_ && property_->get().getId() == id) || (script_ && script_->getId() == id)) && compilerLogWidget_) {
-    LWARNING(id);
+    if(((property_ && property_->get().getId() == id) || (script_ && script_->getId() == id)) && compilerLogWidget_) {
         compilerLogWidget_->append(QString::fromStdString(out));
-    //}
+    }
 }
 
 void PythonPlugin::pyStderr(const std::string& err, const std::string& id) {

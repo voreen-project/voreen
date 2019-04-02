@@ -5,13 +5,13 @@ import voreen_internal
 
 class OutputCatcherStdout:
     def write(self, string):
-        voreen_internal.vrnPrint(string, 0, __voreen_script_id__)
+        voreen_internal.vrnPrint(string, 0)
     def flush(self):
         pass
 
 class OutputCatcherStderr:
     def write(self, string):
-        voreen_internal.vrnPrint(string, 1, __voreen_script_id__)
+        voreen_internal.vrnPrint(string, 1)
     def flush(self):
         pass
         

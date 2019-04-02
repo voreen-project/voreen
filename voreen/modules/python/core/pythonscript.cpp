@@ -161,13 +161,12 @@ bool PythonScript::compile(bool logErrors) {
 bool PythonScript::run(bool logErrors) {
     // use clean environment containing only the built-in symbols,
     // in order to prevent influences of previous script executions
-    PyObject* glb = PyDict_New();
-    PyDict_SetItemString(glb, "__builtins__", PyEval_GetBuiltins());
+    PyObject* glb = PythonModule::getInstance()->cleanGlobals();
 
     // Add the script id for correct output redirection.
     PyObject* id = PyUnicode_FromString(id_.c_str());
     //PyDict_DelItemString(glb, "__voreen_script_id__");
-    PyDict_SetItemString(glb, "__voreen_script_id__", id);
+    PyDict_SetItemString(glb, VOREEN_SCRIPT_ID_IDENTIFIER, id);
 
     bool success;
     if (compiled_){
@@ -186,7 +185,6 @@ bool PythonScript::run(bool logErrors) {
         Py_XDECREF(dum);
     }
 
-    Py_CLEAR(glb);
     Py_CLEAR(id);
 
     if (success) {

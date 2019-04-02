@@ -218,15 +218,18 @@ static PyObject* voreen_setPropertyValue(PyObject* /*self*/, PyObject* args) {
     }
 
     // read processor name and property id
-    char* processorName = PyUnicodeAsString(PyTuple_GetItem(args, 0));
-    char* propertyID = PyUnicodeAsString(PyTuple_GetItem(args, 1));
-    if (!processorName || !propertyID) {
+    std::string processorName_str = PyUnicodeAsString(PyTuple_GetItem(args, 0));
+    std::string propertyID_str = PyUnicodeAsString(PyTuple_GetItem(args, 1));
+    if (processorName_str.empty() || propertyID_str.empty()) {
         PyErr_SetString(PyExc_TypeError, "setPropertyValue() arguments 1 and 2 must be strings");
         return 0;
     }
 
+    char* processorName;
+    char* propertyID;
+
     // fetch property
-    Property* property = getProperty(std::string(processorName), std::string(propertyID), "setPropertyValue");
+    Property* property = getProperty(processorName_str, propertyID_str, "setPropertyValue");
     if (!property)
         return 0;
 
@@ -574,15 +577,18 @@ static PyObject* voreen_setPropertyMinValue(PyObject* /*self*/, PyObject* args) 
     }
 
     // read processor name and property id
-    char* processorName = PyUnicodeAsString(PyTuple_GetItem(args, 0));
-    char* propertyID = PyUnicodeAsString(PyTuple_GetItem(args, 1));
-    if (!processorName || !propertyID) {
+    std::string processorName_str = PyUnicodeAsString(PyTuple_GetItem(args, 0));
+    std::string propertyID_str = PyUnicodeAsString(PyTuple_GetItem(args, 1));
+    if (processorName_str.empty() || propertyID_str.empty()) {
         PyErr_SetString(PyExc_TypeError, "setPropertyMinValue() arguments 1 and 2 must be strings");
         return 0;
     }
 
+    char* processorName;
+    char* propertyID;
+
     // fetch property
-    Property* property = getProperty(std::string(processorName), std::string(propertyID), "setPropertyMinValue");
+    Property* property = getProperty(processorName_str, propertyID_str, "setPropertyMinValue");
     if (!property)
         return 0;
 
@@ -737,15 +743,18 @@ static PyObject* voreen_setPropertyMaxValue(PyObject* /*self*/, PyObject* args) 
     }
 
     // read processor name and property id
-    char* processorName = PyUnicodeAsString(PyTuple_GetItem(args, 0));
-    char* propertyID = PyUnicodeAsString(PyTuple_GetItem(args, 1));
-    if (!processorName || !propertyID) {
+    std::string processorName_str = PyUnicodeAsString(PyTuple_GetItem(args, 0));
+    std::string propertyID_str = PyUnicodeAsString(PyTuple_GetItem(args, 1));
+    if (processorName_str.empty() || propertyID_str.empty()) {
         PyErr_SetString(PyExc_TypeError, "setPropertyMaxValue() arguments 1 and 2 must be strings");
         return 0;
     }
 
+    char* processorName;
+    char* propertyID;
+
     // fetch property
-    Property* property = getProperty(std::string(processorName), std::string(propertyID), "setPropertyMaxValue");
+    Property* property = getProperty(processorName_str, propertyID_str, "setPropertyMaxValue");
     if (!property)
         return 0;
 
@@ -1054,15 +1063,18 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
     }
 
     // read processor name and port id
-    char* processorName = PyUnicodeAsString(PyTuple_GetItem(args, 0));
-    char* portID = PyUnicodeAsString(PyTuple_GetItem(args, 1));
-    if (!processorName || !portID) {
+    std::string processorName_str = PyUnicodeAsString(PyTuple_GetItem(args, 0));
+    std::string portID_str = PyUnicodeAsString(PyTuple_GetItem(args, 1));
+    if (processorName_str.empty() || portID_str.empty()) {
         PyErr_SetString(PyExc_TypeError, "setPortData() arguments 1 and 2 must be strings");
         return 0;
     }
 
+    char* processorName;
+    char* portID;
+
     // fetch port
-    Port* port = getPort(std::string(processorName), std::string(portID), "setPortData");
+    Port* port = getPort(processorName_str, portID_str, "setPortData");
     if (!port)
         return 0;
 

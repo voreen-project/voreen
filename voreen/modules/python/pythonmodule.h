@@ -38,11 +38,13 @@
 namespace voreen {
 
 // Helper to convert Unicode PyObject into c-string
-char* PyUnicodeAsString(PyObject* object);
+std::string PyUnicodeAsString(PyObject* object);
 
 #ifdef DLL_TEMPLATE_INST
 template class VRN_CORE_API tgt::ResourceManager<PythonScript>;
 #endif
+
+extern const char* VOREEN_SCRIPT_ID_IDENTIFIER;
 
 class VRN_CORE_API PythonModule : public VoreenModule, public tgt::ResourceManager<PythonScript> {
 
@@ -107,6 +109,14 @@ public:
     bool checkForPythonError(std::string& errorMsg);
 
     /**
+     * Use this environment in calls to PyEval_EvalCode or PyRun_String. The caller does not
+     * assume ownership of the returned object! Do not decrement reference count!
+     *
+     * You are free to add items to the dictionary via PyDict_Set* calls.
+     */
+    PyObject* cleanGlobals();
+
+    /**
      * Returns the global instance of this class.
      *
      * @note Does not create the instance. If the module class has not been
@@ -131,6 +141,10 @@ protected:
 private:
     /// The actual Voreen Python bindings (uses RAII)
     PyVoreen pyVoreen_;
+
+    // Dictionary to use for calls to PyEval_EvalCode
+    PyObject* globals_;
+    PyObject* initGlobals_;
 
     /// Output of Python scripts is redirected to these.
     static std::vector<PythonOutputListener*> outputListeners_;
