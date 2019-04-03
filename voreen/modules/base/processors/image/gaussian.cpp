@@ -64,6 +64,11 @@ void Gaussian::process() {
         return;
     }
 
+    if(!program_) {
+        LINFO("No valid image shader to execute.");
+        return;
+    }
+
     TextureUnit colorUnit, depthUnit;
 
     //Compute the Gauss kernel and norm
@@ -97,7 +102,7 @@ void Gaussian::process() {
     program_->setUniform("depthTex_", depthUnit.getUnitNumber());
     inport_.setTextureParameters(program_, "textureParameters_");
     program_->setUniform("dir_", tgt::vec2(1.f,0.f));
-    program_->setUniform("gaussKernel_", gaussKernel, 25);
+    program_->setUniform("gaussKernel_", gaussKernel, 26);
     program_->setUniform("norm_", norm);
     program_->setUniform("kernelRadius_", kernelRadius);
     program_->setUniform("channelWeights_",  blurRed_.get() ? 1.f : 0.f,
@@ -121,7 +126,7 @@ void Gaussian::process() {
     program_->setUniform("depthTex_", depthUnit.getUnitNumber());
     inport_.setTextureParameters(program_, "textureParameters_");
     program_->setUniform("dir_", tgt::vec2(0.f,1.f));
-    program_->setUniform("gaussKernel_", gaussKernel, 25);
+    program_->setUniform("gaussKernel_", gaussKernel, 26);
     program_->setUniform("norm_", norm);
     program_->setUniform("kernelRadius_", kernelRadius);
     program_->setUniform("channelWeights_",  blurRed_.get() ? 1.f : 0.f,

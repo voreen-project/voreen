@@ -31,7 +31,7 @@ uniform TextureParameters textureParameters_;
 
 uniform vec2 dir_;
 uniform int kernelRadius_;
-uniform float[25] gaussKernel_;
+uniform float[26] gaussKernel_;
 uniform float norm_;
 uniform vec4 channelWeights_;
 
