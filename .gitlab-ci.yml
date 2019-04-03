@@ -17,7 +17,7 @@ variables:
 
 before_script:
   - export LIBGL_ALWAYS_SOFTWARE="true"
-  - export GALLIUM_DRIVER="swr" #one of softpipe, llvmpipe or swr
+  - export GALLIUM_DRIVER="llvmpipe" #one of softpipe, llvmpipe or swr
 
 build_coreprofile:
   stage: build
