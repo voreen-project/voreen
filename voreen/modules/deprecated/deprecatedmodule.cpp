@@ -25,6 +25,7 @@
 
 #include "deprecatedmodule.h"
 
+#ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
 #include "processors/buttonoverlayprocessor.h"
 #include "processors/canny.h"
 #include "processors/cubeproxygeometry.h"
@@ -37,6 +38,8 @@
 #include "processors/texturetotarget.h"
 #include "processors/volumenormalization.h"
 #include "processors/volumeseriessource.h"
+#endif
+
 #include "processors/volume/volumefiltering.h"
 #include "processors/volume/volumemorphology.h"
 
