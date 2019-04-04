@@ -31,12 +31,6 @@
 
 #include "modules/core/io/vvdvolumewriter.h"
 
-// Include actual Volume Filters.
-#include "../../flowfeatures/magnitudefeature.h"
-//#include "../../flowfeatures/curlfeature.h"       // TODO: implement
-//#include "../../flowfeatures/divergencefeature.h" // TODO: implement
-//#include "../../flowfeatures/helicityfeature.h"   // TODO: implement
-
 namespace voreen {
 
 const std::string FlowEnsembleCreator::loggerCat_("voreen.flowsimulation.FlowEnsembleCreator");
@@ -48,7 +42,6 @@ FlowEnsembleCreator::FlowEnsembleCreator()
     , simulationResultPath_("simulationResultPath", "Simulation Result Path", "Path", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , ensembleOutputPath_("ensembleOutputPath", "Ensemble Output Path", "Path", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , setting_("setting", "Setting", "4d_pc_mri")
-    , featureList_("featureList", "Feature List", false)
     , simulationTime_("simulationTime", "Simulation Time (Link with FlowCharacteristics)", 1.0f, 0.0f, 20.0f)
     , temporalResolution_("temporalResolution", "Temporal Resolution (Link with FlowCharacteristics", 3.1f, 0.1f, 100.0f)
 {
@@ -58,15 +51,6 @@ FlowEnsembleCreator::FlowEnsembleCreator()
     typeCondition->addLinkedCondition(new PortConditionVolumeTypeFloat());
     typeCondition->addLinkedCondition(new PortConditionVolumeType3xFloat());
     inport_.addCondition(new PortConditionVolumeListAdapter(typeCondition));
-
-    addProperty(featureList_);
-    featureList_.setGroupID("feature");
-    featureList_.setDuplicationAllowed(false);
-    setPropertyGroupGuiName("feature", "Feature");
-
-    // Add features.
-    //addFeature(new MagnitudeFeature()); // Will always be added implicitly.
-    //addFeature(new CurlFeature())
 
     // Technical stuff.
     addProperty(deleteOriginalData_);
@@ -102,13 +86,6 @@ Processor* FlowEnsembleCreator::create() const {
 
 FlowEnsembleCreatorInput FlowEnsembleCreator::prepareComputeInput() {
 
-    /*
-    if(featureList_.getInstances().empty()) {
-        LWARNING("Only magnitude will be processed");
-        //throw InvalidInputException("No filter selected", InvalidInputException::S_ERROR);
-    }
-     */
-
     const VolumeList* volumeList = inport_.getThreadSafeData();
 
     return FlowEnsembleCreatorInput{
@@ -118,6 +95,7 @@ FlowEnsembleCreatorInput FlowEnsembleCreator::prepareComputeInput() {
             deleteOriginalData_.get()
     };
 }
+
 FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput input, ProgressReporter& progressReporter) const {
 
     // Map Old -> New filename.
@@ -209,19 +187,12 @@ FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput 
 
     return {};
 }
+
 void FlowEnsembleCreator::processComputeOutput(FlowEnsembleCreatorOutput output) {
     // Delete old data, if desired.
     if(deleteOriginalData_.get()) {
         tgt::FileSystem::deleteDirectoryRecursive(simulationResultPath_.get());
     }
-}
-
-// private methods
-//
-
-void FlowEnsembleCreator::addFeature(FlowFeature* feature) {
-    featureList_.addItem(feature->getName());
-    flowFeatures_.push_back(std::unique_ptr<FlowFeature>(feature));
 }
 
 }   // namespace

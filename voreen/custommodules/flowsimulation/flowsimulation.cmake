@@ -2,10 +2,6 @@
 # Core module resources
 ################################################################################
 
-IF(NOT VRN_MODULE_BIGDATAIMAGEPROCESSING)
-    MESSAGE(FATAL_ERROR "FlowSimulation Module requires big data image processing Module")
-ENDIF()
-
 SET(MOD_CORE_MODULECLASS FlowSimulationModule)
 
 SET(MOD_CORE_SOURCES
@@ -13,9 +9,6 @@ SET(MOD_CORE_SOURCES
 
     # datastructures
     ${MOD_DIR}/datastructures/flowparameters.cpp
-
-    # flow features
-    ${MOD_DIR}/flowfeatures/magnitudefeature.cpp
 
     # ports
     ${MOD_DIR}/ports/flowparametrizationport.cpp
@@ -42,10 +35,6 @@ SET(MOD_CORE_HEADERS
     # datastructures
     ${MOD_DIR}/datastructures/flowparameters.h
 
-    # flow features
-    ${MOD_DIR}/flowfeatures/flowfeature.h
-    ${MOD_DIR}/flowfeatures/magnitudefeature.h
-
     # ports
     ${MOD_DIR}/ports/flowparametrizationport.h
 
@@ -67,7 +56,7 @@ SET(MOD_CORE_HEADERS
 
 IF(VRN_MODULE_VESSELTOPOLOGY)
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
-        ${MOD_DIR}/processors/simulation/flowindicatorselection.h
+        ${MOD_DIR}/processors/simulation/flowindicatordetection.h
     )
     SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
         ${MOD_DIR}/processors/simulation/flowindicatordetection.cpp

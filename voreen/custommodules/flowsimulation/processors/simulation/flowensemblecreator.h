@@ -28,16 +28,8 @@
 
 #include "voreen/core/processors/asynccomputeprocessor.h"
 #include "voreen/core/properties/filedialogproperty.h"
-#include "voreen/core/properties/vectorproperty.h"
-
-#include "custommodules/bigdataimageprocessing/properties/interactivelistproperty.h"
-#include "custommodules/bigdataimageprocessing/volumefiltering/slicereader.h"
 
 namespace voreen {
-
-class SliceReader;
-class VolumeFilter;
-class FlowFeature;
 
 struct FlowEnsembleCreatorInput {
     std::string simulationResultPath;
@@ -59,11 +51,8 @@ public:
     virtual ~FlowEnsembleCreator();
 
     Processor* create() const;
-
     std::string getClassName() const { return "FlowEnsembleCreator"; }
-
     std::string getCategory() const { return "Volume Processing"; }
-
     CodeState getCodeState() const { return CODE_STATE_EXPERIMENTAL; }
 
     virtual bool isReady() const;
@@ -82,11 +71,6 @@ protected:
 
 private:
 
-    void addFeature(FlowFeature* filterProperties);
-
-    /// Filter list
-    std::vector<std::unique_ptr<FlowFeature>> flowFeatures_;
-
     VolumeListPort inport_;
 
     // Output properties.
@@ -94,8 +78,6 @@ private:
     FileDialogProperty simulationResultPath_;
     FileDialogProperty ensembleOutputPath_;
     StringProperty setting_;
-
-    InteractiveListProperty featureList_;
 
     FloatProperty simulationTime_;
     FloatProperty temporalResolution_;
