@@ -31,6 +31,7 @@
 #include "voreen/core/io/volumeserializer.h"
 
 #include "../datastructures/ensembledataset.h"
+#include "../utils/ensemblehash.h"
 #include "../utils/colorpool.h"
 
 namespace voreen {
@@ -48,6 +49,7 @@ EnsembleDataSource::EnsembleDataSource()
     , timeStepProgress_("timeStepProgress", "Time Steps loaded")
     , outport_(Port::OUTPORT, "ensembledataset", "EnsembleDataset Output", false)
     , loadedRuns_("loadedRuns", "Loaded Runs", 5)
+    , hash_("hash", "Hash", "", Processor::VALID, Property::LOD_DEBUG)
 {
     addPort(outport_);
     addProperty(ensemblePath_);
@@ -61,6 +63,8 @@ EnsembleDataSource::EnsembleDataSource()
     loadedRuns_.setColumnLabel(2, "Start Time");
     loadedRuns_.setColumnLabel(3, "End Time");
     loadedRuns_.setColumnLabel(4, "Duration");
+    addProperty(hash_);
+    hash_.setEditable(false);
 
     loadDatasetButton_.onChange(MemberFunctionCallback<EnsembleDataSource>(this, &EnsembleDataSource::buildEnsembleDataset));
 }
@@ -87,11 +91,12 @@ void EnsembleDataSource::deinitialize() {
 }
 
 void EnsembleDataSource::clearEnsembleDataset() {
+    outport_.clear(); // Important: clear the output before deleting volumes!
     volumes_.clear();
-    outport_.clear();
     setProgress(0.0f);
     timeStepProgress_.setProgress(0.0f);
     loadedRuns_.reset();
+    hash_.reset();
 }
 
 void EnsembleDataSource::buildEnsembleDataset() {
@@ -219,6 +224,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
         setProgress(getProgress() + progressPerRun);
     }
 
+    hash_.set(EnsembleHash(*dataset).getHash());
     outport_.setData(dataset, true);
 
     timeStepProgress_.setProgress(1.0f);

@@ -23,51 +23,48 @@
 *                                                                                 *
 ***********************************************************************************/
 
-#include "fieldplotsave.h"
+#include "similaritymatrixsave.h"
 
 #include "voreen/core/voreenapplication.h"
-
-#include "modules/hdf5/io/hdf5volumewriter.h"
 
 #include "tgt/filesystem.h"
 
 namespace voreen {
 
-const std::string FieldPlotSave::loggerCat_("voreen.ensembleanalysis.FieldPlotSave");
+const std::string SimilarityMatrixSave::loggerCat_("voreen.ensembleanalysis.SimilarityMatrixSave");
 
-FieldPlotSave::FieldPlotSave()
+SimilarityMatrixSave::SimilarityMatrixSave()
     : Processor()
     // ports
-    , inport_(Port::INPORT, "fieldPlotInport", "Field Plot Input", false)
+    , inport_(Port::INPORT, "inport", "Similarity Matrix Input", false)
     // properties
-    , filenameProp_("filenameprop", "Save File as", "Select file...", VoreenApplication::app()->getUserDataPath(), "field plot data (*.fpd)", FileDialogProperty::SAVE_FILE, Processor::INVALID_PATH)
-    , saveButton_("saveButton", "Save")
+    , filenameProp_("filenameprop", "Save File as", "Select file...", VoreenApplication::app()->getUserDataPath(), "similarity matrix (*.sm)", FileDialogProperty::SAVE_FILE, Processor::INVALID_PATH)
+    , saveButton_("saveButton", "Save", Processor::INVALID_PATH)
     // members
-    , saveFieldPlot_(true)
+    , saveSimilarityMatrix_(true)
 {
     addPort(inport_);
 
     addProperty(filenameProp_);
     addProperty(saveButton_);
-    saveButton_.onChange(MemberFunctionCallback<FieldPlotSave>(this, &FieldPlotSave::saveFieldPlot));
 }
 
-void FieldPlotSave::invalidate(int inv) {
+void SimilarityMatrixSave::invalidate(int inv) {
     Processor::invalidate(inv);
 
     if (inv == Processor::INVALID_PATH && isInitialized()) {
-        saveFieldPlot_ = true;
+        saveSimilarityMatrix_ = true;
     }
 }
 
-void FieldPlotSave::process() {
-    if (saveFieldPlot_){
-        saveFieldPlot();
-        saveFieldPlot_ = false;
+void SimilarityMatrixSave::process() {
+    if (saveSimilarityMatrix_){
+        saveSimilarityMatrix();
+        saveSimilarityMatrix_ = false;
     }
 }
 
-void FieldPlotSave::saveFieldPlot() {
+void SimilarityMatrixSave::saveSimilarityMatrix() {
     if (!isInitialized())
         return;
     if (!inport_.hasData()) {
@@ -85,7 +82,11 @@ void FieldPlotSave::saveFieldPlot() {
     }
 
     try {
-        HDF5VolumeWriter().write(filenameProp_.get(), inport_.getData()->getVolume());
+        std::fstream stream(filenameProp_.get(), std::ios::out);
+        JsonSerializer json;
+        Serializer s(json);
+        inport_.getData()->serialize(s);
+        json.write(stream, false, true);
     } catch(tgt::FileException& e) {
         LERROR(e.what());
         filenameProp_.set("");

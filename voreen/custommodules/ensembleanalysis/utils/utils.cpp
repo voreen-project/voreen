@@ -27,60 +27,6 @@
 
 namespace voreen {
 
-TimeStepMapper::TimeStepMapper(const EnsembleDataset* dataset)
-    : dataset_(dataset)
-    , minDuration_(std::numeric_limits<float>::max())
-    , maxTime_(std::numeric_limits<float>::lowest())
-    , maxNumTimeSteps_(0)
-{
-    init();
-}
-
-TimeStepMapper::~TimeStepMapper() {
-}
-
-void TimeStepMapper::init() {
-    for(EnsembleDataset::Run run : dataset_->getRuns()) {
-        for(EnsembleDataset::TimeStep timeStep : run.timeSteps_) {
-            minDuration_ = std::min(minDuration_, timeStep.duration_);
-            maxTime_ = std::max(maxTime_, timeStep.time_);
-        }
-    }
-    float globalDuration = 0.0f;
-    while(globalDuration < maxTime_) {
-        for(EnsembleDataset::Run run : dataset_->getRuns()) {
-            for(EnsembleDataset::TimeStep timeStep : run.timeSteps_) {
-                if(timeStep.time_ > globalDuration) {
-                    std::pair<std::string, EnsembleDataset::TimeStep> timeStepPair;
-                    timeStepPair = std::make_pair(run.name_, timeStep);
-                    timeStepMap_[globalDuration].push_back(timeStepPair);
-                    break;
-                }
-            }
-        }
-        globalDuration += minDuration_;
-    }
-    maxNumTimeSteps_ = timeStepMap_.size();
-}
-
-std::map<float, std::vector<std::pair<std::string, EnsembleDataset::TimeStep>>> TimeStepMapper::getTimeSteps() {
-    return timeStepMap_;
-}
-
-
-void TimeStepMapper::iterate(const std::function <void(std::string, EnsembleDataset::TimeStep, float)>& callback) {
-    for(std::pair<float, std::vector<std::pair<std::string, EnsembleDataset::TimeStep>>> ensembleTimeSteps : getTimeSteps()) {
-        float time = ensembleTimeSteps.first;
-
-        for(std::pair<std::string, EnsembleDataset::TimeStep> timeStepPair : ensembleTimeSteps.second) {
-            std::string runName = timeStepPair.first;
-            EnsembleDataset::TimeStep timeStep = timeStepPair.second;
-
-            callback(runName, timeStep, time);
-        }
-     }
-}
-
 }
 
 

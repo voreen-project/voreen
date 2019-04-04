@@ -23,69 +23,71 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_ENSEMBLEDATASOURCE_H
-#define VRN_ENSEMBLEDATASOURCE_H
+#ifndef VRN_SIMILARITYMATRIX_H
+#define VRN_SIMILARITYMATRIX_H
 
-#include "voreen/core/processors/processor.h"
+#include "voreen/core/voreencoreapi.h"
 
-#include "voreen/core/io/volumeserializerpopulator.h"
-#include "voreen/core/ports/genericport.h"
-#include "voreen/core/properties/buttonproperty.h"
-#include "voreen/core/properties/filedialogproperty.h"
-#include "voreen/core/properties/progressproperty.h"
-#include "voreen/core/properties/string/stringtableproperty.h"
+#include "voreen/core/datastructures/datainvalidationobserver.h"
+#include "voreen/core/io/serialization/serializable.h"
 
-#include "../ports/ensembledatasetport.h"
+#include <map>
 
 namespace voreen {
 
-/**
- * Loads multiple volumes and provides them
- * as VolumeList through its outport.
- */
-class VRN_CORE_API EnsembleDataSource : public Processor {
+class EnsembleDataset;
 
-    static const std::string SCALAR_FIELD_NAME; // Deprecated!
-    static const std::string NAME_FIELD_NAME;
-    static const std::string SIMULATED_TIME_NAME;
-
+class VRN_CORE_API SimilarityMatrix : public Serializable {
 public:
-    EnsembleDataSource();
-    virtual ~EnsembleDataSource();
-    virtual Processor* create() const;
 
-    virtual std::string getClassName() const  { return "EnsembleDataSource";    }
-    virtual std::string getCategory() const   { return "Input";                 }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
-    virtual bool usesExpensiveComputation() const { return true; }
+    SimilarityMatrix(); // For deserialization only.
+    explicit SimilarityMatrix(size_t size);
+    SimilarityMatrix(const SimilarityMatrix& other);
+    SimilarityMatrix(SimilarityMatrix&& other);
 
-protected:
-    virtual void setDescriptions() {
-        setDescription("Loads multiple volumes and provides them as VolumeList.");
+    ~SimilarityMatrix();
+
+    SimilarityMatrix& operator=(const SimilarityMatrix& other);
+    SimilarityMatrix& operator=(SimilarityMatrix&& other);
+
+    size_t getSize() const;
+    float& operator() (size_t i, size_t j);
+    float operator() (size_t i, size_t j) const;
+
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+
+private:
+
+    inline size_t index(size_t i, size_t j) const {
+        return (i < j) ? ((i*i-3*i)/2+j) : ((j*j-3*j)/2+i);
     }
 
-    void process();
-    virtual void initialize();
-    virtual void deinitialize();
-
-    void clearEnsembleDataset();
-    void buildEnsembleDataset();
-
-    std::vector<std::unique_ptr<const VolumeBase>> volumes_;
-
-    FileDialogProperty ensemblePath_;
-    ButtonProperty loadDatasetButton_;
-    ProgressProperty runProgress_;
-    ProgressProperty timeStepProgress_;
-    StringTableProperty loadedRuns_;
-    StringProperty hash_;
-
-    /// The structure of the ensemble data.
-    EnsembleDatasetPort outport_;
-
-    static const std::string loggerCat_;
+    std::vector<float> data_;
+    size_t size_;
 };
 
-} // namespace
 
-#endif
+class VRN_CORE_API SimilarityMatrixList : public DataInvalidationObservable, public Serializable {
+public:
+
+    SimilarityMatrixList(); // For deserialization only.
+    explicit SimilarityMatrixList(const EnsembleDataset& dataset);
+    SimilarityMatrixList(const SimilarityMatrixList& other);
+    SimilarityMatrixList(SimilarityMatrixList&& other);
+
+    const std::string& getHash() const;
+    SimilarityMatrix& getSimilarityMatrix(const std::string& channel);
+
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+
+private:
+
+    std::map<std::string, SimilarityMatrix> matrices_;
+    std::string ensembleHash_;
+};
+
+}   // namespace
+
+#endif //VRN_SIMILARITYMATRIX_H

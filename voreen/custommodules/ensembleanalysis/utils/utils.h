@@ -45,27 +45,6 @@ S mapRange(const T& valA, const T& minA, const T& maxA, const S& minB, const S& 
     return S(minB + (maxB - minB) * (valA - minA) / (maxA - minA));
 }
 
-class VRN_CORE_API TimeStepMapper {
-public:
-    TimeStepMapper(const EnsembleDataset* dataset);
-    ~TimeStepMapper();
-    std::map<float, std::vector<std::pair<std::string, EnsembleDataset::TimeStep>>> getTimeSteps();
-
-    float getMinDuration() const { return minDuration_; }
-    float getMaxTime() const { return maxTime_; }
-    int getMaxNumTimeSteps()  const { return maxNumTimeSteps_; }
-    void iterate(const std::function <void(std::string, EnsembleDataset::TimeStep, float)>& callback);
-
-private:
-    const EnsembleDataset* dataset_;
-    float minDuration_;
-    float maxTime_;
-    int maxNumTimeSteps_;
-    std::map<float, std::vector<std::pair<std::string, EnsembleDataset::TimeStep>>> timeStepMap_;
-
-    void init();
-};
-
 }
 
 #endif

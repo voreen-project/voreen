@@ -31,13 +31,16 @@
 #include "processors/fieldparallelplotcreator.h"
 #include "processors/fieldparallelplotviewer.h"
 #include "processors/fieldparallelplothistogram.h"
-#include "custommodules/ensembleanalysis/processors/similarityplot.h"
 #include "processors/similaritydatavolume.h"
+#include "processors/similaritymatrixcreator.h"
+#include "processors/similarityplot.h"
 #include "processors/volumelistmerger.h"
 #include "processors/volumemerger.h"
 
 #include "io/fieldplotsave.h"
 #include "io/fieldplotsource.h"
+#include "io/similaritymatrixsave.h"
+#include "io/similaritymatrixsource.h"
 #ifdef VRN_USE_VTK
 #include "io/vtivolumereader.h"
 #include "io/vtmvolumereader.h"
@@ -58,17 +61,20 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     // Processors
     registerProcessor(new EnsembleDataSource());
     registerProcessor(new EnsembleFilter);
-    registerProcessor(new SimilartyDataVolume());
 
     // Plotting
     registerProcessor(new FieldParallelPlotCreator());
     registerProcessor(new FieldParallelPlotViewer());
     registerProcessor(new FieldParallelPlotHistogram());
+    registerProcessor(new SimilartyDataVolume());
+    registerProcessor(new SimilarityMatrixCreator());
     registerProcessor(new SimilarityPlot());
 
     // IO
     registerProcessor(new FieldPlotSave());
     registerProcessor(new FieldPlotSource());
+    registerProcessor(new SimilarityMatrixSave());
+    registerProcessor(new SimilarityMatrixSource());
 #ifdef VRN_USE_VTK
     registerVolumeReader(new VTIVolumeReader());
     registerVolumeReader(new VTMVolumeReader());

@@ -33,36 +33,23 @@
 
 namespace voreen {
 
-const std::string FieldPlotSource::loggerCat_("voreen.viscontest2018.FieldPlotSource");
+const std::string FieldPlotSource::loggerCat_("voreen.ensembleanalysis.FieldPlotSource");
 
 FieldPlotSource::FieldPlotSource()
     : Processor()
     // ports
-    , fieldPlotOutport_(Port::OUTPORT, "fieldPlotOutport", "Field Plot Output", false)
+    , outport_(Port::OUTPORT, "fieldPlotOutport", "Field Plot Output", false)
     // properties
     , filenameProp_("filenameprop", "Load FPP File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "field plot data (*.fpd)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
     , loadButton_("loadButton", "Load")
     // members
-    , loadFieldPlot_(false)
+    , loadFieldPlot_(true)
 {
-    addPort(fieldPlotOutport_);
+    addPort(outport_);
 
-    loadButton_.onChange(MemberFunctionCallback<FieldPlotSource>(this, &FieldPlotSource::loadFieldPlot));
     addProperty(filenameProp_);
     addProperty(loadButton_);
-}
-
-FieldPlotSource::~FieldPlotSource() {
-}
-
-bool FieldPlotSource::isReady() const {
-    if (!isInitialized())
-        return false;
-
-    if (!fieldPlotOutport_.isReady())
-        return false;
-
-    return true;
+    loadButton_.onChange(MemberFunctionCallback<FieldPlotSource>(this, &FieldPlotSource::loadFieldPlot));
 }
 
 void FieldPlotSource::invalidate(int inv) {
@@ -80,14 +67,11 @@ void FieldPlotSource::process() {
     }
 }
 
-//---------------------------------------------------------------------------------
-//      Callbacks
-//---------------------------------------------------------------------------------
 void FieldPlotSource::loadFieldPlot() {
     if (!isInitialized())
         return;
 
-    fieldPlotOutport_.setData(nullptr);
+    outport_.setData(nullptr);
 
     if (filenameProp_.get().empty()) {
         LWARNING("no filename specified");
@@ -100,7 +84,7 @@ void FieldPlotSource::loadFieldPlot() {
         tgtAssert(list->size() == 1, "Exactly one volume expected");
 
         FieldPlotData* plotData = new FieldPlotData(dynamic_cast<Volume*>(list->first()));
-        fieldPlotOutport_.setData(plotData, true);
+        outport_.setData(plotData, true);
     } catch(tgt::FileException& e) {
         LERROR(e.what());
         filenameProp_.set("");

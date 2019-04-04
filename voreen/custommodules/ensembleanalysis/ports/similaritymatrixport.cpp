@@ -23,54 +23,46 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_SIMILARITYDATA_H
-#define VRN_SIMILARITYDATA_H
-
-#include "voreen/core/voreencoreapi.h"
-
-#include "voreen/core/datastructures/volume/volumeatomic.h"
-#include "voreen/core/datastructures/volume/volumelist.h"
-#include "voreen/core/io/serialization/serializable.h"
-#include "voreen/core/io/serialization/xmlserializer.h"
-#include "voreen/core/io/serialization/xmldeserializer.h"
-#include "voreen/core/ports/port.h"
-
-#include "tgt/vector.h"
-
-#include <map>
+#include "similaritymatrixport.h"
 
 namespace voreen {
 
-/**
- * Datastructure used to represent the actual field data in a
- */
-class VRN_CORE_API SimilarityData : public DataInvalidationObservable {
-public:
+SimilarityMatrixPort::SimilarityMatrixPort(PortDirection direction, const std::string& id, const std::string& guiName, bool allowMultipleConnections, Processor::InvalidationLevel invalidationLevel)
+        : GenericPort<SimilarityMatrixList>(direction, id, guiName, allowMultipleConnections, invalidationLevel) {
+}
 
-    /** Constructor */
-    explicit SimilarityData();
-    /** Destructor */
-    ~SimilarityData();
+std::string SimilarityMatrixPort::getClassName() const {
+    return "SimilarityMatrixPort";
+}
 
-public:
+Port* SimilarityMatrixPort::create(PortDirection direction, const std::string& id, const std::string& guiName) const {
+    return new SimilarityMatrixPort(direction,id,guiName);
+}
 
-    //----------------
-    //  Access
-    //----------------
-    const std::vector<std::vector<float>>& getData() const;
-    const tgt::ivec3 getDimensions() const;
-    const std::vector<std::string> getRuns() const;
+tgt::col3 SimilarityMatrixPort::getColorHint() const {
+    return tgt::col3(150, 72, 190);
+}
 
-private:
+std::string SimilarityMatrixPort::getContentDescription() const {
+    std::stringstream strstr;
+    strstr << Port::getContentDescription();
+    if(hasData()) {
+#ifdef VRN_DEBUG
+        strstr << std::endl << "Hash: " << getData()->getHash();
+#endif
+    }
+    return strstr.str();
+}
 
-    //----------------
-    //  Members
-    //----------------
+std::string SimilarityMatrixPort::getContentDescriptionHTML() const {
+    std::stringstream strstr;
+    strstr << Port::getContentDescriptionHTML();
+    if(hasData()) {
+#ifdef VRN_DEBUG
+        strstr << "<br>" << "Hash: " << getData()->getHash();
+#endif
+    }
+    return strstr.str();
+}
 
-    std::vector<std::vector<float>> data_;
-
-};
-
-}   // namespace
-
-#endif //VRN_SIMILARITYDATA_H
+} // namespace

@@ -23,8 +23,8 @@
 *                                                                                 *
 ***********************************************************************************/
 
-#ifndef VRN_FIELDPLOTLOAD_H
-#define VRN_FIELDPLOTLOAD_H
+#ifndef VRN_FIELDPLOTSOURCE_H
+#define VRN_FIELDPLOTSOURCE_H
 
 #include "voreen/core/processors/processor.h"
 
@@ -36,51 +36,33 @@
 
 namespace voreen {
 
-    class VRN_CORE_API FieldPlotSource : public Processor {
-    public:
-        /** Constructior */
-        FieldPlotSource();
-        /** Destructor */
-        virtual ~FieldPlotSource();
+class VRN_CORE_API FieldPlotSource : public Processor {
+public:
+    FieldPlotSource();
 
-        virtual Processor* create() const         { return new FieldPlotSource(); }
-        virtual std::string getClassName() const  { return "FieldPlotSource"; }
-        virtual std::string getCategory() const   { return "Input"; }
-        virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
+    virtual Processor* create() const         { return new FieldPlotSource(); }
+    virtual std::string getClassName() const  { return "FieldPlotSource"; }
+    virtual std::string getCategory() const   { return "Input"; }
+    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
 
-    protected:
-        virtual void setDescriptions() {
-        }
+protected:
 
-        //--------------------------
-        //  Override
-        //--------------------------
-        /** Saves the volume file. */
-        virtual void process() override;
-        /** Processor should be ready, even if no volume is attached */
-        virtual bool isReady() const override;
-        /** Triggers a auto-save if the file property has changed values. */
-        virtual void invalidate(int inv = 1) override;
+    virtual void process();
+    virtual void invalidate(int inv = 1);
 
-        //--------------
-        //  Callbacks
-        //--------------
-        /** Main function used to save the field plot. Triggered by saveButton_. */
-        void loadFieldPlot();
+private:
 
-        //--------------
-        //  Member
-        //--------------
-    private:
-        FieldPlotDataPort fieldPlotOutport_;
+    void loadFieldPlot();
 
-        FileDialogProperty filenameProp_;               ///< determines the name of the saved file
-        ButtonProperty loadButton_;                     ///< triggers a load
+    FieldPlotDataPort outport_;
 
-        bool loadFieldPlot_;          ///< used to determine, if process should save or not
+    FileDialogProperty filenameProp_;               ///< determines the name of the saved file
+    ButtonProperty loadButton_;                     ///< triggers a load
 
-        static const std::string loggerCat_;
-    };
+    bool loadFieldPlot_;          ///< used to determine, if process should save or not
+
+    static const std::string loggerCat_;
+};
 
 }   //namespace
 

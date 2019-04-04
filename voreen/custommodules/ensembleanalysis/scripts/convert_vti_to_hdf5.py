@@ -20,7 +20,7 @@ for vtiFile in files:
     fullInputPath = inputPath + vtiFile
     fullOutputPath = outputPath + vtiFile.replace(".vti", ".hdf5")
 
-    print ("Converting %s to %s (%s of %s)" % fullInputPath, fullOutputPath, fileCounter, len(files))
+    print ("Converting %s to %s (%s of %s)" % (fullInputPath, fullOutputPath, fileCounter, len(files)))
     fileCounter += 1
 
     if os.path.isfile(fullOutputPath):

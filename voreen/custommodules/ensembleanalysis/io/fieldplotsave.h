@@ -36,52 +36,34 @@
 
 namespace voreen {
 
-    class VRN_CORE_API FieldPlotSave : public Processor {
-    public:
-        /** Constructior */
-        FieldPlotSave();
-        /** Destructor */
-        virtual ~FieldPlotSave();
+class VRN_CORE_API FieldPlotSave : public Processor {
+public:
+    FieldPlotSave();
 
-        virtual Processor* create() const         { return new FieldPlotSave(); }
-        virtual std::string getClassName() const  { return "FieldPlotSave"; }
-        virtual std::string getCategory() const   { return "Output"; }
-        virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
-        virtual bool isEndProcessor() const       { return true; }
+    virtual Processor* create() const         { return new FieldPlotSave(); }
+    virtual std::string getClassName() const  { return "FieldPlotSave"; }
+    virtual std::string getCategory() const   { return "Output"; }
+    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
+    virtual bool isEndProcessor() const       { return true; }
 
-    protected:
-        virtual void setDescriptions() {
-        }
+protected:
 
-        //--------------------------
-        //  Override
-        //--------------------------
-        /** Saves the volume file. */
-        virtual void process() override;
-        /** Processor should be ready, even if no volume is attached */
-        virtual bool isReady() const override;
-        /** Triggers a auto-save if the file property has changed values. */
-        virtual void invalidate(int inv = 1) override;
+    virtual void process();
+    virtual void invalidate(int inv = 1);
 
-        //--------------
-        //  Callbacks
-        //--------------
-        /** Main function used to save the field plot. Triggered by saveButton_. */
-        void saveFieldPlot();
+private:
 
-        //--------------
-        //  Member
-        //--------------
-    private:
-        FieldPlotDataPort fieldPlotInport_;
+    void saveFieldPlot();
 
-        FileDialogProperty filenameProp_;               ///< determines the name of the saved file
-        ButtonProperty saveButton_;                     ///< triggers a save
+    FieldPlotDataPort inport_;
 
-        bool saveFieldPlot_;          ///< used to determine, if process should save or not
+    FileDialogProperty filenameProp_;               ///< determines the name of the saved file
+    ButtonProperty saveButton_;                     ///< triggers a save
 
-        static const std::string loggerCat_;
-    };
+    bool saveFieldPlot_;          ///< used to determine, if process should save or not
+
+    static const std::string loggerCat_;
+};
 
 }   //namespace
 

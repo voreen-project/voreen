@@ -23,68 +23,75 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_ENSEMBLEDATASOURCE_H
-#define VRN_ENSEMBLEDATASOURCE_H
+#ifndef VRN_MDSPLOT_H
+#define VRN_MDSPLOT_H
 
-#include "voreen/core/processors/processor.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
 
-#include "voreen/core/io/volumeserializerpopulator.h"
-#include "voreen/core/ports/genericport.h"
-#include "voreen/core/properties/buttonproperty.h"
-#include "voreen/core/properties/filedialogproperty.h"
-#include "voreen/core/properties/progressproperty.h"
-#include "voreen/core/properties/string/stringtableproperty.h"
+#include "voreen/core/properties/floatproperty.h"
+#include "voreen/core/properties/intproperty.h"
+#include "voreen/core/properties/optionproperty.h"
 
 #include "../ports/ensembledatasetport.h"
+#include "../ports/similaritymatrixport.h"
 
 namespace voreen {
 
-/**
- * Loads multiple volumes and provides them
- * as VolumeList through its outport.
- */
-class VRN_CORE_API EnsembleDataSource : public Processor {
+struct SimilarityMatrixCreatorInput {
+    const EnsembleDataset& dataset;
+    std::unique_ptr<SimilarityMatrixList> outputMatrices;
+    std::vector<tgt::vec3> seedPoints;
+};
 
-    static const std::string SCALAR_FIELD_NAME; // Deprecated!
-    static const std::string NAME_FIELD_NAME;
-    static const std::string SIMULATED_TIME_NAME;
+struct SimilarityMatrixCreatorOutput {
+    std::unique_ptr<SimilarityMatrixList> outputMatrices;
+};
 
+
+class VRN_CORE_API SimilarityMatrixCreator : public AsyncComputeProcessor<SimilarityMatrixCreatorInput, SimilarityMatrixCreatorOutput> {
 public:
-    EnsembleDataSource();
-    virtual ~EnsembleDataSource();
-    virtual Processor* create() const;
+    SimilarityMatrixCreator();
 
-    virtual std::string getClassName() const  { return "EnsembleDataSource";    }
-    virtual std::string getCategory() const   { return "Input";                 }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
-    virtual bool usesExpensiveComputation() const { return true; }
+    virtual Processor* create() const;
+    virtual std::string getClassName() const        { return "SimilarityMatrixCreator"; }
+    virtual std::string getCategory() const         { return "Plotting";                }
+    virtual CodeState getCodeState() const          { return CODE_STATE_EXPERIMENTAL;   }
+
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
 
 protected:
-    virtual void setDescriptions() {
-        setDescription("Loads multiple volumes and provides them as VolumeList.");
-    }
 
-    void process();
-    virtual void initialize();
-    virtual void deinitialize();
+    virtual bool isReady() const;
+    virtual void adjustPropertiesToInput();
 
-    void clearEnsembleDataset();
-    void buildEnsembleDataset();
+private:
 
-    std::vector<std::unique_ptr<const VolumeBase>> volumes_;
+    enum FieldSimilarityMeasure {
+        MEASURE_ISOSURFACE,
+        MEASURE_MULTIFIELD,
+    };
 
-    FileDialogProperty ensemblePath_;
-    ButtonProperty loadDatasetButton_;
-    ProgressProperty runProgress_;
-    ProgressProperty timeStepProgress_;
-    StringTableProperty loadedRuns_;
-    StringProperty hash_;
+    OptionProperty<FieldSimilarityMeasure> fieldSimilarityMeasure_;
+    FloatProperty isoValue_;
+    IntProperty numSeedPoints_;
+    IntProperty numEigenvalues_;
+    IntProperty seedTime_;
 
-    /// The structure of the ensemble data.
-    EnsembleDatasetPort outport_;
+    /// Inport for the ensemble data structure.
+    EnsembleDatasetPort inport_;
+
+    /// Inport for seed mask.
+    VolumePort seedMask_;
+
+    /// Plotport used to output eigenvalues.
+    SimilarityMatrixPort outport_;
 
     static const std::string loggerCat_;
 };
+
+
 
 } // namespace
 

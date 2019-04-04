@@ -56,10 +56,13 @@ SET(MOD_CORE_SOURCES
     #Datastructures
     ${MOD_DIR}/datastructures/ensembledataset.cpp
     ${MOD_DIR}/datastructures/fieldplotdata.cpp
+    ${MOD_DIR}/datastructures/similaritymatrix.cpp
 
     #IO
     ${MOD_DIR}/io/fieldplotsave.cpp
     ${MOD_DIR}/io/fieldplotsource.cpp
+    ${MOD_DIR}/io/similaritymatrixsave.cpp
+    ${MOD_DIR}/io/similaritymatrixsource.cpp
 
     #Processors
     ${MOD_DIR}/processors/ensembledatasource.cpp
@@ -68,8 +71,9 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/fieldparallelplotcreator.cpp
     ${MOD_DIR}/processors/fieldparallelplothistogram.cpp
     ${MOD_DIR}/processors/fieldparallelplotviewer.cpp
-    ${MOD_DIR}/processors/similarityplot.cpp
     ${MOD_DIR}/processors/similaritydatavolume.cpp
+    ${MOD_DIR}/processors/similaritymatrixcreator.cpp
+    ${MOD_DIR}/processors/similarityplot.cpp
     ${MOD_DIR}/processors/volumelistmerger.cpp
     ${MOD_DIR}/processors/volumemerger.cpp
 
@@ -79,6 +83,7 @@ SET(MOD_CORE_SOURCES
     #Ports
     ${MOD_DIR}/ports/ensembledatasetport.cpp
     ${MOD_DIR}/ports/fieldplotdataport.cpp
+    ${MOD_DIR}/ports/similaritymatrixport.cpp
 
     #Conditions
     ${MOD_DIR}/ports/conditions/portconditionensemble.cpp
@@ -95,10 +100,13 @@ SET(MOD_CORE_HEADERS
     #Datastructures
     ${MOD_DIR}/datastructures/ensembledataset.h
     ${MOD_DIR}/datastructures/fieldplotdata.h
+    ${MOD_DIR}/datastructures/similaritymatrix.h
 
     #IO
     ${MOD_DIR}/io/fieldplotsave.h
     ${MOD_DIR}/io/fieldplotsource.h
+    ${MOD_DIR}/io/similaritymatrixsave.h
+    ${MOD_DIR}/io/similaritymatrixsource.h
 
     #Processors
     ${MOD_DIR}/processors/ensembledatasource.h
@@ -107,8 +115,9 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/fieldparallelplotcreator.h
     ${MOD_DIR}/processors/fieldparallelplothistogram.h
     ${MOD_DIR}/processors/fieldparallelplotviewer.h
-    ${MOD_DIR}/processors/similarityplot.h
     ${MOD_DIR}/processors/similaritydatavolume.h
+    ${MOD_DIR}/processors/similaritymatrixcreator.h
+    ${MOD_DIR}/processors/similarityplot.h
     ${MOD_DIR}/processors/volumelistmerger.h
     ${MOD_DIR}/processors/volumemerger.h
 
@@ -119,6 +128,7 @@ SET(MOD_CORE_HEADERS
     #Ports
     ${MOD_DIR}/ports/ensembledatasetport.h
     ${MOD_DIR}/ports/fieldplotdataport.h
+    ${MOD_DIR}/ports/similaritymatrixport.h
 
     #Conditions
     ${MOD_DIR}/ports/conditions/portconditionensemble.h

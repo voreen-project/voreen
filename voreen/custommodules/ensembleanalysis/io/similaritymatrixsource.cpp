@@ -23,69 +23,68 @@
 *                                                                                 *
 ***********************************************************************************/
 
-#include "fieldplotsave.h"
+#include "similaritymatrixsource.h"
 
 #include "voreen/core/voreenapplication.h"
-
-#include "modules/hdf5/io/hdf5volumewriter.h"
 
 #include "tgt/filesystem.h"
 
 namespace voreen {
 
-const std::string FieldPlotSave::loggerCat_("voreen.ensembleanalysis.FieldPlotSave");
+const std::string SimilarityMatrixSource::loggerCat_("voreen.ensembleanalysis.SimilarityMatrixSource");
 
-FieldPlotSave::FieldPlotSave()
+SimilarityMatrixSource::SimilarityMatrixSource()
     : Processor()
     // ports
-    , inport_(Port::INPORT, "fieldPlotInport", "Field Plot Input", false)
+    , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
     // properties
-    , filenameProp_("filenameprop", "Save File as", "Select file...", VoreenApplication::app()->getUserDataPath(), "field plot data (*.fpd)", FileDialogProperty::SAVE_FILE, Processor::INVALID_PATH)
-    , saveButton_("saveButton", "Save")
+    , filenameProp_("filenameprop", "Load Similarity Matrix File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "similarity matrix (*.sm)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
+    , loadButton_("loadButton", "Load", INVALID_PATH)
     // members
-    , saveFieldPlot_(true)
+    , loadSimilarityMatrix_(true)
 {
-    addPort(inport_);
+    addPort(outport_);
 
     addProperty(filenameProp_);
-    addProperty(saveButton_);
-    saveButton_.onChange(MemberFunctionCallback<FieldPlotSave>(this, &FieldPlotSave::saveFieldPlot));
+    addProperty(loadButton_);
 }
 
-void FieldPlotSave::invalidate(int inv) {
+void SimilarityMatrixSource::invalidate(int inv) {
     Processor::invalidate(inv);
 
     if (inv == Processor::INVALID_PATH && isInitialized()) {
-        saveFieldPlot_ = true;
+        loadSimilarityMatrix_ = true;
     }
 }
 
-void FieldPlotSave::process() {
-    if (saveFieldPlot_){
-        saveFieldPlot();
-        saveFieldPlot_ = false;
+void SimilarityMatrixSource::process() {
+    if (loadSimilarityMatrix_){
+        loadSimilarityMatrix();
+        loadSimilarityMatrix_ = false;
     }
 }
 
-void FieldPlotSave::saveFieldPlot() {
+void SimilarityMatrixSource::loadSimilarityMatrix() {
     if (!isInitialized())
         return;
-    if (!inport_.hasData()) {
-        LWARNING("no input field plot");
-        return;
-    }
+
+    outport_.setData(nullptr);
+
     if (filenameProp_.get().empty()) {
         LWARNING("no filename specified");
         return;
     }
-    std::string extension = FileSys.fileExtension(filenameProp_.get(), true);
-    if (extension.compare("fpd")) {
-        LWARNING("Selected file extension is not *.fpd");
-        return;
-    }
 
     try {
-        HDF5VolumeWriter().write(filenameProp_.get(), inport_.getData()->getVolume());
+
+        std::unique_ptr<SimilarityMatrixList> similarityMatrices(new SimilarityMatrixList());
+
+        std::fstream stream(filenameProp_.get(), std::ios::in);
+        JsonDeserializer json;
+        json.read(stream, true);
+        Deserializer s(json);
+        similarityMatrices->deserialize(s);
+
     } catch(tgt::FileException& e) {
         LERROR(e.what());
         filenameProp_.set("");
