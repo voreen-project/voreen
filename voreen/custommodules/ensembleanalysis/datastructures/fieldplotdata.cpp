@@ -42,12 +42,14 @@ void FieldPlotData::drawConnection(size_t x1, size_t x2, float v1, float v2, siz
     long err = dx+dy;
 
     while (true) {
-        representation_->voxel(x1, y1, sliceNumber)++;
         if (x1==x2 && y1==y2) break;
+        representation_->voxel(x1, y1, sliceNumber)++;
         long e2 = 2*err;
         if (e2 > dy) { err += dy; x1 += 1;  } /* e_xy+e_x > 0 */
         if (e2 < dx) { err += dx; y1 += sy; } /* e_xy+e_y < 0 */
     }
+
+    // Note: the last x coord wont't be drawn.
 }
 
 

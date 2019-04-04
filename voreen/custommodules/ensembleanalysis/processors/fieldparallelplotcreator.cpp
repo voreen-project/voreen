@@ -35,6 +35,7 @@
 #include "voreen/core/utils/glsl.h"
 
 #include "../utils/ensemblehash.h"
+#include "../utils/utils.h"
 
 #include <random>
 
@@ -55,9 +56,7 @@ FieldParallelPlotCreator::FieldParallelPlotCreator()
     , horizontalResolutionPerTimeUnit_("horizontalResolutionPerTimeUnit", "Horizontal Resolution (Per Time Unit)", 10, 1, 100)
 {    
     addPort(inport_);
-    ON_CHANGE(inport_, FieldParallelPlotCreator, adjustToEnsemble);
     addPort(seedMask_);
-    seedMask_.addCondition(new PortConditionVolumeTypeUInt8());
     addPort(outport_);
 
     addProperty(numSeedPoints_);
@@ -97,31 +96,30 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
         LINFO("Restricting seed points to volume mask");
     }
 
-    size_t tHeight = static_cast<size_t>(verticalResolution_.get());
-    size_t tWidth = static_cast<size_t>(input.getMaxTotalDuration() * horizontalResolutionPerTimeUnit_.get()) + 1;
-    size_t depth = static_cast<size_t>(input.getCommonChannels().size() * input.getRuns().size());
+    size_t height = static_cast<size_t>(verticalResolution_.get());
+    size_t width  = static_cast<size_t>(input.getMaxTotalDuration() * horizontalResolutionPerTimeUnit_.get()) + 1;
+    size_t depth  = static_cast<size_t>(input.getCommonChannels().size() * input.getRuns().size());
 
-    std::unique_ptr<FieldPlotData> plotData(new FieldPlotData(tWidth, tHeight, depth));
+    std::unique_ptr<FieldPlotData> plotData(new FieldPlotData(width, height, depth));
 
     std::function<float()> rnd(std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
 
-    std::vector<tgt::vec3> seedPoints(numSeedPoints_.get());
+    std::vector<tgt::vec3> seedPoints;
     for (int k = 0; k<numSeedPoints_.get(); k++) {
-        seedPoints[k] = tgt::vec3(rnd(), rnd(), rnd());
-        seedPoints[k] = tgt::vec3(roi.getLLF()) + seedPoints[k] * tgt::vec3(roi.diagonal());
+        tgt::vec3 seedPoint(rnd(), rnd(), rnd());
+        seedPoint = tgt::vec3(roi.getLLF()) + seedPoint * tgt::vec3(roi.diagonal());
 
         // TODO: very rough and dirty restriction, implement something more intelligent.
-        if (seedMask && (!seedMaskBounds.containsPoint(seedPoints[k]) ||
-          seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoints[k]) == 0.0f)) {
-            k--; // reseed this point.
-            continue;
+        if (!seedMask || (seedMaskBounds.containsPoint(seedPoints[k]) &&
+          seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoints[k]) > 0.0f)) {
+            seedPoints.push_back(seedPoint);
         }
     }
 
     return FieldParallelPlotCreatorInput{
             input,
             std::move(plotData),
-            seedPoints
+            std::move(seedPoints)
     };
 }
 FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPlotCreatorInput input, ProgressReporter& progress) const {
@@ -130,7 +128,7 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
 
     const EnsembleDataset& data = input.dataset;
     std::unique_ptr<FieldPlotData> plotData = std::move(input.outputPlot);
-    std::vector<tgt::vec3> seedPoints = input.seedPoints;
+    std::vector<tgt::vec3> seedPoints = std::move(input.seedPoints);
 
     const float progressIncrement = 1.0f / (data.getTotalNumTimeSteps() * data.getCommonChannels().size());
     const int pixelPerTimeUnit = horizontalResolutionPerTimeUnit_.get();
@@ -141,19 +139,16 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
         for (const EnsembleDataset::Run& run : data.getRuns()) {
 
             const tgt::vec2& valueRange = data.getValueRange(channel);
-            progress.setProgressMessage("Plotting channel " + channel + " [" + std::to_string(valueRange.x) + ", " + std::to_string(valueRange.y) + "]");
             float pixelOffset = pixelPerTimeUnit * (timeOffset + run.timeSteps_[0].time_);
             float pixel = pixelPerTimeUnit * run.timeSteps_[0].duration_;
 
             const VolumeBase* volumePrev = run.timeSteps_[0].channels_.at(channel);
-            const VolumeRAM* dataPrev = volumePrev->getRepresentation<VolumeRAM>();
             tgt::mat4 physicalToVoxelMatrixPrev = volumePrev->getPhysicalToVoxelMatrix();
 
             for (size_t t = 1; t < run.timeSteps_.size(); t++) {
 
                 const VolumeBase* volumeCurr = run.timeSteps_[t].channels_.at(channel);
-                const VolumeRAM* dataCurr = volumeCurr->getRepresentation<VolumeRAM>();
-                tgt::mat4 physicalToVoxelMatrixCurr = volumePrev->getPhysicalToVoxelMatrix();
+                tgt::mat4 physicalToVoxelMatrixCurr = volumeCurr->getPhysicalToVoxelMatrix();
 
                 // Determine pixel positions.
                 size_t x1 = static_cast<size_t>(pixelOffset);
@@ -161,14 +156,15 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
 
                 for (size_t k = 0; k<seedPoints.size(); k++) {
 
-                    float voxelPrev = dataPrev->getVoxelNormalizedLinear(physicalToVoxelMatrixPrev * seedPoints[k]);
-                    float voxelCurr = dataCurr->getVoxelNormalizedLinear(physicalToVoxelMatrixCurr * seedPoints[k]);
+                    float voxelPrev = volumePrev->getRepresentation<VolumeRAM>()->getVoxelNormalizedLinear(physicalToVoxelMatrixPrev * seedPoints[k]);
+                    voxelPrev = mapRange(voxelPrev, valueRange.x, valueRange.y, 0.0f, 1.0f);
+                    float voxelCurr = volumeCurr->getRepresentation<VolumeRAM>()->getVoxelNormalizedLinear(physicalToVoxelMatrixCurr * seedPoints[k]);
+                    voxelCurr = mapRange(voxelCurr, valueRange.x, valueRange.y, 0.0f, 1.0f);
 
                     plotData->drawConnection(x1, x2, voxelPrev, voxelCurr, sliceNumber);
                 }
 
                 volumePrev = volumeCurr;
-                dataPrev = dataCurr;
                 physicalToVoxelMatrixPrev = physicalToVoxelMatrixCurr;
 
                 pixelOffset = pixelOffset + pixel;
@@ -193,18 +189,6 @@ void FieldParallelPlotCreator::processComputeOutput(FieldParallelPlotCreatorOutp
     outport_.setData(output.plotData.release(), true);
 }
 
-void FieldParallelPlotCreator::adjustToEnsemble() {
-
-    // Skip if no data available.
-    const EnsembleDataset* ensemble = inport_.getData();
-    if(!ensemble)
-        return;
-
-    numSeedPoints_.setMinValue(1);
-    numSeedPoints_.setMaxValue(131072);
-    numSeedPoints_.set(32768);
-}
-
 bool FieldParallelPlotCreator::isReady() const {
     if (!isInitialized()) {
         setNotReadyErrorMessage("Not initialized.");
@@ -218,6 +202,18 @@ bool FieldParallelPlotCreator::isReady() const {
     // Note: Seed Mask is optional!
 
     return true;
+}
+
+void FieldParallelPlotCreator::adjustPropertiesToInput() {
+
+    // Skip if no data available.
+    const EnsembleDataset* ensemble = inport_.getData();
+    if(!ensemble)
+        return;
+
+    numSeedPoints_.setMinValue(1);
+    numSeedPoints_.setMaxValue(131072);
+    numSeedPoints_.set(32768);
 }
 
 } // namespace voreen

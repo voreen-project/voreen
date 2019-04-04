@@ -72,10 +72,7 @@ public:
 protected:
 
     virtual bool isReady() const;
-
-protected:
-
-    void adjustToEnsemble();
+    virtual void adjustPropertiesToInput();
 
     virtual void setDescriptions() {
         setDescription("");

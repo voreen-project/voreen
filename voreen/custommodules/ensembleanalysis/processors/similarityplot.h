@@ -24,7 +24,7 @@
  ***********************************************************************************/
 
 #ifndef VRN_SIMILARITYPLOT_H
-#define VRN_SIMILARITYLOT_H
+#define VRN_SIMILARITYPLOT_H
 
 #include "voreen/core/processors/renderprocessor.h"
 
