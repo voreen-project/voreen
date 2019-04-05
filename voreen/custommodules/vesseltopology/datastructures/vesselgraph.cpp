@@ -654,7 +654,7 @@ float VesselGraphEdge::getRelativeBulgeSize() const {
         float outerLength = getLength() - innerLength + tipRadius;
         tgtAssert(radius > 0, "Invalid vessel radius");
         tgtAssert(outerLength >= 0, "Invalid outer length");
-        return outerLength / (2*radius);
+        return outerLength / radius;
     } else {
         return -1;
     }
