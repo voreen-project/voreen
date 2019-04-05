@@ -84,7 +84,8 @@ void SimilarityMatrixSource::loadSimilarityMatrix() {
         json.read(stream, true);
         Deserializer s(json);
         similarityMatrices->deserialize(s);
-
+        outport_.setData(similarityMatrices.release(), true);
+        LINFO(filenameProp_.get() << " loaded sucessfully!");
     } catch(tgt::FileException& e) {
         LERROR(e.what());
         filenameProp_.set("");

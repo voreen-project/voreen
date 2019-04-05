@@ -75,11 +75,6 @@ void SimilarityMatrixSave::saveSimilarityMatrix() {
         LWARNING("no filename specified");
         return;
     }
-    std::string extension = FileSys.fileExtension(filenameProp_.get(), true);
-    if (extension.compare("sm")) {
-        LWARNING("Selected file extension is not *.sm");
-        return;
-    }
 
     try {
         std::fstream stream(filenameProp_.get(), std::ios::out);
@@ -87,6 +82,7 @@ void SimilarityMatrixSave::saveSimilarityMatrix() {
         Serializer s(json);
         inport_.getData()->serialize(s);
         json.write(stream, false, true);
+        LINFO(filenameProp_.get() << " saved sucessfully!");
     } catch(tgt::FileException& e) {
         LERROR(e.what());
         filenameProp_.set("");
