@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_MDSPLOT_H
-#define VRN_MDSPLOT_H
+#ifndef VRN_SIMILARITYMATRIXCREATOR_H
+#define VRN_SIMILARITYMATRIXCREATOR_H
 
 #include "voreen/core/processors/asynccomputeprocessor.h"
 
@@ -37,10 +37,17 @@
 
 namespace voreen {
 
+enum FieldSimilarityMeasure {
+    MEASURE_ISOSURFACE,
+    MEASURE_MULTIFIELD,
+};
+
 struct SimilarityMatrixCreatorInput {
     const EnsembleDataset& dataset;
     std::unique_ptr<SimilarityMatrixList> outputMatrices;
     std::vector<tgt::vec3> seedPoints;
+    FieldSimilarityMeasure fieldSimilarityMeasure;
+    float isoValue;
 };
 
 struct SimilarityMatrixCreatorOutput {
@@ -67,11 +74,6 @@ protected:
     virtual void adjustPropertiesToInput();
 
 private:
-
-    enum FieldSimilarityMeasure {
-        MEASURE_ISOSURFACE,
-        MEASURE_MULTIFIELD,
-    };
 
     OptionProperty<FieldSimilarityMeasure> fieldSimilarityMeasure_;
     FloatProperty isoValue_;

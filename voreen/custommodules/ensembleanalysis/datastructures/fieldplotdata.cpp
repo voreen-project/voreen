@@ -34,15 +34,20 @@ FieldPlotData::~FieldPlotData() {
 
 void FieldPlotData::drawConnection(size_t x1, size_t x2, float v1, float v2, size_t sliceNumber) {
 
-    long y1 = static_cast<long>(v1 * (getHeight()-1));
-    long y2 = static_cast<long>(v2 * (getHeight()-1));
+    // TODO: figure out why this is necessary.
+    x1 = std::min(x1, getWidth() - 1);
+    x2 = std::max(x2, getWidth() - 1);
 
+    long y1 = tgt::clamp<long>(v1 * (getHeight()-1), 0, getHeight() - 1);
+    long y2 = tgt::clamp<long>(v2 * (getHeight()-1), 0, getHeight() - 1);
+
+    // Bresenham line algorithm.
     long dx = x2-x1;
-    long dy = -std::abs(y2-y1), sy = y1<y2 ? 1 : -1;
+    long dy = -std::abs(y2-y1);
     long err = dx+dy;
+    long sy = y1<y2 ? 1 : -1;
 
-    while (true) {
-        if (x1==x2 && y1==y2) break;
+    while (x1!=x2 || y1!=y2) {
         representation_->voxel(x1, y1, sliceNumber)++;
         long e2 = 2*err;
         if (e2 > dy) { err += dy; x1 += 1;  } /* e_xy+e_x > 0 */

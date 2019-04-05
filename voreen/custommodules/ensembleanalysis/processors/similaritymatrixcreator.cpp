@@ -139,7 +139,7 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
 
         // TODO: very rough and dirty restriction, implement something more intelligent.
         if (!seedMask || (seedMaskBounds.containsPoint(seedPoints[k]) &&
-                          seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoints[k]) > 0.0f)) {
+                          seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoints[k]) != 0.0f)) {
             seedPoints.push_back(seedPoint);
         }
     }
@@ -147,7 +147,9 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
     return SimilarityMatrixCreatorInput{
             input,
             std::move(outputMatrices),
-            std::move(seedPoints)
+            std::move(seedPoints),
+            fieldSimilarityMeasure_.getValue(),
+            isoValue_.get()
     };
 }
 
@@ -157,45 +159,46 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
     std::vector<tgt::vec3> seedPoints = std::move(input.seedPoints);
 
     // Init empty flags.
-    SimilarityMatrix Flags(input.dataset.getTotalNumTimeSteps());
+    std::vector<std::vector<float>> Flags(input.dataset.getTotalNumTimeSteps(), std::vector<float>(seedPoints.size(), 0.0f));
 
     progress.setProgress(0.0f);
 
-    std::vector<std::string> channels = inport_.getData()->getCommonChannels();
-    float progressPerChannel = 1.0f / channels.size();
+    const std::vector<std::string>& channels = input.dataset.getCommonChannels();
     for (size_t i=0; i<channels.size(); i++) {
         const std::string& channel = channels[i];
+        const tgt::vec2& valueRange = input.dataset.getValueRange(channel);
 
-        SubtaskProgressReporter channelProgressReporter(progress, tgt::vec2(i, i+1)/(channels.size()*0.9f));
+        SubtaskProgressReporter runProgressReporter(progress, tgt::vec2(i, 0.9f*(i+1))/tgt::vec2(channels.size()));
         size_t index = 0;
         for (const EnsembleDataset::Run& run : input.dataset.getRuns()) {
-            float progressPerTimeStep = 1.0f / run.timeSteps_.size();
+            float progressPerTimeStep = 1.0f / (run.timeSteps_.size() * input.dataset.getRuns().size());
             for (const EnsembleDataset::TimeStep& timeStep : run.timeSteps_) {
 
-                const tgt::vec2& valueRange = input.dataset.getValueRange(channel);
                 const VolumeBase* volume = timeStep.channels_.at(channel);
+                tgt::mat4 physicalToVoxelMatrix = volume->getPhysicalToVoxelMatrix();
 
                 for (size_t k=0; k<seedPoints.size(); k++) {
-                    float value = volume->getRepresentation<VolumeRAM>()->getVoxelNormalizedLinear(volume->getPhysicalToVoxelMatrix() * seedPoints[k]);
+                    float value = volume->getRepresentation<VolumeRAM>()->getVoxelNormalizedLinear(physicalToVoxelMatrix * seedPoints[k]);
+                    value = mapRange(value, valueRange.x, valueRange.y, 0.0f, 1.0f);
 
-                    switch(fieldSimilarityMeasure_.getValue()) {
-                        case MEASURE_ISOSURFACE:
-                        {
-                            bool inside = value > (isoValue_.get() * (valueRange.y - valueRange.x) - valueRange.x);
-                            Flags(index, k) = inside ? 1.0f : 0.0f;
-                            break;
-                        }
-                        case MEASURE_MULTIFIELD:
-                            Flags(index, k) = mapRange(value, valueRange.x, valueRange.y, 0.0f, 1.0f);
-                            break;
-                        default:
-                            break;
+                    switch(input.fieldSimilarityMeasure) {
+                    case MEASURE_ISOSURFACE:
+                    {
+                        bool inside = value < input.isoValue;
+                        Flags[index][k] = inside ? 1.0f : 0.0f;
+                        break;
+                    }
+                    case MEASURE_MULTIFIELD:
+                        Flags[index][k] = value;
+                        break;
+                    default:
+                        break;
                     }
                 }
                 index++;
 
                 // Update progress.
-                channelProgressReporter.setProgress(index * progressPerTimeStep);
+                runProgressReporter.setProgress(index * progressPerTimeStep);
             }
         }
 
@@ -215,8 +218,8 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
                 for (size_t k=0; k<seedPoints.size(); k++) {
 
-                    float a = Flags(i, k);
-                    float b = Flags(j, k);
+                    float a = Flags[i][k];
+                    float b = Flags[j][k];
 
                     ScaleSum += (1.0f - (a < b ? a : b));
                     resValue += (1.0f - (a > b ? a : b));
@@ -228,8 +231,6 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                     DistanceMatrix(i, j) = 1.0f;
             }
         }
-
-        progress.setProgress(i * progressPerChannel);
     }
 
     progress.setProgress(1.0f);

@@ -76,8 +76,8 @@ void SimilarityMatrixSave::saveSimilarityMatrix() {
         return;
     }
     std::string extension = FileSys.fileExtension(filenameProp_.get(), true);
-    if (extension.compare("fpd")) {
-        LWARNING("Selected file extension is not *.fpd");
+    if (extension.compare("sm")) {
+        LWARNING("Selected file extension is not *.sm");
         return;
     }
 
