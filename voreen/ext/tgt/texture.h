@@ -100,7 +100,7 @@ public:
     Wrapping getWrapping() const { return wrapping_; }
     GLenum getGLDataType() const { return dataType_; }
     GLubyte getBpt() const { return bpt_; }
-    size_t getNumChannels() const { return calcNumChannels(format_); }
+    size_t getNumChannels() const { return numChannels_; }
     size_t getSizeOnCPU() const;
     int getSizeOnGPU() const;
     std::string getOptionalName() const { return name_; }
@@ -272,6 +272,7 @@ protected:
     GLuint id_;             ///< OpenGL texture id (generated in the constructor)
     GLenum type_;           ///< 1D, 2D, 3D (calculated in the constructor)
     GLubyte bpt_;           ///< bytes per texel (calculated in the constructor)
+    size_t numChannels_;    ///< number of channels (calculated in the constructor)
 
     bool useMipMap_;        ///< when this is set to true, uploading the texture will call glGenerateMipMap
 

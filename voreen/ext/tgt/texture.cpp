@@ -48,6 +48,7 @@ Texture::Texture(const tgt::ivec3& dimensions, GLint format, GLint internalforma
     generateId();
     type_ = calcType(dimensions_);
     bpt_ = calcFormatBpt(format_, dataType_);
+    numChannels_ = calcNumChannels(format_);
     //update texture settings
     setFilter(filter_);
     setWrapping(wrapping_);
@@ -338,6 +339,7 @@ tgt::Color Texture::texelAsFloat(size_t x, size_t y) const {
             }
             break;
         case GL_RED:
+        case GL_DEPTH_COMPONENT:
             switch(dataType_) {
                 case GL_UNSIGNED_BYTE: {
                     tgt::Vector3<uint8_t> t = tgt::vec3(texel<uint8_t>(x,y));
@@ -429,6 +431,7 @@ void Texture::texelFromFloat(const tgt::Color& color, size_t x, size_t y) {
             }
             break;
         case GL_RED:
+        case GL_DEPTH_COMPONENT:
             switch(dataType_) {
                 case GL_UNSIGNED_BYTE: {
                     auto& t = texel<uint8_t>(x, y);
