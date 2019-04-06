@@ -86,6 +86,9 @@
 #endif
 #include "voreen/core/interaction/voreentrackball.h"
 
+#include "tgt/init.h"
+#include "tgt/glcontextmanager.h"
+
 
 //-------------------------------------------------------------------------------------------------
 // internal helper functions
@@ -1104,9 +1107,9 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
         }
 
         std::string format = PyUnicodeAsString(volumeObject.format);
-        VolumeRAM* volume = nullptr;
+        std::unique_ptr<VolumeRAM> volume;
         try {
-            volume = VolumeFactory().create(format, tgt::svec3(volumeObject.dimX, volumeObject.dimY, volumeObject.dimZ));
+            volume.reset(VolumeFactory().create(format, tgt::svec3(volumeObject.dimX, volumeObject.dimY, volumeObject.dimZ)));
         } catch(const std::bad_alloc& error) {
             PyErr_SetString(PyExc_ValueError, "Could not allocate memory for volume");
             return 0;
@@ -1147,7 +1150,7 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
         }
 
         if(error) {
-            delete volume;
+            Py_DECREF(object);
             std::string message = "Volume contains invalid values.";
             PyErr_SetString(PyExc_ValueError, message.c_str());
             return 0;
@@ -1158,7 +1161,7 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
         tgt::vec3 offset(volumeObject.offsetX, volumeObject.offsetY, volumeObject.offsetZ);
         RealWorldMapping rwm(volumeObject.rwmScale, volumeObject.rwmOffset, "");
 
-        Volume* data = new Volume(volume, spacing, offset);
+        Volume* data = new Volume(volume.release(), spacing, offset);
         data->setRealWorldMapping(rwm);
         typedPort->setData(data, true);
 
@@ -1195,19 +1198,24 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
             return 0;
         }
 
-        auto textureUpload = [renderTargetObject] (tgt::Texture* texture) {
+        auto textureUpload = [renderTargetObject] (tgt::Texture* texture, PyObject* target) {
             bool error = false;
+
+            // Ensure cpu texture data is available.
+            if(!texture->getCpuTextureData() && !texture->alloc(true))
+                return false;
 
             for(int y = 0; y < texture->getDimensions().y; y++) {
                 for(int x = 0; x < texture->getDimensions().x; x++) {
 
                     int index = y * texture->getDimensions().x + x;
 
-                    PyObject *p = PyList_GetItem(renderTargetObject.depthTexture, index);
+                    PyObject *p = PyList_GetItem(target, index);
                     tgt::Color value;
                     switch (texture->getNumChannels()) {
                         case 1:
-                            error |= !PyArg_ParseTuple(p, "f", &value.x);
+                            value.x = static_cast<float>(PyFloat_AsDouble(p));
+                            error |= PyErr_Occurred() != nullptr;
                             break;
                         case 2:
                             error |= !PyArg_ParseTuple(p, "ff", &value.x, &value.y);
@@ -1227,13 +1235,24 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
                 }
             }
 
-            texture->uploadTexture(); // TODO: Context active here? Otherwise, use GlContextStateGuard!
+            // Upload data.
+            texture->uploadTexture();
 
             return true;
         };
 
-        bool error = textureUpload(renderTarget->getColorTexture());
-        if (!error)  textureUpload(renderTarget->getDepthTexture());
+        tgt::GLConditionalContextStateGuard guard(tgt::isInitedGL());
+        typedPort->activateTarget();
+        typedPort->clearTarget();
+
+        bool error = !textureUpload(renderTarget->getColorTexture(), renderTargetObject.colorTexture);
+        if (!error) {
+            error =  !textureUpload(renderTarget->getDepthTexture(), renderTargetObject.depthTexture);
+        }
+
+        renderTarget->deactivateTarget();
+
+        Py_DECREF(object);
 
         if(error || PyErr_Occurred()) {
             std::string error = "Pixel data contains invalid values.";
@@ -1241,7 +1260,6 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
             return 0;
         }
 
-        Py_DECREF(object);
         Py_RETURN_NONE;
     }
 
@@ -1348,7 +1366,7 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
         if(!renderTarget)
             return 0;
 
-        // Create new volume object.
+        // Create new render target object.
         RenderTargetObject* renderTargetObject = (RenderTargetObject*) RenderTargetObject_new(&RenderTargetObjectType, NULL, NULL);
         if(!renderTargetObject)
             return 0;
@@ -1360,7 +1378,9 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
 
         auto textureDownload = [] (const tgt::Texture* texture, PyObject* target) {
 
-            texture->downloadTexture(); // TODO: Context active here? Otherwise, use GlContextStateGuard!
+            // Ensure main context is active!
+            tgt::GLConditionalContextStateGuard guard(tgt::isInitedGL());
+            texture->downloadTexture();
             if(!texture->getCpuTextureData())
                 return false;
 
@@ -1394,10 +1414,13 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
             return true;
         };
 
-        bool error = textureDownload(renderTarget->getColorTexture(), renderTargetObject->colorTexture);
-        if (!error)  textureDownload(renderTarget->getDepthTexture(), renderTargetObject->depthTexture);
+        bool error = !textureDownload(renderTarget->getColorTexture(), renderTargetObject->colorTexture);
+        if (!error) {
+            error =  !textureDownload(renderTarget->getDepthTexture(), renderTargetObject->depthTexture);
+        }
 
         if(error || PyErr_Occurred()) {
+            Py_CLEAR(renderTargetObject);
             PyErr_SetString(PyExc_ValueError, "Texture data could not be downloaded");
             return 0;
         }
@@ -2085,6 +2108,9 @@ PyInit_voreenModule(void)
     if (PyType_Ready(&VolumeObjectType) < 0)
         return NULL;
 
+    if (PyType_Ready(&RenderTargetObjectType) < 0)
+        return NULL;
+
     PyObject* m = PyModule_Create(&voreenModuleDef);
     if(m == NULL)
         return NULL;
@@ -2092,6 +2118,8 @@ PyInit_voreenModule(void)
     // Register custom objects.
     Py_INCREF(&VolumeObjectType);
     PyModule_AddObject(m, "Volume", (PyObject *) &VolumeObjectType);
+    Py_INCREF(&RenderTargetObjectType);
+    PyModule_AddObject(m, "RenderTarget", (PyObject *) &RenderTargetObjectType);
 
     return m;
 }
