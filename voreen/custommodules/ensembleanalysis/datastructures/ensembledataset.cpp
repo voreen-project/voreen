@@ -137,7 +137,7 @@ void EnsembleDataset::addRun(const Run& run) {
     commonTimeInterval_.y = std::min(commonTimeInterval_.y, run.timeSteps_.back().time_+run.timeSteps_.back().duration_);
 
     if(commonTimeInterval_.x > commonTimeInterval_.y) {
-        LWARNINGC("voreen.EnsembleDataSet", "The time interval of the currently added Run " << run.name_ << " does not overlap with the prior interval");
+        LWARNINGC("voreen.EnsembleDataSet", "The time interval of the currently added Run " << run.name_ << " does not overlap with the previous interval");
         commonTimeInterval_ = tgt::vec2::zero;
     }
 
@@ -206,13 +206,14 @@ const tgt::Bounds& EnsembleDataset::getRoi() const {
     return roi_;
 }
 
-void EnsembleDataset::setRoi(const tgt::Bounds& roi) {
-    if(commonBounds_.containsVolume(roi)) {
+void EnsembleDataset::setRoi(tgt::Bounds roi) {
+    roi.intersectVolume(commonBounds_);
+    if(!roi.isDefined()) {
         notifyPendingDataInvalidation();
         roi_ = roi;
     }
     else {
-        LWARNINGC("voreen.EnsembleDataSet", "Roi must lie inside common domain bounds");
+        LWARNINGC("voreen.EnsembleDataSet", "Roi must overlap with common domain bounds");
     }
 }
 

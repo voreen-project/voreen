@@ -75,19 +75,15 @@ void SimilarityPlot::MDSData::deserialize(Deserializer& s) {
 SimilarityPlot::SimilarityPlot()
     : RenderProcessor()
     , ensembleInport_(Port::INPORT, "ensembledatastructurein", "Ensemble Datastructure Input", false)
-    , seedMaskInport_(Port::INPORT, "seedmask", "Seed Mask Input (optional)")
+    , similarityMatrixInport_(Port::INPORT, "similaritymatrixin", "Similarity Matrix Input", false)
     , outport_(Port::OUTPORT, "outport", "Outport", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
     , privatePort_(Port::OUTPORT, "image.tmp", "image.tmp", false)
     , pickingBuffer_(Port::OUTPORT, "picking", "Picking", false)
     , eigenValueOutport_(Port::OUTPORT, "eigenvalueOutport", "Eigenvalues", false)
     , calculateButton_("calculate", "Calculate")
     , progressBar_("progressBar", "Progress")
-    , fieldSimilarityMeasure_("fieldSimilarityMeasure", "Field Similarity Measure")
-    , isoValue_("isovalue", "Iso-Value", 0.5f, 0.0f, 1.0f)
-    , numSeedPoints_("numSeedPoints", "Number of Seed Points", 0, 0, 0)
     , numIterations_("numIterations", "Number of Iterations", 1000, 1, 10000)
     , numEigenvalues_("numEigenvalues", "Number of Eigenvalues", MAX_NUM_DIMENSIONS, MAX_NUM_DIMENSIONS, MAX_NUM_DIMENSIONS)
-    , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
     , numDimensions_("numDimensions", "Number of Dimensions", MAX_NUM_DIMENSIONS, 1, MAX_NUM_DIMENSIONS)
     , principalComponent_("principalComponent", "Principal Component", 1, 1, MAX_NUM_DIMENSIONS)
     , scaleToMagnitude_("scaleToMagnitude", "Scale to Magnitude of Principle Component")
@@ -113,10 +109,8 @@ SimilarityPlot::SimilarityPlot()
     */
 {
     // Ports
-    ON_CHANGE(ensembleInport_, SimilarityPlot, adjustToEnsemble);
     addPort(ensembleInport_);
-    addPort(seedMaskInport_);
-    seedMaskInport_.addCondition(new PortConditionVolumeTypeUInt8());
+    addPort(similarityMatrixInport_);
     addPort(outport_);
     addPort(eigenValueOutport_);
     addPrivateRenderPort(privatePort_);
@@ -131,26 +125,10 @@ SimilarityPlot::SimilarityPlot()
         progressBar_.setGroupID("calculation");
     addProgressBar(&progressBar_);
 
-    addProperty(fieldSimilarityMeasure_);
-        fieldSimilarityMeasure_.setGroupID("calculation");
-        fieldSimilarityMeasure_.addOption("isovalue", "Iso-Surface", MEASURE_ISOSURFACE);
-        fieldSimilarityMeasure_.addOption("multifield", "Multi-Field", MEASURE_MULTIFIELD);
-        fieldSimilarityMeasure_.set("multifield");
-        ON_CHANGE_LAMBDA(fieldSimilarityMeasure_, [this] {
-            isoValue_.setVisibleFlag(fieldSimilarityMeasure_.getValue() == MEASURE_ISOSURFACE);
-        });
-    addProperty(isoValue_);
-        isoValue_.setGroupID("calculation");
-        isoValue_.setVisibleFlag(false);
-
-    addProperty(numSeedPoints_);
-        numSeedPoints_.setGroupID("calculation");
     addProperty(numIterations_);
         numIterations_.setGroupID("calculation");
     addProperty(numEigenvalues_);
         numEigenvalues_.setGroupID("calculation");
-    addProperty(seedTime_);
-        seedTime_.setGroupID("calculation");
     setPropertyGroupGuiName("calculation", "Calculation");
 
     // Rendering
@@ -389,6 +367,8 @@ bool SimilarityPlot::isReady() const {
         setNotReadyErrorMessage("No Ensemble connected");
         return false;
     }
+
+    // Note: Similarity Matrix is optional.
 
     if(mdsData_.empty()) {
         setNotReadyErrorMessage("No Plot data available");
@@ -668,7 +648,7 @@ void SimilarityPlot::onEvent(tgt::Event* e) {
     //*/
 }
 
-void SimilarityPlot::adjustToEnsemble() {
+void SimilarityPlot::adjustPropertiesToInput() {
 
     ensembleHash_.clear();
     mdsData_.clear();
@@ -682,9 +662,12 @@ void SimilarityPlot::adjustToEnsemble() {
 
     const EnsembleDataset* dataset = ensembleInport_.getData();
 
-    numSeedPoints_.setMinValue(1);
-    numSeedPoints_.setMaxValue(131072);
-    numSeedPoints_.set(32768);
+    if (!similarityMatrixInport_.isReady())
+        return;
+
+    const SimilarityMatrixList* similarityMatrices = similarityMatrixInport_.getData();
+    if(EnsembleHash(*dataset).getHash() != similarityMatrices->getHash())
+        return;
 
     numEigenvalues_.setMinValue(MAX_NUM_DIMENSIONS);
     numEigenvalues_.setMaxValue(static_cast<int>(dataset->getTotalNumTimeSteps()));
@@ -721,8 +704,8 @@ void SimilarityPlot::calculate() {
     setProgress(0.0f);
     for (const std::string& channel : ensembleInport_.getData()->getCommonChannels()) {
 
-        // Calculate distance matrix.
-        DMMatrix distanceMatrix = calculateDistanceMatrixFromField(channel);
+        // Get distance matrix.
+        const SimilarityMatrix& distanceMatrix = similarityMatrixInport_.getData()->getSimilarityMatrix(channel);
 
         // Compute Principal components and corresponding eigenvectors.
         MDSData mdsData = computeFromDM(distanceMatrix);
@@ -739,130 +722,12 @@ void SimilarityPlot::calculate() {
     invalidate();
 }
 
-SimilarityPlot::DMMatrix SimilarityPlot::calculateDistanceMatrixFromField(const std::string& channel) {
-
-    const float initialProgress = getProgress();
-    const float progressPerChannel = 1.0f; // actually less, but good enough.
-
-    const EnsembleDataset* dataset = ensembleInport_.getData();
-
-    const size_t totalPoints = static_cast<size_t>(numSeedPoints_.get());
-
-    size_t DistanceMatrixSize = dataset->getTotalNumTimeSteps();
-    DMMatrix DistanceMatrix(DistanceMatrixSize);
-    for(size_t i=0; i<DistanceMatrix.size(); i++)
-        DistanceMatrix[i].resize(i+1);
-
-    ///////////////////////////////////////
-    //Calculate flags for all the samples//
-    ///////////////////////////////////////
-
-    DMMatrix Flags(DistanceMatrixSize);
-    for (size_t i=0; i<DistanceMatrixSize; i++)
-        Flags[i].resize(totalPoints);
-
-    // Calculate random seed points.
-    std::function<float()> rnd(std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
-    const tgt::Bounds& roi = dataset->getRoi();
-
-    const VolumeBase* seedMask = seedMaskInport_.getData();
-    tgt::Bounds seedMaskBounds;
-    tgt::mat4 seedMaskPhysicalToVoxelMatrix;
-    if(seedMask) {
-        seedMaskBounds = seedMask->getBoundingBox(false).getBoundingBox();
-        seedMaskPhysicalToVoxelMatrix = seedMask->getPhysicalToVoxelMatrix();
-        LINFO("Restricting seed points to volume mask");
-    }
-
-    std::vector<tgt::vec3> seedPoints(totalPoints);
-    for (size_t k=0; k<totalPoints; k++) {
-        seedPoints[k] = tgt::vec3(rnd(), rnd(), rnd());
-        seedPoints[k] = tgt::vec3(roi.getLLF()) + seedPoints[k] * tgt::vec3(roi.diagonal());
-
-        // TODO: very rough and dirty restriction, implement something more intelligent.
-        if (seedMask && (!seedMaskBounds.containsPoint(seedPoints[k]) ||
-                         seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoints[k]) == 0.0f)) {
-            k--; // reseed this point.
-            continue;
-        }
-    }
-
-    setProgress(initialProgress + 0.01f);
-    float progressIncrement = (progressPerChannel * 0.85f / DistanceMatrixSize) / dataset->getCommonChannels().size();
-
-    size_t i = 0;
-    for (const EnsembleDataset::Run& run : dataset->getRuns()) {
-        for (const EnsembleDataset::TimeStep& timeStep : run.timeSteps_) {
-
-            const tgt::vec2& valueRange = dataset->getValueRange(channel);
-            const VolumeBase* volume = timeStep.channels_.at(channel);
-            const VolumeRAM* data = volume->getRepresentation<VolumeRAM>();
-
-            for (size_t k=0; k<totalPoints; k++) {
-                float value = data->getVoxelNormalizedLinear(volume->getPhysicalToVoxelMatrix() * seedPoints[k]);
-
-                switch(fieldSimilarityMeasure_.getValue()) {
-                case MEASURE_ISOSURFACE:
-                {
-                    bool inside = value > (isoValue_.get() * (valueRange.y - valueRange.x) - valueRange.x);
-                    Flags[i][k] = inside ? 1.0f : 0.0f;
-                    break;
-                }
-                case MEASURE_MULTIFIELD:
-                    Flags[i][k] = (value - valueRange.x) / (valueRange.y - valueRange.x);
-                    break;
-                default:
-                    break;
-                }
-            }
-            i++;
-
-            // Update progress.
-            setProgress(getProgress() + progressIncrement);
-        }
-    }
-    setProgress(initialProgress + 0.85f / dataset->getCommonChannels().size());
-
-    ////////////////////////////////////////////////////////////
-    //Calculate distances for up-right corner and reflect them//
-    ////////////////////////////////////////////////////////////
-
-#ifdef VRN_MODULE_OPENMP
-    #pragma omp parallel for shared(Flags)
-#endif
-    for (long i=0; i<static_cast<long>(DistanceMatrixSize); i++) {
-        for (long j=0; j<i+1; j++) {
-            float ScaleSum = 0.0f;
-            float resValue = 0.0f;
-
-            DistanceMatrix[i][j] = 0.0f;
-
-            for (long k=0; k<static_cast<long>(totalPoints); k++) {
-
-                float a = Flags[i][k];
-                float b = Flags[j][k];
-
-                ScaleSum += (1.0f - (a < b ? a : b));
-                resValue += (1.0f - (a > b ? a : b));
-            }
-
-            if (ScaleSum > 0.0f)
-                DistanceMatrix[i][j] = (ScaleSum-resValue) / ScaleSum;
-            else
-                DistanceMatrix[i][j] = 1.0f;
-        }
-    }
-    setProgress(initialProgress + progressPerChannel / dataset->getCommonChannels().size());
-
-    return DistanceMatrix;
-}
-
-SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const DMMatrix& DistanceMatrix, float epsilon) {
+SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& DistanceMatrix, float epsilon) {
     using namespace Eigen;
 
     const size_t dimNum = numEigenvalues_.get();
     const int iterNum = numIterations_.get();
-    const size_t PointsNumber = DistanceMatrix.size();
+    const size_t PointsNumber = DistanceMatrix.getSize();
 
     MDSData result;
     result.nVectors_.resize(PointsNumber);
@@ -876,7 +741,7 @@ SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const DMMatrix& DistanceMa
     for (size_t i=0; i<PointsNumber; i++) {
         result.nVectors_[i].resize(dimNum);
         for (size_t j=0; j<=i; j++) {
-            float v = DistanceMatrix[i][j];
+            float v = DistanceMatrix(i, j);
             PMatrix(i, j) = v*v;
             PMatrix(j, i) = PMatrix(i, j);
         }
@@ -981,7 +846,7 @@ void SimilarityPlot::save() {
         return;
     }
     if(mdsData_.empty()) {
-        LWARNING("No vectors calculated.");
+        LWARNING("No projection calculated.");
         return;
     }
 
@@ -991,11 +856,11 @@ void SimilarityPlot::save() {
         outFile.open(saveFileDialog_.get().c_str());
         LINFO("Writing mds to file " << saveFileDialog_.get());
 
-        XmlSerializer s;
+        JsonSerializer s;
         Serializer serializer(s);
         serializer.serialize("hash", ensembleHash_);
         serializer.serialize("mds_data", mdsData_);
-        s.write(outFile);
+        s.write(outFile, true);
 
         outFile.close();
         LINFO("Saving " << saveFileDialog_.get() << " was successful.");
@@ -1026,7 +891,7 @@ void SimilarityPlot::load() {
         std::ifstream inFile;
         inFile.open(absPath.c_str());
 
-        XmlDeserializer d;
+        JsonDeserializer d;
         d.read(inFile);
         Deserializer deserializer(d);
         deserializer.deserialize("hash", ensembleHash_);

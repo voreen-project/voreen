@@ -126,6 +126,10 @@ SimilarityMatrix& SimilarityMatrixList::getSimilarityMatrix(const std::string& c
     return matrices_.at(channel);
 }
 
+const SimilarityMatrix& SimilarityMatrixList::getSimilarityMatrix(const std::string& channel) const {
+    return matrices_.at(channel);
+}
+
 void SimilarityMatrixList::serialize(Serializer& s) const {
     s.serialize("matrices", matrices_);
     s.serialize("hash", ensembleHash_);

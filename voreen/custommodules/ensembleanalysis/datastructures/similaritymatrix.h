@@ -78,6 +78,7 @@ public:
 
     const std::string& getHash() const;
     SimilarityMatrix& getSimilarityMatrix(const std::string& channel);
+    const SimilarityMatrix& getSimilarityMatrix(const std::string& channel) const;
 
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);

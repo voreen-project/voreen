@@ -89,7 +89,7 @@ public:
     const tgt::Bounds& getBounds() const;
     const tgt::Bounds& getCommonBounds() const;
     const tgt::Bounds& getRoi() const;
-    void setRoi(const tgt::Bounds& roi);
+    void setRoi(tgt::Bounds roi);
 
     const std::vector<std::string>& getCommonChannels() const;
     std::vector<const VolumeBase*> getVolumes() const;

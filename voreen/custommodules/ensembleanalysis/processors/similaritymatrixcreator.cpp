@@ -48,7 +48,6 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     , fieldSimilarityMeasure_("fieldSimilarityMeasure", "Field Similarity Measure")
     , isoValue_("isovalue", "Iso-Value", 0.5f, 0.0f, 1.0f)
     , numSeedPoints_("numSeedPoints", "Number of Seed Points", 0, 0, 0)
-    , numEigenvalues_("numEigenvalues", "Number of Eigenvalues", MAX_NUM_DIMENSIONS, MAX_NUM_DIMENSIONS, MAX_NUM_DIMENSIONS)
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
 {
     // Ports
@@ -68,7 +67,6 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     isoValue_.setVisibleFlag(false);
 
     addProperty(numSeedPoints_);
-    addProperty(numEigenvalues_);
     addProperty(seedTime_);
 }
 
@@ -101,9 +99,6 @@ void SimilarityMatrixCreator::adjustPropertiesToInput() {
     numSeedPoints_.setMinValue(1);
     numSeedPoints_.setMaxValue(131072);
     numSeedPoints_.set(32768);
-
-    numEigenvalues_.setMinValue(MAX_NUM_DIMENSIONS);
-    numEigenvalues_.setMaxValue(static_cast<int>(dataset->getTotalNumTimeSteps()));
 }
 
 SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {

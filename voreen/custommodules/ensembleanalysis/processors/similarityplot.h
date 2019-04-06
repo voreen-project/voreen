@@ -43,6 +43,7 @@
 #include "modules/plotting/ports/plotport.h"
 
 #include "../ports/ensembledatasetport.h"
+#include "../ports/similaritymatrixport.h"
 #include "../properties/stringlistproperty.h"
 
 namespace voreen {
@@ -51,7 +52,6 @@ class CameraInteractionHandler;
 class PlotLibrary;
 
 class VRN_CORE_API SimilarityPlot : public RenderProcessor {
-    typedef std::vector<std::vector<float>> DMMatrix;
 
     class MDSData : public Serializable {
     public:
@@ -85,12 +85,7 @@ protected:
     virtual void onEvent(tgt::Event* e);
     
     void calculate();
-    void adjustToEnsemble();
-
-    enum FieldSimilarityMeasure {
-        MEASURE_ISOSURFACE,
-        MEASURE_MULTIFIELD,
-    };
+    void adjustPropertiesToInput();
 
     enum ColorCoding {
         COLOR_RUN,
@@ -101,12 +96,8 @@ protected:
 
     ButtonProperty calculateButton_;
     ProgressProperty progressBar_;
-    OptionProperty<FieldSimilarityMeasure> fieldSimilarityMeasure_;
-    FloatProperty isoValue_;
-    IntProperty numSeedPoints_;
     IntProperty numIterations_;
     IntProperty numEigenvalues_;
-    IntProperty seedTime_;
 
     IntProperty numDimensions_;
     IntProperty principalComponent_;
@@ -136,8 +127,8 @@ protected:
     /// Inport for the ensemble data structure.
     EnsembleDatasetPort ensembleInport_;
 
-    /// Option Inport
-    VolumePort seedMaskInport_;
+    /// Inport for similarity matrices.
+    SimilarityMatrixPort similarityMatrixInport_;
 
     /// The whole output.
     RenderPort outport_;
@@ -170,8 +161,7 @@ private:
     void renderAxes();
     void drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, const tgt::vec3& position) const;
     tgt::vec3 getColor(size_t runIdx, size_t timeStepIdx, bool picking) const;
-    DMMatrix calculateDistanceMatrixFromField(const std::string& channel);
-    MDSData computeFromDM(const DMMatrix& matrix, float epsilon = -1.0f);
+    MDSData computeFromDM(const SimilarityMatrix& matrix, float epsilon = -1.0f);
 
     void outputEigenValues();
     void renderedChannelsChanged();

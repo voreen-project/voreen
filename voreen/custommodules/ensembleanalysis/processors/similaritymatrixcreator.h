@@ -78,7 +78,6 @@ private:
     OptionProperty<FieldSimilarityMeasure> fieldSimilarityMeasure_;
     FloatProperty isoValue_;
     IntProperty numSeedPoints_;
-    IntProperty numEigenvalues_;
     IntProperty seedTime_;
 
     /// Inport for the ensemble data structure.
