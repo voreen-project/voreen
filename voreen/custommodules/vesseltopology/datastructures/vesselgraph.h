@@ -277,7 +277,7 @@ struct VesselGraphEdge {
 
     // Move constructor
     VesselGraphEdge(VesselGraphEdge&& other);
-    void operator=(VesselGraphEdge&& other);
+    VesselGraphEdge& operator=(VesselGraphEdge&& other);
 
     /**
      * Indicates whether or not this edge has any valid edge voxels and therefore

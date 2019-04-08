@@ -433,7 +433,7 @@ VesselGraphEdge::VesselGraphEdge(VesselGraph& graph, VGEdgeID id, VGNodeID node1
     // Compute distance
     distance_ = tgt::distance(node1.pos_, node2.pos_);
 
-    size_t lastOuter = voxels_.size()-1;
+    size_t lastOuter = -1;
     size_t firstOuter = voxels_.size();
     for(size_t i=0; i < voxels_.size(); ++i) {
         if(voxels_[i].isOuter()) {
@@ -479,20 +479,19 @@ VesselGraphEdge::VesselGraphEdge(VesselGraphEdge&& other)
     , pathProps_(other.pathProps_)
     , voxels_(std::move(other.voxels_))
     , uuid_(std::move(other.uuid_))
+    , outerPathBeginIndex_(other.outerPathBeginIndex_)
+    , outerPathEndIndex_(other.outerPathEndIndex_)
 {
+    other.graph_ = nullptr;
 }
 
-void VesselGraphEdge::operator=(VesselGraphEdge&& other)
+VesselGraphEdge& VesselGraphEdge::operator=(VesselGraphEdge&& other)
 {
-    graph_ = other.graph_;
-    id_ = other.id_;
-    node1_ = other.node1_;
-    node2_ = other.node2_;
-    distance_ = other.distance_;
-    pathProps_ = other.pathProps_;
-    voxels_ = std::move(other.voxels_);
-
-    other.graph_ = nullptr;
+    if(this != &other) {
+        this->~VesselGraphEdge();
+        new(this) VesselGraphEdge(std::move(other));
+    }
+    return *this;
 }
 
 VesselGraphEdge::VesselGraphEdge()
@@ -668,7 +667,11 @@ const DiskArray<VesselSkeletonVoxel>& VesselGraphEdge::getVoxels() const {
     return voxels_;
 }
 DiskArray<VesselSkeletonVoxel> VesselGraphEdge::getOuterVoxels() const {
-    return voxels_.slice(outerPathBeginIndex_, outerPathEndIndex_);
+    if(outerPathBeginIndex_ > outerPathEndIndex_) {
+        return voxels_.slice(outerPathBeginIndex_, outerPathBeginIndex_);
+    } else {
+        return voxels_.slice(outerPathBeginIndex_, outerPathEndIndex_);
+    }
 }
 VGEdgeID VesselGraphEdge::getID() const {
     return id_;
