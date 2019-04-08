@@ -464,6 +464,10 @@ void PythonPlugin::clearScript() {
 
 void PythonPlugin::updateFromProperty() {
     tgtAssert(property_, "property was null");
+
+    compilerLogWidget_->setTextColor(Qt::black);
+    compilerLogWidget_->clear();
+
     QString source = QString(property_->get().getSource().c_str());
     if(codeEdit_->toPlainText() != source)
         codeEdit_->setPlainText(source);
@@ -521,7 +525,7 @@ void PythonPlugin::updateGuiState() {
 
 void PythonPlugin::pyStdout(const std::string& out, const std::string& id) {
     // Check if this actual script has been executed.
-    if(((property_ && property_->get().getId() == id) || (script_ && script_->getId() == id)) && compilerLogWidget_) {
+    if(((property_ && property_->get().getId() == id) || (script_ && script_->getId() == id))) {
         compilerLogWidget_->append(QString::fromStdString(out));
     }
 }

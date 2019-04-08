@@ -98,6 +98,12 @@ bool DynamicPythonProcessor::isReady() const {
 
 void DynamicPythonProcessor::process() {
     if(enabled_.get()) {
+
+        // The following call will clear the console output.
+        // Additionally, it set's the source code. Hence, we don't call it here.
+        //getProcessorWidget()->updateFromProcessor();
+
+        // Run script.
         PythonScript script = pythonScript_.get();
         script.run(true);
     }

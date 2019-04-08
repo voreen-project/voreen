@@ -155,8 +155,8 @@ typedef struct {
  * The following struct defines the python equivalents the members of the RenderTargetObject struct.
  */
 static PyMemberDef RenderTargetObject_members[] = {
-    {(char*)"internalColorFormat",  T_OBJECT_EX,    offsetof(RenderTargetObject, internalColorFormat),  0, (char*)"Internal color format"   },
-    {(char*)"internalDepthFormat",  T_OBJECT_EX,    offsetof(RenderTargetObject, internalDepthFormat),  0, (char*)"Internal depth format"   },
+    {(char*)"internalColorFormat",  T_INT,          offsetof(RenderTargetObject, internalColorFormat),  0, (char*)"Internal color format"   },
+    {(char*)"internalDepthFormat",  T_INT,          offsetof(RenderTargetObject, internalDepthFormat),  0, (char*)"Internal depth format"   },
     {(char*)"colorTexture",         T_OBJECT_EX,    offsetof(RenderTargetObject, colorTexture),         0, (char*)"Color Texture data"      },
     {(char*)"depthTexture",         T_OBJECT_EX,    offsetof(RenderTargetObject, depthTexture),         0, (char*)"Depth Texture data"      },
     {(char*)"width",                T_UINT,         offsetof(RenderTargetObject, width),                0, (char*)"Width"                   },
