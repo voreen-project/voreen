@@ -29,6 +29,8 @@
 #include "voreen/core/ports/renderport.h"
 #include "voreen/core/processors/processorwidget.h"
 
+#include <regex>
+
 namespace voreen {
 
 const std::string DynamicPythonProcessor::loggerCat_("voreen.DynamicPythonProcessor");
@@ -37,7 +39,8 @@ DynamicPythonProcessor::DynamicPythonProcessor()
     : RenderProcessor()
     , portList_("portList", "Port List", true)
     , enabled_("enabled", "Enabled", true)
-    , pythonScript_("pythonScript", "Python Script")
+    , pythonProperty_("pythonScript", "Python Script")
+    , valid_(false)
 {
     // Add available ports.
     addPortItem(new VolumePort(Port::INPORT, ""));
@@ -50,9 +53,9 @@ DynamicPythonProcessor::DynamicPythonProcessor()
     ON_CHANGE(portList_, DynamicPythonProcessor, onPortListChange);
 
     addProperty(enabled_);
-    //addProperty(pythonScript_); // Don't add property here, since the editor is included as processor widget!
-    pythonScript_.setOwner(this); // ..but override owner!
-    ON_CHANGE(pythonScript_, DynamicPythonProcessor, onScriptChange);
+    //addProperty(pythonProperty_); // Don't add property here, since the editor is included as processor widget!
+    pythonProperty_.setOwner(this); // ..but override owner!
+    ON_CHANGE(pythonProperty_, DynamicPythonProcessor, onScriptChange);
 
     /*
     // TODO: define naming schema!
@@ -104,8 +107,7 @@ void DynamicPythonProcessor::process() {
         //getProcessorWidget()->updateFromProcessor();
 
         // Run script.
-        PythonScript script = pythonScript_.get();
-        script.run(true);
+        pythonScript_.run(true);
     }
 }
 
@@ -113,7 +115,7 @@ void DynamicPythonProcessor::serialize(Serializer& s) const {
     bool usePointerContentSerialization = s.getUsePointerContentSerialization();
     try {
         std::vector<const Property*> pyVec;
-        pyVec.push_back(&pythonScript_);
+        pyVec.push_back(&pythonProperty_);
         s.setUsePointerContentSerialization(true);
         s.serialize("PriorityProperty", pyVec, "Property");
     } catch (SerializationException &e) {
@@ -129,7 +131,7 @@ void DynamicPythonProcessor::deserialize(Deserializer& s) {
     bool usePointerContentSerialization = s.getUsePointerContentSerialization();
     try {
         std::vector<Property*> pyVec;
-        pyVec.push_back(&pythonScript_);
+        pyVec.push_back(&pythonProperty_);
         s.setUsePointerContentSerialization(true);
         s.deserialize("PriorityProperty", pyVec, "Property");
     } catch (SerializationNoSuchDataException&) {
@@ -184,39 +186,21 @@ void DynamicPythonProcessor::onScriptChange() {
     // Reset valid flag.
     valid_ = false;
 
-    const std::string functionName = /*"s/g"*/"etPortData";
+    // Copy script to keep its ID.
+    pythonScript_ = pythonProperty_.get();
 
     // Parse script and search for global modifications.
-    const std::string& source = pythonScript_.get().getSource();
-    size_t portDataPos = source.find(functionName);
-    while(portDataPos != std::string::npos) {
+    std::string source = pythonScript_.getSource();
 
-        size_t openQuote = source.find_first_of('"', portDataPos) + 1;
-        size_t endQuote  = source.find_first_of('"', openQuote);
+    const std::regex getPortDataRegex(R"(getPortData\(\s*(\"[^\"]*\")\s*\))");
+    source = std::regex_replace(source, getPortDataRegex, "getPortData(\"" + getGuiName() + "\", $1)");
 
-        std::string processorArgumentString = source.substr(openQuote, endQuote-openQuote);
-        if(processorArgumentString != getGuiName()) {
-            LERROR("Within a processor-local python script only the processor's own ports can be modified!");
-            return;
-        }
+    const std::regex setPortDataRegex(R"(setPortData\(\s*(\"[^\"]*\"\s*,\s*[a-zA-Z0-9]+\s*)\))");
+    source = std::regex_replace(source, setPortDataRegex, "setPortData(\"" + getGuiName() + "\", $1)");
 
-        portDataPos = source.find(functionName, portDataPos+1);
-    }
-
-    valid_ = true;
-    /*
-    PythonScript script = pythonScript_.get();
-    script.compile(true);
-
-    if(valid_) {
-        LINFO("Script successfully saved!");
-    }
-    else {
-        LERROR(script.getLog());
-    }
-    */
-
-    invalidate(Processor::INVALID_PROGRAM);
+    // Apply modification and compile.
+    pythonScript_.setSource(source);
+    valid_ = pythonScript_.compile();
 }
 
 void DynamicPythonProcessor::addPortItem(Port* port) {

@@ -288,6 +288,8 @@ void PythonPlugin::saveScript() {
         PythonScript script;
         script.setSource(codeEdit_->toPlainText().toStdString());
         property_->set(script);
+        // Invalidate, even if the value didn't change. This forces script execution.
+        property_->invalidate();
 
         // Now, we no longer need the script!
         if(script_) {
@@ -298,6 +300,7 @@ void PythonPlugin::saveScript() {
     else {
 
         if (!script_) {
+            // This should not happen since the save button should be disabled.
             LERROR("No script");
             return;
         }
@@ -311,9 +314,9 @@ void PythonPlugin::saveScript() {
                 QMessageBox::critical(this, tr("Python Error"), message);
             }
         }
-
-        updateGuiState();
     }
+
+    updateGuiState();
 }
 
 void PythonPlugin::saveScriptAs() {
@@ -364,9 +367,9 @@ const QString PythonPlugin::selectOpenFileName(QString filter) {
     urls << QUrl::fromLocalFile(VoreenApplication::app()->getBasePath("modules").c_str());
     urls << QUrl::fromLocalFile(VoreenApplication::app()->getBasePath("custommodules").c_str());
     urls << QUrl::fromLocalFile(VoreenApplication::app()->getCoreResourcePath("scripts").c_str());
-    for (auto f : QStandardPaths::standardLocations(QStandardPaths::DesktopLocation))
+    for (const auto& f : QStandardPaths::standardLocations(QStandardPaths::DesktopLocation))
         urls << QUrl::fromLocalFile(f);
-    for (auto f : QStandardPaths::standardLocations(QStandardPaths::HomeLocation))
+    for (const auto& f : QStandardPaths::standardLocations(QStandardPaths::HomeLocation))
         urls << QUrl::fromLocalFile(f);
     fileDialog.setSidebarUrls(urls);
 
@@ -389,9 +392,9 @@ const QString PythonPlugin::selectSaveFileName(QStringList filters) {
     urls << QUrl::fromLocalFile(VoreenApplication::app()->getUserDataPath().c_str());
     urls << QUrl::fromLocalFile(VoreenApplication::app()->getBasePath("modules").c_str());
     urls << QUrl::fromLocalFile(VoreenApplication::app()->getCoreResourcePath("scripts").c_str());
-    for (auto f : QStandardPaths::standardLocations(QStandardPaths::DesktopLocation))
+    for (const auto& f : QStandardPaths::standardLocations(QStandardPaths::DesktopLocation))
         urls << QUrl::fromLocalFile(f);
-    for (auto f : QStandardPaths::standardLocations(QStandardPaths::HomeLocation))
+    for (const auto& f : QStandardPaths::standardLocations(QStandardPaths::HomeLocation))
         urls << QUrl::fromLocalFile(f);
     fileDialog.setSidebarUrls(urls);
 
@@ -465,21 +468,11 @@ void PythonPlugin::clearScript() {
 void PythonPlugin::updateFromProperty() {
     tgtAssert(property_, "property was null");
 
-    compilerLogWidget_->setTextColor(Qt::black);
-    compilerLogWidget_->clear();
-
     QString source = QString(property_->get().getSource().c_str());
     if(codeEdit_->toPlainText() != source)
         codeEdit_->setPlainText(source);
 
-    std::string windowTitle = "";
-    if (property_->getOwner())
-        windowTitle += property_->getOwner()->getGuiName() + " - ";
-    windowTitle += property_->getGuiName();
-    if(!property_->get().getFilename().empty()) {
-        windowTitle += " (" + property_->get().getFilename() + ")";
-    }
-    window()->setWindowTitle(QString::fromStdString(windowTitle));
+    updateGuiState();
 }
 
 void PythonPlugin::increaseFontSize() {
@@ -502,36 +495,51 @@ void PythonPlugin::updateFont() {
 }
 
 void PythonPlugin::updateGuiState() {
-    if(!property_) {
-        runBt_->setEnabled(script_);
-        saveAsBt_->setEnabled(script_);
-    }
 
-    QString title = "Python Script Editor";
-    if (property_ || (script_ && !script_->getFilename().empty())) {
-        saveBt_->setEnabled(true);
-        if(!script_->getFilename().empty()) {
-            title += QString::fromStdString(script_->getFilename());
+    compilerLogWidget_->setTextColor(Qt::black);
+    compilerLogWidget_->clear();
+
+    std::string windowTitle;
+
+    if(property_) {
+        // No need to modify button states.
+        if (property_->getOwner())
+            windowTitle += property_->getOwner()->getGuiName() + " - ";
+        windowTitle += property_->getGuiName();
+        if(!property_->get().getFilename().empty()) {
+            windowTitle += " (" + property_->get().getFilename() + ")";
         }
     }
     else {
-        saveBt_->setEnabled(false);
+        tgtAssert(script_, "Either property or script must be available");
+
+        windowTitle = "Python Script Editor";
+        saveAsBt_->setEnabled(true);
+        saveBt_->setEnabled(!script_->getFilename().empty());
+        if(!script_->getFilename().empty()) {
+            windowTitle += " (" + script_->getFilename() + ")";
+        }
     }
 
     if(window()) {
-        window()->setWindowTitle(title);
+        window()->setWindowTitle(QString::fromStdString(windowTitle));
     }
 }
 
 void PythonPlugin::pyStdout(const std::string& out, const std::string& id) {
     // Check if this actual script has been executed.
     if(((property_ && property_->get().getId() == id) || (script_ && script_->getId() == id))) {
+        compilerLogWidget_->setTextColor(Qt::black);
         compilerLogWidget_->append(QString::fromStdString(out));
     }
 }
 
 void PythonPlugin::pyStderr(const std::string& err, const std::string& id) {
-    pyStdout(err, id);
+    // Check if this actual script has been executed.
+    if(((property_ && property_->get().getId() == id) || (script_ && script_->getId() == id))) {
+        compilerLogWidget_->setTextColor(Qt::red);
+        compilerLogWidget_->append(QString::fromStdString(err));
+    }
 }
 
 

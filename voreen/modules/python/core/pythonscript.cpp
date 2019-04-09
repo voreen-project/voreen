@@ -23,12 +23,6 @@
  *                                                                                 *
  ***********************************************************************************/
 
-/*
-    Have a look at the script.cpp sample and at
-    http://docs.python.org/api/api.html
-    for more information about binding C/C++ stuff to python
-*/
-
 // include this at very first
 #include <Python.h>
 
@@ -165,7 +159,6 @@ bool PythonScript::run(bool logErrors) {
 
     // Add the script id for correct output redirection.
     PyObject* id = PyUnicode_FromString(id_.c_str());
-    //PyDict_DelItemString(glb, "__voreen_script_id__");
     PyDict_SetItemString(glb, VOREEN_SCRIPT_ID_IDENTIFIER, id);
 
     bool success;

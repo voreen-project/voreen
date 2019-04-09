@@ -49,7 +49,7 @@ public:
     virtual bool isReady() const;
 
     PythonProperty* getPythonProperty() {
-        return &pythonScript_;
+        return &pythonProperty_;
     }
 
 protected:
@@ -73,7 +73,8 @@ private:
 
     InteractiveListProperty portList_;
     BoolProperty enabled_;
-    PythonProperty pythonScript_;
+    PythonProperty pythonProperty_;
+    PythonScript pythonScript_;
 
     bool valid_;
 
