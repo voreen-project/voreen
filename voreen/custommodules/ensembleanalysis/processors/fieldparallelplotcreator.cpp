@@ -110,8 +110,8 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
         seedPoint = tgt::vec3(roi.getLLF()) + seedPoint * tgt::vec3(roi.diagonal());
 
         // TODO: very rough and dirty restriction, implement something more intelligent.
-        if (!seedMask || (seedMaskBounds.containsPoint(seedPoints[k]) &&
-          seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoints[k]) > 0.0f)) {
+        if (!seedMask || (seedMaskBounds.containsPoint(seedPoint) &&
+          seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint) > 0.0f)) {
             seedPoints.push_back(seedPoint);
         }
     }

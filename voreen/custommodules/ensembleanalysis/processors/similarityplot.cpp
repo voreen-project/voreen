@@ -110,7 +110,9 @@ SimilarityPlot::SimilarityPlot()
 {
     // Ports
     addPort(ensembleInport_);
+    ON_CHANGE(ensembleInport_, SimilarityPlot, adjustToEnsemble);
     addPort(similarityMatrixInport_);
+    ON_CHANGE(similarityMatrixInport_, SimilarityPlot, adjustToEnsemble);
     addPort(outport_);
     addPort(eigenValueOutport_);
     addPrivateRenderPort(privatePort_);
@@ -648,7 +650,7 @@ void SimilarityPlot::onEvent(tgt::Event* e) {
     //*/
 }
 
-void SimilarityPlot::adjustPropertiesToInput() {
+void SimilarityPlot::adjustToEnsemble() {
 
     ensembleHash_.clear();
     mdsData_.clear();
@@ -701,17 +703,21 @@ void SimilarityPlot::calculate() {
     ensembleHash_.clear();
     mdsData_.clear();
 
+    const std::vector<std::string>& channels = ensembleInport_.getData()->getCommonChannels();
+    const SimilarityMatrixList* matrices = similarityMatrixInport_.getData();
+
     setProgress(0.0f);
-    for (const std::string& channel : ensembleInport_.getData()->getCommonChannels()) {
+    for (size_t i=0; i<channels.size(); i++) {
+        SubtaskProgressReporter progressReporter(*this, tgt::vec2(i, i+1) / tgt::vec2(channels.size()));
 
         // Get distance matrix.
-        const SimilarityMatrix& distanceMatrix = similarityMatrixInport_.getData()->getSimilarityMatrix(channel);
+        const SimilarityMatrix& distanceMatrix = matrices->getSimilarityMatrix(channels[i]);
 
         // Compute Principal components and corresponding eigenvectors.
-        MDSData mdsData = computeFromDM(distanceMatrix);
+        MDSData mdsData = computeFromDM(distanceMatrix, progressReporter);
 
         // Add the result.
-        mdsData_.push_back(mdsData);
+        mdsData_.push_back(std::move(mdsData));
     }
 
     outputEigenValues();
@@ -722,7 +728,7 @@ void SimilarityPlot::calculate() {
     invalidate();
 }
 
-SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& DistanceMatrix, float epsilon) {
+SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& DistanceMatrix, ProgressReporter& progressReporter, float epsilon) {
     using namespace Eigen;
 
     const size_t dimNum = numEigenvalues_.get();
@@ -755,6 +761,7 @@ SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& Di
     VectorXf TempVector(PointsNumber);
     VectorXf* EVectors = new VectorXf[dimNum];
 
+    progressReporter.setProgress(0.1f);
     for(size_t i=0; i<dimNum; i++) {
 
         VectorXf& EVector = EVectors[i];
@@ -791,6 +798,8 @@ SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& Di
         Result.col(i) = EVector;
         EigSq(i, i) = std::sqrt(EValue);
         result.eigenvalues_.push_back(EValue);
+
+        progressReporter.setProgress(0.1f + 0.8f*i/dimNum);
     }
     delete [] EVectors;
 
@@ -814,6 +823,8 @@ SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& Di
             result.nVectors_[j][i] = value;
         }
     }
+
+    progressReporter.setProgress(1.0f);
 
     return result;
 }

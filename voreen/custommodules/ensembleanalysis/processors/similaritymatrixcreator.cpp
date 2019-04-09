@@ -133,8 +133,8 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
         seedPoint = tgt::vec3(roi.getLLF()) + seedPoint * tgt::vec3(roi.diagonal());
 
         // TODO: very rough and dirty restriction, implement something more intelligent.
-        if (!seedMask || (seedMaskBounds.containsPoint(seedPoints[k]) &&
-                          seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoints[k]) != 0.0f)) {
+        if (!seedMask || (seedMaskBounds.containsPoint(seedPoint) &&
+                          seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint) != 0.0f)) {
             seedPoints.push_back(seedPoint);
         }
     }
@@ -151,7 +151,7 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
 SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixCreatorInput input, ProgressReporter& progress) const {
 
     std::unique_ptr<SimilarityMatrixList> similarityMatrices = std::move(input.outputMatrices);
-    std::vector<tgt::vec3> seedPoints = std::move(input.seedPoints);
+    const std::vector<tgt::vec3>& seedPoints = input.seedPoints;
 
     // Init empty flags.
     std::vector<std::vector<float>> Flags(input.dataset.getTotalNumTimeSteps(), std::vector<float>(seedPoints.size(), 0.0f));
@@ -164,9 +164,9 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
         const tgt::vec2& valueRange = input.dataset.getValueRange(channel);
 
         SubtaskProgressReporter runProgressReporter(progress, tgt::vec2(i, 0.9f*(i+1))/tgt::vec2(channels.size()));
+        float progressPerTimeStep = 1.0f / (input.dataset.getTotalNumTimeSteps());
         size_t index = 0;
         for (const EnsembleDataset::Run& run : input.dataset.getRuns()) {
-            float progressPerTimeStep = 1.0f / (run.timeSteps_.size() * input.dataset.getRuns().size());
             for (const EnsembleDataset::TimeStep& timeStep : run.timeSteps_) {
 
                 const VolumeBase* volume = timeStep.channels_.at(channel);
@@ -190,10 +190,10 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                         break;
                     }
                 }
-                index++;
 
                 // Update progress.
                 runProgressReporter.setProgress(index * progressPerTimeStep);
+                index++;
             }
         }
 
