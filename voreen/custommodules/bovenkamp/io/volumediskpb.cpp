@@ -72,9 +72,8 @@ std::string VolumeDiskPB::getHash() const {
         configStr += filename + "#";
     configStr += std::to_string(timeStep_) + "#";
 
-    // don't add the following to hash because it's not worth loading the volume again.
-    //configStr += VoreenHash::getHash(&invertPosition_[0], invertPosition_.size) + "#";
-    //configStr += VoreenHash::getHash(&invertVelocity_[0], invertVelocity_.size) + "#";
+    configStr += VoreenHash::getHash(&invertPosition_[0], invertPosition_.size) + "#";
+    configStr += VoreenHash::getHash(&invertVelocity_[0], invertVelocity_.size) + "#";
 
     return VoreenHash::getHash(configStr);
 }
@@ -97,18 +96,18 @@ VolumeRAM* VolumeDiskPB::loadBrick(const tgt::svec3& offset, const tgt::svec3& d
     if (!tgt::hand(tgt::lessThanEqual(offset + dimensions, dimensions_)))
         throw VoreenException("requested brick (at least partially) outside volume dimensions");
 
-    VolumeRAM* result = nullptr;
+    std::unique_ptr<VolumeRAM> result;
     if (getNumChannels() == 1)
-        result = new VolumeRAM_Float(dimensions);
+        result.reset(VolumeGeneratorFloat().create(dimensions));
     else if (getNumChannels() == 3)
-        result = new VolumeRAM_3xFloat(dimensions);
+        result.reset(VolumeGenerator3xFloat().create(dimensions));
 
     tgtAssert(result, "Unhandled channel count");
 
     for (size_t i = 0; i < filenames_.size(); i++)
-        readFile(filenames_[i], result, i, offset, dimensions);
+        readFile(filenames_[i], result.get(), i, offset, dimensions);
     
-    return result;
+    return result.release();
 }
 
 size_t toLinear(const tgt::svec3& dim, size_t x, size_t y, size_t z) {
