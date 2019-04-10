@@ -32,8 +32,6 @@
 #include "voreen/core/ports/volumeport.h"
 #include "../../ports/flowparametrizationport.h"
 
-#include "modules/hdf5/io/hdf5filevolume.h"
-
 #include <olb3D.h>
 #define DESCRIPTOR D3Q19Descriptor
 
@@ -151,7 +149,7 @@ private:
 
     void writeResult(       STLreader<T>& stlReader,
                             UnitConverter<T,DESCRIPTOR>& converter, int ti, int tmax,
-                            SuperLatticePhysF3D<T, DESCRIPTOR>& property,
+                            SuperLatticeF3D<T, DESCRIPTOR>& feature,
                             const FlowParametrizationList& parametrizationList,
                             size_t selectedParametrization,
                             const std::string& simulationOutputPath,

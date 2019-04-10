@@ -41,7 +41,7 @@
 #include "processors/simulation/flowindicatordetection.h"
 #endif
 
-#ifdef FLOWREEN_USE_OPENLB
+#ifdef VRN_FLOWSIMULATION_USE_OPENLB
 #include <olb3D.h>
 #include "processors/simulation/flowsimulation.h"
 #include "processors/geometry/implicitrepresentation.h"
@@ -71,7 +71,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
 #ifdef VRN_MODULE_VESSELTOPOLOGY
     registerSerializableType(new FlowIndicatorDetection());
 #endif
-#ifdef FLOWREEN_USE_OPENLB
+#ifdef VRN_FLOWSIMULATION_USE_OPENLB
     registerSerializableType(new ImplicitRepresentation());
     registerSerializableType(new FlowSimulation());
 #endif
@@ -80,7 +80,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
 void FlowSimulationModule::initialize() {
     VoreenModule::initialize();
 
-#ifdef FLOWREEN_USE_OPENLB
+#ifdef VRN_FLOWSIMULATION_USE_OPENLB
     olb::olbInit(nullptr, nullptr);
     olb::singleton::directories().setOutputDir(VoreenApplication::app()->getTemporaryPath("simulation")+"/");
 #endif

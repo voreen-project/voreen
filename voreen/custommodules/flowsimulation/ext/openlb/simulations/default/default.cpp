@@ -299,7 +299,7 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 // Writes result
 void writeResult(STLreader<T>& stlReader,
                  UnitConverter<T,DESCRIPTOR>& converter, int ti, int tmax,
-                 SuperLatticePhysF3D<T, DESCRIPTOR>& property,
+                 SuperLatticeF3D<T, DESCRIPTOR>& feature,
                  const std::string& name) {
 
     OstreamManager clout(std::cout, "writeResult");
@@ -316,7 +316,7 @@ void writeResult(STLreader<T>& stlReader,
     // Determine format.
     // This could be done in a more dynamic way, but the code should be easily portable to the cluster.
     std::string format;
-    switch(property.getTargetDim()) {
+    switch(feature.getTargetDim()) {
         case 1:
             format = "float";
             break;
@@ -328,47 +328,61 @@ void writeResult(STLreader<T>& stlReader,
             return;
     }
 
-    std::vector<float> rawPropertyData;
-    rawPropertyData.reserve(static_cast<size_t>(resolution * resolution * resolution * property.getTargetDim()));
-    AnalyticalFfromSuperF3D<T> interpolateProperty(property, true);
+    std::vector<float> rawFeatureData;
+    rawFeatureData.reserve(static_cast<size_t>(resolution * resolution * resolution * feature.getTargetDim()));
+    AnalyticalFfromSuperF3D<T> interpolateProperty(feature, true);
+
+    T minMagnitude = std::numeric_limits<T>::max();
+    T maxMagnitude = 0.0f;
 
     for(int z=0; z<resolution; z++) {
         for(int y=0; y<resolution; y++) {
             for(int x=0; x<resolution; x++) {
 
                 T pos[3] = {offset[0]+x*maxLen/resolution, offset[1]+y*maxLen/resolution, offset[2]+z*maxLen/resolution};
-                std::vector<T> dat(property.getTargetDim(), 0.0f);
+                std::vector<T> val(feature.getTargetDim(), 0.0f);
 
                 if(pos[0] >= min[0] && pos[1] >= min[1] && pos[2] >= min[2] &&
                    pos[0] <= max[0] && pos[1] <= max[1] && pos[2] <= max[2]) {
-                    interpolateProperty(&dat[0], pos);
+                    interpolateProperty(&val[0], pos);
+
+                    // Update min/max.
+                    T magnitude = 0;
+                    for(int i = 0; i < feature.getTargetDim(); i++) {
+                        magnitude += val[i]*val[i];
+                    }
+                    minMagnitude = std::min(minMagnitude, magnitude);
+                    maxMagnitude = std::max(maxMagnitude, magnitude);
                 }
 
                 // Downgrade to float.
-                for(int i = 0; i < property.getTargetDim(); i++) {
-                    rawPropertyData.push_back(static_cast<float>(dat[i]/VOREEN_LENGTH_TO_SI));
+                for(int i = 0; i < feature.getTargetDim(); i++) {
+                    rawFeatureData.push_back(static_cast<float>(val[i]/VOREEN_LENGTH_TO_SI));
                 }
             }
         }
     }
 
+    minMagnitude = std::sqrt(minMagnitude / (VOREEN_LENGTH_TO_SI * VOREEN_LENGTH_TO_SI));
+    maxMagnitude = std::sqrt(maxMagnitude / (VOREEN_LENGTH_TO_SI * VOREEN_LENGTH_TO_SI));
+
     int tmaxLen = static_cast<int>(std::to_string(tmax).length());
     std::ostringstream suffix;
     suffix << std::setw(tmaxLen) << std::setfill('0') << ti;
-    std::string propertyFilename = name + "_" + suffix.str();
-    std::string rawFilename = singleton::directories().getLogOutDir() + "/" + propertyFilename + ".raw";
-    std::string vvdFilename = singleton::directories().getLogOutDir() + "/" + propertyFilename + ".vvd";
+    std::string featureFilename = name + "_" + suffix.str();
+    std::string rawFilename = singleton::directories().getLogOutDir() + "/" + featureFilename + ".raw";
+    std::string vvdFilename = singleton::directories().getLogOutDir() + "/" + featureFilename + ".vvd";
 
-    const LatticeStatistics<T>& statistics = property.getSuperLattice().getStatistics();
-    std::fstream vvdPropertyFile(vvdFilename.c_str(), std::ios::out);
-    vvdPropertyFile
+    const LatticeStatistics<T>& statistics = feature.getSuperLattice().getStatistics();
+    std::fstream vvdFeatureFile(vvdFilename.c_str(), std::ios::out);
+    vvdFeatureFile
             // Header.
             << "<?xml version=\"1.0\" ?>"
             << "<VoreenData version=\"1\">"
             << "<Volumes>"
             << "<Volume>"
             // Data.
-            << "<RawData filename=\"" << propertyFilename << ".raw\" format=\"" << format << "\" x=\"" << resolution << "\" y=\""<< resolution << "\" z=\"" << resolution << "\" />"
+            << "<RawData filename=\"" << featureFilename << ".raw\" format=\"" << format << "\" x=\"" << resolution << "\" y=\""<< resolution << "\" z=\"" << resolution << "\" />"
             // Mandatory Meta data.
             << "<MetaData>"
             << "<MetaItem name=\""<< META_DATA_NAME_OFFSET << "\" type=\"Vec3MetaData\">"
@@ -389,18 +403,20 @@ void writeResult(STLreader<T>& stlReader,
             << "<MetaItem name=\"" << "StatisticsMaxVelocity" << "\" type=\"FloatMetaData\" value=\"" << statistics.getMaxU() << "\" />"
             << "<MetaItem name=\"" << "StatisticsAvgEnergy" << "\" type=\"FloatMetaData\" value=\"" << statistics.getAverageEnergy() << "\" />"
             << "<MetaItem name=\"" << "StatisticsMaxRho" << "\" type=\"FloatMetaData\" value=\"" << statistics.getAverageRho() << "\" />"
+            // Derived data.
+            << "<DerivedItem type=\"VolumeMinMax\"><minValues><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /></minValues><maxValues><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /></maxValues><minNormValues><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /></minNormValues><maxNormValues><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /></maxNormValues></DerivedItem>"
             // Footer.
             << "</MetaData>"
             << "</Volume>"
             << "</Volumes>"
             << "</VoreenData>";
 
-    vvdPropertyFile.close();
+    vvdFeatureFile.close();
 
-    std::fstream rawPropertyFile(rawFilename.c_str(), std::ios::out | std::ios::binary);
-    size_t numBytes = rawPropertyData.size() * sizeof(float) / sizeof(char);
-    rawPropertyFile.write(reinterpret_cast<const char*>(rawPropertyData.data()), numBytes);
-    if (!rawPropertyFile.good()) {
+    std::fstream rawFeatureFile(rawFilename.c_str(), std::ios::out | std::ios::binary);
+    size_t numBytes = rawFeatureData.size() * sizeof(float) / sizeof(char);
+    rawFeatureFile.write(reinterpret_cast<const char*>(rawFeatureData.data()), numBytes);
+    if (!rawFeatureFile.good()) {
         clout << "Could not write " << name << " file" << std::endl;
     }
 }
@@ -413,32 +429,30 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     OstreamManager clout(std::cout, "getResults");
 
-    SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
-    SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
-
     const int outputIter = tmax / numTimeSteps;
 
     int rank = 0;
 #ifdef PARALLEL_MODE_MPI
-    //rank = singleton::mpi().getRank();
+    rank = singleton::mpi().getRank();
 #endif
     if (rank == 0 && ti % outputIter == 0) {
         // Write velocity.
         SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
         writeResult(stlReader, converter, ti, tmax, velocity, "velocity");
 
+        // Write magnitude.
+        SuperEuklidNorm3D <T, DESCRIPTOR> magnitude(velocity);
+        writeResult(stlReader, converter, ti, tmax, magnitude, "magnitude");
+
         // Write pressure.
         SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
         writeResult(stlReader, converter, ti, tmax, pressure, "pressure");
 
-        // Write WallShearStress
-        // TODO: figure out how and estimate somehow from measured data!
-        //SuperLatticePhysWallShearStress3D<T, DESCRIPTOR> wallShearStress(sLattice, superGeometry, MAT_WALL, converter, stlReader);
-        //writeResult(stlReader, converter, ti, tmax, wallShearStress, simulationOutputPath, "wallShearStress");
-
-        // Write Temperature.
-        //SuperLatticePhysTemperature3D<T, DESCRIPTOR, TODO> temperature(sLattice, converter);
-        //writeResult(stlReader, converter, ti, tmax, temperature, simulationOutputPath, "temperature");
+#ifndef OLB_PRECOMPILED
+        // Write wallShearStress.
+        SuperLatticePhysWallShearStress3D <T, DESCRIPTOR> wallShearStress(sLattice, superGeometry, MAT_WALL, converter, stlReader);
+        writeResult(stlReader, converter, ti, tmax, wallShearStress, "wallShearStress");
+#endif
 
         // Lattice statistics console output
         sLattice.getStatistics().print(ti, converter.getPhysTime(ti));

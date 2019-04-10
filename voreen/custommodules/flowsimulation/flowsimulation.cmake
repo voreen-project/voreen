@@ -67,8 +67,8 @@ ENDIF()
 # External dependency: OpenLB library
 ################################################################################
 
-OPTION(VRN_FLOWREEN_BUILD_OPENLB "Build OpenLB?" ON)
-IF(VRN_FLOWREEN_BUILD_OPENLB)
+OPTION(VRN_FLOWSIMULATION_BUILD_OPENLB "Build OpenLB?" ON)
+IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
     IF(VRN_MSVC)
         # OpenLB was developed on and for POSIX systems, therefore, windows and MSVC are not supported.
         MESSAGE(FATAL_ERROR "OpenLB currently not supported by MSVC")
@@ -82,12 +82,18 @@ IF(VRN_FLOWREEN_BUILD_OPENLB)
 
     SET(OpenLB_DIR ${MOD_DIR}/ext/openlb)
     SET(OpenLB_INCLUDE_DIR ${OpenLB_DIR}/src)
-    SET(OpenLB_LIBRARY_PATH ${OpenLB_DIR}/build/precompiled/lib/libolb.a)
+
+    SET(OLB_BUILDTYPE "precompiled" CACHE STRING "OpenLB Build Type")
+    SET_PROPERTY(CACHE OLB_BUILDTYPE PROPERTY STRINGS "precompiled" "generic")
+    SET(OpenLB_LIBRARY_PATH ${OpenLB_DIR}/build/${OLB_BUILDTYPE}/lib/libolb.a)
+    IF(${OLB_BUILDTYPE} MATCHES "precompiled")
+        ADD_DEFINITIONS("-DOLB_PRECOMPILED")
+    ENDIF()
     LIST(APPEND MOD_INCLUDE_DIRECTORIES ${OpenLB_INCLUDE_DIR})
     LIST(APPEND MOD_LIBRARIES ${OpenLB_LIBRARY_PATH})
 
-    ADD_CUSTOM_TARGET(OpenLB COMMAND make WORKING_DIRECTORY ${OpenLB_DIR})
-    ADD_DEFINITIONS("-DFLOWREEN_USE_OPENLB")
+    ADD_CUSTOM_TARGET(OpenLB COMMAND BUILDTYPE=${OLB_BUILDTYPE} make WORKING_DIRECTORY ${OpenLB_DIR})
+    ADD_DEFINITIONS("-DVRN_FLOWSIMULATION_USE_OPENLB")
 
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
         ${MOD_DIR}/processors/simulation/flowsimulation.h
