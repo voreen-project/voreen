@@ -49,6 +49,7 @@ StreamlineCreator::StreamlineCreator()
     , maxNumStreamlinesProp_("maxNumStreamlinesprop", "Maximal Streamlines: ", 5000, 1, 100000)
     , streamlineLengthThresholdProp_("streamlineLengthThresholdProp", "Threshold of Streamline Length: ", tgt::ivec2(10, 100), 2, 1000)
     , absoluteMagnitudeThresholdProp_("absoluteMagnitudeThreshold", "Threshold of Magnitude (absolute)", tgt::vec2(0.0f, 1000.0f), 0.0f, 9999.99f)
+    , fitAbsoluteMagnitudeProp_("fitAbsoluteMagnitude", "Fit absolute Threshold to Input", false)
     , relativeMagnitudeThresholdProp_("relativeMagnitudeThreshold", "Threshold of Magnitude (relative)", tgt::vec2(0.0f, 100.0f), 0.0f, 100.0f, Processor::VALID)
     , filterModeProp_("filterModeProp","Filtering:",Processor::INVALID_RESULT,false,Property::LOD_DEVELOPMENT)
     // streamlinebundle config
@@ -92,6 +93,8 @@ StreamlineCreator::StreamlineCreator()
         absoluteMagnitudeThresholdProp_.onChange(MemberFunctionCallback<StreamlineCreator>(this,&StreamlineCreator::streamlineSettingsHaveBeenChanged));
         absoluteMagnitudeThresholdProp_.onChange(MemberFunctionCallback<StreamlineCreator>(this,&StreamlineCreator::adjustRelativeThreshold));
         absoluteMagnitudeThresholdProp_.setGroupID("streamline");
+    addProperty(fitAbsoluteMagnitudeProp_);
+        fitAbsoluteMagnitudeProp_.setGroupID("streamline");
     addProperty(relativeMagnitudeThresholdProp_);
         relativeMagnitudeThresholdProp_.setReadOnlyFlag(true);
         relativeMagnitudeThresholdProp_.setGroupID("streamline");
@@ -274,9 +277,12 @@ void StreamlineCreator::volumeChange(const VolumeBase* source) {
 
     absoluteMagnitudeThresholdProp_.setMinValue(data->getMinMagnitude());
     absoluteMagnitudeThresholdProp_.setMaxValue(data->getMaxMagnitude());
+    if(fitAbsoluteMagnitudeProp_.get()) {
+        absoluteMagnitudeThresholdProp_.set(tgt::vec2(data->getMinMagnitude(), data->getMaxMagnitude()));
+    }
 
     tgt::vec3 length = volInport_.getData()->getSpacing() * tgt::vec3(volInport_.getData()->getDimensions());
-    maxAverageDistanceThresholdProp_.setMaxValue(sqrtf(length.x*length.x + length.y*length.y + length.z*length.z));
+    maxAverageDistanceThresholdProp_.setMaxValue(tgt::length(length));
 
     // Invalidate processor
     invalidate();

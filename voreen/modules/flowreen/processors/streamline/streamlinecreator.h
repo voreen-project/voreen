@@ -155,9 +155,10 @@ private:
 
     //streamline settings
     IntProperty maxNumStreamlinesProp_;                     ///< maximal number of streamlines
-    IntIntervalProperty streamlineLengthThresholdProp_;         ///< streamline length must be in this interval
-    FloatIntervalProperty absoluteMagnitudeThresholdProp_;      ///< only magnitudes in this intervall are used
-    FloatIntervalProperty relativeMagnitudeThresholdProp_;      ///< debug output
+    IntIntervalProperty streamlineLengthThresholdProp_;     ///< streamline length must be in this interval
+    FloatIntervalProperty absoluteMagnitudeThresholdProp_;  ///< only magnitudes in this interval are used
+    BoolProperty fitAbsoluteMagnitudeProp_;                 ///< fit magnitude on input change?
+    FloatIntervalProperty relativeMagnitudeThresholdProp_;  ///< debug output
     OptionProperty<FilterMode> filterModeProp_;             ///< filtering inside the dataset
 
     //streamline bundle settings
