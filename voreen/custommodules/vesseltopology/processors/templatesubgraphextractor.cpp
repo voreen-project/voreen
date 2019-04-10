@@ -712,7 +712,7 @@ static const VesselGraphNode* find_starting_node(const VesselGraph& graph, const
     return starting_node;
 }
 
-static void fillGraph(PathTreeNode* root, VesselGraph& output) {
+static void fillGraph(PathTreeNode* root, VesselGraphBuilder& output) {
 
     std::unordered_set<const VesselGraphNode*> nodes_to_keep;
     std::vector<const NodePath*> paths;
@@ -830,11 +830,11 @@ static SubgraphExtractionResult extractBranch(UnprocessedBranch b, const VesselG
 }
 
 std::unique_ptr<VesselGraph> TemplateSubgraphExtractor::extractSubgraphGlobal(const VesselGraph& input, const tgt::vec3& starting_point, const TemplateBranch& tpl, bool keepBounds) {
-    std::unique_ptr<VesselGraph> output(keepBounds ? new VesselGraph(input.getBounds()) : new VesselGraph());
+    VesselGraphBuilder builder(keepBounds ? VesselGraphBuilder(input.getBounds()) : VesselGraphBuilder());
     const VesselGraphNode* starting_node = find_starting_node(input, starting_point);
     if(!starting_node) {
         // No nodes in graph
-        return output;
+        return std::move(builder).finalize();
     }
 
     SubgraphExtractionResult tree = extractBranch(UnprocessedBranch(starting_node, tpl));
@@ -851,17 +851,17 @@ std::unique_ptr<VesselGraph> TemplateSubgraphExtractor::extractSubgraphGlobal(co
 
     if(tree.node) {
         // No node => did not match any branch
-        fillGraph(tree.node.get(), *output);
+        fillGraph(tree.node.get(), builder);
     }
-    return output;
+    return std::move(builder).finalize();
 }
 
 std::unique_ptr<VesselGraph> TemplateSubgraphExtractor::extractSubgraph(const VesselGraph& input, const tgt::vec3& starting_point, const TemplateBranch& tpl, bool keepBounds) {
-    std::unique_ptr<VesselGraph> output(keepBounds ? new VesselGraph(input.getBounds()) : new VesselGraph());
+    VesselGraphBuilder builder(keepBounds ? VesselGraphBuilder(input.getBounds()) : VesselGraphBuilder());
     const VesselGraphNode* starting_node = find_starting_node(input, starting_point);
     if(!starting_node) {
         // No nodes in graph
-        return output;
+        return std::move(builder).finalize();
     }
 
     std::queue<UnprocessedBranch> branches_to_process;
@@ -913,9 +913,9 @@ std::unique_ptr<VesselGraph> TemplateSubgraphExtractor::extractSubgraph(const Ve
 
     if(root) {
         // No node => did not match any branch
-        fillGraph(root.get(), *output);
+        fillGraph(root.get(), builder);
     }
-    return output;
+    return std::move(builder).finalize();
 }
 
 void TemplateSubgraphExtractor::initialize() {

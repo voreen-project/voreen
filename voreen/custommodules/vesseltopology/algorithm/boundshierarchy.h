@@ -159,8 +159,10 @@ BoundsHierarchyNode<T,V>::BoundsHierarchyNode(BoundsHierarchyNode<T,V>&& other) 
 
 template<typename T, typename V>
 BoundsHierarchyNode<T,V>& BoundsHierarchyNode<T,V>::operator=(BoundsHierarchyNode<T,V>&& other) {
-    this->~BoundsHierarchyNode();
-    new(this) BoundsHierarchyNode(std::move(other));
+    if(this != &other) {
+        this->~BoundsHierarchyNode();
+        new(this) BoundsHierarchyNode(std::move(other));
+    }
     return *this;
 }
 

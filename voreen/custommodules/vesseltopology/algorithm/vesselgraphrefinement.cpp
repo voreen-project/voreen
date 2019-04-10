@@ -126,7 +126,7 @@ static std::vector<const VesselGraphEdge*> findDeletable(const VesselGraphNode& 
 }
 
 std::unique_ptr<VesselGraph> VesselGraphRefinement::removeEndEdges(const VesselGraph& input, RemovableEdgeCheck isRemovableEdge, size_t& num_removed_edges) {
-    std::unique_ptr<VesselGraph> output(new VesselGraph(input.getBounds()));
+    VesselGraphBuilder output(input.getBounds());
     num_removed_edges = 0;
 
     DiskArrayStorage<bool> edges_deleted_map(VoreenApplication::app()->getUniqueTmpFilePath(".newnodeids"));
@@ -160,24 +160,24 @@ std::unique_ptr<VesselGraph> VesselGraphRefinement::removeEndEdges(const VesselG
         if(new_node_ids[old_node1_id.raw()].isValid()) {
             new_node1_id = new_node_ids[old_node1_id.raw()];
         } else {
-            new_node1_id = output->insertNode(node1);
+            new_node1_id = output.insertNode(node1);
             new_node_ids[old_node1_id.raw()] = new_node1_id;
         }
         if(new_node_ids[old_node2_id.raw()].isValid()) {
             new_node2_id = new_node_ids[old_node2_id.raw()];
         } else {
-            new_node2_id = output->insertNode(node2);
+            new_node2_id = output.insertNode(node2);
             new_node_ids[old_node2_id.raw()] = new_node2_id;
         }
-        output->insertEdge(new_node1_id, new_node2_id, edge.getVoxels(), edge.getUUID());
+        output.insertEdge(new_node1_id, new_node2_id, edge.getVoxels(), edge.getUUID());
     }
     // Insert all singular nodes as they cannot have been inserted before (via any edges), but should not be removed from the graph
     for(const VesselGraphNode& node : input.getNodes()) {
         if(node.getDegree() == 0) {
-            output->insertNode(node);
+            output.insertNode(node);
         }
     }
-    return removeDregree2Nodes(*output);
+    return removeDregree2Nodes(*std::move(output).finalize());
 }
 
 struct FutureNode {
@@ -291,7 +291,7 @@ std::unique_ptr<VesselGraph> VesselGraphRefinement::removeAllEdges(const VesselG
     // Insertion
     // -----------------
 
-    std::unique_ptr<VesselGraph> output(new VesselGraph(input.getBounds()));
+    VesselGraphBuilder builder(input.getBounds());
     // Create the actual future nodes (aka nodes in the new graph) and insert them
     for(const auto& node_pair : new_nodes) {
         FutureNode* future_node = node_pair.second->getRootNode();
@@ -314,7 +314,7 @@ std::unique_ptr<VesselGraph> VesselGraphRefinement::removeAllEdges(const VesselG
                 new_pos += voxel;
             }
             new_pos /= static_cast<float>(voxels.size());
-            future_node->id_ = output->insertNode(new_pos, std::move(voxels), 0.0f, false /* TODO: should be always not at sample border, right? */);
+            future_node->id_ = builder.insertNode(new_pos, std::move(voxels), 0.0f, false /* TODO: should be always not at sample border, right? */);
         }
     }
 
@@ -333,10 +333,10 @@ std::unique_ptr<VesselGraph> VesselGraphRefinement::removeAllEdges(const VesselG
         }
 
         //TODO: check order of voxels and nodes do they have to be swapped?
-        output->insertEdge(future_node_id1, future_node_id2, std::move(voxels), new_edge->getUUID());
+        builder.insertEdge(future_node_id1, future_node_id2, std::move(voxels), new_edge->getUUID());
     }
 
-    return removeDregree2Nodes(*output);
+    return removeDregree2Nodes(*std::move(builder).finalize());
 }
 
 struct FutureEdge {
@@ -426,8 +426,9 @@ struct FutureEdge {
             auto pushVoxel = [&output, firstEdge, lastEdge] (const VesselGraphEdge& edge, size_t voxelIndex) {
                 // We want all voxels to be outer if they are between the start of the first and the end of the last edge
                 bool isFutureOuter =
-                        (&edge != firstEdge || voxelIndex >= edge.outerPathBeginIndex_)
-                     || (&edge != lastEdge || voxelIndex < edge.outerPathEndIndex_);
+                        (&edge == firstEdge && (voxelIndex >= edge.outerPathBeginIndex_ || edge.isEndStanding()))
+                     || (&edge == lastEdge && (voxelIndex < edge.outerPathEndIndex_ || edge.isEndStanding()))
+                     || (&edge != firstEdge && &edge != lastEdge);
 
                 const VesselSkeletonVoxel& voxel = edge.getVoxels()[voxelIndex];
                 if(isFutureOuter && voxel.isInner()) {
@@ -504,7 +505,7 @@ struct FutureEdge {
 };
 
 std::unique_ptr<VesselGraph> VesselGraphRefinement::removeDregree2Nodes(const VesselGraph& input) {
-    std::unique_ptr<VesselGraph> output(new VesselGraph(input.getBounds()));
+    VesselGraphBuilder builder(input.getBounds());
 
     // 1. build futureedge for all edges, create hashmap edge -> futureedge
     DiskArrayStorage<FutureEdge> future_edges(VoreenApplication::app()->getUniqueTmpFilePath(".futureedges"));
@@ -533,7 +534,7 @@ std::unique_ptr<VesselGraph> VesselGraphRefinement::removeDregree2Nodes(const Ve
             // Node will not be inserted: push invalid id
             insertPos = new_node_ids.storeElement(VGNodeID::INVALID);
         } else {
-            VGNodeID node_id = output->insertNode(node);
+            VGNodeID node_id = builder.insertNode(node);
             insertPos = new_node_ids.storeElement(node_id);
         }
         tgtAssert(insertPos == node.getID().raw(), "nodes not properly ordered");
@@ -552,7 +553,7 @@ std::unique_ptr<VesselGraph> VesselGraphRefinement::removeDregree2Nodes(const Ve
             // we have to have detected a circle: add a single node for the edge:
             tgtAssert(future_edge.begin_ && future_edge.begin_ == future_edge.end_, "Non circle without nodes");
             const VesselGraphNode* circle_node = future_edge.begin_;
-            VGNodeID circle_node_id = output->insertNode(*circle_node);
+            VGNodeID circle_node_id = builder.insertNode(*circle_node);
             node_id_begin = circle_node_id;
             node_id_end = circle_node_id;
         } else {
@@ -563,10 +564,10 @@ std::unique_ptr<VesselGraph> VesselGraphRefinement::removeDregree2Nodes(const Ve
         tgtAssert(node_id_end.isValid(), "Invalid node_id_begin");
 
         std::vector<VesselSkeletonVoxel> voxels = future_edge.collectVoxels();
-        VGEdgeID inserted_edge = output->insertEdge(node_id_begin, node_id_end, std::move(voxels), future_edge.getUUID());
-        tgtAssert(output->getEdge(inserted_edge).getLength() > 0, "Invalid edge length");
+        /*VGEdgeID inserted_edge = */builder.insertEdge(node_id_begin, node_id_end, std::move(voxels), future_edge.getUUID());
+        //tgtAssert(builder.getEdge(inserted_edge).getLength() > 0, "Invalid edge length");
     }
 
-    return output;
+    return std::move(builder).finalize();
 }
 } // namespace voreen

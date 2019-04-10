@@ -84,10 +84,10 @@ void VascuSynthGraphLoader::process() {
     if(path.empty()) {
         return;
     }
-    std::unique_ptr<VesselGraph> output(nullptr);
 
     TiXmlDocument doc(path);
     if(doc.LoadFile()) {
+        VesselGraphBuilder builder;
         const TiXmlNode* glxNode = doc.FirstChild();
         if(!glxNode) {
             LERROR("Could not find glxNode");
@@ -96,7 +96,6 @@ void VascuSynthGraphLoader::process() {
         if(!graphNode) {
             LERROR("Could not find graphNode");
         }
-        output.reset(new VesselGraph());
         std::map<VGNodeID, VGNodeID> idMap;
         for(const TiXmlElement* graphElement = graphNode->FirstChildElement(); graphElement; graphElement = graphElement->NextSiblingElement()) {
             if(std::string(graphElement->Value()) == "node") {
@@ -144,7 +143,7 @@ void VascuSynthGraphLoader::process() {
                         }
                         std::vector<tgt::vec3> voxels;
                         voxels.push_back(pos);
-                        VGNodeID id = output->insertNode(pos, std::move(voxels), 0.0f, false);
+                        VGNodeID id = builder.insertNode(pos, std::move(voxels), 0.0f, false);
                         idMap.insert({nodeId, id});
                     }
                 }
@@ -178,8 +177,8 @@ void VascuSynthGraphLoader::process() {
                             // Apparently are the radii in the correct unit (mm) already...
                             //radius *= GRAPH_UNIT_TO_MM;
 
-                            const auto& node1 = output->getNode(graphFromId);
-                            const auto& node2 = output->getNode(graphToId);
+                            const auto& node1 = builder.getNode(graphFromId);
+                            const auto& node2 = builder.getNode(graphToId);
 
                             float distance = tgt::distance(node1.pos_, node2.pos_);
                             float volume = radius*radius * distance;
@@ -197,7 +196,7 @@ void VascuSynthGraphLoader::process() {
                                 voxels.emplace_back(pos, radius, radius, radius, 1, volumePerVoxel, false);
                             }
 
-                            output->insertEdge(graphFromId, graphToId, voxels);
+                            builder.insertEdge(graphFromId, graphToId, voxels);
                         } catch(...) {
                             LERROR("graph without matching node");
                             continue;
@@ -208,12 +207,13 @@ void VascuSynthGraphLoader::process() {
                 LERROR("Unknown element value " << graphElement->Value());
             }
         }
+        outport_.setData(std::move(builder).finalize().release());
     } else {
         LERROR("Could not load xml file " << path);
+        outport_.setData(nullptr);
     }
 
     //size_t id = output->insertNode(new_pos, std::move(voxels), false);
     //size_t id = output->insertEdge(future_node_id1, future_node_id2, std::move(voxels));
-    outport_.setData(output.release());
 }
 } // namespace voreen

@@ -213,9 +213,6 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(const LZ4SliceV
 
     BranchIdVolumeReader segmentedVolumeReader(ccaVolume);
 
-    //std::unique_ptr<VesselGraph> graph(new VesselGraph(skeleton.getBoundingBox().getBoundingBox()));
-    std::unique_ptr<VesselGraph> graph(new VesselGraph());
-
     tgtAssert(!sampleMask || sampleMask->getDimensions() == dimensions, "Invalid segmentation volume dimensions");
 
     DiskArrayStorage<ProtoNodeRef> nodeRefs(VoreenApplication::app()->getUniqueTmpFilePath(".protonoderefs"));
@@ -373,6 +370,8 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(const LZ4SliceV
     }
     progress.setProgress(1.0f);
 
+    VesselGraphBuilder builder;
+
     // Create nodes
     for(const ProtoNodeRef& nodeRef : nodeRefs.asArray()) {
         const ProtoVesselGraphNode& node = nodeRef.node_;
@@ -382,7 +381,7 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(const LZ4SliceV
             rwBrachVoxels.push_back(rwpos);
         }
         tgtAssert(!std::isnan(tgt::hmul(nodeRef.rwPos_)), "Invalid pos");
-        VGNodeID id = graph->insertNode(nodeRef.rwPos_, std::move(rwBrachVoxels), nodeRef.radius_, node.atSampleBorder_);
+        VGNodeID id = builder.insertNode(nodeRef.rwPos_, std::move(rwBrachVoxels), nodeRef.radius_, node.atSampleBorder_);
         tgtAssert(id == node.id_, "ID mismatch");
     }
 
@@ -392,10 +391,10 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(const LZ4SliceV
         auto& skeletonVoxelList = skeletonVoxelLists[i];
         auto& protoEdge = edges_[i];
 
-        graph->insertEdge(protoEdge.node1_, protoEdge.node2_, std::move(skeletonVoxelList));
+        builder.insertEdge(protoEdge.node1_, protoEdge.node2_, std::move(skeletonVoxelList));
     }
 
-    return graph;
+    return std::move(builder).finalize();
 }
 
 }

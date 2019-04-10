@@ -52,7 +52,8 @@ void VesselGraphSource::process() {
     if(path.empty()) {
         return;
     }
-    std::unique_ptr<VesselGraph> output(new VesselGraph());
+    VesselGraphBuilder builder;
+    auto output = std::move(builder).finalize();
 
     JsonDeserializer deserializer;
     try {

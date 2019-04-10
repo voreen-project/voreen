@@ -119,10 +119,10 @@ namespace {
 } // anymous namespace
 
 static std::unique_ptr<VesselGraph> extractSubgraph(const VesselGraph& input, const tgt::vec3& starting_point, uint32_t max_edge_distance, bool keepBounds) {
-    std::unique_ptr<VesselGraph> output(keepBounds ? new VesselGraph(input.getBounds()) : new VesselGraph());
+    VesselGraphBuilder builder(keepBounds ? VesselGraphBuilder(input.getBounds()) : VesselGraphBuilder());
     auto nodes = input.getNodes();
     if(nodes.empty()) {
-        return output;
+        return std::move(builder).finalize();
     }
     float min_dist_sq = std::numeric_limits<float>::infinity();
     const VesselGraphNode* starting_node = nullptr;
@@ -135,13 +135,13 @@ static std::unique_ptr<VesselGraph> extractSubgraph(const VesselGraph& input, co
     }
     if(!starting_node) {
         // No nodes in graph
-        return output;
+        return std::move(builder).finalize();
     }
     std::unordered_set<const VesselGraphEdge*> added_edges;
     std::unordered_map<const VesselGraphNode*, VGNodeID> added_nodes;
 
     std::queue<SubGraphNode> node_queue;
-    VGNodeID starting_node_id = output->insertNode(*starting_node);
+    VGNodeID starting_node_id = builder.insertNode(*starting_node);
     added_nodes.insert({ starting_node, starting_node_id });
 
     node_queue.push(SubGraphNode(*starting_node, 0, starting_node_id));
@@ -168,21 +168,21 @@ static std::unique_ptr<VesselGraph> extractSubgraph(const VesselGraph& input, co
                 if(added_node != added_nodes.end()) {
                     new_node_id = added_node->second;
                 } else {
-                    new_node_id = output->insertNode(new_node);
+                    new_node_id = builder.insertNode(new_node);
                     added_nodes.insert({ &new_node, new_node_id });
 
                     uint32_t new_depth = depth+1;
                     node_queue.push(SubGraphNode(new_node, new_depth, new_node_id));
                 }
                 std::vector<VesselSkeletonVoxel> new_voxels(edge.get().getVoxels().begin(), edge.get().getVoxels().end());
-                output->insertEdge(node_id, new_node_id, std::move(new_voxels));
+                builder.insertEdge(node_id, new_node_id, std::move(new_voxels));
 
                 added_edges.insert(&edge.get());
             }
         }
     }
 
-    return output;
+    return std::move(builder).finalize();
 }
 
 void SubGraphExtractor::process() {

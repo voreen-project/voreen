@@ -200,6 +200,7 @@ private:
 
 private:
     friend class VesselGraph;
+    friend class VesselGraphBuilder;
     // Only for deserialization. you should probably not use this.
     friend struct VesselGraphNodeDeserializable;
 };
@@ -301,6 +302,8 @@ struct VesselGraphEdge {
     float getRoundnessAvg() const;
     float getRoundnessStdDeviation() const;
     const DiskArray<VesselSkeletonVoxel>& getVoxels() const;
+
+    // Only valid for leaf branches!
     DiskArray<VesselSkeletonVoxel> getOuterVoxels() const;
 
     float getElongation() const;
@@ -359,9 +362,13 @@ private:
     VesselGraphEdge(const VesselGraphEdge&) = delete;
     void operator=(const VesselGraphEdge&) = delete;
 
+    // Compute remaining properties that my depend on other properties of the graph.
+    void finalizeConstruction();
+
 private:
     // Only for deserialization. you should probably not use this.
     friend class VesselGraph;
+    friend class VesselGraphBuilder;
     friend struct VesselGraphEdgeSerializable;
     friend struct VesselGraphEdgeDeserializable;
     VesselGraphEdge();
@@ -405,37 +412,14 @@ class VesselGraph : public Serializable {
 class VesselGraph {
 #endif
 public:
-    // Create a graph with predetermined bounds
-    VesselGraph(const tgt::Bounds& bounds);
-    // Create a graph with undefined bounds
-    VesselGraph();
     // Move data from one graph to another
     VesselGraph(VesselGraph&& original);
+    VesselGraph& operator=(VesselGraph&& other);
 
     // Create a deep copy from another graph
     VesselGraph clone() const;
 
     virtual ~VesselGraph() {}
-
-    // Insert a new node into the graph and clone it from the given existing node
-    VGNodeID insertNode(const VesselGraphNode& base);
-    // Insert a new node into the graph and construct it from the given parameters
-    VGNodeID insertNode(const tgt::vec3& position, const DiskArray<tgt::vec3>& voxels, float radius, bool isAtSampleBorder);
-    VGNodeID insertNode(const tgt::vec3& position, const DiskArray<tgt::vec3>& voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
-    VGNodeID insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>& voxels, float radius, bool isAtSampleBorder);
-    VGNodeID insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>& voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
-
-    // Insert a new edge by deriving its properties from the provided path
-    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const DiskArray<VesselSkeletonVoxel>& path);
-    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const DiskArray<VesselSkeletonVoxel>& path, VesselGraphEdgeUUID uuid);
-    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const std::vector<VesselSkeletonVoxel>& path);
-    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const std::vector<VesselSkeletonVoxel>& path, VesselGraphEdgeUUID uuid);
-    // Insert a new edge by deriving its properties from the path of the provided edge
-    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const VesselGraphEdge& path_definition);
-    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const VesselGraphEdge& path_definition, VesselGraphEdgeUUID uuid);
-    // Insert a new edge by providing predetermined pathProperties. The path itself will be a straight line between two nodes.
-    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, VesselGraphEdgePathProperties pathProperties);
-    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, VesselGraphEdgePathProperties pathProperties, VesselGraphEdgeUUID uuid);
 
     const VesselGraphNode& getNode(VGNodeID i) const;
     const VesselGraphEdge& getEdge(VGEdgeID i) const;
@@ -458,6 +442,12 @@ public:
 #endif
 
 private:
+    friend class VesselGraphBuilder;
+    // Create a graph with predetermined bounds
+    VesselGraph(const tgt::Bounds& bounds);
+    // Create a graph with undefined bounds
+    VesselGraph();
+
     // Note: No need to worry about pointer invalidation here because we do not store pointers
     // to other edges/nodes in nodes/edges, but only indices
     //
@@ -476,6 +466,41 @@ private:
     std::unique_ptr<DiskArrayStorage<tgt::vec3>> nodeVoxelStorage_; //never null
 
     tgt::Bounds bounds_;
+};
+
+class VesselGraphBuilder {
+public:
+    // Create a graph with predetermined bounds
+    VesselGraphBuilder(const tgt::Bounds& bounds);
+    // Create a graph with undefined bounds
+    VesselGraphBuilder();
+
+    std::unique_ptr<VesselGraph> finalize() &&;
+
+    const VesselGraphNode& getNode(VGNodeID i) const;
+
+    // Insert a new node into the graph and clone it from the given existing node
+    VGNodeID insertNode(const VesselGraphNode& base);
+    // Insert a new node into the graph and construct it from the given parameters
+    VGNodeID insertNode(const tgt::vec3& position, const DiskArray<tgt::vec3>& voxels, float radius, bool isAtSampleBorder);
+    VGNodeID insertNode(const tgt::vec3& position, const DiskArray<tgt::vec3>& voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
+    VGNodeID insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>& voxels, float radius, bool isAtSampleBorder);
+    VGNodeID insertNode(const tgt::vec3& position, const std::vector<tgt::vec3>& voxels, float radius, bool isAtSampleBorder, VesselGraphNodeUUID uuid);
+
+    // Insert a new edge by deriving its properties from the provided path
+    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const DiskArray<VesselSkeletonVoxel>& path);
+    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const DiskArray<VesselSkeletonVoxel>& path, VesselGraphEdgeUUID uuid);
+    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const std::vector<VesselSkeletonVoxel>& path);
+    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const std::vector<VesselSkeletonVoxel>& path, VesselGraphEdgeUUID uuid);
+    // Insert a new edge by deriving its properties from the path of the provided edge
+    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const VesselGraphEdge& path_definition);
+    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, const VesselGraphEdge& path_definition, VesselGraphEdgeUUID uuid);
+    // Insert a new edge by providing predetermined pathProperties. The path itself will be a straight line between two nodes.
+    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, VesselGraphEdgePathProperties pathProperties);
+    VGEdgeID insertEdge(VGNodeID node1, VGNodeID node2, VesselGraphEdgePathProperties pathProperties, VesselGraphEdgeUUID uuid);
+
+private:
+    std::unique_ptr<VesselGraph> graph_;
 };
 
 } // namespace voreen
