@@ -91,13 +91,18 @@ FlowSimulation::FlowSimulation()
     addPort(parameterPort_);
 
     addProperty(simulationResults_);
+    simulationResults_.setGroupID("results");
     addProperty(deleteOldSimulations_);
+    deleteOldSimulations_.setGroupID("results");
 
     addProperty(simulateAllParametrizations_);
+    simulateAllParametrizations_.setGroupID("results");
     ON_CHANGE_LAMBDA(simulateAllParametrizations_, [this]{
         selectedParametrization_.setReadOnlyFlag(simulateAllParametrizations_.get());
     });
     addProperty(selectedParametrization_);
+    selectedParametrization_.setGroupID("results");
+    setPropertyGroupGuiName("results", "Results");
 }
 
 FlowSimulation::~FlowSimulation() {
@@ -555,6 +560,8 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
         SuperEuklidNorm3D <T, DESCRIPTOR> magnitude(velocity);
         writeResult(stlReader, converter, ti, tmax, magnitude, parametrizationList, selectedParametrization,
                     simulationOutputPath, "magnitude");
+/*
+        // TODO: Pressure and WSS currently do not have an equivalent in measured data!
 
         // Write pressure.
         SuperLatticePhysPressure3D <T, DESCRIPTOR> pressure(sLattice, converter);
@@ -567,6 +574,7 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
         writeResult(stlReader, converter, ti, tmax, wallShearStress, parametrizationList, selectedParametrization,
                     simulationOutputPath, "wallShearStress");
 #endif
+ */
 
         // Lattice statistics console output
         LINFO("step="     << ti << "; " <<

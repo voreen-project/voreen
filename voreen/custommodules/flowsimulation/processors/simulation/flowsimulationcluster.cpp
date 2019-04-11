@@ -78,7 +78,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     simulationType_.setGroupID("cluster-general");
     simulationType_.addOption("default", "default");
     //simulationType_.addOption("steered", "Steered"); // TODO: implement!
-    simulationType_.addOption("aorta3d", "aorta3d");
+    //simulationType_.addOption("aorta3d", "aorta3d");
     setPropertyGroupGuiName("cluster-general", "General Cluster Config");
 
     addProperty(configNodes_);
@@ -100,12 +100,18 @@ FlowSimulationCluster::FlowSimulationCluster()
     setPropertyGroupGuiName("cluster-resources", "Cluster Resource Config");
 
     addProperty(simulationResults_);
+    simulationResults_.setGroupID("results");
     addProperty(uploadDataPath_);
+    uploadDataPath_.setGroupID("results");
     addProperty(triggerEnqueueSimulations_);
+    triggerEnqueueSimulations_.setGroupID("results");
     ON_CHANGE(triggerEnqueueSimulations_, FlowSimulationCluster, enqueueSimulations);
     addProperty(triggerFetchResults_);
+    triggerFetchResults_.setGroupID("results");
     ON_CHANGE(triggerFetchResults_, FlowSimulationCluster, fetchResults);
     addProperty(progress_);
+    progress_.setGroupID("results");
+    setPropertyGroupGuiName("results", "Results");
 }
 
 FlowSimulationCluster::~FlowSimulationCluster() {
@@ -284,7 +290,7 @@ void FlowSimulationCluster::fetchResults() {
         source += paramPath;
 
         std::string dest = directory + paramPath;
-        if (!tgt::FileSystem::createDirectory(dest)) {
+        if (!tgt::FileSystem::dirExists(dest) && !tgt::FileSystem::createDirectory(dest)) {
             LERROR("Could not create ensemble directory: " << dest);
             return;
         }

@@ -443,6 +443,8 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
         // Write magnitude.
         SuperEuklidNorm3D <T, DESCRIPTOR> magnitude(velocity);
         writeResult(stlReader, converter, ti, tmax, magnitude, "magnitude");
+/*
+        // TODO: Pressure and WSS currently do not have an equivalent in measured data!
 
         // Write pressure.
         SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
@@ -453,7 +455,7 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
         SuperLatticePhysWallShearStress3D <T, DESCRIPTOR> wallShearStress(sLattice, superGeometry, MAT_WALL, converter, stlReader);
         writeResult(stlReader, converter, ti, tmax, wallShearStress, "wallShearStress");
 #endif
-
+*/
         // Lattice statistics console output
         sLattice.getStatistics().print(ti, converter.getPhysTime(ti));
     }
