@@ -371,6 +371,12 @@ public:
      */
     static bool createDirectory(const std::string& directory);
 
+    /**
+     * Recursively creates the directory and all parent directories of the give name if it does not already exists.
+     *
+     * @param   directory   name for the new directory to be created
+     * @return  true if the creation was successful or the directory already exists, false otherwise
+     */
     static bool createDirectoryRecursive(const std::string& directory);
 
     static bool deleteDirectory(const std::string& directory);
