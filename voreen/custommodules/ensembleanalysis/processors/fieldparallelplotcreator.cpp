@@ -144,11 +144,13 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
 
             const VolumeBase* volumePrev = run.timeSteps_[0].channels_.at(channel);
             tgt::mat4 physicalToVoxelMatrixPrev = volumePrev->getPhysicalToVoxelMatrix();
+            RealWorldMapping rwmPrev = volumePrev->getRealWorldMapping();
 
             for (size_t t = 1; t < run.timeSteps_.size(); t++) {
 
                 const VolumeBase* volumeCurr = run.timeSteps_[t].channels_.at(channel);
                 tgt::mat4 physicalToVoxelMatrixCurr = volumeCurr->getPhysicalToVoxelMatrix();
+                RealWorldMapping rwmCurr = volumeCurr->getRealWorldMapping();
 
                 // Determine pixel positions.
                 size_t x1 = static_cast<size_t>(pixelOffset);
@@ -157,8 +159,10 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
                 for (size_t k = 0; k<seedPoints.size(); k++) {
 
                     float voxelPrev = volumePrev->getRepresentation<VolumeRAM>()->getVoxelNormalizedLinear(physicalToVoxelMatrixPrev * seedPoints[k]);
+                    voxelPrev = rwmPrev.normalizedToRealWorld(voxelPrev);
                     voxelPrev = mapRange(voxelPrev, valueRange.x, valueRange.y, 0.0f, 1.0f);
                     float voxelCurr = volumeCurr->getRepresentation<VolumeRAM>()->getVoxelNormalizedLinear(physicalToVoxelMatrixCurr * seedPoints[k]);
+                    voxelCurr = rwmPrev.normalizedToRealWorld(voxelCurr);
                     voxelCurr = mapRange(voxelCurr, valueRange.x, valueRange.y, 0.0f, 1.0f);
 
                     plotData->drawConnection(x1, x2, voxelPrev, voxelCurr, sliceNumber);
@@ -166,6 +170,7 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
 
                 volumePrev = volumeCurr;
                 physicalToVoxelMatrixPrev = physicalToVoxelMatrixCurr;
+                rwmPrev = rwmCurr;
 
                 pixelOffset = pixelOffset + pixel;
                 pixel = pixelPerTimeUnit * run.timeSteps_[t].duration_;

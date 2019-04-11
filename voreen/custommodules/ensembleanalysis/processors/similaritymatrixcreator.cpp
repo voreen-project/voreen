@@ -171,9 +171,11 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
                 const VolumeBase* volume = timeStep.channels_.at(channel);
                 tgt::mat4 physicalToVoxelMatrix = volume->getPhysicalToVoxelMatrix();
+                RealWorldMapping rwm = volume->getRealWorldMapping();
 
                 for (size_t k=0; k<seedPoints.size(); k++) {
                     float value = volume->getRepresentation<VolumeRAM>()->getVoxelNormalizedLinear(physicalToVoxelMatrix * seedPoints[k]);
+                    value = rwm.normalizedToRealWorld(value);
                     value = mapRange(value, valueRange.x, valueRange.y, 0.0f, 1.0f);
 
                     switch(input.fieldSimilarityMeasure) {
