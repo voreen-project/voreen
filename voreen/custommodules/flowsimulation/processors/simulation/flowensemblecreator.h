@@ -33,8 +33,11 @@ namespace voreen {
 
 struct FlowEnsembleCreatorInput {
     std::string simulationResultPath;
+    std::string measuredDataPath;
     std::string ensembleOutputPath;
-    const VolumeList* measuredData;
+    std::string measuredDataName;
+    const VolumeList* magnitudeData;
+    const VolumeList* velocityData;
     bool deleteOriginalData;
 };
 
@@ -71,13 +74,21 @@ protected:
 
 private:
 
-    VolumeListPort inport_;
+    void writeMeasuredData(const VolumeList* measuredData,
+                           const std::string& ensembleOutputPath,
+                           const std::string& ensemble,
+                           const std::string& channel,
+                           const std::string& measuredDataName) const;
+
+    VolumeListPort magnitudeInport_;
+    VolumeListPort velocityInport_;
 
     // Output properties.
     BoolProperty deleteOriginalData_;
     FileDialogProperty simulationResultPath_;
     FileDialogProperty ensembleOutputPath_;
-    StringProperty setting_;
+    FileDialogProperty measuredDataPath_;
+    StringProperty measuredDataName_;
 
     FloatProperty simulationTime_;
     FloatProperty temporalResolution_;

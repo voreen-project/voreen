@@ -37,20 +37,22 @@ const std::string FlowEnsembleCreator::loggerCat_("voreen.flowsimulation.FlowEns
 
 FlowEnsembleCreator::FlowEnsembleCreator()
     : AsyncComputeProcessor<FlowEnsembleCreatorInput, FlowEnsembleCreatorOutput>()
-    , inport_(Port::INPORT, "volumehandle.input", "Volume Input")
+    , magnitudeInport_(Port::INPORT, "magnitudeInput", "Measured Magnitude Input (Optional)", false)
+    , velocityInport_(Port::INPORT, "velocityInput", "Measured Velocity Input (Optional)", false)
     , deleteOriginalData_("deleteOriginalData", "Delete original Data", false)
     , simulationResultPath_("simulationResultPath", "Simulation Result Path", "Path", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , ensembleOutputPath_("ensembleOutputPath", "Ensemble Output Path", "Path", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
-    , setting_("setting", "Setting", "4d_pc_mri")
+    , measuredDataPath_("measuredDataPath", "Measured Data Path (Optional)", "Path", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
+    , measuredDataName_("measuredDataName", "Measured Data Name", "4d_pc_mri")
     , simulationTime_("simulationTime", "Simulation Time (Link with FlowCharacteristics)", 1.0f, 0.0f, 20.0f)
     , temporalResolution_("temporalResolution", "Temporal Resolution (Link with FlowCharacteristics", 3.1f, 0.1f, 100.0f)
 {
-    addPort(inport_);
-    inport_.addCondition(new PortConditionVolumeListEnsemble());
-    PortConditionLogicalOr* typeCondition = new PortConditionLogicalOr();
-    typeCondition->addLinkedCondition(new PortConditionVolumeTypeFloat());
-    typeCondition->addLinkedCondition(new PortConditionVolumeType3xFloat());
-    inport_.addCondition(new PortConditionVolumeListAdapter(typeCondition));
+    addPort(magnitudeInport_);
+    magnitudeInport_.addCondition(new PortConditionVolumeListEnsemble());
+    magnitudeInport_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeTypeFloat()));
+    addPort(velocityInport_);
+    velocityInport_.addCondition(new PortConditionVolumeListEnsemble());
+    velocityInport_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeType3xFloat()));
 
     // Technical stuff.
     addProperty(deleteOriginalData_);
@@ -59,8 +61,10 @@ FlowEnsembleCreator::FlowEnsembleCreator()
     simulationResultPath_.setGroupID("output");
     addProperty(ensembleOutputPath_);
     ensembleOutputPath_.setGroupID("output");
-    addProperty(setting_);
-    setting_.setGroupID("output");
+    addProperty(measuredDataPath_);
+    measuredDataPath_.setGroupID("output");
+    //addProperty(measuredDataName_); // TODO: implement functionality
+    measuredDataName_.setGroupID("output");
     setPropertyGroupGuiName("output", "Output");
 
     addProperty(simulationTime_);
@@ -85,13 +89,13 @@ Processor* FlowEnsembleCreator::create() const {
 }
 
 FlowEnsembleCreatorInput FlowEnsembleCreator::prepareComputeInput() {
-
-    const VolumeList* volumeList = inport_.getThreadSafeData();
-
     return FlowEnsembleCreatorInput{
             simulationResultPath_.get(),
+            measuredDataPath_.get(),
             ensembleOutputPath_.get(),
-            volumeList,
+            measuredDataName_.get(),
+            magnitudeInport_.getThreadSafeData(),
+            velocityInport_.getThreadSafeData(),
             deleteOriginalData_.get()
     };
 }
@@ -137,33 +141,8 @@ FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput 
         }
 
         // Handle measured data.
-        if(input.measuredData && !input.measuredData->empty()) {
-
-            size_t numChannels = input.measuredData->first()->getNumChannels();
-            if (numChannels != 1 && numChannels != 3) {
-                continue;
-            }
-
-            std::string setting = setting_.get();
-            std::string channel = numChannels == 1 ? "magnitude" : "velocity";
-            std::string runPath = input.ensembleOutputPath + "/" + channel + "/" + ensemble + "/" + setting;
-
-            tgt::FileSystem::createDirectoryRecursive(runPath);
-
-            if (input.measuredData->size() == 1) {
-                const VolumeBase* original = input.measuredData->first();
-                VvdVolumeWriter().write(runPath + "/t0.vvd", original);
-                std::unique_ptr<VolumeBase> duplicate(new VolumeDecoratorReplaceTimestep(original, 1.0f));
-                VvdVolumeWriter().write(runPath + "/t1.vvd", duplicate.get());
-            } else {
-                for (size_t j = 0; j < input.measuredData->size(); j++) {
-                    float timeStep = j * temporalResolution_.get();
-                    std::unique_ptr<VolumeBase> original(
-                            new VolumeDecoratorReplaceTimestep(input.measuredData->at(j), timeStep));
-                    VvdVolumeWriter().write(runPath + "/t" + std::to_string(j) + ".vvd", original.get());
-                }
-            }
-        }
+        writeMeasuredData(input.magnitudeData, input.ensembleOutputPath, ensemble, "magnitude", input.measuredDataName);
+        writeMeasuredData(input.velocityData,  input.ensembleOutputPath, ensemble, "velocity",  input.measuredDataName);
     }
 
     // Copy / Move.
@@ -192,6 +171,33 @@ void FlowEnsembleCreator::processComputeOutput(FlowEnsembleCreatorOutput output)
     // Delete old data, if desired.
     if(deleteOriginalData_.get()) {
         tgt::FileSystem::deleteDirectoryRecursive(simulationResultPath_.get());
+    }
+}
+
+void FlowEnsembleCreator::writeMeasuredData(const VolumeList* measuredData,
+                                            const std::string& ensembleOutputPath,
+                                            const std::string& ensemble,
+                                            const std::string& channel,
+                                            const std::string& measuredDataName) const {
+
+    if (measuredData && !measuredData->empty()) {
+
+        std::string runPath = ensembleOutputPath + "/" + channel + "/" + ensemble + "/" + measuredDataName;
+        tgt::FileSystem::createDirectoryRecursive(runPath);
+
+        if (measuredData->size() == 1) {
+            const VolumeBase *original = measuredData->first();
+            VvdVolumeWriter().write(runPath + "/t0.vvd", original);
+            std::unique_ptr<VolumeBase> duplicate(new VolumeDecoratorReplaceTimestep(original, 1.0f));
+            VvdVolumeWriter().write(runPath + "/t1.vvd", duplicate.get());
+        } else {
+            for (size_t j = 0; j < measuredData->size(); j++) {
+                float timeStep = j * temporalResolution_.get();
+                std::unique_ptr<VolumeBase> original(
+                        new VolumeDecoratorReplaceTimestep(measuredData->at(j), timeStep));
+                VvdVolumeWriter().write(runPath + "/t" + std::to_string(j) + ".vvd", original.get());
+            }
+        }
     }
 }
 
