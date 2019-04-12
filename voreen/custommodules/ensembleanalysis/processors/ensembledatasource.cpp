@@ -149,12 +149,13 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
             const std::vector<VolumeURL>& subURLs = reader->listVolumes(url);
             for(const VolumeURL& subURL : subURLs) {
-                VolumeBase* volumeHandle = reader->read(subURL);
+                std::unique_ptr<VolumeBase> volumeHandle(reader->read(subURL));
                 if(!volumeHandle)
                     break;
 
-                if (!volumeHandle->hasDerivedData<VolumeMinMax>())
+                if (!volumeHandle->hasDerivedData<VolumeMinMax>()) {
                     LWARNING("Volume does not contain min max information - needs to be calculated");
+                }
 
                 float time = volumeHandle->getTimestep();
                 if(volumeHandle->hasMetaData(SIMULATED_TIME_NAME)) {
@@ -170,25 +171,23 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
                 const MetaDataBase* name = volumeHandle->getMetaData(NAME_FIELD_NAME);
                 if(!name) {
-                    LWARNING("Trying old deserialization");
-
+                    //LWARNING("Trying old deserialization");
                     name = volumeHandle->getMetaData(SCALAR_FIELD_NAME);
                     if(!name) {
-                        delete volumeHandle;
                         LERROR("Meta data '" << NAME_FIELD_NAME << "' not present for " << subURL.getPath());
                         break;
                     }
                 }
 
                 // Add additional information gained reading the file structure.
-                Volume* volume = dynamic_cast<Volume*>(volumeHandle);
+                Volume* volume = dynamic_cast<Volume*>(volumeHandle.get());
                 tgtAssert(volume, "volumeHandle must be volume");
                 volume->getMetaDataContainer().addMetaData("run_name", new StringMetaData(run));
 
-                timeStep.channels_[name->toString()] = volumeHandle;
+                timeStep.channels_[name->toString()] = volumeHandle.get();
 
                 // Ownership remains.
-                volumes_.push_back(std::unique_ptr<const VolumeBase>(volume));
+                volumes_.push_back(std::move(volumeHandle));
             }
 
             // Calculate duration the current timeStep is valid.
