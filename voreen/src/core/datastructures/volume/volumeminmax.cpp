@@ -84,8 +84,8 @@ VolumeDerivedData* VolumeMinMax::createFrom(const VolumeBase* handle) const {
             const VolumeRAM* v = handle->getRepresentation<VolumeRAM>();
             tgtAssert(v, "no volume");
 
-            minNorm = v->minNormalizedValue();
-            maxNorm = v->maxNormalizedValue();
+            minNorm = v->minNormalizedValue(i);
+            maxNorm = v->maxNormalizedValue(i);
         }
         else if (handle->hasRepresentation<VolumeDisk>()) {
             const VolumeDisk* volumeDisk = handle->getRepresentation<VolumeDisk>();
@@ -97,7 +97,7 @@ VolumeDerivedData* VolumeMinMax::createFrom(const VolumeBase* handle) const {
             // compute min/max values slice-wise
             size_t numSlices = handle->getDimensions().z;
             tgtAssert(numSlices > 0, "empty volume");
-            for (size_t i=0; i<numSlices; i++) {
+            for (size_t slice=0; slice<numSlices; slice++) {
 
                 // interruption point after each slice!
                 try {
@@ -110,9 +110,9 @@ VolumeDerivedData* VolumeMinMax::createFrom(const VolumeBase* handle) const {
 
                 // computation for the slice
                 try {
-                    VolumeRAM* sliceVolume = volumeDisk->loadSlices(i, i);
-                    minNorm = std::min(minNorm, sliceVolume->minNormalizedValue());
-                    maxNorm = std::max(maxNorm, sliceVolume->maxNormalizedValue());
+                    VolumeRAM* sliceVolume = volumeDisk->loadSlices(slice, slice);
+                    minNorm = std::min(minNorm, sliceVolume->minNormalizedValue(i));
+                    maxNorm = std::max(maxNorm, sliceVolume->maxNormalizedValue(i));
                     delete sliceVolume;
                 }
                 catch (tgt::Exception& e) {
