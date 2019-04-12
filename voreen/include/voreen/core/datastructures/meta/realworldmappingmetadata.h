@@ -39,6 +39,11 @@ public:
     RealWorldMapping(float scale, float offset, std::string unit);
     RealWorldMapping(tgt::vec2 range, std::string unit);
 
+    /// Testing for equality with another Real World Mapping. Evaluates to true if offset, scale and unit are equal.
+    bool operator==(const RealWorldMapping& other) const;
+    /// Testing for inequality with another Real World Mapping. Evaluates to true if any of offset, scale and unit differs.
+    bool operator!=(const RealWorldMapping& other) const;
+
     virtual void serialize(Serializer& s) const; ///< @see Serializable::serialize
     virtual void deserialize(Deserializer& s);   ///< @see Serializable::deserialize
 

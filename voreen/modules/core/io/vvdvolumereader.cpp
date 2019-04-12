@@ -92,27 +92,38 @@ VolumeList* VvdVolumeReader::read(const std::string &url) {
     if (vec.empty())
         throw tgt::FileException("Deserialization from file '" + fileName + "' failed: no VvdObject deserialized");
 
-    VolumeList* vc = new VolumeList();
+    std::vector<std::unique_ptr<VolumeBase>> vc;
     for(size_t i=0; i<vec.size(); i++) {
         std::unique_ptr<Volume> vh(vec[i].createVolume());
 
         // If the volume does not have a RealWorldMapping, we add a denormalizing mapping for its data type.
         // As previously the default RealWorldMapping had a scale of one, and all DerivedData created at that
         // time used the default RealWorldMapping, we clear all DerivedData and thus force them to be recreated.
-        if(!vh->hasMetaData("RealWorldMapping")) {
+        if(!vh->hasMetaData(VolumeBase::META_DATA_NAME_REAL_WORLD_MAPPING)) {
+            RealWorldMapping rwm;
             try {
-                vh->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping(vh->getBaseType()));
-            } catch(tgt::UnsupportedFormatException) {
+                rwm = RealWorldMapping::createDenormalizingMapping(vh->getBaseType());
+            } catch(tgt::UnsupportedFormatException&) {
                 throw tgt::FileException("Deserialization from file '" + fileName + "' failed: Unsupported base type.");
             }
-            vh->clearDerivedData();
+
+            // Only clear derived data, if real world mapping differs.
+            if(rwm != vh->getRealWorldMapping()) {
+                vh->setRealWorldMapping(rwm);
+                vh->clearDerivedData();
+            }
         }
 
         vh->setOrigin(origin);
-        vc->add(vh.release());
+        vc.push_back(std::move(vh));
     }
 
-    return vc;
+    VolumeList* list = new VolumeList();
+    for(auto& volume : vc) {
+        list->add(volume.release());
+    }
+
+    return list;
 }
 
 VolumeReader* VvdVolumeReader::create(ProgressBar* progress) const {

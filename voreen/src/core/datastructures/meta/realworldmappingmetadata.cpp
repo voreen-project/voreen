@@ -42,6 +42,14 @@ RealWorldMapping::RealWorldMapping(tgt::vec2 range, std::string unit)
     tgtAssert(range.x <= range.y, "Invalid range for RWM");
 }
 
+bool RealWorldMapping::operator==(const RealWorldMapping& other) const {
+    return (scale_ == other.scale_ && offset_ == other.offset_ && unit_ == other.unit_);
+}
+
+bool RealWorldMapping::operator!=(const RealWorldMapping& other) const {
+    return !(*this == other);
+}
+
 void RealWorldMapping::serialize(Serializer& s) const {
     s.serialize("scale", scale_);
     s.serialize("offset", offset_);
