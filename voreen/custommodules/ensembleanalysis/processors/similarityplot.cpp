@@ -244,7 +244,6 @@ void SimilarityPlot::process() {
         outport_.activateTarget();
         outport_.clearTarget();
 
-        glLineWidth(6.0f);
         renderingPass(false);
 
         outport_.deactivateTarget();
@@ -253,7 +252,6 @@ void SimilarityPlot::process() {
         privatePort_.activateTarget();
         privatePort_.clearTarget(); // TODO: may change clear color to..?
 
-        glLineWidth(6.0f);
         renderingPass(false);
 
         privatePort_.deactivateTarget();
@@ -393,6 +391,13 @@ void SimilarityPlot::renderingPass(bool picking) {
     {
         for(int runIdx : renderingOrder_) {
 
+            if(selectedRunsSorted_.find(runIdx) != selectedRunsSorted_.end()) {
+                glLineWidth(7.0f);
+            }
+            else {
+                glLineWidth(5.0f);
+            }
+
             size_t runOffset = 0;
             for (int i = 0; i < runIdx; i++)
                 runOffset += dataset->getRuns()[i].timeSteps_.size();
@@ -421,6 +426,13 @@ void SimilarityPlot::renderingPass(bool picking) {
     case 2:
     {
         for (int runIdx : renderingOrder_) {
+
+            if(selectedRunsSorted_.find(runIdx) != selectedRunsSorted_.end()) {
+                glLineWidth(7.0f);
+            }
+            else {
+                glLineWidth(5.0f);
+            }
 
             size_t runOffset = 0;
             for (int i = 0; i < runIdx; i++)
@@ -459,6 +471,13 @@ void SimilarityPlot::renderingPass(bool picking) {
         }
 
         for (int runIdx : renderingOrder_) {
+
+            if(selectedRunsSorted_.find(runIdx) != selectedRunsSorted_.end()) {
+                glLineWidth(7.0f);
+            }
+            else {
+                glLineWidth(5.0f);
+            }
 
             size_t runOffset = 0;
             for (int i = 0; i < runIdx; i++)
@@ -576,7 +595,8 @@ void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
     }
 
     // Calculate run index.
-    const std::vector<EnsembleDataset::Run>& runs = ensembleInport_.getData()->getRuns();
+    const EnsembleDataset* dataset = ensembleInport_.getData();
+    const std::vector<EnsembleDataset::Run>& runs = dataset->getRuns();
     size_t numRuns = runs.size();
     int r = static_cast<int>(std::round(texel.r * numRuns));
 
@@ -593,14 +613,32 @@ void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
         size_t t = static_cast<size_t>(std::round(texel.g * numTimeSteps));
 
         // Update selection.
-        std::vector<int> run;
-        run.push_back(r);
-        selectedRuns_.setSelectedRowIndices(run);
+        std::vector<int> runIndices;
+        if(e->modifiers() & tgt::MouseEvent::CTRL) {
+            runIndices = selectedRuns_.getSelectedRowIndices();
+            auto iter = std::find(runIndices.begin(), runIndices.end(), r);
+            if (iter == runIndices.end()) {
+                runIndices.erase(iter);
+            }
+            else {
+                runIndices.push_back(r);
+            }
+        }
+        else {
+            runIndices.push_back(r);
+        }
+        selectedRuns_.setSelectedRowIndices(runIndices);
+        selectedRunsSorted_ = std::set<int>(runIndices.begin(), runIndices.end());
 
-        const EnsembleDataset::TimeStep& timeStep = runs[r].timeSteps_[tgt::clamp<size_t>(t, 0, numTimeSteps - 1)];
-        float lower = std::floor(timeStep.time_ * 100.0f) / 100.0f;
-        float upper = std::ceil((timeStep.time_+timeStep.duration_) * 100.0f) / 100.0f;
-        selectedTimeSteps_.set(tgt::vec2(lower, upper));
+        if(runIndices.empty()) {
+            selectedTimeSteps_.set(tgt::vec2(dataset->getStartTime(), dataset->getEndTime()));
+        }
+        else {
+            const EnsembleDataset::TimeStep &timeStep = runs[runIndices.back()].timeSteps_[tgt::clamp<size_t>(t, 0, numTimeSteps - 1)];
+            float lower = std::floor(timeStep.time_ * 100.0f) / 100.0f;
+            float upper = std::ceil((timeStep.time_ + timeStep.duration_) * 100.0f) / 100.0f;
+            selectedTimeSteps_.set(tgt::vec2(lower, upper));
+        }
     }
 
     e->accept();
@@ -731,12 +769,19 @@ void SimilarityPlot::calculate() {
 SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& DistanceMatrix, ProgressReporter& progressReporter, float epsilon) {
     using namespace Eigen;
 
+    const std::vector<EnsembleDataset::Run>& runs = ensembleInport_.getData()->getRuns();
+
     const size_t dimNum = numEigenvalues_.get();
     const int iterNum = numIterations_.get();
-    const size_t PointsNumber = DistanceMatrix.getSize();
+    const size_t runsNum = ensembleInport_.getData()->getRuns().size();
+
+    size_t PointsNumber = 0;
+    for(int runIdx : selectedRunsSorted_) {
+        PointsNumber += runs[runIdx].timeSteps_.size();
+    }
 
     MDSData result;
-    result.nVectors_.resize(PointsNumber);
+    result.nVectors_ = std::vector<std::vector<float>>(PointsNumber, std::vector<float>(dimNum));
     result.eigenvalues_.clear();
 
     MatrixXf Result(PointsNumber, dimNum);
@@ -744,12 +789,21 @@ SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& Di
     MatrixXf PMatrix(PointsNumber, PointsNumber);
 
     // Init datastructures.
-    for (size_t i=0; i<PointsNumber; i++) {
-        result.nVectors_[i].resize(dimNum);
-        for (size_t j=0; j<=i; j++) {
-            float v = DistanceMatrix(i, j);
-            PMatrix(i, j) = v*v;
-            PMatrix(j, i) = PMatrix(i, j);
+    size_t position = 0;
+    size_t offset = 0;
+    for(size_t runIdx=0; runIdx<runsNum; runIdx++) {
+        size_t numTimeSteps = runs[runIdx].timeSteps_.size();
+        if(selectedRunsSorted_.find(runIdx) == selectedRunsSorted_.end()) {
+            offset += numTimeSteps;
+        }
+        else {
+            for (size_t i = 0; i < numTimeSteps; i++) {
+                for (size_t j = 0; j <= i; j++) {
+                    float v = DistanceMatrix(i + offset, j + offset);
+                    PMatrix(i + position, j + position) = PMatrix(j + position, i + position) = v * v;
+                }
+            }
+            position += numTimeSteps;
         }
     }
 

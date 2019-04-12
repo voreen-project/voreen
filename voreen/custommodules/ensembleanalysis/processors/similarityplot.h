@@ -154,6 +154,9 @@ protected:
     /// Rendering order.
     std::deque<int> renderingOrder_;
 
+    /// Selected runs (sorted).
+    std::set<int> selectedRunsSorted_;
+
 private:
 
     void mouseClickEvent(tgt::MouseEvent* e);
