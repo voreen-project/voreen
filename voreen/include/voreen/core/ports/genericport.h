@@ -54,10 +54,19 @@ public:
         , owned_(owned)
     {
     }
+    PortDataPointer(PortDataPointer&& other)
+        : pointer_(other.pointer_)
+        , owned_(other.owned_)
+    {
+    }
     ~PortDataPointer() {
         if(owned_) {
             delete pointer_;
         }
+    }
+    PortDataPointer& operator=(PortDataPointer&& other) {
+        pointer_ = other.pointer_;
+        owned_ = other.owned_;
     }
     const T& operator*() {
         return *pointer_;
@@ -67,6 +76,9 @@ public:
     }
     operator const T*() {
         return pointer_;
+    }
+    operator bool() const {
+        return pointer_ != nullptr;
     }
 
 private:
@@ -89,6 +101,12 @@ public:
     virtual void forwardData() const;
 
     /**
+     * Returns whether GenericPort::getData() returns 0 or not,
+     * therefore indicating if there is any data at the port.
+     */
+    virtual bool hasData() const;
+
+    /**
      * Set data stored in this port. Can only be called on outports.
      * @param takeOwnership If true, the data will be deleted by the port.
      */
@@ -97,11 +115,8 @@ public:
     /// Return the data stored in this port (if this is an outport) or the data of the first connected outport (if this is an inport).
     virtual const T* getData() const;
 
-    /**
-     * Returns whether GenericPort::getData() returns 0 or not,
-     * therefore indicating if there is any data at the port.
-     */
-    virtual bool hasData() const;
+    /// Return the data stored in this port (if this is an outport) or the data of all the connected outports (if this is an inport).
+    virtual std::vector<const T*> getAllData() const;
 
     /**
      * Get a pointer to the data of the port that is safe to use in a thread IF the thread is cancelled on invalidation of the port data.
@@ -114,13 +129,21 @@ public:
     PortDataPointer<T> getThreadSafeData() const;
 
     /**
+     * Gets a vector from pointers as described in getThreadSafeData, hence returning a thread safe data representation
+     * for each contained data.
+     *
+     * @see getThreadSafeData
+     * @see DataInvalidationObservable
+     * @see AsyncComputeProcessor
+     */
+    std::vector<PortDataPointer<T>> getThreadSafeAllData() const;
+
+    /**
      * Register a callback
      * @param callback Is called if the data of the port changes and data exists
      */
     void onNewData(const Callback& callback);
 
-    /// Return the data stored in this port (if this is an outport) or the data of all the connected outports (if this is an inport).
-    virtual std::vector<const T*> getAllData() const;
 
     std::vector<const GenericPort<T>* > getConnected() const;
 
@@ -289,19 +312,19 @@ const T* GenericPort<T>::getData() const {
 
 template <typename T>
 bool GenericPort<T>::hasData() const {
-    return (getData() != 0);
+    return (getData() != nullptr);
 }
 
 // Give out data pointer for DataInvalidationObservable types.
 template<typename T>
-static PortDataPointer<T> getThreadSafeDataInternal(const GenericPort<T>& p, typename std::enable_if<std::is_base_of<DataInvalidationObservable, T>::value>::type* = 0) {
-    return PortDataPointer<T>(p.getData(), false);
+static PortDataPointer<T> getThreadSafeDataInternal(const T* data, typename std::enable_if<std::is_base_of<DataInvalidationObservable, T>::value>::type* = 0) {
+    return PortDataPointer<T>(data, false);
 }
 
 // Give out data pointer for Cloneable types.
 template<typename T>
-static PortDataPointer<T> getThreadSafeDataInternal(const GenericPort<T>& p, typename std::enable_if<!std::is_base_of<DataInvalidationObservable, T>::value && std::is_base_of<Cloneable<T>, T>::value>::type* = 0) {
-    return PortDataPointer<T>(p.hasData() ? p.getData()->clone().release() : nullptr, true);
+static PortDataPointer<T> getThreadSafeDataInternal(const T* data, typename std::enable_if<!std::is_base_of<DataInvalidationObservable, T>::value && std::is_base_of<Cloneable<T>, T>::value>::type* = 0) {
+    return PortDataPointer<T>(data ? data->clone().release() : nullptr, true);
 }
 
 // Stop compilation for types that are neither DataInvalidationObservable nor Cloneable.
@@ -309,7 +332,7 @@ template<typename T>
 struct __DelayedInstatiationFalse : std::false_type
 { };
 template<typename T>
-static PortDataPointer<T> getThreadSafeDataInternal(const GenericPort<T>& p, typename std::enable_if<!std::is_base_of<DataInvalidationObservable, T>::value && !std::is_base_of<Cloneable<T>, T>::value>::type* = 0) {
+static PortDataPointer<T> getThreadSafeDataInternal(const T* data, typename std::enable_if<!std::is_base_of<DataInvalidationObservable, T>::value && !std::is_base_of<Cloneable<T>, T>::value>::type* = 0) {
 #ifdef _MSC_VER // FIXME: enable opt-out of unused static functions in MSVC at compile time
     tgtAssert(false, "Threadsafe generic port data must implement Cloneable or DataInvalidationObservable!");
     return PortDataPointer<T>(nullptr, false);
@@ -320,7 +343,7 @@ static PortDataPointer<T> getThreadSafeDataInternal(const GenericPort<T>& p, typ
 
 template <typename T>
 PortDataPointer<T> GenericPort<T>::getThreadSafeData() const {
-    return getThreadSafeDataInternal(*this);
+    return getThreadSafeDataInternal(getData());
 }
 
 template <typename T>
@@ -331,7 +354,7 @@ std::vector<const T*> GenericPort<T>::getAllData() const {
         allData.push_back(portData_);
     else {
         for (size_t i = 0; i < connectedPorts_.size(); ++i) {
-            if (connectedPorts_[i]->isOutport() == false)
+            if (!connectedPorts_[i]->isOutport())
                 continue;
             GenericPort<T>* p = static_cast<GenericPort<T>*>(connectedPorts_[i]);
             if(p->getData())
@@ -340,6 +363,15 @@ std::vector<const T*> GenericPort<T>::getAllData() const {
     }
 
     return allData;
+}
+
+template <typename T>
+std::vector<PortDataPointer<T>> GenericPort<T>::getThreadSafeAllData() const {
+    std::vector<PortDataPointer<T>> allDataThreadSafe;
+    for (const T* data : getAllData()) {
+        allDataThreadSafe.push_back(std::move(getThreadSafeDataInternal(data)));
+    }
+    return allDataThreadSafe;
 }
 
 template <typename T>

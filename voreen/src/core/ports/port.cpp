@@ -310,7 +310,7 @@ const std::vector<const Port*> Port::getConnected() const {
 }
 
 bool Port::isConnected() const {
-    return (connectedPorts_.size() > 0);
+    return !connectedPorts_.empty();
 }
 
 bool Port::isConnectedTo(const Port* port) const {
