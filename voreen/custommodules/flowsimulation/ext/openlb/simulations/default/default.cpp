@@ -116,6 +116,7 @@ const T VOREEN_TIME_TO_SI = 0.001;
 const std::string META_DATA_NAME_OFFSET = "Offset";
 const std::string META_DATA_NAME_SPACING = "Spacing";
 const std::string META_DATA_NAME_TIMESTEP = "Timestep";
+const std::string META_DATA_NAME_REAL_WORLD_MAPPING = "RealWorldMapping";
 
 // Config
 T simulationTime = 0.0;
@@ -392,6 +393,7 @@ void writeResult(STLreader<T>& stlReader,
             << "<value x=\"" << spacing[0] << "\" y=\"" << spacing[1] << "\" z=\"" << spacing[2] << "\" />"
             << "</MetaItem>"
             << "<MetaItem name=\"" << META_DATA_NAME_TIMESTEP << "\" type=\"FloatMetaData\" value=\"" << converter.getPhysTime(ti) << "\" />"
+            << "<MetaItem name=\"" << META_DATA_NAME_REAL_WORLD_MAPPING << "\" type=\"RealWorldMappingMetaData\"><value scale=\"1\" offset=\"0\" unit=\"mm\" /></MetaItem>"
             << "<MetaItem name=\"" << "name" << "\" type=\"StringMetaData\" value=\"" << name << "\" />"
             // Parameters.
             << "<MetaItem name=\"" << "ParameterCharacteristicLength" << "\" type=\"FloatMetaData\" value=\"" << characteristicLength << "\" />"
