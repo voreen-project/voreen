@@ -405,10 +405,12 @@ void writeResult(STLreader<T>& stlReader,
             << "<MetaItem name=\"" << "StatisticsMaxVelocity" << "\" type=\"FloatMetaData\" value=\"" << statistics.getMaxU() << "\" />"
             << "<MetaItem name=\"" << "StatisticsAvgEnergy" << "\" type=\"FloatMetaData\" value=\"" << statistics.getAverageEnergy() << "\" />"
             << "<MetaItem name=\"" << "StatisticsMaxRho" << "\" type=\"FloatMetaData\" value=\"" << statistics.getAverageRho() << "\" />"
-            // Derived data.
-            << "<DerivedItem type=\"VolumeMinMax\"><minValues><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /></minValues><maxValues><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /></maxValues><minNormValues><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /></minNormValues><maxNormValues><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /></maxNormValues></DerivedItem>"
-            // Footer.
             << "</MetaData>"
+            // Derived data.
+            << "<DerivedData>"
+            << "<DerivedItem type=\"VolumeMinMax\"><minValues><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /></minValues><maxValues><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /></maxValues><minNormValues><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /></minNormValues><maxNormValues><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /></maxNormValues></DerivedItem>"
+            << "</DerivedData>"
+            // Footer.
             << "</Volume>"
             << "</Volumes>"
             << "</VoreenData>";
