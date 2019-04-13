@@ -39,9 +39,10 @@ IF(LZ4_FOUND)
     
     IF(VRN_MSVC)
         FOREACH(elem ${LZ4_LIBRARIES})
-            # Don't copy both debug and release binaries, since they are named the same. Prefer debug.
-            #LIST(APPEND MOD_RELEASE_DLLS ${LZ4_INCLUDE_DIR}/../lib/${elem}.dll)
-            #LIST(APPEND MOD_RELEASE_LIBRARIES ${LZ4_INCLUDE_DIR}/../lib/${elem}.lib)
+            # Note that we set the same library for both, relase and debug.
+            # This way the user has to decide how the library should be compiled.
+            LIST(APPEND MOD_RELEASE_DLLS ${LZ4_INCLUDE_DIR}/../lib/${elem}.dll)
+            LIST(APPEND MOD_RELEASE_LIBRARIES ${LZ4_INCLUDE_DIR}/../lib/${elem}.lib)
             LIST(APPEND MOD_DEBUG_DLLS ${LZ4_INCLUDE_DIR}/../lib/${elem}.dll)
             LIST(APPEND MOD_DEBUG_LIBRARIES ${LZ4_INCLUDE_DIR}/../lib/${elem}.lib)
         ENDFOREACH()

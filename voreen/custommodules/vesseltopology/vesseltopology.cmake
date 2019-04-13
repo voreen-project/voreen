@@ -47,9 +47,10 @@ IF(YAML_CPP_INCLUDE_DIR) # Apparently YAML_CPP does not declare a *_FOUND
     IF(VRN_MSVC)
         ADD_DEFINITIONS("-DYAML_CPP_DLL")
         FOREACH(elem ${YAML_CPP_LIBRARIES})
-            # Don't copy both debug and release binaries, since they are named the same. Prefer debug.
-            #LIST(APPEND MOD_RELEASE_DLLS ${YAML-CPP_DIR}/../bin/${elem}.dll)
-            #LIST(APPEND MOD_RELEASE_LIBRARIES ${YAML-CPP_DIR}/../lib/${elem}.lib)
+            # Note that we set the same library for both, relase and debug.
+            # This way the user has to decide how the library should be compiled.
+            LIST(APPEND MOD_RELEASE_DLLS ${YAML-CPP_DIR}/../bin/${elem}.dll)
+            LIST(APPEND MOD_RELEASE_LIBRARIES ${YAML-CPP_DIR}/../lib/${elem}.lib)
             LIST(APPEND MOD_DEBUG_DLLS ${YAML-CPP_DIR}/../bin/${elem}.dll)
             LIST(APPEND MOD_DEBUG_LIBRARIES ${YAML-CPP_DIR}/../lib/${elem}.lib)
         ENDFOREACH()
