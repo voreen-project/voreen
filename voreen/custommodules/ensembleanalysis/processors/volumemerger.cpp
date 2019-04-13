@@ -41,6 +41,7 @@ VolumeMerger::VolumeMerger()
     , inport_(Port::INPORT, "volumelist.input", "Volume List Input", false)
     , outport_(Port::OUTPORT, "volume.output", "Volume Output", false)
     , allowIntersections_("allowIntersections", "Allow Intersections?", false)
+    , padding_("padding", "Padding", 0, 0, 10)
 {
     addPort(inport_);
     addPort(outport_);
@@ -70,6 +71,7 @@ VolumeMergerComputeInput VolumeMerger::prepareComputeInput() {
     // Gather reference values.
     const tgt::vec3& spacing = inputVolumes.first()->getSpacing();
     const size_t numChannels = inputVolumes.first()->getNumChannels();
+    const tgt::vec3 rwPadding(spacing * static_cast<float>(padding_.get()));
 
     tgt::Bounds globalBounds;
     std::vector<tgt::Bounds> processedBounds;
@@ -83,9 +85,8 @@ VolumeMergerComputeInput VolumeMerger::prepareComputeInput() {
             throw InvalidInputException("Num Channels must match", InvalidInputException::S_ERROR);
         }
 
-        // TODO: add more checks.
-
-        tgt::Bounds localBounds(inputVolumes.at(i)->getLLF(), inputVolumes.at(i)->getURB());
+        // TODO: add more checks
+        tgt::Bounds localBounds(inputVolumes.at(i)->getLLF()+rwPadding, inputVolumes.at(i)->getURB()-rwPadding);
 
         if(!allowIntersections_.get()) {
             for (size_t j = 0; j < processedBounds.size(); j++) {
@@ -112,10 +113,12 @@ VolumeMergerComputeInput VolumeMerger::prepareComputeInput() {
         throw InvalidInputException("Could not create output volume.", InvalidInputException::S_ERROR);
     }
 
+    size_t padding = static_cast<size_t>(padding_.get());
     std::unique_ptr<Volume> outputVolume(new Volume(outputVolumeData, spacing, globalBounds.getLLF()));
 
     return VolumeMergerComputeInput{
             inputVolPtr,
+            padding,
             std::move(outputVolume)
     };
 }
@@ -130,6 +133,7 @@ VolumeMergerComputeOutput VolumeMerger::compute(VolumeMergerComputeInput input, 
 
     const tgt::vec3 spacing = outputVolume->getSpacing();
     const tgt::vec3 llf = outputVolume->getLLF();
+    const size_t padding = input.padding_;
 
     float progressPerVolume = 1.0f / inputVolumes->size();
     for(size_t i=0; i<inputVolumes->size(); i++) {
@@ -142,15 +146,16 @@ VolumeMergerComputeOutput VolumeMerger::compute(VolumeMergerComputeInput input, 
         const tgt::svec3 offset = tgt::iround((volume->getLLF() - llf) / spacing);
 
 #ifdef VRN_MODULE_OPENMP
-        long dimZ = static_cast<long>(dim.z);
+        const long startZ = static_cast<long>(padding);
+        const long dimZ = static_cast<long>(dim.z-padding);
         #pragma omp parallel for
-        for(long pz = 0; pz < dimZ; pz++) {
+        for(long pz = startZ; pz < dimZ; pz++) {
             size_t z = static_cast<size_t>(pz);
 #else
-        for(size_t z=0; z<dim.z; z++) {
+        for(size_t z=padding; z<dim.z-padding; z++) {
 #endif
-            for(size_t y=0; y<dim.y; y++) {
-                for(size_t x=0; x<dim.x; x++) {
+            for(size_t y=padding; y<dim.y-padding; y++) {
+                for(size_t x=padding; x<dim.x-padding; x++) {
                     for(size_t channel=0; channel < volumeData->getNumChannels(); channel++) {
                         float value = volumeData->getVoxelNormalized(x, y, z, channel);
                         outputVolumeData->setVoxelNormalized(value, x+offset.x, y+offset.y, z+offset.z, channel);

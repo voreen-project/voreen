@@ -30,23 +30,26 @@
 #include "voreen/core/voreenapplication.h"
 #include "voreen/core/utils/stringutils.h"
 
+#include "processors/dynamicpythonprocessor.h"
+
 namespace voreen {
 
-char* PyUnicodeAsString(PyObject* object) {
+std::string PyUnicodeAsString(PyObject* object) {
 
     tgtAssert(object != nullptr, "Object was null");
     tgtAssert(PyUnicode_Check(object), "No Unicode Object");
 
-    char* result = NULL;
+    std::string result;
     PyObject* bytes = PyUnicode_AsEncodedString(object, "UTF-8", "strict");
     if (bytes != NULL) {
         result = PyBytes_AS_STRING(bytes);
-        result = strdup(result);
         Py_DECREF(bytes);
     }
 
     return result;
 }
+
+const char* VOREEN_SCRIPT_ID_IDENTIFIER = "__voreen_script_id__";
 
 const std::string PythonModule::loggerCat_("voreen.Python.Module");
 PythonModule* PythonModule::instance_ = 0;
@@ -61,18 +64,19 @@ static PyObject* voreen_print(PyObject* /*self*/, PyObject* args) {
     int isStderr;
     if (!PyArg_ParseTuple(args, "s#i", &msg, &len, &isStderr)) {
         LWARNINGC("voreen.Python.voreen_print", "failed to parse log message");
-    }
-    else {
+    } else {
         if (len > 1 || ((len == 1) && (msg[0] != '\0') && (msg[0] != '\r') && (msg[0] != '\n'))) {
+            PyObject* scriptIdObj = PyDict_GetItemString(PyEval_GetGlobals(), VOREEN_SCRIPT_ID_IDENTIFIER);
+            std::string id = PyUnicodeAsString(scriptIdObj);
             std::string message(msg);
             const std::vector<PythonOutputListener*> listeners = PythonModule::getOutputListeners();
             if (!listeners.empty()) {
                 // pass output to listeners
                 for (size_t i=0; i<listeners.size(); i++) {
                     if (isStderr)
-                        listeners[i]->pyStderr(message);
+                        listeners[i]->pyStderr(message, id);
                     else
-                        listeners[i]->pyStdout(message);
+                        listeners[i]->pyStdout(message, id);
                 }
             }
             else {
@@ -118,10 +122,14 @@ PyInit_voreenInternalModule(void)
 PythonModule::PythonModule(const std::string& modulePath)
     : VoreenModule(modulePath)
     , tgt::ResourceManager<PythonScript>(false)
+    , globals_(nullptr)
+    , initGlobals_(nullptr)
 {
     setID("Python");
     setGuiName("Python");
     instance_ = this;
+
+    registerProcessor(new DynamicPythonProcessor());
 }
 
 PythonModule::~PythonModule() {
@@ -185,6 +193,10 @@ void PythonModule::initialize() {
     addModulePath(libraryPath + "/lib");
 #endif
 
+    // Define an initial (empty) global environment
+    globals_ = PyDict_New();
+    initGlobals_ = PyDict_New();
+
     //
     // Redirect script output from std::cout to voreen_print function (see above)
     //
@@ -201,12 +213,18 @@ void PythonModule::initialize() {
     else {
         LWARNING("Failed to load init script '" << filename << "'");
     }
+    Py_CLEAR(initGlobals_);
+    initGlobals_ = PyDict_Copy(globals_);
+    PyDict_DelItemString(initGlobals_, VOREEN_SCRIPT_ID_IDENTIFIER);
 }
 
 void PythonModule::deinitialize() {
 
     if (!isInitialized())
         throw VoreenException("not initialized");
+
+    Py_CLEAR(globals_);
+    Py_CLEAR(initGlobals_);
 
     // clean up python interpreter
     Py_Finalize();
@@ -318,6 +336,25 @@ bool PythonModule::checkForPythonError(std::string& errorMsg) {
     Py_XDECREF(traceback);
 
     return false;
+}
+
+PyObject* PythonModule::cleanGlobals() {
+    // Here's the deal: For some reason, the FIRST call to PyEval_EvalCode or PyRun_String "registers" the
+    // passed globals dictionary as THE globals dictionary for ever and ever and ever. Subsequent calls will
+    // not use the (potentially other) dictionary passed in that call and instead refer to the first passed
+    // dictionary. Why? I don't know.
+    //
+    // However, we want to be able to supply the script with a "clean", but pre setup environment. initGlobals_
+    // IS this clean argument with some setup done (i.e., redirections for stdout/stderr, voreen_internal module).
+    // We therefore reset the globals_ dictionary (the one that will be passed always (and thus also the first time)
+    // to PyEval_EvalCode and PyRun_String) to have the same values as initGlobals_.
+    PyDict_Clear(globals_);
+    PyDict_Merge(globals_, initGlobals_, true);
+
+    int ret = PyDict_SetItemString(globals_, "__builtins__", PyEval_GetBuiltins());
+    tgtAssert(ret == 0, "Setting builtins failed!");
+
+    return globals_;
 }
 
 void PythonModule::addOutputListener(PythonOutputListener* listener) {

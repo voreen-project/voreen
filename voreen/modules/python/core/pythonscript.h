@@ -29,6 +29,7 @@
 #include <string>
 
 #include "voreen/core/voreencoreapi.h"
+#include "voreen/core/io/serialization/serializable.h"
 
 #ifndef PyObject_HEAD
 struct _object;
@@ -48,7 +49,7 @@ namespace voreen {
  * @note Convenient loading of Python scripts with search path handling
  *  is provided by the PythonModule class.
  */
-class VRN_CORE_API PythonScript {
+class VRN_CORE_API PythonScript : public Serializable {
 
 public:
     PythonScript();
@@ -59,6 +60,14 @@ public:
      * when deleting the script.
      */
     ~PythonScript();
+
+    PythonScript(const PythonScript& other);
+    PythonScript& operator=(const PythonScript& other);
+
+    /**
+     * Returns the uuid of the script. This is mainly used for output forwarding.
+     */
+    const std::string& getId() const;
 
     /**
      * Loads a Python script from file and compiles it to byte code by default.
@@ -76,7 +85,7 @@ public:
     /**
      * Returns the script's source.
      */
-    std::string getSource() const;
+    const std::string& getSource() const;
 
     /**
      * Assigns a filename to the script. This is optionally,
@@ -89,7 +98,7 @@ public:
      * the name of file the script has been loaded from,
      * but it may have been overwritten or even empty.
      */
-    std::string getFilename() const;
+    const std::string& getFilename() const;
 
     /**
      * Compiles the script source to byte code, which speeds up script execution
@@ -121,7 +130,7 @@ public:
      * Returns the error that has occurred during the last operation (compilation or execution).
      * If the last operation has been successful, an empty string is returned.
      */
-    std::string getLog() const;
+    const std::string& getLog() const;
 
     /**
      * Returns the source line number where the last error has occurred.
@@ -135,10 +144,31 @@ public:
      */
     int getErrorCol() const;
 
+    /**
+     * @see Property::serialize
+     */
+    virtual void serialize(Serializer& s) const;
+
+    /**
+     * @see Property::deserialize
+     */
+    virtual void deserialize(Deserializer& s);
+
+    /**
+     * Two scripts are considered equal, if both their source and filename are equal.
+     */
+    bool operator==(const PythonScript& other) const;
+
+    /**
+     * Two scripts are not considered equal, if any of their source or filename are not equal.
+     */
+    bool operator!=(const PythonScript& other) const;
+
 private:
     bool checkCompileError(bool logErrors = true);
     bool checkRuntimeError(bool logErrors = true);
 
+    std::string     id_;
     std::string     source_;
     std::string     filename_;
     PyObject*       byteCode_;

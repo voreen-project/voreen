@@ -98,8 +98,6 @@ public:
                          Processor::InvalidationLevel invalidationLevel = Processor::INVALID_RESULT);
     virtual ~GenericPort();
 
-    virtual void forwardData() const;
-
     /**
      * Returns whether GenericPort::getData() returns 0 or not,
      * therefore indicating if there is any data at the port.
@@ -255,13 +253,6 @@ GenericPort<T>::~GenericPort() {
     portData_ = nullptr;
 
     notifyDataHasChanged();
-}
-
-template <typename T>
-void GenericPort<T>::forwardData() const{
-    for(std::vector<Port*>::const_iterator it = forwardPorts_.begin(); it != forwardPorts_.end(); ++it){
-        dynamic_cast<GenericPort<T>*>(*it)->setData(getData(), false);
-    }
 }
 
 template <typename T>

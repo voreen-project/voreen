@@ -37,7 +37,6 @@ public:
 
     virtual std::string getClassName() const { return "CoProcessorPort"; }
 
-    virtual void forwardData() const {};
     virtual bool hasData() const {return false;}
 
     std::vector<Processor*> getConnectedProcessors() const;

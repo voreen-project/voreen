@@ -383,25 +383,6 @@ public:
      */
     virtual tgt::col3 getColorHint() const;
 
-    /**
-     * Adds the port to the forwardPortList_. If this gets new data, it will forward
-     * it to all ports in the list.
-     *
-     * @see forwardData
-     *
-     * @param Port that will be added to list.
-     */
-    virtual void addForwardPort(Port* port);
-
-    /**
-     * Removes the port from the forwardPortList_.
-     *
-     * @see forwardData
-     *
-     * @param Port that will be removed from list.
-     */
-    virtual bool removeForwardPort(Port* port);
-
     virtual void serialize(Serializer& s) const;
 
     virtual void deserialize(Deserializer& s);
@@ -447,15 +428,6 @@ public:
 
     /** @override propertyowner */
     virtual void notifyPropertyValueHasBeenModified(Property* prop) const;
-
-    /**
-     * If this gets new data, it will forward it to all ports in the list.
-     * Ports in the list must have the same type as this. An example implementation
-     * can be found in GenericPort.
-     *
-     * @see invalidatePort, GenericPort
-     */
-    virtual void forwardData() const = 0;
 
     /**
      * Returns true if the data is safe to use in another thread, false otherwise.
@@ -574,8 +546,6 @@ public:
     std::vector<PortCondition*> conditions_;
 
     Processor::InvalidationLevel invalidationLevel_;
-
-    std::vector<Port*> forwardPorts_;
 
     /// category used in logging
     static const std::string loggerCat_;

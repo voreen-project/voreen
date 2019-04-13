@@ -23,37 +23,55 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_PYTHONEDITOR_H
-#define VRN_PYTHONEDITOR_H
+#include "dynamicpythonwidget.h"
+#include "voreen/qt/voreenapplicationqt.h"
 
-#include "voreen/qt/mainwindow/menuentities/voreenqtmenuentity.h"
+#include "../pythonmodule.h"
+#include <QGridLayout>
+#include <QMainWindow>
+#include <QLabel>
+#include <QCheckBox>
 
-#include <QIcon>
 
 namespace voreen {
 
-class PythonPlugin;
+const std::string DynamicPythonWidget::loggerCat_("voreen.DynamicPythonWidget");
 
-class PythonEditor : public VoreenQtMenuEntity {
-public:
-    PythonEditor();
-    ~PythonEditor();
+DynamicPythonWidget::DynamicPythonWidget(QWidget* parent, DynamicPythonProcessor* pyProcessor)
+    : QProcessorWidget(pyProcessor, parent)
+    , plugin_(nullptr)
+{
+    tgtAssert(pyProcessor, "No DynamicPythonProcessor processor");
 
-    virtual std::string getName() const { return "Python Scripting"; }
-    virtual QIcon getIcon() const       { return QIcon(":/modules/python/python.png"); }
+    setWindowTitle(QString::fromStdString(pyProcessor->getID()));
+    resize(800, 480);
+}
 
-protected:
-    virtual QWidget* createWidget() const;
+DynamicPythonWidget::~DynamicPythonWidget() {
+    delete plugin_;
+}
 
-    virtual void initialize();
-    virtual void deinitialize();
+void DynamicPythonWidget::initialize() {
+    QProcessorWidget::initialize();
 
-private:
-    mutable PythonPlugin* pythonWidget_;
+    DynamicPythonProcessor* pyProcessor = dynamic_cast<DynamicPythonProcessor*>(processor_);
 
-    static const std::string loggerCat_;
-};
+    plugin_ = new PythonPlugin(pyProcessor->getPythonProperty(), parentWidget());
 
-} // namespace voreen
+    QGridLayout* layout = new QGridLayout();
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->addWidget(plugin_);
+    setLayout(layout);
 
-#endif // VRN_PYTHONEDITOR_H
+    if(isVisible())
+        show();
+
+    initialized_ = true;
+}
+
+void DynamicPythonWidget::updateFromProcessor() {
+    plugin_->updateFromProperty();
+}
+
+} //namespace voreen
+

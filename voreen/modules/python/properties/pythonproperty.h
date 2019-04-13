@@ -23,37 +23,46 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_PYTHONEDITOR_H
-#define VRN_PYTHONEDITOR_H
+#ifndef VRN_PYTHONPROPERTY_H
+#define VRN_PYTHONPROPERTY_H
 
-#include "voreen/qt/mainwindow/menuentities/voreenqtmenuentity.h"
-
-#include <QIcon>
+#include "voreen/core/properties/templateproperty.h"
+#include "modules/python/core/pythonscript.h"
 
 namespace voreen {
 
-class PythonPlugin;
+#ifdef DLL_TEMPLATE_INST
+template class VRN_CORE_API TemplateProperty<PythonScript>;
+#endif
 
-class PythonEditor : public VoreenQtMenuEntity {
+class VRN_CORE_API PythonProperty : public TemplateProperty<PythonScript> {
 public:
-    PythonEditor();
-    ~PythonEditor();
+    PythonProperty(const std::string& id, const std::string& guiText,
+                   Processor::InvalidationLevel invalidationLevel=Processor::INVALID_PROGRAM,
+                   Property::LevelOfDetail lod = Property::LOD_DEFAULT);
+    PythonProperty();
+    ~PythonProperty();
 
-    virtual std::string getName() const { return "Python Scripting"; }
-    virtual QIcon getIcon() const       { return QIcon(":/modules/python/python.png"); }
+    virtual Property* create() const;
 
-protected:
-    virtual QWidget* createWidget() const;
+    virtual std::string getClassName() const       { return "PythonProperty"; }
+    virtual std::string getTypeDescription() const { return "Python Script"; }
 
-    virtual void initialize();
-    virtual void deinitialize();
+    /**
+     * @see Property::serialize
+     */
+    virtual void serialize(Serializer& s) const;
+
+    /**
+     * @see Property::deserialize
+     */
+    virtual void deserialize(Deserializer& s);
 
 private:
-    mutable PythonPlugin* pythonWidget_;
 
     static const std::string loggerCat_;
 };
 
-} // namespace voreen
+}   // namespace
 
-#endif // VRN_PYTHONEDITOR_H
+#endif

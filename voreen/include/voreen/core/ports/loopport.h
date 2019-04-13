@@ -38,7 +38,6 @@ public:
 
     virtual Port* create(PortDirection direction, const std::string& id, const std::string& guiName = "") const { return new LoopPort(direction,id,guiName);}
     virtual std::string getClassName() const {return "LoopPort";}
-    virtual void forwardData() const {}
     virtual bool hasData() const {return false;}
     virtual std::string getContentDescription() const;
     virtual std::string getContentDescriptionHTML() const;

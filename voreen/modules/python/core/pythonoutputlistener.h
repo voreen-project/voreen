@@ -23,37 +23,24 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_PYTHONEDITOR_H
-#define VRN_PYTHONEDITOR_H
+#ifndef VRN_PYTHONOUTPUTLISTENER_H
+#define VRN_PYTHONOUTPUTLISTENER_H
 
-#include "voreen/qt/mainwindow/menuentities/voreenqtmenuentity.h"
+#include "voreen/core/voreencoreapi.h"
 
-#include <QIcon>
-
-namespace voreen {
-
-class PythonPlugin;
-
-class PythonEditor : public VoreenQtMenuEntity {
+/**
+ * Implement this interface in order to receive the output of
+ * Python scripts.
+ *
+ * @see PythonModule::addOutputListener
+ */
+class VRN_CORE_API PythonOutputListener {
 public:
-    PythonEditor();
-    ~PythonEditor();
+    /// Receives sys.stdout
+    virtual void pyStdout(const std::string& out, const std::string& id) = 0;
 
-    virtual std::string getName() const { return "Python Scripting"; }
-    virtual QIcon getIcon() const       { return QIcon(":/modules/python/python.png"); }
-
-protected:
-    virtual QWidget* createWidget() const;
-
-    virtual void initialize();
-    virtual void deinitialize();
-
-private:
-    mutable PythonPlugin* pythonWidget_;
-
-    static const std::string loggerCat_;
+    /// Receives sys.stderr
+    virtual void pyStderr(const std::string& err, const std::string& id) = 0;
 };
 
-} // namespace voreen
-
-#endif // VRN_PYTHONEDITOR_H
+#endif // VRN_PYTHONOUTPUTLISTENER_H

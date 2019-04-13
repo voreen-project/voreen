@@ -23,37 +23,27 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_PYTHONEDITOR_H
-#define VRN_PYTHONEDITOR_H
+#include "pythonprocessorwidgetfactory.h"
 
-#include "voreen/qt/mainwindow/menuentities/voreenqtmenuentity.h"
+#include "../processors/dynamicpythonprocessor.h"
+#include "dynamicpythonwidget.h"
 
-#include <QIcon>
+#include "voreen/qt/voreenapplicationqt.h"
+#include "voreen/qt/mainwindow/voreenqtmainwindow.h"
 
 namespace voreen {
 
-class PythonPlugin;
+ProcessorWidget* PythonProcessorWidgetFactory::createWidget(Processor* processor) const {
 
-class PythonEditor : public VoreenQtMenuEntity {
-public:
-    PythonEditor();
-    ~PythonEditor();
+    if (!VoreenApplicationQt::qtApp()) {
+        LERRORC("voreen.pythonProcessorWidgetFactory", "VoreenApplicationQt not instantiated");
+        return 0;
+    }
+    QWidget* parent = VoreenApplicationQt::qtApp()->getMainWindow();
 
-    virtual std::string getName() const { return "Python Scripting"; }
-    virtual QIcon getIcon() const       { return QIcon(":/modules/python/python.png"); }
+    if (dynamic_cast<DynamicPythonProcessor*>(processor))
+        return new DynamicPythonWidget(parent, static_cast<DynamicPythonProcessor*>(processor));
 
-protected:
-    virtual QWidget* createWidget() const;
-
-    virtual void initialize();
-    virtual void deinitialize();
-
-private:
-    mutable PythonPlugin* pythonWidget_;
-
-    static const std::string loggerCat_;
-};
-
+    return 0;
+}
 } // namespace voreen
-
-#endif // VRN_PYTHONEDITOR_H

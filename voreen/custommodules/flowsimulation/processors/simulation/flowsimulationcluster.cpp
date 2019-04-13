@@ -325,7 +325,7 @@ void FlowSimulationCluster::fetchResults() {
 }
 
 int FlowSimulationCluster::executeCommand(const std::string& command) const {
-
+#ifndef WIN32
     std::string result;
     std::array<char, 128> buffer;
 
@@ -346,6 +346,9 @@ int FlowSimulationCluster::executeCommand(const std::string& command) const {
     }
 
     return pclose(pipe);
+#else
+    return system(command.c_str());
+#endif
 }
 
 std::string FlowSimulationCluster::generateEnqueueScript(const std::string& parametrizationPath) const {

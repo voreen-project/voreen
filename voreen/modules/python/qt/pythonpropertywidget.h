@@ -23,37 +23,46 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_PYTHONEDITOR_H
-#define VRN_PYTHONEDITOR_H
+#ifndef VRN_PYTHONPROPERTYWIDGET_H
+#define VRN_PYTHONPROPERTYWIDGET_H
 
-#include "voreen/qt/mainwindow/menuentities/voreenqtmenuentity.h"
+#include "voreen/qt/widgets/property/qpropertywidgetwithtoolwindow.h"
 
-#include <QIcon>
+class QPushButton;
 
 namespace voreen {
 
 class PythonPlugin;
+class VoreenToolWindow;
+class PythonProperty;
 
-class PythonEditor : public VoreenQtMenuEntity {
+class PythonPropertyWidget : public QPropertyWidgetWithToolWindow {
+Q_OBJECT
 public:
-    PythonEditor();
-    ~PythonEditor();
+    PythonPropertyWidget(PythonProperty* prop, QWidget* parent = 0);
 
-    virtual std::string getName() const { return "Python Scripting"; }
-    virtual QIcon getIcon() const       { return QIcon(":/modules/python/python.png"); }
+    void disconnect();
+
+    PythonPlugin* getPlugin() const {
+        return plugin_;
+    }
+
+public slots:
+    void setProperty();
 
 protected:
-    virtual QWidget* createWidget() const;
+    virtual QWidget* createToolWindowWidget();
+    virtual void customizeToolWindow();
 
-    virtual void initialize();
-    virtual void deinitialize();
+    PythonPlugin* plugin_;
+    PythonProperty* property_;
+    QPushButton* editBt_;
 
-private:
-    mutable PythonPlugin* pythonWidget_;
+protected slots:
+    virtual void updateFromPropertySlot();
 
-    static const std::string loggerCat_;
 };
 
-} // namespace voreen
+} // namespace
 
-#endif // VRN_PYTHONEDITOR_H
+#endif // VRN_PYTHONPROPERTYWIDGET_H

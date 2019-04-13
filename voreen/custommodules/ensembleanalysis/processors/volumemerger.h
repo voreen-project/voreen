@@ -36,6 +36,7 @@ namespace voreen {
 
 struct VolumeMergerComputeInput {
     const VolumeList* inputVolumes;
+    size_t padding_;
     std::unique_ptr<Volume> outputVolume;
 };
 
@@ -71,6 +72,7 @@ private:
     VolumePort outport_;
 
     BoolProperty allowIntersections_;
+    IntProperty padding_;
 
     static const std::string loggerCat_;
 };

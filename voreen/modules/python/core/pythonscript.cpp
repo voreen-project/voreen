@@ -23,12 +23,6 @@
  *                                                                                 *
  ***********************************************************************************/
 
-/*
-    Have a look at the script.cpp sample and at
-    http://docs.python.org/api/api.html
-    for more information about binding C/C++ stuff to python
-*/
-
 // include this at very first
 #include <Python.h>
 
@@ -36,7 +30,12 @@
 #include "pythonscript.h"
 
 #include "tgt/filesystem.h"
+#include "voreen/core/voreenapplication.h"
 #include "voreen/core/utils/stringutils.h"
+
+#include <boost/lexical_cast.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include <traceback.h>
 #include <frameobject.h>
@@ -47,18 +46,54 @@ const std::string PythonScript::loggerCat_ = "voreen.Python.PythonScript";
 
 PythonScript::PythonScript()
     : source_("")
+    , filename_("")
     , byteCode_(nullptr)
     , compiled_(false)
     , errorLine_(-1)
     , errorCol_(-1)
     , printErrorsToStdOut_(false)
-{}
+{
+    if(VoreenApplication::app()) {
+        id_ = boost::lexical_cast<std::string>(VoreenApplication::app()->generateUUID());
+    }
+}
 
 PythonScript::~PythonScript() {
     Py_XDECREF(byteCode_);
 }
 
-std::string PythonScript::getLog() const {
+PythonScript::PythonScript(const PythonScript& other) {
+    id_ = other.id_;
+    source_ = other.source_;
+    filename_ = other.filename_;
+    byteCode_ = other.byteCode_;
+    Py_XINCREF(byteCode_);
+    compiled_ = other.compiled_;
+    errorLine_ = other.errorLine_;
+    errorCol_ = other.errorCol_;
+    printErrorsToStdOut_ = other.printErrorsToStdOut_;
+}
+
+PythonScript& PythonScript::operator=(const PythonScript& other) {
+    id_ = other.id_;
+    source_ = other.source_;
+    filename_ = other.filename_;
+    Py_XDECREF(byteCode_);
+    byteCode_ = other.byteCode_;
+    Py_XINCREF(byteCode_);
+    compiled_ = other.compiled_;
+    errorLine_ = other.errorLine_;
+    errorCol_ = other.errorCol_;
+    printErrorsToStdOut_ = other.printErrorsToStdOut_;
+
+    return *this;
+}
+
+const std::string& PythonScript::getId() const {
+    return id_;
+}
+
+const std::string& PythonScript::getLog() const {
     return log_;
 }
 
@@ -111,8 +146,7 @@ bool PythonScript::compile(bool logErrors) {
     compiled_ = checkCompileError(logErrors);
 
     if (!compiled_) {
-        Py_XDECREF(byteCode_);
-        byteCode_ = 0;
+        Py_CLEAR(byteCode_);
     }
 
     return compiled_;
@@ -121,8 +155,11 @@ bool PythonScript::compile(bool logErrors) {
 bool PythonScript::run(bool logErrors) {
     // use clean environment containing only the built-in symbols,
     // in order to prevent influences of previous script executions
-    PyObject* glb = PyDict_New();
-    PyDict_SetItemString(glb, "__builtins__", PyEval_GetBuiltins());
+    PyObject* glb = PythonModule::getInstance()->cleanGlobals();
+
+    // Add the script id for correct output redirection.
+    PyObject* id = PyUnicode_FromString(id_.c_str());
+    PyDict_SetItemString(glb, VOREEN_SCRIPT_ID_IDENTIFIER, id);
 
     bool success;
     if (compiled_){
@@ -136,11 +173,12 @@ bool PythonScript::run(bool logErrors) {
     }
     else {
         LDEBUG("Running script '" << getFilename() << "' ...");
-        PyRun_String(source_.c_str(), Py_file_input, glb, glb);
+        PyObject* dum = PyRun_String(source_.c_str(), Py_file_input, glb, glb);
         success = checkRuntimeError(logErrors);
+        Py_XDECREF(dum);
     }
 
-    Py_XDECREF(glb);
+    Py_CLEAR(id);
 
     if (success) {
         LDEBUG("finished.");
@@ -149,22 +187,21 @@ bool PythonScript::run(bool logErrors) {
     return success;
 }
 
-std::string PythonScript::getSource() const {
+const std::string& PythonScript::getSource() const {
     return source_;
 }
 
 void PythonScript::setSource(const std::string& source) {
     source_ = source;
     compiled_ = false;
-    Py_XDECREF(byteCode_);
-    byteCode_ = 0;
+    Py_CLEAR(byteCode_);
 }
 
 void PythonScript::setFilename(const std::string& filename) {
     filename_ = filename;
 }
 
-std::string PythonScript::getFilename() const {
+const std::string& PythonScript::getFilename() const {
     return filename_;
 }
 
@@ -176,8 +213,25 @@ int PythonScript::getErrorCol() const {
     return errorCol_;
 }
 
+void PythonScript::serialize(voreen::Serializer& s) const {
+    s.serialize("source", source_);
+    s.serialize("filename", filename_);
+}
+
+void PythonScript::deserialize(voreen::Deserializer& s) {
+    s.deserialize("source", source_);
+    s.deserialize("filename", filename_);
+}
+
+bool PythonScript::operator==(const voreen::PythonScript& other) const {
+    return (filename_ == other.filename_ && source_ == other.source_);
+}
+
+bool PythonScript::operator!=(const voreen::PythonScript& other) const {
+    return !(*this == other);
+}
+
 bool PythonScript::checkCompileError(bool logErrors) {
-    using std::string;
 
     log_ = "";
     errorLine_ = -1;

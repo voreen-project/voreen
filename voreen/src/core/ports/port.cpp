@@ -70,11 +70,13 @@ Port::~Port() {
         delete conditions_.at(i);
     conditions_.clear();
 
+    tgtAssert(!initialized_, "Port destructor called before deinitialization");
     if (isInitialized()) {
-        LWARNING("~Port() '" << getQualifiedName() << "' has not been deinitialized");
+        LERROR("~Port() '" << getQualifiedName() << "' has not been deinitialized");
     }
 
-    disconnectAll();
+    // moved to deinitialize as it should be called before destruction anyway to omit pure virtual function calls
+    //disconnectAll();
 }
 
 Port* Port::create() const {
@@ -329,7 +331,6 @@ void Port::invalidatePort() {
     }
     else {
         getProcessor()->invalidate(invalidationLevel_);
-        forwardData();
     }
 
     // Perform condition check.
@@ -457,14 +458,10 @@ void Port::initialize() {
 
 void Port::deinitialize() {
 
-    if (!isInitialized()) {
-        /*std::string id;
-        if (getProcessor())
-            id = getProcessor()->getName() + ".";
-        id += getName();
-        LWARNING("deinitialize(): '" << id << "' not initialized"); */
+    if (!isInitialized()) 
         return;
-    }
+
+    disconnectAll();
 
     initialized_ = false;
 }
@@ -523,23 +520,6 @@ tgt::col3 Port::getColorHint() const {
     return tgt::col3(0, 0, 0);
 }
 
-void Port::addForwardPort(Port* port){
-    tgtAssert(port->isOutport(), "Only outports can get forwared data!");
-    tgtAssert(!port->getClassName().compare(getClassName()),"Forward ports have to be the same type as this class!");
-
-    forwardPorts_.push_back(port);
-}
-
-bool Port::removeForwardPort(Port* port){
-    for(std::vector<Port*>::iterator it = forwardPorts_.begin(); it != forwardPorts_.end(); it++){
-        if(*it == port){
-            forwardPorts_.erase(it);
-            return true;
-        }
-    }
-    return false;
-}
-
 void Port::serialize(Serializer& s) const {
     PropertyOwner::serialize(s);
 
@@ -593,7 +573,7 @@ void Port::notifyBeforeConnectionRemoved(const Port* connectedPort) {
     for (size_t i = 0; i < observers.size(); ++i)
         observers[i]->beforeConnectionRemoved(this, connectedPort);
 
-    if(isInport() && hasData()) {
+    if(isInport() && hasData()) {   
         notifyDataWillChange();
     }
 }

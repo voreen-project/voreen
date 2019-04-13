@@ -32,6 +32,9 @@
 
 // Do this at very first
 #include <Python.h>
+
+#include "pyvoreenobjects.h"
+
 #include "../pythonmodule.h"
 
 #include "pyvoreen.h"
@@ -62,6 +65,9 @@
 //#include "voreen/core/properties/color/colorswitchproperty.h" // covered by ColorProperty
 #include "voreen/core/properties/transfunc/1d/1dkeys/transfunc1dkeysproperty.h"
 
+#include "voreen/core/ports/volumeport.h"
+#include "voreen/core/datastructures/volume/volumefactory.h"
+
 #include "voreen/core/datastructures/transfunc/1d/1dkeys/transfunc1dkeys.h"
 #include "voreen/core/network/processornetwork.h"
 
@@ -80,11 +86,16 @@
 #endif
 #include "voreen/core/interaction/voreentrackball.h"
 
+#include "tgt/init.h"
+#include "tgt/glcontextmanager.h"
+
 
 //-------------------------------------------------------------------------------------------------
 // internal helper functions
 
 namespace {
+
+
 
 /**
  * Retrieves the current processor network.
@@ -162,26 +173,24 @@ bool setPropertyValue(PropertyType* property, const ValueType& value,
                       const std::string& functionName);
 
 /**
+ * Retrieves a port with the specified ID of a certain processor.
+ */
+voreen::Port* getPort(const std::string& processorName, const std::string& portID,
+                      const std::string& functionName);
+
+/**
+ * Retrieves the port with the specified ID, if it matches the template parameter.
+ */
+template<typename T>
+T* getTypedPort(const std::string& processorName, const std::string& portID,
+                const std::string& portTypeString, const std::string& functionName);
+
+/**
  * Uses the apihelper.py script to print documentation
  * about the module's functions.
  */
 static PyObject* printModuleInfo(const std::string& moduleName, bool omitFunctionName = false,
                                  int spacing = 0, bool collapse = false, bool blanklines = false);
-
-// type conversion macros
-#define VecToPyVec(VARIABLE, CONVERTER, GETVEC, SIZE, VALUEPOSTFIX) \
-    VARIABLE = PyList_New(SIZE); \
-    for(unsigned int i=0; i<SIZE; i++){ \
-    PyList_SetItem(VARIABLE, i, CONVERTER(GETVEC[i]VALUEPOSTFIX)); \
-    }
-
-#define PyVecToVec(PYVEC, CONVERTER, VEC) \
-{ \
-    PyObject* pyList = PYVEC; \
-    for(int i=0; i < PyList_Size(pyList); i++) { \
-    VEC[i] = (CONVERTER(PyList_GetItem(pyList, i))); \
-    } \
-}
 
 } // namespace anonymous
 
@@ -212,15 +221,18 @@ static PyObject* voreen_setPropertyValue(PyObject* /*self*/, PyObject* args) {
     }
 
     // read processor name and property id
-    char* processorName = PyUnicodeAsString(PyTuple_GetItem(args, 0));
-    char* propertyID = PyUnicodeAsString(PyTuple_GetItem(args, 1));
-    if (!processorName || !propertyID) {
+    std::string processorName_str = PyUnicodeAsString(PyTuple_GetItem(args, 0));
+    std::string propertyID_str = PyUnicodeAsString(PyTuple_GetItem(args, 1));
+    if (processorName_str.empty() || propertyID_str.empty()) {
         PyErr_SetString(PyExc_TypeError, "setPropertyValue() arguments 1 and 2 must be strings");
         return 0;
     }
 
+    char* processorName;
+    char* propertyID;
+
     // fetch property
-    Property* property = getProperty(std::string(processorName), std::string(propertyID), "setPropertyValue");
+    Property* property = getProperty(processorName_str, propertyID_str, "setPropertyValue");
     if (!property)
         return 0;
 
@@ -568,15 +580,18 @@ static PyObject* voreen_setPropertyMinValue(PyObject* /*self*/, PyObject* args) 
     }
 
     // read processor name and property id
-    char* processorName = PyUnicodeAsString(PyTuple_GetItem(args, 0));
-    char* propertyID = PyUnicodeAsString(PyTuple_GetItem(args, 1));
-    if (!processorName || !propertyID) {
+    std::string processorName_str = PyUnicodeAsString(PyTuple_GetItem(args, 0));
+    std::string propertyID_str = PyUnicodeAsString(PyTuple_GetItem(args, 1));
+    if (processorName_str.empty() || propertyID_str.empty()) {
         PyErr_SetString(PyExc_TypeError, "setPropertyMinValue() arguments 1 and 2 must be strings");
         return 0;
     }
 
+    char* processorName;
+    char* propertyID;
+
     // fetch property
-    Property* property = getProperty(std::string(processorName), std::string(propertyID), "setPropertyMinValue");
+    Property* property = getProperty(processorName_str, propertyID_str, "setPropertyMinValue");
     if (!property)
         return 0;
 
@@ -731,15 +746,18 @@ static PyObject* voreen_setPropertyMaxValue(PyObject* /*self*/, PyObject* args) 
     }
 
     // read processor name and property id
-    char* processorName = PyUnicodeAsString(PyTuple_GetItem(args, 0));
-    char* propertyID = PyUnicodeAsString(PyTuple_GetItem(args, 1));
-    if (!processorName || !propertyID) {
+    std::string processorName_str = PyUnicodeAsString(PyTuple_GetItem(args, 0));
+    std::string propertyID_str = PyUnicodeAsString(PyTuple_GetItem(args, 1));
+    if (processorName_str.empty() || propertyID_str.empty()) {
         PyErr_SetString(PyExc_TypeError, "setPropertyMaxValue() arguments 1 and 2 must be strings");
         return 0;
     }
 
+    char* processorName;
+    char* propertyID;
+
     // fetch property
-    Property* property = getProperty(std::string(processorName), std::string(propertyID), "setPropertyMaxValue");
+    Property* property = getProperty(processorName_str, propertyID_str, "setPropertyMaxValue");
     if (!property)
         return 0;
 
@@ -1028,6 +1046,399 @@ static PyObject* voreen_getPropertyMaxValue(PyObject* /*self*/, PyObject* args) 
     }
 
     return result;
+}
+
+static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
+
+    // check length of tuple
+    if (PyTuple_Size(args) != 3) {
+        std::ostringstream errStr;
+        errStr << "setPortData() takes exactly 3 arguments: processor name, port id, data";
+        errStr << " (" << PyTuple_Size(args) << " given)";
+        PyErr_SetString(PyExc_TypeError, errStr.str().c_str());
+        return 0;
+    }
+
+    // check parameter 1 and 2, if they are strings
+    if (!PyUnicode_Check(PyTuple_GetItem(args, 0)) || !PyUnicode_Check(PyTuple_GetItem(args, 1))) {
+        PyErr_SetString(PyExc_TypeError, "setPortData() arguments 1 and 2 must be strings");
+        return 0;
+    }
+
+    // read processor name and port id
+    std::string processorName_str = PyUnicodeAsString(PyTuple_GetItem(args, 0));
+    std::string portID_str = PyUnicodeAsString(PyTuple_GetItem(args, 1));
+    if (processorName_str.empty() || portID_str.empty()) {
+        PyErr_SetString(PyExc_TypeError, "setPortData() arguments 1 and 2 must be strings");
+        return 0;
+    }
+
+    char* processorName;
+    char* portID;
+
+    // fetch port
+    Port* port = getPort(processorName_str, portID_str, "setPortData");
+    if (!port)
+        return 0;
+
+    if (port->isInport()) {
+        PyErr_SetString(PyExc_TypeError, "setPortData() must be called for outgoing ports");
+        return 0;
+    }
+
+    // Delete old data first.
+    port->clear();
+
+    // determine port type, convert and assign data
+    if (VolumePort* typedPort = dynamic_cast<VolumePort*>(port)) {
+        PyObject* object = NULL;
+        if (!PyArg_ParseTuple(args, "ssO!:setPortData", &processorName, &portID, &VolumeObjectType, &object))
+            return 0;
+        tgtAssert(object, "parsing VolumeObject failed");
+
+        const VolumeObject& volumeObject = *((VolumeObject*) object);
+
+        unsigned int numVoxels = volumeObject.dimX * volumeObject.dimY * volumeObject.dimZ;
+        Py_ssize_t size = PyList_Size(volumeObject.data);
+        if(size != numVoxels) {
+            std::string error = "Volume data has invalid size '" + std::to_string(size) + "', must be '" + std::to_string(numVoxels) + "') according to dimensions";
+            PyErr_SetString(PyExc_ValueError, error.c_str());
+            return 0;
+        }
+
+        std::string format = PyUnicodeAsString(volumeObject.format);
+        std::unique_ptr<VolumeRAM> volume;
+        try {
+            volume.reset(VolumeFactory().create(format, tgt::svec3(volumeObject.dimX, volumeObject.dimY, volumeObject.dimZ)));
+        } catch(const std::bad_alloc& error) {
+            PyErr_SetString(PyExc_ValueError, "Could not allocate memory for volume");
+            return 0;
+        }
+        if(!volume) {
+            std::string error = "Volume of format '" + format + "' could not be created.";
+            PyErr_SetString(PyExc_ValueError, error.c_str());
+            return 0;
+        }
+
+        // Set voxel values.
+        bool error = false;
+        for(size_t i=0; i<volume->getNumVoxels() && !error; i++) {
+            PyObject* p = PyList_GetItem(volumeObject.data, i);
+
+            tgt::vec4 value = tgt::vec4::zero;
+            switch(volume->getNumChannels()) {
+            case 1:
+                value.x = static_cast<float>(PyFloat_AsDouble(p));
+                error |= PyErr_Occurred() != nullptr;
+                break;
+            case 2:
+                error |= !PyArg_ParseTuple(p, "ff", &value.x, &value.y);
+                break;
+            case 3:
+                error |= !PyArg_ParseTuple(p, "fff", &value.x, &value.y, &value.z);
+                break;
+            case 4:
+                error |= !PyArg_ParseTuple(p, "ffff", &value.x, &value.y, &value.z, &value.w);
+                break;
+            default:
+                tgtAssert(false, "unsupported channel count");
+            }
+
+            for(size_t channel = 0; channel < volume->getNumChannels(); channel++) {
+                volume->setVoxelNormalized(value[channel], i, channel);
+            }
+        }
+
+        if(error) {
+            Py_DECREF(object);
+            std::string message = "Volume contains invalid values.";
+            PyErr_SetString(PyExc_ValueError, message.c_str());
+            return 0;
+        }
+
+        // Set meta data.
+        tgt::vec3 spacing(volumeObject.spacingX, volumeObject.spacingY, volumeObject.spacingZ);
+        tgt::vec3 offset(volumeObject.offsetX, volumeObject.offsetY, volumeObject.offsetZ);
+        RealWorldMapping rwm(volumeObject.rwmScale, volumeObject.rwmOffset, "");
+
+        Volume* data = new Volume(volume.release(), spacing, offset);
+        data->setRealWorldMapping(rwm);
+        typedPort->setData(data, true);
+
+        Py_DECREF(object);
+        Py_RETURN_NONE;
+    }
+    else if (RenderPort* typedPort = dynamic_cast<RenderPort*>(port)) {
+        PyObject* object = NULL;
+        if (!PyArg_ParseTuple(args, "ssO!:setPortData", &processorName, &portID, &RenderTargetObjectType, &object))
+            return 0;
+        tgtAssert(object, "parsing RenderTargetObject failed");
+
+        const RenderTargetObject& renderTargetObject = *((RenderTargetObject*) object);
+
+        RenderTarget* renderTarget = typedPort->getRenderTarget();
+        if(!renderTarget) {
+            std::string error = "Port has no valid RenderTarget";
+            PyErr_SetString(PyExc_ValueError, error.c_str());
+            return 0;
+        }
+
+        unsigned int numPixels = renderTargetObject.width * renderTargetObject.height;
+        Py_ssize_t colorTextureSize = PyList_Size(renderTargetObject.colorTexture);
+        if(colorTextureSize != numPixels) {
+            std::string error = "Color texture data has invalid size '" + std::to_string(colorTextureSize) + "', must be '" + std::to_string(numPixels) + "') according to dimensions";
+            PyErr_SetString(PyExc_ValueError, error.c_str());
+            return 0;
+        }
+
+        Py_ssize_t depthTextureSize = PyList_Size(renderTargetObject.depthTexture);
+        if(depthTextureSize != numPixels) {
+            std::string error = "Depth texture data has invalid size '" + std::to_string(depthTextureSize) + "', must be '" + std::to_string(numPixels) + "') according to dimensions";
+            PyErr_SetString(PyExc_ValueError, error.c_str());
+            return 0;
+        }
+
+        auto textureUpload = [renderTargetObject] (tgt::Texture* texture, PyObject* target) {
+            bool error = false;
+
+            // Ensure cpu texture data is available.
+            if(!texture->getCpuTextureData() && !texture->alloc(true))
+                return false;
+
+            for(int y = 0; y < texture->getDimensions().y; y++) {
+                for(int x = 0; x < texture->getDimensions().x; x++) {
+
+                    int index = y * texture->getDimensions().x + x;
+
+                    PyObject *p = PyList_GetItem(target, index);
+                    tgt::Color value;
+                    switch (texture->getNumChannels()) {
+                        case 1:
+                            value.x = static_cast<float>(PyFloat_AsDouble(p));
+                            error |= PyErr_Occurred() != nullptr;
+                            break;
+                        case 2:
+                            error |= !PyArg_ParseTuple(p, "ff", &value.x, &value.y);
+                            break;
+                        case 3:
+                            error |= !PyArg_ParseTuple(p, "fff", &value.x, &value.y, &value.z);
+                            break;
+                        case 4:
+                            error |= !PyArg_ParseTuple(p, "ffff", &value.x, &value.y, &value.z, &value.w);
+                            break;
+                    }
+
+                    if(error)
+                        return false;
+
+                    texture->texelFromFloat(value, x, y);
+                }
+            }
+
+            // Upload data.
+            texture->uploadTexture();
+
+            return true;
+        };
+
+        tgt::GLConditionalContextStateGuard guard(tgt::isInitedGL());
+        typedPort->activateTarget();
+        typedPort->clearTarget();
+
+        bool error = !textureUpload(renderTarget->getColorTexture(), renderTargetObject.colorTexture);
+        if (!error) {
+            error =  !textureUpload(renderTarget->getDepthTexture(), renderTargetObject.depthTexture);
+        }
+
+        renderTarget->deactivateTarget();
+
+        Py_DECREF(object);
+
+        if(error || PyErr_Occurred()) {
+            std::string error = "Pixel data contains invalid values.";
+            PyErr_SetString(PyExc_ValueError, error.c_str());
+            return 0;
+        }
+
+        Py_RETURN_NONE;
+    }
+
+    // we only get here, if port data assignment has failed or
+    // the port type is not supported at all
+
+    if (!PyErr_Occurred()) {
+        // no error so far => unknown port type
+        std::ostringstream errStr;
+        errStr << "setPortData() Port '" << port->getQualifiedName() << "'";
+        errStr << " has unsupported type: '" << port->getClassName() << "'";
+        PyErr_SetString(PyExc_ValueError, errStr.str().c_str());
+    }
+
+    return 0; //< indicates failure
+}
+
+static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
+
+    // Parse passed arguments: processor name, property ID
+    char *processorName, *portID;
+    PyArg_ParseTuple(args, "ss:getPortData", &processorName, &portID);
+    if (PyErr_Occurred())
+        return 0;
+
+    // fetch port
+    Port* port = getPort(std::string(processorName), std::string(portID), "getPort");
+    if (!port)
+        return 0;
+
+    if(!port->hasData()) {
+        std::ostringstream errStr;
+        errStr << "getPortData() Port '" << port->getQualifiedName() << "' has no data.";
+        PyErr_SetString(PyExc_ValueError, errStr.str().c_str());
+        return 0;
+    }
+
+    PyObject* result = (PyObject*)-1;
+    if (VolumePort* typedPort = dynamic_cast<VolumePort*>(port)) {
+
+        const VolumeBase* data = typedPort->getData();
+        tgtAssert(data, "volume was null");
+        const VolumeRAM* volume = data->getRepresentation<VolumeRAM>();
+        if(!volume)
+            return 0;
+
+        // Create new volume object.
+        VolumeObject* volumeObject = (VolumeObject*) VolumeObject_new(&VolumeObjectType, NULL, NULL);
+        if(!volumeObject)
+            return 0;
+
+        Py_DECREF(volumeObject->format); // Format will be overwritten.
+        volumeObject->format = PyUnicode_FromString(volume->getFormat().c_str());
+
+        for(size_t i=0; i<volume->getNumVoxels(); i++) {
+            tgt::vec4 value = tgt::vec4::zero;
+            for(size_t channel = 0; channel < volume->getNumChannels(); channel++) {
+                value[channel] = volume->getVoxelNormalized(i, channel);
+            }
+
+            PyObject* p = NULL;
+            switch(volume->getNumChannels()) {
+            case 1:
+                p = PyFloat_FromDouble(value.x);
+                break;
+            case 2:
+                p = Py_BuildValue("(ff)", value.x, value.y);
+                break;
+            case 3:
+                p = Py_BuildValue("(fff)", value.x, value.y, value.z);
+                break;
+            case 4:
+                p = Py_BuildValue("(ffff)", value.x, value.y, value.z, value.w);
+                break;
+            default:
+                tgtAssert(false, "unsupported channel count");
+            }
+
+            tgtAssert(p, "value null");
+            PyList_Append(volumeObject->data, p);
+        }
+
+        volumeObject->dimX = data->getDimensions().x;
+        volumeObject->dimY = data->getDimensions().y;
+        volumeObject->dimZ = data->getDimensions().z;
+
+        volumeObject->spacingX = data->getSpacing().x;
+        volumeObject->spacingY = data->getSpacing().y;
+        volumeObject->spacingZ = data->getSpacing().z;
+
+        volumeObject->offsetX = data->getOffset().x;
+        volumeObject->offsetY = data->getOffset().y;
+        volumeObject->offsetZ = data->getOffset().z;
+
+        volumeObject->rwmScale  = data->getRealWorldMapping().getScale();
+        volumeObject->rwmOffset = data->getRealWorldMapping().getOffset();
+
+        result = (PyObject*) volumeObject;
+        Py_INCREF(result); // FIXME: memory leak
+    }
+    else if (RenderPort* typedPort = dynamic_cast<RenderPort*>(port)) {
+
+        const RenderTarget* renderTarget = typedPort->getRenderTarget();
+        if(!renderTarget)
+            return 0;
+
+        // Create new render target object.
+        RenderTargetObject* renderTargetObject = (RenderTargetObject*) RenderTargetObject_new(&RenderTargetObjectType, NULL, NULL);
+        if(!renderTargetObject)
+            return 0;
+
+        renderTargetObject->internalColorFormat = renderTarget->getColorTexture()->getGLInternalFormat();
+        renderTargetObject->internalDepthFormat = renderTarget->getDepthTexture()->getGLInternalFormat();
+        renderTargetObject->width  = renderTarget->getSize().x;
+        renderTargetObject->height = renderTarget->getSize().y;
+
+        auto textureDownload = [] (const tgt::Texture* texture, PyObject* target) {
+
+            // Ensure main context is active!
+            tgt::GLConditionalContextStateGuard guard(tgt::isInitedGL());
+            texture->downloadTexture();
+            if(!texture->getCpuTextureData())
+                return false;
+
+            for(int y = 0; y < texture->getDimensions().y; y++) {
+                for(int x = 0; x < texture->getDimensions().x; x++) {
+                    tgt::vec4 value = texture->texelAsFloat(x, y);
+
+                    PyObject* p = NULL;
+                    switch(texture->getNumChannels()) {
+                        case 1:
+                            p = PyFloat_FromDouble(value.x);
+                            break;
+                        case 2:
+                            p = Py_BuildValue("(ff)", value.x, value.y);
+                            break;
+                        case 3:
+                            p = Py_BuildValue("(fff)", value.x, value.y, value.z);
+                            break;
+                        case 4:
+                            p = Py_BuildValue("(ffff)", value.x, value.y, value.z, value.w);
+                            break;
+                        default:
+                            tgtAssert(false, "unsupported channel count");
+                    }
+
+                    tgtAssert(p, "value null");
+                    PyList_Append(target, p);
+                }
+            }
+
+            return true;
+        };
+
+        bool error = !textureDownload(renderTarget->getColorTexture(), renderTargetObject->colorTexture);
+        if (!error) {
+            error =  !textureDownload(renderTarget->getDepthTexture(), renderTargetObject->depthTexture);
+        }
+
+        if(error || PyErr_Occurred()) {
+            Py_CLEAR(renderTargetObject);
+            PyErr_SetString(PyExc_ValueError, "Texture data could not be downloaded");
+            return 0;
+        }
+
+        result = (PyObject*) renderTargetObject;
+        Py_INCREF(result); // FIXME: memory leak
+    }
+
+    if (result == (PyObject*)-1) {
+        std::ostringstream errStr;
+        errStr << "getPortData() Port '" << port->getQualifiedName() << "'";
+        errStr << " has unsupported type: '" << port->getClassName() << "'";
+        PyErr_SetString(PyExc_ValueError, errStr.str().c_str());
+        return 0;
+    }
+
+    return result;
+
 }
 
 static PyObject* voreen_setCameraPosition(PyObject* /*self*/, PyObject* args) {
@@ -1525,6 +1936,21 @@ static PyMethodDef voreen_methods[] = {
         "depending on the property's cardinality."
     },
     {
+        "setPortData",
+        voreen_setPortData,
+        METH_VARARGS,
+        "setPortData(processor name, port id, data)\n\n"
+        "Assigns data to a processor port.\n"
+    },
+    {
+        "getPortData",
+        voreen_getPortData,
+        METH_VARARGS,
+        "getPortData(processor name, port id) -> data\n\n"
+        "Returns the data of a processor port,\n"
+        "depending on the port's type. See: setPortData"
+    },
+    {
         "setCameraPosition",
         voreen_setCameraPosition,
         METH_VARARGS,
@@ -1563,7 +1989,7 @@ static PyMethodDef voreen_methods[] = {
         METH_VARARGS,
         "loadVolumes(filename, selected, clear, [volume list source])\n\n"
         "Loads all volumes and assigns them to a VolumeListSource processor.\n"
-        "If no processor name is passed, the first volume source in the\n"
+        "If no processor name is passed, the first volume list source in the\n"
         "network is chosen."
     },
     {
@@ -1679,7 +2105,23 @@ static struct PyModuleDef voreenModuleDef =
 PyMODINIT_FUNC
 PyInit_voreenModule(void)
 {
-    return PyModule_Create(&voreenModuleDef);
+    if (PyType_Ready(&VolumeObjectType) < 0)
+        return NULL;
+
+    if (PyType_Ready(&RenderTargetObjectType) < 0)
+        return NULL;
+
+    PyObject* m = PyModule_Create(&voreenModuleDef);
+    if(m == NULL)
+        return NULL;
+
+    // Register custom objects.
+    Py_INCREF(&VolumeObjectType);
+    PyModule_AddObject(m, "Volume", (PyObject *) &VolumeObjectType);
+    Py_INCREF(&RenderTargetObjectType);
+    PyModule_AddObject(m, "RenderTarget", (PyObject *) &RenderTargetObjectType);
+
+    return m;
 }
 
 namespace voreen {
@@ -1835,6 +2277,44 @@ bool setPropertyValue(PropertyType* property, const ValueType& value,
         // define Python exception
         PyErr_SetString(PyExc_ValueError, (functionName + std::string("() ") + errorMsg).c_str());
         return false;
+    }
+}
+
+Port* getPort(const std::string& processorName, const std::string& portID, const std::string& functionName) {
+
+    // fetch processor
+    Processor* processor = getProcessor(processorName, functionName);
+    if (!processor)
+        return 0;
+
+    // find property
+    Port* port = processor->getPort(portID);
+    if (!port) {
+        PyErr_SetString(PyExc_NameError, std::string(functionName + "() Processor '" +
+                                                     processorName + "' has no port '" + portID + "'").c_str());
+        return 0;
+    }
+
+    return port;
+}
+
+template<typename T>
+T* getTypedPort(const std::string& processorName, const std::string& portID,
+                const std::string& portTypeString, const std::string& functionName) {
+
+    // fetch port
+    Port* port = getPort(processorName, portID, functionName);
+    if (!port)
+        return 0;
+
+    // check type
+    if (T* cProp = dynamic_cast<T*>(port))
+        return cProp;
+    else {
+        PyErr_SetString(PyExc_TypeError, std::string(functionName + "() Port '" +
+                                                     port->getQualifiedName() + "' is not of type " +
+                                                     portTypeString).c_str());
+        return 0;
     }
 }
 

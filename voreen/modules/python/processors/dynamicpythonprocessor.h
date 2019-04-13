@@ -23,37 +23,64 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_PYTHONEDITOR_H
-#define VRN_PYTHONEDITOR_H
+#ifndef VRN_DYNAMICPYTHONPROCESSOR_H
+#define VRN_DYNAMICPYTHONPROCESSOR_H
 
-#include "voreen/qt/mainwindow/menuentities/voreenqtmenuentity.h"
+#include "voreen/core/processors/renderprocessor.h"
 
-#include <QIcon>
+#include "voreen/core/ports/volumeport.h"
+#include "../properties/pythonproperty.h"
+
+#include "custommodules/bigdataimageprocessing/properties/interactivelistproperty.h"
 
 namespace voreen {
 
-class PythonPlugin;
-
-class PythonEditor : public VoreenQtMenuEntity {
+class DynamicPythonProcessor : public RenderProcessor {
 public:
-    PythonEditor();
-    ~PythonEditor();
+    DynamicPythonProcessor();
+    ~DynamicPythonProcessor();
 
-    virtual std::string getName() const { return "Python Scripting"; }
-    virtual QIcon getIcon() const       { return QIcon(":/modules/python/python.png"); }
+    virtual Processor* create() const;
+
+    virtual std::string getClassName() const  { return "DynamicPythonProcessor"; }
+    virtual std::string getCategory() const   { return "Python";                 }
+    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;  }
+
+    virtual bool isReady() const;
+
+    PythonProperty* getPythonProperty() {
+        return &pythonProperty_;
+    }
 
 protected:
-    virtual QWidget* createWidget() const;
 
+    virtual void process();
     virtual void initialize();
     virtual void deinitialize();
 
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+
 private:
-    mutable PythonPlugin* pythonWidget_;
+
+    void onPortListChange();
+    void onScriptChange();
+
+    void addPortItem(Port* port);
+
+    std::vector<std::unique_ptr<Port>> portItems_;
+    std::map<std::string, std::vector<Port*>> portInstances_;
+
+    InteractiveListProperty portList_;
+    BoolProperty enabled_;
+    PythonProperty pythonProperty_;
+    PythonScript pythonScript_;
+
+    bool valid_;
 
     static const std::string loggerCat_;
 };
 
-} // namespace voreen
+} // namespace
 
-#endif // VRN_PYTHONEDITOR_H
+#endif // VRN_DYNAMICGLSLPROCESSOR_H

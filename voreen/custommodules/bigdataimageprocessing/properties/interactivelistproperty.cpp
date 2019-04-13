@@ -33,6 +33,17 @@ InteractiveListProperty::InteractiveListProperty(const std::string& id, const st
     , allowDuplication_(allowDuplication)
     , selectedInstance_(-1)
 {
+    // Setup default name generator.
+    nameGenerator_ =
+        [this] (const Instance& instance) {
+            std::string name = items_[instance.itemId_];
+
+            if (allowDuplication_) {
+                name += " (" + std::to_string(instance.instanceId_) + ")";
+            }
+
+            return name;
+        };
 }
 
 InteractiveListProperty::InteractiveListProperty()
@@ -271,13 +282,15 @@ InteractiveListProperty::Instance InteractiveListProperty::createInstance(int it
 }
 
 std::string InteractiveListProperty::getInstanceName(const voreen::InteractiveListProperty::Instance& instance) const {
-    std::string name = items_[instance.itemId_];
+    return nameGenerator_(instance);
+}
 
-    if(allowDuplication_) {
-        name += " #" + std::to_string(instance.instanceId_);
-    }
+void InteractiveListProperty::setNameGenerator(const NameGenerator& nameGenerator) {
+    nameGenerator_ = nameGenerator;
+}
 
-    return name;
+const InteractiveListProperty::NameGenerator& InteractiveListProperty::getNameGenerator() const {
+    return nameGenerator_;
 }
 
 } // namespace voreen

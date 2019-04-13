@@ -48,6 +48,7 @@ Texture::Texture(const tgt::ivec3& dimensions, GLint format, GLint internalforma
     generateId();
     type_ = calcType(dimensions_);
     bpt_ = calcFormatBpt(format_, dataType_);
+    numChannels_ = calcNumChannels(format_);
     //update texture settings
     setFilter(filter_);
     setWrapping(wrapping_);
@@ -279,101 +280,6 @@ GLubyte* Texture::downloadTextureToBuffer(GLint format, GLenum dataType) const {
 //-----------------------------------------------------------------------------------------
 // Texel access (only if downloadTexture has been called or cpuTextureData_ is up to date)
 //-----------------------------------------------------------------------------------------
-tgt::Color Texture::texelAsFloat(size_t x) const {
-    tgt::Color ret = tgt::Color(0.0f);
-    switch(format_) {
-        case GL_RGBA:
-            switch(dataType_) {
-                case GL_UNSIGNED_BYTE: {
-                    tgt::Vector4<uint8_t> t = texel< tgt::Vector4<uint8_t> >(x);
-                    ret.x = (float )t.x / 0xFF;
-                    ret.y = (float )t.y / 0xFF;
-                    ret.z = (float )t.z / 0xFF;
-                    ret.w = (float )t.w / 0xFF;
-                    break;
-                }
-                case GL_UNSIGNED_SHORT: {
-                    tgt::Vector4<uint16_t> t = texel< tgt::Vector4<uint16_t> >(x);
-                    ret.x = (float )t.x / 0xFFFF;
-                    ret.y = (float )t.y / 0xFFFF;
-                    ret.z = (float )t.z / 0xFFFF;
-                    ret.w = (float )t.w / 0xFFFF;
-                    break;
-                }
-                case GL_FLOAT:
-                    ret = texel<tgt::Color>(x);
-                    break;
-                default:
-                    LWARNINGC("tgt.texture", "texelAsFloat: Unknown data type!");
-            }
-            break;
-        case GL_RGB:
-            switch(dataType_) {
-                case GL_UNSIGNED_BYTE: {
-                    tgt::Vector3<uint8_t> t = texel< tgt::Vector3<uint8_t> >(x);
-                    ret.x = (float )t.x / 0xFF;
-                    ret.y = (float )t.y / 0xFF;
-                    ret.z = (float )t.z / 0xFF;
-                    ret.w = 1.0f;
-                    break;
-                }
-                case GL_UNSIGNED_SHORT: {
-                    tgt::Vector3<uint16_t> t = texel< tgt::Vector3<uint16_t> >(x);
-                    ret.x = (float )t.x / 0xFFFF;
-                    ret.y = (float )t.y / 0xFFFF;
-                    ret.z = (float )t.z / 0xFFFF;
-                    ret.w = 1.0f;
-                    break;
-                }
-                case GL_FLOAT: {
-                    tgt::Vector3f t = texel<tgt::Vector3f>(x);
-                    ret.x = t.x;
-                    ret.y = t.y;
-                    ret.z = t.z;
-                    ret.w = 1.0f;
-                    break;
-                }
-                default:
-                    LWARNINGC("tgt.texture", "texelAsFloat: Unknown data type!");
-            }
-            break;
-        case GL_RED:
-            switch(dataType_) {
-                case GL_UNSIGNED_BYTE: {
-                    tgt::Vector3<uint8_t> t = tgt::vec3(texel<uint8_t>(x));
-                    ret.x = (float )t.x / 0xFF;
-                    ret.y = (float )t.y / 0xFF;
-                    ret.z = (float )t.z / 0xFF;
-                    ret.w = 1.0f;
-                    break;
-                                       }
-                case GL_UNSIGNED_SHORT: {
-                    tgt::Vector3<uint16_t> t = tgt::vec3(texel<uint16_t>(x));
-                    ret.x = (float )t.x / 0xFFFF;
-                    ret.y = (float )t.y / 0xFFFF;
-                    ret.z = (float )t.z / 0xFFFF;
-                    ret.w = 1.0f;
-                    break;
-                                        }
-                case GL_FLOAT: {
-                    tgt::Vector3f t = tgt::vec3(texel<GLfloat>(x));
-                    ret.x = t.x;
-                    ret.y = t.y;
-                    ret.z = t.z;
-                    ret.w = 1.0f;
-                    break;
-                }
-                default:
-                    LWARNINGC("tgt.texture", "texelAsFloat: Unknown data type!");
-        }
-        break;
-
-        default:
-            LWARNINGC("tgt.texture", "texelAsFloat: Unknown format!");
-    }
-    return ret;
-}
-
 tgt::Color Texture::texelAsFloat(size_t x, size_t y) const {
     tgt::Color ret = tgt::Color(0.0f);
     switch(format_) {
@@ -433,6 +339,7 @@ tgt::Color Texture::texelAsFloat(size_t x, size_t y) const {
             }
             break;
         case GL_RED:
+        case GL_DEPTH_COMPONENT:
             switch(dataType_) {
                 case GL_UNSIGNED_BYTE: {
                     tgt::Vector3<uint8_t> t = tgt::vec3(texel<uint8_t>(x,y));
@@ -467,6 +374,87 @@ tgt::Color Texture::texelAsFloat(size_t x, size_t y) const {
             LWARNINGC("tgt.texture", "texelAsFloat: Unknown format!");
     }
     return ret;
+}
+
+void Texture::texelFromFloat(const tgt::Color& color, size_t x, size_t y) {
+    switch(format_) {
+        case GL_RGBA:
+            switch(dataType_) {
+                case GL_UNSIGNED_BYTE: {
+                    auto& t = texel< tgt::Vector4<uint8_t> >(x,y);
+                    t.x = static_cast<uint8_t>(color.x * 0xFF);
+                    t.y = static_cast<uint8_t>(color.y * 0xFF);
+                    t.z = static_cast<uint8_t>(color.z * 0xFF);
+                    t.w = static_cast<uint8_t>(color.w * 0xFF);
+                    break;
+                }
+                case GL_UNSIGNED_SHORT: {
+                    auto& t = texel< tgt::Vector4<uint16_t> >(x,y);
+                    t.x = static_cast<uint16_t>(color.x * 0xFFFF);
+                    t.y = static_cast<uint16_t>(color.y * 0xFFFF);
+                    t.z = static_cast<uint16_t>(color.z * 0xFFFF);
+                    t.w = static_cast<uint16_t>(color.w * 0xFFFF);
+                    break;
+                }
+                case GL_FLOAT:
+                    texel<tgt::Color>(x,y) = color;
+                    break;
+                default:
+                    LWARNINGC("tgt.texture", "texelAsFloat: Unknown data type!");
+            }
+            break;
+        case GL_RGB:
+            switch(dataType_) {
+                case GL_UNSIGNED_BYTE: {
+                    auto& t = texel< tgt::Vector3<uint8_t> >(x,y);
+                    t.x = static_cast<uint8_t>(color.x * 0xFF);
+                    t.y = static_cast<uint8_t>(color.y * 0xFF);
+                    t.z = static_cast<uint8_t>(color.z * 0xFF);
+                    break;
+                }
+                case GL_UNSIGNED_SHORT: {
+                    auto& t = texel< tgt::Vector3<uint16_t> >(x,y);
+                    t.x = static_cast<uint16_t>(color.x * 0xFFFF);
+                    t.y = static_cast<uint16_t>(color.y * 0xFFFF);
+                    t.z = static_cast<uint16_t>(color.z * 0xFFFF);
+                    break;
+                }
+                case GL_FLOAT: {
+                    auto& t = texel<tgt::Vector3f>(x,y);
+                    t.x = color.x;
+                    t.y = color.y;
+                    t.z = color.z;
+                    break;
+                }
+                default:
+                    LWARNINGC("tgt.texture", "texelAsFloat: Unknown data type!");
+            }
+            break;
+        case GL_RED:
+        case GL_DEPTH_COMPONENT:
+            switch(dataType_) {
+                case GL_UNSIGNED_BYTE: {
+                    auto& t = texel<uint8_t>(x, y);
+                    t = static_cast<uint8_t>(color.x * 0xFF);
+                    break;
+                }
+                case GL_UNSIGNED_SHORT: {
+                    auto& t = texel<uint16_t>(x,y);
+                    t = static_cast<uint16_t>(color.x * 0xFFFF);
+                    break;
+                }
+                case GL_FLOAT: {
+                    texel<GLfloat>(x, y) = color.x;
+                    break;
+                }
+                default:
+                    LWARNINGC("tgt.texture", "texelAsFloat: Unknown data type!");
+            }
+            break;
+
+        default:
+            LWARNINGC("tgt.texture", "texelAsFloat: Unknown format!");
+    }
 }
 
 //--------------------------------------------------------------------------------------

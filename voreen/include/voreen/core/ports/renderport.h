@@ -122,10 +122,6 @@ public:
     virtual std::string getContentDescription() const;
     virtual std::string getContentDescriptionHTML() const;
 
-    virtual void forwardData() const;
-    virtual void addForwardPort(Port* port);
-    virtual bool removeForwardPort(Port* port);
-
     /**
      * @brief Activates the outport's RenderTarget, so that all subsequent rendering operations
      * are performed on this target. The target has to be deactivated after all rendering operations
