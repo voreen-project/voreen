@@ -65,8 +65,14 @@ public:
         }
     }
     PortDataPointer& operator=(PortDataPointer&& other) {
-        pointer_ = other.pointer_;
-        owned_ = other.owned_;
+        if(this != &other) {
+            // Destruct the current object, but keep the memory.
+            this->~PortDataPointer();
+            // Call the move constructor on the memory region of the current object.
+            new(this) PortDataPointer(std::move(other));
+        }
+
+        return *this;
     }
     const T& operator*() {
         return *pointer_;
@@ -82,6 +88,11 @@ public:
     }
 
 private:
+
+    // Delete copy and copy assignment.
+    PortDataPointer(const PortDataPointer&);
+    PortDataPointer& operator=(const PortDataPointer&);
+
     const T* pointer_;
     bool owned_;
 };
