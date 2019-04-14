@@ -37,7 +37,7 @@ const std::string VolumeDiskLZ4::loggerCat_("voreen.hdf5.VolumeDiskLZ4");
 
 
 VolumeDiskLZ4::VolumeDiskLZ4(std::unique_ptr<LZ4SliceVolumeBase> volume)
-    : VolumeDisk(volume->getMetaData().getBaseType(), volume->getDimensions())
+    : VolumeDisk(volume->getMetaData().getFormat(), volume->getDimensions())
     , volume_(std::move(volume))
 {
 }

@@ -70,6 +70,10 @@ Processor* LargeVolumeFormatConversion::create() const {
     return new LargeVolumeFormatConversion();
 }
 
+void LargeVolumeFormatConversion::adjustPropertiesToInput() {
+    numChannels_.set(inport_.hasData() ? inport_.getData()->getNumChannels() : 0);
+}
+
 template<typename OutputFormat>
 void processDispatch(const VolumeBase& input, std::unique_ptr<Volume>& output, const std::string& outputPath, ProgressReporter& progressReporter) {
     float scale;
@@ -147,7 +151,7 @@ LargeVolumeFormatConversion::ComputeInput LargeVolumeFormatConversion::prepareCo
     return LargeVolumeFormatConversion::ComputeInput {
         outputVolumeFilePath_.get(),
         targetBaseType_.get(),
-        inport_.getData()
+        inport_.getThreadSafeData()
     };
 }
 

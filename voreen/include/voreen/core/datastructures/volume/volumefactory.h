@@ -53,14 +53,6 @@ public:
     VolumeFactory();
     ~VolumeFactory();
 
-    std::string getFormat(const VolumeRAM* v) const {
-        for (size_t i = 0; i < generators_.size(); ++i) {
-            if (generators_[i]->isType(v))
-                return generators_[i]->getFormat();
-        }
-        return "";
-    }
-
     VolumeRAM* create(const std::string& format, tgt::svec3 dimensions) const {
         for (size_t i = 0; i < generators_.size(); ++i) {
             if (generators_[i]->getFormat() == format)
@@ -68,6 +60,15 @@ public:
         }
         LERROR("Failed to create volume of format '" << format << "'");
         return 0;
+    }
+
+    /// Returns the format for a specified volume.
+    std::string getFormat(const VolumeRAM* v) const {
+        for (size_t i = 0; i < generators_.size(); ++i) {
+            if (generators_[i]->isType(v))
+                return generators_[i]->getFormat();
+        }
+        return "";
     }
 
     /// Returns the format for a base-type and number of channels

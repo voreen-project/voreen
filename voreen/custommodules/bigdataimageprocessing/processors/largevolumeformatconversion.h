@@ -63,6 +63,7 @@ public:
     virtual void processComputeOutput(ComputeOutput output);
 
     virtual bool usesExpensiveComputation() const { return true; }
+    virtual void adjustPropertiesToInput();
 
 protected:
     virtual void setDescriptions() {
