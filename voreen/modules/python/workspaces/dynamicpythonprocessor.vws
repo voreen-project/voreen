@@ -23,9 +23,9 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="46" y="122" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-1.409960508" y="0.934277534" z="1.960826397" />
+                            <position x="-1.181914806" y="0.2402125" z="2.292951107" />
                             <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
-                            <upVector x="0.182561591" y="-0.822090268" z="0.539294899" />
+                            <upVector x="0.498444378" y="-0.792162955" z="0.35218069" />
                             <trackball moveCenter="false">
                                 <center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             </trackball>
@@ -119,7 +119,7 @@
                                 <MetaItem name="FollowCamera" type="BoolMetaData" value="false" />
                                 <MetaItem name="UseBackHemisphere" type="BoolMetaData" value="false" />
                             </MetaData>
-                            <value x="-0.446713448" y="0.45763588" z="3.038173199" w="1" />
+                            <value x="0.070522666" y="-0.061748922" z="3.102844238" w="1" />
                             <Center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             <LightPos x="-0.990817606" y="1.147262454" z="2.737164497" w="0" />
                         </Property>
@@ -543,7 +543,7 @@
                 </Processor>
                 <Processor type="VolumeSource" name="VolumeSource" id="ref3">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-514" y="-398" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-498" y="-395" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
@@ -553,7 +553,7 @@
                                     <paths>
                                         <item value="../../../resource/voreenve/volumes/nucleon.vvd" />
                                         <item value="resource/voreenve/volumes/nucleon.vvd" />
-                                        <item value="/home/spider/programming/voreen-development/voreen/resource/voreenve/volumes/nucleon.vvd" />
+                                        <item value="/home/spider/programming/voreen-flow/voreen/resource/voreenve/volumes/nucleon.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -583,9 +583,9 @@
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="721" y="372" />
                             </MetaData>
-                            <position x="-1.409960508" y="0.934277534" z="1.960826397" />
+                            <position x="-1.181914806" y="0.2402125" z="2.292951107" />
                             <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
-                            <upVector x="0.182561591" y="-0.822090268" z="0.539294899" />
+                            <upVector x="0.498444378" y="-0.792162955" z="0.35218069" />
                             <trackball moveCenter="false">
                                 <center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             </trackball>
@@ -800,15 +800,16 @@
 import voreen
 
 # Fetch port data.
-volume = voreen.getPortData("DynamicPythonProcessor", "VolumePort-in (1)")
+volume = voreen.getPortData("VolumePort-in (1)")
 print ("Format: %s " % (volume.format))
 print ("Dimensions: (%i, %i, %i)" % (volume.dimX, volume.dimY, volume.dimZ))
 print ("Spacing: (%f, %f, %f)" % (volume.spacingX, volume.spacingY, volume.spacingZ))
 print ("Offset: (%f, %f, %f)" % (volume.offsetX, volume.offsetY, volume.offsetZ))
+print ("RealWorldMapping (Offset, Scale): (%f, %f)" % (volume.rwmOffset, volume.rwmScale))
 
 # Perform thresholding
 lowerThreshold = 0.0
-upperThreshold = 1.0
+upperThreshold = 0.7
 
 for i in range(0, len(volume.data)):
     if (volume.data[i] < lowerThreshold):
@@ -820,13 +821,13 @@ for i in range(0, len(volume.data)):
 volume.format = "float"
 
 # Set data to port.
-voreen.setPortData("DynamicPythonProcessor", "VolumePort-out (2)", volume);]]>
+voreen.setPortData("VolumePort-out (2)", volume);]]>
                             </source>
                         </Property>
                     </PriorityProperty>
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-531" y="-284" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="1033" y="576" width="800" height="480" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="1058" y="590" width="800" height="480" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="enabled" name="enabled" value="true" />
