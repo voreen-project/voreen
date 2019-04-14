@@ -1,3 +1,7 @@
+#TODO: Remove dependency! This is only needed for InteractiveListProperty.
+IF(NOT VRN_MODULE_BIGDATAIMAGEPROCESSING)
+    MESSAGE(FATAL_ERROR "Python Module requires big data image processing Module")
+ENDIF()
 
 ################################################################################
 # External dependency: Python library
