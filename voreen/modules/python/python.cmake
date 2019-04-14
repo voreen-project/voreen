@@ -30,6 +30,7 @@ IF(WIN32)
     SET(MOD_INSTALL_DIRECTORIES
         ${MOD_DIR}/ext/${VRN_USE_PYTHON_VERSION}/lib
         ${MOD_DIR}/scripts
+        ${MOD_DIR}/workspaces
     )
     SET(MOD_INSTALL_FILES
         ${MOD_DIR}/ext/${VRN_USE_PYTHON_VERSION}/LICENSE.txt
@@ -49,6 +50,7 @@ ELSEIF(UNIX)
     # deployment
     SET(MOD_INSTALL_DIRECTORIES
         ${MOD_DIR}/scripts
+        ${MOD_DIR}/workspaces
     )
 ENDIF()
 

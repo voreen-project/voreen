@@ -49,6 +49,7 @@ ENDIF()
 # deployment
 SET(MOD_INSTALL_DIRECTORIES
     ${MOD_DIR}/glsl
+    ${MOD_DIR}/scripts
     ${MOD_DIR}/workspaces
 )
 

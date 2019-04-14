@@ -130,4 +130,6 @@ SET(MOD_INSTALL_FILES
 
 # Deployment
 SET(MOD_INSTALL_DIRECTORIES
+    ${MOD_DIR}/scripts
+    ${MOD_DIR}/workspaces
 )
