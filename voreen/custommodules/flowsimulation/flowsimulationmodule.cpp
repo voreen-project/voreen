@@ -52,10 +52,8 @@ namespace voreen {
 FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     : VoreenModule(modulePath)
 {
-    setID("Flowreen");
-    setGuiName("Flowreen");
-
-    addShaderPath(getModulePath("glsl"));
+    setID("FlowSimulation");
+    setGuiName("FlowSimulation");
 
     // processors
     registerSerializableType(new GeometryClose());
