@@ -69,8 +69,8 @@ void StringListProperty::deserialize(Deserializer& s) {
 //-------------------------------------------------------------------------------------------
 //          Row    Functions
 //-------------------------------------------------------------------------------------------
-unsigned int StringListProperty::getNumRows() const {
-    return static_cast<unsigned int>(values_.size());
+int StringListProperty::getNumRows() const {
+    return static_cast<int>(values_.size());
 }
 
 const std::vector<int>& StringListProperty::getSelectedRowIndices() const {
@@ -78,7 +78,13 @@ const std::vector<int>& StringListProperty::getSelectedRowIndices() const {
 }
 
 void StringListProperty::setSelectedRowIndices(const std::vector<int>& rowIndices) {
-    selectedRows_ = rowIndices;
+    selectedRows_.clear();
+    // Ignore invalid selection silently.
+    for(int rowIdx : rowIndices) {
+        if(rowIdx >= 0 && rowIdx < getNumRows()) {
+            selectedRows_.push_back(rowIdx);
+        }
+    }
     neededTableUpdates_ |= UPDATE_SELECTION;
     invalidate();
 }

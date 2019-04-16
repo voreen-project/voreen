@@ -67,12 +67,12 @@ public:
         UPDATE_ROWS      = 1,
         UPDATE_SELECTION = 2,
 
-        UPDATE_ALL = UPDATE_NONE | UPDATE_SELECTION | UPDATE_ROWS
+        UPDATE_ALL = UPDATE_SELECTION | UPDATE_ROWS
     };
 
 public:
     /** Returns the number of rows. */
-    unsigned int getNumRows() const;
+    int getNumRows() const;
     /** Clears the rows. */
     virtual void reset();
     /** Adds a new row to the end of the table. */

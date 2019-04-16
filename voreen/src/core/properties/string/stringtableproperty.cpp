@@ -30,18 +30,18 @@
 namespace voreen {
 
 StringTableProperty::StringTableProperty(const std::string& id, const std::string& guiText,
-                       const unsigned int columnCount, int invalidationLevel, Property::LevelOfDetail lod)
+                       int columnCount, int invalidationLevel, Property::LevelOfDetail lod)
     : Property(id, guiText, invalidationLevel, lod)
-    , columnCount_(columnCount), selectedRow_(-1)
+    , columnCount_(columnCount)
+    , selectedRow_(-1)
     , neededTableUpdates_(UPDATE_ALL)
 {
-    tgtAssert(columnCount_ > 0, "zero columns are not allowed");
-    for(size_t i = 0; i < columnCount_; i++)
+    tgtAssert(columnCount_ > 0, "at least one column is required");
+    for(int i = 0; i < columnCount_; i++)
         columnLabels_.push_back("Column " + itos(i));
 }
 
 StringTableProperty::StringTableProperty()
-    : columnCount_(0), selectedRow_(-1)
 {
 }
 
@@ -78,7 +78,7 @@ void StringTableProperty::deserialize(Deserializer& s) {
 //-------------------------------------------------------------------------------------------
 //          Column Functions
 //-------------------------------------------------------------------------------------------
-unsigned int StringTableProperty::getNumColumns() const {
+int StringTableProperty::getNumColumns() const {
     return columnCount_;
 }
 
@@ -96,8 +96,8 @@ const std::vector<std::string>& StringTableProperty::getColumnLabels() const {
 //-------------------------------------------------------------------------------------------
 //          Row    Functions
 //-------------------------------------------------------------------------------------------
-unsigned int StringTableProperty::getNumRows() const {
-    return static_cast<unsigned int>(values_.size());
+int StringTableProperty::getNumRows() const {
+    return static_cast<int>(values_.size());
 }
 
 int StringTableProperty::getSelectedRowIndex() const {
@@ -105,6 +105,12 @@ int StringTableProperty::getSelectedRowIndex() const {
 }
 
 void StringTableProperty::setSelectedRowIndex(int rowIndex) {
+
+    // Ignore invalid selection silently.
+    if(rowIndex >= getNumRows()) {
+        rowIndex = -1;
+    }
+
     if(rowIndex != selectedRow_) {
         selectedRow_ = rowIndex;
         neededTableUpdates_ |= UPDATE_SELECTION;
@@ -120,14 +126,14 @@ void StringTableProperty::reset() {
 }
 
 void StringTableProperty::addRow(const std::vector<std::string>& row) {
-    tgtAssert(row.size() == columnCount_, "row elements do not match column count");
+    tgtAssert(row.size() == static_cast<size_t>(columnCount_), "row elements do not match column count");
     values_.push_back(row);
     neededTableUpdates_ |= UPDATE_ROWS;
     updateWidgets();
 }
 
 void StringTableProperty::removeRow(int rowIndex) {
-    tgtAssert(static_cast<unsigned int>(rowIndex) < getNumRows(), "row index out of bounds");
+    tgtAssert(rowIndex < getNumRows(), "row index out of bounds");
     values_.erase(values_.begin() + rowIndex);
     neededTableUpdates_ |= UPDATE_ROWS;
     updateWidgets();

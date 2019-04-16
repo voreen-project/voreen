@@ -57,7 +57,7 @@ class VRN_CORE_API StringTableProperty : public Property {
     friend class StringTablePropertyWidget;
 
 public:
-    StringTableProperty(const std::string& id, const std::string& guiText, const unsigned int columnCount,
+    StringTableProperty(const std::string& id, const std::string& guiText, int columnCount,
         int invalidationLevel=Processor::INVALID_RESULT, Property::LevelOfDetail lod = Property::LOD_DEFAULT);
     StringTableProperty();
     virtual ~StringTableProperty() {}
@@ -89,7 +89,7 @@ public:
     //------------------
 public:
     /** Returns the number of columns created in the constructor. */
-    unsigned int getNumColumns() const;
+    int getNumColumns() const;
     /** Change the label of a column. Starts at 0. */
     void setColumnLabel(size_t number, const std::string& label);
 protected:
@@ -101,7 +101,7 @@ protected:
     //------------------
 public:
     /** Returns the number of rows. */
-    unsigned int getNumRows() const;
+    int getNumRows() const;
     /** Clears the rows. */
     virtual void reset();
     /** Adds a new row to the end of the table. */
@@ -118,7 +118,7 @@ private:
     //------------------
     //  Member
     //------------------
-    unsigned int columnCount_;                      ///< number of columns
+    int columnCount_;                      ///< number of columns
     int selectedRow_;                               ///< member containing the selected row
     std::vector<std::string> columnLabels_;         ///< labels of each column
     std::vector<std::vector<std::string> > values_; ///< The stored value (table content)
