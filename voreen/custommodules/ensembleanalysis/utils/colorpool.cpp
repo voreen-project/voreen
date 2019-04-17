@@ -60,7 +60,9 @@ namespace {
         if (index < colors.size())
             return colors[index];
 
-        return tgt::vec3::one;
+        // TODO: implement gradient or something.
+        // The colors need to be distinct for selection.
+        return tgt::uniformRandomVec3();// tgt::vec3::zero;
     }
 }
 

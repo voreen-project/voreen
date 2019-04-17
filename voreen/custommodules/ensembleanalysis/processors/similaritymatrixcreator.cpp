@@ -209,7 +209,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 #pragma omp parallel for shared(Flags)
 #endif
         for (long i=0; i<static_cast<long>(DistanceMatrix.getSize()); i++) {
-            for (long j=0; j<i+1; j++) {
+            for (long j=0; j<=i; j++) {
                 float ScaleSum = 0.0f;
                 float resValue = 0.0f;
 
