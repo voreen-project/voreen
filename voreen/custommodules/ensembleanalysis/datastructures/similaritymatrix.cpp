@@ -36,7 +36,7 @@ SimilarityMatrix::SimilarityMatrix()
 }
 
 SimilarityMatrix::SimilarityMatrix(size_t size)
-    : data_((size+1) * size/2, 0.0f)
+    : data_(size*size, 0.0f)//((size+1) * size/2, 0.0f) // TODO: implement symmetric case.
     , size_(size)
 {
 }

@@ -60,7 +60,8 @@ public:
 private:
 
     inline size_t index(size_t i, size_t j) const {
-        return (i < j) ? ((i*i-3*i)/2+j) : ((j*j-3*j)/2+i);
+        // return (i < j) ? ((i*i-3*i)/2+j) : ((j*j-3*j)/2+i); // TODO: implement symmetric case.
+        return i*size_ + j;
     }
 
     std::vector<float> data_;
