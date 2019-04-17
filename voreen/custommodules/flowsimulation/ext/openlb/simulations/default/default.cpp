@@ -393,7 +393,7 @@ void writeResult(STLreader<T>& stlReader,
             << "<value x=\"" << spacing[0] << "\" y=\"" << spacing[1] << "\" z=\"" << spacing[2] << "\" />"
             << "</MetaItem>"
             << "<MetaItem name=\"" << META_DATA_NAME_TIMESTEP << "\" type=\"FloatMetaData\" value=\"" << converter.getPhysTime(ti) << "\" />"
-            << "<MetaItem name=\"" << META_DATA_NAME_REAL_WORLD_MAPPING << "\" type=\"RealWorldMappingMetaData\"><value scale=\"1\" offset=\"0\" unit=\"mm\" /></MetaItem>"
+            << "<MetaItem name=\"" << META_DATA_NAME_REAL_WORLD_MAPPING << "\" type=\"RealWorldMappingMetaData\"><value scale=\"1\" offset=\"0\" unit=\"\" /></MetaItem>"
             << "<MetaItem name=\"" << "name" << "\" type=\"StringMetaData\" value=\"" << name << "\" />"
             // Parameters.
             << "<MetaItem name=\"" << "ParameterCharacteristicLength" << "\" type=\"FloatMetaData\" value=\"" << characteristicLength << "\" />"
@@ -407,8 +407,34 @@ void writeResult(STLreader<T>& stlReader,
             << "<MetaItem name=\"" << "StatisticsMaxRho" << "\" type=\"FloatMetaData\" value=\"" << statistics.getAverageRho() << "\" />"
             << "</MetaData>"
             // Derived data.
-            << "<DerivedData>"
-            << "<DerivedItem type=\"VolumeMinMax\"><minValues><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /></minValues><maxValues><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /></maxValues><minNormValues><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /></minNormValues><maxNormValues><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /></maxNormValues></DerivedItem>"
+            << "<DerivedData>";
+    // * VolumeMinMaxMagnitude
+    if (feature.getTargetDim() > 1) {
+        vvdFeatureFile
+            << "<DerivedItem type=\"VolumeMinMaxMagnitude\">"
+            << "<minMagnitude value=\"" << minMagnitude << "\" />"
+            << "<maxMagnitude value=\"" << maxMagnitude << "\" />"
+            << "</DerivedItem>";
+    }
+    // * VolumeMinMax
+    vvdFeatureFile << "<DerivedItem type=\"VolumeMinMax\"><minValues>";
+    for(int i=0; i<feature.getTargetDim(); i++) {
+        vvdFeatureFile << "<channel value=\"" << minValue[i] << "\" />";
+    }
+    vvdFeatureFile << "</minValues><maxValues>";
+    for(int i=0; i<feature.getTargetDim(); i++) {
+        vvdFeatureFile << "<channel value=\"" << maxValue[i] << "\" />";
+    }
+    vvdFeatureFile << "</maxValues><minNormValues>";
+    for(int i=0; i<feature.getTargetDim(); i++) {
+        vvdFeatureFile << "<channel value=\"" << minValue[i] << "\" />";
+    }
+    vvdFeatureFile << "</minNormValues><maxNormValues>";
+    for(int i=0; i<feature.getTargetDim(); i++) {
+        vvdFeatureFile << "<channel value=\"" << maxValue[i] << "\" />";
+    }
+    vvdFeatureFile
+            << "</maxNormValues></DerivedItem>"
             << "</DerivedData>"
             // Footer.
             << "</Volume>"

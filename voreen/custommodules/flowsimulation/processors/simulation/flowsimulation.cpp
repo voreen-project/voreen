@@ -602,8 +602,8 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
                                  const std::string& simulationOutputPath,
                                  const std::string& name) const {
 
-    const Vector<T, 3>& min = stlReader.getMin();
-    const Vector<T, 3>& max = stlReader.getMax();
+    const Vector<T, 3> &min = stlReader.getMin();
+    const Vector<T, 3> &max = stlReader.getMax();
 
     const int resolution = converter.getResolution();
     const Vector<T, 3> len = (max - min);
@@ -614,48 +614,54 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
     // Determine format.
     // This could be done in a more dynamic way, but the code should be easily portable to the cluster.
     std::string format;
-    switch(feature.getTargetDim()) {
-    case 1:
-        format = "float";
-        break;
-    case 3:
-        format = "Vector3(float)";
-        break;
-    default:
-        LERROR("Unhandled target dimensions");
-        return;
+    switch (feature.getTargetDim()) {
+        case 1:
+            format = "float";
+            break;
+        case 3:
+            format = "Vector3(float)";
+            break;
+        default:
+            LERROR("Unhandled target dimensions");
+            return;
     }
 
     std::vector<float> rawFeatureData;
     rawFeatureData.reserve(static_cast<size_t>(resolution * resolution * resolution * feature.getTargetDim()));
     AnalyticalFfromSuperF3D<T> interpolateFeature(feature, true);
 
+    std::vector<T> minValue(feature.getTargetDim(), std::numeric_limits<T>::max());
+    std::vector<T> maxValue(feature.getTargetDim(), std::numeric_limits<T>::lowest());
+
     T minMagnitude = std::numeric_limits<T>::max();
-    T maxMagnitude = 0.0f;
+    T maxMagnitude = 0;
 
-    for(int z=0; z<resolution; z++) {
-        for(int y=0; y<resolution; y++) {
-            for(int x=0; x<resolution; x++) {
+    for (int z = 0; z < resolution; z++) {
+        for (int y = 0; y < resolution; y++) {
+            for (int x = 0; x < resolution; x++) {
 
-                T pos[3] = {offset[0]+x*maxLen/resolution, offset[1]+y*maxLen/resolution, offset[2]+z*maxLen/resolution};
+                T pos[3] = {offset[0] + x * maxLen / resolution, offset[1] + y * maxLen / resolution,
+                            offset[2] + z * maxLen / resolution};
                 std::vector<T> val(feature.getTargetDim(), 0.0f);
 
-                if(pos[0] >= min[0] && pos[1] >= min[1] && pos[2] >= min[2] &&
-                   pos[0] <= max[0] && pos[1] <= max[1] && pos[2] <= max[2]) {
+                if (pos[0] >= min[0] && pos[1] >= min[1] && pos[2] >= min[2] &&
+                    pos[0] <= max[0] && pos[1] <= max[1] && pos[2] <= max[2]) {
                     interpolateFeature(&val[0], pos);
 
                     // Update min/max.
                     T magnitude = 0;
-                    for(int i = 0; i < feature.getTargetDim(); i++) {
-                        magnitude += val[i]*val[i];
+                    for (int i = 0; i < feature.getTargetDim(); i++) {
+                        minValue[i] = std::min(minValue[i], val[i]);
+                        maxValue[i] = std::max(maxValue[i], val[i]);
+                        magnitude += val[i] * val[i];
                     }
                     minMagnitude = std::min(minMagnitude, magnitude);
                     maxMagnitude = std::max(maxMagnitude, magnitude);
                 }
 
                 // Downgrade to float.
-                for(int i = 0; i < feature.getTargetDim(); i++) {
-                    rawFeatureData.push_back(static_cast<float>(val[i]/VOREEN_LENGTH_TO_SI));
+                for (int i = 0; i < feature.getTargetDim(); i++) {
+                    rawFeatureData.push_back(static_cast<float>(val[i] / VOREEN_LENGTH_TO_SI));
                 }
             }
         }
@@ -671,47 +677,74 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
     std::string rawFilename = simulationOutputPath + featureFilename + ".raw";
     std::string vvdFilename = simulationOutputPath + featureFilename + ".vvd";
 
-    const FlowParameters& parameters = parametrizationList.at(selectedParametrization);
-    const LatticeStatistics<T>& statistics = feature.getSuperLattice().getStatistics();
+    const FlowParameters &parameters = parametrizationList.at(selectedParametrization);
+    const LatticeStatistics<T> &statistics = feature.getSuperLattice().getStatistics();
     std::fstream vvdFeatureFile(vvdFilename.c_str(), std::ios::out);
     vvdFeatureFile
-        // Header.
-        << "<?xml version=\"1.0\" ?>"
-        << "<VoreenData version=\"1\">"
-        << "<Volumes>"
-        << "<Volume>"
-        // Data.
-        << "<RawData filename=\"" << featureFilename << ".raw\" format=\"" << format << "\" x=\"" << resolution << "\" y=\""<< resolution << "\" z=\"" << resolution << "\" />"
-        // Mandatory Meta data.
-        << "<MetaData>"
-        << "<MetaItem name=\""<< VolumeBase::META_DATA_NAME_OFFSET << "\" type=\"Vec3MetaData\">"
-        << "<value x=\"" << offset[0] << "\" y=\"" << offset[1] << "\" z=\"" << offset[2] << "\" />"
-        << "</MetaItem>"
-        << "<MetaItem name=\"" << VolumeBase::META_DATA_NAME_SPACING << "\" type=\"Vec3MetaData\">"
-        << "<value x=\"" << spacing[0] << "\" y=\"" << spacing[1] << "\" z=\"" << spacing[2] << "\" />"
-        << "</MetaItem>"
-        << "<MetaItem name=\"" << VolumeBase::META_DATA_NAME_TIMESTEP << "\" type=\"FloatMetaData\" value=\"" << converter.getPhysTime(ti) << "\" />"
-        << "<MetaItem name=\"" << VolumeBase::META_DATA_NAME_REAL_WORLD_MAPPING << "\" type=\"RealWorldMappingMetaData\"><value scale=\"1\" offset=\"0\" unit=\"mm\" /></MetaItem>"
-        << "<MetaItem name=\"" << "name" << "\" type=\"StringMetaData\" value=\"" << name << "\" />"
-        // Parameters.
-        << "<MetaItem name=\"" << "ParameterCharacteristicLength" << "\" type=\"FloatMetaData\" value=\"" << parameters.getCharacteristicLength() << "\" />"
-        << "<MetaItem name=\"" << "ParameterCharacteristicVelocity" << "\" type=\"FloatMetaData\" value=\"" << parameters.getCharacteristicVelocity() << "\" />"
-        << "<MetaItem name=\"" << "ParameterViscosity" << "\" type=\"FloatMetaData\" value=\"" << parameters.getViscosity() << "\" />"
-        << "<MetaItem name=\"" << "ParameterDensity" << "\" type=\"FloatMetaData\" value=\"" << parameters.getDensity() << "\" />"
-        << "<MetaItem name=\"" << "ParameterBouzidi" << "\" type=\"BoolMetaData\" value=\"" << (parameters.getBouzidi() ? "true" : "false") << "\" />"
-        // Additional meta data.
-        << "<MetaItem name=\"" << "StatisticsMaxVelocity" << "\" type=\"FloatMetaData\" value=\"" << statistics.getMaxU() << "\" />"
-        << "<MetaItem name=\"" << "StatisticsAvgEnergy" << "\" type=\"FloatMetaData\" value=\"" << statistics.getAverageEnergy() << "\" />"
-        << "<MetaItem name=\"" << "StatisticsMaxRho" << "\" type=\"FloatMetaData\" value=\"" << statistics.getAverageRho() << "\" />"
-        << "</MetaData>"
-        // Derived data.
-        << "<DerivedData>"
-        << "<DerivedItem type=\"VolumeMinMax\"><minValues><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /></minValues><maxValues><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /></maxValues><minNormValues><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /><channel value=\"" << minMagnitude << "\" /></minNormValues><maxNormValues><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /><channel value=\"" << maxMagnitude << "\" /></maxNormValues></DerivedItem>"
-        << "</DerivedData>"
-        // Footer.
-        << "</Volume>"
-        << "</Volumes>"
-        << "</VoreenData>";
+            // Header.
+            << "<?xml version=\"1.0\" ?>"
+            << "<VoreenData version=\"1\">"
+            << "<Volumes>"
+            << "<Volume>"
+            // Data.
+            << "<RawData filename=\"" << featureFilename << ".raw\" format=\"" << format << "\" x=\"" << resolution
+            << "\" y=\"" << resolution << "\" z=\"" << resolution << "\" />"
+            // Mandatory Meta data.
+            << "<MetaData>"
+            << "<MetaItem name=\"" << VolumeBase::META_DATA_NAME_OFFSET << "\" type=\"Vec3MetaData\">"
+            << "<value x=\"" << offset[0] << "\" y=\"" << offset[1] << "\" z=\"" << offset[2] << "\" />"
+            << "</MetaItem>"
+            << "<MetaItem name=\"" << VolumeBase::META_DATA_NAME_SPACING << "\" type=\"Vec3MetaData\">"
+            << "<value x=\"" << spacing[0] << "\" y=\"" << spacing[1] << "\" z=\"" << spacing[2] << "\" />"
+            << "</MetaItem>"
+            << "<MetaItem name=\"" << VolumeBase::META_DATA_NAME_TIMESTEP << "\" type=\"FloatMetaData\" value=\"" << converter.getPhysTime(ti) << "\" />"
+            << "<MetaItem name=\"" << VolumeBase::META_DATA_NAME_REAL_WORLD_MAPPING << "\" type=\"RealWorldMappingMetaData\"><value scale=\"1\" offset=\"0\" unit=\"\" /></MetaItem>"
+            << "<MetaItem name=\"" << "name" << "\" type=\"StringMetaData\" value=\"" << name << "\" />"
+            // Parameters.
+            << "<MetaItem name=\"" << "ParameterCharacteristicLength" << "\" type=\"FloatMetaData\" value=\"" << parameters.getCharacteristicLength() << "\" />"
+            << "<MetaItem name=\"" << "ParameterCharacteristicVelocity" << "\" type=\"FloatMetaData\" value=\"" << parameters.getCharacteristicVelocity() << "\" />"
+            << "<MetaItem name=\"" << "ParameterViscosity" << "\" type=\"FloatMetaData\" value=\"" << parameters.getViscosity() << "\" />"
+            << "<MetaItem name=\"" << "ParameterDensity" << "\" type=\"FloatMetaData\" value=\"" << parameters.getDensity() << "\" />"
+            << "<MetaItem name=\"" << "ParameterBouzidi" << "\" type=\"BoolMetaData\" value=\"" << (parameters.getBouzidi() ? "true" : "false") << "\" />"
+            // Additional meta data.
+            << "<MetaItem name=\"" << "StatisticsMaxVelocity" << "\" type=\"FloatMetaData\" value=\"" << statistics.getMaxU() << "\" />"
+            << "<MetaItem name=\"" << "StatisticsAvgEnergy" << "\" type=\"FloatMetaData\" value=\"" << statistics.getAverageEnergy() << "\" />"
+            << "<MetaItem name=\"" << "StatisticsMaxRho" << "\" type=\"FloatMetaData\" value=\"" << statistics.getAverageRho() << "\" />"
+            << "</MetaData>"
+            // Derived data.
+            << "<DerivedData>";
+            // * VolumeMinMaxMagnitude
+    if (feature.getTargetDim() > 1) {
+        vvdFeatureFile
+            << "<DerivedItem type=\"VolumeMinMaxMagnitude\">"
+            << "<minMagnitude value=\"" << minMagnitude << "\" />"
+            << "<maxMagnitude value=\"" << maxMagnitude << "\" />"
+            << "</DerivedItem>";
+    }
+            // * VolumeMinMax
+    vvdFeatureFile << "<DerivedItem type=\"VolumeMinMax\"><minValues>";
+    for(int i=0; i<feature.getTargetDim(); i++) {
+        vvdFeatureFile << "<channel value=\"" << minValue[i] << "\" />";
+    }
+    vvdFeatureFile << "</minValues><maxValues>";
+    for(int i=0; i<feature.getTargetDim(); i++) {
+        vvdFeatureFile << "<channel value=\"" << maxValue[i] << "\" />";
+    }
+    vvdFeatureFile << "</maxValues><minNormValues>";
+    for(int i=0; i<feature.getTargetDim(); i++) {
+        vvdFeatureFile << "<channel value=\"" << minValue[i] << "\" />";
+    }
+    vvdFeatureFile << "</minNormValues><maxNormValues>";
+    for(int i=0; i<feature.getTargetDim(); i++) {
+        vvdFeatureFile << "<channel value=\"" << maxValue[i] << "\" />";
+    }
+    vvdFeatureFile
+            << "</maxNormValues></DerivedItem>"
+            << "</DerivedData>"
+            // Footer.
+            << "</Volume>"
+            << "</Volumes>"
+            << "</VoreenData>";
 
     vvdFeatureFile.close();
 
