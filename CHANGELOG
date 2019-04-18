@@ -32,6 +32,7 @@ Voreen Changelog
       o Fix Drag&Drop'ing processors into network editor for Qt>=5.12
       o Fix out of bounds memory access in histogram creation
       o Fix bug in Port class that could lead to pure virtual function calls 
+      o Fix VolumeMinMax now correctly storing values for multi-channel volumes
 
 
 2018-09-06: Voreen 5.0.1
