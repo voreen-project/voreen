@@ -1,0 +1,1029 @@
+Voreen Changelog
+----------------
+
+2019-04-18: Voreen 5.1
+----------------------
+
+    * Features:
+      o Implemented File Watching for ImageSource and ImageSequenceSource
+      o OctreeCreator now inherits AsyncComputeProcessor
+      o Bundle LZ4 library for windows builds
+      o Add VolumeFilterList allowing to efficiently apply filter operations like thresholding, morphology operations, binarization, median filtering and more on large volumes
+      o Add port conditions for VolumeLists. In particular, a single volume port condition can be applied for each volume contained in the port's list
+      o Add support for STL geometry files (both ASCII and binary) to GeometrySource
+      o Python scripts can access port data, currently Volume- and RenderPorts are implemented. Refer to the module's example workspace
+      o Implement dynamic python processor, each of which has its own python script. Ports can be added and removed using drag and drop
+
+    * Framework/API Changes:
+      o StringProperty: Renamed setReadOnly/isReadyOnly to setEditable/isEditable
+      o Move VolumeFiltering and VolumeMorphology to deprecated module
+      o Remove VolumeContainer since it is conceptually unusable for volume decorators
+      o Remove data forwarding between ports, since it's not used and bypasses the network data flow concept
+      o Implement getThreadSafeAllData() for generic ports returning a vector of PortDataPointers
+      o Texture pixels now can be fetched and set similar to normalized voxels
+      o Implement intersection calculation between two template bounds
+      o HDF5 module now supports loading a single multi-channel volume instead of only allowing for multiple single-channel volumes
+
+    * Bug Fixes/Minor Changes:
+      o Fix crash when shader programs would fail to compile/link
+      o Fix infinite loop occuring when auto-layouting graphs that contain loops
+      o Fix memory leak/possible crashes of VolumeSelector, VolumeListSpacing
+      o Fix crash when closing voreen having network evaluation disabled
+      o Fix Drag&Drop'ing processors into network editor for Qt>=5.12
+      o Fix out of bounds memory access in histogram creation
+      o Fix bug in Port class that could lead to pure virtual function calls 
+
+
+2018-09-06: Voreen 5.0.1
+------------------------
+
+    * Features:
+      o Added ultramicroscopy meta module (referencing module requirements for ultramicroscopy users) 
+      o Added ultramicroscopy workspace
+      o Added warning when opening workspaces created with Voreen versions prior to 5.0 
+
+    * Framework/API Changes:
+      o tgt::Vector constructor from pointer has been removed and replaced by a static fromPointer(...) function thus disambiguating the tgt::Vector?<...>(0) constructor
+
+    * Bug Fixes/Minor Changes:
+      o Minor bugfix in SEGY volume reader (previously crashed Voreen if a dataset could not be loaded instead of displaying an error message)
+      o Bugfix for reading RAW volume files with file extension *.raw
+      o Minor bugfixes for HDF5 volume format
+      o Fix ready state of processors not updating correctly in some instances
+
+2018-08-02: Voreen 5.0
+----------------------
+
+    * Features:
+      o Added startup wizard at the start of VoreenVE with recent workspaces and template workspaces
+      o Complete revision of application mode and application mode configuration
+      o Revised animation editor
+      o Revised transfer functions (internally as well as TF editor in GUI), separated 1D and 2D TFs, increased flexibility of 2D TF, added 1D Gaussian TFs
+      o Added 2D orientation overlay option for orientation overlay in slice views
+      o Added 2D geometry rendering (for rendering geometry intersections with slice rendering)
+      o Added HDF5 support (import and export) for volume data
+      o Revision of screenshot tool
+      o Automatic detection and setting of CPU RAM limit for octree memory management
+      o CPU and GPU memory management for volume representations (e.g., for volume lists such as time series)
+      o SingleOctreeRaycaster now allows to render in full resolution level even when before a lower resolution would be selected due to the viewpoint
+      o Added support for multi-channel volumes (up to four channels) in SingleVolumeRaycaster
+      o OpenCL module now allows to select the OpenCL device in Voreen's general settings
+      o Added IsoSurfaceExtractor processor to create iso surface geometries from volume data
+      o GeometryRenderer supports order-independent transparency rendering for geometries
+      o Revised and extended Splitter, TripleView, QuadView, and TabbedView processors
+      o Added filewatching for input data in FileDialogProperty widgets and VolumeURL and VolumeURLListProperty (currently only HDF5 volumes are supported)
+      o AsyncCompute processor class for multi-threaded computations
+      o Revised and extended shader code editor (including clickable links to included shader files)
+      o Introduced support for binary JSON serialization in addition to XML serialization
+      o Port conditions that are not met are highlighted in the network editor
+      o Processor list widget allows to add processors using the return key
+      o Processors can now be dragged from the processor list onto ports 
+      o Added documentation icons (text boxes and colored frames) to highlight and document the structure of the network
+
+    * Framework/API Changes:
+      o Switch from Qt 4.8 to Qt 5 (supporting Qt versions > Qt 5.5)
+      o Added OpenGL core profile mode, which is now the default and ported many modules and processors to OpenGL core profile (does not yet support all modules and processors)
+      o Completely revised OpenGL context handling and OpenGL/Qt interaction
+      o Fontrendering: replaced FTGL with STB, moved font rendering to core
+      o Removed support for 32-bit builds
+      o Added support for Visual Studio 2013, 2015, and 2017, removed support for Visual Studio older than VS 2012
+      o Added IntervalProperty and BoundingBoxProperty classes and replaced sets of IntProperty and FloatProperty members for functionality such as axis-aligned clipping in several processors
+      o Python module now uses Python 3 instead of Python 2.7
+      o Introduced GlMeshGeometry class to replace TriangleMeshGeometry perspectively
+      o Introduced command queue for better event and callback handling
+      o Better handling of temporary data (in particular by introducing the TempPathProperty class)	      
+      o Added warnings for non-initialized uniforms in shaders
+
+
+    * Bug Fixes/Minor Changes:
+      o Fixes for background threads computing derived data
+      o Fixes in camera property / camera object
+      o Fix for octree generation with RAM brick pool manager: added check for sufficient main memory setting
+      o Fixes and improvements for handling volume lists
+      o Fixed MIP rendering in SingleVolumeRaycaster
+      o Revised multi-volume raycaster
+      o Fixed some instances where coordinate transformations between texture space and voxel space were not computed correctly
+      o Corrected resampling computations in VolumeOperatorResample
+      o Removed a lot of deprecated functionality
+      o A lot of minor bugixes, code improvements and code documentation
+ 
+
+2013-12-20: Voreen 4.4
+----------------------
+
+   * Features:
+     o Out-of-core rendering:
+       - efficient disk streaming for data set sizes of up to 25 GB
+       - multi-threaded octree construction, supporting arbitrary input formats
+       - SingleOctreeRaycasterCL supports iterative refinement
+       - sample workspace for combined 3D/2D rendering: large-data-exploration.vws
+     o 3D plane manipulation widget (see raycasting-arbitraryclipping.vws)
+     o Automated network layout
+     o SliceViewer supports multi-channel volumes
+     o Transfer function supports gamma correction
+     o Quad-buffered stereo rendering (see StereoCanvas processor)
+     o Scale legend for BoundingBoxRenderer and SliceViewer
+     o Pong processor: see pong-xmas.vws ;-)
+     
+   * Framework/API Changes:
+     o Introduced tgt::MatrixStack as replacement for fixed-function pipeline
+     o Octree:
+       - moved octree structures from staging to core, SingleOctreeRaycasterCL to OpenCL module
+       - disk storage path and RAM usage are set globally in application settings      
+     o Revised progress API in order to support multiple progress bars simultaneously: 
+       - introduced ProgressReporter interface, implemented by Processor and ProgressBar
+       - Processor can handle multiple progress bars
+       - added ProgressProperty
+     o Removed SliceRendererBase, moved helper functions to VolumeSliceHelper and glsl.h
+     o VolumeSliceHelper: added slice cache and slice extraction in background thread
+     o Added VolumeDiskDicom for deferred/partial loading of Dicom data sets
+     o OpenCLProperty handles kernels in different build configurations
+     o Added TransFunc::DomainFittingStrategy as replacement for alwaysFitDomain flag
+     o Added VoreenApplication::showMessageBox, implemented by VoreenApplicationQt
+     o Added CollectiveSettingsProperty
+       
+   * Bug Fixes/Minor Changes:
+     o Log level can be changed via application settings
+     o Fixed network evaluation scheduling
+     o VolumeDiskRaw::loadBrick uses file input stream (fixing large file issues)
+     o CLWrapper: fixed memory leak in CommandQueue::enqueue
+     o CMake: added /Zm1000 flag for MSVC++ (increases RAM limit for precompiled headers)
+     o Added VolumeChannelMerger and VolumeChannelSeparator processors
+     o StereoCanvas uses real-world focal length and eye separation
+     o tgt::FileSystem::fileAccessTime
+     o FloatVectorPropertyWidgets respect stepping and numdecimals settings
+
+
+2013-06-14: Voreen 4.3
+----------------------
+
+   * Features:
+     o Octree-based out-of-core rendering and handling of large volume data:
+       - data structures and renderers: modules/staging/octree
+       - sample workspace: raycasting-largedata-cl.vws (requires OpenCL module)
+     o MultiVolumeGeometryRaycaster including arbitrary geometry in a multi-volume rendering:
+       - sample workspace: raycasting-multivolumegeometry.vws
+     o Transfer function user interface enhancements:
+       - 'Edit' property button has been replaced by a quick-access manipulation widget
+       - Colormap presets (without domain information) can be loaded via drop-down menu
+       - Window presets (currently only for CT) can be loaded
+       - Alpha-channel can be disabled via button (for slice viewers)
+     o GPU-computation of transfer function pre-integration table 
+     o OptimizedProxyGeometry: added 'Outer Faces' mode discarding all inner geometry
+     o MultiSliceViewer: added crosshair for improved navigation and measuring
+     o TripleView: support for multiple view configurations
+     o Released itk_wrapper application
+     o Added InveonVolumeReader
+     
+   * Framework/API Changes:
+     o Transformed VolumeDisk into base class for various disk formats:
+       - renamed previous VolumeDisk to VolumeDiskRaw
+       - added VolumeDisk::loadSlices and VolumeDisk::loadBrick
+       - added VolumeDisk::getHash computing the hash from filenames and meta-data
+         rather than from the volume data (performance reasons)
+       - added VolumeDiskOmeTiff for disk handling of OME-TIFF stacks
+     o CMake:
+       - added VRN_BINARY_OUTPUT_DIR option for applications and libraries (default: VRN_HOME/bin)
+       - replaced VRN_WINDOWS_DEPLOYMENT option by VRN_DEPLOYMENT
+     o VolumeDerivedData can now be computed in background threads
+     o VolumeSliceHelper uses VolumeOctree or VolumeDisk representation if available,
+       in order to avoid unnecessary loading of a disk volume into RAM
+     o VolumeMinMax and VolumeHistogram derived data support multi-channel volumes       
+     o Moved Processor::setValid from NetworkEvaluator to Processor::afterProcess
+       
+   * Bug Fixes/Minor Changes:
+     o 2D transfer function fixes
+     o SliceViewer supports channel selection
+     o OMETiffVolumeReader supports selection of channel and timestep
+     o Added enable switches to BoundingBoxRenderer, PlaneWidgetProcessor, SlicePositionRenderer
+   
+   
+2013-03-22: Voreen 4.2.1
+------------------------
+
+   * Features:
+     o OMETiffVolumeReader supports 5D data stacks and multi-directory tiff files
+     o Added 'sample' module containing compilable example processors
+
+   * Bug Fixes/Minor Changes:
+     o Fixed OpenGL texture creation of single-slice volumes
+     o CameraProperty adjusts near plane according to physical data set extent 
+     o Added missing qsvgicon4 DLLs to Win32 install targets
+     o Added Python and FFmpeg Win32 builds fully compatible with Visual Studio 2010/2012
+     o PortConditionVolumeType does not implicitly create VolumeRAM anymore
+     o ProcessorPropertiesWidget propertly handles properties in groups without label
+     o Cleaned up OptimizedProxyGeometry
+
+
+2013-03-01: Voreen 4.2
+----------------------
+
+   * Features:
+     o OptimizedProxyGeometry excluding subregions of the volume that are classified
+       as transparent by the current transfer function
+     o Significant performance optimizations in raycasting shaders
+     o 3D random walker implementation for interactive segmentation (module 'randomwalker')
+     o Stereo rendering (module 'stereoscopy')
+     o GL-optimized TriangleMeshGeometry
+     o Image-based camera-inside-volume technique
+     o Stacking/decomposing of multi-channel images/volumes
+     o Background threads (see OptimizedProxyGeometry as example)
+     o NetworkEditor depicts processor states (initialized/ready) by icons 
+     o 3D Sobel filter as gradient calculation technique
+     o OME-TIFF volume reader (XYZ stacks)
+     o VolumeOperatorEqualize for histogram equalization
+
+   * Framework/API Changes:
+     o Visual Studio 2012 support
+     o Added missing dynamic library export markers
+     o Introduced VoreenSerializableObject as base class for serializable Voreen types:
+       - VoreenModule derives from VoreenSerializableObjectFactory
+       - module resources are directly registered at the module
+       - no separate SerializableFactories required anymore
+     o Camera-to-scene adaptation is now performed by CameraProperty:
+       - Adaptation has to be triggered by owning processor or by the user via the camera editor
+       - By default, only raycasters trigger camera adaptation
+     o Raycasters handle interaction coarseness internally, thereby no longer forcing 
+       their predecessing entry-exit point processor to downsize its output textures
+     o Added complete volume format description to VolumeBase interface
+     o Added RepresentationConverterLoadFromDiskToGL for uploading volume data from disk 
+       directly to the GPU without the need to create an intermediate RAM representation.
+     o Modules can contain tool applications
+     o Renamed VolumeCollection to VolumeList
+     o Moved NetworkEditor from VoreenVE application to voreenqt library
+     o VoreenApplication supports multiple network evaluators 
+     o Introduced NumericProperty::BoundaryUpdatePolicy specifying whether min/max values 
+       should be static or serialized
+     o Overhaul of animation editor: property timelines have to be explicitly added  
+     o Added VolumeInfoProperty for displaying volume preview in processor property list
+     o Added boost::asio library
+     
+   * Bug Fixes/Minor Changes:
+     o Corrected offset calculation in GdcmVolumeReader
+     o Fixed multi volume rendering for some transformation matrices
+     o Fixed occasional flickering caused by Compositor
+     o Fixed application setting serialization for user data paths with uppercase letters.
+     o TransFuncProperty observes assigned volume to prevent occasional crash on volume deletion
+     o CameraProperty serializes its trackball settings  
+     o Added VolumeOperatorResizePowerOfTwo for resizing to next power-of-two dimensions
+     o Removed VRN_DEBUG CMake option: debugging code is implicitly enabled in debug builds.
+     o Save processors immediately save to file on path change
+
+
+2012-12-20: Voreen 4.1.1
+------------------------
+
+   * Bug Fixes:
+     o Compatibility with Clang compiler on Mac
+     o Compile fixes for GCC on Ubuntu 12.10
+     o MinGW compile fixes (still linking issues with some external libraries)     
+     o Trackball center adjustment when switching data sets
+     o Selection of OpenCL GPU device when multiple platforms/devices are present
+     o Camera animation in animation-sample.vws workspace
+     o Memory leak in animation framework
+     o Application settings are stored in a separate file for each application,
+       preventing settings loss when switching between Voreen applications.
+
+
+2012-10-05: Voreen 4.1
+----------------------
+
+   * Features:
+     o Global volume illumination (see module 'advancedlighting')
+     o SingleVolumeRaycaster and CPURaycaster support pre-integrated classification
+     o OpenCL support on AMD/ATI (see module 'opencl')
+     o Convenient multi-modal slice rendering (see 'MultiSliceViewer' in staging module)
+     o Mutual information coregistration (see 'itk' module)
+   
+   * Framework/API Changes:
+     o Switched tgt sub-library to LGPL license (ext/tgt)
+     o Processor ports can have properties
+     o Render size linking: replaced implicit render size propagation by explicit 
+       linking of render size port properties (RenderSizeOrigin/RenderSizeReceiver)
+     o Outports can block event flow via property
+     o NetworkEditor overhaul: 
+       - separate property linking layers for camera and render size linking
+       - preview tooltips for volume ports, generally improved tooltip behaviour
+     o Camera does not save aspect ratio, but expects it as parameter in
+       getFrustum()/getProjection() calls 
+     o Added GUI names to Ports and LinkEvaluators
+     o Removed DependencyLinks
+     o Removed GPUCapabilitiesWindows, moved Windows WMI query code to GPUCapabilities
+     o Released testing applications
+     o Added Boost unit testing framework
+     
+   * Bug Fixes/Minor Changes:
+     o Geometry mesh clipping for large objects 
+     o GDCMVolumeReader correctly handles data sets with non-uniform windowing
+     o ImageSource/ImageSequenceSource put out empty textures on AMD/ATI
+     o Repaint/update issue in sample applications
+     o Improved camera-to-scene adaption for transformed volumes
+     o Added .ima as supported extension of DICOM readers
+     o Added link evaluator for linking the camera orientation only
+     o Extended DateTime class
+
+     
+2012-08-03: Voreen 4.0.1
+------------------------
+
+   * Features:
+     o Canvas supports fullscreen mode (F11)
+     o Transfer function editor: histogram y-axis scale (logarithmic/linear) is selectable via menu     
+     o Visual Studio: source files can be grouped by directory (CMake option 'VRN_GROUP_SOURCE_FILES')
+
+   * Bug Fixes:
+     o ATI/AMD driver compatibility:
+       - compile error in mod_raysetup.frag with older drivers (macro escape sequence)
+       - texture upload in ImageSequenceSource
+       - distance attenuation in PointListRenderer
+     o ITKWrapper correctly handles volume offsets
+     o Absolute/relative path conversion in FileDialogProperty
+     o Occasional NetworkEditor crash when relocating arrows
+     o Opacity accomodation in CPURaycaster
+
+   * Minor Changes:
+     o Camera frustum adjustment is now consistent between horizontal and vertical canvas resizing
+     o CPURaycaster uses multi-threading via OpenMP
+     o NetworkEvaluator clears outports, if processor isn't ready
+     o Moved standard shader header generation from RenderProcessor to glsl.h/cpp
+     o tgt::QtCanvas passes events to QGLWidget base class
+
+
+2012-06-22: Voreen 4.0
+----------------------
+
+   * Features:
+     o ITK 4 integration: wrapped approx. 140 filtering and segmentation algorithms by processors
+     o New volume API:
+       - Improved handling of spacing, units, transformations
+       - Shader modules handle real-world data units
+       - Persistent storage of derived volume data (histograms, ...) 
+       - New XML-based volume data format (.vvd)
+     o Transparent, persistent caching of intermediate data processing results (volumes, geometry)
+     o GLSL shaders of most rendering processors are now runtime-editable via shader properties.
+     o Runtime editing of OpenCL kernels (see OpenCLProperty)
+     o GDCM-based DICOM reader supporting JPEG 2000 compression and reading from PACS servers,
+       highly configurable via XML (see GDCM module)
+     o Geometry classes support affine transformations and clipping operations.
+     o Interactive registration (see 'tools' workspaces)
+     o Copying of sub-networks in the network editor
+     o 'VoreenTool' command-line application for executing workspaces/networks
+     o Improved command-line parser supporting multi-value and typed arguments
+     o Windows 64 bit and dynamic linking support
+
+   * Framework/API Changes:
+     o Switched to CMake build system
+     o Framework modules are now organized within the subdirectory 'modules', 
+       which contains both sources and headers.
+     o Custom modules can be stored anywhere in the file system (default: subdir 'custommodules').
+     o Processor and property widgets are organized in Qt modules.
+     o VoreenVE modules containing VoreenVE plugins (see Python module)
+     o Removed global volume container, volumes are now possessed by source processors.
+     o Binaries are written to 'bin' subdirectory.
+     o Separated read-only resources (subdir 'resource') from user-generated data (subdir 'data').
+     o New modules:
+       - Introduced mandatory 'core' module containing basic I/O processors and shader modules.
+       - Introduced 'itk' and 'itk_generated' modules. 
+       - Introduced 'staging' module containing code that is not yet ready for productive use.
+       - Introduced 'deprecated' module.
+       - ZIP, Image I/O, font rendering, and FFmpeg support is now provided by 
+         the modules 'zip', 'devil', 'fontrendering', and 'ffmpeg', respectively.
+       - Moved GLSL parser to new 'dynamicglsl' module.
+       - Moved volume labeling processors to separate module.
+     o Processor::initialize/deinitialize() throw tgt::Exception instead of
+       VoreenException, ShaderManager throws exceptions on loading failures
+       => Shader error handling in Processor::initialize no longer necessary.
+     o RenderProcessor::generateHeader() may be called during processor initialization.
+     
+   * Further Changes: 
+     o Added 'Eigen' as standard math library
+     o Using Boost library
+     o Updated GLEW library to 1.7.0
+     o Added 'MultiView' processor for combining an arbitrary number of input renderings.
+     o Image processors can be disabled (by-passed) via a bool property.
+     o Port conditions specifying allowed types of input data
+     o Light source position can now be attached to camera.
+     o Axis aligned clipping for slice based renderers.
+     o BoundingBoxRenderer supports geometry as well as volume data as input.
+     o Geometry can now be stored and loaded using the GeometrySave and GeometrySource processors.
+     o Tricubic filtering is supported by Volume class, VolumeOperatorResample,
+       and VolumeResample processor.
+     o All volume processors use progress bars.
+     o Removed deprecated LightProperty and ColorProperty (use instead FloatVec4Property with 
+       view Property::LIGHT_POSITION or Property::COLOR, respectively).
+     o XmlSerializer retrieves SerializableFactories from modules.
+     o Improved heuristic for volume preview slice selection.
+     o Renamed VolumeSubSet processor to VolumeCrop
+     o Merged Dilation and Erosion processors to ImageMorphology processor
+     o VolumeResample displays expected data size of output volume
+
+
+2010-11-04: Voreen 2.6.1 (r39, internal r12656)
+-----------------------------------------------
+
+   * Framework/API changes:
+     o RenderPort::readColorBuffer expects image data type as template parameter.
+     o VolumeRaycaster::bindVolumes() supports specification of texture filter mode.
+     o Added command line option for overriding detected GLSL version (--glslVersion)
+
+   * Features:
+     o RenderPort::saveToImage (and SnapshotPlugin) save PNG and TIFF snapshots 
+       with 16 bits per channel.
+     o SingleVolumeRaycaster, MultiVolumeRaycaster, SliceViewer provide properties
+       for specification of volume texture filtering modes.
+     o SEGY volume reader (module 'segy'), written by Aqeel Al-Naser.  
+     
+   * Bug fixes:
+     o Crash of command line parser on incorrect number of arguments
+     o Crash when opening context menu of processor info widget in VoreenVE     
+     o Qt warning "redefined signal" in transfer function editor
+         
+   * Minor changes: 
+     o Qt 4.7 support
+     o Added Vis10 tutorial slides, accessible from VoreenVE help menu
+     o GUI improvements:
+       o Autoscrolling in PropertyLinkDialog
+       o Added Desktop to side bar URLs of file dialogs
+       o Renaming of processors with "F2" in NetworkEditor
+       o Grouping of texture access properties in Single/MultiVolumeRaycaster
+     o Cleaned up shader modules
+     o Added command line option for VoreenVE session reset (window settings, paths)
+     o Added sample workspace for "DynamicGLSLRaycaster"
+
+   
+2010-10-18: Voreen 2.6 (r38, internal r12585)
+----------------------------------------------
+
+   * Framework changes:
+     o GLSL shaders do no longer use deprecated functions and context uniforms.
+       Most of this happened under the hood, except that shader authors should
+       now use "FragData0" instead of "gl_FragColor" for fragment shader output.
+     o The shader member has been removed from the VolumeRaycaster base class.
+       Shader loading and disposing is now completely up to the concrete subclasses.
+   
+   * Features:
+     o We have added a plotting toolbox including processors for line, bar, 
+       surface and 2D/3D scatter plots as well as function fitting. 
+     o The Python interface (module "python") has been revised and now provides: 
+       o Read/write access to almost all types of processor properties, incl. cameras
+       o Loading volume data and transfer functions
+       o Saving canvas snapshots to file
+       Please have a look at the Python script editor in VoreenVE as well as 
+       the samples in data/scripts.
+     o To further support rapid prototyping we have added the "DynamicGLSLProcessor"
+       that dynamically adds/removes ports and properties according to the uniforms
+       declared in its fragment shader.
+     o Camera vectors are accessible through the camera property widget.
+          
+   * Bug fixes:
+     o Generation of module registration file with spaces in path.
+     o "QGLWidget::makecurrent(): GetDC() failed" errors with multiple canvases 
+       on Windows 7.
+     o Set environment variable "XLIB_SKIP_ARGB_VISUALS=1" on Linux to work around 
+       Qt bug that breaks Voreen tool windows.
+     o Instability of 2D transfer functions during TF modifications (flickering).
+      
+   * Minor changes:
+     o Default modules are included by "VRN_MODULES += default" instead of 
+       "VRN_MODULES += most" in config.txt.
+     o Pre-compiled headers:
+       o now activated by "DEFINES += VRN_PRECOMPILE_HEADER" in config.txt
+       o enabled pre-compiled headers for the Voreen Qt library
+       o included more framework headers in pch.h
+     o RenderPort::readColorBuffer/saveToImage and network editor tooltips
+       support RenderTarget textures of arbitrary formats and data types.
+     o TIFF volume reader has been encapsulated in the new 'tiff' module.  
+     o Module description is shown in processor info box.
+     o Segmentation masking has been removed from VolumeRaycaster base class.
+     o Removed Python linking
+     
+   
+2010-09-16: Voreen 2.55 (r37, internal r12039)
+----------------------------------------------
+
+   * Architectural/infrastructure changes:
+     o The module registration file is now auto-generated; therefore manual registration of 
+       custom modules is no longer necessary.
+       - Instead, the module class has to be specified in the module's *_common.pri project file. 
+         See src/modules/base/base_common.pri or the module tutorial on www.voreen.org.
+       - In case of problems with the auto-registration, it can be disabled in config.txt:
+           DEFINES += VRN_NO_MODULE_AUTO_REGISTRATION
+     o Property semantics can be reflected by views, removing the need to introduce redundant 
+       property types as GUI hints:
+       - ColorProperties and LightProperties are replaced by FloatVec4Properties with views 
+         Property::COLOR or Property::LIGHT_POSITION, respectively. See VolumeRenderer base class.
+     o DICOM volume reader and writer have been encapsulated in the new DICOM module.
+       - DICOM support is enabled with VRN_MODULE_DICOM instead of VRN_WITH_DCMTK.
+       - A pre-compiled DCMTK library for Visual Studio 2008 is now available on www.voreen.org.
+     o The OpenCL module has been revised:
+       - Centralized OpenCL initialization in OpenCLModule class (see GrayscaleCL processor).
+       - Moved OpenCL wrapper from core to OpenCL module.
+
+   * Feature improvements:
+     o NetworkEditor:
+       - Processors may utilize a progress bar for indicating progress of time-consuming operations.
+         See VolumeResample or VolumeCombine processor.
+       - Auto-evaluation of the network can be temporarily disabled.
+       - Presence and state of a processor widget (e.g. canvas) is indicated by an icon that is 
+         displayed on top of the processor item.
+     o Related properties can be visually grouped (see SingleVolumeRaycaster).
+     o Property GUI name is changeable in VoreenVE by a right-click on the property's label.
+     o Tracking of numeric properties (continuous updates during slider dragging) can be disabled
+       on code level as well as in the context menu of the property's slider.
+     o Added LinePlot processor as preview of the upcoming plotting feature (see "plotsample.vws"). 
+       Further plot types including height maps and scatter plots will follow in the next release.
+     o Processors:
+       - Added VolumePicking processor for 3D volume picking.
+       - Added VolumeRegistration processor for landmark-based registration.
+         (experimental, see "tools/volumeregistration.vws")
+       - Added QuadricRenderer for rendering GLU quadrics, currently supports cylinders and spheres.
+       - Added VolumeSeriesSource for loading large series of (time-varying) volumes.
+       - GeometryRenderer supports texturing and lighting (merged with TexturedGeometryRenderer).
+       - VolumeMirrorZ supports mirroring along each axis (renamed to VolumeMirror).
+     o The Windows binary now ships with the HPMC module.
+     
+   * Documentation:
+     o Added animation manual, accessible via VoreenVE help menu.
+
+   * Minor changes:
+     o Moved VolumeProcessor base class from base module to core.
+     o RenderPort is derived from Port instead of GenericPort.
+     o Non-canvas end processors trigger network processing.
+     o Workspace archives are always extracted to disc before loading.
+     o Progress dialog is shown during extraction of workspace archives.
+     o Volume::convert/resize/resample/createSubset have been converted into VolumeOperators.
+     o ImageOverlay retrieves overlay image through inport instead of loading it directly.     
+     o Serializer supports std::pair.
+     o Renamed VolumeConvert to VolumeBitScale.
+     o Renamed ClippingPlaneWidget to PlaneWidgetProcessor.
+
+   * Bug fixes:
+     o Volume lighting routines consider volume transformation matrix.
+     o 2D transfer function transparency bug after reloading.
+     o Invalid camera state after certain trackball interactions.
+     o Incorrect results from EEPGeometryIntegrator for non-cubic volumes.
+     o Invalid state of RenderTargetViewer after changing network topology.
+     o Broken rendering after loading of workspace archives.
+     o Unintended reloading of the assigned data set on copy&paste of a VolumeSource processor.
+     o Flickering during video export.
+     o Processors are deinitialized after failed initialization.
+     o Volume clone operations also copy transformation matrix.
+     o Refresh of multiple volumes in the volume container widget.
+     o Serialization of tif volumes.
+          
+
+2010-07-14: Voreen 2.5 (r35, internal r11040)
+---------------------------------------------
+
+   * Major feature improvements:
+     o With the novel animation feature, Voreen can be used to create complex
+       animations of render networks and export them as a movie. Try out the
+       animation user interface by clicking the animation button in the toolbar.
+     o The new MultiVolumeRaycaster allows rendering of up to four volumes
+       simultaneously with correct sampling and blending.
+     o Voreen now has OpenCL support. You can find a few example processors in
+       /src/modules/opencl (VolumeGradientCL and GrayscaleCL)
+     o To ease the development of complex rendering networks, the aggregation of
+       subnetworks is supported in VoreenVE. Just select multiple processors in
+       the network editor and choose "Aggregate" in the context menu.
+     o Several arbitrary clipping planes can be used simultaneously (see the
+       workspace "arbitraryclipping.vws").
+     o The render target viewer has been extended to better support visual
+       debugging. You can now choose which channels to view and also quantify
+       the actual pixel content for each channel of each used render target.
+       Furthermore, export of the intermediate results in the render targets as
+       an image file is possible.
+     o The TextOverlay processor allows to augment renderings with text.
+     o Opaque geometry can be comfortably integrated into volume renderings by
+       using the EEPGeometryIntegrator processor.
+     o Loops can be used within the network to support iterative processing
+       (RenderLoopInitiator, RenderLoopFinalizer), see "renderloop.vws".
+     o Exploded views of volume data exploiting the loop functionality, see
+       "explodedviews.vws".
+     o Support for analyze and nifti file formats.
+  
+   * Minor feature improvements:
+     o RGBRaycaster using a hue-based transfer function
+     o New volume processors
+       o VolumeCombine for resampling and combining two volumes on a common grid.
+       o VolumeMasking for masking a volume based on an opacity masking function.
+       o ConnectedComponents3D, VolumeMorphology, VolumeResampling, VolumeSubSet
+     o New image processors
+       o Gabor filter, to be used in combination with the Convolution processor
+     o The OrientationOverlay processor has been revised.
+     o GPU-based marching cubes rendering through the HPMC library.
+     o Camera fly-through navigation (selectable in InputMappingDialog)
+     o GUI improvements
+       o Linking dialog
+       o Layout of InputMappingDialog
+       o Layout of property widgets 
+     o Workspace serialization now writes to temporary file that is moved to the
+       final filename in an atomic operation for added data security.
+
+   * Infrastructure changes
+     o Voreen now requires Qt 4.4 or newer.
+     o Use RGBA16 instead of RGBA16F as standard texture format
+     o The directory structure has been revised. Now, all processors are contained
+       in modules. All basic functionality is provided by the 'Base' module. 
+       To learn how to generate your own modules, please see:
+       http://www.voreen.org/402-Adding-a-Module.html
+     o The volume data files have been moved from data/ to data/volumes/.
+     o Use .pri instead of .txt for files included from .pro files.
+
+   * Bug fixes:
+     o The PVM reader has been improved:
+       o Fixed endianness issues when loading 16 bit volumes
+       o Detect whether loaded data set can be represented as a 12 bit volume
+       o More robust error handling
+       o Fixed a crash with non-C locale and 16 bit data on Linux
+     o Sampling rate changed for anisotropical volumes: now relative to maximum size
+       not minimum (value might need to be reduced for some data sets).
+     o Fix serialization of transfer functions on unix systems with non-posix locale
+     o Limited resolution of 2D transfer functions to 10 bit, preventing
+     inacceptable memory consumption
+
+
+2010-01-29: Voreen 2.01 (r34, internal r9025)
+---------------------------------------------
+
+   * Bug fixes:
+     o Add missing Flowreen shader files to binary distribution.
+     o Fix crash when loading new workspace while the transfer function editor
+       window is open.
+     o Set correct clamping mode for rendering in coarseness mode and for the
+       render target viewer. This removes artifacts at the border of the
+       rendering canvas.
+     o Correct export of transfer function files on unix platforms with
+       non-POSIX locale.
+     o Support loading of compressed TGA image files without using the DevIL
+       image library. This is used for the "test card" image shown in the output
+       window when not connected to a valid processor.
+     o Change the coordinate system origin for SliceSequenceRenderer from bottom
+       right to bottom left.
+     o Activate workaround for incorrectly reported non-power-of-two (NPOT)
+       texture capabilities for ATI Radeon 9* and X* on Linux in addition to Mac.
+
+
+2009-12-23: Voreen 2.0 (r29, internal r8674)
+--------------------------------------------
+
+   * Since we have introduced several new concepts, we provide new tutorial
+     videos, which you can find on the Voreen website (http://www.voreen.org).
+     If you want to know more about one of the concepts mentioned below, be sure
+     to check out the videos.
+
+   * With the new native support for multiple canvases, the user can add more
+     than one canvas to the network. Thus, development of multi-view
+     applications becomes easy. To integrate multiple views within one canvas
+     multi view processors can be used (e.g., the QuadView processor). To deal
+     with the different sizes of individual views, scaling processors are
+     added automatically.
+
+   * To support linking of multiple views, we have added a linking layer. Now
+     you can switch into linking mode, in order to link properties. Thus, you
+     can link the camera properties of different views, or the transfer
+     functions. To make working with linking easy, we allow auto linking of
+     camera properties to always ensure synced views. When Voreen is built with
+     Python support, the linked property values can be transformed by Python
+     scripts. Note that these scripts can run arbitrary code, so you should only
+     open external workspace files from trusted sources.
+
+   * We have added Flowreen, a module containing several processors providing
+     basic flow visualization techniques. Now you can use LICs, stream lines and
+     other flow visualization techniques in Voreen. Be sure to try the sample
+     workspaces available on the website.
+
+   * The serialization framework has been reengineered. This resulted in a new
+     file format for our .vws workspace files. We have done our best to allow
+     you to convert your old work spaces by using the converter tool provided on
+     the website.
+
+   * Improvements in the network editor: 
+     o Changes in the network are evaluated automatically.
+     o Volume information is shown in the connection tooltips. 
+     o We keep track of the code state of all processors, indicated by the
+       traffic light symbols in the processor list.
+
+   * Changes concerning the processor classes:
+     o Instead of setting an abstract "raycasting quality" for raycasting
+       processors, the sampling rate can now be controlled numerically. It
+       specifies how often each voxel on a ray will be sampled. To get good
+       performance with larger volumes, it might be necessary to reduce the
+       sampling rate.
+     o To allow rapid development of shader programs and be able to keep track
+       of different shader versions, we now allow to add shaders as a property.
+       Take a look at the GLSLRaycaster to see how to work with these new
+       properties.
+     o Added processors: Grayscale, Gaussian, GLSLRaycaster, QuadView
+     o Removed processors: Collect, Merge, Combine, NullCanvas, CacheRenderer
+     o Interaction coarseness is now handled for each processor, removing the
+       need for a CoarsenessRenderer.
+
+   * We have integrated improved volume handling functionality, both under the
+     hood as well as visible in the GUI:
+     o The class VolumeSourceProcessor replaces VolumeSetSource and
+       VolumeSelector, and VolumeSet/Series are replaced by the new
+       VolumeCollection.
+     o Additional data set information is shown in the GUI.
+     o Raw volume files (without headers) can be loaded directly by selecting
+       the file type "Raw Files" in the file open dialog. You are then then
+       asked to specify header skip, data type, dimensions and spacing to use
+       for this file.
+     o Loaded volumes can be exported as dat+raw via the context menu in the
+       volume list. Thus, for instance DICOM files can be converted easily.
+
+   * GUI improvements:
+     o The processor list now contains more information about the processors, such
+       as the module it belongs to or its code state (stable, testing,
+       experimental). Several options for sorting the list have been added.
+     o Workspace can be exported and imported as a ZIP archives containing
+       workspace and volume files.
+     o Integrated the OrientationPlugin into camera property widget.
+     o Numerical properties can now be changed via a slider.
+     o Canvases show "test card" image when not connected to a valid processor.
+     o DICOMDIR files can now be loaded as any other volume file, removed
+       special "Load DICOMDIR" menu entry.
+
+   * Internal changes:
+     o Dynamically allocate the required number of OpenGL render targets,
+       instead of relying on a pre-allocated pool, reducing the memory footprint.
+     o Removed the messaging subsystem, replaced it by the new linking
+       functionality.
+     o Removed PortMapping, ports are now handled directly by the processors.
+     o Replaced EnumProperty with the new OptionProperty.
+     o ShaderManager now correctly resolves line numbers for GLSL shaders that
+       use the include mechanism (supports NVIDIA and ATI error message format).
+     o Replaced external library for supporting ZIP files by own implementation.
+     o Projects to build (core, qt, voreenve, voltool) are now controlled via
+       config.txt.
+
+   * Minor changes and bug fixes:
+     o Prevent keeping both old and new volume in memory at the same time when
+       loading a workspaces.
+     o Enabled loading of unnormalized float volume data sets.
+     o + and - no longer zoom when renaming processors.
+     o Added flush to console plugin (now showing output during operations).
+     o Fixed problem with isosurface rendering.
+
+   * Platform-dependent changes:
+     o Mac: Add direct support for GLEW installed via MacPorts.
+     o Linux: Build as a shared library by default.
+     o Activated parallel compilation for Visual Studio 2005.
+
+
+2009-12-09: Snapshot r28 (voreen-8367)
+--------------------------------------
+
+   * Bug fixes:
+     o Workaround for a driver bug in some ATI drivers that would introduce
+       graphics artifacts when "support camera inside the volume" is active
+       for an EntryExitPoints processors. Thanks to Fedor Chelnokov for pointing
+       this out!
+     o Loading of all DICOM files in a directory was broken for Qt >= 4.5.
+     o Support loading of non-normalized float and double volume data.
+
+
+2009-11-20: Snapshot r25 (voreen-8050)
+--------------------------------------
+
+   * Large data set rendering (bricking):
+     o User is asked to specifiy amount of main memory and GPU memory to be
+       used for bricking when loading a bricked data set (.bvi).
+     o Bricking now uses about 30% less main memory.
+     o Take maximum texture dimensions supported by GPU into account when
+       allocating memory for bricking.
+
+  * Minor feature improvements:
+     o Voreen can be built using MinGW and Qt Creator (as included in the
+       Open Source Qt SDK).
+     o Fixed building with nmake.
+     o Improved mac deployment script and added installer target.
+     o VoreenVE supports new command line option -w for loading workspaces
+     o Log warning message when raycasting quality is chosen too high for the
+       GPU (because MAX_PROGRAM_EXEC_INSTRUCTIONS is not large enough) and
+       artifacts might appear (Nvidia only).
+     o Update DevIL libs to version 1.7.8.
+
+   * General bugfixes:
+     o Define "precision highp float" when using GLSL 1.30 as required by newer
+       ATI drivers.
+     o Fix problems with the GLSL extension GL_ARB_draw_buffers (would report
+       extension as unsupport in shader, although it is there).
+     o Removed some runtime warnings when running without DevIL image library.
+     o Workaround for slow histogram computation when using 2D gradient-based 
+       transfer functions.
+
+   * Mac bugfixes:
+     o Do manual inlining of some shader code to prevent fallback to (very slow)
+       software rendering mode for ATI cards on Mac.
+     o Disable non-power-of-two (NPOT) textures for ATI Radeon 9* and X* on Mac,
+       as they are not correctly supported there (would trigger fallback to
+       software mode, with extremely slow rendering).
+     o Add backspace as an additional key for deleting objects in the network
+       editor, to support MacBook keyboards.
+     o Last opened workspace is correctly restored on application startup.
+
+
+2009-08-04: Snapshot r24 (voreen-7062)
+--------------------------------------
+
+   * New experimental dynamic bricking support, for rendering volumes larger
+     than GPU memory. To use this feature, the data set first needs to be
+     preprocessed using "voltool --brick 32 volume.dat volume-bricked.bvi".
+     Bricking is activated by simply loading the resulting .bvi file as a volume
+     in VoreenVE. The raycasting processor has several additional properties for
+     controlling details of the bricking technique, such as interpolation
+     between adjacent bricks and the method for selection of brick resolutions.
+
+     The amount of GPU memory used for bricking is calculated using a simple
+     heuristic approach, taking into account the total amount of GPU memory. For
+     non-Windows platforms or when the heuristic fails, the memory size can be
+     set manually in brickingmanager.h (gpuMemorySize and gpuMemoryReserve).
+
+   * A new getting started guide is available in the 'Help' menu.
+
+   * Distribution:
+     o The installer package for Windows now contains Python scripting support.
+     o A pre-compiled version is now available also for the Mac platform as a
+       .dmg file. To install, just drag the VoreenVE folder into the application
+       folder or somewhere else.
+
+   * New functionality in VoreenVE:
+     o The animation plugin can now directly output video files (AVI, MPEG, WMV,
+       FLV) using the ffmpeg library.
+     o In addition to keyframe-based animation, now also a simple rotation is
+       supported.
+     o The visibility and position of transfer function editor windows is
+       serialized in the workspace file.
+     o The sides of the orientation cube available through "show orientation
+       overlay" in the "Camera Orientation" window are now labeled with their
+       particular direction.
+     o New fly-through navigation for the camera: activate it in the "Options"
+       menu, navigation is controlled with the arrow keys.
+
+   * Internal changes:
+     o CubeEntryExitPoints was merged with EntryExitPoints
+     o refactoring of Rpt* classes, renaming
+     o switched to Python 2.6.2 
+     o support for DICOM files with non axis-aligned slice positioning
+     o select GLSL version for shaders depending on GPU capabilities
+
+   * Bug fixes:
+     o benchmark script fps.py now gives correct results independent of the size
+       of the visualization window
+     o DICOM reader now supports volumes > 2 GB
+     o prevent crashes when calculation a volume histogram
+     o fix template instantiation problem for gcc 4.3.2
+     o fix some memory leaks and uninitialized memory (thanks to Valgrind)
+
+
+2009-07-06: Snapshot r18 (voreen-6845)
+--------------------------------------
+
+   * VoreenVE now has two modes of operation: network mode and visualization
+     mode. The visualization replaces the old VoreenDev application.
+      o The entire state of VoreenVE can be saved/restored into workspace files
+        (*.vws).
+      o Switched to use docking for most tool windows.
+      o The visibility of individual properties and entire processors in
+        visualization mode can be configured using the 'eye' buttons in network
+        editor mode.
+      o Processor-specific tool windows are only shown when the network
+        contains the processor.
+      o Status messages are shown in debug console widget instead of default
+        Windows console
+      o Show alpha channel in tooltips over processor connections.
+      o Added snapshot plugin.
+
+    * Many improvements in the transfer function editor
+      o Switch between 'Intensity', 'Intensity Ramp', 'Intensity Pet' and
+        'Intensity Gradient (2D)'.
+      o Histogram is calculated in a background thread.
+      o Integrated intensity threshold into transfer function.
+
+    * Added new volumeset 'walnut.dat': a CT scan of a walnut (courtesy of
+      European Institut of Molecular Imaging (EIMI), Muenster, Germany)
+    * The example networks were restructured and cleaned up.
+    * ZipVolumeReader now automatically reads all volume files contained in a
+      .zip files (requires the ZipArchive library).
+    * The (optional) font rendering now require FreeType and FTGL.
+
+    * Processors
+      o New volume processors for operating on volume data, see
+        'volumeinversion.vnw' for an example.
+      o New SliceSequenceRenderer and SingleSliceRenderer for 2D visualization.    
+      o Simple interactive segmentation using region growing, see 'regiongrowing.vnw'.
+
+    * Added a Windows installer for the snapshot release.
+
+    * Voreen can now be installed with 'make install' on unix, 
+      see INSTALL_PREFIX in config-default.txt
+
+
+2009-02-13: Snapshot r13 (voreen-5688)
+--------------------------------------
+  
+    * Redesigned GUI for VoreenVE, using multiple tool windows instead of dock
+      widgets, work in progress
+ 
+    * Added network for labeling processor, use with NCAT example data set from
+      the voreen.org website (requires FreeType activated in config.txt):
+      o load network 'labeling.vnw'
+      o load data sets 'ncat_phantom_medium.dat' and 'ncat_phantom_segmentation.dat'
+      o attach 'ncat_phantom_medium.dat' to left VolumeSetSource processor
+      o attach 'ncat_phantom_segmentation.dat' to right VolumeSetSource processor
+      o press 'play' button
+
+    * Added tool for creating spline-based camera animations
+
+    * Improve global light settings, light position can be move with the
+      mouse pointer, reactivated LightMaterialPlugin in VoreenDev,
+
+    * Rendering results are cached by default
+
+    * Support for .dat volume files from TU Vienna
+     (compare http://www.cg.tuwien.ac.at/research/vis/datasets/)
+
+    * Improved support for Mac OS X
+      o disable Render-to-Texture
+      o remove lots of Mac-specific warnings
+      o several GUI improvements
+      o fix problem where OpenGL canvas would show garbage on startup
+
+    * Improved DICOM support
+      o direct loading of all DICOM slice in a directory (without a DICOMDIR)
+      o correct behaviour for non power-of-two slices
+
+    * Python scripts
+      o benchmarking script fps.py can be started with parameter "--benchmark"
+        in VoreenDev
+      o new script for camera animation 
+ 
+    * Various bugfixes and cleanups:
+      o allow spaces in path names for project directory
+      o VoreenDev now uses the SingleVolumeRaycaster by default
+      o verify correct working directory when starting
+      o better exception handling for file IO
+      o fix rendering artifacts in EEP with GeForce 8 or newer
+      o improve logging of GLSL compiler and linker messages
+      o move all handling of interaction mode into CoarsenessRenderer
+      o rework caching of processor outputs
+      o update file loading progress less often
+      o check for require Qt version in qmake script
+      o reworked command line parser
+      o fix processor names in GUI
+      o handle errors during processor initialization more gracefully
+      o remove black border in interaction mode
+
+
+2008-11-14: Snapshot r3 (voreen-5112)
+-------------------------------------
+    * New SingleVolumeRaycaster, a modular default renderer:
+      o compositing modes: DVR, MIP, isosurface, first-hit point, first-hit normal
+      o shading: none, Phong (several variants), toon shading
+      o gradient calculation: forward/central differences, filtered
+      o supports different compositing modes on its three output ports
+      o see network "standard.vnw" for an example
+    * Multiplanar slice renderer, see network "multiplanar.vnw".
+    * Example network for clipping widgets with two renderers in "clipping.vnw".
+    * Simple example programm for using Voreen with GLUT in "apps/glutexample"
+      (also see the tutorial on http://www.voreen.org).
+
+    * User interface:
+      o dock/undock the preview window by double clicking (VoreenVE)
+      o improvements for editing multiple transfer functions
+      o load networks with drag and drop (VoreenVE)
+      o save state of toolbar and dock widgets (VoreenVE)
+      o information about loaded data sets is serialized into the .vnw file
+      o more command line parameters for voreenve and voreendev
+
+    * Rendering / volume handling:
+      o correct rendering when camera enters the volume
+      o hardware volumes (OpenGL textures) are now generated implicitly when
+        accessing getVolumeGL()
+      o automatic downsampling of volume texture if it is larger than GPU memory
+        (available memory must be specified in VolumeGL::setAvailableGpuMemory())
+      o OpenGL state is checked after every process() call in
+        NetworkEvaluator.
+
+    * More detailed logging of system information, also written to a log file by
+      default (you may need to add "DEFINES += VRN_ADD_FILE_LOGGER" to your
+      "config.txt" file).
+    * Renamed TransFuncIntensityKeys -> TransFuncIntensity.
+    * Old "rptgui" application renamed to "voreenve".
+
+    * Various bugfixes and cleanups:
+      o fixed DICOM loading
+      o do not link with unused ILUT lib (from DevIL image library).
+      o texture container widget was showing junk debug messages
+      o invalid GL_BLEND and glClearColor state changes
+      o automatic registration for Processors
+      o serialization of Processor::getName()
+      o no more warnings with gcc
+      o serialization of BackgroundProcessor in voreendev
+      o adapt to coding guidelines
+
+
+2008-09-26: Snapshot r2 (voreen-4687)
+-------------------------------------
+    * Initial public snapshot release
