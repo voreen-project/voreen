@@ -18,6 +18,7 @@ variables:
 before_script:
   - export LIBGL_ALWAYS_SOFTWARE="true"
   - export GALLIUM_DRIVER="llvmpipe" #one of softpipe, llvmpipe or swr
+  - export GALLIVM_PERF="no_aos_sampling" #force floating point sampling path in llvmpipe
 
 build_coreprofile:
   stage: build

@@ -2,6 +2,9 @@ FROM ubuntu:18.04
 
 ENV TZ=Europe/Berlin
 
+# enable source repositories
+RUN sed -i '/deb-src/s/^# //' /etc/apt/sources.list && apt update
+
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -30,15 +33,58 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
             ocl-icd-opencl-dev \
             libpython3-all-dev \
             xvfb \
-            mesa-opencl-icd \
-            mesa-utils \
-            libosmesa6 \
-            libgl1-mesa-dev \
-            libgl1-mesa-dri \
-            libgl1-mesa-glx \
-            libglu1-mesa-dev \
             iputils-ping \
             curl \
-            file
+            file \
+            meson \
+            ca-certificates \
+            ninja-build \
+            python3-mako \
+            clang-6.0 \
+            elfutils \
+            libgcrypt11-dev \
+            llvm-6.0-dev \
+            libc6 \
+            libdrm2 \
+            libexpat1 \
+            libgbm1 \
+            libgl1-mesa-dri \
+            libglapi-mesa \
+            libx11-xcb1 \
+            libxcb-dri2-0 \
+            libxcb-dri3-0 \
+            libxcb-present0 \
+            libxcb-sync1 \
+            libxcb-xfixes0 \
+            libxcb1 \
+            libxshmfence1
+
+            #mesa-opencl-icd \
+            #mesa-utils \
+            #libosmesa6 \
+            #libgl1-mesa-dev \
+            #libgl1-mesa-dri \
+            #libgl1-mesa-glx \
+            #libglu1-mesa-dev
+
+# install dependencies for building mesa
+RUN apt-get build-dep mesa -y
+
+    #&& git config --global user.email "dummy@example.com" \
+    #&& git config --global user.name "dummy" \
+    #&& git cherry-pick 829f278ad0042b0bb5026b10e7393fa3e11498b2 \
+    #&& mkdir -p build \
+    #&& cd build \
+
+RUN mkdir -p /build/ \
+    && cd /build \
+    && git clone "https://gitlab.freedesktop.org/mesa/mesa.git" --depth=1\
+    && mkdir -p mesa/build \
+    && cd mesa/build \
+    && meson -Dplatforms=surfaceless,x11 -Dgallium-drivers=swrast -Ddri-drivers=[] -Dvulkan-drivers=[]\
+    && echo SETUP DONE \
+    && echo CONFIGURE DONE \
+    && meson .. \
+    && ninja install
 
 RUN useradd -ms /bin/bash test_user
