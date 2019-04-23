@@ -81,7 +81,13 @@ void GeometrySliceRenderer::initialize() {
     types[1] = tgt::ShaderObject::GEOMETRY_SHADER;
 
     std::string shaderDefines = "#version 330 core \n #extension GL_ARB_gpu_shader5 : enable \n #define USE_COLOR \n";
-    clipShader_ = ShdrMgr.loadSeparate(filenames, types, shaderDefines, false, false);
+    try {
+        clipShader_ = ShdrMgr.loadSeparate(filenames, types, shaderDefines, false, false);
+    } catch (tgt::Exception& e) {
+        LERROR("Failed to load shader: " << e.what());
+        clipShader_ = 0;
+        return;
+    }
 
     // prepare program for xfb
     static const char* xfbVaryings[] = { "edgeData.position1", "edgeData.color1", "edgeData.position2", "edgeData.color2" };
@@ -95,7 +101,13 @@ void GeometrySliceRenderer::initialize() {
     }
 
     // load render shader
-    renderShader_ = ShdrMgr.load("geometryslicerenderer_render", "", false);
+    try {
+        renderShader_ = ShdrMgr.load("geometryslicerenderer_render", "", false);
+    } catch (tgt::Exception& e) {
+        LERROR("Failed to load shader: " << e.what());
+        renderShader_ = 0;
+        return;
+    }
 
     glGenVertexArrays(1, &vertexArrayID_);
     glGenTransformFeedbacks(1, &tfo_);
@@ -126,6 +138,11 @@ void GeometrySliceRenderer::process() {
         renderOutport_.activateTarget();
         renderOutport_.clearTarget();
         renderOutport_.deactivateTarget();
+        return;
+    }
+
+    if (!clipShader_ || !renderShader_) {
+        LERROR("Invalid shader(s)!");
         return;
     }
 
