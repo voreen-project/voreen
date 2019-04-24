@@ -39,7 +39,7 @@ build_coreprofile:
 serializertest_coreprofile:
   stage: test
   script:
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}
     - ${COREPROFILE_BUILD_DIR}/bin/serializertest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/serializer-log.html
   artifacts:
     paths:
@@ -49,7 +49,7 @@ serializertest_coreprofile:
 descriptiontest_coreprofile:
   stage: test
   script:
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}
     - ${COREPROFILE_BUILD_DIR}/bin/descriptiontest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/descriptiontest-log.html
   artifacts:
     paths:
@@ -59,7 +59,7 @@ descriptiontest_coreprofile:
 processorcreatetest_coreprofile:
   stage: test
   script:
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}
     - ${COREPROFILE_BUILD_DIR}/bin/processorcreatetest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorcreatetest-log.html
   artifacts:
     paths:
@@ -69,7 +69,7 @@ processorcreatetest_coreprofile:
 processorinittest_coreprofile: #probably needs xserver
   stage: test
   script:
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}
     - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
     - export DISPLAY=:98
     - ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=info --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorinittest-log.html
@@ -83,7 +83,7 @@ processorinittest_coreprofile: #probably needs xserver
 octreetest_coreprofile: #probably need testdata
   stage: test
   script:
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}
     - ${COREPROFILE_BUILD_DIR}/bin/octreetest -- --logLevel=debug --datadir ${TEST_DATA_DIR} --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html
   artifacts:
     paths:
@@ -93,7 +93,7 @@ octreetest_coreprofile: #probably need testdata
 networkevaluatortest_coreprofile:
   stage: test
   script:
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}
     - ${COREPROFILE_BUILD_DIR}/bin/networkevaluatortest -- --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/networkevaluatortest-log.html
   artifacts:
     paths:
@@ -103,7 +103,7 @@ networkevaluatortest_coreprofile:
 processornetworktest_coreprofile:
   stage: test
   script:
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}
     - ${COREPROFILE_BUILD_DIR}/bin/processornetworktest -- --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processornetworktest-log.html
   artifacts:
     paths:
@@ -113,7 +113,7 @@ processornetworktest_coreprofile:
 volumeorigintest_coreprofile:
   stage: test
   script:
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}
     - ${COREPROFILE_BUILD_DIR}/bin/volumeorigintest -- --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/volumeorigintest-log.html
   artifacts:
     paths:
@@ -125,8 +125,7 @@ regressiontest_coreprofile:
   script:
     - mkdir -p ${IDENTIFIER}
     - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
-    - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${IDENTIFIER}/regressiontest-report.html --splitHtmlReport true --junitReport ${IDENTIFIER}/regressiontest-junit.xml --reportdir ${IDENTIFIER}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60 || true
-    - ls ${TOOLS_DIR}/additional/cloudsend.sh || true
+    - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${IDENTIFIER}/regressiontest-report.html --splitHtmlReport true --junitReport ${IDENTIFIER}/regressiontest-junit.xml --reportdir ${IDENTIFIER}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60
     - find ${IDENTIFIER}/ -exec ${TOOLS_DIR}/additional/cloudsend.sh {} ${REGRESSION_TEST_UPLOAD_URL} ${REGRESSION_TEST_UPLOAD_PASSWORD} \;
     - mv ${IDENTIFIER}/regressiontest-junit.xml ./ #actifacts session does not have access to IDENTIFIER variable!
   artifacts:
