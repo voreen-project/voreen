@@ -16,6 +16,10 @@ variables:
   REGRESSION_TEST_UPLOAD_URL: 'https://uni-muenster.sciebo.de/s/YdhJ4czrPsfqPL6'
   #REGRESSION_TEST_UPLOAD_PASSWORD: configured in gitlab
   XVFB_SERVER_ARGS: -screen 0 640x480x24
+  CURRENT_BRANCH: $(git rev-parse --abbrev-ref HEAD)
+  CURRENT_REVISION: $(git rev-parse HEAD)
+  NOW: $(date +%Y-%m-%d-%H:%M:%S)
+  IDENTIFIER: ${CURRENT_BRANCH}-${CURRENT_REVISION}-${NOW}
   #TEST_DATA_REPOSITORY: 'zivgitlab.uni-muenster.de/voreen-project/voreen-testdata.git'
 
 before_script:
@@ -130,22 +134,27 @@ regressiontest_coreprofile:
   script:
     - ls -la --file-type
     - file ${REPORT_DIR} || true
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
+    - echo "BRANCH: ${CURRENT_BRANCH}"
+    - echo "REV: ${CURRENT_REVISION}"
+    - echo "DATE: ${NOW}"
+    - export IDENTIFIER=${CURRENT_BRANCH}-${CURRENT_REVISION}-${NOW}-coreprofile
+    - echo "IDENTIFIER: ${IDENTIFIER}"
+    - mkdir -p ${REPORT_DIR}/${IDENTIFIER} || true
     - ls -la --file-type
     - file ${REPORT_DIR} || true
     - cat ${REPORT_DIR} || true
     - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
-    - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-report.html --splitHtmlReport true --junitReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-junit.xml --reportdir ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60 || true
+    - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${REPORT_DIR}/${IDENTIFIER}/regressiontest-report.html --splitHtmlReport true --junitReport ${REPORT_DIR}/${IDENTIFIER}/regressiontest-junit.xml --reportdir ${REPORT_DIR}/${IDENTIFIER}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60 || true
     - ls ${TOOLS_DIR}/additional/cloudsend.sh || true
     - cd ${REPORT_DIR}
-    - find ${COREPROFILE_BUILD_DIR}/ -exec ../${TOOLS_DIR}/additional/cloudsend.sh {} ${REGRESSION_TEST_UPLOAD_URL} ${REGRESSION_TEST_UPLOAD_PASSWORD} \;
+    - find ${IDENTIFIER}/ -exec ../${TOOLS_DIR}/additional/cloudsend.sh {} ${REGRESSION_TEST_UPLOAD_URL} ${REGRESSION_TEST_UPLOAD_PASSWORD} \;
       #- tar czf ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}_files.tar.gz ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/
       #- ls -lh ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}_files.tar.gz
       #- ls ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/
       #- ls ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/
   artifacts:
     paths:
-    - ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}_files.tar.gz
+      #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}_files.tar.gz
       #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*.txt
       #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*.html
       #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*/*.txt
