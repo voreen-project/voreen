@@ -25,12 +25,6 @@ before_script:
   - export NOW=$(date +%Y-%m-%d-%H:%M:%S)
   - export IDENTIFIER=${CI_COMMIT_REF_NAME}--${NOW}--${CURRENT_REVISION}--coreprofile
 
-foobar:
-  stage: build
-  script:
-    - false || EXITCODE=$?
-    - $(exit $EXITCODE)
-
 build_coreprofile:
   stage: build
   script:
@@ -131,9 +125,10 @@ regressiontest_coreprofile:
   script:
     - mkdir -p ${IDENTIFIER}
     - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
-    - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${IDENTIFIER}/regressiontest-report.html --splitHtmlReport true --junitReport ${IDENTIFIER}/regressiontest-junit.xml --reportdir ${IDENTIFIER}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60
+    - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${IDENTIFIER}/regressiontest-report.html --splitHtmlReport true --junitReport ${IDENTIFIER}/regressiontest-junit.xml --reportdir ${IDENTIFIER}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60 || EXITCODE=$? #save exit code of regressiontest, but do not stop, yet (need to upload results!)
     - find ${IDENTIFIER}/ -exec ${TOOLS_DIR}/additional/cloudsend.sh {} ${REGRESSION_TEST_UPLOAD_URL} ${REGRESSION_TEST_UPLOAD_PASSWORD} \;
     - mv ${IDENTIFIER}/regressiontest-junit.xml ./ #actifacts session does not have access to IDENTIFIER variable!
+    - $(exit $EXITCODE) #propagate regressiontest exit code
   artifacts:
     reports:
       junit: regressiontest-junit.xml
