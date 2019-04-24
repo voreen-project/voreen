@@ -23,7 +23,7 @@ before_script:
   - export GALLIVM_PERF="no_aos_sampling" #force floating point sampling path in llvmpipe
   - export CURRENT_REVISION=$(git rev-parse HEAD)
   - export NOW=$(date +%Y-%m-%d-%H:%M:%S)
-  - export IDENTIFIER=${CI_COMMIT_REF_NAME}--${CURRENT_REVISION}--${NOW}--coreprofile
+  - export IDENTIFIER=${CI_COMMIT_REF_NAME}--${NOW}--${CURRENT_REVISION}--coreprofile
 
 build_coreprofile:
   stage: build
