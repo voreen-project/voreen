@@ -9,19 +9,21 @@ variables:
   DOCKER_DRIVER: overlay2 # use overlayfs
   GIT_SUBMODULE_STRATEGY: 'normal' #fetch test data repository
   RUN_TESTS_AS_USER: 'test_user'
-  REPORT_DIR: 'public_asdf'
   TOOLS_DIR: 'voreen/tools'
   COREPROFILE_BUILD_DIR: 'build_coreprofile'
   TEST_DATA_DIR: 'test-data/voreen-testdata'
   REGRESSION_TEST_UPLOAD_URL: 'https://uni-muenster.sciebo.de/s/YdhJ4czrPsfqPL6'
-  #REGRESSION_TEST_UPLOAD_PASSWORD: configured in gitlab
+  #REGRESSION_TEST_UPLOAD_PASSWORD: configured in gitlab!
   XVFB_SERVER_ARGS: -screen 0 640x480x24
-  #TEST_DATA_REPOSITORY: 'zivgitlab.uni-muenster.de/voreen-project/voreen-testdata.git'
 
 before_script:
   - export LIBGL_ALWAYS_SOFTWARE="true"
   - export GALLIUM_DRIVER="llvmpipe" #one of softpipe, llvmpipe or swr
   - export GALLIVM_PERF="no_aos_sampling" #force floating point sampling path in llvmpipe
+  - export CURRENT_REVISION=$(git rev-parse HEAD)
+  - export NOW=$(date +%Y-%m-%d-%H:%M:%S)
+  - export IDENTIFIER=${CI_COMMIT_REF_NAME}--${CURRENT_REVISION}--${NOW}--coreprofile
+  - export REPORT_DIR=REPORTS--${IDENTIFIER}
 
 build_coreprofile:
   stage: build
@@ -29,8 +31,6 @@ build_coreprofile:
     #- ci/build_minimal.sh ${COREPROFILE_BUILD_DIR}
     - ci/build_coreprofile.sh ${COREPROFILE_BUILD_DIR}
     #- runuser $RUN_TESTS_AS_USER -c "ci/build_coreprofile.sh ${COREPROFILE_BUILD_DIR}"
-    - ping -c 5 deep-force-one || true
-    - ping -c 5 10.5.20.80 || true
   artifacts:
     paths:
     - "${COREPROFILE_BUILD_DIR}/bin/*"
@@ -85,9 +85,6 @@ processorinittest_coreprofile: #probably needs xserver
 octreetest_coreprofile: #probably need testdata
   stage: test
   script:
-    - ls || true
-    - ls ${TEST_DATA_DIR} || true
-    - ls .. || true
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
     - ${COREPROFILE_BUILD_DIR}/bin/octreetest -- --logLevel=debug --datadir ${TEST_DATA_DIR} --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html
   artifacts:
@@ -128,28 +125,13 @@ volumeorigintest_coreprofile:
 regressiontest_coreprofile:
   stage: test
   script:
-    - export CURRENT_BRANCH=$(git branch | grep \* | cut -d ' ' -f2)
-    - export CURRENT_REVISION=$(git rev-parse HEAD)
-    - export NOW=$(date +%Y-%m-%d-%H:%M:%S)
-    - export IDENTIFIER=${CURRENT_BRANCH}--${CURRENT_REVISION}--${NOW}--coreprofile
     - echo "IDENTIFIER ${IDENTIFIER}"
     - mkdir -p ${IDENTIFIER}
     - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
     - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${IDENTIFIER}/regressiontest-report.html --splitHtmlReport true --junitReport ${IDENTIFIER}/regressiontest-junit.xml --reportdir ${IDENTIFIER}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60 || true
     - ls ${TOOLS_DIR}/additional/cloudsend.sh || true
-    - find ${IDENTIFIER}/ -exec ../${TOOLS_DIR}/additional/cloudsend.sh {} ${REGRESSION_TEST_UPLOAD_URL} ${REGRESSION_TEST_UPLOAD_PASSWORD} \;
-      #- tar czf ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}_files.tar.gz ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/
-      #- ls -lh ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}_files.tar.gz
-      #- ls ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/
-      #- ls ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/
+    - find ${IDENTIFIER}/ -exec ${TOOLS_DIR}/additional/cloudsend.sh {} ${REGRESSION_TEST_UPLOAD_URL} ${REGRESSION_TEST_UPLOAD_PASSWORD} \;
   artifacts:
-    #paths:
-      #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}_files.tar.gz
-      #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*.txt
-      #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*.html
-      #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*/*.txt
-      #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*/*.html
-      #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/
     reports:
       junit: ${IDENTIFIER}/regressiontest-junit.xml
     expire_in: 1 day
