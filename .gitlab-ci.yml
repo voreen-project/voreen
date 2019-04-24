@@ -128,24 +128,15 @@ volumeorigintest_coreprofile:
 regressiontest_coreprofile:
   stage: test
   script:
-    - ls -la --file-type
-    - file ${REPORT_DIR} || true
-    - echo "BRANCH ${CURRENT_BRANCH}"
-    - echo "REV ${CURRENT_REVISION}"
-    - echo "DATE ${NOW}"
-    - export CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    - export CURRENT_BRANCH=$(git branch | grep \* | cut -d ' ' -f2)
     - export CURRENT_REVISION=$(git rev-parse HEAD)
     - export NOW=$(date +%Y-%m-%d-%H:%M:%S)
-    - export IDENTIFIER=${CURRENT_BRANCH}-${CURRENT_REVISION}-${NOW}-coreprofile
+    - export IDENTIFIER=${CURRENT_BRANCH}--${CURRENT_REVISION}--${NOW}--coreprofile
     - echo "IDENTIFIER ${IDENTIFIER}"
-    - mkdir -p ${REPORT_DIR}/${IDENTIFIER} || true
-    - ls -la --file-type
-    - file ${REPORT_DIR} || true
-    - cat ${REPORT_DIR} || true
+    - mkdir -p ${IDENTIFIER}
     - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
-    - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${REPORT_DIR}/${IDENTIFIER}/regressiontest-report.html --splitHtmlReport true --junitReport ${REPORT_DIR}/${IDENTIFIER}/regressiontest-junit.xml --reportdir ${REPORT_DIR}/${IDENTIFIER}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60 || true
+    - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${IDENTIFIER}/regressiontest-report.html --splitHtmlReport true --junitReport ${IDENTIFIER}/regressiontest-junit.xml --reportdir ${IDENTIFIER}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60 || true
     - ls ${TOOLS_DIR}/additional/cloudsend.sh || true
-    - cd ${REPORT_DIR}
     - find ${IDENTIFIER}/ -exec ../${TOOLS_DIR}/additional/cloudsend.sh {} ${REGRESSION_TEST_UPLOAD_URL} ${REGRESSION_TEST_UPLOAD_PASSWORD} \;
       #- tar czf ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}_files.tar.gz ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/
       #- ls -lh ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}_files.tar.gz
@@ -159,8 +150,8 @@ regressiontest_coreprofile:
       #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*/*.txt
       #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*/*.html
       #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/
-      #reports:
-      #junit: ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-junit.xml
+      reports:
+        junit: ${IDENTIFIER}/regressiontest-junit.xml
     expire_in: 1 day
 
 schedule_test:
