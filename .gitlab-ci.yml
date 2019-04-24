@@ -143,15 +143,15 @@ regressiontest_coreprofile:
       #- ls ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/
       #- ls ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/
   artifacts:
-    paths:
+    #paths:
       #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}_files.tar.gz
       #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*.txt
       #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*.html
       #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*/*.txt
       #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/*/*/*/*/*.html
       #- ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/
-      reports:
-        junit: ${IDENTIFIER}/regressiontest-junit.xml
+    reports:
+      junit: ${IDENTIFIER}/regressiontest-junit.xml
     expire_in: 1 day
 
 schedule_test:
