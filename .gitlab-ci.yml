@@ -80,6 +80,8 @@ processorinittest_coreprofile: #probably needs xserver
     - "${REPORT_DIR}"
     expire_in: 1 day
 
+# octreetest, networkevaluatortest, processornetworktest and volumeorigintest are boost tests and need a "--"
+# before specifying application options!
 octreetest_coreprofile: #probably need testdata
   stage: test
   script:
@@ -87,7 +89,7 @@ octreetest_coreprofile: #probably need testdata
     - ls ${TEST_DATA_DIR} || true
     - ls .. || true
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
-    - ${COREPROFILE_BUILD_DIR}/bin/octreetest --log_level=test_suite -- --datadir ${TEST_DATA_DIR} --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html
+    - ${COREPROFILE_BUILD_DIR}/bin/octreetest -- --logLevel=debug --datadir ${TEST_DATA_DIR} --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html
   artifacts:
     paths:
     - "${REPORT_DIR}"
@@ -97,7 +99,7 @@ networkevaluatortest_coreprofile:
   stage: test
   script:
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
-    - ${COREPROFILE_BUILD_DIR}/bin/networkevaluatortest --log_level=test_suite -- --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/networkevaluatortest-log.html
+    - ${COREPROFILE_BUILD_DIR}/bin/networkevaluatortest -- --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/networkevaluatortest-log.html
   artifacts:
     paths:
     - "${REPORT_DIR}"
@@ -117,7 +119,7 @@ volumeorigintest_coreprofile:
   stage: test
   script:
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
-    - ${COREPROFILE_BUILD_DIR}/bin/volumeorigintest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/volumeorigintest-log.html
+    - ${COREPROFILE_BUILD_DIR}/bin/volumeorigintest -- --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/volumeorigintest-log.html
   artifacts:
     paths:
     - "${REPORT_DIR}"
@@ -136,7 +138,7 @@ regressiontest_coreprofile:
     - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-report.html --splitHtmlReport true --junitReport ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest-junit.xml --reportdir ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60 || true
     - ls ${TOOLS_DIR}/additional/cloudsend.sh || true
     - cd ${REPORT_DIR}
-    - find ${COREPROFILE_BUILD_DIR}/ -exec ${TOOLS_DIR}/additional/cloudsend.sh {} ${REGRESSION_TEST_UPLOAD_URL} ${REGRESSION_TEST_UPLOAD_PASSWORD} \;
+    - find ${COREPROFILE_BUILD_DIR}/ -exec ../${TOOLS_DIR}/additional/cloudsend.sh {} ${REGRESSION_TEST_UPLOAD_URL} ${REGRESSION_TEST_UPLOAD_PASSWORD} \;
       #- tar czf ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}_files.tar.gz ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/
       #- ls -lh ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}_files.tar.gz
       #- ls ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/regressiontest_files/
