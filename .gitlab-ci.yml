@@ -39,11 +39,14 @@ build_coreprofile:
 serializertest_coreprofile:
   stage: test
   script:
+    - echo ${REPORT_DIR}
     - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
     - ${COREPROFILE_BUILD_DIR}/bin/serializertest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/serializer-log.html
+    - ls -la ${REPORT_DIR}/${COREPROFILE_BUILD_DIR} || true
   artifacts:
     paths:
     - "${REPORT_DIR}"
+    - "${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/serializer-log.html"
     expire_in: 1 day
 
 descriptiontest_coreprofile:
