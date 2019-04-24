@@ -134,11 +134,11 @@ regressiontest_coreprofile:
   script:
     - ls -la --file-type
     - file ${REPORT_DIR} || true
-    - echo "BRANCH: ${CURRENT_BRANCH}"
-    - echo "REV: ${CURRENT_REVISION}"
-    - echo "DATE: ${NOW}"
+    - echo "BRANCH ${CURRENT_BRANCH}"
+    - echo "REV ${CURRENT_REVISION}"
+    - echo "DATE ${NOW}"
     - export IDENTIFIER=${CURRENT_BRANCH}-${CURRENT_REVISION}-${NOW}-coreprofile
-    - echo "IDENTIFIER: ${IDENTIFIER}"
+    - echo "IDENTIFIER ${IDENTIFIER}"
     - mkdir -p ${REPORT_DIR}/${IDENTIFIER} || true
     - ls -la --file-type
     - file ${REPORT_DIR} || true
