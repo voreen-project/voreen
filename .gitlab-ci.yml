@@ -16,10 +16,6 @@ variables:
   REGRESSION_TEST_UPLOAD_URL: 'https://uni-muenster.sciebo.de/s/YdhJ4czrPsfqPL6'
   #REGRESSION_TEST_UPLOAD_PASSWORD: configured in gitlab
   XVFB_SERVER_ARGS: -screen 0 640x480x24
-  CURRENT_BRANCH: $(git rev-parse --abbrev-ref HEAD)
-  CURRENT_REVISION: $(git rev-parse HEAD)
-  NOW: $(date +%Y-%m-%d-%H:%M:%S)
-  IDENTIFIER: ${CURRENT_BRANCH}-${CURRENT_REVISION}-${NOW}
   #TEST_DATA_REPOSITORY: 'zivgitlab.uni-muenster.de/voreen-project/voreen-testdata.git'
 
 before_script:
@@ -137,6 +133,9 @@ regressiontest_coreprofile:
     - echo "BRANCH ${CURRENT_BRANCH}"
     - echo "REV ${CURRENT_REVISION}"
     - echo "DATE ${NOW}"
+    - export CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    - export CURRENT_REVISION=$(git rev-parse HEAD)
+    - export NOW=$(date +%Y-%m-%d-%H:%M:%S)
     - export IDENTIFIER=${CURRENT_BRANCH}-${CURRENT_REVISION}-${NOW}-coreprofile
     - echo "IDENTIFIER ${IDENTIFIER}"
     - mkdir -p ${REPORT_DIR}/${IDENTIFIER} || true
