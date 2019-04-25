@@ -14,6 +14,7 @@ variables:
   COREPROFILE_BUILD_DIR: 'build_coreprofile'
   TEST_DATA_DIR: 'test-data/voreen-testdata'
   REGRESSION_TEST_UPLOAD_URL: 'https://uni-muenster.sciebo.de/s/YdhJ4czrPsfqPL6'
+  REGRESSION_TEST_WEBSERVER_BASE: 'https://sso.uni-muenster.de/IVV5WS/vrreports'
   #REGRESSION_TEST_UPLOAD_PASSWORD: configured in gitlab
   XVFB_SERVER_ARGS: -screen 0 640x480x24
 
@@ -128,6 +129,7 @@ regressiontest_coreprofile:
     - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${IDENTIFIER}/regressiontest-report.html --splitHtmlReport true --junitReport ${IDENTIFIER}/regressiontest-junit.xml --reportdir ${IDENTIFIER}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60 || EXITCODE=$? #save exit code of regressiontest, but do not stop, yet (need to upload results!)
     - find ${IDENTIFIER}/ -exec ${TOOLS_DIR}/additional/cloudsend.sh {} ${REGRESSION_TEST_UPLOAD_URL} ${REGRESSION_TEST_UPLOAD_PASSWORD} \;
     - mv ${IDENTIFIER}/regressiontest-junit.xml ./ #actifacts session does not have access to IDENTIFIER variable!
+    - echo The test report is available at ${REGRESSION_TEST_WEBSERVER_BASE}/${IDENTIFIER}/regressiontest-report.html
     - $(exit $EXITCODE) #propagate regressiontest exit code
   artifacts:
     reports:
