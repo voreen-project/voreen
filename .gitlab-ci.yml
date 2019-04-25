@@ -40,85 +40,77 @@ build_coreprofile:
 serializertest_coreprofile:
   stage: test
   script:
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}
-    - ${COREPROFILE_BUILD_DIR}/bin/serializertest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/serializer-log.html
+    - ${COREPROFILE_BUILD_DIR}/bin/serializertest --logLevel=debug --logFile=serializer-log.html
   artifacts:
     paths:
-    - "${REPORT_DIR}"
+    - serializer-log.html
     expire_in: 1 day
 
 descriptiontest_coreprofile:
   stage: test
   script:
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}
-    - ${COREPROFILE_BUILD_DIR}/bin/descriptiontest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/descriptiontest-log.html
+    - ${COREPROFILE_BUILD_DIR}/bin/descriptiontest --logLevel=debug --logFile=descriptiontest-log.html
   artifacts:
     paths:
-    - "${REPORT_DIR}"
+    - descriptiontest-log.html
     expire_in: 1 day
 
 processorcreatetest_coreprofile:
   stage: test
   script:
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}
-    - ${COREPROFILE_BUILD_DIR}/bin/processorcreatetest --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorcreatetest-log.html
+    - ${COREPROFILE_BUILD_DIR}/bin/processorcreatetest --logLevel=debug --logFile=processorcreatetest-log.html
   artifacts:
     paths:
-    - "${REPORT_DIR}"
+    - processorcreatetest-log.html
     expire_in: 1 day
 
-processorinittest_coreprofile: #probably needs xserver
+processorinittest_coreprofile:
   stage: test
   script:
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}
     - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
     - export DISPLAY=:98
-    - ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=info --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processorinittest-log.html
+    - ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=info --logFile=processorinittest-log.html
   artifacts:
     paths:
-    - "${REPORT_DIR}"
+    - processorinittest-log.html
     expire_in: 1 day
 
 # octreetest, networkevaluatortest, processornetworktest and volumeorigintest are boost tests and need a "--"
 # before specifying application options!
-octreetest_coreprofile: #probably need testdata
+octreetest_coreprofile:
   stage: test
   script:
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}
-    - ${COREPROFILE_BUILD_DIR}/bin/octreetest -- --logLevel=debug --datadir ${TEST_DATA_DIR} --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/octreetest-log.html
+    - ${COREPROFILE_BUILD_DIR}/bin/octreetest -- --logLevel=debug --datadir ${TEST_DATA_DIR} --logFile=octreetest-log.html
   artifacts:
     paths:
-    - "${REPORT_DIR}"
+    - octreetest-log.html
     expire_in: 1 day
 
 networkevaluatortest_coreprofile:
   stage: test
   script:
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}
-    - ${COREPROFILE_BUILD_DIR}/bin/networkevaluatortest -- --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/networkevaluatortest-log.html
+    - ${COREPROFILE_BUILD_DIR}/bin/networkevaluatortest -- --logLevel=debug --logFile=networkevaluatortest-log.html
   artifacts:
     paths:
-    - "${REPORT_DIR}"
+    - networkevaluatortest-log.html
     expire_in: 1 day
 
 processornetworktest_coreprofile:
   stage: test
   script:
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}
-    - ${COREPROFILE_BUILD_DIR}/bin/processornetworktest -- --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/processornetworktest-log.html
+    - ${COREPROFILE_BUILD_DIR}/bin/processornetworktest -- --logLevel=debug --logFile=processornetworktest-log.html
   artifacts:
     paths:
-    - "${REPORT_DIR}"
+    - processornetworktest-log.html
     expire_in: 1 day
 
 volumeorigintest_coreprofile:
   stage: test
   script:
-    - mkdir -p ${REPORT_DIR}/${COREPROFILE_BUILD_DIR}
-    - ${COREPROFILE_BUILD_DIR}/bin/volumeorigintest -- --logLevel=debug --logFile=${REPORT_DIR}/${COREPROFILE_BUILD_DIR}/volumeorigintest-log.html
+    - ${COREPROFILE_BUILD_DIR}/bin/volumeorigintest -- --logLevel=debug --logFile=volumeorigintest-log.html
   artifacts:
     paths:
-    - "${REPORT_DIR}"
+    - volumeorigintest-log.html
     expire_in: 1 day
 
 regressiontest_coreprofile:
