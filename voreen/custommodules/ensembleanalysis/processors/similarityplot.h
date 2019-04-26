@@ -145,8 +145,11 @@ protected:
     /// The hash of the ensemble the plot was generated for.
     std::string ensembleHash_;
 
-    /// Actual MDS data for each channel.
+    /// Actual MDS data for each channel (all runs selected).
     std::vector<MDSData> mdsData_;
+
+    /// MDS data for subselection.
+    //std::vector<MDSData> mdsDataSubselection_;
 
     /// Sphere geometry for timestep selection.
     GlMeshGeometryUInt16Simple sphere_;
@@ -154,8 +157,8 @@ protected:
     /// Rendering order.
     std::deque<int> renderingOrder_;
 
-    /// Selected runs (sorted).
-    std::set<int> selectedRunsSorted_;
+    /// Selected runs (sorted for faster access).
+    std::set<int> subSelection_;
 
 private:
 
@@ -164,10 +167,11 @@ private:
     void renderAxes();
     void drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, const tgt::vec3& position) const;
     tgt::vec3 getColor(size_t runIdx, size_t timeStepIdx, bool picking) const;
-    MDSData computeFromDM(const SimilarityMatrix& matrix, ProgressReporter& progressReporter, float epsilon = -1.0f);
+    MDSData computeFromDM(const SimilarityMatrix& matrix, ProgressReporter& progressReporter, float epsilon = -1.0f) const;
 
     void outputEigenValues();
     void renderedChannelsChanged();
+    void selectedRunsChanged();
     void save();
     void load();
 
