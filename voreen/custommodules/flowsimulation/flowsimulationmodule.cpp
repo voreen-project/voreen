@@ -25,6 +25,9 @@
 
 #include "flowsimulationmodule.h"
 
+// volume operators
+#include "datastructures/volume/operators/volumeoperatorvectorsimilarity.h"
+
 // processors
 #include "processors/geometry/geometryclose.h"
 #include "processors/geometry/geometryoffsetremove.h"
@@ -73,6 +76,9 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerSerializableType(new ImplicitRepresentation());
     registerSerializableType(new FlowSimulation());
 #endif
+
+    // volume operators
+    INST_VECTOR_TYPES(VolumeOperatorVectorSimilarity, VolumeOperatorVectorSimilarityGeneric);
 }
 
 void FlowSimulationModule::initialize() {

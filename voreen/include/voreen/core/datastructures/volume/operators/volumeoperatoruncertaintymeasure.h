@@ -26,7 +26,6 @@
 #ifndef VRN_VOLUMEOPERATORUNCERTAINTYMEASURE_H
 #define VRN_VOLUMEOPERATORUNCERTAINTYMEASURE_H
 
-#include "voreen/core/datastructures/volume/operators/volumeoperatorminmax.h"
 #include "voreen/core/datastructures/volume/volumeoperator.h"
 
 namespace voreen {
@@ -48,17 +47,13 @@ public:
 
 template<typename T>
 Volume* VolumeOperatorUncertaintyMeasureGeneric<T>::apply(const VolumeBase* vh, ProgressReporter* progressReporter) const {
-    const VolumeRAM* v = vh->getRepresentation<VolumeRAM>();
-    if(!v)
-        return 0;
-
-    const VolumeAtomic<T>* va = dynamic_cast<const VolumeAtomic<T>*>(v);
+    const VolumeAtomic<T>* va = dynamic_cast<const VolumeAtomic<T>*>(vh->getRepresentation<VolumeRAM>());
     if (!va)
-        return 0;
+        return nullptr;
 
     VolumeAtomic<T>* out = va->clone();
 
-    VRN_FOR_EACH_VOXEL_WITH_PROGRESS(index, tgt::svec3(0, 0, 0), out->getDimensions(), progressReporter) {
+    VRN_FOR_EACH_VOXEL_WITH_PROGRESS(index, tgt::svec3::zero, out->getDimensions(), progressReporter) {
         out->voxel(index) = T(1) - tgt::abs(T(2)*out->voxel(index) - T(1));
     }
     if (progressReporter)

@@ -26,99 +26,63 @@
 #ifndef VRN_VOLUMEOPERATORVECTORSIMILARITY_H
 #define VRN_VOLUMEOPERATORVECTORSIMILARITY_H
 
-//#include "voreen/core/datastructures/volume/volumeoperator.h"
-#include "voreen/core/datastructures/volume/volumeatomic.h"
-#include "voreen/core/datastructures/volume/volume.h"
-#include "tgt/vector.h"
+#include "voreen/core/datastructures/volume/volumeoperator.h"
+#include "voreen/core/datastructures/volume/volumefactory.h"
+#include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
+#include "voreen/core/utils/stringutils.h"
 
 namespace voreen {
 
-class VRN_CORE_API VolumeOperatorVectorSimilarity {
+// Base class, defines interface for the operator (-> apply):
+class VRN_CORE_API VolumeOperatorVectorSimilarityBase : public UnaryVolumeOperatorBase {
 public:
-    VolumeOperatorVectorSimilarity(){};
-
-    /**
-     * Calculates voxel-wise similarity between
-     *
-     * Use uint8_t or uint16_t as U template argument in order to generate 8 or 16 bit datasets.
-     */
-    template<typename U>
-    Volume* apply(const VolumeBase* srcVolume, float p);
-private:
-    /** T = Input   U = Output */
-    template<typename T, typename U>
-    Volume* calcVectorSimilarityGeneric(const VolumeBase* handle, float p);
+    virtual Volume* apply(const VolumeBase* volume, float p, ProgressReporter* progressReporter = 0) const = 0;
 };
 
-//---------------------------------------------------------------------------------------------
-//      apply function
-//---------------------------------------------------------------------------------------------
-template<typename U>
-Volume* VolumeOperatorVectorSimilarity::apply(const VolumeBase* srcVolume, float p) {
-    if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_3xUInt8))
-        return calcVectorSimilarityGeneric<tgt::Vector3<uint8_t>, U>(srcVolume, p);
-    else
-    if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_3xUInt16))
-        return calcVectorSimilarityGeneric<tgt::Vector3<uint16_t>, U >(srcVolume, p);
-    else
-    if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_3xInt8))
-        return calcVectorSimilarityGeneric<tgt::Vector3<int8_t>, U>(srcVolume, p);
-    else
-    if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_3xInt16))
-        return calcVectorSimilarityGeneric<tgt::Vector3<int16_t>, U >(srcVolume, p);
-    else
-    if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_4xUInt8))
-        return calcVectorSimilarityGeneric<tgt::Vector4<uint8_t>, U>(srcVolume, p);
-    else
-    if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_4xUInt16))
-        return calcVectorSimilarityGeneric<tgt::Vector4<uint16_t>, U>(srcVolume, p);
-    else
-    if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_4xInt8))
-        return calcVectorSimilarityGeneric<tgt::Vector4<int8_t>, U>(srcVolume, p);
-    else
-    if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_4xInt16))
-        return calcVectorSimilarityGeneric<tgt::Vector4<int16_t>, U >(srcVolume, p);
-    else
-    if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_3xFloat))
-        return calcVectorSimilarityGeneric<tgt::Vector3<float>, U>(srcVolume, p);
-    else
-    if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_3xDouble))
-        return calcVectorSimilarityGeneric<tgt::Vector3<double>, U>(srcVolume, p);
-    else
-    if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_4xFloat))
-        return calcVectorSimilarityGeneric<tgt::Vector4<float>, U>(srcVolume, p);
-    else
-    if (typeid(*(srcVolume->getRepresentation<VolumeRAM>())) == typeid(VolumeRAM_4xDouble))
-        return calcVectorSimilarityGeneric<tgt::Vector4<double>, U>(srcVolume, p);
-    else {
-        LERRORC("calcGradientMagnitudes", "Unhandled type!");
-        return 0;
-    }
-}
-//---------------------------------------------------------------------------------------------
-//      similarity function
-//---------------------------------------------------------------------------------------------
-template<typename T, typename U>
-Volume* VolumeOperatorVectorSimilarity::calcVectorSimilarityGeneric(const VolumeBase* handle, float p) {
-    // get RAM representation of the input volume and relevant meta data
-    const VolumeAtomic<T>* input = dynamic_cast<const VolumeAtomic<T>*>(handle->getRepresentation<VolumeRAM>());
-    tgt::svec3 dim = input->getDimensions();
+// Generic implementation:
+template<typename T>
+class VolumeOperatorVectorSimilarityGeneric : public VolumeOperatorVectorSimilarityBase {
+public:
+    virtual Volume* apply(const VolumeBase* volume, float p, ProgressReporter* progressReporter = 0) const;
+    //Implement isCompatible using a handy macro:
+    IS_COMPATIBLE
+};
 
-    // create the output volume
-    VolumeAtomic<U>* result = new VolumeAtomic<U>(dim);
+template<typename T>
+Volume* VolumeOperatorVectorSimilarityGeneric<T>::apply(const VolumeBase* vh, float p, ProgressReporter* progressReporter) const {
 
-    tgt::svec3 pos;
-    for (pos.z = 0; pos.z < dim.z; pos.z++) {
-        for (pos.y = 0; pos.y < dim.y; pos.y++) {
-            for (pos.x = 0; pos.x < dim.x; pos.x++) {
-                // TODO:
-            }
+    VolumeRAM* out = VolumeFactory().create(getBaseTypeFromType<T>(), vh->getDimensions());
+    if (!out)
+        return nullptr;
+
+    const VolumeRAM* volume = vh->getRepresentation<VolumeRAM>();
+    if(!volume)
+        return nullptr;
+
+    RealWorldMapping rwm = vh->getRealWorldMapping();
+    float maxMagnitude = vh->getDerivedData<VolumeMinMaxMagnitude>()->getMaxMagnitude();
+
+    VRN_FOR_EACH_VOXEL_WITH_PROGRESS(index, tgt::svec3::zero, out->getDimensions(), progressReporter) {
+
+        T voxel;
+        for(size_t channel=0; channel<vh->getNumChannels(); channel++) {
+            voxel[channel] = rwm.normalizedToRealWorld(volume->getVoxelNormalized(index, channel));
         }
-    }
 
-    Volume* volume = new Volume(result, handle);
-    return  volume;
+        //float angle = std::acos(tgt::dot(xAxis, voxel) / (tgt::length(xAxis) * tgt::length(voxel) )
+        float angle = std::acos(voxel.x / tgt::length(voxel)) / (2*tgt::PIf);
+        float magnitude = tgt::length(voxel) / maxMagnitude;
+
+        float value = (1 - p) * angle  + p * magnitude;
+        out->setVoxelNormalized(value, index);
+    }
+    if (progressReporter)
+        progressReporter->setProgress(1.f);
+
+    return new Volume(out, vh);
 }
+
+typedef UniversalUnaryVolumeOperatorGeneric<VolumeOperatorVectorSimilarityBase> VolumeOperatorVectorSimilarity;
 
 } // namespace
 

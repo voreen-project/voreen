@@ -34,6 +34,8 @@ SET(MOD_CORE_HEADERS
 
     # datastructures
     ${MOD_DIR}/datastructures/flowparameters.h
+    ${MOD_DIR}/datastructures/volume/operators/volumeoperatorvectorsimilarity.h
+
 
     # ports
     ${MOD_DIR}/ports/flowparametrizationport.h
