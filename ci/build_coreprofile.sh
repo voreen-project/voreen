@@ -10,6 +10,8 @@ cd $BUILD_DIR
 
 # build configuration
 build_options=(
+    -DCMAKE_BUILD_TYPE=Debug
+
     -DVRN_OPENGL_COMPATIBILITY_PROFILE=OFF #required to build some modules
 
     -DVRN_BUILD_VOREENVE=ON
@@ -52,6 +54,9 @@ build_options=(
 
     # custom modules
     -DVRN_MODULE_GRAPHLAYOUT=OFF
+
+    # do not block on failed assertions
+    -DVRN_NON_INTERACTIVE=ON
 
     -DVRN_PRECOMPILED_HEADER=OFF
 )

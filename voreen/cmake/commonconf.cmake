@@ -337,6 +337,11 @@ SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DTGT_DEBUG -DVRN_DEBUG")
 # minimum Qt version
 SET(VRN_REQUIRED_QT_VERSION "5.5")
 
+SET(VRN_NON_INTERACTIVE OFF CACHE BOOL "Assume that voreen is used non-interactively, e.g., do not ask user when an assertion fails.")
+IF(VRN_NON_INTERACTIVE)
+   LIST(APPEND VRN_DEFINITIONS "-DTGT_NON_INTERACTIVE_ASSERT")
+ENDIF()
+
 
 # detect libraries
 MESSAGE(STATUS "--------------------------------------------------------------------------------")
