@@ -72,7 +72,6 @@ void EnsembleDataset::addRun(const Run& run) {
     endTime_   = std::max(endTime_,   run.timeSteps_.back().time_);
 
     RunMetaData metaData;
-    runMetaData_.push_back(metaData);
 
     for (size_t t = 0; t < run.timeSteps_.size(); t++) {
         std::vector<std::string> channels;
@@ -82,6 +81,7 @@ void EnsembleDataset::addRun(const Run& run) {
             channels.push_back(channelName);
 
             const VolumeBase* volume = channel.second;
+            // Bounds are stored in physical space, so don't transform to world space.
             tgt::Bounds bounds = volume->getBoundingBox(false).getBoundingBox();
             VolumeMinMax* minMax = volume->getDerivedData<VolumeMinMax>();
 
@@ -93,15 +93,20 @@ void EnsembleDataset::addRun(const Run& run) {
                 channelMetaData_[channelName].valueRange_.y = std::max(channelMetaData_[channelName].valueRange_.y, minMax->getMax());
             }
 
-            runMetaData_.back().timeStepDurationStats_.addSample(run.timeSteps_[t].duration_);
+            metaData.timeStepDurationStats_.addSample(run.timeSteps_[t].duration_);
 
-            bounds_.addVolume(bounds);
-            if(!commonBounds_.isDefined()) {
-                commonBounds_.addVolume(bounds);
+            if (!bounds_.isDefined()) {
+                if(!commonBounds_.isDefined()) {
+                    commonBounds_.addVolume(bounds);
+                }
             }
-            else {
+            else if(commonBounds_.isDefined()) {
                 commonBounds_.intersectVolume(bounds);
+                if(!commonBounds_.isDefined()) {
+                    LWARNINGC("voreen.EnsembeDataSet", "There is no overlap between the bounds of Run " << run.name_ << " and the previously defined bounds");
+                }
             }
+            bounds_.addVolume(bounds);
         }
 
         // Calculate common channels.
@@ -115,13 +120,15 @@ void EnsembleDataset::addRun(const Run& run) {
                 std::back_inserter(intersection)
             );
 
-            if (commonChannels_.size() != intersection.size() && !runs_.empty())
-                LWARNINGC("voreen.EnsembeDataSet", "TimeStep " << t << " of Run " << run.name_ << " has less channels than the previously added Run " << runs_.back().name_);
+            if (commonChannels_.size() != intersection.size() && !runs_.empty()) {
+                LWARNINGC("voreen.EnsembeDataSet", "Time Step " << t << " of Run " << run.name_ << " has less channels than the previously added Run " << runs_.back().name_);
+            }
 
             commonChannels_ = intersection;
         }
-        else if (runs_.empty())
+        else if (runs_.empty()) {
             commonChannels_ = channels;
+        }
 
         // Calculate times and durations.
         if (t < run.timeSteps_.size() - 1) {
@@ -141,6 +148,7 @@ void EnsembleDataset::addRun(const Run& run) {
         commonTimeInterval_ = tgt::vec2::zero;
     }
 
+    runMetaData_.push_back(metaData);
     runs_.push_back(run);
 }
 

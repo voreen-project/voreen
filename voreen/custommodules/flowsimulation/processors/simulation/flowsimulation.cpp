@@ -602,14 +602,15 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
                                  const std::string& simulationOutputPath,
                                  const std::string& name) const {
 
-    const Vector<T, 3> &min = stlReader.getMin();
-    const Vector<T, 3> &max = stlReader.getMax();
+    const Vector<T, 3>& min = stlReader.getMin();
+    const Vector<T, 3>& max = stlReader.getMax();
 
     const int resolution = converter.getResolution();
     const Vector<T, 3> len = (max - min);
     const T maxLen = std::max({len[0], len[1], len[2]});
-    const Vector<T, 3> offset = min + (len - maxLen) * 0.5;
-    const Vector<T, 3> spacing(maxLen / resolution);
+
+    Vector<T, 3> offset = min + (len - maxLen) * 0.5;
+    Vector<T, 3> spacing(maxLen / resolution);
 
     // Determine format.
     // This could be done in a more dynamic way, but the code should be easily portable to the cluster.
@@ -667,8 +668,11 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
         }
     }
 
-    minMagnitude = std::sqrt(minMagnitude / (VOREEN_LENGTH_TO_SI * VOREEN_LENGTH_TO_SI));
-    maxMagnitude = std::sqrt(maxMagnitude / (VOREEN_LENGTH_TO_SI * VOREEN_LENGTH_TO_SI));
+    // Adapt to Voreen units.
+    minMagnitude = std::sqrt(minMagnitude) / (VOREEN_LENGTH_TO_SI * VOREEN_LENGTH_TO_SI);
+    maxMagnitude = std::sqrt(maxMagnitude) / (VOREEN_LENGTH_TO_SI * VOREEN_LENGTH_TO_SI);
+    offset = offset * (1/VOREEN_LENGTH_TO_SI);
+    spacing = spacing * (1/VOREEN_LENGTH_TO_SI);
 
     int tmaxLen = static_cast<int>(std::to_string(tmax).length());
     std::ostringstream suffix;
@@ -678,7 +682,7 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
     std::string vvdFilename = simulationOutputPath + featureFilename + ".vvd";
 
     const FlowParameters &parameters = parametrizationList.at(selectedParametrization);
-    const LatticeStatistics<T> &statistics = feature.getSuperLattice().getStatistics();
+    const LatticeStatistics<T>& statistics = feature.getSuperLattice().getStatistics();
     std::fstream vvdFeatureFile(vvdFilename.c_str(), std::ios::out);
     vvdFeatureFile
             // Header.

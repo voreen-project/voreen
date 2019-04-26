@@ -311,8 +311,9 @@ void writeResult(STLreader<T>& stlReader,
     const int resolution = converter.getResolution();
     const Vector<T, 3> len = (max - min);
     const T maxLen = std::max({len[0], len[1], len[2]});
-    const Vector<T, 3> offset = min + (len - maxLen) * 0.5;
-    const Vector<T, 3> spacing(maxLen / resolution);
+
+    Vector<T, 3> offset = min + (len - maxLen) * 0.5;
+    Vector<T, 3> spacing(maxLen / resolution);
 
     // Determine format.
     // This could be done in a more dynamic way, but the code should be easily portable to the cluster.
@@ -364,8 +365,11 @@ void writeResult(STLreader<T>& stlReader,
         }
     }
 
-    minMagnitude = std::sqrt(minMagnitude / (VOREEN_LENGTH_TO_SI * VOREEN_LENGTH_TO_SI));
-    maxMagnitude = std::sqrt(maxMagnitude / (VOREEN_LENGTH_TO_SI * VOREEN_LENGTH_TO_SI));
+    // Adapt to Voreen units.
+    minMagnitude = std::sqrt(minMagnitude) / (VOREEN_LENGTH_TO_SI * VOREEN_LENGTH_TO_SI);
+    maxMagnitude = std::sqrt(maxMagnitude) / (VOREEN_LENGTH_TO_SI * VOREEN_LENGTH_TO_SI);
+    offset = offset * (1/VOREEN_LENGTH_TO_SI);
+    spacing = spacing * (1/VOREEN_LENGTH_TO_SI);
 
     int tmaxLen = static_cast<int>(std::to_string(tmax).length());
     std::ostringstream suffix;
