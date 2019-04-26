@@ -259,8 +259,8 @@ void OrientationOverlay::process() {
         // use the shader to draw cube and axis over inport render data
         // therefore bind rgba and depth values of both to textures
         tgt::TextureUnit colorUnit0, depthUnit0, colorUnit1, depthUnit1;
-        privatePort_.bindTextures(colorUnit0.getEnum(), depthUnit0.getEnum());
-        inport_.bindTextures(colorUnit1.getEnum(), depthUnit1.getEnum());
+        privatePort_.bindTextures(colorUnit0.getEnum(), depthUnit0.getEnum(), GL_NEAREST);
+        inport_.bindTextures(colorUnit1.getEnum(), depthUnit1.getEnum(), GL_NEAREST);
 
         // initialize shader
         program_->activate();
