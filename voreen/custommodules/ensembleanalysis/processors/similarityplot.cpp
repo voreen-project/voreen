@@ -181,7 +181,6 @@ SimilarityPlot::SimilarityPlot()
     addProperty(selectedTimeSteps_);
         selectedTimeSteps_.setGroupID("selection");
     addProperty(selectedRuns_);
-        ON_CHANGE(selectedRuns_, SimilarityPlot, selectedRunsChanged);
         selectedRuns_.setGroupID("selection");
     setPropertyGroupGuiName("selection", "Selection");
 
@@ -398,26 +397,23 @@ void SimilarityPlot::renderingPass(bool picking) {
                 glLineWidth(5.0f);
             }
 
-            size_t runOffset = 0;
-            for (int i = 0; i < runIdx; i++)
-                runOffset += dataset->getRuns()[i].timeSteps_.size();
-
             const EnsembleDataset::Run& run = dataset->getRuns()[runIdx];
             size_t numTimeSteps = run.timeSteps_.size();
             int eigenValueIdx = principalComponent_.get() - 1;
+            const auto& vertices = mdsData.nVectors_.at(runIdx);
 
             IMode.begin(tgt::ImmediateMode::LINE_STRIP);
             for(size_t j=0; j<numTimeSteps; j++) {
                 float t = mapRange(run.timeSteps_[j].time_, dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
                 IMode.color(getColor(runIdx, j, picking));
-                IMode.vertex(tgt::vec2(t, mdsData.nVectors_[j+runOffset][eigenValueIdx]));
+                IMode.vertex(tgt::vec2(t, vertices[j][eigenValueIdx]));
             }
             IMode.end();
 
             if(!picking && numTimeSteps > 0) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
                 float x = mapRange(run.timeSteps_[selectedTimeStep].time_, dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
-                tgt::vec3 position(x, mdsData.nVectors_[runOffset+selectedTimeStep][eigenValueIdx], 0.0f);
+                tgt::vec3 position(x, vertices[selectedTimeStep][eigenValueIdx], 0.0f);
                 drawTimeStepSelection(runIdx, selectedTimeStep, position);
             }
         }
@@ -434,22 +430,19 @@ void SimilarityPlot::renderingPass(bool picking) {
                 glLineWidth(5.0f);
             }
 
-            size_t runOffset = 0;
-            for (int i = 0; i < runIdx; i++)
-                runOffset += dataset->getRuns()[i].timeSteps_.size();
-
             size_t numTimeSteps = dataset->getRuns()[runIdx].timeSteps_.size();
+            const auto& vertices = mdsData.nVectors_.at(runIdx);
 
             IMode.begin(tgt::ImmediateMode::LINE_STRIP);
             for(size_t j=0; j<numTimeSteps; j++) {
                 IMode.color(getColor(runIdx, j, picking));
-                IMode.vertex(tgt::vec2(mdsData.nVectors_[j+runOffset][0], mdsData.nVectors_[j+runOffset][1]));
+                IMode.vertex(tgt::vec2(vertices[j][0], vertices[j][1]));
             }
             IMode.end();
 
             if(!picking && numTimeSteps > 0) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
-                tgt::vec3 position(mdsData.nVectors_[runOffset+selectedTimeStep][0], mdsData.nVectors_[runOffset+selectedTimeStep][1], 0.0f);
+                tgt::vec3 position(vertices[selectedTimeStep][0], vertices[selectedTimeStep][1], 0.0f);
                 drawTimeStepSelection(runIdx, selectedTimeStep, position);
             }
         }
@@ -479,22 +472,19 @@ void SimilarityPlot::renderingPass(bool picking) {
                 glLineWidth(5.0f);
             }
 
-            size_t runOffset = 0;
-            for (int i = 0; i < runIdx; i++)
-                runOffset += dataset->getRuns()[i].timeSteps_.size();
-
             size_t numTimeSteps = dataset->getRuns()[runIdx].timeSteps_.size();
+            const auto& vertices = mdsData.nVectors_.at(runIdx);
 
             IMode.begin(tgt::ImmediateMode::LINE_STRIP);
             for(size_t j=0; j<numTimeSteps; j++) {
                 IMode.color(getColor(runIdx, j, picking));
-                IMode.vertex(tgt::vec3::fromPointer(&mdsData.nVectors_[j+runOffset][0]) * scale);
+                IMode.vertex(tgt::vec3::fromPointer(&vertices[j][0]) * scale);
             }
             IMode.end();
 
             if(!picking && numTimeSteps > 0) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
-                drawTimeStepSelection(runIdx, selectedTimeStep, tgt::vec3::fromPointer(&mdsData.nVectors_[runOffset+selectedTimeStep][0])*scale);
+                drawTimeStepSelection(runIdx, selectedTimeStep, tgt::vec3::fromPointer(&vertices[selectedTimeStep][0])*scale);
             }
         }
 
@@ -548,7 +538,7 @@ tgt::vec3 SimilarityPlot::getColor(size_t runIdx, size_t timeStepIdx, bool picki
     float ts = static_cast<float>(timeStepIdx) / dataset->getRuns()[runIdx].timeSteps_.size();
     if (picking)
         return tgt::vec3(static_cast<float>(runIdx) / dataset->getRuns().size(), ts, 0.0f);
-    
+
     switch (colorCoding_.getValue()) {
     case COLOR_RUN:
         return dataset->getColor(runIdx);
@@ -621,7 +611,7 @@ void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
 
         // Update selection.
         if(e->modifiers() & tgt::MouseEvent::CTRL) {
-            // This selection mode modifes the sub selection for the MDS plot.
+            // This selection mode modifies the sub selection for the MDS plot.
 
             auto iter = std::find(subSelection_.begin(), subSelection_.end(), r);
             if (iter != subSelection_.end()) {
@@ -745,10 +735,15 @@ void SimilarityPlot::adjustToEnsemble() {
 
 void SimilarityPlot::calculate() {
 
+    size_t numRuns = ensembleInport_.getData()->getRuns().size();
+
     if(subSelection_.empty()) {
-        for(size_t i=0; i<ensembleInport_.getData()->getRuns().size(); i++) {
+        for (size_t i = 0; i < numRuns; i++) {
             subSelection_.insert(static_cast<int>(i));
         }
+    }
+
+    if(subSelection_.size() == numRuns) {
         LINFO("Calculating for whole data");
     }
     else {
@@ -780,10 +775,8 @@ void SimilarityPlot::calculate() {
     outputEigenValues();
     setProgress(1.0f);
 
-    // If subselection is whole dataset, we don't actually have a subselection.
-    if(subSelection_.size() == ensembleInport_.getData()->getRuns().size()) {
-        subSelection_.clear();
-    }
+    // Update rendering order.
+    renderingOrder_.assign(subSelection_.rbegin(), subSelection_.rend());
 
     ensembleHash_ = EnsembleHash(*ensembleInport_.getData()).getHash();
     calculateButton_.setReadOnlyFlag(false);
@@ -799,28 +792,18 @@ SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& Di
     const int iterNum = numIterations_.get();
     const size_t runsNum = runs.size();
 
+    MDSData result;
+
     size_t PointsNumber = 0;
     for(int runIdx : subSelection_) {
-        PointsNumber += runs[runIdx].timeSteps_.size();
+        size_t numTimeSteps = runs[runIdx].timeSteps_.size();
+        PointsNumber += numTimeSteps;
+        result.nVectors_[runIdx] = std::vector<std::vector<float>>(numTimeSteps, std::vector<float>(dimNum, 0.0f));
     }
-
-    MDSData result;
-    result.nVectors_ = std::vector<std::vector<float>>(PointsNumber, std::vector<float>(dimNum, 0.0f));
-    result.eigenvalues_.clear();
 
     MatrixXf Result(PointsNumber, dimNum);
     MatrixXf EigSq = MatrixXf::Zero(dimNum, dimNum);
     MatrixXf PMatrix(PointsNumber, PointsNumber);
-
-    /*
-    // TODO: find the error!
-
-    std::set<std::pair<size_t, size_t>> p;
-    for(size_t i=0; i<PointsNumber; i++) {
-        for(size_t j=0; j<=i; j++) {
-            p.insert(std::make_pair(i, j));
-        }
-    }
 
     // Init datastructures.
     size_t offsetA = 0;
@@ -828,50 +811,33 @@ SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& Di
 
     // Iterate each run, call it A.
     for(size_t runIdxA=0; runIdxA<runsNum; runIdxA++) {
-        size_t offsetB = 0;
-        size_t positionB = 0;
+        size_t offsetB = 0;//offsetA;
+        size_t positionB = 0;//positionA;
         size_t numTimeStepsA = runs[runIdxA].timeSteps_.size();
         if(subSelection_.find(runIdxA) != subSelection_.end()) {
             // Again iterate each run, call it B. Now looking at pairs of run A and B.
-            for(size_t runIdxB=0; runIdxB<=runIdxA; runIdxB++) {
+            for(size_t runIdxB=0; runIdxB<=runIdxA; runIdxB++) {//for(size_t runIdxB=runIdxA; runIdxB<runsNum; runIdxB++) {
                 size_t numTimeStepsB = runs[runIdxB].timeSteps_.size();
                 if (subSelection_.find(runIdxB) != subSelection_.end()) {
                     // Iterate time steps of run A.
                     for (size_t i = 0; i < numTimeStepsA; i++) {
                         // Iterate time steps of run B.
                         for (size_t j = 0; j < numTimeStepsB; j++) {
-                            float v = DistanceMatrix(i + offsetA, j + offsetB);
-                            PMatrix(i + positionA, j + positionB) = PMatrix(j + positionA, i + positionB) = v * v;
-
-                            if (p.find(std::make_pair(i + positionA, j + positionB)) == p.end()) {
-                                tgtAssert(false, "double delete p");
-                            } else {
-                                size_t s = p.size();
-                                p.erase(std::make_pair(i + positionA, j + positionB));
-                                tgtAssert(p.size() == s - 1, "not deleted");
-                            }
+//                            if(runIdxA == runIdxB && j < i){
+//                                continue;
+//                            }
+                            float v = DistanceMatrix(i + offsetA, j + offsetB);//float v = DistanceMatrix(j + offsetB, i + offsetA);
+                            PMatrix(i + positionA, j + positionB) = PMatrix(j + positionB, i + positionA) = v * v;
                         }
-                        positionB+=numTimeStepsB;
                     }
-                    positionA+=numTimeStepsA;
+                    positionB+=numTimeStepsB;
                 }
                 offsetB+=numTimeStepsB;
             }
+            positionA+=numTimeStepsA;
         }
         offsetA += numTimeStepsA;
     }
-    tgtAssert(p.empty(), "not empty");
-    /*/
-
-    for (size_t i=0; i<PointsNumber; i++) {
-        for (size_t j = 0; j <= i; j++) {
-            float v = DistanceMatrix(i, j);
-            PMatrix(i, j) = v * v;
-            PMatrix(j, i) = PMatrix(i, j);
-        }
-    }
-
-    //*/
 
     MatrixXf JMatrix = MatrixXf::Identity (PointsNumber, PointsNumber) -
               (1.0f / PointsNumber) * MatrixXf::Ones (PointsNumber, PointsNumber);
@@ -923,7 +889,7 @@ SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& Di
     }
     delete [] EVectors;
 
-    //Now get the resulting matrix
+    // Now get the resulting matrix.
     Result = Result*EigSq;
 
     for (size_t i=0; i<result.eigenvalues_.size(); i++) {
@@ -938,9 +904,14 @@ SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& Di
                 MinValue = Result(j, i);
         }
 
-        for (size_t j = 0; j < PointsNumber; j++) {
-            float value = mapRange(Result(j, i), MinValue, MaxValue, -1.0f, 1.0f);
-            result.nVectors_[j][i] = value;
+        // Interpret as run and time steps.
+        size_t j=0;
+        for (int runIdx : subSelection_) {
+            for(size_t t=0; t<runs[runIdx].timeSteps_.size(); t++) {
+                float value = mapRange(Result(j, i), MinValue, MaxValue, -1.0f, 1.0f);
+                result.nVectors_[runIdx][t][i] = value;
+                j++;
+            }
         }
     }
 
@@ -1005,11 +976,6 @@ void SimilarityPlot::save() {
 
 void SimilarityPlot::renderedChannelsChanged() {
     renderingOrder_ = std::deque<int>(renderedRuns_.getSelectedRowIndices().begin(), renderedRuns_.getSelectedRowIndices().end());
-}
-
-void SimilarityPlot::selectedRunsChanged() {
-    //const std::vector<int>& runIndices = selectedRuns_.getSelectedRowIndices();
-    //subSelection_ = std::set<int>(runIndices.begin(), runIndices.end());
 }
 
 void SimilarityPlot::load() {

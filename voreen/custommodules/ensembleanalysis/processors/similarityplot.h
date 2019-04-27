@@ -56,7 +56,10 @@ class VRN_CORE_API SimilarityPlot : public RenderProcessor {
     class MDSData : public Serializable {
     public:
         /// Actual principal components, to be drawn.
-        std::vector<std::vector<float>> nVectors_;
+        // * First layer encodes run.
+        // * Second layer encodes time step.
+        // * Third layer encodes principle component.
+        std::map<int, std::vector<std::vector<float>>> nVectors_;
 
         /// Corresponding eigen values.
         std::vector<float> eigenvalues_;
@@ -148,9 +151,6 @@ protected:
     /// Actual MDS data for each channel (all runs selected).
     std::vector<MDSData> mdsData_;
 
-    /// MDS data for subselection.
-    //std::vector<MDSData> mdsDataSubselection_;
-
     /// Sphere geometry for timestep selection.
     GlMeshGeometryUInt16Simple sphere_;
 
@@ -171,7 +171,6 @@ private:
 
     void outputEigenValues();
     void renderedChannelsChanged();
-    void selectedRunsChanged();
     void save();
     void load();
 
