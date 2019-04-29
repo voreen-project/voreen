@@ -190,14 +190,17 @@ namespace tgt {
                     tgt::vec4 v1Pix = toPixelMat*v1.position;
                     tgt::vec4 v2Pix = toPixelMat*v2.position;
 
-                    tgt::vec2 pixFromTo = tgt::normalize(v2Pix.xy() - v1Pix.xy());
-                    tgt::vec2 pixOrthogonal(pixFromTo.y, -pixFromTo.x);
-                    tgt::vec4 pixOffset(pixOrthogonal*(lineWidth*0.5f), 0, 0);
+                    tgt::vec2 pixFromTo = v2Pix.xy() - v1Pix.xy();
+                    if(pixFromTo != tgt::vec2::zero) {
+                        tgt::vec2 pixTangent = tgt::normalize(pixFromTo);
+                        tgt::vec2 pixOrthogonal(pixTangent.y, -pixTangent.x);
+                        tgt::vec4 pixOffset(pixOrthogonal*(lineWidth*0.5f), 0, 0);
 
-                    v11.position = fromPixelMat*(v1Pix+pixOffset);
-                    v12.position = fromPixelMat*(v1Pix-pixOffset);
-                    v21.position = fromPixelMat*(v2Pix+pixOffset);
-                    v22.position = fromPixelMat*(v2Pix-pixOffset);
+                        v11.position = fromPixelMat*(v1Pix+pixOffset);
+                        v12.position = fromPixelMat*(v1Pix-pixOffset);
+                        v21.position = fromPixelMat*(v2Pix+pixOffset);
+                        v22.position = fromPixelMat*(v2Pix-pixOffset);
+                    }
 
                     return std::make_tuple(v11, v12, v21, v22);
             };
@@ -209,12 +212,29 @@ namespace tgt {
 
                     tgt::vec2 pixFromToB = tgt::normalize(vnPix.xy() - vbPix.xy());
                     tgt::vec2 pixFromToA = tgt::normalize(vaPix.xy() - vnPix.xy());
-                    tgt::vec2 pixTangent = tgt::normalize(pixFromToB + pixFromToA);
-                    tgt::vec2 pixOrthogonal(pixTangent.y, -pixTangent.x);
-                    tgt::vec4 pixOffset(pixOrthogonal*(lineWidth*0.5f), 0, 0);
 
                     Vertex v1 = vn;
                     Vertex v2 = vn;
+
+                    tgt::vec2 pixTangent;
+                    if(tgt::isNaN(pixFromToA)) {
+                        if(tgt::isNaN(pixFromToB)) {
+                            return std::make_tuple(v1, v2);
+                        } else {
+                            pixTangent = pixFromToB;
+                        }
+                    } else {
+                        if(tgt::isNaN(pixFromToB)) {
+                            pixTangent = pixFromToA;
+                        } else {
+                            pixTangent = tgt::normalize(pixFromToB + pixFromToA);
+                            if(tgt::isNaN(pixTangent)) {
+                                pixTangent = pixFromToA;
+                            }
+                        }
+                    }
+                    tgt::vec2 pixOrthogonal(pixTangent.y, -pixTangent.x);
+                    tgt::vec4 pixOffset(pixOrthogonal*(lineWidth*0.5f), 0, 0);
 
                     v1.position = fromPixelMat*(vnPix+pixOffset);
                     v2.position = fromPixelMat*(vnPix-pixOffset);
