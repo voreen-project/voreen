@@ -186,9 +186,9 @@ void FlowEnsembleCreator::writeMeasuredData(const VolumeList* measuredData,
         tgt::FileSystem::createDirectoryRecursive(runPath);
 
         if (measuredData->size() == 1) {
-            const VolumeBase *original = measuredData->first();
+            const VolumeBase* original = measuredData->first();
             VvdVolumeWriter().write(runPath + "/t0.vvd", original);
-            std::unique_ptr<VolumeBase> duplicate(new VolumeDecoratorReplaceTimestep(original, 1.0f));
+            std::unique_ptr<VolumeBase> duplicate(new VolumeDecoratorReplaceTimestep(original, simulationTime_.get()));
             VvdVolumeWriter().write(runPath + "/t1.vvd", duplicate.get());
         } else {
             for (size_t j = 0; j < measuredData->size(); j++) {
