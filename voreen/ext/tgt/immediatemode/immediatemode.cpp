@@ -91,7 +91,7 @@ namespace tgt {
     ImmediateMode::Material ImmediateMode::getMaterial() const {
         return material_;
     }
-    
+
     void ImmediateMode::setMaterialColor(MaterialColor matColor) {
         materialColor_ = matColor;
     }
@@ -147,6 +147,11 @@ namespace tgt {
         GLvoid* finalVertices = vertices_.data();
         GLsizei finalSize = (GLsizei)vertices_.size();
 
+        // Only relevant for FAKE_LINES/FAKE_LINE_STRIP
+        GLint oldPolygonSmoothHint;
+        GLboolean oldPolygonSmooth;
+        bool fakeLines = polygonMode_ == FAKE_LINES || polygonMode_ == FAKE_LINE_STRIP;
+
         // we need to convert quad geometry to triangle geometry
         std::vector<Vertex> convertedVertices;
         if (polygonMode_ == QUADS) {
@@ -161,6 +166,120 @@ namespace tgt {
             }
 
             polygonMode_ = TRIANGLES;
+
+            finalVertices = convertedVertices.data();
+            finalSize = (GLsizei)convertedVertices.size();
+        } else if (fakeLines) {
+            glGetIntegerv(GL_POLYGON_SMOOTH_HINT, &oldPolygonSmoothHint);
+            glGetBooleanv(GL_POLYGON_SMOOTH, &oldPolygonSmooth);
+
+            GLboolean lineSmooth;
+            glGetBooleanv(GL_LINE_SMOOTH, &lineSmooth);
+            if (lineSmooth) {
+                GLint lineSmoothHint=GL_DONT_CARE;
+                glGetIntegerv(GL_LINE_SMOOTH_HINT, &lineSmoothHint);
+
+                glHint(GL_POLYGON_SMOOTH_HINT, lineSmoothHint);
+                glEnable(GL_POLYGON_SMOOTH);
+            }
+
+            float lineWidth = 1;
+            glGetFloatv(GL_LINE_WIDTH, &lineWidth);
+
+            tgt::vec4 viewport = tgt::vec4::zero;
+            glGetFloatv(GL_VIEWPORT, viewport.elem);
+            tgt::mat4 viewportMat = tgt::mat4::createTranslation(tgt::vec3(viewport.xy(),0)) // [0,w|h] -> [x|y,x+w|y+h]
+                                  * tgt::mat4::createScale(tgt::vec3(viewport.zw(), 1))      // [0,1] -> [0,w|h]
+                                  * tgt::mat4::createScale(tgt::vec3(0.5,0.5,1))             // [0,2] -> [0,1]
+                                  * tgt::mat4::createTranslation(tgt::vec3(1,1,0));          // [-1,1] -> [0,2]
+
+            tgt::mat4 toPixelMat = viewportMat * MatStack.getProjectionMatrix() * MatStack.getModelViewMatrix();
+            tgt::mat4 fromPixelMat;
+            bool inverted = toPixelMat.invert(fromPixelMat);
+            tgtAssert(inverted, "Failed to invert toPixelMat");
+            LGL_ERROR;
+
+            auto offsetVertices2 = [&] (const Vertex& v1, const Vertex& v2) {
+                    Vertex v11 = v1;
+                    Vertex v12 = v1;
+                    Vertex v21 = v2;
+                    Vertex v22 = v2;
+
+                    tgt::vec4 v1Pix = toPixelMat*v1.position;
+                    tgt::vec4 v2Pix = toPixelMat*v2.position;
+
+                    tgt::vec2 pixFromTo = tgt::normalize(v2Pix.xy() - v1Pix.xy());
+                    tgt::vec2 pixOrthogonal(pixFromTo.y, -pixFromTo.x);
+                    tgt::vec4 pixOffset(pixOrthogonal*(lineWidth*0.5f), 0, 0);
+
+                    v11.position = fromPixelMat*(v1Pix+pixOffset);
+                    v12.position = fromPixelMat*(v1Pix-pixOffset);
+                    v21.position = fromPixelMat*(v2Pix+pixOffset);
+                    v22.position = fromPixelMat*(v2Pix-pixOffset);
+
+                    return std::make_tuple(v11, v12, v21, v22);
+            };
+
+            auto offsetVertices3 = [&] (const Vertex& vb, const Vertex& vn, const Vertex& va) {
+                    tgt::vec4 vbPix = toPixelMat*vb.position;
+                    tgt::vec4 vnPix = toPixelMat*vn.position;
+                    tgt::vec4 vaPix = toPixelMat*va.position;
+
+                    tgt::vec2 pixFromToB = tgt::normalize(vnPix.xy() - vbPix.xy());
+                    tgt::vec2 pixFromToA = tgt::normalize(vaPix.xy() - vnPix.xy());
+                    tgt::vec2 pixTangent = tgt::normalize(pixFromToB + pixFromToA);
+                    tgt::vec2 pixOrthogonal(pixTangent.y, -pixTangent.x);
+                    tgt::vec4 pixOffset(pixOrthogonal*(lineWidth*0.5f), 0, 0);
+
+                    Vertex v1 = vn;
+                    Vertex v2 = vn;
+
+                    v1.position = fromPixelMat*(vnPix+pixOffset);
+                    v2.position = fromPixelMat*(vnPix-pixOffset);
+
+                    return std::make_tuple(v1, v2);
+            };
+
+            if (polygonMode_ == FAKE_LINES) {
+                for (size_t i = 0; i < vertices_.size()-1; i+=2) {
+                    auto t = offsetVertices2(vertices_[i+0], vertices_[i+1]);
+
+                    convertedVertices.push_back(std::get<0>(t));
+                    convertedVertices.push_back(std::get<2>(t));
+                    convertedVertices.push_back(std::get<1>(t));
+
+                    convertedVertices.push_back(std::get<1>(t));
+                    convertedVertices.push_back(std::get<2>(t));
+                    convertedVertices.push_back(std::get<3>(t));
+                }
+                polygonMode_ = TRIANGLES;
+            } else if (polygonMode_ == FAKE_LINE_STRIP) {
+                if(vertices_.size() > 1) {
+                    {
+                        auto t = offsetVertices2(vertices_[0], vertices_[1]);
+
+                        convertedVertices.push_back(std::get<1>(t));
+                        convertedVertices.push_back(std::get<0>(t));
+                    }
+                    for (size_t i = 1; i < vertices_.size()-1; i+=1) {
+                        Vertex vbefore = vertices_[i-1];
+                        Vertex vnow    = vertices_[i  ];
+                        Vertex vafter  = vertices_[i+1];
+
+                        auto t = offsetVertices3(vbefore, vnow, vafter);
+
+                        convertedVertices.push_back(std::get<1>(t));
+                        convertedVertices.push_back(std::get<0>(t));
+                    }
+                    {
+                        auto t = offsetVertices2(vertices_[vertices_.size()-2], vertices_[vertices_.size()-1]);
+
+                        convertedVertices.push_back(std::get<3>(t));
+                        convertedVertices.push_back(std::get<2>(t));
+                    }
+                }
+                polygonMode_ = TRIANGLE_STRIP;
+            }
 
             finalVertices = convertedVertices.data();
             finalSize = (GLsizei)convertedVertices.size();
@@ -246,6 +365,13 @@ namespace tgt {
                         glDisable(clipDistanceID);
                     }
                 }
+            }
+        }
+
+        if (fakeLines) {
+            glHint(GL_POLYGON_SMOOTH_HINT, oldPolygonSmoothHint);
+            if(!oldPolygonSmooth) {
+                glDisable(GL_POLYGON_SMOOTH);
             }
         }
     }

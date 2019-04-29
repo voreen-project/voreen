@@ -151,10 +151,12 @@ bool PlotLibraryOpenGl::setRenderStatus() {
         //glEnable(GL_POINT_SMOOTH);
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
         glEnable(GL_LINE_SMOOTH);
+
         //clear color buffer
         glClearColor(1.0,1.0,1.0,0.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
+
     return true;
 }
 
@@ -200,7 +202,7 @@ void PlotLibraryOpenGl::renderLine(const PlotData& data, int indexX, int indexY)
         }
         x = tagsInX ? i : it->getValueAt(indexX);
         y = it->getValueAt(indexY);
-        IMode.begin(tgt::ImmediateMode::LINES);
+        IMode.begin(tgt::ImmediateMode::FAKE_LINES);
             logGlVertex2d(oldX, oldY);
             logGlVertex2d(x, y);
         IMode.end();
@@ -294,7 +296,7 @@ void PlotLibraryOpenGl::renderSpline(const PlotData& data, int indexX, int index
         IMode.color(highlightColor_);
     else
         IMode.color(drawingColor_);
-    IMode.begin(tgt::ImmediateMode::LINE_STRIP);
+    IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
     for (GLfloat p = 0.f; p < 1.f; p+=step) {
         x = spline.getPoint(p).x;
         y = spline.getPoint(p).y;
@@ -471,15 +473,15 @@ void PlotLibraryOpenGl::renderErrorbars(const PlotData& data, int indexX, int in
         y = logarithmicAxisFlags_[Y_AXIS] ? convertToLogCoordinates(y, Y_AXIS) : y;
         yTop = logarithmicAxisFlags_[Y_AXIS] ? convertToLogCoordinates(yTop, Y_AXIS) : yTop;
         yBottom = logarithmicAxisFlags_[Y_AXIS] ? convertToLogCoordinates(yBottom, Y_AXIS) : yBottom;
-        IMode.begin(tgt::ImmediateMode::LINES);
+        IMode.begin(tgt::ImmediateMode::FAKE_LINES);
             IMode.vertex(x, yBottom);
             IMode.vertex(x, yTop);
         IMode.end();
-        IMode.begin(tgt::ImmediateMode::LINES);
+        IMode.begin(tgt::ImmediateMode::FAKE_LINES);
             IMode.vertex(x-radius, yTop);
             IMode.vertex(x+radius, yTop);
         IMode.end();
-        IMode.begin(tgt::ImmediateMode::LINES);
+        IMode.begin(tgt::ImmediateMode::FAKE_LINES);
             IMode.vertex(x-radius, yBottom);
             IMode.vertex(x+radius, yBottom);
         IMode.end();
@@ -533,7 +535,7 @@ void PlotLibraryOpenGl::renderCandlesticks(const PlotData& data, int indexX, int
             IMode.color(highlightColor_);
         else
             IMode.color(drawingColor_);
-        IMode.begin(tgt::ImmediateMode::LINES);
+        IMode.begin(tgt::ImmediateMode::FAKE_LINES);
             logGlVertex2d(x, yStickTop);
             logGlVertex2d(x, (yStickTop+yStickBottom)/2.0);
         IMode.end();
@@ -543,7 +545,7 @@ void PlotLibraryOpenGl::renderCandlesticks(const PlotData& data, int indexX, int
             IMode.color(highlightColor_);
         else
             IMode.color(drawingColor_);
-        IMode.begin(tgt::ImmediateMode::LINES);
+        IMode.begin(tgt::ImmediateMode::FAKE_LINES);
             logGlVertex2d(x, (yStickTop+yStickBottom)/2.0);
             logGlVertex2d(x, yStickBottom);
         IMode.end();
@@ -1081,7 +1083,7 @@ void PlotLibraryOpenGl::renderNodeGraph(const PlotData& nodeData, const PlotData
 
         // render force vector
         IMode.color(fillColor_);
-        IMode.begin(tgt::ImmediateMode::LINE_STRIP);
+        IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
             logGlVertex2d(it->getValueAt(indexX), it->getValueAt(indexY));
             logGlVertex2d(it->getValueAt(indexX) + it->getValueAt(indexDx), it->getValueAt(indexY) + it->getValueAt(indexDy));
         IMode.end();
@@ -1107,7 +1109,7 @@ void PlotLibraryOpenGl::renderNodeGraph(const PlotData& nodeData, const PlotData
         secondIt = nodeData.lower_bound(tester);
 
         if (firstIt != nodeData.getRowsEnd() && secondIt != nodeData.getRowsEnd()) {
-            IMode.begin(tgt::ImmediateMode::LINE_STRIP);
+            IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
                 logGlVertex2d(firstIt->getValueAt(indexX), firstIt->getValueAt(indexY));
                 logGlVertex2d(secondIt->getValueAt(indexX), secondIt->getValueAt(indexY));
             IMode.end();
@@ -1157,7 +1159,7 @@ void PlotLibraryOpenGl::renderColorMapLegend(const PlotData& data, int column, i
     // bounding box
     IMode.color(drawingColor_);
     glLineWidth(lineWidth_);
-    IMode.begin(tgt::ImmediateMode::LINE_STRIP);
+    IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
         IMode.vertex(xStart, yStart);
         IMode.vertex(xStart, yStart - height);
         IMode.vertex(xStart + width, yStart - height);
@@ -1249,8 +1251,7 @@ void PlotLibraryOpenGl::renderScatter(const PlotData& data, int indexX, int inde
 
 void PlotLibraryOpenGl::renderAxes() {
     // axes
-    if (dimension_ == TWO)
-        glDisable(GL_DEPTH_TEST);
+    glDepthFunc(GL_ALWAYS);
 
     glLineWidth(axesWidth_);
     IMode.color(drawingColor_);
@@ -1261,7 +1262,7 @@ void PlotLibraryOpenGl::renderAxes() {
 
     if (! centerAxesFlag_) {
         //x and y axes
-        IMode.begin(tgt::ImmediateMode::LINE_STRIP);
+        IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
             IMode.vertex(xl, yr, zl);
             IMode.vertex(xl, yl, zl);
             IMode.vertex(xr, yl, zl);
@@ -1277,7 +1278,7 @@ void PlotLibraryOpenGl::renderAxes() {
         MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
         MatStack.pushMatrix();
         MatStack.loadIdentity();
-        IMode.begin(tgt::ImmediateMode::LINES);
+        IMode.begin(tgt::ImmediateMode::FAKE_LINES);
             IMode.vertex(windowSize_.x-marginRight_, marginBottom_);
             IMode.vertex(windowSize_.x-marginRight_+4*arrowSize, marginBottom_);
             IMode.vertex(windowSize_.x-marginRight_+2*arrowSize, marginBottom_+arrowSize);
@@ -1299,7 +1300,7 @@ void PlotLibraryOpenGl::renderAxes() {
     }
     else if (dimension_ == THREE) {
         if (centerAxesFlag_) {
-            IMode.begin(tgt::ImmediateMode::LINES);
+            IMode.begin(tgt::ImmediateMode::FAKE_LINES);
                 IMode.vertex(xl, 0, 0); IMode.vertex(xr, 0, 0);
                 IMode.vertex(0, yl, 0); IMode.vertex(0, yr, 0);
                 IMode.vertex(0, 0,  0); IMode.vertex(0, 0, zr);
@@ -1307,16 +1308,16 @@ void PlotLibraryOpenGl::renderAxes() {
         }
         else {
             //draw cube mesh
-            IMode.begin(tgt::ImmediateMode::LINE_STRIP);
+            IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
                 IMode.vertex(xr, yl, zl); IMode.vertex(xr, yr, zl);
                 IMode.vertex(xl, yr, zl); IMode.vertex(xl, yr, zr);
                 IMode.vertex(xr, yr, zr); IMode.vertex(xr, yr, zl);
             IMode.end();
-            IMode.begin(tgt::ImmediateMode::LINE_STRIP);
+            IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
                 IMode.vertex(xr, yl, zl); IMode.vertex(xr, yl, zr);
                 IMode.vertex(xl, yl, zr); IMode.vertex(xl, yl, zl);
             IMode.end();
-            IMode.begin(tgt::ImmediateMode::LINES);
+            IMode.begin(tgt::ImmediateMode::FAKE_LINES);
                 IMode.vertex(xr, yl, zr); IMode.vertex(xr, yr, zr);
                 IMode.vertex(xl, yl, zr); IMode.vertex(xl, yr, zr);
             IMode.end();
@@ -1330,7 +1331,7 @@ void PlotLibraryOpenGl::renderAxes() {
         IMode.end();
 
         //draw bottom
-        IMode.begin(tgt::ImmediateMode::LINES);
+        IMode.begin(tgt::ImmediateMode::FAKE_LINES);
             IMode.vertex(xl, yl, zl); IMode.vertex(xl, yl, zr);
             IMode.vertex(xr, yl, zr); IMode.vertex(xr, yl, zl);
         IMode.end();
@@ -1342,26 +1343,27 @@ void PlotLibraryOpenGl::renderAxes() {
         IMode.end();
 
         //draw zero
-        IMode.begin(tgt::ImmediateMode::LINES);
+        IMode.begin(tgt::ImmediateMode::FAKE_LINES);
             IMode.vertex(xl, 0, zl); IMode.vertex(xl, 0, zr);
             IMode.vertex(xr, 0, zr); IMode.vertex(xr, 0, zl);
         IMode.end();
 
         //the front is always above the plot
         glDisable(GL_DEPTH_TEST);
-        IMode.begin(tgt::ImmediateMode::LINES);
+        IMode.begin(tgt::ImmediateMode::FAKE_LINES);
             IMode.vertex(xl, 0, zr);
             IMode.vertex(xr, 0, zr);
         IMode.end();
-        IMode.begin(tgt::ImmediateMode::LINES);
+        IMode.begin(tgt::ImmediateMode::FAKE_LINES);
             IMode.vertex(xl, yl, zr);
             IMode.vertex(xr, yl, zr);
         IMode.end();
     }
-    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
 }
 
 void PlotLibraryOpenGl::renderAxisScales(Axis axis, bool helperLines, const std::string& label, plot_t offset) {
+    glDepthFunc(GL_ALWAYS);
     tgt::dvec2 step = updateScaleSteps(axis);
     glLineWidth(axesWidth_/2.f);
     IMode.color(drawingColor_);
@@ -1394,7 +1396,7 @@ void PlotLibraryOpenGl::renderAxisScales(Axis axis, bool helperLines, const std:
                                           convertPlotCoordinatesToViewport3(tgt::dvec3(i, yl, zr)),
                                           fontColor_, fontSize_, SmartLabel::TOPCENTERED);
                 if (helperLines && dimension_ == TWO) {
-                    IMode.begin(tgt::ImmediateMode::LINE_STRIP);
+                    IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
                         logGlVertex2d(i, yl);
                         logGlVertex2d(i, yr);
                     IMode.end();
@@ -1402,8 +1404,9 @@ void PlotLibraryOpenGl::renderAxisScales(Axis axis, bool helperLines, const std:
             }
             else if (axis == Y_AXIS) {
                 renderLabel(tgt::dvec3(xl, i, zr), SmartLabel::MIDDLERIGHT, stream.str());
+                glDisable(GL_DEPTH_TEST);
                 if (helperLines) {
-                    IMode.begin(tgt::ImmediateMode::LINE_STRIP);
+                    IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
                         if (dimension_ == FAKETHREE)
                             logGlVertex3d(xl, i, zr);
                         logGlVertex3d(xl, i, zl);
@@ -1413,6 +1416,7 @@ void PlotLibraryOpenGl::renderAxisScales(Axis axis, bool helperLines, const std:
             }
         }
         renderSmartLabelGroup(&xAxisLabelGroup_);
+        glEnable(GL_DEPTH_TEST);
     }
     else if (dimension_ == THREE) {
         // If we are inside the plot cube (or really close to it) we do not want to
@@ -1602,7 +1606,7 @@ void PlotLibraryOpenGl::renderAxisScales(Axis axis, bool helperLines, const std:
                glGetQueryObjectiv(occlusionQueries[i], GL_QUERY_RESULT, &renderFaces[i]);
             }
 
-            IMode.begin(tgt::ImmediateMode::LINES);
+            IMode.begin(tgt::ImmediateMode::FAKE_LINES);
             if (axis == X_AXIS) {
                 for (plot_t i = start; renderFaces[0] && i <= domain_[axis].getRight(); i += step.x) {
                     IMode.vertex(i, yl, zl);
@@ -1663,9 +1667,12 @@ void PlotLibraryOpenGl::renderAxisScales(Axis axis, bool helperLines, const std:
             glDisable(GL_CULL_FACE);
         }
     }
+    glDepthFunc(GL_LESS);
 }
 
 void PlotLibraryOpenGl::renderAxisLabelScales(const PlotData& data, int indexLabel, bool helperLines) {
+    glDepthFunc(GL_ALWAYS);
+
     std::string label;
     xAxisLabelGroup_.reset();
     xAxisLabelGroup_.setBounds(getBoundsBelowPlot());
@@ -1689,7 +1696,7 @@ void PlotLibraryOpenGl::renderAxisLabelScales(const PlotData& data, int indexLab
                                   convertPlotCoordinatesToViewport3(tgt::dvec3(x, domain_[1].getLeft(), domain_[2].getRight())),
                                   fontColor_, fontSize_, SmartLabel::TOPCENTERED);
         if (helperLines && dimension_ == TWO) {
-            IMode.begin(tgt::ImmediateMode::LINE_STRIP);
+            IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
                 logGlVertex2d(x, domain_[1].getLeft());
                 logGlVertex2d(x, domain_[1].getRight());
             IMode.end();
@@ -1697,6 +1704,7 @@ void PlotLibraryOpenGl::renderAxisLabelScales(const PlotData& data, int indexLab
         x += 1;
     }
     renderSmartLabelGroup(&xAxisLabelGroup_);
+    glDepthFunc(GL_LESS);
 }
 
 void PlotLibraryOpenGl::renderLabel(tgt::vec3 pos, const SmartLabel::Alignment align, const std::string& text,
@@ -1786,6 +1794,7 @@ void PlotLibraryOpenGl::resetRenderStatus() {
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glLineWidth(1.f);
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
 
     MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
     MatStack.loadIdentity();

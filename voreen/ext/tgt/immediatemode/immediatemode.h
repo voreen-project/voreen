@@ -60,7 +60,9 @@ namespace tgt {
             TRIANGLE_FAN = GL_TRIANGLE_FAN,
             QUADS = GL_QUADS,
             QUAD_STRIP = GL_TRIANGLE_STRIP, // it is basically the same
-            POLYGON = GL_TRIANGLE_FAN       // it is the same for convex polygons
+            POLYGON = GL_TRIANGLE_FAN,      // it is the same for convex polygons
+            FAKE_LINES = 0xfeedbeee,        // Emulate lines with triangles
+            FAKE_LINE_STRIP = 0xfeedbeef,   // Emulate line strip with triangle strip
         };
 
         /**
