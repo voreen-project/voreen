@@ -469,7 +469,7 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
         lattice.iniEquilibrium(superGeometry, MAT_LIQUID, rhoF, uF);
 
         // Initialize all values of distribution functions to their local equilibrium
-        for (const FlowIndicatorMaterial &indicator : flowIndicators) {
+        for (const FlowIndicatorMaterial& indicator : flowIndicators) {
             lattice.defineRhoU(superGeometry, indicator.materialId_, rhoF, uF);
             lattice.iniEquilibrium(superGeometry, indicator.materialId_, rhoF, uF);
         }
@@ -641,8 +641,7 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
         for (int y = 0; y < resolution; y++) {
             for (int x = 0; x < resolution; x++) {
 
-                T pos[3] = {offset[0] + x * maxLen / resolution, offset[1] + y * maxLen / resolution,
-                            offset[2] + z * maxLen / resolution};
+                T pos[3] = {offset[0] + x * spacing[0], offset[1] + y * spacing[1], offset[2] + z * spacing[2]};
                 std::vector<T> val(feature.getTargetDim(), 0.0f);
 
                 if (pos[0] >= min[0] && pos[1] >= min[1] && pos[2] >= min[2] &&
@@ -669,11 +668,18 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
     }
 
     // Adapt to Voreen units.
-    minMagnitude = std::sqrt(minMagnitude) / (VOREEN_LENGTH_TO_SI * VOREEN_LENGTH_TO_SI);
-    maxMagnitude = std::sqrt(maxMagnitude) / (VOREEN_LENGTH_TO_SI * VOREEN_LENGTH_TO_SI);
-    offset = offset * (1/VOREEN_LENGTH_TO_SI);
+    offset  = offset  * (1/VOREEN_LENGTH_TO_SI);
     spacing = spacing * (1/VOREEN_LENGTH_TO_SI);
 
+    for (int i = 0; i < feature.getTargetDim(); i++) {
+        minValue[i] /= VOREEN_LENGTH_TO_SI;
+        maxValue[i] /= VOREEN_LENGTH_TO_SI;
+    }
+
+    minMagnitude = std::sqrt(minMagnitude) / VOREEN_LENGTH_TO_SI;
+    maxMagnitude = std::sqrt(maxMagnitude) / VOREEN_LENGTH_TO_SI;
+
+    // Set output names.
     int tmaxLen = static_cast<int>(std::to_string(tmax).length());
     std::ostringstream suffix;
     suffix << std::setw(tmaxLen) << std::setfill('0') << ti;
@@ -681,7 +687,7 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
     std::string rawFilename = simulationOutputPath + featureFilename + ".raw";
     std::string vvdFilename = simulationOutputPath + featureFilename + ".vvd";
 
-    const FlowParameters &parameters = parametrizationList.at(selectedParametrization);
+    const FlowParameters& parameters = parametrizationList.at(selectedParametrization);
     const LatticeStatistics<T>& statistics = feature.getSuperLattice().getStatistics();
     std::fstream vvdFeatureFile(vvdFilename.c_str(), std::ios::out);
     vvdFeatureFile

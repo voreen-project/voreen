@@ -334,6 +334,9 @@ void writeResult(STLreader<T>& stlReader,
     rawFeatureData.reserve(static_cast<size_t>(resolution * resolution * resolution * feature.getTargetDim()));
     AnalyticalFfromSuperF3D<T> interpolateProperty(feature, true);
 
+    std::vector<T> minValue(feature.getTargetDim(), std::numeric_limits<T>::max());
+    std::vector<T> maxValue(feature.getTargetDim(), std::numeric_limits<T>::lowest());
+
     T minMagnitude = std::numeric_limits<T>::max();
     T maxMagnitude = 0.0f;
 
@@ -350,8 +353,10 @@ void writeResult(STLreader<T>& stlReader,
 
                     // Update min/max.
                     T magnitude = 0;
-                    for(int i = 0; i < feature.getTargetDim(); i++) {
-                        magnitude += val[i]*val[i];
+                    for (int i = 0; i < feature.getTargetDim(); i++) {
+                        minValue[i] = std::min(minValue[i], val[i]);
+                        maxValue[i] = std::max(maxValue[i], val[i]);
+                        magnitude += val[i] * val[i];
                     }
                     minMagnitude = std::min(minMagnitude, magnitude);
                     maxMagnitude = std::max(maxMagnitude, magnitude);
@@ -366,11 +371,18 @@ void writeResult(STLreader<T>& stlReader,
     }
 
     // Adapt to Voreen units.
-    minMagnitude = std::sqrt(minMagnitude) / (VOREEN_LENGTH_TO_SI * VOREEN_LENGTH_TO_SI);
-    maxMagnitude = std::sqrt(maxMagnitude) / (VOREEN_LENGTH_TO_SI * VOREEN_LENGTH_TO_SI);
-    offset = offset * (1/VOREEN_LENGTH_TO_SI);
+    offset  = offset  * (1/VOREEN_LENGTH_TO_SI);
     spacing = spacing * (1/VOREEN_LENGTH_TO_SI);
 
+    for (int i = 0; i < feature.getTargetDim(); i++) {
+        minValue[i] /= VOREEN_LENGTH_TO_SI;
+        maxValue[i] /= VOREEN_LENGTH_TO_SI;
+    }
+
+    minMagnitude = std::sqrt(minMagnitude) / VOREEN_LENGTH_TO_SI;
+    maxMagnitude = std::sqrt(maxMagnitude) / VOREEN_LENGTH_TO_SI;
+
+    // Set output names.
     int tmaxLen = static_cast<int>(std::to_string(tmax).length());
     std::ostringstream suffix;
     suffix << std::setw(tmaxLen) << std::setfill('0') << ti;
