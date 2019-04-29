@@ -23,49 +23,27 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "voreen/core/utils/multisampler.h"
+#ifndef VRN_MULTISAMPLER
+#define VRN_MULTISAMPLER
+
+#include "voreen/core/ports/renderport.h"
 
 namespace voreen {
 
-Multisampler::Multisampler(RenderPort& target, size_t numSamples)
-    : tex_(0)
-    , fbo_(0)
-    , port_(target)
-{
-    size_t width = port_.getSize().x;
-    size_t height = port_.getSize().y;
-
-    glGenFramebuffers(1, &fbo_);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
-
-    glGenTextures(1, &tex_);
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, tex_);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, numSamples, port_.getColorTexture()->getGLFormat(), width, height, false);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, tex_, 0);
-
-    glGenTextures(1, &depthTex_);
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, depthTex_);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, numSamples, port_.getDepthTexture()->getGLFormat(), width, height, false);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_MULTISAMPLE, depthTex_, 0);
-
-    glViewport(0, 0, width, height);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
-}
-
-Multisampler::~Multisampler() {
-    size_t width = port_.getSize().x;
-    size_t height = port_.getSize().y;
-
-    port_.activateTarget();
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_); // Make sure your multisampled FBO is the read framebuffer
-    //glDrawBuffer(GL_BACK);                        // Set the back buffer as the draw buffer
-    glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-    port_.deactivateTarget();
-
-    glDeleteFramebuffers(1, &fbo_);
-    glDeleteTextures(1, &tex_);
-    glDeleteTextures(1, &depthTex_);
-}
+// Use this class as a guard in a scope to render to a renderport using MSAA.
+// In its constructor, the Multisampler sets its internal fbo as the rendertarget.
+// In the destructor, it blits its content to the provided RenderPort.
+class Multisampler {
+public:
+    Multisampler(RenderPort& target, size_t numSamples = 8);
+    ~Multisampler();
+private:
+    GLuint tex_;
+    GLuint depthTex_;
+    GLuint fbo_;
+    RenderPort& port_;
+};
 
 }
+
+#endif
