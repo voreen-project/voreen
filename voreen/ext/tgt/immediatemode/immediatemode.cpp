@@ -147,11 +147,6 @@ namespace tgt {
         GLvoid* finalVertices = vertices_.data();
         GLsizei finalSize = (GLsizei)vertices_.size();
 
-        // Only relevant for FAKE_LINES/FAKE_LINE_STRIP
-        GLint oldPolygonSmoothHint;
-        GLboolean oldPolygonSmooth;
-        bool fakeLines = polygonMode_ == FAKE_LINES || polygonMode_ == FAKE_LINE_STRIP;
-
         // we need to convert quad geometry to triangle geometry
         std::vector<Vertex> convertedVertices;
         if (polygonMode_ == QUADS) {
@@ -169,20 +164,7 @@ namespace tgt {
 
             finalVertices = convertedVertices.data();
             finalSize = (GLsizei)convertedVertices.size();
-        } else if (fakeLines) {
-            glGetIntegerv(GL_POLYGON_SMOOTH_HINT, &oldPolygonSmoothHint);
-            glGetBooleanv(GL_POLYGON_SMOOTH, &oldPolygonSmooth);
-
-            GLboolean lineSmooth;
-            glGetBooleanv(GL_LINE_SMOOTH, &lineSmooth);
-            if (lineSmooth) {
-                GLint lineSmoothHint=GL_DONT_CARE;
-                glGetIntegerv(GL_LINE_SMOOTH_HINT, &lineSmoothHint);
-
-                glHint(GL_POLYGON_SMOOTH_HINT, lineSmoothHint);
-                glEnable(GL_POLYGON_SMOOTH);
-            }
-
+        } else if (polygonMode_ == FAKE_LINES || polygonMode_ == FAKE_LINE_STRIP) {
             float lineWidth = 1;
             glGetFloatv(GL_LINE_WIDTH, &lineWidth);
 
@@ -365,13 +347,6 @@ namespace tgt {
                         glDisable(clipDistanceID);
                     }
                 }
-            }
-        }
-
-        if (fakeLines) {
-            glHint(GL_POLYGON_SMOOTH_HINT, oldPolygonSmoothHint);
-            if(!oldPolygonSmooth) {
-                glDisable(GL_POLYGON_SMOOTH);
             }
         }
     }

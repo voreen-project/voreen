@@ -149,14 +149,12 @@ bool PlotLibraryOpenGl::setRenderStatus() {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         //glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
         //glEnable(GL_POINT_SMOOTH);
-        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-        glEnable(GL_LINE_SMOOTH);
-
+        //glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+        //glEnable(GL_LINE_SMOOTH);
         //clear color buffer
         glClearColor(1.0,1.0,1.0,0.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
-
     return true;
 }
 
@@ -1251,7 +1249,8 @@ void PlotLibraryOpenGl::renderScatter(const PlotData& data, int indexX, int inde
 
 void PlotLibraryOpenGl::renderAxes() {
     // axes
-    glDepthFunc(GL_ALWAYS);
+    if (dimension_ == TWO)
+        glDisable(GL_DEPTH_TEST);
 
     glLineWidth(axesWidth_);
     IMode.color(drawingColor_);
@@ -1359,11 +1358,10 @@ void PlotLibraryOpenGl::renderAxes() {
             IMode.vertex(xr, yl, zr);
         IMode.end();
     }
-    glDepthFunc(GL_LESS);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void PlotLibraryOpenGl::renderAxisScales(Axis axis, bool helperLines, const std::string& label, plot_t offset) {
-    glDepthFunc(GL_ALWAYS);
     tgt::dvec2 step = updateScaleSteps(axis);
     glLineWidth(axesWidth_/2.f);
     IMode.color(drawingColor_);
@@ -1404,7 +1402,6 @@ void PlotLibraryOpenGl::renderAxisScales(Axis axis, bool helperLines, const std:
             }
             else if (axis == Y_AXIS) {
                 renderLabel(tgt::dvec3(xl, i, zr), SmartLabel::MIDDLERIGHT, stream.str());
-                glDisable(GL_DEPTH_TEST);
                 if (helperLines) {
                     IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
                         if (dimension_ == FAKETHREE)
@@ -1416,7 +1413,6 @@ void PlotLibraryOpenGl::renderAxisScales(Axis axis, bool helperLines, const std:
             }
         }
         renderSmartLabelGroup(&xAxisLabelGroup_);
-        glEnable(GL_DEPTH_TEST);
     }
     else if (dimension_ == THREE) {
         // If we are inside the plot cube (or really close to it) we do not want to
@@ -1667,12 +1663,9 @@ void PlotLibraryOpenGl::renderAxisScales(Axis axis, bool helperLines, const std:
             glDisable(GL_CULL_FACE);
         }
     }
-    glDepthFunc(GL_LESS);
 }
 
 void PlotLibraryOpenGl::renderAxisLabelScales(const PlotData& data, int indexLabel, bool helperLines) {
-    glDepthFunc(GL_ALWAYS);
-
     std::string label;
     xAxisLabelGroup_.reset();
     xAxisLabelGroup_.setBounds(getBoundsBelowPlot());
@@ -1704,7 +1697,6 @@ void PlotLibraryOpenGl::renderAxisLabelScales(const PlotData& data, int indexLab
         x += 1;
     }
     renderSmartLabelGroup(&xAxisLabelGroup_);
-    glDepthFunc(GL_LESS);
 }
 
 void PlotLibraryOpenGl::renderLabel(tgt::vec3 pos, const SmartLabel::Alignment align, const std::string& text,
@@ -1794,7 +1786,6 @@ void PlotLibraryOpenGl::resetRenderStatus() {
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glLineWidth(1.f);
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
 
     MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
     MatStack.loadIdentity();
