@@ -205,43 +205,6 @@ namespace tgt {
                     return std::make_tuple(v11, v12, v21, v22);
             };
 
-            auto offsetVertices3 = [&] (const Vertex& vb, const Vertex& vn, const Vertex& va) {
-                    tgt::vec4 vbPix = toPixelMat*vb.position;
-                    tgt::vec4 vnPix = toPixelMat*vn.position;
-                    tgt::vec4 vaPix = toPixelMat*va.position;
-
-                    tgt::vec2 pixFromToB = tgt::normalize(vnPix.xy() - vbPix.xy());
-                    tgt::vec2 pixFromToA = tgt::normalize(vaPix.xy() - vnPix.xy());
-
-                    Vertex v1 = vn;
-                    Vertex v2 = vn;
-
-                    tgt::vec2 pixTangent;
-                    if(tgt::isNaN(pixFromToA)) {
-                        if(tgt::isNaN(pixFromToB)) {
-                            return std::make_tuple(v1, v2);
-                        } else {
-                            pixTangent = pixFromToB;
-                        }
-                    } else {
-                        if(tgt::isNaN(pixFromToB)) {
-                            pixTangent = pixFromToA;
-                        } else {
-                            pixTangent = tgt::normalize(pixFromToB + pixFromToA);
-                            if(tgt::isNaN(pixTangent)) {
-                                pixTangent = pixFromToA;
-                            }
-                        }
-                    }
-                    tgt::vec2 pixOrthogonal(pixTangent.y, -pixTangent.x);
-                    tgt::vec4 pixOffset(pixOrthogonal*(lineWidth*0.5f), 0, 0);
-
-                    v1.position = fromPixelMat*(vnPix+pixOffset);
-                    v2.position = fromPixelMat*(vnPix-pixOffset);
-
-                    return std::make_tuple(v1, v2);
-            };
-
             if (polygonMode_ == FAKE_LINES) {
                 for (size_t i = 0; i < vertices_.size()-1; i+=2) {
                     auto t = offsetVertices2(vertices_[i+0], vertices_[i+1]);
@@ -256,29 +219,13 @@ namespace tgt {
                 }
                 polygonMode_ = TRIANGLES;
             } else if (polygonMode_ == FAKE_LINE_STRIP) {
-                if(vertices_.size() > 1) {
-                    {
-                        auto t = offsetVertices2(vertices_[0], vertices_[1]);
+                for (size_t i = 0; i < vertices_.size()-1; i+=1) {
+                    auto t = offsetVertices2(vertices_[i+0], vertices_[i+1]);
 
-                        convertedVertices.push_back(std::get<1>(t));
-                        convertedVertices.push_back(std::get<0>(t));
-                    }
-                    for (size_t i = 1; i < vertices_.size()-1; i+=1) {
-                        Vertex vbefore = vertices_[i-1];
-                        Vertex vnow    = vertices_[i  ];
-                        Vertex vafter  = vertices_[i+1];
-
-                        auto t = offsetVertices3(vbefore, vnow, vafter);
-
-                        convertedVertices.push_back(std::get<1>(t));
-                        convertedVertices.push_back(std::get<0>(t));
-                    }
-                    {
-                        auto t = offsetVertices2(vertices_[vertices_.size()-2], vertices_[vertices_.size()-1]);
-
-                        convertedVertices.push_back(std::get<3>(t));
-                        convertedVertices.push_back(std::get<2>(t));
-                    }
+                    convertedVertices.push_back(std::get<1>(t));
+                    convertedVertices.push_back(std::get<0>(t));
+                    convertedVertices.push_back(std::get<3>(t));
+                    convertedVertices.push_back(std::get<2>(t));
                 }
                 polygonMode_ = TRIANGLE_STRIP;
             }
