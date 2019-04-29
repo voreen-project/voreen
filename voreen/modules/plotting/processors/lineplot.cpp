@@ -26,6 +26,7 @@
 #include "lineplot.h"
 
 #include "../datastructures/plotrow.h"
+#include "voreen/core/utils/multisampler.h"
 #include "tgt/tgt_math.h"
 
 #include <iomanip>
@@ -91,22 +92,26 @@ Processor* LinePlot::create() const {
 }
 
 void LinePlot::render() {
-    outport_.activateTarget();
-    plotLib_->setUsePlotPickingManager(false);
-    setPlotStatus();
-    if (plotLib_->setRenderStatus()) {
-        renderAxes();
-        renderData();
-        createLineLabels();
-        plotLib_->renderLineLabels();
-        createPlotLabels();
-        plotLib_->renderPlotLabels();
-        renderPlotLabel();
-        renderMousePosition();
+    {
+        Multisampler m(outport_);
+
+        plotLib_->setUsePlotPickingManager(false);
+        setPlotStatus();
+        if (plotLib_->setRenderStatus()) {
+            renderAxes();
+            renderData();
+            createLineLabels();
+            plotLib_->renderLineLabels();
+            createPlotLabels();
+            plotLib_->renderPlotLabels();
+            renderPlotLabel();
+            renderMousePosition();
+        }
+        plotLib_->resetRenderStatus();
+
+        renderSelectedRegion();
     }
-    plotLib_->resetRenderStatus();
-    renderSelectedRegion();
-    outport_.deactivateTarget();
+
     plotPickingManager_.activateTarget();
     plotPickingManager_.clearTarget();
     if (enablePicking_.get()) {

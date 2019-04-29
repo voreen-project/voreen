@@ -26,6 +26,7 @@
 #include "barplot.h"
 
 #include "../datastructures/plotrow.h"
+#include "voreen/core/utils/multisampler.h"
 
 #include <iomanip>
 
@@ -102,18 +103,20 @@ void BarPlot::select(tgt::MouseEvent* e, bool highlight, bool label, bool zoom, 
 }
 
 void BarPlot::render() {
-    outport_.activateTarget();
-    plotLib_->setUsePlotPickingManager(false);
-    setPlotStatus();
-    if (plotLib_->setRenderStatus()) {
-        renderAxes();
-        renderData();
-        createPlotLabels();
-        plotLib_->renderPlotLabels();
-        renderPlotLabel();
+    {
+        Multisampler m(outport_);
+        plotLib_->setUsePlotPickingManager(false);
+        setPlotStatus();
+        if (plotLib_->setRenderStatus()) {
+            renderAxes();
+            renderData();
+            createPlotLabels();
+            plotLib_->renderPlotLabels();
+            renderPlotLabel();
+        }
+        plotLib_->resetRenderStatus();
     }
-    plotLib_->resetRenderStatus();
-    outport_.deactivateTarget();
+
     plotPickingManager_.activateTarget();
     plotPickingManager_.clearTarget();
     if (enablePicking_.get()) {

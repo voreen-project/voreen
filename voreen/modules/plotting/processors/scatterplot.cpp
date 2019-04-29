@@ -26,6 +26,7 @@
 #include "scatterplot.h"
 
 #include "voreen/core/interaction/camerainteractionhandler.h"
+#include "voreen/core/utils/multisampler.h"
 #include "../interaction/plotcamerainteractionhandler.h"
 
 #include "tgt/logmanager.h"
@@ -80,24 +81,25 @@ Processor* ScatterPlot::create() const {
 }
 
 void ScatterPlot::render() {
-    outport_.activateTarget();
-    plotLib_->setUsePlotPickingManager(false);
-    setPlotStatus();
-    if (plotLib_->setRenderStatus()) {
-        renderAxes();
-        renderData();
-        renderPlotLabel();
-        createPlotLabels();
-        plotLib_->renderPlotLabels();
-        renderMousePosition();
-        renderLegends();
-        if (threeDimensional_)
-            renderSelectionPlanes();
+    {
+        Multisampler m(outport_);
+        plotLib_->setUsePlotPickingManager(false);
+        setPlotStatus();
+        if (plotLib_->setRenderStatus()) {
+            renderAxes();
+            renderData();
+            renderPlotLabel();
+            createPlotLabels();
+            plotLib_->renderPlotLabels();
+            renderMousePosition();
+            renderLegends();
+            if (threeDimensional_)
+                renderSelectionPlanes();
+        }
+        plotLib_->resetRenderStatus();
+        if (!threeDimensional_)
+            renderSelectedRegion();
     }
-    plotLib_->resetRenderStatus();
-    if (!threeDimensional_)
-        renderSelectedRegion();
-    outport_.deactivateTarget();
     plotPickingManager_.activateTarget();
     plotPickingManager_.clearTarget();
     if (enablePicking_.get()) {

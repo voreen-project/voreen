@@ -26,6 +26,7 @@
 #include "surfaceplot.h"
 
 #include "voreen/core/interaction/camerainteractionhandler.h"
+#include "voreen/core/utils/multisampler.h"
 #include "../interaction/plotcamerainteractionhandler.h"
 #include "../datastructures/plotrow.h"
 
@@ -250,41 +251,43 @@ tgt::dvec2 SurfacePlot::intersect(const tgt::dvec2& p, const tgt::dvec2& s, cons
 }
 
 void SurfacePlot::render() {
-    plotLib_->setUsePlotPickingManager(false);
-    outport_.activateTarget();
-    setPlotStatus();
-    plotLib_->setRenderStatus();
-    renderAxes();
     PlotLibraryOpenGl* glPlotLib = dynamic_cast<PlotLibraryOpenGl*>(plotLib_);
-    if (glPlotLib) {
-        if (regenDataList_) {
-            glLibMeshes_.clear();
-            plotLib_->setHighlightColor(highlightColor_.get());
-            for(auto plotEntity : plotEntitiesProp_.get()) {
-                if (plotEntity.getOptionalColumnIndex() != -1) //use colormap
-                    plotLib_->setColorMap(plotEntity.getColorMap());
-                else
-                    plotLib_->setDrawingColor(plotEntity.getFirstColor());
+    plotLib_->setUsePlotPickingManager(false);
+    {
+        Multisampler m(outport_);
+        setPlotStatus();
+        plotLib_->setRenderStatus();
+        renderAxes();
+        if (glPlotLib) {
+            if (regenDataList_) {
+                glLibMeshes_.clear();
+                plotLib_->setHighlightColor(highlightColor_.get());
+                for(auto plotEntity : plotEntitiesProp_.get()) {
+                    if (plotEntity.getOptionalColumnIndex() != -1) //use colormap
+                        plotLib_->setColorMap(plotEntity.getColorMap());
+                    else
+                        plotLib_->setDrawingColor(plotEntity.getFirstColor());
 
-                std::unique_ptr<PlotLibraryOpenGl::MeshType> mesh(plotEntity.getHeightmapFlag()
-                    ? glPlotLib->createHeightmapMesh(data_, voronoiRegions_, plotEntity.getMainColumnIndex(), plotEntity.getOptionalColumnIndex())
-                    : glPlotLib->createSurfaceMesh(data_, triangleEdgeIndices_, plotEntitiesProp_.getXColumnIndex(), plotEntitiesProp_.getYColumnIndex(), plotEntity.getMainColumnIndex(), plotEntity.getOptionalColumnIndex()));
-                glLibMeshes_.push_back(std::make_pair(std::move(mesh), plotEntity));
+                    std::unique_ptr<PlotLibraryOpenGl::MeshType> mesh(plotEntity.getHeightmapFlag()
+                            ? glPlotLib->createHeightmapMesh(data_, voronoiRegions_, plotEntity.getMainColumnIndex(), plotEntity.getOptionalColumnIndex())
+                            : glPlotLib->createSurfaceMesh(data_, triangleEdgeIndices_, plotEntitiesProp_.getXColumnIndex(), plotEntitiesProp_.getYColumnIndex(), plotEntity.getMainColumnIndex(), plotEntity.getOptionalColumnIndex()));
+                    glLibMeshes_.push_back(std::make_pair(std::move(mesh), plotEntity));
+                }
+                regenDataList_ = false;
             }
-            regenDataList_ = false;
+            renderDataGL(false);
+        } else {
+            renderData();
         }
-        renderDataGL(false);
-    } else {
-        renderData();
+        createPlotLabels();
+        renderPlotLabel();
+        renderSelectionPlanes();
+        plotLib_->renderPlotLabels();
+        renderMousePosition();
+        renderLegends();
+        plotLib_->resetRenderStatus();
     }
-    createPlotLabels();
-    renderPlotLabel();
-    renderSelectionPlanes();
-    plotLib_->renderPlotLabels();
-    renderMousePosition();
-    renderLegends();
-    plotLib_->resetRenderStatus();
-    outport_.deactivateTarget();
+
     plotPickingManager_.activateTarget();
     plotPickingManager_.clearTarget();
     if (enablePicking_.get()) {

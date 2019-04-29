@@ -254,6 +254,7 @@ SET(VRN_CORE_SOURCES
     utils/glsl.cpp
     utils/hashing.cpp
     utils/memoryinfo.cpp
+    utils/multisampler.cpp
     utils/observer.cpp
     utils/stringutils.cpp
     utils/statistics.cpp
@@ -612,6 +613,7 @@ SET(VRN_CORE_HEADERS
     ../../include/voreen/core/utils/glsl.h
     ../../include/voreen/core/utils/hashing.h
     ../../include/voreen/core/utils/memoryinfo.h
+    ../../include/voreen/core/utils/multisampler.h
     ../../include/voreen/core/utils/observer.h
     ../../include/voreen/core/utils/stringutils.h
     ../../include/voreen/core/utils/statistics.h
