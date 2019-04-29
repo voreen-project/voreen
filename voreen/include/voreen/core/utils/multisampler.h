@@ -35,7 +35,7 @@ namespace voreen {
 // In the destructor, it blits its content to the provided RenderPort.
 class Multisampler {
 public:
-    Multisampler(RenderPort& target, size_t numSamples = 8);
+    Multisampler(RenderPort& target, size_t numSamples = -1);
     ~Multisampler();
 private:
     GLuint tex_;

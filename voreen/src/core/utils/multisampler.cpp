@@ -32,6 +32,17 @@ Multisampler::Multisampler(RenderPort& target, size_t numSamples)
     , fbo_(0)
     , port_(target)
 {
+    GLint maxSamples;
+    glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
+    if(numSamples == -1) {
+        numSamples = maxSamples;
+    }
+
+    if(numSamples > maxSamples) {
+        LERRORC("Multisampler", "Invalid number of MSAA samples specified");
+        numSamples = maxSamples;
+    }
+
     size_t width = port_.getSize().x;
     size_t height = port_.getSize().y;
 
