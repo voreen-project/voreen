@@ -138,14 +138,14 @@ void Port::disconnect(Port* other) {
             //
             // Yeah, that sounds complicated, which is another great reason to just make sure that the outport
             // does store any (potentially) soon to be invalidated pointers right here:
-            // Disconnected outports just don't hold any data!
-            if(isOutport()) {
-                clear();
+            // Disconnected outports just don't hold any data! (So check, if any other connection exists!)
+            if(isOutport() && !isConnected()) {
+                clear(); // This will invalidate the owner.
             }
-            getProcessor()->invalidate(invalidationLevel_);
 
-            if(isInport())
-                invalidatePort();
+            if(isInport()) {
+                invalidatePort(); // This will invalidate the owner.
+            }
             return;
         }
     }
