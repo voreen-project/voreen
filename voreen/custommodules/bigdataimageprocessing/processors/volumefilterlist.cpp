@@ -139,10 +139,6 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
     auto inputVolPtr = inport_.getThreadSafeData();
     const VolumeBase& inputVolume = *inputVolPtr;
 
-    if(inputVolume.getNumChannels() != 1) {
-        throw InvalidInputException("Input volume has multiple channels, but a single channel volume is expected!", InvalidInputException::S_ERROR);
-    }
-
     VolumeFilterStackBuilder builder(inputVolume);
     std::string baseType = inputVolume.getBaseType();
     for(const InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
@@ -210,7 +206,7 @@ void VolumeFilterList::processComputeOutput(VolumeFilterListOutput output) {
     } else {
         // outputVolume has been destroyed and thus closed by now.
         // So we can open it again (and use HDF5VolumeReader's implementation to read all the metadata with the file)
-        const VolumeBase* vol = HDF5VolumeReader().read(output.outputVolumeFilePath)->at(0);
+        const VolumeBase* vol = HDF5VolumeReaderOriginal().read(output.outputVolumeFilePath)->at(0);
         outport_.setData(vol);
     }
 }

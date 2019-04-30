@@ -81,7 +81,7 @@ public:
     virtual VolumeReader* create(ProgressBar* progress = nullptr) const;
 
     virtual std::string getClassName() const   { return "HDF5VolumeReader"; }
-    virtual std::string getFormatDescription() const { return "3D HDF5 format; multi-channel volumes are separated into multiple single-channel volumes."; }
+    virtual std::string getFormatDescription() const { return "3D HDF5 format"; /*multi-channel volumes are separated into multiple single-channel volumes.*/ }
 };
 
 class VRN_CORE_API HDF5VolumeReaderOriginal : public HDF5VolumeReaderBase {

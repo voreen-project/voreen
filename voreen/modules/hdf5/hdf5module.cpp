@@ -36,7 +36,12 @@ HDF5Module::HDF5Module(const std::string& modulePath)
     setID("HDF5");
     setGuiName("HDF5");
 
-    registerVolumeReader(new HDF5VolumeReaderOriginal());
+    // The following reader spits out multiple multi-channel volumes whereas
+    // the 'old' reader interprets them as multiple single-channel volumes.
+    // However, the old behavior should remain, therefore we only provide the API
+    // for internal purposes (such as VolumeFilterList).
+    //registerVolumeReader(new HDF5VolumeReaderOriginal());
+
     registerVolumeReader(new HDF5VolumeReader());
     registerVolumeWriter(new HDF5VolumeWriter());
 
