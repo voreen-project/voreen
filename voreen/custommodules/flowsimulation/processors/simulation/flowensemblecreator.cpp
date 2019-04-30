@@ -63,7 +63,7 @@ FlowEnsembleCreator::FlowEnsembleCreator()
     ensembleOutputPath_.setGroupID("output");
     addProperty(measuredDataPath_);
     measuredDataPath_.setGroupID("output");
-    //addProperty(measuredDataName_); // TODO: implement functionality
+    addProperty(measuredDataName_);
     measuredDataName_.setGroupID("output");
     setPropertyGroupGuiName("output", "Output");
 
@@ -89,21 +89,40 @@ Processor* FlowEnsembleCreator::create() const {
 }
 
 FlowEnsembleCreatorInput FlowEnsembleCreator::prepareComputeInput() {
+
+    std::vector<std::pair<std::string, const VolumeList*>> measuredData;
+    measuredData.push_back(std::make_pair("magnitude", magnitudeInport_.getThreadSafeData()));
+    measuredData.push_back(std::make_pair("velocity", velocityInport_.getThreadSafeData()));
+
     return FlowEnsembleCreatorInput{
             simulationResultPath_.get(),
             measuredDataPath_.get(),
             ensembleOutputPath_.get(),
             measuredDataName_.get(),
-            magnitudeInport_.getThreadSafeData(),
-            velocityInport_.getThreadSafeData(),
+            measuredData,
             deleteOriginalData_.get()
     };
 }
 
 FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput input, ProgressReporter& progressReporter) const {
 
-    // Map Old -> New filename.
-    std::map<std::string, std::string> files;
+    // If available, use additional measured data from file system.
+    std::vector<std::vector<std::pair<std::string, std::string>>> measuredDataFiles(input.measuredData.size());
+    if(!measuredDataPath_.get().empty()) {
+        std::vector<std::string> files = tgt::FileSystem::readDirectory(input.measuredDataPath, false, true);
+        for(size_t i=0; i<files.size(); i++) {
+            std::string path = input.measuredDataPath + "/" + files[i];
+            std::string name = strJoin(strSplit(tgt::FileSystem::dirName(files[i]), "/"), "-");
+            for(size_t j=0; j<input.measuredData.size(); j++) {
+                if(files[i].find(input.measuredData[j].first + "_") != std::string::npos) {
+                    measuredDataFiles[j].push_back(std::make_pair(path, name));
+                }
+            }
+        }
+    }
+
+    // Map Old, New filename, Measured?
+    std::vector<std::tuple<std::string, std::string, bool>> files;
 
     // Gather all files.
     std::vector<std::string> ensembles = tgt::FileSystem::listSubDirectories(input.simulationResultPath);
@@ -135,14 +154,31 @@ FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput 
                     //newPath += run       + "/t_"; // VVD file contains filename that would have to be changed.
                     newPath += run  + "/" + channel + "_";
                     newPath += iteration;
-                    files[oldPath] = newPath;
+                    files.push_back(std::make_tuple(oldPath, newPath, false));
                 }
             }
         }
 
         // Handle measured data.
-        writeMeasuredData(input.magnitudeData, input.ensembleOutputPath, ensemble, "magnitude", input.measuredDataName);
-        writeMeasuredData(input.velocityData,  input.ensembleOutputPath, ensemble, "velocity",  input.measuredDataName);
+        for(size_t j=0; j<measuredDataFiles.size(); j++) {
+
+            const std::string& channel = input.measuredData[j].first;
+
+            // Handle files from file system.
+            for(const auto& file : measuredDataFiles[j]) {
+
+                const std::string& oldPath = file.first;
+                std::string newPath = input.ensembleOutputPath + "/";
+                newPath += channel + "/";
+                newPath += ensemble + "/";
+                newPath += file.second + "/";
+                newPath += tgt::FileSystem::fileName(oldPath);
+                files.push_back(std::make_tuple(oldPath, newPath, true));
+            }
+
+            // Handle files from inport.
+            writeMeasuredData(input.measuredData[j].second, input.ensembleOutputPath, ensemble, input.measuredData[j].first, input.measuredDataName);
+        }
     }
 
     // Copy / Move.
@@ -150,14 +186,19 @@ FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput 
     float progressPerFile = 1.0f / files.size();
     for(const auto& file : files) {
 
-        // Create output directory.
-        tgt::FileSystem::createDirectoryRecursive(tgt::FileSystem::dirName(file.second));
+        const std::string& oldFileName = std::get<0>(file);
+        const std::string& newFileName = std::get<1>(file);
+        bool measured                  = std::get<2>(file);
 
-        if(input.deleteOriginalData) {
-            tgt::FileSystem::renameFile(file.first, file.second, false);
+        // Create output directory.
+        tgt::FileSystem::createDirectoryRecursive(tgt::FileSystem::dirName(newFileName));
+
+        // We only want to delete simulation data if desired, not the measured data.
+        if(input.deleteOriginalData && !measured) {
+            tgt::FileSystem::renameFile(oldFileName, newFileName, false);
         }
         else {
-            tgt::FileSystem::copyFile(file.first, file.second);
+            tgt::FileSystem::copyFile(oldFileName, newFileName);
         }
 
         fileIdx++;
@@ -185,18 +226,11 @@ void FlowEnsembleCreator::writeMeasuredData(const VolumeList* measuredData,
         std::string runPath = ensembleOutputPath + "/" + channel + "/" + ensemble + "/" + measuredDataName;
         tgt::FileSystem::createDirectoryRecursive(runPath);
 
-        if (measuredData->size() == 1) {
-            const VolumeBase* original = measuredData->first();
-            VvdVolumeWriter().write(runPath + "/t0.vvd", original);
-            std::unique_ptr<VolumeBase> duplicate(new VolumeDecoratorReplaceTimestep(original, simulationTime_.get()));
-            VvdVolumeWriter().write(runPath + "/t1.vvd", duplicate.get());
-        } else {
-            for (size_t j = 0; j < measuredData->size(); j++) {
-                float timeStep = j * temporalResolution_.get();
-                std::unique_ptr<VolumeBase> original(
-                        new VolumeDecoratorReplaceTimestep(measuredData->at(j), timeStep));
-                VvdVolumeWriter().write(runPath + "/t" + std::to_string(j) + ".vvd", original.get());
-            }
+        for (size_t i = 0; i < measuredData->size(); i++) {
+            float timeStep = i * temporalResolution_.get();
+            std::unique_ptr<VolumeBase> original(
+                    new VolumeDecoratorReplaceTimestep(measuredData->at(i), timeStep));
+            VvdVolumeWriter().write(runPath + "/t" + std::to_string(i) + ".vvd", original.get());
         }
     }
 }

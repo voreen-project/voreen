@@ -36,8 +36,7 @@ struct FlowEnsembleCreatorInput {
     std::string measuredDataPath;
     std::string ensembleOutputPath;
     std::string measuredDataName;
-    const VolumeList* magnitudeData;
-    const VolumeList* velocityData;
+    std::vector<std::pair<std::string, const VolumeList*>> measuredData;
     bool deleteOriginalData;
 };
 
