@@ -25,7 +25,7 @@ before_script:
   - export CURRENT_REVISION=$(git rev-parse HEAD)
   - export NOW=$(date +%Y-%m-%d-%H:%M:%S)
   - export IDENTIFIER_COREPROFILE=${CI_COMMIT_REF_NAME}--${NOW}--${CURRENT_REVISION}--coreprofile
-  - export IDENTIFIER_COMPATPROFILE=${CI_COMMIT_REF_NAME}--${NOW}--${CURRENT_REVISION}--coreprofile
+  - export IDENTIFIER_COMPATPROFILE=${CI_COMMIT_REF_NAME}--${NOW}--${CURRENT_REVISION}--compatibilityprofile
 
 build_compatprofile:
   stage: build
