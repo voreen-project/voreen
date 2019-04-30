@@ -1,11 +1,14 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="false" GlobalDescription="">
-        <ProcessorNetwork version="17">
+        <ProcessorNetwork version="20">
             <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="LinePlot" ref="ref0" />
+                        <item type="Canvas" ref="ref1" />
                     </values>
                 </MetaItem>
                 <MetaItem name="Zoom" type="ZoomMetaData">
@@ -16,7 +19,7 @@
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="340.9609375" y="-289" />
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.07114089" />
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.071140885" />
             </MetaData>
             <Processors>
                 <Processor type="LinePlot" name="LinePlot" id="ref0">
@@ -29,17 +32,17 @@
                         <Property mapKey="descreteStep" name="descreteStep" value="50" tracking="false" />
                         <Property mapKey="enablePicking" name="enablePicking" value="true" />
                         <Property mapKey="enterExitEvent" name="enterExitEvent" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="fileProp" name="fileProp">
+                        <Property mapKey="fileProp" name="fileProp" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="highlight" name="highlight" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="highlightAdditive" name="highlightAdditive" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="highlightColor" name="highlightColor">
-                            <value x="1" y="0.89999998" z="0.80000001" w="1" />
+                            <value x="1" y="0.899999976" z="0.800000012" w="1" />
                         </Property>
                         <Property mapKey="label" name="label" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="labelAdditive" name="labelAdditive" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property mapKey="lineWidth" name="lineWidth" value="1.60000002" />
+                        <Property mapKey="lineWidth" name="lineWidth" value="1.600000024" />
                         <Property mapKey="logXAxes" name="logXAxes" value="false" />
                         <Property mapKey="logYAxes" name="logYAxes" value="false" />
                         <Property mapKey="marginBottom" name="marginBottom" value="50" />
@@ -443,8 +446,8 @@
                                             <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
                                         </colors>
                                     </colorMap>
-                                    <firstColor x="0.57871628" y="0.52558136" z="0.84375" w="1" />
-                                    <secondColor x="0.57871628" y="0.52558136" z="0.84375" w="1" />
+                                    <firstColor x="0.578716278" y="0.52558136" z="0.84375" w="1" />
+                                    <secondColor x="0.578716278" y="0.52558136" z="0.84375" w="1" />
                                 </plotEntitySettings>
                                 <plotEntitySettings entity="0" mainColumnIndex="18" candleTopColumnIndex="18" candleBottomColumnIndex="18" stickTopColumnIndex="18" stickBottomColumnIndex="18" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
                                     <colorMap name="Visifire 1">
@@ -466,8 +469,8 @@
                                             <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
                                         </colors>
                                     </colorMap>
-                                    <firstColor x="0.92135596" y="0.99609375" z="0.43589526" w="1" />
-                                    <secondColor x="0.92135596" y="0.99609375" z="0.43589526" w="1" />
+                                    <firstColor x="0.921355963" y="0.99609375" z="0.435895264" w="1" />
+                                    <secondColor x="0.921355963" y="0.99609375" z="0.435895264" w="1" />
                                 </plotEntitySettings>
                                 <plotEntitySettings entity="0" mainColumnIndex="19" candleTopColumnIndex="19" candleBottomColumnIndex="19" stickTopColumnIndex="19" stickBottomColumnIndex="19" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
                                     <colorMap name="Visifire 1">
@@ -489,8 +492,8 @@
                                             <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
                                         </colors>
                                     </colorMap>
-                                    <firstColor x="0.85546875" y="0.7428844" z="0.53497314" w="1" />
-                                    <secondColor x="0.85546875" y="0.7428844" z="0.53497314" w="1" />
+                                    <firstColor x="0.85546875" y="0.742884398" z="0.534973145" w="1" />
+                                    <secondColor x="0.85546875" y="0.742884398" z="0.534973145" w="1" />
                                 </plotEntitySettings>
                                 <plotEntitySettings entity="0" mainColumnIndex="21" candleTopColumnIndex="21" candleBottomColumnIndex="21" stickTopColumnIndex="21" stickBottomColumnIndex="21" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
                                     <colorMap name="Visifire 1">
@@ -512,8 +515,8 @@
                                             <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
                                         </colors>
                                     </colorMap>
-                                    <firstColor x="0.5810951" y="0.828125" z="0.5674057" w="1" />
-                                    <secondColor x="0.5810951" y="0.828125" z="0.5674057" w="1" />
+                                    <firstColor x="0.581095099" y="0.828125" z="0.567405701" w="1" />
+                                    <secondColor x="0.581095099" y="0.828125" z="0.567405701" w="1" />
                                 </plotEntitySettings>
                                 <plotEntitySettings entity="0" mainColumnIndex="22" candleTopColumnIndex="22" candleBottomColumnIndex="22" stickTopColumnIndex="22" stickBottomColumnIndex="22" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
                                     <colorMap name="Visifire 1">
@@ -535,8 +538,8 @@
                                             <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
                                         </colors>
                                     </colorMap>
-                                    <firstColor x="0.69921875" y="0.28887939" z="0.67359322" w="1" />
-                                    <secondColor x="0.69921875" y="0.28887939" z="0.67359322" w="1" />
+                                    <firstColor x="0.69921875" y="0.288879395" z="0.673593223" w="1" />
+                                    <secondColor x="0.69921875" y="0.288879395" z="0.673593223" w="1" />
                                 </plotEntitySettings>
                                 <plotEntitySettings entity="0" mainColumnIndex="23" candleTopColumnIndex="23" candleBottomColumnIndex="23" stickTopColumnIndex="23" stickBottomColumnIndex="23" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
                                     <colorMap name="Visifire 1">
@@ -558,8 +561,8 @@
                                             <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
                                         </colors>
                                     </colorMap>
-                                    <firstColor x="0.47472632" y="0.54384404" z="0.88671875" w="1" />
-                                    <secondColor x="0.47472632" y="0.54384404" z="0.88671875" w="1" />
+                                    <firstColor x="0.474726319" y="0.543844044" z="0.88671875" w="1" />
+                                    <secondColor x="0.474726319" y="0.543844044" z="0.88671875" w="1" />
                                 </plotEntitySettings>
                                 <plotEntitySettings entity="0" mainColumnIndex="24" candleTopColumnIndex="24" candleBottomColumnIndex="24" stickTopColumnIndex="24" stickBottomColumnIndex="24" optionalCI="-1" secondOptionalCI="-1" lineStyle="0" splineFlag="false" errorbarFlag="false" wireOnlyFlag="false" heightmapFlag="false" candleStickFlag="false" minGlyphSize="1" maxGlyphSize="1" glyphStyle="0" texturePath="" useTextureFlag="false">
                                     <colorMap name="Visifire 1">
@@ -581,8 +584,8 @@
                                             <item x="0.98828125" y="0.7734375" z="0.53515625" w="1" />
                                         </colors>
                                     </colorMap>
-                                    <firstColor x="0.58718181" y="0.56496435" z="0.96875" w="1" />
-                                    <secondColor x="0.58718181" y="0.56496435" z="0.96875" w="1" />
+                                    <firstColor x="0.587181807" y="0.564964354" z="0.96875" w="1" />
+                                    <secondColor x="0.587181807" y="0.564964354" z="0.96875" w="1" />
                                 </plotEntitySettings>
                             </plotEntitySettingsVector>
                         </Property>
@@ -599,7 +602,7 @@
                         <Property mapKey="renderXHelperLines" name="renderXHelperLines" value="true" />
                         <Property mapKey="renderYHelperLines" name="renderYHelperLines" value="true" />
                         <Property mapKey="selectionPlaneColor" name="selectionPlaneColor">
-                            <value x="0.40000001" y="0.40000001" z="0.40000001" w="0.40000001" />
+                            <value x="0.400000006" y="0.400000006" z="0.400000006" w="0.400000006" />
                         </Property>
                         <Property mapKey="selectionProperty" name="selectionProperty" threeDimensional="false">
                             <values>
@@ -678,12 +681,12 @@
                         <Property mapKey="constantOrder" name="constantOrder" value="true" />
                         <Property mapKey="countKeyColumn" name="countKeyColumn" value="1" tracking="false" />
                         <Property mapKey="countLine" name="countLine" value="1" tracking="false" />
-                        <Property mapKey="inputFile" name="inputFile">
+                        <Property mapKey="inputFile" name="inputFile" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="input/plotting/data_fmo.csv" />
                                     <item value="../../voreen-testdata/voreen-testdata/input/plotting/data_fmo.csv" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/input/plotting/data_fmo.csv" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/input/plotting/data_fmo.csv" />
                                 </paths>
                             </paths>
                         </Property>
@@ -712,18 +715,25 @@
                         <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
                             <value x="769" y="521" />
                         </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="44" y="119" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="769" y="521" />
+                        </MetaItem>
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize">
                             <value x="769" y="521" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/canvas.jpg" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/canvas.jpg" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/canvas.jpg" />
+                                    <item value="output/canvas.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/canvas.png" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/canvas.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -752,11 +762,11 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="Data-Column Color" name="Data-Column Color">
-                            <value x="0.94117647" y="0.94117647" z="0.94117647" w="1" />
+                            <value x="0.941176474" y="0.941176474" z="0.941176474" w="1" />
                         </Property>
                         <Property mapKey="Ignore Columnlabels" name="Ignore Columnlabels" value="true" />
                         <Property mapKey="Key-Column Color" name="Key-Column Color">
-                            <value x="0.78431374" y="0.78431374" z="0.78431374" w="1" />
+                            <value x="0.784313738" y="0.784313738" z="0.784313738" w="1" />
                         </Property>
                         <Property mapKey="Max Column Width" name="Max Column Width" value="0" />
                         <Property mapKey="swap" name="swap" value="false" />
@@ -789,12 +799,12 @@
                         <Property mapKey="constantOrder" name="constantOrder" value="true" />
                         <Property mapKey="countKeyColumn" name="countKeyColumn" value="1" tracking="false" />
                         <Property mapKey="countLine" name="countLine" value="1" tracking="false" />
-                        <Property mapKey="inputFile" name="inputFile">
+                        <Property mapKey="inputFile" name="inputFile" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="input/plotting/data_lineplot.csv" />
                                     <item value="../../voreen-testdata/voreen-testdata/input/plotting/data_lineplot.csv" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/input/plotting/data_lineplot.csv" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/input/plotting/data_lineplot.csv" />
                                 </paths>
                             </paths>
                         </Property>
@@ -819,11 +829,11 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="Data-Column Color" name="Data-Column Color">
-                            <value x="0.94117647" y="0.94117647" z="0.94117647" w="1" />
+                            <value x="0.941176474" y="0.941176474" z="0.941176474" w="1" />
                         </Property>
                         <Property mapKey="Ignore Columnlabels" name="Ignore Columnlabels" value="true" />
                         <Property mapKey="Key-Column Color" name="Key-Column Color">
-                            <value x="0.78431374" y="0.78431374" z="0.78431374" w="1" />
+                            <value x="0.784313738" y="0.784313738" z="0.784313738" w="1" />
                         </Property>
                         <Property mapKey="Max Column Width" name="Max Column Width" value="0" />
                         <Property mapKey="swap" name="swap" value="true" />
@@ -854,11 +864,11 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="Data-Column Color" name="Data-Column Color">
-                            <value x="0.94117647" y="0.94117647" z="0.94117647" w="1" />
+                            <value x="0.941176474" y="0.941176474" z="0.941176474" w="1" />
                         </Property>
                         <Property mapKey="Ignore Columnlabels" name="Ignore Columnlabels" value="true" />
                         <Property mapKey="Key-Column Color" name="Key-Column Color">
-                            <value x="0.78431374" y="0.78431374" z="0.78431374" w="1" />
+                            <value x="0.784313738" y="0.784313738" z="0.784313738" w="1" />
                         </Property>
                         <Property mapKey="Max Column Width" name="Max Column Width" value="0" />
                         <Property mapKey="swap" name="swap" value="false" />

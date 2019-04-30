@@ -1,17 +1,20 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="false" GlobalDescription="">
-        <ProcessorNetwork version="17">
+        <ProcessorNetwork version="20">
             <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="LinePlot" ref="ref2" />
+                        <item type="Canvas" ref="ref9" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="326" y="-580.5" />
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.07142854" />
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.071428537" />
             </MetaData>
             <Processors>
                 <Processor type="PlotDataSource" name="PlotDataSource" id="ref0">
@@ -23,12 +26,12 @@
                         <Property mapKey="constantOrder" name="constantOrder" value="false" />
                         <Property mapKey="countKeyColumn" name="countKeyColumn" value="1" />
                         <Property mapKey="countLine" name="countLine" value="1" />
-                        <Property mapKey="inputFile" name="inputFile">
+                        <Property mapKey="inputFile" name="inputFile" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="input/plotting/data_lineplot.csv" />
                                     <item value="../../voreen-testdata/voreen-testdata/input/plotting/data_lineplot.csv" />
-                                    <item value="D:/voreen_/gitolite/voreen-testdata/voreen-testdata/input/plotting/data_lineplot.csv" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/input/plotting/data_lineplot.csv" />
                                 </paths>
                             </paths>
                         </Property>
@@ -53,15 +56,15 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="Data-Column Color" name="Data-Column Color">
-                            <value x="0.94117647" y="0.94117647" z="0.94117647" w="1" />
+                            <value x="0.941176474" y="0.941176474" z="0.941176474" w="1" />
                         </Property>
                         <Property mapKey="Expression Format" name="Expression Format" value="full" />
                         <Property mapKey="Fitting-Column Color" name="Fitting-Column Color">
-                            <value x="1" y="0.70588237" z="0.55686277" w="1" />
+                            <value x="1" y="0.70588237" z="0.556862772" w="1" />
                         </Property>
                         <Property mapKey="Ignore False Values" name="Ignore False Values" value="true" />
                         <Property mapKey="Key-Column Color" name="Key-Column Color">
-                            <value x="0.78431374" y="0.78431374" z="0.78431374" w="1" />
+                            <value x="0.784313738" y="0.784313738" z="0.784313738" w="1" />
                         </Property>
                         <Property mapKey="Max Column Width" name="Max Column Width" value="0" />
                         <Property mapKey="expressionNameInput_" name="expressionNameInput_" value="f" />
@@ -93,7 +96,7 @@
                     <Properties>
                         <Property mapKey="DimensionsList_" name="DimensionsList_" value="1 Column" />
                         <Property mapKey="NumberofCalculations" name="NumberofCalculations" value="140" />
-                        <Property mapKey="Steps_" name="Steps_" value="0.1" />
+                        <Property mapKey="Steps_" name="Steps_" value="0.100000001" />
                         <Property mapKey="leftInterval_" name="leftInterval_" value="-1" />
                         <Property mapKey="rightInterval_" name="rightInterval_" value="13" />
                         <Property mapKey="startDiscretization_" name="startDiscretization_" />
@@ -139,13 +142,13 @@
                         <Property mapKey="descreteStep" name="descreteStep" value="50" tracking="false" />
                         <Property mapKey="enablePicking" name="enablePicking" value="true" />
                         <Property mapKey="enterExitEvent" name="enterExitEvent" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="fileProp" name="fileProp">
+                        <Property mapKey="fileProp" name="fileProp" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="highlight" name="highlight" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="highlightAdditive" name="highlightAdditive" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="highlightColor" name="highlightColor">
-                            <value x="1" y="0.89999998" z="0.80000001" w="1" />
+                            <value x="1" y="0.899999976" z="0.800000012" w="1" />
                         </Property>
                         <Property mapKey="label" name="label" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="labelAdditive" name="labelAdditive" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
@@ -168,7 +171,7 @@
                                 <colors>
                                     <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
                                     <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
-                                    <item x="0.85546875" y="0.265625" z="0.24609376" w="1" />
+                                    <item x="0.85546875" y="0.265625" z="0.246093765" w="1" />
                                     <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
                                     <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
                                     <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
@@ -189,7 +192,7 @@
                                         <colors>
                                             <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
                                             <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
-                                            <item x="0.85546875" y="0.265625" z="0.24609376" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.246093765" w="1" />
                                             <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
                                             <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
                                             <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
@@ -212,7 +215,7 @@
                                         <colors>
                                             <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
                                             <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
-                                            <item x="0.85546875" y="0.265625" z="0.24609376" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.246093765" w="1" />
                                             <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
                                             <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
                                             <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
@@ -245,7 +248,7 @@
                         <Property mapKey="renderXHelperLines" name="renderXHelperLines" value="true" />
                         <Property mapKey="renderYHelperLines" name="renderYHelperLines" value="true" />
                         <Property mapKey="selectionPlaneColor" name="selectionPlaneColor">
-                            <value x="0.40000001" y="0.40000001" z="0.40000001" w="0.40000001" />
+                            <value x="0.400000006" y="0.400000006" z="0.400000006" w="0.400000006" />
                         </Property>
                         <Property mapKey="selectionProperty" name="selectionProperty" threeDimensional="false">
                             <values />
@@ -289,13 +292,13 @@
                         <Property mapKey="descreteStep" name="descreteStep" value="50" tracking="false" />
                         <Property mapKey="enablePicking" name="enablePicking" value="true" />
                         <Property mapKey="enterExitEvent" name="enterExitEvent" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="fileProp" name="fileProp">
+                        <Property mapKey="fileProp" name="fileProp" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="highlight" name="highlight" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="highlightAdditive" name="highlightAdditive" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="highlightColor" name="highlightColor">
-                            <value x="1" y="0.89999998" z="0.80000001" w="1" />
+                            <value x="1" y="0.899999976" z="0.800000012" w="1" />
                         </Property>
                         <Property mapKey="label" name="label" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="labelAdditive" name="labelAdditive" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
@@ -318,7 +321,7 @@
                                 <colors>
                                     <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
                                     <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
-                                    <item x="0.85546875" y="0.265625" z="0.24609376" w="1" />
+                                    <item x="0.85546875" y="0.265625" z="0.246093765" w="1" />
                                     <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
                                     <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
                                     <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
@@ -339,7 +342,7 @@
                                         <colors>
                                             <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
                                             <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
-                                            <item x="0.85546875" y="0.265625" z="0.24609376" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.246093765" w="1" />
                                             <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
                                             <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
                                             <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
@@ -372,7 +375,7 @@
                         <Property mapKey="renderXHelperLines" name="renderXHelperLines" value="true" />
                         <Property mapKey="renderYHelperLines" name="renderYHelperLines" value="true" />
                         <Property mapKey="selectionPlaneColor" name="selectionPlaneColor">
-                            <value x="0.40000001" y="0.40000001" z="0.40000001" w="0.40000001" />
+                            <value x="0.400000006" y="0.400000006" z="0.400000006" w="0.400000006" />
                         </Property>
                         <Property mapKey="selectionProperty" name="selectionProperty" threeDimensional="false">
                             <values>
@@ -431,12 +434,19 @@
                 <Processor type="Canvas" name="Canvas Both" id="ref7">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="281" y="-308" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="343" y="414" width="751" height="494" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="92" y="451" width="751" height="494" />
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
                             <value x="343" y="414" />
                         </MetaItem>
                         <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
+                            <value x="751" y="494" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="92" y="451" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="751" y="494" />
                         </MetaItem>
                     </MetaData>
@@ -445,12 +455,12 @@
                             <value x="751" y="494" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/both.jpg" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/both.jpg" />
-                                    <item value="D:/voreen_/gitolite/voreen-testdata/voreen-testdata/output/both.jpg" />
+                                    <item value="output/both.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/both.png" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/both.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -475,19 +485,26 @@
                 <Processor type="Canvas" name="Canvas Fitting" id="ref8">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="124" y="-308" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="208" y="253" width="751" height="494" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="71" y="256" width="751" height="494" />
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="71" y="256" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="751" y="494" />
+                        </MetaItem>
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize" id="ref10">
                             <value x="751" y="494" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/fitted.jpg" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/fitted.jpg" />
-                                    <item value="D:/voreen_/gitolite/voreen-testdata/voreen-testdata/output/fitted.jpg" />
+                                    <item value="output/fitted.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/fitted.png" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/fitted.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -516,11 +533,11 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="Data-Column Color" name="Data-Column Color">
-                            <value x="0.94117647" y="0.94117647" z="0.94117647" w="1" />
+                            <value x="0.941176474" y="0.941176474" z="0.941176474" w="1" />
                         </Property>
                         <Property mapKey="Ignore Columnlabels" name="Ignore Columnlabels" value="true" />
                         <Property mapKey="Key-Column Color" name="Key-Column Color">
-                            <value x="0.78431374" y="0.78431374" z="0.78431374" w="1" />
+                            <value x="0.784313738" y="0.784313738" z="0.784313738" w="1" />
                         </Property>
                         <Property mapKey="Max Column Width" name="Max Column Width" value="0" />
                         <Property mapKey="swap" name="swap" value="false" />
@@ -554,13 +571,13 @@
                         <Property mapKey="descreteStep" name="descreteStep" value="50" tracking="false" />
                         <Property mapKey="enablePicking" name="enablePicking" value="true" />
                         <Property mapKey="enterExitEvent" name="enterExitEvent" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="fileProp" name="fileProp">
+                        <Property mapKey="fileProp" name="fileProp" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="highlight" name="highlight" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="highlightAdditive" name="highlightAdditive" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="highlightColor" name="highlightColor">
-                            <value x="1" y="0.89999998" z="0.80000001" w="1" />
+                            <value x="1" y="0.899999976" z="0.800000012" w="1" />
                         </Property>
                         <Property mapKey="label" name="label" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="labelAdditive" name="labelAdditive" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
@@ -584,7 +601,7 @@
                                 <colors>
                                     <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
                                     <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
-                                    <item x="0.85546875" y="0.265625" z="0.24609376" w="1" />
+                                    <item x="0.85546875" y="0.265625" z="0.246093765" w="1" />
                                     <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
                                     <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
                                     <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
@@ -605,7 +622,7 @@
                                         <colors>
                                             <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
                                             <item x="0.99609375" y="0.6015625" z="0.1796875" w="1" />
-                                            <item x="0.85546875" y="0.265625" z="0.24609376" w="1" />
+                                            <item x="0.85546875" y="0.265625" z="0.246093765" w="1" />
                                             <item x="0.65625" y="0.828125" z="0.30859375" w="1" />
                                             <item x="0.51953125" y="0.375" z="0.69921875" w="1" />
                                             <item x="0.234375" y="0.74609375" z="0.88671875" w="1" />
@@ -638,7 +655,7 @@
                         <Property mapKey="renderXHelperLines" name="renderXHelperLines" value="true" />
                         <Property mapKey="renderYHelperLines" name="renderYHelperLines" value="true" />
                         <Property mapKey="selectionPlaneColor" name="selectionPlaneColor">
-                            <value x="0.40000001" y="0.40000001" z="0.40000001" w="0.40000001" />
+                            <value x="0.400000006" y="0.400000006" z="0.400000006" w="0.400000006" />
                         </Property>
                         <Property mapKey="selectionProperty" name="selectionProperty" threeDimensional="false">
                             <values />
@@ -676,18 +693,25 @@
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="426" y="-308" />
                         <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="92" y="104" width="751" height="494" />
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="92" y="104" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="751" y="494" />
+                        </MetaItem>
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize" id="ref12">
                             <value x="751" y="494" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/original.jpg" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/original.jpg" />
-                                    <item value="D:/voreen_/gitolite/voreen-testdata/voreen-testdata/output/original.jpg" />
+                                    <item value="output/original.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/original.png" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/original.png" />
                                 </paths>
                             </paths>
                         </Property>

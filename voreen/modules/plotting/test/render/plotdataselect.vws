@@ -1,13 +1,20 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
-    <Workspace version="2" GlobalDescription="">
-        <ProcessorNetwork version="13">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="20">
             <MetaData>
-                <MetaItem name="ProcessorSelection" type="SelectionMetaData::Processor">
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="ScatterPlot" ref="ref3" />
+                        <item type="Canvas" ref="ref4" />
                     </values>
                 </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="100.2734375" y="-132.5" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.957471251" />
             </MetaData>
             <Processors>
                 <Processor type="PlotFunctionSource" name="PlotFunctionSource" id="ref0">
@@ -15,19 +22,23 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="30" y="-350" />
                     </MetaData>
                     <Properties>
-                        <Property name="Calculate" />
-                        <Property name="Expression Format" value="full" />
-                        <Property name="expressionNameInput_" value="f" />
-                        <Property name="functionInput_" value="exp(sin(x))*exp(cos(y))-exp(sin(x*y))+exp(cos(x*y))" />
-                        <Property name="maxLength" value="200" />
-                        <Property name="selfDescription" value="" />
+                        <Property mapKey="Calculate" name="Calculate" />
+                        <Property mapKey="Expression Format" name="Expression Format" value="full" />
+                        <Property mapKey="expressionNameInput_" name="expressionNameInput_" value="f" />
+                        <Property mapKey="functionInput_" name="functionInput_" value="exp(sin(x))*exp(cos(y))-exp(sin(x*y))+exp(cos(x*y))" />
+                        <Property mapKey="maxLength" name="maxLength" value="200" />
+                        <Property mapKey="selfDescription" name="selfDescription" value="" />
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="PlotFunctionOutPort">
-                            <Properties />
+                        <Port name="PlotFunctionOutPort" direction="0" portID="PlotFunctionOutPort" guiName="" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
                         </Port>
                     </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="PlotFunctionDiscret" name="PlotFunctionDiscret" id="ref1">
@@ -35,23 +46,27 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="30" y="-257" />
                     </MetaData>
                     <Properties>
-                        <Property name="DimensionsList_" value="1 Column" />
-                        <Property name="NumberofCalculations" value="4489" />
-                        <Property name="Steps_" value="0.15000001" />
-                        <Property name="leftInterval_" value="-5" />
-                        <Property name="rightInterval_" value="5" />
-                        <Property name="startDiscretization_" />
+                        <Property mapKey="DimensionsList_" name="DimensionsList_" value="1 Column" />
+                        <Property mapKey="NumberofCalculations" name="NumberofCalculations" value="4489" />
+                        <Property mapKey="Steps_" name="Steps_" value="0.150000006" />
+                        <Property mapKey="leftInterval_" name="leftInterval_" value="-5" />
+                        <Property mapKey="rightInterval_" name="rightInterval_" value="5" />
+                        <Property mapKey="startDiscretization_" name="startDiscretization_" />
                     </Properties>
                     <Inports>
-                        <Port name="PlotPort.PlotFunction.InPort">
+                        <Port name="PlotPort.PlotFunction.InPort" direction="1" portID="PlotPort.PlotFunction.InPort" guiName="" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="PlotData.OutPort">
-                            <Properties />
+                        <Port name="PlotData.OutPort" direction="0" portID="PlotData.OutPort" guiName="" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
                         </Port>
                     </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                     <ResetList>
                         <Interval>
@@ -80,29 +95,33 @@
                         <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="71" y="310" width="280" height="379" />
                     </MetaData>
                     <Properties>
-                        <Property name="Data-Column Color">
-                            <value x="0.94117647" y="0.94117647" z="0.94117647" w="1" />
+                        <Property mapKey="Data-Column Color" name="Data-Column Color">
+                            <value x="0.941176474" y="0.941176474" z="0.941176474" w="1" />
                         </Property>
-                        <Property name="Key-Column Color">
-                            <value x="0.78431374" y="0.78431374" z="0.78431374" w="1" />
+                        <Property mapKey="Key-Column Color" name="Key-Column Color">
+                            <value x="0.784313738" y="0.784313738" z="0.784313738" w="1" />
                         </Property>
-                        <Property name="Max Column Width" value="0" />
-                        <Property name="PlotPredicateVector" />
-                        <Property name="columnorder" value="false" />
-                        <Property name="filter" value="false" />
-                        <Property name="newKeyColumnCount" value="2" />
-                        <Property name="select" value="true" />
+                        <Property mapKey="Max Column Width" name="Max Column Width" value="0" />
+                        <Property mapKey="PlotPredicateVector" name="PlotPredicateVector" />
+                        <Property mapKey="columnorder" name="columnorder" value="false" />
+                        <Property mapKey="filter" name="filter" value="false" />
+                        <Property mapKey="newKeyColumnCount" name="newKeyColumnCount" value="2" />
+                        <Property mapKey="select" name="select" value="true" />
                     </Properties>
                     <Inports>
-                        <Port name="PlotData.InPort">
+                        <Port name="PlotData.InPort" direction="1" portID="PlotData.InPort" guiName="" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="PlotData.OutPort">
-                            <Properties />
+                        <Port name="PlotData.OutPort" direction="0" portID="PlotData.OutPort" guiName="" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
                         </Port>
                     </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                     <resetList>
                         <item KeyColumnCount="2" DataColumnCount="1">
@@ -131,39 +150,48 @@
                         <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="false" x="183" y="183" width="256" height="160" />
                     </MetaData>
                     <Properties>
-                        <Property name="axesWidth" value="1.5" />
-                        <Property name="camera" adjustProjectionToViewport="true" projectionMode="1" frustLeft="-0.04142136" frustRight="0.04142136" frustBottom="-0.04142136" frustTop="0.04142136" frustNear="0.1" frustFar="50" fovy="45">
+                        <Property mapKey="axesWidth" name="axesWidth" value="1.5" />
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.01">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="547" y="340" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-0.76376277" y="0.60484731" z="0.22544666" />
+                            <position x="-0.763762772" y="0.604847312" z="0.225446656" />
                             <focus x="0" y="0" z="0" />
                             <upVector x="0" y="0" z="1" />
+                            <trackball moveCenter="false">
+                                <center x="0" y="0" z="0" />
+                            </trackball>
+                            <sceneLLF x="0" y="0" z="0" />
+                            <sceneURB x="0" y="0" z="0" />
                         </Property>
-                        <Property name="enablePicking" value="true" />
-                        <Property name="enterExitEvent" lod="1" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property name="fileProp" noPathSet="true" value="" />
-                        <Property name="highlight" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property name="highlightAdditive" lod="1" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property name="highlightColor">
-                            <value x="1" y="0.89999998" z="0.80000001" w="1" />
+                        <Property mapKey="enablePicking" name="enablePicking" value="true" />
+                        <Property mapKey="enterExitEvent" name="enterExitEvent" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="fileProp" name="fileProp" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
                         </Property>
-                        <Property name="label" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property name="labelAdditive" lod="1" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property name="lighting" value="true" />
-                        <Property name="marginBottom" value="50" />
-                        <Property name="marginLeft" value="60" />
-                        <Property name="marginRight" value="100" />
-                        <Property name="marginTop" value="50" />
-                        <Property name="mousePositionUpdate" lod="1" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property name="orthographicCamera" value="true" />
-                        <Property name="pLVPC" value="true" />
-                        <Property name="plotDataTable">
+                        <Property mapKey="highlight" name="highlight" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="highlightAdditive" name="highlightAdditive" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="highlightColor" name="highlightColor">
+                            <value x="1" y="0.899999976" z="0.800000012" w="1" />
+                        </Property>
+                        <Property mapKey="label" name="label" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="labelAdditive" name="labelAdditive" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="lighting" name="lighting" value="true" />
+                        <Property mapKey="marginBottom" name="marginBottom" value="50" />
+                        <Property mapKey="marginLeft" name="marginLeft" value="60" />
+                        <Property mapKey="marginRight" name="marginRight" value="100" />
+                        <Property mapKey="marginTop" name="marginTop" value="50" />
+                        <Property mapKey="mousePositionUpdate" name="mousePositionUpdate" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="orthographicCamera" name="orthographicCamera" value="true" />
+                        <Property mapKey="pLVPC" name="pLVPC" value="true" />
+                        <Property mapKey="plotDataTable" name="plotDataTable">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="553" y="276" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" />
                             </MetaData>
                         </Property>
-                        <Property name="plotEntitiesProperty" guiName="Scatter Data" entities="3" xCI="0" yCI="1" loadStrategy="0">
+                        <Property mapKey="plotEntitiesProperty" name="plotEntitiesProperty" guiName="Scatter Data" entities="3" xCI="0" yCI="1" loadStrategy="0">
                             <colorMap name="Visifire 1">
                                 <colors>
                                     <item x="0.26171875" y="0.5234375" z="0.84375" w="1" />
@@ -209,73 +237,75 @@
                                 </plotEntitySettings>
                             </plotEntitySettingsVector>
                         </Property>
-                        <Property name="plotLabel" value="" />
-                        <Property name="plotLabelColor">
+                        <Property mapKey="plotLabel" name="plotLabel" value="" />
+                        <Property mapKey="plotLabelColor" name="plotLabelColor">
                             <value x="0" y="0" z="1" w="1" />
                         </Property>
-                        <Property name="plotLabelSize" value="18" />
-                        <Property name="renderAxes" value="true" />
-                        <Property name="renderLegend" value="true" />
-                        <Property name="renderMousePosition" value="true" />
-                        <Property name="renderScales" value="true" />
-                        <Property name="renderXHelperLines" value="true" />
-                        <Property name="renderYHelperLines" value="true" />
-                        <Property name="renderZHelperLines" value="true" />
-                        <Property name="selectionPlaneColor">
-                            <value x="0.40000001" y="0.40000001" z="0.40000001" w="0.40000001" />
+                        <Property mapKey="plotLabelSize" name="plotLabelSize" value="18" />
+                        <Property mapKey="renderAxes" name="renderAxes" value="true" />
+                        <Property mapKey="renderLegend" name="renderLegend" value="true" />
+                        <Property mapKey="renderMousePosition" name="renderMousePosition" value="true" />
+                        <Property mapKey="renderScales" name="renderScales" value="true" />
+                        <Property mapKey="renderXHelperLines" name="renderXHelperLines" value="true" />
+                        <Property mapKey="renderYHelperLines" name="renderYHelperLines" value="true" />
+                        <Property mapKey="renderZHelperLines" name="renderZHelperLines" value="true" />
+                        <Property mapKey="selectionPlaneColor" name="selectionPlaneColor">
+                            <value x="0.400000006" y="0.400000006" z="0.400000006" w="0.400000006" />
                         </Property>
-                        <Property name="selectionProperty" threeDimensional="true">
+                        <Property mapKey="selectionProperty" name="selectionProperty" threeDimensional="true">
                             <values />
                         </Property>
-                        <Property name="updateFile" />
-                        <Property name="xLabel" value="x axis" />
-                        <Property name="xLabelOption" value="user" />
-                        <Property name="xScaleStep" value="40" />
-                        <Property name="yLabel" value="y axis" />
-                        <Property name="yLabelOption" value="user" />
-                        <Property name="yScaleStep" value="40" />
-                        <Property name="zLabel" value="z axis" />
-                        <Property name="zLabelOption" value="user" />
-                        <Property name="zScaleStep" value="40" />
-                        <Property name="zoom" lod="1" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
-                        <Property name="zoomAdditive" lod="1" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property mapKey="updateFile" name="updateFile" />
+                        <Property mapKey="xLabel" name="xLabel" value="x axis" />
+                        <Property mapKey="xLabelOption" name="xLabelOption" value="user" />
+                        <Property mapKey="xScaleStep" name="xScaleStep" value="40" />
+                        <Property mapKey="yLabel" name="yLabel" value="y axis" />
+                        <Property mapKey="yLabelOption" name="yLabelOption" value="user" />
+                        <Property mapKey="yScaleStep" name="yScaleStep" value="40" />
+                        <Property mapKey="zLabel" name="zLabel" value="z axis" />
+                        <Property mapKey="zLabelOption" name="zLabelOption" value="user" />
+                        <Property mapKey="zScaleStep" name="zScaleStep" value="40" />
+                        <Property mapKey="zoom" name="zoom" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property mapKey="zoomAdditive" name="zoomAdditive" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="1" shareEvents="false" />
                     </Properties>
                     <Inports>
-                        <Port name="inport">
+                        <Port name="inport" direction="1" portID="inport" guiName="" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="outport">
+                        <Port name="outport" direction="0" portID="outport" guiName="outport" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
-                                <Property name="outport.renderSizeReceive" id="ref6">
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref6">
                                     <value x="500" y="400" />
                                 </Property>
                             </Properties>
                         </Port>
                     </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers>
                         <Handler name="cameraHandler">
                             <Properties>
-                                <Property name="cameraHandler.adjustCamera" value="bigsizechange" />
-                                <Property name="cameraHandler.interactionMetaphor" value="trackball" />
-                                <Property name="cameraHandler.moveBackward" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
-                                <Property name="cameraHandler.moveDown" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
-                                <Property name="cameraHandler.moveForward" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
-                                <Property name="cameraHandler.moveLeft" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
-                                <Property name="cameraHandler.moveRight" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
-                                <Property name="cameraHandler.moveUp" lod="1" enabled="false" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
-                                <Property name="cameraHandler.resetTrackballCenter" />
-                                <Property name="cameraHandler.rotate" lod="1" enabled="false" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property name="cameraHandler.shift" lod="1" enabled="false" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
-                                <Property name="cameraHandler.shiftTrackballCenter" value="scenecenter" />
-                                <Property name="cameraHandler.wheelZoom" lod="1" enabled="false" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property name="cameraHandler.zoom" lod="1" enabled="false" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.interactionMetaphor" name="cameraHandler.interactionMetaphor" value="trackball" />
+                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="false" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="false" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="false" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="false" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="false" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="false" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="false" mouseAction="0" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="false" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="false" mouseAction="127" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="false" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="false" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="false" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                         <Handler name="plotCameraHandler">
                             <Properties>
-                                <Property name="plotCameraHandler.rotate" lod="1" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="plotCameraHandler.rotate" name="plotCameraHandler.rotate" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                     </InteractionHandlers>
@@ -291,26 +321,44 @@
                         <MetaItem name="preferedDevelopmentCanvasSize" type="IVec2MetaData">
                             <value x="500" y="400" />
                         </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="40" y="124" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="500" y="400" />
+                        </MetaItem>
                     </MetaData>
                     <Properties>
-                        <Property name="canvasSize">
+                        <Property mapKey="canvasSize" name="canvasSize">
                             <value x="500" y="400" />
                         </Property>
-                        <Property name="saveScreenshot" />
-                        <Property name="screenshotFilename" noPathSet="false" value="output/canvas.jpg" />
-                        <Property name="showCursor" value="true" />
-                        <Property name="showFullScreen" value="false" />
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/canvas.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/canvas.png" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/canvas.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
                     </Properties>
                     <Inports>
-                        <Port name="image.input">
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
-                                <Property name="image.input.renderSizeOrigin" id="ref5">
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref5">
                                     <value x="500" y="400" />
                                 </Property>
                             </Properties>
                         </Port>
                     </Inports>
                     <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
             </Processors>
@@ -358,5 +406,10 @@
             </PropertyLinks>
         </ProcessorNetwork>
         <Animation />
+        <ApplicationModeConfig MainCanvas="Canvas::Canvas">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
     </Workspace>
 </VoreenData>
