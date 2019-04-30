@@ -24,7 +24,8 @@ before_script:
   - export GALLIVM_PERF="no_aos_sampling" #force floating point sampling path in llvmpipe
   - export CURRENT_REVISION=$(git rev-parse HEAD)
   - export NOW=$(date +%Y-%m-%d-%H:%M:%S)
-  - export IDENTIFIER=${CI_COMMIT_REF_NAME}--${NOW}--${CURRENT_REVISION}--coreprofile
+  - export IDENTIFIER_COREPROFILE=${CI_COMMIT_REF_NAME}--${NOW}--${CURRENT_REVISION}--coreprofile
+  - export IDENTIFIER_COMPATPROFILE=${CI_COMMIT_REF_NAME}--${NOW}--${CURRENT_REVISION}--coreprofile
 
 build_compatprofile:
   stage: build
@@ -153,11 +154,26 @@ volumeorigintest_coreprofile:
 regressiontest_coreprofile:
   stage: test
   script:
-    - mkdir -p ${IDENTIFIER}
+    - mkdir -p ${IDENTIFIER_COREPROFILE}
     - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
-    - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${IDENTIFIER}/regressiontest-report.html --splitHtmlReport true --junitReport ${IDENTIFIER}/regressiontest-junit.xml --reportdir ${IDENTIFIER}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60 || EXITCODE=$? #save exit code of regressiontest, but do not stop, yet (need to upload results!)
-    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --add-ci-report=${IDENTIFIER} ${IDENTIFIER}
-    - mv ${IDENTIFIER}/regressiontest-junit.xml ./ #actifacts session does not have access to IDENTIFIER variable!
+    - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${IDENTIFIER_COREPROFILE}/regressiontest-report.html --splitHtmlReport true --junitReport ${IDENTIFIER_COREPROFILE}/regressiontest-junit.xml --reportdir ${IDENTIFIER_COREPROFILE}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60 || EXITCODE=$? #save exit code of regressiontest, but do not stop, yet (need to upload results!)
+    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --add-ci-report=${IDENTIFIER_COREPROFILE} ${IDENTIFIER_COREPROFILE}
+    - mv ${IDENTIFIER_COREPROFILE}/regressiontest-junit.xml ./ #actifacts session does not have access to IDENTIFIER_COREPROFILE variable!
+    - $(exit $EXITCODE) #propagate regressiontest exit code
+  artifacts:
+    reports:
+      junit: regressiontest-junit.xml
+    expire_in: 1 day
+
+regressiontest_compatprofile:
+  stage: test
+  script:
+    - mkdir -p ${IDENTIFIER_COMPATPROFILE}
+    - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
+    - export MESA_GL_VERSION_OVERRIDE=3.3COMPAT #required for compatibilityprofile with mesa
+    - DISPLAY=:98 ${COMPATPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COMPATPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${IDENTIFIER_COMPATPROFILE}/regressiontest-report.html --splitHtmlReport true --junitReport ${IDENTIFIER_COMPATPROFILE}/regressiontest-junit.xml --reportdir ${IDENTIFIER_COMPATPROFILE}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60 || EXITCODE=$? #save exit code of regressiontest, but do not stop, yet (need to upload results!)
+    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --add-ci-report=${IDENTIFIER_COMPATPROFILE} ${IDENTIFIER_COMPATPROFILE}
+    - mv ${IDENTIFIER_COMPATPROFILE}/regressiontest-junit.xml ./ #actifacts session does not have access to IDENTIFIER_COMPATPROFILE variable!
     - $(exit $EXITCODE) #propagate regressiontest exit code
   artifacts:
     reports:
