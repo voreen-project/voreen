@@ -88,12 +88,12 @@ bool Particles::isReady() const {
 }
 
 void Particles::initialize() {
+    RenderProcessor::initialize();
+
     if(GpuCaps.getShaderModel() < tgt::GpuCapabilities::SHADER_MODEL_5) {
         LERROR("This system does not seem to support compute shaders, cannot initialize particles processor.");
         return;
     }
-
-    RenderProcessor::initialize();
 
     compile();
 
