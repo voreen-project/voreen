@@ -12,6 +12,7 @@ variables:
   REPORT_DIR: 'reports'
   TOOLS_DIR: 'voreen/tools'
   COREPROFILE_BUILD_DIR: 'build_coreprofile'
+  COMPATPROFILE_BUILD_DIR: 'build_compatibilityprofile'
   TEST_DATA_DIR: 'test-data/voreen-testdata'
   REGRESSION_TEST_UPLOAD_URL: 'https://uni-muenster.sciebo.de/s/YdhJ4czrPsfqPL6'
   #REGRESSION_TEST_UPLOAD_PASSWORD: configured in gitlab
@@ -25,12 +26,19 @@ before_script:
   - export NOW=$(date +%Y-%m-%d-%H:%M:%S)
   - export IDENTIFIER=${CI_COMMIT_REF_NAME}--${NOW}--${CURRENT_REVISION}--coreprofile
 
+build_compatprofile:
+  stage: build
+  script:
+    - ci/build_compatibilityprofile.sh ${COMPATPROFILE_BUILD_DIR}
+  artifacts:
+    paths:
+    - "${COREPROFILE_BUILD_DIR}/bin/*"
+    expire_in: 1 day
+
 build_coreprofile:
   stage: build
   script:
-    #- ci/build_minimal.sh ${COREPROFILE_BUILD_DIR}
     - ci/build_coreprofile.sh ${COREPROFILE_BUILD_DIR}
-    #- runuser $RUN_TESTS_AS_USER -c "ci/build_coreprofile.sh ${COREPROFILE_BUILD_DIR}"
   artifacts:
     paths:
     - "${COREPROFILE_BUILD_DIR}/bin/*"
