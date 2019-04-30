@@ -38,6 +38,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <regex>
 
 #ifdef UNIX
 #include <clocale>
@@ -52,6 +53,8 @@ std::string FILE_MAGNITUDE = "magnitude.txt";
 std::string FILE_VELOCITYX = "velocity_x.txt";
 std::string FILE_VELOCITYY = "velocity_y.txt";
 std::string FILE_VELOCITYZ = "velocity_z.txt";
+
+const static std::regex SPACING_REGEX(R"(.*\[(mm|cm)\/pix\].*)");
 
 PBReader::PBReader()
     : Processor()
@@ -281,11 +284,29 @@ void PBReader::readParameters(tgt::svec3& dimensions, tgt::vec3& spacing, int& t
     getline(ifs, tmp); //field of view
     getline(ifs, tmp); //values
     getline(ifs, tmp); //step size
+
+    float factor = 1.0f;
+    std::smatch match;
+    if(std::regex_search(tmp, match, SPACING_REGEX)) {
+        std::string unit = match[1].str();
+        if(unit == "mm") {
+            factor = 1.0f;
+        }
+        else if(unit == "cm") {
+            factor = 10.0f;
+        }
+        else {
+            tgtAssert(false, "Unhandled unit");
+        }
+    } else {
+        LWARNING("Unit could not be read, assuming mm");
+    }
+
     getline(ifs, tmp); //spacing
     line.str(tmp);
     for(int s = 0; s < 3; s++) {
         getline(line,tmp,'\t');
-        spacing[s] = (float)atof(tmp.c_str());
+        spacing[s] = atof(tmp.c_str()) * factor;
     }
     getline(ifs, tmp); //number of time frames
     getline(ifs, tmp); //timesteps
