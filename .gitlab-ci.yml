@@ -32,7 +32,7 @@ build_compatprofile:
     - ci/build_compatibilityprofile.sh ${COMPATPROFILE_BUILD_DIR}
   artifacts:
     paths:
-    - "${COREPROFILE_BUILD_DIR}/bin/*"
+    - "${COMPATPROFILE_BUILD_DIR}/bin/*"
     expire_in: 1 day
 
 build_coreprofile:
@@ -44,6 +44,36 @@ build_coreprofile:
     - "${COREPROFILE_BUILD_DIR}/bin/*"
     expire_in: 1 day
 
+# Daily builds
+build_default:
+  stage: build
+  script:
+    - ci/build_default.sh $(mktmp -d)
+  only:
+    - schedules
+
+build_no_modules:
+  stage: build
+  script:
+    - ci/build_no_modules.sh $(mktmp -d)
+  only:
+    - schedules
+
+build_release:
+  stage: build
+  script:
+    - ci/build_release.sh $(mktmp -d)
+  only:
+    - schedules
+
+build_static_libs:
+  stage: build
+  script:
+    - ci/build_static_libs.sh $(mktmp -d)
+  only:
+    - schedules
+
+# Tests
 serializertest_coreprofile:
   stage: test
   script:
@@ -133,13 +163,3 @@ regressiontest_coreprofile:
     reports:
       junit: regressiontest-junit.xml
     expire_in: 1 day
-
-schedule_test:
-  stage: build
-  only:
-    - schedules
-  script:
-    - echo Schedule ran! > ${REPORT_DIR}
-  artifacts:
-    paths:
-    - ${REPORT_DIR}
