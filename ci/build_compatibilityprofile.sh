@@ -54,7 +54,8 @@ build_options=(
     # custom modules
     -DVRN_MODULE_GRAPHLAYOUT=ON
 
-    -DVRN_PRECOMPILED_HEADER=OFF
+    # do not block on failed assertions
+    -DVRN_NON_INTERACTIVE=ON
 )
 cmake "${build_options[@]}" ../voreen
 

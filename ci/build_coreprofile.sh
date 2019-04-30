@@ -55,8 +55,6 @@ build_options=(
 
     # do not block on failed assertions
     -DVRN_NON_INTERACTIVE=ON
-
-    -DVRN_PRECOMPILED_HEADER=OFF
 )
 cmake "${build_options[@]}" ../voreen
 
