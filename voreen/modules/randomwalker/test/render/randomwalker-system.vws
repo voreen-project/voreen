@@ -6,13 +6,18 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="Canvas" ref="ref53" />
+                    </values>
+                </MetaItem>
                 <MetaItem name="Zoom" type="ZoomMetaData">
                     <transform.row0 x="0.39685088396072388" y="0" z="0" />
                     <transform.row1 x="0" y="0.39685088396072388" z="0" />
                     <transform.row2 x="7676.314453125" y="-4512.15673828125" z="1" />
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="221.329528809" y="249.161392212" />
+                    <value x="-34.458488464" y="544.70916748" />
                 </MetaItem>
                 <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.754531026" />
             </MetaData>
@@ -44,9 +49,9 @@
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/canvas-main.png" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/canvas-main.png" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/canvas-main.png" />
+                                    <item value="output/canvas-main.png" />
+                                    <item value="../../voreen-testdata/report/output/canvas-main.png" />
+                                    <item value="/data/dominik/git/voreen-testdata/report/output/canvas-main.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -80,7 +85,7 @@
                                     <paths>
                                         <item value="input/walnut_medium.vvd" />
                                         <item value="../../voreen-testdata/voreen-testdata/input/walnut_medium.vvd" />
-                                        <item value="/git/voreen-testdata/voreen-testdata/input/walnut_medium.vvd" />
+                                        <item value="/data/dominik/git/voreen-testdata/voreen-testdata/input/walnut_medium.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -173,7 +178,7 @@
                             </MetaData>
                             <position x="3.589541674" y="3.26179266" z="-0.744670212" />
                             <focus x="-0.088099502" y="0.035271689" z="-0.246205956" />
-                            <upVector x="0.331249803" y="-0.337106764" z="0.881267548" />
+                            <upVector x="0.331249833" y="-0.337106794" z="0.881267667" />
                             <trackball moveCenter="false">
                                 <center x="-0.01474702" y="-0.01049805" z="-0.00127947" />
                             </trackball>
@@ -4121,9 +4126,9 @@ void main() {
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/canvas-probabilities.png" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/canvas-probabilities.png" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/canvas-probabilities.png" />
+                                    <item value="output/canvas-probabilities.png" />
+                                    <item value="../../voreen-testdata/report/output/canvas-probabilities.png" />
+                                    <item value="/data/dominik/git/voreen-testdata/report/output/canvas-probabilities.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -4448,7 +4453,7 @@ void main() {
                                 <paths>
                                     <item value="" />
                                     <item value="../../voreen-testdata/voreen-testdata" />
-                                    <item value="/git/voreen-testdata/voreen-testdata" />
+                                    <item value="/data/dominik/git/voreen-testdata/voreen-testdata" />
                                 </paths>
                             </paths>
                         </Property>
@@ -4518,9 +4523,9 @@ void main() {
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/segmentation.vvd" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/segmentation.vvd" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/segmentation.vvd" />
+                                    <item value="output/segmentation.vvd" />
+                                    <item value="../../../../../home/dominik/git/voreen-testdata/report/output/segmentation.vvd" />
+                                    <item value="/home/dominik/git/voreen-testdata/report/output/segmentation.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -4599,7 +4604,7 @@ void main() {
                             </MetaData>
                             <position x="3.589541674" y="3.26179266" z="-0.744670212" />
                             <focus x="-0.088099502" y="0.035271689" z="-0.246205956" />
-                            <upVector x="0.331249833" y="-0.337106794" z="0.881267667" />
+                            <upVector x="0.331249803" y="-0.337106764" z="0.881267548" />
                             <trackball moveCenter="false">
                                 <center x="-0.01474702" y="-0.01049805" z="-0.00127947" />
                             </trackball>
@@ -4669,7 +4674,7 @@ void main() {
                             </MetaData>
                             <position x="3.589541674" y="3.26179266" z="-0.744670212" />
                             <focus x="-0.088099502" y="0.035271689" z="-0.246205956" />
-                            <upVector x="0.331249803" y="-0.337106764" z="0.881267548" />
+                            <upVector x="0.331249833" y="-0.337106794" z="0.881267667" />
                             <trackball moveCenter="false">
                                 <center x="-0.01474702" y="-0.01049805" z="-0.00127947" />
                             </trackball>
@@ -5030,7 +5035,7 @@ void main() {
                             </MetaData>
                             <position x="3.589541674" y="3.26179266" z="-0.744670212" />
                             <focus x="-0.088099502" y="0.035271689" z="-0.246205956" />
-                            <upVector x="0.331249833" y="-0.337106794" z="0.881267667" />
+                            <upVector x="0.331249803" y="-0.337106764" z="0.881267548" />
                             <trackball moveCenter="false">
                                 <center x="-0.01474702" y="-0.01049805" z="-0.00127947" />
                             </trackball>
@@ -5190,7 +5195,7 @@ void main() {
                                 <paths>
                                     <item value="" />
                                     <item value="../../voreen-testdata/voreen-testdata" />
-                                    <item value="/git/voreen-testdata/voreen-testdata" />
+                                    <item value="/data/dominik/git/voreen-testdata/voreen-testdata" />
                                 </paths>
                             </paths>
                         </Property>
@@ -5242,7 +5247,7 @@ void main() {
                                 <paths>
                                     <item value="" />
                                     <item value="../../voreen-testdata/voreen-testdata" />
-                                    <item value="/git/voreen-testdata/voreen-testdata" />
+                                    <item value="/data/dominik/git/voreen-testdata/voreen-testdata" />
                                 </paths>
                             </paths>
                         </Property>
@@ -5317,9 +5322,9 @@ void main() {
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/probabilities.vvd" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/probabilities.vvd" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/probabilities.vvd" />
+                                    <item value="output/probabilities.vvd" />
+                                    <item value="../../../../../home/dominik/git/voreen-testdata/report/output/probabilities.vvd" />
+                                    <item value="/home/dominik/git/voreen-testdata/report/output/probabilities.vvd" />
                                 </paths>
                             </paths>
                         </Property>
