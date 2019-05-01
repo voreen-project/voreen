@@ -49,28 +49,28 @@ build_coreprofile:
 build_default:
   stage: build
   script:
-    - ci/build_default.sh $(mktmp -d)
+    - ci/build_default.sh $(mktemp -d)
   only:
     - schedules
 
 build_no_modules:
   stage: build
   script:
-    - ci/build_no_modules.sh $(mktmp -d)
+    - ci/build_no_modules.sh $(mktemp -d)
   only:
     - schedules
 
 build_release:
   stage: build
   script:
-    - ci/build_release.sh $(mktmp -d)
+    - ci/build_release.sh $(mktemp -d)
   only:
     - schedules
 
 build_static_libs:
   stage: build
   script:
-    - ci/build_static_libs.sh $(mktmp -d)
+    - ci/build_static_libs.sh $(mktemp -d)
   only:
     - schedules
 
