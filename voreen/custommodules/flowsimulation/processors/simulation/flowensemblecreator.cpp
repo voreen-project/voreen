@@ -107,15 +107,23 @@ FlowEnsembleCreatorInput FlowEnsembleCreator::prepareComputeInput() {
 FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput input, ProgressReporter& progressReporter) const {
 
     // If available, use additional measured data from file system.
-    std::vector<std::vector<std::pair<std::string, std::string>>> measuredDataFiles(input.measuredData.size());
+    std::vector<std::vector<std::string>> measuredDataFiles(input.measuredData.size());
     if(!measuredDataPath_.get().empty()) {
-        std::vector<std::string> files = tgt::FileSystem::readDirectory(input.measuredDataPath, false, true);
-        for(size_t i=0; i<files.size(); i++) {
-            std::string path = input.measuredDataPath + "/" + files[i];
-            std::string name = strJoin(strSplit(tgt::FileSystem::dirName(files[i]), "/"), "-");
-            for(size_t j=0; j<input.measuredData.size(); j++) {
-                if(files[i].find(input.measuredData[j].first + "_") != std::string::npos) {
-                    measuredDataFiles[j].push_back(std::make_pair(path, name));
+        // List all directory names which we interpret as runs.
+        std::vector<std::string> runs = tgt::FileSystem::listSubDirectories(input.measuredDataPath);
+        for(size_t i=0; i<runs.size(); i++) {
+            std::string runPath = input.measuredDataPath + "/" + runs[i];
+            // List all contained filed (namely all time steps of all channels)
+            std::vector<std::string> files = tgt::FileSystem::listFiles(runPath);
+            for(size_t j=0; j<files.size(); j++) {
+                std::string relativeFilePath = runs[i] + "/" + files[j];
+                // For each contained file, check which channel it belongs to.
+                for (size_t k = 0; k < input.measuredData.size(); k++) {
+                    const std::string& channel = input.measuredData[k].first;
+                    if (files[j].find(channel) != std::string::npos) {
+                        measuredDataFiles[k].push_back(relativeFilePath);
+                        break;
+                    }
                 }
             }
         }
@@ -165,14 +173,13 @@ FlowEnsembleCreatorOutput FlowEnsembleCreator::compute(FlowEnsembleCreatorInput 
             const std::string& channel = input.measuredData[j].first;
 
             // Handle files from file system.
-            for(const auto& file : measuredDataFiles[j]) {
+            for(const std::string& file : measuredDataFiles[j]) {
 
-                const std::string& oldPath = file.first;
+                std::string oldPath = input.measuredDataPath + "/" + file;
                 std::string newPath = input.ensembleOutputPath + "/";
                 newPath += channel + "/";
                 newPath += ensemble + "/";
-                newPath += file.second + "/";
-                newPath += tgt::FileSystem::fileName(oldPath);
+                newPath += file;
                 files.push_back(std::make_tuple(oldPath, newPath, true));
             }
 
