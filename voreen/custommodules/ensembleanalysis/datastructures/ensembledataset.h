@@ -84,6 +84,7 @@ public:
     const tgt::vec2& getCommonTimeInterval() const;
 
     const tgt::vec2& getValueRange(const std::string& channel) const;
+    size_t getNumChannels(const std::string& channel) const;
 
     // Bounds are defined in physical coordinates
     const tgt::Bounds& getBounds() const;
@@ -106,6 +107,7 @@ private:
 
     struct ChannelMetaData {
         tgt::vec2 valueRange_;
+        size_t numChannels_{0};
     };
 
     //----------------

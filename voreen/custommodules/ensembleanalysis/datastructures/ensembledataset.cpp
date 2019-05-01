@@ -85,12 +85,19 @@ void EnsembleDataset::addRun(const Run& run) {
             tgt::Bounds bounds = volume->getBoundingBox(false).getBoundingBox();
             VolumeMinMax* minMax = volume->getDerivedData<VolumeMinMax>();
 
-            if(channelMetaData_.find(channelName) == channelMetaData_.end()) {
-                channelMetaData_[channelName].valueRange_ = tgt::vec2(minMax->getMin(), minMax->getMax());
+            bool firstChannelElement = channelMetaData_.find(channelName) == channelMetaData_.end();
+            ChannelMetaData& channelMetaData = channelMetaData_[channelName];
+            if(firstChannelElement) {
+                channelMetaData.valueRange_ = tgt::vec2(minMax->getMin(), minMax->getMax());
+                channelMetaData.numChannels_ = volume->getNumChannels();
             }
             else {
-                channelMetaData_[channelName].valueRange_.x = std::min(channelMetaData_[channelName].valueRange_.x, minMax->getMin());
-                channelMetaData_[channelName].valueRange_.y = std::max(channelMetaData_[channelName].valueRange_.y, minMax->getMax());
+                channelMetaData.valueRange_.x = std::min(channelMetaData.valueRange_.x, minMax->getMin());
+                channelMetaData.valueRange_.y = std::max(channelMetaData.valueRange_.y, minMax->getMax());
+                if(channelMetaData.numChannels_ != volume->getNumChannels()) {
+                    LERRORC("voreen.EnsembleDataSet", "Number of channels inside channel differs, taking min.");
+                    channelMetaData.numChannels_ = std::min(channelMetaData.numChannels_, volume->getNumChannels());
+                }
             }
 
             metaData.timeStepDurationStats_.addSample(run.timeSteps_[t].duration_);
@@ -228,6 +235,11 @@ void EnsembleDataset::setRoi(tgt::Bounds roi) {
 const tgt::vec2& EnsembleDataset::getValueRange(const std::string& channel) const {
     tgtAssert(channelMetaData_.find(channel) != channelMetaData_.end(), "Channel not available");
     return channelMetaData_.at(channel).valueRange_;
+}
+
+size_t EnsembleDataset::getNumChannels(const std::string& channel) const {
+    tgtAssert(channelMetaData_.find(channel) != channelMetaData_.end(), "Channel not available");
+    return channelMetaData_.at(channel).numChannels_;
 }
 
 const std::vector<std::string>& EnsembleDataset::getCommonChannels() const {

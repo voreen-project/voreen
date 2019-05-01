@@ -38,6 +38,7 @@ namespace voreen {
 const std::string EnsembleDataSource::SCALAR_FIELD_NAME = "Scalar";
 const std::string EnsembleDataSource::NAME_FIELD_NAME = "name";
 const std::string EnsembleDataSource::SIMULATED_TIME_NAME = "simulated_time";
+const std::string EnsembleDataSource::RUN_NAME = "run_name";
 const std::string EnsembleDataSource::loggerCat_("voreen.ensembleanalysis.EnsembleDataSource");
 
 EnsembleDataSource::EnsembleDataSource()
@@ -57,14 +58,21 @@ EnsembleDataSource::EnsembleDataSource()
     addProperty(runProgress_);
     addProgressBar(&runProgress_);
     addProperty(timeStepProgress_);
+
     addProperty(loadedRuns_);
     loadedRuns_.setColumnLabel(0, "Name");
     loadedRuns_.setColumnLabel(1, "Num Time Steps");
     loadedRuns_.setColumnLabel(2, "Start Time");
     loadedRuns_.setColumnLabel(3, "End Time");
     loadedRuns_.setColumnLabel(4, "Duration");
+
     addProperty(colorMap_);
-    colorMap_.set(ColorMap::createSpectral());
+    std::vector<tgt::Color> colors;
+    colors.push_back(tgt::Color(0.0f, 0.0f, 1.0f, 1.0f));
+    colors.push_back(tgt::Color(1.0f, 0.0f, 0.0f, 1.0f));
+    colors.push_back(tgt::Color(1.0f, 1.0f, 0.0f, 1.0f));
+    colorMap_.set(ColorMap::createFromVector(colors));
+
     addProperty(hash_);
     hash_.setEditable(false);
 
@@ -130,7 +138,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
         for(const std::string& fileName : fileNames) {
 
             // Skip raw files. They belong to VVD files or can't be read anyway.
-            if(fileName.substr(fileName.find_last_of('.')) == ".raw") {
+            if(tgt::FileSystem::fileExtension(fileName, true) == "raw") {
                 continue;
             }
 
@@ -185,7 +193,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 // Add additional information gained reading the file structure.
                 Volume* volume = dynamic_cast<Volume*>(volumeHandle.get());
                 tgtAssert(volume, "volumeHandle must be volume");
-                volume->getMetaDataContainer().addMetaData("run_name", new StringMetaData(run));
+                volume->getMetaDataContainer().addMetaData(RUN_NAME, new StringMetaData(run));
 
                 timeStep.channels_[name->toString()] = volumeHandle.get();
 

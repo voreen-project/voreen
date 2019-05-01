@@ -261,8 +261,8 @@ bool FieldParallelPlotViewer::checkConsistency() {
 
     // Compare hashes.
     if (EnsembleHash(*dataset).getHash() != ensembleHash->toString())
-        LERROR("HASH does not match - currently ignored, application likely to crash");
-        //return false;
+        //LERROR("HASH does not match - currently ignored, application likely to crash");
+        return false;
 
     renderedChannel_.blockCallbacks(true);
     for (const std::string& channel : dataset->getCommonChannels())
