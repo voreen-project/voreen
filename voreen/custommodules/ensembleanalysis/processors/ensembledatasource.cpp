@@ -164,10 +164,6 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 if(!volumeHandle)
                     break;
 
-                if (!volumeHandle->hasDerivedData<VolumeMinMax>()) {
-                    LWARNING("Volume does not contain min max information - needs to be calculated");
-                }
-
                 float time = volumeHandle->getTimestep();
                 if(volumeHandle->hasMetaData(SIMULATED_TIME_NAME)) {
                     time = dynamic_cast<const FloatMetaData*>(volumeHandle->getMetaData(SIMULATED_TIME_NAME))->getValue();

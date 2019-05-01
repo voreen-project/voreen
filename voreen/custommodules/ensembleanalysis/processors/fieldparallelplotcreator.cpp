@@ -111,7 +111,7 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
 
         // TODO: very rough and dirty restriction, implement something more intelligent.
         if (!seedMask || (seedMaskBounds.containsPoint(seedPoint) &&
-          seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint) > 0.0f)) {
+          seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint) != 0.0f)) {
             seedPoints.push_back(seedPoint);
         }
     }

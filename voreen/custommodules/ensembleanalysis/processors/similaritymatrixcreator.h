@@ -37,16 +37,21 @@
 
 namespace voreen {
 
-enum FieldSimilarityMeasure {
+enum SingleChannelSimilarityMeasure {
     MEASURE_ISOSURFACE,
     MEASURE_MULTIFIELD,
+};
+
+enum MultiChannelSimilarityMeasure {
+    MEASURE_ANGLEDIFFERENCE,
 };
 
 struct SimilarityMatrixCreatorInput {
     const EnsembleDataset& dataset;
     std::unique_ptr<SimilarityMatrixList> outputMatrices;
     std::vector<tgt::vec3> seedPoints;
-    FieldSimilarityMeasure fieldSimilarityMeasure;
+    SingleChannelSimilarityMeasure singleChannelSimilarityMeasure;
+    MultiChannelSimilarityMeasure multiChannelSimilarityMeasure;
     float isoValue;
 };
 
@@ -75,7 +80,8 @@ protected:
 
 private:
 
-    OptionProperty<FieldSimilarityMeasure> fieldSimilarityMeasure_;
+    OptionProperty<SingleChannelSimilarityMeasure> singleChannelSimilarityMeasure_;
+    OptionProperty<MultiChannelSimilarityMeasure> multiChannelSimilarityMeasure_;
     FloatProperty isoValue_;
     IntProperty numSeedPoints_;
     IntProperty seedTime_;

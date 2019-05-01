@@ -27,6 +27,7 @@
 
 #include "tgt/assert.h"
 #include "voreen/core/datastructures/volume/volumeminmax.h"
+#include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 
 namespace voreen {
 
@@ -83,17 +84,25 @@ void EnsembleDataset::addRun(const Run& run) {
             const VolumeBase* volume = channel.second;
             // Bounds are stored in physical space, so don't transform to world space.
             tgt::Bounds bounds = volume->getBoundingBox(false).getBoundingBox();
-            VolumeMinMax* minMax = volume->getDerivedData<VolumeMinMax>();
+            tgt::vec2 minMax;
+            if(volume->getNumChannels() == 1) {
+                VolumeMinMax* derivedData = volume->getDerivedData<VolumeMinMax>();
+                minMax = tgt::vec2(derivedData->getMin(), derivedData->getMax());
+            }
+            else { // bigger than 1
+                VolumeMinMaxMagnitude* derivedData = volume->getDerivedData<VolumeMinMaxMagnitude>();
+                minMax = tgt::vec2(derivedData->getMinMagnitude(), derivedData->getMaxMagnitude());
+            }
 
             bool firstChannelElement = channelMetaData_.find(channelName) == channelMetaData_.end();
             ChannelMetaData& channelMetaData = channelMetaData_[channelName];
             if(firstChannelElement) {
-                channelMetaData.valueRange_ = tgt::vec2(minMax->getMin(), minMax->getMax());
+                channelMetaData.valueRange_ = minMax;
                 channelMetaData.numChannels_ = volume->getNumChannels();
             }
             else {
-                channelMetaData.valueRange_.x = std::min(channelMetaData.valueRange_.x, minMax->getMin());
-                channelMetaData.valueRange_.y = std::max(channelMetaData.valueRange_.y, minMax->getMax());
+                channelMetaData.valueRange_.x = std::min(channelMetaData.valueRange_.x, minMax.x);
+                channelMetaData.valueRange_.y = std::max(channelMetaData.valueRange_.y, minMax.y);
                 if(channelMetaData.numChannels_ != volume->getNumChannels()) {
                     LERRORC("voreen.EnsembleDataSet", "Number of channels inside channel differs, taking min.");
                     channelMetaData.numChannels_ = std::min(channelMetaData.numChannels_, volume->getNumChannels());
