@@ -25,7 +25,6 @@
 
 #include "similarityplot.h"
 
-#include "../utils/colorpool.h"
 #include "../utils/ensemblehash.h"
 #include "../utils/utils.h"
 
@@ -403,14 +402,24 @@ void SimilarityPlot::renderingPass(bool picking) {
             const auto& vertices = mdsData.nVectors_.at(runIdx);
 
             IMode.begin(tgt::ImmediateMode::LINE_STRIP);
-            for(size_t j=0; j<numTimeSteps; j++) {
-                float t = mapRange(run.timeSteps_[j].time_, dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
-                IMode.color(getColor(runIdx, j, picking));
-                IMode.vertex(tgt::vec2(t, vertices[j][eigenValueIdx]));
+            if(numTimeSteps == 1) {
+                // In case we have a single time step, we draw it across the whole range,
+                // since it doesn't change. This could (and should!) be improved, however,
+                // such that it becomes clear at which t the time step is recorded.
+                IMode.color(getColor(runIdx, 0, picking));
+                IMode.vertex(tgt::vec2(-1.0f, vertices[0][eigenValueIdx]));
+                IMode.vertex(tgt::vec2(1.0f, vertices[0][eigenValueIdx]));
+            }
+            else {
+                for (size_t j = 0; j < numTimeSteps; j++) {
+                    float t = mapRange(run.timeSteps_[j].time_, dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
+                    IMode.color(getColor(runIdx, j, picking));
+                    IMode.vertex(tgt::vec2(t, vertices[j][eigenValueIdx]));
+                }
             }
             IMode.end();
 
-            if(!picking && numTimeSteps > 0) {
+            if(numTimeSteps > 0 && !picking) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
                 float x = mapRange(run.timeSteps_[selectedTimeStep].time_, dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
                 tgt::vec3 position(x, vertices[selectedTimeStep][eigenValueIdx], 0.0f);
@@ -440,7 +449,7 @@ void SimilarityPlot::renderingPass(bool picking) {
             }
             IMode.end();
 
-            if(!picking && numTimeSteps > 0) {
+            if(numTimeSteps > 0 && (!picking || numTimeSteps == 1)) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
                 tgt::vec3 position(vertices[selectedTimeStep][0], vertices[selectedTimeStep][1], 0.0f);
                 drawTimeStepSelection(runIdx, selectedTimeStep, position);
@@ -482,7 +491,7 @@ void SimilarityPlot::renderingPass(bool picking) {
             }
             IMode.end();
 
-            if(!picking && numTimeSteps > 0) {
+            if(numTimeSteps > 0 && (!picking || numTimeSteps == 1)) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
                 drawTimeStepSelection(runIdx, selectedTimeStep, tgt::vec3::fromPointer(&vertices[selectedTimeStep][0])*scale);
             }
@@ -511,14 +520,24 @@ void SimilarityPlot::drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, co
     MatStack.translate(position);
     MatStack.scale(tgt::vec3(sphereRadius_.get()));
 
-    size_t numTimeSteps = ensembleInport_.getData()->getRuns()[runIdx].timeSteps_.size();
+    const EnsembleDataset* dataset = ensembleInport_.getData();
+    size_t numTimeSteps = dataset->getRuns()[runIdx].timeSteps_.size();
+
+    // In case the run only got a single time step, we use the sphere to indicate it's projected position.
+    // Otherwise, we wouldn't be able to see it.
+    tgt::vec3 color = tgt::vec3::one;
+    if(numTimeSteps == 1) {
+        color = dataset->getColor(runIdx);
+    }
+
     bool timeStepAvailable = timeStepIdx < numTimeSteps;
-    if(timeStepAvailable)
-        IMode.color(tgt::vec4::one);
-    else {
-        IMode.color(tgt::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+    if(!timeStepAvailable) {
+        IMode.color(tgt::vec4(color, 0.5f));
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_BLEND);
+    }
+    else {
+        IMode.color(tgt::vec4(color, 1.0f));
     }
 
     sphere_.render(GL_TRIANGLES);
@@ -588,7 +607,7 @@ void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
     const EnsembleDataset* dataset = ensembleInport_.getData();
     const std::vector<EnsembleDataset::Run>& runs = dataset->getRuns();
     size_t numRuns = runs.size();
-    int r = static_cast<int>(std::round(texel.r * numRuns));
+    int r = tgt::clamp<int>(std::round(texel.r * numRuns), 0, numRuns-1);
 
     // Right-click selection changes rendering order.
     if (e->button() & tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
@@ -607,7 +626,7 @@ void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
     else {
         // Calculate time step index.
         size_t numTimeSteps = runs[r].timeSteps_.size();
-        size_t t = static_cast<size_t>(std::round(texel.g * numTimeSteps));
+        int t = tgt::clamp<int>(std::round(texel.g * numTimeSteps), 0, numTimeSteps-1);
 
         // Update selection.
         if(e->modifiers() & tgt::MouseEvent::CTRL) {
@@ -625,11 +644,15 @@ void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
             // This selection mode modifies selectedRuns_ and therefore linked processors.
             // This is the actual (!) selection.
 
+            // Reset subselection.
+            subSelection_.clear();
+
             std::vector<int> runIndices;
             runIndices.push_back(r);
             selectedRuns_.setSelectedRowIndices(runIndices);
+            subSelection_.insert(r);
 
-            const EnsembleDataset::TimeStep& timeStep = runs[runIndices.back()].timeSteps_[std::min(t, numTimeSteps - 1)];
+            const EnsembleDataset::TimeStep& timeStep = runs[r].timeSteps_[t];
             float lower = std::floor(timeStep.time_ * 100.0f) / 100.0f;
             float upper = std::ceil((timeStep.time_ + timeStep.duration_) * 100.0f) / 100.0f;
             selectedTimeSteps_.set(tgt::vec2(lower, upper));
@@ -644,7 +667,7 @@ void SimilarityPlot::onEvent(tgt::Event* e) {
     tgt::MouseEvent* event = dynamic_cast<tgt::MouseEvent*>(e);
 
     //*
-    if(event && event->getEventType() == tgt::MouseEvent::PRESSED && (event->modifiers() & tgt::MouseEvent::SHIFT))
+    if(event && event->getEventType() == tgt::MouseEvent::PRESSED)
         mouseClickEvent(event);
     else
         RenderProcessor::onEvent(e);

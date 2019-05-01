@@ -41,9 +41,11 @@ class VRN_CORE_API ColorMapProperty : public TemplateProperty<ColorMap> {
 public:
     ColorMapProperty(const std::string& id, const std::string& guiText, ColorMap value = ColorMap::createColdHot(),
         Processor::InvalidationLevel invalidationLevel=Processor::INVALID_RESULT);
-
+    ColorMapProperty();
     virtual ~ColorMapProperty() {}
 
+    virtual Property* create() const;
+    virtual std::string getClassName() const;
     virtual std::string getTypeDescription() const;
 
     /**

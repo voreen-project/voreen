@@ -35,6 +35,8 @@
 #include "voreen/core/properties/progressproperty.h"
 #include "voreen/core/properties/string/stringtableproperty.h"
 
+#include "modules/plotting/properties/colormapproperty.h"
+
 #include "../ports/ensembledatasetport.h"
 
 namespace voreen {
@@ -78,6 +80,7 @@ protected:
     ProgressProperty runProgress_;
     ProgressProperty timeStepProgress_;
     StringTableProperty loadedRuns_;
+    ColorMapProperty colorMap_;
     StringProperty hash_;
 
     /// The structure of the ensemble data.

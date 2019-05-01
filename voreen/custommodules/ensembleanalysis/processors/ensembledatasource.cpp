@@ -32,7 +32,6 @@
 
 #include "../datastructures/ensembledataset.h"
 #include "../utils/ensemblehash.h"
-#include "../utils/colorpool.h"
 
 namespace voreen {
 
@@ -43,12 +42,13 @@ const std::string EnsembleDataSource::loggerCat_("voreen.ensembleanalysis.Ensemb
 
 EnsembleDataSource::EnsembleDataSource()
     : Processor()
+    , outport_(Port::OUTPORT, "ensembledataset", "EnsembleDataset Output", false)
     , ensemblePath_("ensemblepath", "Ensemble Path", "Select Ensemble root folder", "", "", FileDialogProperty::DIRECTORY)
     , loadDatasetButton_("loadDataset", "Load Dataset")
     , runProgress_("runProgress", "Runs loaded")
     , timeStepProgress_("timeStepProgress", "Time Steps loaded")
-    , outport_(Port::OUTPORT, "ensembledataset", "EnsembleDataset Output", false)
     , loadedRuns_("loadedRuns", "Loaded Runs", 5)
+    , colorMap_("colorMap", "Color Map")
     , hash_("hash", "Hash", "", Processor::VALID, Property::LOD_DEBUG)
 {
     addPort(outport_);
@@ -63,6 +63,8 @@ EnsembleDataSource::EnsembleDataSource()
     loadedRuns_.setColumnLabel(2, "Start Time");
     loadedRuns_.setColumnLabel(3, "End Time");
     loadedRuns_.setColumnLabel(4, "Duration");
+    addProperty(colorMap_);
+    colorMap_.set(ColorMap::createSpectral());
     addProperty(hash_);
     hash_.setEditable(false);
 
@@ -115,6 +117,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
     float progressPerRun = 1.0f / runs.size();
 
     VolumeSerializerPopulator populator;
+    ColorMap::InterpolationIterator colorIter = colorMap_.get().getInterpolationIterator(runs.size());
 
     for(const std::string& run : runs) {
         std::string runPath = ensemblePath_.get() + "/" + run;
@@ -216,8 +219,9 @@ void EnsembleDataSource::buildEnsembleDataset() {
         loadedRuns_.addRow(row);//addRow(run, color);
 
         // Update dataset.
-        tgt::vec3 color = ColorPool::getDistinctColor(dataset->getRuns().size());
-        dataset->addRun(EnsembleDataset::Run{ run, color, timeSteps });
+        tgt::Color color = *colorIter;
+        dataset->addRun(EnsembleDataset::Run{ run, color.xyz(), timeSteps });
+        ++colorIter;
 
         // Update progress bar.
         setProgress(getProgress() + progressPerRun);

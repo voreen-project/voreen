@@ -35,6 +35,9 @@ ColorMapProperty::ColorMapProperty(const std::string& id, const std::string& gui
     : TemplateProperty<ColorMap>(id, guiText, value, invalidationLevel)
 {}
 
+ColorMapProperty::ColorMapProperty() {
+}
+
 void ColorMapProperty::serialize(Serializer& s) const {
     Property::serialize(s);
 
@@ -52,6 +55,14 @@ void ColorMapProperty::deserialize(Deserializer& s) {
     catch (Condition::ValidationFailed& e) {
         s.addError(e);
     }
+}
+
+Property* ColorMapProperty::create() const {
+    return new ColorMapProperty();
+}
+
+std::string ColorMapProperty::getClassName() const {
+    return "ColorMapProperty";
 }
 
 std::string ColorMapProperty::getTypeDescription() const {

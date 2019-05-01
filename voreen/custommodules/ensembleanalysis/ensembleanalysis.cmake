@@ -92,7 +92,6 @@ SET(MOD_CORE_SOURCES
     #Interaction
     
     #Utils
-    ${MOD_DIR}/utils/colorpool.cpp
     ${MOD_DIR}/utils/ensemblehash.cpp
     ${MOD_DIR}/utils/utils.cpp
 )
@@ -137,7 +136,6 @@ SET(MOD_CORE_HEADERS
     #Interaction
 
     #Utils
-    ${MOD_DIR}/utils/colorpool.h
     ${MOD_DIR}/utils/ensemblehash.h
     ${MOD_DIR}/utils/utils.h
 )

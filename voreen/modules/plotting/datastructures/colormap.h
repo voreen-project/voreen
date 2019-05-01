@@ -44,11 +44,6 @@ namespace voreen {
  * will create a infinite sequence of colors generated out of the Colors in this ColorMap.
  **/
 class VRN_CORE_API ColorMap : public Serializable {
-
-// BoxObject needs a parameterless constructor to work with ColorMap, though we grant it access to our
-// private default constructor
-friend class BoxObject;
-
 public:
     /**
      * Interpolates between the held colors of a given ColorMap in n steps (color map and n given
