@@ -89,14 +89,11 @@ ColorMapPropertyWidget::ColorMapPropertyWidget(ColorMapProperty* prop, QWidget* 
     addWidget(colorLbl_);
 
     if (cbMaps_) {
+        customColorMap_ = property_->get();
         cbMaps_->addItem("custom");
-        cbMaps_->addItem("Cold-Hot");
-        cbMaps_->addItem("Germany");
-        cbMaps_->addItem("Tango");
-        cbMaps_->addItem("Visifire 1");
-        cbMaps_->addItem("Visifire 2");
-        cbMaps_->addItem("Candlelight");
-        cbMaps_->addItem("Sandy Shades");
+        for(const std::string& label : ColorMap::getColorMapLabels()) {
+            cbMaps_->addItem(label.c_str());
+        }
     }
     addWidget(cbMaps_);
     connect(cbMaps_, SIGNAL(currentIndexChanged(int)), this, SLOT(selectColormap(int)));
@@ -112,23 +109,11 @@ void ColorMapPropertyWidget::updateColorLabel() {
 }
 
 void ColorMapPropertyWidget::selectColormap(int index) {
-    switch (index) {
-        case 1:
-            property_->set(ColorMap::createColdHot()); break;
-        case 2:
-            property_->set(ColorMap::createGermany()); break;
-        case 3:
-            property_->set(ColorMap::createTango()); break;
-        case 4:
-            property_->set(ColorMap::createVisifire1()); break;
-        case 5:
-            property_->set(ColorMap::createVisifire2()); break;
-        case 6:
-            property_->set(ColorMap::createCandleLight()); break;
-        case 7:
-            property_->set(ColorMap::createSandyShades()); break;
-        default :
-            break;
+    if(index == 0) {
+        property_->set(customColorMap_);
+    }
+    else {
+        property_->set(ColorMap::createColorMap(index - 1));
     }
 }
 

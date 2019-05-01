@@ -79,6 +79,7 @@ protected:
     QColor toQColor(tgt::Color color);
 
 private:
+    ColorMap customColorMap_;
     ColorMapProperty* property_;
     QComboBox* cbMaps_;
     ClickableColorMapLabel* colorLbl_;
