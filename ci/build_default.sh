@@ -1,5 +1,7 @@
 #!/bin/bash
 
+VRN_DIR=$(pwd)/voreen
+
 # clear build directory (also clears CMake cache)
 BUILD_DIR=$1
 rm -rf $BUILD_DIR
@@ -10,7 +12,7 @@ cd $BUILD_DIR
 build_options=(
     #just the defaults!
 )
-cmake "${build_options[@]}" ../voreen
+cmake "${build_options[@]}" $VRN_DIR
 
 N_CORES=$(nproc)
 # start build once again to make errors (if any) more readable
