@@ -87,7 +87,7 @@ private:
     StringOptionProperty configPartition_;
 
     FileDialogProperty simulationResults_;
-    FileDialogProperty uploadDataPath_;
+    TempPathProperty uploadDataPath_;
     ButtonProperty triggerEnqueueSimulations_;
     ButtonProperty triggerFetchResults_;
     ProgressProperty progress_;
