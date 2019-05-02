@@ -158,6 +158,22 @@ blastest_coreprofile:
   script:
     - ${COREPROFILE_BUILD_DIR}/bin/voreenblastest --quickmode --errorThreshold 5e-4 --matrixSeed 1509551691
 
+valgrind_memcheck_processorcreate_coreprofile:
+  stage: test
+  script:
+    # possibly TODO: suppressions
+    # valgrind --leak-check=full --error-exitcode=1 --suppressions=/home/viscg-x11/opengl.supp ${VOREEN_ROOT}/bin/processorcreatetest
+    - valgrind --leak-check=full --error-exitcode=1 ${COREPROFILE_BUILD_DIR}/bin/processorcreatetest
+
+valgrind_memcheck_processorinit_coreprofile:
+  stage: test
+  script:
+    # possibly TODO: suppressions
+    # valgrind --leak-check=full --error-exitcode=1 --suppressions=/home/viscg-x11/opengl.supp ${VOREEN_ROOT}/bin/processorcreatetest
+    - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
+    - export DISPLAY=:98
+    - valgrind --leak-check=full --error-exitcode=1 ${COREPROFILE_BUILD_DIR}/bin/processorinittest
+
 regressiontest_coreprofile:
   stage: test
   script:
