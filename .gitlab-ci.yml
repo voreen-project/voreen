@@ -157,7 +157,7 @@ regressiontest_coreprofile:
     - mkdir -p ${IDENTIFIER_COREPROFILE}
     - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
     - DISPLAY=:98 ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${IDENTIFIER_COREPROFILE}/regressiontest-report.html --splitHtmlReport true --junitReport ${IDENTIFIER_COREPROFILE}/regressiontest-junit.xml --reportdir ${IDENTIFIER_COREPROFILE}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60 || EXITCODE=$? #save exit code of regressiontest, but do not stop, yet (need to upload results!)
-    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --add-ci-report=${IDENTIFIER_COREPROFILE} ${IDENTIFIER_COREPROFILE}
+    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --add-ci-report=${IDENTIFIER_COREPROFILE} regressiontest_reports/${IDENTIFIER_COREPROFILE}
     - mv ${IDENTIFIER_COREPROFILE}/regressiontest-junit.xml ./ #actifacts session does not have access to IDENTIFIER_COREPROFILE variable!
     - $(exit $EXITCODE) #propagate regressiontest exit code
   artifacts:
@@ -172,7 +172,7 @@ regressiontest_compatprofile:
     - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
     - export MESA_GL_VERSION_OVERRIDE=3.3COMPAT #required for compatibilityprofile with mesa
     - DISPLAY=:98 ${COMPATPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COMPATPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${IDENTIFIER_COMPATPROFILE}/regressiontest-report.html --splitHtmlReport true --junitReport ${IDENTIFIER_COMPATPROFILE}/regressiontest-junit.xml --reportdir ${IDENTIFIER_COMPATPROFILE}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 60 || EXITCODE=$? #save exit code of regressiontest, but do not stop, yet (need to upload results!)
-    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --add-ci-report=${IDENTIFIER_COMPATPROFILE} ${IDENTIFIER_COMPATPROFILE}
+    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --add-ci-report=${IDENTIFIER_COMPATPROFILE} regressiontest_reports/${IDENTIFIER_COMPATPROFILE}
     - mv ${IDENTIFIER_COMPATPROFILE}/regressiontest-junit.xml ./ #actifacts session does not have access to IDENTIFIER_COMPATPROFILE variable!
     - $(exit $EXITCODE) #propagate regressiontest exit code
   artifacts:
