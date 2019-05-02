@@ -309,6 +309,7 @@ struct TestFixture {
 
     ~TestFixture() {
         evaluator->addObserver(evalOrderRec);
+        evaluator->setProcessorNetwork(nullptr, true);
         delete evaluator;
         delete evalOrderRec;
         delete network;
