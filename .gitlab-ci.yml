@@ -153,10 +153,11 @@ volumeorigintest_coreprofile:
     - volumeorigintest-log.html
     expire_in: 1 day
 
-blastest_coreprofile:
-  stage: test
-  script:
-    - ${COREPROFILE_BUILD_DIR}/bin/voreenblastest --quickmode --errorThreshold 5e-4 --matrixSeed 1509551691
+#only available with opencl
+#blastest_coreprofile:
+#  stage: test
+#  script:
+#    - ${COREPROFILE_BUILD_DIR}/bin/voreenblastest --quickmode --errorThreshold 5e-4 --matrixSeed 1509551691
 
 valgrind_memcheck_processorcreate_coreprofile:
   stage: test
