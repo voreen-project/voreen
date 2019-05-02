@@ -108,10 +108,12 @@ VolumeList* VvdVolumeReader::read(const std::string &url) {
             }
 
             // Only clear derived data, if real world mapping differs.
-            vh->setRealWorldMapping(rwm);
             if(rwm != vh->getRealWorldMapping()) {
                 vh->clearDerivedData();
             }
+
+            // Always set real world mapping to explicitly tell the volume has the default real world mapping.
+            vh->setRealWorldMapping(rwm);
         }
 
         vh->setOrigin(origin);
