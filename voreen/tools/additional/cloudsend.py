@@ -14,6 +14,7 @@ parser.add_argument('-p', '--password', help='filter a parameter (<parametername
 parser.add_argument('-u', '--upload-dir', help='upload the specified directory recursively to the destination', type=str)
 parser.add_argument('--max-old-runs', help='maximum number of runs to keep when adding a ci report', type=int, default=3)
 parser.add_argument('-d', '--delete', help='delete destination', action="store_true")
+parser.add_argument('-f', '--file', help='upload file as destionation', type=str)
 parser.add_argument('-l', '--list', help='list remote directory', action="store_true")
 parser.add_argument('--add-ci-report', help='Add the provided ci report directory')
 parser.add_argument('destination')
@@ -148,6 +149,8 @@ if args.delete:
     delete(args.destination)
 if args.upload_dir:
     put_tree(args.upload_dir, args.destination)
+if args.file:
+    put_single_file(args.file, args.destination)
 if args.add_ci_report:
     report_base_dir = os.path.dirname(args.destination)
     report_name = os.path.basename(args.destination)

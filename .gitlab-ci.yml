@@ -1,6 +1,7 @@
 stages:
   - build
   - test
+  - deploy
 
 image: voreen/ci-ubuntu-18.04
 
@@ -24,8 +25,9 @@ before_script:
   - export GALLIVM_PERF="no_aos_sampling" #force floating point sampling path in llvmpipe
   - export CURRENT_REVISION=$(git rev-parse HEAD)
   - export NOW=$(date +%Y-%m-%d-%H:%M:%S)
-  - export IDENTIFIER_COREPROFILE=${CI_COMMIT_REF_NAME}--${NOW}--${CURRENT_REVISION}--coreprofile
-  - export IDENTIFIER_COMPATPROFILE=${CI_COMMIT_REF_NAME}--${NOW}--${CURRENT_REVISION}--compatibilityprofile
+  - export IDENTIFIER=${CI_COMMIT_REF_NAME}--${NOW}--${CURRENT_REVISION}
+  - export IDENTIFIER_COREPROFILE=${IDENTIFIER}--coreprofile
+  - export IDENTIFIER_COMPATPROFILE=${IDENTIFIER}--compatibilityprofile
 
 build_compatprofile:
   stage: build
@@ -179,3 +181,14 @@ regressiontest_compatprofile:
     reports:
       junit: regressiontest-junit.xml
     expire_in: 1 day
+
+# Deployment stage
+
+src_snapshot:
+  stage: deploy
+  #only:
+  #  - schedules
+  script:
+    - export SNAPSHOT_NAME=voreen-src-${IDENTIFIER}
+    - ${TOOLS_DIR}/snapshot/make-snapshot.sh unix ${SNAPSHOT_NAME} --unifdef --force
+    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME}.tar.gz voreen-src-nightly.tar.gz

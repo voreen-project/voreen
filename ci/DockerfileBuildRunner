@@ -37,6 +37,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
             curl \
             file \
             meson \
+            unifdef \
             ca-certificates \
             ninja-build \
             python3-mako \
