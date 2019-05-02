@@ -137,7 +137,9 @@ if args.delete:
 if args.upload_dir:
     put_tree(args.upload_dir, args.destination)
 if args.add_ci_report:
-    run = Run.parse(args.destination)
+    report_base_dir = os.path.dirname(args.destination)
+    report_name = os.path.basename(args.destination)
+    run = Run.parse(report_name)
     if run is None:
         print("Invalid run format.\nExpected: '<branch>--<datetime>--<commit>--<build>'\nGot: '{}'".format(args.destination))
         sys.exit(1)
@@ -145,7 +147,7 @@ if args.add_ci_report:
     print("Adding run: branch: {}, time: {}, commit: {}, build: {}".format(run.branch, run.date, run.commit, run.build))
     put_tree(args.add_ci_report, args.destination)
 
-    listing = list_dir("/")
+    listing = list_dir("/" + report_base_dir)
     runs = []
     matching_runs = []
     for s in listing:
@@ -176,7 +178,7 @@ if args.add_ci_report:
         index_page += '<th>Commit</th><th>Time</th><th>Build</th>\n'
         for r in runs:
             if r.branch == branch:
-                index_page += '<tr><td class="commit"><a href="./{}/{}">{}</a></td><td class="date">{}</td><td class="build">{}</td></tr>\n'.format(r.path(), regressiontest_report_file, r.commit, r.date, r.build)
+                index_page += '<tr><td class="commit"><a href="{}/{}/{}">{}</a></td><td class="date">{}</td><td class="build">{}</td></tr>\n'.format(report_base_dir, r.path(), regressiontest_report_file, r.commit, r.date, r.build)
         index_page += '</tbody></table>\n'
     index_page += '</body>\n'
     index_page += '</html>'
