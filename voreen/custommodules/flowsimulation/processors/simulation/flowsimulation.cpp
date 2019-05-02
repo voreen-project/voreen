@@ -610,7 +610,7 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
     const T maxLen = std::max({len[0], len[1], len[2]});
 
     Vector<T, 3> offset = min + (len - maxLen) * 0.5;
-    Vector<T, 3> spacing(maxLen / resolution);
+    Vector<T, 3> spacing(maxLen / (resolution-1));
 
     // Determine format.
     // This could be done in a more dynamic way, but the code should be easily portable to the cluster.
