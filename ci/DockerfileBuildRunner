@@ -61,7 +61,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
             libxcb-xfixes0 \
             libxcb1 \
             libxshmfence1 \
-            libfuse2
+            libfuse2 \
+            libfile-copy-recursive-perl
 
             #mesa-opencl-icd \
             #mesa-utils \
