@@ -2,7 +2,7 @@
 
 VRN_DIR=$(pwd)/voreen
 
-INSTALL_DIR=$2
+INSTALL_DIR=$(realpath $2)
 rm -rf $INSTALL_DIR
 mkdir $INSTALL_DIR
 
@@ -15,7 +15,7 @@ cd $BUILD_DIR
 # build configuration
 build_options=(
     -DCMAKE_BUILD_TYPE=Release
-    -DCMAKE_INSTALL_PREFIX=./voreen-install/
+    -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR
     -DVRN_DEPLOYMENT=ON
     -DVRN_ADD_INSTALL_TARGET=ON
 
@@ -34,4 +34,4 @@ cmake "${build_options[@]}" $VRN_DIR
 
 N_CORES=$(nproc)
 # start build once again to make errors (if any) more readable
-nice make -j$N_CORES || make
+nice make -j$N_CORES install || make install
