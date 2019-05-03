@@ -221,7 +221,7 @@ src_snapshot_unix:
   script:
     - export SNAPSHOT_NAME=voreen-src-${IDENTIFIER}
     - cd ${TOOLS_DIR}/.. # Apparently make-snapshot.sh requires us to be exactly here
-    - tools/snapshot/make-snapshot.sh unix ${SNAPSHOT_NAME} --unifdef --force
+    - tools/snapshot/make-snapshot.sh unix ${SNAPSHOT_NAME} --force
     - tools/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME}.tar.gz voreen-src-unix-nightly.tar.gz
 
 appimage:
