@@ -14,6 +14,7 @@ variables:
   TOOLS_DIR: 'voreen/tools'
   COREPROFILE_BUILD_DIR: 'build_coreprofile'
   COMPATPROFILE_BUILD_DIR: 'build_compatibilityprofile'
+  DEPLOY_INSTALL_DIR: 'build_deploy'
   TEST_DATA_DIR: 'test-data/voreen-testdata'
   REGRESSION_TEST_UPLOAD_URL: 'https://uni-muenster.sciebo.de/s/YdhJ4czrPsfqPL6'
   #REGRESSION_TEST_UPLOAD_PASSWORD: configured in gitlab
@@ -80,8 +81,10 @@ build_deploy:
   stage: build
   script:
     - export BUILD_DIR=$(mktemp -d)
-    - INSTALL_DIR=$(mktemp -d)
-    - ci/build_deploy.sh $BUILD_DIR $INSTALL_DIR
+    - ci/build_deploy.sh $BUILD_DIR $DEPLOY_INSTALL_DIR
+  artifacts:
+    paths:
+    - "${DEPLOY_INSTALL_DIR}"
       #only:
       #- schedules
 
@@ -219,3 +222,13 @@ src_snapshot:
     - export SNAPSHOT_NAME=voreen-src-${IDENTIFIER}
     - ${TOOLS_DIR}/snapshot/make-snapshot.sh unix ${SNAPSHOT_NAME} --unifdef --force
     - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME}.tar.gz voreen-src-nightly.tar.gz
+
+appimage:
+  stage: deploy
+  #only:
+  #  - schedules
+  script:
+    - ls ${DEPLOY_INSTALL_DIR}
+    - export DEPLOY_FILE=${DEPLOY_INSTALL_DIR}/VoreenVE.tar.gz
+    - ls ${DEPLOY_FILE}
+    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${DEPLOY_FILE} VoreenVE-nightly.tar.gz
