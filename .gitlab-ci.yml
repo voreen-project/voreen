@@ -162,14 +162,14 @@ volumeorigintest_coreprofile:
 valgrind_memcheck_processorcreate_coreprofile:
   stage: test
   script:
-    - valgrind --leak-check=full --error-exitcode=1 --suppressions=ci/valgrind-python.supp ${COREPROFILE_BUILD_DIR}/bin/processorcreatetest
+    - valgrind --leak-check=full --error-exitcode=1 --suppressions=ci/voreen.supp ${COREPROFILE_BUILD_DIR}/bin/processorcreatetest
 
 valgrind_memcheck_processorinit_coreprofile:
   stage: test
   script:
     - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
     - export DISPLAY=:98
-    - valgrind --leak-check=full --error-exitcode=1 --suppressions=ci/valgrind-python.supp ${COREPROFILE_BUILD_DIR}/bin/processorinittest
+    - valgrind --leak-check=full --error-exitcode=1 --suppressions=ci/voreen.supp ${COREPROFILE_BUILD_DIR}/bin/processorinittest
 
 regressiontest_coreprofile:
   stage: test

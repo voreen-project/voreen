@@ -1,0 +1,36 @@
+{
+   python_addr4
+
+   Memcheck:Addr4
+   obj:/usr/lib/x86_64-linux-gnu/libpython3.6m.so.1.0
+   ...
+}
+{
+   python_cond
+   Memcheck:Cond
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libpython3.6m.so.1.0
+   ...
+}
+{
+   python_value8
+   Memcheck:Value8
+   obj:/usr/lib/x86_64-linux-gnu/libpython3.6m.so.1.0
+   ...
+}
+{
+   libgobject_leak
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0.5600.3
+   ...
+}
+{
+   python_leak
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libpython3.6m.so.1.0
+   ...
+}
