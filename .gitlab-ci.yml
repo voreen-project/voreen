@@ -1,7 +1,7 @@
 stages:
   - build
-  - test
   - deploy
+  - test
 
 image: voreen/ci-ubuntu-18.04
 
@@ -30,23 +30,23 @@ before_script:
   - export IDENTIFIER_COREPROFILE=${IDENTIFIER}--coreprofile
   - export IDENTIFIER_COMPATPROFILE=${IDENTIFIER}--compatibilityprofile
 
-build_compatprofile:
-  stage: build
-  script:
-    - ci/build_compatibilityprofile.sh ${COMPATPROFILE_BUILD_DIR}
-  artifacts:
-    paths:
-    - "${COMPATPROFILE_BUILD_DIR}/bin/*"
-    expire_in: 1 day
+    #build_compatprofile:
+    #  stage: build
+    #  script:
+    #    - ci/build_compatibilityprofile.sh ${COMPATPROFILE_BUILD_DIR}
+    #  artifacts:
+    #    paths:
+    #    - "${COMPATPROFILE_BUILD_DIR}/bin/*"
+    #    expire_in: 1 day
 
-build_coreprofile:
-  stage: build
-  script:
-    - ci/build_coreprofile.sh ${COREPROFILE_BUILD_DIR}
-  artifacts:
-    paths:
-    - "${COREPROFILE_BUILD_DIR}/bin/*"
-    expire_in: 1 day
+    #build_coreprofile:
+    #  stage: build
+    #  script:
+    #    - ci/build_coreprofile.sh ${COREPROFILE_BUILD_DIR}
+    #  artifacts:
+    #    paths:
+    #    - "${COREPROFILE_BUILD_DIR}/bin/*"
+    #    expire_in: 1 day
 
 # Daily builds
 build_default:
