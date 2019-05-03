@@ -219,7 +219,7 @@ src_snapshot_unix:
   #only:
   #  - schedules
   script:
-    - export SNAPSHOT_NAME=voreen-src-${IDENTIFIER}
+    - export SNAPSHOT_NAME=voreen-src-unix-nightly
     - cd ${TOOLS_DIR}/.. # Apparently make-snapshot.sh requires us to be exactly here
     - tools/snapshot/make-snapshot.sh unix ${SNAPSHOT_NAME} --force
     - tools/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME}.tar.gz voreen-src-unix-nightly.tar.gz
