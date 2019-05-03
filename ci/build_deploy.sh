@@ -2,13 +2,15 @@
 
 VRN_DIR=$(pwd)/voreen
 
+INSTALL_DIR=$2
+rm -rf $INSTALL_DIR
+mkdir $INSTALL_DIR
+
 # clear build directory (also clears CMake cache)
 BUILD_DIR=$1
 rm -rf $BUILD_DIR
 mkdir $BUILD_DIR
 cd $BUILD_DIR
-
-INSTALL_DIR=$1
 
 # build configuration
 build_options=(
