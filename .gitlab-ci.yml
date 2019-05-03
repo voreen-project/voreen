@@ -1,7 +1,7 @@
 stages:
   - build
-  - deploy
   - test
+  - deploy
 
 image: voreen/ci-ubuntu-18.04
 
@@ -30,23 +30,23 @@ before_script:
   - export IDENTIFIER_COREPROFILE=${IDENTIFIER}--coreprofile
   - export IDENTIFIER_COMPATPROFILE=${IDENTIFIER}--compatibilityprofile
 
-    #build_compatprofile:
-    #  stage: build
-    #  script:
-    #    - ci/build_compatibilityprofile.sh ${COMPATPROFILE_BUILD_DIR}
-    #  artifacts:
-    #    paths:
-    #    - "${COMPATPROFILE_BUILD_DIR}/bin/*"
-    #    expire_in: 1 day
+build_compatprofile:
+  stage: build
+  script:
+    - ci/build_compatibilityprofile.sh ${COMPATPROFILE_BUILD_DIR}
+  artifacts:
+    paths:
+    - "${COMPATPROFILE_BUILD_DIR}/bin/*"
+    expire_in: 1 day
 
-    #build_coreprofile:
-    #  stage: build
-    #  script:
-    #    - ci/build_coreprofile.sh ${COREPROFILE_BUILD_DIR}
-    #  artifacts:
-    #    paths:
-    #    - "${COREPROFILE_BUILD_DIR}/bin/*"
-    #    expire_in: 1 day
+build_coreprofile:
+  stage: build
+  script:
+    - ci/build_coreprofile.sh ${COREPROFILE_BUILD_DIR}
+  artifacts:
+    paths:
+    - "${COREPROFILE_BUILD_DIR}/bin/*"
+    expire_in: 1 day
 
 # Daily builds
 build_default:
@@ -85,8 +85,9 @@ build_deploy:
   artifacts:
     paths:
     - "${DEPLOY_INSTALL_DIR}/VoreenVE.tar.gz"
-      #only:
-      #- schedules
+    expire_in: 1 day
+    only:
+      - schedules
 
 # Tests
 serializertest_coreprofile:
@@ -216,18 +217,28 @@ regressiontest_compatprofile:
 
 src_snapshot_unix:
   stage: deploy
-  #only:
-  #  - schedules
+  only:
+    - schedules
   script:
     - export SNAPSHOT_NAME=voreen-src-unix-nightly
     - cd ${TOOLS_DIR}/.. # Apparently make-snapshot.sh requires us to be exactly here
     - tools/snapshot/make-snapshot.sh unix ${SNAPSHOT_NAME} --force
     - tools/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME}.tar.gz voreen-src-unix-nightly.tar.gz
 
+src_snapshot_win32:
+  stage: deploy
+  only:
+    - schedules
+  script:
+    - export SNAPSHOT_NAME=voreen-src-win32-nightly
+    - cd ${TOOLS_DIR}/.. # Apparently make-snapshot.sh requires us to be exactly here
+    - tools/snapshot/make-snapshot.sh win32 ${SNAPSHOT_NAME} --force
+    - tools/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME}.tar.gz voreen-src-win32-nightly.tar.gz
+
 appimage:
   stage: deploy
-  #only:
-  #  - schedules
+  only:
+    - schedules
   script:
     - ls ${DEPLOY_INSTALL_DIR}
     - export DEPLOY_FILE=${DEPLOY_INSTALL_DIR}/VoreenVE.tar.gz
