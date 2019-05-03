@@ -40,8 +40,12 @@ echo ""
 echo "* ---------------------------------------------------"
 echo "*  Executing deployment tool ...                     "
 echo "* ---------------------------------------------------"
+# To run inside docker, we need to extract the appimage manually first
+./$DEPLOYMENT_TOOL --appimage-extract
 # The arch sometimes fails to detect. We are not planning to distribute binaries for other arches anyway
-ARCH="x86_64" ./$DEPLOYMENT_TOOL ./tmp/usr/share/applications/voreenve.desktop -appimage -bundle-non-qt-libs -extra-plugins=iconengines/libqsvgicon.so
+ARCH="x86_64" squashfs-root/AppRun ./tmp/usr/share/applications/voreenve.desktop -appimage -bundle-non-qt-libs -extra-plugins=iconengines/libqsvgicon.so
+# remove the folder where the appimage was extracted to
+rm -rf squashfs-root/
 
 # Copy resources.
 echo ""
