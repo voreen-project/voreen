@@ -76,6 +76,15 @@ build_static_libs:
   only:
     - schedules
 
+build_deploy:
+  stage: build
+  script:
+    - export BUILD_DIR=$(mktemp -d)
+    - INSTALL_DIR=$(mktemp -d)
+    - ci/build_deploy.sh $BUILD_DIR $INSTALL_DIR
+      #only:
+      #- schedules
+
 # Tests
 serializertest_coreprofile:
   stage: test
