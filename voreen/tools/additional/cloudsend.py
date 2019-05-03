@@ -176,7 +176,7 @@ if args.add_ci_report:
     to_delete = matching_runs[args.max_old_runs:]
     for d in to_delete:
         print("Deleting old run: {}".format(d.path()))
-        delete(d.path())
+        delete(report_base_dir + "/" + d.path())
         runs.remove(d)
 
     runs.sort(key=lambda r: r.date, reverse=True)
