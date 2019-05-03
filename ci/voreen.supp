@@ -37,7 +37,7 @@
 {
    libglx_leak
    Memcheck:Leak
-   match-leak-kinds: possible, definite
+   match-leak-kinds: all
    ...
    obj:/usr/lib/x86_64-linux-gnu/libGLX.so.0.0.0
    ...
