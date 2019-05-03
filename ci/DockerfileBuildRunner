@@ -60,7 +60,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
             libxcb-sync1 \
             libxcb-xfixes0 \
             libxcb1 \
-            libxshmfence1
+            libxshmfence1 \
+            libfuse2
 
             #mesa-opencl-icd \
             #mesa-utils \
