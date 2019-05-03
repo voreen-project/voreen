@@ -84,7 +84,7 @@ build_deploy:
     - ci/build_deploy.sh $BUILD_DIR $DEPLOY_INSTALL_DIR
   artifacts:
     paths:
-    - "${DEPLOY_INSTALL_DIR}"
+    - "${DEPLOY_INSTALL_DIR}/VoreenVE.tar.gz"
       #only:
       #- schedules
 
