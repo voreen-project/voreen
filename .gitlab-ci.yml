@@ -86,8 +86,8 @@ build_deploy:
     paths:
     - "${DEPLOY_INSTALL_DIR}/VoreenVE.tar.gz"
     expire_in: 1 day
-    only:
-      - schedules
+  only:
+    - schedules
 
 # Tests
 serializertest_coreprofile:
