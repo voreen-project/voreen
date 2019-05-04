@@ -47,7 +47,8 @@ FlowSimulationCluster::FlowSimulationCluster()
     , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
     , username_("username", "Username", "s_leis06")
     , clusterAddress_("clusterAddress", "Cluster Address", "palma2c.uni-muenster.de")
-    , simulationPath_("simulationPath", "Simulation Path", "~/OpenLB-intel/simulations")
+    , simulationPath_("simulationPath", "Simulation Path", "~/OpenLB")
+    , toolchain_("toolchain", "Toolchain")
     , simulationType_("simulationType", "Simulation Type")
     , configNodes_("configNodes", "Nodes", 1, 1, 2)
     , configTasks_("configTasks", "Tasks", 18, 1, 72)
@@ -58,6 +59,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     , configTime_("configTime", "Max. Time (x 1/4h)", 1, 1, 4*10)
     , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", VoreenApplication::app()->getTemporaryPath("simulations"), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , uploadDataPath_("uploadDataPath", "Upload Data Path", "Upload Data Path", VoreenApplication::app()->getTemporaryPath(), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT)
+    , compileOnUpload_("compileOnUpload", "Compile on Upload", false)
     , triggerEnqueueSimulations_("triggerEnqueueSimulations", "Enqueue Simulations", Processor::VALID)
     , triggerFetchResults_("triggerFetchResults", "Fetch Results", Processor::VALID)
     , progress_("progress", "Progress")
@@ -74,11 +76,15 @@ FlowSimulationCluster::FlowSimulationCluster()
     clusterAddress_.setGroupID("cluster-general");
     addProperty(simulationPath_);
     simulationPath_.setGroupID("cluster-general");
+    addProperty(toolchain_);
+    toolchain_.setGroupID("cluster-general");
+    toolchain_.addOption("foss", "foss");
+    toolchain_.addOption("intel", "intel");
     addProperty(simulationType_);
     simulationType_.setGroupID("cluster-general");
     simulationType_.addOption("default", "default");
     //simulationType_.addOption("steered", "Steered"); // TODO: implement!
-    //simulationType_.addOption("aorta3d", "aorta3d");
+    simulationType_.addOption("aorta3d", "aorta3d");
     setPropertyGroupGuiName("cluster-general", "General Cluster Config");
 
     addProperty(configNodes_);
@@ -103,6 +109,8 @@ FlowSimulationCluster::FlowSimulationCluster()
     simulationResults_.setGroupID("results");
     addProperty(uploadDataPath_);
     uploadDataPath_.setGroupID("results");
+    addProperty(compileOnUpload_);
+    compileOnUpload_.setGroupID("results");
     addProperty(triggerEnqueueSimulations_);
     triggerEnqueueSimulations_.setGroupID("results");
     ON_CHANGE(triggerEnqueueSimulations_, FlowSimulationCluster, enqueueSimulations);
@@ -162,15 +170,37 @@ void FlowSimulationCluster::enqueueSimulations() {
     VoreenApplication::app()->showMessageBox("Information", "Start enqueuing data, this may take a while...");
     LINFO("Configuring and enqueuing Simulations '" << simulationType_.get() << "'");
 
-    // This processor assumes:
-    //      * on the cluster, there is a folder in home called 'OpenLB-intel/simulations'
-    //      * all simulations have already been compiled
-    //      * the result will be saved to /scratch/tmp/<user>/simulations/<simulation_name>/<run_name>
+    // (Re-)compile code on cluster, if desired.
+    if(compileOnUpload_.get()) {
+
+        // Create compile script locally.
+        std::string compileScriptFilename = VoreenApplication::app()->getUniqueTmpFilePath();
+        std::ofstream compileScriptFile(compileScriptFilename);
+        if (!compileScriptFile.good()) {
+            LERROR("Could not write compile script file");
+            return;
+        }
+        compileScriptFile << generateCompileScript();
+        compileScriptFile.close();
+
+        // Execute compile script on the cluster.
+        std::string command = "ssh " + username_.get() + "@" + clusterAddress_.get() + " 'bash -s' < " + compileScriptFilename;
+        int ret = executeCommand(command);
+
+        // Delete the script, we no longer need this file.
+        tgt::FileSystem::deleteFile(compileScriptFilename);
+
+        // Check if compilation was successful.
+        if (ret != EXIT_SUCCESS) {
+            LERROR("Could not compile program");
+            return;
+        }
+    }
 
     std::string simulationPathSource = uploadDataPath_.get() + "/" + flowParametrization->getName() + "/";
     tgt::FileSystem::createDirectoryRecursive(simulationPathSource);
     std::string simulationPathDest = username_.get() + "@" + clusterAddress_.get() + ":" + simulationPath_.get() + "/" +
-                                     simulationType_.get() + "/";
+                                     toolchain_.get() + "/simulations/" + simulationType_.get() + "/";
 
     // Copy simulation geometry.
     // TODO: support changing/multiple geometries.
@@ -253,7 +283,7 @@ void FlowSimulationCluster::enqueueSimulations() {
             LERROR("Could not write enqueue script file");
             continue;
         }
-        std::string localSimulationPath = simulationPath_.get() + "/" + simulationType_.get() + "/" +
+        std::string localSimulationPath = simulationPath_.get() + "/" + toolchain_.get() + "/simulations/" + simulationType_.get() + "/" +
                                           flowParametrization->getName() + "/" + flowParametrization->at(i).getName();
         enqueueScriptFile << generateEnqueueScript(localSimulationPath);
         enqueueScriptFile.close();
@@ -351,11 +381,22 @@ int FlowSimulationCluster::executeCommand(const std::string& command) const {
 #endif
 }
 
+std::string FlowSimulationCluster::generateCompileScript() const {
+    std::stringstream script;
+
+    script << "#!/bin/bash" << std::endl;
+    script << "module load " << toolchain_.get() << std::endl;
+    script << "cd " << simulationPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get() << std::endl;
+    script << "make -j4" << std::endl; // Assumes that using 4 threads is okay, which should be the case on any system.
+
+    return script.str();
+}
+
 std::string FlowSimulationCluster::generateEnqueueScript(const std::string& parametrizationPath) const {
     std::stringstream script;
 
     script << "#!/bin/bash" << std::endl;
-    script << "module add intel/2018a" << std::endl;
+    script << "module load " << toolchain_.get() << std::endl;
     script << "cd " << parametrizationPath << std::endl;
     script << "sbatch submit.cmd" << std::endl;
 
@@ -407,7 +448,7 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     script << std::endl;
     script << "# run the application" << std::endl;
     script << "OMP_NUM_THREADS=" << configCPUsPerTask_.get() << " "
-           << "mpirun " + simulationPath_.get() + "/" + simulationType_.get() + "/" + simulationType_.get() << " "
+           << "mpirun " << simulationPath_.get() << "/" << simulationType_.get() << "/" << simulationType_.get() << " "
            << parameterPort_.getData()->getName() << " " << parametrizationName << std::endl;
 
     return script.str();

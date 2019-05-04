@@ -41,6 +41,9 @@ namespace voreen {
 
 /**
  * This processor performs simulations on the PALMAII cluster at WWU Muenster using a parameter set and as input.
+ * This processor assumes:
+ *     - on the cluster, there is a folder in home called 'OpenLB/<tool-chain>/simulations'
+ *     - the result will be saved to /scratch/tmp/<user>/simulations/<simulation_name>/<run_name>
  * TODO: Eventually, this processor should be able to react to emails send by the cluster and process the result automatically.
  */
 class VRN_CORE_API FlowSimulationCluster : public Processor {
@@ -58,7 +61,9 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("This processor performs simulations on the PALMAII cluster at WWU Muenster using a parameter set and as input.");
+        setDescription("This processor performs simulations on the PALMAII cluster at WWU Muenster using a parameter set and as input."
+                       "The processor assumes that on the cluster, there is a folder '<simulation-path>/OpenLB/<tool-chain>/simulations'."
+                       "The simulation artifacts will be stored to and fetched from '/scratch/tmp/<user>/simulations/<simulation_name>/<run_name>'");
     }
 
 private:
@@ -66,6 +71,8 @@ private:
     void enqueueSimulations();
     void fetchResults();
     int executeCommand(const std::string& command) const;
+
+    std::string generateCompileScript() const;
     std::string generateEnqueueScript(const std::string& parametrizationPath) const;
     std::string generateSubmissionScript(const std::string& parametrizationName) const;
 
@@ -76,6 +83,7 @@ private:
     StringProperty username_;
     StringProperty clusterAddress_;
     StringProperty simulationPath_;
+    StringOptionProperty toolchain_;
     StringOptionProperty simulationType_;
 
     IntProperty configNodes_;
@@ -88,6 +96,7 @@ private:
 
     FileDialogProperty simulationResults_;
     TempPathProperty uploadDataPath_;
+    BoolProperty compileOnUpload_;
     ButtonProperty triggerEnqueueSimulations_;
     ButtonProperty triggerFetchResults_;
     ProgressProperty progress_;
