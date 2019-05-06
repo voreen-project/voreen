@@ -233,7 +233,7 @@ src_snapshot_win32:
     - export SNAPSHOT_NAME=voreen-src-win32-nightly
     - cd ${TOOLS_DIR}/.. # Apparently make-snapshot.sh requires us to be exactly here
     - tools/snapshot/make-snapshot.sh win32 ${SNAPSHOT_NAME} --force
-    - tools/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME}.tar.gz voreen-src-win32-nightly.tar.gz
+    - tools/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME}.tar.gz voreen-src-win32-nightly.zip
 
 appimage:
   stage: deploy
