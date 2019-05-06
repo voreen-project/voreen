@@ -56,7 +56,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     , configCPUsPerTask_("configCPUsPerTask", "CPUs per Task", 4, 1, 72)
     , configMemory_("configMemory", "Memory (GB/Node)", 16, 1, 32)
     , configPartition_("configPartition", "Partition")
-    , configTime_("configTime", "Max. Time (x 1/4h)", 1, 1, 4*10)
+    , configTime_("configTime", "Max. Time (x 1/4h)", 1, 1, 4*24)
     , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", VoreenApplication::app()->getTemporaryPath("simulations"), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , uploadDataPath_("uploadDataPath", "Upload Data Path", "Upload Data Path", VoreenApplication::app()->getTemporaryPath(), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT)
     , compileOnUpload_("compileOnUpload", "Compile on Upload", false)
@@ -435,7 +435,7 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     script << "#SBATCH --time=" << std::setw(2) << std::setfill('0') << hours << ":" << std::setw(2) << std::setfill('0') << minutes << ":00" << std::endl;
     script << std::endl;
     script << "# set name of job" << std::endl;
-    script << "#SBATCH --job-name=" + parameterPort_.getData()->getName() + "-" + parametrizationName << std::endl;
+    script << "#SBATCH --job-name=" << parameterPort_.getData()->getName() << "-" << parametrizationName << std::endl;
     script << std::endl;
     script << "# mail alert at start, end and abortion of execution" << std::endl;
     script << "#SBATCH --mail-type=ALL" << std::endl;
@@ -444,12 +444,13 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     script << "#SBATCH --output output.log" << std::endl;
     script << std::endl;
     script << "# send mail to this address" << std::endl;
-    script << "#SBATCH --mail-user=" + username_.get() + "@uni-muenster.de" << std::endl;
+    script << "#SBATCH --mail-user=" << username_.get() << "@uni-muenster.de" << std::endl;
     script << std::endl;
     script << "# run the application" << std::endl;
     script << "OMP_NUM_THREADS=" << configCPUsPerTask_.get() << " "
-           << "mpirun " << simulationPath_.get() << "/" << simulationType_.get() << "/" << simulationType_.get() << " "
-           << parameterPort_.getData()->getName() << " " << parametrizationName << std::endl;
+           << "mpirun " << simulationPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get()
+           << "/" << simulationType_.get() << " " << parameterPort_.getData()->getName() << " " << parametrizationName
+           << std::endl;
 
     return script.str();
 }
