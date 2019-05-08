@@ -424,11 +424,12 @@ void SimilarityPlot::renderingPass(bool picking) {
             }
             IMode.end();
 
-            if(numTimeSteps > 0 && !picking) {
+            if(!picking) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
                 float x = mapRange(run.timeSteps_[selectedTimeStep].time_, dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
                 tgt::vec3 position(x, vertices[selectedTimeStep][eigenValueIdx], 0.0f);
-                drawTimeStepSelection(runIdx, selectedTimeStep, position);
+                tgt::vec3 color = getColor(runIdx, selectedTimeStep, picking);
+                drawTimeStepSelection(runIdx, selectedTimeStep, position, color);
             }
         }
         break;
@@ -454,10 +455,11 @@ void SimilarityPlot::renderingPass(bool picking) {
             }
             IMode.end();
 
-            if(numTimeSteps > 0 && (!picking || numTimeSteps == 1)) {
+            if(!picking || numTimeSteps == 1) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
                 tgt::vec3 position(vertices[selectedTimeStep][0], vertices[selectedTimeStep][1], 0.0f);
-                drawTimeStepSelection(runIdx, selectedTimeStep, position);
+                tgt::vec3 color = getColor(runIdx, selectedTimeStep, picking);
+                drawTimeStepSelection(runIdx, selectedTimeStep, position, color);
             }
         }
         break;
@@ -496,9 +498,11 @@ void SimilarityPlot::renderingPass(bool picking) {
             }
             IMode.end();
 
-            if(numTimeSteps > 0 && (!picking || numTimeSteps == 1)) {
+            if(!picking || numTimeSteps == 1) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
-                drawTimeStepSelection(runIdx, selectedTimeStep, tgt::vec3::fromPointer(&vertices[selectedTimeStep][0])*scale);
+                tgt::vec3 position = tgt::vec3::fromPointer(&vertices[selectedTimeStep][0])*scale;
+                tgt::vec3 color = getColor(runIdx, selectedTimeStep, picking);
+                drawTimeStepSelection(runIdx, selectedTimeStep, position, color);
             }
         }
 
@@ -515,7 +519,7 @@ void SimilarityPlot::renderingPass(bool picking) {
     }
 }
 
-void SimilarityPlot::drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, const tgt::vec3& position) const {
+void SimilarityPlot::drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, const tgt::vec3& position, const tgt::vec3& color) const {
 
     // Skip rendering, if not visible anyways.
     if(sphereRadius_.get() <= std::numeric_limits<float>::epsilon())
@@ -527,13 +531,6 @@ void SimilarityPlot::drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, co
 
     const EnsembleDataset* dataset = ensembleInport_.getData();
     size_t numTimeSteps = dataset->getRuns()[runIdx].timeSteps_.size();
-
-    // In case the run only got a single time step, we use the sphere to indicate it's projected position.
-    // Otherwise, we wouldn't be able to see it.
-    tgt::vec3 color = tgt::vec3::one;
-    if(numTimeSteps == 1) {
-        color = dataset->getColor(runIdx);
-    }
 
     bool timeStepAvailable = timeStepIdx < numTimeSteps;
     if(!timeStepAvailable) {
@@ -561,7 +558,7 @@ tgt::vec3 SimilarityPlot::getColor(size_t runIdx, size_t timeStepIdx, bool picki
 
     float ts = static_cast<float>(timeStepIdx) / dataset->getRuns()[runIdx].timeSteps_.size();
     if (picking)
-        return tgt::vec3(static_cast<float>(runIdx) / dataset->getRuns().size(), ts, 0.0f);
+        return tgt::vec3(static_cast<float>(runIdx) / dataset->getRuns().size(), ts, 1.0f);
 
     switch (colorCoding_.getValue()) {
     case COLOR_RUN:
@@ -603,7 +600,7 @@ void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
         pixel = mapRange(tgt::ivec2(x, y), tgt::ivec2::zero, outport_.getSize(), tgt::ivec2::zero, target->getSize());
 
     tgt::vec4 texel = target->getColorAtPos(tgt::ivec2(pixel.x, target->getSize().y - pixel.y - 1));
-    if(texel.xyz() == tgt::vec3::zero) {
+    if(texel.z != 1.0f) {
         e->accept();
         return; // No hit - preserve last selection.
     }
