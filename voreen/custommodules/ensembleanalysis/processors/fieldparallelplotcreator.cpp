@@ -132,7 +132,7 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
 
     const float progressIncrement = 1.0f / (data.getTotalNumTimeSteps() * data.getCommonChannels().size());
     const int pixelPerTimeUnit = horizontalResolutionPerTimeUnit_.get();
-    float timeOffset = data.getStartTime();
+    float timeOffset = -data.getStartTime();
 
     size_t sliceNumber = 0;
     for (const std::string& channel : data.getCommonChannels()) {

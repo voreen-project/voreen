@@ -49,7 +49,8 @@ std::string EnsembleDatasetPort::getContentDescription() const {
     if(hasData()) {
         if (!getData()->getRuns().empty()) {
             strstr << std::endl << "Number of runs: " << getData()->getRuns().size();
-            strstr << std::endl << "Number of Common Channels: " << getData()->getCommonChannels().size();
+            strstr << std::endl << "Number of unique channels: " << getData()->getUniqueChannels().size();
+            strstr << std::endl << "Number of common Channels: " << getData()->getCommonChannels().size();
             strstr << std::endl << "Min Number of Time Steps: " << getData()->getMinNumTimeSteps();
             strstr << std::endl << "Max Number of Time Steps: " << getData()->getMaxNumTimeSteps();
             strstr << std::endl << "Min Time Step Duration: " << getData()->getMinTimeStepDuration();
@@ -75,7 +76,8 @@ std::string EnsembleDatasetPort::getContentDescriptionHTML() const {
     if(hasData()) {
         if (!getData()->getRuns().empty()) {
             strstr << "<br>" << "Number of runs: " << getData()->getRuns().size();
-            strstr << "<br>" << "Number of Common Channels: " << getData()->getCommonChannels().size();
+            strstr << "<br>" << "Number of unique Channels: " << getData()->getUniqueChannels().size();
+            strstr << "<br>" << "Number of common Channels: " << getData()->getCommonChannels().size();
             strstr << "<br>" << "Min Number of Time Steps: " << getData()->getMinNumTimeSteps();
             strstr << "<br>" << "Max Number of Time Steps: " << getData()->getMaxNumTimeSteps();
             strstr << "<br>" << "Min Time Step Duration: " << getData()->getMinTimeStepDuration();

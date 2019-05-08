@@ -215,7 +215,10 @@ public:
     FilterChannel()
         : channels_("channel", "Selected Channel", Processor::INVALID_RESULT, true)
     {
-        channels_.setDescription("Selects a single channel from the ensemble data.");
+        channels_.setDescription("Selects a single channel from the ensemble data."
+                                 "<br>"
+                                 "(*) Marks common channels across all runs."
+        );
     }
 
     Property& getProperty() {
@@ -229,13 +232,16 @@ public:
         for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
             std::vector<EnsembleDataset::TimeStep> timesteps;
             for (const EnsembleDataset::TimeStep& timestep : run.timeSteps_) {
-                EnsembleDataset::TimeStep filteredTimeStep = timestep;
+                // Only add time step, if selected channel is available.
+                if(timestep.channels_.count(channels_.getValue()) > 0) {
+                    EnsembleDataset::TimeStep filteredTimeStep = timestep;
 
-                std::map<std::string, const VolumeBase*> filteredChannels;
-                filteredChannels[channels_.getValue()] = timestep.channels_.at(channels_.getValue());
-                filteredTimeStep.channels_ = filteredChannels;
+                    std::map<std::string, const VolumeBase*> filteredChannels;
+                    filteredChannels[channels_.getValue()] = timestep.channels_.at(channels_.getValue());
+                    filteredTimeStep.channels_ = filteredChannels;
 
-                timesteps.push_back(filteredTimeStep);
+                    timesteps.push_back(filteredTimeStep);
+                }
             }
             dataset->addRun(EnsembleDataset::Run{ run.name_, run.color_, timesteps });
         }
@@ -250,8 +256,10 @@ public:
         channels_.setOptions(std::deque<Option<std::string>>());
 
         if (ensemble) {
-            for (const std::string& channel : ensemble->getCommonChannels()) {
-                channels_.addOption(channel, channel, channel);
+            const std::set<std::string> common(ensemble->getCommonChannels().begin(), ensemble->getCommonChannels().end());
+            for (const std::string& channel : ensemble->getUniqueChannels()) {
+                bool isCommon = common.find(channel) != common.end();
+                channels_.addOption(channel, channel + (isCommon ? " (*)" : ""), channel);
             }
         }
     }

@@ -146,6 +146,11 @@ void EnsembleDataset::addRun(const Run& run) {
             commonChannels_ = channels;
         }
 
+        // Update all channels.
+        std::vector<std::string> channelUnion;
+        std::set_union(uniqueChannels_.begin(), uniqueChannels_.end(), channels.begin(), channels.end(), std::back_inserter(channelUnion));
+        uniqueChannels_ = channelUnion;
+
         // Calculate times and durations.
         if (t < run.timeSteps_.size() - 1) {
             maxTimeStepDuration_ = std::max(maxTimeStepDuration_, run.timeSteps_[t].duration_);
@@ -249,6 +254,10 @@ const tgt::vec2& EnsembleDataset::getValueRange(const std::string& channel) cons
 size_t EnsembleDataset::getNumChannels(const std::string& channel) const {
     tgtAssert(channelMetaData_.find(channel) != channelMetaData_.end(), "Channel not available");
     return channelMetaData_.at(channel).numChannels_;
+}
+
+const std::vector<std::string>& EnsembleDataset::getUniqueChannels() const {
+    return uniqueChannels_;
 }
 
 const std::vector<std::string>& EnsembleDataset::getCommonChannels() const {

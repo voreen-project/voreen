@@ -365,7 +365,23 @@ void FieldParallelPlotViewer::onEvent(tgt::Event* e) {
 }
 
 bool FieldParallelPlotViewer::isReady() const {
-    return plotDataInport_.isReady() && ensembleInport_.isReady();
+
+    if(!plotDataInport_.isReady()) {
+        setNotReadyErrorMessage("No Plot Data Input");
+        return false;
+    }
+
+    if(!ensembleInport_.isReady()) {
+        setNotReadyErrorMessage("No Ensemble Input");
+        return false;
+    }
+
+    if(ensembleInport_.getData()->getCommonChannels().empty()) {
+        setNotReadyErrorMessage("No common channels available");
+        return false;
+    }
+
+    return true;
 }
 
 void FieldParallelPlotViewer::beforeProcess() {

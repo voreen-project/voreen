@@ -92,7 +92,9 @@ public:
     const tgt::Bounds& getRoi() const;
     void setRoi(tgt::Bounds roi);
 
+    const std::vector<std::string>& getUniqueChannels() const;
     const std::vector<std::string>& getCommonChannels() const;
+
     std::vector<const VolumeBase*> getVolumes() const;
 
     size_t pickTimeStep(size_t runIdx, float time) const;
@@ -114,6 +116,7 @@ private:
     //  Members
     //----------------
     std::vector<Run> runs_;
+    std::vector<std::string> uniqueChannels_;
     std::vector<std::string> commonChannels_;
 
     std::vector<RunMetaData> runMetaData_;

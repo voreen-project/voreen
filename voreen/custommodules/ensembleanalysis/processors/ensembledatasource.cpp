@@ -39,6 +39,7 @@ const std::string EnsembleDataSource::SCALAR_FIELD_NAME = "Scalar";
 const std::string EnsembleDataSource::NAME_FIELD_NAME = "name";
 const std::string EnsembleDataSource::SIMULATED_TIME_NAME = "simulated_time";
 const std::string EnsembleDataSource::RUN_NAME = "run_name";
+const std::string EnsembleDataSource::FALLBACK_FIELD_NAME = "unnamed";
 const std::string EnsembleDataSource::loggerCat_("voreen.ensembleanalysis.EnsembleDataSource");
 
 EnsembleDataSource::EnsembleDataSource()
@@ -156,7 +157,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
             timeStep.path_ = fileName;
             timeStep.time_ = 0.0f;
             timeStep.duration_ = 0.0f;
-            bool timeSet = false;
+            bool timeIsSet = false;
 
             const std::vector<VolumeURL>& subURLs = reader->listVolumes(url);
             for(const VolumeURL& subURL : subURLs) {
@@ -169,21 +170,22 @@ void EnsembleDataSource::buildEnsembleDataset() {
                     time = dynamic_cast<const FloatMetaData*>(volumeHandle->getMetaData(SIMULATED_TIME_NAME))->getValue();
                 }
 
-                if (!timeSet) {
+                if (!timeIsSet) {
                     timeStep.time_ = time;
-                    timeSet = true;
+                    timeIsSet = true;
                 }
                 else if (timeStep.time_ != time)
                     LWARNING("Meta data '" << SIMULATED_TIME_NAME << "' not equal channel-wise in t=" << timeSteps.size() << " of run" << run);
 
-                const MetaDataBase* name = volumeHandle->getMetaData(NAME_FIELD_NAME);
-                if(!name) {
-                    //LWARNING("Trying old deserialization");
-                    name = volumeHandle->getMetaData(SCALAR_FIELD_NAME);
-                    if(!name) {
-                        LERROR("Meta data '" << NAME_FIELD_NAME << "' not present for " << subURL.getPath());
-                        break;
-                    }
+                std::string name;
+                if(volumeHandle->hasMetaData(NAME_FIELD_NAME)) {
+                    name = volumeHandle->getMetaData(NAME_FIELD_NAME)->toString();
+                }
+                else if(volumeHandle->hasMetaData(SCALAR_FIELD_NAME)) {
+                    name = volumeHandle->getMetaData(SCALAR_FIELD_NAME)->toString();
+                }
+                else {
+                    name = FALLBACK_FIELD_NAME;
                 }
 
                 // Add additional information gained reading the file structure.
@@ -191,7 +193,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 tgtAssert(volume, "volumeHandle must be volume");
                 volume->getMetaDataContainer().addMetaData(RUN_NAME, new StringMetaData(run));
 
-                timeStep.channels_[name->toString()] = volumeHandle.get();
+                timeStep.channels_[name] = volumeHandle.get();
 
                 // Ownership remains.
                 volumes_.push_back(std::move(volumeHandle));

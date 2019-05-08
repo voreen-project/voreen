@@ -366,6 +366,11 @@ bool SimilarityPlot::isReady() const {
         return false;
     }
 
+    if(ensembleInport_.getData()->getCommonChannels().empty()) {
+        setNotReadyErrorMessage("No common channels available");
+        return false;
+    }
+
     // Note: Similarity Matrix is optional.
 
     if(mdsData_.empty()) {

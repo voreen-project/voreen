@@ -422,9 +422,10 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     script << "#SBATCH --ntasks-per-node=" << configTasksPerNode_.get() << std::endl;
     script << "#SBATCH --cpus-per-task=" << configCPUsPerTask_.get() << std::endl;
     script << std::endl;
-    script << "# set the number of CPU cores per node" << std::endl;
-    script << "#SBATCH --exclusive" << std::endl;
-    script << std::endl;
+    // Don't use exclusive access, it might block other jobs if number of tasks is low.
+    //script << "# set the number of CPU cores per node" << std::endl;
+    //script << "#SBATCH --exclusive" << std::endl;
+    //script << std::endl;
     script << "# How much memory is needed (per node)" << std::endl;
     script << "#SBATCH --mem=" << configMemory_.get() << "G" << std::endl;
     script << std::endl;
