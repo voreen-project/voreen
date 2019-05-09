@@ -27,8 +27,6 @@
 
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
-#include "voreen/core/datastructures/volume/volumefactory.h"
-#include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/ports/conditions/portconditionvolumelist.h"
 
 #include "modules/core/io/rawvolumereader.h"
@@ -167,28 +165,15 @@ void FlowSimulationCluster::enqueueSimulations() {
         return;
     }
 
-    VoreenApplication::app()->showMessageBox("Information", "Start enqueuing data, this may take a while...");
+    VoreenApplication::app()->showMessageBox("Information", "Start enqueuing runs, this may take a while...");
     LINFO("Configuring and enqueuing Simulations '" << simulationType_.get() << "'");
 
     // (Re-)compile code on cluster, if desired.
     if(compileOnUpload_.get()) {
 
-        // Create compile script locally.
-        std::string compileScriptFilename = VoreenApplication::app()->getUniqueTmpFilePath();
-        std::ofstream compileScriptFile(compileScriptFilename);
-        if (!compileScriptFile.good()) {
-            LERROR("Could not write compile script file");
-            return;
-        }
-        compileScriptFile << generateCompileScript();
-        compileScriptFile.close();
-
         // Execute compile script on the cluster.
-        std::string command = "ssh " + username_.get() + "@" + clusterAddress_.get() + " 'bash -s' < " + compileScriptFilename;
+        std::string command = "ssh " + username_.get() + "@" + clusterAddress_.get() + " " + generateCompileScript();
         int ret = executeCommand(command);
-
-        // Delete the script, we no longer need this file.
-        tgt::FileSystem::deleteFile(compileScriptFilename);
 
         // Check if compilation was successful.
         if (ret != EXIT_SUCCESS) {
@@ -275,26 +260,28 @@ void FlowSimulationCluster::enqueueSimulations() {
     //tgt::FileSystem::deleteDirectoryRecursive(simulationPathSource);
 
     // Enqueue simulations.
+    std::vector<std::string> failed;
     for(size_t i=0; i<flowParametrization->size(); i++) {
 
-        std::string enqueueScriptFilename = VoreenApplication::app()->getUniqueTmpFilePath(".sh");
-        std::ofstream enqueueScriptFile(enqueueScriptFilename);
-        if (!enqueueScriptFile.good()) {
-            LERROR("Could not write enqueue script file");
-            continue;
-        }
         std::string localSimulationPath = simulationPath_.get() + "/" + toolchain_.get() + "/simulations/" + simulationType_.get() + "/" +
                                           flowParametrization->getName() + "/" + flowParametrization->at(i).getName();
-        enqueueScriptFile << generateEnqueueScript(localSimulationPath);
-        enqueueScriptFile.close();
 
         // Enqueue job.
-        command = "ssh " + username_.get() + "@" + clusterAddress_.get() + " 'bash -s' < " + enqueueScriptFilename;
+        command = "ssh " + username_.get() + "@" + clusterAddress_.get() + " " + generateEnqueueScript(localSimulationPath);
         ret = executeCommand(command);
         if (ret != EXIT_SUCCESS) {
+            failed.push_back(flowParametrization->at(i).getName());
             LERROR("Could not enqueue job");
             continue;
         }
+    }
+
+    if (!failed.empty()) {
+        VoreenApplication::app()->showMessageBox("Error", "Some runs could not be enqueued. See log for details.", true);
+        LERROR("Could not enqueue runs: \n* " << strJoin(failed, "\n* "));
+    }
+    else {
+        VoreenApplication::app()->showMessageBox("Information", "All runs successfully enqueued!");
     }
 
     progress_.setProgress(1.0f);
@@ -340,6 +327,7 @@ void FlowSimulationCluster::fetchResults() {
         if(!failed.empty()) {
             VoreenApplication::app()->showMessageBox("Error", "Some data could not be fetched. See log for details.", true);
             LERROR("Could not fetch results of: \n* " << strJoin(failed, "\n* "));
+            return;
         }
     }
     else {
@@ -350,8 +338,9 @@ void FlowSimulationCluster::fetchResults() {
             LERROR("Could not fetch results");
             return;
         }
-        VoreenApplication::app()->showMessageBox("Fetching Done", "Fetching data was successful!");
     }
+
+    VoreenApplication::app()->showMessageBox("Information", "Fetching data was successful!");
 }
 
 int FlowSimulationCluster::executeCommand(const std::string& command) const {
@@ -384,10 +373,11 @@ int FlowSimulationCluster::executeCommand(const std::string& command) const {
 std::string FlowSimulationCluster::generateCompileScript() const {
     std::stringstream script;
 
-    script << "#!/bin/bash" << std::endl;
-    script << "module load " << toolchain_.get() << std::endl;
-    script << "cd " << simulationPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get() << std::endl;
-    script << "make -j4" << std::endl; // Assumes that using 4 threads is okay, which should be the case on any system.
+    script << "\"";
+    script << "module load " << toolchain_.get();
+    script << " && cd " << simulationPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get();
+    script << " && make -j4"; // Assumes that using 4 threads is okay, which should be the case on any system.
+    script << "\"";
 
     return script.str();
 }
@@ -395,10 +385,15 @@ std::string FlowSimulationCluster::generateCompileScript() const {
 std::string FlowSimulationCluster::generateEnqueueScript(const std::string& parametrizationPath) const {
     std::stringstream script;
 
-    script << "#!/bin/bash" << std::endl;
-    script << "module load " << toolchain_.get() << std::endl;
-    script << "cd " << parametrizationPath << std::endl;
-    script << "sbatch submit.cmd" << std::endl;
+    script << "\"";
+    script << "module load " << toolchain_.get();
+    script << " && cd " << parametrizationPath;
+#ifdef WIN32
+    // Using windows, the script's DOS line breaks need to be converted to UNIX line breaks.
+    script << " && sed -i 's/\\r$//' submit.cmd";
+#endif
+    script << " && sbatch submit.cmd";
+    script << "\"";
 
     return script.str();
 }
