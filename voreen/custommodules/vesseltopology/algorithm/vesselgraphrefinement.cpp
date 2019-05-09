@@ -423,7 +423,33 @@ struct FutureEdge {
             const VesselGraphEdge* firstEdge = thisq.front();
             const VesselGraphEdge* lastEdge = thisq.back();
 
-            auto pushVoxel = [&output, firstEdge, lastEdge] (const VesselGraphEdge& edge, size_t voxelIndex) {
+            // Generate fallback data;
+            float minDistToSurfaceSum = 0.0;
+            float avgDistToSurfaceSum = 0.0;
+            float maxDistToSurfaceSum = 0.0;
+            size_t totalVoxels = 0.0;
+            for(const VesselGraphEdge* edge : thisq) {
+                for(const auto& voxel : edge->getVoxels()) {
+                    if(voxel.hasValidData()) {
+                        minDistToSurfaceSum += voxel.minDistToSurface_;
+                        avgDistToSurfaceSum += voxel.avgDistToSurface_;
+                        maxDistToSurfaceSum += voxel.maxDistToSurface_;
+                        totalVoxels += 1;
+                    }
+                }
+            }
+            float fallbackMinDistToSurface = minDistToSurfaceSum / totalVoxels;
+            float fallbackAvgDistToSurface = avgDistToSurfaceSum / totalVoxels;
+            float fallbackMaxDistToSurface = maxDistToSurfaceSum / totalVoxels;
+
+            auto pushVoxel = [&output,
+                 firstEdge,
+                 lastEdge,
+                 fallbackMinDistToSurface,
+                 fallbackAvgDistToSurface,
+                 fallbackMaxDistToSurface]
+                     (const VesselGraphEdge& edge, size_t voxelIndex) {
+
                 // We want all voxels to be outer if they are between the start of the first and the end of the last edge
                 bool isFutureOuter =
                         (&edge == firstEdge && (voxelIndex >= edge.outerPathBeginIndex_ || edge.isEndStanding()))
@@ -435,13 +461,19 @@ struct FutureEdge {
                     VesselSkeletonVoxel newVoxel(voxel); //copy
                     newVoxel.nearOtherEdge_ = false;
 
-                    if(!voxel.hasValidData() && edge.hasValidData()) {
+                    if(!voxel.hasValidData()) {
                         // We need to fix up the properties, as this voxel is supposed to be an outer voxel
                         // Best bet are the average values of the edge itself.
-                        newVoxel.minDistToSurface_ = edge.getMinRadiusAvg();
-                        newVoxel.avgDistToSurface_ = edge.getAvgRadiusAvg();
-                        newVoxel.maxDistToSurface_ = edge.getMaxRadiusAvg();
                         newVoxel.numSurfaceVoxels_ = 1;
+                        if(edge.hasValidData()) {
+                            newVoxel.minDistToSurface_ = edge.getMinRadiusAvg();
+                            newVoxel.avgDistToSurface_ = edge.getAvgRadiusAvg();
+                            newVoxel.maxDistToSurface_ = edge.getMaxRadiusAvg();
+                        } else {
+                            newVoxel.minDistToSurface_ = fallbackMinDistToSurface;
+                            newVoxel.avgDistToSurface_ = fallbackAvgDistToSurface;
+                            newVoxel.maxDistToSurface_ = fallbackMaxDistToSurface;
+                        }
                     }
 
                     output.push_back(newVoxel);
@@ -564,7 +596,7 @@ std::unique_ptr<VesselGraph> VesselGraphRefinement::removeDregree2Nodes(const Ve
         tgtAssert(node_id_end.isValid(), "Invalid node_id_begin");
 
         std::vector<VesselSkeletonVoxel> voxels = future_edge.collectVoxels();
-        /*VGEdgeID inserted_edge = */builder.insertEdge(node_id_begin, node_id_end, std::move(voxels), future_edge.getUUID());
+        /*VGEdgeID inserted_edge =*/ builder.insertEdge(node_id_begin, node_id_end, std::move(voxels), future_edge.getUUID());
         //tgtAssert(builder.getEdge(inserted_edge).getLength() > 0, "Invalid edge length");
     }
 
