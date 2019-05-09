@@ -33,6 +33,8 @@ auth = (args.share_folder_token, args.password)
 
 max_server_error_retries=5
 
+http_request_timeout_seconds=10
+
 def retry_request(request):
     code = 500
     num_tries = 0
@@ -44,7 +46,7 @@ def retry_request(request):
 
 def put_as_file(data, destination):
     url = url_base + '/' + destination
-    r = retry_request(lambda: requests.put(url, data=data, headers=headers, auth=auth))
+    r = retry_request(lambda: requests.put(url, data=data, headers=headers, auth=auth, timeout=http_request_timeout_seconds))
 
     if r.status_code < 200 or r.status_code >= 300:
         print('Sending file {} not successful: {} {}'.format(destination, r.status_code, r.text))
@@ -55,7 +57,7 @@ def put_single_file(file_to_send, destination):
 
 def make_dir(destination):
     url = url_base + '/' + destination
-    r = retry_request(lambda: requests.request('MKCOL', url, headers=headers, auth=auth))
+    r = retry_request(lambda: requests.request('MKCOL', url, headers=headers, auth=auth, timeout=http_request_timeout_seconds))
     if r.status_code < 200 or r.status_code >= 300:
         print('Creating dir {} not successful: {} {}'.format(destination, r.status_code, r.text))
 
@@ -88,7 +90,7 @@ def put_tree(dir_path, destination):
 
 def delete(destination):
     url = url_base + '/' + destination
-    r = retry_request(lambda: requests.delete(url, headers=headers, auth=auth))
+    r = retry_request(lambda: requests.delete(url, headers=headers, auth=auth, timeout=http_request_timeout_seconds))
     if r.status_code < 200 or r.status_code >= 300:
         print('Deleting {} not successful: {} {}'.format(destination, r.status_code, r.text))
 
@@ -100,7 +102,7 @@ def list_dir(destination):
        </d:prop>
      </d:propfind>'''
     url = url_base + '/' + destination
-    r = retry_request(lambda: requests.request('PROPFIND', url, data=data, headers=headers, auth=auth))
+    r = retry_request(lambda: requests.request('PROPFIND', url, data=data, headers=headers, auth=auth, timeout=http_request_timeout_seconds))
     if r.status_code < 200 or r.status_code >= 300:
         print('Listing dir {} not successful: {} {}'.format(destination, r.status_code, r.text))
         sys.exit(1)
