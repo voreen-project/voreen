@@ -66,7 +66,7 @@ void VesselGraphSave::saveCurrentGraph() {
     JsonSerializer serializer;
     try {
         serializer.serialize("graph", *input);
-    } catch(SerializationException s) {
+    } catch(SerializationException& s) {
         LERROR("Could not serialize graph: " << s.what());
         return;
     }

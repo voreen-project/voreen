@@ -61,7 +61,7 @@ void VesselGraphSource::process() {
         deserializer.read(f, true);
         deserializer.deserialize("graph", *output);
 
-    } catch(SerializationException e) {
+    } catch(SerializationException& e) {
         LERROR("Could not deserialize graph: " << e.what());
         outport_.setData(nullptr);
         return;

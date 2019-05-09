@@ -790,7 +790,7 @@ void VesselGraphEdgeDeserializable::deserialize(Deserializer& s) {
         for(const auto& voxel : voxels) {
             voxels_.push_back(voxel.inner_);
         }
-    } catch (SerializationException s) {
+    } catch (SerializationException& s) {
     }
     if(voxels_.empty()) {
         VesselGraphEdgePathPropertiesSerializable props;
