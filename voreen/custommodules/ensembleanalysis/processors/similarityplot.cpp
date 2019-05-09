@@ -583,71 +583,82 @@ tgt::vec3 SimilarityPlot::getColor(size_t runIdx, size_t timeStepIdx, bool picki
 
 void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
 
-    RenderTarget* target = pickingBuffer_.getRenderTarget();
-
-    int x = tgt::clamp(e->x(), MARGINS.x, e->viewport().x-MARGINS.x);
-    int y = tgt::clamp(e->y(), MARGINS.y, e->viewport().y-MARGINS.y);
-
-    // Not inside margins.
-    if(x != e->x() || y != e->y())
-        return;
-
-    // Handle margins.
-    tgt::ivec2 pixel;
-    if(numDimensions_.get() < 3)
-        pixel = tgt::ivec2(mapRange(tgt::vec2(x, y), tgt::vec2(MARGINS), tgt::vec2(outport_.getSize()-MARGINS), tgt::vec2::zero, tgt::vec2(target->getSize())));
-    else
-        pixel = mapRange(tgt::ivec2(x, y), tgt::ivec2::zero, outport_.getSize(), tgt::ivec2::zero, target->getSize());
-
-    tgt::vec4 texel = target->getColorAtPos(tgt::ivec2(pixel.x, target->getSize().y - pixel.y - 1));
-    if(texel.z != 1.0f) {
-        e->accept();
-        return; // No hit - preserve last selection.
-    }
-
-    // Calculate run index.
     const EnsembleDataset* dataset = ensembleInport_.getData();
-    const std::vector<EnsembleDataset::Run>& runs = dataset->getRuns();
-    size_t numRuns = runs.size();
-    int r = tgt::clamp<int>(std::round(texel.r * numRuns), 0, numRuns-1);
 
-    // Right-click selection changes rendering order.
-    if (e->button() & tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
-        if(e->modifiers() & tgt::MouseEvent::CTRL) {
-            // Reset subselection.
-            subSelection_.clear();
+    // Right click resets subselection.
+    if(e->button() & tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
+        subSelection_.clear();
+    }
+    // Middle click inverts subselection.
+    else if(e->button() & tgt::MouseEvent::MOUSE_BUTTON_MIDDLE) {
+        std::set<int> invertedSelection;
+        for(size_t i=0; i<dataset->getRuns().size(); i++) {
+            if(subSelection_.count(i) == 0) {
+                invertedSelection.insert(i);
+            }
         }
-        else {
+
+        subSelection_ = invertedSelection;
+    }
+    // Otherwise, we look for a hit.
+    else if(e->button() & tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
+
+        RenderTarget* target = pickingBuffer_.getRenderTarget();
+
+        int x = tgt::clamp(e->x(), MARGINS.x, e->viewport().x - MARGINS.x);
+        int y = tgt::clamp(e->y(), MARGINS.y, e->viewport().y - MARGINS.y);
+
+        // Not inside margins.
+        if (x != e->x() || y != e->y()) {
+            e->accept();
+            return; // Outside margins, ignore.
+        }
+
+        // Handle margins.
+        tgt::ivec2 pixel;
+        if (numDimensions_.get() < 3)
+            pixel = tgt::ivec2(
+                    mapRange(tgt::vec2(x, y), tgt::vec2(MARGINS), tgt::vec2(outport_.getSize() - MARGINS),
+                             tgt::vec2::zero, tgt::vec2(target->getSize())));
+        else
+            pixel = mapRange(tgt::ivec2(x, y), tgt::ivec2::zero, outport_.getSize(), tgt::ivec2::zero,
+                             target->getSize());
+
+        tgt::vec4 texel = target->getColorAtPos(tgt::ivec2(pixel.x, target->getSize().y - pixel.y - 1));
+        if (texel.z != 1.0f) {
+            e->accept();
+            return; // No hit - preserve last selection.
+        }
+
+        // Calculate run index.
+        const std::vector<EnsembleDataset::Run>& runs = dataset->getRuns();
+        size_t numRuns = runs.size();
+        int r = tgt::clamp<int>(std::round(texel.r * numRuns), 0, numRuns - 1);
+
+        // Calculate time step index.
+        size_t numTimeSteps = runs[r].timeSteps_.size();
+        int t = tgt::clamp<int>(std::round(texel.g * numTimeSteps), 0, numTimeSteps - 1);
+
+        // Right-click selection changes rendering order.
+        if (e->modifiers() == tgt::MouseEvent::SHIFT) {
             // Push selected run to the front of the rendering order.
             renderingOrder_.erase(std::find(renderingOrder_.begin(), renderingOrder_.end(), r));
             renderingOrder_.push_front(r);
         }
-        invalidate();
-    }
-    // Left-click performs time step selection.
-    else {
-        // Calculate time step index.
-        size_t numTimeSteps = runs[r].timeSteps_.size();
-        int t = tgt::clamp<int>(std::round(texel.g * numTimeSteps), 0, numTimeSteps-1);
-
-        // Update selection.
-        if(e->modifiers() & tgt::MouseEvent::CTRL) {
+        else if(e->modifiers() == tgt::MouseEvent::CTRL) {
             // This selection mode modifies the sub selection for the MDS plot.
-
             auto iter = std::find(subSelection_.begin(), subSelection_.end(), r);
             if (iter != subSelection_.end()) {
                 subSelection_.erase(iter);
-            }
-            else {
+            } else {
                 subSelection_.insert(r);
             }
-        }
-        else {
+        } else if(e->modifiers() == tgt::MouseEvent::MODIFIER_NONE){
             // This selection mode modifies selectedRuns_ and therefore linked processors.
             // This is the actual (!) selection.
 
             // Reset subselection.
-            subSelection_.clear();
+            //subSelection_.clear();
 
             std::vector<int> runIndices;
             runIndices.push_back(r);
@@ -659,9 +670,9 @@ void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
             float upper = std::ceil((timeStep.time_ + timeStep.duration_) * 100.0f) / 100.0f;
             selectedTimeSteps_.set(tgt::vec2(lower, upper));
         }
-
     }
 
+    invalidate();
     e->accept();
 }
 
