@@ -84,7 +84,8 @@ struct ProtoVesselGraphEdge {
     VGNodeID node1_;
     VGNodeID node2_;
     DiskArray<tgt::svec3> voxels_; //Voxel position of the original centerline
-    DiskArray<tgt::vec3> voxelsRw_; //Smoothed centerline in real world coordinates
+    DiskArray<tgt::vec3> voxelsRw_; //Voxel position transformed into real world
+    DiskArray<tgt::vec3> voxelsRwSmooth_; //Smoothed centerline in real world coordinates
     ElementTree tree_;
 };
 

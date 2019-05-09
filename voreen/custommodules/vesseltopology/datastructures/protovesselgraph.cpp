@@ -62,18 +62,28 @@ ProtoVesselGraphNode::ProtoVesselGraphNode(VGNodeID id, DiskArray<tgt::svec3>&& 
     voxelPos_ = tgt::vec3(voxelSum)/static_cast<float>(voxels_.size());
 }
 
-static std::vector<tgt::vec3> transformAndSmoothVoxels(const tgt::mat4& toRWMatrix, const DiskArray<tgt::svec3>& voxels, tgt::vec3 node1VoxelPos, tgt::vec3 node2VoxelPos) {
-    std::vector<tgt::vec3> controlPoints;
-    controlPoints.push_back(toRWMatrix.transform(node1VoxelPos));
+static DiskArray<tgt::vec3> transformVoxels(const tgt::mat4& toRWMatrix, const DiskArray<tgt::svec3>& voxels, DiskArrayStorage<tgt::vec3>& storage) {
+    std::vector<tgt::vec3> vec; //TODO: somehow avoid copy here?
     for(const auto& v: voxels) {
-        controlPoints.push_back(toRWMatrix.transform(tgt::vec3(v)));
+        vec.push_back(toRWMatrix.transform(tgt::vec3(v)));
     }
-    controlPoints.push_back(toRWMatrix.transform(node2VoxelPos));
+    return storage.store(vec);
+}
+static DiskArray<tgt::vec3> smoothVoxels(const DiskArray<tgt::vec3>& voxels, tgt::vec3 node1PosRw, tgt::vec3 node2PosRw, DiskArrayStorage<tgt::vec3>& storage) {
+    std::vector<tgt::vec3> controlPoints;
+    controlPoints.push_back(node1PosRw);
+    for(const auto& v: voxels) {
+        controlPoints.push_back(v);
+    }
+    controlPoints.push_back(node2PosRw);
 
 
-    std::vector<tgt::vec3> output;
+    std::vector<tgt::vec3> vec;
     int numPoints = voxels.size();
     for(int i=1; i<=numPoints; ++i) {
+        // No smoothing
+        //tgt::vec3 result = controlPoints[i];
+
         // Local Bezier curve of degree 2 (i.e., mix the neighbors):
         //tgt::vec3 result = 0.5f*controlPoints[i];
         //result += 0.25f*controlPoints[i-1];
@@ -87,10 +97,10 @@ static std::vector<tgt::vec3> transformAndSmoothVoxels(const tgt::mat4& toRWMatr
         result += controlPoints[std::min(i+2, numPoints+1)];
         result /= 16.0f;
 
-        output.push_back(result);
+        vec.push_back(result);
     }
 
-    return output;
+    return storage.store(vec);
 }
 
 static ProtoVesselGraphEdge::ElementTree buildTree(const DiskArray<tgt::vec3>& voxels, static_kdtree::SharedMemoryTreeBuilder<ProtoVesselGraphEdgeElement>& treeBuilder) {
@@ -108,8 +118,9 @@ ProtoVesselGraphEdge::ProtoVesselGraphEdge(const tgt::mat4& toRWMatrix, VGEdgeID
     , node1_(node1.id_)
     , node2_(node2.id_)
     , voxels_(graph.voxelStorage_.store(voxels))
-    , voxelsRw_(graph.rwvoxelStorage_.store(transformAndSmoothVoxels(toRWMatrix, voxels, node1.voxelPos_, node2.voxelPos_)))
-    , tree_(buildTree(voxelsRw_, graph.treeBuilder_))
+    , voxelsRw_(transformVoxels(toRWMatrix, voxels_, graph.rwvoxelStorage_))
+    , voxelsRwSmooth_(smoothVoxels(voxelsRw_, toRWMatrix.transform(node1.voxelPos_), toRWMatrix.transform(node2.voxelPos_), graph.rwvoxelStorage_))
+    , tree_(buildTree(voxelsRwSmooth_, graph.treeBuilder_))
 {
 }
 static_kdtree::SearchNearestResultSet<ProtoVesselGraphEdgeElement> ProtoVesselGraphEdge::findClosestVoxelIndex(tgt::vec3 v) const {
