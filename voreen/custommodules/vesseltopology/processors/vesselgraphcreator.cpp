@@ -773,6 +773,8 @@ static void mapEdgeIds(LZ4SliceVolume<uint32_t>& regions, size_t numComponents, 
             tgtAssert(ccaindex, "Read invalid voxel");
             tgtAssert(*ccaindex != 0, "sample at background voxel");
 
+            tgtAssert(ccaToEdgeIdTable[*ccaindex] == IdVolume::UNLABELED_FOREGROUND_VALUE, "Duplicate edge mapping");
+
             ccaToEdgeIdTable[*ccaindex] = pair.first;
         }
     }
