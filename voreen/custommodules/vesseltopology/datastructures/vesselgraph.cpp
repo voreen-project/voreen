@@ -65,7 +65,7 @@ bool VesselSkeletonVoxel::hasValidData() const {
 }
 
 bool VesselSkeletonVoxel::isInner() const {
-    return !hasValidData() || nearOtherEdge_;
+    return nearOtherEdge_;
 }
 
 bool VesselSkeletonVoxel::isOuter() const {
@@ -302,8 +302,8 @@ VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const Vess
 
     // Compute length
     output.length_ = 0;
-    float distFromLastOuter = 0;
-    float distToFirstOuter = 0;
+    float distFromLastOuter;
+    float distToFirstOuter;
 
     if(path.empty()) {
         float dist = tgt::distance(begin.pos_, end.pos_);
@@ -317,7 +317,18 @@ VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const Vess
         float beginDist = tgt::distance(begin.pos_, path.front().pos_);
         output.length_ += beginDist;
         distFromLastOuter = 0.0;
-        distToFirstOuter = beginDist;
+        if(outerPathBeginIndex != 0) {
+            // If the outer path does not begin with an outer voxel, we assume the node itself to be outside
+            distToFirstOuter = beginDist;
+        } else {
+            // Otherwise it must be inside
+            distToFirstOuter = 0.0;
+        }
+
+        if(outerPathEndIndex == 0) {
+            // Path is completely inside, including first node
+            distFromLastOuter += beginDist;
+        }
 
         for(size_t i=0; i < path.size()-1; ++i) {
             float dist = tgt::distance(path[i].pos_, path[i+1].pos_);
@@ -333,7 +344,14 @@ VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const Vess
 
         float endDist = tgt::distance(path.back().pos_, end.pos_);
         output.length_ += endDist;
-        distFromLastOuter += endDist;
+        if(outerPathEndIndex < path.size()) {
+            // If the path does not end with an outer voxel, it is assumed to be inside.
+            distFromLastOuter += endDist;
+        }
+        if(outerPathBeginIndex == path.size()) {
+            // Path is completely inside, including first node
+            distToFirstOuter += endDist;
+        }
 
         output.tipRadiusNode1_ = path.front().minDistToSurface_;
         output.tipRadiusNode2_ = path.back().minDistToSurface_;
@@ -436,7 +454,7 @@ void VesselGraphEdge::finalizeConstruction() {
     distance_ = tgt::distance(node1.pos_, node2.pos_);
 
     size_t firstInner = voxels_.size();
-    size_t lastInner = 0;
+    size_t lastInner = -1;
     size_t longestRunBegin = 0;
     size_t longestRunEnd = 0;
     bool inRun = false;
@@ -472,6 +490,8 @@ void VesselGraphEdge::finalizeConstruction() {
         }
     }
 
+    bool allInner = firstInner == 0 && lastInner == voxels_.size()-1;
+
     // If we do not have any outer voxels, at least try to even out the innerLengths of both nodes.
     if(longestRunBegin == longestRunEnd) {
         longestRunBegin = voxels_.size()/2;
@@ -480,11 +500,16 @@ void VesselGraphEdge::finalizeConstruction() {
 
     if(getNode2().isEndNode()) {
         // At least one node is a leaf: The first inner voxel (starting from the node) marks the end of the outer path
-        outerPathBeginIndex_ = lastInner;
+        outerPathBeginIndex_ = lastInner+1;
     } else {
         if(getNode1().isEndNode()) {
-            // At least one node is a leaf: the outer path begins directly at that node
-            outerPathBeginIndex_ = 0;
+            if(allInner) {
+                // Special case for end standing edges with all inner voxels
+                outerPathBeginIndex_ = lastInner+1;
+            } else {
+                // At least one node is a leaf: the outer path begins directly at that node
+                outerPathBeginIndex_ = 0;
+            }
         } else {
             // Both nodes are branching points: use the longest run of outer voxels
             outerPathBeginIndex_ = longestRunBegin;
@@ -495,8 +520,13 @@ void VesselGraphEdge::finalizeConstruction() {
         outerPathEndIndex_ = firstInner;
     } else {
         if(getNode2().isEndNode()) {
-            // At least one node is a leaf: the outer path begins directly at that node
-            outerPathEndIndex_ = voxels_.size();
+            if(allInner) {
+                // Special case for end standing edges with all inner voxels
+                outerPathEndIndex_ = firstInner;
+            } else {
+                // At least one node is a leaf: the outer path begins directly at that node
+                outerPathEndIndex_ = voxels_.size();
+            }
         } else {
             // Both nodes are branching points: use the longest run of outer voxels
             outerPathEndIndex_ = longestRunEnd;
