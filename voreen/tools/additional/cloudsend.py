@@ -40,7 +40,10 @@ def retry_request(request):
     num_tries = 0
     rep = request()
     while rep.status_code == 500 and num_tries < max_server_error_retries:
-        rep = request()
+        try:
+            rep = request()
+        except requests.exceptions.ReadTimeout as e:
+            print("Request timeout: {}", e)
         num_tries += 1
     return rep
 
