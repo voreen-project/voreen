@@ -238,7 +238,7 @@ std::unique_ptr<VesselGraph> ProtoVesselGraph::createVesselGraph(const LZ4SliceV
 
     for(const auto& edge : edges_.asArray()) {
         auto builder = tmpSkeletonVoxelListStorage.build();
-        for(const auto& voxel : edge.voxels()) {
+        for(const auto& voxel : edge.voxelsRwSmooth_) {
             builder.push(VesselSkeletonVoxel(voxel, std::numeric_limits<float>::infinity(), 0, 0, 0, 0, false));
         }
         skeletonVoxelLists.storeElement(DiskArray<VesselSkeletonVoxel>(std::move(builder).finalize()));
