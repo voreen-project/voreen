@@ -443,8 +443,13 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     script << "#SBATCH --mail-user=" << username_.get() << "@uni-muenster.de" << std::endl;
     script << std::endl;
     script << "# run the application" << std::endl;
-    script << "OMP_NUM_THREADS=" << configCPUsPerTask_.get() << " "
-           << "mpirun " << simulationPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get()
+    if(configCPUsPerTask_.get() > 1) {
+        script << "OMP_NUM_THREADS=" << configCPUsPerTask_.get() << " ";
+    }
+    if(configTasks_.get() > 1 || configTasksPerNode_.get() > 1) {
+        script << "mpirun ";
+    }
+    script << simulationPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get()
            << "/" << simulationType_.get() << " " << parameterPort_.getData()->getName() << " " << parametrizationName
            << std::endl;
 
