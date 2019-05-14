@@ -45,8 +45,6 @@ public:
     SimilarityMatrix(const SimilarityMatrix& other);
     SimilarityMatrix(SimilarityMatrix&& other);
 
-    ~SimilarityMatrix();
-
     SimilarityMatrix& operator=(const SimilarityMatrix& other);
     SimilarityMatrix& operator=(SimilarityMatrix&& other);
 

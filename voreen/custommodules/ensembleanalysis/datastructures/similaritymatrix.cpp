@@ -53,10 +53,6 @@ SimilarityMatrix::SimilarityMatrix(SimilarityMatrix&& other)
 {
 }
 
-SimilarityMatrix::~SimilarityMatrix()
-{
-}
-
 SimilarityMatrix& SimilarityMatrix::operator=(const SimilarityMatrix& other) {
     data_ = other.data_;
     size_ = other.size_;
@@ -65,8 +61,11 @@ SimilarityMatrix& SimilarityMatrix::operator=(const SimilarityMatrix& other) {
 }
 
 SimilarityMatrix& SimilarityMatrix::operator=(SimilarityMatrix&& other) {
-    data_ = std::move(other.data_);
-    size_ = other.size_;
+    // Destruct the current object, but keep the memory.
+    this->~SimilarityMatrix();
+
+    // Call the move constructor on the memory region of the current object.
+    new(this) SimilarityMatrix(std::move(other));
 
     return *this;
 }

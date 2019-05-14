@@ -43,7 +43,9 @@ enum SingleChannelSimilarityMeasure {
 };
 
 enum MultiChannelSimilarityMeasure {
-    MEASURE_ANGLEDIFFERENCE,
+    MEASURE_MAGNITUDE                       = 1 << 0,
+    MEASURE_ANGLEDIFFERENCE                 = 1 << 1,
+    MEASURE_MAGNITUDE_AND_ANGLEDIFFERENCE   = MEASURE_MAGNITUDE | MEASURE_ANGLEDIFFERENCE,
 };
 
 struct SimilarityMatrixCreatorInput {
@@ -51,14 +53,14 @@ struct SimilarityMatrixCreatorInput {
     std::unique_ptr<SimilarityMatrixList> outputMatrices;
     std::vector<tgt::vec3> seedPoints;
     SingleChannelSimilarityMeasure singleChannelSimilarityMeasure;
-    MultiChannelSimilarityMeasure multiChannelSimilarityMeasure;
     float isoValue;
+    MultiChannelSimilarityMeasure multiChannelSimilarityMeasure;
+    float weight;
 };
 
 struct SimilarityMatrixCreatorOutput {
     std::unique_ptr<SimilarityMatrixList> outputMatrices;
 };
-
 
 class VRN_CORE_API SimilarityMatrixCreator : public AsyncComputeProcessor<SimilarityMatrixCreatorInput, SimilarityMatrixCreatorOutput> {
 public:
@@ -81,8 +83,9 @@ protected:
 private:
 
     OptionProperty<SingleChannelSimilarityMeasure> singleChannelSimilarityMeasure_;
-    OptionProperty<MultiChannelSimilarityMeasure> multiChannelSimilarityMeasure_;
     FloatProperty isoValue_;
+    OptionProperty<MultiChannelSimilarityMeasure> multiChannelSimilarityMeasure_;
+    FloatProperty weight_;
     IntProperty numSeedPoints_;
     IntProperty seedTime_;
 
