@@ -237,12 +237,12 @@ const tgt::Bounds& EnsembleDataset::getRoi() const {
 
 void EnsembleDataset::setRoi(tgt::Bounds roi) {
     roi.intersectVolume(commonBounds_);
-    if(!roi.isDefined()) {
+    if(roi.isDefined()) {
         notifyPendingDataInvalidation();
         roi_ = roi;
     }
     else {
-        LWARNINGC("voreen.EnsembleDataSet", "Roi must overlap with common domain bounds");
+        LWARNINGC("voreen.EnsembleDataSet", "Roi must overlap with common domain bounds, ignoring.");
     }
 }
 
