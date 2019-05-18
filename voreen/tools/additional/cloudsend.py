@@ -42,9 +42,8 @@ def retry_request(request):
     while rep.status_code == 500 and num_tries < max_server_error_retries:
         try:
             rep = request()
-        #except requests.exceptions.RequestException as e:
-        except e:
-            print("Request exception: {}", e)
+        except:
+            print("TEST: CAUGHT EXCEPTION")
         num_tries += 1
     return rep
 
