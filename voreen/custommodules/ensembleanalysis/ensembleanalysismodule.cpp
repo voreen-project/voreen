@@ -31,6 +31,7 @@
 #include "processors/fieldparallelplotcreator.h"
 #include "processors/fieldparallelplotviewer.h"
 #include "processors/fieldparallelplothistogram.h"
+#include "processors/physicalclippinglinker.h"
 #include "processors/similaritydatavolume.h"
 #include "processors/similaritymatrixcreator.h"
 #include "processors/similarityplot.h"
@@ -66,6 +67,7 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     registerProcessor(new FieldParallelPlotCreator());
     registerProcessor(new FieldParallelPlotViewer());
     registerProcessor(new FieldParallelPlotHistogram());
+    registerProcessor(new PhysicalClippingLinker());
     registerProcessor(new SimilartyDataVolume());
     registerProcessor(new SimilarityMatrixCreator());
     registerProcessor(new SimilarityPlot());
