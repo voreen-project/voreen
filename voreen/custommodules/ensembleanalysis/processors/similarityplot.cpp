@@ -394,12 +394,7 @@ void SimilarityPlot::renderingPass(bool picking) {
     {
         for(int runIdx : renderingOrder_) {
 
-            if(subSelection_.find(runIdx) != subSelection_.end()) {
-                glLineWidth(7.0f);
-            }
-            else {
-                glLineWidth(5.0f);
-            }
+            glLineWidth((subSelection_.count(runIdx) != 0) ? 7.0f : 5.0f);
 
             const EnsembleDataset::Run& run = dataset->getRuns()[runIdx];
             size_t numTimeSteps = run.timeSteps_.size();
@@ -428,7 +423,7 @@ void SimilarityPlot::renderingPass(bool picking) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
                 float x = mapRange(run.timeSteps_[selectedTimeStep].time_, dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
                 tgt::vec3 position(x, vertices[selectedTimeStep][eigenValueIdx], 0.0f);
-                tgt::vec3 color = getColor(runIdx, selectedTimeStep, picking);
+                tgt::vec3 color = tgt::vec3::one; // in 1D-case the selection is always white.!
                 drawTimeStepSelection(runIdx, selectedTimeStep, position, color);
             }
         }
@@ -438,12 +433,7 @@ void SimilarityPlot::renderingPass(bool picking) {
     {
         for (int runIdx : renderingOrder_) {
 
-            if(subSelection_.find(runIdx) != subSelection_.end()) {
-                glLineWidth(7.0f);
-            }
-            else {
-                glLineWidth(5.0f);
-            }
+            glLineWidth((subSelection_.count(runIdx) != 0) ? 7.0f : 5.0f);
 
             size_t numTimeSteps = dataset->getRuns()[runIdx].timeSteps_.size();
             const auto& vertices = mdsData.nVectors_.at(runIdx);
@@ -458,7 +448,7 @@ void SimilarityPlot::renderingPass(bool picking) {
             if(!picking || numTimeSteps == 1) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
                 tgt::vec3 position(vertices[selectedTimeStep][0], vertices[selectedTimeStep][1], 0.0f);
-                tgt::vec3 color = getColor(runIdx, selectedTimeStep, picking);
+                tgt::vec3 color = (numTimeSteps == 1) ? getColor(runIdx, selectedTimeStep, picking) : tgt::vec3::one;
                 drawTimeStepSelection(runIdx, selectedTimeStep, position, color);
             }
         }
@@ -481,12 +471,7 @@ void SimilarityPlot::renderingPass(bool picking) {
 
         for (int runIdx : renderingOrder_) {
 
-            if(subSelection_.find(runIdx) != subSelection_.end()) {
-                glLineWidth(7.0f);
-            }
-            else {
-                glLineWidth(5.0f);
-            }
+            glLineWidth((subSelection_.count(runIdx) != 0) ? 7.0f : 5.0f);
 
             size_t numTimeSteps = dataset->getRuns()[runIdx].timeSteps_.size();
             const auto& vertices = mdsData.nVectors_.at(runIdx);
@@ -501,7 +486,7 @@ void SimilarityPlot::renderingPass(bool picking) {
             if(!picking || numTimeSteps == 1) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
                 tgt::vec3 position = tgt::vec3::fromPointer(&vertices[selectedTimeStep][0])*scale;
-                tgt::vec3 color = getColor(runIdx, selectedTimeStep, picking);
+                tgt::vec3 color = (numTimeSteps == 1) ? getColor(runIdx, selectedTimeStep, picking) : tgt::vec3::one;
                 drawTimeStepSelection(runIdx, selectedTimeStep, position, color);
             }
         }
@@ -850,11 +835,11 @@ SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& Di
         size_t offsetB = 0;//offsetA;
         size_t positionB = 0;//positionA;
         size_t numTimeStepsA = runs[runIdxA].timeSteps_.size();
-        if(subSelection_.find(runIdxA) != subSelection_.end()) {
+        if(subSelection_.count(runIdxA) != 0) {
             // Again iterate each run, call it B. Now looking at pairs of run A and B.
             for(size_t runIdxB=0; runIdxB<=runIdxA; runIdxB++) {//for(size_t runIdxB=runIdxA; runIdxB<runsNum; runIdxB++) {
                 size_t numTimeStepsB = runs[runIdxB].timeSteps_.size();
-                if (subSelection_.find(runIdxB) != subSelection_.end()) {
+                if (subSelection_.count(runIdxB) != 0) {
                     // Iterate time steps of run A.
                     for (size_t i = 0; i < numTimeStepsA; i++) {
                         // Iterate time steps of run B.
