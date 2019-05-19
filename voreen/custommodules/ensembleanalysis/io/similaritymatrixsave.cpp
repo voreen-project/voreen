@@ -77,11 +77,12 @@ void SimilarityMatrixSave::saveSimilarityMatrix() {
     }
 
     try {
-        std::fstream stream(filenameProp_.get(), std::ios::out);
+        const SimilarityMatrixList& data = *inport_.getData();
+        std::ofstream stream(filenameProp_.get());
         JsonSerializer json;
         Serializer s(json);
-        inport_.getData()->serialize(s);
-        json.write(stream, false, true);
+        s.serialize("similarity", data);
+        json.write(stream, true, false);
         LINFO(filenameProp_.get() << " saved sucessfully!");
     } catch(tgt::FileException& e) {
         LERROR(e.what());

@@ -79,11 +79,11 @@ void SimilarityMatrixSource::loadSimilarityMatrix() {
 
         std::unique_ptr<SimilarityMatrixList> similarityMatrices(new SimilarityMatrixList());
 
-        std::fstream stream(filenameProp_.get(), std::ios::in);
+        std::ifstream stream(filenameProp_.get());
         JsonDeserializer json;
-        json.read(stream, true);
+        json.read(stream, false);
         Deserializer s(json);
-        similarityMatrices->deserialize(s);
+        s.deserialize("similarity", *similarityMatrices);
         outport_.setData(similarityMatrices.release(), true);
         LINFO(filenameProp_.get() << " loaded sucessfully!");
     } catch(tgt::FileException& e) {
