@@ -91,7 +91,8 @@ private:
     IntProperty configTasksPerNode_;
     IntProperty configCPUsPerTask_;
     IntProperty configMemory_;
-    IntProperty configTime_;
+    IntProperty configTimeDays_;
+    IntProperty configTimeQuarters_;
     StringOptionProperty configPartition_;
 
     FileDialogProperty simulationResults_;
