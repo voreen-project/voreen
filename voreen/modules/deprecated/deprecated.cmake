@@ -60,7 +60,7 @@ SET(MOD_CORE_HEADERS
 
 # Possibly not core profile ready
 IF(VRN_OPENGL_COMPATIBILITY_PROFILE)
-    LIST(APPEND MOD_CORE_SOURCES
+    LIST(APPEND MOD_CORE_HEADERS
         ${MOD_DIR}/ports/textureport.h
         ${MOD_DIR}/processors/buttonoverlayprocessor.h
         ${MOD_DIR}/processors/canny.h 
