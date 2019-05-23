@@ -123,12 +123,7 @@ bool FlowIndicatorDetection::isReady() const {
         return false;
     }
 
-    // Both inports are optional, but the velocity port
-    // must contain a valid volume, if connected.
-    if (volumePort_.hasData() && !volumePort_.isReady()) {
-        setNotReadyErrorMessage("Volume port connected but contains invalid volume");
-        return false;
-    }
+    // Both inports are optional
 
     return true;
 }
@@ -199,12 +194,16 @@ void FlowIndicatorDetection::onInputChange() {
 
             const VesselGraphEdge& edge = node.getEdges().back().get();
             size_t numVoxels = edge.getVoxels().size();
+            if (numVoxels == 0) {
+                //tgtAssert(false, "No voxels assigned to edge");
+                continue;
+            }
 
-            size_t mid = std::min<size_t>(firstRefNode_.get(), numVoxels -1);
+            size_t mid = std::min<size_t>(firstRefNode_.get(), numVoxels-1);
             size_t num   = static_cast<size_t>(numRefNodes_.get());
 
             size_t frontIdx = mid > num ? (mid - num) : 0;
-            size_t backIdx = (mid < numVoxels - 1 - num) ? (mid + num) : (numVoxels - 1);
+            size_t backIdx = std::min(mid + num, numVoxels - 1);
 
             std::function<size_t (size_t)> index;
             if(edge.getNode1().getID() == node.getID()) {
@@ -233,19 +232,23 @@ void FlowIndicatorDetection::onInputChange() {
             indicator.function_  = FlowFunction::FF_NONE;
 
             // Estimate flow direction based on underlying velocities.
-            if(volume && volume->getRepresentation<VolumeRAM>()) {
-                tgt::svec3 voxel = volume->getWorldToVoxelMatrix() * indicator.center_;
-                auto velocities = dynamic_cast<const VolumeRAM_3xFloat*>(volume->getRepresentation<VolumeRAM>());
-                tgtAssert(velocities, "VolumeRAM_3xFloat required");
-                tgt::vec3 velocity = velocities->voxel(voxel);
-                if(velocity != tgt::vec3::zero) {
+            if (volume) {
+
+                tgt::vec3 velocity = tgt::vec3::zero;
+                if (auto velocities = dynamic_cast<const VolumeRAM_3xFloat*>(volume->getRepresentation<VolumeRAM>())) {
+                    tgt::svec3 voxel = volume->getWorldToVoxelMatrix() * indicator.center_;
+                    velocity = velocities->voxel(voxel);
+                }
+
+                if (velocity != tgt::vec3::zero) {
                     velocity = tgt::normalize(velocity);
                     float threshold = tgt::deg2rad(static_cast<float>(angleThreshold_.get()));
                     float angle = std::acos(tgt::dot(velocity, indicator.normal_) /
-                                            (tgt::length(velocity) * tgt::length(indicator.normal_)));
+                        (tgt::length(velocity) * tgt::length(indicator.normal_)));
                     if (angle < threshold) {
                         indicator.direction_ = FlowDirection::FD_IN;
-                    } else if (tgt::PIf - angle < threshold) {
+                    }
+                    else if (tgt::PIf - angle < threshold) {
                         indicator.direction_ = FlowDirection::FD_OUT;
                     }
                 }
