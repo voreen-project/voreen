@@ -14,15 +14,15 @@ ENDIF()
 
 # set release mode by default when under unix
 IF(UNIX)
-	if(NOT CMAKE_BUILD_TYPE) 
-		set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." FORCE) 
-	endif(NOT CMAKE_BUILD_TYPE)
+	IF(NOT CMAKE_BUILD_TYPE) 
+		SET(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." FORCE) 
+	ENDIF()
 ENDIF()
 
 #PCH is currently problematic under linux -> display message and disable if set
 IF(UNIX AND VRN_PRECOMPILED_HEADER)
 	MESSAGE(WARNING "Precompiled Headers currently not supported for linux builds - disabling PCH")
-	set(VRN_PRECOMPILED_HEADER OFF CACHE BOOL "Use pre-compiled headers?" FORCE)
+	SET(VRN_PRECOMPILED_HEADER OFF CACHE BOOL "Use pre-compiled headers?" FORCE)
 ENDIF()
 
 # set/create binary output path
@@ -148,6 +148,11 @@ IF(VRN_MSVC)
         ELSE()
             SET(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /INCREMENTAL")
             SET(CMAKE_EXE_LINKER_FLAGS_DEBUG    "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /INCREMENTAL")
+            IF((MSVC_TOOLSET_VERSION EQUAL 140) OR (MSVC_TOOLSET_VERSION GREATER 140))
+                MESSAGE(STATUS "MSVC: Edit and Continue supported")
+                SET(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /EDITANDCONTINUE")
+                SET(CMAKE_EXE_LINKER_FLAGS_DEBUG    "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /EDITANDCONTINUE")
+            ENDIF()
         ENDIF()
     ELSE()
         SET(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /INCREMENTAL:NO")
@@ -460,6 +465,7 @@ ELSE(VRN_BUILD_VOREENBIOLOGY)
     SET(VRN_MODULE_VOREENBIOLOGY OFF CACHE INTERNAL "VoreenBiology module is included if VoreenBiology is built." FORCE)
     MARK_AS_ADVANCED(VRN_MODULE_VOREENBIOLOGY)
 ENDIF(VRN_BUILD_VOREENBIOLOGY)
+
 FOREACH(module_basedir ${MODULE_BASEDIR_LIST})
 
     MESSAGE(STATUS "Including Voreen Modules from ${module_basedir}:")
