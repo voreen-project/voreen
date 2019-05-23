@@ -99,11 +99,11 @@ private:
     std::string name_;
 
     // All other relevant parameters.
-    float characteristicLength_;
-    float characteristicVelocity_;
-    float viscosity_;
-    float density_;
-    bool bouzidi_;
+    float characteristicLength_;    ///< characteristic length in mm
+    float characteristicVelocity_;  ///< characteristic velocity in mm/s
+    float viscosity_;               ///< viscosity in e-6 m^2/s
+    float density_;                 ///< density in kg/m^3
+    bool bouzidi_;                  ///< bouzidi boundary condition
 };
 
 /**
@@ -164,10 +164,10 @@ private:
     std::string name_;
 
     // Configuration.
-    float simulationTime_;
-    float temporalResolution_;
-    int spatialResolution_;
-    int numTimeSteps_;
+    float simulationTime_;     ///< simulation time in seconds
+    float temporalResolution_; ///< temporal resolution in seconds
+    int spatialResolution_;    ///< spatial resolution in voxels (per dimension)
+    int numTimeSteps_;         ///< number of time steps
 
     // Flow indication (in-/out flow).
     std::vector<FlowIndicator> flowIndicators_;
