@@ -45,6 +45,8 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , flowDirection_("flowDirection", "Flow Direction")
     , radius_("radius", "Radius", 1.0f, 0.0f, 10.0f)
     , flowIndicatorTable_("flowIndicators", "Flow Indicators", 4)
+    , firstRefNode_("firstRefNode", "First Ref. Nodes", 0, 0, 20)
+    , numRefNodes_("numRefNodes", "Num. Ref. Nodes", 3, 1, 10)
     , angleThreshold_("angleThreshold", "Angle Threshold", 15, 0, 90)
 {
     addPort(vesselGraphPort_);
@@ -89,6 +91,10 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     flowIndicatorTable_.setColumnLabel(3, "Radius");
     ON_CHANGE(flowIndicatorTable_, FlowIndicatorDetection, onSelectionChange);
 
+    addProperty(firstRefNode_);
+    ON_CHANGE(firstRefNode_, FlowIndicatorDetection, onInputChange);
+    addProperty(numRefNodes_);
+    ON_CHANGE(numRefNodes_, FlowIndicatorDetection, onInputChange);
     addProperty(angleThreshold_);
     ON_CHANGE(angleThreshold_, FlowIndicatorDetection, onInputChange);
 }
@@ -117,7 +123,12 @@ bool FlowIndicatorDetection::isReady() const {
         return false;
     }
 
-    // Both inports are optional.
+    // Both inports are optional, but the velocity port
+    // must contain a valid volume, if connected.
+    if (volumePort_.hasData() && !volumePort_.isReady()) {
+        setNotReadyErrorMessage("Volume port connected but contains invalid volume");
+        return false;
+    }
 
     return true;
 }
@@ -146,9 +157,12 @@ void FlowIndicatorDetection::onSelectionChange() {
         size_t index = static_cast<size_t>(flowIndicatorTable_.getSelectedRowIndex());
         flowDirection_.selectByValue(flowIndicators_.at(index).direction_);
         flowDirection_.setReadOnlyFlag(false);
+        radius_.set(flowIndicators_.at(index).radius_);
+        radius_.setReadOnlyFlag(false);
     }
     else {
         flowDirection_.setReadOnlyFlag(true);
+        radius_.setReadOnlyFlag(true);
     }
     //setPropertyGroupVisible("indicator", flowIndicatorTable_.getSelectedRowIndex() >= 0);
 }
@@ -184,23 +198,37 @@ void FlowIndicatorDetection::onInputChange() {
         if(node.getDegree() == 1) {
 
             const VesselGraphEdge& edge = node.getEdges().back().get();
+            size_t numVoxels = edge.getVoxels().size();
 
-            size_t n = std::min<size_t>(5, edge.getVoxels().size()-1);
-            const VesselSkeletonVoxel* end = nullptr;
-            const VesselSkeletonVoxel* ref = nullptr;
+            size_t mid = std::min<size_t>(firstRefNode_.get(), numVoxels -1);
+            size_t num   = static_cast<size_t>(numRefNodes_.get());
+
+            size_t frontIdx = mid > num ? (mid - num) : 0;
+            size_t backIdx = (mid < numVoxels - 1 - num) ? (mid + num) : (numVoxels - 1);
+
+            std::function<size_t (size_t)> index;
             if(edge.getNode1().getID() == node.getID()) {
-                end = &edge.getVoxels().front();
-                ref = &edge.getVoxels().at(n);
+                index = [](size_t i) { return i; };
             }
             else {
-                end = &edge.getVoxels().back();
-                ref = &edge.getVoxels().at(edge.getVoxels().size() - n - 1);
+                index = [numVoxels](size_t i) { return numVoxels - 1 - i;  };
             }
 
+            const VesselSkeletonVoxel* ref   = &edge.getVoxels().at(index(mid));
+            const VesselSkeletonVoxel* front = &edge.getVoxels().at(index(frontIdx));
+            const VesselSkeletonVoxel* back  = &edge.getVoxels().at(index(backIdx));
+
+            // Calculate average radius.
+            float radius = 0.0f;
+            for (size_t i = frontIdx; i <= backIdx; i++) {
+                radius += edge.getVoxels().at(index(i)).avgDistToSurface_;
+            }
+            radius /= backIdx - frontIdx + 1;
+
             FlowIndicator indicator;
-            indicator.center_ = end->pos_;
-            indicator.normal_ = tgt::normalize(ref->pos_ - end->pos_);
-            indicator.radius_ = end->avgDistToSurface_;
+            indicator.center_ = ref->pos_;
+            indicator.normal_ = tgt::normalize(back->pos_ - front->pos_);
+            indicator.radius_ = radius;
             indicator.direction_ = FlowDirection::FD_NONE;
             indicator.function_  = FlowFunction::FF_NONE;
 

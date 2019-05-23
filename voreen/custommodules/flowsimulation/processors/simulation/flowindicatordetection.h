@@ -88,6 +88,8 @@ private:
 
     StringTableProperty flowIndicatorTable_;
 
+    IntProperty firstRefNode_;
+    IntProperty numRefNodes_;
     IntProperty angleThreshold_;
 
     std::vector<FlowIndicator> flowIndicators_;
