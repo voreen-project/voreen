@@ -27,6 +27,7 @@
 
 #include "voreen/core/datastructures/volume/histogram.h"
 #include "voreen/core/datastructures/volume/volumehash.h"
+#include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/utils/hashing.h"
 
 using std::string;
@@ -232,6 +233,9 @@ VolumeDecoratorReplace::VolumeDecoratorReplace(const VolumeBase* vhb,
 
         if (vhb->hasDerivedData<VolumeMinMax>())
             addDerivedData(new VolumeMinMax(*vhb->getDerivedData<VolumeMinMax>()));
+
+        if (vhb->hasDerivedData<VolumeMinMaxMagnitude>())
+            addDerivedData(new VolumeMinMaxMagnitude(*vhb->getDerivedData<VolumeMinMaxMagnitude>()));
     }
 
     // copy over volume origin

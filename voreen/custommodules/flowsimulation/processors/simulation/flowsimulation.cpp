@@ -726,10 +726,7 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
             // * VolumeMinMaxMagnitude
     if (feature.getTargetDim() > 1) {
         vvdFeatureFile
-            << "<DerivedItem type=\"VolumeMinMaxMagnitude\">"
-            << "<minMagnitude value=\"" << minMagnitude << "\" />"
-            << "<maxMagnitude value=\"" << maxMagnitude << "\" />"
-            << "</DerivedItem>";
+            << "<DerivedItem type=\"VolumeMinMaxMagnitude\" minMagnitude=\"" << minMagnitude << "\" maxMagnitude=\"" << maxMagnitude << "\" />";
     }
             // * VolumeMinMax
     vvdFeatureFile << "<DerivedItem type=\"VolumeMinMax\"><minValues>";

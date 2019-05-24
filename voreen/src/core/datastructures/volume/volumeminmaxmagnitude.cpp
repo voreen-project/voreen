@@ -34,6 +34,12 @@ VolumeMinMaxMagnitude::VolumeMinMaxMagnitude()
     : VolumeDerivedData()
 {}
 
+VolumeMinMaxMagnitude::VolumeMinMaxMagnitude(const VolumeMinMaxMagnitude& other)
+    : VolumeDerivedData()
+    , minMagnitude_(other.minMagnitude_)
+    , maxMagnitude_(other.maxMagnitude_)
+{}
+
 VolumeMinMaxMagnitude::VolumeMinMaxMagnitude(float minMag, float maxMag)
     : VolumeDerivedData()
     , minMagnitude_(minMag)

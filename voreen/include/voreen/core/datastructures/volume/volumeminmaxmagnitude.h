@@ -41,6 +41,7 @@ class VRN_CORE_API VolumeMinMaxMagnitude : public VolumeDerivedData {
 public:
     /// Empty default constructor required by VolumeDerivedData interface.
     VolumeMinMaxMagnitude();
+    VolumeMinMaxMagnitude(const VolumeMinMaxMagnitude& other);
     VolumeMinMaxMagnitude(float minMag, float maxMag);
     virtual std::string getClassName() const { return "VolumeMinMaxMagnitude"; }
 

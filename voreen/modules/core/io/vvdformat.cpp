@@ -30,6 +30,7 @@
 
 #include "voreen/core/datastructures/volume/volumehash.h"
 #include "voreen/core/datastructures/volume/volumeminmax.h"
+#include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/datastructures/volume/histogram.h"
 #include "voreen/core/datastructures/volume/volumepreview.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
@@ -206,6 +207,7 @@ VvdObject::VvdObject(const VolumeBase* vb, std::string absRAWPath, bool useExter
 
     //derivedData_.insert(vb->getDerivedData<VolumeHash>());
     derivedData_.insert(vb->getDerivedData<VolumeMinMax>());
+    derivedData_.insert(vb->getDerivedData<VolumeMinMaxMagnitude>());
     derivedData_.insert(vb->getDerivedData<VolumePreview>());
     derivedData_.insert(vb->getDerivedData<VolumeHistogramIntensity>());
     if(vb->hasDerivedData<VolumeHistogramIntensityGradient>())

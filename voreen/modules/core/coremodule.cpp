@@ -127,6 +127,7 @@
 // volume derived data
 #include "voreen/core/datastructures/volume/volumehash.h"
 #include "voreen/core/datastructures/volume/volumeminmax.h"
+#include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/datastructures/volume/volumepreview.h"
 #include "voreen/core/datastructures/volume/histogram.h"
 
@@ -529,6 +530,7 @@ CoreModule::CoreModule(const std::string& modulePath)
 
     // volume derived data
     registerSerializableType(new VolumeMinMax());
+    registerSerializableType(new VolumeMinMaxMagnitude());
     registerSerializableType(new VolumeHash());
     registerSerializableType(new VolumePreview());
     registerSerializableType(new VolumeHistogramIntensity());
