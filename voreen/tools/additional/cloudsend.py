@@ -35,15 +35,19 @@ max_server_error_retries=5
 
 http_request_timeout_seconds=10
 
+def save_request(request):
+    try:
+        return request()
+    except requests.exceptions.RequestException as e:
+        print("Request exception: {}", e)
+    return None
+
 def retry_request(request):
     code = 500
     num_tries = 0
-    rep = request()
-    while rep.status_code == 500 and num_tries < max_server_error_retries:
-        try:
-            rep = request()
-        except:
-            print("TEST: CAUGHT EXCEPTION")
+    rep = save_request(request)
+    while (rep is None or rep.status_code == 500) and num_tries < max_server_error_retries:
+        rep = save_request(request)
         num_tries += 1
     return rep
 
