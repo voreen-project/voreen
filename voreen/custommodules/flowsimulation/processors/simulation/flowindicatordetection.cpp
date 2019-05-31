@@ -200,10 +200,10 @@ void FlowIndicatorDetection::onInputChange() {
             }
 
             size_t mid = std::min<size_t>(firstRefNode_.get(), numVoxels-1);
-            size_t num   = static_cast<size_t>(numRefNodes_.get());
+            size_t num = static_cast<size_t>(numRefNodes_.get());
 
             size_t frontIdx = mid > num ? (mid - num) : 0;
-            size_t backIdx = std::min(mid + num, numVoxels - 1);
+            size_t backIdx  = std::min(mid + num, numVoxels - 1);
 
             std::function<size_t (size_t)> index;
             if(edge.getNode1().getID() == node.getID()) {

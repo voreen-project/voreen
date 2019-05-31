@@ -41,7 +41,8 @@ FlowParametrization::FlowParametrization()
     , flowFunction_("flowFunction", "Flow Function")
     , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 10.0f, 0.1f, 1000.0f)
     , characteristicVelocity_("characteristicVelocity", "Characteristic Velocity (mm/s)", 10.0f, 0.0f, 1000.0f)
-    , viscosity_("viscosity", "Viscosity (e-6 m^2/s)", 3.5, 3, 4)
+    , fluid_("fluid", "Fluid")
+    , viscosity_("viscosity", "Viscosity (e-3 m^2/s)", 3.5, 3, 4)
     , density_("density", "Density (kg/m^3)", 1000.0f, 1000.0f, 1100.0f)
     , bouzidi_("bouzidi", "Bouzidi", true)
     , addParametrization_("addParametrization", "Add Parametrization")
@@ -78,6 +79,11 @@ FlowParametrization::FlowParametrization()
         characteristicLength_.setGroupID("parameters");
     addProperty(characteristicVelocity_);
         characteristicVelocity_.setGroupID("parameters");
+    addProperty(fluid_);
+        ON_CHANGE(fluid_, FlowParametrization, fluidChanged);
+        fluid_.addOption("water", "Water", FLUID_WATER);
+        fluid_.addOption("blood", "Blood", FLUID_BLOOD);
+        fluid_.setGroupID("parameters");
     addProperty(viscosity_);
         viscosity_.setGroupID("parameters");
     addProperty(density_);
@@ -103,6 +109,30 @@ FlowParametrization::FlowParametrization()
     parametrizations_.setColumnLabel(3, "Viscosity");
     parametrizations_.setColumnLabel(4, "Density");
     parametrizations_.setColumnLabel(5, "Bouzidi");
+}
+
+void FlowParametrization::fluidChanged() {
+    switch(fluid_.getValue()) {
+        case FLUID_WATER:
+            viscosity_.setMinValue(0.79722f);
+            viscosity_.setMaxValue(1.35f);
+            viscosity_.set(1.0016f); // at room temperature
+            density_.setMinValue(988.1f);
+            density_.setMaxValue(1000.0f);
+            density_.set(998.21f); // at room temperature
+            break;
+        case FLUID_BLOOD:
+            viscosity_.setMinValue(3.0f);
+            viscosity_.setMaxValue(4.0f);
+            viscosity_.set(4.0f); // literature value
+            density_.setMinValue(1043.0f);
+            density_.setMaxValue(1057.0f);
+            density_.set(1055.0f); // literature value
+            break;
+        default:
+            tgtAssert(false, "Unhandled fluid");
+            break;
+    }
 }
 
 void FlowParametrization::addParametrization() {

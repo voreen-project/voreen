@@ -52,7 +52,7 @@ FlowSimulation::MeasuredDataMapper::MeasuredDataMapper(const VolumeBase* volume)
 {
     tgtAssert(volume_, "No volume");
     tgtAssert(volume_->getNumChannels() == 3, "Num channels != 3");
-    bounds_ = volume_->getBoundingBox(true).getBoundingBox(true);
+    bounds_ = volume_->getBoundingBox(false).getBoundingBox(false);
 }
 
 bool FlowSimulation::MeasuredDataMapper::operator() (T output[], const T input[]) {
@@ -272,7 +272,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
             (T) parametrizationList.getTemporalResolution() * VOREEN_TIME_TO_SI,// physDeltaT: time step in __s__
             (T) parameters.getCharacteristicLength() * VOREEN_LENGTH_TO_SI,     // charPhysLength: reference length of simulation geometry
             (T) parameters.getCharacteristicVelocity() * VOREEN_LENGTH_TO_SI,   // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
-            (T) parameters.getViscosity() * 1e-6,                               // physViscosity: physical kinematic viscosity in __m^2 / s__
+            (T) parameters.getViscosity() / parameters.getDensity(),            // physViscosity: physical kinematic viscosity in __m^2 / s__
             (T) parameters.getDensity()                                         // physDensity: physical density in __kg / m^3__
     );
     // Prints the converter log as console output

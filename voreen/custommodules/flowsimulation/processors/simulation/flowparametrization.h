@@ -64,6 +64,12 @@ protected:
 
 private:
 
+    enum Fluid {
+        FLUID_WATER,
+        FLUID_BLOOD,
+    };
+
+    void fluidChanged();
     void addParametrization();
     void removeParametrization();
     void clearParametrizations();
@@ -84,6 +90,7 @@ private:
     StringProperty parametrizationName_;
     FloatProperty characteristicLength_;
     FloatProperty characteristicVelocity_;
+    OptionProperty<Fluid> fluid_;
     FloatProperty viscosity_;
     FloatProperty density_;
     BoolProperty  bouzidi_;

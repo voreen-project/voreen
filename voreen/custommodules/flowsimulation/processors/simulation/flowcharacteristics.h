@@ -30,6 +30,10 @@
 
 #include "voreen/core/ports/volumeport.h"
 
+#ifdef VRN_MODULE_VESSELTOPOLOGY
+#include "custommodules/vesseltopology/ports/vesselgraphport.h"
+#endif
+
 namespace voreen {
 
 /**
@@ -44,6 +48,7 @@ public:
     virtual std::string getClassName() const { return "FlowCharacteristics"; }
     virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL; }
 
+    virtual bool isReady() const;
     virtual void process();
 
 protected:
@@ -54,6 +59,9 @@ protected:
 private:
 
     VolumeListPort inport_;
+#ifdef VRN_MODULE_VESSELTOPOLOGY
+    VesselGraphPort vesselGraphPort_;
+#endif
 
     FloatProperty simulationTime_;
     FloatProperty temporalResolution_;

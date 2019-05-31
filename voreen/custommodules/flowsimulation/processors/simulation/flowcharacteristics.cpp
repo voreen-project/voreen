@@ -34,9 +34,12 @@ namespace voreen {
 FlowCharacteristics::FlowCharacteristics()
     : Processor()
     , inport_(Port::INPORT, "parametrization", "Parametrization Input")
+#ifdef VRN_MODULE_VESSELTOPOLOGY
+    , vesselGraphPort_(Port::INPORT, "vesselgraph.inport", "Vessel Graph")
+#endif
     , simulationTime_("simulationTime", "Simulation time (s)", 1.0f, 0.1f, 100.0f, Processor::VALID)
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 200.0f, Processor::VALID)
-    , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 22.46f, 0.1f, 1000.0f, Processor::VALID)
+    , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 22.46f, 0.1f, 100.0f, Processor::VALID)
     , minVelocity_("minVelocity", "Min. Velocity (mm/s)", 0.0f, 0.0f, 1000.0f, Processor::VALID)
     , maxVelocity_("maxVelocity", "Max. Velocity (mm/s)", 0.0f, 0.0f, 1000.0f, Processor::VALID)
     , resetButton_("resetButton", "Reset") // Invalidation level -> resets values.
@@ -44,6 +47,9 @@ FlowCharacteristics::FlowCharacteristics()
     addPort(inport_);
     inport_.addCondition(new PortConditionVolumeListEnsemble());
     inport_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeType3xFloat()));
+#ifdef VRN_MODULE_VESSELTOPOLOGY
+    addPort(vesselGraphPort_);
+#endif
 
     addProperty(simulationTime_);
     addProperty(temporalResolution_);
@@ -51,6 +57,22 @@ FlowCharacteristics::FlowCharacteristics()
     addProperty(minVelocity_);
     addProperty(maxVelocity_);
     addProperty(resetButton_);
+}
+
+bool FlowCharacteristics::isReady() const {
+    if(!isInitialized()) {
+        setNotReadyErrorMessage("Not initialized");
+        return false;
+    }
+
+    // VesselGraphPort is optional.
+
+    if(!inport_.isReady()) {
+        setNotReadyErrorMessage("No input");
+        return false;
+    }
+
+    return true;
 }
 
 void FlowCharacteristics::process() {
@@ -71,6 +93,21 @@ void FlowCharacteristics::process() {
     }
 
     //simulationTime_.set(volumeList->size() * temporalResolution_.get());
+#ifdef VRN_MODULE_VESSELTOPOLOGY
+    if(const VesselGraph* vesselGraph = vesselGraphPort_.getData()) {
+
+        // Reset max radius.
+        maxLength = 0.0f;
+
+        for(VesselGraphNode& node : vesselGraph->getNodes()) {
+            if(node.getDegree() == 1) {
+                for(const VesselGraphEdge* edge : node.getEdgesAsPtrs()) {
+                    maxLength = std::max(maxLength, edge->getMaxRadiusAvg());
+                }
+            }
+        }
+    }
+#endif
     characteristicLength_.set(maxLength);
     minVelocity_.setMaxValue(maxVelocity * 1.2f); // Allow for 20% adjustments.
     minVelocity_.set(minVelocity);
