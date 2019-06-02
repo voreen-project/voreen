@@ -99,13 +99,14 @@ void FlowCharacteristics::process() {
         // Reset max radius.
         maxLength = 0.0f;
 
-        for(VesselGraphNode& node : vesselGraph->getNodes()) {
-            if(node.getDegree() == 1) {
-                for(const VesselGraphEdge* edge : node.getEdgesAsPtrs()) {
-                    maxLength = std::max(maxLength, edge->getMaxRadiusAvg());
-                }
+        for(VesselGraphEdge& edge : vesselGraph->getEdges()) {
+            if(edge.hasValidData()) {
+                maxLength = std::max(maxLength, edge.getMaxRadiusAvg());
             }
         }
+
+        // Convert from radius to diameter.
+        maxLength *= 2.0f;
     }
 #endif
     characteristicLength_.set(maxLength);

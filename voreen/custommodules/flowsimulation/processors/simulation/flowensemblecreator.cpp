@@ -45,7 +45,7 @@ FlowEnsembleCreator::FlowEnsembleCreator()
     , measuredDataPath_("measuredDataPath", "Measured Data Path (Optional)", "Path", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , measuredDataName_("measuredDataName", "Measured Data Name", "4d_pc_mri")
     , simulationTime_("simulationTime", "Simulation Time (Link with FlowCharacteristics)", 1.0f, 0.0f, 20.0f)
-    , temporalResolution_("temporalResolution", "Temporal Resolution (Link with FlowCharacteristics", 3.1f, 0.1f, 100.0f)
+    , temporalResolution_("temporalResolution", "Temporal Resolution (Link with FlowCharacteristics", 3.1f, 0.1f, 200.0f)
 {
     addPort(magnitudeInport_);
     magnitudeInport_.addCondition(new PortConditionVolumeListEnsemble());

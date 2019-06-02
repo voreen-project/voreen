@@ -123,6 +123,7 @@ T simulationTime = 0.0;
 T temporalResolution = 0.0;
 int spatialResolution = 1;
 int numTimeSteps = 1;
+int outputResolution = 1;
 std::vector<FlowIndicator> flowIndicators;
 std::vector<MeasuredData> measuredData;
 
@@ -308,9 +309,10 @@ void writeResult(STLreader<T>& stlReader,
     const Vector<T, 3>& min = stlReader.getMin();
     const Vector<T, 3>& max = stlReader.getMax();
 
-    const int resolution = converter.getResolution();
     const Vector<T, 3> len = (max - min);
     const T maxLen = std::max({len[0], len[1], len[2]});
+    const int gridResolution = static_cast<int>(std::round(maxLen / converter.getConversionFactorLength()));
+    const int resolution = std::min(outputResolution, gridResolution);
 
     Vector<T, 3> offset = min + (len - maxLen) * 0.5;
     Vector<T, 3> spacing(maxLen / (resolution-1));
@@ -558,17 +560,18 @@ int main(int argc, char* argv[]) {
 
     // Parse XML simulation config.
     XMLreader config("config.xml");
-    simulationTime = std::atof(config["simulationTime"].getAttribute("value").c_str());
-    temporalResolution = std::atof(config["temporalResolution"].getAttribute("value").c_str());
-    spatialResolution = std::atoi(config["spatialResolution"].getAttribute("value").c_str());
-    numTimeSteps = std::atoi(config["numTimeSteps"].getAttribute("value").c_str());
+    simulationTime          = std::atof(config["simulationTime"].getAttribute("value").c_str());
+    temporalResolution      = std::atof(config["temporalResolution"].getAttribute("value").c_str());
+    spatialResolution       = std::atoi(config["spatialResolution"].getAttribute("value").c_str());
+    numTimeSteps            = std::atoi(config["numTimeSteps"].getAttribute("value").c_str());
+    outputResolution        = std::atoi(config["outputResolution"].getAttribute("value").c_str());
 
     XMLreader parameters = config["flowParameters"];
-    characteristicLength = std::atof(parameters["characteristicLength"].getAttribute("value").c_str());
-    characteristicVelocity = std::atof(parameters["characteristicVelocity"].getAttribute("value").c_str());
-    viscosity = std::atof(parameters["viscosity"].getAttribute("value").c_str());
-    density = std::atof(parameters["density"].getAttribute("value").c_str());
-    bouzidiOn = parameters["bouzidi"].getAttribute("value") == "true";
+    characteristicLength    = std::atof(parameters["characteristicLength"].getAttribute("value").c_str());
+    characteristicVelocity  = std::atof(parameters["characteristicVelocity"].getAttribute("value").c_str());
+    viscosity               = std::atof(parameters["viscosity"].getAttribute("value").c_str());
+    density                 = std::atof(parameters["density"].getAttribute("value").c_str());
+    bouzidiOn               = parameters["bouzidi"].getAttribute("value") == "true";
 
     XMLreader indicators = config["flowIndicators"];
     for(auto iter : indicators) {
@@ -591,7 +594,7 @@ int main(int argc, char* argv[]) {
     const int N = spatialResolution;
     UnitConverter<T, DESCRIPTOR> converter(
             (T) characteristicLength * VOREEN_LENGTH_TO_SI / N,  // physDeltaX: spacing between two lattice cells in __m__
-            (T) temporalResolution * VOREEN_TIME_TO_SI,          // physDeltaT: time step in __s__
+            (T) temporalResolution * VOREEN_TIME_TO_SI,          // TODO: define proper semantic
             (T) characteristicLength * VOREEN_LENGTH_TO_SI,      // charPhysLength: reference length of simulation geometry
             (T) characteristicVelocity * VOREEN_LENGTH_TO_SI,    // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
             (T) viscosity * 1e-6,                                // physViscosity: physical kinematic viscosity in __m^2 / s__
@@ -612,7 +615,7 @@ int main(int argc, char* argv[]) {
 
     // Instantiation of a cuboidGeometry with weights
 #ifdef PARALLEL_MODE_MPI
-    const int noOfCuboids = std::min( 16*N,2*singleton::mpi().getSize() );
+    const int noOfCuboids = std::min( 16*spatialResolution,2*singleton::mpi().getSize() );
 #else
     const int noOfCuboids = 2;
 #endif

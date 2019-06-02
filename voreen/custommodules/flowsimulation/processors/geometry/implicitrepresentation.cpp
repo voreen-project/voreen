@@ -76,7 +76,7 @@ void ImplicitRepresentation::process() {
 
     VolumeRAM_UInt8* idVolume = new VolumeRAM_UInt8(tgt::svec3(dimensions_.get()));
     idVolume->clear(); // Set every voxel to outside (0)
-    const uint8_t INSIDE = 1;
+    const float INSIDE = 1.0f;
 
     std::vector<Octree<T>*> leafs;
     stlReader.getTree()->getLeafs(leafs);
@@ -95,7 +95,7 @@ void ImplicitRepresentation::process() {
             tgt::svec3 urb = tgt::min(max / spacing, tgt::Vector3<T>(idVolume->getDimensions()));
 
             VRN_FOR_EACH_VOXEL(i, llf, urb) {
-                idVolume->voxel(i) = INSIDE;
+                idVolume->setVoxelNormalized(INSIDE, i);
             }
         }
     }

@@ -68,6 +68,7 @@ class VRN_CORE_API FlowParameters : public Serializable {
 public:
 
     /** Constructor */
+    FlowParameters(); // For deserialization only.
     explicit FlowParameters(const std::string& name);
 
     /**
@@ -75,18 +76,35 @@ public:
      */
     const std::string& getName() const;
 
+    /**
+     * Returns the max expected length in mm within the simulation geometry.
+     * E.g., the largest diameter of all contained vessels.
+     */
     float getCharacteristicLength() const;
     void setCharacteristicLength(float characteristicLength);
 
+    /**
+     * Returns the highest expected velocity in mm/s.
+     */
     float getCharacteristicVelocity() const;
     void setCharacteristicVelocity(float characteristicVelocity);
 
+    /**
+     * Returns the kinematic viscosity in 10^-3 m^2/s.
+     * Note: in order to achieve the correct physical value, multiply by 0.001
+     */
     float getViscosity() const;
     void setViscosity(float viscosity);
 
+    /**
+     * Returns the mass density in kg/m^3
+     */
     float getDensity() const;
     void setDensity(float density);
 
+    /**
+     * Returns whether bouzidi boundaty condition should be used for unaligned simulation geometries.
+     */
     bool getBouzidi() const;
     void setBouzidi(bool bouzidi);
 
@@ -101,7 +119,7 @@ private:
     // All other relevant parameters.
     float characteristicLength_;    ///< characteristic length in mm
     float characteristicVelocity_;  ///< characteristic velocity in mm/s
-    float viscosity_;               ///< viscosity in e-6 m^2/s
+    float viscosity_;               ///< viscosity in 10^-3 m^2/s
     float density_;                 ///< density in kg/m^3
     bool bouzidi_;                  ///< bouzidi boundary condition
 };
@@ -122,19 +140,43 @@ public:
 
     const std::string& getName() const;
 
+    /**
+     * Returns the time in s which should be simulated.
+     */
     float getSimulationTime() const;
     void setSimulationTime(float simulationTime);
 
+    /**
+     * Returns the temporal granularity, i.e., the duration of each time step in ms.
+     */
     float getTemporalResolution() const;
     void setTemporalResolution(float temporalResolution);
 
+    /**
+     * Returns the spatial resolution in voxels, the largest vessel diameter should be divided into.
+     * A high resolution is important for simulation accuracy.
+     * Note: must NOT exceed output resolution.
+     */
     int getSpatialResolution() const;
     void setSpatialResolution(int spatialResolution);
 
+    /**
+     * Returns the number of time steps (intermediate results), the simulation should store.
+     * Note: The initial time step will be stored additionally and in any case.
+     */
     int getNumTimeSteps() const;
     void setNumTimeSteps(int numTimeSteps);
 
-    /** Overrides flow function for each inflow indicator. Therefore, not getter exists */
+    /**
+     * Returns the output resolution of the intermediate time steps for each volume and their dimension.
+     * This enforces basically a resampling of the simulation domain.
+     * Note: this currently acts as the max(!) resolution. If all the features can be captured by a lower resolution
+     *       the latter will be taken. TODO: rename, if tested properly!
+     */
+    int getOutputResolution() const;
+    void setOutputResolution(int outputResolution);
+
+    /** Overrides flow function for each inflow indicator. Therefore, no getter exists */
     void setFlowFunction(FlowFunction flowFunction);
 
     void addFlowIndicator(const FlowIndicator& flowIndicator);
@@ -164,10 +206,13 @@ private:
     std::string name_;
 
     // Configuration.
-    float simulationTime_;     ///< simulation time in seconds
-    float temporalResolution_; ///< temporal resolution in seconds
-    int spatialResolution_;    ///< spatial resolution in voxels (per dimension)
-    int numTimeSteps_;         ///< number of time steps
+    float simulationTime_;         ///< simulation time in seconds
+    float temporalResolution_;     ///< temporal resolution in seconds
+    int spatialResolution_;        ///< spatial resolution in voxels (per dimension and reference vessel)
+
+    // Output parameters.
+    int numTimeSteps_;             ///< number of time steps of output
+    int outputResolution_;         ///< spatial resolution of output in voxels (per dimension)
 
     // Flow indication (in-/out flow).
     std::vector<FlowIndicator> flowIndicators_;

@@ -268,12 +268,12 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
     const int N = parametrizationList.getSpatialResolution();
     UnitConverter<T, DESCRIPTOR> converter(
-            (T) parameters.getCharacteristicLength() * VOREEN_LENGTH_TO_SI / N, // physDeltaX: spacing between two lattice cells in __m__
-            (T) parametrizationList.getTemporalResolution() * VOREEN_TIME_TO_SI,// physDeltaT: time step in __s__
-            (T) parameters.getCharacteristicLength() * VOREEN_LENGTH_TO_SI,     // charPhysLength: reference length of simulation geometry
-            (T) parameters.getCharacteristicVelocity() * VOREEN_LENGTH_TO_SI,   // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
-            (T) parameters.getViscosity() / parameters.getDensity(),            // physViscosity: physical kinematic viscosity in __m^2 / s__
-            (T) parameters.getDensity()                                         // physDensity: physical density in __kg / m^3__
+            (T) parameters.getCharacteristicLength() * VOREEN_LENGTH_TO_SI / N,      // resolution for charPhysLength
+            (T) parametrizationList.getTemporalResolution() * VOREEN_TIME_TO_SI,     // TODO: define proper semantic
+            (T) parameters.getCharacteristicLength() * VOREEN_LENGTH_TO_SI,          // charPhysLength: reference length of simulation geometry
+            (T) parameters.getCharacteristicVelocity() * VOREEN_LENGTH_TO_SI,        // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
+            (T) parameters.getViscosity() * 0.001 / parameters.getDensity(),         // physViscosity: physical kinematic viscosity in __m^2 / s__
+            (T) parameters.getDensity()                                              // physDensity: physical density in __kg / m^3__
     );
     // Prints the converter log as console output
     converter.print();
@@ -605,9 +605,10 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
     const Vector<T, 3>& min = stlReader.getMin();
     const Vector<T, 3>& max = stlReader.getMax();
 
-    const int resolution = converter.getResolution();
     const Vector<T, 3> len = (max - min);
     const T maxLen = std::max({len[0], len[1], len[2]});
+    const int gridResolution = static_cast<int>(std::round(maxLen / converter.getConversionFactorLength()));
+    const int resolution = std::min(parametrizationList.getOutputResolution(), gridResolution);
 
     Vector<T, 3> offset = min + (len - maxLen) * 0.5;
     Vector<T, 3> spacing(maxLen / (resolution-1));

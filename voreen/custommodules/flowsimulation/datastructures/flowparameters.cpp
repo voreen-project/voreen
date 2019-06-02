@@ -61,6 +61,10 @@ void FlowIndicator::deserialize(Deserializer& s) {
     s.deserialize("radius", radius_);
 }
 
+FlowParameters::FlowParameters()
+    : FlowParameters("")
+{
+}
 
 FlowParameters::FlowParameters(const std::string& name)
     : name_(name)
@@ -144,6 +148,7 @@ FlowParametrizationList::FlowParametrizationList(const std::string& name)
     , temporalResolution_(0.0f)
     , spatialResolution_(0)
     , numTimeSteps_(0)
+    , outputResolution_(0)
 {
 }
 
@@ -153,6 +158,7 @@ FlowParametrizationList::FlowParametrizationList(const FlowParametrizationList& 
     , temporalResolution_(origin.temporalResolution_)
     , spatialResolution_(origin.spatialResolution_)
     , numTimeSteps_(origin.numTimeSteps_)
+    , outputResolution_(origin.outputResolution_)
     , flowIndicators_(origin.flowIndicators_)
     , flowParametrizations_(origin.flowParametrizations_)
 {
@@ -198,6 +204,15 @@ void FlowParametrizationList::setNumTimeSteps(int numTimeSteps) {
     numTimeSteps_ = numTimeSteps;
 }
 
+int FlowParametrizationList::getOutputResolution() const {
+    return outputResolution_;
+}
+
+void FlowParametrizationList::setOutputResolution(int outputResolution) {
+    notifyPendingDataInvalidation();
+    outputResolution_ = outputResolution;
+}
+
 void FlowParametrizationList::setFlowFunction(FlowFunction flowFunction) {
     notifyPendingDataInvalidation();
     for(FlowIndicator& flowIndicator : flowIndicators_) {
@@ -241,6 +256,9 @@ std::string FlowParametrizationList::toCSVString(size_t param) const {
     output << VERSION;
     output << ", " << simulationTime_;
     output << ", " << temporalResolution_;
+    output << ", " << spatialResolution_;
+    output << ", " << numTimeSteps_;
+    output << ", " << outputResolution_;
 
     if(param == ALL_PARAMETRIZATIONS) {
         output << ", " << flowParametrizations_.size();
@@ -298,20 +316,20 @@ void FlowParametrizationList::deserialize(Deserializer& s) {
     s.deserialize("name", name_);
     s.deserialize("simulationTime", simulationTime_);
     s.deserialize("temporalResolution", temporalResolution_);
-    s.deserialize("numTimeSteps", numTimeSteps_);
     s.deserialize("spatialResolution", spatialResolution_);
+    s.deserialize("numTimeSteps", numTimeSteps_);
+    s.deserialize("outputResolution", outputResolution_);
     s.deserialize("flowIndicators", flowIndicators_);
-    s.deserialize("flowParametrizations", flowParametrizations_,
-                  XmlSerializationConstants::ITEMNODE,
-                  std::function<FlowParameters()>([]{ return FlowParameters(""); }));
+    s.deserialize("flowParametrizations", flowParametrizations_);
 }
 
 void FlowParametrizationList::serializeInternal(Serializer& s, size_t param) const {
     s.serialize("name", name_);
     s.serialize("simulationTime", simulationTime_);
     s.serialize("temporalResolution", temporalResolution_);
-    s.serialize("numTimeSteps", numTimeSteps_);
     s.serialize("spatialResolution", spatialResolution_);
+    s.serialize("numTimeSteps", numTimeSteps_);
+    s.serialize("outputResolution", outputResolution_);
     s.serialize("flowIndicators", flowIndicators_);
     if(param == ALL_PARAMETRIZATIONS) {
         s.serialize("flowParametrizations", flowParametrizations_);

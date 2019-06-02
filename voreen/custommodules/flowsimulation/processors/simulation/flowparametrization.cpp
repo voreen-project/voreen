@@ -35,14 +35,15 @@ FlowParametrization::FlowParametrization()
     , outport_(Port::OUTPORT, "outport", "Parameter Inport")
     , parametrizationName_("parametrizationName", "Parametrization Name", "test_parametrization")
     , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 20.0f)
-    , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 200.0f)
-    , spatialResolution_("spatialResolution", "Spatial Resolution", 128, 32, 1024)
+    , temporalResolution_("temporalResolution", "Temporal Resolution", 0.01, 0.01, 0.01) //TODO: define proper semantic
+    , spatialResolution_("spatialResolution", "Spatial Resolution", 64, 32, 1024)
     , numTimeSteps_("numTimeSteps", "Num. Output Time Steps", 50, 1, 1000)
+    , outputResolution_("outputResolution", "Spatial Resolution of Output", 128, 32, 1024)
     , flowFunction_("flowFunction", "Flow Function")
     , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 10.0f, 0.1f, 1000.0f)
     , characteristicVelocity_("characteristicVelocity", "Characteristic Velocity (mm/s)", 10.0f, 0.0f, 1000.0f)
     , fluid_("fluid", "Fluid")
-    , viscosity_("viscosity", "Viscosity (e-3 m^2/s)", 3.5, 3, 4)
+    , viscosity_("viscosity", "Kinematic Viscosity (x10^-3 m^2/s)", 3.5, 3, 4)
     , density_("density", "Density (kg/m^3)", 1000.0f, 1000.0f, 1100.0f)
     , bouzidi_("bouzidi", "Bouzidi", true)
     , addParametrization_("addParametrization", "Add Parametrization")
@@ -61,11 +62,14 @@ FlowParametrization::FlowParametrization()
     addProperty(simulationTime_);
         simulationTime_.setGroupID("ensemble");
     addProperty(temporalResolution_);
+        temporalResolution_.adaptDecimalsToRange(3);
         temporalResolution_.setGroupID("ensemble");
     addProperty(spatialResolution_);
         spatialResolution_.setGroupID("ensemble");
     addProperty(numTimeSteps_);
         numTimeSteps_.setGroupID("ensemble");
+    addProperty(outputResolution_);
+        outputResolution_.setGroupID("ensemble");
     addProperty(flowFunction_);
         flowFunction_.addOption("none", "NONE", FlowFunction::FF_NONE); // get's selected automatically
         flowFunction_.addOption("constant", "CONSTANT", FlowFunction ::FF_CONSTANT);
@@ -84,6 +88,7 @@ FlowParametrization::FlowParametrization()
         fluid_.addOption("water", "Water", FLUID_WATER);
         fluid_.addOption("blood", "Blood", FLUID_BLOOD);
         fluid_.setGroupID("parameters");
+        fluidChanged(); // Init proper values.
     addProperty(viscosity_);
         viscosity_.setGroupID("parameters");
     addProperty(density_);
@@ -113,25 +118,25 @@ FlowParametrization::FlowParametrization()
 
 void FlowParametrization::fluidChanged() {
     switch(fluid_.getValue()) {
-        case FLUID_WATER:
-            viscosity_.setMinValue(0.79722f);
-            viscosity_.setMaxValue(1.35f);
-            viscosity_.set(1.0016f); // at room temperature
-            density_.setMinValue(988.1f);
-            density_.setMaxValue(1000.0f);
-            density_.set(998.21f); // at room temperature
-            break;
-        case FLUID_BLOOD:
-            viscosity_.setMinValue(3.0f);
-            viscosity_.setMaxValue(4.0f);
-            viscosity_.set(4.0f); // literature value
-            density_.setMinValue(1043.0f);
-            density_.setMaxValue(1057.0f);
-            density_.set(1055.0f); // literature value
-            break;
-        default:
-            tgtAssert(false, "Unhandled fluid");
-            break;
+    case FLUID_WATER:
+        viscosity_.setMinValue(0.79722f);
+        viscosity_.setMaxValue(1.35f);
+        viscosity_.set(1.0016f); // at room temperature
+        density_.setMinValue(988.1f);
+        density_.setMaxValue(1000.0f);
+        density_.set(998.21f); // at room temperature
+        break;
+    case FLUID_BLOOD:
+        viscosity_.setMinValue(3.0f);
+        viscosity_.setMaxValue(4.0f);
+        viscosity_.set(4.0f); // literature value
+        density_.setMinValue(1043.0f);
+        density_.setMaxValue(1057.0f);
+        density_.set(1055.0f); // literature value
+        break;
+    default:
+        tgtAssert(false, "Unhandled fluid");
+        break;
     }
 }
 
@@ -235,9 +240,10 @@ void FlowParametrization::process() {
     else {
         flowParametrizationList = new FlowParametrizationList(ensembleName_.get());
         flowParametrizationList->setSimulationTime(simulationTime_.get());
-        flowParametrizationList->setTemporalResolution(temporalResolution_.get() / 1000.0f); // Convert ms to s
+        flowParametrizationList->setTemporalResolution(temporalResolution_.get());
         flowParametrizationList->setSpatialResolution(spatialResolution_.get());
         flowParametrizationList->setNumTimeSteps(numTimeSteps_.get());
+        flowParametrizationList->setOutputResolution(outputResolution_.get());
         flowParametrizationList->setFlowFunction(flowFunction_.getValue());
     }
 
@@ -255,9 +261,7 @@ void FlowParametrization::serialize(Serializer& s) const {
 
 void FlowParametrization::deserialize(Deserializer& s) {
     Processor::deserialize(s);
-    s.deserialize("flowParameters", flowParameters_,
-                  XmlSerializationConstants::ITEMNODE,
-                  std::function<FlowParameters()>([]{ return FlowParameters(""); }));
+    s.deserialize("flowParameters", flowParameters_);
 }
 
 }   // namespace

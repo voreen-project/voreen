@@ -62,7 +62,7 @@ bool exportGeometryToSTL(const Geometry* geometry, const std::string& path) {
             std::copy(geom->getVertices().begin(), geom->getVertices().end(), vertices.begin());
             indices = geom->getIndices();
         } else {
-            std::cout << "Unsupported geometry" << std::endl;
+            LERRORC("voreen.stlexport", "Unsupported geometry");
             return false;
         }
 

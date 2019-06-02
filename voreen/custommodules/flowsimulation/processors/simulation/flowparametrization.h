@@ -85,6 +85,7 @@ private:
     FloatProperty temporalResolution_;
     IntProperty spatialResolution_;
     IntProperty numTimeSteps_;
+    IntProperty outputResolution_;
     OptionProperty<FlowFunction> flowFunction_;
 
     StringProperty parametrizationName_;

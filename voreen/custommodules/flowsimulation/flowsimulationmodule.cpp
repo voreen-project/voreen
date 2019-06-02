@@ -34,7 +34,7 @@
 #include "processors/render/unalignedsliceviewer.h"
 #include "processors/simulation/flowcharacteristics.h"
 #include "processors/simulation/flowensemblecreator.h"
-#include "processors/simulation/flowindicatorselection.h"
+//#include "processors/simulation/flowindicatorselection.h"
 #include "processors/simulation/flowindicatorrenderer.h"
 #include "processors/simulation/flowparametrization.h"
 #include "processors/simulation/flowsimulationcluster.h"
@@ -64,7 +64,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerSerializableType(new UnalignedSliceViewer());
     registerSerializableType(new FlowCharacteristics());
     registerSerializableType(new FlowEnsembleCreator());
-    registerSerializableType(new FlowIndicatorSelection());
+    //registerSerializableType(new FlowIndicatorSelection());
     registerSerializableType(new FlowIndicatorRenderer());
     registerSerializableType(new FlowParametrization());
     registerSerializableType(new FlowSimulationCluster());

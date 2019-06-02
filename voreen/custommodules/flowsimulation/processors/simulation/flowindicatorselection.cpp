@@ -68,7 +68,7 @@ void FlowIndicatorSelection::process() {
     if(rebuildOutput_) {
         FlowParametrizationList* parametrizationList = new FlowParametrizationList(ensembleName_.get());
         parametrizationList->setSimulationTime(simulationTime_.get());
-        parametrizationList->setTemporalResolution(temporalResolution_.get() / 1000.0f); // Convert ms to s
+        parametrizationList->setTemporalResolution(temporalResolution_.get());
         parametrizationList->setNumTimeSteps(numTimeSteps_.get());
         for(const FlowIndicator& flowIndicator : flowIndicators_) {
             parametrizationList->addFlowIndicator(flowIndicator);
