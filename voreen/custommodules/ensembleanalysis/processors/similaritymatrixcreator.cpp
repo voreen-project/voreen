@@ -144,14 +144,21 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
     std::function<float()> rnd(
             std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
 
+    size_t maxTries = 500; // TODO: choose a user defined approach
     std::vector<tgt::vec3> seedPoints;
-    for (int k = 0; k < numSeedPoints_.get(); k++) {
-        tgt::vec3 seedPoint(rnd(), rnd(), rnd());
-        seedPoint = tgt::vec3(roi.getLLF()) + seedPoint * tgt::vec3(roi.diagonal());
+    seedPoints.reserve(numSeedPoints_.get());
+    for (int k = 0; k<numSeedPoints_.get(); k++) {
+        tgt::vec3 seedPoint;
 
-        // TODO: very rough and dirty restriction, implement something more intelligent.
-        if (!seedMask || (seedMaskBounds.containsPoint(seedPoint) &&
-                          seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint) != 0.0f)) {
+        size_t tries = 0;
+        do {
+            seedPoint = tgt::vec3(rnd(), rnd(), rnd());
+            seedPoint = tgt::vec3(roi.getLLF()) + seedPoint * tgt::vec3(roi.diagonal());
+            tries++;
+        } while (tries < maxTries && seedMask && (!seedMaskBounds.containsPoint(seedPoint) ||
+                                                  seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint) == 0.0f));
+
+        if(tries < maxTries) {
             seedPoints.push_back(seedPoint);
         }
     }
@@ -255,7 +262,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                 else {
 
                     Statistics magnitudeStatistics(false);
-                    Statistics velocityStatistics(false);
+                    Statistics angleStatistics(false);
 
                     for (size_t k = 0; k < seedPoints.size(); k++) {
 
@@ -277,7 +284,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
                         if(input.multiChannelSimilarityMeasure & MEASURE_ANGLEDIFFERENCE) {
                             if (direction_i == tgt::vec4::zero && direction_j == tgt::vec4::zero) {
-                                velocityStatistics.addSample(0.0f);
+                                angleStatistics.addSample(0.0f);
                             }
                             else if (direction_i != tgt::vec4::zero && direction_j != tgt::vec4::zero) {
                                 tgt::vec4 normDirection_i = tgt::normalize(direction_i);
@@ -285,10 +292,46 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
                                 float dot = tgt::dot(normDirection_i, normDirection_j);
                                 float angle = std::acos(tgt::clamp(dot, -1.0f, 1.0f)) / tgt::PIf;
-                                velocityStatistics.addSample(angle);
+                                angleStatistics.addSample(angle);
                             }
                             else {
-                                velocityStatistics.addSample(1.0f);
+                                angleStatistics.addSample(1.0f);
+                            }
+                        }
+
+                        if(input.multiChannelSimilarityMeasure & MEASURE_CROSSPRODUCT) {
+                            if (direction_i == tgt::vec4::zero && direction_j == tgt::vec4::zero) {
+                                angleStatistics.addSample(0.0f);
+                            }
+                            else if (direction_i != tgt::vec4::zero && direction_j != tgt::vec4::zero) {
+                                float area = tgt::length(tgt::cross(direction_i.xyz(), direction_j.xyz()));
+                                // In case area is 0, we have to account for colinear vectors.
+                                if(area < std::numeric_limits<float>::epsilon()) {
+                                    float length_i = tgt::length(direction_i);
+                                    float length_j = tgt::length(direction_j);
+
+                                    tgt::vec4 normDirection_i = direction_i / length_i;
+                                    tgt::vec4 normDirection_j = direction_j / length_j;
+
+                                    // Determine direction of collinearity.
+                                    float dot = tgt::dot(normDirection_i, normDirection_j);
+                                    float angle = std::acos(tgt::clamp(dot, -1.0f, 1.0f));
+                                    if(angle > tgt::PIf*0.5f) {
+                                        float magnitudeDifference = tgt::abs(-length_i - length_j);
+                                        magnitudeStatistics.addSample(magnitudeDifference);
+                                    }
+                                    else {
+                                        float magnitudeDifference = tgt::abs(length_i - length_j);
+                                        magnitudeStatistics.addSample(magnitudeDifference);
+                                    }
+                                }
+                                else {
+                                    angleStatistics.addSample(area);
+                                }
+                            }
+                            else {
+                                float maxDifference = valueRange.y * valueRange.y;
+                                angleStatistics.addSample(maxDifference);
                             }
                         }
                     }
@@ -297,12 +340,15 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                         DistanceMatrix(i, j) = magnitudeStatistics.getMean();
                     }
                     else if(input.multiChannelSimilarityMeasure == MEASURE_ANGLEDIFFERENCE) {
-                        DistanceMatrix(i, j) = velocityStatistics.getMean();
+                        DistanceMatrix(i, j) = angleStatistics.getMean();
                     }
                     else if(input.multiChannelSimilarityMeasure == MEASURE_MAGNITUDE_AND_ANGLEDIFFERENCE) {
                         DistanceMatrix(i, j) =
                                 (1.0f - input.weight) * magnitudeStatistics.getMean() +
-                                (       input.weight) * velocityStatistics.getMean();
+                                (       input.weight) * angleStatistics.getMean();
+                    }
+                    else if(input.multiChannelSimilarityMeasure == MEASURE_CROSSPRODUCT) {
+                        DistanceMatrix(i, j) = angleStatistics.getMean();
                     }
                     else {
                         tgtAssert(false, "unhandled multi-channel measure");

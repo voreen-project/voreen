@@ -104,14 +104,21 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
 
     std::function<float()> rnd(std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
 
+    size_t maxTries = 500; // TODO: choose a user defined approach
     std::vector<tgt::vec3> seedPoints;
+    seedPoints.reserve(numSeedPoints_.get());
     for (int k = 0; k<numSeedPoints_.get(); k++) {
-        tgt::vec3 seedPoint(rnd(), rnd(), rnd());
-        seedPoint = tgt::vec3(roi.getLLF()) + seedPoint * tgt::vec3(roi.diagonal());
+        tgt::vec3 seedPoint;
 
-        // TODO: very rough and dirty restriction, implement something more intelligent.
-        if (!seedMask || (seedMaskBounds.containsPoint(seedPoint) &&
-          seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint) != 0.0f)) {
+        size_t tries = 0;
+        do {
+            seedPoint = tgt::vec3(rnd(), rnd(), rnd());
+            seedPoint = tgt::vec3(roi.getLLF()) + seedPoint * tgt::vec3(roi.diagonal());
+            tries++;
+        } while (tries < maxTries && seedMask && (!seedMaskBounds.containsPoint(seedPoint) ||
+            seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint) == 0.0f));
+
+        if(tries < maxTries) {
             seedPoints.push_back(seedPoint);
         }
     }

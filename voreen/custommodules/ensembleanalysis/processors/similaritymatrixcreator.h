@@ -46,6 +46,7 @@ enum MultiChannelSimilarityMeasure {
     MEASURE_MAGNITUDE                       = 1 << 0,
     MEASURE_ANGLEDIFFERENCE                 = 1 << 1,
     MEASURE_MAGNITUDE_AND_ANGLEDIFFERENCE   = MEASURE_MAGNITUDE | MEASURE_ANGLEDIFFERENCE,
+    MEASURE_CROSSPRODUCT                    = 1 << 2
 };
 
 struct SimilarityMatrixCreatorInput {
