@@ -84,7 +84,7 @@ SimilarityPlot::SimilarityPlot()
     , numIterations_("numIterations", "Number of Iterations", 1000, 1, 10000)
     , numEigenvalues_("numEigenvalues", "Number of Eigenvalues", MAX_NUM_DIMENSIONS, MAX_NUM_DIMENSIONS, MAX_NUM_DIMENSIONS)
     , numDimensions_("numDimensions", "Number of Dimensions", MAX_NUM_DIMENSIONS, 1, MAX_NUM_DIMENSIONS)
-    , principalComponent_("principalComponent", "Principal Component", 1, 1, MAX_NUM_DIMENSIONS)
+    , principleComponent_("principalComponent", "Principle Component", 1, 1, MAX_NUM_DIMENSIONS)
     , scaleToMagnitude_("scaleToMagnitude", "Scale to Magnitude of Principle Component")
     , sphereRadius_("sphereRadius", "Sphere Radius", 0.01, 0.0f, 0.1f)
     , toggleAxes_("toggleAxes", "Render Axes", true, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
@@ -92,8 +92,10 @@ SimilarityPlot::SimilarityPlot()
     , colorCoding_("colorCoding", "Color Coding")
     , renderedChannel_("renderedChannel", "Channel")
     , renderedRuns_("renderedRuns", "Rendered Runs")
-    , selectedTimeSteps_("selectedTimeSteps", "Selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
-    , selectedRuns_("selectedRuns", "Selected Runs")
+    , selectedRun_("selectedRuns", "Selected Runs")
+    , selectedTimeStep_("selectedTimeSteps", "Selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
+    , referenceRun_("referenceRun", "Reference Run")
+    , referenceTimeStep_("referenceTimeStep", "Reference Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
     , saveFileDialog_("saveFileDialog", "Export MDS Plot", "Select file...", VoreenApplication::app()->getUserDataPath(),
                       "MDS Plot data (*.mds)", FileDialogProperty::SAVE_FILE, Processor::INVALID_PATH, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , loadFileDialog_("loadFile", "Import MDS Plot", "Select file...", VoreenApplication::app()->getUserDataPath(),
@@ -140,7 +142,7 @@ SimilarityPlot::SimilarityPlot()
             numEigenvalues_.setMinValue(numDimensions_.get());
 
             // Eigenvalue index only useful when rendering 1D.
-            principalComponent_.setVisibleFlag(numDimensions_.get() == 1);
+            principleComponent_.setVisibleFlag(numDimensions_.get() == 1);
 
             // Scaling only useful when rendering 3D
             scaleToMagnitude_.setVisibleFlag(numDimensions_.get() == 3);
@@ -149,9 +151,9 @@ SimilarityPlot::SimilarityPlot()
             if (numDimensions_.get() == 3)
                 camera_.adaptInteractionToScene(tgt::Bounds(-tgt::vec3::one, tgt::vec3::one), 0.1f, true);
         });
-    addProperty(principalComponent_);
-        principalComponent_.setVisibleFlag(numDimensions_.get() == 1);
-        principalComponent_.setGroupID("rendering");
+    addProperty(principleComponent_);
+        principleComponent_.setVisibleFlag(numDimensions_.get() == 1);
+        principleComponent_.setGroupID("rendering");
     addProperty(scaleToMagnitude_);
         scaleToMagnitude_.setVisibleFlag(numDimensions_.get() == 3);
         scaleToMagnitude_.setGroupID("rendering");
@@ -176,12 +178,17 @@ SimilarityPlot::SimilarityPlot()
         renderedRuns_.setGroupID("rendering");
     setPropertyGroupGuiName("rendering", "Rendering");
 
-    // Selection
-    addProperty(selectedTimeSteps_);
-        selectedTimeSteps_.setGroupID("selection");
-    addProperty(selectedRuns_);
-        selectedRuns_.setGroupID("selection");
+    // Selection (Linking)
+    addProperty(selectedRun_);
+        selectedRun_.setGroupID("selection");
+    addProperty(selectedTimeStep_);
+        selectedTimeStep_.setGroupID("selection");
+    addProperty(referenceRun_);
+        referenceRun_.setGroupID("selection");
+    addProperty(referenceTimeStep_);
+        referenceTimeStep_.setGroupID("selection");
     setPropertyGroupGuiName("selection", "Selection");
+    setPropertyGroupVisible("selection", false);
 
     // IO
     addProperty(saveFileDialog_);
@@ -304,9 +311,9 @@ void SimilarityPlot::renderAxes() {
             switch (numDimensions_.get()) {
                 case 1:
                     plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "t [s]");
-                    if (principalComponent_.get() == 1)
+                    if (principleComponent_.get() == 1)
                         plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "1st PC");
-                    else if (principalComponent_.get() == 2)
+                    else if (principleComponent_.get() == 2)
                         plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "2nd PC");
                     else
                         plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "3rd PC");
@@ -398,7 +405,7 @@ void SimilarityPlot::renderingPass(bool picking) {
 
             const EnsembleDataset::Run& run = dataset->getRuns()[runIdx];
             size_t numTimeSteps = run.timeSteps_.size();
-            int eigenValueIdx = principalComponent_.get() - 1;
+            int eigenValueIdx = principleComponent_.get() - 1;
             const auto& vertices = mdsData.nVectors_.at(runIdx);
 
             IMode.begin(tgt::ImmediateMode::LINE_STRIP);
@@ -420,7 +427,7 @@ void SimilarityPlot::renderingPass(bool picking) {
             IMode.end();
 
             if(!picking) {
-                size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
+                size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeStep_.get().x);
                 float x = mapRange(run.timeSteps_[selectedTimeStep].time_, dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
                 tgt::vec3 position(x, vertices[selectedTimeStep][eigenValueIdx], 0.0f);
                 tgt::vec3 color = tgt::vec3::one; // in 1D-case the selection is always white.!
@@ -446,7 +453,7 @@ void SimilarityPlot::renderingPass(bool picking) {
             IMode.end();
 
             if(!picking || numTimeSteps == 1) {
-                size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
+                size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeStep_.get().x);
                 tgt::vec3 position(vertices[selectedTimeStep][0], vertices[selectedTimeStep][1], 0.0f);
                 tgt::vec3 color = (numTimeSteps == 1) ? getColor(runIdx, selectedTimeStep, picking) : tgt::vec3::one;
                 drawTimeStepSelection(runIdx, selectedTimeStep, position, color);
@@ -484,7 +491,7 @@ void SimilarityPlot::renderingPass(bool picking) {
             IMode.end();
 
             if(!picking || numTimeSteps == 1) {
-                size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeSteps_.get().x);
+                size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeStep_.get().x);
                 tgt::vec3 position = tgt::vec3::fromPointer(&vertices[selectedTimeStep][0])*scale;
                 tgt::vec3 color = (numTimeSteps == 1) ? getColor(runIdx, selectedTimeStep, picking) : tgt::vec3::one;
                 drawTimeStepSelection(runIdx, selectedTimeStep, position, color);
@@ -638,22 +645,33 @@ void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
             } else {
                 subSelection_.insert(r);
             }
-        } else if(e->modifiers() == tgt::MouseEvent::MODIFIER_NONE){
-            // This selection mode modifies selectedRuns_ and therefore linked processors.
-            // This is the actual (!) selection.
+        }
+        else {
+
+            // Define some modifier to enable reference dataset selection.
+            // This is currently done hardcoded but should at least show up in documentation.
+            const int referenceModifier = tgt::MouseEvent::Modifier::SHIFT | tgt::MouseEvent::Modifier::CTRL;
 
             // Reset subselection.
             //subSelection_.clear();
 
             std::vector<int> runIndices;
             runIndices.push_back(r);
-            selectedRuns_.setSelectedRowIndices(runIndices);
+            if(e->modifiers() == referenceModifier) {
+                referenceRun_.setSelectedRowIndices(runIndices);
+            } else {
+                selectedRun_.setSelectedRowIndices(runIndices);
+            }
             subSelection_.insert(r);
 
             const EnsembleDataset::TimeStep& timeStep = runs[r].timeSteps_[t];
             float lower = std::floor(timeStep.time_ * 100.0f) / 100.0f;
             float upper = std::ceil((timeStep.time_ + timeStep.duration_) * 100.0f) / 100.0f;
-            selectedTimeSteps_.set(tgt::vec2(lower, upper));
+            if(e->modifiers() == referenceModifier) {
+                referenceTimeStep_.set(tgt::vec2(lower, upper));
+            } else if(e->modifiers() == tgt::MouseEvent::MODIFIER_NONE) {
+                selectedTimeStep_.set(tgt::vec2(lower, upper));
+            }
         }
     }
 
@@ -712,7 +730,8 @@ void SimilarityPlot::adjustToEnsemble() {
     subSelection_.clear();
     renderedChannel_.setOptions(std::deque<Option<std::string>>());
     renderedRuns_.reset();
-    selectedRuns_.reset();
+    selectedRun_.reset();
+    referenceRun_.reset();
     calculateButton_.setReadOnlyFlag(true);
 
     if (!ensembleInport_.isReady())
@@ -738,15 +757,21 @@ void SimilarityPlot::adjustToEnsemble() {
     std::vector<int> runIndices;
     for (const EnsembleDataset::Run& run : dataset->getRuns()) {
         renderedRuns_.addRow(run.name_, dataset->getColor(runIndices.size()));
-        selectedRuns_.addRow(run.name_, dataset->getColor(runIndices.size()));
+        selectedRun_.addRow(run.name_, dataset->getColor(runIndices.size()));
+        referenceRun_.addRow(run.name_, dataset->getColor(runIndices.size()));
         runIndices.push_back(static_cast<int>(runIndices.size()));
     }
     renderedRuns_.setSelectedRowIndices(runIndices);
-    selectedRuns_.setSelectedRowIndices(runIndices);
+    selectedRun_.setSelectedRowIndices(runIndices);
+    referenceRun_.setSelectedRowIndices(runIndices);
 
-    selectedTimeSteps_.setMinValue(dataset->getStartTime());
-    selectedTimeSteps_.setMaxValue(dataset->getEndTime());
-    selectedTimeSteps_.set(tgt::vec2(dataset->getStartTime(), dataset->getEndTime()));
+    selectedTimeStep_.setMinValue(dataset->getStartTime());
+    selectedTimeStep_.setMaxValue(dataset->getEndTime());
+    selectedTimeStep_.set(tgt::vec2(dataset->getStartTime(), dataset->getEndTime()));
+
+    referenceTimeStep_.setMinValue(dataset->getStartTime());
+    referenceTimeStep_.setMaxValue(dataset->getEndTime());
+    referenceTimeStep_.set(tgt::vec2(dataset->getStartTime(), dataset->getEndTime()));
 
     // Try to load plot data, if already set.
     loadFileDialog_.invalidate();

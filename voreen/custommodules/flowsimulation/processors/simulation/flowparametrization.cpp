@@ -35,8 +35,8 @@ FlowParametrization::FlowParametrization()
     , outport_(Port::OUTPORT, "outport", "Parameter Inport")
     , parametrizationName_("parametrizationName", "Parametrization Name", "test_parametrization")
     , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 20.0f)
-    , temporalResolution_("temporalResolution", "Temporal Resolution", 0.01, 0.01, 0.01) //TODO: define proper semantic
-    , spatialResolution_("spatialResolution", "Spatial Resolution", 64, 32, 1024)
+    , temporalResolution_("temporalResolution", "Temporal Resolution", 0.1, 0.001, 1.0f) //TODO: define proper semantic
+    , spatialResolution_("spatialResolution", "Spatial Resolution", 32, 16, 512)
     , numTimeSteps_("numTimeSteps", "Num. Output Time Steps", 50, 1, 1000)
     , outputResolution_("outputResolution", "Spatial Resolution of Output", 128, 32, 1024)
     , flowFunction_("flowFunction", "Flow Function")

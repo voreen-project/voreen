@@ -285,6 +285,8 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     STLreader<T> stlReader(input.geometryPath, converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI, 1);
     IndicatorLayer3D<T> extendedDomain(stlReader, converter.getConversionFactorLength());
 
+    interruptionPoint();
+
     std::vector<FlowIndicatorMaterial> flowIndicators;
     for(const FlowIndicator& indicator : parametrizationList.getFlowIndicators()) {
         FlowIndicatorMaterial indicatorMaterial;
@@ -307,9 +309,13 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     // Instantiation of a superGeometry
     SuperGeometry3D<T> superGeometry(cuboidGeometry, loadBalancer, 2);
 
+    interruptionPoint();
+
     prepareGeometry(converter, extendedDomain, stlReader, superGeometry,
                     parametrizationList, input.selectedParametrization,
                     flowIndicators);
+
+    interruptionPoint();
 
     // === 3rd Step: Prepare Lattice ===
     SuperLattice3D<T, DESCRIPTOR> sLattice(superGeometry);
@@ -325,12 +331,16 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     sOffLatticeBoundaryCondition3D<T, DESCRIPTOR> sOffBoundaryCondition(sLattice);
     createBouzidiBoundaryCondition3D<T, DESCRIPTOR>(sOffBoundaryCondition);
 
+    interruptionPoint();
+
     prepareLattice(sLattice, converter, bulkDynamics,
                    sBoundaryCondition, sOffBoundaryCondition,
                    stlReader, superGeometry,
                    measuredData,
                    parametrizationList, input.selectedParametrization,
                    flowIndicators);
+
+    interruptionPoint();
 
     // === 4th Step: Main Loop  ===
     const int tmax = converter.getLatticeTime(parametrizationList.getSimulationTime());

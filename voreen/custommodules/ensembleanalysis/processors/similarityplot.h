@@ -103,7 +103,7 @@ protected:
     IntProperty numEigenvalues_;
 
     IntProperty numDimensions_;
-    IntProperty principalComponent_;
+    IntProperty principleComponent_;
     BoolProperty scaleToMagnitude_;
     FloatProperty sphereRadius_;
     IntProperty fontSize_;
@@ -112,8 +112,10 @@ protected:
     OptionProperty<std::string> renderedChannel_;
     StringListProperty renderedRuns_;
 
-    FloatIntervalProperty selectedTimeSteps_;
-    StringListProperty selectedRuns_;
+    StringListProperty selectedRun_;
+    FloatIntervalProperty selectedTimeStep_;
+    StringListProperty referenceRun_;
+    FloatIntervalProperty referenceTimeStep_;
 
     FileDialogProperty saveFileDialog_;
     FileDialogProperty loadFileDialog_;
