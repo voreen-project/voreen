@@ -41,6 +41,7 @@ struct LargeVolumeFormatConversionInput {
     std::string outputPath_;
     std::string outputBaseType_;
     const VolumeBase* inputVolume_;
+    bool normalizeRange_;
 };
 struct LargeVolumeFormatConversionOutput {
     std::unique_ptr<Volume> outputVolume_;
@@ -75,6 +76,7 @@ private:
 
     BoolProperty enableProcessing_;
     StringOptionProperty targetBaseType_;
+    BoolProperty normalizeRange_;
     IntProperty numChannels_;
     TempPathProperty outputVolumeFilePath_;
 
