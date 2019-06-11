@@ -100,13 +100,7 @@ VolumeDerivedData* VolumeMinMax::createFrom(const VolumeBase* handle) const {
             for (size_t slice=0; slice<numSlices; slice++) {
 
                 // interruption point after each slice!
-                try {
-                    boost::this_thread::sleep(boost::posix_time::seconds(0));
-                }
-                catch(boost::thread_interrupted&)
-                {
-                    throw boost::thread_interrupted();
-                }
+                boost::this_thread::interruption_point();
 
                 // computation for the slice
                 try {

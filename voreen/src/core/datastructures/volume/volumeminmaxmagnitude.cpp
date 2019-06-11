@@ -72,6 +72,10 @@ VolumeDerivedData* VolumeMinMaxMagnitude::createFrom(const VolumeBase* handle) c
         size_t numSlices = handle->getDimensions().z;
         tgtAssert(numSlices > 0, "empty volume");
         for (size_t i=0; i<numSlices; i++) {
+
+            // interruption point after each slice!
+            boost::this_thread::interruption_point();
+
             try {
                 VolumeRAM* sliceVolume = volumeDisk->loadSlices(i, i);
                 minMagnitude = std::min(minMagnitude, sliceVolume->minMagnitude());
