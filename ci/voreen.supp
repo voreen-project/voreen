@@ -62,3 +62,11 @@
    obj:/usr/lib/x86_64-linux-gnu/dri/swrast_dri.so
    ...
 }
+
+{
+   src_sw_glx1_leak
+   Memcheck:Leak
+   ...
+   src:drisw_glx.c:*
+   ...
+}
