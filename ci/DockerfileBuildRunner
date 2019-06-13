@@ -101,3 +101,9 @@ RUN mkdir -p /build/ \
     && ninja install
 
 RUN useradd -ms /bin/bash test_user
+
+# Clean up to reduce image size
+RUN pip3 uninstall --yes meson pip setuptools
+
+RUN apt-get -y remove python3-pip
+RUN apt-get -y autoremove
