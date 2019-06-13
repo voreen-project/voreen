@@ -1,9 +1,13 @@
-FROM ubuntu:18.04
+FROM ubuntu:16.04
 
 ENV TZ=Europe/Berlin
 
 # enable source repositories
-RUN sed -i '/deb-src/s/^# //' /etc/apt/sources.list && apt update
+RUN sed -i '/deb-src/s/^# //' /etc/apt/sources.list
+# enable backports
+RUN sed -i '/backports/s/^# //' /etc/apt/sources.list && apt-get update
+# prefer backports
+RUN echo "Package: *\nPin: release a=xenial-backports\nPin-Priority: 600" >> /etc/apt/preferences
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && apt-get update \
@@ -22,7 +26,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
             libavformat-dev \
             freeglut3-dev \
             libhdf5-dev \
-            libhdf5-cpp-100 \
+            libhdf5-cpp-11 \
             liblz4-dev \
             qt5-default \
             libqt5svg5-dev \
@@ -36,7 +40,6 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
             iputils-ping \
             curl \
             file \
-            meson \
             unifdef \
             valgrind \
             ca-certificates \
@@ -63,15 +66,13 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
             libxshmfence1 \
             libfuse2 \
             libfile-copy-recursive-perl \
-            zip
+            zip \
+            locales \
+            python3-pip
 
-            #mesa-opencl-icd \
-            #mesa-utils \
-            #libosmesa6 \
-            #libgl1-mesa-dev \
-            #libgl1-mesa-dri \
-            #libgl1-mesa-glx \
-            #libglu1-mesa-dev
+# install meson from pip (at least version 0.45 is required)
+RUN pip3 install --upgrade pip setuptools
+RUN pip3 install meson
 
 # install dependencies for building mesa
 RUN apt-get build-dep mesa -y
@@ -82,12 +83,18 @@ RUN apt-get build-dep mesa -y
     #&& mkdir -p build \
     #&& cd build \
 
+# Set the locale
+RUN echo en_US.UTF-8 UTF-8> /etc/locale.gen && locale-gen
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+
 RUN mkdir -p /build/ \
     && cd /build \
     && git clone "https://gitlab.freedesktop.org/mesa/mesa.git" --depth=1\
     && mkdir -p mesa/build \
     && cd mesa/build \
-    && meson -Dplatforms=surfaceless,x11 -Dgallium-drivers=swrast -Ddri-drivers=[] -Dvulkan-drivers=[]\
+    && meson -Dplatforms=surfaceless,x11 -Dgallium-drivers=swrast -Ddri-drivers=[] -Dvulkan-drivers=[] .. .\
     && echo SETUP DONE \
     && echo CONFIGURE DONE \
     && meson .. \
