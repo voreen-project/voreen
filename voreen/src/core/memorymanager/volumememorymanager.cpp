@@ -34,6 +34,16 @@
 
 namespace voreen {
 
+VolumeRef::VolumeRef(VolumeBase* volume)
+    : volume_(volume)
+    , numLockedUses_(0)
+{
+}
+
+VolumeRef::~VolumeRef() {
+    tgtAssert(numLockedUses_ == 0, "Volume Representation still has locked uses.");
+}
+
 const std::string VolumeMemoryManager::loggerCat_("voreen.VolumeMemoryManager");
 
 VolumeMemoryManager::VolumeMemoryManager()
@@ -52,7 +62,7 @@ VolumeMemoryManager::~VolumeMemoryManager() {
 void VolumeMemoryManager::registerVolume(VolumeBase* v) {
     boost::lock_guard<boost::recursive_mutex> lock(vmmMutex_);
 
-    if (std::find(registeredVolumes_.begin(), registeredVolumes_.end(), v) != registeredVolumes_.end()) {
+    if (findRegisteredVolume(v) != registeredVolumes_.end()) {
         LERROR("Cannot register volume, volume has already been registered!");
         return;
     }
@@ -65,7 +75,7 @@ void VolumeMemoryManager::registerVolume(VolumeBase* v) {
 
 void VolumeMemoryManager::deregisterVolume(VolumeBase* v) {
     boost::lock_guard<boost::recursive_mutex> lock(vmmMutex_);
-    auto it = std::find(registeredVolumes_.begin(), registeredVolumes_.end(), v);
+    auto it = findRegisteredVolume(v);
 
     if (it == registeredVolumes_.end()) {
         LERROR("Cannot deregister volume, not found in volume list!");
@@ -94,14 +104,16 @@ bool VolumeMemoryManager::requestMainMemory(const VolumeBase* v) {
     bool memoryCheck = (requiredMemory <= getAvailableMainMemory());
 
     // find the requested volume to avoid removing its representations
-    auto requestedVolume = std::find(registeredVolumes_.begin(), registeredVolumes_.end(), v);
+    auto requestedVolume = findRegisteredVolume(v);
     // start at least recently used volume to free memory
     auto currentVolume = registeredVolumes_.end() - 1;
 
     while (!memoryCheck) {
         LDEBUG("Not enough resources... trying to free main memory.");
-        // do not remove representations from the request volumes or from volumes that do not have the representation
-        if (currentVolume == requestedVolume || !((*currentVolume)->hasRepresentation<VolumeRAM>())) {
+        // do not remove representations from...
+        if (       currentVolume == requestedVolume // the original volume
+                || !(currentVolume->volume_->hasRepresentation<VolumeRAM>()) // ones that do not have a RAM representation
+                || currentVolume->numLockedUses_ > 0) { // ones whose RAM representation cannot be deleted currently.
             // if every volume has been checked: break
             if (currentVolume == registeredVolumes_.begin())
                 break;
@@ -112,8 +124,8 @@ bool VolumeMemoryManager::requestMainMemory(const VolumeBase* v) {
         }
 
         // check all representations of the current volume and see if there is one that can be converted to VolumeRAM before removing it
-        if ((*currentVolume)->canConvertToRepresentation<VolumeRAM>()) {
-            (*currentVolume)->removeRepresentation<VolumeRAM>();
+        if (currentVolume->volume_->canConvertToRepresentation<VolumeRAM>()) {
+            currentVolume->volume_->removeRepresentation<VolumeRAM>();
             LDEBUG("Removed one RAM representation");
         }
 
@@ -150,7 +162,9 @@ bool VolumeMemoryManager::requestMainMemory(size_t requiredMemory) {
     while (!memoryCheck) {
         LDEBUG("Not enough resources... trying to free main memory.");
         // do not remove representations from volumes that do not have the representation
-        if (!((*currentVolume)->hasRepresentation<VolumeRAM>())) {
+        if (
+                !(currentVolume->volume_->hasRepresentation<VolumeRAM>())
+                || currentVolume->numLockedUses_ > 0) { // ... or whose RAM representation cannot be deleted currently.
             // if every volume has been checked: break
             if (currentVolume == registeredVolumes_.begin())
                 break;
@@ -161,8 +175,8 @@ bool VolumeMemoryManager::requestMainMemory(size_t requiredMemory) {
         }
 
         // check all representations of the current volume and see if there is one that can be converted to VolumeRAM before removing it
-        if ((*currentVolume)->canConvertToRepresentation<VolumeRAM>()) {
-            (*currentVolume)->removeRepresentation<VolumeRAM>();
+        if (currentVolume->volume_->canConvertToRepresentation<VolumeRAM>()) {
+            currentVolume->volume_->removeRepresentation<VolumeRAM>();
             LDEBUG("Removed one RAM representation");
         }
 
@@ -221,14 +235,14 @@ bool VolumeMemoryManager::requestGraphicsMemory(const VolumeBase* v) {
     bool memoryCheck = (requiredMemory <= getAvailableGraphicsMemory()) && checkProxyTexture(v);
 
     // find the requested volume to avoid removing its representations
-    auto requestedVolume = std::find(registeredVolumes_.begin(), registeredVolumes_.end(), v);
+    auto requestedVolume = findRegisteredVolume(v);
     // start at least recently used volume to free memory
     auto currentVolume = registeredVolumes_.end() - 1;
 
     while (!memoryCheck) {
         LDEBUG("Not enough resources... trying to free GPU memory.");
         // do not remove representations from the request volumes or from volumes that do not have the representation
-        if (currentVolume == requestedVolume || !((*currentVolume)->hasRepresentation<VolumeGL>())) {
+        if (currentVolume == requestedVolume || !(currentVolume->volume_->hasRepresentation<VolumeGL>())) {
             // if every volume has been checked: break
             if (currentVolume == registeredVolumes_.begin())
                 break;
@@ -239,8 +253,8 @@ bool VolumeMemoryManager::requestGraphicsMemory(const VolumeBase* v) {
         }
 
         // check all representations of the current volume and see if there is one that can be converted to VolumeGL before removing it
-        if ((*currentVolume)->canConvertToRepresentation<VolumeGL>()) {
-            (*currentVolume)->removeRepresentation<VolumeGL>();
+        if (currentVolume->volume_->canConvertToRepresentation<VolumeGL>()) {
+            currentVolume->volume_->removeRepresentation<VolumeGL>();
             LDEBUG("Removed one GL representation");
         }
 
@@ -260,22 +274,41 @@ bool VolumeMemoryManager::requestGraphicsMemory(const VolumeBase* v) {
     return memoryCheck;
 }
 
-void VolumeMemoryManager::notifyUse(VolumeBase* v) {
+void VolumeMemoryManager::notifyUse(const VolumeBase* v, bool locked) {
     boost::lock_guard<boost::recursive_mutex> lock(vmmMutex_);
 
-    // const cast is safe because we get a non-const volume originally
-    v = const_cast<VolumeBase*>(getActualVolume(v));
+    v = getActualVolume(v);
 
-    auto it = std::find(registeredVolumes_.begin(), registeredVolumes_.end(), v);
+    auto it = findRegisteredVolume(v);
 
     if (it == registeredVolumes_.end()) {
         LERROR("Notifying use for unregistered volume!");
         return;
     }
 
+    if (locked) {
+        it->numLockedUses_ -= 1;
+    }
+
     // remove and put to front
     registeredVolumes_.erase(it);
-    registeredVolumes_.push_front(v);
+    registeredVolumes_.push_front(*it);
+}
+
+void VolumeMemoryManager::notifyLockedRelease(const VolumeBase* v) {
+    boost::lock_guard<boost::recursive_mutex> lock(vmmMutex_);
+
+    v = getActualVolume(v);
+
+    auto it = findRegisteredVolume(v);
+
+    if (it == registeredVolumes_.end()) {
+        LERROR("Notifying use for unregistered volume!");
+        return;
+    }
+
+    tgtAssert(it->numLockedUses_ > 0, "No locked uses left");
+    it->numLockedUses_ -= 1;
 }
 
 void VolumeMemoryManager::updateMainMemory() {
@@ -299,8 +332,8 @@ size_t VolumeMemoryManager::getAvailableMainMemory() const {
     size_t usedMemory = 0;
 
     for (auto it = registeredVolumes_.begin(); it != registeredVolumes_.end(); ++it) {
-        if ((*it)->hasRepresentation<VolumeRAM>())
-            usedMemory += getMemoryRequirement(*it);
+        if (it->volume_->hasRepresentation<VolumeRAM>())
+            usedMemory += getMemoryRequirement(it->volume_);
     }
 
     if (usedMemory > totalMemory)   // may occur if the application settings have changed
@@ -330,8 +363,8 @@ size_t VolumeMemoryManager::getAvailableGraphicsMemory() const {
     size_t usedMemory = 0;
 
     for (auto it = registeredVolumes_.begin(); it != registeredVolumes_.end(); ++it) {
-        if ((*it)->hasRepresentation<VolumeGL>()) {
-            size_t requiredMemory = getMemoryRequirement(*it);
+        if (it->volume_->hasRepresentation<VolumeGL>()) {
+            size_t requiredMemory = getMemoryRequirement(it->volume_);
             // FIXME: textures seem to take up some additional space (overhead)
             requiredMemory += requiredMemory / 10;
             usedMemory += requiredMemory;
@@ -376,6 +409,29 @@ const VolumeBase* VolumeMemoryManager::getActualVolume(const VolumeBase* v) {
     }
 
     return dynamic_cast<const Volume*>(v);
+}
+
+std::deque<VolumeRef>::iterator VolumeMemoryManager::findRegisteredVolume(const VolumeBase* v) {
+    return std::find_if(registeredVolumes_.begin(), registeredVolumes_.end(), [v] (VolumeRef& ref) {
+            return ref.volume_ == v;
+            });
+}
+
+const VolumeRAM* VolumeRAMRepresentationLock::operator->() const {
+    return ram_;
+}
+
+VolumeRAMRepresentationLock::VolumeRAMRepresentationLock(const VolumeBase* vol)
+    : vol_(vol)
+    , ram_(nullptr)
+{
+    if (VolumeMemoryManager::isInited())
+        VolumeMemoryManager::getRef().notifyUse(vol_, true);
+    ram_ = vol_->getRepresentation<VolumeRAM>();
+}
+VolumeRAMRepresentationLock::~VolumeRAMRepresentationLock() {
+    if (VolumeMemoryManager::isInited())
+        VolumeMemoryManager::getRef().notifyLockedRelease(vol_);
 }
 
 } // namespace voreen

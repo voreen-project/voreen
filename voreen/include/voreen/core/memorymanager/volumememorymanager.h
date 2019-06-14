@@ -36,6 +36,16 @@
 namespace voreen {
 
 class VolumeBase;
+class VolumeRAM;
+class VolumeRAMRepresentationLock;
+
+struct VolumeRef {
+    VolumeBase* volume_;
+    size_t numLockedUses_;
+
+    VolumeRef(VolumeBase* volume);
+    ~VolumeRef();
+};
 
 /**
  * This class provides basic memory management for volume data and its representations.
@@ -65,6 +75,9 @@ protected:
     // the converter from disk to GL internally converts to a VolumeRAM and should therefore use the memory manager
     friend class RepresentationConverterLoadFromDiskToGL;
 
+    // Needs to call notify*-methods
+    friend class VolumeRAMRepresentationLock;
+
     /**
      * Register volume for memory management (called by VolumeBase constructor).
      */
@@ -78,8 +91,18 @@ protected:
     /**
      * Notifies the memory manager that the volume is used (i.e., is called by VolumeBase class if a representation is requested).
      * This will place the volume at the front of the LRU list (as it is the most recently used volume).
+     *
+     * @param locked Specify whether or not the RAM representation of volume should also be considered locked to main memory
+     * and thus can be freed if other sources request main memory AND if there are no other sources that lock this
+     * RAM representation.
      */
-    void notifyUse(VolumeBase* v);
+    void notifyUse(const VolumeBase* v, bool locked = false);
+
+    /**
+     * Notify the memory manager that the RAM representation of the specified volume is no longer locked into memory and
+     * thus can be freed if other sources request main memory AND if there are no other sources that lock this RAM representation.
+     */
+    void notifyLockedRelease(const VolumeBase* v);
 
     /**
      * Request main memory, e.g. for a VolumeRAM representation (called by getRepresentation).
@@ -144,7 +167,9 @@ protected:
 
     static const std::string loggerCat_;
 
-    std::deque<VolumeBase*> registeredVolumes_;   ///< the list of registered volumes in LRU order (front: most recently used, back: lest recently used)
+    std::deque<VolumeRef> registeredVolumes_;   ///< the list of registered volumes in LRU order (front: most recently used, back: lest recently used)
+
+    std::deque<VolumeRef>::iterator findRegisteredVolume(const VolumeBase*);
 
     size_t availableMainMemory_;            ///< currently available main memory for volumes (in bytes)
     bool availableMainMemoryInvalid_;       ///< does the available main memory have to be recomputed?
@@ -153,6 +178,19 @@ protected:
     bool availableGraphicsMemoryInvalid_;   ///< does the available graphics memory has to be recomputed?
 
     mutable boost::recursive_mutex vmmMutex_;     ///< mutex for the volume memory manager
+};
+
+// Use this class to get a VolumeRAM Representation from a volume and force it to remain in main memory until
+// this object is dropped.
+class VolumeRAMRepresentationLock {
+public:
+    const VolumeRAM* operator->() const;
+private:
+    const VolumeBase* vol_;
+    const VolumeRAM* ram_;
+
+    VolumeRAMRepresentationLock(const VolumeBase* vol);
+    ~VolumeRAMRepresentationLock();
 };
 
 } // namespace voreen
