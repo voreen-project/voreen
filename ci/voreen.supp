@@ -64,9 +64,23 @@
 }
 
 {
-   src_sw_glx1_leak
+   src_drisw_bind_leak
    Memcheck:Leak
    ...
-   src:drisw_glx.c:*
+   fun:drisw_bind_context
+   ...
+}
+{
+   src_drisw_create_screen_leak
+   Memcheck:Leak
+   ...
+   fun:driswCreateScreen
+   ...
+}
+{
+   src_drisw_create_drawable_leak
+   Memcheck:Leak
+   ...
+   fun:driswCreateDrawable
    ...
 }
