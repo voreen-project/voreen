@@ -129,11 +129,11 @@ processorinittest_coreprofile:
     expire_in: 1 day
 
 # octreetest, networkevaluatortest, processornetworktest and volumeorigintest are boost tests and need a "--"
-# before specifying application options!
+# before specifying application options, but only for newer boost versions...
 octreetest_coreprofile:
   stage: test
   script:
-    - ${COREPROFILE_BUILD_DIR}/bin/octreetest -- --logLevel=debug --datadir=${TEST_DATA_DIR} --logFile=octreetest-log.html
+    - ${COREPROFILE_BUILD_DIR}/bin/octreetest --logLevel=debug --datadir=${TEST_DATA_DIR} --logFile=octreetest-log.html
   artifacts:
     paths:
     - octreetest-log.html
