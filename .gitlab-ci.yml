@@ -133,7 +133,7 @@ processorinittest_coreprofile:
 octreetest_coreprofile:
   stage: test
   script:
-    - ${COREPROFILE_BUILD_DIR}/bin/octreetest -- --logLevel=debug -d ${TEST_DATA_DIR} --logFile=octreetest-log.html
+    - ${COREPROFILE_BUILD_DIR}/bin/octreetest -- --logLevel=debug --datadir=${TEST_DATA_DIR} --logFile=octreetest-log.html
   artifacts:
     paths:
     - octreetest-log.html
