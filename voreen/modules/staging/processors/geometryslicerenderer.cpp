@@ -42,6 +42,10 @@ GeometrySliceRenderer::GeometrySliceRenderer()
     , renderShader_(0)
     , numInputTriangles_(0)
     , writtenEdges_(0)
+    , vertexArrayID_(0)
+    , tfo_(0)
+    , edgeVbo_(0)
+    , edgeQuery_(0)
 {
     ON_CHANGE(geometryInport_, GeometrySliceRenderer, adjustPropertyVisibility);
     addPort(geometryInport_);
@@ -117,10 +121,18 @@ void GeometrySliceRenderer::initialize() {
 
 void GeometrySliceRenderer::deinitialize() {
 
-    glDeleteVertexArrays(1, &vertexArrayID_);
-    glDeleteTransformFeedbacks(1, &tfo_);
-    glDeleteBuffers(1, &edgeVbo_);
-    glDeleteQueries(1, &edgeQuery_);
+    if(vertexArrayID_) {
+        glDeleteVertexArrays(1, &vertexArrayID_);
+    }
+    if(tfo_) {
+        glDeleteTransformFeedbacks(1, &tfo_);
+    }
+    if(edgeVbo_) {
+        glDeleteBuffers(1, &edgeVbo_);
+    }
+    if(edgeQuery_) {
+        glDeleteQueries(1, &edgeQuery_);
+    }
 
     // dispose clip shader and render shader
     ShdrMgr.dispose(clipShader_);
