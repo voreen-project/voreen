@@ -36,7 +36,7 @@ void FieldPlotData::drawConnection(size_t x1, size_t x2, float v1, float v2, siz
 
     // TODO: figure out why this is necessary.
     x1 = std::min(x1, getWidth() - 1);
-    x2 = std::max(x2, getWidth() - 1);
+    x2 = std::min(x2, getWidth() - 1);
 
     long y1 = tgt::clamp<long>(v1 * (getHeight()-1), 0, getHeight() - 1);
     long y2 = tgt::clamp<long>(v2 * (getHeight()-1), 0, getHeight() - 1);

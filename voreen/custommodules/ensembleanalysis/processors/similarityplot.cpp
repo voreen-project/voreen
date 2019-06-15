@@ -110,6 +110,7 @@ SimilarityPlot::SimilarityPlot()
     */
 {
     // Ports
+    //NOTE: don't use adjustPropertiesToInput() as callback, this seems to be triggered each frame for RenderProcessors.
     addPort(ensembleInport_);
     ON_CHANGE(ensembleInport_, SimilarityPlot, adjustToEnsemble);
     addPort(similarityMatrixInport_);

@@ -68,18 +68,15 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
     , valueRange_("valueRange", "Value Range", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
     , timeInterval_("timeInterval", "Selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
     , selectedRuns_("selectedRuns", "Selected Runs")
-    , hasLogarithmicDensity_("logarithmicDensity", "Logarithmic Density", false, Processor::VALID)
+    , hasLogarithmicDensity_("logarithmicDensity", "Logarithmic Density", false)
     , zoomX_("zoomX", "Zoom X", tgt::vec2(0.0, 1.0), 0.0f, 1.0f)
     , zoomY_("zoomY", "Zoom Y", tgt::vec2(0.0, 1.0), 0.0f, 1.0f)
     , xUnit_("xUnit", "x-Unit", "time")
     , yUnit_("yUnit", "y-Unit", "value")
     , fontSize_("fontSize", "Font Size", 10, 1, 30)
-    , plotShader_("shaderprop", "Plot Shader", "fieldplot.frag", "passthrough.vert", "", Processor::INVALID_PROGRAM, Property::LOD_DEBUG)
+    , plotShader_("shaderprop", "Plot Shader", "fieldplot.frag", "passthrough.vert", "", Processor::INVALID_RESULT, Property::LOD_DEBUG)
     , timeStepPosition_(0.0f)
     , viewPortWidth_(0.0f)
-    , requirePlotDataUpdate_(false)
-    , requireConsistencyCheck_(false)
-    , consistent_(false)
     , plotData_(nullptr)
     // UI
     , plotLib_(new PlotLibraryOpenGl())
@@ -88,10 +85,8 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
     , isSelectionMode_(false)
 {
     // Ports
-    addPort(plotDataInport_);
-        ON_CHANGE(plotDataInport_, FieldParallelPlotViewer, loadPlotData);
     addPort(ensembleInport_);
-        ON_CHANGE_LAMBDA(ensembleInport_, [this] { requireConsistencyCheck_ = true; });
+    addPort(plotDataInport_);
     addPort(outport_);
     addPort(volumeOutport_);
     addPrivateRenderPort(privatePort_);
@@ -100,8 +95,8 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
     addProperty(transferFunc_);
         transferFunc_.setGroupID("rendering");
     addProperty(hasLogarithmicDensity_);
+        ON_CHANGE(hasLogarithmicDensity_, FieldParallelPlotViewer, adjustPropertiesToInput);
         hasLogarithmicDensity_.setGroupID("rendering");
-        ON_CHANGE_LAMBDA(hasLogarithmicDensity_, [this] { requirePlotDataUpdate_ = true; });
     addProperty(zoomX_);
         zoomX_.setGroupID("rendering");
     addProperty(zoomY_);
@@ -123,9 +118,9 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
     addProperty(volumeTransferFunc_);
         volumeTransferFunc_.setGroupID("linking");
     addProperty(valueRange_);
+        //ON_CHANGE(valueRange_, FieldParallelPlotViewer, adjustPropertiesToInput);
         valueRange_.setGroupID("linking");
         valueRange_.setReadOnlyFlag(true);
-        ON_CHANGE_LAMBDA(valueRange_, [this] { requirePlotDataUpdate_ = true; });
     addProperty(timeInterval_);
         timeInterval_.setGroupID("linking");
         timeInterval_.setReadOnlyFlag(true);
@@ -170,99 +165,33 @@ bool FieldParallelPlotViewer::rebuildShader() {
     return plotShader_.rebuild();
 }
 
-void FieldParallelPlotViewer::switchChannel() {
+void FieldParallelPlotViewer::adjustPropertiesToInput() {
 
-    size_t numRuns = ensembleInport_.getData()->getRuns().size();
-    size_t firstSlice = renderedChannel_.getSelectedIndex() * numRuns;
-    tgt::svec3 offset(0, 0, firstSlice);
-    tgt::svec3 dimensions(plotDataInport_.getData()->getWidth(), plotDataInport_.getData()->getHeight(), numRuns);
-    VolumeRAM_Float* slices = dynamic_cast<const VolumeRAM_Float*>(plotData_->getRepresentation<VolumeRAM>())->getSubVolume(dimensions, offset);
-    tgtAssert(slices, "slices could not be read");
-
-    // Set unfiltered slices to outport.
-    channelSlices_ = new Volume(slices, tgt::svec3::one, tgt::svec3::zero);
-    volumeOutport_.setData(channelSlices_, true);
-
-    requirePlotDataUpdate_ = true;
-}
-
-void FieldParallelPlotViewer::updatePlotData() {
-    if(!ensembleInport_.hasData()) return;
-
-    // Apply range mask to selected plot data.
-    VolumeRAM_Float* slices = dynamic_cast<const VolumeRAM_Float*>(channelSlices_->getRepresentation<VolumeRAM>())->clone();
-
-    tgt::vec2 valueRange(slices->min(), slices->max());
-
-    valueRange_.setMinValue(valueRange.x);
-    valueRange_.setMaxValue(valueRange.y);
-    //valueRange_.set(valueRange); // do NOT set, because it's gonna be linked
-    valueRange_.blockCallbacks(false);
-
-    // Apply threshold
-    applyThreshold(slices);
-
-    currentPlot_.reset(new Volume(slices, tgt::vec3::one, tgt::vec3::zero));
-    plotTexture_.reset(new tgt::Texture(tgt::ivec3(slices->getDimensions()), GL_RED, GL_R32F, GL_FLOAT, tgt::Texture::NEAREST, tgt::Texture::CLAMP_TO_EDGE, static_cast<GLubyte*>(slices->getData()), false));
-    plotTexture_->uploadTexture();
-    plotTexture_->setCpuTextureData(0, false);
-    
-    // Fit transfer function to volume.
-    transferFunc_.setVolume(currentPlot_.get());
-
-    requirePlotDataUpdate_ = false;
-}
-
-void FieldParallelPlotViewer::loadPlotData() {
-
-    // Reset old data.
     plotData_ = nullptr;
-
-    if(!plotDataInport_.hasData())
-        return;
-
-    try {
-        VolumeBase* plotData = plotDataInport_.getData()->getVolume();
-
-        //if(!plotData->hasRepresentation<VolumeDisk>())
-        //    throw VoreenException("Plot data has no Disk representation.");
-        
-        if(!plotData->hasMetaData(FieldParallelPlotCreator::META_DATA_HASH))
-            throw VoreenException("Plot Dataset could not be loaded - Attribute " + FieldParallelPlotCreator::META_DATA_HASH + " missing.");
-
-        plotData_ = plotData;
-
-    } catch(VoreenException e) {
-        VoreenApplication::app()->showMessageBox("Failed loading", e.what(), true);
-        return;
-    }
-
-    // Trigger consistency check.
-    requireConsistencyCheck_ = true;
-}
-
-bool FieldParallelPlotViewer::checkConsistency() {
-    requireConsistencyCheck_ = false;
-
     selectedRuns_.reset();
     renderedRuns_.reset();
     renderedChannel_.setOptions(std::deque<Option<std::string>>());
     renderedChannel_.setReadOnlyFlag(true);
     valueRange_.setReadOnlyFlag(true);
 
-    if (!ensembleInport_.isReady() || !plotData_)
-        return false;
+    if (!ensembleInport_.isReady())
+        return;
 
     const EnsembleDataset* dataset = ensembleInport_.getData();
-    tgtAssert(dataset, "dataset must not be null");
 
-    const MetaDataBase* ensembleHash = plotData_->getMetaData(FieldParallelPlotCreator::META_DATA_HASH);
+    if(!plotDataInport_.isReady())
+        return;
+
+    const VolumeBase* plotData = plotDataInport_.getData()->getVolume();
+    const MetaDataBase* ensembleHash = plotData->getMetaData(FieldParallelPlotCreator::META_DATA_HASH);
     tgtAssert(ensembleHash, "Plot does not contain Hash");
 
     // Compare hashes.
     if (EnsembleHash(*dataset).getHash() != ensembleHash->toString())
         //LERROR("HASH does not match - currently ignored, application likely to crash");
-        return false;
+        return;
+
+    plotData_ = plotData;
 
     renderedChannel_.blockCallbacks(true);
     for (const std::string& channel : dataset->getCommonChannels())
@@ -289,7 +218,42 @@ bool FieldParallelPlotViewer::checkConsistency() {
     valueRange_.setReadOnlyFlag(false);
 
     // Build shader for ensemble.
-    return rebuildShader();
+    rebuildShader();
+
+    // Apply range mask to selected plot data.
+    VolumeRAM_Float* slices = dynamic_cast<const VolumeRAM_Float*>(channelSlices_->getRepresentation<VolumeRAM>())->clone();
+
+    tgt::vec2 valueRange(slices->min(), slices->max());
+
+    valueRange_.setMinValue(valueRange.x);
+    valueRange_.setMaxValue(valueRange.y);
+    //valueRange_.set(valueRange); // do NOT set, because it's gonna be linked
+    valueRange_.blockCallbacks(false);
+
+    // Apply threshold
+    applyThreshold(slices);
+
+    currentPlot_.reset(new Volume(slices, tgt::vec3::one, tgt::vec3::zero));
+    plotTexture_.reset(new tgt::Texture(tgt::ivec3(slices->getDimensions()), GL_RED, GL_R32F, GL_FLOAT, tgt::Texture::NEAREST, tgt::Texture::CLAMP_TO_EDGE, static_cast<GLubyte*>(slices->getData()), false));
+    plotTexture_->uploadTexture();
+    plotTexture_->setCpuTextureData(nullptr, false);
+
+    // Fit transfer function to volume.
+    transferFunc_.setVolume(currentPlot_.get());
+}
+
+void FieldParallelPlotViewer::switchChannel() {
+
+    size_t numRuns = ensembleInport_.getData()->getRuns().size();
+    size_t firstSlice = renderedChannel_.getSelectedIndex() * numRuns;
+    tgt::svec3 offset(0, 0, firstSlice);
+    tgt::svec3 dimensions(plotDataInport_.getData()->getWidth(), plotDataInport_.getData()->getHeight(), numRuns);
+    VolumeRAM_Float* slices = dynamic_cast<const VolumeRAM_Float*>(plotData_->getRepresentation<VolumeRAM>())->getSubVolume(dimensions, offset);
+    tgtAssert(slices, "slices could not be read");
+
+    // Set unfiltered slices to outport.
+    channelSlices_ = new Volume(slices, tgt::svec3::one, tgt::svec3::zero);
+    volumeOutport_.setData(channelSlices_, true);
 }
 
 void FieldParallelPlotViewer::applyThreshold(VolumeRAM_Float* volume) {
@@ -298,7 +262,7 @@ void FieldParallelPlotViewer::applyThreshold(VolumeRAM_Float* volume) {
             for(size_t y = 0; y < volume->getDimensions().y; y++) {
                 float& voxel = volume->voxel(x, y, z);
                 if(voxel < valueRange_.get().x || voxel > valueRange_.get().y)
-                    voxel = 0.0f;
+                    voxel = 0;
                 else if(hasLogarithmicDensity_.get())
                     voxel = std::log(voxel+1); // shift the function such that we obtain only positive values
             }
@@ -366,18 +330,23 @@ void FieldParallelPlotViewer::onEvent(tgt::Event* e) {
 
 bool FieldParallelPlotViewer::isReady() const {
 
-    if(!plotDataInport_.isReady()) {
-        setNotReadyErrorMessage("No Plot Data Input");
-        return false;
-    }
-
     if(!ensembleInport_.isReady()) {
         setNotReadyErrorMessage("No Ensemble Input");
         return false;
     }
 
+    if(!plotDataInport_.isReady()) {
+        setNotReadyErrorMessage("No Plot Data Input");
+        return false;
+    }
+
     if(ensembleInport_.getData()->getCommonChannels().empty()) {
         setNotReadyErrorMessage("No common channels available");
+        return false;
+    }
+
+    if(!plotData_) {
+        setNotReadyErrorMessage("No Plot data available");
         return false;
     }
 
@@ -387,20 +356,10 @@ bool FieldParallelPlotViewer::isReady() const {
 void FieldParallelPlotViewer::beforeProcess() {
     RenderProcessor::beforeProcess();
 
-    if (requireConsistencyCheck_) {
-        consistent_ = checkConsistency();
-        if(!consistent_)
-            VoreenApplication::app()->showMessageBox("Mismatching data", "The plot was probably not generated by the ensemble dataset passed to the FieldParallelPlotViewer", true);
-    }
 
-    if(consistent_ && requirePlotDataUpdate_)
-        updatePlotData();
 }
 
 void FieldParallelPlotViewer::process() {
-    if (!consistent_)
-        return;
-
     // Perform the actual rendering by embedding the rendered
     // plot inside a coordinate system generated by the plot library
     renderPlot();
@@ -595,8 +554,8 @@ void FieldParallelPlotViewer::updateSelection() {
     /**
      * update run selection
      */
-    int width  = static_cast<int>(plotData_->getDimensions().x);
-    int height = static_cast<int>(plotData_->getDimensions().y);
+    size_t width  = plotData_->getDimensions().x;
+    size_t height = plotData_->getDimensions().y;
 
     tgt::ivec2 selectedPixelX(0, width);
     tgt::ivec2 selectedPixelY(0, height);

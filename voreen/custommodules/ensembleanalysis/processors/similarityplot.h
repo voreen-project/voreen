@@ -86,9 +86,6 @@ protected:
     virtual void process();
     virtual bool isReady() const;
     virtual void onEvent(tgt::Event* e);
-    
-    void calculate();
-    void adjustToEnsemble();
 
     enum ColorCoding {
         COLOR_RUN,
@@ -164,12 +161,16 @@ protected:
 
 private:
 
+    void adjustToEnsemble();
     void mouseClickEvent(tgt::MouseEvent* e);
+
     void renderingPass(bool picking);
     void renderAxes();
     void drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, const tgt::vec3& position, const tgt::vec3& color) const;
     tgt::vec3 getColor(size_t runIdx, size_t timeStepIdx, bool picking) const;
+
     MDSData computeFromDM(const SimilarityMatrix& matrix, ProgressReporter& progressReporter, float epsilon = -1.0f) const;
+    void calculate();
 
     void outputEigenValues();
     void renderedChannelsChanged();

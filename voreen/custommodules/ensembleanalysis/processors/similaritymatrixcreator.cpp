@@ -70,6 +70,7 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     multiChannelSimilarityMeasure_.addOption("magnitude", "Magnitude", MEASURE_MAGNITUDE);
     multiChannelSimilarityMeasure_.addOption("angleDifference", "Angle Difference", MEASURE_ANGLEDIFFERENCE);
     multiChannelSimilarityMeasure_.addOption("magnitudeAndAngleDifference", "Magnitude and Angle Difference", MEASURE_MAGNITUDE_AND_ANGLEDIFFERENCE);
+    multiChannelSimilarityMeasure_.addOption("crossproduct", "Crossproduct Magnitude", MEASURE_CROSSPRODUCT);
     ON_CHANGE_LAMBDA(multiChannelSimilarityMeasure_, [this] {
         weight_.setVisibleFlag(multiChannelSimilarityMeasure_.getValue() == MEASURE_MAGNITUDE_AND_ANGLEDIFFERENCE);
     });
@@ -130,10 +131,11 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
         }
     }
 
-    const VolumeBase* seedMask = seedMask_.getData();
+    const VolumeBase* seedMask = seedMask_.getThreadSafeData();
     tgt::Bounds seedMaskBounds;
     tgt::mat4 seedMaskPhysicalToVoxelMatrix;
     if (seedMask) {
+        seedMaskLock_.reset(new VolumeRAMRepresentationLock(seedMask));
         seedMaskBounds = seedMask->getBoundingBox(false).getBoundingBox();
         seedMaskPhysicalToVoxelMatrix = seedMask->getPhysicalToVoxelMatrix();
         LINFO("Restricting seed points to volume mask");
@@ -156,7 +158,7 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
             seedPoint = tgt::vec3(roi.getLLF()) + seedPoint * tgt::vec3(roi.diagonal());
             tries++;
         } while (tries < maxTries && seedMask && (!seedMaskBounds.containsPoint(seedPoint) ||
-                                                  seedMask->getRepresentation<VolumeRAM>()->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint) == 0.0f));
+                (*seedMaskLock_)->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint) == 0.0f));
 
         if(tries < maxTries) {
             seedPoints.push_back(seedPoint);
@@ -170,7 +172,7 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
             singleChannelSimilarityMeasure_.getValue(),
             isoValue_.get(),
             multiChannelSimilarityMeasure_.getValue(),
-            weight_.get()
+            weight_.get(),
     };
 }
 
@@ -206,9 +208,11 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                 tgt::mat4 physicalToVoxelMatrix = volume->getPhysicalToVoxelMatrix();
                 RealWorldMapping rwm = volume->getRealWorldMapping();
 
+                VolumeRAMRepresentationLock lock(volume);
+
                 for (size_t k = 0; k < seedPoints.size(); k++) {
                     for(size_t ch = 0; ch < numChannels; ch++) {
-                        float value = volume->getRepresentation<VolumeRAM>()->getVoxelNormalizedLinear(
+                        float value = lock->getVoxelNormalizedLinear(
                                 physicalToVoxelMatrix * seedPoints[k], ch);
 
                         value = rwm.normalizedToRealWorld(value);
@@ -367,6 +371,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 }
 
 void SimilarityMatrixCreator::processComputeOutput(ComputeOutput output) {
+    seedMaskLock_.reset(); // Release the lock.
     outport_.setData(output.outputMatrices.release(), true);
 }
 

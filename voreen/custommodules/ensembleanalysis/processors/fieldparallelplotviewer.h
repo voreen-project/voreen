@@ -80,16 +80,14 @@ protected:
     virtual std::string generateHeader(const tgt::GpuCapabilities::GlVersion* version = 0);
     virtual bool rebuildShader();
 
+    virtual void adjustPropertiesToInput();
+
 protected:
 
     void renderPlot();
     void renderAxes();
 
     void switchChannel();
-    void loadPlotData();
-    void updatePlotData();
-    bool checkConsistency();
-
     void applyThreshold(VolumeRAM_Float* volume);
 
     void mouseEvent(tgt::MouseEvent* e);
@@ -101,8 +99,8 @@ protected:
         setDescription("");
     }
 
-    FieldPlotDataPort plotDataInport_;
     EnsembleDatasetPort ensembleInport_;
+    FieldPlotDataPort plotDataInport_;
     RenderPort outport_;
     VolumePort volumeOutport_;
     RenderPort privatePort_;
@@ -124,17 +122,13 @@ protected:
 
     ShaderProperty plotShader_;
 
-    VolumeBase* plotData_;
-    VolumeBase* channelSlices_;
+    const VolumeBase* plotData_;
+    const VolumeBase* channelSlices_;
     std::unique_ptr<Volume> currentPlot_;
     std::unique_ptr<tgt::Texture> plotTexture_;
 
     float timeStepPosition_;
     float viewPortWidth_;
-
-    bool requirePlotDataUpdate_;
-    bool requireConsistencyCheck_;
-    bool consistent_;
 
     // UI
     std::unique_ptr<PlotLibrary> plotLib_;

@@ -99,6 +99,9 @@ private:
     /// Plotport used to output eigenvalues.
     SimilarityMatrixPort outport_;
 
+    // We need to lock the seed mask representation that the calculation won't abort.
+    std::unique_ptr<VolumeRAMRepresentationLock> seedMaskLock_;
+
     static const std::string loggerCat_;
 };
 
