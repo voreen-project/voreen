@@ -461,7 +461,7 @@ void FlowArrowRenderer2D::process() {
     LGL_ERROR;
     const VolumeRAM_3xFloat* velValues = dynamic_cast<const VolumeRAM_3xFloat*>(velVolume->getRepresentation<VolumeRAM>());
     velocityShader_->activate();
-    velocityShader_->setUniform("maxVelocity", velValues->maxMagnitude());
+    velocityShader_->setUniform("maxVelocity", velValues->maxNormalizedMagnitude());
     velocityShader_->setUniform("ColorTexture", transferUnitVel.getUnitNumber());
     velocityShader_->setUniform("colorFromDir_", mappingOption_.getValue());
 

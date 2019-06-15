@@ -300,7 +300,7 @@ void RadarGlyphRendererBase::inportOnChange() {
     //set maximum
     float maximum = 0.f;
     for(size_t i = 0; i < vcInport_.getData()->size(); i++){
-        float tmp = vcInport_.getData()->at(i)->getRepresentation<VolumeRAM_3xFloat>()->maxMagnitude();
+        float tmp = vcInport_.getData()->at(i)->getRepresentation<VolumeRAM_3xFloat>()->maxNormalizedMagnitude();
         if(tmp > maximum)
             maximum = tmp;
     }

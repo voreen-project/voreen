@@ -196,7 +196,7 @@ void FlowArrowRenderer3D::process() {
     }
     tgtAssert(velocity,"Nullpointer in volumeInport");
     //get Maximal Displacement
-    float maxLength = velocity->maxMagnitude();
+    float maxLength = velocity->maxNormalizedMagnitude();
     if(maxLength <= 0) return;
 
     //activate outport
