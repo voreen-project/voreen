@@ -37,15 +37,6 @@ namespace voreen {
 
 class Callback;
 
-struct CommandQueueElement {
-    CommandQueueElement(const void* owner, std::unique_ptr<Callback>&& callback);
-    CommandQueueElement(CommandQueueElement&&);
-    CommandQueueElement& operator=(CommandQueueElement&&);
-    const void* owner_;
-    std::unique_ptr<Callback> callback_;
-    boost::mutex mutex_; // Mutual exclusion for execution of callback and deletion of the element
-};
-
 /**
  * Command queue for executing deferred tasks.
  * This can come in handy for tasks being started in another than the main thread.
@@ -82,6 +73,15 @@ public:
     void removeAll(const void* owner = nullptr);
 
 protected:
+
+    struct CommandQueueElement {
+        CommandQueueElement(const void* owner, std::unique_ptr<Callback>&& callback);
+        CommandQueueElement(CommandQueueElement&&);
+        CommandQueueElement& operator=(CommandQueueElement&&);
+        const void* owner_;
+        std::unique_ptr<Callback> callback_;
+        boost::mutex mutex_; // Mutual exclusion for execution of callback and deletion of the element
+    };
 
     boost::shared_mutex queueMutex_; // R/RW for queue, i.e,. either: read (shared) or modify (exclusive)
     boost::shared_mutex nextMutex_;  // R/RW for the commands that will be added in the _next_ executeAll

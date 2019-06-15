@@ -37,15 +37,6 @@ namespace voreen {
 
 class VolumeBase;
 class VolumeRAM;
-class VolumeRAMRepresentationLock;
-
-struct VolumeRef {
-    VolumeBase* volume_;
-    size_t numLockedUses_;
-
-    VolumeRef(VolumeBase* volume);
-    ~VolumeRef();
-};
 
 /**
  * This class provides basic memory management for volume data and its representations.
@@ -54,7 +45,6 @@ struct VolumeRef {
  * The main memory and GPU memory / representations are thereby handled individually.
  */
 class VRN_CORE_API VolumeMemoryManager : public tgt::Singleton<VolumeMemoryManager> {
-
 public:
 
     /**
@@ -64,6 +54,18 @@ public:
     virtual ~VolumeMemoryManager();
 
 protected:
+
+    /**
+     * Instances of this class are stored by the VolumeMemoryManager instead of raw volumes to allow
+     * for locked representations not to be deleted as long as at least one lock is acquired.
+     * For usage, see VolumeRAMRepresentationLock.
+     */
+    struct VolumeEntity {
+        VolumeBase* volume_;
+        size_t numLockedUses_;
+
+        VolumeEntity(VolumeBase* volume);
+    };
 
     // VolumeBase and Volume have to call protected functions in MemoryManager and are therefore friend classes
     friend class VolumeBase;
@@ -158,6 +160,9 @@ protected:
     /// internal method for finding a decorated volume in a hierarchy of VolumeDecorators
     const VolumeBase* getActualVolume(const VolumeBase* v);
 
+    /// internal method for retrieving an iterator to
+    std::deque<VolumeEntity>::iterator findRegisteredVolumeEntity(const VolumeBase*);
+
     /**
      * Returns a pointer to the mutex of the memory manager, which is used in Volume and VolumeBase class.
      *
@@ -167,9 +172,7 @@ protected:
 
     static const std::string loggerCat_;
 
-    std::deque<VolumeRef> registeredVolumes_;   ///< the list of registered volumes in LRU order (front: most recently used, back: lest recently used)
-
-    std::deque<VolumeRef>::iterator findRegisteredVolume(const VolumeBase*);
+    std::deque<VolumeEntity> registeredVolumes_;  ///< the list of registered volumes in LRU order (front: most recently used, back: lest recently used)
 
     size_t availableMainMemory_;            ///< currently available main memory for volumes (in bytes)
     bool availableMainMemoryInvalid_;       ///< does the available main memory have to be recomputed?
@@ -184,13 +187,17 @@ protected:
 // this object is dropped.
 class VolumeRAMRepresentationLock {
 public:
-    const VolumeRAM* operator->() const;
-private:
-    const VolumeBase* vol_;
-    const VolumeRAM* ram_;
-
-    VolumeRAMRepresentationLock(const VolumeBase* vol);
+    VolumeRAMRepresentationLock(const VolumeBase* volume);
+    VolumeRAMRepresentationLock(const VolumeRAMRepresentationLock* other);
     ~VolumeRAMRepresentationLock();
+
+    VolumeRAMRepresentationLock& operator=(const VolumeRAMRepresentationLock* other);
+    VolumeRAMRepresentationLock& operator=(const VolumeBase* volume);
+    const VolumeRAM* operator->() const;
+    const VolumeRAM* operator*() const;
+private:
+    const VolumeBase* volume_;
+    const VolumeRAM* representation_;
 };
 
 } // namespace voreen

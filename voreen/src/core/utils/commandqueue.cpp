@@ -33,19 +33,19 @@
 
 namespace voreen {
 
-CommandQueueElement::CommandQueueElement(const void* owner, std::unique_ptr<Callback>&& callback)
+CommandQueue::CommandQueueElement::CommandQueueElement(const void* owner, std::unique_ptr<Callback>&& callback)
     : owner_(owner)
     , callback_(std::move(callback))
     , mutex_()
 {
 }
-CommandQueueElement::CommandQueueElement(CommandQueueElement&& other)
+CommandQueue::CommandQueueElement::CommandQueueElement(CommandQueueElement&& other)
     : owner_(other.owner_)
     , callback_(std::move(other.callback_))
     , mutex_()
 {
 }
-CommandQueueElement& CommandQueueElement::operator=(CommandQueueElement&& other) {
+CommandQueue::CommandQueueElement& CommandQueue::CommandQueueElement::operator=(CommandQueueElement&& other) {
     owner_ = other.owner_;
     callback_ = std::move(other.callback_);
     return *this;

@@ -34,14 +34,10 @@
 
 namespace voreen {
 
-VolumeRef::VolumeRef(VolumeBase* volume)
+VolumeMemoryManager::VolumeEntity::VolumeEntity(VolumeBase* volume)
     : volume_(volume)
     , numLockedUses_(0)
 {
-}
-
-VolumeRef::~VolumeRef() {
-    tgtAssert(numLockedUses_ == 0, "Volume Representation still has locked uses.");
 }
 
 const std::string VolumeMemoryManager::loggerCat_("voreen.VolumeMemoryManager");
@@ -62,11 +58,11 @@ VolumeMemoryManager::~VolumeMemoryManager() {
 void VolumeMemoryManager::registerVolume(VolumeBase* v) {
     boost::lock_guard<boost::recursive_mutex> lock(vmmMutex_);
 
-    if (findRegisteredVolume(v) != registeredVolumes_.end()) {
+    if (findRegisteredVolumeEntity(v) != registeredVolumes_.end()) {
         LERROR("Cannot register volume, volume has already been registered!");
         return;
     }
-
+    
     registeredVolumes_.push_front(v);
 
     updateMainMemory();
@@ -75,13 +71,14 @@ void VolumeMemoryManager::registerVolume(VolumeBase* v) {
 
 void VolumeMemoryManager::deregisterVolume(VolumeBase* v) {
     boost::lock_guard<boost::recursive_mutex> lock(vmmMutex_);
-    auto it = findRegisteredVolume(v);
+    auto it = findRegisteredVolumeEntity(v);
 
     if (it == registeredVolumes_.end()) {
         LERROR("Cannot deregister volume, not found in volume list!");
         return;
     }
 
+    tgtAssert(it->numLockedUses_ == 0, "Volume Representation still has locked uses.");
     registeredVolumes_.erase(it);
 
     updateMainMemory();
@@ -104,7 +101,7 @@ bool VolumeMemoryManager::requestMainMemory(const VolumeBase* v) {
     bool memoryCheck = (requiredMemory <= getAvailableMainMemory());
 
     // find the requested volume to avoid removing its representations
-    auto requestedVolume = findRegisteredVolume(v);
+    auto requestedVolume = findRegisteredVolumeEntity(v);
     // start at least recently used volume to free memory
     auto currentVolume = registeredVolumes_.end() - 1;
 
@@ -235,7 +232,7 @@ bool VolumeMemoryManager::requestGraphicsMemory(const VolumeBase* v) {
     bool memoryCheck = (requiredMemory <= getAvailableGraphicsMemory()) && checkProxyTexture(v);
 
     // find the requested volume to avoid removing its representations
-    auto requestedVolume = findRegisteredVolume(v);
+    auto requestedVolume = findRegisteredVolumeEntity(v);
     // start at least recently used volume to free memory
     auto currentVolume = registeredVolumes_.end() - 1;
 
@@ -279,7 +276,7 @@ void VolumeMemoryManager::notifyUse(const VolumeBase* v, bool locked) {
 
     v = getActualVolume(v);
 
-    auto it = findRegisteredVolume(v);
+    auto it = findRegisteredVolumeEntity(v);
 
     if (it == registeredVolumes_.end()) {
         LERROR("Notifying use for unregistered volume!");
@@ -287,12 +284,13 @@ void VolumeMemoryManager::notifyUse(const VolumeBase* v, bool locked) {
     }
 
     if (locked) {
-        it->numLockedUses_ -= 1;
+        it->numLockedUses_++;
     }
 
     // remove and put to front
-    registeredVolumes_.erase(it);
-    registeredVolumes_.push_front(*it);
+    VolumeEntity entity = *it;    // Backup entity.
+    registeredVolumes_.erase(it); // Invalidates the iterator.
+    registeredVolumes_.push_front(entity);
 }
 
 void VolumeMemoryManager::notifyLockedRelease(const VolumeBase* v) {
@@ -300,7 +298,7 @@ void VolumeMemoryManager::notifyLockedRelease(const VolumeBase* v) {
 
     v = getActualVolume(v);
 
-    auto it = findRegisteredVolume(v);
+    auto it = findRegisteredVolumeEntity(v);
 
     if (it == registeredVolumes_.end()) {
         LERROR("Notifying use for unregistered volume!");
@@ -308,7 +306,7 @@ void VolumeMemoryManager::notifyLockedRelease(const VolumeBase* v) {
     }
 
     tgtAssert(it->numLockedUses_ > 0, "No locked uses left");
-    it->numLockedUses_ -= 1;
+    it->numLockedUses_--;
 }
 
 void VolumeMemoryManager::updateMainMemory() {
@@ -411,27 +409,65 @@ const VolumeBase* VolumeMemoryManager::getActualVolume(const VolumeBase* v) {
     return dynamic_cast<const Volume*>(v);
 }
 
-std::deque<VolumeRef>::iterator VolumeMemoryManager::findRegisteredVolume(const VolumeBase* v) {
-    return std::find_if(registeredVolumes_.begin(), registeredVolumes_.end(), [v] (VolumeRef& ref) {
+std::deque<VolumeMemoryManager::VolumeEntity>::iterator VolumeMemoryManager::findRegisteredVolumeEntity(const VolumeBase* v) {
+    return std::find_if(registeredVolumes_.begin(), registeredVolumes_.end(), [v] (VolumeEntity& ref) {
             return ref.volume_ == v;
             });
 }
 
-const VolumeRAM* VolumeRAMRepresentationLock::operator->() const {
-    return ram_;
-}
-
-VolumeRAMRepresentationLock::VolumeRAMRepresentationLock(const VolumeBase* vol)
-    : vol_(vol)
-    , ram_(nullptr)
+VolumeRAMRepresentationLock::VolumeRAMRepresentationLock(const VolumeBase* volume)
+    : volume_(volume)
+    , representation_(nullptr)
 {
+    tgtAssert(volume_, "volume was null");
+
     if (VolumeMemoryManager::isInited())
-        VolumeMemoryManager::getRef().notifyUse(vol_, true);
-    ram_ = vol_->getRepresentation<VolumeRAM>();
+        VolumeMemoryManager::getRef().notifyUse(volume_, true);
+    representation_ = volume_->getRepresentation<VolumeRAM>();
+}
+VolumeRAMRepresentationLock::VolumeRAMRepresentationLock(const VolumeRAMRepresentationLock* other)
+    : VolumeRAMRepresentationLock(other->volume_)
+{
 }
 VolumeRAMRepresentationLock::~VolumeRAMRepresentationLock() {
     if (VolumeMemoryManager::isInited())
-        VolumeMemoryManager::getRef().notifyLockedRelease(vol_);
+        VolumeMemoryManager::getRef().notifyLockedRelease(volume_);
 }
+
+VolumeRAMRepresentationLock& VolumeRAMRepresentationLock::operator=(const VolumeRAMRepresentationLock* other) {
+    if (VolumeMemoryManager::isInited())
+        VolumeMemoryManager::getRef().notifyLockedRelease(volume_);
+
+    volume_ = other->volume_;
+
+    if (VolumeMemoryManager::isInited())
+        VolumeMemoryManager::getRef().notifyUse(volume_, true);
+
+    representation_ = other->representation_;
+
+    return *this;
+}
+VolumeRAMRepresentationLock& VolumeRAMRepresentationLock::operator=(const VolumeBase* volume) {
+    tgtAssert(volume, "volume was null");
+
+    if (VolumeMemoryManager::isInited())
+        VolumeMemoryManager::getRef().notifyLockedRelease(volume_);
+
+    volume_ = volume;
+
+    if (VolumeMemoryManager::isInited())
+        VolumeMemoryManager::getRef().notifyUse(volume_, true);
+
+    representation_ = volume->getRepresentation<VolumeRAM>();
+
+    return *this;
+}
+const VolumeRAM* VolumeRAMRepresentationLock::operator->() const {
+    return representation_;
+}
+const VolumeRAM* VolumeRAMRepresentationLock::operator*() const {
+    return representation_;
+}
+
 
 } // namespace voreen
