@@ -88,7 +88,7 @@ private:
     // Static material ids.
     enum Material {
         MAT_EMPTY  = 0,
-        MAT_LIQUID = 1,
+        MAT_FLUID  = 1,
         MAT_WALL   = 2,
         MAT_COUNT,
     };

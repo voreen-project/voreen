@@ -167,11 +167,11 @@ bool Volume::hasMetaData(const std::string& key) const {
     return metaData_.hasMetaData(key);
 }
 
-void Volume::setModality(Modality modality) {
+void Volume::setModality(const Modality& modality) {
     setMetaDataValue<StringMetaData>(META_DATA_NAME_MODALITY, modality.getName());
 }
 
-void Volume::setRealWorldMapping(RealWorldMapping rwm) {
+void Volume::setRealWorldMapping(const RealWorldMapping& rwm) {
     setMetaDataValue<RealWorldMappingMetaData>(META_DATA_NAME_REAL_WORLD_MAPPING, rwm);
 }
 
@@ -179,11 +179,11 @@ void Volume::setTimestep(float timestep) {
     setMetaDataValue<FloatMetaData>(META_DATA_NAME_TIMESTEP, timestep);
 }
 
-void Volume::setSpacing(const tgt::vec3 spacing) {
+void Volume::setSpacing(const tgt::vec3& spacing) {
     setMetaDataValue<Vec3MetaData>(META_DATA_NAME_SPACING, spacing);
 }
 
-void Volume::setOffset(const tgt::vec3 offset) {
+void Volume::setOffset(const tgt::vec3& offset) {
     setMetaDataValue<Vec3MetaData>(META_DATA_NAME_OFFSET, offset);
 }
 

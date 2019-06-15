@@ -69,7 +69,7 @@ StreamlineCreator::StreamlineCreator()
     , backgroundThreadIsStreamlineCreator_(false)
 {
     //add ports
-    volInport_.addCondition(new PortConditionVolumeType3xFloat());
+    volInport_.addCondition(new PortConditionVolumeChannelCount(3));
     volInport_.onNewData(MemberFunctionCallback<StreamlineCreator>(this,&StreamlineCreator::volumePortHasChanged));
     static_cast<Observable<PortObserver>*>(&volInport_)->addObserver(static_cast<PortObserver*>(this));
     addPort(volInport_);
@@ -202,11 +202,10 @@ void StreamlineCreator::process() {
         backgroundThreadIsStreamlineCreator_ = true;
 
         // create a new thread
-        const VolumeRAM_3xFloat* flow = dynamic_cast<const VolumeRAM_3xFloat*>(volInport_.getData()->getRepresentation<VolumeRAM>());
         backgroundThread_ = new StreamlineCreatorBackgroundThread(
                     this,
                     seedTimeProp_.get(),
-                    flow,
+                    volInport_.getThreadSafeData(),
                     streamlineListThreadOutput_,
                     maxNumStreamlinesProp_.get(),
                     streamlineLengthThresholdProp_.get(),

@@ -42,7 +42,7 @@ public:
     /// Empty default constructor required by VolumeDerivedData interface.
     VolumeMinMaxMagnitude();
     VolumeMinMaxMagnitude(const VolumeMinMaxMagnitude& other);
-    VolumeMinMaxMagnitude(float minMag, float maxMag);
+    VolumeMinMaxMagnitude(float minMag, float maxMag, float minNormMag, float maxNormMag);
     virtual std::string getClassName() const { return "VolumeMinMaxMagnitude"; }
 
     virtual VolumeDerivedData* create() const;
@@ -55,14 +55,23 @@ public:
     /// @see VolumeDerivedData
     virtual void deserialize(Deserializer& s);
 
-    /// Minimum (RealWorld)
+    /// Minimum Magnitude (RealWorld)
     float getMinMagnitude() const;
 
-    /// Maximum (RealWorld)
+    /// Maximum Magnitude (RealWorld)
     float getMaxMagnitude() const;
+
+    /// Minimum Magnitude (Normalized)
+    float getMinNormalizedMagnitude() const;
+
+    /// Maximum Magnitude (Normalized)
+    float getMaxNormalizedMagnitude() const;
+
 protected:
     float minMagnitude_;
     float maxMagnitude_;
+    float minNormalizedMagnitude_;
+    float maxNormalizedMagnitude_;
 };
 
 } // namespace voreen

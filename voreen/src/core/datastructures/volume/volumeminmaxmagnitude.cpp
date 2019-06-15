@@ -30,6 +30,42 @@
 
 namespace voreen {
 
+VolumeMinMaxMagnitude* createFromVolumeRAM(const VolumeRAM* volume, RealWorldMapping rwm) {
+
+    float minMagnitude = 0.f, maxMagnitude = 0.f;
+    float minNormMagnitude = 0.f, maxNormMagnitude = 0.f;
+
+    for (size_t i=0; i<volume->getNumVoxels(); i++) {
+        float magnitude = 0.0f, normalizedMagnitude = 0.0f;
+        for(size_t c=0; c<volume->getNumChannels(); c++) {
+
+            // Update normalized magnitude.
+            float value = volume->getVoxelNormalized(i, c);
+            normalizedMagnitude += value * value;
+
+            // Update real world magnitude.
+            value = rwm.normalizedToRealWorld(value);
+            magnitude += value * value;
+        }
+
+        minMagnitude = std::min(minMagnitude, magnitude);
+        maxMagnitude = std::max(maxMagnitude, magnitude);
+
+        minNormMagnitude = std::min(minNormMagnitude, normalizedMagnitude);
+        maxNormMagnitude = std::max(maxNormMagnitude, normalizedMagnitude);
+    }
+
+    minMagnitude = std::sqrt(minMagnitude);
+    maxMagnitude = std::sqrt(maxMagnitude);
+    tgtAssert(minMagnitude <= maxMagnitude, "invalid min/max magnitude values");
+
+    minNormMagnitude = std::sqrt(minNormMagnitude);
+    maxNormMagnitude = std::sqrt(maxNormMagnitude);
+    tgtAssert(minNormMagnitude <= maxNormMagnitude, "invalid min/max normalized magnitude values");
+
+    return new VolumeMinMaxMagnitude(minMagnitude, maxMagnitude, minNormMagnitude, maxNormMagnitude);
+}
+
 VolumeMinMaxMagnitude::VolumeMinMaxMagnitude()
     : VolumeDerivedData()
 {}
@@ -38,12 +74,16 @@ VolumeMinMaxMagnitude::VolumeMinMaxMagnitude(const VolumeMinMaxMagnitude& other)
     : VolumeDerivedData()
     , minMagnitude_(other.minMagnitude_)
     , maxMagnitude_(other.maxMagnitude_)
+    , minNormalizedMagnitude_(other.minNormalizedMagnitude_)
+    , maxNormalizedMagnitude_(other.maxNormalizedMagnitude_)
 {}
 
-VolumeMinMaxMagnitude::VolumeMinMaxMagnitude(float minMag, float maxMag)
+VolumeMinMaxMagnitude::VolumeMinMaxMagnitude(float minMag, float maxMag, float minNormMag, float maxNormMag)
     : VolumeDerivedData()
     , minMagnitude_(minMag)
     , maxMagnitude_(maxMag)
+    , minNormalizedMagnitude_(minNormMag)
+    , maxNormalizedMagnitude_(maxNormMag)
 {}
 
 VolumeDerivedData* VolumeMinMaxMagnitude::create() const {
@@ -53,20 +93,21 @@ VolumeDerivedData* VolumeMinMaxMagnitude::create() const {
 VolumeDerivedData* VolumeMinMaxMagnitude::createFrom(const VolumeBase* handle) const {
     tgtAssert(handle, "no volume");
 
-    float minMagnitude = 0.f, maxMagnitude = 1.f;
+    RealWorldMapping rwm = handle->getRealWorldMapping();
+
     if (handle->hasRepresentation<VolumeRAM>()) {
         const VolumeRAM* v = handle->getRepresentation<VolumeRAM>();
         tgtAssert(v, "no volume");
-
-        minMagnitude = v->minMagnitude();
-        maxMagnitude = v->maxMagnitude();
+        return createFromVolumeRAM(v, rwm);
     }
     else if (handle->hasRepresentation<VolumeDisk>()) {
         const VolumeDisk* volumeDisk = handle->getRepresentation<VolumeDisk>();
         tgtAssert(volumeDisk, "no disk volume");
 
-        minMagnitude = FLT_MAX;
-        maxMagnitude = -FLT_MAX;
+        float minMagnitude = std::numeric_limits<float>::max();
+        float maxMagnitude = 0.0f;
+        float minNormalizedMagnitude = std::numeric_limits<float>::max();
+        float maxNormalizedMagnitude = 0.0f;
 
         // compute min/max values slice-wise
         size_t numSlices = handle->getDimensions().z;
@@ -77,23 +118,26 @@ VolumeDerivedData* VolumeMinMaxMagnitude::createFrom(const VolumeBase* handle) c
             boost::this_thread::interruption_point();
 
             try {
-                VolumeRAM* sliceVolume = volumeDisk->loadSlices(i, i);
-                minMagnitude = std::min(minMagnitude, sliceVolume->minMagnitude());
-                maxMagnitude = std::max(maxMagnitude, sliceVolume->maxMagnitude());
-                delete sliceVolume;
+                std::unique_ptr<VolumeRAM> sliceVolume(volumeDisk->loadSlices(i, i));
+                std::unique_ptr<VolumeMinMaxMagnitude> sliceMinMaxMagnitude(createFromVolumeRAM(sliceVolume.get(), rwm));
+
+                minMagnitude = std::min(minMagnitude, sliceMinMaxMagnitude->getMinMagnitude());
+                maxMagnitude = std::max(maxMagnitude, sliceMinMaxMagnitude->getMaxMagnitude());
+
+                minNormalizedMagnitude = std::min(minNormalizedMagnitude, sliceMinMaxMagnitude->getMinNormalizedMagnitude());
+                maxNormalizedMagnitude = std::max(maxNormalizedMagnitude, sliceMinMaxMagnitude->getMaxNormalizedMagnitude());
             }
             catch (tgt::Exception& e) {
                 LWARNING("Unable to compute min/max values: failed to load slice from disk volume: " << e.what());
-                break;
+                return nullptr;
             }
         }
-    }
-    else {
-        LWARNING("Unable to compute min/max values: neither disk nor ram representation available");
-    }
-    tgtAssert(minMagnitude <= maxMagnitude, "invalid min/max values");
 
-    return new VolumeMinMaxMagnitude(minMagnitude,maxMagnitude);
+        return new VolumeMinMaxMagnitude(minMagnitude, maxMagnitude, minNormalizedMagnitude, maxNormalizedMagnitude);;
+    }
+
+    LWARNING("Unable to compute min/max magnitude values: neither disk nor ram representation available");
+    return nullptr;
 }
 
 float VolumeMinMaxMagnitude::getMinMagnitude() const {
@@ -104,14 +148,37 @@ float VolumeMinMaxMagnitude::getMaxMagnitude() const {
     return maxMagnitude_;
 }
 
+float VolumeMinMaxMagnitude::getMinNormalizedMagnitude() const {
+    return minMagnitude_;
+}
+
+float VolumeMinMaxMagnitude::getMaxNormalizedMagnitude() const {
+    return maxMagnitude_;
+}
+
 void VolumeMinMaxMagnitude::serialize(Serializer& s) const  {
     s.serialize("minMagnitude", minMagnitude_);
     s.serialize("maxMagnitude", maxMagnitude_);
+    s.serialize("minNormalizedMagnitude", minNormalizedMagnitude_);
+    s.serialize("maxNormalizedMagnitude", maxNormalizedMagnitude_);
 }
 
 void VolumeMinMaxMagnitude::deserialize(Deserializer& s) {
     s.deserialize("minMagnitude", minMagnitude_);
     s.deserialize("maxMagnitude", maxMagnitude_);
+    try {
+        // Normalized values have been added later on.
+        // Note, that former versions of min and max magnitude do not exist any longer.
+        // This breaks compatibility with magnitudes calculated on other than
+        // (vec) float or (vec) double but those haven't been used so far in voreen.
+        s.deserialize("minNormalizedMagnitude", minNormalizedMagnitude_);
+        s.deserialize("maxNormalizedMagnitude", maxNormalizedMagnitude_);
+    }
+    catch (SerializationException&) {
+        LWARNING("Couldn't find normalized magnitudes, assuming default real world mapping");
+        minNormalizedMagnitude_ = minMagnitude_;
+        maxNormalizedMagnitude_ = maxMagnitude_;
+    }
 }
 
 } // namespace voreen

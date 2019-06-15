@@ -44,7 +44,7 @@ typedef double T;
 
 enum Material {
     MAT_EMPTY  = 0,
-    MAT_LIQUID = 1,
+    MAT_FLUID = 1,
     MAT_WALL   = 2,
     MAT_COUNT,
 };
@@ -144,7 +144,7 @@ void prepareGeometry(UnitConverter<T, DESCRIPTOR> const& converter, IndicatorF3D
     clout << "Prepare Geometry ..." << std::endl;
 
     superGeometry.rename(MAT_EMPTY, MAT_WALL,   indicator);
-    superGeometry.rename(MAT_WALL,  MAT_LIQUID, stlReader);
+    superGeometry.rename(MAT_WALL,  MAT_FLUID, stlReader);
 
     superGeometry.clean();
 
@@ -161,7 +161,7 @@ void prepareGeometry(UnitConverter<T, DESCRIPTOR> const& converter, IndicatorF3D
                                   normal[0], normal[1], normal[2],
                                   radius*VOREEN_LENGTH_TO_SI);
         IndicatorCylinder3D<T> layerFlow(flow, 2. * converter.getConversionFactorLength());
-        superGeometry.rename(MAT_WALL, materialId, MAT_LIQUID, layerFlow);
+        superGeometry.rename(MAT_WALL, materialId, MAT_FLUID, layerFlow);
         flowIndicators[i].materialId_ = materialId;
         materialId++;
     }
@@ -169,7 +169,7 @@ void prepareGeometry(UnitConverter<T, DESCRIPTOR> const& converter, IndicatorF3D
     // Removes all not needed boundary voxels outside the surface
     superGeometry.clean();
     // Removes all not needed boundary voxels inside the surface
-    superGeometry.innerClean(3);
+    superGeometry.innerClean(MAT_COUNT);
     superGeometry.checkForErrors();
 
     superGeometry.print();
@@ -192,7 +192,7 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
     lattice.defineDynamics(superGeometry, MAT_EMPTY, &instances::getNoDynamics<T, DESCRIPTOR>());
 
     // material=1 --> bulk dynamics
-    lattice.defineDynamics(superGeometry, MAT_LIQUID, &bulkDynamics);
+    lattice.defineDynamics(superGeometry, MAT_FLUID, &bulkDynamics);
 
     if (bouzidiOn) {
         // material=2 --> no dynamics + bouzidi zero velocity
@@ -230,8 +230,8 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
         std::vector<T> velocity(3, T());
         AnalyticalConst3D<T, T> uF(velocity);
 
-        lattice.defineRhoU(superGeometry, MAT_LIQUID, rhoF, uF);
-        lattice.iniEquilibrium(superGeometry, MAT_LIQUID, rhoF, uF);
+        lattice.defineRhoU(superGeometry, MAT_FLUID, rhoF, uF);
+        lattice.iniEquilibrium(superGeometry, MAT_FLUID, rhoF, uF);
 
         // Initialize all values of distribution functions to their local equilibrium
         for (const FlowIndicator &indicator : flowIndicators) {
@@ -242,7 +242,7 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
     // Steered simulation.
     else {
         MeasuredDataMapper mapper(measuredData.front());
-        lattice.defineU(superGeometry, MAT_LIQUID, mapper);
+        lattice.defineU(superGeometry, MAT_FLUID, mapper);
     }
 
     // Lattice initialize
@@ -429,7 +429,7 @@ void writeResult(STLreader<T>& stlReader,
     // * VolumeMinMaxMagnitude
     if (feature.getTargetDim() > 1) {
         vvdFeatureFile
-            << "<DerivedItem type=\"VolumeMinMaxMagnitude\" minMagnitude=\"" << minMagnitude << "\" maxMagnitude=\"" << maxMagnitude << "\" />";
+            << "<DerivedItem type=\"VolumeMinMaxMagnitude\" minMagnitude=\"" << minMagnitude << "\" maxMagnitude=\"" << maxMagnitude << "\" minNormalizedMagnitude=\"" << minMagnitude << "\" maxNormalizedMagnitude=\"" << maxMagnitude << "\" />";
     }
     // * VolumeMinMax
     vvdFeatureFile << "<DerivedItem type=\"VolumeMinMax\"><minValues>";

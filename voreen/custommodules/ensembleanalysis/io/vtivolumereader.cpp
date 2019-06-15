@@ -97,12 +97,7 @@ Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vt
     }
 
     Volume* volumeHandle = new Volume(dataset, spacing, offset);
-    if (volumeHandle->getNumChannels() == 1) {
-        volumeHandle->addDerivedData(new VolumeMinMax(min, max, min, max));
-    }
-    else {
-        volumeHandle->addDerivedData(new VolumeMinMaxMagnitude(min, max));
-    }
+    volumeHandle->addDerivedData(new VolumeMinMax(min, max, min, max));
     volumeHandle->setOrigin(origin);
     volumeHandle->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping(volumeHandle->getBaseType()));
     volumeHandle->getMetaDataContainer().addMetaData("name", new StringMetaData(name));

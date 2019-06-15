@@ -44,7 +44,7 @@ namespace voreen {
     class VRN_CORE_API StreamlineCreatorBackgroundThread : public ProcessorBackgroundThread<StreamlineCreator> {
     public:
         /** Constructor */
-        StreamlineCreatorBackgroundThread(StreamlineCreator* processor, int seedTime, const VolumeRAM_3xFloat* flow, StreamlineList* output,
+        StreamlineCreatorBackgroundThread(StreamlineCreator* processor, int seedTime, const VolumeBase* flow, StreamlineList* output,
             int maxNumStreamlines, tgt::ivec2 streamlineLengthThreshold, tgt::vec2 absoluteMagnitudeThreshold,
             StreamlineCreator::FilterMode filterMode);
         /** Destructor */
@@ -67,11 +67,12 @@ namespace voreen {
         //-----------
         //  Members
         //-----------
-        std::function<float()> rnd; ///< c++11 vodoo!!! burn witch!!!
+        std::function<float()> rnd;
         //derived from properties
-        const VolumeRAM_3xFloat* flow_;        ///< input flow
+        const VolumeBase* flow_;               ///< input flow
+        VolumeRAMRepresentationLock representation_; ///< representation lock for input flow
         StreamlineList* output_;               ///< output, which will be used by the processor
-        size_t maxNumStreamlines_;                ///< maximal number of streamlines
+        size_t maxNumStreamlines_;             ///< maximal number of streamlines
         tgt::svec2 streamlineLengthThreshold_; ///< streamline length must be in this interval
         tgt::vec2 absoluteMagnitudeThreshold_; ///< only magnitudes in this intervall are used
         StreamlineCreator::FilterMode filterMode_; ///< filtering inside the volume

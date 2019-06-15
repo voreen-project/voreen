@@ -34,12 +34,12 @@
 namespace voreen {
 
 StreamlineCreatorBackgroundThread::StreamlineCreatorBackgroundThread(StreamlineCreator* processor, int seedTime,
-    const VolumeRAM_3xFloat* flow, StreamlineList* output,
+    const VolumeBase* flow, StreamlineList* output,
     int maxNumStreamlines, tgt::ivec2 streamlineLengthThreshold,
     tgt::vec2 absoluteMagnitudeThreshold, StreamlineCreator::FilterMode filterMode)
     : ProcessorBackgroundThread<StreamlineCreator>(processor)
     , rnd(std::bind(std::uniform_real_distribution<float>(0.f, 1.f), std::mt19937(seedTime)))
-    , flow_(flow), output_(output)
+    , flow_(flow), representation_(flow), output_(output)
     , maxNumStreamlines_(maxNumStreamlines), streamlineLengthThreshold_(tgt::svec2(streamlineLengthThreshold))
     , absoluteMagnitudeThreshold_(absoluteMagnitudeThreshold), filterMode_(filterMode)
     , seedingPositions_(0)
@@ -59,14 +59,16 @@ void StreamlineCreatorBackgroundThread::handleInterruption() {
 }
 
 void StreamlineCreatorBackgroundThread::threadMain() {
+
     //--------------------- init seeds ---------------------------------------
     std::vector<tgt::vec3> validPositions;
     for (size_t z = 0; z < flow_->getDimensions().z; z++) {
         for (size_t y = 0; y < flow_->getDimensions().y; y++) {
             for (size_t x = 0; x < flow_->getDimensions().x; x++) {
-                float len = tgt::length(flow_->voxel(x, y, z));
+                tgt::vec3 voxel = getVelocityAt(tgt::vec3(x, y, z));
+                float len = tgt::length(voxel);
                 if (len >= absoluteMagnitudeThreshold_.x && len <= absoluteMagnitudeThreshold_.y)
-                    validPositions.push_back(tgt::vec3(x, y, z));
+                    validPositions.push_back(voxel);
             }
         }
     }
@@ -250,8 +252,23 @@ Streamline StreamlineCreatorBackgroundThread::computeStreamlineRungeKutta(const 
 }
 
 const tgt::vec3 StreamlineCreatorBackgroundThread::getVelocityAt(const tgt::vec3& pos) {
-    return (filterMode_ == StreamlineCreator::NEAREST ? flow_->getVoxelNearest(pos, 0, true)
-        : flow_->getVoxelLinear(pos, 0, true));
+
+    RealWorldMapping rwm = flow_->getRealWorldMapping();
+
+    tgt::vec3 voxel;
+    if(filterMode_ == StreamlineCreator::NEAREST) {
+        for (size_t channel = 0; channel < flow_->getNumChannels(); channel++) {
+            voxel[channel] = rwm.normalizedToRealWorld(
+                    representation_->getVoxelNormalized(pos, channel));
+        }
+    }
+    else {
+        for (size_t channel = 0; channel < flow_->getNumChannels(); channel++) {
+            voxel[channel] = rwm.normalizedToRealWorld(
+                    representation_->getVoxelNormalizedLinear(pos, channel));
+        }
+    }
+    return voxel;
 }
 
 }   // namespace

@@ -82,6 +82,14 @@ public:
 
     virtual bool hasMetaData(const std::string& key) const;
 
+    /**
+     * Sets the meta data with given key to a specified value, if it did not exist already.
+     * Note: This function is not thread safe!
+     *       If you change the real world mapping for example, while VolumeMinMax is calculated in
+     *       a background thread, the result is undefined.
+     *       It's necessary to stop all derived data threads and guarantee not to start a new one,
+     *       until this function call finished its work.
+     */
     template<typename T, typename U>
     void setMetaDataValue(const std::string& key, U value);
 
@@ -89,14 +97,14 @@ public:
     virtual void setHash(const std::string& hash) const;
 
     /// Specifies the voxel dimensions of the volume.
-    virtual void setSpacing(const tgt::vec3 spacing);
+    virtual void setSpacing(const tgt::vec3& spacing);
 
-    virtual void setOffset(const tgt::vec3 offset);
+    virtual void setOffset(const tgt::vec3& offset);
 
     virtual void setPhysicalToWorldMatrix(const tgt::mat4& transformationMatrix);
 
-    void setModality(Modality modality);
-    void setRealWorldMapping(RealWorldMapping rwm);
+    void setModality(const Modality& modality);
+    void setRealWorldMapping(const RealWorldMapping& rwm);
 
     void setTimestep(float timestep);
 
@@ -138,7 +146,9 @@ protected:
     friend class SliceHelper;
     friend class RawVolumeReader;
 
+#ifdef VRN_MODULE_DEPRECATED
     friend class VolumeSeriesSource;
+#endif
 #ifdef VRN_MODULE_EXPERIMENTAL
     friend class VolumeStreamProcessor;
 #endif
@@ -193,8 +203,6 @@ protected:
     static const std::string loggerCat_;
 
 private:
-
-    friend class KeyValueFactory;
 
     Volume(const Volume&) {} // private copy-constructor to prevent copying, use clone() instead.
 

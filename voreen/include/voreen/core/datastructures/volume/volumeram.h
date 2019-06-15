@@ -111,16 +111,18 @@ public:
     virtual float maxNormalizedValue(size_t channel = 0) const;
 
     /**
-     * Returns the value with the largest magnitude (absolute value) contained in the volume;
-     * in case of multiple channels, this means that the maximum euclidian vector length is returned.
-     */
-    virtual float maxMagnitude() const = 0;
-
-    /**
      * Returns the value with the smallest magnitude (absolute value) contained in the volume;
      * in case of multiple channels, this means that the minimum euclidian vector length is returned.
+     * The normalized values are considered. For the real world magnitudes use VolumeMinMaxMagnitude.
      */
-    virtual float minMagnitude() const = 0;
+    virtual float minNormalizedMagnitude() const = 0;
+
+    /**
+     * Returns the value with the largest magnitude (absolute value) contained in the volume;
+     * in case of multiple channels, this means that the maximum euclidian vector length is returned.
+     * The normalized values are considered. For the real world magnitudes use VolumeMinMaxMagnitude.
+     */
+    virtual float maxNormalizedMagnitude() const = 0;
 
     //------------------------------------------------------
 

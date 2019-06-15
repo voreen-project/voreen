@@ -79,7 +79,7 @@ VolumeDerivedData* VolumeMinMax::createFrom(const VolumeBase* handle) const {
         // use RAM representation only if already present,
         // otherwise use disk representation, if available
         float minNorm = 0.f;
-        float maxNorm = 1.f;
+        float maxNorm = 0.f;
         if (handle->hasRepresentation<VolumeRAM>()) {
             const VolumeRAM* v = handle->getRepresentation<VolumeRAM>();
             tgtAssert(v, "no volume");
@@ -157,11 +157,6 @@ float VolumeMinMax::getMaxNormalized(size_t channel /*= 0*/) const {
 }
 
 void VolumeMinMax::serialize(Serializer& s) const  {
-    /*s.serialize("min", min_);
-    s.serialize("max", max_);
-    s.serialize("minNorm", minNorm_);
-    s.serialize("maxNorm", maxNorm_); */
-
     s.serialize("minValues", minValues_, "channel");
     s.serialize("maxValues", maxValues_, "channel");
     s.serialize("minNormValues", minNormValues_, "channel");
