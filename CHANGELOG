@@ -8,11 +8,13 @@ Voreen Changelog
       o Implemented File Watching for ImageSource and ImageSequenceSource
       o OctreeCreator now inherits AsyncComputeProcessor
       o Bundle LZ4 library for windows builds
-      o Add VolumeFilterList allowing to efficiently apply filter operations like thresholding, morphology operations, binarization, median filtering and more on large volumes
+      o Introduce VolumeFilterList allowing to efficiently apply filter operations like thresholding, morphology operations, binarization, median filtering and more on large volumes
       o Add port conditions for VolumeLists. In particular, a single volume port condition can be applied for each volume contained in the port's list
       o Add support for STL geometry files (both ASCII and binary) to GeometrySource
       o Python scripts can access port data, currently Volume- and RenderPorts are implemented. Refer to the module's example workspace
       o Implement dynamic python processor, each of which has its own python script. Ports can be added and removed using drag and drop
+      o Extend VolumeMinMaxMagnitude to support normalized and real world magnitudes as it's done for VolumeMinMax
+      o Introduce VolumeRAMRepresentationLock for asynchronous calculations which prevents a representation to be removed by the memory manager until it's destroyed
 
     * Framework/API Changes:
       o StringProperty: Renamed setReadOnly/isReadyOnly to setEditable/isEditable
@@ -23,6 +25,8 @@ Voreen Changelog
       o Texture pixels now can be fetched and set similar to normalized voxels
       o Implement intersection calculation between two template bounds
       o HDF5 module now supports loading a single multi-channel volume instead of only allowing for multiple single-channel volumes
+      o Remove minMagnitude and maxMagnitude from VolumeRAM which did not have proper semantic
+      o Introduce minNormalizedMagnitude and maxNormalizedMagnitude to VolumeRAM which is based on normalized Values
 
     * Bug Fixes/Minor Changes:
       o Fix crash when shader programs would fail to compile/link
