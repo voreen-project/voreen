@@ -149,11 +149,11 @@ float VolumeMinMaxMagnitude::getMaxMagnitude() const {
 }
 
 float VolumeMinMaxMagnitude::getMinNormalizedMagnitude() const {
-    return minMagnitude_;
+    return minNormalizedMagnitude_;
 }
 
 float VolumeMinMaxMagnitude::getMaxNormalizedMagnitude() const {
-    return maxMagnitude_;
+    return maxNormalizedMagnitude_;
 }
 
 void VolumeMinMaxMagnitude::serialize(Serializer& s) const  {

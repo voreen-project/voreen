@@ -63,7 +63,7 @@ VolumeRAM* VolumeDiskLZ4::loadSlices(const size_t firstZSlice, const size_t last
 
 template<typename Voxel>
 static void createBrick(const tgt::svec3& offset, const tgt::svec3& dimensions, LZ4SliceVolumeBase& volume, std::unique_ptr<VolumeRAM>& res) {
-    tgtAssert(tgt::hand(tgt::lessThan(offset+dimensions, volume.getDimensions())), "Invalid brick range");
+    tgtAssert(tgt::hand(tgt::lessThanEqual(offset+dimensions, volume.getDimensions())), "Invalid brick range");
 
     VolumeAtomic<Voxel> output(dimensions);
 

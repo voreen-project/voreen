@@ -39,7 +39,6 @@ LargeVolumeFormatConversion::LargeVolumeFormatConversion()
     , outport_(Port::OUTPORT, "volumehandle.output", "Volume Output",false)
     , enableProcessing_("enabled", "Enable", false)
     , targetBaseType_("targetFormat", "Target Data Type")
-    , normalizeRange_("normalizeRange", "Normalize Range", true)
     , numChannels_("numChannels", "Num Channels", 0, 0, 4)
     , outputVolumeFilePath_("outputVolumeFilePath", "Output volume file path", "Output volume file path", "", LZ4SliceVolumeBase::FILE_EXTENSION)
 {
@@ -58,8 +57,6 @@ LargeVolumeFormatConversion::LargeVolumeFormatConversion()
     targetBaseType_.addOption("double",   "Double");
     addProperty(targetBaseType_);
 
-    addProperty(normalizeRange_);
-
     numChannels_.setReadOnlyFlag(true);
     addProperty(numChannels_);
 
@@ -77,12 +74,12 @@ void LargeVolumeFormatConversion::adjustPropertiesToInput() {
 }
 
 template<typename OutputFormat>
-void processDispatch(const VolumeBase& input, std::unique_ptr<Volume>& output, const std::string& outputPath, bool normalizeRange, ProgressReporter& progressReporter) {
+void processDispatch(const VolumeBase& input, std::unique_ptr<Volume>& output, const std::string& outputPath, ProgressReporter& progressReporter) {
     float scale = 1.0f;
     float offset = 0.0f;
-    RealWorldMapping destMapping = input.getRealWorldMapping();
+    RealWorldMapping destMapping;
 
-    if(normalizeRange) {
+    {
         VolumeAtomic<OutputFormat> outputMetadata(tgt::svec3::one);
 
         // determine input mapping range
@@ -127,7 +124,7 @@ void processDispatch(const VolumeBase& input, std::unique_ptr<Volume>& output, c
             for(size_t x = 0; x < dim.x; ++x) {
                 tgt::svec3 slicePos(x,y,0);
                 for(size_t c = 0; c < numChannels; ++c) {
-                    float val = (inputSlice->getVoxelNormalized(slicePos, c) + offset) * scale;
+                    float val = inputSlice->getVoxelNormalized(slicePos, c) * scale + offset;
                     outputSlice->setVoxelNormalized(val, slicePos, c);
                 }
             }
@@ -154,8 +151,7 @@ LargeVolumeFormatConversion::ComputeInput LargeVolumeFormatConversion::prepareCo
     return LargeVolumeFormatConversion::ComputeInput {
         outputVolumeFilePath_.get(),
         targetBaseType_.get(),
-        inport_.getThreadSafeData(),
-        normalizeRange_.get()
+        inport_.getThreadSafeData()
     };
 }
 
@@ -169,7 +165,7 @@ LargeVolumeFormatConversion::ComputeOutput LargeVolumeFormatConversion::compute(
 
     std::unique_ptr<Volume> outputVolume(nullptr);
 
-    DISPATCH_FOR_FORMAT(outputFormat, processDispatch, *input.inputVolume_, outputVolume, input.outputPath_, input.normalizeRange_, progressReporter);
+    DISPATCH_FOR_FORMAT(outputFormat, processDispatch, *input.inputVolume_, outputVolume, input.outputPath_, progressReporter);
 
     return {
         std::move(outputVolume)
