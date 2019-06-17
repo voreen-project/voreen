@@ -70,13 +70,6 @@ build_release:
   only:
     - schedules
 
-build_static_libs:
-  stage: build
-  script:
-    - ci/build_static_libs.sh $(mktemp -d)
-  only:
-    - schedules
-
 build_deploy:
   stage: build
   script:
