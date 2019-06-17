@@ -24,8 +24,6 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
             libhdf5-dev \
             libhdf5-cpp-11 \
             liblz4-dev \
-            qt5-default \
-            libqt5svg5-dev \
             libvtkgdcm2-dev \
             opencl-headers \
             clinfo \
@@ -71,13 +69,7 @@ RUN pip3 install --upgrade pip setuptools
 RUN pip3 install meson
 
 # install dependencies for building mesa
-RUN apt-get build-dep mesa -y
-
-    #&& git config --global user.email "dummy@example.com" \
-    #&& git config --global user.name "dummy" \
-    #&& git cherry-pick 829f278ad0042b0bb5026b10e7393fa3e11498b2 \
-    #&& mkdir -p build \
-    #&& cd build \
+RUN apt-get build-dep mesa qt5-default -y
 
 # Set the locale
 RUN echo en_US.UTF-8 UTF-8> /etc/locale.gen && locale-gen
@@ -85,6 +77,7 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
+# Build mesa
 RUN mkdir -p /build/ \
     && cd /build \
     && git clone "https://gitlab.freedesktop.org/mesa/mesa.git" --depth=1\
@@ -94,9 +87,25 @@ RUN mkdir -p /build/ \
     && echo SETUP DONE \
     && echo CONFIGURE DONE \
     && meson .. \
-    && ninja install
+    && ninja install\
+    && cd /\
+    && rm -rf /build/
 
-RUN useradd -ms /bin/bash test_user
+# Build qt5 (we need to build it manually, because the repo package causes segfaults in the app image)
+RUN mkdir -p /build/ \
+    && cd /build \
+    && git clone https://code.qt.io/qt/qt5.git\
+    && cd qt5\
+    && git checkout 5.12.4\
+    && ./init-repository --module-subset=default,-qtwebengine,-qtcharts,-qtdatavis3d,-qtpurchasing,-qtvirtualkeyboard,-qtnetworkauth,-qtremoteobjects,-qtscript,-qtspeech \
+    && cd /build/qt5\
+    && mkdir qt5-build\
+    && cd qt5-build\
+    && ../configure -opensource -nomake examples -nomake tests -confirm-license\
+    && make -j8\
+    && make install\
+    && cd /\
+    && rm -rf /build/
 
 # Clean up to reduce image size
 RUN pip3 uninstall --yes meson pip setuptools
