@@ -29,6 +29,7 @@ before_script:
   - export IDENTIFIER=${CI_COMMIT_REF_NAME}--${NOW}--${CURRENT_REVISION}
   - export IDENTIFIER_COREPROFILE=${IDENTIFIER}--coreprofile
   - export IDENTIFIER_COMPATPROFILE=${IDENTIFIER}--compatibilityprofile
+  - export CMAKE_PREFIX_PATH="/usr/local/Qt-5.12.4/lib/cmake/"
 
 build_compatprofile:
   stage: build
