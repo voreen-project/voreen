@@ -197,7 +197,7 @@ if args.add_ci_report:
     branches = list(set([r.branch for r in runs]))
     branches.sort()
 
-    downloads = [("Appimage", "VoreenVE-nightly.tar.gz"), ("Source (Unix)", "voreen-src-unix-nightly.zip"), ("Source (Windows)", "voreen-src-win32-nightly.zip")]
+    downloads = [("Appimage", "VoreenVE-nightly.tar.gz"), ("Source (Unix)", "voreen-src-unix-nightly.tar.gz"), ("Source (Windows)", "voreen-src-win32-nightly.zip")]
     index_page += '<table><tbody>\n'
     index_page += '<tr><td class="latestheader" colspan="1"><b>Latest</b></td></tr>\n'
     for (title, path) in downloads:
