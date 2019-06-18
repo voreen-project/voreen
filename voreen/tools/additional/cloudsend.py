@@ -196,6 +196,14 @@ if args.add_ci_report:
     index_page += '<marquee>Voreen Regression Test Reports</marquee>\n'
     branches = list(set([r.branch for r in runs]))
     branches.sort()
+
+    downloads = [("Appimage", "VoreenVE-nightly.tar.gz"), ("Source (Unix)", "voreen-src-unix-nightly.zip"), ("Source (Windows)", "voreen-src-win32-nightly.zip")]
+    index_page += '<table><tbody>\n'
+    index_page += '<tr><td class="latestheader" colspan="1"><b>Latest</b></td></tr>\n'
+    for (title, path) in downloads:
+        index_page += '<tr><td class="download"><a href="{}/{}">{}</a></td></tr>\n'.format(report_base_dir, path, title)
+    index_page += '</tbody></table>\n'
+
     for branch in branches:
         index_page += '<table><tbody>\n'
         index_page += '<tr><td class="branchheader" colspan="3"><b>{}</b></td></tr>\n'.format(branch)
