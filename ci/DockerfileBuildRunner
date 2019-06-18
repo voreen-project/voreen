@@ -80,7 +80,7 @@ ENV LC_ALL en_US.UTF-8
 # Build mesa
 RUN mkdir -p /build/ \
     && cd /build \
-    && git clone "https://gitlab.freedesktop.org/mesa/mesa.git" --depth=1\
+    && git clone "https://gitlab.freedesktop.org/mesa/mesa.git" -b mesa-19.1.0 --depth=1\
     && mkdir -p mesa/build \
     && cd mesa/build \
     && meson -Dplatforms=surfaceless,x11 -Dgallium-drivers=swrast -Ddri-drivers=[] -Dvulkan-drivers=[] .. .\
@@ -94,9 +94,8 @@ RUN mkdir -p /build/ \
 # Build qt5 (we need to build it manually, because the repo package causes segfaults in the app image)
 RUN mkdir -p /build/ \
     && cd /build \
-    && git clone https://code.qt.io/qt/qt5.git\
+    && git clone https://code.qt.io/qt/qt5.git -b 5.12.4 --depth=1\
     && cd qt5\
-    && git checkout 5.12.4\
     && ./init-repository --module-subset=default,-qtwebengine,-qtcharts,-qtdatavis3d,-qtpurchasing,-qtvirtualkeyboard,-qtnetworkauth,-qtremoteobjects,-qtscript,-qtspeech \
     && cd /build/qt5\
     && mkdir qt5-build\
