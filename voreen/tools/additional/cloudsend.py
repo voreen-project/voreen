@@ -201,7 +201,7 @@ if args.add_ci_report:
     index_page += '<table><tbody>\n'
     index_page += '<tr><td class="latestheader" colspan="1"><b>Latest</b></td></tr>\n'
     for (title, path) in downloads:
-        index_page += '<tr><td class="download"><a href="{}/{}">{}</a></td></tr>\n'.format(report_base_dir, path, title)
+        index_page += '<tr><td class="download"><a href="{}">{}</a></td></tr>\n'.format(path, title)
     index_page += '</tbody></table>\n'
 
     for branch in branches:
