@@ -146,8 +146,12 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
     for (size_t i=0; i<channels.size(); i++) {
 
         const std::string& channel = channels[i];
-        SubtaskProgressReporter subtaskProgressReporter(progress, tgt::vec2(i, i+1) / tgt::vec2(channels.size()));
-        for (const EnsembleDataset::Run& run : data.getRuns()) {
+        SubtaskProgressReporter channelProgressReporter(progress, tgt::vec2(i, i+1) / tgt::vec2(channels.size()));
+
+        for (size_t j=0; j<data.getRuns().size(); j++) {
+
+            const EnsembleDataset::Run& run = data.getRuns()[j];
+            SubtaskProgressReporter runProgressReporter(channelProgressReporter, tgt::vec2(j, j+1) / tgt::vec2(data.getRuns().size()));
 
             const tgt::vec2& valueRange = data.getValueRange(channel);
             float pixelOffset = pixelPerTimeUnit * (timeOffset + run.timeSteps_[0].time_);
@@ -176,7 +180,7 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
                     voxelPrev = rwmPrev.normalizedToRealWorld(voxelPrev);
                     voxelPrev = mapRange(voxelPrev, valueRange.x, valueRange.y, 0.0f, 1.0f);
                     float voxelCurr = lockCurr->getVoxelNormalizedLinear(physicalToVoxelMatrixCurr * seedPoints[k]);
-                    voxelCurr = rwmPrev.normalizedToRealWorld(voxelCurr);
+                    voxelCurr = rwmCurr.normalizedToRealWorld(voxelCurr);
                     voxelCurr = mapRange(voxelCurr, valueRange.x, valueRange.y, 0.0f, 1.0f);
 
                     plotData->drawConnection(x1, x2, voxelPrev, voxelCurr, sliceNumber);
@@ -185,12 +189,13 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
                 volumePrev = volumeCurr;
                 physicalToVoxelMatrixPrev = physicalToVoxelMatrixCurr;
                 rwmPrev = rwmCurr;
+                lockPrev = volumePrev;
 
                 pixelOffset = pixelOffset + pixel;
                 pixel = pixelPerTimeUnit * run.timeSteps_[t].duration_;
 
                 // Update progress.
-                subtaskProgressReporter.setProgress(t*progressPerTimeStep);
+                runProgressReporter.setProgress(t*progressPerTimeStep);
             }
             sliceNumber++;
         }
