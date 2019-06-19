@@ -84,15 +84,20 @@ void EnsembleDataset::addRun(const Run& run) {
             const VolumeBase* volume = channel.second;
             // Bounds are stored in physical space, so don't transform to world space.
             tgt::Bounds bounds = volume->getBoundingBox(false).getBoundingBox();
-            tgt::vec2 minMax;
-            if(volume->getNumChannels() == 1) {
-                VolumeMinMax* derivedData = volume->getDerivedData<VolumeMinMax>();
-                minMax = tgt::vec2(derivedData->getMin(), derivedData->getMax());
+            VolumeMinMax* vmm = volume->getDerivedData<VolumeMinMax>();
+            tgt::vec2 minMax(std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest());
+            for(size_t c = 0; c < vmm->getNumChannels(); c++) {
+                minMax.x = std::min(minMax.x, vmm->getMin());
+                minMax.y = std::max(minMax.y, vmm->getMax());
             }
-            else { // bigger than 1
-                VolumeMinMaxMagnitude* derivedData = volume->getDerivedData<VolumeMinMaxMagnitude>();
-                minMax = tgt::vec2(derivedData->getMinMagnitude(), derivedData->getMaxMagnitude());
+
+            /*
+            // In further applications it might be useful to force derived data calculations
+            // to improve responsivity after loading the data.
+            if(volume->getNumChannels() > 1) {
+                volume->getDerivedData<VolumeMinMaxMagnitude>();
             }
+            */
 
             bool firstChannelElement = channelMetaData_.find(channelName) == channelMetaData_.end();
             ChannelMetaData& channelMetaData = channelMetaData_[channelName];
