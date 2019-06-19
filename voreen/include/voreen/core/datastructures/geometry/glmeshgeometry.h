@@ -348,6 +348,8 @@ public:
 
     virtual VertexBase::VertexLayout getVertexLayout() const;
 
+    void writeObj(std::ostream& s) const;
+
     // Method is not implemented here to force use of subclasses
     //virtual IndexType getIndexType() const = 0;
 
@@ -358,7 +360,6 @@ public:
 
     /// Clears the mesh and creates a cylinder mesh with the specified parameters (using index buffers and GL_TRIANGLES)
     void setCylinderGeometry(tgt::vec4 color, float lowerRadius, float upperRadius, float height, size_t slices, size_t tiles, bool lowerCap, bool upperCap);
-
 
     // The following mesh creation functions are
     // analogous to those in tgt/quadrics.h
@@ -669,6 +670,143 @@ tgt::Shader& GlMeshGeometry<I, V>::getDefaultShaderTransparent() {
     }
     tgtAssert(defaultShaderTransparent_, "Loading mesh shader failed");
     return *defaultShaderTransparent_;
+}
+
+namespace {
+    void writeVec4AsObj(std::ostream& s, const std::string& prefix, const tgt::vec4& v) {
+        s << prefix << " " << v.x << " " << v.y << " " << v.z << " " << v.w << "\n";
+    }
+    void writeVec3AsObj(std::ostream& s, const std::string& prefix, const tgt::vec3& v) {
+        s << prefix << " " << v.x << " " << v.y << " " << v.z << " " << "\n";
+    }
+    void writeVec2AsObj(std::ostream& s, const std::string& prefix, const tgt::vec2& v) {
+        s << prefix << " " << v.x << " " << v.y << "\n";
+    }
+    template <class I, class V>
+    void writeIndex(std::ostream& s, I i) {
+        switch(V::layout & (VertexBase::TEXCOORD | VertexBase::NORMAL)) {
+            case VertexBase::SIMPLE: {
+                s << i;
+                break;
+            }
+            case VertexBase::TEXCOORD: {
+                s << i << "/" << i;
+                break;
+            }
+            case VertexBase::NORMAL: {
+                s << i << "//" << i;
+                break;
+            }
+            case VertexBase::NORMAL_TEXCOORD: {
+                s << i << "/" << i << "/" << i;
+                break;
+            }
+            default:
+                {
+                    tgtAssert(false, "Invalid layout");
+                }
+        }
+    }
+}
+
+template <class I, class V>
+void GlMeshGeometry<I,V>::writeObj(std::ostream& s) const {
+    // Define all positions
+    for(auto& v : vertices_) {
+        writeVec4AsObj(s, "v", v.pos_);
+    }
+
+    // Define texcoords
+    if((V::layout & VertexBase::TEXCOORD) == VertexBase::TEXCOORD) {
+        for(auto& v : vertices_) {
+            writeVec2AsObj(s, "v", v.getTexCoord());
+        }
+    }
+
+    // Define normals
+    if((V::layout & VertexBase::NORMAL) == VertexBase::NORMAL) {
+        for(auto& v : vertices_) {
+            writeVec3AsObj(s, "v", v.getNormal());
+        }
+    }
+
+    // Colors are not supported in obj files :-(
+
+    //Write faces via indices
+    switch(getPrimitiveType()) {
+        case GL_TRIANGLES:
+            {
+                std::vector<I> collected;
+                for(auto& i : indices_) {
+                    if(i == primitiveRestartIndex_) {
+                        collected.clear();
+                    } else {
+                        collected.push_back(i);
+                    }
+                    tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
+                    if(collected.size() == 3) {
+                        s << "f";
+                        writeIndex(s, collected[0]);
+                        writeIndex(s, collected[1]);
+                        writeIndex(s, collected[2]);
+
+                        collected.clear();
+                    }
+                }
+                tgtAssert(collected.empty(), "Remaining indices");
+                break;
+            }
+        case GL_TRIANGLE_STRIP:
+            {
+                std::deque<I> collected;
+                for(auto& i : indices_) {
+                    if(i == primitiveRestartIndex_) {
+                        collected.clear();
+                    } else {
+                        collected.push_back(i);
+                    }
+                    tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
+                    if(collected.size() == 3) {
+                        s << "f";
+                        writeIndex(s, collected[0]);
+                        writeIndex(s, collected[1]);
+                        writeIndex(s, collected[2]);
+
+                        collected.pop_front();
+                    }
+                }
+                break;
+            }
+        case GL_TRIANGLE_FAN:
+            {
+                std::deque<I> collected;
+                for(auto& i : indices_) {
+                    if(i == primitiveRestartIndex_) {
+                        collected.clear();
+                    } else {
+                        collected.push_back(i);
+                    }
+                    tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
+                    if(collected.size() == 3) {
+                        s << "f";
+                        writeIndex(s, collected[0]);
+                        writeIndex(s, collected[1]);
+                        writeIndex(s, collected[2]);
+
+                        // Not the most efficient, but the simplest for now...
+                        I first = collected.front();
+                        collected.pop_front();
+                        collected.pop_front();
+                        collected.push_front(first);
+                    }
+                }
+                break;
+            }
+        default:
+            {
+                throw tgt::Exception("Unsupported geometry type for .obj export");
+            }
+    }
 }
 
 //------------------------ implemented from base class
