@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="false" GlobalDescription="">
-        <ProcessorNetwork version="18">
+        <ProcessorNetwork version="20">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
@@ -18,59 +18,24 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="input/flow/flow_data.vvd" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="">
+                                <path noPathSet="false">
+                                    <paths>
+                                        <item value="input/flow/helix_flow.vvd" />
+                                        <item value="../../voreen-testdata/voreen-testdata/input/flow/helix_flow.vvd" />
+                                        <item value="/home/s_leis06/programming/voreen-testdata/voreen-testdata/input/flow/helix_flow.vvd" />
+                                    </paths>
+                                </path>
+                                <searchParameters>
+                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                </searchParameters>
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
                         <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
-                            <Properties>
-                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
-                            </Properties>
-                        </Port>
-                    </Outports>
-                    <CoProcessorInports />
-                    <CoProcessorOutports />
-                    <InteractionHandlers />
-                </Processor>
-                <Processor type="StreamlineCreator" name="StreamlineCreator" id="ref1">
-                    <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-208" y="-183" />
-                    </MetaData>
-                    <Properties>
-                        <Property mapKey="absoluteMagnitudeThreshold" minValue="0" maxValue="83.751838684" minRange="0" maxRange="214748368" stepping="0.01">
-                            <value x="5.849999905" y="83.75" />
-                        </Property>
-                        <Property mapKey="autoGenerateProp" name="autoGenerateProp" value="true" />
-                        <Property mapKey="calculateStreamlineProp" name="calculateStreamlineProp" />
-                        <Property mapKey="detectBundlesProgressProp" name="detectBundlesProgressProp" />
-                        <Property mapKey="filterModeProp" name="filterModeProp" value="linear" />
-                        <Property mapKey="generateTubesProp" name="generateTubesProp" value="true" />
-                        <Property mapKey="maxAverageDistanceThreshold" name="maxAverageDistanceThreshold" value="0.100000001" />
-                        <Property mapKey="maxNumStreamlinesprop" name="maxNumStreamlinesprop" value="100" />
-                        <Property mapKey="minNumStreamlinesPerBundle" name="minNumStreamlinesPerBundle" value="1" />
-                        <Property mapKey="progressProp" name="progressProp" />
-                        <Property mapKey="relativeMagnitudeThreshold" minValue="0" maxValue="100" minRange="0" maxRange="214748368" stepping="0.01">
-                            <value x="6.984920979" y="99.997802734" />
-                        </Property>
-                        <Property mapKey="resampleSize" name="resampleSize" value="30" />
-                        <Property mapKey="resetSeedProp" name="resetSeedProp" />
-                        <Property mapKey="seedTimeProp" name="seedTimeProp" value="1438790262" />
-                        <Property mapKey="streamlineLengthThresholdProp" minValue="2" maxValue="1000" minRange="0" maxRange="214748368" stepping="1">
-                            <value x="50" y="1000" />
-                        </Property>
-                        <Property mapKey="waitForThreadFinishedProp" name="waitForThreadFinishedProp" value="true" />
-                    </Properties>
-                    <Inports>
-                        <Port name="volInport" direction="1" portID="volInport" guiName="Flow Volume Input (vec3)" allowMultipleConnections="false" invalidationLevel="1">
-                            <Properties>
-                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
-                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
-                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
-                            </Properties>
-                        </Port>
-                    </Inports>
-                    <Outports>
-                        <Port name="streamlineOutport" direction="0" portID="streamlineOutport" guiName="Streamlines Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -85,12 +50,12 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-362" y="-39" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="filenameprop" name="filenameprop">
+                        <Property mapKey="filenameprop" name="filenameprop" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/vsd_no_volume.vsd" />
                                     <item value="../../voreen-testdata/voreen-testdata/output/vsd_no_volume.vsd" />
-                                    <item value="/home/spider/programming.local/voreen-testdata/voreen-testdata/output/vsd_no_volume.vsd" />
+                                    <item value="/home/s_leis06/programming/voreen-testdata/voreen-testdata/output/vsd_no_volume.vsd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -114,17 +79,17 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="StreamlineSave" name="StreamlineSave 2" id="ref2">
+                <Processor type="StreamlineSave" name="StreamlineSave 2" id="ref1">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-198" y="-39" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="filenameprop" name="filenameprop">
+                        <Property mapKey="filenameprop" name="filenameprop" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/vsd_volume.vsd" />
                                     <item value="../../voreen-testdata/voreen-testdata/output/vsd_volume.vsd" />
-                                    <item value="/home/spider/programming.local/voreen-testdata/voreen-testdata/output/vsd_volume.vsd" />
+                                    <item value="/home/s_leis06/programming/voreen-testdata/voreen-testdata/output/vsd_volume.vsd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -153,12 +118,12 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-51" y="-38" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="filenameprop" name="filenameprop">
+                        <Property mapKey="filenameprop" name="filenameprop" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/csv_no_volume.csv" />
                                     <item value="../../voreen-testdata/voreen-testdata/output/csv_no_volume.csv" />
-                                    <item value="/home/spider/programming.local/voreen-testdata/voreen-testdata/output/csv_no_volume.csv" />
+                                    <item value="/home/s_leis06/programming/voreen-testdata/voreen-testdata/output/csv_no_volume.csv" />
                                 </paths>
                             </paths>
                         </Property>
@@ -182,27 +147,76 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
+                <Processor type="StreamlineCreator" name="StreamlineCreator" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-210" y="-169" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="absoluteMagnitudeThreshold" minValue="0" maxValue="41.906887054" minRange="0" maxRange="2147483648" stepping="0.01">
+                            <value x="1" y="41.906887054" />
+                        </Property>
+                        <Property mapKey="autoGenerateProp" name="autoGenerateProp" value="true" />
+                        <Property mapKey="calculateStreamlineProp" name="calculateStreamlineProp" />
+                        <Property mapKey="detectBundlesProgressProp" name="detectBundlesProgressProp" />
+                        <Property mapKey="filterModeProp" name="filterModeProp" value="linear" />
+                        <Property mapKey="fitAbsoluteMagnitude" name="fitAbsoluteMagnitude" value="false" />
+                        <Property mapKey="generateTubesProp" name="generateTubesProp" value="true" />
+                        <Property mapKey="maxAverageDistanceThreshold" name="maxAverageDistanceThreshold" value="5" />
+                        <Property mapKey="maxNumStreamlinesprop" name="maxNumStreamlinesprop" value="100" />
+                        <Property mapKey="minNumStreamlinesPerBundle" name="minNumStreamlinesPerBundle" value="1" />
+                        <Property mapKey="progressProp" name="progressProp" />
+                        <Property mapKey="relativeMagnitudeThreshold" minValue="0" maxValue="100" minRange="0" maxRange="2147483648" stepping="0.01">
+                            <value x="2.386242628" y="100" />
+                        </Property>
+                        <Property mapKey="resampleSize" name="resampleSize" value="20" />
+                        <Property mapKey="resetSeedProp" name="resetSeedProp" />
+                        <Property mapKey="seedTimeProp" name="seedTimeProp" value="1561120561" />
+                        <Property mapKey="streamlineLengthThresholdProp" minValue="2" maxValue="1000" minRange="0" maxRange="2147483647" stepping="1">
+                            <value x="10" y="200" />
+                        </Property>
+                        <Property mapKey="waitForThreadFinishedProp" name="waitForThreadFinishedProp" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volInport" direction="1" portID="volInport" guiName="Flow Volume Input (vec3)" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="streamlineOutport" direction="0" portID="streamlineOutport" guiName="Streamlines Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
             </Processors>
             <Connections>
                 <Connection>
                     <Outport name="volumehandle.volumehandle">
                         <Processor type="VolumeSource" ref="ref0" />
                     </Outport>
-                    <Inport name="volInport">
-                        <Processor type="StreamlineCreator" ref="ref1" />
+                    <Inport name="volumeInport">
+                        <Processor type="StreamlineSave" ref="ref1" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="volumehandle.volumehandle">
                         <Processor type="VolumeSource" ref="ref0" />
                     </Outport>
-                    <Inport name="volumeInport">
-                        <Processor type="StreamlineSave" ref="ref2" />
+                    <Inport name="volInport">
+                        <Processor type="StreamlineCreator" ref="ref2" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="streamlineOutport">
-                        <Processor type="StreamlineCreator" ref="ref1" />
+                        <Processor type="StreamlineCreator" ref="ref2" />
                     </Outport>
                     <Inport name="streamlineInport">
                         <Processor type="StreamlineSave" ref="ref3" />
@@ -210,15 +224,15 @@
                 </Connection>
                 <Connection>
                     <Outport name="streamlineOutport">
-                        <Processor type="StreamlineCreator" ref="ref1" />
+                        <Processor type="StreamlineCreator" ref="ref2" />
                     </Outport>
                     <Inport name="streamlineInport">
-                        <Processor type="StreamlineSave" ref="ref2" />
+                        <Processor type="StreamlineSave" ref="ref1" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="streamlineOutport">
-                        <Processor type="StreamlineCreator" ref="ref1" />
+                        <Processor type="StreamlineCreator" ref="ref2" />
                     </Outport>
                     <Inport name="streamlineInport">
                         <Processor type="StreamlineSave" ref="ref4" />
