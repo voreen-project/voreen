@@ -1,5 +1,6 @@
 [submodule "test-data"]
 	path = test-data
 	#url = git@zivgitlab.uni-muenster.de:voreen-project/voreen-testdata.git
-	url = https://zivgitlab.uni-muenster.de/voreen-project/voreen-testdata.git
+	#url = https://zivgitlab.uni-muenster.de/voreen-project/voreen-testdata.git
+	url = ../../voreen-project/voreen-testdata.git
 	branch = master
