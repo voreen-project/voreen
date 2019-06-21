@@ -68,6 +68,7 @@ protected:
 
 private:
 
+    void institutionChanged();
     void enqueueSimulations();
     void fetchResults();
     int executeCommand(const std::string& command) const;
@@ -80,9 +81,12 @@ private:
     VolumeListPort measuredDataPort_;
     FlowParametrizationPort parameterPort_;
 
+    StringOptionProperty institution_;
+
     StringProperty username_;
     StringProperty clusterAddress_;
-    StringProperty simulationPath_;
+    StringProperty programPath_;
+    StringProperty dataPath_;
     StringOptionProperty toolchain_;
     StringOptionProperty simulationType_;
 
@@ -98,6 +102,7 @@ private:
     FileDialogProperty simulationResults_;
     TempPathProperty uploadDataPath_;
     BoolProperty compileOnUpload_;
+    BoolProperty deleteOnDownload_;
     ButtonProperty triggerEnqueueSimulations_;
     ButtonProperty triggerFetchResults_;
     ProgressProperty progress_;

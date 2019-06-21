@@ -81,7 +81,7 @@ FlowSimulation::FlowSimulation()
     , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
     , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", VoreenApplication::app()->getTemporaryPath("simulation"), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , deleteOldSimulations_("deleteOldSimulations", "Delete old Simulations", false)
-    , simulateAllParametrizations_("simulateAllParametrizations", "Simulate all Parametrizations?", false)
+    , simulateAllParametrizations_("simulateAllParametrizations", "Simulate all Parametrizations", false)
     , selectedParametrization_("selectedSimulation", "Selected Parametrization", 0, 0, 0)
 {
     addPort(geometryDataPort_);

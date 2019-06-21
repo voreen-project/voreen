@@ -43,9 +43,11 @@ FlowSimulationCluster::FlowSimulationCluster()
     , geometryDataPort_(Port::INPORT, "geometryDataPort", "Geometry Input", false)
     , measuredDataPort_(Port::INPORT, "measuredDataPort", "Measured Data Input", false)
     , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
+    , institution_("institution", "Institution")
     , username_("username", "Username", "s_leis06")
     , clusterAddress_("clusterAddress", "Cluster Address", "palma2c.uni-muenster.de")
-    , simulationPath_("simulationPath", "Simulation Path", "~/OpenLB")
+    , programPath_("programPath", "Program Path", "~/OpenLB")
+    , dataPath_("dataPath", "Data Path", "/scratch/tmp")
     , toolchain_("toolchain", "Toolchain")
     , simulationType_("simulationType", "Simulation Type")
     , configNodes_("configNodes", "Nodes", 1, 1, 2)
@@ -59,6 +61,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", VoreenApplication::app()->getTemporaryPath("simulations"), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , uploadDataPath_("uploadDataPath", "Upload Data Path", "Upload Data Path", VoreenApplication::app()->getTemporaryPath(), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT)
     , compileOnUpload_("compileOnUpload", "Compile on Upload", false)
+    , deleteOnDownload_("deleteOnDownload", "Delete original Data", false)
     , triggerEnqueueSimulations_("triggerEnqueueSimulations", "Enqueue Simulations", Processor::VALID)
     , triggerFetchResults_("triggerFetchResults", "Fetch Results", Processor::VALID)
     , progress_("progress", "Progress")
@@ -69,12 +72,19 @@ FlowSimulationCluster::FlowSimulationCluster()
     measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeType3xFloat()));
     addPort(parameterPort_);
 
+    addProperty(institution_);
+    ON_CHANGE(institution_, FlowSimulationCluster, institutionChanged);
+    institution_.addOption("jena", "Jena");
+    institution_.addOption("wwu", "WWU");
+    institution_.setGroupID("cluster-general");
     addProperty(username_);
     username_.setGroupID("cluster-general");
     addProperty(clusterAddress_);
     clusterAddress_.setGroupID("cluster-general");
-    addProperty(simulationPath_);
-    simulationPath_.setGroupID("cluster-general");
+    addProperty(programPath_);
+    programPath_.setGroupID("cluster-general");
+    addProperty(dataPath_);
+    dataPath_.setGroupID("cluster-general");
     addProperty(toolchain_);
     toolchain_.setGroupID("cluster-general");
     toolchain_.addOption("foss", "foss");
@@ -112,6 +122,8 @@ FlowSimulationCluster::FlowSimulationCluster()
     uploadDataPath_.setGroupID("results");
     addProperty(compileOnUpload_);
     compileOnUpload_.setGroupID("results");
+    addProperty(deleteOnDownload_);
+    deleteOnDownload_.setGroupID("results");
     addProperty(triggerEnqueueSimulations_);
     triggerEnqueueSimulations_.setGroupID("results");
     ON_CHANGE(triggerEnqueueSimulations_, FlowSimulationCluster, enqueueSimulations);
@@ -121,6 +133,9 @@ FlowSimulationCluster::FlowSimulationCluster()
     addProperty(progress_);
     progress_.setGroupID("results");
     setPropertyGroupGuiName("results", "Results");
+
+    // Set visibility according to institution.
+    institutionChanged();
 }
 
 FlowSimulationCluster::~FlowSimulationCluster() {
@@ -154,17 +169,31 @@ void FlowSimulationCluster::process() {
     // Everything to process is done using callbacks.
 }
 
+void FlowSimulationCluster::institutionChanged() {
+    if(institution_.get() == "jena") {
+        setPropertyGroupVisible("cluster-resources", false);
+    }
+    else if(institution_.get() == "wwu") {
+        setPropertyGroupVisible("cluster-resources", true);
+    }
+    else {
+        tgtAssert(false, "unhandled institution");
+    }
+}
+
 void FlowSimulationCluster::enqueueSimulations() {
 
     const Geometry* geometryData = geometryDataPort_.getData();
     if (!geometryData) {
+        VoreenApplication::app()->showMessageBox("Error", "No simulation geometry. Did you perform the segmentation?", true);
         LERROR("No simulation geometry");
         return;
     }
 
     const FlowParametrizationList* flowParametrization = parameterPort_.getData();
     if (!flowParametrization || flowParametrization->empty()) {
-        LERROR("No parameterization");
+        VoreenApplication::app()->showMessageBox("Error", "No parametrization. Did you add one?", true);
+        LERROR("No parametrization");
         return;
     }
 
@@ -180,6 +209,7 @@ void FlowSimulationCluster::enqueueSimulations() {
 
         // Check if compilation was successful.
         if (ret != EXIT_SUCCESS) {
+            VoreenApplication::app()->showMessageBox("Error", "Could not compile program", true);
             LERROR("Could not compile program");
             return;
         }
@@ -187,7 +217,7 @@ void FlowSimulationCluster::enqueueSimulations() {
 
     std::string simulationPathSource = uploadDataPath_.get() + "/" + flowParametrization->getName() + "/";
     tgt::FileSystem::createDirectoryRecursive(simulationPathSource);
-    std::string simulationPathDest = username_.get() + "@" + clusterAddress_.get() + ":" + simulationPath_.get() + "/" +
+    std::string simulationPathDest = username_.get() + "@" + clusterAddress_.get() + ":" + programPath_.get() + "/" +
                                      toolchain_.get() + "/simulations/" + simulationType_.get() + "/";
 
     // Copy simulation geometry.
@@ -195,6 +225,7 @@ void FlowSimulationCluster::enqueueSimulations() {
     tgt::FileSystem::createDirectory(simulationPathSource + "geometry/");
     std::string geometryFilename = simulationPathSource + "geometry/" + "geometry.stl";
     if (!exportGeometryToSTL(geometryData, geometryFilename)) {
+        VoreenApplication::app()->showMessageBox("Error", "Could not write geometry file", true);
         LERROR("Could not write geometry file");
         return;
     }
@@ -266,7 +297,9 @@ void FlowSimulationCluster::enqueueSimulations() {
     std::vector<std::string> failed;
     for(size_t i=0; i<flowParametrization->size(); i++) {
 
-        std::string localSimulationPath = simulationPath_.get() + "/" + toolchain_.get() + "/simulations/" + simulationType_.get() + "/" +
+        progress_.setProgress(i * 1.0f / flowParametrization->size());
+
+        std::string localSimulationPath = programPath_.get() + "/" + toolchain_.get() + "/simulations/" + simulationType_.get() + "/" +
                                           flowParametrization->getName() + "/" + flowParametrization->at(i).getName();
 
         // Enqueue job.
@@ -274,7 +307,6 @@ void FlowSimulationCluster::enqueueSimulations() {
         ret = executeCommand(command);
         if (ret != EXIT_SUCCESS) {
             failed.push_back(flowParametrization->at(i).getName());
-            LERROR("Could not enqueue job");
             continue;
         }
     }
@@ -303,7 +335,9 @@ void FlowSimulationCluster::fetchResults() {
         return;
     }
 
-    std::string source = username + "@" + clusterAddress + ":/scratch/tmp/" + username + "/simulations/" + simulationType_.get();
+    std::string address = username + "@" + clusterAddress;
+    std::string simulationPath = dataPath_.get() + "/" + username + "/simulations/" + simulationType_.get();
+    std::string source = address + ":" + simulationPath;
     const FlowParametrizationList* parametrizationList = parameterPort_.getData();
     if (parametrizationList) {
         std::string paramPath = "/" + parametrizationList->getName();
@@ -316,6 +350,7 @@ void FlowSimulationCluster::fetchResults() {
         }
 
         std::vector<std::string> failed;
+        bool deletionFailed = false;
         for(const FlowParameters& parameters : parametrizationList->getFlowParametrizations()) {
             std::string command = "scp -r ";
             command += source + "/" + parameters.getName() + " ";
@@ -325,10 +360,26 @@ void FlowSimulationCluster::fetchResults() {
             if (ret != EXIT_SUCCESS) {
                 failed.push_back(parametrizationList->getName() + "/" + parameters.getName());
             }
+
+            if(deleteOnDownload_.get()) {
+                command = "ssh " + address + " \"rm -rf " + paramPath + "/" + parameters.getName() + "\"";
+                ret = executeCommand(command);
+                if (ret != EXIT_SUCCESS) {
+                    deletionFailed = true;
+                }
+            }
+        }
+
+        if(deletionFailed && failed.empty()) {
+            VoreenApplication::app()->showMessageBox("Error", "Some data could not be deleted. You may clean up manually.", true);
         }
 
         if(!failed.empty()) {
-            VoreenApplication::app()->showMessageBox("Error", "Some data could not be fetched. See log for details.", true);
+            std::string message = "Some data could not be fetched. See log for details.";
+            if(deletionFailed) {
+                message += "\n\nAlso, some data could not be deleted. You may clean up manually.";
+            }
+            VoreenApplication::app()->showMessageBox("Error", message, true);
             LERROR("Could not fetch results of: \n* " << strJoin(failed, "\n* "));
             return;
         }
@@ -340,6 +391,16 @@ void FlowSimulationCluster::fetchResults() {
             VoreenApplication::app()->showMessageBox("Error", "Data could not be fetched!", true);
             LERROR("Could not fetch results");
             return;
+        }
+
+        if(deleteOnDownload_.get()) {
+            command = "ssh " + address + " \" rm -rf " + simulationPath + "\"";
+            ret = executeCommand(command);
+            if (ret != EXIT_SUCCESS) {
+                VoreenApplication::app()->showMessageBox("Warning", "Data could not be deleted!", true);
+                LERROR("Could not delete data");
+                return;
+            }
         }
     }
 
@@ -376,9 +437,11 @@ int FlowSimulationCluster::executeCommand(const std::string& command) const {
 std::string FlowSimulationCluster::generateCompileScript() const {
     std::stringstream script;
 
+    //TODO: adapt for jena
+
     script << "\"";
     script << "module load " << toolchain_.get();
-    script << " && cd " << simulationPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get();
+    script << " && cd " << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get();
     script << " && make -j4"; // Assumes that using 4 threads is okay, which should be the case on any system.
     script << "\"";
 
@@ -387,6 +450,8 @@ std::string FlowSimulationCluster::generateCompileScript() const {
 
 std::string FlowSimulationCluster::generateEnqueueScript(const std::string& parametrizationPath) const {
     std::stringstream script;
+
+    //TODO: adapt for jena
 
     script << "\"";
     script << "module load " << toolchain_.get();
@@ -404,6 +469,8 @@ std::string FlowSimulationCluster::generateEnqueueScript(const std::string& para
 std::string FlowSimulationCluster::generateSubmissionScript(const std::string& parametrizationName) const {
     tgtAssert(parameterPort_.hasData(), "no data");
     std::stringstream script;
+
+    //TODO: adapt for jena
 
     int quarters = configTimeQuarters_.get();
     int minutes = quarters * 15;
@@ -452,8 +519,9 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     if(configTasks_.get() > 1 || configTasksPerNode_.get() > 1) {
         script << "mpirun ";
     }
+
     // Add executable.
-    script << simulationPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get()
+    script << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get()
            << "/" << simulationType_.get();
     // First argument: ensemble name
     script << " " << parameterPort_.getData()->getName();
@@ -463,6 +531,7 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     script << " " << "/scratch/tmp/s_leis06/simulations/"; //TODO: make configurable
 
     script << std::endl;
+
 
     return script.str();
 }
