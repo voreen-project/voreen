@@ -1,28 +1,3 @@
-/*  Lattice Boltzmann sample, written in C++, using the OpenLB
- *  library
- *
- *  Copyright (C) 2011-2014 Mathias J. Krause
- *  E-mail contact: info@openlb.net
- *  The most recent release of OpenLB can be downloaded at
- *  <http://www.openlb.net/>
- *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public
- *  License along with this program; if not, write to the Free
- *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- *  Boston, MA  02110-1301, USA.
- */
-
-
 #include "olb3D.h"
 #ifndef OLB_PRECOMPILED // Unless precompiled version is used,
 #include "olb3D.hh"   // include full template code;
@@ -44,7 +19,7 @@ typedef double T;
 
 enum Material {
     MAT_EMPTY  = 0,
-    MAT_FLUID = 1,
+    MAT_FLUID  = 1,
     MAT_WALL   = 2,
     MAT_COUNT,
 };
@@ -507,7 +482,7 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     if (sLattice.getStatistics().getMaxU() > 0.3) {
         clout << "PROBLEM uMax=" << sLattice.getStatistics().getMaxU() << std::endl;
-        std::exit(0);
+        std::exit(EXIT_FAILURE);
     }
 }
 
@@ -516,8 +491,9 @@ int main(int argc, char* argv[]) {
     // === 1st Step: Initialization ===
     olbInit(&argc, &argv);
 
-    if(argc != 3) {
-        std::cout << "Invalid number of arguments!" << std::endl;
+    if(argc != 4) {
+        std::cout << "Invalid number of arguments! Usage:" << std::endl;
+        std::cout << "./" << simulation << " <ensemble name> <run name> <output directory>" << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -525,7 +501,8 @@ int main(int argc, char* argv[]) {
     std::string ensemble = argv[1];
     std::string run = argv[2];
 
-    std::string output = base;
+    //std::string output = base; // hardcoded path
+    std::string output = argv[3];
     int rank = 0;
 #ifdef PARALLEL_MODE_MPI
     rank = singleton::mpi().getRank();
@@ -597,7 +574,7 @@ int main(int argc, char* argv[]) {
             (T) temporalResolution * VOREEN_TIME_TO_SI,          // TODO: define proper semantic
             (T) characteristicLength * VOREEN_LENGTH_TO_SI,      // charPhysLength: reference length of simulation geometry
             (T) characteristicVelocity * VOREEN_LENGTH_TO_SI,    // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
-            (T) viscosity * 1e-6,                                // physViscosity: physical kinematic viscosity in __m^2 / s__
+            (T) viscosity * 0.001 / density,                     // physViscosity: physical kinematic viscosity in __m^2 / s__
             (T) density                                          // physDensity: physical density in __kg / m^3__
     );
     // Prints the converter log as console output

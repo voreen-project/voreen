@@ -452,9 +452,17 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     if(configTasks_.get() > 1 || configTasksPerNode_.get() > 1) {
         script << "mpirun ";
     }
+    // Add executable.
     script << simulationPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get()
-           << "/" << simulationType_.get() << " " << parameterPort_.getData()->getName() << " " << parametrizationName
-           << std::endl;
+           << "/" << simulationType_.get();
+    // First argument: ensemble name
+    script << " " << parameterPort_.getData()->getName();
+    // Second argument: run name
+    script << " " << parametrizationName;
+    // Third argument: output directory
+    script << " " << "/scratch/tmp/s_leis06/simulations/"; //TODO: make configurable
+
+    script << std::endl;
 
     return script.str();
 }
