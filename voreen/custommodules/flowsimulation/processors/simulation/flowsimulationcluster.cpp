@@ -43,6 +43,8 @@ FlowSimulationCluster::FlowSimulationCluster()
     , geometryDataPort_(Port::INPORT, "geometryDataPort", "Geometry Input", false)
     , measuredDataPort_(Port::INPORT, "measuredDataPort", "Measured Data Input", false)
     , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
+    , useLocalInstance_("useLocalInstance", "Use local Instance", false)
+    , localInstancePath_("localInstancePath", "Local Instance Path", "Path", "", "EXE (*.exe)", FileDialogProperty::OPEN_FILE, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , institution_("institution", "Institution")
     , username_("username", "Username", "s_leis06")
     , clusterAddress_("clusterAddress", "Cluster Address", "palma2c.uni-muenster.de")
@@ -71,6 +73,21 @@ FlowSimulationCluster::FlowSimulationCluster()
     measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
     measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeType3xFloat()));
     addPort(parameterPort_);
+
+    addProperty(useLocalInstance_);
+    //ON_CHANGE_LAMBDA(useLocalInstance_, [this] {
+    //    setPropertyGroupVisible("cluster-general", !useLocalInstance_.get());
+    //});
+    useLocalInstance_.setGroupID("local-instance");
+    addProperty(localInstancePath_);
+    localInstancePath_.setGroupID("local-instance");
+    setPropertyGroupGuiName("local-instance", "Local Instance");
+//#ifndef WIN32
+    // This is essentially a workaround for OpenLB not being compilable using MSVC.
+    // So we compile it, e. g. using cygwin, and treat it as a local compute node.
+    // TODO: see below!
+    setPropertyGroupVisible("local-instance", false);
+//#endif
 
     addProperty(institution_);
     ON_CHANGE(institution_, FlowSimulationCluster, institutionChanged);
@@ -201,7 +218,11 @@ void FlowSimulationCluster::enqueueSimulations() {
     LINFO("Configuring and enqueuing Simulations '" << simulationType_.get() << "'");
 
     // (Re-)compile code on cluster, if desired.
-    if(compileOnUpload_.get()) {
+#ifdef WIN32
+    if (!useLocalInstance_.get() && compileOnUpload_.get()) {
+#else
+    if (compileOnUpload_.get()) {
+#endif
 
         // Execute compile script on the cluster.
         std::string command = "ssh " + username_.get() + "@" + clusterAddress_.get() + " " + generateCompileScript();
@@ -281,6 +302,49 @@ void FlowSimulationCluster::enqueueSimulations() {
         submissionScriptFile.close();
     }
 
+#ifdef WIN32
+    // Allow to use a local simulation program.
+    if (useLocalInstance_.get()) {
+
+        // TODO: make platform independent.
+        // TODO: figure out and set working directory according to upload path.
+
+        // Move directory to the very same place, the local instance is located.
+        simulationPathSource = tgt::FileSystem::cleanupPath(simulationPathSource, true);
+        simulationPathDest = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + flowParametrization->getName(), true);
+        std::string command = "move " + simulationPathSource + " " + simulationPathDest;
+        if (executeCommand(command) != EXIT_SUCCESS) {
+            VoreenApplication::app()->showMessageBox("Error", "Could not move ensemble", true);
+            LERROR("Could not move ensemble");
+            return;
+        }
+
+        // Run simulations one after the other.
+        std::vector<std::string> failed;
+        for (size_t i = 0; i < flowParametrization->size(); i++) {
+
+            // Start job.
+            std::string command = localInstancePath_.get() + " " + flowParametrization->getName() + " " + flowParametrization->at(i).getName() + " " + simulationResults_.get() + "/"; // Add a trailing '/' !
+            int ret = executeCommand(command);
+            if (ret != EXIT_SUCCESS) {
+                failed.push_back(flowParametrization->at(i).getName());
+                continue;
+            }
+        }
+
+        if (!failed.empty()) {
+            VoreenApplication::app()->showMessageBox("Error", "Some runs could not be enqueued. See log for details.", true);
+            LERROR("Could not enqueue runs: \n* " << strJoin(failed, "\n* "));
+        }
+        else {
+            VoreenApplication::app()->showMessageBox("Information", "All runs successfully enqueued!");
+        }
+
+        progress_.setProgress(1.0f);
+        return;
+    }
+#endif
+
     // Copy data to cluster.
     std::string command = "scp -r " + simulationPathSource + " " + simulationPathDest;
     int ret = executeCommand(command);
@@ -340,10 +404,9 @@ void FlowSimulationCluster::fetchResults() {
     std::string source = address + ":" + simulationPath;
     const FlowParametrizationList* parametrizationList = parameterPort_.getData();
     if (parametrizationList) {
-        std::string paramPath = "/" + parametrizationList->getName();
-        source += paramPath;
+        source += "/" + parametrizationList->getName();
 
-        std::string dest = directory + paramPath;
+        std::string dest = directory + "/" + parametrizationList->getName();
         if (!tgt::FileSystem::dirExists(dest) && !tgt::FileSystem::createDirectory(dest)) {
             LERROR("Could not create ensemble directory: " << dest);
             return;
@@ -362,7 +425,7 @@ void FlowSimulationCluster::fetchResults() {
             }
 
             if(deleteOnDownload_.get()) {
-                command = "ssh " + address + " \"rm -rf " + paramPath + "/" + parameters.getName() + "\"";
+                command = "ssh " + address + " \"rm -rf " + simulationPath + "/" + parametrizationList->getName() + "/" + parameters.getName() + "\"";
                 ret = executeCommand(command);
                 if (ret != EXIT_SUCCESS) {
                     deletionFailed = true;
@@ -528,7 +591,7 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     // Second argument: run name
     script << " " << parametrizationName;
     // Third argument: output directory
-    script << " " << "/scratch/tmp/s_leis06/simulations/"; //TODO: make configurable
+    script << " " << dataPath_.get() + "/" + username_.get() + "simulations/"; // Cluster code needs a trailing '/' !
 
     script << std::endl;
 

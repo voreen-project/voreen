@@ -82,6 +82,8 @@ private:
     FlowParametrizationPort parameterPort_;
 
     StringOptionProperty institution_;
+    BoolProperty useLocalInstance_;
+    FileDialogProperty localInstancePath_;
 
     StringProperty username_;
     StringProperty clusterAddress_;
