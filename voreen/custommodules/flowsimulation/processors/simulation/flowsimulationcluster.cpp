@@ -591,7 +591,7 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     // Second argument: run name
     script << " " << parametrizationName;
     // Third argument: output directory
-    script << " " << dataPath_.get() + "/" + username_.get() + "simulations/"; // Cluster code needs a trailing '/' !
+    script << " " << dataPath_.get() + "/" + username_.get() + "/simulations/"; // Cluster code needs a trailing '/' !
 
     script << std::endl;
 
