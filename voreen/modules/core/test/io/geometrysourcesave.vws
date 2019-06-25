@@ -1,19 +1,56 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
-    <Workspace version="2" GlobalDescription="">
-        <ProcessorNetwork version="11">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="20">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="GeometrySave" ref="ref7" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-524.364501953" y="-127.746963501" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.495143175" />
+            </MetaData>
             <Processors>
                 <Processor type="GeometrySource" name="SegmentList Source" id="ref0">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-671" y="-196" />
                     </MetaData>
                     <Properties>
-                        <Property name="clearGeometry" />
-                        <Property name="geometryFile" value="input/geometry/cow-skeleton-segmentlist.txt" />
-                        <Property name="geometryType" value="segmentlist" />
-                        <Property name="loadGeometry" />
-                        <Property name="skipItems" value="1" />
+                        <Property mapKey="addobjcolor" name="addobjcolor" value="false" />
+                        <Property mapKey="calcNormals" name="calcNormals" value="false" />
+                        <Property mapKey="clearGeometry" name="clearGeometry" />
+                        <Property mapKey="geometryFile" name="geometryFile" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/geometry/cow-skeleton-segmentlist.txt" />
+                                    <item value="../../voreen-testdata/voreen-testdata/input/geometry/cow-skeleton-segmentlist.txt" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/input/geometry/cow-skeleton-segmentlist.txt" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="geometryType" name="geometryType" value="segmentlist" />
+                        <Property mapKey="loadGeometry" name="loadGeometry" />
+                        <Property mapKey="objcolor" name="objcolor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="skipItems" name="skipItems" value="1" />
                     </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="geometry.pointlist" direction="0" portID="geometry.pointlist" guiName="PointList Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="GeometrySource" name="PointList Source" id="ref2">
@@ -21,12 +58,35 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-813" y="-195" />
                     </MetaData>
                     <Properties>
-                        <Property name="clearGeometry" />
-                        <Property name="geometryFile" value="input/geometry/cow-skeleton-pointlist.txt" />
-                        <Property name="geometryType" value="pointlist" />
-                        <Property name="loadGeometry" />
-                        <Property name="skipItems" value="0" />
+                        <Property mapKey="addobjcolor" name="addobjcolor" value="false" />
+                        <Property mapKey="calcNormals" name="calcNormals" value="false" />
+                        <Property mapKey="clearGeometry" name="clearGeometry" />
+                        <Property mapKey="geometryFile" name="geometryFile" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/geometry/cow-skeleton-pointlist.txt" />
+                                    <item value="../../voreen-testdata/voreen-testdata/input/geometry/cow-skeleton-pointlist.txt" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/input/geometry/cow-skeleton-pointlist.txt" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="geometryType" name="geometryType" value="pointlist" />
+                        <Property mapKey="loadGeometry" name="loadGeometry" />
+                        <Property mapKey="objcolor" name="objcolor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="skipItems" name="skipItems" value="0" />
                     </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="geometry.pointlist" direction="0" portID="geometry.pointlist" guiName="PointList Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="GeometrySave" name="PointList Save" id="ref3">
@@ -34,10 +94,26 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-806" y="-66" />
                     </MetaData>
                     <Properties>
-                        <Property name="continousSave" value="false" />
-                        <Property name="file" value="output/cowskeleton-pointlist.vge" />
-                        <Property name="save" />
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="file" name="file" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cowskeleton-pointlist.vge" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cowskeleton-pointlist.vge" />
+                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/cowskeleton-pointlist.vge" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
                     </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="GeometrySave" name="SegmentList Save" id="ref1">
@@ -45,10 +121,26 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-664" y="-66" />
                     </MetaData>
                     <Properties>
-                        <Property name="continousSave" value="false" />
-                        <Property name="file" value="output/cowskeleton-segmentlist.vge" />
-                        <Property name="save" />
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="file" name="file" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cowskeleton-segmentlist.vge" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cowskeleton-segmentlist.vge" />
+                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/cowskeleton-segmentlist.vge" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
                     </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="GeometrySource" name="ProxyGeometry Source" id="ref4">
@@ -56,12 +148,35 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-506" y="-197" />
                     </MetaData>
                     <Properties>
-                        <Property name="clearGeometry" />
-                        <Property name="geometryFile" value="input/geometry/walnut-proxygeometry.vge" />
-                        <Property name="geometryType" value="geometry" />
-                        <Property name="loadGeometry" />
-                        <Property name="skipItems" value="0" />
+                        <Property mapKey="addobjcolor" name="addobjcolor" value="false" />
+                        <Property mapKey="calcNormals" name="calcNormals" value="false" />
+                        <Property mapKey="clearGeometry" name="clearGeometry" />
+                        <Property mapKey="geometryFile" name="geometryFile" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/geometry/walnut-proxygeometry.vge" />
+                                    <item value="../../voreen-testdata/voreen-testdata/input/geometry/walnut-proxygeometry.vge" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/input/geometry/walnut-proxygeometry.vge" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="geometryType" name="geometryType" value="geometry" />
+                        <Property mapKey="loadGeometry" name="loadGeometry" />
+                        <Property mapKey="objcolor" name="objcolor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="skipItems" name="skipItems" value="0" />
                     </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="geometry.pointlist" direction="0" portID="geometry.pointlist" guiName="PointList Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
                 <Processor type="GeometrySave" name="ProxyGeometry Save" id="ref5">
@@ -69,10 +184,89 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-499" y="-65" />
                     </MetaData>
                     <Properties>
-                        <Property name="continousSave" value="false" />
-                        <Property name="file" value="output/walnut-proxygeometry.vge" />
-                        <Property name="save" />
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="file" name="file" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/walnut-proxygeometry.vge" />
+                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/walnut-proxygeometry.vge" />
+                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/walnut-proxygeometry.vge" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
                     </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="GeometrySource" name="GeometrySource" id="ref6">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-319" y="-198" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="addobjcolor" name="addobjcolor" value="false" />
+                        <Property mapKey="calcNormals" name="calcNormals" value="false" />
+                        <Property mapKey="clearGeometry" name="clearGeometry" />
+                        <Property mapKey="geometryFile" name="geometryFile" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="reference/core/io/geometrysourcesave/walnut-isosurface.vge" />
+                                    <item value="../../voreen-testdata/voreen-testdata/reference/core/io/geometrysourcesave/walnut-isosurface.vge" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/reference/core/io/geometrysourcesave/walnut-isosurface.vge" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="geometryType" name="geometryType" value="geometry" />
+                        <Property mapKey="loadGeometry" name="loadGeometry" />
+                        <Property mapKey="objcolor" name="objcolor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="skipItems" name="skipItems" value="0" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="geometry.pointlist" direction="0" portID="geometry.pointlist" guiName="PointList Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="GeometrySave" name="GeometrySave" id="ref7">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-311" y="-66" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="file" name="file" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/walnut-isosurface.vge" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/walnut-isosurface.vge" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/walnut-isosurface.vge" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
             </Processors>
@@ -101,13 +295,23 @@
                         <Processor type="GeometrySave" ref="ref5" />
                     </Inport>
                 </Connection>
+                <Connection>
+                    <Outport name="geometry.pointlist">
+                        <Processor type="GeometrySource" ref="ref6" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="GeometrySave" ref="ref7" />
+                    </Inport>
+                </Connection>
             </Connections>
             <CoProcessorConnections />
             <PropertyLinks />
-            <PropertyStateCollections />
-            <PropertyStateFileReferences />
-            <PropertyStateDirectoryReferences />
         </ProcessorNetwork>
         <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
     </Workspace>
 </VoreenData>
