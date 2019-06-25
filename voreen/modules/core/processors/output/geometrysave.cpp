@@ -24,6 +24,7 @@
  ***********************************************************************************/
 
 #include "geometrysave.h"
+#include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 
 #include <fstream>
 
@@ -63,6 +64,24 @@ void GeometrySave::process() {
         saveFile();
 }
 
+namespace {
+    void saveAsVGE(const Geometry* geometry, std::fstream& f) {
+        XmlSerializer s;
+        try {
+            s.serialize("Geometry", geometry);
+        }
+        catch (VoreenException& e) {
+            LERRORC("voreen.core.GeometrySave", "Failed to serialize geometry: " + std::string(e.what()));
+            return;
+        }
+        s.write(f);
+        f.close();
+    }
+    void saveAsObj(const GlMeshGeometryBase* geometry, std::fstream& f) {
+        geometry->exportAsObj(f);
+    }
+}
+
 void GeometrySave::saveFile() {
     const Geometry* geometry = inport_.getData();
     if (!geometry)
@@ -76,22 +95,32 @@ void GeometrySave::saveFile() {
 
     LINFO("Saving Voreen Geometry to file: " << filename);
 
-    XmlSerializer s;
-    try {
-        s.serialize("Geometry", geometry);
-    }
-    catch (VoreenException& e) {
-        LERROR("Failed to serialize geometry: " + std::string(e.what()));
-        return;
-    }
-
-    std::fstream stream(fileProp_.get().c_str(), std::ios::out);
+    std::fstream stream(filename.c_str(), std::ios::out);
     if (stream.fail()) {
         LERROR("Failed to open file for writing: " << filename);
     }
     else {
-        s.write(stream);
-        stream.close();
+        auto extension = tgt::FileSystem::fileExtension(filename, true);
+        if(extension == "vge") {
+            saveAsVGE(geometry, stream);
+        } else if(extension == "obj") {
+            if(const GlMeshGeometryBase* geom = dynamic_cast<const GlMeshGeometryBase*>(geometry)) {
+                saveAsObj(geom, stream);
+            } else {
+                LERROR("Unsupported output file type '" << extension << "' for input geometry!");
+            }
+        } else {
+            LERROR("Unsupported output file type '" << extension << "'!");
+        }
+    }
+}
+
+void GeometrySave::adjustPropertiesToInput() {
+    const Geometry* geometry = inport_.getData();
+    if(const GlMeshGeometryBase* geom = dynamic_cast<const GlMeshGeometryBase*>(geometry)) {
+        fileProp_.setFileFilter("Voreen Geometry files (*.vge);; Wavefront Object Files (*.obj)");
+    } else {
+        fileProp_.setFileFilter("Voreen Geometry files (*.vge)");
     }
 }
 

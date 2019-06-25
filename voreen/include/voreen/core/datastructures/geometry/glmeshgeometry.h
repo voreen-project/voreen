@@ -175,6 +175,11 @@ public:
      */
     void setHasTransparentComponents(bool hasTransparentComponents);
 
+    /**
+     * Save the geometry in Wavefront Object File format to the specified stream.
+     */
+    virtual void exportAsObj(std::ostream& s) const = 0;
+
 protected:
 
     /**
@@ -348,8 +353,6 @@ public:
 
     virtual VertexBase::VertexLayout getVertexLayout() const;
 
-    void writeObj(std::ostream& s) const;
-
     // Method is not implemented here to force use of subclasses
     //virtual IndexType getIndexType() const = 0;
 
@@ -384,6 +387,7 @@ public:
     /// Clears the mesh and creates a cuboid in with the specified parameters.
     void setCuboidGeometry(float width, float height, float depth);
 
+    void exportAsObj(std::ostream& s) const;
 protected:
 
     /// helper method for setCylinderGeometry(...)
@@ -673,17 +677,22 @@ tgt::Shader& GlMeshGeometry<I, V>::getDefaultShaderTransparent() {
 }
 
 namespace {
+    /*
     void writeVec4AsObj(std::ostream& s, const std::string& prefix, const tgt::vec4& v) {
         s << prefix << " " << v.x << " " << v.y << " " << v.z << " " << v.w << "\n";
     }
+    */
     void writeVec3AsObj(std::ostream& s, const std::string& prefix, const tgt::vec3& v) {
-        s << prefix << " " << v.x << " " << v.y << " " << v.z << " " << "\n";
+        s << prefix << " " << v.x << " " << v.y << " " << v.z << "\n";
     }
     void writeVec2AsObj(std::ostream& s, const std::string& prefix, const tgt::vec2& v) {
         s << prefix << " " << v.x << " " << v.y << "\n";
     }
     template <class I, class V>
-    void writeIndex(std::ostream& s, I i) {
+    void writeObjIndex(std::ostream& s, I i) {
+        // Stupid obj indices start at 1:
+        i += 1;
+
         switch(V::layout & (VertexBase::TEXCOORD | VertexBase::NORMAL)) {
             case VertexBase::SIMPLE: {
                 s << i;
@@ -701,43 +710,53 @@ namespace {
                 s << i << "/" << i << "/" << i;
                 break;
             }
-            default:
-                {
-                    tgtAssert(false, "Invalid layout");
-                }
+            default: {
+                tgtAssert(false, "Invalid layout");
+            }
         }
     }
 }
 
 template <class I, class V>
-void GlMeshGeometry<I,V>::writeObj(std::ostream& s) const {
+void GlMeshGeometry<I,V>::exportAsObj(std::ostream& s) const {
+    auto vertexMat = getTransformationMatrix();
+    auto normalMat = getTransformationMatrix().getRotationalPartMat3();
     // Define all positions
     for(auto& v : vertices_) {
-        writeVec4AsObj(s, "v", v.pos_);
+        writeVec3AsObj(s, "v", vertexMat*v.pos_);
     }
 
     // Define texcoords
     if((V::layout & VertexBase::TEXCOORD) == VertexBase::TEXCOORD) {
         for(auto& v : vertices_) {
-            writeVec2AsObj(s, "v", v.getTexCoord());
+            writeVec2AsObj(s, "vt", v.getTexCoord());
         }
     }
 
     // Define normals
     if((V::layout & VertexBase::NORMAL) == VertexBase::NORMAL) {
         for(auto& v : vertices_) {
-            writeVec3AsObj(s, "v", v.getNormal());
+            writeVec3AsObj(s, "vn", normalMat*v.getNormal());
         }
     }
 
     // Colors are not supported in obj files :-(
 
+    // c++ iterators suck, so we do it the lazy (in terms of the programmer) way.
+    std::vector<I> out_indices;
+    if(usesIndexedDrawing()) {
+        out_indices.resize(indices_.size());
+        std::copy(indices_.begin(), indices_.end(), out_indices.begin());
+    } else {
+        out_indices.resize(vertices_.size());
+        std::iota(out_indices.begin(), out_indices.end(), 0);
+    }
     //Write faces via indices
     switch(getPrimitiveType()) {
         case GL_TRIANGLES:
             {
                 std::vector<I> collected;
-                for(auto& i : indices_) {
+                for(auto& i : out_indices) {
                     if(i == primitiveRestartIndex_) {
                         collected.clear();
                     } else {
@@ -745,10 +764,10 @@ void GlMeshGeometry<I,V>::writeObj(std::ostream& s) const {
                     }
                     tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
                     if(collected.size() == 3) {
-                        s << "f";
-                        writeIndex(s, collected[0]);
-                        writeIndex(s, collected[1]);
-                        writeIndex(s, collected[2]);
+                        s << "f ";
+                        writeObjIndex<I, V>(s, collected[0]); s << " ";
+                        writeObjIndex<I, V>(s, collected[1]); s << " ";
+                        writeObjIndex<I, V>(s, collected[2]); s << "\n";
 
                         collected.clear();
                     }
@@ -759,7 +778,7 @@ void GlMeshGeometry<I,V>::writeObj(std::ostream& s) const {
         case GL_TRIANGLE_STRIP:
             {
                 std::deque<I> collected;
-                for(auto& i : indices_) {
+                for(auto& i : out_indices) {
                     if(i == primitiveRestartIndex_) {
                         collected.clear();
                     } else {
@@ -767,10 +786,10 @@ void GlMeshGeometry<I,V>::writeObj(std::ostream& s) const {
                     }
                     tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
                     if(collected.size() == 3) {
-                        s << "f";
-                        writeIndex(s, collected[0]);
-                        writeIndex(s, collected[1]);
-                        writeIndex(s, collected[2]);
+                        s << "f ";
+                        writeObjIndex<I, V>(s, collected[0]); s << " ";
+                        writeObjIndex<I, V>(s, collected[1]); s << " ";
+                        writeObjIndex<I, V>(s, collected[2]); s << "\n";
 
                         collected.pop_front();
                     }
@@ -780,7 +799,7 @@ void GlMeshGeometry<I,V>::writeObj(std::ostream& s) const {
         case GL_TRIANGLE_FAN:
             {
                 std::deque<I> collected;
-                for(auto& i : indices_) {
+                for(auto& i : out_indices) {
                     if(i == primitiveRestartIndex_) {
                         collected.clear();
                     } else {
@@ -788,10 +807,10 @@ void GlMeshGeometry<I,V>::writeObj(std::ostream& s) const {
                     }
                     tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
                     if(collected.size() == 3) {
-                        s << "f";
-                        writeIndex(s, collected[0]);
-                        writeIndex(s, collected[1]);
-                        writeIndex(s, collected[2]);
+                        s << "f ";
+                        writeObjIndex<I, V>(s, collected[0]); s << " ";
+                        writeObjIndex<I, V>(s, collected[1]); s << " ";
+                        writeObjIndex<I, V>(s, collected[2]); s << "\n";
 
                         // Not the most efficient, but the simplest for now...
                         I first = collected.front();

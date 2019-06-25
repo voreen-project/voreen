@@ -52,6 +52,7 @@ protected:
     virtual void setDescriptions() {
         setDescription("Writes the input geometry to a Voreen Geometry file (.vge).");
     }
+    virtual void adjustPropertiesToInput();
 
     virtual void process();
 

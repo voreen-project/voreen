@@ -91,13 +91,13 @@ struct VertexBase {
 
     /// Sets the normal of this vertex, used in clipping code. Default implementation does nothing.
     void setNormal(tgt::vec3 n) {}
-    tgt::vec3 getNormal() {return tgt::vec3::zero;}
+    tgt::vec3 getNormal() const {return tgt::vec3::zero;}
     void setColor(tgt::vec4 col) {};
-    tgt::vec4 getColor() {return tgt::vec4::zero;}
+    tgt::vec4 getColor() const {return tgt::vec4::zero;}
     void setTexCoord(tgt::vec2 texCoord) {};
-    tgt::vec2 getTexCoord() {return tgt::vec2::zero;}
+    tgt::vec2 getTexCoord() const {return tgt::vec2::zero;}
     void setTexIndex(tgt::ivec2 texIndex) {};
-    tgt::ivec2 getTexIndex() {return tgt::ivec2::zero;}
+    tgt::ivec2 getTexIndex() const {return tgt::ivec2::zero;}
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -121,7 +121,7 @@ struct VertexNormal : public VertexBase {
     static VertexNormal interpolate(const VertexNormal& v1, const VertexNormal& v2, float t);
 
     void setNormal(tgt::vec3 n) {normal_ = n;}
-    tgt::vec3 getNormal() {return normal_;}
+    tgt::vec3 getNormal() const {return normal_;}
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -145,7 +145,7 @@ struct VertexColor : public VertexBase {
     static VertexColor interpolate(const VertexColor& v1, const VertexColor& v2, float t);
 
     void setColor(tgt::vec4 color) {color_ = color;}
-    tgt::vec4 getColor() {return color_;}
+    tgt::vec4 getColor() const {return color_;}
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -170,9 +170,9 @@ struct VertexTexCoord : public VertexBase {
     static VertexTexCoord interpolate(const VertexTexCoord& v1, const VertexTexCoord& v2, float t);
 
     void setTexCoord(tgt::vec2 texCoord) {texCoord_ = texCoord;}
-    tgt::vec2 getTexCoord() {return texCoord_;}
+    tgt::vec2 getTexCoord() const {return texCoord_;}
     void setTexIndex(tgt::ivec2 texIndex) {texIndex_ = texIndex;}
-    tgt::ivec2 getTexIndex() {return texIndex_;}
+    tgt::ivec2 getTexIndex() const {return texIndex_;}
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -199,8 +199,8 @@ struct VertexColorNormal : public VertexBase {
 
     void setColor(tgt::vec4 color) {color_ = color;}
     void setNormal(tgt::vec3 n) {normal_ = n;}
-    tgt::vec4 getColor() {return color_;}
-    tgt::vec3 getNormal() {return normal_;}
+    tgt::vec4 getColor() const {return color_;}
+    tgt::vec3 getNormal() const {return normal_;}
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -228,9 +228,9 @@ struct VertexNormalTexCoord : public VertexBase {
     void setNormal(tgt::vec3 n) {normal_ = n;}
     void setTexCoord(tgt::vec2 texCoord) {texCoord_ = texCoord;}
     void setTexIndex(tgt::ivec2 texIndex) {texIndex_ = texIndex;}
-    tgt::vec3 getNormal() {return normal_;}
-    tgt::vec2 getTexCoord() {return texCoord_;}
-    tgt::ivec2 getTexIndex() {return texIndex_;}
+    tgt::vec3 getNormal() const {return normal_;}
+    tgt::vec2 getTexCoord() const {return texCoord_;}
+    tgt::ivec2 getTexIndex() const {return texIndex_;}
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -260,9 +260,9 @@ struct VertexColorTexCoord : public VertexBase {
     void setColor(tgt::vec4 color) {color_ = color;}
     void setTexCoord(tgt::vec2 texCoord) {texCoord_ = texCoord;}
     void setTexIndex(tgt::ivec2 texIndex) {texIndex_ = texIndex;}
-    tgt::vec4 getColor() {return color_;}
-    tgt::vec2 getTexCoord() {return texCoord_;}
-    tgt::ivec2 getTexIndex() {return texIndex_;}
+    tgt::vec4 getColor() const {return color_;}
+    tgt::vec2 getTexCoord() const {return texCoord_;}
+    tgt::ivec2 getTexIndex() const {return texIndex_;}
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -292,10 +292,10 @@ struct VertexColorNormalTexCoord : public VertexBase {
     void setNormal(tgt::vec3 n) {normal_ = n;}
     void setTexCoord(tgt::vec2 texCoord) {texCoord_ = texCoord;}
     void setTexIndex(tgt::ivec2 texIndex) {texIndex_ = texIndex;}
-    tgt::vec3 getNormal() {return normal_;}
-    tgt::vec4 getColor() {return color_;}
-    tgt::vec2 getTexCoord() {return texCoord_;}
-    tgt::ivec2 getTexIndex() {return texIndex_;}
+    tgt::vec3 getNormal() const {return normal_;}
+    tgt::vec4 getColor() const {return color_;}
+    tgt::vec2 getTexCoord() const {return texCoord_;}
+    tgt::ivec2 getTexIndex() const {return texIndex_;}
 };
 
 } // namespace
