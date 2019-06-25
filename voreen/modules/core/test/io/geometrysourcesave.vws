@@ -98,9 +98,7 @@
                         <Property mapKey="file" name="file" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cowskeleton-pointlist.vge" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cowskeleton-pointlist.vge" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/cowskeleton-pointlist.vge" />
+                                    <item value="output/cowskeleton-pointlist.vge" />
                                 </paths>
                             </paths>
                         </Property>
@@ -125,9 +123,7 @@
                         <Property mapKey="file" name="file" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cowskeleton-segmentlist.vge" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cowskeleton-segmentlist.vge" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/cowskeleton-segmentlist.vge" />
+                                    <item value="output/cowskeleton-segmentlist.vge" />
                                 </paths>
                             </paths>
                         </Property>
@@ -188,9 +184,7 @@
                         <Property mapKey="file" name="file" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/walnut-proxygeometry.vge" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/walnut-proxygeometry.vge" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/walnut-proxygeometry.vge" />
+                                    <item value="output/walnut-proxygeometry.vge" />
                                 </paths>
                             </paths>
                         </Property>
