@@ -37,8 +37,6 @@
 using tgt::vec3;
 using tgt::TextureUnit;
 
-#define LIGHT_POSITION_MAX_DIST_MULTIPLIER 10
-
 namespace voreen {
 
 const std::string SingleVolumeRaycaster::loggerCat_("voreen.SingleVolumeRaycaster");
@@ -530,12 +528,8 @@ void SingleVolumeRaycaster::adjustPropertyVisibilities() {
 
 void SingleVolumeRaycaster::volumeInportOnChange() {
     //adjust camera to scene
-    if(volumeInport_.hasData()) {
-        auto bb = volumeInport_.getData()->getBoundingBox().getBoundingBox();
-        camera_.adaptInteractionToScene(bb, tgt::min(volumeInport_.getData()->getSpacing()));
-
-        lightPosition_.setMaxDist(LIGHT_POSITION_MAX_DIST_MULTIPLIER * tgt::length(bb.diagonal()));
-    }
+    if(volumeInport_.hasData())
+        camera_.adaptInteractionToScene(volumeInport_.getData()->getBoundingBox().getBoundingBox(), tgt::min(volumeInport_.getData()->getSpacing()));
 
     //update tf properties
     int channels = volumeInport_.hasData() ? volumeInport_.getData()->getNumChannels() : 1;
