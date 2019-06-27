@@ -86,6 +86,7 @@ private:
     FileDialogProperty localInstancePath_;
 
     StringProperty username_;
+    StringProperty emailAddress_;
     StringProperty clusterAddress_;
     StringProperty programPath_;
     StringProperty dataPath_;

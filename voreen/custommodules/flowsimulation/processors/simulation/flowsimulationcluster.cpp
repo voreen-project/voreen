@@ -47,6 +47,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     , localInstancePath_("localInstancePath", "Local Instance Path", "Path", "", "EXE (*.exe)", FileDialogProperty::OPEN_FILE, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , institution_("institution", "Institution")
     , username_("username", "Username", "s_leis06")
+    , emailAddress_("emailAddress", "E-Mail Address", "s_leis06@uni-muenster.de")
     , clusterAddress_("clusterAddress", "Cluster Address", "palma2c.uni-muenster.de")
     , programPath_("programPath", "Program Path", "~/OpenLB")
     , dataPath_("dataPath", "Data Path", "/scratch/tmp")
@@ -96,6 +97,8 @@ FlowSimulationCluster::FlowSimulationCluster()
     institution_.setGroupID("cluster-general");
     addProperty(username_);
     username_.setGroupID("cluster-general");
+    addProperty(emailAddress_);
+    emailAddress_.setGroupID("cluster-general");
     addProperty(clusterAddress_);
     clusterAddress_.setGroupID("cluster-general");
     addProperty(programPath_);
@@ -499,33 +502,45 @@ int FlowSimulationCluster::executeCommand(const std::string& command) const {
 
 std::string FlowSimulationCluster::generateCompileScript() const {
     std::stringstream script;
-
-    //TODO: adapt for jena
-
-    script << "\"";
-    script << "module load " << toolchain_.get();
-    script << " && cd " << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get();
-    script << " && make -j4"; // Assumes that using 4 threads is okay, which should be the case on any system.
     script << "\"";
 
+    if(institution_.get() == "jena") {
+        script << "cd " << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get();
+        script << " && make -j4"; // Assumes that using 4 threads is okay, which should be the case on any system.
+    }
+    else if(institution_.get() == "wwu") {
+        script << "module load " << toolchain_.get();
+        script << " && cd " << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get();
+        script << " && make -j4"; // Assumes that using 4 threads is okay, which should be the case on any system.
+    }
+
+    script << "\"";
     return script.str();
 }
 
 std::string FlowSimulationCluster::generateEnqueueScript(const std::string& parametrizationPath) const {
     std::stringstream script;
-
-    //TODO: adapt for jena
-
     script << "\"";
-    script << "module load " << toolchain_.get();
-    script << " && cd " << parametrizationPath;
+
+    if(institution_.get() == "jena") {
+        script << "cd " << parametrizationPath;
 #ifdef WIN32
-    // Using windows, the script's DOS line breaks need to be converted to UNIX line breaks.
-    script << " && sed -i 's/\\r$//' submit.cmd";
+        // Using windows, the script's DOS line breaks need to be converted to UNIX line breaks.
+        script << " && sed -i 's/\\r$//' submit.cmd";
 #endif
-    script << " && sbatch submit.cmd";
-    script << "\"";
+        script << " && qsub submit.cmd";
+    }
+    else if(institution_.get() == "wwu") {
+        script << "module load " << toolchain_.get();
+        script << " && cd " << parametrizationPath;
+#ifdef WIN32
+        // Using windows, the script's DOS line breaks need to be converted to UNIX line breaks.
+        script << " && sed -i 's/\\r$//' submit.cmd";
+#endif
+        script << " && sbatch submit.cmd";
+    }
 
+    script << "\"";
     return script.str();
 }
 
@@ -533,67 +548,97 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     tgtAssert(parameterPort_.hasData(), "no data");
     std::stringstream script;
 
-    //TODO: adapt for jena
+    if(institution_.get() == "jena") {
 
-    int quarters = configTimeQuarters_.get();
-    int minutes = quarters * 15;
-    int hours = minutes / 60;
-    minutes = minutes % 60;
+        script << "#!/bin/bash" << std::endl;
+        script << "# The job should be placed into the queue 'all.q'." << std::endl;
+        script << "#$ -q short.q" << std::endl;
+        script << "# E-Mail notification to...." << std::endl;
+        script << "#$ -M " << emailAddress_.get() << std::endl;
+        script << "# Report on finished and abort." << std::endl;
+        script << "#$ -m bea" << std::endl;
+        script << "#$ -N " << parameterPort_.getData()->getName() << "_" << parametrizationName << std::endl;
+        script << "cd " << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get()
+               << "/" << parameterPort_.getData()->getName() << "/" << parametrizationName << std::endl;
+        script << "# This is the file to be executed." << std::endl;
+        script << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get()
+               << "/" << simulationType_.get();
+        // First argument: ensemble name
+        script << " " << parameterPort_.getData()->getName();
+        // Second argument: run name
+        script << " " << parametrizationName;
+        // Third argument: output directory
+        script << " "
+               << dataPath_.get() + "/" + username_.get() + "/simulations/" // Cluster code needs a trailing '/' !
+               << " > output.log" // forward output to output.log.
+               << std::endl;
 
-    script << "#!/bin/bash" << std::endl;
-    script << std::endl;
-    script << "# set the number of nodes" << std::endl;
-    script << "#SBATCH --nodes=" << configNodes_.get() << std::endl;
-    script << std::endl;
-    script << "# MPI/OMP Hybrid config" << std::endl;
-    script << "#SBATCH --ntasks=" << configTasks_.get() << std::endl;
-    script << "#SBATCH --ntasks-per-node=" << configTasksPerNode_.get() << std::endl;
-    script << "#SBATCH --cpus-per-task=" << configCPUsPerTask_.get() << std::endl;
-    script << std::endl;
-    // Don't use exclusive access, it might block other jobs if number of tasks is low.
-    //script << "# set the number of CPU cores per node" << std::endl;
-    //script << "#SBATCH --exclusive" << std::endl;
-    //script << std::endl;
-    script << "# How much memory is needed (per node)" << std::endl;
-    script << "#SBATCH --mem=" << configMemory_.get() << "G" << std::endl;
-    script << std::endl;
-    script << "# set a partition" << std::endl;
-    script << "#SBATCH --partition " << configPartition_.get() << std::endl;
-    script << std::endl;
-    script << "# set max wallclock time" << std::endl;
-    script << "#SBATCH --time=" << configTimeDays_.get() << "-" << std::setw(2) << std::setfill('0') << hours << ":" << std::setw(2) << std::setfill('0') << minutes << ":00" << std::endl;
-    script << std::endl;
-    script << "# set name of job" << std::endl;
-    script << "#SBATCH --job-name=" << parameterPort_.getData()->getName() << "-" << parametrizationName << std::endl;
-    script << std::endl;
-    script << "# mail alert at start, end and abortion of execution" << std::endl;
-    script << "#SBATCH --mail-type=ALL" << std::endl;
-    script << std::endl;
-    script << "# set an output file" << std::endl;
-    script << "#SBATCH --output output.log" << std::endl;
-    script << std::endl;
-    script << "# send mail to this address" << std::endl;
-    script << "#SBATCH --mail-user=" << username_.get() << "@uni-muenster.de" << std::endl;
-    script << std::endl;
-    script << "# run the application" << std::endl;
-    if(configCPUsPerTask_.get() > 1) {
-        script << "OMP_NUM_THREADS=" << configCPUsPerTask_.get() << " ";
     }
-    if(configTasks_.get() > 1 || configTasksPerNode_.get() > 1) {
-        script << "mpirun ";
+    else if(institution_.get() == "wwu") {
+
+        int quarters = configTimeQuarters_.get();
+        int minutes = quarters * 15;
+        int hours = minutes / 60;
+        minutes = minutes % 60;
+
+        script << "#!/bin/bash" << std::endl;
+        script << std::endl;
+        script << "# set the number of nodes" << std::endl;
+        script << "#SBATCH --nodes=" << configNodes_.get() << std::endl;
+        script << std::endl;
+        script << "# MPI/OMP Hybrid config" << std::endl;
+        script << "#SBATCH --ntasks=" << configTasks_.get() << std::endl;
+        script << "#SBATCH --ntasks-per-node=" << configTasksPerNode_.get() << std::endl;
+        script << "#SBATCH --cpus-per-task=" << configCPUsPerTask_.get() << std::endl;
+        script << std::endl;
+        // Don't use exclusive access, it might block other jobs if number of tasks is low.
+        //script << "# set the number of CPU cores per node" << std::endl;
+        //script << "#SBATCH --exclusive" << std::endl;
+        //script << std::endl;
+        script << "# How much memory is needed (per node)" << std::endl;
+        script << "#SBATCH --mem=" << configMemory_.get() << "G" << std::endl;
+        script << std::endl;
+        script << "# set a partition" << std::endl;
+        script << "#SBATCH --partition " << configPartition_.get() << std::endl;
+        script << std::endl;
+        script << "# set max wallclock time" << std::endl;
+        script << "#SBATCH --time=" << configTimeDays_.get() << "-" << std::setw(2) << std::setfill('0') << hours << ":"
+               << std::setw(2) << std::setfill('0') << minutes << ":00" << std::endl;
+        script << std::endl;
+        script << "# set name of job" << std::endl;
+        script << "#SBATCH --job-name=" << parameterPort_.getData()->getName() << "-" << parametrizationName
+               << std::endl;
+        script << std::endl;
+        script << "# mail alert at start, end and abortion of execution" << std::endl;
+        script << "#SBATCH --mail-type=ALL" << std::endl;
+        script << std::endl;
+        script << "# set an output file" << std::endl;
+        script << "#SBATCH --output output.log" << std::endl;
+        script << std::endl;
+        script << "# send mail to this address" << std::endl;
+        script << "#SBATCH --mail-user=" << emailAddress_.get() << std::endl;
+        script << std::endl;
+        script << "# run the application" << std::endl;
+        if (configCPUsPerTask_.get() > 1) {
+            script << "OMP_NUM_THREADS=" << configCPUsPerTask_.get() << " ";
+        }
+        if (configTasks_.get() > 1 || configTasksPerNode_.get() > 1) {
+            script << "mpirun ";
+        }
+
+        // Add executable.
+        script << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get()
+               << "/" << simulationType_.get();
+        // First argument: ensemble name
+        script << " " << parameterPort_.getData()->getName();
+        // Second argument: run name
+        script << " " << parametrizationName;
+        // Third argument: output directory
+        script << " " << dataPath_.get() + "/" + username_.get() + "/simulations/"; // Cluster code needs a trailing '/'
+
+        script << std::endl;
+
     }
-
-    // Add executable.
-    script << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get()
-           << "/" << simulationType_.get();
-    // First argument: ensemble name
-    script << " " << parameterPort_.getData()->getName();
-    // Second argument: run name
-    script << " " << parametrizationName;
-    // Third argument: output directory
-    script << " " << dataPath_.get() + "/" + username_.get() + "/simulations/"; // Cluster code needs a trailing '/' !
-
-    script << std::endl;
 
 
     return script.str();
