@@ -30,7 +30,7 @@
 
 namespace voreen {
 
-VolumeMinMaxMagnitude* createFromVolumeRAM(const VolumeRAM* volume, RealWorldMapping rwm) {
+VolumeMinMaxMagnitude* createFromVolumeRAM(const VolumeRAM* volume, const RealWorldMapping& rwm) {
 
     float minMagnitude = 0.f, maxMagnitude = 0.f;
     float minNormMagnitude = 0.f, maxNormMagnitude = 0.f;

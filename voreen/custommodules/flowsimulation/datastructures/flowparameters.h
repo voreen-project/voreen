@@ -103,7 +103,13 @@ public:
     void setDensity(float density);
 
     /**
-     * Returns whether bouzidi boundaty condition should be used for unaligned simulation geometries.
+     * Returns the constant for the Smagorinsky turbolence model.
+     */
+    float getSmagorinskyConstant() const;
+    void setSmagorinskyConstant(float smagorinskyConstant);
+
+    /**
+     * Returns whether Bouzidi boundary condition should be used for unaligned simulation geometries.
      */
     bool getBouzidi() const;
     void setBouzidi(bool bouzidi);
@@ -121,6 +127,7 @@ private:
     float characteristicVelocity_;  ///< characteristic velocity in mm/s
     float viscosity_;               ///< viscosity in 10^-3 m^2/s
     float density_;                 ///< density in kg/m^3
+    float smagorinskyConstant_;     ///< constant for Smagorinsky turbolence model
     bool bouzidi_;                  ///< bouzidi boundary condition
 };
 

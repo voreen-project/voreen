@@ -321,7 +321,8 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     SuperLattice3D<T, DESCRIPTOR> sLattice(superGeometry);
 
     SmagorinskyBGKdynamics<T, DESCRIPTOR> bulkDynamics(converter.getLatticeRelaxationFrequency(),
-                                                       instances::getBulkMomenta<T, DESCRIPTOR>(), 0.1);
+                                                       instances::getBulkMomenta<T, DESCRIPTOR>(),
+                                                       parameters.getSmagorinskyConstant());
 
     // choose between local and non-local boundary condition
     sOnLatticeBoundaryCondition3D<T, DESCRIPTOR> sBoundaryCondition(sLattice);
@@ -344,7 +345,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
     // === 4th Step: Main Loop  ===
     const int tmax = converter.getLatticeTime(parametrizationList.getSimulationTime());
-    util::ValueTracer<T> converge( converter.getLatticeTime(1.0), 1e-5 );
+    util::ValueTracer<T> converge( converter.getLatticeTime(1.0), 1e-5);
     for (int ti = 0; ti <= tmax; ti++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
@@ -726,6 +727,7 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
             << "<MetaItem name=\"" << "ParameterCharacteristicVelocity" << "\" type=\"FloatMetaData\" value=\"" << parameters.getCharacteristicVelocity() << "\" />"
             << "<MetaItem name=\"" << "ParameterViscosity" << "\" type=\"FloatMetaData\" value=\"" << parameters.getViscosity() << "\" />"
             << "<MetaItem name=\"" << "ParameterDensity" << "\" type=\"FloatMetaData\" value=\"" << parameters.getDensity() << "\" />"
+            << "<MetaItem name=\"" << "ParameterSmagorinskyConstant" << "\" type=\"FloatMetaData\" value=\"" << parameters.getSmagorinskyConstant() << "\" />"
             << "<MetaItem name=\"" << "ParameterBouzidi" << "\" type=\"BoolMetaData\" value=\"" << (parameters.getBouzidi() ? "true" : "false") << "\" />"
             // Additional meta data.
             << "<MetaItem name=\"" << "StatisticsMaxVelocity" << "\" type=\"FloatMetaData\" value=\"" << statistics.getMaxU() << "\" />"

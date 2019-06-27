@@ -72,6 +72,7 @@ FlowParameters::FlowParameters(const std::string& name)
     , characteristicVelocity_(0.0f)
     , viscosity_(0.0f)
     , density_(0.0f)
+    , smagorinskyConstant_(0.0f)
     , bouzidi_(false)
 {
 }
@@ -112,6 +113,14 @@ void FlowParameters::setDensity(float density) {
     density_ = density;
 }
 
+float FlowParameters::getSmagorinskyConstant() const {
+    return smagorinskyConstant_;
+}
+
+void FlowParameters::setSmagorinskyConstant(float smagorinskyConstant) {
+    smagorinskyConstant_ = smagorinskyConstant;
+}
+
 bool FlowParameters::getBouzidi() const {
     return bouzidi_;
 }
@@ -126,6 +135,7 @@ void FlowParameters::serialize(Serializer& s) const {
     s.serialize("characteristicVelocity", characteristicVelocity_);
     s.serialize("viscosity", viscosity_);
     s.serialize("density", density_);
+    s.serialize("smagorinskyConstant", smagorinskyConstant_);
     s.serialize("bouzidi", bouzidi_);
 }
 
@@ -135,6 +145,7 @@ void FlowParameters::deserialize(Deserializer& s) {
     s.deserialize("characteristicVelocity", characteristicVelocity_);
     s.deserialize("viscosity", viscosity_);
     s.deserialize("density", density_);
+    s.deserialize("smagorinskyConstant", smagorinskyConstant_);
     s.deserialize("bouzidi", bouzidi_);
 }
 
@@ -267,6 +278,7 @@ std::string FlowParametrizationList::toCSVString(size_t param) const {
             output << ", " << flowParameters.getCharacteristicVelocity();
             output << ", " << flowParameters.getViscosity();
             output << ", " << flowParameters.getDensity();
+            output << ", " << flowParameters.getSmagorinskyConstant();
             output << ", " << flowParameters.getBouzidi();
         }
     }
@@ -276,6 +288,7 @@ std::string FlowParametrizationList::toCSVString(size_t param) const {
         output << ", " << flowParametrizations_[param].getCharacteristicVelocity();
         output << ", " << flowParametrizations_[param].getViscosity();
         output << ", " << flowParametrizations_[param].getDensity();
+        output << ", " << flowParametrizations_[param].getSmagorinskyConstant();
         output << ", " << flowParametrizations_[param].getBouzidi();
     }
 

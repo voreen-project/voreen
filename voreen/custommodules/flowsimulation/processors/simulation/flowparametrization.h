@@ -70,10 +70,9 @@ private:
     };
 
     void fluidChanged();
-    void addParametrization();
+    void addParametrizations();
     void removeParametrization();
     void clearParametrizations();
-    void autoGenerateEnsemble();
 
     std::vector<FlowParameters> flowParameters_;
 
@@ -89,17 +88,18 @@ private:
     OptionProperty<FlowFunction> flowFunction_;
 
     StringProperty parametrizationName_;
-    FloatProperty characteristicLength_;
-    FloatProperty characteristicVelocity_;
+    FloatIntervalProperty characteristicLength_;
+    FloatIntervalProperty characteristicVelocity_;
     OptionProperty<Fluid> fluid_;
-    FloatProperty viscosity_;
-    FloatProperty density_;
-    BoolProperty  bouzidi_;
+    FloatIntervalProperty viscosity_;
+    FloatIntervalProperty density_;
+    FloatIntervalProperty smagorinskyConstant_;
+    BoolProperty bouzidi_;
+    IntProperty discretization_;
 
     ButtonProperty addParametrization_;
     ButtonProperty removeParametrization_;
     ButtonProperty clearParametrizations_;
-    ButtonProperty autoGenerateParametrizations_;
 
     StringTableProperty parametrizations_;
 

@@ -107,6 +107,7 @@ T characteristicLength = 0.0;
 T characteristicVelocity = 0.0;
 T viscosity = 0.0;
 T density = 0.0;
+T smagorinskyConstant = 0.0;
 bool bouzidiOn = false;
 //////////////////////////////////////
 
@@ -393,6 +394,7 @@ void writeResult(STLreader<T>& stlReader,
             << "<MetaItem name=\"" << "ParameterCharacteristicVelocity" << "\" type=\"FloatMetaData\" value=\"" << characteristicVelocity << "\" />"
             << "<MetaItem name=\"" << "ParameterViscosity" << "\" type=\"FloatMetaData\" value=\"" << viscosity << "\" />"
             << "<MetaItem name=\"" << "ParameterDensity" << "\" type=\"FloatMetaData\" value=\"" << density << "\" />"
+            << "<MetaItem name=\"" << "ParameterSmagorinskyConstant" << "\" type=\"FloatMetaData\" value=\"" << smagorinskyConstant << "\" />"
             << "<MetaItem name=\"" << "ParameterBouzidi" << "\" type=\"BoolMetaData\" value=\"" << (bouzidiOn ? "true" : "false") << "\" />"
             // Additional meta data.
             << "<MetaItem name=\"" << "StatisticsMaxVelocity" << "\" type=\"FloatMetaData\" value=\"" << statistics.getMaxU() << "\" />"
@@ -548,6 +550,7 @@ int main(int argc, char* argv[]) {
     characteristicVelocity  = std::atof(parameters["characteristicVelocity"].getAttribute("value").c_str());
     viscosity               = std::atof(parameters["viscosity"].getAttribute("value").c_str());
     density                 = std::atof(parameters["density"].getAttribute("value").c_str());
+    smagorinskyConstant     = std::atof(parameters["smagorinskyConstant"].getAttribute("value").c_str());
     bouzidiOn               = parameters["bouzidi"].getAttribute("value") == "true";
 
     XMLreader indicators = config["flowIndicators"];
@@ -610,7 +613,8 @@ int main(int argc, char* argv[]) {
     SuperLattice3D<T, DESCRIPTOR> sLattice(superGeometry);
 
     SmagorinskyBGKdynamics<T, DESCRIPTOR> bulkDynamics(converter.getLatticeRelaxationFrequency(),
-                                                       instances::getBulkMomenta<T, DESCRIPTOR>(), 0.1);
+                                                       instances::getBulkMomenta<T, DESCRIPTOR>(),
+                                                       smagorinskyConstant);
 
     // choose between local and non-local boundary condition
     sOnLatticeBoundaryCondition3D<T, DESCRIPTOR> sBoundaryCondition(sLattice);
