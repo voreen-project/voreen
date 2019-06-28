@@ -689,25 +689,23 @@ namespace {
         s << prefix << " " << v.x << " " << v.y << "\n";
     }
     template <class I, class V>
-    void writeObjIndex(std::ostream& s, I i) {
-        // Stupid obj indices start at 1:
-        i += 1;
+    void writeObjIndex(V v, std::ostream& s, std::unordered_map<tgt::vec3, I>& pos, std::unordered_map<tgt::vec2, I>& tex, std::unordered_map<tgt::vec3, I>& normal) {
 
         switch(V::layout & (VertexBase::TEXCOORD | VertexBase::NORMAL)) {
             case VertexBase::SIMPLE: {
-                s << i;
+                s << pos.at(v.pos_);
                 break;
             }
             case VertexBase::TEXCOORD: {
-                s << i << "/" << i;
+                s << pos.at(v.pos_) << "/" << tex.at(v.getTexCoord());
                 break;
             }
             case VertexBase::NORMAL: {
-                s << i << "//" << i;
+                s << pos.at(v.pos_) << "//" << normal.at(v.getNormal());
                 break;
             }
             case VertexBase::NORMAL_TEXCOORD: {
-                s << i << "/" << i << "/" << i;
+                s << pos.at(v.pos_) << "/" << tex.at(v.getTexCoord()) << "/" << normal.at(v.getNormal());
                 break;
             }
             default: {
@@ -717,26 +715,71 @@ namespace {
     }
 }
 
+namespace {
+template<class V>
+class VertexHash
+{
+    public:
+    std::size_t operator()(V const& s) const
+    {
+        std::vector<float> vals;
+        vals.push_back(s.pos_.x);
+        vals.push_back(s.pos_.y);
+        vals.push_back(s.pos_.z);
+        return boost::hash_value(vals);
+    }
+};
+template<class V>
+class VertexEqual
+{
+    public:
+    bool operator() (V const& t1, V const& t2) const
+    {
+        return t1.pos_ == t2.pos_;
+    }
+};
+}
+
 template <class I, class V>
 void GlMeshGeometry<I,V>::exportAsObj(std::ostream& s) const {
     auto vertexMat = getTransformationMatrix();
     auto normalMat = getTransformationMatrix().getRotationalPartMat3();
     // Define all positions
-    for(auto& v : vertices_) {
-        writeVec3AsObj(s, "v", vertexMat*v.pos_);
+    std::unordered_map<tgt::vec3, I> vertex_map;
+    {
+        I vert_index = 1;
+        for(auto& v : vertices_) {
+            auto it = vertex_map.find(v.pos_);
+            if(it == vertex_map.end()) {
+                vertex_map.insert({v.pos_, vert_index++});
+                writeVec3AsObj(s, "v", vertexMat*v.pos_);
+            }
+        }
     }
 
     // Define texcoords
+    std::unordered_map<tgt::vec2, I> tex_map;
     if((V::layout & VertexBase::TEXCOORD) == VertexBase::TEXCOORD) {
+        I tex_index = 1;
         for(auto& v : vertices_) {
-            writeVec2AsObj(s, "vt", v.getTexCoord());
+            auto it = tex_map.find(v.getTexCoord());
+            if(it == tex_map.end()) {
+                tex_map.insert({v.getTexCoord(), tex_index++});
+                writeVec2AsObj(s, "vt", v.getTexCoord());
+            }
         }
     }
 
     // Define normals
+    std::unordered_map<tgt::vec3, I> normal_map;
     if((V::layout & VertexBase::NORMAL) == VertexBase::NORMAL) {
+        I normal_index = 1;
         for(auto& v : vertices_) {
-            writeVec3AsObj(s, "vn", normalMat*v.getNormal());
+            auto it = normal_map.find(v.getNormal());
+            if(it == normal_map.end()) {
+                normal_map.insert({v.getNormal(), normal_index++});
+                writeVec3AsObj(s, "vn", normalMat*v.getNormal());
+            }
         }
     }
 
@@ -757,7 +800,7 @@ void GlMeshGeometry<I,V>::exportAsObj(std::ostream& s) const {
             {
                 std::vector<I> collected;
                 for(auto& i : out_indices) {
-                    if(i == primitiveRestartIndex_) {
+                    if(i == primitiveRestartIndex_ && primitiveRestartEnabled_) {
                         collected.clear();
                     } else {
                         collected.push_back(i);
@@ -765,9 +808,9 @@ void GlMeshGeometry<I,V>::exportAsObj(std::ostream& s) const {
                     tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
                     if(collected.size() == 3) {
                         s << "f ";
-                        writeObjIndex<I, V>(s, collected[0]); s << " ";
-                        writeObjIndex<I, V>(s, collected[1]); s << " ";
-                        writeObjIndex<I, V>(s, collected[2]); s << "\n";
+                        writeObjIndex<I, V>(vertices_.at(collected[0]), s, vertex_map, tex_map, normal_map); s << " ";
+                        writeObjIndex<I, V>(vertices_.at(collected[1]), s, vertex_map, tex_map, normal_map); s << " ";
+                        writeObjIndex<I, V>(vertices_.at(collected[2]), s, vertex_map, tex_map, normal_map); s << "\n";
 
                         collected.clear();
                     }
@@ -779,7 +822,7 @@ void GlMeshGeometry<I,V>::exportAsObj(std::ostream& s) const {
             {
                 std::deque<I> collected;
                 for(auto& i : out_indices) {
-                    if(i == primitiveRestartIndex_) {
+                    if(i == primitiveRestartIndex_ && primitiveRestartEnabled_) {
                         collected.clear();
                     } else {
                         collected.push_back(i);
@@ -787,9 +830,9 @@ void GlMeshGeometry<I,V>::exportAsObj(std::ostream& s) const {
                     tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
                     if(collected.size() == 3) {
                         s << "f ";
-                        writeObjIndex<I, V>(s, collected[0]); s << " ";
-                        writeObjIndex<I, V>(s, collected[1]); s << " ";
-                        writeObjIndex<I, V>(s, collected[2]); s << "\n";
+                        writeObjIndex<I, V>(vertices_.at(collected[0]), s, vertex_map, tex_map, normal_map); s << " ";
+                        writeObjIndex<I, V>(vertices_.at(collected[1]), s, vertex_map, tex_map, normal_map); s << " ";
+                        writeObjIndex<I, V>(vertices_.at(collected[2]), s, vertex_map, tex_map, normal_map); s << "\n";
 
                         collected.pop_front();
                     }
@@ -800,7 +843,7 @@ void GlMeshGeometry<I,V>::exportAsObj(std::ostream& s) const {
             {
                 std::deque<I> collected;
                 for(auto& i : out_indices) {
-                    if(i == primitiveRestartIndex_) {
+                    if(i == primitiveRestartIndex_ && primitiveRestartEnabled_) {
                         collected.clear();
                     } else {
                         collected.push_back(i);
@@ -808,9 +851,9 @@ void GlMeshGeometry<I,V>::exportAsObj(std::ostream& s) const {
                     tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
                     if(collected.size() == 3) {
                         s << "f ";
-                        writeObjIndex<I, V>(s, collected[0]); s << " ";
-                        writeObjIndex<I, V>(s, collected[1]); s << " ";
-                        writeObjIndex<I, V>(s, collected[2]); s << "\n";
+                        writeObjIndex<I, V>(vertices_.at(collected[0]), s, vertex_map, tex_map, normal_map); s << " ";
+                        writeObjIndex<I, V>(vertices_.at(collected[1]), s, vertex_map, tex_map, normal_map); s << " ";
+                        writeObjIndex<I, V>(vertices_.at(collected[2]), s, vertex_map, tex_map, normal_map); s << "\n";
 
                         // Not the most efficient, but the simplest for now...
                         I first = collected.front();
