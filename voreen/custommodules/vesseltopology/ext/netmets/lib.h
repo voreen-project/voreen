@@ -1,6 +1,6 @@
 
 namespace voreen {
-   struct VesselGraph;
+   class VesselGraph;
 }
 
 struct NetmetsResult {
