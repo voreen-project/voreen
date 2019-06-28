@@ -217,5 +217,5 @@ if args.add_ci_report:
 
     put_as_file(index_page, overview_file_name)
     print("")
-    print("New testreport: {}/{}/{}".format(reports_web_server_root, run.path(), regressiontest_report_file))
+    print("New testreport: {}/{}/{}/{}".format(reports_web_server_root, report_base_dir, run.path(), regressiontest_report_file))
     print("Overview: {}/{}".format(reports_web_server_root, overview_file_name))
