@@ -68,7 +68,9 @@ void StringTableProperty::deserialize(Deserializer& s) {
     Property::deserialize(s);
 
     s.deserialize("columnCount",  columnCount_);
-    s.optionalDeserialize("selectedRow", selectedRow_,-1);
+    int selectedRow = -1;
+    s.optionalDeserialize("selectedRow", selectedRow,-1);
+    setSelectedRowIndex(selectedRow);
     s.deserialize("columnLabels", columnLabels_);
     s.deserialize("values",       values_);
     neededTableUpdates_ = UPDATE_ALL;
@@ -136,6 +138,7 @@ void StringTableProperty::removeRow(int rowIndex) {
     tgtAssert(rowIndex < getNumRows(), "row index out of bounds");
     values_.erase(values_.begin() + rowIndex);
     neededTableUpdates_ |= UPDATE_ROWS;
+    setSelectedRowIndex(-1);
     updateWidgets();
 }
 
