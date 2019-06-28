@@ -56,6 +56,7 @@ DEFINE_GDB_SCRIPT("voreen/tools/gdb/gdb-vector-pretty-printers.py")
 #include <cmath>
 
 #include "tgt/tgt_math.h"
+#include "boost/array.hpp"
 
 /*
     Performance remarks:
@@ -1440,5 +1441,31 @@ inline tgt::vec3 uniformRandomVec3() {
 }
 
 } // namespace
+
+// Hash implementation for tgt::Vector*<T>
+// This makes vectors usable in unordered_{map,set}, for example.
+namespace std {
+    template <typename T> struct hash<tgt::Vector2<T>>
+    {
+        size_t operator()(const tgt::Vector2<T> & p) const
+        {
+            return boost::hash_range(p.elem, p.elem+2);
+        }
+    };
+    template <typename T> struct hash<tgt::Vector3<T>>
+    {
+        size_t operator()(const tgt::Vector3<T> & p) const
+        {
+            return boost::hash_range(p.elem, p.elem+3);
+        }
+    };
+    template <typename T> struct hash<tgt::Vector4<T>>
+    {
+        size_t operator()(const tgt::Vector4<T> & p) const
+        {
+            return boost::hash_range(p.elem, p.elem+4);
+        }
+    };
+}
 
 #endif // TGT_VECTOR_H
