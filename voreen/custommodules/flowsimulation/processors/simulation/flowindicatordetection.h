@@ -83,8 +83,9 @@ private:
     IntProperty numTimeSteps_;
     IntProperty outputResolution_;
 
-    OptionProperty<FlowFunction> flowFunction_;
     OptionProperty<FlowDirection> flowDirection_;
+    OptionProperty<FlowFunction> startPhaseFunction_;
+    FloatProperty startPhaseDuration_;
     FloatProperty radius_;
 
     StringTableProperty flowIndicatorTable_;
@@ -94,6 +95,7 @@ private:
     IntProperty angleThreshold_;
 
     std::vector<FlowIndicator> flowIndicators_;
+    bool triggertBySelection_;
 
     static const std::string loggerCat_;
 };

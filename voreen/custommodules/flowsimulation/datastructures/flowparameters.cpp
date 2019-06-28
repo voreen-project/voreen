@@ -34,7 +34,8 @@ namespace voreen {
 
 FlowIndicator::FlowIndicator()
     : direction_(FD_NONE)
-    , function_(FF_NONE)
+    , startPhaseFunction_(FF_NONE)
+    , startPhaseDuration_(0.0f)
     , center_(tgt::vec3::zero)
     , normal_(tgt::vec3::zero)
     , radius_(0.0f)
@@ -43,7 +44,8 @@ FlowIndicator::FlowIndicator()
 
 void FlowIndicator::serialize(Serializer& s) const {
     s.serialize("direction", direction_);
-    s.serialize("function", function_);
+    s.serialize("startPhaseFunction", startPhaseFunction_);
+    s.serialize("startPhaseDuration", startPhaseDuration_);
     s.serialize("center", center_);
     s.serialize("normal", normal_);
     s.serialize("radius", radius_);
@@ -55,7 +57,8 @@ void FlowIndicator::deserialize(Deserializer& s) {
     direction_ = static_cast<FlowDirection>(direction);
     int function = FF_NONE;
     s.deserialize("function", function);
-    function_ = static_cast<FlowFunction>(function);
+    startPhaseFunction_ = static_cast<FlowFunction>(function);
+    s.deserialize("startPhaseDuration", startPhaseDuration_);
     s.deserialize("center", center_);
     s.deserialize("normal", normal_);
     s.deserialize("radius", radius_);
@@ -224,11 +227,11 @@ void FlowParametrizationList::setOutputResolution(int outputResolution) {
     outputResolution_ = outputResolution;
 }
 
-void FlowParametrizationList::setFlowFunction(FlowFunction flowFunction) {
+void FlowParametrizationList::setStartPhaseFunction(FlowFunction startPhaseFunction) {
     notifyPendingDataInvalidation();
     for(FlowIndicator& flowIndicator : flowIndicators_) {
         if(flowIndicator.direction_ == FD_IN) {
-            flowIndicator.function_ = flowFunction;
+            flowIndicator.startPhaseFunction_ = startPhaseFunction;
         }
     }
 }
@@ -295,6 +298,8 @@ std::string FlowParametrizationList::toCSVString(size_t param) const {
     output << ", " << flowIndicators_.size();
     for(const FlowIndicator& flowIndicator : flowIndicators_) {
         output << ", " << flowIndicator.direction_;
+        output << ", " << flowIndicator.startPhaseFunction_;
+        output << ", " << flowIndicator.startPhaseDuration_;
         output << ", " << flowIndicator.center_.x << ", " << flowIndicator.center_.y << ", " << flowIndicator.center_.z;
         output << ", " << flowIndicator.normal_.x << ", " << flowIndicator.normal_.y << ", " << flowIndicator.normal_.z;
         output << ", " << flowIndicator.radius_;

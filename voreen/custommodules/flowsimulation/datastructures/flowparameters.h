@@ -50,7 +50,10 @@ enum FlowFunction {
 // Indicates flux through an arbitrary, circle-shaped area.
 struct VRN_CORE_API FlowIndicator : public Serializable {
     FlowDirection   direction_;
-    FlowFunction    function_;
+
+    FlowFunction    startPhaseFunction_;
+    float           startPhaseDuration_;
+
     tgt::vec3       center_;
     tgt::vec3       normal_;
     float           radius_;
@@ -184,7 +187,7 @@ public:
     void setOutputResolution(int outputResolution);
 
     /** Overrides flow function for each inflow indicator. Therefore, no getter exists */
-    void setFlowFunction(FlowFunction flowFunction);
+    void setStartPhaseFunction(FlowFunction startPhaseFunction);
 
     void addFlowIndicator(const FlowIndicator& flowIndicator);
     const std::vector<FlowIndicator>& getFlowIndicators() const;

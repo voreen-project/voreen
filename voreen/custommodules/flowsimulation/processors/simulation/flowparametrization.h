@@ -85,7 +85,8 @@ private:
     IntProperty spatialResolution_;
     IntProperty numTimeSteps_;
     IntProperty outputResolution_;
-    OptionProperty<FlowFunction> flowFunction_;
+    OptionProperty<FlowFunction> startPhaseFunction_;
+    FloatProperty startPhaseDuration_;
 
     StringProperty parametrizationName_;
     FloatIntervalProperty characteristicLength_;

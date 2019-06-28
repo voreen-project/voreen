@@ -30,20 +30,22 @@
     if(property ## _.get().x == property ## _.get().y) { \
         discretization ## property = 1; \
     } \
+    std::string tmp = name; \
     for(int property ## i = 0; property ## i < discretization ## property; property ## i++) { \
         float property = property ## _.get().x; \
         if(discretization ## property > 1) { \
             property += (property ## _.get().y - property ## _.get().x) \
                             * property ## i / (discretization ## property - 1); \
-        }
-
+        } \
+        std::string name = tmp + static_cast<char>('A' + property ## i);
+//std::string name = tmp + std::string(#property).substr(0, 3) + "=" + std::to_string(property);
 
 #define PARAMETER_DISCRETIZATION_END }
 
 
 namespace voreen {
 
-const std::string FlowParametrization::loggerCat_("voreen.flowreen.FlowParametrization");
+const std::string FlowParametrization::loggerCat_("voreen.flowsimulation.FlowParametrization");
 
 FlowParametrization::FlowParametrization()
     : Processor()
@@ -55,7 +57,8 @@ FlowParametrization::FlowParametrization()
     , spatialResolution_("spatialResolution", "Spatial Resolution", 32, 16, 512)
     , numTimeSteps_("numTimeSteps", "Num. Output Time Steps", 50, 1, 1000)
     , outputResolution_("outputResolution", "Spatial Resolution of Output", 128, 32, 1024)
-    , flowFunction_("flowFunction", "Flow Function")
+    , startPhaseFunction_("startPhaseFunction", "Start Phase Function")
+    , startPhaseDuration_("startPhaseDuration", "Start Phase Duration")
     , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 10.0f, 0.1f, 1000.0f)
     , characteristicVelocity_("characteristicVelocity", "Characteristic Velocity (mm/s)", 10.0f, 0.0f, 1000.0f)
     , fluid_("fluid", "Fluid")
@@ -63,7 +66,7 @@ FlowParametrization::FlowParametrization()
     , density_("density", "Density (kg/m^3)", 1000.0f, 1000.0f, 1100.0f)
     , smagorinskyConstant_("smagorinskyConstant", "Smagorinsky Contant", 0.1f, 0.01f, 2.0f)
     , bouzidi_("bouzidi", "Bouzidi", true)
-    , discretization_("discretization", "Discretization", 3, 1, 20)
+    , discretization_("discretization", "Discretization", 3, 1, 26)
     , addParametrization_("addParametrizations", "Add Parametrizations")
     , removeParametrization_("removeParametrization", "Remove Parametrization")
     , clearParametrizations_("clearParametrizations", "Clear Parametrizations")
@@ -87,11 +90,13 @@ FlowParametrization::FlowParametrization()
         numTimeSteps_.setGroupID("ensemble");
     addProperty(outputResolution_);
         outputResolution_.setGroupID("ensemble");
-    addProperty(flowFunction_);
-        flowFunction_.addOption("none", "NONE", FlowFunction::FF_NONE); // get's selected automatically
-        flowFunction_.addOption("constant", "CONSTANT", FlowFunction ::FF_CONSTANT);
-        flowFunction_.addOption("sinus", "SINUS", FlowFunction::FF_SINUS);
-        flowFunction_.setGroupID("ensemble");
+    addProperty(startPhaseFunction_);
+        startPhaseFunction_.addOption("none", "NONE", FlowFunction::FF_NONE); // get's selected automatically
+        startPhaseFunction_.addOption("constant", "CONSTANT", FlowFunction ::FF_CONSTANT);
+        startPhaseFunction_.addOption("sinus", "SINUS", FlowFunction::FF_SINUS);
+        startPhaseFunction_.setGroupID("ensemble");
+    addProperty(startPhaseDuration_);
+        startPhaseDuration_.setGroupID("ensemble");
     setPropertyGroupGuiName("ensemble", "Ensemble");
 
     addProperty(parametrizationName_);
@@ -161,22 +166,22 @@ void FlowParametrization::fluidChanged() {
 
 void FlowParametrization::addParametrizations() {
 
+    std::string name = parametrizationName_.get();
+    for(const FlowParameters& params : flowParameters_) {
+        if(params.getName().find(name) != std::string::npos) {
+            LERROR("Already parametrization with prefix " << name);
+            return;;
+        }
+    }
+
     PARAMETER_DISCRETIZATION_BEGIN(characteristicLength)
     PARAMETER_DISCRETIZATION_BEGIN(characteristicVelocity)
-    PARAMETER_DISCRETIZATION_BEGIN(smagorinskyConstant)
     PARAMETER_DISCRETIZATION_BEGIN(viscosity)
     PARAMETER_DISCRETIZATION_BEGIN(density)
+    PARAMETER_DISCRETIZATION_BEGIN(smagorinskyConstant)
     bool bouzidi = bouzidi_.get();
 //   for (bool bouzidi : {true, false})
     {
-        std::string name = "config"
-                           "_len=" + std::to_string(characteristicLength) +
-                           "_vel=" + std::to_string(characteristicVelocity) +
-                           "_v=" + std::to_string(viscosity) +
-                           "_d=" + std::to_string(density) +
-                           "_s=" + std::to_string(smagorinskyConstant) +
-                           "_b=" + std::to_string(bouzidi);
-
         FlowParameters parameters(name);
         parameters.setCharacteristicLength(characteristicLength);
         parameters.setCharacteristicVelocity(characteristicVelocity);
@@ -186,7 +191,7 @@ void FlowParametrization::addParametrizations() {
         parameters.setBouzidi(bouzidi);
         flowParameters_.push_back(parameters);
 
-        std::vector<std::string> row(7);
+        std::vector<std::string> row(parametrizations_.getNumColumns());
         row[0] = parameters.getName();
         row[1] = std::to_string(parameters.getCharacteristicLength());
         row[2] = std::to_string(parameters.getCharacteristicVelocity());
@@ -241,7 +246,7 @@ void FlowParametrization::process() {
         flowParametrizationList->setSpatialResolution(spatialResolution_.get());
         flowParametrizationList->setNumTimeSteps(numTimeSteps_.get());
         flowParametrizationList->setOutputResolution(outputResolution_.get());
-        flowParametrizationList->setFlowFunction(flowFunction_.getValue());
+        flowParametrizationList->setStartPhaseFunction(startPhaseFunction_.getValue());
     }
 
     for (const FlowParameters& flowParameters : flowParameters_) {

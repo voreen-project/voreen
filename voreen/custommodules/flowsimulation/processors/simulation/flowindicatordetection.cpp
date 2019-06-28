@@ -42,13 +42,15 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , spatialResolution_("spatialResolution", "Spatial Resolution", 32, 16, 512)
     , numTimeSteps_("numTimeSteps", "Num. Output Time Steps", 50, 1, 1000)
     , outputResolution_("outputResolution", "Max. Output Resolution", 128, 32, 1024)
-    , flowFunction_("flowFunction", "Flow Function")
     , flowDirection_("flowDirection", "Flow Direction")
+    , startPhaseFunction_("startPhaseFunction", "Start Phase Function")
+    , startPhaseDuration_("startPhaseDuration", "Start Phase Duration", 0.0f, 0.0f, 20.0f)
     , radius_("radius", "Radius", 1.0f, 0.0f, 10.0f)
-    , flowIndicatorTable_("flowIndicators", "Flow Indicators", 4)
+    , flowIndicatorTable_("flowIndicators", "Flow Indicators", 6)
     , firstRefNode_("firstRefNode", "First Ref. Nodes", 0, 0, 20)
     , numRefNodes_("numRefNodes", "Num. Ref. Nodes", 3, 1, 10)
     , angleThreshold_("angleThreshold", "Angle Threshold", 15, 0, 90)
+    , triggertBySelection_(false)
 {
     addPort(vesselGraphPort_);
     ON_CHANGE(vesselGraphPort_, FlowIndicatorDetection, onInputChange);
@@ -61,6 +63,9 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         ensembleName_.setGroupID("ensemble");
     addProperty(simulationTime_);
         simulationTime_.setGroupID("ensemble");
+        ON_CHANGE_LAMBDA(simulationTime_, [this] {
+            startPhaseDuration_.setMaxValue(simulationTime_.get());
+        });
     addProperty(temporalResolution_);
         temporalResolution_.adaptDecimalsToRange(3);
         temporalResolution_.setGroupID("ensemble");
@@ -72,27 +77,33 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         outputResolution_.setGroupID("ensemble");
     setPropertyGroupGuiName("ensemble", "Ensemble");
 
-    addProperty(flowFunction_);
-        flowFunction_.addOption("none", "NONE", FlowFunction::FF_NONE); // get's selected automatically
-        flowFunction_.addOption("constant", "CONSTANT", FlowFunction ::FF_CONSTANT);
-        flowFunction_.addOption("sinus", "SINUS", FlowFunction::FF_SINUS);
-        flowFunction_.setGroupID("indicator");
     addProperty(flowDirection_);
         flowDirection_.addOption("none", "NONE", FlowDirection::FD_NONE);
         flowDirection_.addOption("in", "IN", FlowDirection::FD_IN);
         flowDirection_.addOption("out", "OUT", FlowDirection::FD_OUT);
         flowDirection_.setGroupID("indicator");
         ON_CHANGE(flowDirection_, FlowIndicatorDetection, onConfigChange);
-    //addProperty(radius_);
+    addProperty(startPhaseFunction_);
+        startPhaseFunction_.addOption("none", "NONE", FlowFunction::FF_NONE); // get's selected automatically
+        startPhaseFunction_.addOption("constant", "CONSTANT", FlowFunction ::FF_CONSTANT);
+        startPhaseFunction_.addOption("sinus", "SINUS", FlowFunction::FF_SINUS);
+        startPhaseFunction_.setGroupID("indicator");
+        ON_CHANGE(startPhaseFunction_, FlowIndicatorDetection, onConfigChange);
+    addProperty(startPhaseDuration_);
+        startPhaseDuration_.setGroupID("indicator");
+        ON_CHANGE(startPhaseDuration_, FlowIndicatorDetection, onConfigChange);
+    addProperty(radius_);
         radius_.setGroupID("indicator");
         ON_CHANGE(radius_, FlowIndicatorDetection, onConfigChange);
     setPropertyGroupGuiName("indicator", "Indicator");
 
     addProperty(flowIndicatorTable_);
     flowIndicatorTable_.setColumnLabel(0, "Dir.");
-    flowIndicatorTable_.setColumnLabel(1, "Center");
-    flowIndicatorTable_.setColumnLabel(2, "Normal");
-    flowIndicatorTable_.setColumnLabel(3, "Radius");
+    flowIndicatorTable_.setColumnLabel(1, "St. Ph. Fun.");
+    flowIndicatorTable_.setColumnLabel(2, "St. Ph. Dur.");
+    flowIndicatorTable_.setColumnLabel(3, "Center");
+    flowIndicatorTable_.setColumnLabel(4, "Normal");
+    flowIndicatorTable_.setColumnLabel(5, "Radius");
     ON_CHANGE(flowIndicatorTable_, FlowIndicatorDetection, onSelectionChange);
 
     addProperty(firstRefNode_);
@@ -147,34 +158,45 @@ void FlowIndicatorDetection::process() {
             flowParametrizationList->addFlowIndicator(indicator);
         }
     }
-    flowParametrizationList->setFlowFunction(flowFunction_.getValue());
 
     flowParametrizationPort_.setData(flowParametrizationList);
 }
 
 void FlowIndicatorDetection::onSelectionChange() {
-    if(flowIndicatorTable_.getNumRows() > 0 && flowIndicatorTable_.getSelectedRowIndex() >= 0) {
+    bool validSelection = flowIndicatorTable_.getNumRows() > 0 && flowIndicatorTable_.getSelectedRowIndex() >= 0;
+    if(validSelection) {
+        triggertBySelection_ = true;
         size_t index = static_cast<size_t>(flowIndicatorTable_.getSelectedRowIndex());
         flowDirection_.selectByValue(flowIndicators_.at(index).direction_);
-        flowDirection_.setReadOnlyFlag(false);
+        startPhaseFunction_.selectByValue(flowIndicators_.at(index).startPhaseFunction_);
+        startPhaseDuration_.set(flowIndicators_.at(index).startPhaseDuration_);
         radius_.set(flowIndicators_.at(index).radius_);
-        radius_.setReadOnlyFlag(false);
+        triggertBySelection_ = false;
     }
-    else {
-        flowDirection_.setReadOnlyFlag(true);
-        radius_.setReadOnlyFlag(true);
-    }
+
+    flowDirection_.setReadOnlyFlag(!validSelection);
+    startPhaseFunction_.setReadOnlyFlag(!validSelection);
+    startPhaseDuration_.setReadOnlyFlag(!validSelection);
+    radius_.setReadOnlyFlag(!validSelection);
+
     //setPropertyGroupVisible("indicator", flowIndicatorTable_.getSelectedRowIndex() >= 0);
 }
 
 void FlowIndicatorDetection::onConfigChange() {
+
+    // Ignore calls being triggert during selection callback.
+    if(triggertBySelection_)
+        return;
+
     if(flowIndicatorTable_.getNumRows() > 0 &&
        flowIndicatorTable_.getSelectedRowIndex() >= 0 &&
        flowIndicatorTable_.getSelectedRowIndex() < static_cast<int>(flowIndicators_.size()) ) {
 
         FlowIndicator& indicator = flowIndicators_[flowIndicatorTable_.getSelectedRowIndex()];
         indicator.direction_ = flowDirection_.getValue();
-        //indicator.radius_ = radius_.get(); // Estimate is quite accurate.
+        indicator.startPhaseFunction_ = startPhaseFunction_.getValue();
+        indicator.startPhaseDuration_ = startPhaseDuration_.get();
+        indicator.radius_ = radius_.get(); // Estimate is quite accurate.
 
         buildTable();
     }
@@ -234,7 +256,9 @@ void FlowIndicatorDetection::onInputChange() {
             indicator.normal_ = tgt::normalize(back->pos_ - front->pos_);
             indicator.radius_ = radius;
             indicator.direction_ = FlowDirection::FD_NONE;
-            indicator.function_  = FlowFunction::FF_NONE;
+            // Define default values here:
+            indicator.startPhaseFunction_ = FlowFunction::FF_SINUS;
+            indicator.startPhaseDuration_ = simulationTime_.get() * 0.25;
 
             // Estimate flow direction based on underlying velocities.
             if (volume) {
@@ -271,14 +295,17 @@ void FlowIndicatorDetection::buildTable() {
     flowIndicatorTable_.reset();
 
     for(const FlowIndicator& indicator : flowIndicators_) {
-        std::vector<std::string> row(4);
-        row[0] = indicator.direction_ == FlowDirection::FD_IN ? "IN" : (indicator.direction_ == FlowDirection::FD_OUT
-                                                                     ? "OUT" : "NONE");
-        row[1] = "(" + std::to_string(indicator.center_.x) + ", " + std::to_string(indicator.center_.y) + ", " +
+        std::vector<std::string> row(flowIndicatorTable_.getNumColumns());
+        row[0] = indicator.direction_ == FlowDirection::FD_IN ? "IN" :
+                (indicator.direction_ == FlowDirection::FD_OUT ? "OUT" : "NONE");
+        row[1] = indicator.startPhaseFunction_ == FlowFunction::FF_CONSTANT ? "CONSTANT" :
+                (indicator.startPhaseFunction_ == FlowFunction::FF_SINUS ? "SINUS" : "NONE");
+        row[2] = std::to_string(indicator.startPhaseDuration_);
+        row[3] = "(" + std::to_string(indicator.center_.x) + ", " + std::to_string(indicator.center_.y) + ", " +
                  std::to_string(indicator.center_.z) + ")";
-        row[2] = "(" + std::to_string(indicator.normal_.x) + ", " + std::to_string(indicator.normal_.y) + ", " +
+        row[4] = "(" + std::to_string(indicator.normal_.x) + ", " + std::to_string(indicator.normal_.y) + ", " +
                  std::to_string(indicator.normal_.z) + ")";
-        row[3] = std::to_string(indicator.radius_);
+        row[5] = std::to_string(indicator.radius_);
         flowIndicatorTable_.addRow(row);
     }
 

@@ -40,10 +40,11 @@ enum FlowFunction {
 // This code is adapted from the voreen host code.
 struct FlowIndicator {
     FlowDirection   direction_{FD_NONE};
-    FlowFunction    function_{FF_NONE};
-    T               center_[3]{0.0};
-    T               normal_[3]{0.0};
-    T               radius_{0.0};
+    FlowFunction    startPhaseFunction_{FF_NONE};
+    T               startPhaseDuration_{0};
+    T               center_[3]{0};
+    T               normal_[3]{0};
+    T               radius_{0};
     int             materialId_{0};
 };
 
@@ -210,7 +211,7 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
         lattice.iniEquilibrium(superGeometry, MAT_FLUID, rhoF, uF);
 
         // Initialize all values of distribution functions to their local equilibrium
-        for (const FlowIndicator &indicator : flowIndicators) {
+        for (const FlowIndicator& indicator : flowIndicators) {
             lattice.defineRhoU(superGeometry, indicator.materialId_, rhoF, uF);
             lattice.iniEquilibrium(superGeometry, indicator.materialId_, rhoF, uF);
         }
@@ -243,18 +244,21 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 int iTvec[1] = {iT};
                 T maxVelocity[1] = {T()};
 
-                switch(indicator.function_) {
+                switch(indicator.startPhaseFunction_) {
+                case FF_SINUS:
+                {
+                    int iTperiod = converter.getLatticeTime(indicator.startPhaseDuration_);
+                    if(iT < iTperiod) {
+                        SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getCharLatticeVelocity());
+                        nSinusStartScale(maxVelocity, iTvec);
+                        break;
+                    }
+                    // Else: fallthrough
+                }
                 case FF_CONSTANT:
                 {
                     AnalyticalConst1D<T, int> nConstantStartScale(converter.getCharLatticeVelocity());
                     nConstantStartScale(maxVelocity, iTvec);
-                    break;
-                }
-                case FF_SINUS:
-                {
-                    int iTperiod = converter.getLatticeTime(0.5);
-                    SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getCharLatticeVelocity());
-                    nSinusStartScale(maxVelocity, iTvec);
                     break;
                 }
                 case FF_NONE:
@@ -556,15 +560,16 @@ int main(int argc, char* argv[]) {
     XMLreader indicators = config["flowIndicators"];
     for(auto iter : indicators) {
         FlowIndicator indicator;
-        indicator.direction_ = static_cast<FlowDirection>(std::atoi((*iter)["direction"].getAttribute("value").c_str()));
-        indicator.function_  = static_cast<FlowFunction>(std::atoi((*iter)["function"].getAttribute("value").c_str()));
-        indicator.center_[0] = std::atof((*iter)["center"].getAttribute("x").c_str());
-        indicator.center_[1] = std::atof((*iter)["center"].getAttribute("y").c_str());
-        indicator.center_[2] = std::atof((*iter)["center"].getAttribute("z").c_str());
-        indicator.normal_[0] = std::atof((*iter)["normal"].getAttribute("x").c_str());
-        indicator.normal_[1] = std::atof((*iter)["normal"].getAttribute("y").c_str());
-        indicator.normal_[2] = std::atof((*iter)["normal"].getAttribute("z").c_str());
-        indicator.radius_ = std::atof((*iter)["radius"].getAttribute("value").c_str());
+        indicator.direction_            = static_cast<FlowDirection>(std::atoi((*iter)["direction"].getAttribute("value").c_str()));
+        indicator.startPhaseFunction_   = static_cast<FlowFunction>(std::atoi((*iter)["startPhaseFunction"].getAttribute("value").c_str()));
+        indicator.startPhaseDuration_   = std::atof((*iter)["startPhaseDuration"].getAttribute("value").c_str());
+        indicator.center_[0]            = std::atof((*iter)["center"].getAttribute("x").c_str());
+        indicator.center_[1]            = std::atof((*iter)["center"].getAttribute("y").c_str());
+        indicator.center_[2]            = std::atof((*iter)["center"].getAttribute("z").c_str());
+        indicator.normal_[0]            = std::atof((*iter)["normal"].getAttribute("x").c_str());
+        indicator.normal_[1]            = std::atof((*iter)["normal"].getAttribute("y").c_str());
+        indicator.normal_[2]            = std::atof((*iter)["normal"].getAttribute("z").c_str());
+        indicator.radius_               = std::atof((*iter)["radius"].getAttribute("value").c_str());
         flowIndicators.push_back(indicator);
     }
     clout << "Found " << flowIndicators.size() << " Flow Indicators" << std::endl;

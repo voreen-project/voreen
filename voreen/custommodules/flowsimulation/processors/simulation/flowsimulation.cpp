@@ -290,12 +290,13 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     std::vector<FlowIndicatorMaterial> flowIndicators;
     for(const FlowIndicator& indicator : parametrizationList.getFlowIndicators()) {
         FlowIndicatorMaterial indicatorMaterial;
-        indicatorMaterial.direction_ = indicator.direction_;
-        indicatorMaterial.function_  = indicator.function_;
-        indicatorMaterial.center_ = indicator.center_;
-        indicatorMaterial.normal_ = indicator.normal_;
-        indicatorMaterial.radius_ = indicator.radius_;
-        indicatorMaterial.materialId_ = 0;
+        indicatorMaterial.direction_            = indicator.direction_;
+        indicatorMaterial.startPhaseFunction_   = indicator.startPhaseFunction_;
+        indicatorMaterial.startPhaseDuration_   = indicator.startPhaseDuration_;
+        indicatorMaterial.center_               = indicator.center_;
+        indicatorMaterial.normal_               = indicator.normal_;
+        indicatorMaterial.radius_               = indicator.radius_;
+        indicatorMaterial.materialId_           = MAT_EMPTY;
         flowIndicators.push_back(indicatorMaterial);
     }
 
@@ -516,18 +517,21 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 int iTvec[1] = {iT};
                 T maxVelocity[1] = {T()};
 
-                switch(indicator.function_) {
+                switch(indicator.startPhaseFunction_) {
+                case FF_SINUS:
+                {
+                    int iTperiod = converter.getLatticeTime(indicator.startPhaseDuration_);
+                    if(iT < iTperiod) {
+                        SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getCharLatticeVelocity());
+                        nSinusStartScale(maxVelocity, iTvec);
+                        break;
+                    }
+                    // Else: fallthrough
+                }
                 case FF_CONSTANT:
                 {
                     AnalyticalConst1D<T, int> nConstantStartScale(converter.getCharLatticeVelocity());
                     nConstantStartScale(maxVelocity, iTvec);
-                    break;
-                }
-                case FF_SINUS:
-                {
-                    int iTperiod = converter.getLatticeTime(0.5);
-                    SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getCharLatticeVelocity());
-                    nSinusStartScale(maxVelocity, iTvec);
                     break;
                 }
                 case FF_NONE:
