@@ -88,7 +88,7 @@ private:
     class MetaFileWatchListener : public efsw::FileWatchListener {
     public:
         MetaFileWatchListener(efsw::FileWatcher* parent, const std::string& directory);
-        ~MetaFileWatchListener();
+        virtual ~MetaFileWatchListener();
 
         /**
          * This function is called by the async file watch thread.
