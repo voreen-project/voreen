@@ -194,11 +194,41 @@ void InteractiveListProperty::removeInstance(int instanceId) {
 }
 
 void InteractiveListProperty::moveInstance(int instanceId, int pos) {
+    tgtAssert(pos >= 0 && pos <= static_cast<int>(instances_.size()), "Position out of range");
+
+    int idx = getIndexOfInstance(instanceId);
+    tgtAssert(idx != -1, "Instance not available");
+    if(idx == -1 || pos == idx) {
+        return;
+    }
+
+    // First erase the instance at its old position.
+    Instance instance = instances_[idx];
+    instances_.erase(instances_.begin() + idx);
+
+    // Insert the instance at its new position.
+    if(idx < pos) {
+        pos--;
+    }
+    instances_.insert(instances_.begin() + pos, instance);
+
+    // Update selection.
+    if(selectedInstance_ == idx) {
+        selectedInstance_ = pos;
+    }
+    else if(selectedInstance_ == pos) {
+        selectedInstance_ = idx;
+    }
+
+    invalidate();
+}
+
+void InteractiveListProperty::swapInstances(int instanceId, int pos) {
     tgtAssert(pos >= 0 && pos < static_cast<int>(instances_.size()), "Position out of range");
 
     int idx = getIndexOfInstance(instanceId);
     tgtAssert(idx != -1, "Instance not available");
-    if(idx == -1)
+    if(idx == -1 || pos == idx)
         return;
 
     // Swap positions.
@@ -207,6 +237,9 @@ void InteractiveListProperty::moveInstance(int instanceId, int pos) {
     // Update selection.
     if(selectedInstance_ == idx) {
         selectedInstance_ = pos;
+    }
+    else if(selectedInstance_ == pos) {
+        selectedInstance_ = idx;
     }
 
     invalidate();

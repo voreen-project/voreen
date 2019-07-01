@@ -223,7 +223,7 @@ public:
             QDataStream dataStream(&data, QIODevice::ReadOnly);
             dataStream >> instance;
 
-            property_->moveInstance(property_->getInstances()[instance].instanceId_, position);
+            property_->swapInstances(property_->getInstances()[instance].instanceId_, position);
             event->acceptProposedAction();
         }
         else if(event->mimeData()->hasFormat("filter/item")) {
@@ -271,7 +271,7 @@ public:
         current = tgt::clamp(current, 0, count()-1);
 
         if(event->modifiers() & Qt::Modifier::CTRL) {
-            property_->moveInstance(instance.instanceId_, current);
+            property_->swapInstances(instance.instanceId_, current);
         }
         else {
             property_->setSelectedInstance(current);
@@ -297,7 +297,7 @@ InteractiveListPropertyWidget::InteractiveListPropertyWidget(InteractiveListProp
     instanceTable_ = new InstanceListWidget(property_, nullptr);
 
     itemTable_->setToolTip(tr("Use Drag and Drop or press RETURN to add an instance of the selected item"));
-    instanceTable_->setToolTip(tr("Use Drag and Drop or CTRL + UP/Down to move items"));
+    instanceTable_->setToolTip(tr("Use Drag and Drop or CTRL + Up/Down to move items"));
 
     // Add widgets.
     addWidget(itemTable_);

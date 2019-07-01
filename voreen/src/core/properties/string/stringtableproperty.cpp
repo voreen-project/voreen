@@ -138,7 +138,14 @@ void StringTableProperty::removeRow(int rowIndex) {
     tgtAssert(rowIndex < getNumRows(), "row index out of bounds");
     values_.erase(values_.begin() + rowIndex);
     neededTableUpdates_ |= UPDATE_ROWS;
-    setSelectedRowIndex(-1);
+
+    if(selectedRow_ >= 0
+       && (selectedRow_ == static_cast<int>(getNumRows())
+           || rowIndex > selectedRow_)) {
+        selectedRow_--;
+        neededTableUpdates_ |= UPDATE_SELECTION;
+    }
+
     updateWidgets();
 }
 

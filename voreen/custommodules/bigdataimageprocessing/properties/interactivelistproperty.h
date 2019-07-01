@@ -163,6 +163,15 @@ public:
     void moveInstance(int instanceId, int pos);
 
     /**
+     * Moves a single instance to a new position by swapping
+     * positions with a target instance.
+     * @note selection will be update accordingly
+     * @param instanceId instance to be swapped
+     * @param pos position to be moved to
+     */
+    void swapInstances(int instanceId, int pos);
+
+    /**
      * Determines, if the specified item has at least one instance.
      * @param item item to be checked
      * @return true, if the specified item is part of the output, false otherwise
