@@ -30,6 +30,8 @@
 #include "voreen/core/datastructures/meta/serializablevectormetadata.h"
 #include "tgt/texturemanager.h"
 
+#define LIGHT_POSITION_MAX_DIST_MULTIPLIER 10.0
+
 namespace voreen {
 
 GeometryRenderer::GeometryRenderer()
@@ -351,6 +353,10 @@ void GeometryRenderer::adjustPropertiesToInput() {
         planeDistance_.setVisibleFlag(false);
     }
     solidColor_.setVisibleFlag(isUsingSolidColor());
+
+    if (inport_.hasData()) {
+        lightPosition_.setMaxDist(LIGHT_POSITION_MAX_DIST_MULTIPLIER * tgt::length(getBoundingBox().diagonal()));
+    }
 }
 
 void GeometryRenderer::updatePropertyVisibilities() {
