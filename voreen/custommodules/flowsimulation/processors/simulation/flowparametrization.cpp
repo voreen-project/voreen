@@ -58,7 +58,6 @@ FlowParametrization::FlowParametrization()
     , numTimeSteps_("numTimeSteps", "Num. Output Time Steps", 50, 1, 1000)
     , outputResolution_("outputResolution", "Spatial Resolution of Output", 128, 32, 1024)
     , startPhaseFunction_("startPhaseFunction", "Start Phase Function")
-    , startPhaseDuration_("startPhaseDuration", "Start Phase Duration")
     , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 10.0f, 0.1f, 1000.0f)
     , characteristicVelocity_("characteristicVelocity", "Characteristic Velocity (mm/s)", 10.0f, 0.0f, 1000.0f)
     , fluid_("fluid", "Fluid")
@@ -95,8 +94,6 @@ FlowParametrization::FlowParametrization()
         startPhaseFunction_.addOption("constant", "CONSTANT", FlowFunction ::FF_CONSTANT);
         startPhaseFunction_.addOption("sinus", "SINUS", FlowFunction::FF_SINUS);
         startPhaseFunction_.setGroupID("ensemble");
-    addProperty(startPhaseDuration_);
-        startPhaseDuration_.setGroupID("ensemble");
     setPropertyGroupGuiName("ensemble", "Ensemble");
 
     addProperty(parametrizationName_);
@@ -210,8 +207,8 @@ void FlowParametrization::addParametrizations() {
 
 void FlowParametrization::removeParametrization() {
     if(parametrizations_.getNumRows() > 0 && parametrizations_.getSelectedRowIndex() >= 0) {
-        parametrizations_.removeRow(parametrizations_.getSelectedRowIndex());
         flowParameters_.erase(flowParameters_.begin() + parametrizations_.getSelectedRowIndex());
+        parametrizations_.removeRow(parametrizations_.getSelectedRowIndex());
     }
     else {
         LWARNING("No parametrization selected");
