@@ -2,6 +2,10 @@ if(VRN_MSVC2012 OR VRN_MSVC2013)
     MESSAGE(FATAL_ERROR "Big Data Image Processing Module does NOT compile with MSVC 2012 and MSVC 2013 - use MSVC 2015 or higher")
 ENDIF()
 
+IF(NOT VRN_MODULE_BASE)
+    MESSAGE(FATAL_ERROR "Big Data Image Processing Module requires Base Module")
+ENDIF()
+
 IF(NOT VRN_MODULE_HDF5)
     MESSAGE(FATAL_ERROR "Big Data Image Processing Module requires HDF5 Module")
 ENDIF()
@@ -93,9 +97,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/volumefilterproperties/morphologyfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/thresholdingfilterproperties.cpp
 
-    # Properties
-    ${MOD_DIR}/properties/interactivelistproperty.cpp
-
     # cell nuclei cluster splitting
     ${MOD_DIR}/util/clustersplittingthread.cpp
     ${MOD_DIR}/util/connectedcomponentqueue.cpp
@@ -138,9 +139,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/volumefilterproperties/morphologyfilterproperties.h
     ${MOD_DIR}/volumefilterproperties/thresholdingfilterproperties.h
 
-    # Properties
-    ${MOD_DIR}/properties/interactivelistproperty.h
-
     # cell nuclei cluster splitting
     ${MOD_DIR}/operators/ternaryvolumeoperator.h
     ${MOD_DIR}/operators/volumeoperatordistancetransform.h
@@ -156,27 +154,3 @@ IF(VRN_MODULE_PLOTTING)
         ${MOD_DIR}/processors/segmentationslicedensity.h
     )
 ENDIF()
-
-###############################################################################
-# Qt module resources
-################################################################################
-SET(MOD_QT_MODULECLASS BigDataImageProcessingModuleQt)
-
-SET(MOD_QT_SOURCES
-        #Factories
-        ${MOD_DIR}/qt/properties/bigdataimageprocessingpropertywidgetfactory.cpp
-
-        #Properties
-        ${MOD_DIR}/qt/properties/interactivelistpropertywidget.cpp
-        )
-
-SET(MOD_QT_HEADERS
-        #Factories
-        ${MOD_DIR}/qt/properties/bigdataimageprocessingpropertywidgetfactory.h
-
-        #Properties
-        ${MOD_DIR}/qt/properties/interactivelistpropertywidget.h
-        )
-
-SET(MOD_QT_HEADERS_NONMOC
-        )

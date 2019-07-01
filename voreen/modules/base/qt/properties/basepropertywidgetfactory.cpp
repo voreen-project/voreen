@@ -23,14 +23,14 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "bigdataimageprocessingpropertywidgetfactory.h"
+#include "basepropertywidgetfactory.h"
 
 #include "interactivelistpropertywidget.h"
 #include "../../properties/interactivelistproperty.h"
 
 namespace voreen {
 
-PropertyWidget* BigDataImageProcessingPropertyWidgetFactory::createAssociatedWidget(Property* prop) const {
+PropertyWidget* BasePropertyWidgetFactory::createAssociatedWidget(Property* prop) const {
 
     if (typeid(*prop) == typeid(InteractiveListProperty))
         return new InteractiveListPropertyWidget(static_cast<InteractiveListProperty*>(prop), 0);

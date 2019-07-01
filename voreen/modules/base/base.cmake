@@ -115,6 +115,9 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/volume/volumeoffset.cpp
     ${MOD_DIR}/processors/volume/volumevorticity.cpp
 
+    # Properties
+    ${MOD_DIR}/properties/interactivelistproperty.cpp
+
     # Volume readers/writers sources
     ${MOD_DIR}/io/analyzevolumereader.cpp
     ${MOD_DIR}/io/brukervolumereader.cpp
@@ -243,6 +246,9 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volume/volumeoffset.h
     ${MOD_DIR}/processors/volume/volumevorticity.h
 
+    # Properties
+    ${MOD_DIR}/properties/interactivelistproperty.h
+
     # Volume readers/writers headers
     ${MOD_DIR}/io/analyzevolumereader.h
     ${MOD_DIR}/io/brukervolumereader.h
@@ -266,14 +272,24 @@ SET(MOD_CORE_HEADERS
 SET(MOD_QT_MODULECLASS BaseModuleQt)
 
 SET(MOD_QT_SOURCES
+    # Factories
     ${MOD_DIR}/qt/processorwidgets/baseprocessorwidgetfactory.cpp
+    ${MOD_DIR}/qt/properties/basepropertywidgetfactory.cpp
+
+    # Property Widgets
+    ${MOD_DIR}/qt/properties/interactivelistpropertywidget.cpp
+
 )
 
 SET(MOD_QT_HEADERS
+    # Property Widgets
+    ${MOD_DIR}/qt/properties/interactivelistpropertywidget.h
 )
 
 SET(MOD_QT_HEADERS_NONMOC
+    # Factories
     ${MOD_DIR}/qt/processorwidgets/baseprocessorwidgetfactory.h
+    ${MOD_DIR}/qt/properties/basepropertywidgetfactory.h
 )
 
 

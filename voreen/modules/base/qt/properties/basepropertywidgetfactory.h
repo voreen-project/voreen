@@ -23,18 +23,18 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_BIGDATAIMAGEPROCESSINGPROPERTYWIDGETFACTORY_H
-#define VRN_BIGDATAIMAGEPROCESSINGPROPERTYWIDGETFACTORY_H
+#ifndef VRN_BASEPROPERTYWIDGETFACTORY_H
+#define VRN_BASEPROPERTYWIDGETFACTORY_H
 
 #include "voreen/core/properties/propertywidgetfactory.h"
 
 namespace voreen {
 
-class BigDataImageProcessingPropertyWidgetFactory : public PropertyWidgetFactory {
+class BasePropertyWidgetFactory : public PropertyWidgetFactory {
 public:
     virtual PropertyWidget* createAssociatedWidget(Property*) const;
 };
 
 } // namespace
 
-#endif // VRN_BIGDATAIMAGEPROCESSINGPROPERTYWIDGETFACTORY_H
+#endif // VRN_BASEPROPERTYWIDGETFACTORY_H

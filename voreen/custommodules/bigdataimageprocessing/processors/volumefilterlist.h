@@ -28,7 +28,7 @@
 
 #include "voreen/core/processors/asynccomputeprocessor.h"
 #include "voreen/core/properties/temppathproperty.h"
-#include "../properties/interactivelistproperty.h"
+#include "modules/base/properties/interactivelistproperty.h"
 #include "../volumefiltering/slicereader.h"
 
 namespace voreen {

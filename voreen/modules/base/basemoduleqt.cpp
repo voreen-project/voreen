@@ -26,6 +26,7 @@
 #include "basemoduleqt.h"
 
 #include "qt/processorwidgets/baseprocessorwidgetfactory.h"
+#include "qt/properties/basepropertywidgetfactory.h"
 
 namespace voreen {
 
@@ -38,6 +39,7 @@ BaseModuleQt::BaseModuleQt(const std::string& modulePath)
     setGuiName("Base (Qt)");
 
     registerProcessorWidgetFactory(new BaseProcessorWidgetFactory());
+    registerPropertyWidgetFactory(new BasePropertyWidgetFactory());
 }
 
 } // namespace

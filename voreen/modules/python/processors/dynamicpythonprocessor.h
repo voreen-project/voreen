@@ -29,9 +29,10 @@
 #include "voreen/core/processors/renderprocessor.h"
 
 #include "voreen/core/ports/volumeport.h"
-#include "../properties/pythonproperty.h"
 
-#include "custommodules/bigdataimageprocessing/properties/interactivelistproperty.h"
+#include "modules/base/properties/interactivelistproperty.h"
+
+#include "../properties/pythonproperty.h"
 
 namespace voreen {
 
