@@ -6,6 +6,10 @@ IF(NOT VRN_MODULE_HDF5)
     MESSAGE(FATAL_ERROR "Big Data Image Processing Module requires HDF5 Module")
 ENDIF()
 
+IF(NOT VRN_MODULE_PLOTTING)
+    MESSAGE(FATAL_ERROR "Big Data Image Processing Module requires Plotting Module")
+ENDIF()
+
 ################################################################################
 # External dependency: lz4 library
 ################################################################################
