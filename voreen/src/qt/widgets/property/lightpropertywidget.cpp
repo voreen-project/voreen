@@ -61,7 +61,7 @@ void LightPropertyWidget::changeWidgetLight(tgt::vec4 lightPos) {
 }
 
 void LightPropertyWidget::updateFromPropertySlot() {
-    light_->setMinDist(property_->getMaxDist() * 0.1f);
+    light_->setMinDist(0.01);
     light_->setMaxDist(property_->getMaxDist());
     light_->setLightPosition(property_->getLightPos());
     followCam_->setCheckState(property_->getFollowCam() ? Qt::Checked : Qt::Unchecked);
