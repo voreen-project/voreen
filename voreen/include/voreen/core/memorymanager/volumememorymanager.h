@@ -188,11 +188,11 @@ protected:
 class VolumeRAMRepresentationLock {
 public:
     VolumeRAMRepresentationLock(const VolumeBase* volume);
-    VolumeRAMRepresentationLock(const VolumeRAMRepresentationLock* other);
+    VolumeRAMRepresentationLock(const VolumeRAMRepresentationLock& other);
     ~VolumeRAMRepresentationLock();
 
-    VolumeRAMRepresentationLock& operator=(const VolumeRAMRepresentationLock* other);
     VolumeRAMRepresentationLock& operator=(const VolumeBase* volume);
+    VolumeRAMRepresentationLock& operator=(const VolumeRAMRepresentationLock& other);
     const VolumeRAM* operator->() const;
     const VolumeRAM* operator*() const;
 private:

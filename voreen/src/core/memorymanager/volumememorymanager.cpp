@@ -425,8 +425,8 @@ VolumeRAMRepresentationLock::VolumeRAMRepresentationLock(const VolumeBase* volum
         VolumeMemoryManager::getRef().notifyUse(volume_, true);
     representation_ = volume_->getRepresentation<VolumeRAM>();
 }
-VolumeRAMRepresentationLock::VolumeRAMRepresentationLock(const VolumeRAMRepresentationLock* other)
-    : VolumeRAMRepresentationLock(other->volume_)
+VolumeRAMRepresentationLock::VolumeRAMRepresentationLock(const VolumeRAMRepresentationLock& other)
+    : VolumeRAMRepresentationLock(other.volume_)
 {
 }
 VolumeRAMRepresentationLock::~VolumeRAMRepresentationLock() {
@@ -434,19 +434,6 @@ VolumeRAMRepresentationLock::~VolumeRAMRepresentationLock() {
         VolumeMemoryManager::getRef().notifyLockedRelease(volume_);
 }
 
-VolumeRAMRepresentationLock& VolumeRAMRepresentationLock::operator=(const VolumeRAMRepresentationLock* other) {
-    if (VolumeMemoryManager::isInited())
-        VolumeMemoryManager::getRef().notifyLockedRelease(volume_);
-
-    volume_ = other->volume_;
-
-    if (VolumeMemoryManager::isInited())
-        VolumeMemoryManager::getRef().notifyUse(volume_, true);
-
-    representation_ = other->representation_;
-
-    return *this;
-}
 VolumeRAMRepresentationLock& VolumeRAMRepresentationLock::operator=(const VolumeBase* volume) {
     tgtAssert(volume, "volume was null");
 
@@ -462,12 +449,25 @@ VolumeRAMRepresentationLock& VolumeRAMRepresentationLock::operator=(const Volume
 
     return *this;
 }
+VolumeRAMRepresentationLock& VolumeRAMRepresentationLock::operator=(const VolumeRAMRepresentationLock& other) {
+    if (VolumeMemoryManager::isInited())
+        VolumeMemoryManager::getRef().notifyLockedRelease(volume_);
+
+    volume_ = other.volume_;
+
+    if (VolumeMemoryManager::isInited())
+        VolumeMemoryManager::getRef().notifyUse(volume_, true);
+
+    representation_ = other.representation_;
+
+    return *this;
+}
+
 const VolumeRAM* VolumeRAMRepresentationLock::operator->() const {
     return representation_;
 }
 const VolumeRAM* VolumeRAMRepresentationLock::operator*() const {
     return representation_;
 }
-
 
 } // namespace voreen
