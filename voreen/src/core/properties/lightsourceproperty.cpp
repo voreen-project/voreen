@@ -123,16 +123,13 @@ void LightSourceProperty::cameraUpdate() {
     if(!getCamera())
         return;
 
-    float maxVal = getCamera()->getMaxValue() / 50.f;
     tgt::vec3 newCenter = getCamera()->getTrackball().getCenter();
 
-    if(fabs(maxVal - maxDist_) > 1.f || newCenter != curCenter_) {
+    if(newCenter != curCenter_) {
         float oldRelDist = length(get().xyz() - curCenter_) / maxDist_;
         tgt::vec3 oldPos = get().xyz();
-        FloatVec4Property::set(tgt::vec4(normalize(oldPos - curCenter_) * oldRelDist * maxVal + newCenter, 1.0));
+        FloatVec4Property::set(tgt::vec4(normalize(oldPos - curCenter_) * oldRelDist * maxDist_ + newCenter, 1.0));
         curCenter_ = newCenter;
-        maxDist_ = maxVal;
-        oldRelDist = length(get().xyz() - curCenter_) / maxDist_;
     }
 
     const tgt::Camera& camera = getCamera()->get();
