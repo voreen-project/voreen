@@ -49,7 +49,7 @@ EnsembleDataset::EnsembleDataset()
 EnsembleDataset::EnsembleDataset(const EnsembleDataset& origin)
     : EnsembleDataset()
 {
-    // Adding runs set's attributes accordingly.
+    // Adding runs sets attributes accordingly.
     for(const Run& run : origin.runs_)
         addRun(run);
 
@@ -87,8 +87,8 @@ void EnsembleDataset::addRun(const Run& run) {
             VolumeMinMax* vmm = volume->getDerivedData<VolumeMinMax>();
             tgt::vec2 minMax(std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest());
             for(size_t c = 0; c < vmm->getNumChannels(); c++) {
-                minMax.x = std::min(minMax.x, vmm->getMin());
-                minMax.y = std::max(minMax.y, vmm->getMax());
+                minMax.x = std::min(minMax.x, vmm->getMin(c));
+                minMax.y = std::max(minMax.y, vmm->getMax(c));
             }
 
             /*
