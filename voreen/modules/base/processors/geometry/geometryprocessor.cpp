@@ -140,7 +140,7 @@ void GeometryProcessor::deinitialize() {
         glDeleteBuffers(1, &fragmentStorageBuffer_);
     }
     if(fragmentStorageTexture_) {
-        glDeleteBuffers(1, &fragmentStorageTexture_);
+        glDeleteTextures(1, &fragmentStorageTexture_);
     }
 
     RenderProcessor::deinitialize();
