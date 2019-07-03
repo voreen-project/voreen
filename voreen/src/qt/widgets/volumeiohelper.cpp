@@ -73,11 +73,11 @@ VolumeIOHelper::VolumeIOHelper(QWidget* parent, FileMode fileMode)
     }
     volumeSerializerPopulator_ = new VolumeSerializerPopulator(progressBar_);
 
-    readerSelectionDialog_ = new VolumeReaderSelectionDialog(VoreenApplicationQt::qtApp()->getMainWindow());
+    readerSelectionDialog_ = new VolumeReaderSelectionDialog(nullptr);
     connect(readerSelectionDialog_, SIGNAL(readerSelected(const std::string&, VolumeReader*)),
         this, SLOT(loadURL(const std::string&, VolumeReader*)));
 
-    volumeListingDialog_ = new VolumeListingDialog(VoreenApplicationQt::qtApp()->getMainWindow(),
+    volumeListingDialog_ = new VolumeListingDialog(nullptr,
         fileMode == SINGLE_FILE ? VolumeListingDialog::SINGLE_SELECTION : VolumeListingDialog::MULTI_SELECTION);
     connect(volumeListingDialog_, SIGNAL(originsSelected(const std::vector<VolumeURL>&, VolumeReader*)),
         this, SLOT(loadOrigins(const std::vector<VolumeURL>&, VolumeReader*)));
@@ -89,6 +89,12 @@ VolumeIOHelper::~VolumeIOHelper() {
 
     delete volumeSerializerPopulator_;
     volumeSerializerPopulator_ = 0;
+
+    delete volumeListingDialog_;
+    volumeListingDialog_ = 0;
+
+    delete readerSelectionDialog_;
+    readerSelectionDialog_ = 0;
 }
 
 void VolumeIOHelper::showFileOpenDialog() {
