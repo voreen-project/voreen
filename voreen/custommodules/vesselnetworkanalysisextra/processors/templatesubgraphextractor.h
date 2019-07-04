@@ -28,7 +28,7 @@
 
 #include "voreen/core/processors/geometryrendererbase.h"
 
-#include "../ports/vesselgraphport.h"
+#include "modules/vesselnetworkanalysis/ports/vesselgraphport.h"
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/properties/colorproperty.h"
 #include "voreen/core/properties/floatproperty.h"

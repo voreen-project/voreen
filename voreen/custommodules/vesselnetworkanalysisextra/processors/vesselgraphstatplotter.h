@@ -28,7 +28,7 @@
 
 #include "voreen/core/processors/processor.h"
 
-#include "../ports/vesselgraphport.h"
+#include "modules/vesselnetworkanalysis/ports/vesselgraphport.h"
 #include "voreen/core/properties/boolproperty.h"
 #include "voreen/core/properties/optionproperty.h"
 #include "voreen/core/properties/intproperty.h"

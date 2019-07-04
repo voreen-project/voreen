@@ -22,7 +22,6 @@
  * contact the authors.                                                            *
  *                                                                                 *
  ***********************************************************************************/
-
 #include "vesselnetworkanalysisextramodule.h"
 
 #include "processors/aortasegmentation.h"

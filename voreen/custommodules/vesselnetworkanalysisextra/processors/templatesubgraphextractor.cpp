@@ -28,7 +28,7 @@
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 #include "voreen/core/datastructures/geometry/pointlistgeometry.h"
-#include "../algorithm/vesselgraphrefinement.h"
+#include "modules/vesselnetworkanalysis/algorithm/vesselgraphrefinement.h"
 
 #include "tgt/tgt_math.h"
 #include "tgt/quaternion.h"
