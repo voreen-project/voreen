@@ -56,7 +56,6 @@ void ColorPicker::setHSSlot(int h, int s) {
     int nsat = qMin(qMax(0,s), 255);
     if ((nhue == hue_) && (nsat == sat_))
         return;
-    QPoint oldPos = getCurrentPosition();
     //set values
     hue_ = nhue; sat_ = nsat;
     //update area

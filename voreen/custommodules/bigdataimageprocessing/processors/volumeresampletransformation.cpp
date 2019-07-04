@@ -131,7 +131,7 @@ VolumeResampleTransformationInput VolumeResampleTransformation::prepareComputeIn
     std::unique_ptr<HDF5FileVolume> outputVolume = nullptr;
     try {
         outputVolume = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(volumeFilePath, volumeLocation, baseType, outputDim, 1, true, deflateLevel, tgt::svec3(outputDim.xy(), 1), false));
-    } catch(tgt::IOException e) {
+    } catch(tgt::IOException& e) {
         throw InvalidInputException("Could not create output volume.", InvalidInputException::S_ERROR);
     }
 

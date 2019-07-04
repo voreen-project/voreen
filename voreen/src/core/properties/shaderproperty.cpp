@@ -239,7 +239,7 @@ void ShaderSourceComponent::deserialize(Deserializer& s) {
             VoreenFilePathHelper pathHelper;
             s.deserialize(SERIALIZATION_IDENTIFIER_EXTERNAL_FILENAME_PATHS, pathHelper);
             externalFilename_ = pathHelper.getPath();
-        } catch (SerializationNoSuchDataException) {
+        } catch (SerializationNoSuchDataException&) {
             // No external file name => no external file
             s.removeLastError();
             externalFilename_ = "";
@@ -299,7 +299,7 @@ void ShaderSourceComponent::deserializeFallback(Deserializer& s) {
                 s.deserialize(makeCamelCase("external", typeName, "filenamePaths"), tmp);
                 externalFilename_ = tmp.getPath();
             }
-            catch (SerializationNoSuchDataException) {
+            catch (SerializationNoSuchDataException&) {
                 //old deserialization
                 s.removeLastError();
                 s.deserialize(makeCamelCase("external", typeName, "filename"), externalFilename_);

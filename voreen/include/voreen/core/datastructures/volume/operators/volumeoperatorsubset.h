@@ -77,7 +77,7 @@ Volume* VolumeOperatorSubsetGeneric<T>::apply(const VolumeBase* vh, tgt::ivec3 p
         try {
             subset = new VolumeAtomic<T>(size);
         }
-        catch (std::bad_alloc) {
+        catch (std::bad_alloc&) {
             LERRORC("voreen.VolumeOperatorCreateSubset", "Failed to create subset: bad allocation");
             throw; // throw it to the caller
         }

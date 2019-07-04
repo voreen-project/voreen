@@ -124,7 +124,7 @@ void VolumeSave::saveVolume() {
     try {
         s->write(filename_.get(), inport_.getData());
     }
-    catch(tgt::FileException e) {
+    catch(tgt::FileException& e) {
         LERROR(e.what());
         filename_.set("");
         s->setProgressBar(0);

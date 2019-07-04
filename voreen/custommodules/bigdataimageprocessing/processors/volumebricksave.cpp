@@ -101,7 +101,7 @@ void VolumeBrickSave::saveBrick() {
     if(tgt::FileSystem::fileExists(volumeFilePath_.get())) {
         try {
             currentVolume = HDF5FileVolume::openVolume(volumeFilePath_.get(), volumeLocation, false /*readonly*/);
-        } catch(tgt::IOException e) {
+        } catch(tgt::IOException& e) {
             if(allowTruncateFile_.get()) {
                 currentVolume = nullptr;
             } else {
@@ -167,7 +167,7 @@ void VolumeBrickSave::saveBrick() {
                 currentVolume->writeRealWorldMapping(input->getRealWorldMapping());
             }
 
-        } catch(tgt::IOException e) {
+        } catch(tgt::IOException& e) {
             VoreenApplication::app()->showMessageBox("Could not create Output Volume",
                     std::string("Could not create Output Volume:\n\n") + e.what(),
                     true);

@@ -166,7 +166,7 @@ void Pong::initialize() {
         copyShader_ = ShdrMgr.loadSeparate("passthrough.vert", "copyimage.frag",
             ImageProcessor::generateHeader(), false);
         copyShader_->deactivate();
-    } catch(tgt::Exception) {
+    } catch(tgt::Exception&) {
         processorState_ = PROCESSOR_STATE_NOT_INITIALIZED;
         throw VoreenException("Failed to load shader: passthrough.vert/copyimage.frag");
     }

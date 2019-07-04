@@ -70,7 +70,7 @@ std::unique_ptr<HDF5FileVolume> HDF5FileVolume::openVolume(const std::string& fi
             flags |= H5F_ACC_RDWR;
         }
         file = std::unique_ptr<H5::H5File>(new H5::H5File(fileName, flags));
-    } catch(H5::Exception error) {
+    } catch(H5::Exception& error) {
         throw tgt::IOException("Error opening hdf5 file:" + error.getFuncName() + ": " + error.getDetailMsg());
     }
 
@@ -79,7 +79,7 @@ std::unique_ptr<HDF5FileVolume> HDF5FileVolume::openVolume(const std::string& fi
 
     try {
         dataSet = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet(volumeLocation)));
-    } catch(H5::Exception error) {
+    } catch(H5::Exception& error) {
         throw tgt::IOException("Error opening dataset:" + error.getFuncName() + ": " + error.getDetailMsg());
     }
     return std::unique_ptr<HDF5FileVolume>(new HDF5FileVolume(std::move(file), std::move(dataSet), fileName, volumeLocation));
@@ -126,7 +126,7 @@ std::unique_ptr<HDF5FileVolume> HDF5FileVolume::createVolume(const std::string& 
 
         // Create the hdf5 file using the propertylists created earlier.
         file = std::unique_ptr<H5::H5File>(new H5::H5File(fileName, flags, H5::FileCreatPropList::DEFAULT, accList));
-    } catch(H5::Exception error) {
+    } catch(H5::Exception& error) {
         throw tgt::IOException("Error opening/creating hdf5 file:" + error.getFuncName() + ": " + error.getDetailMsg());
     }
 
@@ -181,7 +181,7 @@ std::unique_ptr<HDF5FileVolume> HDF5FileVolume::createVolume(const std::string& 
 
         // Finally try to create the data set inside the file
         dataSet = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->createDataSet(volumeLocation, h5type, dataSpace, propList)));
-    } catch(H5::Exception error) {
+    } catch(H5::Exception& error) {
         throw tgt::IOException("Error constructing dataset:" + error.getFuncName() + ": " + error.getDetailMsg());
     }
 
@@ -233,7 +233,7 @@ tgt::vec3* HDF5FileVolume::tryReadSpacing() const {
         // Convert to Voreen's mm.
         return new tgt::vec3(readVec3Attribute<float>(*dataSet_, SPACING_ATTRIBUTE_NAME) * MM_PER_HDF5_UNIT_OF_LENGTH);
 
-    } catch(H5::AttributeIException error) {
+    } catch(H5::AttributeIException& error) {
         LERROR("Error reading spacing attribute: " + error.getFuncName() + ": " + error.getDetailMsg());
         return nullptr;
     }
@@ -256,7 +256,7 @@ tgt::vec3* HDF5FileVolume::tryReadOffset() const {
         // Convert to Voreen's mm.
         return new tgt::vec3(readVec3Attribute<float>(*dataSet_, OFFSET_ATTRIBUTE_NAME) * MM_PER_HDF5_UNIT_OF_LENGTH);
 
-    } catch(H5::AttributeIException error) {
+    } catch(H5::AttributeIException& error) {
         LERROR("Error reading offset attribute: " + error.getFuncName() + ": " + error.getDetailMsg());
         //LERROR("\tAssuming offset (0,0,0).");
         return nullptr;
@@ -306,7 +306,7 @@ RealWorldMapping* HDF5FileVolume::tryReadRealWorldMapping() const {
         // real world mapping is complete, so write it to rwm.
         return new RealWorldMapping(scale, offset, unit);
 
-    } catch(H5::AttributeIException error) {
+    } catch(H5::AttributeIException& error) {
         // If there are no attributes for RWM at all we would not have gotten here, so something has really gone wrong:
         // Issue an error message!
         LERROR("Error reading RealWorldMapping attributes: " + error.getFuncName() + ": " + error.getDetailMsg());
@@ -343,7 +343,7 @@ VolumeMinMax* HDF5FileVolume::tryReadVolumeMinMax(size_t channel) const {
     std::vector<float> values(getNumberOfChannels() * perChannelDataSize);
     try {
         readArrayAttribute(*dataSet_, REPRESENTATION_MINMAX_ATTRIBUTE_NAME, values.data(), values.size());
-    } catch(H5::AttributeIException error) {
+    } catch(H5::AttributeIException& error) {
         LERROR("Error reading VolumeMinMax attribute: " + error.getFuncName() + ": " + error.getDetailMsg());
         return nullptr;
     }
@@ -397,7 +397,7 @@ VolumeHistogramIntensity* HDF5FileVolume::tryReadVolumeHistogramIntensity(size_t
     std::vector<float> metaData(getNumberOfChannels() * perChannelMetaDataSize);
     try {
         readArrayAttribute(*dataSet_, REPRESENTATION_HISTOGRAMINTENSITY_METADATA_ATTRIBUTE_NAME, metaData.data(), metaData.size());
-    } catch(H5::AttributeIException error) {
+    } catch(H5::AttributeIException& error) {
         LERROR("Error reading VolumeHistogramIntensity-MetaData attribute: " + error.getFuncName() + ": " + error.getDetailMsg());
         return nullptr;
     }
@@ -421,7 +421,7 @@ VolumeHistogramIntensity* HDF5FileVolume::tryReadVolumeHistogramIntensity(size_t
     std::vector<uint64_t> values(bufferSize);
     try {
         readArrayAttribute(*dataSet_, REPRESENTATION_HISTOGRAMINTENSITY_ATTRIBUTE_NAME, values.data(), values.size());
-    } catch(H5::AttributeIException error) {
+    } catch(H5::AttributeIException& error) {
         LERROR("Error reading VolumeHistogramIntensity attribute: " + error.getFuncName() + ": " + error.getDetailMsg());
         return nullptr;
     }
@@ -487,7 +487,7 @@ VolumeHistogramIntensityGradient* HDF5FileVolume::tryReadVolumeHistogramIntensit
     std::vector<float> metaData(getNumberOfChannels() * perChannelMetaDataSize);
     try {
         readArrayAttribute(*dataSet_, REPRESENTATION_HISTOGRAMINTENSITYGRADIENT_METADATA_ATTRIBUTE_NAME, metaData.data(), metaData.size());
-    } catch(H5::AttributeIException error) {
+    } catch(H5::AttributeIException& error) {
         LERROR("Error reading VolumeHistogramIntensityGradient-MetaData attribute: " + error.getFuncName() + ": " + error.getDetailMsg());
         return nullptr;
     }
@@ -520,7 +520,7 @@ VolumeHistogramIntensityGradient* HDF5FileVolume::tryReadVolumeHistogramIntensit
     std::vector<uint64_t> values(bufferSize);
     try {
         readArrayAttribute(*dataSet_, REPRESENTATION_HISTOGRAMINTENSITYGRADIENT_ATTRIBUTE_NAME, values.data(), values.size());
-    } catch(H5::AttributeIException error) {
+    } catch(H5::AttributeIException& error) {
         LERROR("Error reading VolumeHistogramIntensityGradient attribute: " + error.getFuncName() + ": " + error.getDetailMsg());
         return nullptr;
     }
@@ -597,7 +597,7 @@ VolumePreview* HDF5FileVolume::tryReadVolumePreview() const {
     std::vector<uint64_t> metaData(metaDataSize);
     try {
         readArrayAttribute(*dataSet_, REPRESENTATION_PREVIEW_METADATA_ATTRIBUTE_NAME, metaData.data(), metaData.size());
-    } catch(H5::AttributeIException error) {
+    } catch(H5::AttributeIException& error) {
         LERROR("Error reading VolumePreview-MetaData attribute: " + error.getFuncName() + ": " + error.getDetailMsg());
         return nullptr;
     }
@@ -609,7 +609,7 @@ VolumePreview* HDF5FileVolume::tryReadVolumePreview() const {
     std::vector<unsigned char> values(width*height);
     try {
         readArrayAttribute(*dataSet_, REPRESENTATION_PREVIEW_ATTRIBUTE_NAME, values.data(), values.size());
-    } catch(H5::AttributeIException error) {
+    } catch(H5::AttributeIException& error) {
         LERROR("Error reading VolumePreview attribute: " + error.getFuncName() + ": " + error.getDetailMsg());
         return nullptr;
     }
@@ -788,7 +788,7 @@ VolumeRAM* HDF5FileVolume::loadBrick(const tgt::svec3& offset, const tgt::svec3&
         }
         dataSet_->read(data->getData(), h5type, memSpace, fileSpace);
         return data;
-    } catch(H5::Exception error) { // catch HDF5 exceptions
+    } catch(H5::Exception& error) { // catch HDF5 exceptions
         LERROR(error.getFuncName() + ": " + error.getDetailMsg());
         throw tgt::IOException("An Error occured while reading volume from file " + getFileName());
     }
@@ -831,7 +831,7 @@ void HDF5FileVolume::writeBrick(const VolumeRAM* vol, const tgt::svec3& offset, 
         //Write the volume to disk.
         dataSet_->write(vol->getData(), dataSet_->getDataType(), memSpace, fileSpace);
 
-    } catch(H5::Exception error) { // catch HDF5 exceptions
+    } catch(H5::Exception& error) { // catch HDF5 exceptions
         LERROR(error.getFuncName() + ": " + error.getDetailMsg());
         throw tgt::IOException("An Error occured while writing volume to file " + getFileName());
     }

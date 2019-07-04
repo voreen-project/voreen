@@ -101,7 +101,7 @@ void InteractiveRegistrationWidget::initialize() {
             RenderProcessor::generateHeader(), false);
         copyShader_->deactivate();
         sphereShader_ = ShdrMgr.load("pointlistrenderer_spheres", "", false);
-    } catch(tgt::Exception) {
+    } catch(tgt::Exception&) {
         processorState_ = PROCESSOR_STATE_NOT_INITIALIZED;
         throw VoreenException("Failed to load shader: passthrough.vert/copyimage.frag");
     }

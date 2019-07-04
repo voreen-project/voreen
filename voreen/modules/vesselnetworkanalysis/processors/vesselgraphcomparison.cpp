@@ -39,7 +39,7 @@
 #include "tgt/filesystem.h"
 #include "tgt/immediatemode/immediatemode.h"
 
-#include "custommodules/vesselnetworkanalysis/ext/netmets/lib.h"
+#include "../ext/netmets/lib.h"
 
 //#include "stim/network.h"
 

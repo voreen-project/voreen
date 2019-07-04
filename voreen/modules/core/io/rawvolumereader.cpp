@@ -661,7 +661,7 @@ Volume* RawVolumeReader::readSliceStack(const std::vector<std::string>& sliceFil
         catch (tgt::FileException& e) {
             LWARNING("Reading slice '" << sliceFiles[i] << "' failed: " << e.what());
         }
-        catch (std::bad_alloc) {
+        catch (std::bad_alloc&) {
             LWARNING("Reading slice '" << sliceFiles[i] << "' failed: bad allocation");
         }
     }
@@ -686,7 +686,7 @@ Volume* RawVolumeReader::readSliceStack(const std::vector<std::string>& sliceFil
         result->clear();
         //result->setTransformation(tgt::mat4::identity);
     }
-    catch (std::bad_alloc) {
+    catch (std::bad_alloc&) {
         LERROR("Reading slice stack failed: bad allocation");
     }
 

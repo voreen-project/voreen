@@ -532,7 +532,7 @@ VolumeList* BrukerVolumeReader::read(const std::string &url, int volumeId) {
             numFrames = acqpParser.getInteger("NR");
             LDEBUG("nRuns: " << numFrames);
         }
-        catch(JCampParserException e) {
+        catch(JCampParserException& e) {
             LERROR(e.what());
         }
 
@@ -541,7 +541,7 @@ VolumeList* BrukerVolumeReader::read(const std::string &url, int volumeId) {
             if (list_size != 1)
                 LERROR("Unexpected value in field ACQ_ns_list_size: " << list_size << ". Results may not be as expected!");
         }
-        catch(JCampParserException e) {
+        catch(JCampParserException& e) {
             LERROR(e.what());
         }
     }
@@ -570,7 +570,7 @@ VolumeList* BrukerVolumeReader::read(const std::string &url, int volumeId) {
             }
             LDEBUG("Transposition: " << recoTranspose);
         }
-        catch(JCampParserException e) {
+        catch(JCampParserException& e) {
             LERROR(e.what());
         }
 
@@ -586,7 +586,7 @@ VolumeList* BrukerVolumeReader::read(const std::string &url, int volumeId) {
 
             LDEBUG("byte order: " << bigEndian);
         }
-        catch(JCampParserException e) {
+        catch(JCampParserException& e) {
             LERROR(e.what());
         }
 
@@ -617,14 +617,14 @@ VolumeList* BrukerVolumeReader::read(const std::string &url, int volumeId) {
         try {
             PVM_DwEffBval = methodParser.getFloatArray("PVM_DwEffBval");
         }
-        catch(JCampParserException e) {
+        catch(JCampParserException& e) {
             LERROR(e.what());
         }
 
         try {
             numRepetitions = methodParser.getInteger("PVM_NRepetitions");
         }
-        catch(JCampParserException e) {
+        catch(JCampParserException& e) {
             LERROR(e.what());
         }
 
@@ -642,7 +642,7 @@ VolumeList* BrukerVolumeReader::read(const std::string &url, int volumeId) {
                 PVM_DwGradVec.push_back(grad);
             }
         }
-        catch(JCampParserException e) {
+        catch(JCampParserException& e) {
             LERROR(e.what());
         }
     }
@@ -680,7 +680,7 @@ VolumeList* BrukerVolumeReader::read(const std::string &url, int volumeId) {
         try {
             resolution = visuParsParser.getIVec2("VisuCoreSize");
         }
-        catch(JCampParserException e) {
+        catch(JCampParserException& e) {
             LERROR(e.what());
         }
         try {
@@ -712,14 +712,14 @@ VolumeList* BrukerVolumeReader::read(const std::string &url, int volumeId) {
             }
             LDEBUG("format: " << format);
         }
-        catch(JCampParserException e) {
+        catch(JCampParserException& e) {
             LERROR(e.what());
         }
 
         try {
             sliceThickness[2] = visuParsParser.getFloat("VisuCoreFrameThickness");
         }
-        catch(JCampParserException e) {
+        catch(JCampParserException& e) {
             LERROR(e.what());
         }
 
@@ -728,7 +728,7 @@ VolumeList* BrukerVolumeReader::read(const std::string &url, int volumeId) {
             sliceThickness[0] /= static_cast<float>(resolution[0]);
             sliceThickness[1] /= static_cast<float>(resolution[1]);
         }
-        catch(JCampParserException e) {
+        catch(JCampParserException& e) {
             LERROR(e.what());
         }
         LDEBUG("spacing: " << sliceThickness);
@@ -736,13 +736,13 @@ VolumeList* BrukerVolumeReader::read(const std::string &url, int volumeId) {
         try {
             mappingOffset = visuParsParser.getFloatArray("VisuCoreDataOffs");
         }
-        catch(JCampParserException e) {
+        catch(JCampParserException& e) {
             LERROR(e.what());
         }
         try {
             mappingScale = visuParsParser.getFloatArray("VisuCoreDataSlope");
         }
-        catch(JCampParserException e) {
+        catch(JCampParserException& e) {
             LERROR(e.what());
         }
     }
@@ -1020,7 +1020,7 @@ std::vector<BrukerVolumeReader::SliceCollection> BrukerVolumeReader::listSliceCo
             numFrames = visuParsParser.getInteger("VisuCoreFrameCount");
             LINFO("Got " << numFrames << " frames.");
         }
-        catch(JCampParserException e) {
+        catch(JCampParserException& e) {
             LERROR(e.what());
             return vector<BrukerVolumeReader::SliceCollection>();
         }
@@ -1046,7 +1046,7 @@ std::vector<BrukerVolumeReader::SliceCollection> BrukerVolumeReader::listSliceCo
             }
 
         }
-        catch(JCampParserException e) {
+        catch(JCampParserException& e) {
             LERROR(e.what());
             return vector<BrukerVolumeReader::SliceCollection>();
         }

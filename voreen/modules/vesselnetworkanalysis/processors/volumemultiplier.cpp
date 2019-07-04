@@ -139,7 +139,7 @@ VolumeMultiplierInput VolumeMultiplier::prepareComputeInput() {
     std::unique_ptr<HDF5FileVolume> outputVolume = nullptr;
     try {
         outputVolume = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(volumeFilePath, volumeLocation, baseType, dim, numChannels, true, outputVolumeDeflateLevel_.get(), tgt::svec3(dim.x, dim.y, 1), false));
-    } catch(tgt::IOException e) {
+    } catch(tgt::IOException& e) {
         throw InvalidInputException("Could not create output volume.", InvalidInputException::S_ERROR);
     }
 

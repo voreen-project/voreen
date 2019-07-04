@@ -222,7 +222,7 @@ void VolumeURLProperty::deserialize(Deserializer& s) {
         s.deserialize("urls", tmp);
         value = tmp.getURL();
     }
-    catch(SerializationNoSuchDataException) {
+    catch(SerializationNoSuchDataException&) {
         s.removeLastError();
         //LINFO("trying old deserialization");
         //old deserialization

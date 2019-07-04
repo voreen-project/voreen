@@ -75,7 +75,7 @@ Volume* VolumeOperatorResizeGeneric<T>::apply(const VolumeBase* vh, tgt::ivec3 n
     try {
         result = new VolumeAtomic<T>(newDims, allocMem);
     }
-    catch (std::bad_alloc) {
+    catch (std::bad_alloc&) {
         throw; // throw it to the caller
     }
 

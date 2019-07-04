@@ -987,7 +987,7 @@ void RegionOfInterest2D::deserialize(Deserializer& s) {
         clearROIs();
         s.deserialize("RegionsOfInterest", regionsOfInterest_, "Region");
     }
-    catch (SerializationNoSuchDataException) {
+    catch (SerializationNoSuchDataException&) {
         // just no ROI data present => ignore
         s.removeLastError();
     }

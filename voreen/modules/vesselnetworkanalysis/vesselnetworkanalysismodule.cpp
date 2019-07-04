@@ -25,25 +25,25 @@
 
 #include "vesselnetworkanalysismodule.h"
 
-#include"processors/appropriatespacinglinker.cpp"
-#include"processors/vascusynthgraphloader.cpp"
+#include"processors/appropriatespacinglinker.h"
+#include"processors/vascusynthgraphloader.h"
 #ifdef LEMON_FOUND
 #include "processors/vesselgraphcomparison.h"
 #endif
-#include"processors/vesselgraphcreator.cpp"
-#include"processors/vesselgraphglobalstats.cpp"
-#include"processors/vesselgraphrefiner.cpp"
-#include"processors/vesselgraphperturbation.cpp"
-#include"processors/vesselgraphrenderer.cpp"
-#include"processors/vesselgraphsave.cpp"
-#include"processors/vesselgraphskeletonextractor.cpp"
-#include"processors/vesselgraphsource.cpp"
-#include"processors/vesselgraphselector.cpp"
-#include"processors/vesselnessextractor.cpp"
-#include"processors/volumemultiplier.cpp"
-#include"processors/volumeslicepadding.cpp"
-#include"processors/volumesurfacenoise.cpp"
-#include"processors/volumethinning.cpp"
+#include"processors/vesselgraphcreator.h"
+#include"processors/vesselgraphglobalstats.h"
+#include"processors/vesselgraphrefiner.h"
+#include"processors/vesselgraphperturbation.h"
+#include"processors/vesselgraphrenderer.h"
+#include"processors/vesselgraphsave.h"
+#include"processors/vesselgraphskeletonextractor.h"
+#include"processors/vesselgraphsource.h"
+#include"processors/vesselgraphselector.h"
+#include"processors/vesselnessextractor.h"
+#include"processors/volumemultiplier.h"
+#include"processors/volumeslicepadding.h"
+#include"processors/volumesurfacenoise.h"
+#include"processors/volumethinning.h"
 
 namespace voreen {
 

@@ -82,7 +82,6 @@ void VolumeRealWorldMapping::process() {
         return;
     }
 
-    tgt::vec2 range = realWorldRange_.get();
     RealWorldMapping rvm = getRealWorldMapping();
 
     VolumeBase* outputVolume = new VolumeDecoratorReplaceRealWorldMapping(inputVolume, rvm);

@@ -162,7 +162,7 @@ void VolumeBrickSource::tryOpenVolume() {
         tgtAssert(url.getSearchParameter("path") != "", "Could not find path in VolumeURL");
 
         hdf5vol = HDF5FileVolume::openVolume(url.getPath(), url.getSearchParameter("path"), true /*readonly*/);
-    } catch(tgt::IOException e) {
+    } catch(tgt::IOException& e) {
         VoreenApplication::app()->showMessageBox("Could not open input volume",
                 std::string("Could not open input volume:\n\n") + e.what(),
                 true);

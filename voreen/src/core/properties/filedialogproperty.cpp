@@ -138,7 +138,7 @@ void FileDialogProperty::deserialize(Deserializer& s) {
     try {
         s.deserialize("paths", tmp);
     }
-    catch (SerializationNoSuchDataException) {
+    catch (SerializationNoSuchDataException&) {
         s.removeLastError();
         LINFO("trying old deserialization");
         //old deserialization
@@ -150,7 +150,7 @@ void FileDialogProperty::deserialize(Deserializer& s) {
                 return;
             }
         }
-        catch (SerializationNoSuchDataException) {
+        catch (SerializationNoSuchDataException&) {
             s.removeLastError();
         }
         std::string value;

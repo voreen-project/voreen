@@ -220,7 +220,7 @@ void VolumePort::saveData(const std::string& path) const {
     try {
         serializer->write(filename, getData());
     }
-    catch (VoreenException) {
+    catch (VoreenException&) {
         throw;
     }
     catch (std::exception& e) {
@@ -246,7 +246,7 @@ void VolumePort::loadData(const std::string& path) {
         //we do not need the collection, just the volume:
         delete volumeList;
     }
-    catch (VoreenException) {
+    catch (VoreenException&) {
         throw;
     }
     catch (std::exception& e) {

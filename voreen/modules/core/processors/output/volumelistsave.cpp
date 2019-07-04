@@ -201,7 +201,7 @@ void VolumeListSave::saveVolumeVVD(const std::string& volumeName, const VolumeLi
     try {
         serializer->write(folderNameVVD_.get() + "/" + fileName, volumeList->at(i));
     }
-    catch (tgt::FileException e) {
+    catch (tgt::FileException& e) {
         LERROR("Failed to save volume to file '" << fileName << "': " << e.what());
     }
 }
@@ -222,7 +222,7 @@ void VolumeListSave::saveVolumeHDF5(const std::string& volumeName, const VolumeL
         // Write to HDF5 file, but only truncate for the first volume (i == 0)!
         hdf5VolumeWriter_->write(fileNameHDF5_.get(), vol, volumeName, (i == 0), compressionLevel, chunkSize, enableShuffling_.get());
     }
-    catch (tgt::IOException e) {
+    catch (tgt::IOException& e) {
         LERROR("Failed to save volume " << volumeName << " to file '" << fileNameHDF5_.get() << "': " << e.what());
     }
 }

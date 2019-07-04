@@ -278,7 +278,7 @@ std::vector<VolumeURL> HDF5VolumeReaderBase::listVolumes(const std::string& urlS
 
         H5::H5File file(filepath, H5F_ACC_RDONLY);
         collectVolumes(file, filepath, "", urls, separatedChannels_);
-    } catch(H5::Exception error) { // catch HDF5 exceptions
+    } catch(H5::Exception& error) { // catch HDF5 exceptions
         LERROR(error.getFuncName() + ": " + error.getDetailMsg());
         throw tgt::IOException("An Error occured while reading file " + filepath);
     }

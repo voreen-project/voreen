@@ -431,7 +431,7 @@ void OctreeSave::saveVolume() {
             try {
                 saveToOctree(filename_.get(), inport_.getData());
             }
-            catch(tgt::FileException e) {
+            catch(tgt::FileException& e) {
                 LERROR(e.what());
                 filename_.set("");
             }
@@ -443,11 +443,11 @@ void OctreeSave::saveVolume() {
             try {
                 saveToVolume(filename_.get(), inport_.getData());
             }
-            catch(tgt::Exception e) {
+            catch(tgt::Exception& e) {
                 LERROR(e.what());
                 filename_.set("");
             }
-            catch(std::invalid_argument e) {
+            catch(std::invalid_argument& e) {
                 LERROR(e.what());
                 filename_.set("");
             }

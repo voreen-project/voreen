@@ -1223,7 +1223,7 @@ static bool compareH5Attribute(const H5::Attribute& a1, const H5::Attribute& a2,
             report = "Data types of attributes at /" + path + " differ (" + getBaseTypeFromDataType(a1.getDataType()) + "!=" + getBaseTypeFromDataType(a2.getDataType()) + ").";
             return false;
         }
-    } catch(IOException e) {
+    } catch(IOException& e) {
         report = "Unknown base data type.";
         return false;
     }
@@ -1455,7 +1455,7 @@ bool HDF5FileComparator::compare(RegressionTestDataset& refDataset, RegressionTe
         H5::H5File f2(outputFile, H5F_ACC_RDONLY);
         // ... and check if they are the same using the helper functions above.
         return compareH5CommonFG(f1, f2, "", report);
-    } catch(H5::Exception error) { // catch HDF5 exceptions and fail the test if any are caught.
+    } catch(H5::Exception& error) { // catch HDF5 exceptions and fail the test if any are caught.
         report = "HDF5 Error during test: " + error.getFuncName() + ": " + error.getDetailMsg();
         return false;
     }

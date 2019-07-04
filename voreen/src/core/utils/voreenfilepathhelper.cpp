@@ -84,7 +84,7 @@ void VoreenFilePathHelper::deserialize(Deserializer& s) {
             return;
         }
     }
-    catch (SerializationNoSuchDataException) {
+    catch (SerializationNoSuchDataException&) {
         s.removeLastError();
         return;
     }
@@ -94,7 +94,7 @@ void VoreenFilePathHelper::deserialize(Deserializer& s) {
     try {
         s.deserialize("paths", pathVector);
     }
-    catch (SerializationNoSuchDataException) {
+    catch (SerializationNoSuchDataException&) {
         s.removeLastError();
         return;
     }
