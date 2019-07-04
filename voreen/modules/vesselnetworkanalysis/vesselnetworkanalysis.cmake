@@ -9,10 +9,6 @@ IF(NOT VRN_MODULE_HDF5)
     MESSAGE(FATAL_ERROR "VesselNetworkAnalysis Module requires HDF5 Module")
 ENDIF()
 
-IF(NOT VRN_MODULE_PLOTTING)
-    MESSAGE(FATAL_ERROR "VesselNetworkAnalysis Module requires Plotting Module")
-ENDIF()
-
 SET(MOD_CORE_MODULECLASS VesselNetworkAnalysisModule)
 
 ################################################################################
