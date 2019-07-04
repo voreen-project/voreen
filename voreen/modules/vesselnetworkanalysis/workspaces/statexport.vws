@@ -1,0 +1,240 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="17">
+            <MetaData>
+                <MetaItem name="Canvas_Index" type="IntMetaData" value="0" />
+                <MetaItem name="Canvas_Prefix" type="StringMetaData" value="snapshot" />
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="VesselGraphCreator" ref="ref0" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="624.98895264" y="-221.82469177" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.18562102" />
+            </MetaData>
+            <Processors>
+                <Processor type="VesselGraphCreator" name="VesselGraphCreator" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="539" y="-179" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="binarizationThresholdSegmentation" name="binarizationThresholdSegmentation" value="0.5" />
+                        <Property mapKey="binarizationThresholdSkeleton" name="binarizationThresholdSkeleton" value="0.5" />
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="maxVesselRadiusX" name="maxVesselRadiusX" value="25" />
+                        <Property mapKey="maxVesselRadiusY" name="maxVesselRadiusY" value="25" />
+                        <Property mapKey="maxVesselRadiusZ" name="maxVesselRadiusZ" value="25" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                    </Properties>
+                    <Inports>
+                        <Port name="vesselgraphcreator.segmentedVolume.inport" direction="1" portID="vesselgraphcreator.segmentedVolume.inport" guiName="Segmented Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="vesselgraphcreator.skeleton.inport" direction="1" portID="vesselgraphcreator.skeleton.inport" guiName="Skeleton Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="vesselgraphcreator_edge.outport" direction="0" portID="vesselgraphcreator_edge.outport" guiName="Edges Voxels" allowMultipleConnections="true" invalidationLevel="20">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                        <Port name="vesselgraphcreator_graph.outport" direction="0" portID="vesselgraphcreator_graph.outport" guiName="Graph" allowMultipleConnections="true" invalidationLevel="10">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                        <Port name="vesselgraphcreator_node.outport" direction="0" portID="vesselgraphcreator_node.outport" guiName="Nodes Voxels" allowMultipleConnections="true" invalidationLevel="20">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VesselGraphStatPlotter" name="VesselGraphStatPlotter" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="447" y="-66" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="activeEdgeID" name="activeEdgeID" value="4" />
+                        <Property mapKey="avgCrossSection" name="avgCrossSection" value="0" />
+                        <Property mapKey="avgRadiusAvg" name="avgRadiusAvg" value="0" />
+                        <Property mapKey="avgRadiusStdDeviation" name="avgRadiusStdDeviation" value="0" />
+                        <Property mapKey="curveness" name="curveness" value="1.17353046" />
+                        <Property mapKey="distance" name="distance" value="0.11301119" />
+                        <Property mapKey="exportButton" name="exportButton" />
+                        <Property mapKey="exportFilePath" name="exportFilePath">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="length" name="length" value="0.13262208" />
+                        <Property mapKey="maxRadiusAvg" name="maxRadiusAvg" value="0.05055975" />
+                        <Property mapKey="maxRadiusStdDeviation" name="maxRadiusStdDeviation" value="0.00823465" />
+                        <Property mapKey="minRadiusAvg" name="minRadiusAvg" value="0.00800001" />
+                        <Property mapKey="minRadiusStdDeviation" name="minRadiusStdDeviation" value="0.00000005" />
+                        <Property mapKey="numEdgesLeftNode" name="numEdgesLeftNode" value="1" />
+                        <Property mapKey="numEdgesRightNode" name="numEdgesRightNode" value="3" />
+                        <Property mapKey="numSkeletonVoxels" name="numSkeletonVoxels" value="5" />
+                        <Property mapKey="roundnessAvg" name="roundnessAvg" value="0" />
+                        <Property mapKey="roundnessStdDeviation" name="roundnessStdDeviation" value="0" />
+                        <Property mapKey="volume" name="volume" value="0" />
+                    </Properties>
+                    <Inports>
+                        <Port name="graph.input" direction="1" portID="graph.input" guiName="Graph Input" allowMultipleConnections="false" invalidationLevel="10">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="plot.output" direction="0" portID="plot.output" guiName="Plot Data Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="Skeleton Source" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="480" y="-296" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="Segmentation Source" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="647" y="-298" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" url="" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VesselGraphGlobalStats" name="VesselGraphGlobalStats" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="673" y="-70" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="autoExport" name="autoExport" value="false" />
+                        <Property mapKey="exportButton_" name="exportButton_" />
+                        <Property mapKey="nodeExportFilePath" name="nodeExportFilePath">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../../../../../Daten_Rene/dicht/nodes.csv" />
+                                    <item value="custommodules/vesselnetworkanalysis/workspaces/../../../../../../Daten_Rene/dicht/nodes.csv" />
+                                    <item value="/data/dominik/git/voreen-masterarbeit/voreen/custommodules/vesselnetworkanalysis/workspaces/../../../../../../Daten_Rene/dicht/nodes.csv" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="numEdges" name="numEdges" value="555" />
+                        <Property mapKey="numNodes" name="numNodes" value="623" />
+                        <Property mapKey="segmentExportFilePath" name="segmentExportFilePath">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../../../../../Daten_Rene/dicht/edges.csv" />
+                                    <item value="custommodules/vesselnetworkanalysis/workspaces/../../../../../../Daten_Rene/dicht/edges.csv" />
+                                    <item value="/data/dominik/git/voreen-masterarbeit/voreen/custommodules/vesselnetworkanalysis/workspaces/../../../../../../Daten_Rene/dicht/edges.csv" />
+                                </paths>
+                            </paths>
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="graph.input" direction="1" portID="graph.input" guiName="Graph Input" allowMultipleConnections="false" invalidationLevel="10">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="vesselgraphcreator_graph.outport">
+                        <Processor type="VesselGraphCreator" ref="ref0" />
+                    </Outport>
+                    <Inport name="graph.input">
+                        <Processor type="VesselGraphStatPlotter" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="vesselgraphcreator_graph.outport">
+                        <Processor type="VesselGraphCreator" ref="ref0" />
+                    </Outport>
+                    <Inport name="graph.input">
+                        <Processor type="VesselGraphGlobalStats" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref3" />
+                    </Outport>
+                    <Inport name="vesselgraphcreator.skeleton.inport">
+                        <Processor type="VesselGraphCreator" ref="ref0" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref4" />
+                    </Outport>
+                    <Inport name="vesselgraphcreator.segmentedVolume.inport">
+                        <Processor type="VesselGraphCreator" ref="ref0" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>
