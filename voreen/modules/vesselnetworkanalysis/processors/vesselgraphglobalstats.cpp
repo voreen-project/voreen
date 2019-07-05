@@ -26,7 +26,7 @@
 #include "vesselgraphglobalstats.h"
 
 #include "voreen/core/datastructures/callback/lambdacallback.h"
-#include "custommodules/bigdataimageprocessing/util/csvwriter.h"
+#include "modules/bigdataimageprocessing/util/csvwriter.h"
 
 namespace voreen {
 

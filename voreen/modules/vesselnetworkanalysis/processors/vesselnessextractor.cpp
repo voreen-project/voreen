@@ -30,7 +30,7 @@
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/datastructures/callback/memberfunctioncallback.h"
 
-#include "custommodules/bigdataimageprocessing/volumefiltering/gaussianfilter.h"
+#include "modules/bigdataimageprocessing/volumefiltering/gaussianfilter.h"
 #include "tgt/tgt_math.h"
 
 #include <chrono>

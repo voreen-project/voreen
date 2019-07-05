@@ -25,7 +25,7 @@
 
 #include "idvolume.h"
 #include "tgt/filesystem.h"
-#include "custommodules/bigdataimageprocessing/volumefiltering/slicereader.h"
+#include "modules/bigdataimageprocessing/volumefiltering/slicereader.h"
 #include "voreen/core/voreenapplication.h"
 #include "modules/core/io/rawvolumereader.h"
 #include "../util/tasktimelogger.h"

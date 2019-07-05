@@ -37,9 +37,9 @@
 #include "voreen/core/properties/numeric/intervalproperty.h"
 #include "voreen/core/ports/volumeport.h"
 
-#include "custommodules/bigdataimageprocessing/volumefiltering/slicereader.h"
-#include "custommodules/bigdataimageprocessing/volumefiltering/volumefilter.h"
-#include "custommodules/bigdataimageprocessing/volumefiltering/parallelvolumefilter.h"
+#include "modules/bigdataimageprocessing/volumefiltering/slicereader.h"
+#include "modules/bigdataimageprocessing/volumefiltering/volumefilter.h"
+#include "modules/bigdataimageprocessing/volumefiltering/parallelvolumefilter.h"
 
 namespace voreen {
 

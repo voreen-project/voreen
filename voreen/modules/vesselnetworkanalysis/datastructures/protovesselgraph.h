@@ -31,8 +31,8 @@
 #include "../datastructures/kdtree.h"
 #include "../datastructures/diskarraystorage.h"
 #include "voreen/core/datastructures/volume/volume.h"
-#include "custommodules/bigdataimageprocessing/volumefiltering/slicereader.h"
-#include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
+#include "modules/bigdataimageprocessing/volumefiltering/slicereader.h"
+#include "modules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 #include "../algorithm/idvolume.h"
 #include "vesselgraph.h"
 

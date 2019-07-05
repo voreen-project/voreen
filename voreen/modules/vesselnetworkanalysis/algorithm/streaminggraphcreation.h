@@ -36,8 +36,8 @@
 #include "../datastructures/diskarraystorage.h"
 #include "../algorithm/volumemask.h"
 #include "../util/tasktimelogger.h"
-#include "custommodules/bigdataimageprocessing/volumefiltering/slicereader.h"
-#include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
+#include "modules/bigdataimageprocessing/volumefiltering/slicereader.h"
+#include "modules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 
 #include "tgt/vector.h"
 #include "tgt/memory.h"

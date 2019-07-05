@@ -94,7 +94,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/util/connectedcomponentqueue.cpp
     ${MOD_DIR}/processors/nucleiclustersplitting.cpp
 )
-ENDIF()
 SET(MOD_CORE_HEADERS
     ${MOD_DIR}/algorithm/streamingcomponents.h
     ${MOD_DIR}/datastructures/lz4slicevolume.h
@@ -135,4 +134,3 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/util/csvwriter.h
     ${MOD_DIR}/processors/nucleiclustersplitting.h
 )
-ENDIF()

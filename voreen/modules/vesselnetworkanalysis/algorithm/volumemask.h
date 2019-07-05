@@ -31,7 +31,7 @@
 #include "voreen/core/datastructures/volume/volumebase.h"
 #include "voreen/core/datastructures/volume/volumeram.h"
 #include "voreen/core/io/progressreporter.h"
-#include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
+#include "modules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 #include "tgt/vector.h"
 #include "tgt/filesystem.h"
 #include "../util/tasktimelogger.h"

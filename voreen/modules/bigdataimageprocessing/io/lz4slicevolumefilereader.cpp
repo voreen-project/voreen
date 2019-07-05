@@ -55,7 +55,7 @@ VolumeList* LZ4SliceVolumeFileReader::read(const std::string &url) {
         for(const auto& url : urls) {
             volumeList->add(read(url));
         }
-    } catch(tgt::IOException e) {
+    } catch(tgt::IOException& e) {
         delete volumeList;
         throw e;
     }

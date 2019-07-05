@@ -33,7 +33,7 @@
 #include "tgt/vector.h"
 #include "surface.h"
 #include "voreen/core/datastructures/volume/volumebase.h"
-#include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
+#include "modules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 
 namespace voreen {
 

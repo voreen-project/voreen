@@ -214,7 +214,7 @@ tgt::svec3 HDF5FileVolume::getChunkSize() const {
     hsize_t chunkdimHDF5[3];
     try {
         propList.getChunk(3, chunkdimHDF5);
-    } catch (H5::PropListIException e) {
+    } catch (H5::PropListIException& e) {
         // If there is an error retrieving the chunk dim: Assume the volume is not split into chunks
         return dimensions_;
     }

@@ -173,7 +173,7 @@ CCAComputeInput ConnectedComponentAnalysis::prepareComputeInput() {
 
         try {
             statWriter = std::unique_ptr<CCAWriterType>(new CCAWriterType(componentStatFilePath_.get(), ','));
-        } catch (tgt::IOException e) {
+        } catch (tgt::IOException& e) {
             std::string error = std::string("Could not create component stat file: ") + e.what();
             throw InvalidInputException(error, InvalidInputException::S_ERROR);
         }
@@ -194,7 +194,7 @@ CCAComputeInput ConnectedComponentAnalysis::prepareComputeInput() {
     std::unique_ptr<HDF5FileVolume> outputVolume = nullptr;
     try {
         outputVolume = HDF5FileVolume::createVolume(volumeFilePath, volumeLocation, baseType, dim, 1, true, outputVolumeDeflateLevel_.get(), tgt::svec3(dim.x, dim.y, 1), false);
-    } catch(tgt::IOException e) {
+    } catch(tgt::IOException& e) {
         throw InvalidInputException("Could not create output volume.", InvalidInputException::S_ERROR);
     }
 

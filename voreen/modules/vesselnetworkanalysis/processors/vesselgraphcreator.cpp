@@ -41,8 +41,8 @@
 #include "../algorithm/vesselgraphrefinement.h"
 #include "../datastructures/kdtree.h"
 
-#include "custommodules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
-#include "custommodules/bigdataimageprocessing/processors/connectedcomponentanalysis.h"
+#include "modules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
+#include "modules/bigdataimageprocessing/processors/connectedcomponentanalysis.h"
 
 #include "../ext/intervaltree/IntervalTree.h"
 

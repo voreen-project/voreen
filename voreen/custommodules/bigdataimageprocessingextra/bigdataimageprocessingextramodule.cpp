@@ -23,7 +23,7 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "bigdataimageprocessingmoduleextra.h"
+#include "bigdataimageprocessingextramodule.h"
 
 #include "processors/fatcellquantification.h"
 #include "processors/segmentationquantification.h"

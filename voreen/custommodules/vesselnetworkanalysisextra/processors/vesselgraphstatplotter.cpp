@@ -26,7 +26,7 @@
 #include "vesselgraphstatplotter.h"
 
 #include "voreen/core/datastructures/callback/lambdacallback.h"
-#include "custommodules/bigdataimageprocessing/util/csvwriter.h"
+#include "modules/bigdataimageprocessing/util/csvwriter.h"
 
 #include "modules/plotting/datastructures/plotdata.h"
 #include "modules/plotting/datastructures/plotrow.h"

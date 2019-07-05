@@ -30,7 +30,7 @@
 #include "voreen/core/ports/conditions/portconditionvolumetype.h"
 #include "voreen/core/datastructures/callback/memberfunctioncallback.h"
 
-#include "custommodules/bigdataimageprocessing/util/csvwriter.h"
+#include "modules/bigdataimageprocessing/util/csvwriter.h"
 
 #include <climits>
 

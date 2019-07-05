@@ -22,7 +22,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/volumebricksave.cpp
     ${MOD_DIR}/processors/volumebricksource.cpp
 )
-ENDIF()
 SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/fatcellquantification.h
     ${MOD_DIR}/processors/segmentationquantification.h
@@ -30,4 +29,3 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volumebricksave.h
     ${MOD_DIR}/processors/volumebricksource.h
 )
-ENDIF()
