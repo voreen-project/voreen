@@ -24,23 +24,13 @@
  ***********************************************************************************/
 
 #include "bigdataimageprocessingmodule.h"
+
 #include "processors/binarymedian.h"
 #include "processors/connectedcomponentanalysis.h"
-#include "processors/fatcellquantification.h"
 #include "processors/largevolumeformatconversion.h"
-#include "processors/segmentationquantification.h"
-#include "processors/volumeresampletransformation.h"
-
-#ifdef VRN_MODULE_PLOTTING
-#include "processors/segmentationslicedensity.h"
-#endif
-
-#include "processors/volumebricksource.h"
-#include "processors/volumebricksave.h"
 #include "processors/volumefilterlist.h"
-
+#include "processors/volumeresampletransformation.h"
 #include "io/lz4slicevolumefilereader.h"
-
 
 // nuclei cluster splitting
 #include "operators/volumeoperatordistancetransform.h"
@@ -60,18 +50,10 @@ BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& mo
 
     registerProcessor(new BinaryMedian());
     registerProcessor(new ConnectedComponentAnalysis());
-    registerProcessor(new FatCellQuantification());
     registerProcessor(new LargeVolumeFormatConversion());
     registerProcessor(new NucleiClusterSplitting());
-    registerProcessor(new SegmentationQuantification());
     registerProcessor(new VolumeFilterList());
     registerProcessor(new VolumeResampleTransformation());
-#ifdef VRN_MODULE_PLOTTING
-    registerProcessor(new SegmentationSliceDensity());
-#endif
-
-    registerProcessor(new VolumeBrickSource());
-    registerProcessor(new VolumeBrickSave());
 
     registerVolumeReader(new LZ4SliceVolumeFileReader());
 

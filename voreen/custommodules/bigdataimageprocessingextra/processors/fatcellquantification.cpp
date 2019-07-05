@@ -26,7 +26,7 @@
 #include "fatcellquantification.h"
 
 #include "voreen/core/datastructures/volume/volumedisk.h"
-#include "custommodules/bigdataimageprocessing/util/csvwriter.h"
+#include "modules/bigdataimageprocessing/util/csvwriter.h"
 
 #include <vector>
 

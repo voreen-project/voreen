@@ -40,7 +40,7 @@
 
 namespace voreen {
 
-const std::string VolumeBrickSave::loggerCat_("voreen.bigdataimageprocessing.volumebricksave");
+const std::string VolumeBrickSave::loggerCat_("voreen.bigdataimageprocessingextra.volumebricksave");
 
 VolumeBrickSave::VolumeBrickSave()
     : VolumeProcessor()

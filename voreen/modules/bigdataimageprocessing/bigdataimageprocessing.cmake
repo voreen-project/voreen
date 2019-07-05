@@ -10,10 +10,6 @@ IF(NOT VRN_MODULE_HDF5)
     MESSAGE(FATAL_ERROR "Big Data Image Processing Module requires HDF5 Module")
 ENDIF()
 
-IF(NOT VRN_MODULE_PLOTTING)
-    MESSAGE(FATAL_ERROR "Big Data Image Processing Module requires Plotting Module")
-ENDIF()
-
 ################################################################################
 # External dependency: lz4 library
 ################################################################################
@@ -23,7 +19,7 @@ IF(VRN_MSVC)
     SET(LZ4_INCLUDE_DIR ${MOD_DIR}/ext/lz4/include)
     SET(LZ4_LIBRARIES liblz4)
     SET(LZ4_FOUND TRUE)
-    
+
     SET(MOD_INSTALL_FILES
         ${MOD_DIR}/ext/lz4/LICENSE
     )
@@ -44,7 +40,7 @@ IF(LZ4_FOUND)
     MESSAGE(STATUS "Include Directories: " ${LZ4_INCLUDE_DIR})
     MESSAGE(STATUS "Libraries: " ${LZ4_LIBRARIES})
     LIST(APPEND MOD_INCLUDE_DIRECTORIES ${LZ4_INCLUDE_DIR})
-    
+
     IF(VRN_MSVC)
         FOREACH(elem ${LZ4_LIBRARIES})
             # Note that we set the same library for both, relase and debug.
@@ -72,11 +68,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/io/volumedisklz4.cpp
     ${MOD_DIR}/processors/binarymedian.cpp
     ${MOD_DIR}/processors/connectedcomponentanalysis.cpp
-    ${MOD_DIR}/processors/fatcellquantification.cpp
     ${MOD_DIR}/processors/largevolumeformatconversion.cpp
-    ${MOD_DIR}/processors/segmentationquantification.cpp
-    ${MOD_DIR}/processors/volumebricksave.cpp
-    ${MOD_DIR}/processors/volumebricksource.cpp
     ${MOD_DIR}/processors/volumefilterlist.cpp
     ${MOD_DIR}/processors/volumeresampletransformation.cpp
 
@@ -88,7 +80,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/volumefiltering/medianfilter.cpp
     ${MOD_DIR}/volumefiltering/morphologyfilter.cpp
     ${MOD_DIR}/volumefiltering/thresholdingfilter.cpp
-    
+
     # Filter Properties
     ${MOD_DIR}/volumefilterproperties/filterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/binarymedianfilterproperties.cpp
@@ -102,22 +94,15 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/util/connectedcomponentqueue.cpp
     ${MOD_DIR}/processors/nucleiclustersplitting.cpp
 )
-IF(VRN_MODULE_PLOTTING)
-    LIST(APPEND MOD_CORE_SOURCES
-        ${MOD_DIR}/processors/segmentationslicedensity.cpp
-    )
 ENDIF()
 SET(MOD_CORE_HEADERS
+    ${MOD_DIR}/algorithm/streamingcomponents.h
     ${MOD_DIR}/datastructures/lz4slicevolume.h
     ${MOD_DIR}/io/lz4slicevolumefilereader.h
     ${MOD_DIR}/io/volumedisklz4.h
-    ${MOD_DIR}/processors/binarymedian.cpp
+    ${MOD_DIR}/processors/binarymedian.h
     ${MOD_DIR}/processors/connectedcomponentanalysis.h
-    ${MOD_DIR}/processors/fatcellquantification.h
     ${MOD_DIR}/processors/largevolumeformatconversion.h
-    ${MOD_DIR}/processors/segmentationquantification.h
-    ${MOD_DIR}/processors/volumebricksave.h
-    ${MOD_DIR}/processors/volumebricksource.h
     ${MOD_DIR}/processors/volumefilterlist.h
     ${MOD_DIR}/processors/volumeresampletransformation.h
 
@@ -130,7 +115,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/volumefiltering/medianfilter.h
     ${MOD_DIR}/volumefiltering/morphologyfilter.h
     ${MOD_DIR}/volumefiltering/thresholdingfilter.h
-    
+
     # Filter Properties
     ${MOD_DIR}/volumefilterproperties/filterproperties.h
     ${MOD_DIR}/volumefilterproperties/binarymedianfilterproperties.h
@@ -147,10 +132,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/operators/volumeoperatorwatershed.h
     ${MOD_DIR}/util/clustersplittingthread.h
     ${MOD_DIR}/util/connectedcomponentqueue.h
+    ${MOD_DIR}/util/csvwriter.h
     ${MOD_DIR}/processors/nucleiclustersplitting.h
 )
-IF(VRN_MODULE_PLOTTING)
-    LIST(APPEND MOD_CORE_HEADERS
-        ${MOD_DIR}/processors/segmentationslicedensity.h
-    )
 ENDIF()
