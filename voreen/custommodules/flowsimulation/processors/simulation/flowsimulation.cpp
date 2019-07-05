@@ -33,8 +33,6 @@
 #include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/ports/conditions/portconditionvolumelist.h"
 
-#include "../../utils/geometryconverter.h"
-
 #ifndef OLB_PRECOMPILED
 #include "olb3D.hh"
 #endif
@@ -146,9 +144,9 @@ void FlowSimulation::adjustPropertiesToInput() {
 }
 
 FlowSimulationInput FlowSimulation::prepareComputeInput() {
-    auto geometryData = geometryDataPort_.getThreadSafeData();
+    const GlMeshGeometryBase* geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData());
     if (!geometryData) {
-        throw InvalidInputException("No simulation geometry", InvalidInputException::S_WARNING);
+        throw InvalidInputException("Invalid simulation geometry", InvalidInputException::S_WARNING);
     }
 
     tgtAssert(measuredDataPort_.isDataInvalidationObservable(), "VolumeListPort must be DataInvalidationObservable!");
@@ -186,8 +184,13 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     }
 
     std::string geometryPath = VoreenApplication::app()->getUniqueTmpFilePath(".stl");
-    if(!exportGeometryToSTL(geometryData, geometryPath)) {
-        throw InvalidInputException("Geometry could not be initialized", InvalidInputException::S_ERROR);
+    try {
+        std::ofstream file(geometryPath);
+        geometryData->exportAsStl(file);
+        file.close();
+    }
+    catch (std::exception&) {
+        throw InvalidInputException("Geometry could not be exported", InvalidInputException::S_ERROR);
     }
 
     if(simulationResults_.get().empty()) {
@@ -267,13 +270,14 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     }
 
     const int N = parametrizationList.getSpatialResolution();
-    UnitConverter<T, DESCRIPTOR> converter(
-            (T) parameters.getCharacteristicLength() * VOREEN_LENGTH_TO_SI / N,      // resolution for charPhysLength
-            (T) parametrizationList.getTemporalResolution() * VOREEN_TIME_TO_SI,     // TODO: define proper semantic
-            (T) parameters.getCharacteristicLength() * VOREEN_LENGTH_TO_SI,          // charPhysLength: reference length of simulation geometry
-            (T) parameters.getCharacteristicVelocity() * VOREEN_LENGTH_TO_SI,        // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
-            (T) parameters.getViscosity() * 0.001 / parameters.getDensity(),         // physViscosity: physical kinematic viscosity in __m^2 / s__
-            (T) parameters.getDensity()                                              // physDensity: physical density in __kg / m^3__
+    const T conversion = VOREEN_LENGTH_TO_SI * N * parametrizationList.getTemporalResolution() / parameters.getCharacteristicLength();
+    UnitConverterFromResolutionAndLatticeVelocity<T, DESCRIPTOR> converter(
+            N,                                                                      // resolution for charPhysLength
+            (T) parameters.getCharacteristicVelocity() * conversion,                // max. lattice velocity
+            (T) parameters.getCharacteristicLength() * VOREEN_LENGTH_TO_SI,         // charPhysLength: reference length of simulation geometry
+            (T) parameters.getCharacteristicVelocity() * VOREEN_LENGTH_TO_SI,       // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
+            (T) parameters.getViscosity() * 0.001 / parameters.getDensity(),        // physViscosity: physical kinematic viscosity in __m^2 / s__
+            (T) parameters.getDensity()                                             // physDensity: physical density in __kg / m^3__
     );
     // Prints the converter log as console output
     converter.print();

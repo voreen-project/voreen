@@ -42,7 +42,7 @@ public:
     virtual std::string getClassName() const { return "ImplicitRepresentation"; }
     virtual std::string getCategory() const  { return "Geometry";               }
     virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL;  }
-    virtual bool usesExpensiveComputation() const { return false; }
+    virtual bool usesExpensiveComputation() const { return true; }
 
 protected:
 
@@ -56,6 +56,7 @@ protected:
         path_.setDescription("Path where the input geometry will be stored.");
     }
 
+    virtual bool isReady() const;
     virtual void process();
 
 private:

@@ -80,6 +80,9 @@ namespace {
     void saveAsObj(const GlMeshGeometryBase* geometry, std::fstream& f) {
         geometry->exportAsObj(f);
     }
+    void saveAsStl(const GlMeshGeometryBase* geometry, std::fstream& f) {
+        geometry->exportAsStl(f);
+    }
 }
 
 void GeometrySave::saveFile() {
@@ -88,7 +91,7 @@ void GeometrySave::saveFile() {
         return;
 
     std::string filename = fileProp_.get();
-    if (filename == "") {
+    if (filename.empty()) {
         LWARNING("Could not save geometry: filename is empty");
         return;
     }
@@ -103,13 +106,21 @@ void GeometrySave::saveFile() {
         auto extension = tgt::FileSystem::fileExtension(filename, true);
         if(extension == "vge") {
             saveAsVGE(geometry, stream);
-        } else if(extension == "obj") {
+        }
+        else if(extension == "obj") {
             if(const GlMeshGeometryBase* geom = dynamic_cast<const GlMeshGeometryBase*>(geometry)) {
                 saveAsObj(geom, stream);
             } else {
                 LERROR("Unsupported output file type '" << extension << "' for input geometry!");
             }
-        } else {
+        } else if(extension == "stl") {
+            if(const GlMeshGeometryBase* geom = dynamic_cast<const GlMeshGeometryBase*>(geometry)) {
+                saveAsStl(geom, stream);
+            } else {
+                LERROR("Unsupported output file type '" << extension << "' for input geometry!");
+            }
+        }
+        else {
             LERROR("Unsupported output file type '" << extension << "'!");
         }
     }
@@ -118,7 +129,7 @@ void GeometrySave::saveFile() {
 void GeometrySave::adjustPropertiesToInput() {
     const Geometry* geometry = inport_.getData();
     if(const GlMeshGeometryBase* geom = dynamic_cast<const GlMeshGeometryBase*>(geometry)) {
-        fileProp_.setFileFilter("Voreen Geometry files (*.vge);; Wavefront Object Files (*.obj)");
+        fileProp_.setFileFilter("Voreen Geometry files (*.vge);; Wavefront Object Files (*.obj);; Stereolithography Files (*.stl)");
     } else {
         fileProp_.setFileFilter("Voreen Geometry files (*.vge)");
     }

@@ -180,6 +180,11 @@ public:
      */
     virtual void exportAsObj(std::ostream& s) const = 0;
 
+    /**
+     * Save the geometry in stereolithography File format to the specified stream.
+     */
+    virtual void exportAsStl(std::ostream& s) const = 0;
+
 protected:
 
     /**
@@ -388,6 +393,8 @@ public:
     void setCuboidGeometry(float width, float height, float depth);
 
     void exportAsObj(std::ostream& s) const;
+    void exportAsStl(std::ostream& s) const;
+
 protected:
 
     /// helper method for setCylinderGeometry(...)
@@ -715,31 +722,6 @@ namespace {
     }
 }
 
-namespace {
-template<class V>
-class VertexHash
-{
-    public:
-    std::size_t operator()(V const& s) const
-    {
-        std::vector<float> vals;
-        vals.push_back(s.pos_.x);
-        vals.push_back(s.pos_.y);
-        vals.push_back(s.pos_.z);
-        return boost::hash_value(vals);
-    }
-};
-template<class V>
-class VertexEqual
-{
-    public:
-    bool operator() (V const& t1, V const& t2) const
-    {
-        return t1.pos_ == t2.pos_;
-    }
-};
-}
-
 template <class I, class V>
 void GlMeshGeometry<I,V>::exportAsObj(std::ostream& s) const {
     auto vertexMat = getTransformationMatrix();
@@ -796,78 +778,192 @@ void GlMeshGeometry<I,V>::exportAsObj(std::ostream& s) const {
     }
     //Write faces via indices
     switch(getPrimitiveType()) {
-        case GL_TRIANGLES:
-            {
-                std::vector<I> collected;
-                for(auto& i : out_indices) {
-                    if(i == primitiveRestartIndex_ && primitiveRestartEnabled_) {
-                        collected.clear();
-                    } else {
-                        collected.push_back(i);
-                    }
-                    tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
-                    if(collected.size() == 3) {
-                        s << "f ";
-                        writeObjIndex<I, V>(vertices_.at(collected[0]), s, vertex_map, tex_map, normal_map); s << " ";
-                        writeObjIndex<I, V>(vertices_.at(collected[1]), s, vertex_map, tex_map, normal_map); s << " ";
-                        writeObjIndex<I, V>(vertices_.at(collected[2]), s, vertex_map, tex_map, normal_map); s << "\n";
+    case GL_TRIANGLES:
+    {
+        std::vector<I> collected;
+        for(auto& i : out_indices) {
+            if(i == primitiveRestartIndex_ && primitiveRestartEnabled_) {
+                collected.clear();
+            } else {
+                collected.push_back(i);
+            }
+            tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
+            if(collected.size() == 3) {
+                s << "f ";
+                writeObjIndex<I, V>(vertices_.at(collected[0]), s, vertex_map, tex_map, normal_map); s << " ";
+                writeObjIndex<I, V>(vertices_.at(collected[1]), s, vertex_map, tex_map, normal_map); s << " ";
+                writeObjIndex<I, V>(vertices_.at(collected[2]), s, vertex_map, tex_map, normal_map); s << "\n";
 
-                        collected.clear();
-                    }
-                }
-                tgtAssert(collected.empty(), "Remaining indices");
-                break;
+                collected.clear();
             }
-        case GL_TRIANGLE_STRIP:
-            {
-                std::deque<I> collected;
-                for(auto& i : out_indices) {
-                    if(i == primitiveRestartIndex_ && primitiveRestartEnabled_) {
-                        collected.clear();
-                    } else {
-                        collected.push_back(i);
-                    }
-                    tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
-                    if(collected.size() == 3) {
-                        s << "f ";
-                        writeObjIndex<I, V>(vertices_.at(collected[0]), s, vertex_map, tex_map, normal_map); s << " ";
-                        writeObjIndex<I, V>(vertices_.at(collected[1]), s, vertex_map, tex_map, normal_map); s << " ";
-                        writeObjIndex<I, V>(vertices_.at(collected[2]), s, vertex_map, tex_map, normal_map); s << "\n";
+        }
+        tgtAssert(collected.empty(), "Remaining indices");
+        break;
+    }
+    case GL_TRIANGLE_STRIP:
+    {
+        std::deque<I> collected;
+        for(auto& i : out_indices) {
+            if(i == primitiveRestartIndex_ && primitiveRestartEnabled_) {
+                collected.clear();
+            } else {
+                collected.push_back(i);
+            }
+            tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
+            if(collected.size() == 3) {
+                s << "f ";
+                writeObjIndex<I, V>(vertices_.at(collected[0]), s, vertex_map, tex_map, normal_map); s << " ";
+                writeObjIndex<I, V>(vertices_.at(collected[1]), s, vertex_map, tex_map, normal_map); s << " ";
+                writeObjIndex<I, V>(vertices_.at(collected[2]), s, vertex_map, tex_map, normal_map); s << "\n";
 
-                        collected.pop_front();
-                    }
-                }
-                break;
+                collected.pop_front();
             }
-        case GL_TRIANGLE_FAN:
-            {
-                std::deque<I> collected;
-                for(auto& i : out_indices) {
-                    if(i == primitiveRestartIndex_ && primitiveRestartEnabled_) {
-                        collected.clear();
-                    } else {
-                        collected.push_back(i);
-                    }
-                    tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
-                    if(collected.size() == 3) {
-                        s << "f ";
-                        writeObjIndex<I, V>(vertices_.at(collected[0]), s, vertex_map, tex_map, normal_map); s << " ";
-                        writeObjIndex<I, V>(vertices_.at(collected[1]), s, vertex_map, tex_map, normal_map); s << " ";
-                        writeObjIndex<I, V>(vertices_.at(collected[2]), s, vertex_map, tex_map, normal_map); s << "\n";
+        }
+        break;
+    }
+    case GL_TRIANGLE_FAN:
+    {
+        std::deque<I> collected;
+        for(auto& i : out_indices) {
+            if(i == primitiveRestartIndex_ && primitiveRestartEnabled_) {
+                collected.clear();
+            } else {
+                collected.push_back(i);
+            }
+            tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
+            if(collected.size() == 3) {
+                s << "f ";
+                writeObjIndex<I, V>(vertices_.at(collected[0]), s, vertex_map, tex_map, normal_map); s << " ";
+                writeObjIndex<I, V>(vertices_.at(collected[1]), s, vertex_map, tex_map, normal_map); s << " ";
+                writeObjIndex<I, V>(vertices_.at(collected[2]), s, vertex_map, tex_map, normal_map); s << "\n";
 
-                        // Not the most efficient, but the simplest for now...
-                        I first = collected.front();
-                        collected.pop_front();
-                        collected.pop_front();
-                        collected.push_front(first);
-                    }
-                }
-                break;
+                // Not the most efficient, but the simplest for now...
+                I first = collected.front();
+                collected.pop_front();
+                collected.pop_front();
+                collected.push_front(first);
             }
-        default:
-            {
-                throw tgt::Exception("Unsupported geometry type for .obj export");
+        }
+        break;
+    }
+    default:
+        throw tgt::Exception("Unsupported geometry type for .obj export");
+    }
+}
+
+template <class I, class V>
+void GlMeshGeometry<I,V>::exportAsStl(std::ostream& s) const {
+
+    s << "solid ascii" << "\n";
+
+    tgt::mat4 m = getTransformationMatrix();
+    std::vector<I> out_indices;
+    if(usesIndexedDrawing()) {
+        out_indices.resize(indices_.size());
+        std::copy(indices_.begin(), indices_.end(), out_indices.begin());
+    } else {
+        out_indices.resize(vertices_.size());
+        std::iota(out_indices.begin(), out_indices.end(), 0);
+    }
+
+    switch(getPrimitiveType()) {
+    case GL_TRIANGLES:
+    {
+        std::vector<I> collected;
+        for(auto& i : out_indices) {
+            if(i == primitiveRestartIndex_ && primitiveRestartEnabled_) {
+                collected.clear();
+            } else {
+                collected.push_back(i);
             }
+            tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
+            if(collected.size() == 3) {
+                tgt::vec3 v0 = m * vertices_.at(collected[0]).pos_;
+                tgt::vec3 v1 = m * vertices_.at(collected[1]).pos_;
+                tgt::vec3 v2 = m * vertices_.at(collected[2]).pos_;
+
+                tgt::vec3 normal = tgt::normalize(tgt::cross(v0-v1, v0-v2));
+
+                s << "facet normal " << normal.x << " " << normal.y << " " << normal.z << "\n";
+                s << "    outer loop\n";
+                s << "        vertex " << v0.x << " " << v0.y << " " << v0.z << "\n";
+                s << "        vertex " << v1.x << " " << v1.y << " " << v1.z << "\n";
+                s << "        vertex " << v2.x << " " << v2.y << " " << v2.z << "\n";
+                s << "    endloop\n";
+                s << "endfacet\n";
+
+                collected.clear();
+            }
+        }
+        tgtAssert(collected.empty(), "Remaining indices");
+        break;
+    }
+    case GL_TRIANGLE_STRIP:
+    {
+        std::deque<I> collected;
+        for(auto& i : out_indices) {
+            if(i == primitiveRestartIndex_ && primitiveRestartEnabled_) {
+                collected.clear();
+            } else {
+                collected.push_back(i);
+            }
+            tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
+            if(collected.size() == 3) {
+                tgt::vec3 v0 = m * vertices_.at(collected[0]).pos_;
+                tgt::vec3 v1 = m * vertices_.at(collected[1]).pos_;
+                tgt::vec3 v2 = m * vertices_.at(collected[2]).pos_;
+
+                tgt::vec3 normal = tgt::normalize(tgt::cross(v0-v1, v0-v2));
+
+                s << "facet normal " << normal.x << " " << normal.y << " " << normal.z << "\n";
+                s << "    outer loop\n";
+                s << "        vertex " << v0.x << " " << v0.y << " " << v0.z << "\n";
+                s << "        vertex " << v1.x << " " << v1.y << " " << v1.z << "\n";
+                s << "        vertex " << v2.x << " " << v2.y << " " << v2.z << "\n";
+                s << "    endloop\n";
+                s << "endfacet\n";
+
+                collected.pop_front();
+            }
+        }
+        break;
+    }
+    case GL_TRIANGLE_FAN:
+    {
+        std::deque<I> collected;
+        for(auto& i : out_indices) {
+            if(i == primitiveRestartIndex_ && primitiveRestartEnabled_) {
+                collected.clear();
+            } else {
+                collected.push_back(i);
+            }
+            tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
+            if(collected.size() == 3) {
+                tgt::vec3 v0 = m * vertices_.at(collected[0]).pos_;
+                tgt::vec3 v1 = m * vertices_.at(collected[1]).pos_;
+                tgt::vec3 v2 = m * vertices_.at(collected[2]).pos_;
+
+                tgt::vec3 normal = tgt::normalize(tgt::cross(v0-v1, v0-v2));
+
+                s << "facet normal " << normal.x << " " << normal.y << " " << normal.z << "\n";
+                s << "    outer loop\n";
+                s << "        vertex " << v0.x << " " << v0.y << " " << v0.z << "\n";
+                s << "        vertex " << v1.x << " " << v1.y << " " << v1.z << "\n";
+                s << "        vertex " << v2.x << " " << v2.y << " " << v2.z << "\n";
+                s << "    endloop\n";
+                s << "endfacet\n";
+
+                // Not the most efficient, but the simplest for now...
+                I first = collected.front();
+                collected.pop_front();
+                collected.pop_front();
+                collected.push_front(first);
+            }
+        }
+        break;
+    }
+    default:
+        throw tgt::Exception("Unsupported geometry type for .obj export");
     }
 }
 

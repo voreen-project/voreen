@@ -1,0 +1,99 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="20">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-524.364501953" y="-127.746963501" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.495143175" />
+            </MetaData>
+            <Processors>
+                <Processor type="GeometrySource" name="GeometrySource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-318" y="-198" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="addobjcolor" name="addobjcolor" value="false" />
+                        <Property mapKey="calcNormals" name="calcNormals" value="false" />
+                        <Property mapKey="clearGeometry" name="clearGeometry" />
+                        <Property mapKey="geometryFile" name="geometryFile" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/geometry/mesh_testcene_a.obj" />
+                                    <item value="../../voreen-testdata/voreen-testdata/input/geometry/mesh_testcene_a.obj" />
+                                    <item value="/home/s_leis06/programming/voreen-testdata/voreen-testdata/input/geometry/mesh_testcene_a.obj" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="geometryType" name="geometryType" value="geometry" />
+                        <Property mapKey="loadGeometry" name="loadGeometry" />
+                        <Property mapKey="objcolor" name="objcolor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="skipItems" name="skipItems" value="0" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="geometry.pointlist" direction="0" portID="geometry.pointlist" guiName="PointList Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="GeometrySave" name="GeometrySave" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-311" y="-66" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="file" name="file" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/mesh_testcene_a.stl" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/mesh_testcene_a.stl" />
+                                    <item value="/home/s_leis06/programming/voreen-testdata/voreen-testdata/output/mesh_testcene_a.stl" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="geometry.pointlist">
+                        <Processor type="GeometrySource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="GeometrySave" ref="ref1" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

@@ -53,7 +53,7 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Loads a serialized Voreen Geometry (.vge), triangle meshes from .ply or .obj files, a point list or a segmented point list from a file.\
+        setDescription("Loads a serialized Voreen Geometry (.vge), triangle meshes from .ply, .obj or .stl files, a point list or a segmented point list from a file.\
 \
 <p>Point lists and segmented point lists are read from ASCII files (.txt or loadable by selecting all file types). In point lists, each point is expected to consist of three components that are separated by white space.\
 For a segmented point list, each point is expected to be followed by a numeric segment identifier. The segments have to be listed in ascending order. Additionally, the number of items that are to be skipped after each point can be specified.</p>");

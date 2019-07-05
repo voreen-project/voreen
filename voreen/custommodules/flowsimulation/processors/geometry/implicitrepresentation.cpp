@@ -25,9 +25,8 @@
 
 #include "implicitrepresentation.h"
 
+#include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
-
-#include "../../utils/geometryconverter.h"
 
 #include <olb3D.h>
 using namespace olb;
@@ -59,12 +58,32 @@ Processor* ImplicitRepresentation::create() const {
     return new ImplicitRepresentation();
 }
 
+bool ImplicitRepresentation::isReady() const {
+    if(!isInitialized()) {
+        setNotReadyErrorMessage("Not initialized");
+        return false;
+    }
+
+    if(!dynamic_cast<const GlMeshGeometryBase*>(inport_.getData())) {
+        setNotReadyErrorMessage("Invalid input");
+        return false;
+    }
+
+    return true;
+}
+
 void ImplicitRepresentation::process() {
 
-    const Geometry* inputGeometry = inport_.getData();
-    tgtAssert(inputGeometry, "No input");
-    if (!exportGeometryToSTL(inputGeometry, path_.get())) {
-        LERROR("Failed to export mesh.");
+    const GlMeshGeometryBase* inputGeometry = dynamic_cast<const GlMeshGeometryBase*>(inport_.getData());
+    tgtAssert(inputGeometry, "Invalid input");
+
+    try {
+        std::ofstream file(path_.get());
+        inputGeometry->exportAsStl(file);
+        file.close();
+    }
+    catch (std::exception& e) {
+        LERROR("Failed to export mesh: " << e.what());
         outport_.setData(nullptr);
         return;
     }

@@ -577,9 +577,9 @@ int main(int argc, char* argv[]) {
     // TODO: implement measured data support!
 
     const int N = spatialResolution;
-    UnitConverter<T, DESCRIPTOR> converter(
-            (T) characteristicLength * VOREEN_LENGTH_TO_SI / N,  // physDeltaX: spacing between two lattice cells in __m__
-            (T) temporalResolution * VOREEN_TIME_TO_SI,          // TODO: define proper semantic
+    UnitConverterFromResolutionAndLatticeVelocity<T, DESCRIPTOR> converter(
+            N,                                                                      // resolution for charPhysLength
+            (T) parameters.getCharacteristicVelocity() * conversion,                // max. lattice velocity
             (T) characteristicLength * VOREEN_LENGTH_TO_SI,      // charPhysLength: reference length of simulation geometry
             (T) characteristicVelocity * VOREEN_LENGTH_TO_SI,    // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
             (T) viscosity * 0.001 / density,                     // physViscosity: physical kinematic viscosity in __m^2 / s__

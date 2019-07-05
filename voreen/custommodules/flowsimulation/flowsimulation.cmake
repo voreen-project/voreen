@@ -24,9 +24,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/simulation/flowparametrization.cpp
     ${MOD_DIR}/processors/simulation/flowsimulationcluster.cpp
     ${MOD_DIR}/processors/volume/volumelistadapter.cpp
-
-    # utils
-    ${MOD_DIR}/utils/geometryconverter.cpp
 )
 
 SET(MOD_CORE_HEADERS
@@ -51,9 +48,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/simulation/flowparametrization.h
     ${MOD_DIR}/processors/simulation/flowsimulationcluster.h
     ${MOD_DIR}/processors/volume/volumelistadapter.h
-
-    # utils
-    ${MOD_DIR}/utils/geometryconverter.h
 )
 
 IF(VRN_MODULE_VESSELTOPOLOGY)

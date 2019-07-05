@@ -31,8 +31,6 @@
 
 #include "modules/core/io/rawvolumereader.h"
 
-#include "../../utils/geometryconverter.h"
-
 namespace voreen {
 
 const std::string FlowSimulationCluster::loggerCat_("voreen.flowreen.FlowSimulationCluster");
@@ -203,10 +201,10 @@ void FlowSimulationCluster::institutionChanged() {
 
 void FlowSimulationCluster::enqueueSimulations() {
 
-    const Geometry* geometryData = geometryDataPort_.getData();
+    const GlMeshGeometryBase* geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData());
     if (!geometryData) {
         VoreenApplication::app()->showMessageBox("Error", "No simulation geometry. Did you perform the segmentation?", true);
-        LERROR("No simulation geometry");
+        LERROR("Invalid simulation geometry");
         return;
     }
 
@@ -248,9 +246,14 @@ void FlowSimulationCluster::enqueueSimulations() {
     // TODO: support changing/multiple geometries.
     tgt::FileSystem::createDirectory(simulationPathSource + "geometry/");
     std::string geometryFilename = simulationPathSource + "geometry/" + "geometry.stl";
-    if (!exportGeometryToSTL(geometryData, geometryFilename)) {
+    try {
+        std::ofstream file(geometryFilename);
+        geometryData->exportAsStl(file);
+        file.close();
+    }
+    catch (std::exception& e) {
         VoreenApplication::app()->showMessageBox("Error", "Could not write geometry file", true);
-        LERROR("Could not write geometry file");
+        LERROR("Could not write geometry file: " << e.what());
         return;
     }
 

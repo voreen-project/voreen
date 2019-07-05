@@ -166,8 +166,9 @@ void FlowParametrization::addParametrizations() {
     std::string name = parametrizationName_.get();
     for(const FlowParameters& params : flowParameters_) {
         if(params.getName().find(name) != std::string::npos) {
-            LERROR("Already parametrization with prefix " << name);
-            return;;
+            VoreenApplication::app()->showMessageBox("Warning", "Already parametrization added with the same prefix");
+            LWARNING("Already parametrization with prefix " << name);
+            return;
         }
     }
 
@@ -211,6 +212,7 @@ void FlowParametrization::removeParametrization() {
         parametrizations_.removeRow(parametrizations_.getSelectedRowIndex());
     }
     else {
+        VoreenApplication::app()->showMessageBox("Warning", "No parametrization selected");
         LWARNING("No parametrization selected");
     }
 }
