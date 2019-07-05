@@ -10,12 +10,12 @@ Voreen Changelog
       o Bundle LZ4 library for windows builds
       o Introduce VolumeFilterList allowing to efficiently apply filter operations like thresholding, morphology operations, binarization, median filtering and more on large volumes
       o Add port conditions for VolumeLists. In particular, a single volume port condition can be applied for each volume contained in the port's list
-      o Add support for STL geometry files (both ASCII and binary) to GeometrySource
       o Python scripts can access port data, currently Volume- and RenderPorts are implemented. Refer to the module's example workspace
       o Implement dynamic python processor, each of which has its own python script. Ports can be added and removed using drag and drop
       o Extend VolumeMinMaxMagnitude to support normalized and real world magnitudes as it's done for VolumeMinMax
       o Introduce VolumeRAMRepresentationLock for asynchronous calculations which prevents a representation to be removed by the memory manager until it's destroyed
-      o GlMeshGeometries (such as the output of IsoSurfaceCreator) can now be saved as .obj files using GeometrySave
+      o Add support for STL geometry files (both ASCII and binary) to GeometrySource
+      o GlMeshGeometries (such as the output of IsoSurfaceCreator) can now be saved as .obj and .stl files using GeometrySave
 
     * Framework/API Changes:
       o StringProperty: Renamed setReadOnly/isReadyOnly to setEditable/isEditable
