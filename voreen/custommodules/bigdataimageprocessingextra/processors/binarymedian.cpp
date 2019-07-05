@@ -39,7 +39,7 @@
 #include "tgt/bounds.h"
 #include "tgt/filesystem.h"
 
-#include "../volumefiltering/binarymedianfilter.h"
+#include "modules/bigdataimageprocessing/volumefiltering/binarymedianfilter.h"
 
 #include <vector>
 #include <memory>

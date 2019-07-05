@@ -25,6 +25,7 @@
 
 #include "bigdataimageprocessingextramodule.h"
 
+#include "processors/binarymedian.h"
 #include "processors/fatcellquantification.h"
 #include "processors/segmentationquantification.h"
 #include "processors/segmentationslicedensity.h"
@@ -39,6 +40,7 @@ BigDataImageProcessingExtraModule::BigDataImageProcessingExtraModule(const std::
     setID("bigdataimageprocessingextra");
     setGuiName("Big Data Image Processing Extra");
 
+    registerProcessor(new BinaryMedian());
     registerProcessor(new FatCellQuantification());
     registerProcessor(new SegmentationQuantification());
     registerProcessor(new SegmentationSliceDensity());

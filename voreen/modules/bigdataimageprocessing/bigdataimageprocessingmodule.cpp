@@ -25,7 +25,6 @@
 
 #include "bigdataimageprocessingmodule.h"
 
-#include "processors/binarymedian.h"
 #include "processors/connectedcomponentanalysis.h"
 #include "processors/largevolumeformatconversion.h"
 #include "processors/volumefilterlist.h"
@@ -48,7 +47,6 @@ BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& mo
     setID("bigdataimageprocessing");
     setGuiName("Big Data Image Processing");
 
-    registerProcessor(new BinaryMedian());
     registerProcessor(new ConnectedComponentAnalysis());
     registerProcessor(new LargeVolumeFormatConversion());
     registerProcessor(new NucleiClusterSplitting());

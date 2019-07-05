@@ -66,7 +66,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/datastructures/lz4slicevolume.cpp
     ${MOD_DIR}/io/lz4slicevolumefilereader.cpp
     ${MOD_DIR}/io/volumedisklz4.cpp
-    ${MOD_DIR}/processors/binarymedian.cpp
     ${MOD_DIR}/processors/connectedcomponentanalysis.cpp
     ${MOD_DIR}/processors/largevolumeformatconversion.cpp
     ${MOD_DIR}/processors/volumefilterlist.cpp
@@ -99,7 +98,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/datastructures/lz4slicevolume.h
     ${MOD_DIR}/io/lz4slicevolumefilereader.h
     ${MOD_DIR}/io/volumedisklz4.h
-    ${MOD_DIR}/processors/binarymedian.h
     ${MOD_DIR}/processors/connectedcomponentanalysis.h
     ${MOD_DIR}/processors/largevolumeformatconversion.h
     ${MOD_DIR}/processors/volumefilterlist.h
