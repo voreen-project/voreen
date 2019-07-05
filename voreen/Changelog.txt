@@ -5,6 +5,8 @@ Voreen Changelog
 ----------------------
 
     * Features:
+      o Add BigDataImageProcessing module. This module provides support for various basic image prossessing procedure which can be applied to volumes which exceed the size of main memory.
+      o Add VesselNetworkAnalysis module. This modules enables foreground segmentation of volumetic vessel data, subsequent extraction of VesselGraphs containing topological and morphological information, and a number of related processors. All processors can operate on volume which exceed the size of main memory.
       o Implemented File Watching for ImageSource and ImageSequenceSource
       o OctreeCreator now inherits AsyncComputeProcessor
       o Bundle LZ4 library for windows builds
