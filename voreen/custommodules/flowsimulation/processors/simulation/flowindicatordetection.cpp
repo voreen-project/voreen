@@ -46,7 +46,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , startPhaseFunction_("startPhaseFunction", "Start Phase Function")
     , startPhaseDuration_("startPhaseDuration", "Start Phase Duration (s)", 0.0f, 0.0f, 20.0f)
     , radius_("radius", "Radius", 1.0f, 0.0f, 10.0f)
-    , flowIndicatorTable_("flowIndicators", "Flow Indicators", 6)
+    , flowIndicatorTable_("flowIndicators", "Flow Indicators", 4)
     , firstRefNode_("firstRefNode", "First Ref. Nodes", 0, 0, 20)
     , numRefNodes_("numRefNodes", "Num. Ref. Nodes", 3, 1, 10)
     , angleThreshold_("angleThreshold", "Angle Threshold", 15, 0, 90)
@@ -101,9 +101,9 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     flowIndicatorTable_.setColumnLabel(0, "Dir.");
     flowIndicatorTable_.setColumnLabel(1, "St. Ph. Fun.");
     flowIndicatorTable_.setColumnLabel(2, "St. Ph. Dur.");
-    flowIndicatorTable_.setColumnLabel(3, "Center");
-    flowIndicatorTable_.setColumnLabel(4, "Normal");
-    flowIndicatorTable_.setColumnLabel(5, "Radius");
+    flowIndicatorTable_.setColumnLabel(3, "Radius");
+    //flowIndicatorTable_.setColumnLabel(4, "Center");
+    //flowIndicatorTable_.setColumnLabel(5, "Normal");
     ON_CHANGE(flowIndicatorTable_, FlowIndicatorDetection, onSelectionChange);
 
     addProperty(firstRefNode_);
@@ -301,11 +301,13 @@ void FlowIndicatorDetection::buildTable() {
         row[1] = indicator.startPhaseFunction_ == FlowFunction::FF_CONSTANT ? "CONSTANT" :
                 (indicator.startPhaseFunction_ == FlowFunction::FF_SINUS ? "SINUS" : "NONE");
         row[2] = std::to_string(indicator.startPhaseDuration_);
-        row[3] = "(" + std::to_string(indicator.center_.x) + ", " + std::to_string(indicator.center_.y) + ", " +
+        row[3] = std::to_string(indicator.radius_);
+        /*
+        row[4] = "(" + std::to_string(indicator.center_.x) + ", " + std::to_string(indicator.center_.y) + ", " +
                  std::to_string(indicator.center_.z) + ")";
-        row[4] = "(" + std::to_string(indicator.normal_.x) + ", " + std::to_string(indicator.normal_.y) + ", " +
+        row[5] = "(" + std::to_string(indicator.normal_.x) + ", " + std::to_string(indicator.normal_.y) + ", " +
                  std::to_string(indicator.normal_.z) + ")";
-        row[5] = std::to_string(indicator.radius_);
+        */
         flowIndicatorTable_.addRow(row);
     }
 
