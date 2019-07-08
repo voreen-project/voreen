@@ -74,13 +74,13 @@ public:
 
         return *this;
     }
-    const T& operator*() {
+    const T& operator*() const {
         return *pointer_;
     }
-    const T* operator->() {
+    const T* operator->() const {
         return pointer_;
     }
-    operator const T*() {
+    operator const T*() const {
         return pointer_;
     }
     operator bool() const {
