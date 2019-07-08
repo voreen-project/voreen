@@ -465,11 +465,11 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
         // Write velocity.
         SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
         writeResult(stlReader, converter, ti, tmax, velocity, "velocity");
-
+/*
         // Write magnitude.
         SuperEuklidNorm3D <T, DESCRIPTOR> magnitude(velocity);
         writeResult(stlReader, converter, ti, tmax, magnitude, "magnitude");
-/*
+
         // TODO: Pressure and WSS currently do not have an equivalent in measured data!
 
         // Write pressure.

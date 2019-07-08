@@ -574,12 +574,12 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
         SuperLatticePhysVelocity3D <T, DESCRIPTOR> velocity(sLattice, converter);
         writeResult(stlReader, converter, ti, tmax, velocity, parametrizationList, selectedParametrization,
                     simulationOutputPath, "velocity");
-
+/*
         // Write magnitude.
         SuperEuklidNorm3D <T, DESCRIPTOR> magnitude(velocity);
         writeResult(stlReader, converter, ti, tmax, magnitude, parametrizationList, selectedParametrization,
                     simulationOutputPath, "magnitude");
-/*
+
         // TODO: Pressure and WSS currently do not have an equivalent in measured data!
 
         // Write pressure.
