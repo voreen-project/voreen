@@ -75,9 +75,11 @@ public:
     SimilarityMatrixList(const SimilarityMatrixList& other);
     SimilarityMatrixList(SimilarityMatrixList&& other);
 
+    size_t getSize() const;
     const std::string& getHash() const;
-    SimilarityMatrix& getSimilarityMatrix(const std::string& channel);
-    const SimilarityMatrix& getSimilarityMatrix(const std::string& channel) const;
+    const std::vector<std::string> getFieldNames() const;
+    SimilarityMatrix& getSimilarityMatrix(const std::string& fieldName);
+    const SimilarityMatrix& getSimilarityMatrix(const std::string& fieldName) const;
 
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);

@@ -207,22 +207,22 @@ private:
 };
 
 //----------------------------------------
-// Filter : Channel
+// Filter : Field
 //----------------------------------------
 
-class FilterChannel : public Filter {
+class FilterField : public Filter {
 public:
-    FilterChannel()
-        : channels_("channel", "Selected Channel", Processor::INVALID_RESULT, true)
+    FilterField()
+        : fields_("channel", "Selected Field", Processor::INVALID_RESULT, true)
     {
-        channels_.setDescription("Selects a single channel from the ensemble data."
+        fields_.setDescription("Selects a single field from the ensemble data."
                                  "<br>"
-                                 "(*) Marks common channels across all runs."
+                                 "(*) Marks common fields across all runs."
         );
     }
 
     Property& getProperty() {
-        return channels_;
+        return fields_;
     }
 
     EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
@@ -232,13 +232,13 @@ public:
         for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
             std::vector<EnsembleDataset::TimeStep> timesteps;
             for (const EnsembleDataset::TimeStep& timestep : run.timeSteps_) {
-                // Only add time step, if selected channel is available.
-                if(timestep.channels_.count(channels_.getValue()) > 0) {
+                // Only add time step, if selected field is available.
+                if(timestep.fieldNames_.count(fields_.getValue()) > 0) {
                     EnsembleDataset::TimeStep filteredTimeStep = timestep;
 
-                    std::map<std::string, const VolumeBase*> filteredChannels;
-                    filteredChannels[channels_.getValue()] = timestep.channels_.at(channels_.getValue());
-                    filteredTimeStep.channels_ = filteredChannels;
+                    std::map<std::string, const VolumeBase*> filteredFields;
+                    filteredFields[fields_.getValue()] = timestep.fieldNames_.at(fields_.getValue());
+                    filteredTimeStep.fieldNames_ = filteredFields;
 
                     timesteps.push_back(filteredTimeStep);
                 }
@@ -253,20 +253,20 @@ public:
 
     void adjustToEnsemble(const EnsembleDataset* ensemble) {
         
-        channels_.setOptions(std::deque<Option<std::string>>());
+        fields_.setOptions(std::deque<Option<std::string>>());
 
         if (ensemble) {
-            const std::set<std::string> common(ensemble->getCommonChannels().begin(), ensemble->getCommonChannels().end());
-            for (const std::string& channel : ensemble->getUniqueChannels()) {
-                bool isCommon = common.find(channel) != common.end();
-                channels_.addOption(channel, channel + (isCommon ? " (*)" : ""), channel);
+            const std::set<std::string> common(ensemble->getCommonFieldNames().begin(), ensemble->getCommonFieldNames().end());
+            for (const std::string& fieldName : ensemble->getUniqueFieldNames()) {
+                bool isCommon = common.find(fieldName) != common.end();
+                fields_.addOption(fieldName, fieldName + (isCommon ? " (*)" : ""), fieldName);
             }
         }
     }
 
 private:
 
-    OptionProperty<std::string> channels_;
+    OptionProperty<std::string> fields_;
 };
 
 //----------------------------------------
@@ -328,7 +328,7 @@ EnsembleFilter::EnsembleFilter()
     addFilter(new FilterRun());
     //addFilter(new FilterTimeStep()); // replaced by FilterTimeInterval
     addFilter(new FilterTimeInterval());
-    addFilter(new FilterChannel());
+    addFilter(new FilterField());
     addFilter(new FilterROI());
 }
 

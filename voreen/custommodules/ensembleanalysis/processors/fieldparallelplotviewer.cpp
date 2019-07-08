@@ -62,7 +62,7 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
     , volumeOutport_(Port::OUTPORT, "volumehandle.volumehandle", "Volume Output")
     , privatePort_(Port::OUTPORT, "image.tmp", "image.tmp", false)
     , transferFunc_("transferFunction", "Transfer Function for Plot")
-    , renderedChannel_("channel", "Rendered Channel")
+    , renderedField_("channel", "Rendered Field")
     , renderedRuns_("renderedRuns", "Rendered Runs")
     , volumeTransferFunc_("volumeTransferFunction", "Transfer Function for Volume")
     , valueRange_("valueRange", "Value Range", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
@@ -107,10 +107,10 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
         yUnit_.setGroupID("rendering");
     addProperty(fontSize_);
         fontSize_.setGroupID("rendering");
-    addProperty(renderedChannel_);
-        renderedChannel_.setGroupID("rendering");
-        renderedChannel_.setReadOnlyFlag(true);
-        ON_CHANGE(renderedChannel_, FieldParallelPlotViewer, switchChannel);
+    addProperty(renderedField_);
+        renderedField_.setGroupID("rendering");
+        renderedField_.setReadOnlyFlag(true);
+        ON_CHANGE(renderedField_, FieldParallelPlotViewer, switchField);
     addProperty(renderedRuns_);
         renderedRuns_.setGroupID("rendering");
     setPropertyGroupGuiName("rendering", "Rendering");
@@ -170,8 +170,8 @@ void FieldParallelPlotViewer::adjustPropertiesToInput() {
     plotData_ = nullptr;
     selectedRuns_.reset();
     renderedRuns_.reset();
-    renderedChannel_.setOptions(std::deque<Option<std::string>>());
-    renderedChannel_.setReadOnlyFlag(true);
+    renderedField_.setOptions(std::deque<Option<std::string>>());
+    renderedField_.setReadOnlyFlag(true);
     valueRange_.setReadOnlyFlag(true);
 
     if (!ensembleInport_.isReady())
@@ -193,10 +193,10 @@ void FieldParallelPlotViewer::adjustPropertiesToInput() {
 
     plotData_ = plotData;
 
-    renderedChannel_.blockCallbacks(true);
-    for (const std::string& channel : dataset->getCommonChannels())
-        renderedChannel_.addOption(channel, channel, channel);
-    renderedChannel_.blockCallbacks(false);
+    renderedField_.blockCallbacks(true);
+    for (const std::string& fieldName : dataset->getCommonFieldNames())
+        renderedField_.addOption(fieldName, fieldName, fieldName);
+    renderedField_.blockCallbacks(false);
 
     timeInterval_.setMinValue(dataset->getStartTime());
     timeInterval_.setMaxValue(dataset->getEndTime());
@@ -210,18 +210,18 @@ void FieldParallelPlotViewer::adjustPropertiesToInput() {
     }
     renderedRuns_.setSelectedRowIndices(renderedRunsIndices);
 
-    // Switch to default channel (first).
-    switchChannel();
+    // Switch to default field (first).
+    switchField();
 
     // Update UI.
-    renderedChannel_.setReadOnlyFlag(false);
+    renderedField_.setReadOnlyFlag(false);
     valueRange_.setReadOnlyFlag(false);
 
     // Build shader for ensemble.
     rebuildShader();
 
     // Apply range mask to selected plot data.
-    VolumeRAM_Float* slices = dynamic_cast<const VolumeRAM_Float*>(channelSlices_->getRepresentation<VolumeRAM>())->clone();
+    VolumeRAM_Float* slices = dynamic_cast<const VolumeRAM_Float*>(fieldSlices_->getRepresentation<VolumeRAM>())->clone();
 
     tgt::vec2 valueRange(slices->min(), slices->max());
 
@@ -242,18 +242,18 @@ void FieldParallelPlotViewer::adjustPropertiesToInput() {
     transferFunc_.setVolume(currentPlot_.get());
 }
 
-void FieldParallelPlotViewer::switchChannel() {
+void FieldParallelPlotViewer::switchField() {
 
     size_t numRuns = ensembleInport_.getData()->getRuns().size();
-    size_t firstSlice = renderedChannel_.getSelectedIndex() * numRuns;
+    size_t firstSlice = renderedField_.getSelectedIndex() * numRuns;
     tgt::svec3 offset(0, 0, firstSlice);
     tgt::svec3 dimensions(plotDataInport_.getData()->getWidth(), plotDataInport_.getData()->getHeight(), numRuns);
     VolumeRAM_Float* slices = dynamic_cast<const VolumeRAM_Float*>(plotData_->getRepresentation<VolumeRAM>())->getSubVolume(dimensions, offset);
     tgtAssert(slices, "slices could not be read");
 
     // Set unfiltered slices to outport.
-    channelSlices_ = new Volume(slices, tgt::svec3::one, tgt::svec3::zero);
-    volumeOutport_.setData(channelSlices_, true);
+    fieldSlices_ = new Volume(slices, tgt::svec3::one, tgt::svec3::zero);
+    volumeOutport_.setData(fieldSlices_, true);
 }
 
 void FieldParallelPlotViewer::applyThreshold(VolumeRAM_Float* volume) {
@@ -340,8 +340,8 @@ bool FieldParallelPlotViewer::isReady() const {
         return false;
     }
 
-    if(ensembleInport_.getData()->getCommonChannels().empty()) {
-        setNotReadyErrorMessage("No common channels available");
+    if(ensembleInport_.getData()->getCommonFieldNames().empty()) {
+        setNotReadyErrorMessage("No common fields available");
         return false;
     }
 
@@ -439,7 +439,7 @@ void FieldParallelPlotViewer::renderAxes() {
     plotLib_->setMarginRight(MARGINS.x);
     plotLib_->setMinimumScaleStep(32, PlotLibrary::X_AXIS);
     plotLib_->setMinimumScaleStep(32, PlotLibrary::Y_AXIS);
-    tgt::vec2 valueRange = ensembleInport_.getData()->getValueRange(renderedChannel_.get());
+    tgt::vec2 valueRange = ensembleInport_.getData()->getValueRange(renderedField_.get());
     tgt::vec2 zoomedTimeRange = applyZoomToRange(tgt::vec2(timeInterval_.getMinValue(), timeInterval_.getMaxValue()), zoomX_.get());
     tgt::vec2 zoomedValueRange = applyZoomToRange(tgt::vec2(valueRange.x, valueRange.y), zoomY_.get());
 
@@ -564,7 +564,7 @@ void FieldParallelPlotViewer::updateSelection() {
         selectedPixelX = tgt::ivec2(mapRange(selectionX, -tgt::vec2::one, tgt::vec2::one, tgt::vec2::zero, tgt::vec2(width)));
         selectedPixelY = tgt::ivec2(mapRange(selectionY, -tgt::vec2::one, tgt::vec2::one, tgt::vec2::zero, tgt::vec2(height)));
 
-        const VolumeRAM_Float* slices = dynamic_cast<const VolumeRAM_Float*>(channelSlices_->getRepresentation<VolumeRAM>());
+        const VolumeRAM_Float* slices = dynamic_cast<const VolumeRAM_Float*>(fieldSlices_->getRepresentation<VolumeRAM>());
         tgtAssert(slices, "slices null");
 
         std::vector<int> relevantRuns;

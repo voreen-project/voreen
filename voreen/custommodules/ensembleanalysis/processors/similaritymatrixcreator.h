@@ -43,10 +43,9 @@ enum SingleChannelSimilarityMeasure {
 };
 
 enum MultiChannelSimilarityMeasure {
-    MEASURE_MAGNITUDE                       = 1 << 0,
-    MEASURE_ANGLEDIFFERENCE                 = 1 << 1,
-    MEASURE_MAGNITUDE_AND_ANGLEDIFFERENCE   = MEASURE_MAGNITUDE | MEASURE_ANGLEDIFFERENCE,
-    MEASURE_CROSSPRODUCT                    = 1 << 2
+    MEASURE_MAGNITUDE,
+    MEASURE_ANGLEDIFFERENCE,
+    MEASURE_CROSSPRODUCT,
 };
 
 struct SimilarityMatrixCreatorInput {
@@ -56,7 +55,7 @@ struct SimilarityMatrixCreatorInput {
     SingleChannelSimilarityMeasure singleChannelSimilarityMeasure;
     float isoValue;
     MultiChannelSimilarityMeasure multiChannelSimilarityMeasure;
-    float weight;
+    float angleThreshold;
 };
 
 struct SimilarityMatrixCreatorOutput {
@@ -86,7 +85,7 @@ private:
     OptionProperty<SingleChannelSimilarityMeasure> singleChannelSimilarityMeasure_;
     FloatProperty isoValue_;
     OptionProperty<MultiChannelSimilarityMeasure> multiChannelSimilarityMeasure_;
-    FloatProperty weight_;
+    FloatProperty angleThreshold_;
     IntProperty numSeedPoints_;
     IntProperty seedTime_;
 

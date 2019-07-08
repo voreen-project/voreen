@@ -106,7 +106,7 @@ protected:
     IntProperty fontSize_;
     BoolProperty toggleAxes_; //< used for merging plots
     OptionProperty<ColorCoding> colorCoding_;
-    OptionProperty<std::string> renderedChannel_;
+    OptionProperty<std::string> renderedField_;
     StringListProperty renderedRuns_;
 
     StringListProperty selectedRun_;
@@ -173,7 +173,7 @@ private:
     void calculate();
 
     void outputEigenValues();
-    void renderedChannelsChanged();
+    void renderedFieldsChanged();
     void save();
     void load();
 

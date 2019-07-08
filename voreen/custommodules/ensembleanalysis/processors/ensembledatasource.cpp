@@ -193,7 +193,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 tgtAssert(volume, "volumeHandle must be volume");
                 volume->getMetaDataContainer().addMetaData(RUN_NAME, new StringMetaData(run));
 
-                timeStep.channels_[name] = volumeHandle.get();
+                timeStep.fieldNames_[name] = volumeHandle.get();
 
                 // Ownership remains.
                 volumes_.push_back(std::move(volumeHandle));

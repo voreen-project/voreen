@@ -44,27 +44,27 @@ protected:
 };
 
 
-class VRN_CORE_API PortConditionEnsembleChannelName : public PortConditionEnsemble {
+class VRN_CORE_API PortConditionEnsembleFieldName : public PortConditionEnsemble {
 public:
-    PortConditionEnsembleChannelName(const std::string& channelName);
-    PortConditionEnsembleChannelName(const std::vector<std::string>& channelNames);
-    virtual ~PortConditionEnsembleChannelName();
+    PortConditionEnsembleFieldName(const std::string& fieldName);
+    PortConditionEnsembleFieldName(const std::vector<std::string>& fieldNames);
+    virtual ~PortConditionEnsembleFieldName();
 
     virtual bool acceptsPortData() const;
 
 protected:
-    const std::vector<std::string> channelNames_;
+    const std::vector<std::string> fieldNames_;
 };
 
-class VRN_CORE_API PortConditionEnsembleChannelCount : public PortConditionEnsemble {
+class VRN_CORE_API PortConditionEnsembleFieldCount : public PortConditionEnsemble {
 public:
-    PortConditionEnsembleChannelCount(size_t channelCount);
-    virtual ~PortConditionEnsembleChannelCount();
+    PortConditionEnsembleFieldCount(size_t fieldCount);
+    virtual ~PortConditionEnsembleFieldCount();
 
     virtual bool acceptsPortData() const;
 
 protected:
-    const size_t channelCount_;
+    const size_t fieldCount_;
 };
 
 class VRN_CORE_API PortConditionEnsembleSingleTimeStep : public PortConditionEnsemble {

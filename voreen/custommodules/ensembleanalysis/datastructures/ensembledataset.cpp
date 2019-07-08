@@ -75,13 +75,13 @@ void EnsembleDataset::addRun(const Run& run) {
     RunMetaData metaData;
 
     for (size_t t = 0; t < run.timeSteps_.size(); t++) {
-        std::vector<std::string> channels;
-        for (const auto& channel : run.timeSteps_[t].channels_) {
+        std::vector<std::string> fields;
+        for (const auto& field : run.timeSteps_[t].fieldNames_) {
 
-            const std::string& channelName = channel.first;
-            channels.push_back(channelName);
+            const std::string& fieldName = field.first;
+            fields.push_back(fieldName);
 
-            const VolumeBase* volume = channel.second;
+            const VolumeBase* volume = field.second;
             // Bounds are stored in physical space, so don't transform to world space.
             tgt::Bounds bounds = volume->getBoundingBox(false).getBoundingBox();
             VolumeMinMax* vmm = volume->getDerivedData<VolumeMinMax>();
@@ -99,18 +99,18 @@ void EnsembleDataset::addRun(const Run& run) {
             }
             */
 
-            bool firstChannelElement = channelMetaData_.find(channelName) == channelMetaData_.end();
-            ChannelMetaData& channelMetaData = channelMetaData_[channelName];
-            if(firstChannelElement) {
-                channelMetaData.valueRange_ = minMax;
-                channelMetaData.numChannels_ = volume->getNumChannels();
+            bool firstFieldElement = fieldMetaData_.find(fieldName) == fieldMetaData_.end();
+            FieldMetaData& fieldMetaData = fieldMetaData_[fieldName];
+            if(firstFieldElement) {
+                fieldMetaData.valueRange_ = minMax;
+                fieldMetaData.numChannels_ = volume->getNumChannels();
             }
             else {
-                channelMetaData.valueRange_.x = std::min(channelMetaData.valueRange_.x, minMax.x);
-                channelMetaData.valueRange_.y = std::max(channelMetaData.valueRange_.y, minMax.y);
-                if(channelMetaData.numChannels_ != volume->getNumChannels()) {
+                fieldMetaData.valueRange_.x = std::min(fieldMetaData.valueRange_.x, minMax.x);
+                fieldMetaData.valueRange_.y = std::max(fieldMetaData.valueRange_.y, minMax.y);
+                if(fieldMetaData.numChannels_ != volume->getNumChannels()) {
                     LERRORC("voreen.EnsembleDataSet", "Number of channels inside channel differs, taking min.");
-                    channelMetaData.numChannels_ = std::min(channelMetaData.numChannels_, volume->getNumChannels());
+                    fieldMetaData.numChannels_ = std::min(fieldMetaData.numChannels_, volume->getNumChannels());
                 }
             }
 
@@ -130,31 +130,31 @@ void EnsembleDataset::addRun(const Run& run) {
             bounds_.addVolume(bounds);
         }
 
-        // Calculate common channels.
-        if (!commonChannels_.empty()) {
+        // Calculate common fields.
+        if (!commonFieldNames_.empty()) {
             std::vector<std::string> intersection;
             std::set_intersection(
-                commonChannels_.begin(),
-                commonChannels_.end(),
-                channels.begin(),
-                channels.end(),
+                commonFieldNames_.begin(),
+                commonFieldNames_.end(),
+                fields.begin(),
+                fields.end(),
                 std::back_inserter(intersection)
             );
 
-            if (commonChannels_.size() != intersection.size() && !runs_.empty()) {
-                LWARNINGC("voreen.EnsembeDataSet", "Time Step " << t << " of Run " << run.name_ << " has less channels than the previously added Run " << runs_.back().name_);
+            if (commonFieldNames_.size() != intersection.size() && !runs_.empty()) {
+                LWARNINGC("voreen.EnsembeDataSet", "Time Step " << t << " of Run " << run.name_ << " has less fields than the previously added Run " << runs_.back().name_);
             }
 
-            commonChannels_ = intersection;
+            commonFieldNames_ = intersection;
         }
         else if (runs_.empty()) {
-            commonChannels_ = channels;
+            commonFieldNames_ = fields;
         }
 
-        // Update all channels.
-        std::vector<std::string> channelUnion;
-        std::set_union(uniqueChannels_.begin(), uniqueChannels_.end(), channels.begin(), channels.end(), std::back_inserter(channelUnion));
-        uniqueChannels_ = channelUnion;
+        // Update all fields.
+        std::vector<std::string> fieldUnion;
+        std::set_union(uniqueFieldNames_.begin(), uniqueFieldNames_.end(), fields.begin(), fields.end(), std::back_inserter(fieldUnion));
+        uniqueFieldNames_ = fieldUnion;
 
         // Calculate times and durations.
         if (t < run.timeSteps_.size() - 1) {
@@ -251,30 +251,30 @@ void EnsembleDataset::setRoi(tgt::Bounds roi) {
     }
 }
 
-const tgt::vec2& EnsembleDataset::getValueRange(const std::string& channel) const {
-    tgtAssert(channelMetaData_.find(channel) != channelMetaData_.end(), "Channel not available");
-    return channelMetaData_.at(channel).valueRange_;
+const tgt::vec2& EnsembleDataset::getValueRange(const std::string& field) const {
+    tgtAssert(fieldMetaData_.find(field) != fieldMetaData_.end(), "Field not available");
+    return fieldMetaData_.at(field).valueRange_;
 }
 
-size_t EnsembleDataset::getNumChannels(const std::string& channel) const {
-    tgtAssert(channelMetaData_.find(channel) != channelMetaData_.end(), "Channel not available");
-    return channelMetaData_.at(channel).numChannels_;
+size_t EnsembleDataset::getNumChannels(const std::string& field) const {
+    tgtAssert(fieldMetaData_.find(field) != fieldMetaData_.end(), "Field not available");
+    return fieldMetaData_.at(field).numChannels_;
 }
 
-const std::vector<std::string>& EnsembleDataset::getUniqueChannels() const {
-    return uniqueChannels_;
+const std::vector<std::string>& EnsembleDataset::getUniqueFieldNames() const {
+    return uniqueFieldNames_;
 }
 
-const std::vector<std::string>& EnsembleDataset::getCommonChannels() const {
-    return commonChannels_;
+const std::vector<std::string>& EnsembleDataset::getCommonFieldNames() const {
+    return commonFieldNames_;
 }
 
 std::vector<const VolumeBase*> EnsembleDataset::getVolumes() const {
     std::vector<const VolumeBase*> result;
     for(const Run& run : runs_) {
         for(const TimeStep& timeStep : run.timeSteps_) {
-            for(const auto& channel : timeStep.channels_) {
-                result.push_back(channel.second);
+            for(const auto& field : timeStep.fieldNames_) {
+                result.push_back(field.second);
             }
         }
     }

@@ -188,10 +188,10 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
 
                         samples.resize(2);
                         size_t t = input.dataset.pickTimeStep(r, input.time);
-                        const VolumeBase* volume = run.timeSteps_[t].channels_.at(channel);
+                        const VolumeBase* volume = run.timeSteps_[t].fieldNames_.at(channel);
                         const VolumeRAM_Float* volumeData = dynamic_cast<const VolumeRAM_Float*>(volume->getRepresentation<VolumeRAM>());
 
-                        const VolumeBase* volumeStart = run.timeSteps_[0].channels_.at(channel);
+                        const VolumeBase* volumeStart = run.timeSteps_[0].fieldNames_.at(channel);
                         const VolumeRAM_Float* volumeDataStart = dynamic_cast<const VolumeRAM_Float*>(volumeStart->getRepresentation<VolumeRAM>());
 
 
@@ -202,7 +202,7 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
                     }
                     else {
                         size_t t = input.dataset.pickTimeStep(r, input.time);
-                        const VolumeBase* volume = run.timeSteps_[t].channels_.at(channel);
+                        const VolumeBase* volume = run.timeSteps_[t].fieldNames_.at(channel);
                         const VolumeRAM_Float* volumeData = dynamic_cast<const VolumeRAM_Float*>(volume->getRepresentation<VolumeRAM>());
 
                         samples[r] = volumeData->getVoxelNormalizedLinear(volume->getPhysicalToVoxelMatrix() * sample);
@@ -290,7 +290,7 @@ tgt::vec3 SimilartyDataVolume::getSpacing() const {
     }
     for(int index : runIndices) {
         EnsembleDataset::Run run = inport_.getData()->getRuns().at(index);
-        const VolumeBase* firstVolume = run.timeSteps_.front().channels_.begin()->second;
+        const VolumeBase* firstVolume = run.timeSteps_.front().fieldNames_.begin()->second;
         tgt::vec3 spacing = firstVolume->getSpacing();
         commonSpacing.x = std::min(commonSpacing.x, spacing.x);
         commonSpacing.y = std::min(commonSpacing.y, spacing.y);
@@ -321,7 +321,7 @@ void SimilartyDataVolume::adjustToEnsemble() {
 
     selectedChannel_.reset();
     selectedChannel_.setOptions(std::deque<Option<std::string>>());
-    for(const std::string& channel : ensemble->getCommonChannels()) {
+    for(const std::string& channel : ensemble->getCommonFieldNames()) {
         selectedChannel_.addOption(channel, channel);
     }
 

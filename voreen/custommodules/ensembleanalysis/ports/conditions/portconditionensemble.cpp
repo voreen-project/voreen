@@ -48,30 +48,30 @@ void PortConditionEnsemble::setCheckedPort(const Port* checkedPort) {
     }
 }
 
-PortConditionEnsembleChannelName::PortConditionEnsembleChannelName(const std::string& channelName)
-    : PortConditionEnsemble("Ensemble with channel " + channelName + " expected")
-    , channelNames_(1, channelName)
+PortConditionEnsembleFieldName::PortConditionEnsembleFieldName(const std::string& fieldName)
+    : PortConditionEnsemble("Ensemble with field " + fieldName + " expected")
+    , fieldNames_(1, fieldName)
 {}
 
-PortConditionEnsembleChannelName::PortConditionEnsembleChannelName(const std::vector<std::string>& channelNames)
-    : PortConditionEnsemble("Ensemble with channels: " + strJoin(channelNames, ", ") + " expected")
-    , channelNames_(channelNames)
+PortConditionEnsembleFieldName::PortConditionEnsembleFieldName(const std::vector<std::string>& fieldNames)
+    : PortConditionEnsemble("Ensemble with fields: " + strJoin(fieldNames, ", ") + " expected")
+    , fieldNames_(fieldNames)
 {}
 
-PortConditionEnsembleChannelName::~PortConditionEnsembleChannelName()
+PortConditionEnsembleFieldName::~PortConditionEnsembleFieldName()
 {}
 
-bool PortConditionEnsembleChannelName::acceptsPortData() const  {
+bool PortConditionEnsembleFieldName::acceptsPortData() const  {
     if (!ensemblePort_ || !ensemblePort_->hasData())
         return false;
 
-    if(ensemblePort_->getData()->getCommonChannels().empty())
+    if(ensemblePort_->getData()->getCommonFieldNames().empty())
         return false;
 
-    for(const std::string& channel1 : ensemblePort_->getData()->getCommonChannels()) {
+    for(const std::string& field1 : ensemblePort_->getData()->getCommonFieldNames()) {
         bool found = false;
-        for(const std::string& channel2 : channelNames_) {
-            if(channel1 == channel2) {
+        for(const std::string& field2 : fieldNames_) {
+            if(field1 == field2) {
                 found = true;
                 break;
             }
@@ -83,19 +83,19 @@ bool PortConditionEnsembleChannelName::acceptsPortData() const  {
     return true;
 }
 
-PortConditionEnsembleChannelCount::PortConditionEnsembleChannelCount(size_t channelCount)
-    : PortConditionEnsemble("Ensemble with " + std::to_string(channelCount) + " channel(s) expected")
-    , channelCount_(channelCount)
+PortConditionEnsembleFieldCount::PortConditionEnsembleFieldCount(size_t fieldCount)
+    : PortConditionEnsemble("Ensemble with " + std::to_string(fieldCount) + " field(s) expected")
+    , fieldCount_(fieldCount)
 {}
 
-PortConditionEnsembleChannelCount::~PortConditionEnsembleChannelCount()
+PortConditionEnsembleFieldCount::~PortConditionEnsembleFieldCount()
 {}
 
-bool PortConditionEnsembleChannelCount::acceptsPortData() const  {
+bool PortConditionEnsembleFieldCount::acceptsPortData() const  {
     if (!ensemblePort_ || !ensemblePort_->hasData())
         return false;
 
-    if(ensemblePort_->getData()->getCommonChannels().size() != channelCount_)
+    if(ensemblePort_->getData()->getCommonFieldNames().size() != fieldCount_)
         return false;
 
     return true;

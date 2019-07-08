@@ -99,8 +99,8 @@ SimilarityMatrixList::SimilarityMatrixList()
 SimilarityMatrixList::SimilarityMatrixList(const EnsembleDataset& dataset)
     : ensembleHash_(EnsembleHash(dataset).getHash())
 {
-    for(const std::string& channel : dataset.getCommonChannels()) {
-        matrices_.insert(std::make_pair(channel, SimilarityMatrix(dataset.getTotalNumTimeSteps())));
+    for(const std::string& fieldName : dataset.getCommonFieldNames()) {
+        matrices_.insert(std::make_pair(fieldName, SimilarityMatrix(dataset.getTotalNumTimeSteps())));
     }
 }
 
@@ -116,17 +116,36 @@ SimilarityMatrixList::SimilarityMatrixList(SimilarityMatrixList&& other)
 {
 }
 
+size_t SimilarityMatrixList::getSize() const {
+    std::vector<std::string> fieldNames = getFieldNames();
+    if(fieldNames.empty()) {
+        return 0;
+    }
+    return getSimilarityMatrix(fieldNames.front()).getSize();
+}
+
 const std::string& SimilarityMatrixList::getHash() const {
     return ensembleHash_;
 }
 
-SimilarityMatrix& SimilarityMatrixList::getSimilarityMatrix(const std::string& channel) {
-    notifyPendingDataInvalidation();
-    return matrices_.at(channel);
+const std::vector<std::string> SimilarityMatrixList::getFieldNames() const {
+    std::vector<std::string> fieldNames;
+    fieldNames.reserve(matrices_.size());
+
+    for(auto matrix : matrices_) {
+        fieldNames.push_back(matrix.first);
+    }
+
+    return fieldNames;
 }
 
-const SimilarityMatrix& SimilarityMatrixList::getSimilarityMatrix(const std::string& channel) const {
-    return matrices_.at(channel);
+SimilarityMatrix& SimilarityMatrixList::getSimilarityMatrix(const std::string& fieldName) {
+    notifyPendingDataInvalidation();
+    return matrices_.at(fieldName);
+}
+
+const SimilarityMatrix& SimilarityMatrixList::getSimilarityMatrix(const std::string& fieldName) const {
+    return matrices_.at(fieldName);
 }
 
 void SimilarityMatrixList::serialize(Serializer& s) const {

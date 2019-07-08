@@ -87,7 +87,7 @@ protected:
     void renderPlot();
     void renderAxes();
 
-    void switchChannel();
+    void switchField();
     void applyThreshold(VolumeRAM_Float* volume);
 
     void mouseEvent(tgt::MouseEvent* e);
@@ -106,7 +106,7 @@ protected:
     RenderPort privatePort_;
 
     TransFunc1DKeysProperty transferFunc_;
-    OptionProperty<std::string> renderedChannel_;
+    OptionProperty<std::string> renderedField_;
     StringListProperty renderedRuns_;
 
     TransFunc1DKeysProperty volumeTransferFunc_;
@@ -123,7 +123,7 @@ protected:
     ShaderProperty plotShader_;
 
     const VolumeBase* plotData_;
-    const VolumeBase* channelSlices_;
+    const VolumeBase* fieldSlices_;
     std::unique_ptr<Volume> currentPlot_;
     std::unique_ptr<tgt::Texture> plotTexture_;
 

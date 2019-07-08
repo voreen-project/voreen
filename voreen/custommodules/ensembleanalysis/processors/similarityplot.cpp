@@ -90,7 +90,7 @@ SimilarityPlot::SimilarityPlot()
     , toggleAxes_("toggleAxes", "Render Axes", true, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , fontSize_("fontSize", "Font Size", 10, 1, 30)
     , colorCoding_("colorCoding", "Color Coding")
-    , renderedChannel_("renderedChannel", "Channel")
+    , renderedField_("renderedChannel", "Field")
     , renderedRuns_("renderedRuns", "Rendered Runs")
     , selectedRun_("selectedRuns", "Selected Runs")
     , selectedTimeStep_("selectedTimeSteps", "Selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
@@ -171,11 +171,11 @@ SimilarityPlot::SimilarityPlot()
         colorCoding_.addOption("duration", "Time Step Duration", COLOR_DURATION);
         colorCoding_.selectByValue(COLOR_RUN_AND_TIMESTEP);
         colorCoding_.setGroupID("rendering");
-    addProperty(renderedChannel_);
-        ON_CHANGE(renderedChannel_, SimilarityPlot, outputEigenValues);
-        renderedChannel_.setGroupID("rendering");
+    addProperty(renderedField_);
+        ON_CHANGE(renderedField_, SimilarityPlot, outputEigenValues);
+        renderedField_.setGroupID("rendering");
     addProperty(renderedRuns_);
-        ON_CHANGE(renderedRuns_, SimilarityPlot, renderedChannelsChanged);
+        ON_CHANGE(renderedRuns_, SimilarityPlot, renderedFieldsChanged);
         renderedRuns_.setGroupID("rendering");
     setPropertyGroupGuiName("rendering", "Rendering");
 
@@ -374,8 +374,8 @@ bool SimilarityPlot::isReady() const {
         return false;
     }
 
-    if(ensembleInport_.getData()->getCommonChannels().empty()) {
-        setNotReadyErrorMessage("No common channels available");
+    if(ensembleInport_.getData()->getCommonFieldNames().empty()) {
+        setNotReadyErrorMessage("No common fields available");
         return false;
     }
 
@@ -395,7 +395,7 @@ void SimilarityPlot::renderingPass(bool picking) {
     const EnsembleDataset* dataset = ensembleInport_.getData();
 
     // Retrieve selected mds data.
-    const MDSData& mdsData = mdsData_[renderedChannel_.getSelectedIndex()];
+    const MDSData& mdsData = mdsData_[renderedField_.getSelectedIndex()];
 
     switch(numDimensions_.get()) {
     case 1:
@@ -729,7 +729,7 @@ void SimilarityPlot::adjustToEnsemble() {
     ensembleHash_.clear();
     mdsData_.clear();
     subSelection_.clear();
-    renderedChannel_.setOptions(std::deque<Option<std::string>>());
+    renderedField_.setOptions(std::deque<Option<std::string>>());
     renderedRuns_.reset();
     selectedRun_.reset();
     referenceRun_.reset();
@@ -750,10 +750,10 @@ void SimilarityPlot::adjustToEnsemble() {
     numEigenvalues_.setMinValue(MAX_NUM_DIMENSIONS);
     numEigenvalues_.setMaxValue(static_cast<int>(dataset->getTotalNumTimeSteps()));
 
-    renderedChannel_.blockCallbacks(true);
-    for (const std::string& channel : dataset->getCommonChannels())
-        renderedChannel_.addOption(channel, channel, channel);
-    renderedChannel_.blockCallbacks(false);
+    renderedField_.blockCallbacks(true);
+    for (const std::string& fieldName : dataset->getCommonFieldNames())
+        renderedField_.addOption(fieldName, fieldName, fieldName);
+    renderedField_.blockCallbacks(false);
 
     std::vector<int> runIndices;
     for (const EnsembleDataset::Run& run : dataset->getRuns()) {
@@ -801,15 +801,15 @@ void SimilarityPlot::calculate() {
     ensembleHash_.clear();
     mdsData_.clear();
 
-    const std::vector<std::string>& channels = ensembleInport_.getData()->getCommonChannels();
+    const std::vector<std::string>& fieldNames = ensembleInport_.getData()->getCommonFieldNames();
     const SimilarityMatrixList* matrices = similarityMatrixInport_.getData();
 
     setProgress(0.0f);
-    for (size_t i=0; i<channels.size(); i++) {
-        SubtaskProgressReporter progressReporter(*this, tgt::vec2(i, i+1) / tgt::vec2(channels.size()));
+    for (size_t i=0; i<fieldNames.size(); i++) {
+        SubtaskProgressReporter progressReporter(*this, tgt::vec2(i, i+1) / tgt::vec2(fieldNames.size()));
 
         // Get distance matrix.
-        const SimilarityMatrix& distanceMatrix = matrices->getSimilarityMatrix(channels[i]);
+        const SimilarityMatrix& distanceMatrix = matrices->getSimilarityMatrix(fieldNames[i]);
 
         // Compute Principal components and corresponding eigenvectors.
         MDSData mdsData = computeFromDM(distanceMatrix, progressReporter);
@@ -979,7 +979,7 @@ void SimilarityPlot::outputEigenValues() {
     data->setColumnLabel(0, "Index");
     data->setColumnLabel(1, "Eigenvalue");
 
-    const MDSData& mdsData = mdsData_[renderedChannel_.getSelectedIndex()];
+    const MDSData& mdsData = mdsData_[renderedField_.getSelectedIndex()];
     for(size_t i = 0; i < mdsData.eigenvalues_.size(); i++) {
         std::vector<PlotCellValue> values;
         values.push_back(PlotCellValue(i+1));
@@ -1021,7 +1021,7 @@ void SimilarityPlot::save() {
     }
 }
 
-void SimilarityPlot::renderedChannelsChanged() {
+void SimilarityPlot::renderedFieldsChanged() {
     renderingOrder_ = std::deque<int>(renderedRuns_.getSelectedRowIndices().begin(), renderedRuns_.getSelectedRowIndices().end());
 }
 

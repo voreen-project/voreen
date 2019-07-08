@@ -99,7 +99,7 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
 
     size_t height = static_cast<size_t>(verticalResolution_.get());
     size_t width  = static_cast<size_t>(input.getMaxTotalDuration() * horizontalResolutionPerTimeUnit_.get()) + 1;
-    size_t depth  = static_cast<size_t>(input.getCommonChannels().size() * input.getRuns().size());
+    size_t depth  = static_cast<size_t>(input.getCommonFieldNames().size() * input.getRuns().size());
 
     std::unique_ptr<FieldPlotData> plotData(new FieldPlotData(width, height, depth));
 
@@ -137,27 +137,27 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
     const EnsembleDataset& data = input.dataset;
     std::unique_ptr<FieldPlotData> plotData = std::move(input.outputPlot);
     std::vector<tgt::vec3> seedPoints = std::move(input.seedPoints);
-    const std::vector<std::string>& channels = data.getCommonChannels();
+    const std::vector<std::string>& fieldNames = data.getCommonFieldNames();
 
     const int pixelPerTimeUnit = horizontalResolutionPerTimeUnit_.get();
     float timeOffset = -data.getStartTime();
 
     size_t sliceNumber = 0;
-    for (size_t i=0; i<channels.size(); i++) {
+    for (size_t i=0; i<fieldNames.size(); i++) {
 
-        const std::string& channel = channels[i];
-        SubtaskProgressReporter channelProgressReporter(progress, tgt::vec2(i, i+1) / tgt::vec2(channels.size()));
+        const std::string& field = fieldNames[i];
+        SubtaskProgressReporter fieldProgressReporter(progress, tgt::vec2(i, i+1) / tgt::vec2(fieldNames.size()));
 
         for (size_t j=0; j<data.getRuns().size(); j++) {
 
             const EnsembleDataset::Run& run = data.getRuns()[j];
-            SubtaskProgressReporter runProgressReporter(channelProgressReporter, tgt::vec2(j, j+1) / tgt::vec2(data.getRuns().size()));
+            SubtaskProgressReporter runProgressReporter(fieldProgressReporter, tgt::vec2(j, j+1) / tgt::vec2(data.getRuns().size()));
 
-            const tgt::vec2& valueRange = data.getValueRange(channel);
+            const tgt::vec2& valueRange = data.getValueRange(field);
             float pixelOffset = pixelPerTimeUnit * (timeOffset + run.timeSteps_[0].time_);
             float pixel = pixelPerTimeUnit * run.timeSteps_[0].duration_;
 
-            const VolumeBase* volumePrev = run.timeSteps_[0].channels_.at(channel);
+            const VolumeBase* volumePrev = run.timeSteps_[0].fieldNames_.at(field);
             tgt::mat4 physicalToVoxelMatrixPrev = volumePrev->getPhysicalToVoxelMatrix();
             RealWorldMapping rwmPrev = volumePrev->getRealWorldMapping();
             VolumeRAMRepresentationLock lockPrev(volumePrev);
@@ -165,7 +165,7 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
             float progressPerTimeStep = 1.0f / (input.dataset.getTotalNumTimeSteps());
             for (size_t t = 1; t < run.timeSteps_.size(); t++) {
 
-                const VolumeBase* volumeCurr = run.timeSteps_[t].channels_.at(channel);
+                const VolumeBase* volumeCurr = run.timeSteps_[t].fieldNames_.at(field);
                 tgt::mat4 physicalToVoxelMatrixCurr = volumeCurr->getPhysicalToVoxelMatrix();
                 RealWorldMapping rwmCurr = volumeCurr->getRealWorldMapping();
                 VolumeRAMRepresentationLock lockCurr(volumeCurr);

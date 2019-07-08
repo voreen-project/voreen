@@ -43,11 +43,11 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     , inport_(Port::INPORT, "inport", "Ensemble Datastructure Input", false)
     , seedMask_(Port::INPORT, "seedmask", "Seed Mask Input (optional)")
     , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
-    , singleChannelSimilarityMeasure_("singleChannelSimilarityMeasure", "Single Channel Similarity Measure")
-    , isoValue_("isovalue", "Iso-Value", 0.5f, 0.0f, 1.0f)
-    , multiChannelSimilarityMeasure_("multiChannelSimilarityMeasure", "Multi Channel Similarity Measure")
-    , weight_("weight", "Weight (0=magnitude, 1=angle)", 0.5f, 0.0f, 1.0f)
-    , numSeedPoints_("numSeedPoints", "Number of Seed Points", 0, 0, 0)
+    , singleChannelSimilarityMeasure_("singleChannelSimilarityMeasure", "Single Field Similarity Measure")
+    , isoValue_("isoValue", "Iso-Value", 0.5f, 0.0f, 1.0f)
+    , multiChannelSimilarityMeasure_("multiChannelSimilarityMeasure", "Multi Field Similarity Measure")
+    , angleThreshold_("angleThreshold", "Angle Threshold", 20.0f, 0.0f, 180.0f)
+    , numSeedPoints_("numSeedPoints", "Number of Seed Points", 16384, 1, 131072)
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
 {
     // Ports
@@ -61,21 +61,22 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     singleChannelSimilarityMeasure_.addOption("multifield", "Multi-Field", MEASURE_MULTIFIELD);
     singleChannelSimilarityMeasure_.set("multifield");
     ON_CHANGE_LAMBDA(singleChannelSimilarityMeasure_, [this] {
-        isoValue_.setVisibleFlag(singleChannelSimilarityMeasure_.getValue() == MEASURE_ISOSURFACE);
+       isoValue_.setVisibleFlag(singleChannelSimilarityMeasure_.getValue() == MEASURE_ISOSURFACE);
     });
+
     addProperty(isoValue_);
     isoValue_.setVisibleFlag(false);
 
     addProperty(multiChannelSimilarityMeasure_);
     multiChannelSimilarityMeasure_.addOption("magnitude", "Magnitude", MEASURE_MAGNITUDE);
     multiChannelSimilarityMeasure_.addOption("angleDifference", "Angle Difference", MEASURE_ANGLEDIFFERENCE);
-    multiChannelSimilarityMeasure_.addOption("magnitudeAndAngleDifference", "Magnitude and Angle Difference", MEASURE_MAGNITUDE_AND_ANGLEDIFFERENCE);
     multiChannelSimilarityMeasure_.addOption("crossproduct", "Crossproduct Magnitude", MEASURE_CROSSPRODUCT);
     ON_CHANGE_LAMBDA(multiChannelSimilarityMeasure_, [this] {
-        weight_.setVisibleFlag(multiChannelSimilarityMeasure_.getValue() == MEASURE_MAGNITUDE_AND_ANGLEDIFFERENCE);
+        angleThreshold_.setVisibleFlag(multiChannelSimilarityMeasure_.getValue() == MEASURE_ANGLEDIFFERENCE);
     });
-    addProperty(weight_);
-    weight_.setVisibleFlag(false);
+
+    addProperty(angleThreshold_);
+    angleThreshold_.setVisibleFlag(false);
 
     addProperty(numSeedPoints_);
     addProperty(seedTime_);
@@ -102,14 +103,8 @@ bool SimilarityMatrixCreator::isReady() const {
 }
 
 void SimilarityMatrixCreator::adjustPropertiesToInput() {
-
-    const EnsembleDataset* dataset = inport_.getData();
-    if (!dataset)
-        return;
-
-    numSeedPoints_.setMinValue(1);
-    numSeedPoints_.setMaxValue(131072);
-    numSeedPoints_.set(32768);
+    //TODO: implement heuristic for auto-selecting number of seed points depending on dataset
+    //numSeedPoints_.set(32768);
 }
 
 SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
@@ -124,8 +119,8 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
         throw InvalidInputException("ROI is not defined", InvalidInputException::S_ERROR);
     }
 
-    for(const std::string& channel : input.getCommonChannels()) {
-        size_t numChannels = input.getNumChannels(channel);
+    for(const std::string& fieldName : input.getCommonFieldNames()) {
+        size_t numChannels = input.getNumChannels(fieldName);
         if(numChannels != 1 && numChannels != 3) {
             throw InvalidInputException("Only volumes with 1 or 3 channels supported", InvalidInputException::S_ERROR);
         }
@@ -172,7 +167,7 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
             singleChannelSimilarityMeasure_.getValue(),
             isoValue_.get(),
             multiChannelSimilarityMeasure_.getValue(),
-            weight_.get(),
+            angleThreshold_.get()
     };
 }
 
@@ -183,14 +178,15 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
     progress.setProgress(0.0f);
 
-    const std::vector<std::string>& channels = input.dataset.getCommonChannels();
-    for (size_t i=0; i<channels.size(); i++) {
+    const std::vector<std::string>& fieldNames = input.dataset.getCommonFieldNames();
+    for (size_t fi=0; fi<fieldNames.size(); fi++) {
 
-        const std::string& channel = channels[i];
-        const tgt::vec2& valueRange = input.dataset.getValueRange(channel);
-        size_t numChannels = input.dataset.getNumChannels(channel);
+        const std::string& fieldName = fieldNames[fi];
+        const tgt::vec2& valueRange = input.dataset.getValueRange(fieldName);
+        size_t numChannels = input.dataset.getNumChannels(fieldName);
 
         // Init empty flags.
+        // TODO: array size too big! Use chunks or memory mapped files!
         std::vector<std::vector<std::vector<float>>> Flags(
                 input.dataset.getTotalNumTimeSteps(), std::vector<std::vector<float>>(
                         seedPoints.size(), std::vector<float>(
@@ -198,13 +194,13 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                                 )
                         );
 
-        SubtaskProgressReporter runProgressReporter(progress, tgt::vec2(i, 0.9f*(i+1))/tgt::vec2(channels.size()));
+        SubtaskProgressReporter runProgressReporter(progress, tgt::vec2(fi, 0.9f*(fi+1))/tgt::vec2(fieldNames.size()));
         float progressPerTimeStep = 1.0f / (input.dataset.getTotalNumTimeSteps());
         size_t index = 0;
         for (const EnsembleDataset::Run& run : input.dataset.getRuns()) {
             for (const EnsembleDataset::TimeStep& timeStep : run.timeSteps_) {
 
-                const VolumeBase* volume = timeStep.channels_.at(channel);
+                const VolumeBase* volume = timeStep.fieldNames_.at(fieldName);
                 tgt::mat4 physicalToVoxelMatrix = volume->getPhysicalToVoxelMatrix();
                 RealWorldMapping rwm = volume->getRealWorldMapping();
 
@@ -218,12 +214,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                         value = rwm.normalizedToRealWorld(value);
                         value = mapRange(value, valueRange.x, valueRange.y, 0.0f, 1.0f);
 
-                        if (input.singleChannelSimilarityMeasure == MEASURE_ISOSURFACE && numChannels == 1) {
-                            bool inside = value < input.isoValue;
-                            Flags[index][k][ch] = inside ? 1.0f : 0.0f;
-                        } else {
-                            Flags[index][k][ch] = value;
-                        }
+                        Flags[index][k][ch] = value;
                     }
                 }
 
@@ -237,36 +228,33 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
         //Calculate distances for up-right corner and reflect them//
         ////////////////////////////////////////////////////////////
 
-        SimilarityMatrix& DistanceMatrix = similarityMatrices->getSimilarityMatrix(channel);
+        SimilarityMatrix& DistanceMatrix = similarityMatrices->getSimilarityMatrix(fieldName);
 
 #ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for shared(Flags), shared(DistanceMatrix)
 #endif
         for (long i = 0; i < static_cast<long>(DistanceMatrix.getSize()); i++) {
             for (long j = 0; j <= i; j++) {
+
+                float scaleSum = 0.0f; // Can be interpret as the number of (equal) samples
+                float resValue = 0.0f; // Can be interpret as the number of differing samples
+
                 if(numChannels == 1) {
-
-                    float ScaleSum = 0.0f;
-                    float resValue = 0.0f;
-
                     for (size_t k = 0; k < seedPoints.size(); k++) {
 
                         float a = Flags[i][k][0];
                         float b = Flags[j][k][0];
 
-                        ScaleSum += (1.0f - (a < b ? a : b));
+                        if(input.singleChannelSimilarityMeasure == MEASURE_ISOSURFACE) {
+                            a = a < input.isoValue ? 1.0f : 0.0f;
+                            b = b < input.isoValue ? 1.0f : 0.0f;
+                        }
+
+                        scaleSum += (1.0f - (a < b ? a : b));
                         resValue += (1.0f - (a > b ? a : b));
                     }
-
-                    if (ScaleSum > 0.0f)
-                        DistanceMatrix(i, j) = (ScaleSum - resValue) / ScaleSum;
-                    else
-                        DistanceMatrix(i, j) = 1.0f;
                 }
                 else {
-
-                    Statistics magnitudeStatistics(false);
-                    Statistics angleStatistics(false);
 
                     for (size_t k = 0; k < seedPoints.size(); k++) {
 
@@ -278,34 +266,41 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                             direction_j[ch] = Flags[j][k][ch];
                         }
 
-                        if(input.multiChannelSimilarityMeasure & MEASURE_MAGNITUDE) {
-                            float length_i = tgt::length(direction_i);
-                            float length_j = tgt::length(direction_j);
+                        if(input.multiChannelSimilarityMeasure == MEASURE_MAGNITUDE) {
+                            float a = tgt::length(direction_i);
+                            float b = tgt::length(direction_j);
+                            float diff = std::abs(a - b);
 
-                            float magnitudeDifference = tgt::abs(length_i - length_j);
-                            magnitudeStatistics.addSample(magnitudeDifference);
+                            scaleSum += 1.0f;
+                            resValue += diff;
+
+                            //scaleSum += (1.0f - (a < b ? a : b));
+                            //resValue += (1.0f - (a > b ? a : b));
                         }
-
-                        if(input.multiChannelSimilarityMeasure & MEASURE_ANGLEDIFFERENCE) {
+                        else if(input.multiChannelSimilarityMeasure == MEASURE_ANGLEDIFFERENCE) {
+                            scaleSum += 1.0f; // add one more sample
                             if (direction_i == tgt::vec4::zero && direction_j == tgt::vec4::zero) {
-                                angleStatistics.addSample(0.0f);
+                                resValue += 1.0f;
                             }
                             else if (direction_i != tgt::vec4::zero && direction_j != tgt::vec4::zero) {
                                 tgt::vec4 normDirection_i = tgt::normalize(direction_i);
                                 tgt::vec4 normDirection_j = tgt::normalize(direction_j);
 
                                 float dot = tgt::dot(normDirection_i, normDirection_j);
-                                float angle = std::acos(tgt::clamp(dot, -1.0f, 1.0f)) / tgt::PIf;
-                                angleStatistics.addSample(angle);
+                                float angle = tgt::rad2deg(std::acos(tgt::clamp(dot, -1.0f, 1.0f)));
+
+                                if(angle < input.angleThreshold) {
+                                    resValue += angle / 180.0f;
+                                }
                             }
                             else {
-                                angleStatistics.addSample(1.0f);
+                                //resValue += 0.0f;
                             }
                         }
-
-                        if(input.multiChannelSimilarityMeasure & MEASURE_CROSSPRODUCT) {
+                        else if(input.multiChannelSimilarityMeasure == MEASURE_CROSSPRODUCT) {
+                            scaleSum += 1.0f; // add one more sample
                             if (direction_i == tgt::vec4::zero && direction_j == tgt::vec4::zero) {
-                                angleStatistics.addSample(0.0f);
+                                resValue += 1.0f;
                             }
                             else if (direction_i != tgt::vec4::zero && direction_j != tgt::vec4::zero) {
                                 float area = tgt::length(tgt::cross(direction_i.xyz(), direction_j.xyz()));
@@ -321,44 +316,27 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                                     float dot = tgt::dot(normDirection_i, normDirection_j);
                                     float angle = std::acos(tgt::clamp(dot, -1.0f, 1.0f));
                                     if(angle > tgt::PIf*0.5f) {
-                                        float magnitudeDifference = tgt::abs(-length_i - length_j);
-                                        magnitudeStatistics.addSample(magnitudeDifference);
+                                        resValue += tgt::abs(-length_i - length_j);
                                     }
                                     else {
-                                        float magnitudeDifference = tgt::abs(length_i - length_j);
-                                        magnitudeStatistics.addSample(magnitudeDifference);
+                                        resValue += tgt::abs(length_i - length_j);
                                     }
                                 }
                                 else {
-                                    angleStatistics.addSample(area);
+                                    resValue += area;
                                 }
                             }
                             else {
-                                float maxDifference = valueRange.y * valueRange.y;
-                                angleStatistics.addSample(maxDifference);
+                                //resValue += 0.0f;
                             }
                         }
                     }
-
-                    if(input.multiChannelSimilarityMeasure == MEASURE_MAGNITUDE) {
-                        DistanceMatrix(i, j) = magnitudeStatistics.getMean();
-                    }
-                    else if(input.multiChannelSimilarityMeasure == MEASURE_ANGLEDIFFERENCE) {
-                        DistanceMatrix(i, j) = angleStatistics.getMean();
-                    }
-                    else if(input.multiChannelSimilarityMeasure == MEASURE_MAGNITUDE_AND_ANGLEDIFFERENCE) {
-                        DistanceMatrix(i, j) =
-                                (1.0f - input.weight) * magnitudeStatistics.getMean() +
-                                (       input.weight) * angleStatistics.getMean();
-                    }
-                    else if(input.multiChannelSimilarityMeasure == MEASURE_CROSSPRODUCT) {
-                        DistanceMatrix(i, j) = angleStatistics.getMean();
-                    }
-                    else {
-                        tgtAssert(false, "unhandled multi-channel measure");
-                        DistanceMatrix(i, j) = 1.0f;
-                    }
                 }
+
+                if (scaleSum > 0.0f)
+                    DistanceMatrix(i, j) = (scaleSum - resValue) / scaleSum;
+                else
+                    DistanceMatrix(i, j) = 1.0f;
             }
         }
     }

@@ -48,7 +48,7 @@ public:
         std::string path_;
         float time_;
         float duration_;
-        std::map<std::string, const VolumeBase*> channels_;
+        std::map<std::string, const VolumeBase*> fieldNames_;
     };
 
     struct Run {
@@ -92,8 +92,8 @@ public:
     const tgt::Bounds& getRoi() const;
     void setRoi(tgt::Bounds roi);
 
-    const std::vector<std::string>& getUniqueChannels() const;
-    const std::vector<std::string>& getCommonChannels() const;
+    const std::vector<std::string>& getUniqueFieldNames() const;
+    const std::vector<std::string>& getCommonFieldNames() const;
 
     std::vector<const VolumeBase*> getVolumes() const;
 
@@ -107,7 +107,7 @@ private:
         // could add simulation parameters here
     };
 
-    struct ChannelMetaData {
+    struct FieldMetaData {
         tgt::vec2 valueRange_;
         size_t numChannels_{0};
     };
@@ -116,11 +116,11 @@ private:
     //  Members
     //----------------
     std::vector<Run> runs_;
-    std::vector<std::string> uniqueChannels_;
-    std::vector<std::string> commonChannels_;
+    std::vector<std::string> uniqueFieldNames_;
+    std::vector<std::string> commonFieldNames_;
 
     std::vector<RunMetaData> runMetaData_;
-    std::map<std::string, ChannelMetaData> channelMetaData_;
+    std::map<std::string, FieldMetaData> fieldMetaData_;
 
     size_t minNumTimeSteps_;
     size_t maxNumTimeSteps_;
