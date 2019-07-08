@@ -33,6 +33,7 @@
 #include "processors/fieldparallelplothistogram.h"
 #include "processors/physicalclippinglinker.h"
 #include "processors/similaritydatavolume.h"
+#include "processors/similaritymatrixcombine.h"
 #include "processors/similaritymatrixcreator.h"
 #include "processors/similarityplot.h"
 #include "processors/volumelistmerger.h"
@@ -69,6 +70,7 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     registerProcessor(new FieldParallelPlotHistogram());
     registerProcessor(new PhysicalClippingLinker());
     registerProcessor(new SimilartyDataVolume());
+    registerProcessor(new SimilarityMatrixCombine());
     registerProcessor(new SimilarityMatrixCreator());
     registerProcessor(new SimilarityPlot());
 
