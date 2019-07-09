@@ -41,9 +41,10 @@
      ");
 
 #ifdef VRN_BASE_PATH
+#define VRN_BASE_PATH_STRINGIFY(x) #x
 // If possible, also set the global path of the pretty printers script, thus enabling
 // pretty printing independet from the directory voreen was started in.
-DEFINE_GDB_SCRIPT(VRN_BASE_PATH "/tools/gdb/gdb-vector-pretty-printers.py")
+DEFINE_GDB_SCRIPT(VRN_BASE_PATH_STRINGIFY(VRN_BASE_PATH) "/tools/gdb/gdb-vector-pretty-printers.py")
 #else
 // Otherwise, refer to the pretty printers script relative from the project root.
 DEFINE_GDB_SCRIPT("voreen/tools/gdb/gdb-vector-pretty-printers.py")

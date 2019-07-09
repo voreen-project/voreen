@@ -229,7 +229,7 @@ IF(VRN_MSVC)
     ELSE(VRN_DEPLOYMENT)
         # hardcode Voreen base path, if binary output dir has been modified and we are not in deployment mode
         IF(NOT ${VRN_BINARY_OUTPUT_DIR} STREQUAL "${VRN_HOME}/bin")
-            LIST(APPEND VRN_DEFINITIONS "-DVRN_BASE_PATH=\"${VRN_HOME}\"")
+            LIST(APPEND VRN_DEFINITIONS "-DVRN_BASE_PATH=${VRN_HOME}")
         ENDIF()
     ENDIF(VRN_DEPLOYMENT)
 
@@ -248,7 +248,7 @@ ELSEIF(UNIX)
     ELSE()
         # hardcode Voreen base path, if binary output dir has been modified and we are not in deployment mode
         IF(NOT ${VRN_BINARY_OUTPUT_DIR} STREQUAL "${VRN_HOME}/bin")
-            LIST(APPEND VRN_DEFINITIONS "-DVRN_BASE_PATH=\"${VRN_HOME}\"")
+            LIST(APPEND VRN_DEFINITIONS "-DVRN_BASE_PATH=${VRN_HOME}")
         ENDIF()
     ENDIF()
 

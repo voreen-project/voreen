@@ -550,7 +550,8 @@ void VoreenApplication::initialize() {
     basePath_ = findAppBundleResourcesPath() + "/voreenRoot";
 #else
     #if defined(VRN_BASE_PATH) // use base path passed by CMAKE, if present
-        basePath_ = VRN_BASE_PATH;
+#define VRN_BASE_PATH_STRINGIFY(x) #x
+        basePath_ = VRN_BASE_PATH_STRINGIFY(VRN_BASE_PATH);
         if (!tgt::FileSystem::dirExists(basePath_)) {
             std::cerr << "WARNING: Passed base path does not exist: " << basePath_ << ". Using current directory instead.\n";
             basePath_ = ".";
