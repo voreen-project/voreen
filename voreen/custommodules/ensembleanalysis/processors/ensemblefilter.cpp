@@ -360,6 +360,9 @@ void EnsembleFilter::addFilter(Filter* filter) {
 }
 
 void EnsembleFilter::adjustToEnsemble() {
+    
+    ensembleOutport_.clear();
+    
     if(ensembleInport_.hasData()) {
         std::string hash = EnsembleHash(*ensembleInport_.getData()).getHash();
         if(hash != hash_) {
@@ -373,7 +376,7 @@ void EnsembleFilter::adjustToEnsemble() {
 
 void EnsembleFilter::applyFilter() {
 
-    ensembleOutport_.setData(nullptr);
+    ensembleOutport_.clear();
 
     if (ensembleInport_.hasData()) {
         std::unique_ptr<EnsembleDataset> ensemble(new EnsembleDataset(*ensembleInport_.getData()));

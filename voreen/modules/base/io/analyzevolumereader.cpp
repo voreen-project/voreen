@@ -399,10 +399,10 @@ VolumeBase* AnalyzeVolumeReader::read(const VolumeURL& origin) {
 
     int volumeId = -1;
     std::string tmp = origin.getSearchParameter("volumeId");
-    if (! tmp.empty())
+    if (!tmp.empty())
         volumeId = stoi(tmp);
 
-    VolumeList* collection = read(origin.getPath(), volumeId);
+    std::unique_ptr<VolumeList> collection(read(origin.getPath(), volumeId));
 
     if (collection && collection->size() == 1) {
         result = collection->first();
@@ -413,11 +413,8 @@ VolumeBase* AnalyzeVolumeReader::read(const VolumeURL& origin) {
            collection->remove(vh);
            delete vh;
         }
-        delete collection;
         throw tgt::FileException("Only one volume expected", origin.getPath());
     }
-
-    delete collection;
 
     return result;
 }

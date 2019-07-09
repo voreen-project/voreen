@@ -50,7 +50,7 @@ FieldParallelPlotCreator::FieldParallelPlotCreator()
     , inport_(Port::INPORT, "volumehandle.volumehandle", "Volume Input")
     , seedMask_(Port::INPORT, "seedmask", "Seed Mask Input (optional)")
     , outport_(Port::OUTPORT, "fpp.representation", "FieldPlotData Port")
-    , numSeedPoints_("numSeedPoints", "Number of Seed Points", 0, 0, 0)
+    , numSeedPoints_("numSeedPoints", "Number of Seed Points", 8192, 1, 131072)
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
     , verticalResolution_("verticalResolution", "Vertical Resolution", 128, 10, 16384)
     , horizontalResolutionPerTimeUnit_("horizontalResolutionPerTimeUnit", "Horizontal Resolution (Per Time Unit)", 10, 1, 100)
@@ -72,6 +72,14 @@ Processor* FieldParallelPlotCreator::create() const {
     return new FieldParallelPlotCreator();
 }
 
+std::vector<std::reference_wrapper<Port>> FieldParallelPlotCreator::getCriticalPorts() {
+    auto criticalPorts = AsyncComputeProcessor<ComputeInput, ComputeOutput>::getCriticalPorts();
+    criticalPorts.erase(std::remove_if(criticalPorts.begin(), criticalPorts.end(),[this] (const std::reference_wrapper<Port>& port){
+        return port.get().getID() == seedMask_.getID();
+    }));
+    return criticalPorts;
+}
+
 FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
     const EnsembleDataset* inputPtr = inport_.getThreadSafeData();
     if (!inputPtr)
@@ -90,8 +98,9 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
     const VolumeBase* seedMask = seedMask_.getThreadSafeData();
     tgt::Bounds seedMaskBounds;
     tgt::mat4 seedMaskPhysicalToVoxelMatrix;
+    std::unique_ptr<VolumeRAMRepresentationLock> seedMaskLock;
     if(seedMask) {
-        seedMaskLock_.reset(new VolumeRAMRepresentationLock(seedMask));
+        seedMaskLock.reset(new VolumeRAMRepresentationLock(seedMask));
         seedMaskBounds = seedMask->getBoundingBox(false).getBoundingBox();
         seedMaskPhysicalToVoxelMatrix = seedMask->getPhysicalToVoxelMatrix();
         LINFO("Restricting seed points to volume mask");
@@ -117,7 +126,7 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
             seedPoint = tgt::vec3(roi.getLLF()) + seedPoint * tgt::vec3(roi.diagonal());
             tries++;
         } while (tries < maxTries && seedMask && (!seedMaskBounds.containsPoint(seedPoint) ||
-                (*seedMaskLock_)->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint) == 0.0f));
+                (*seedMaskLock)->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint) == 0.0f));
 
         if(tries < maxTries) {
             seedPoints.push_back(seedPoint);
@@ -210,7 +219,6 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
 }
 
 void FieldParallelPlotCreator::processComputeOutput(FieldParallelPlotCreatorOutput output) {
-    seedMaskLock_.reset(); // Release the lock.
     outport_.setData(output.plotData.release(), true);
 }
 
@@ -230,15 +238,8 @@ bool FieldParallelPlotCreator::isReady() const {
 }
 
 void FieldParallelPlotCreator::adjustPropertiesToInput() {
-
-    // Skip if no data available.
-    const EnsembleDataset* ensemble = inport_.getData();
-    if(!ensemble)
-        return;
-
-    numSeedPoints_.setMinValue(1);
-    numSeedPoints_.setMaxValue(131072);
-    numSeedPoints_.set(32768);
+    //TODO: implement heuristic for auto-selecting number of seed points depending on dataset
+    //numSeedPoints_.set(32768);
 }
 
 } // namespace voreen

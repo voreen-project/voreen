@@ -73,6 +73,7 @@ protected:
 
     virtual bool isReady() const;
     virtual void adjustPropertiesToInput();
+    virtual std::vector<std::reference_wrapper<Port>> getCriticalPorts();
 
     virtual void setDescriptions() {
         setDescription("");
@@ -86,9 +87,6 @@ protected:
     IntProperty seedTime_;
     IntProperty verticalResolution_;
     IntProperty horizontalResolutionPerTimeUnit_;
-
-    // We need to lock the seed mask representation that the calculation won't abort.
-    std::unique_ptr<VolumeRAMRepresentationLock> seedMaskLock_;
 
     static const std::string loggerCat_;
 };

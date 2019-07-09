@@ -47,7 +47,7 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     , isoValue_("isoValue", "Iso-Value", 0.5f, 0.0f, 1.0f)
     , multiChannelSimilarityMeasure_("multiChannelSimilarityMeasure", "Multi Field Similarity Measure")
     , angleThreshold_("angleThreshold", "Angle Threshold", 20.0f, 0.0f, 180.0f)
-    , numSeedPoints_("numSeedPoints", "Number of Seed Points", 16384, 1, 131072)
+    , numSeedPoints_("numSeedPoints", "Number of Seed Points", 8192, 1, 131072)
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
 {
     // Ports
@@ -102,6 +102,14 @@ bool SimilarityMatrixCreator::isReady() const {
     return true;
 }
 
+std::vector<std::reference_wrapper<Port>> SimilarityMatrixCreator::getCriticalPorts() {
+    auto criticalPorts = AsyncComputeProcessor<ComputeInput, ComputeOutput>::getCriticalPorts();
+    criticalPorts.erase(std::remove_if(criticalPorts.begin(), criticalPorts.end(), [this] (const std::reference_wrapper<Port>& port){
+       return port.get().getID() == seedMask_.getID();
+    }));
+    return criticalPorts;
+}
+
 void SimilarityMatrixCreator::adjustPropertiesToInput() {
     //TODO: implement heuristic for auto-selecting number of seed points depending on dataset
     //numSeedPoints_.set(32768);
@@ -129,8 +137,9 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
     const VolumeBase* seedMask = seedMask_.getThreadSafeData();
     tgt::Bounds seedMaskBounds;
     tgt::mat4 seedMaskPhysicalToVoxelMatrix;
+    std::unique_ptr<VolumeRAMRepresentationLock> seedMaskLock;
     if (seedMask) {
-        seedMaskLock_.reset(new VolumeRAMRepresentationLock(seedMask));
+        seedMaskLock.reset(new VolumeRAMRepresentationLock(seedMask));
         seedMaskBounds = seedMask->getBoundingBox(false).getBoundingBox();
         seedMaskPhysicalToVoxelMatrix = seedMask->getPhysicalToVoxelMatrix();
         LINFO("Restricting seed points to volume mask");
@@ -153,7 +162,7 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
             seedPoint = tgt::vec3(roi.getLLF()) + seedPoint * tgt::vec3(roi.diagonal());
             tries++;
         } while (tries < maxTries && seedMask && (!seedMaskBounds.containsPoint(seedPoint) ||
-                (*seedMaskLock_)->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint) == 0.0f));
+                (*seedMaskLock)->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint) == 0.0f));
 
         if(tries < maxTries) {
             seedPoints.push_back(seedPoint);
@@ -174,7 +183,7 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
 SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixCreatorInput input, ProgressReporter& progress) const {
 
     std::unique_ptr<SimilarityMatrixList> similarityMatrices = std::move(input.outputMatrices);
-    const std::vector<tgt::vec3>& seedPoints = input.seedPoints;
+    std::vector<tgt::vec3> seedPoints = std::move(input.seedPoints);
 
     progress.setProgress(0.0f);
 
@@ -349,7 +358,6 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 }
 
 void SimilarityMatrixCreator::processComputeOutput(ComputeOutput output) {
-    seedMaskLock_.reset(); // Release the lock.
     outport_.setData(output.outputMatrices.release(), true);
 }
 

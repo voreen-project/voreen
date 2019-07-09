@@ -122,7 +122,7 @@ SimilarityMatrixCombineOutput SimilarityMatrixCombine::compute(SimilarityMatrixC
                 SimilarityMatrix& outputDistanceMatrix = outputMatrices->getSimilarityMatrix(fieldName);
                 switch (input.method) {
                 case METHOD_MAX:
-                    outputDistanceMatrix(i, j) = statistics.getMin();
+                    outputDistanceMatrix(i, j) = statistics.getMax();
                     break;
                 case METHOD_AVG:
                     outputDistanceMatrix(i, j) = statistics.getMean();
