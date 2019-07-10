@@ -203,7 +203,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
         DiskArrayStorage<float> Flags(VoreenApplication::app()->getUniqueTmpFilePath());
 #else
         std::vector<float> Flags;
-        Flags.reserve(input.dataset.getTotalNumTimeSteps() * seedPoints.size() * numChannels, 0.0f);
+        Flags.reserve(input.dataset.getTotalNumTimeSteps() * seedPoints.size() * numChannels);
 #endif
 
         SubtaskProgressReporter runProgressReporter(progress, tgt::vec2(fi, 0.9f*(fi+1))/tgt::vec2(fieldNames.size()));
