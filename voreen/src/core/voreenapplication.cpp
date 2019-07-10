@@ -86,12 +86,10 @@
     #include "CoreFoundation/CFBundle.h"
 #endif
 
-using std::string;
-
 namespace {
 
-string findWithSubDir(const string& path, const string& subdir, int iterations = 0) {
-    string p = path;
+std::string findWithSubDir(const std::string& path, const std::string& subdir, int iterations = 0) {
+    std::string p = path;
 
     // try in start directory
     if (tgt::FileSystem::dirExists(p + "/" + subdir))
@@ -107,17 +105,12 @@ string findWithSubDir(const string& path, const string& subdir, int iterations =
     return "";
 }
 
-// Convert define into a string, compare
-// http://gcc.gnu.org/onlinedocs/cpp/Stringification.html
-#define VRN_XSTRINGIFY(s) VRN_STRINGIFY(s)
-#define VRN_STRINGIFY(s) #s
-
-string findBasePath(const string& path) {
+std::string findBasePath(const std::string& path) {
     return findWithSubDir(path, "resource/voreencore", 7);
 }
 
 #ifdef __APPLE__
-string findAppBundleResourcesPath() {
+std::string findAppBundleResourcesPath() {
     CFBundleRef bundle;
 
     bundle = CFBundleGetMainBundle();
@@ -130,9 +123,9 @@ string findAppBundleResourcesPath() {
         return "";
     CFRelease(resourceURL);
 
-    string pathStr;
+    std::string pathStr;
     if (path)
-        pathStr = string(path);
+        pathStr = std::string(path);
 
     delete[] path;
     return pathStr;
@@ -550,14 +543,12 @@ void VoreenApplication::initialize() {
     basePath_ = findAppBundleResourcesPath() + "/voreenRoot";
 #else
     #if defined(VRN_BASE_PATH) // use base path passed by CMAKE, if present
-
 // See https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html:
 #define VRN_BASE_PATH_STRINGIFY(x) VRN_BASE_PATH_STRINGIFY_CONTENT(x)
 #define VRN_BASE_PATH_STRINGIFY_CONTENT(x) #x
         basePath_ = VRN_BASE_PATH_STRINGIFY(VRN_BASE_PATH);
 #undef VRN_BASE_PATH_STRINGIFY
 #undef VRN_BASE_PATH_STRINGIFY_CONTENT
-
         if (!tgt::FileSystem::dirExists(basePath_)) {
             std::cerr << "WARNING: Passed base path does not exist: " << basePath_ << ". Using current directory instead.\n";
             basePath_ = ".";

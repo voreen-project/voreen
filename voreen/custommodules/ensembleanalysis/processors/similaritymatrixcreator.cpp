@@ -34,6 +34,10 @@
 
 #include <random>
 
+#ifdef VRN_MODULE_VESSELTOPOLOGY
+#include "custommodules/vesseltopology/datastructures/diskarraystorage.h"
+#endif
+
 namespace voreen {
 
 const std::string SimilarityMatrixCreator::loggerCat_("voreen.ensembleanalysis.SimilarityMatrixCreator");
@@ -195,13 +199,12 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
         size_t numChannels = input.dataset.getNumChannels(fieldName);
 
         // Init empty flags.
-        // TODO: array size too big! Use chunks or memory mapped files!
-        std::vector<std::vector<std::vector<float>>> Flags(
-                input.dataset.getTotalNumTimeSteps(), std::vector<std::vector<float>>(
-                        seedPoints.size(), std::vector<float>(
-                                numChannels, 0.0f)
-                                )
-                        );
+#ifdef VRN_MODULE_VESSELTOPOLOGY
+        DiskArrayStorage<float> Flags(VoreenApplication::app()->getUniqueTmpFilePath());
+#else
+        std::vector<float> Flags;
+        Flags.reserve(input.dataset.getTotalNumTimeSteps() * seedPoints.size() * numChannels, 0.0f);
+#endif
 
         SubtaskProgressReporter runProgressReporter(progress, tgt::vec2(fi, 0.9f*(fi+1))/tgt::vec2(fieldNames.size()));
         float progressPerTimeStep = 1.0f / (input.dataset.getTotalNumTimeSteps());
@@ -215,16 +218,22 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
                 VolumeRAMRepresentationLock lock(volume);
 
-                for (size_t k = 0; k < seedPoints.size(); k++) {
+                size_t s=0;
+                for (const tgt::vec3& seedPoint : seedPoints) {
                     for(size_t ch = 0; ch < numChannels; ch++) {
                         float value = lock->getVoxelNormalizedLinear(
-                                physicalToVoxelMatrix * seedPoints[k], ch);
+                                physicalToVoxelMatrix * seedPoint, ch);
 
                         value = rwm.normalizedToRealWorld(value);
                         value = mapRange(value, valueRange.x, valueRange.y, 0.0f, 1.0f);
 
-                        Flags[index][k][ch] = value;
+#ifdef VRN_MODULE_VESSELTOPOLOGY
+                        Flags.storeElement(value);
+#else
+                        Flags.push_back(value);
+#endif
                     }
+                    s++;
                 }
 
                 // Update progress.
@@ -237,12 +246,17 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
         //Calculate distances for up-right corner and reflect them//
         ////////////////////////////////////////////////////////////
 
+        auto calcIndex = [&seedPoints, numChannels] (size_t timeStepIndex, size_t seedIndex, size_t channel = 0) {
+            return timeStepIndex * seedPoints.size() * numChannels + seedIndex * numChannels + channel;
+        };
+
         SimilarityMatrix& DistanceMatrix = similarityMatrices->getSimilarityMatrix(fieldName);
 
 #ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for shared(Flags), shared(DistanceMatrix)
 #endif
         for (long i = 0; i < static_cast<long>(DistanceMatrix.getSize()); i++) {
+
             for (long j = 0; j <= i; j++) {
 
                 float scaleSum = 0.0f; // Can be interpret as the number of (equal) samples
@@ -251,8 +265,8 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                 if(numChannels == 1) {
                     for (size_t k = 0; k < seedPoints.size(); k++) {
 
-                        float a = Flags[i][k][0];
-                        float b = Flags[j][k][0];
+                        float a = Flags[calcIndex(i, k)];
+                        float b = Flags[calcIndex(j, k)];
 
                         if(input.singleChannelSimilarityMeasure == MEASURE_ISOSURFACE) {
                             a = a < input.isoValue ? 1.0f : 0.0f;
@@ -271,8 +285,8 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                         tgt::vec4 direction_j = tgt::vec4::zero;
 
                         for (size_t ch = 0; ch < numChannels; ch++) {
-                            direction_i[ch] = Flags[i][k][ch];
-                            direction_j[ch] = Flags[j][k][ch];
+                            direction_i[ch] = Flags[calcIndex(i, k, ch)];
+                            direction_j[ch] = Flags[calcIndex(j, k, ch)];
                         }
 
                         if(input.multiChannelSimilarityMeasure == MEASURE_MAGNITUDE) {
