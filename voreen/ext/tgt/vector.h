@@ -41,10 +41,14 @@
      ");
 
 #ifdef VRN_BASE_PATH
-#define VRN_BASE_PATH_STRINGIFY(x) #x
+// See https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html:
+#define VRN_BASE_PATH_STRINGIFY(x) VRN_BASE_PATH_STRINGIFY_CONTENT(x)
+#define VRN_BASE_PATH_STRINGIFY_CONTENT(x) #x
 // If possible, also set the global path of the pretty printers script, thus enabling
 // pretty printing independet from the directory voreen was started in.
 DEFINE_GDB_SCRIPT(VRN_BASE_PATH_STRINGIFY(VRN_BASE_PATH) "/tools/gdb/gdb-vector-pretty-printers.py")
+#undef VRN_BASE_PATH_STRINGIFY
+#undef VRN_BASE_PATH_STRINGIFY_CONTENT
 #else
 // Otherwise, refer to the pretty printers script relative from the project root.
 DEFINE_GDB_SCRIPT("voreen/tools/gdb/gdb-vector-pretty-printers.py")
