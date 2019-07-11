@@ -58,6 +58,7 @@ VolumeFilterList::VolumeFilterList()
     , outputVolumeDeflateLevel_("outputVolumeDeflateLevel", "Deflate Level", 1, 0, 9, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEFAULT)
     , filterList_("filterList", "Filter List", true)
     , numInstances_(0)
+    , propertyDisabler_(*this)
 {
     addPort(inport_);
         // Currently, only single channel volumes are supported.
@@ -80,6 +81,16 @@ VolumeFilterList::VolumeFilterList()
     // Technical stuff.
     addProperty(enabled_);
         enabled_.setGroupID("output");
+        ON_CHANGE_LAMBDA(enabled_, [this] () {
+            if(enabled_.get()) {
+                this->outport_.setData(nullptr);
+                propertyDisabler_.restore();
+            } else {
+                this->forceComputation();
+                propertyDisabler_.saveState([this] (Property* p) { return p == &enabled_; });
+                propertyDisabler_.disable();
+            }
+        });
     addProperty(outputVolumeFilePath_);
         outputVolumeFilePath_.setGroupID("output");
     addProperty(outputVolumeDeflateLevel_);
@@ -102,6 +113,11 @@ bool VolumeFilterList::isReady() const {
     return true;
 }
 
+void VolumeFilterList::initialize() {
+    AsyncComputeProcessor::initialize();
+    propertyDisabler_.saveState([this] (Property* p) { return p == &enabled_; });
+}
+
 Processor* VolumeFilterList::create() const {
     return new VolumeFilterList();
 }
@@ -122,10 +138,8 @@ void VolumeFilterList::deserialize(Deserializer& s) {
 
 VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
     if(!enabled_.get()) {
-        return VolumeFilterListInput(
-                nullptr,
-                nullptr
-        );
+        outport_.setData(inport_.getData(), false);
+        throw InvalidInputException("", InvalidInputException::S_IGNORE);
     }
 
     if(!inport_.hasData()) {
@@ -187,9 +201,6 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
     );
 }
 VolumeFilterListOutput VolumeFilterList::compute(VolumeFilterListInput input, ProgressReporter& progressReporter) const {
-    if(!enabled_.get()) {
-        return { "" };
-    }
     tgtAssert(input.sliceReader, "No sliceReader");
     tgtAssert(input.outputVolume, "No outputVolume");
 
@@ -201,14 +212,10 @@ VolumeFilterListOutput VolumeFilterList::compute(VolumeFilterListInput input, Pr
     //outputVolume will be destroyed and thus closed now.
 }
 void VolumeFilterList::processComputeOutput(VolumeFilterListOutput output) {
-    if(!enabled_.get()) {
-        outport_.setData(inport_.getData(), false);
-    } else {
-        // outputVolume has been destroyed and thus closed by now.
-        // So we can open it again (and use HDF5VolumeReader's implementation to read all the metadata with the file)
-        const VolumeBase* vol = HDF5VolumeReaderOriginal().read(output.outputVolumeFilePath)->at(0);
-        outport_.setData(vol);
-    }
+    // outputVolume has been destroyed and thus closed by now.
+    // So we can open it again (and use HDF5VolumeReader's implementation to read all the metadata with the file)
+    const VolumeBase* vol = HDF5VolumeReaderOriginal().read(output.outputVolumeFilePath)->at(0);
+    outport_.setData(vol);
 }
 
 void VolumeFilterList::adjustPropertiesToInput() {

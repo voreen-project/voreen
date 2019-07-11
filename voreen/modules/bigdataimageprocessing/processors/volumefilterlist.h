@@ -102,6 +102,7 @@ protected:
     }
 
     virtual void adjustPropertiesToInput();
+    virtual void initialize();
 
 private:
 
@@ -124,6 +125,9 @@ private:
     InteractiveListProperty filterList_;
     boost::optional<InteractiveListProperty::Instance> selectedInstance_;
     size_t numInstances_;
+
+    // Disable properties when processor is not enabled:
+    PropertyDisabler propertyDisabler_;
 
     static const std::string loggerCat_; ///< category used in logging
 };
