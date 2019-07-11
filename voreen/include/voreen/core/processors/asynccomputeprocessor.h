@@ -52,6 +52,39 @@
 
 namespace voreen {
 
+class PropertyDisabler {
+public:
+    PropertyDisabler(PropertyOwner& owner)
+        : owner_(owner)
+        , propertyWritablilityMap_()
+    {
+    }
+
+    void saveState(std::function<bool(Property*)> shouldBeIgnored) {
+        for(Property* property : owner_.getProperties()) {
+            if(!shouldBeIgnored(property)) {
+                propertyWritablilityMap_[property] = property->isReadOnlyFlagSet();
+            }
+        }
+    }
+
+    void disable() {
+        for(auto pair : propertyWritablilityMap_) {
+            pair.first->setReadOnlyFlag(true);
+        }
+    }
+
+    void restore() {
+        for(auto pair : propertyWritablilityMap_) {
+            pair.first->setReadOnlyFlag(pair.second);
+        }
+    }
+
+private:
+    PropertyOwner& owner_;
+    std::map<Property*, bool> propertyWritablilityMap_;
+};
+
 /**
  * Can be thrown to indicate invalid input configurations.
  * See AsyncComputeProcessor::prepareComputeInput()
@@ -186,6 +219,8 @@ protected:
 
     /// Inherited from DataInvalidationObserver
     virtual void dataAboutToInvalidate(const DataInvalidationObservable* source);
+protected:
+    void forceComputation();
 
 private:
 
@@ -201,8 +236,7 @@ private:
     const static std::chrono::milliseconds MINIMUM_PROGRESS_UPDATE_INTERVAL;
 
     /// Used to manage the visibility of properties during compute()
-    bool isDisabledDuringComputation(Property* property) const;
-    void savePropertyVisibilities();
+    void savePropertyEnableStates();
     void enableRunningState();
     void disableRunningState();
 
@@ -284,7 +318,7 @@ private:
     StringProperty statusDisplay_;
 
     /// Used to save/restore property writability before/after expensive computation
-    std::map<Property*, bool> propertyWritablilityMap_;
+    PropertyDisabler propertyDisabler_;
 
     bool updateForced_;
     bool stopForced_;
@@ -467,6 +501,7 @@ AsyncComputeProcessor<I,O>::AsyncComputeProcessor()
     , updateForced_(false)
     , stopForced_(false)
     , computation_(*this)
+    , propertyDisabler_(*this)
 {
     addProperty(continuousUpdate_);
         continuousUpdate_.setGroupID("ac_processing");
@@ -505,30 +540,19 @@ AsyncComputeProcessor<I,O>::~AsyncComputeProcessor() {
 }
 
 template<class I, class O>
-bool AsyncComputeProcessor<I,O>::isDisabledDuringComputation(Property* property) const {
-    return property != &manualUpdateButton_
-        && property != &stopUpdateButton_
-        && property != &progressDisplay_
-        && property != &statusDisplay_;
-}
-
-template<class I, class O>
-void AsyncComputeProcessor<I,O>::savePropertyVisibilities() {
-    for(Property* property : getProperties()) {
-        if(isDisabledDuringComputation(property)) {
-            propertyWritablilityMap_[property] = property->isReadOnlyFlagSet();
-        }
-    }
+void AsyncComputeProcessor<I,O>::savePropertyEnableStates() {
+    propertyDisabler_.saveState([this] (Property* p) {
+    return p == &manualUpdateButton_
+        || p == &stopUpdateButton_
+        || p == &progressDisplay_
+        || p == &statusDisplay_;
+    });
 }
 
 template<class I, class O>
 void AsyncComputeProcessor<I,O>::enableRunningState() {
-    savePropertyVisibilities();
-    for(Property* property : getProperties()) {
-        if(isDisabledDuringComputation(property)) {
-            property->setReadOnlyFlag(true);
-        }
-    }
+    savePropertyEnableStates();
+    propertyDisabler_.disable();
 
     manualUpdateButton_.setVisibleFlag(false);
     stopUpdateButton_.setVisibleFlag(true);
@@ -536,13 +560,7 @@ void AsyncComputeProcessor<I,O>::enableRunningState() {
 
 template<class I, class O>
 void AsyncComputeProcessor<I,O>::disableRunningState() {
-    // Restore property visibilities
-    for(Property* property : getProperties()) {
-        if(isDisabledDuringComputation(property)) {
-            tgtAssert(propertyWritablilityMap_.find(property) != propertyWritablilityMap_.end(), "Invalid property. Did you add properties during computation?");
-            property->setReadOnlyFlag(propertyWritablilityMap_[property]);
-        }
-    }
+    propertyDisabler_.restore();
 
     manualUpdateButton_.setVisibleFlag(true);
     stopUpdateButton_.setVisibleFlag(false);
@@ -604,6 +622,11 @@ void AsyncComputeProcessor<I, O>::dataAboutToInvalidate(const DataInvalidationOb
     interruptComputation();
     unlockMutex();
 }
+template<class I, class O>
+void AsyncComputeProcessor<I, O>::forceComputation() {
+    invalidate();
+    updateForced_ = true;
+}
 
 template<class I, class O>
 void AsyncComputeProcessor<I,O>::initialize() {
@@ -628,7 +651,7 @@ void AsyncComputeProcessor<I,O>::initialize() {
     }
 
     // Populate propertyWritablilityMap in case stopComputeThread gets called before any computation
-    savePropertyVisibilities();
+    savePropertyEnableStates();
 }
 
 template<class I, class O>

@@ -121,6 +121,7 @@ protected:
 
     virtual bool isReady() const;
     virtual bool isEndProcessor() const       { return true; }
+    virtual void initialize();
 
     virtual VesselnessExtractorInput prepareComputeInput();
     virtual VesselnessExtractorOutput compute(VesselnessExtractorInput input, ProgressReporter& progressReporter) const;
@@ -133,6 +134,7 @@ private:
     VolumePort inport_;
     VolumePort outport_;
 
+    BoolProperty enabled_;
     TempPathProperty outputVolumeFilePath_;
     FloatIntervalProperty vesselRadiusRangeRW_;
     IntProperty scaleSpaceSteps_;
@@ -141,6 +143,9 @@ private:
     IntVec3Property minSmoothingKernelSize_;
     IntVec3Property maxSmoothingKernelSize_;
     // TODO: Optionproperty<?> vesselType (>, <, egal)
+
+    // Disable properties when not enabled:
+    PropertyDisabler propertyDisabler_;
 
     static const std::string loggerCat_;
 };

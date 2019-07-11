@@ -182,12 +182,12 @@ SeparableKernel::SeparableKernel(std::vector<float> xKernel, std::vector<float> 
     tgtAssert(static_cast<int>(yKernel_.size()) == 2*extent_.y+1, "Invalid kernel size");
     tgtAssert(static_cast<int>(zKernel_.size()) == 2*extent_.z+1, "Invalid kernel size");
 
-    std::cout << "[";
-    for(auto val : xKernel_) {
-        std::cout << val << ", ";
-    }
-    std::cout << "]\n";
-    std::cout.flush();
+    //std::cout << "[";
+    //for(auto val : xKernel_) {
+    //    std::cout << val << ", ";
+    //}
+    //std::cout << "]\n";
+    //std::cout.flush();
 }
 static SeparableKernel::KernelFunc gauss(float stdev) {
     return [stdev] (float x) {
@@ -773,6 +773,7 @@ VesselnessExtractor::VesselnessExtractor()
     : AsyncComputeProcessor()
     , inport_(Port::INPORT, "volumehandle.input", "Volume Input")
     , outport_(Port::OUTPORT, "volumehandle.output", "Volume Output", false)
+    , enabled_("enabled", "Enabled", true)
     , outputVolumeFilePath_("outputVolumeFilePath", "Output Volume", "Path", "", "HDF5 (*.h5)", FileDialogProperty::SAVE_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , vesselRadiusRangeRW_("vesselRadiusRangeRW", "Vessel Radius (mm)", 1.0, std::numeric_limits<float>::epsilon(), std::numeric_limits<float>::max())
     , scaleSpaceSteps_("scaleSpaceSteps", "Scale Space Steps", 5, 1, 10)
@@ -780,9 +781,22 @@ VesselnessExtractor::VesselnessExtractor()
     , maxStandardDeviationVec_("maxStandardDeviationVec", "Used Max Standard Deviation (voxel)", tgt::vec3::zero, tgt::vec3::zero, tgt::vec3(std::numeric_limits<float>::max()))
     , minSmoothingKernelSize_("minSmoothingKernelSize", "Min Smoothing Kernel Size", tgt::ivec3::zero, tgt::ivec3::zero, tgt::ivec3(std::numeric_limits<int>::max()))
     , maxSmoothingKernelSize_("maxSmoothingKernelSize", "Max Smoothing Kernel Size", tgt::ivec3::zero, tgt::ivec3::zero, tgt::ivec3(std::numeric_limits<int>::max()))
+    , propertyDisabler_(*this)
 {
     addPort(inport_);
     addPort(outport_);
+
+    addProperty(enabled_);
+        ON_CHANGE_LAMBDA(enabled_, [this] () {
+            if(enabled_.get()) {
+                this->outport_.setData(nullptr);
+                propertyDisabler_.restore();
+            } else {
+                this->forceComputation();
+                propertyDisabler_.saveState([this] (Property* p) { return p == &enabled_; });
+                propertyDisabler_.disable();
+            }
+        });
 
     addProperty(outputVolumeFilePath_);
 
@@ -865,6 +879,10 @@ static std::unique_ptr<SliceReader> buildStack(const VolumeBase& input, const tg
 }
 
 VesselnessExtractorInput VesselnessExtractor::prepareComputeInput() {
+    if(!enabled_.get()) {
+        outport_.setData(inport_.getData(), false);
+        throw InvalidInputException("", InvalidInputException::S_IGNORE);
+    }
     const VolumeBase* inputVol = inport_.getData();
     if(!inputVol) {
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
@@ -979,5 +997,9 @@ bool VesselnessExtractor::isReady() const {
         return false;
     }
     return true;
+}
+void VesselnessExtractor::initialize() {
+    AsyncComputeProcessor::initialize();
+    propertyDisabler_.saveState([this] (Property* p) { return p == &enabled_; });
 }
 }   // namespace
