@@ -25,9 +25,9 @@
                         <Property mapKey="graphFilePath" name="graphFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="reference/vesselnetworkanalysis/graph_load_save_test/cow.vvg.gz" />
-                                    <item value="../../voreen-testdata/voreen-testdata/reference/vesselnetworkanalysis/graph_load_save_test/cow.vvg.gz" />
-                                    <item value="/git/voreen-testdata/voreen-testdata/reference/vesselnetworkanalysis/graph_load_save_test/cow.vvg.gz" />
+                                    <item value="reference/vesselnetworkanalysis/graph_load_save/cow.vvg.gz" />
+                                    <item value="../../voreen-testdata/voreen-testdata/reference/vesselnetworkanalysis/graph_load_save/cow.vvg.gz" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/reference/vesselnetworkanalysis/graph_load_save/cow.vvg.gz" />
                                 </paths>
                             </paths>
                         </Property>
@@ -55,8 +55,8 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/cow.vvg.gz" />
-                                    <item value="../../../home/dominik/git/voreen-testdata/voreen-testdata/output/cow.vvg.gz" />
-                                    <item value="/home/dominik/git/voreen-testdata/voreen-testdata/output/cow.vvg.gz" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/cow.vvg.gz" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/cow.vvg.gz" />
                                 </paths>
                             </paths>
                         </Property>

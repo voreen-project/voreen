@@ -1,0 +1,280 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="20">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="VolumeSave" ref="ref3" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="81.849983215" y="113.150352478" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="2.775607824" />
+            </MetaData>
+            <Processors>
+                <Processor type="VolumeSource" name="VolumeSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="6" y="-16" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="">
+                                <path noPathSet="false">
+                                    <paths>
+                                        <item value="input/aneurism.vvd" />
+                                        <item value="../../voreen-testdata/voreen-testdata/input/aneurism.vvd" />
+                                        <item value="/git/voreen-testdata/voreen-testdata/input/aneurism.vvd" />
+                                    </paths>
+                                </path>
+                                <searchParameters>
+                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                </searchParameters>
+                            </urls>
+                        </Property>
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VesselnessExtractor" name="VesselnessExtractor" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="161" y="83" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
+                        <Property mapKey="enabled" name="enabled" value="true" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="maxSmoothingKernelSize" name="maxSmoothingKernelSize">
+                            <value x="39" y="39" z="39" />
+                        </Property>
+                        <Property mapKey="maxStandardDeviationVec" name="maxStandardDeviationVec">
+                            <value x="6.400000095" y="6.400000095" z="6.400000095" />
+                        </Property>
+                        <Property mapKey="minSmoothingKernelSize" name="minSmoothingKernelSize">
+                            <value x="9" y="9" z="9" />
+                        </Property>
+                        <Property mapKey="minStandardDeviationVec" name="minStandardDeviationVec">
+                            <value x="1.279999971" y="1.279999971" z="1.279999971" />
+                        </Property>
+                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../../nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/fced3dbe-eec8-4979-aefd-686432f00d6c.h5" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/fced3dbe-eec8-4979-aefd-686432f00d6c.h5" />
+                                    <item value="/nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/fced3dbe-eec8-4979-aefd-686432f00d6c.h5" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="scaleSpaceSteps" name="scaleSpaceSteps" value="3" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                        <Property mapKey="vesselRadiusRangeRW" minValue="0.0078125" maxValue="2" minRange="0" maxRange="2147483648" stepping="0.00001">
+                            <value x="0.01" y="0.050000001" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="volumehandle.output" direction="0" portID="volumehandle.output" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSave" name="Single Scale" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-115" y="183" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/single_scale.h5" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/single_scale.h5" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/single_scale.h5" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="saveOnPathChange" name="saveOnPathChange" value="true" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSave" name="Multi Scale" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="184" y="183" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/multi_scale.h5" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/multi_scale.h5" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/multi_scale.h5" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="saveOnPathChange" name="saveOnPathChange" value="true" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VesselnessExtractor" name="VesselnessExtractor 2" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-143" y="83" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
+                        <Property mapKey="enabled" name="enabled" value="true" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="maxSmoothingKernelSize" name="maxSmoothingKernelSize">
+                            <value x="9" y="9" z="9" />
+                        </Property>
+                        <Property mapKey="maxStandardDeviationVec" name="maxStandardDeviationVec">
+                            <value x="1.281280041" y="1.281280041" z="1.281280041" />
+                        </Property>
+                        <Property mapKey="minSmoothingKernelSize" name="minSmoothingKernelSize">
+                            <value x="9" y="9" z="9" />
+                        </Property>
+                        <Property mapKey="minStandardDeviationVec" name="minStandardDeviationVec">
+                            <value x="1.279999971" y="1.279999971" z="1.279999971" />
+                        </Property>
+                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../../nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/c9a0dd18-d945-4bfe-8921-ced29a4068d2.h5" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/c9a0dd18-d945-4bfe-8921-ced29a4068d2.h5" />
+                                    <item value="/nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/c9a0dd18-d945-4bfe-8921-ced29a4068d2.h5" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="scaleSpaceSteps" name="scaleSpaceSteps" value="1" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                        <Property mapKey="vesselRadiusRangeRW" minValue="0.0078125" maxValue="2" minRange="0" maxRange="2147483648" stepping="0.00001">
+                            <value x="0.01" y="0.01001" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="volumehandle.output" direction="0" portID="volumehandle.output" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VesselnessExtractor" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VesselnessExtractor" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.output">
+                        <Processor type="VesselnessExtractor" ref="ref1" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeSave" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.output">
+                        <Processor type="VesselnessExtractor" ref="ref2" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeSave" ref="ref4" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>
