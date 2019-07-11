@@ -269,8 +269,8 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         return;
     }
 
-    const int N = parametrizationList.getSpatialResolution();
-    const T conversion = VOREEN_LENGTH_TO_SI * N * parametrizationList.getTemporalResolution() / parameters.getCharacteristicLength();
+    const int N = parameters.getSpatialResolution();
+    const T conversion = VOREEN_LENGTH_TO_SI * N * parameters.getTemporalResolution() / parameters.getCharacteristicLength();
     UnitConverterFromResolutionAndLatticeVelocity<T, DESCRIPTOR> converter(
             N,                                                                      // resolution for charPhysLength
             (T) parameters.getCharacteristicVelocity() * conversion,                // max. lattice velocity
@@ -544,7 +544,12 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                     continue;
                 }
 
-                CirclePoiseuille3D<T> velocity(superGeometry, indicator.materialId_, maxVelocity[0]);
+                //CirclePoiseuille3D<T> velocity(superGeometry, indicator.materialId_, maxVelocity[0]); // tends to crash
+                const tgt::vec3& center = indicator.center_;
+                const tgt::vec3& normal = indicator.normal_;
+                T radius = indicator.radius_;
+                CirclePoiseuille3D<T> velocity(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
+                                               normal[0], normal[1], normal[2], radius * VOREEN_LENGTH_TO_SI, maxVelocity[0]);
                 if (bouzidiOn) {
                     offBc.defineU(superGeometry, indicator.materialId_, velocity);
                 } else {

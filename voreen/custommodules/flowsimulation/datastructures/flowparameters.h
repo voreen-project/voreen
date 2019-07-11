@@ -80,6 +80,19 @@ public:
     const std::string& getName() const;
 
     /**
+     * Returns the spatial resolution in voxels, the largest vessel diameter should be divided into.
+     * A high resolution is important for simulation accuracy.
+     */
+    int getSpatialResolution() const;
+    void setSpatialResolution(int spatialResolution);
+
+    /**
+     * Returns the temporal granularity, i.e., the duration of each time step in s.
+     */
+    float getTemporalResolution() const;
+    void setTemporalResolution(float temporalResolution);
+
+    /**
      * Returns the max expected length in mm within the simulation geometry.
      * E.g., the largest diameter of all contained vessels.
      */
@@ -126,11 +139,13 @@ private:
     std::string name_;
 
     // All other relevant parameters.
+    int spatialResolution_;        ///< spatial resolution in voxels (per dimension and characteristic length)
+    float temporalResolution_;     ///< temporal resolution in seconds
     float characteristicLength_;    ///< characteristic length in mm
     float characteristicVelocity_;  ///< characteristic velocity in mm/s
     float viscosity_;               ///< viscosity in 10^-3 m^2/s
     float density_;                 ///< density in kg/m^3
-    float smagorinskyConstant_;     ///< constant for Smagorinsky turbolence model
+    float smagorinskyConstant_;     ///< constant for Smagorinsky turbulence model
     bool bouzidi_;                  ///< bouzidi boundary condition
 };
 
@@ -155,20 +170,6 @@ public:
      */
     float getSimulationTime() const;
     void setSimulationTime(float simulationTime);
-
-    /**
-     * Returns the temporal granularity, i.e., the duration of each time step in ms.
-     */
-    float getTemporalResolution() const;
-    void setTemporalResolution(float temporalResolution);
-
-    /**
-     * Returns the spatial resolution in voxels, the largest vessel diameter should be divided into.
-     * A high resolution is important for simulation accuracy.
-     * Note: must NOT exceed output resolution.
-     */
-    int getSpatialResolution() const;
-    void setSpatialResolution(int spatialResolution);
 
     /**
      * Returns the number of time steps (intermediate results), the simulation should store.
@@ -217,8 +218,6 @@ private:
 
     // Configuration.
     float simulationTime_;         ///< simulation time in seconds
-    float temporalResolution_;     ///< temporal resolution in seconds
-    int spatialResolution_;        ///< spatial resolution in voxels (per dimension and reference vessel)
 
     // Output parameters.
     int numTimeSteps_;             ///< number of time steps of output

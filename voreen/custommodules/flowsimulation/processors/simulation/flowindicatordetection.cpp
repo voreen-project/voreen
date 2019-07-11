@@ -38,8 +38,6 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , flowParametrizationPort_(Port::OUTPORT, "flowParametrization.outport", "Flow Parametrization")
     , ensembleName_("ensembleName", "Ensemble Name", "test_ensemble")
     , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 20.0f)
-    , temporalResolution_("temporalResolution", "Temporal Resolution (s)", 0.1, 0.001, 1.0f)
-    , spatialResolution_("spatialResolution", "Spatial Resolution", 32, 16, 512)
     , numTimeSteps_("numTimeSteps", "Num. Output Time Steps", 50, 1, 1000)
     , outputResolution_("outputResolution", "Max. Output Resolution", 128, 32, 1024)
     , flowDirection_("flowDirection", "Flow Direction")
@@ -66,11 +64,6 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         ON_CHANGE_LAMBDA(simulationTime_, [this] {
             startPhaseDuration_.setMaxValue(simulationTime_.get());
         });
-    addProperty(temporalResolution_);
-        temporalResolution_.adaptDecimalsToRange(3);
-        temporalResolution_.setGroupID("ensemble");
-    addProperty(spatialResolution_);
-        spatialResolution_.setGroupID("ensemble");
     addProperty(numTimeSteps_);
         numTimeSteps_.setGroupID("ensemble");
     addProperty(outputResolution_);
@@ -147,8 +140,6 @@ void FlowIndicatorDetection::process() {
 
     FlowParametrizationList* flowParametrizationList = new FlowParametrizationList(ensembleName_.get());
     flowParametrizationList->setSimulationTime(simulationTime_.get());
-    flowParametrizationList->setTemporalResolution(temporalResolution_.get());
-    flowParametrizationList->setSpatialResolution(spatialResolution_.get());
     flowParametrizationList->setNumTimeSteps(numTimeSteps_.get());
     flowParametrizationList->setOutputResolution(outputResolution_.get());
 

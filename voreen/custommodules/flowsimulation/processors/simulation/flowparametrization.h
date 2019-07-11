@@ -48,7 +48,6 @@ public:
     virtual std::string getCategory() const   { return "Simulation";              }
     virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;  }
 
-    virtual bool isReady() const;
     virtual void process();
 
     virtual void serialize(Serializer& s) const;
@@ -79,15 +78,9 @@ private:
     FlowParametrizationPort inport_;
     FlowParametrizationPort outport_;
 
-    StringProperty ensembleName_;
-    FloatProperty simulationTime_;
-    FloatProperty temporalResolution_;
-    IntProperty spatialResolution_;
-    IntProperty numTimeSteps_;
-    IntProperty outputResolution_;
-    OptionProperty<FlowFunction> startPhaseFunction_;
-
     StringProperty parametrizationName_;
+    IntIntervalProperty spatialResolution_;
+    FloatIntervalProperty temporalResolution_;
     FloatIntervalProperty characteristicLength_;
     FloatIntervalProperty characteristicVelocity_;
     OptionProperty<Fluid> fluid_;

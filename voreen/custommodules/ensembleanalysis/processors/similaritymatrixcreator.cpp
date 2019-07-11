@@ -218,7 +218,6 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
                 VolumeRAMRepresentationLock lock(volume);
 
-                size_t s=0;
                 for (const tgt::vec3& seedPoint : seedPoints) {
                     for(size_t ch = 0; ch < numChannels; ch++) {
                         float value = lock->getVoxelNormalizedLinear(
@@ -233,7 +232,6 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                         Flags.push_back(value);
 #endif
                     }
-                    s++;
                 }
 
                 // Update progress.
@@ -256,7 +254,6 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 #pragma omp parallel for shared(Flags), shared(DistanceMatrix)
 #endif
         for (long i = 0; i < static_cast<long>(DistanceMatrix.getSize()); i++) {
-
             for (long j = 0; j <= i; j++) {
 
                 float scaleSum = 0.0f; // Can be interpret as the number of (equal) samples

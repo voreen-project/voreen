@@ -267,7 +267,12 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                     continue;
                 }
 
-                CirclePoiseuille3D<T> velocity(superGeometry, indicator.materialId_, maxVelocity[0]);
+                //CirclePoiseuille3D<T> velocity(superGeometry, indicator.materialId_, maxVelocity[0]); // tends to crash
+                const T* center = indicator.center_;
+                const T* normal = indicator.normal_;
+                T radius = indicator.radius_;
+                CirclePoiseuille3D<T> velocity(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
+                                               normal[0], normal[1], normal[2], radius * VOREEN_LENGTH_TO_SI, maxVelocity[0]);
                 if (bouzidiOn) {
                     offBc.defineU(superGeometry, indicator.materialId_, velocity);
                 } else {
@@ -544,12 +549,12 @@ int main(int argc, char* argv[]) {
     // Parse XML simulation config.
     XMLreader config("config.xml");
     simulationTime          = std::atof(config["simulationTime"].getAttribute("value").c_str());
-    temporalResolution      = std::atof(config["temporalResolution"].getAttribute("value").c_str());
-    spatialResolution       = std::atoi(config["spatialResolution"].getAttribute("value").c_str());
     numTimeSteps            = std::atoi(config["numTimeSteps"].getAttribute("value").c_str());
     outputResolution        = std::atoi(config["outputResolution"].getAttribute("value").c_str());
 
     XMLreader parameters = config["flowParameters"];
+    spatialResolution       = std::atoi(parameters["spatialResolution"].getAttribute("value").c_str());
+    temporalResolution      = std::atof(parameters["temporalResolution"].getAttribute("value").c_str());
     characteristicLength    = std::atof(parameters["characteristicLength"].getAttribute("value").c_str());
     characteristicVelocity  = std::atof(parameters["characteristicVelocity"].getAttribute("value").c_str());
     viscosity               = std::atof(parameters["viscosity"].getAttribute("value").c_str());
@@ -577,9 +582,10 @@ int main(int argc, char* argv[]) {
     // TODO: implement measured data support!
 
     const int N = spatialResolution;
+    const T conversion = VOREEN_LENGTH_TO_SI * N * temporalResolution / characteristicLength;
     UnitConverterFromResolutionAndLatticeVelocity<T, DESCRIPTOR> converter(
-            N,                                                                      // resolution for charPhysLength
-            (T) parameters.getCharacteristicVelocity() * conversion,                // max. lattice velocity
+            N,                                                   // resolution for charPhysLength
+            (T) characteristicVelocity * conversion,             // max. lattice velocity
             (T) characteristicLength * VOREEN_LENGTH_TO_SI,      // charPhysLength: reference length of simulation geometry
             (T) characteristicVelocity * VOREEN_LENGTH_TO_SI,    // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
             (T) viscosity * 0.001 / density,                     // physViscosity: physical kinematic viscosity in __m^2 / s__

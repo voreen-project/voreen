@@ -25,20 +25,20 @@
 
 #include "flowparametrization.h"
 
-#define PARAMETER_DISCRETIZATION_BEGIN(property) \
-    int discretization ## property = discretization_.get(); \
-    if(property ## _.get().x == property ## _.get().y) { \
-        discretization ## property = 1; \
+#define PARAMETER_DISCRETIZATION_BEGIN(PROPERTY, TYPE) \
+    int discretization ## PROPERTY = discretization_.get(); \
+    if(PROPERTY ## _.get().x == PROPERTY ## _.get().y) { \
+        discretization ## PROPERTY = 1; \
     } \
     std::string tmp = name; \
-    for(int property ## i = 0; property ## i < discretization ## property; property ## i++) { \
-        float property = property ## _.get().x; \
-        if(discretization ## property > 1) { \
-            property += (property ## _.get().y - property ## _.get().x) \
-                            * property ## i / (discretization ## property - 1); \
+    for(int PROPERTY ## i = 0; PROPERTY ## i < discretization ## PROPERTY; PROPERTY ## i++) { \
+        TYPE PROPERTY = PROPERTY ## _.get().x; \
+        if(discretization ## PROPERTY > 1) { \
+            PROPERTY += (PROPERTY ## _.get().y - PROPERTY ## _.get().x) \
+                            * PROPERTY ## i / (discretization ## PROPERTY - 1); \
         } \
-        std::string name = tmp + static_cast<char>('A' + property ## i);
-//std::string name = tmp + std::string(#property).substr(0, 3) + "=" + std::to_string(property);
+        std::string name = tmp + static_cast<char>('A' + PROPERTY ## i);
+//std::string name = tmp + std::string(#PROPERTY).substr(0, 3) + "=" + std::to_string(PROPERTY);
 
 #define PARAMETER_DISCRETIZATION_END }
 
@@ -52,12 +52,8 @@ FlowParametrization::FlowParametrization()
     , inport_(Port::INPORT, "inport", "Parameter Inport")
     , outport_(Port::OUTPORT, "outport", "Parameter Inport")
     , parametrizationName_("parametrizationName", "Parametrization Name", "test_parametrization")
-    , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 20.0f)
-    , temporalResolution_("temporalResolution", "Temporal Resolution", 0.1, 0.001, 1.0f) //TODO: define proper semantic
-    , spatialResolution_("spatialResolution", "Spatial Resolution", 32, 16, 512)
-    , numTimeSteps_("numTimeSteps", "Num. Output Time Steps", 50, 1, 1000)
-    , outputResolution_("outputResolution", "Spatial Resolution of Output", 128, 32, 1024)
-    , startPhaseFunction_("startPhaseFunction", "Start Phase Function")
+    , spatialResolution_("spatialResolution", "Spatial Resolution", 32, 8, 512)
+    , temporalResolution_("temporalResolution", "Temporal Resolution (s)", 0.1, 0.001, 1.0f)
     , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 10.0f, 0.1f, 1000.0f)
     , characteristicVelocity_("characteristicVelocity", "Characteristic Velocity (mm/s)", 10.0f, 0.0f, 1000.0f)
     , fluid_("fluid", "Fluid")
@@ -69,35 +65,19 @@ FlowParametrization::FlowParametrization()
     , addParametrization_("addParametrizations", "Add Parametrizations")
     , removeParametrization_("removeParametrization", "Remove Parametrization")
     , clearParametrizations_("clearParametrizations", "Clear Parametrizations")
-    , ensembleName_("ensembleName", "Ensemble Name", "test_ensemble")
-    , parametrizations_("parametrizations", "Parametrizations", 7, Processor::VALID)
+    , parametrizations_("parametrizations", "Parametrizations", 9, Processor::VALID)
 
 {
     addPort(inport_);
     addPort(outport_);
 
-    addProperty(ensembleName_);
-        ensembleName_.setGroupID("ensemble");
-    addProperty(simulationTime_);
-        simulationTime_.setGroupID("ensemble");
-    addProperty(temporalResolution_);
-        temporalResolution_.adaptDecimalsToRange(3);
-        temporalResolution_.setGroupID("ensemble");
-    addProperty(spatialResolution_);
-        spatialResolution_.setGroupID("ensemble");
-    addProperty(numTimeSteps_);
-        numTimeSteps_.setGroupID("ensemble");
-    addProperty(outputResolution_);
-        outputResolution_.setGroupID("ensemble");
-    addProperty(startPhaseFunction_);
-        startPhaseFunction_.addOption("none", "NONE", FlowFunction::FF_NONE); // get's selected automatically
-        startPhaseFunction_.addOption("constant", "CONSTANT", FlowFunction ::FF_CONSTANT);
-        startPhaseFunction_.addOption("sinus", "SINUS", FlowFunction::FF_SINUS);
-        startPhaseFunction_.setGroupID("ensemble");
-    setPropertyGroupGuiName("ensemble", "Ensemble");
-
     addProperty(parametrizationName_);
         parametrizationName_.setGroupID("parameters");
+    addProperty(spatialResolution_);
+        spatialResolution_.setGroupID("parameters");
+    addProperty(temporalResolution_);
+        temporalResolution_.adaptDecimalsToRange(3);
+        temporalResolution_.setGroupID("parameters");
     addProperty(characteristicLength_);
         characteristicLength_.setGroupID("parameters");
     addProperty(characteristicVelocity_);
@@ -129,12 +109,14 @@ FlowParametrization::FlowParametrization()
 
     addProperty(parametrizations_);
     parametrizations_.setColumnLabel(0, "Name");
-    parametrizations_.setColumnLabel(1, "Char. Len.");
-    parametrizations_.setColumnLabel(2, "Char. Vel.");
-    parametrizations_.setColumnLabel(3, "Viscosity");
-    parametrizations_.setColumnLabel(4, "Density");
-    parametrizations_.setColumnLabel(5, "Smagorinsky Const.");
-    parametrizations_.setColumnLabel(6, "Bouzidi");
+    parametrizations_.setColumnLabel(1, "Spat. Res.");
+    parametrizations_.setColumnLabel(2, "Temp. Res.");
+    parametrizations_.setColumnLabel(3, "Char. Len.");
+    parametrizations_.setColumnLabel(4, "Char. Vel.");
+    parametrizations_.setColumnLabel(5, "Viscosity");
+    parametrizations_.setColumnLabel(6, "Density");
+    parametrizations_.setColumnLabel(7, "Smagorinsky Const.");
+    parametrizations_.setColumnLabel(8, "Bouzidi");
 }
 
 void FlowParametrization::fluidChanged() {
@@ -172,15 +154,19 @@ void FlowParametrization::addParametrizations() {
         }
     }
 
-    PARAMETER_DISCRETIZATION_BEGIN(characteristicLength)
-    PARAMETER_DISCRETIZATION_BEGIN(characteristicVelocity)
-    PARAMETER_DISCRETIZATION_BEGIN(viscosity)
-    PARAMETER_DISCRETIZATION_BEGIN(density)
-    PARAMETER_DISCRETIZATION_BEGIN(smagorinskyConstant)
+    PARAMETER_DISCRETIZATION_BEGIN(spatialResolution, int)
+    PARAMETER_DISCRETIZATION_BEGIN(temporalResolution, float)
+    PARAMETER_DISCRETIZATION_BEGIN(characteristicLength, float)
+    PARAMETER_DISCRETIZATION_BEGIN(characteristicVelocity, float)
+    PARAMETER_DISCRETIZATION_BEGIN(viscosity, float)
+    PARAMETER_DISCRETIZATION_BEGIN(density, float)
+    PARAMETER_DISCRETIZATION_BEGIN(smagorinskyConstant, float)
     bool bouzidi = bouzidi_.get();
 //   for (bool bouzidi : {true, false})
     {
         FlowParameters parameters(name);
+        parameters.setSpatialResolution(spatialResolution);
+        parameters.setTemporalResolution(temporalResolution);
         parameters.setCharacteristicLength(characteristicLength);
         parameters.setCharacteristicVelocity(characteristicVelocity);
         parameters.setViscosity(viscosity);
@@ -191,14 +177,18 @@ void FlowParametrization::addParametrizations() {
 
         std::vector<std::string> row(parametrizations_.getNumColumns());
         row[0] = parameters.getName();
-        row[1] = std::to_string(parameters.getCharacteristicLength());
-        row[2] = std::to_string(parameters.getCharacteristicVelocity());
-        row[3] = std::to_string(parameters.getViscosity());
-        row[4] = std::to_string(parameters.getDensity());
-        row[5] = std::to_string(parameters.getSmagorinskyConstant());
-        row[6] = std::to_string(parameters.getBouzidi());
+        row[1] = std::to_string(parameters.getSpatialResolution());
+        row[2] = std::to_string(parameters.getTemporalResolution());
+        row[3] = std::to_string(parameters.getCharacteristicLength());
+        row[4] = std::to_string(parameters.getCharacteristicVelocity());
+        row[5] = std::to_string(parameters.getViscosity());
+        row[6] = std::to_string(parameters.getDensity());
+        row[7] = std::to_string(parameters.getSmagorinskyConstant());
+        row[8] = std::to_string(parameters.getBouzidi());
         parametrizations_.addRow(row);
     }
+    PARAMETER_DISCRETIZATION_END
+    PARAMETER_DISCRETIZATION_END
     PARAMETER_DISCRETIZATION_END
     PARAMETER_DISCRETIZATION_END
     PARAMETER_DISCRETIZATION_END
@@ -226,27 +216,9 @@ void FlowParametrization::adjustPropertiesToInput() {
     setPropertyGroupVisible("ensemble", !inport_.hasData());
 }
 
-bool FlowParametrization::isReady() const {
-    // Ignore inport!
-    return outport_.isReady();
-}
-
 void FlowParametrization::process() {
 
-    FlowParametrizationList* flowParametrizationList = nullptr;
-
-    if(inport_.isReady()) {
-        flowParametrizationList = new FlowParametrizationList(*inport_.getData());
-    }
-    else {
-        flowParametrizationList = new FlowParametrizationList(ensembleName_.get());
-        flowParametrizationList->setSimulationTime(simulationTime_.get());
-        flowParametrizationList->setTemporalResolution(temporalResolution_.get());
-        flowParametrizationList->setSpatialResolution(spatialResolution_.get());
-        flowParametrizationList->setNumTimeSteps(numTimeSteps_.get());
-        flowParametrizationList->setOutputResolution(outputResolution_.get());
-        flowParametrizationList->setStartPhaseFunction(startPhaseFunction_.getValue());
-    }
+    FlowParametrizationList* flowParametrizationList = new FlowParametrizationList(*inport_.getData());
 
     for (const FlowParameters& flowParameters : flowParameters_) {
         flowParametrizationList->addFlowParameters(flowParameters);

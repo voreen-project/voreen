@@ -78,8 +78,6 @@ private:
 
     StringProperty ensembleName_;
     FloatProperty simulationTime_;
-    FloatProperty temporalResolution_;
-    IntProperty spatialResolution_;
     IntProperty numTimeSteps_;
     IntProperty outputResolution_;
 
