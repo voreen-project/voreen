@@ -35,6 +35,14 @@
 
 namespace voreen {
 
+enum FlowFeatures {
+    FT_NONE             = 0,
+    FT_VELOCITY         = 1 << 0,
+    FT_MAGNITUDE        = 1 << 1,
+    FT_PRESSURE         = 1 << 2,
+    FT_WALLSHEARSTRESS  = 1 << 3,
+};
+
 enum FlowDirection {
     FD_NONE = -1,
     FD_IN   =  0,
@@ -187,6 +195,13 @@ public:
     int getOutputResolution() const;
     void setOutputResolution(int outputResolution);
 
+    /**
+     * Returns the flow features as bitmask.
+     * To test for a single feature, binarily test for the available features.
+     */
+    int getFlowFeatures() const;
+    void setFlowFeatures(int flowFeatures);
+
     /** Overrides flow function for each inflow indicator. Therefore, no getter exists */
     void setStartPhaseFunction(FlowFunction startPhaseFunction);
 
@@ -218,10 +233,9 @@ private:
 
     // Configuration.
     float simulationTime_;         ///< simulation time in seconds
-
-    // Output parameters.
     int numTimeSteps_;             ///< number of time steps of output
     int outputResolution_;         ///< spatial resolution of output in voxels (per dimension)
+    int flowFeatures_;             ///< bitmask storing flow features
 
     // Flow indication (in-/out flow).
     std::vector<FlowIndicator> flowIndicators_;

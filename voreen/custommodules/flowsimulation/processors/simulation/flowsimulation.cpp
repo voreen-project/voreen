@@ -575,30 +575,34 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     if (ti % outputIter == 0) {
 
-        // Write velocity.
-        SuperLatticePhysVelocity3D <T, DESCRIPTOR> velocity(sLattice, converter);
-        writeResult(stlReader, converter, ti, tmax, velocity, parametrizationList, selectedParametrization,
-                    simulationOutputPath, "velocity");
-/*
-        // Write magnitude.
-        SuperEuklidNorm3D <T, DESCRIPTOR> magnitude(velocity);
-        writeResult(stlReader, converter, ti, tmax, magnitude, parametrizationList, selectedParametrization,
-                    simulationOutputPath, "magnitude");
+        if(parametrizationList.getFlowFeatures() & FT_VELOCITY) {
+            SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
+            writeResult(stlReader, converter, ti, tmax, velocity, parametrizationList, selectedParametrization,
+                        simulationOutputPath, "velocity");
+        }
 
-        // TODO: Pressure and WSS currently do not have an equivalent in measured data!
+        if(parametrizationList.getFlowFeatures() & FT_MAGNITUDE) {
+            SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
+            SuperEuklidNorm3D<T, DESCRIPTOR> magnitude(velocity);
+            writeResult(stlReader, converter, ti, tmax, magnitude, parametrizationList, selectedParametrization,
+                        simulationOutputPath, "magnitude");
+        }
 
-        // Write pressure.
-        SuperLatticePhysPressure3D <T, DESCRIPTOR> pressure(sLattice, converter);
-        writeResult(stlReader, converter, ti, tmax, pressure, parametrizationList, selectedParametrization,
-                    simulationOutputPath, "pressure");
+        if(parametrizationList.getFlowFeatures() & FT_PRESSURE) {
+            SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
+            writeResult(stlReader, converter, ti, tmax, pressure, parametrizationList, selectedParametrization,
+                        simulationOutputPath, "pressure");
+        }
 
 #ifndef OLB_PRECOMPILED
-        // Write wallShearStress.
-        SuperLatticePhysWallShearStress3D <T, DESCRIPTOR> wallShearStress(sLattice, superGeometry, MAT_WALL, converter, stlReader);
-        writeResult(stlReader, converter, ti, tmax, wallShearStress, parametrizationList, selectedParametrization,
-                    simulationOutputPath, "wallShearStress");
+        if(parametrizationList.getFlowFeatures() & FT_WALLSHEARSTRESS) {
+            SuperLatticePhysWallShearStress3D<T, DESCRIPTOR> wallShearStress(sLattice, superGeometry, MAT_WALL,
+                                                                             converter, stlReader);
+            writeResult(stlReader, converter, ti, tmax, wallShearStress, parametrizationList,
+                        selectedParametrization,
+                        simulationOutputPath, "wallShearStress");
+        }
 #endif
- */
 
         // Lattice statistics console output
         LINFO("step="     << ti << "; " <<

@@ -24,6 +24,14 @@ enum Material {
     MAT_COUNT,
 };
 
+enum FlowFeatures {
+    FT_NONE             = 0,
+    FT_VELOCITY         = 1 << 0,
+    FT_MAGNITUDE        = 1 << 1,
+    FT_PRESSURE         = 1 << 2,
+    FT_WALLSHEARSTRESS  = 1 << 3,
+};
+
 enum FlowDirection {
     FD_NONE = -1,
     FD_IN   =  0,
@@ -100,6 +108,7 @@ T temporalResolution = 0.0;
 int spatialResolution = 1;
 int numTimeSteps = 1;
 int outputResolution = 1;
+int flowFeatures = FT_NONE;
 std::vector<FlowIndicator> flowIndicators;
 std::vector<MeasuredData> measuredData;
 
@@ -467,26 +476,31 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
     rank = singleton::mpi().getRank();
 #endif
     if (rank == 0 && ti % outputIter == 0) {
-        // Write velocity.
-        SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
-        writeResult(stlReader, converter, ti, tmax, velocity, "velocity");
-/*
-        // Write magnitude.
-        SuperEuklidNorm3D <T, DESCRIPTOR> magnitude(velocity);
-        writeResult(stlReader, converter, ti, tmax, magnitude, "magnitude");
 
-        // TODO: Pressure and WSS currently do not have an equivalent in measured data!
+        if(flowFeatures & FT_VELOCITY) {
+            SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
+            writeResult(stlReader, converter, ti, tmax, velocity, "velocity");
+        }
 
-        // Write pressure.
-        SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
-        writeResult(stlReader, converter, ti, tmax, pressure, "pressure");
+        if(flowFeatures & FT_MAGNITUDE) {
+            SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
+            SuperEuklidNorm3D<T, DESCRIPTOR> magnitude(velocity);
+            writeResult(stlReader, converter, ti, tmax, magnitude, "magnitude");
+        }
+
+        if(flowFeatures & FT_PRESSURE) {
+            SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
+            writeResult(stlReader, converter, ti, tmax, pressure, "pressure");
+        }
 
 #ifndef OLB_PRECOMPILED
-        // Write wallShearStress.
-        SuperLatticePhysWallShearStress3D <T, DESCRIPTOR> wallShearStress(sLattice, superGeometry, MAT_WALL, converter, stlReader);
-        writeResult(stlReader, converter, ti, tmax, wallShearStress, "wallShearStress");
+        if(flowFeatures & FT_WALLSHEARSTRESS) {
+            SuperLatticePhysWallShearStress3D<T, DESCRIPTOR> wallShearStress(sLattice, superGeometry, MAT_WALL,
+                                                                             converter, stlReader);
+            writeResult(stlReader, converter, ti, tmax, wallShearStress, "wallShearStress");
+        }
 #endif
-*/
+
         // Lattice statistics console output
         sLattice.getStatistics().print(ti, converter.getPhysTime(ti));
     }
@@ -551,6 +565,7 @@ int main(int argc, char* argv[]) {
     simulationTime          = std::atof(config["simulationTime"].getAttribute("value").c_str());
     numTimeSteps            = std::atoi(config["numTimeSteps"].getAttribute("value").c_str());
     outputResolution        = std::atoi(config["outputResolution"].getAttribute("value").c_str());
+    flowFeatures            = std::atoi(config["flowFeatures"].getAttribute("value").c_str());
 
     XMLreader parameters = config["flowParameters"];
     spatialResolution       = std::atoi(parameters["spatialResolution"].getAttribute("value").c_str());

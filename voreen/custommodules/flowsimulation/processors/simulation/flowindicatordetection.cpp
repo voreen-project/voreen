@@ -40,6 +40,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 20.0f)
     , numTimeSteps_("numTimeSteps", "Num. Output Time Steps", 50, 1, 1000)
     , outputResolution_("outputResolution", "Max. Output Resolution", 128, 32, 1024)
+    , flowFeatures_("flowFeatures", "Flow Features")
     , flowDirection_("flowDirection", "Flow Direction")
     , startPhaseFunction_("startPhaseFunction", "Start Phase Function")
     , startPhaseDuration_("startPhaseDuration", "Start Phase Duration (s)", 0.0f, 0.0f, 20.0f)
@@ -68,6 +69,14 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         numTimeSteps_.setGroupID("ensemble");
     addProperty(outputResolution_);
         outputResolution_.setGroupID("ensemble");
+
+    addProperty(flowFeatures_);
+    addFeature("Velocity", FT_VELOCITY);
+    addFeature("Magnitude", FT_MAGNITUDE);
+    addFeature("Pressure", FT_PRESSURE);
+    addFeature("Wall Shear Stress", FT_WALLSHEARSTRESS);
+    flowFeatures_.addInstance("Velocity"); // Default selection.
+    flowFeatures_.setGroupID("ensemble");
     setPropertyGroupGuiName("ensemble", "Ensemble");
 
     addProperty(flowDirection_);
@@ -143,6 +152,12 @@ void FlowIndicatorDetection::process() {
     flowParametrizationList->setNumTimeSteps(numTimeSteps_.get());
     flowParametrizationList->setOutputResolution(outputResolution_.get());
 
+    int flowFeatures = FT_NONE;
+    for(const InteractiveListProperty::Instance& instance : flowFeatures_.getInstances()) {
+        flowFeatures |=  flowFeatureIds_[instance.itemId_];
+    }
+    flowParametrizationList->setFlowFeatures(flowFeatures);
+
     for(const FlowIndicator& indicator : flowIndicators_) {
         // NONE means invalid or not being selected for output.
         if(indicator.direction_ != FD_NONE) {
@@ -151,6 +166,11 @@ void FlowIndicatorDetection::process() {
     }
 
     flowParametrizationPort_.setData(flowParametrizationList);
+}
+
+void FlowIndicatorDetection::addFeature(const std::string &name, int id) {
+    flowFeatures_.addItem(name);
+    flowFeatureIds_.push_back(id);
 }
 
 void FlowIndicatorDetection::onSelectionChange() {

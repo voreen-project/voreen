@@ -36,6 +36,7 @@
 #include "../../datastructures/flowparameters.h"
 #include "../../ports/flowparametrizationport.h"
 
+#include "modules/base/properties/interactivelistproperty.h"
 #include "custommodules/vesseltopology/ports/vesselgraphport.h"
 
 namespace voreen {
@@ -67,6 +68,7 @@ protected:
 
 private:
 
+    void addFeature(const std::string& name, int id);
     void onSelectionChange();
     void onConfigChange();
     void onInputChange();
@@ -80,6 +82,9 @@ private:
     FloatProperty simulationTime_;
     IntProperty numTimeSteps_;
     IntProperty outputResolution_;
+
+    InteractiveListProperty flowFeatures_;
+    std::vector<int> flowFeatureIds_;
 
     OptionProperty<FlowDirection> flowDirection_;
     OptionProperty<FlowFunction> startPhaseFunction_;

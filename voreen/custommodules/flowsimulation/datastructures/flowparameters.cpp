@@ -183,6 +183,7 @@ FlowParametrizationList::FlowParametrizationList(const std::string& name)
     , simulationTime_(0.0f)
     , numTimeSteps_(0)
     , outputResolution_(0)
+    , flowFeatures_(FT_NONE)
 {
 }
 
@@ -191,6 +192,7 @@ FlowParametrizationList::FlowParametrizationList(const FlowParametrizationList& 
     , simulationTime_(origin.simulationTime_)
     , numTimeSteps_(origin.numTimeSteps_)
     , outputResolution_(origin.outputResolution_)
+    , flowFeatures_(origin.flowFeatures_)
     , flowIndicators_(origin.flowIndicators_)
     , flowParametrizations_(origin.flowParametrizations_)
 {
@@ -225,6 +227,15 @@ int FlowParametrizationList::getOutputResolution() const {
 void FlowParametrizationList::setOutputResolution(int outputResolution) {
     notifyPendingDataInvalidation();
     outputResolution_ = outputResolution;
+}
+
+int FlowParametrizationList::getFlowFeatures() const {
+    return flowFeatures_;
+}
+
+void FlowParametrizationList::setFlowFeatures(int flowFeatures) {
+    notifyPendingDataInvalidation();
+    flowFeatures_ = flowFeatures;
 }
 
 void FlowParametrizationList::setStartPhaseFunction(FlowFunction startPhaseFunction) {
@@ -271,6 +282,7 @@ std::string FlowParametrizationList::toCSVString(size_t param) const {
     output << ", " << simulationTime_;
     output << ", " << numTimeSteps_;
     output << ", " << outputResolution_;
+    output << ", " << flowFeatures_;
 
     if(param == ALL_PARAMETRIZATIONS) {
         output << ", " << flowParametrizations_.size();
@@ -337,6 +349,7 @@ void FlowParametrizationList::deserialize(Deserializer& s) {
     s.deserialize("simulationTime", simulationTime_);
     s.deserialize("numTimeSteps", numTimeSteps_);
     s.deserialize("outputResolution", outputResolution_);
+    s.deserialize("flowFeatures", flowFeatures_);
     s.deserialize("flowIndicators", flowIndicators_);
     s.deserialize("flowParametrizations", flowParametrizations_);
 }
@@ -346,6 +359,7 @@ void FlowParametrizationList::serializeInternal(Serializer& s, size_t param) con
     s.serialize("simulationTime", simulationTime_);
     s.serialize("numTimeSteps", numTimeSteps_);
     s.serialize("outputResolution", outputResolution_);
+    s.serialize("flowFeatures", flowFeatures_);
     s.serialize("flowIndicators", flowIndicators_);
     if(param == ALL_PARAMETRIZATIONS) {
         s.serialize("flowParametrizations", flowParametrizations_);
