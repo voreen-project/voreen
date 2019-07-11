@@ -144,7 +144,7 @@ private:
     IntVec3Property maxSmoothingKernelSize_;
     // TODO: Optionproperty<?> vesselType (>, <, egal)
 
-    // Disable properties when not enabled:
+    // Disable properties when processor is not enabled:
     PropertyDisabler propertyDisabler_;
 
     static const std::string loggerCat_;
