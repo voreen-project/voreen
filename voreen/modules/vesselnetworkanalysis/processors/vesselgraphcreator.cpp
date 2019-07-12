@@ -62,8 +62,6 @@ VesselGraphCreator::VesselGraphCreator()
     , sampleMaskInport_(Port::INPORT, "vesselgraphcreator.samplemask.inport", "Sample Mask (optional)")
     , fixedForegroundPointInport_(Port::INPORT, "vesselgraphcreator.fixedForegroundPointInport", "Fixed Foreground Points", false, Processor::INVALID_RESULT)
     , graphOutport_(Port::OUTPORT, "vesselgraphcreator_graph.outport", "Graph", false, Processor::VALID)
-    , nodeOutport_(Port::OUTPORT, "vesselgraphcreator_node.outport", "Nodes Voxels", false, Processor::VALID)
-    , edgeOutport_(Port::OUTPORT, "vesselgraphcreator_edge.outport", "Edges Voxels", false, Processor::VALID)
     , generatedVolumesOutport_(Port::OUTPORT, "generatedSkeletons.outport", "Generated Volumes", false, Processor::VALID)
     , generatedGraphsOutport_(Port::OUTPORT, "generatedGraphs.outport", "Generated Graphs", false, Processor::VALID)
     , numRefinementIterations_("numRefinementIterations", "Refinement Iterations", 100, 0, 100, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_ADVANCED)
@@ -78,8 +76,6 @@ VesselGraphCreator::VesselGraphCreator()
     addPort(sampleMaskInport_);
     addPort(fixedForegroundPointInport_);
     addPort(graphOutport_);
-    addPort(nodeOutport_);
-    addPort(edgeOutport_);
     addPort(generatedVolumesOutport_);
     addPort(generatedGraphsOutport_);
 
@@ -113,7 +109,7 @@ VoreenSerializableObject* VesselGraphCreator::create() const {
 
 bool VesselGraphCreator::isReady() const {
     return isInitialized() && segmentedVolumeInport_.isReady() &&
-        (graphOutport_.isReady() || nodeOutport_.isReady() || edgeOutport_.isReady() || generatedVolumesOutport_.isReady() || generatedGraphsOutport_.isReady());
+        (graphOutport_.isReady() || generatedVolumesOutport_.isReady() || generatedGraphsOutport_.isReady());
 }
 
 struct VesselGraphCreatorProcessedInput {
@@ -1051,26 +1047,6 @@ VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput inp
 void VesselGraphCreator::processComputeOutput(VesselGraphCreatorOutput output) {
     const VesselGraph* graph = output.graph.release();
     graphOutport_.setData(graph);
-    if(graph) {
-        PointListGeometryVec3* nodeGeom = new PointListGeometryVec3();
-        for(auto& node : graph->getNodes()) {
-            nodeGeom->addPoint(node.pos_);
-        }
-        nodeOutport_.setData(nodeGeom);
-
-        PointSegmentListGeometryVec3* edgeGeom = new PointSegmentListGeometryVec3();
-        for(auto& edge : graph->getEdges()) {
-            std::vector<tgt::vec3> segment(edge.getVoxels().size());
-            std::transform(edge.getVoxels().begin(), edge.getVoxels().end(), segment.begin(), [] (const VesselSkeletonVoxel& voxel) {
-                    return voxel.pos_;
-                    });
-            edgeGeom->addSegment(segment);
-        }
-        edgeOutport_.setData(edgeGeom);
-    } else {
-        nodeOutport_.setData(nullptr);
-        edgeOutport_.setData(nullptr);
-    }
     lastGeneratedVolumes_ = std::move(output.generatedVolumes);
     VolumeList* volList = new VolumeList();
     for(auto& vol : lastGeneratedVolumes_) {

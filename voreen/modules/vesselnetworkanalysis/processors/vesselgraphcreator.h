@@ -116,11 +116,17 @@ public:
     virtual VoreenSerializableObject* create() const;
     virtual void setDescriptions() {
         setDescription(
-                "Processor that creates a graph from a voxel skeleton. "
-                "For the VesselGraph extraction a binary input volume (created via VolumeThinning) and the original Segmentation are required. "
+                "Create a VesselGraph from a binary input volume (and optionally a mask that specifies the sample volume). "
+                "This is the original implementation of the algorithm described in \"Scalable Robust Graph and Feature Extraction for Arbitrary Vessel Networks in Volumetric Datasets\" by Drees et al. "
+                "The resulting VesselGraph can be rendered using <b>VesselGraphRenderer</b> or exported using <b>VesselGraphGlobalStats</b> or <b>VesselGraphSave</b>. "
+                "The centerlines of the graph can be extracted using a <b>VesselGraphCenterlineConverter</b>."
                 );
+        binarizationThresholdSegmentation_.setDescription("Values above this threshold will be considered foreground, others background. If the input volume is not binary already, this property can therefore be used for thresholding.");
+        numRefinementIterations_.setDescription("Maximum number of refinement iterations. Note that this value can generally be set to a very high value as the computation is interrupted automatically once a fixed point is reached, i.e., when the refinement does not make progress anymore.");
+
+        minBulgeSize_.setDescription("Edges with a bulge size below this threshold will be considered for deletion during the refinement. A bulge size of 1.0 roughly corresponds to hemisphere-shaped bulge.");
     }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
+    virtual CodeState getCodeState() const        { return CODE_STATE_TESTING; }
     virtual bool isReady() const;
 
     virtual VesselGraphCreatorInput prepareComputeInput();
@@ -137,8 +143,6 @@ private:
     VolumePort sampleMaskInport_;
     GeometryPort fixedForegroundPointInport_;
     VesselGraphPort graphOutport_;
-    GeometryPort nodeOutport_;
-    GeometryPort edgeOutport_;
     VolumeListPort generatedVolumesOutport_; //For debug purposes
     std::vector<std::unique_ptr<VolumeBase>> lastGeneratedVolumes_; //owns volumes as generated volumes only holds references
     VesselGraphListPort generatedGraphsOutport_; //For debug purposes
