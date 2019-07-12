@@ -36,7 +36,7 @@
 #include"processors/vesselgraphperturbation.h"
 #include"processors/vesselgraphrenderer.h"
 #include"processors/vesselgraphsave.h"
-#include"processors/vesselgraphskeletonextractor.h"
+#include"processors/vesselgraphcenterlineconverter.h"
 #include"processors/vesselgraphsource.h"
 #include"processors/vesselgraphselector.h"
 #include"processors/vesselnessextractor.h"
@@ -66,7 +66,7 @@ VesselNetworkAnalysisModule::VesselNetworkAnalysisModule(const std::string& modu
     registerProcessor(new VesselGraphPerturbation());
     registerProcessor(new VesselGraphRenderer());
     registerProcessor(new VesselGraphSave());
-    registerProcessor(new VesselGraphSkeletonExtractor());
+    registerProcessor(new VesselGraphCenterlineConverter());
     registerProcessor(new VesselGraphSource());
     registerProcessor(new VesselGraphSelector());
     registerProcessor(new VesselnessExtractor());

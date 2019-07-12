@@ -47,7 +47,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/vesselgraphperturbation.cpp
     ${MOD_DIR}/processors/vesselgraphrenderer.cpp
     ${MOD_DIR}/processors/vesselgraphsave.cpp
-    ${MOD_DIR}/processors/vesselgraphskeletonextractor.cpp
+    ${MOD_DIR}/processors/vesselgraphcenterlineconverter.cpp
     ${MOD_DIR}/processors/vesselgraphsource.cpp
     ${MOD_DIR}/processors/vesselgraphselector.cpp
     ${MOD_DIR}/processors/vesselnessextractor.cpp
@@ -79,7 +79,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/vesselgraphperturbation.h
     ${MOD_DIR}/processors/vesselgraphrenderer.h
     ${MOD_DIR}/processors/vesselgraphsave.h
-    ${MOD_DIR}/processors/vesselgraphskeletonextractor.h
+    ${MOD_DIR}/processors/vesselgraphcenterlineconverter.h
     ${MOD_DIR}/processors/vesselgraphsource.h
     ${MOD_DIR}/processors/vesselgraphselector.h
     ${MOD_DIR}/processors/vesselnessextractor.h

@@ -7,20 +7,20 @@
                     <values>
                         <item type="TextBoxMetaData" userType="65568" caption="Segmentation" captionFontSize="9" y="-1373" width="1134" height="751" baseColor="#e71e22" />
                         <item type="TextBoxMetaData" userType="65568" caption="Postprocessing" captionFontSize="9" x="0" y="-629" width="1132" height="300" baseColor="#0da49a" />
-                        <item type="TextBoxMetaData" userType="65568" caption="Graph Extraction" captionFontSize="9" x="0" y="-317" width="1132" height="503" baseColor="#a49701" />
+                        <item type="TextBoxMetaData" userType="65568" caption="Graph Extraction" captionFontSize="9" x="0" y="-313" width="1132" height="503" baseColor="#a49701" />
                         <item type="TextBoxMetaData" userType="65568" caption="Input" captionFontSize="9" x="-3" y="-1602" width="453" height="211" />
                         <item type="TextBoxMetaData" userType="65568" caption="Output" captionFontSize="9" x="-2" y="193" width="1128" height="251" baseColor="#49a44c" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="VolumeSource" ref="ref0" />
+                        <item type="VesselGraphCenterlineConverter" ref="ref15" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="363.138519287" y="-738.118469238" />
+                    <value x="218.080444336" y="-7.894314766" />
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.506693721" />
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.013387442" />
             </MetaData>
             <Processors>
                 <Processor type="VolumeSource" name="Vessel Volume" id="ref0">
@@ -30,9 +30,17 @@
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
                         <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
-                            <urls protocol="" absolute="false">
-                                <path noPathSet="true" />
-                                <searchParameters />
+                            <urls protocol="">
+                                <path noPathSet="false">
+                                    <paths>
+                                        <item value="../../../../../voreen-testdata/voreen-testdata/input/cow.vvd" />
+                                        <item value="../../voreen-testdata/voreen-testdata/input/cow.vvd" />
+                                        <item value="/git/voreen-testdata/voreen-testdata/input/cow.vvd" />
+                                    </paths>
+                                </path>
+                                <searchParameters>
+                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                </searchParameters>
                             </urls>
                         </Property>
                     </Properties>
@@ -62,10 +70,10 @@
                         <Property mapKey="numRefinementIterations" name="numRefinementIterations" value="100" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="saveDebugData" name="saveDebugData" value="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 6.198 sec" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 880 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
-                        <Property mapKey="tmpStorageSizeInfo" name="tmpStorageSizeInfo" value="4 MB" />
+                        <Property mapKey="tmpStorageSizeInfo" name="tmpStorageSizeInfo" value="34.7 kB" />
                     </Properties>
                     <Inports>
                         <Port name="vesselgraphcreator.fixedForegroundPointInport" direction="1" portID="vesselgraphcreator.fixedForegroundPointInport" guiName="Fixed Foreground Points" allowMultipleConnections="false" invalidationLevel="1">
@@ -124,18 +132,18 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.043349057" id="ref42">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.042634923" id="ref42">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.464131802" y="-2.179156303" z="-0.642255783" />
-                            <focus x="-0.011764824" y="-0.011764735" z="-0.011764765" />
-                            <upVector x="0.147063687" y="0.120263755" z="-0.981788635" />
+                            <position x="0.21666877" y="-2.345788002" z="-0.050888963" />
+                            <focus x="-0.011764705" y="-0.011764735" z="-0.011764765" />
+                            <upVector x="-0.066261999" y="-0.126902357" z="-0.989699602" />
                             <trackball moveCenter="false">
-                                <center x="-0.011764824" y="-0.011764735" z="-0.011764765" />
+                                <center x="-0.011764705" y="-0.011764735" z="-0.011764765" />
                             </trackball>
-                            <sceneLLF x="-0.847499967" y="-0.824062467" z="-1" />
-                            <sceneURB x="0.839687467" y="0.870937467" z="0.878749967" />
+                            <sceneLLF x="-0.987764716" y="-0.352470607" z="-0.623058856" />
+                            <sceneURB x="0.964235306" y="0.328941137" z="0.599529326" />
                         </Property>
                         <Property mapKey="composeShader" name="composeShader">
                             <MetaData>
@@ -583,7 +591,7 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="1" />
+                                <domain x="0.847294509" y="0.972932041" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -755,7 +763,7 @@
                             </components>
                         </Property>
                         <Property mapKey="enabledProp" name="enabledProp" value="true" />
-                        <Property mapKey="isoValueProp" name="isoValueProp" guiName="Binarization Threshold" value="9" id="ref144" />
+                        <Property mapKey="isoValueProp" name="isoValueProp" guiName="Binarization Threshold" value="110" id="ref144" />
                         <Property mapKey="marchingCubesShaderProp" name="marchingCubesShaderProp">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-1920" y="0" width="700" height="700" />
@@ -767,7 +775,7 @@
                         </Property>
                         <Property mapKey="maxGradientProp" name="maxGradientProp" value="-3" />
                         <Property mapKey="maxSmoothingIterationsProp" name="maxSmoothingIterationsProp" value="10" />
-                        <Property mapKey="meshBufferSizeProp" name="meshBufferSizeProp" value="214748364" />
+                        <Property mapKey="meshBufferSizeProp" name="meshBufferSizeProp" value="48081600" />
                         <Property mapKey="recalculateSmoothingButtonProp" name="recalculateSmoothingButtonProp" />
                         <Property mapKey="smoothingProgressProp" name="smoothingProgressProp" />
                         <Property mapKey="smoothingStepSizeProp" name="smoothingStepSizeProp" value="0" />
@@ -827,7 +835,7 @@
                         <Property mapKey="lightDiffuse" name="lightDiffuse">
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
                         </Property>
-                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="30.31139183">
+                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="24.034574509">
                             <value x="0" y="0" z="0.01" w="0" />
                             <Center x="0" y="0" z="0" />
                             <LightPos x="0" y="0" z="0.01" w="0" />
@@ -896,7 +904,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="PointSegmentListRenderer" name="PointSegmentListRenderer" id="ref20">
+                <Processor type="PointSegmentListRenderer" name="PointSegmentListRenderer" id="ref41">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="52" y="-61" />
                     </MetaData>
@@ -914,7 +922,7 @@
                             <value x="0.06666667" y="1" z="0.125490203" w="1" />
                         </Property>
                         <Property mapKey="segmentEnabled" name="segmentEnabled" value="true" />
-                        <Property mapKey="segmentList" name="segmentList" value="" />
+                        <Property mapKey="segmentList" name="segmentList" value="0" />
                         <Property mapKey="sphereDiameter" name="sphereDiameter" value="0.02" />
                         <Property mapKey="sphereSlicesStacks" name="sphereSlicesStacks" value="20" />
                     </Properties>
@@ -955,1214 +963,9 @@
                         <item enabled="true">
                             <color x="1" y="0.392156869" z="0.078431375" w="1" />
                         </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0" y="1" z="1" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="1" z="0" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
-                        </item>
-                        <item enabled="true">
-                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
-                        </item>
                     </segments>
                 </Processor>
-                <Processor type="VesselGraphSkeletonExtractor" name="VesselGraphSkeletonExtractor" id="ref14">
-                    <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="38" y="-165" />
-                    </MetaData>
-                    <Properties />
-                    <Inports>
-                        <Port name="vesselgraphskeletonextractor_graph.inport" direction="1" portID="vesselgraphskeletonextractor_graph.inport" guiName="Graph" allowMultipleConnections="false" invalidationLevel="1">
-                            <Properties />
-                        </Port>
-                    </Inports>
-                    <Outports>
-                        <Port name="vesselgraphskeletonextractor_edges.outport" direction="0" portID="vesselgraphskeletonextractor_edges.outport" guiName="Edges" allowMultipleConnections="true" invalidationLevel="0">
-                            <Properties>
-                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
-                            </Properties>
-                        </Port>
-                        <Port name="vesselgraphskeletonextractor_nodes.outport" direction="0" portID="vesselgraphskeletonextractor_nodes.outport" guiName="Nodes" allowMultipleConnections="true" invalidationLevel="0">
-                            <Properties>
-                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
-                            </Properties>
-                        </Port>
-                    </Outports>
-                    <CoProcessorInports />
-                    <CoProcessorOutports />
-                    <InteractionHandlers />
-                </Processor>
-                <Processor type="VolumeSource" name="Sample Mask" id="ref21">
+                <Processor type="VolumeSource" name="Sample Mask" id="ref20">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="265" y="-1549" />
                     </MetaData>
@@ -2187,7 +990,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="ConnectedComponentAnalysis" name="Cavity Removal" id="ref22">
+                <Processor type="ConnectedComponentAnalysis" name="Cavity Removal" id="ref21">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="100" y="-477" />
                     </MetaData>
@@ -2208,14 +1011,14 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/0867287d-2e6a-4d69-a366-c29f88198f2b.h5" />
-                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/0867287d-2e6a-4d69-a366-c29f88198f2b.h5" />
-                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/0867287d-2e6a-4d69-a366-c29f88198f2b.h5" />
+                                    <item value="../../../../../../nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/fced3dbe-eec8-4979-aefd-686432f00d6c.h5" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/fced3dbe-eec8-4979-aefd-686432f00d6c.h5" />
+                                    <item value="/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/fced3dbe-eec8-4979-aefd-686432f00d6c.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" guiName="Progress (Cavity Removal)" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 933 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 97 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="writeComponentStatFile" name="writeComponentStatFile" value="false" />
@@ -2240,7 +1043,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="ConnectedComponentAnalysis" name="Object Removal" id="ref23">
+                <Processor type="ConnectedComponentAnalysis" name="Object Removal" id="ref22">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="100" y="-401" />
                     </MetaData>
@@ -2261,14 +1064,14 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/1b54105e-6590-4d26-a763-ecfcf81eedc4.h5" />
-                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/1b54105e-6590-4d26-a763-ecfcf81eedc4.h5" />
-                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/1b54105e-6590-4d26-a763-ecfcf81eedc4.h5" />
+                                    <item value="../../../../../../nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/a76fbfb4-5989-4acc-8232-260830730951.h5" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/a76fbfb4-5989-4acc-8232-260830730951.h5" />
+                                    <item value="/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/a76fbfb4-5989-4acc-8232-260830730951.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" guiName="Progress (Object Removal)" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 800 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 100 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="writeComponentStatFile" name="writeComponentStatFile" value="false" />
@@ -2299,32 +1102,32 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="false" />
-                        <Property mapKey="enabled" name="enabled" guiName="Enable Vesselness Filtering" value="true" />
+                        <Property mapKey="enabled" name="enabled" guiName="Enable Vesselness Filtering" value="false" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="maxSmoothingKernelSize" name="maxSmoothingKernelSize">
-                            <value x="0" y="0" z="0" />
+                            <value x="13" y="13" z="13" />
                         </Property>
                         <Property mapKey="maxStandardDeviationVec" name="maxStandardDeviationVec">
-                            <value x="0" y="0" z="0" />
+                            <value x="2.125000238" y="2.125000238" z="2.125000238" />
                         </Property>
                         <Property mapKey="minSmoothingKernelSize" name="minSmoothingKernelSize">
-                            <value x="0" y="0" z="0" />
+                            <value x="7" y="7" z="7" />
                         </Property>
                         <Property mapKey="minStandardDeviationVec" name="minStandardDeviationVec">
-                            <value x="0" y="0" z="0" />
+                            <value x="1" y="1" z="1" />
                         </Property>
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/632acde9-b7fd-4f04-8cb4-d2cbb06b3595.h5" />
-                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/632acde9-b7fd-4f04-8cb4-d2cbb06b3595.h5" />
-                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/632acde9-b7fd-4f04-8cb4-d2cbb06b3595.h5" />
+                                    <item value="../../../../../../nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/c9a0dd18-d945-4bfe-8921-ced29a4068d2.h5" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/c9a0dd18-d945-4bfe-8921-ced29a4068d2.h5" />
+                                    <item value="/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/c9a0dd18-d945-4bfe-8921-ced29a4068d2.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" guiName="Vesselness Extraction Progress" />
                         <Property mapKey="scaleSpaceSteps" name="scaleSpaceSteps" value="3" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 215 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="vesselRadiusRangeRW" minValue="0.02352941" maxValue="0.729411721" minRange="0" maxRange="2147483648" stepping="0.00001">
@@ -2351,7 +1154,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="TabbedView" name="TabbedView" id="ref28">
+                <Processor type="TabbedView" name="TabbedView" id="ref27">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="905" y="247" />
                     </MetaData>
@@ -2368,7 +1171,7 @@
                         <Property mapKey="buttonHoverColor" name="buttonHoverColor">
                             <value x="0.699999988" y="0.699999988" z="0.699999988" w="1" />
                         </Property>
-                        <Property mapKey="currentView" name="currentView" value="first" />
+                        <Property mapKey="currentView" name="currentView" value="third" />
                         <Property mapKey="enableTab3" name="enableTab3" value="true" />
                         <Property mapKey="enableTab4" name="enableTab4" value="false" />
                         <Property mapKey="hideTabbar_" name="hideTabbar_" value="false" />
@@ -2387,7 +1190,7 @@
                             <value x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="voreen.fontprop" name="voreen.fontprop" fontSize="12" fontName="VeraMono.ttf" textAlignment="3" lineWidth="459">
-                            <fontColor x="0" y="0" z="0" w="1" />
+                            <fontColor x="0.899999976" y="0.899999976" z="0.899999976" w="1" />
                         </Property>
                     </Properties>
                     <Inports>
@@ -2434,22 +1237,22 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="GeometryProcessor" name="GeometryProcessor 2" id="ref30">
+                <Processor type="GeometryProcessor" name="GeometryProcessor 2" id="ref29">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="373" y="-1020" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.043349057" id="ref43">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.042634923" id="ref43">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.464131802" y="-2.179156303" z="-0.642255783" />
-                            <focus x="-0.011764824" y="-0.011764735" z="-0.011764765" />
-                            <upVector x="0.147063687" y="0.120263755" z="-0.981788635" />
+                            <position x="0.21666877" y="-2.345788002" z="-0.050888963" />
+                            <focus x="-0.011764705" y="-0.011764735" z="-0.011764765" />
+                            <upVector x="-0.066261999" y="-0.126902357" z="-0.989699602" />
                             <trackball moveCenter="false">
-                                <center x="-0.011764824" y="-0.011764735" z="-0.011764765" />
+                                <center x="-0.011764705" y="-0.011764735" z="-0.011764765" />
                             </trackball>
                             <sceneLLF x="-1.011764765" y="-0.376470596" z="-0.647058845" />
                             <sceneURB x="0.988235116" y="0.352941126" z="0.623529315" />
@@ -2532,7 +1335,7 @@
                         </Handler>
                     </InteractionHandlers>
                 </Processor>
-                <Processor type="IsosurfaceExtractor" name="IsosurfaceExtractor 3" id="ref24">
+                <Processor type="IsosurfaceExtractor" name="IsosurfaceExtractor 3" id="ref23">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="322" y="-550" />
                     </MetaData>
@@ -2560,7 +1363,7 @@
                         </Property>
                         <Property mapKey="maxGradientProp" name="maxGradientProp" value="-3" />
                         <Property mapKey="maxSmoothingIterationsProp" name="maxSmoothingIterationsProp" value="10" />
-                        <Property mapKey="meshBufferSizeProp" name="meshBufferSizeProp" value="214748364" />
+                        <Property mapKey="meshBufferSizeProp" name="meshBufferSizeProp" value="48081600" />
                         <Property mapKey="recalculateSmoothingButtonProp" name="recalculateSmoothingButtonProp" />
                         <Property mapKey="smoothingProgressProp" name="smoothingProgressProp" />
                         <Property mapKey="smoothingStepSizeProp" name="smoothingStepSizeProp" value="0" />
@@ -2587,7 +1390,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="GeometryRenderer" name="GeometryRenderer 3" id="ref32">
+                <Processor type="GeometryRenderer" name="GeometryRenderer 3" id="ref31">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="339" y="-443" />
                     </MetaData>
@@ -2620,7 +1423,7 @@
                         <Property mapKey="lightDiffuse" name="lightDiffuse">
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
                         </Property>
-                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="30.441293716">
+                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="24.034574509">
                             <value x="2.299999952" y="1.5" z="1.5" w="1" />
                             <Center x="0" y="0" z="0" />
                             <LightPos x="0" y="0" z="1" w="1" />
@@ -2661,25 +1464,25 @@
                     </CoProcessorOutports>
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="GeometryProcessor" name="GeometryProcessor 3" id="ref33">
+                <Processor type="GeometryProcessor" name="GeometryProcessor 3" id="ref32">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="619" y="-560" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.043349057" id="ref44">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.042634923" id="ref44">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="2328" y="112" />
                             </MetaData>
-                            <position x="0.464131802" y="-2.179156303" z="-0.642255783" />
-                            <focus x="-0.011764824" y="-0.011764735" z="-0.011764765" />
-                            <upVector x="0.147063687" y="0.120263755" z="-0.981788635" />
+                            <position x="0.21666877" y="-2.345788002" z="-0.050888963" />
+                            <focus x="-0.011764705" y="-0.011764735" z="-0.011764765" />
+                            <upVector x="-0.066261999" y="-0.126902357" z="-0.989699602" />
                             <trackball moveCenter="false">
-                                <center x="-0.011764824" y="-0.011764735" z="-0.011764765" />
+                                <center x="-0.011764705" y="-0.011764735" z="-0.011764765" />
                             </trackball>
-                            <sceneLLF x="-0.84765625" y="-0.82421875" z="-1.00390625" />
-                            <sceneURB x="0.83984375" y="0.87109375" z="0.87890625" />
+                            <sceneLLF x="-0.988235295" y="-0.352941185" z="-0.623529434" />
+                            <sceneURB x="0.964705706" y="0.329411715" z="0.599999964" />
                         </Property>
                         <Property mapKey="composeShader" name="composeShader">
                             <MetaData>
@@ -2765,15 +1568,15 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLightAttenuation" name="applyLightAttenuation" value="false" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.043349057" id="ref45">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.042634923" id="ref45">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.464131802" y="-2.179156303" z="-0.642255783" />
-                            <focus x="-0.011764824" y="-0.011764735" z="-0.011764765" />
-                            <upVector x="0.147063687" y="0.120263755" z="-0.981788635" />
+                            <position x="0.21666877" y="-2.345788002" z="-0.050888963" />
+                            <focus x="-0.011764705" y="-0.011764735" z="-0.011764765" />
+                            <upVector x="-0.066261999" y="-0.126902357" z="-0.989699602" />
                             <trackball moveCenter="false">
-                                <center x="-0.011764824" y="-0.011764735" z="-0.011764765" />
+                                <center x="-0.011764705" y="-0.011764735" z="-0.011764765" />
                             </trackball>
                             <sceneLLF x="-1.011764765" y="-0.376470596" z="-0.647058845" />
                             <sceneURB x="0.988235116" y="0.352941126" z="0.623529315" />
@@ -2861,9 +1664,9 @@
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
                         </Property>
                         <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="24.792005539">
-                            <value x="-0.007858636" y="-0.007858545" z="-0.007858574" w="1" />
-                            <Center x="-0.011764824" y="-0.011764735" z="-0.011764765" />
-                            <LightPos x="-0.005090917" y="-0.002097233" z="-0.003931811" w="1" />
+                            <value x="-0.007858517" y="-0.007858545" z="-0.007858574" w="1" />
+                            <Center x="-0.011764705" y="-0.011764735" z="-0.011764765" />
+                            <LightPos x="-0.003950642" y="-0.004172485" z="-0.003571799" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -3274,20 +2077,20 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="MeshEntryExitPoints" name="MeshEntryExitPoints" id="ref35">
+                <Processor type="MeshEntryExitPoints" name="MeshEntryExitPoints" id="ref34">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="370" y="-1185" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.043349057" id="ref46">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.042634923" id="ref46">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.464131802" y="-2.179156303" z="-0.642255783" />
-                            <focus x="-0.011764824" y="-0.011764735" z="-0.011764765" />
-                            <upVector x="0.147063687" y="0.120263755" z="-0.981788635" />
+                            <position x="0.21666877" y="-2.345788002" z="-0.050888963" />
+                            <focus x="-0.011764705" y="-0.011764735" z="-0.011764765" />
+                            <upVector x="-0.066261999" y="-0.126902357" z="-0.989699602" />
                             <trackball moveCenter="false">
-                                <center x="-0.011764824" y="-0.011764735" z="-0.011764765" />
+                                <center x="-0.011764705" y="-0.011764735" z="-0.011764765" />
                             </trackball>
                             <sceneLLF x="0" y="0" z="0" />
                             <sceneURB x="0" y="0" z="0" />
@@ -3343,7 +2146,7 @@
                         </Handler>
                     </InteractionHandlers>
                 </Processor>
-                <Processor type="Background" name="Background" id="ref31">
+                <Processor type="Background" name="Background" id="ref30">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="400" y="-931" />
                     </MetaData>
@@ -3389,10 +2192,10 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="Canvas" name="Canvas" id="ref29">
+                <Processor type="Canvas" name="Canvas" id="ref28">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="910" y="351" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="79" y="895" width="1406" height="1132" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-1920" y="0" width="1406" height="1132" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="-1920" y="0" />
@@ -3484,7 +2287,7 @@
                         <Property mapKey="sliceIndex" name="sliceIndex" value="42" id="ref108" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" id="ref56" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
-                            <value x="-1" y="-1" z="-1" />
+                            <value x="42" y="23" z="53" />
                         </Property>
                         <Property mapKey="textureMode" name="textureMode" value="3d-texture" id="ref54" />
                         <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true" id="ref64">
@@ -3935,7 +2738,7 @@
                         </Handler>
                     </InteractionHandlers>
                 </Processor>
-                <Processor type="QuadView" name="QuadView" id="ref36">
+                <Processor type="QuadView" name="QuadView" id="ref35">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="876" y="-741" />
                     </MetaData>
@@ -4060,7 +2863,7 @@
                     </CoProcessorOutports>
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="Background" name="Background 2" id="ref34">
+                <Processor type="Background" name="Background 2" id="ref33">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="643" y="-468" />
                     </MetaData>
@@ -4152,7 +2955,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeFilterList" name="Surface Smoothing" Binary_Median_Filter_names.numItems="2" Binary_Median_Filter_names.data="/////wEAAAA=" Binary_Median_Filter_settings.numItems="2" Binary_Median_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAD8BAAAAAAAAAAEAAAANAAAAAQAAAAEAAAABAAAAAQAAAAAAgEAAAAAAAAAAAAEAAAANAAAA" Median_Filter_names.numItems="1" Median_Filter_names.data="/////w==" Median_Filter_settings.numItems="1" Median_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Gaussian_Filter_names.numItems="1" Gaussian_Filter_names.data="/////w==" Gaussian_Filter_settings.numItems="1" Gaussian_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Morphology_Filter_names.numItems="1" Morphology_Filter_names.data="/////w==" Morphology_Filter_settings.numItems="1" Morphology_Filter_settings.data="AQAAAAEAAAABAAAAAAAAAAAAAAABAAAAAAAAAA==" Thresholding_Filter_names.numItems="1" Thresholding_Filter_names.data="/////w==" Thresholding_Filter_settings.numItems="1" Thresholding_Filter_settings.data="AAAAAAAAAAAAAAAAAAAAAA==" id="ref40">
+                <Processor type="VolumeFilterList" name="Surface Smoothing" Binary_Median_Filter_names.numItems="2" Binary_Median_Filter_names.data="/////wEAAAA=" Binary_Median_Filter_settings.numItems="2" Binary_Median_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAD8BAAAAAAAAAAEAAAANAAAAAQAAAAEAAAABAAAAAQAAAAAAgEAAAAAAAAAAAAEAAAANAAAA" Median_Filter_names.numItems="1" Median_Filter_names.data="/////w==" Median_Filter_settings.numItems="1" Median_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Gaussian_Filter_names.numItems="1" Gaussian_Filter_names.data="/////w==" Gaussian_Filter_settings.numItems="1" Gaussian_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Morphology_Filter_names.numItems="1" Morphology_Filter_names.data="/////w==" Morphology_Filter_settings.numItems="1" Morphology_Filter_settings.data="AQAAAAEAAAABAAAAAAAAAAAAAAABAAAAAAAAAA==" Thresholding_Filter_names.numItems="1" Thresholding_Filter_names.data="/////w==" Thresholding_Filter_settings.numItems="1" Thresholding_Filter_settings.data="AAAAAAAAAAAAAAAAAAAAAA==" id="ref39">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="90" y="-554" />
                     </MetaData>
@@ -4210,9 +3013,9 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/38f2d955-ea7a-4a21-aba6-02ae23f1bd4a.h5" />
-                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/38f2d955-ea7a-4a21-aba6-02ae23f1bd4a.h5" />
-                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/38f2d955-ea7a-4a21-aba6-02ae23f1bd4a.h5" />
+                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/81c041f3-483e-477d-9475-d108280de2a9.h5" />
+                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/81c041f3-483e-477d-9475-d108280de2a9.h5" />
+                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/81c041f3-483e-477d-9475-d108280de2a9.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -4241,7 +3044,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VesselGraphGlobalStats" name="VesselGraphGlobalStats" id="ref15">
+                <Processor type="VesselGraphGlobalStats" name="VesselGraphGlobalStats" id="ref14">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="280" y="268" />
                     </MetaData>
@@ -4251,8 +3054,8 @@
                         <Property mapKey="nodeExportFilePath" name="nodeExportFilePath" guiName="Node Data Export File" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
-                        <Property mapKey="numEdges" name="numEdges" value="400" />
-                        <Property mapKey="numNodes" name="numNodes" value="322" />
+                        <Property mapKey="numEdges" name="numEdges" value="7" />
+                        <Property mapKey="numNodes" name="numNodes" value="8" />
                         <Property mapKey="segmentExportFilePath" name="segmentExportFilePath" guiName="Edge Data Export File" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
@@ -4318,7 +3121,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="Compositor" name="Compositor" id="ref37">
+                <Processor type="Compositor" name="Compositor" id="ref36">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="588" y="-1000" />
                     </MetaData>
@@ -4403,7 +3206,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="Compositor" name="Compositor 2" id="ref38">
+                <Processor type="Compositor" name="Compositor 2" id="ref37">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="770" y="-1002" />
                     </MetaData>
@@ -4443,7 +3246,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="Compositor" name="Compositor 3" id="ref39">
+                <Processor type="Compositor" name="Compositor 3" id="ref38">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="947" y="-993" />
                     </MetaData>
@@ -4528,7 +3331,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="GeometryRenderer" name="GeometryRenderer 2" id="ref41">
+                <Processor type="GeometryRenderer" name="GeometryRenderer 2" id="ref40">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="338" y="21" />
                     </MetaData>
@@ -4561,7 +3364,7 @@
                         <Property mapKey="lightDiffuse" name="lightDiffuse">
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
                         </Property>
-                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="30.412708282">
+                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="24.019468307">
                             <value x="2.299999952" y="1.5" z="1.5" w="1" />
                             <Center x="0" y="0" z="0" />
                             <LightPos x="0" y="0" z="1" w="1" />
@@ -4602,7 +3405,7 @@
                     </CoProcessorOutports>
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="IsosurfaceExtractor" name="IsosurfaceExtractor 2" id="ref25">
+                <Processor type="IsosurfaceExtractor" name="IsosurfaceExtractor 2" id="ref24">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="318" y="-79" />
                     </MetaData>
@@ -4630,7 +3433,7 @@
                         </Property>
                         <Property mapKey="maxGradientProp" name="maxGradientProp" value="-3" />
                         <Property mapKey="maxSmoothingIterationsProp" name="maxSmoothingIterationsProp" value="10" />
-                        <Property mapKey="meshBufferSizeProp" name="meshBufferSizeProp" value="214748364" />
+                        <Property mapKey="meshBufferSizeProp" name="meshBufferSizeProp" value="48081600" />
                         <Property mapKey="recalculateSmoothingButtonProp" name="recalculateSmoothingButtonProp" />
                         <Property mapKey="smoothingProgressProp" name="smoothingProgressProp" />
                         <Property mapKey="smoothingStepSizeProp" name="smoothingStepSizeProp" value="0" />
@@ -4657,7 +3460,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeSave" name="VolumeSave" id="ref26">
+                <Processor type="VolumeSave" name="VolumeSave" id="ref25">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="543" y="269" />
                     </MetaData>
@@ -4684,7 +3487,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeFilterList" name="VolumeFilterList" Binary_Median_Filter_names.numItems="1" Binary_Median_Filter_names.data="/////w==" Binary_Median_Filter_settings.numItems="1" Binary_Median_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAD8BAAAAAAAAAAEAAAANAAAA" Median_Filter_names.numItems="1" Median_Filter_names.data="/////w==" Median_Filter_settings.numItems="1" Median_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Gaussian_Filter_names.numItems="1" Gaussian_Filter_names.data="/////w==" Gaussian_Filter_settings.numItems="1" Gaussian_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Morphology_Filter_names.numItems="1" Morphology_Filter_names.data="/////w==" Morphology_Filter_settings.numItems="1" Morphology_Filter_settings.data="AQAAAAEAAAABAAAAAAAAAAAAAAABAAAAAAAAAA==" Thresholding_Filter_names.numItems="2" Thresholding_Filter_names.data="/////wEAAAA=" Thresholding_Filter_settings.numItems="2" Thresholding_Filter_settings.data="AAAAAAAAAAAAAAAAAAAAAAAAoEABAAAAAAAAAAAAAAA=" id="ref27">
+                <Processor type="VolumeFilterList" name="VolumeFilterList" Binary_Median_Filter_names.numItems="1" Binary_Median_Filter_names.data="/////w==" Binary_Median_Filter_settings.numItems="1" Binary_Median_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAD8BAAAAAAAAAAEAAAANAAAA" Median_Filter_names.numItems="1" Median_Filter_names.data="/////w==" Median_Filter_settings.numItems="1" Median_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Gaussian_Filter_names.numItems="1" Gaussian_Filter_names.data="/////w==" Gaussian_Filter_settings.numItems="1" Gaussian_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Morphology_Filter_names.numItems="1" Morphology_Filter_names.data="/////w==" Morphology_Filter_settings.numItems="1" Morphology_Filter_settings.data="AQAAAAEAAAABAAAAAAAAAAAAAAABAAAAAAAAAA==" Thresholding_Filter_names.numItems="2" Thresholding_Filter_names.data="/////wEAAAA=" Thresholding_Filter_settings.numItems="2" Thresholding_Filter_settings.data="AAAAAAAAAAAAAAAAAAAAAAAAoEABAAAAAAAAAAAAAAA=" id="ref26">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="97" y="-726" />
                     </MetaData>
@@ -4717,7 +3520,7 @@
                         <Property mapKey="Morphology_Filter_samplingStrategyType" name="Morphology_Filter_samplingStrategyType" value="clamp" />
                         <Property mapKey="Thresholding_Filter_binarize" name="Thresholding_Filter_binarize" value="true" />
                         <Property mapKey="Thresholding_Filter_replacementValue" name="Thresholding_Filter_replacementValue" value="0" />
-                        <Property mapKey="Thresholding_Filter_thresholdValue" name="Thresholding_Filter_thresholdValue" value="0" id="ref145" />
+                        <Property mapKey="Thresholding_Filter_thresholdValue" name="Thresholding_Filter_thresholdValue" value="110" id="ref145" />
                         <Property mapKey="Thresholding_Filter_thresholdingStrategyType" name="Thresholding_Filter_thresholdingStrategyType" value="lower" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="false" />
                         <Property mapKey="enabled" name="enabled" value="true" />
@@ -4742,14 +3545,14 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/dabe541b-b164-4180-97a4-5ca761b86800.h5" />
-                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/dabe541b-b164-4180-97a4-5ca761b86800.h5" />
-                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/dabe541b-b164-4180-97a4-5ca761b86800.h5" />
+                                    <item value="../../../../../../nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/92e8f8c3-0985-4c0d-8e38-92cbbf365409.h5" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/92e8f8c3-0985-4c0d-8e38-92cbbf365409.h5" />
+                                    <item value="/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/92e8f8c3-0985-4c0d-8e38-92cbbf365409.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" guiName="Progress (Thresholding)" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 385 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 98 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
@@ -4764,6 +3567,27 @@
                     </Inports>
                     <Outports>
                         <Port name="volumehandle.output" direction="0" portID="volumehandle.output" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VesselGraphCenterlineConverter" name="VesselGraphCenterlineConverter" id="ref15">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="47" y="-160" />
+                    </MetaData>
+                    <Properties />
+                    <Inports>
+                        <Port name="vesselgraphcenterlineextractor_graph.inport" direction="1" portID="vesselgraphcenterlineextractor_graph.inport" guiName="Graph" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="vesselgraphcenterlineextractor.outport" direction="0" portID="vesselgraphcenterlineextractor.outport" guiName="Edges" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -4875,16 +3699,16 @@
                     <Outport name="vesselgraphcreator_graph.outport">
                         <Processor type="VesselGraphCreator" ref="ref11" />
                     </Outport>
-                    <Inport name="vesselgraphskeletonextractor_graph.inport">
-                        <Processor type="VesselGraphSkeletonExtractor" ref="ref14" />
+                    <Inport name="graph.input">
+                        <Processor type="VesselGraphGlobalStats" ref="ref14" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="vesselgraphcreator_graph.outport">
                         <Processor type="VesselGraphCreator" ref="ref11" />
                     </Outport>
-                    <Inport name="graph.input">
-                        <Processor type="VesselGraphGlobalStats" ref="ref15" />
+                    <Inport name="vesselgraphcenterlineextractor_graph.inport">
+                        <Processor type="VesselGraphCenterlineConverter" ref="ref15" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -4928,16 +3752,8 @@
                     </Inport>
                 </Connection>
                 <Connection>
-                    <Outport name="vesselgraphskeletonextractor_edges.outport">
-                        <Processor type="VesselGraphSkeletonExtractor" ref="ref14" />
-                    </Outport>
-                    <Inport name="geometry.input">
-                        <Processor type="PointSegmentListRenderer" ref="ref20" />
-                    </Inport>
-                </Connection>
-                <Connection>
                     <Outport name="volumehandle.volumehandle">
-                        <Processor type="VolumeSource" ref="ref21" />
+                        <Processor type="VolumeSource" ref="ref20" />
                     </Outport>
                     <Inport name="vesselgraphcreator.samplemask.inport">
                         <Processor type="VesselGraphCreator" ref="ref11" />
@@ -4945,15 +3761,15 @@
                 </Connection>
                 <Connection>
                     <Outport name="connectedcomponentanalysis.outport">
-                        <Processor type="ConnectedComponentAnalysis" ref="ref22" />
+                        <Processor type="ConnectedComponentAnalysis" ref="ref21" />
                     </Outport>
                     <Inport name="connectedcomponentanalysis.inport">
-                        <Processor type="ConnectedComponentAnalysis" ref="ref23" />
+                        <Processor type="ConnectedComponentAnalysis" ref="ref22" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="connectedcomponentanalysis.outport">
-                        <Processor type="ConnectedComponentAnalysis" ref="ref23" />
+                        <Processor type="ConnectedComponentAnalysis" ref="ref22" />
                     </Outport>
                     <Inport name="vesselgraphcreator.segmentedVolume.inport">
                         <Processor type="VesselGraphCreator" ref="ref11" />
@@ -4961,7 +3777,15 @@
                 </Connection>
                 <Connection>
                     <Outport name="connectedcomponentanalysis.outport">
-                        <Processor type="ConnectedComponentAnalysis" ref="ref23" />
+                        <Processor type="ConnectedComponentAnalysis" ref="ref22" />
+                    </Outport>
+                    <Inport name="isosurfaceextractor.inport">
+                        <Processor type="IsosurfaceExtractor" ref="ref23" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="connectedcomponentanalysis.outport">
+                        <Processor type="ConnectedComponentAnalysis" ref="ref22" />
                     </Outport>
                     <Inport name="isosurfaceextractor.inport">
                         <Processor type="IsosurfaceExtractor" ref="ref24" />
@@ -4969,18 +3793,10 @@
                 </Connection>
                 <Connection>
                     <Outport name="connectedcomponentanalysis.outport">
-                        <Processor type="ConnectedComponentAnalysis" ref="ref23" />
-                    </Outport>
-                    <Inport name="isosurfaceextractor.inport">
-                        <Processor type="IsosurfaceExtractor" ref="ref25" />
-                    </Inport>
-                </Connection>
-                <Connection>
-                    <Outport name="connectedcomponentanalysis.outport">
-                        <Processor type="ConnectedComponentAnalysis" ref="ref23" />
+                        <Processor type="ConnectedComponentAnalysis" ref="ref22" />
                     </Outport>
                     <Inport name="volumehandle.input">
-                        <Processor type="VolumeSave" ref="ref26" />
+                        <Processor type="VolumeSave" ref="ref25" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -4996,39 +3812,39 @@
                         <Processor type="VesselnessExtractor" ref="ref1" />
                     </Outport>
                     <Inport name="volumehandle.input">
-                        <Processor type="VolumeFilterList" ref="ref27" />
+                        <Processor type="VolumeFilterList" ref="ref26" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="outport">
-                        <Processor type="TabbedView" ref="ref28" />
+                        <Processor type="TabbedView" ref="ref27" />
                     </Outport>
                     <Inport name="image.input">
-                        <Processor type="Canvas" ref="ref29" />
+                        <Processor type="Canvas" ref="ref28" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="image.output">
-                        <Processor type="GeometryProcessor" ref="ref30" />
+                        <Processor type="GeometryProcessor" ref="ref29" />
                     </Outport>
                     <Inport name="image.input">
-                        <Processor type="Background" ref="ref31" />
+                        <Processor type="Background" ref="ref30" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="isosurfaceextractor.outport">
-                        <Processor type="IsosurfaceExtractor" ref="ref24" />
+                        <Processor type="IsosurfaceExtractor" ref="ref23" />
                     </Outport>
                     <Inport name="inport.geometry">
-                        <Processor type="GeometryRenderer" ref="ref32" />
+                        <Processor type="GeometryRenderer" ref="ref31" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="image.output">
-                        <Processor type="GeometryProcessor" ref="ref33" />
+                        <Processor type="GeometryProcessor" ref="ref32" />
                     </Outport>
                     <Inport name="image.input">
-                        <Processor type="Background" ref="ref34" />
+                        <Processor type="Background" ref="ref33" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -5036,7 +3852,7 @@
                         <Processor type="SingleVolumeRaycaster" ref="ref3" />
                     </Outport>
                     <Inport name="image.input">
-                        <Processor type="GeometryProcessor" ref="ref30" />
+                        <Processor type="GeometryProcessor" ref="ref29" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -5044,12 +3860,12 @@
                         <Processor type="OptimizedProxyGeometry" ref="ref2" />
                     </Outport>
                     <Inport name="proxgeometry.geometry">
-                        <Processor type="MeshEntryExitPoints" ref="ref35" />
+                        <Processor type="MeshEntryExitPoints" ref="ref34" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="image.entrypoints">
-                        <Processor type="MeshEntryExitPoints" ref="ref35" />
+                        <Processor type="MeshEntryExitPoints" ref="ref34" />
                     </Outport>
                     <Inport name="image.entrypoints">
                         <Processor type="SingleVolumeRaycaster" ref="ref3" />
@@ -5057,7 +3873,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="image.exitpoints">
-                        <Processor type="MeshEntryExitPoints" ref="ref35" />
+                        <Processor type="MeshEntryExitPoints" ref="ref34" />
                     </Outport>
                     <Inport name="image.exitpoints">
                         <Processor type="SingleVolumeRaycaster" ref="ref3" />
@@ -5065,10 +3881,10 @@
                 </Connection>
                 <Connection>
                     <Outport name="image.output">
-                        <Processor type="Background" ref="ref31" />
+                        <Processor type="Background" ref="ref30" />
                     </Outport>
                     <Inport name="inport1">
-                        <Processor type="QuadView" ref="ref36" />
+                        <Processor type="QuadView" ref="ref35" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -5076,7 +3892,7 @@
                         <Processor type="SliceViewer" ref="ref4" />
                     </Outport>
                     <Inport name="image.inport0">
-                        <Processor type="Compositor" ref="ref37" />
+                        <Processor type="Compositor" ref="ref36" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -5084,7 +3900,7 @@
                         <Processor type="SliceViewer" ref="ref5" />
                     </Outport>
                     <Inport name="image.inport0">
-                        <Processor type="Compositor" ref="ref38" />
+                        <Processor type="Compositor" ref="ref37" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -5092,23 +3908,23 @@
                         <Processor type="SliceViewer" ref="ref6" />
                     </Outport>
                     <Inport name="image.inport0">
-                        <Processor type="Compositor" ref="ref39" />
+                        <Processor type="Compositor" ref="ref38" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="outport">
-                        <Processor type="QuadView" ref="ref36" />
+                        <Processor type="QuadView" ref="ref35" />
                     </Outport>
                     <Inport name="inport1">
-                        <Processor type="TabbedView" ref="ref28" />
+                        <Processor type="TabbedView" ref="ref27" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="image.output">
-                        <Processor type="Background" ref="ref34" />
+                        <Processor type="Background" ref="ref33" />
                     </Outport>
                     <Inport name="inport2">
-                        <Processor type="TabbedView" ref="ref28" />
+                        <Processor type="TabbedView" ref="ref27" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -5116,15 +3932,15 @@
                         <Processor type="Background" ref="ref17" />
                     </Outport>
                     <Inport name="inport3">
-                        <Processor type="TabbedView" ref="ref28" />
+                        <Processor type="TabbedView" ref="ref27" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="volumehandle.output">
-                        <Processor type="VolumeFilterList" ref="ref40" />
+                        <Processor type="VolumeFilterList" ref="ref39" />
                     </Outport>
                     <Inport name="connectedcomponentanalysis.inport">
-                        <Processor type="ConnectedComponentAnalysis" ref="ref22" />
+                        <Processor type="ConnectedComponentAnalysis" ref="ref21" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -5132,15 +3948,15 @@
                         <Processor type="GeometrySliceRenderer" ref="ref8" />
                     </Outport>
                     <Inport name="image.inport1">
-                        <Processor type="Compositor" ref="ref37" />
+                        <Processor type="Compositor" ref="ref36" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="image.outport">
-                        <Processor type="Compositor" ref="ref37" />
+                        <Processor type="Compositor" ref="ref36" />
                     </Outport>
                     <Inport name="inport2">
-                        <Processor type="QuadView" ref="ref36" />
+                        <Processor type="QuadView" ref="ref35" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -5148,23 +3964,23 @@
                         <Processor type="GeometrySliceRenderer" ref="ref9" />
                     </Outport>
                     <Inport name="image.inport1">
-                        <Processor type="Compositor" ref="ref38" />
+                        <Processor type="Compositor" ref="ref37" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="image.outport">
-                        <Processor type="Compositor" ref="ref38" />
+                        <Processor type="Compositor" ref="ref37" />
                     </Outport>
                     <Inport name="inport3">
-                        <Processor type="QuadView" ref="ref36" />
+                        <Processor type="QuadView" ref="ref35" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="image.outport">
-                        <Processor type="Compositor" ref="ref39" />
+                        <Processor type="Compositor" ref="ref38" />
                     </Outport>
                     <Inport name="inport4">
-                        <Processor type="QuadView" ref="ref36" />
+                        <Processor type="QuadView" ref="ref35" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -5172,23 +3988,31 @@
                         <Processor type="GeometrySliceRenderer" ref="ref10" />
                     </Outport>
                     <Inport name="image.inport1">
-                        <Processor type="Compositor" ref="ref39" />
+                        <Processor type="Compositor" ref="ref38" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="isosurfaceextractor.outport">
-                        <Processor type="IsosurfaceExtractor" ref="ref25" />
+                        <Processor type="IsosurfaceExtractor" ref="ref24" />
                     </Outport>
                     <Inport name="inport.geometry">
-                        <Processor type="GeometryRenderer" ref="ref41" />
+                        <Processor type="GeometryRenderer" ref="ref40" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="volumehandle.output">
-                        <Processor type="VolumeFilterList" ref="ref27" />
+                        <Processor type="VolumeFilterList" ref="ref26" />
                     </Outport>
                     <Inport name="volumehandle.input">
-                        <Processor type="VolumeFilterList" ref="ref40" />
+                        <Processor type="VolumeFilterList" ref="ref39" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="vesselgraphcenterlineextractor.outport">
+                        <Processor type="VesselGraphCenterlineConverter" ref="ref15" />
+                    </Outport>
+                    <Inport name="geometry.input">
+                        <Processor type="PointSegmentListRenderer" ref="ref41" />
                     </Inport>
                 </Connection>
             </Connections>
@@ -5206,7 +4030,7 @@
                         <Processor type="GeometryRenderer" ref="ref19" />
                     </Outport>
                     <Inport name="coprocessor.geometryrenderers">
-                        <Processor type="GeometryProcessor" ref="ref30" />
+                        <Processor type="GeometryProcessor" ref="ref29" />
                     </Inport>
                 </CoProcessorConnection>
                 <CoProcessorConnection>
@@ -5214,12 +4038,12 @@
                         <Processor type="GeometryRenderer" ref="ref19" />
                     </Outport>
                     <Inport name="coprocessor.geometryrenderers">
-                        <Processor type="GeometryProcessor" ref="ref33" />
+                        <Processor type="GeometryProcessor" ref="ref32" />
                     </Inport>
                 </CoProcessorConnection>
                 <CoProcessorConnection>
                     <Outport name="coprocessor.geometryrenderer">
-                        <Processor type="PointSegmentListRenderer" ref="ref20" />
+                        <Processor type="PointSegmentListRenderer" ref="ref41" />
                     </Outport>
                     <Inport name="coprocessor.geometryrenderers">
                         <Processor type="GeometryProcessor" ref="ref16" />
@@ -5227,10 +4051,10 @@
                 </CoProcessorConnection>
                 <CoProcessorConnection>
                     <Outport name="coprocessor.geometryrenderer">
-                        <Processor type="GeometryRenderer" ref="ref32" />
+                        <Processor type="GeometryRenderer" ref="ref31" />
                     </Outport>
                     <Inport name="coprocessor.geometryrenderers">
-                        <Processor type="GeometryProcessor" ref="ref33" />
+                        <Processor type="GeometryProcessor" ref="ref32" />
                     </Inport>
                 </CoProcessorConnection>
                 <CoProcessorConnection>
@@ -5238,12 +4062,12 @@
                         <Processor type="SlicePositionRenderer" ref="ref7" />
                     </Outport>
                     <Inport name="coprocessor.geometryrenderers">
-                        <Processor type="GeometryProcessor" ref="ref30" />
+                        <Processor type="GeometryProcessor" ref="ref29" />
                     </Inport>
                 </CoProcessorConnection>
                 <CoProcessorConnection>
                     <Outport name="coprocessor.geometryrenderer">
-                        <Processor type="GeometryRenderer" ref="ref41" />
+                        <Processor type="GeometryRenderer" ref="ref40" />
                     </Outport>
                     <Inport name="coprocessor.geometryrenderers">
                         <Processor type="GeometryProcessor" ref="ref16" />

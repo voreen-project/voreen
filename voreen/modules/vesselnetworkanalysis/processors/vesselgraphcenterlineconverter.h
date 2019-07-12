@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VESSELGRAPHSKELETONEXTRACTOR
-#define VRN_VESSELGRAPHSKELETONEXTRACTOR
+#ifndef VRN_VESSELGRAPHCENTERLINECONVERTER
+#define VRN_VESSELGRAPHCENTERLINECONVERTER
 
 #include "voreen/core/processors/processor.h"
 
@@ -35,21 +35,18 @@
 
 namespace voreen {
 
-// A processor that extracts a vessel graph from a voxel skeleton volume and annotates
-// edges and nodes with features derived from the supplied segmentation.
-class VesselGraphSkeletonExtractor : public Processor {
+class VesselGraphCenterlineConverter : public Processor {
 public:
-    VesselGraphSkeletonExtractor();
-    virtual ~VesselGraphSkeletonExtractor();
+    VesselGraphCenterlineConverter();
+    virtual ~VesselGraphCenterlineConverter();
 
-    virtual std::string getClassName() const         { return "VesselGraphSkeletonExtractor";      }
+    virtual std::string getClassName() const         { return "VesselGraphCenterlineConverter";      }
     virtual std::string getCategory() const       { return "Geometry"; }
     virtual VoreenSerializableObject* create() const;
     virtual void setDescriptions() {
-        setDescription("Retrieves the nodes (as a PointListGeometry) and skeletal lines (as a PointSegmentListGeometryVec3) from a VesselGraph.");
+        setDescription("Retrieves the centerlines (as a PointSegmentListGeometryVec3) from a VesselGraph.");
     }
     virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
-    virtual bool isReady() const;
 
     virtual void process();
 
@@ -57,8 +54,7 @@ private:
 
     // Ports
     VesselGraphPort graphInport_;
-    GeometryPort nodeOutport_;
-    GeometryPort edgeOutport_;
+    GeometryPort outport_;
 
     static const std::string loggerCat_;
 };
@@ -66,4 +62,4 @@ private:
 
 } // namespace voreen
 
-#endif // VRN_VESSELGRAPHSKELETONEXTRACTOR
+#endif // VRN_VESSELGRAPHCENTERLINECONVERTER

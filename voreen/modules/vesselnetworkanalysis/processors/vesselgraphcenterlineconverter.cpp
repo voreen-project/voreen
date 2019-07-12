@@ -23,7 +23,7 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "vesselgraphskeletonextractor.h"
+#include "vesselgraphcenterlineconverter.h"
 
 #include "voreen/core/datastructures/geometry/pointlistgeometry.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
@@ -33,43 +33,29 @@
 
 namespace voreen {
 
-const std::string VesselGraphSkeletonExtractor::loggerCat_("voreen.vesselnetworkanalysis.vesselgraphskeletonextractor");
+const std::string VesselGraphCenterlineConverter::loggerCat_("voreen.vesselnetworkanalysis.vesselgraphcenterlineextractor");
 
-VesselGraphSkeletonExtractor::VesselGraphSkeletonExtractor()
-    : graphInport_(Port::INPORT, "vesselgraphskeletonextractor_graph.inport", "Graph", false, Processor::INVALID_RESULT)
-    , nodeOutport_(Port::OUTPORT, "vesselgraphskeletonextractor_nodes.outport", "Nodes", false, Processor::VALID)
-    , edgeOutport_(Port::OUTPORT, "vesselgraphskeletonextractor_edges.outport", "Edges", false, Processor::VALID)
+VesselGraphCenterlineConverter::VesselGraphCenterlineConverter()
+    : graphInport_(Port::INPORT, "vesselgraphcenterlineextractor_graph.inport", "Graph", false, Processor::INVALID_RESULT)
+    , outport_(Port::OUTPORT, "vesselgraphcenterlineextractor.outport", "Edges", false, Processor::VALID)
 {
     addPort(graphInport_);
-    addPort(nodeOutport_);
-    addPort(edgeOutport_);
+    addPort(outport_);
 }
 
-VesselGraphSkeletonExtractor::~VesselGraphSkeletonExtractor() {
+VesselGraphCenterlineConverter::~VesselGraphCenterlineConverter() {
 }
-VoreenSerializableObject* VesselGraphSkeletonExtractor::create() const {
-    return new VesselGraphSkeletonExtractor();
-}
-
-bool VesselGraphSkeletonExtractor::isReady() const {
-    return isInitialized() && graphInport_.isReady() && (nodeOutport_.isReady() || edgeOutport_.isReady());
+VoreenSerializableObject* VesselGraphCenterlineConverter::create() const {
+    return new VesselGraphCenterlineConverter();
 }
 
-void VesselGraphSkeletonExtractor::process() {
+void VesselGraphCenterlineConverter::process() {
     const VesselGraph* input = graphInport_.getData();
     if(!input) {
-        nodeOutport_.setData(nullptr);
-        edgeOutport_.setData(nullptr);
+        outport_.setData(nullptr);
         return;
     }
     const VesselGraph& graph = *input;
-    PointListGeometryVec3* nodeGeom = new PointListGeometryVec3();
-    for(const auto& node : graph.getNodes()) {
-        for(const auto& voxel: node.voxels_) {
-            nodeGeom->addPoint(voxel);
-        }
-    }
-    nodeOutport_.setData(nodeGeom);
 
     PointSegmentListGeometryVec3* edgeGeom = new PointSegmentListGeometryVec3();
     for(auto& edge : graph.getEdges()) {
@@ -81,7 +67,7 @@ void VesselGraphSkeletonExtractor::process() {
         segment.back() = edge.getNode2().pos_;
         edgeGeom->addSegment(segment);
     }
-    edgeOutport_.setData(edgeGeom);
+    outport_.setData(edgeGeom);
 }
 
 } // namespace voreen
