@@ -55,7 +55,6 @@ struct SimilarityMatrixCreatorInput {
     SingleChannelSimilarityMeasure singleChannelSimilarityMeasure;
     float isoValue;
     MultiChannelSimilarityMeasure multiChannelSimilarityMeasure;
-    float angleThreshold;
 };
 
 struct SimilarityMatrixCreatorOutput {
@@ -86,7 +85,6 @@ private:
     OptionProperty<SingleChannelSimilarityMeasure> singleChannelSimilarityMeasure_;
     FloatProperty isoValue_;
     OptionProperty<MultiChannelSimilarityMeasure> multiChannelSimilarityMeasure_;
-    FloatProperty angleThreshold_;
     IntProperty numSeedPoints_;
     IntProperty seedTime_;
 
