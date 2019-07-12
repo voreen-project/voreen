@@ -110,7 +110,15 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Renders Vessel-Graphs.");
+        setDescription("Render VesselGraphs as a Geometry. "
+                "The coprocessor port of this processor should be connected to a <b>GeometryProcessor</b>. "
+                "Note that centerlines cannot be rendered using this processor. "
+                "Instead use, a <b>VesselGraphCenterlineConverter</b> to obtain the centerline geometry and a <b>PointSegmentlistRenderer</b> for rendering via a <b>GeometryProcessor</b>."
+                );
+        nodeRadiusMultiplier_.setDescription("Set the render size of a node as a percentage of the diagonal of the bounding box of the whole graph. ");
+        edgeCrossSectionMultiplier_.setDescription("Set the render size of an edge as a percentage of the diagonal of the bounding box of the whole graph. ");
+        activeEdgeProperty_.setDescription("Specify the edge property that is used for mapping colors to the rendered edges.");
+        activeEdgeID_.setDescription("The edge with the specified id will be highlighted in the rendering.");
     }
 
     void adjustLightingPropertyVisibility();

@@ -40,7 +40,6 @@
 
 namespace voreen {
 
-// This processor enables the export of per-node and per-edge properties as a csv-File for VesselGraphs.
 class VesselGraphGlobalStats : public Processor {
 public:
     VesselGraphGlobalStats();
@@ -52,7 +51,10 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Global stats for VesselGraphs.");
+        setDescription("This processor enables the export of per-node and per-edge properties as a csv-File for VesselGraphs.");
+        segmentExportFilePath_.setDescription("Output path for the .csv file containing the edge data and properties.0");
+        nodeExportFilePath_.setDescription("Output path for the .csv file containing the node data.");
+        autoExport_.setDescription("Automatically overwrite specified files when the input VesselGraph changes. If not enabled, the export can be triggered manually using the 'Export'-Button.");
     }
 
     virtual void process();

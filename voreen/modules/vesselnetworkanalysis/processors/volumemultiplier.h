@@ -69,9 +69,10 @@ public:
     virtual VoreenSerializableObject* create() const;
 
     virtual void setDescriptions() {
-        setDescription("Processor that multiplies the size of the input volume by mirroring.");
+        setDescription("Processor that multiplies the size of the input volume by mirroring it in each of the coordinate axis directions. "
+                "The mirroring behaviour is the same as GL_MIRRORED_REPEAT.");
     }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
+    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL; }
 
     virtual void initialize();
     virtual bool isReady() const;

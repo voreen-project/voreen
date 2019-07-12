@@ -48,7 +48,8 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("This processor can be used to perturb VesselGraphs using a number of methods.");
+        setDescription("This processor can be used to modify VesselGraphs using a number of methods. "
+                "All methods used are described in 'GERoMe-a Method for Evaluating Stability of Graph Extraction Algorithms Without Ground Truth' by Drees et al.");
     }
 
     enum PerturbationMethod {

@@ -116,7 +116,14 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Transforms in input volume into an output volume containing the voxel wise vesselness of the input.");
+        setDescription("Transforms in input volume into an output volume containing the voxel wise vesselness of the input. "
+                "The implementation is based on \"Three-dimensional multi-scale line filter for segmentation andvisualization of curvilinear structures in medical images\" by Sato et al.");
+        vesselRadiusRangeRW_.setDescription("The vessel radius range in mm. "
+                "Correct specification of the vessel radius is essential for good results. "
+                "Consider using a <b>SliceViewer</b> to visually gauge vessel radii if not known from other sources.");
+        scaleSpaceSteps_.setDescription("The number of (logarithmic) scale space steps that will be accumulated in the specified vessel radius range. "
+                "Higher values generally yield butter results, but require more computation time."
+                );
     }
 
     virtual bool isReady() const;
@@ -142,7 +149,6 @@ private:
     FloatVec3Property maxStandardDeviationVec_;
     IntVec3Property minSmoothingKernelSize_;
     IntVec3Property maxSmoothingKernelSize_;
-    // TODO: Optionproperty<?> vesselType (>, <, egal)
 
     // Disable properties when processor is not enabled:
     PropertyDisabler propertyDisabler_;

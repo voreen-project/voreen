@@ -45,7 +45,13 @@ public:
     virtual std::string getCategory() const       { return "Volume Processing"; }
     virtual std::string setDescriptions() const       { return "Volume Processing"; }
     virtual VoreenSerializableObject* create() const;
-    virtual void setDescriptions() { setDescription( "Processor that modifies a binary input volume by (iteratively) adding salt and pepper noise to the surface of the object"); }
+    virtual void setDescriptions() {
+        setDescription("Processor that modifies a binary input volume by (iteratively) adding salt and pepper noise to the surface of the object. "
+                "The process is described and used in \"Scalable Robust Graph and Feature Extraction for Arbitrary Vessel Networks in Volumetric Datasets\" by Drees et al."
+                );
+        binarizationThreshold_.setDescription("Values above this threshold will be considered foreground, others background. If the input volume is not binary already, this property can therefore be used for thresholding.");
+        noiseAmount_.setDescription("In total, the (initial) number of voxels on the surface of the object multiplied by this factor are considered for flipping its value.");
+    }
     virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
     virtual void process();
 

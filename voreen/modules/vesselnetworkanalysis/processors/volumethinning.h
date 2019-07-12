@@ -48,12 +48,15 @@ public:
     virtual std::string getCategory() const       { return "Volume Processing"; }
     virtual std::string setDescriptions() const       { return "Volume Processing"; }
     virtual VoreenSerializableObject* create() const;
-    virtual void setDescriptions() { setDescription(
-            "Volume processor that reduces a binary volume to a one voxel wide skeleton. "
-            "The binary volume input is required and is skeletonized. "
-            "Additionally, another binary volume (sample mask) can optionally be used to restrict the skeletonization process to a certain arbitrary subvolume. "
-            "Voxels outside the sample mask are considered to be foreground for the skeletonization, but will be written as background to the output volume. "
-            ); }
+    virtual void setDescriptions() {
+        setDescription(
+                "Volume processor that reduces a binary volume to a one voxel wide skeleton. "
+                "The binary volume input is required and is skeletonized. "
+                "Additionally, another binary volume (sample mask) can optionally be used to restrict the skeletonization process to a certain arbitrary subvolume. "
+                "Voxels outside the sample mask are considered to be foreground for the skeletonization, but will be written as background to the output volume. "
+                );
+        binarizationThreshold_.setDescription("Values above this threshold will be considered foreground, others background. If the input volume is not binary already, this property can therefore be used for thresholding.");
+    }
     virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
     //virtual bool usesExpensiveComputation() const { return true; }
     virtual bool isReady() const;

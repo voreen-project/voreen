@@ -42,7 +42,7 @@ public:
     virtual std::string getCategory() const       { return "Volume Processing"; }
     virtual std::string setDescriptions() const       { return "Volume Processing"; }
     virtual VoreenSerializableObject* create() const;
-    virtual void setDescriptions() { setDescription( "Find an appropriate spacing to be used for example in a resampling processor"); }
+    virtual void setDescriptions() { setDescription( "Find an appropriate spacing to be used, for example, in a resampling processor This processor simply reads the minimum of the spacing in each dimension from the specified volume, multiplies it by a specified factor and displays the result in a property."); }
     virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
     virtual void process();
 

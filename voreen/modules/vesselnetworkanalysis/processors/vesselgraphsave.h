@@ -47,7 +47,11 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("This processor can be used to save vessel graphs as files that can be later reloaded using VesselGraphSource.");
+        setDescription("This processor can be used to save vessel graphs as files that can be later reloaded using VesselGraphSource. "
+                "Vesselgraphs are serialized in a custom (but simple) json format that is gzip-compressed before writing it to disk.");
+        graphFilePath_.setDescription("Location on disk where the serialized version of the graph will be written to.");
+        continousSave_.setDescription("Automatically overwrite specified file when the input VesselGraph changes. If not enabled, the export can be triggered manually using the 'Save'-Button.");
+        prettyJson_.setDescription("Generate json with human-friendly newlines and identation. If not specified, no superfluous space characters will be written.");
     }
     virtual void saveCurrentGraph();
 

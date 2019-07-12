@@ -44,7 +44,9 @@ public:
     virtual std::string getCategory() const       { return "Geometry"; }
     virtual VoreenSerializableObject* create() const;
     virtual void setDescriptions() {
-        setDescription("Retrieves the centerlines (as a PointSegmentListGeometryVec3) from a VesselGraph.");
+        setDescription("Retrieves the centerlines (as a PointSegmentListGeometryVec3) from a VesselGraph. "
+                "The resulting geometry can be rendered using a <b>PointSegmentListRenderer</b> and a <b>GeometryProcessor</b>."
+                );
     }
     virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
 

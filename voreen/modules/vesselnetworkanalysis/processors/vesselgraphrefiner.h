@@ -46,7 +46,13 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("This processor can be used to remove small, unwanted edges from Vessel-Graphs.");
+        setDescription("This processor implements a refinement step of the paper \"Scalable Robust Graph and Feature Extraction for Arbitrary Vessel Networks in Volumetric Datasets\" by Drees et al. "
+                "Please note that this processor does not (and cannot) recompute the properties of the remaining edges ."
+                "It should therefore typically only be used for debugging purposes or as a quick way to find an appropriate bulge size parameter for a full extraction using <b>VesselGraphCrator</b>."
+                );
+        enabled_.setDescription("If not enabled, the original graph is passed on unmodified.");
+        refinementMethod_.setDescription("'End Recursive' is the method used in the above mentioned paper. 'All' also tries to remove central edges in the graph.");
+        minBulgeSize_.setDescription("Edges with a bulge size below this threshold will be considered for deletion during the refinement. A bulge size of 1.0 roughly corresponds to hemisphere-shaped bulge.");
     }
 
     enum RefinementMethod {

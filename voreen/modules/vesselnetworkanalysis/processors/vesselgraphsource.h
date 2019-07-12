@@ -45,7 +45,10 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("This processor can be used to load vessel graph files that have been previously saved using VesselGraphSave.");
+        setDescription("This processor can be used to load vessel graph files that have been previously saved using <b>VesselGraphSave</b>. "
+                "Vesselgraphs are serialized in a custom (but simple) json format that is gzip-compressed before writing it to disk."
+                );
+        graphFilePath_.setDescription("Path to the *.vvg.gz file to be loaded.");
     }
 
     virtual void process();

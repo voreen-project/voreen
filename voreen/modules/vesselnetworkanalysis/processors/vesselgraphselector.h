@@ -55,7 +55,11 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Selects a single vessel graph from the input list.");
+        setDescription("Selects a single VesselGraph from the input list. "
+                "So far, this processor is mostly intended to be used in conjuction with the debug output of a <b>VesselGraphCreator</b>.");
+        graphID_.setDescription("Select the graph with the specified number from the list.");
+        debugVolumeID_.setDescription("Select a type of debug volume. This is not actually used in this processor, but used to calculate the resulting debug volume selector id.");
+        resultingDebugVesselGraphSelectorID_.setDescription("Link with a VolumeListSelector which is fed by the debug volumes of a <b>VesselGraphCreator</b>.");
     }
 
     virtual void process();

@@ -44,7 +44,12 @@ public:
     virtual std::string getCategory() const       { return "Volume Processing"; }
     virtual std::string setDescriptions() const       { return "Volume Processing"; }
     virtual VoreenSerializableObject* create() const;
-    virtual void setDescriptions() { setDescription( "Processor that modifies an input volume by adding slices before/after the first/last slice."); }
+    virtual void setDescriptions() {
+        setDescription(
+            "Processor that modifies an input volume by adding slices before/after the first/last slice. "
+            "This is escpecially useful when trying to extract the vessel network topology from a 'nearly-2D' volume using <b>VesselGraphCreator</b> to avoid connections to the edge of the volume."
+            );
+    }
     virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
     virtual void process();
 
