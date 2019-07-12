@@ -40,7 +40,7 @@ public:
     virtual ~VesselGraphSource();
     virtual std::string getCategory() const { return "Geometry"; }
     virtual std::string getClassName() const { return "VesselGraphSource"; }
-    virtual CodeState getCodeState() const { return Processor::CODE_STATE_EXPERIMENTAL; }
+    virtual CodeState getCodeState() const { return Processor::CODE_STATE_TESTING; }
     virtual Processor* create() const { return new VesselGraphSource(); }
 
 protected:

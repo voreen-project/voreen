@@ -111,7 +111,7 @@ public:
 
     virtual std::string getClassName() const      { return "VesselnessExtractor";  }
     virtual std::string getCategory() const       { return "Volume Processing"; }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
+    virtual CodeState getCodeState() const        { return CODE_STATE_TESTING;   }
     virtual bool usesExpensiveComputation() const { return true; }
 
 protected:

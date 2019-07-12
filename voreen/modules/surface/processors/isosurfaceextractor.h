@@ -96,7 +96,7 @@ public:
                 );
 
     }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
+    virtual CodeState getCodeState() const        { return CODE_STATE_TESTING;   }
 
     virtual void initialize();
     virtual void deinitialize();

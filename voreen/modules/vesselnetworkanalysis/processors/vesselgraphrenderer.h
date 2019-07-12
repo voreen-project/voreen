@@ -101,7 +101,7 @@ public:
     virtual ~VesselGraphRenderer();
     virtual std::string getCategory() const { return "Geometry"; }
     virtual std::string getClassName() const { return "VesselGraphRenderer"; }
-    virtual CodeState getCodeState() const { return Processor::CODE_STATE_EXPERIMENTAL; }
+    virtual CodeState getCodeState() const { return Processor::CODE_STATE_TESTING; }
     virtual Processor* create() const { return new VesselGraphRenderer(); }
 
     virtual tgt::Bounds getBoundingBox() const;

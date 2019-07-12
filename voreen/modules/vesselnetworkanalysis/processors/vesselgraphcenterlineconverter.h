@@ -48,7 +48,7 @@ public:
                 "The resulting geometry can be rendered using a <b>PointSegmentListRenderer</b> and a <b>GeometryProcessor</b>."
                 );
     }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
+    virtual CodeState getCodeState() const        { return CODE_STATE_TESTING;   }
 
     virtual void process();
 

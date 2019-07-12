@@ -76,7 +76,7 @@ public:
     virtual void setDescriptions() {
         setDescription("Processor that performs a binary median operation on a binary input volume");
     }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
+    virtual CodeState getCodeState() const        { return CODE_STATE_OBSOLETE;   }
 
     virtual void initialize();
     virtual bool isReady() const;
