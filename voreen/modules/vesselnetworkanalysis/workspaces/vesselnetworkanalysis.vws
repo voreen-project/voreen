@@ -14,13 +14,13 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="VesselGraphGlobalStats" ref="ref15" />
+                        <item type="VolumeSource" ref="ref0" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="767.722290039" y="-459.843933105" />
+                    <value x="363.138519287" y="-738.118469238" />
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.506693661" />
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.506693721" />
             </MetaData>
             <Processors>
                 <Processor type="VolumeSource" name="Vessel Volume" id="ref0">
@@ -30,17 +30,9 @@
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
                         <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
-                            <urls protocol="">
-                                <path noPathSet="false">
-                                    <paths>
-                                        <item value="../../../../../voreen-testdata/voreen-testdata/input/aneurism.vvd" />
-                                        <item value="../../voreen-testdata/voreen-testdata/input/aneurism.vvd" />
-                                        <item value="/git/voreen-testdata/voreen-testdata/input/aneurism.vvd" />
-                                    </paths>
-                                </path>
-                                <searchParameters>
-                                    <value key="preferredReader" value="VvdVolumeReader" />
-                                </searchParameters>
+                            <urls protocol="" absolute="false">
+                                <path noPathSet="true" />
+                                <searchParameters />
                             </urls>
                         </Property>
                     </Properties>
@@ -132,15 +124,15 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.043899093" id="ref42">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.043349057" id="ref42">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.735183358" y="1.680729747" z="-1.401501179" />
-                            <focus x="-0.00390625" y="0.0234375" z="-0.0625" />
-                            <upVector x="0.633432925" y="0.484757721" z="0.603135765" />
+                            <position x="0.464131802" y="-2.179156303" z="-0.642255783" />
+                            <focus x="-0.011764824" y="-0.011764735" z="-0.011764765" />
+                            <upVector x="0.147063687" y="0.120263755" z="-0.981788635" />
                             <trackball moveCenter="false">
-                                <center x="-0.00390625" y="0.0234375" z="-0.0625" />
+                                <center x="-0.011764824" y="-0.011764735" z="-0.011764765" />
                             </trackball>
                             <sceneLLF x="-0.847499967" y="-0.824062467" z="-1" />
                             <sceneURB x="0.839687467" y="0.870937467" z="0.878749967" />
@@ -922,7 +914,7 @@
                             <value x="0.06666667" y="1" z="0.125490203" w="1" />
                         </Property>
                         <Property mapKey="segmentEnabled" name="segmentEnabled" value="true" />
-                        <Property mapKey="segmentList" name="segmentList" value="0" />
+                        <Property mapKey="segmentList" name="segmentList" value="" />
                         <Property mapKey="sphereDiameter" name="sphereDiameter" value="0.02" />
                         <Property mapKey="sphereSlicesStacks" name="sphereSlicesStacks" value="20" />
                     </Properties>
@@ -2216,9 +2208,9 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/3466cda7-8b6d-422c-92e4-d22bbe2d4a4d.h5" />
-                                    <item value="../../../nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/3466cda7-8b6d-422c-92e4-d22bbe2d4a4d.h5" />
-                                    <item value="/nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/3466cda7-8b6d-422c-92e4-d22bbe2d4a4d.h5" />
+                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/0867287d-2e6a-4d69-a366-c29f88198f2b.h5" />
+                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/0867287d-2e6a-4d69-a366-c29f88198f2b.h5" />
+                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/0867287d-2e6a-4d69-a366-c29f88198f2b.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -2269,9 +2261,9 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/b06ce446-c27e-47df-a4e3-d10b64552c26.h5" />
-                                    <item value="../../../nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/b06ce446-c27e-47df-a4e3-d10b64552c26.h5" />
-                                    <item value="/nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/b06ce446-c27e-47df-a4e3-d10b64552c26.h5" />
+                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/1b54105e-6590-4d26-a763-ecfcf81eedc4.h5" />
+                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/1b54105e-6590-4d26-a763-ecfcf81eedc4.h5" />
+                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/1b54105e-6590-4d26-a763-ecfcf81eedc4.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -2307,36 +2299,36 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="false" />
-                        <Property mapKey="enabled" name="enabled" value="true" />
+                        <Property mapKey="enabled" name="enabled" guiName="Enable Vesselness Filtering" value="true" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="maxSmoothingKernelSize" name="maxSmoothingKernelSize">
-                            <value x="39" y="39" z="39" />
+                            <value x="0" y="0" z="0" />
                         </Property>
                         <Property mapKey="maxStandardDeviationVec" name="maxStandardDeviationVec">
-                            <value x="6.400000095" y="6.400000095" z="6.400000095" />
+                            <value x="0" y="0" z="0" />
                         </Property>
                         <Property mapKey="minSmoothingKernelSize" name="minSmoothingKernelSize">
-                            <value x="9" y="9" z="9" />
+                            <value x="0" y="0" z="0" />
                         </Property>
                         <Property mapKey="minStandardDeviationVec" name="minStandardDeviationVec">
-                            <value x="1.279999971" y="1.279999971" z="1.279999971" />
+                            <value x="0" y="0" z="0" />
                         </Property>
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/e149e0b1-47fa-4b20-b36e-2d51ee1e85c3.h5" />
-                                    <item value="../../../nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/e149e0b1-47fa-4b20-b36e-2d51ee1e85c3.h5" />
-                                    <item value="/nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/e149e0b1-47fa-4b20-b36e-2d51ee1e85c3.h5" />
+                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/632acde9-b7fd-4f04-8cb4-d2cbb06b3595.h5" />
+                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/632acde9-b7fd-4f04-8cb4-d2cbb06b3595.h5" />
+                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/632acde9-b7fd-4f04-8cb4-d2cbb06b3595.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" guiName="Vesselness Extraction Progress" />
                         <Property mapKey="scaleSpaceSteps" name="scaleSpaceSteps" value="3" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 20.306 sec" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
-                        <Property mapKey="vesselRadiusRangeRW" minValue="0.0078125" maxValue="2" minRange="0" maxRange="2147483648" stepping="0.00001">
-                            <value x="0.01" y="0.050000001" />
+                        <Property mapKey="vesselRadiusRangeRW" minValue="0.02352941" maxValue="0.729411721" minRange="0" maxRange="2147483648" stepping="0.00001">
+                            <value x="0.02352941" y="0.050000001" />
                         </Property>
                     </Properties>
                     <Inports>
@@ -2376,7 +2368,7 @@
                         <Property mapKey="buttonHoverColor" name="buttonHoverColor">
                             <value x="0.699999988" y="0.699999988" z="0.699999988" w="1" />
                         </Property>
-                        <Property mapKey="currentView" name="currentView" value="third" />
+                        <Property mapKey="currentView" name="currentView" value="first" />
                         <Property mapKey="enableTab3" name="enableTab3" value="true" />
                         <Property mapKey="enableTab4" name="enableTab4" value="false" />
                         <Property mapKey="hideTabbar_" name="hideTabbar_" value="false" />
@@ -2395,7 +2387,7 @@
                             <value x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="voreen.fontprop" name="voreen.fontprop" fontSize="12" fontName="VeraMono.ttf" textAlignment="3" lineWidth="459">
-                            <fontColor x="0.899999976" y="0.899999976" z="0.899999976" w="1" />
+                            <fontColor x="0" y="0" z="0" w="1" />
                         </Property>
                     </Properties>
                     <Inports>
@@ -2449,18 +2441,18 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.043899093" id="ref43">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.043349057" id="ref43">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.735183358" y="1.680729747" z="-1.401501179" />
-                            <focus x="-0.00390625" y="0.0234375" z="-0.0625" />
-                            <upVector x="0.633432925" y="0.484757721" z="0.603135765" />
+                            <position x="0.464131802" y="-2.179156303" z="-0.642255783" />
+                            <focus x="-0.011764824" y="-0.011764735" z="-0.011764765" />
+                            <upVector x="0.147063687" y="0.120263755" z="-0.981788635" />
                             <trackball moveCenter="false">
-                                <center x="-0.00390625" y="0.0234375" z="-0.0625" />
+                                <center x="-0.011764824" y="-0.011764735" z="-0.011764765" />
                             </trackball>
-                            <sceneLLF x="-1.00390625" y="-1.00390625" z="-1.00390625" />
-                            <sceneURB x="0.99609375" y="0.99609375" z="0.99609375" />
+                            <sceneLLF x="-1.011764765" y="-0.376470596" z="-0.647058845" />
+                            <sceneURB x="0.988235116" y="0.352941126" z="0.623529315" />
                         </Property>
                         <Property mapKey="composeShader" name="composeShader">
                             <MetaData>
@@ -2676,15 +2668,15 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.043899093" id="ref44">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.043349057" id="ref44">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="2328" y="112" />
                             </MetaData>
-                            <position x="0.735183358" y="1.680729747" z="-1.401501179" />
-                            <focus x="-0.00390625" y="0.0234375" z="-0.0625" />
-                            <upVector x="0.633432925" y="0.484757721" z="0.603135765" />
+                            <position x="0.464131802" y="-2.179156303" z="-0.642255783" />
+                            <focus x="-0.011764824" y="-0.011764735" z="-0.011764765" />
+                            <upVector x="0.147063687" y="0.120263755" z="-0.981788635" />
                             <trackball moveCenter="false">
-                                <center x="-0.00390625" y="0.0234375" z="-0.0625" />
+                                <center x="-0.011764824" y="-0.011764735" z="-0.011764765" />
                             </trackball>
                             <sceneLLF x="-0.84765625" y="-0.82421875" z="-1.00390625" />
                             <sceneURB x="0.83984375" y="0.87109375" z="0.87890625" />
@@ -2773,18 +2765,18 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLightAttenuation" name="applyLightAttenuation" value="false" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.043899093" id="ref45">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.043349057" id="ref45">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.735183358" y="1.680729747" z="-1.401501179" />
-                            <focus x="-0.00390625" y="0.0234375" z="-0.0625" />
-                            <upVector x="0.633432925" y="0.484757721" z="0.603135765" />
+                            <position x="0.464131802" y="-2.179156303" z="-0.642255783" />
+                            <focus x="-0.011764824" y="-0.011764735" z="-0.011764765" />
+                            <upVector x="0.147063687" y="0.120263755" z="-0.981788635" />
                             <trackball moveCenter="false">
-                                <center x="-0.00390625" y="0.0234375" z="-0.0625" />
+                                <center x="-0.011764824" y="-0.011764735" z="-0.011764765" />
                             </trackball>
-                            <sceneLLF x="-1.00390625" y="-1.00390625" z="-1.00390625" />
-                            <sceneURB x="0.99609375" y="0.99609375" z="0.99609375" />
+                            <sceneLLF x="-1.011764765" y="-0.376470596" z="-0.647058845" />
+                            <sceneURB x="0.988235116" y="0.352941126" z="0.623529315" />
                         </Property>
                         <Property mapKey="channelShift1" name="channelShift1">
                             <value x="0" y="0" z="0" />
@@ -2868,10 +2860,10 @@
                         <Property mapKey="lightDiffuse" name="lightDiffuse">
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
                         </Property>
-                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="34.641014099">
-                            <value x="-0.000000061" y="0.02734369" z="-0.05859381" w="1" />
-                            <Center x="-0.00390625" y="0.0234375" z="-0.0625" />
-                            <LightPos x="0.000596089" y="0.006485775" z="0.001831493" w="1" />
+                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="24.792005539">
+                            <value x="-0.007858636" y="-0.007858545" z="-0.007858574" w="1" />
+                            <Center x="-0.011764824" y="-0.011764735" z="-0.011764765" />
+                            <LightPos x="-0.005090917" y="-0.002097233" z="-0.003931811" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -3171,18 +3163,18 @@
                     <Properties>
                         <Property mapKey="clipRegion">
                             <bounds.llf x="0" y="0" z="0" />
-                            <bounds.urb x="255" y="255" z="255" />
+                            <bounds.urb x="84" y="30" z="53" />
                             <minValue x="0" y="0" z="0" />
-                            <maxValue x="255" y="255" z="255" />
+                            <maxValue x="84" y="30" z="53" />
                             <minRange x="0" y="0" z="0" />
                             <maxRange x="2147483647" y="2147483647" z="2147483647" />
                             <stepping x="1" y="1" z="1" />
                         </Property>
                         <Property mapKey="modeString" name="modeString" value="minboundingbox" />
                         <Property mapKey="resetClipPlanes" name="resetClipPlanes" />
-                        <Property mapKey="resolution" name="resolution" value="32" />
+                        <Property mapKey="resolution" name="resolution" value="31" />
                         <Property mapKey="resolutionMode" name="resolutionMode" value="subdivide" />
-                        <Property mapKey="resolutionvoxel" name="resolutionvoxel" value="8" />
+                        <Property mapKey="resolutionvoxel" name="resolutionvoxel" value="1" />
                         <Property mapKey="threshold" name="threshold" value="1" />
                         <Property mapKey="transferfunction" name="transferfunction" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
@@ -3287,15 +3279,15 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="370" y="-1185" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.043899093" id="ref46">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.006645601" frustRight="0.006645601" frustBottom="-0.006645601" frustTop="0.006645601" frustNear="0.0160439" frustFar="502" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.043349057" id="ref46">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.735183358" y="1.680729747" z="-1.401501179" />
-                            <focus x="-0.00390625" y="0.0234375" z="-0.0625" />
-                            <upVector x="0.633432925" y="0.484757721" z="0.603135765" />
+                            <position x="0.464131802" y="-2.179156303" z="-0.642255783" />
+                            <focus x="-0.011764824" y="-0.011764735" z="-0.011764765" />
+                            <upVector x="0.147063687" y="0.120263755" z="-0.981788635" />
                             <trackball moveCenter="false">
-                                <center x="-0.00390625" y="0.0234375" z="-0.0625" />
+                                <center x="-0.011764824" y="-0.011764735" z="-0.011764765" />
                             </trackball>
                             <sceneLLF x="0" y="0" z="0" />
                             <sceneURB x="0" y="0" z="0" />
@@ -3400,7 +3392,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref29">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="910" y="351" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-1920" y="0" width="1406" height="1132" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="79" y="895" width="1406" height="1132" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="-1920" y="0" />
@@ -3410,10 +3402,10 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-1666" y="151" />
+                            <value x="79" y="895" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="1245" y="763" />
+                            <value x="1406" y="1132" />
                         </MetaItem>
                     </MetaData>
                     <Properties>
@@ -3475,8 +3467,8 @@
                         <Property mapKey="numSlicesPerRow" name="numSlicesPerRow" value="1" />
                         <Property mapKey="pickingMatrix" name="pickingMatrix" id="ref123">
                             <value.row0 x="0" y="0" z="1" w="0" />
-                            <value.row1 x="-0.459605038" y="0" z="0" w="289.051177979" />
-                            <value.row2 x="0" y="0.459605038" z="0" w="-0.5" />
+                            <value.row1 x="-0.096947931" y="0" z="0" w="49.077198029" />
+                            <value.row2 x="0" y="0.096947938" z="0" w="-0.5" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="renderLegend" name="renderLegend" value="false" id="ref78" />
@@ -3489,10 +3481,10 @@
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="yz-plane" id="ref120" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" id="ref62" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" id="ref60" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="95" id="ref108" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="42" id="ref108" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" id="ref56" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
-                            <value x="95" y="176" z="254" />
+                            <value x="-1" y="-1" z="-1" />
                         </Property>
                         <Property mapKey="textureMode" name="textureMode" value="3d-texture" id="ref54" />
                         <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true" id="ref64">
@@ -3642,8 +3634,8 @@
                         <Property mapKey="numSlicesPerRow" name="numSlicesPerRow" value="1" />
                         <Property mapKey="pickingMatrix" name="pickingMatrix" id="ref132">
                             <value.row0 x="0" y="0" z="1" w="0" />
-                            <value.row1 x="-0.459605038" y="0" z="0" w="289.051177979" />
-                            <value.row2 x="0" y="0.459605038" z="0" w="-0.5" />
+                            <value.row1 x="-0.096947931" y="0" z="0" w="49.077198029" />
+                            <value.row2 x="0" y="0.096947938" z="0" w="-0.5" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="renderLegend" name="renderLegend" value="false" id="ref79" />
@@ -3656,7 +3648,7 @@
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="yz-plane" id="ref135" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" id="ref63" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" id="ref61" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="137" id="ref110" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="42" id="ref110" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" id="ref57" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="-1" y="-1" z="-1" />
@@ -3808,8 +3800,8 @@
                         <Property mapKey="numSlicesPerCol" name="numSlicesPerCol" value="1" />
                         <Property mapKey="numSlicesPerRow" name="numSlicesPerRow" value="1" />
                         <Property mapKey="pickingMatrix" name="pickingMatrix" id="ref139">
-                            <value.row0 x="0.459605038" y="0" z="0" w="-34.051166534" />
-                            <value.row1 x="0" y="-0.459605038" z="0" w="255.5" />
+                            <value.row0 x="0.120910384" y="0" z="0" w="-0.5" />
+                            <value.row1 x="0" y="-0.120910384" z="0" w="48.673542023" />
                             <value.row2 x="0" y="0" z="1" w="0" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
@@ -3823,7 +3815,7 @@
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xy-plane" id="ref136" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" id="ref88" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" id="ref87" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="140" id="ref112" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="27" id="ref112" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" id="ref85" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="-1" y="-1" z="-1" />
@@ -4038,15 +4030,15 @@
                         <Property mapKey="xColor" name="xColor">
                             <value x="1" y="0" z="0" w="1" />
                         </Property>
-                        <Property mapKey="xSliceIndex" name="xSliceIndex" value="95" id="ref107" />
+                        <Property mapKey="xSliceIndex" name="xSliceIndex" value="42" id="ref107" />
                         <Property mapKey="yColor" name="yColor">
                             <value x="0" y="1" z="0" w="1" />
                         </Property>
-                        <Property mapKey="ySliceIndex" name="ySliceIndex" value="137" id="ref109" />
+                        <Property mapKey="ySliceIndex" name="ySliceIndex" value="30" id="ref109" />
                         <Property mapKey="zColor" name="zColor">
                             <value x="0" y="0" z="1" w="1" />
                         </Property>
-                        <Property mapKey="zSliceIndex" name="zSliceIndex" value="140" id="ref111" />
+                        <Property mapKey="zSliceIndex" name="zSliceIndex" value="27" id="ref111" />
                     </Properties>
                     <Inports>
                         <Port name="volume" direction="1" portID="volume" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -4218,9 +4210,9 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/e68c5170-03c3-4a20-abd0-ad610c43d035.h5" />
-                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/e68c5170-03c3-4a20-abd0-ad610c43d035.h5" />
-                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/e68c5170-03c3-4a20-abd0-ad610c43d035.h5" />
+                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/38f2d955-ea7a-4a21-aba6-02ae23f1bd4a.h5" />
+                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/38f2d955-ea7a-4a21-aba6-02ae23f1bd4a.h5" />
+                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/38f2d955-ea7a-4a21-aba6-02ae23f1bd4a.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -4290,12 +4282,12 @@
                         <Property mapKey="enable" name="enable" value="true" />
                         <Property mapKey="pickingMatrix" name="pickingMatrix" id="ref124">
                             <value.row0 x="0" y="0" z="1" w="0" />
-                            <value.row1 x="-0.459605038" y="0" z="0" w="289.051177979" />
-                            <value.row2 x="0" y="0.459605038" z="0" w="-0.5" />
+                            <value.row1 x="-0.096947931" y="0" z="0" w="49.077198029" />
+                            <value.row2 x="0" y="0.096947938" z="0" w="-0.5" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="yz-plane" id="ref121" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="95" id="ref122" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="42" id="ref122" />
                         <Property mapKey="solidcolor" name="solidcolor" id="ref141">
                             <value x="1" y="0" z="0.015686275" w="1" />
                         </Property>
@@ -4375,12 +4367,12 @@
                         <Property mapKey="enable" name="enable" value="true" />
                         <Property mapKey="pickingMatrix" name="pickingMatrix" id="ref131">
                             <value.row0 x="0" y="0" z="1" w="0" />
-                            <value.row1 x="-0.459605038" y="0" z="0" w="289.051177979" />
-                            <value.row2 x="0" y="0.459605038" z="0" w="-0.5" />
+                            <value.row1 x="-0.096947931" y="0" z="0" w="49.077198029" />
+                            <value.row2 x="0" y="0.096947938" z="0" w="-0.5" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="yz-plane" id="ref134" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="137" id="ref133" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="42" id="ref133" />
                         <Property mapKey="solidcolor" name="solidcolor" id="ref142">
                             <value x="1" y="0" z="0.015686275" w="1" />
                         </Property>
@@ -4499,13 +4491,13 @@
                         <Property mapKey="alwaysfreememory" name="alwaysfreememory" value="false" />
                         <Property mapKey="enable" name="enable" value="true" />
                         <Property mapKey="pickingMatrix" name="pickingMatrix" id="ref140">
-                            <value.row0 x="0.459605038" y="0" z="0" w="-34.051166534" />
-                            <value.row1 x="0" y="-0.459605038" z="0" w="255.5" />
+                            <value.row0 x="0.120910384" y="0" z="0" w="-0.5" />
+                            <value.row1 x="0" y="-0.120910384" z="0" w="48.673542023" />
                             <value.row2 x="0" y="0" z="1" w="0" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xy-plane" id="ref137" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="140" id="ref138" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="27" id="ref138" />
                         <Property mapKey="solidcolor" name="solidcolor" id="ref143">
                             <value x="1" y="0" z="0.015686275" w="1" />
                         </Property>
@@ -4725,7 +4717,7 @@
                         <Property mapKey="Morphology_Filter_samplingStrategyType" name="Morphology_Filter_samplingStrategyType" value="clamp" />
                         <Property mapKey="Thresholding_Filter_binarize" name="Thresholding_Filter_binarize" value="true" />
                         <Property mapKey="Thresholding_Filter_replacementValue" name="Thresholding_Filter_replacementValue" value="0" />
-                        <Property mapKey="Thresholding_Filter_thresholdValue" name="Thresholding_Filter_thresholdValue" value="9" id="ref145" />
+                        <Property mapKey="Thresholding_Filter_thresholdValue" name="Thresholding_Filter_thresholdValue" value="0" id="ref145" />
                         <Property mapKey="Thresholding_Filter_thresholdingStrategyType" name="Thresholding_Filter_thresholdingStrategyType" value="lower" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="false" />
                         <Property mapKey="enabled" name="enabled" value="true" />
@@ -4750,9 +4742,9 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/08e2d62f-f99a-4268-8b33-617dfcc63e75.h5" />
-                                    <item value="../../../nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/08e2d62f-f99a-4268-8b33-617dfcc63e75.h5" />
-                                    <item value="/nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/08e2d62f-f99a-4268-8b33-617dfcc63e75.h5" />
+                                    <item value="../../../../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/dabe541b-b164-4180-97a4-5ca761b86800.h5" />
+                                    <item value="../../../home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/dabe541b-b164-4180-97a4-5ca761b86800.h5" />
+                                    <item value="/home/dominik/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/dabe541b-b164-4180-97a4-5ca761b86800.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -6100,6 +6092,10 @@
                     <First value="Data Export" />
                     <Second value="11" />
                 </value>
+                <value key="VesselnessExtractor.enabled">
+                    <First value="Segmentation" />
+                    <Second value="0" />
+                </value>
                 <value key="VesselnessExtractor.manualUpdateButton_">
                     <First value="Segmentation" />
                     <Second value="20" />
@@ -6110,7 +6106,7 @@
                 </value>
                 <value key="VesselnessExtractor.scaleSpaceSteps">
                     <First value="Segmentation" />
-                    <Second value="1" />
+                    <Second value="2" />
                 </value>
                 <value key="VesselnessExtractor.statusDisplay">
                     <First value="Segmentation" />
@@ -6122,7 +6118,7 @@
                 </value>
                 <value key="VesselnessExtractor.vesselRadiusRangeRW">
                     <First value="Segmentation" />
-                    <Second value="0" />
+                    <Second value="1" />
                 </value>
                 <value key="VolumeFilterList.manualUpdateButton_">
                     <First value="Segmentation Postprocessing" />
