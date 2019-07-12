@@ -1,0 +1,125 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="20">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="GeometrySave" ref="ref2" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="114" y="106" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="3.342307806" />
+            </MetaData>
+            <Processors>
+                <Processor type="VesselGraphSource" name="VesselGraphSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="42" y="-24" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="graphFilePath" name="graphFilePath" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="reference/vesselnetworkanalysis/graph_load_save/cow.vvg.gz" />
+                                    <item value="../../voreen-testdata/voreen-testdata/reference/vesselnetworkanalysis/graph_load_save/cow.vvg.gz" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/reference/vesselnetworkanalysis/graph_load_save/cow.vvg.gz" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="reload" name="reload" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="graph.output" direction="0" portID="graph.output" guiName="Graph Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VesselGraphCenterlineConverter" name="VesselGraphCenterlineConverter" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="4" y="76" />
+                    </MetaData>
+                    <Properties />
+                    <Inports>
+                        <Port name="vesselgraphcenterlineextractor_graph.inport" direction="1" portID="vesselgraphcenterlineextractor_graph.inport" guiName="Graph" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="vesselgraphcenterlineextractor.outport" direction="0" portID="vesselgraphcenterlineextractor.outport" guiName="Edges" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="GeometrySave" name="GeometrySave" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="56" y="176" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="file" name="file" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/cow_centerlines.vge" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/cow_centerlines.vge" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/cow_centerlines.vge" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="graph.output">
+                        <Processor type="VesselGraphSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="vesselgraphcenterlineextractor_graph.inport">
+                        <Processor type="VesselGraphCenterlineConverter" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="vesselgraphcenterlineextractor.outport">
+                        <Processor type="VesselGraphCenterlineConverter" ref="ref1" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="GeometrySave" ref="ref2" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>
