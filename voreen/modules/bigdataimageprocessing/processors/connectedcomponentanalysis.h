@@ -109,9 +109,21 @@ public:
     virtual bool isEndProcessor() const       { return true; }
     virtual VoreenSerializableObject* create() const;
     virtual void setDescriptions() {
-        setDescription("Processor that performs connected component analysis on a binary input volume");
+        setDescription(
+                "Processor that performs connected component analysis on a binary input volume."
+                "This is an implementation of the paper 'Streaming Connected Component Computation for Trillion Voxel Images' by Isenburg and Shewchuk and is thus able to process very large volumes."
+                );
+        writeComponentStatFile_.setDescription("Write a csv file containing properties (such as number of voxels, bounding box and volume) for each of the connected components.");
+        componentStatFilePath_.setDescription("Path to the csv file containing component information to be written.");
+        neighbourhoodMode_.setDescription("Which kinds of neighbors are considered to be connected. One of 6, 18 or 26.");
+        binarizationThreshold_.setDescription("Values above this threshold will be considered foreground, others background. If the input volume is not binary already, this property can therefore be used for thresholding.");
+        invertBinarization_.setDescription("If enabled, values <i>below</i> the specified threshold will be consindered foreground and others background.");
+        minBoundsDiagonal_.setDescription("Components with an axis-aligned bounding box with a diagonal (in mm) less than the specified volume will be removed from the result.");
+        minBoundsDiagonalRelative_.setDescription("Components with an axis-aligned bounding box with a diagonal (relative to volume diagonal, between 0 and 1) less than the specified volume will be removed from the result.");
+        minVoxelVolume_.setDescription("Components containing less voxels than the specified value will be removed from the result.");
+        applyLabeling_.setDescription("If enabled, each component will receive a unique id. Otherwise, a binary volume is generated. The latter is useful if the components are only used to remove some components from a binary input volume.");
     }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
+    virtual CodeState getCodeState() const        { return CODE_STATE_TESTING;   }
 
     virtual bool isReady() const;
 

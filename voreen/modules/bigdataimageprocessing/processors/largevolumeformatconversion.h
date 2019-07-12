@@ -67,7 +67,10 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Converts a multi-channel input volume to an arbitrary multi-channel target format.");
+        setDescription(
+                "Converts a multi-channel input volume to an arbitrary multi-channel target format. "
+                "This processor operates on on-disk volumes and is thus capable of processing volumes that exceed the main memory in size."
+                );
     }
 private:
     VolumePort inport_;
