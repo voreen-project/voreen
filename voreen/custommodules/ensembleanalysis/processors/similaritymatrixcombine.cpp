@@ -95,12 +95,10 @@ SimilarityMatrixCombineInput SimilarityMatrixCombine::prepareComputeInput() {
         inputMatrixLists.push_back(matrix);
     }
 
-    std::vector<Statistics> statisticsMatrix(referenceMatrices->getSize()*referenceMatrices->getSize(), false);
     std::unique_ptr<SimilarityMatrixList> outputMatrices(new SimilarityMatrixList(*referenceMatrices));
 
     return SimilarityMatrixCombineInput{
             inputMatrixLists,
-            std::move(statisticsMatrix),
             std::move(outputMatrices),
             similarityCombinationMethod_.getValue()
     };
@@ -109,7 +107,6 @@ SimilarityMatrixCombineInput SimilarityMatrixCombine::prepareComputeInput() {
 SimilarityMatrixCombineOutput SimilarityMatrixCombine::compute(SimilarityMatrixCombineInput input, ProgressReporter& progress) const {
 
     std::vector<const SimilarityMatrixList*> inputMatrixLists = input.inputMatrixLists;
-    std::vector<Statistics> statisticsMatrix = std::move(input.statisticsMatrix);
     std::unique_ptr<SimilarityMatrixList> outputMatrices = std::move(input.outputMatrices);
 
     std::vector<std::string> fieldNames = outputMatrices->getFieldNames();
@@ -119,12 +116,12 @@ SimilarityMatrixCombineOutput SimilarityMatrixCombine::compute(SimilarityMatrixC
         SimilarityMatrix& outputDistanceMatrix = outputMatrices->getSimilarityMatrix(fieldName);
         size_t size = outputDistanceMatrix.getSize();
 #ifdef VRN_MODULE_OPENMP
-#pragma omp parallel for shared(outputDistanceMatrix), shared(statisticsMatrix), shared(inputMatrixLists)
+#pragma omp parallel for shared(outputDistanceMatrix), shared(inputMatrixLists)
 #endif
         for(long i=0; i<static_cast<long>(size); i++) {
             for(long j=0; j<=i; j++) {
 
-                Statistics& statistics = statisticsMatrix[i * size + j];
+                Statistics statistics(false);
 
                 for (const SimilarityMatrixList* inputMatrixList : inputMatrixLists) {
                     std::string inputFieldName = inputMatrixList->getFieldNames()[fi]; // Never ever use reference here!

@@ -808,8 +808,8 @@ void SimilarityPlot::calculate() {
     ensembleHash_.clear();
     mdsData_.clear();
 
-    const std::vector<std::string>& fieldNames = ensembleInport_.getData()->getCommonFieldNames();
     const SimilarityMatrixList* matrices = similarityMatrixInport_.getData();
+    std::vector<std::string> fieldNames = matrices->getFieldNames();
 
     setProgress(0.0f);
     for (size_t i=0; i<fieldNames.size(); i++) {

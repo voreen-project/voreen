@@ -44,7 +44,6 @@ enum SimilarityCombinationMethod {
 
 struct SimilarityMatrixCombineInput {
     std::vector<const SimilarityMatrixList*> inputMatrixLists;
-    std::vector<Statistics> statisticsMatrix;
     std::unique_ptr<SimilarityMatrixList> outputMatrices;
     SimilarityCombinationMethod method;
 };
