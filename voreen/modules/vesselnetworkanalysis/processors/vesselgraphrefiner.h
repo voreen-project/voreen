@@ -39,7 +39,7 @@ class VesselGraphRefiner : public Processor {
 public:
     VesselGraphRefiner();
     virtual ~VesselGraphRefiner();
-    virtual std::string getCategory() const { return "Geometry"; }
+    virtual std::string getCategory() const { return "VesselGraph Processing"; }
     virtual std::string getClassName() const { return "VesselGraphRefiner"; }
     virtual CodeState getCodeState() const { return Processor::CODE_STATE_EXPERIMENTAL; }
     virtual Processor* create() const { return new VesselGraphRefiner(); }

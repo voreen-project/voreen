@@ -38,7 +38,7 @@ class VascuSynthGraphLoader : public Processor {
 public:
     VascuSynthGraphLoader();
     virtual ~VascuSynthGraphLoader();
-    virtual std::string getCategory() const { return "Geometry"; }
+    virtual std::string getCategory() const { return "Input"; }
     virtual std::string getClassName() const { return "VascuSynthGraphLoader"; }
     virtual CodeState getCodeState() const { return Processor::CODE_STATE_EXPERIMENTAL; }
     virtual Processor* create() const { return new VascuSynthGraphLoader(); }

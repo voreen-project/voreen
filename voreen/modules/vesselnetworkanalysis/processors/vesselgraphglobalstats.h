@@ -44,7 +44,7 @@ class VesselGraphGlobalStats : public Processor {
 public:
     VesselGraphGlobalStats();
     virtual ~VesselGraphGlobalStats();
-    virtual std::string getCategory() const { return "VesselGraph"; }
+    virtual std::string getCategory() const { return "Output"; }
     virtual std::string getClassName() const { return "VesselGraphGlobalStats"; }
     virtual CodeState getCodeState() const { return Processor::CODE_STATE_TESTING; }
     virtual Processor* create() const { return new VesselGraphGlobalStats(); }

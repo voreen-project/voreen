@@ -41,7 +41,7 @@ class VesselGraphPerturbation : public Processor {
 public:
     VesselGraphPerturbation();
     virtual ~VesselGraphPerturbation();
-    virtual std::string getCategory() const { return "Geometry"; }
+    virtual std::string getCategory() const { return "VesselGraph Processing"; }
     virtual std::string getClassName() const { return "VesselGraphPerturbation"; }
     virtual CodeState getCodeState() const { return Processor::CODE_STATE_EXPERIMENTAL; }
     virtual Processor* create() const { return new VesselGraphPerturbation(); }

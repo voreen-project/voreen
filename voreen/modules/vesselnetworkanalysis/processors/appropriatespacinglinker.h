@@ -39,7 +39,7 @@ public:
     virtual ~AppropriateSpacingLinker();
 
     virtual std::string getClassName() const         { return "AppropriateSpacingLinker";      }
-    virtual std::string getCategory() const       { return "Volume Processing"; }
+    virtual std::string getCategory() const       { return "Util"; }
     virtual std::string setDescriptions() const       { return "Volume Processing"; }
     virtual VoreenSerializableObject* create() const;
     virtual void setDescriptions() { setDescription( "Find an appropriate spacing to be used, for example, in a resampling processor This processor simply reads the minimum of the spacing in each dimension from the specified volume, multiplies it by a specified factor and displays the result in a property."); }

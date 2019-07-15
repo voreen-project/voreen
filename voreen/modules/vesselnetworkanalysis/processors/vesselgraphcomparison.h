@@ -54,7 +54,7 @@ class VesselGraphComparison : public GeometryRendererBase {
 public:
     VesselGraphComparison();
     virtual ~VesselGraphComparison();
-    virtual std::string getCategory() const { return "Geometry"; }
+    virtual std::string getCategory() const { return "VesselGraph Processing"; }
     virtual std::string getClassName() const { return "VesselGraphComparison"; }
     virtual CodeState getCodeState() const { return Processor::CODE_STATE_EXPERIMENTAL; }
     virtual Processor* create() const { return new VesselGraphComparison(); }

@@ -99,7 +99,7 @@ class VesselGraphRenderer : public GeometryRendererBase {
 public:
     VesselGraphRenderer();
     virtual ~VesselGraphRenderer();
-    virtual std::string getCategory() const { return "Geometry"; }
+    virtual std::string getCategory() const { return "VesselGraph Rendering"; }
     virtual std::string getClassName() const { return "VesselGraphRenderer"; }
     virtual CodeState getCodeState() const { return Processor::CODE_STATE_TESTING; }
     virtual Processor* create() const { return new VesselGraphRenderer(); }

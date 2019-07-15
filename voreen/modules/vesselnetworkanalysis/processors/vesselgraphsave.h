@@ -39,7 +39,7 @@ class VesselGraphSave : public Processor {
 public:
     VesselGraphSave();
     virtual ~VesselGraphSave();
-    virtual std::string getCategory() const { return "Geometry"; }
+    virtual std::string getCategory() const { return "Output"; }
     virtual std::string getClassName() const { return "VesselGraphSave"; }
     virtual CodeState getCodeState() const { return Processor::CODE_STATE_TESTING; }
     virtual Processor* create() const { return new VesselGraphSave(); }
