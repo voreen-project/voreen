@@ -44,7 +44,7 @@ namespace voreen {
 BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& modulePath)
     : VoreenModule(modulePath)
 {
-    setID("bigdataimageprocessing");
+    setID("Big Data Image Processing");
     setGuiName("Big Data Image Processing");
 
     registerProcessor(new ConnectedComponentAnalysis());

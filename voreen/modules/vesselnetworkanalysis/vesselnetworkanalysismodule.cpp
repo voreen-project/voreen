@@ -50,8 +50,8 @@ namespace voreen {
 VesselNetworkAnalysisModule::VesselNetworkAnalysisModule(const std::string& modulePath)
     : VoreenModule(modulePath)
 {
-    setID("VesselNetworkAnalysis");
-    setGuiName("VesselNetworkAnalysis");
+    setID("Vessel Network Analysis");
+    setGuiName("Vessel Network Analysis");
 
     addShaderPath(getModulePath("glsl"));
 
