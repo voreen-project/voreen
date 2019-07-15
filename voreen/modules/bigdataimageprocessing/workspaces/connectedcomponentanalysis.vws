@@ -1,14 +1,14 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="false" GlobalDescription="A basic network for a simple volume ray-casting application.">
-        <ProcessorNetwork version="17">
+        <ProcessorNetwork version="20">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="ConnectedComponentAnalysis" ref="ref3" />
+                        <item type="SliceViewer" ref="ref4" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -23,10 +23,10 @@
                         <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="80" y="351" width="350" height="350" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-1678" y="3" />
+                            <value x="-1920" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
-                            <value x="1305" y="980" />
+                            <value x="1406" y="1132" />
                         </MetaItem>
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
@@ -37,7 +37,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="78" y="351" />
+                            <value x="80" y="351" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="350" y="350" />
@@ -48,7 +48,7 @@
                             <value x="350" y="350" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
-                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="showCanvas" name="showCanvas" value="true" />
@@ -71,28 +71,32 @@
                 </Processor>
                 <Processor type="Background" name="Background" id="ref0">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-428" y="97" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-427" y="97" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="angle" name="angle" value="60" />
-                        <Property mapKey="backgroundModeAsString" name="backgroundModeAsString" value="gradient" />
-                        <Property mapKey="blendMode" name="blendMode" value="alpha-blending" />
+                        <Property mapKey="backgroundModeAsString" name="backgroundModeAsString" value="monochrome" />
+                        <Property mapKey="blendMode" name="blendMode" value="add" />
                         <Property mapKey="color1" name="color1">
-                            <value x="1" y="1" z="1" w="1" />
+                            <value x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="color2" name="color2">
-                            <value x="0.39215699" y="0.39215699" z="0.39215699" w="1" />
+                            <value x="0.392156988" y="0.392156988" z="0.392156988" w="1" />
                         </Property>
                         <Property mapKey="enable" name="enable" value="true" />
                         <Property mapKey="randomClouds" name="randomClouds" value="true" />
                         <Property mapKey="repeat" name="repeat" value="1" />
-                        <Property mapKey="shader.program" name="shader.program" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                        <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-700" y="0" width="700" height="700" />
                             </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
+                            </components>
                         </Property>
-                        <Property mapKey="texture" name="texture">
+                        <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                     </Properties>
@@ -118,11 +122,24 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
-                        <Property mapKey="volumeURL" name="volumeURL" url="../../../resource/voreenve/volumes/nucleon.vvd" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="">
+                                <path noPathSet="false">
+                                    <paths>
+                                        <item value="../../../resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="/git/voreen1/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                    </paths>
+                                </path>
+                                <searchParameters>
+                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                </searchParameters>
+                            </urls>
+                        </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -138,12 +155,12 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLabeling" name="applyLabeling" value="true" />
-                        <Property mapKey="binarizationThreshold" name="binarizationThreshold" value="0.75" />
-                        <Property mapKey="componentStatFilePath" name="componentStatFilePath">
+                        <Property mapKey="binarizationThreshold" name="binarizationThreshold" value="5456" />
+                        <Property mapKey="componentStatFilePath" name="componentStatFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../../../home/dominik/test.csv" />
-                                    <item value="../../../../../home/dominik/test.csv" />
+                                    <item value="../../../../../../home/dominik/test.csv" />
+                                    <item value="../../../home/dominik/test.csv" />
                                     <item value="/home/dominik/test.csv" />
                                 </paths>
                             </paths>
@@ -152,20 +169,23 @@
                         <Property mapKey="invertBinarization" name="invertBinarization" value="false" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="minBoundsDiagonal" name="minBoundsDiagonal" value="0" />
+                        <Property mapKey="minBoundsDiagonalRelative" name="minBoundsDiagonalRelative" value="0" />
                         <Property mapKey="minVoxelVolume" name="minVoxelVolume" value="0" />
                         <Property mapKey="neighbourhoodMode" name="neighbourhoodMode" value="n6" />
                         <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
-                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath">
+                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../cca.h5" />
-                                    <item value="../../../cca.h5" />
-                                    <item value="/data/dominik/cca.h5" />
+                                    <item value="../../../../../../nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/fced3dbe-eec8-4979-aefd-686432f00d6c.h5" />
+                                    <item value="../../../nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/fced3dbe-eec8-4979-aefd-686432f00d6c.h5" />
+                                    <item value="/nosnapshot/tmp/voreentmp/318cf86b-7a79-4a1c-aea4-6dea0788c7a3/fced3dbe-eec8-4979-aefd-686432f00d6c.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 480 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="writeComponentStatFile" name="writeComponentStatFile" value="true" />
                     </Properties>
                     <Inports>
@@ -178,7 +198,7 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="connectedcomponentanalysis.outport" direction="0" portID="connectedcomponentanalysis.outport" guiName="Label Volume Output" allowMultipleConnections="true" invalidationLevel="1">
+                        <Port name="connectedcomponentanalysis.outport" direction="0" portID="connectedcomponentanalysis.outport" guiName="Label Volume Output" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -212,6 +232,7 @@
                         </Property>
                         <Property mapKey="fontSize" name="fontSize" value="14" />
                         <Property mapKey="interactionLevelOfDetail" name="interactionLevelOfDetail" value="1" />
+                        <Property mapKey="legendAlignment" name="legendAlignment" value="NW" />
                         <Property mapKey="legendLineLength" name="legendLineLength" value="80" />
                         <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="true" mouseAction="3" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="true" />
@@ -231,10 +252,10 @@
                         <Property mapKey="selectCenterSliceOnInputChange" name="selectCenterSliceOnInputChange" value="true" />
                         <Property mapKey="showCursorInformation" name="showCursorInformation" value="onMove" />
                         <Property mapKey="showSliceNumber" name="showSliceNumber" value="true" />
-                        <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xz-plane" />
+                        <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xy-plane" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="20" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="60" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="-1" y="-1" z="-1" />
@@ -242,53 +263,53 @@
                         <Property mapKey="textureMode" name="textureMode" value="3d-texture" />
                         <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" width="718" height="459" />
                                 <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
-                                    <value x="0" y="2" />
+                                    <value x="0" y="943" />
                                 </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="2" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="2" />
+                                <domain x="0" y="943" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
                                         <colorL r="0" g="0" b="127" a="0" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.041666" split="false">
-                                        <colorL r="0" g="0" b="191" a="10" />
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="191" a="255" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="0.125" split="false">
                                         <colorL r="0" g="0" b="255" a="31" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.208333" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.208333001" split="false">
                                         <colorL r="0" g="85" b="255" a="53" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.291666" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.291666001" split="false">
                                         <colorL r="0" g="170" b="255" a="74" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="0.375" split="false">
                                         <colorL r="0" g="255" b="255" a="95" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.45833299" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.458332986" split="false">
                                         <colorL r="85" g="255" b="170" a="116" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.54166597" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.541665971" split="false">
                                         <colorL r="170" g="255" b="85" a="138" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="0.625" split="false">
                                         <colorL r="255" g="255" b="0" a="159" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.70833302" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.708333015" split="false">
                                         <colorL r="255" g="170" b="0" a="180" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.79166597" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.791665971" split="false">
                                         <colorL r="255" g="85" b="0" a="201" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="0.875" split="false">
                                         <colorL r="255" g="0" b="0" a="223" />
                                     </key>
-                                    <key type="TransFuncMappingKey" intensity="0.95833302" split="false">
+                                    <key type="TransFuncMappingKey" intensity="0.958333015" split="false">
                                         <colorL r="191" g="0" b="0" a="244" />
                                     </key>
                                     <key type="TransFuncMappingKey" intensity="1" split="false">
@@ -438,44 +459,64 @@
         <ApplicationModeConfig MainCanvas="Canvas::Canvas">
             <PropertyGroups>
                 <item value="Data Input" />
-                <item value="Color Mapping (Transfer Function)" />
-                <item value="Camera" />
-                <item value="Axis-Aligned Clipping" />
-                <item value="Ray-Casting Options" />
-                <item value="Background" />
-                <item value="Save Image" />
+                <item value="Connected Component Processing" />
+                <item value="Rendering" />
             </PropertyGroups>
             <GroupMembership>
-                <value key="Background.angle">
-                    <First value="Background" />
-                    <Second value="4" />
-                </value>
-                <value key="Background.backgroundModeAsString">
-                    <First value="Background" />
-                    <Second value="0" />
-                </value>
-                <value key="Background.color1">
-                    <First value="Background" />
-                    <Second value="1" />
-                </value>
-                <value key="Background.color2">
-                    <First value="Background" />
-                    <Second value="2" />
-                </value>
-                <value key="Background.repeat">
-                    <First value="Background" />
-                    <Second value="5" />
-                </value>
-                <value key="Background.texture">
-                    <First value="Background" />
+                <value key="ConnectedComponentAnalysis.applyLabeling">
+                    <First value="Connected Component Processing" />
                     <Second value="3" />
                 </value>
-                <value key="Canvas.saveScreenshot">
-                    <First value="Save Image" />
+                <value key="ConnectedComponentAnalysis.binarizationThreshold">
+                    <First value="Connected Component Processing" />
                     <Second value="1" />
                 </value>
-                <value key="Canvas.screenshotFilename">
-                    <First value="Save Image" />
+                <value key="ConnectedComponentAnalysis.invertBinarization">
+                    <First value="Connected Component Processing" />
+                    <Second value="0" />
+                </value>
+                <value key="ConnectedComponentAnalysis.manualUpdateButton_">
+                    <First value="Connected Component Processing" />
+                    <Second value="10" />
+                </value>
+                <value key="ConnectedComponentAnalysis.minBoundsDiagonal">
+                    <First value="Connected Component Processing" />
+                    <Second value="6" />
+                </value>
+                <value key="ConnectedComponentAnalysis.minBoundsDiagonalRelative">
+                    <First value="Connected Component Processing" />
+                    <Second value="5" />
+                </value>
+                <value key="ConnectedComponentAnalysis.minVoxelVolume">
+                    <First value="Connected Component Processing" />
+                    <Second value="7" />
+                </value>
+                <value key="ConnectedComponentAnalysis.neighbourhoodMode">
+                    <First value="Connected Component Processing" />
+                    <Second value="2" />
+                </value>
+                <value key="ConnectedComponentAnalysis.outputVolumeFilePath">
+                    <First value="Connected Component Processing" />
+                    <Second value="20" />
+                </value>
+                <value key="ConnectedComponentAnalysis.progressDisplay">
+                    <First value="Connected Component Processing" />
+                    <Second value="11" />
+                </value>
+                <value key="ConnectedComponentAnalysis.statusDisplay">
+                    <First value="Connected Component Processing" />
+                    <Second value="12" />
+                </value>
+                <value key="ConnectedComponentAnalysis.stopUpdateButton">
+                    <First value="Connected Component Processing" />
+                    <Second value="10" />
+                </value>
+                <value key="SliceViewer.resetViewButton">
+                    <First value="Rendering" />
+                    <Second value="2" />
+                </value>
+                <value key="SliceViewer.transferFunction">
+                    <First value="Rendering" />
                     <Second value="0" />
                 </value>
                 <value key="VolumeSource.volumeInfo">
