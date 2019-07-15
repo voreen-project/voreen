@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="VesselGraphSource" ref="ref0" />
+                        <item type="Canvas" ref="ref4" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -466,7 +466,7 @@
                 </Processor>
                 <Processor type="Canvas" name="Canvas" id="ref4">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="218" y="195" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="219" y="195" />
                         <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="486" y="542" width="500" height="400" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
@@ -482,7 +482,13 @@
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
-                            <paths noPathSet="true" />
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/cow.png" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/cow.png" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/cow.png" />
+                                </paths>
+                            </paths>
                         </Property>
                         <Property mapKey="showCanvas" name="showCanvas" value="true" />
                         <Property mapKey="showCursor" name="showCursor" value="true" />
