@@ -73,7 +73,7 @@ public:
 
     std::string getCategory() const { return "Volume Processing"; }
 
-    CodeState getCodeState() const { return CODE_STATE_EXPERIMENTAL; }
+    CodeState getCodeState() const { return CODE_STATE_TESTING; }
 
     virtual bool isReady() const;
 

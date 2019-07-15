@@ -118,9 +118,9 @@ public:
     VolumeResampleTransformation();
     Processor* create() const;
 
-    std::string getClassName() const      { return "VolumeResampleTransformation";    }
+    std::string getClassName() const      { return "VolumeResampleTransformation"; }
     std::string getCategory() const       { return "Volume Processing"; }
-    CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
+    CodeState getCodeState() const        { return CODE_STATE_TESTING; }
     virtual bool isReady() const;
 
     virtual ComputeInput prepareComputeInput();
