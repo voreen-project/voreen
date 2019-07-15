@@ -133,6 +133,12 @@ protected:
                 "Transforms the input volume and resamples it so that the resulting voxel grid is aligned with the voxel grid of the input volume. "
                 "The transformation is applied in world space. "
                 );
+
+        spacingHandling_.setDescription("How to determine the spacing of the output volume (and thus the resolution). "
+                "Options are: <b>Keep</b> the resolution of the input volume, <b>set</b> an explicit spacing, and <b>multiply</b> the resolution of the input volume by a specified factor.");
+        transformMatrix_.setDescription("Specify the transformation matrix. A <b>VolumeTransformation</b> processor can be used to compute specific transformations (e.g., rotation) and link them with this processor.");
+        outsideVolumeHandling_.setDescription("When rotating the input volume, some regions of the output volume will not have a correspondence in the original volume. This property defines how the value of these voxels will be determined.");
+        filteringMode_.setDescription("Specifies how values of the output volume will be sampled from the input volume, one of <b>linear</b> and <b>nearest neighbor</b> filtering.");
     }
 
     virtual void adjustPropertiesToInput();
@@ -185,9 +191,6 @@ private:
 template<class S>
 void VolumeResampleTransformation::resample(const VolumeBase& inputVol, std::unique_ptr<HDF5FileVolume> output, const tgt::mat4& voxelOutToVoxelIn, S samplingStrategy, ProgressReporter& progress) const {
     tgt::svec3 outputDim = output->getDimensions();
-    tgt::ivec3 inputMaxVoxelPos(tgt::ivec3(inputVol.getDimensions()) - tgt::ivec3(1));
-
-
     std::string baseType = output->getBaseType();
 
     const VolumeRAM* input = inputVol.getRepresentation<VolumeRAM>();

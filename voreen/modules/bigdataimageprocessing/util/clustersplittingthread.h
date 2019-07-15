@@ -37,11 +37,11 @@
 
 namespace voreen {
 
-class VRN_CORE_API ClusterSplittingThread : public BackgroundThread { 
+class VRN_CORE_API ClusterSplittingThread : public BackgroundThread {
 
 public:
 
-    ClusterSplittingThread(NucleiClusterSplitting* processor, ConnectedComponentQueue& queue, boost::mutex& globalValueMutex, bool smoothForSeedDetection, size_t gaussianKernelSize, float gaussianSigma, bool maskBeforeSmoothing, bool expandMarkers, size_t minSeedRank); 
+    ClusterSplittingThread(NucleiClusterSplitting* processor, ConnectedComponentQueue& queue, boost::mutex& globalValueMutex, bool smoothForSeedDetection, size_t gaussianKernelSize, float gaussianSigma, bool maskBeforeSmoothing, bool expandMarkers, size_t minSeedRank);
 
 protected:
 

@@ -117,7 +117,7 @@ public:
         componentStatFilePath_.setDescription("Path to the csv file containing component information to be written.");
         neighbourhoodMode_.setDescription("Which kinds of neighbors are considered to be connected. One of 6, 18 or 26.");
         binarizationThreshold_.setDescription("Values above this threshold will be considered foreground, others background. If the input volume is not binary already, this property can therefore be used for thresholding.");
-        invertBinarization_.setDescription("If enabled, values <i>below</i> the specified threshold will be consindered foreground and others background.");
+        invertBinarization_.setDescription("If enabled, values <i>below</i> the specified threshold will be considered foreground and others background.");
         minBoundsDiagonal_.setDescription("Components with an axis-aligned bounding box with a diagonal (in mm) less than the specified volume will be removed from the result.");
         minBoundsDiagonalRelative_.setDescription("Components with an axis-aligned bounding box with a diagonal (relative to volume diagonal, between 0 and 1) less than the specified volume will be removed from the result.");
         minVoxelVolume_.setDescription("Components containing less voxels than the specified value will be removed from the result.");

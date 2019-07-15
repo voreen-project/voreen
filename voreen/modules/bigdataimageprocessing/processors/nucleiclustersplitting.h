@@ -69,7 +69,7 @@ protected:
         setDescription("Segmentation of touching cell nuclei in ultramicroscopy images. Realizes the method proposed in Scherzinger et al. - \"Automated Segmentation of Immunostained Cell Nuclei in 3D Ultramicroscopy Images\". The processor does only perform the cluster splitting (i.e., expects a foreground segmentation in form of a connected component labeling) and processes each cluster separately by only loading the current cluster into main memory in a blockwise fashion. The processor does not output a labeled segmentation image, but a PointSegmentList of the cell nuclei centroids, where each segment corresponds to a single cluster.");
 
         inportImage_.setDescription("Original input image. Is expected to contain only one channel, data type must be uint16. A VolumeDiskHDF5 representation is expected to allow loading arbitrary blocks into main memory.");
-        inportLabels_.setDescription("Imnage containing the connected component labeling of the foreground segmentation of the input image. Is expected to contain only one channel, data type must be uint32. The dimensions must match the input image. This data set is used both as a foreground mask and to identify each individual connected component."); 
+        inportLabels_.setDescription("Imnage containing the connected component labeling of the foreground segmentation of the input image. Is expected to contain only one channel, data type must be uint32. The dimensions must match the input image. This data set is used both as a foreground mask and to identify each individual connected component.");
         connectedComponentsDescription_.setDescription("CSV file which contains the description of the connected components, i.e., their ID, volume, LLF and URB voxel. Is written out by the ConnectedComponentLabeling processor for large image data.");
         centroidOutport_.setDescription("Output of cell nuclei centroids as a PointSegmentList. Each segment corresponds to a single cluster and each point in the segment corresponds to a cell nucleus centroid within that cluster.");
     }
@@ -104,8 +104,8 @@ protected:
     VolumePort inportLabels_;   ///< inport of a connected component labeling image (one channel, uint32, VolumeDiskHDF5 representation, same dimensions as original image)
 
     GeometryPort centroidOutport_;  ///< centroids of detected cell nuclei as PointSegmentList (one segment per cluster)
-    
-    // TODO: optionally output a complete segmentation image?!    
+
+    // TODO: optionally output a complete segmentation image?!
     //VolumePort outport_;
 
     FileDialogProperty connectedComponentsDescription_; ///< description file of the connected components, i.e., their IDs, volume, LLF, URB
