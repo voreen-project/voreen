@@ -36,6 +36,7 @@ SimilarityMatrixCombine::SimilarityMatrixCombine()
     , inport_(Port::INPORT, "inport", "Ensemble Datastructure Input", true)
     , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
     , similarityCombinationMethod_("similarityCombinationMethod", "Combination Method")
+    , ignoreHash_("ignoreHash", "Ignore Hash", false)
 {
     // Ports
     addPort(inport_);
@@ -47,6 +48,8 @@ SimilarityMatrixCombine::SimilarityMatrixCombine()
     similarityCombinationMethod_.addOption("method-avg", "Avg.", METHOD_AVG);
     similarityCombinationMethod_.addOption("method-std", "Std.", METHOD_STD);
     similarityCombinationMethod_.selectByValue(METHOD_MAX);
+
+    addProperty(ignoreHash_);
 }
 
 Processor* SimilarityMatrixCombine::create() const {
@@ -77,8 +80,16 @@ SimilarityMatrixCombineInput SimilarityMatrixCombine::prepareComputeInput() {
     const SimilarityMatrixList* referenceMatrices = inputData.front();
     std::vector<const SimilarityMatrixList*> inputMatrixLists;
     for(const auto& matrix : inputData) {
-        if(referenceMatrices->getHash() != matrix->getHash()) {
+        if(!ignoreHash_.get() && referenceMatrices->getHash() != matrix->getHash()) {
             throw InvalidInputException("Hashes do not match", InvalidInputException::S_ERROR);
+        }
+
+        if (referenceMatrices->getFieldNames().size() != matrix->getFieldNames().size()) {
+            throw InvalidInputException("Number of contained fields does not match", InvalidInputException::S_ERROR);
+        }
+
+        if (referenceMatrices->getSize() != matrix->getSize()) {
+            throw InvalidInputException("Matrix size does not match", InvalidInputException::S_ERROR);
         }
 
         inputMatrixLists.push_back(matrix);
@@ -102,12 +113,13 @@ SimilarityMatrixCombineOutput SimilarityMatrixCombine::compute(SimilarityMatrixC
     std::unique_ptr<SimilarityMatrixList> outputMatrices = std::move(input.outputMatrices);
 
     std::vector<std::string> fieldNames = outputMatrices->getFieldNames();
-    for(size_t ch = 0; ch < fieldNames.size(); ch++) {
-        const std::string& fieldName = fieldNames[ch];
+    for(size_t fi = 0; fi < fieldNames.size(); fi++) {
+        const std::string& fieldName = fieldNames[fi];
 
-        size_t size = outputMatrices->getSimilarityMatrix(fieldName).getSize();
+        SimilarityMatrix& outputDistanceMatrix = outputMatrices->getSimilarityMatrix(fieldName);
+        size_t size = outputDistanceMatrix.getSize();
 #ifdef VRN_MODULE_OPENMP
-#pragma omp parallel for shared(outputMatrices), shared(statisticsMatrix), shared(inputMatrixLists)
+#pragma omp parallel for shared(outputDistanceMatrix), shared(statisticsMatrix), shared(inputMatrixLists)
 #endif
         for(long i=0; i<static_cast<long>(size); i++) {
             for(long j=0; j<=i; j++) {
@@ -115,11 +127,11 @@ SimilarityMatrixCombineOutput SimilarityMatrixCombine::compute(SimilarityMatrixC
                 Statistics& statistics = statisticsMatrix[i * size + j];
 
                 for (const SimilarityMatrixList* inputMatrixList : inputMatrixLists) {
-                    const SimilarityMatrix& inputDistanceMatrix = inputMatrixList->getSimilarityMatrix(fieldName);
+                    std::string inputFieldName = inputMatrixList->getFieldNames()[fi]; // Never ever use reference here!
+                    const SimilarityMatrix& inputDistanceMatrix = inputMatrixList->getSimilarityMatrix(inputFieldName);
                     statistics.addSample(inputDistanceMatrix(i, j));
                 }
 
-                SimilarityMatrix& outputDistanceMatrix = outputMatrices->getSimilarityMatrix(fieldName);
                 switch (input.method) {
                 case METHOD_MAX:
                     outputDistanceMatrix(i, j) = statistics.getMax();
@@ -134,7 +146,7 @@ SimilarityMatrixCombineOutput SimilarityMatrixCombine::compute(SimilarityMatrixC
             }
         }
 
-        progress.setProgress(1.0f * ch / fieldNames.size());
+        progress.setProgress(1.0f * fi / fieldNames.size());
     }
 
     progress.setProgress(1.0f);

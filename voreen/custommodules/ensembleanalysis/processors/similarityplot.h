@@ -95,6 +95,7 @@ protected:
     };
 
     ButtonProperty calculateButton_;
+    BoolProperty autoCalculate_;
     ProgressProperty progressBar_;
     IntProperty numIterations_;
     IntProperty numEigenvalues_;

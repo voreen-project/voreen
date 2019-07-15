@@ -73,6 +73,7 @@ protected:
 private:
 
     OptionProperty<SimilarityCombinationMethod> similarityCombinationMethod_;
+    BoolProperty ignoreHash_;
 
     /// Inport for the ensemble data structure.
     SimilarityMatrixPort inport_;

@@ -292,7 +292,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                         }
                         else if(input.multiChannelSimilarityMeasure == MEASURE_ANGLEDIFFERENCE) {
                             if (direction_i == tgt::vec4::zero && direction_j == tgt::vec4::zero) {
-                                //resValue += 0.0f;
+                                //diff += 0.0f;
                             }
                             else if (direction_i != tgt::vec4::zero && direction_j != tgt::vec4::zero) {
                                 tgt::vec4 normDirection_i = tgt::normalize(direction_i);

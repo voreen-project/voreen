@@ -80,6 +80,7 @@ SimilarityPlot::SimilarityPlot()
     , pickingBuffer_(Port::OUTPORT, "picking", "Picking", false)
     , eigenValueOutport_(Port::OUTPORT, "eigenvalueOutport", "Eigenvalues", false)
     , calculateButton_("calculate", "Calculate")
+    , autoCalculate_("autoCalculate", "Auto Calculate", true)
     , progressBar_("progressBar", "Progress")
     , numIterations_("numIterations", "Number of Iterations", 1000, 1, 10000)
     , numEigenvalues_("numEigenvalues", "Number of Eigenvalues", MAX_NUM_DIMENSIONS, MAX_NUM_DIMENSIONS, MAX_NUM_DIMENSIONS)
@@ -125,6 +126,8 @@ SimilarityPlot::SimilarityPlot()
         calculateButton_.setGroupID("calculation");
         calculateButton_.setReadOnlyFlag(true);
         ON_CHANGE(calculateButton_, SimilarityPlot, calculate);
+    addProperty(autoCalculate_);
+        autoCalculate_.setGroupID("calculation");
     addProperty(progressBar_);
         progressBar_.setGroupID("calculation");
     addProgressBar(&progressBar_);
@@ -778,6 +781,10 @@ void SimilarityPlot::adjustToEnsemble() {
     loadFileDialog_.invalidate();
 
     calculateButton_.setReadOnlyFlag(false);
+
+    if (autoCalculate_.get()) {
+        calculate();
+    }
 }
 
 void SimilarityPlot::calculate() {
