@@ -699,7 +699,7 @@ bool FileSystem::isAbsolutePath(const std::string& path) {
     return ((path.size() > 0 && path.at(0) == '/') || (path.size() > 1 && path.at(1) ==':'));
 }
 
-string FileSystem::absolutePath(const string& path) {
+static bool tryMakeAbsolute(const string& path, string& output) {
     char* buffer;
 #ifdef WIN32
     buffer = static_cast<char*>(malloc(4096));
@@ -723,9 +723,26 @@ string FileSystem::absolutePath(const string& path) {
     if (buffer) {
         string result(buffer);
         free(buffer);
-        return cleanupPath(result);
+        output = tgt::FileSystem::cleanupPath(result);
+        return true;
+    } else {
+        output = path;
+        return false;
     }
-    return path;
+}
+
+string FileSystem::absolutePath(const string& path) {
+    string absprefix;
+    string prefix = path;
+    string suffix = "";
+    while(!tryMakeAbsolute(prefix, absprefix)) {
+        if(prefix.empty() || prefix == "/") {
+          return path;
+        }
+        suffix = fileName(prefix) + "/" + suffix;
+        prefix = dirName(prefix);
+    }
+    return cleanupPath(absprefix + "/" + suffix);
 }
 
 std::string FileSystem::relativePath(const std::string& path, const std::string& dir) {
