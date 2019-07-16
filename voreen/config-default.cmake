@@ -73,11 +73,3 @@ IF(WIN32)
     OPTION(VRN_DISABLE_ZERO_CHECK   
         "Do not generate ZERO_CHECK target (might cause unnecessary PCH re-compilations)"       ON )
 ENDIF()
-
-####################################################################################################
-#  Voreen Biology
-####################################################################################################
-OPTION(VRN_BUILD_VOREENBIOLOGY  "Build VoreenBiology application?"                              OFF )
-MARK_AS_ADVANCED(VRN_BUILD_VOREENBIOLOGY)
-
-
