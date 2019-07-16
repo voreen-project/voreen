@@ -942,7 +942,7 @@ string FileSystem::cleanupPath(std::string path, bool native /*= true*/) {
     }
     else {
         // convert to unix separators
-        tgtAssert(p_start < path.length(), "invalid p_start param"); // see above
+        tgtAssert(p_start <= path.length(), "invalid p_start param"); // see above
         path = path.substr(0, p_start) + replaceAllCharacters(path.substr(p_start), '\\', '/');
     }
 
