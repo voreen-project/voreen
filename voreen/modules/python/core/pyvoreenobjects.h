@@ -167,7 +167,7 @@ static PyMemberDef RenderTargetObject_members[] = {
 /*
  * Construction and destruction.
  */
-PyObject* RenderTargetObject_new(PyTypeObject *type, PyObject */*args*/, PyObject */*kwds*/) ;
+PyObject* RenderTargetObject_new(PyTypeObject *type, PyObject* /*args*/, PyObject* /*kwds*/) ;
 int RenderTargetObject_init(RenderTargetObject *self, PyObject *args, PyObject *kwds);
 void RenderTargetObject_dealloc(RenderTargetObject *self);
 

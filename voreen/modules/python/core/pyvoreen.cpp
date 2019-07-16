@@ -1150,7 +1150,6 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
         }
 
         if(error) {
-            Py_DECREF(object);
             std::string message = "Volume contains invalid values.";
             PyErr_SetString(PyExc_ValueError, message.c_str());
             return 0;
@@ -1165,7 +1164,6 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
         data->setRealWorldMapping(rwm);
         typedPort->setData(data, true);
 
-        Py_DECREF(object);
         Py_RETURN_NONE;
     }
     else if (RenderPort* typedPort = dynamic_cast<RenderPort*>(port)) {
@@ -1198,7 +1196,7 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
             return 0;
         }
 
-        auto textureUpload = [renderTargetObject] (tgt::Texture* texture, PyObject* target) {
+        auto textureUpload = [] (tgt::Texture* texture, PyObject* target) {
             bool error = false;
 
             // Ensure cpu texture data is available.
@@ -1251,8 +1249,6 @@ static PyObject* voreen_setPortData(PyObject* /*self*/, PyObject* args) {
         }
 
         renderTarget->deactivateTarget();
-
-        Py_DECREF(object);
 
         if(error || PyErr_Occurred()) {
             std::string error = "Pixel data contains invalid values.";
@@ -1340,6 +1336,9 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
 
             tgtAssert(p, "value null");
             PyList_Append(volumeObject->data, p);
+
+            // p is now owned by the list
+            Py_XDECREF(p);
         }
 
         volumeObject->dimX = data->getDimensions().x;
@@ -1358,7 +1357,6 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
         volumeObject->rwmOffset = data->getRealWorldMapping().getOffset();
 
         result = (PyObject*) volumeObject;
-        Py_INCREF(result); // FIXME: memory leak
     }
     else if (RenderPort* typedPort = dynamic_cast<RenderPort*>(port)) {
 
@@ -1408,6 +1406,8 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
 
                     tgtAssert(p, "value null");
                     PyList_Append(target, p);
+                    // p is now owned by the list
+                    Py_XDECREF(p);
                 }
             }
 
@@ -1426,7 +1426,6 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
         }
 
         result = (PyObject*) renderTargetObject;
-        Py_INCREF(result); // FIXME: memory leak
     }
 
     if (result == (PyObject*)-1) {
@@ -1438,7 +1437,6 @@ static PyObject* voreen_getPortData(PyObject* /*self*/, PyObject* args) {
     }
 
     return result;
-
 }
 
 static PyObject* voreen_setCameraPosition(PyObject* /*self*/, PyObject* args) {
