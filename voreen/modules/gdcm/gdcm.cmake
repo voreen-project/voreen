@@ -65,7 +65,7 @@ ELSEIF(UNIX)
         SET(GDCM_USE_VTK 0)
         INCLUDE(${GDCM_USE_FILE})
 
-        IF((GDCM_MAJOR_VERSION EQUAL 2) AND (GDCM_MINOR_VERSION GREATER 1))
+        IF((GDCM_MAJOR_VERSION EQUAL 2) AND (GDCM_MINOR_VERSION GREATER 1) OR (GDCM_MAJOR_VERSION EQUAL 3))
             MESSAGE( STATUS "GDCM 2.2 or newer detected." )
             #LIST(APPEND MOD_LIBRARIES -lgdcmMEXD -lgdcmopenjpeg -lgdcmuuid -lgdcmzlib)
             LIST(APPEND MOD_LIBRARIES -lgdcmCommon -lgdcmDICT -lgdcmDSED -lgdcmIOD -lgdcmMEXD -lgdcmMSFF -lgdcmjpeg12 -lgdcmjpeg16 -lgdcmjpeg8)

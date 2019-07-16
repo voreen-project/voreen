@@ -128,7 +128,7 @@ void DicomNetworkConnector::moveImage(const std::string& remote, uint16_t portno
     moveQueryDataSet.push_back(std::make_pair(getTagFromDictEntry(dict_.getDictEntryByKeyword("SeriesInstanceUID")),seriesInstanceUID)); //SeriesInstanceUID
     moveQueryDataSet.push_back(std::make_pair(getTagFromDictEntry(dict_.getDictEntryByKeyword("SOPInstanceUID")),sopInstanceUID)); //SOP Instance UID
     //create query
-#if GDCM_MAJOR_VERSION == 2 && ((GDCM_MINOR_VERSION == 2 && GDCM_BUILD_VERSION >= 2) || (GDCM_MINOR_VERSION > 2))
+#if GDCM_MAJOR_VERSION == 3 || GDCM_MAJOR_VERSION == 2 && ((GDCM_MINOR_VERSION == 2 && GDCM_BUILD_VERSION >= 2) || (GDCM_MINOR_VERSION > 2))
     gdcm::BaseRootQuery* moveQuery = gdcm::CompositeNetworkFunctions::ConstructQuery(gdcm::eStudyRootType, gdcm::eImage, moveQueryDataSet);
 #else
     gdcm::BaseRootQuery* moveQuery = gdcm::CompositeNetworkFunctions::ConstructQuery(gdcm::eStudyRootType, gdcm::eImageOrFrame, moveQueryDataSet);
@@ -343,7 +343,7 @@ std::vector<gdcm::DataSet> DicomNetworkConnector::findImages(const std::string& 
     }
 
     //create query
-#if GDCM_MAJOR_VERSION == 2 && ((GDCM_MINOR_VERSION == 2 && GDCM_BUILD_VERSION >= 2) || (GDCM_MINOR_VERSION > 2))
+#if GDCM_MAJOR_VERSION == 3 || GDCM_MAJOR_VERSION == 2 && ((GDCM_MINOR_VERSION == 2 && GDCM_BUILD_VERSION >= 2) || (GDCM_MINOR_VERSION > 2))
     gdcm::BaseRootQuery* imageQuery = gdcm::CompositeNetworkFunctions::ConstructQuery(gdcm::eStudyRootType, gdcm::eImage, imageQueryDataSet);
 #else
     gdcm::BaseRootQuery* imageQuery = gdcm::CompositeNetworkFunctions::ConstructQuery(gdcm::eStudyRootType, gdcm::eImageOrFrame, imageQueryDataSet);
