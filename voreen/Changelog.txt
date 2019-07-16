@@ -42,6 +42,7 @@ Voreen Changelog
       o Fix bug in Port class that could lead to pure virtual function calls
       o Fix VolumeMinMax now correctly storing values for multi-channel volumes
       o Adjust maximum distance of LightSourceProperty based on diagonal of dataset in SingleVolumeRaycaster and GeometryRenderer
+      o Fix saving files in symlinked folders in some cases
 
 
 2018-09-06: Voreen 5.0.1
