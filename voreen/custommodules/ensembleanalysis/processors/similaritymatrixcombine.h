@@ -40,6 +40,7 @@ enum SimilarityCombinationMethod {
     METHOD_MAX,
     METHOD_AVG,
     METHOD_STD,
+    METHOD_MULTIPLY,
 };
 
 struct SimilarityMatrixCombineInput {

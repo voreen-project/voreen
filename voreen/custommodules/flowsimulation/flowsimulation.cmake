@@ -50,7 +50,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volume/volumelistadapter.h
 )
 
-IF(VRN_MODULE_VESSELTOPOLOGY)
+IF(VRN_MODULE_VESSELNETWORKANALYSIS)
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
         ${MOD_DIR}/processors/simulation/flowindicatordetection.h
     )

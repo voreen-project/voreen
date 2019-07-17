@@ -37,7 +37,7 @@
 #include "../../ports/flowparametrizationport.h"
 
 #include "modules/base/properties/interactivelistproperty.h"
-#include "custommodules/vesseltopology/ports/vesselgraphport.h"
+#include "modules/vesselnetworkanalysis/ports/vesselgraphport.h"
 
 namespace voreen {
 

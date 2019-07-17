@@ -47,6 +47,7 @@ SimilarityMatrixCombine::SimilarityMatrixCombine()
     similarityCombinationMethod_.addOption("method-max", "Max.", METHOD_MAX);
     similarityCombinationMethod_.addOption("method-avg", "Avg.", METHOD_AVG);
     similarityCombinationMethod_.addOption("method-std", "Std.", METHOD_STD);
+    similarityCombinationMethod_.addOption("method-std", "Std.", METHOD_MULTIPLY);
     similarityCombinationMethod_.selectByValue(METHOD_MAX);
 
     addProperty(ignoreHash_);
@@ -121,12 +122,16 @@ SimilarityMatrixCombineOutput SimilarityMatrixCombine::compute(SimilarityMatrixC
         for(long i=0; i<static_cast<long>(size); i++) {
             for(long j=0; j<=i; j++) {
 
+                float d = 1.0f;
                 Statistics statistics(false);
 
                 for (const SimilarityMatrixList* inputMatrixList : inputMatrixLists) {
                     std::string inputFieldName = inputMatrixList->getFieldNames()[fi]; // Never ever use reference here!
                     const SimilarityMatrix& inputDistanceMatrix = inputMatrixList->getSimilarityMatrix(inputFieldName);
-                    statistics.addSample(inputDistanceMatrix(i, j));
+                    // We just need one or the other measure, but simply do both, since the calculation is cheap.
+                    float dissimilarity = inputDistanceMatrix(i, j);
+                    statistics.addSample(dissimilarity);
+                    d *= (1.0f - dissimilarity);
                 }
 
                 switch (input.method) {
@@ -138,6 +143,9 @@ SimilarityMatrixCombineOutput SimilarityMatrixCombine::compute(SimilarityMatrixC
                     break;
                 case METHOD_STD:
                     outputDistanceMatrix(i, j) = statistics.getStdDev();
+                    break;
+                case METHOD_MULTIPLY:
+                    outputDistanceMatrix(i, j) = d;
                     break;
                 }
             }

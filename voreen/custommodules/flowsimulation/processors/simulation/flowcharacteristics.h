@@ -30,8 +30,8 @@
 
 #include "voreen/core/ports/volumeport.h"
 
-#ifdef VRN_MODULE_VESSELTOPOLOGY
-#include "custommodules/vesseltopology/ports/vesselgraphport.h"
+#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
+#include "modules/vesselnetworkanalysis/ports/vesselgraphport.h"
 #endif
 
 namespace voreen {
@@ -59,7 +59,7 @@ protected:
 private:
 
     VolumeListPort inport_;
-#ifdef VRN_MODULE_VESSELTOPOLOGY
+#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
     VesselGraphPort vesselGraphPort_;
 #endif
 

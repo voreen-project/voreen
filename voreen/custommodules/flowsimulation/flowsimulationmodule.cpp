@@ -40,7 +40,7 @@
 #include "processors/simulation/flowsimulationcluster.h"
 #include "processors/volume/volumelistadapter.h"
 
-#ifdef VRN_MODULE_VESSELTOPOLOGY
+#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
 #include "processors/simulation/flowindicatordetection.h"
 #endif
 
@@ -69,7 +69,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerSerializableType(new FlowParametrization());
     registerSerializableType(new FlowSimulationCluster());
     registerSerializableType(new VolumeListAdapter());
-#ifdef VRN_MODULE_VESSELTOPOLOGY
+#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
     registerSerializableType(new FlowIndicatorDetection());
 #endif
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB

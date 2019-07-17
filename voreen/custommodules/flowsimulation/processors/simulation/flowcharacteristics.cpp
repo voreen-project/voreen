@@ -34,7 +34,7 @@ namespace voreen {
 FlowCharacteristics::FlowCharacteristics()
     : Processor()
     , inport_(Port::INPORT, "parametrization", "Parametrization Input")
-#ifdef VRN_MODULE_VESSELTOPOLOGY
+#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
     , vesselGraphPort_(Port::INPORT, "vesselgraph.inport", "Vessel Graph")
 #endif
     , simulationTime_("simulationTime", "Simulation time (s)", 1.0f, 0.1f, 100.0f, Processor::VALID)
@@ -47,7 +47,7 @@ FlowCharacteristics::FlowCharacteristics()
     addPort(inport_);
     inport_.addCondition(new PortConditionVolumeListEnsemble());
     inport_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeType3xFloat()));
-#ifdef VRN_MODULE_VESSELTOPOLOGY
+#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
     addPort(vesselGraphPort_);
 #endif
 
@@ -93,7 +93,7 @@ void FlowCharacteristics::process() {
     }
 
     //simulationTime_.set(volumeList->size() * temporalResolution_.get());
-#ifdef VRN_MODULE_VESSELTOPOLOGY
+#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
     if(const VesselGraph* vesselGraph = vesselGraphPort_.getData()) {
 
         // Reset max radius.

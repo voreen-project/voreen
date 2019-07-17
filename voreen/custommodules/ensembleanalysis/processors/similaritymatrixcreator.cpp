@@ -34,8 +34,8 @@
 
 #include <random>
 
-#ifdef VRN_MODULE_VESSELTOPOLOGY
-#include "custommodules/vesseltopology/datastructures/diskarraystorage.h"
+#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
+#include "modules/vesselnetworkanalysis/datastructures/diskarraystorage.h"
 #endif
 
 namespace voreen {
@@ -191,7 +191,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
         size_t numChannels = input.dataset.getNumChannels(fieldName);
 
         // Init empty flags.
-#ifdef VRN_MODULE_VESSELTOPOLOGY
+#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
         DiskArrayStorage<float> Flags(VoreenApplication::app()->getUniqueTmpFilePath());
 #else
         std::vector<float> Flags;
@@ -218,7 +218,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                         value = rwm.normalizedToRealWorld(value);
                         value = mapRange(value, valueRange.x, valueRange.y, 0.0f, 1.0f);
 
-#ifdef VRN_MODULE_VESSELTOPOLOGY
+#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
                         Flags.storeElement(value);
 #else
                         Flags.push_back(value);
