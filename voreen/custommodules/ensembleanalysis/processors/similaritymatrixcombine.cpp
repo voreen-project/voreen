@@ -47,7 +47,7 @@ SimilarityMatrixCombine::SimilarityMatrixCombine()
     similarityCombinationMethod_.addOption("method-max", "Max.", METHOD_MAX);
     similarityCombinationMethod_.addOption("method-avg", "Avg.", METHOD_AVG);
     similarityCombinationMethod_.addOption("method-std", "Std.", METHOD_STD);
-    similarityCombinationMethod_.addOption("method-std", "Std.", METHOD_MULTIPLY);
+    similarityCombinationMethod_.addOption("method-multiply", "Multiply", METHOD_MULTIPLY);
     similarityCombinationMethod_.selectByValue(METHOD_MAX);
 
     addProperty(ignoreHash_);

@@ -136,7 +136,8 @@ void EnsembleDataSource::buildEnsembleDataset() {
         float progressPerTimeStep = 1.0f / fileNames.size();
 
         std::vector<EnsembleDataset::TimeStep> timeSteps;
-        for(const std::string& fileName : fileNames) {
+        for(size_t t = 0; t<fileNames.size(); t++) {
+            const std::string& fileName = fileNames[t];
 
             // Skip raw files. They belong to VVD files or can't be read anyway.
             if(tgt::FileSystem::fileExtension(fileName, true) == "raw") {
@@ -165,9 +166,16 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 if(!volumeHandle)
                     break;
 
-                float time = volumeHandle->getTimestep();
-                if(volumeHandle->hasMetaData(SIMULATED_TIME_NAME)) {
+                float time;
+                if(volumeHandle->hasMetaData(VolumeBase::META_DATA_NAME_TIMESTEP)) {
+                    time = volumeHandle->getTimestep();
+                }
+                else if(volumeHandle->hasMetaData(SIMULATED_TIME_NAME)) {
                     time = dynamic_cast<const FloatMetaData*>(volumeHandle->getMetaData(SIMULATED_TIME_NAME))->getValue();
+                }
+                else {
+                    time = 1.0f * timeSteps.size();
+                    LWARNING("Actual time information not found for time step " << t << " of run " << run);
                 }
 
                 if (!timeIsSet) {

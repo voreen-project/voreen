@@ -212,11 +212,11 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
                 for (const tgt::vec3& seedPoint : seedPoints) {
                     for(size_t ch = 0; ch < numChannels; ch++) {
-                        float value = lock->getVoxelNormalizedLinear(
+                        float value = lock->getVoxelNormalized(
                                 physicalToVoxelMatrix * seedPoint, ch);
 
                         value = rwm.normalizedToRealWorld(value);
-                        value = mapRange(value, valueRange.x, valueRange.y, 0.0f, 1.0f);
+                        //value = mapRange(value, valueRange.x, valueRange.y, 0.0f, 1.0f);
 
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
                         Flags.storeElement(value);
@@ -256,6 +256,9 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
                         float a = Flags[calcIndex(i, k)];
                         float b = Flags[calcIndex(j, k)];
+
+                        a = mapRange(a, valueRange.x, valueRange.y, 0.0f, 1.0f);
+                        b = mapRange(b, valueRange.x, valueRange.y, 0.0f, 1.0f);
 
                         if(input.singleChannelSimilarityMeasure == MEASURE_ISOSURFACE) {
                             a = a < input.isoValue ? 1.0f : 0.0f;
