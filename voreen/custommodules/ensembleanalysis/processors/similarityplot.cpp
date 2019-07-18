@@ -585,10 +585,10 @@ void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
     if(e->button() & tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
         subSelection_.clear();
     }
-    // Middle click inverts subselection.
+    // Middle click inverts subselection, but only considers rendered runs.
     else if(e->button() & tgt::MouseEvent::MOUSE_BUTTON_MIDDLE) {
         std::set<int> invertedSelection;
-        for(size_t i=0; i<dataset->getRuns().size(); i++) {
+        for(int i : renderedRuns_.get()) {
             if(subSelection_.count(i) == 0) {
                 invertedSelection.insert(i);
             }
@@ -661,19 +661,16 @@ void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
 
             std::vector<int> runIndices;
             runIndices.push_back(r);
-            if(e->modifiers() == referenceModifier) {
-                referenceRun_.setSelectedRowIndices(runIndices);
-            } else {
-                selectedRun_.setSelectedRowIndices(runIndices);
-            }
             subSelection_.insert(r);
 
             const EnsembleDataset::TimeStep& timeStep = runs[r].timeSteps_[t];
             float lower = std::floor(timeStep.time_ * 100.0f) / 100.0f;
             float upper = std::ceil((timeStep.time_ + timeStep.duration_) * 100.0f) / 100.0f;
             if(e->modifiers() == referenceModifier) {
+                referenceRun_.setSelectedRowIndices(runIndices);
                 referenceTimeStep_.set(tgt::vec2(lower, upper));
             } else if(e->modifiers() == tgt::MouseEvent::MODIFIER_NONE) {
+                selectedRun_.setSelectedRowIndices(runIndices);
                 selectedTimeStep_.set(tgt::vec2(lower, upper));
             }
         }
@@ -763,6 +760,7 @@ void SimilarityPlot::adjustToEnsemble() {
         renderedRuns_.addRow(run.name_, dataset->getColor(runIndices.size()));
         selectedRun_.addRow(run.name_, dataset->getColor(runIndices.size()));
         referenceRun_.addRow(run.name_, dataset->getColor(runIndices.size()));
+        subSelection_.insert(static_cast<int>(runIndices.size()));
         runIndices.push_back(static_cast<int>(runIndices.size()));
     }
     renderedRuns_.setSelectedRowIndices(runIndices);
@@ -789,14 +787,12 @@ void SimilarityPlot::adjustToEnsemble() {
 
 void SimilarityPlot::calculate() {
 
-    size_t numRuns = ensembleInport_.getData()->getRuns().size();
-
     if(subSelection_.empty()) {
-        for (size_t i = 0; i < numRuns; i++) {
-            subSelection_.insert(static_cast<int>(i));
-        }
+        LERROR("No run selected");
+        return;
     }
 
+    size_t numRuns = ensembleInport_.getData()->getRuns().size();
     if(subSelection_.size() == numRuns) {
         LINFO("Calculating for whole data");
     }
