@@ -148,7 +148,7 @@ protected:
     /// The hash of the ensemble the plot was generated for.
     std::string ensembleHash_;
 
-    /// Actual MDS data for each channel (all runs selected).
+    /// Actual MDS data for each field (all runs selected).
     std::vector<MDSData> mdsData_;
 
     /// Sphere geometry for timestep selection.
@@ -174,7 +174,7 @@ private:
     void calculate();
 
     void outputEigenValues();
-    void renderedFieldsChanged();
+    void renderedRunsChanged();
     void save();
     void load();
 

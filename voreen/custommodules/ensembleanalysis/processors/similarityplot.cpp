@@ -178,7 +178,7 @@ SimilarityPlot::SimilarityPlot()
         ON_CHANGE(renderedField_, SimilarityPlot, outputEigenValues);
         renderedField_.setGroupID("rendering");
     addProperty(renderedRuns_);
-        ON_CHANGE(renderedRuns_, SimilarityPlot, renderedFieldsChanged);
+        ON_CHANGE(renderedRuns_, SimilarityPlot, renderedRunsChanged);
         renderedRuns_.setGroupID("rendering");
     setPropertyGroupGuiName("rendering", "Rendering");
 
@@ -826,7 +826,8 @@ void SimilarityPlot::calculate() {
     setProgress(1.0f);
 
     // Update rendering order.
-    renderingOrder_.assign(subSelection_.rbegin(), subSelection_.rend());
+    renderedRuns_.setSelectedRowIndices(std::vector<int>(subSelection_.rbegin(), subSelection_.rend()));
+    //renderingOrder_.assign(subSelection_.rbegin(), subSelection_.rend());
 
     ensembleHash_ = EnsembleHash(*ensembleInport_.getData()).getHash();
     calculateButton_.setReadOnlyFlag(false);
@@ -861,12 +862,12 @@ SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& Di
 
     // Iterate each run, call it A.
     for(size_t runIdxA=0; runIdxA<runsNum; runIdxA++) {
-        size_t offsetB = 0;//offsetA;
-        size_t positionB = 0;//positionA;
+        size_t offsetB = 0;
+        size_t positionB = 0;
         size_t numTimeStepsA = runs[runIdxA].timeSteps_.size();
         if(subSelection_.count(runIdxA) != 0) {
             // Again iterate each run, call it B. Now looking at pairs of run A and B.
-            for(size_t runIdxB=0; runIdxB<=runIdxA; runIdxB++) {//for(size_t runIdxB=runIdxA; runIdxB<runsNum; runIdxB++) {
+            for(size_t runIdxB=0; runIdxB<=runIdxA; runIdxB++) {
                 size_t numTimeStepsB = runs[runIdxB].timeSteps_.size();
                 if (subSelection_.count(runIdxB) != 0) {
                     // Iterate time steps of run A.
@@ -876,7 +877,7 @@ SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& Di
 //                            if(runIdxA == runIdxB && j < i){
 //                                continue;
 //                            }
-                            float v = DistanceMatrix(i + offsetA, j + offsetB);//float v = DistanceMatrix(j + offsetB, i + offsetA);
+                            float v = DistanceMatrix(i + offsetA, j + offsetB);
                             PMatrix(i + positionA, j + positionB) = PMatrix(j + positionB, i + positionA) = v * v;
                         }
                     }
@@ -886,7 +887,7 @@ SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& Di
             }
             positionA+=numTimeStepsA;
         }
-        offsetA += numTimeStepsA;
+        offsetA+=numTimeStepsA;
     }
 
     MatrixXf JMatrix = MatrixXf::Identity (PointsNumber, PointsNumber) -
@@ -1024,8 +1025,19 @@ void SimilarityPlot::save() {
     }
 }
 
-void SimilarityPlot::renderedFieldsChanged() {
-    renderingOrder_ = std::deque<int>(renderedRuns_.getSelectedRowIndices().begin(), renderedRuns_.getSelectedRowIndices().end());
+void SimilarityPlot::renderedRunsChanged() {
+    renderingOrder_.clear();
+
+    if(mdsData_.empty())
+        return;
+
+    for(int runIdx : renderedRuns_.getSelectedRowIndices()) {
+        // The first field is representative for all fields here.
+        // We just want to check if the mds data was calculated for the run.
+        if(mdsData_.front().nVectors_.count(runIdx)) {
+            renderingOrder_.push_back(runIdx);
+        }
+    }
 }
 
 void SimilarityPlot::load() {

@@ -31,6 +31,7 @@
 #include "voreen/core/voreenapplication.h"
 #include "voreen/core/datastructures/volume/volume.h"
 #include "voreen/core/datastructures/volume/volumeram.h"
+#include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 
 #include <random>
 
@@ -187,8 +188,15 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
     for (size_t fi=0; fi<fieldNames.size(); fi++) {
 
         const std::string& fieldName = fieldNames[fi];
-        const tgt::vec2& valueRange = input.dataset.getValueRange(fieldName);
         size_t numChannels = input.dataset.getNumChannels(fieldName);
+        tgt::vec2 valueRange;
+        if(numChannels == 1) {
+             valueRange = input.dataset.getValueRange(fieldName);
+        }
+        else {
+            valueRange.x = std::numeric_limits<float>::max();
+            valueRange.y = 0.0f;
+        }
 
         // Init empty flags.
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
@@ -210,13 +218,19 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
                 VolumeRAMRepresentationLock lock(volume);
 
+                // If we use multi-channel volumes, we need to calculate the min. and max. magnitude in order
+                // to properly scale values later on to achieve a matrix whose values are within [0, 1].
+                // This is done right after the lock is acquired, since the derived data accesses the RAM repr.
+                if(numChannels > 1) {
+                    VolumeMinMaxMagnitude* vmm = volume->getDerivedData<VolumeMinMaxMagnitude>();
+                    valueRange.x = std::min(valueRange.x, vmm->getMinMagnitude());
+                    valueRange.y = std::max(valueRange.y, vmm->getMaxMagnitude());
+                }
+
                 for (const tgt::vec3& seedPoint : seedPoints) {
                     for(size_t ch = 0; ch < numChannels; ch++) {
-                        float value = lock->getVoxelNormalized(
-                                physicalToVoxelMatrix * seedPoint, ch);
-
+                        float value = lock->getVoxelNormalized(physicalToVoxelMatrix * seedPoint, ch);
                         value = rwm.normalizedToRealWorld(value);
-                        //value = mapRange(value, valueRange.x, valueRange.y, 0.0f, 1.0f);
 
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
                         Flags.storeElement(value);
@@ -243,14 +257,14 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
         SimilarityMatrix& DistanceMatrix = similarityMatrices->getSimilarityMatrix(fieldName);
 
 #ifdef VRN_MODULE_OPENMP
-#pragma omp parallel for shared(Flags), shared(DistanceMatrix)
+//#pragma omp parallel for shared(Flags), shared(DistanceMatrix)
 #endif
         for (long i = 0; i < static_cast<long>(DistanceMatrix.getSize()); i++) {
             for (long j = 0; j <= i; j++) {
                 if(numChannels == 1) {
 
-                    float scaleSum = 0.0f; // Can be interpret as the number of (equal) samples
-                    float resValue = 0.0f; // Can be interpret as the number of differing samples
+                    float minSamples = 0.0f;
+                    float maxSamples = 0.0f;
 
                     for (size_t k = 0; k < seedPoints.size(); k++) {
 
@@ -265,12 +279,12 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                             b = b < input.isoValue ? 1.0f : 0.0f;
                         }
 
-                        scaleSum += (1.0f - (a < b ? a : b));
-                        resValue += (1.0f - (a > b ? a : b));
+                        minSamples += (1.0f - (a > b ? a : b));
+                        maxSamples += (1.0f - (a < b ? a : b));
                     }
 
-                    if (scaleSum > 0.0f)
-                        DistanceMatrix(i, j) = (scaleSum - resValue) / scaleSum;
+                    if (maxSamples > 0.0f)
+                        DistanceMatrix(i, j) = (maxSamples - minSamples) / maxSamples;
                     else
                         DistanceMatrix(i, j) = 1.0f;
                 }
@@ -291,7 +305,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                         if(input.multiChannelSimilarityMeasure == MEASURE_MAGNITUDE) {
                             float a = tgt::length(direction_i);
                             float b = tgt::length(direction_j);
-                            diff += std::abs(a - b);
+                            diff += mapRange(std::abs(a - b), valueRange.x, valueRange.y, 0.0f, 1.0f);
                         }
                         else if(input.multiChannelSimilarityMeasure == MEASURE_ANGLEDIFFERENCE) {
                             if (direction_i == tgt::vec4::zero && direction_j == tgt::vec4::zero) {
@@ -303,6 +317,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
                                 float dot = tgt::dot(normDirection_i, normDirection_j);
                                 float angle = std::acos(tgt::clamp(dot, -1.0f, 1.0f)) / tgt::PI;
+                                tgtAssert(!tgt::isNaN(angle), "NaN value");
                                 diff += angle;
                             }
                             else {
@@ -314,23 +329,27 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                                 //diff += 0.0f;
                             }
                             else if (direction_i != tgt::vec4::zero && direction_j != tgt::vec4::zero) {
-                                float area = tgt::length(tgt::cross(direction_i.xyz(), direction_j.xyz()));
+                                // Normalize vectors according to max magnitude within data set.
+                                tgt::vec3 a = direction_i.xyz() / valueRange.y;
+                                tgt::vec3 b = direction_j.xyz() / valueRange.y;
+
+                                float area = tgt::length(tgt::cross(a, b));
                                 // In case area is 0, we have to account for colinear vectors.
                                 if(area < std::numeric_limits<float>::epsilon()) {
-                                    float length_i = tgt::length(direction_i);
-                                    float length_j = tgt::length(direction_j);
+                                    float length_a = tgt::length(a);
+                                    float length_b = tgt::length(b);
 
-                                    tgt::vec4 normDirection_i = direction_i / length_i;
-                                    tgt::vec4 normDirection_j = direction_j / length_j;
+                                    tgt::vec3 normA = a / length_a;
+                                    tgt::vec3 normB = b / length_b;
 
                                     // Determine direction of collinearity.
-                                    float dot = tgt::dot(normDirection_i, normDirection_j);
+                                    float dot = tgt::dot(normA, normB);
                                     float angle = std::acos(tgt::clamp(dot, -1.0f, 1.0f));
                                     if(angle > tgt::PIf*0.5f) {
-                                        diff += tgt::abs(length_i + length_j) * 0.5f;
+                                        diff += tgt::abs(length_a + length_b) * 0.5f;
                                     }
                                     else {
-                                        diff += tgt::abs(length_i - length_j) * 0.5f;
+                                        diff += tgt::abs(length_a - length_b) * 0.5f;
                                     }
                                 }
                                 else {
