@@ -26,7 +26,6 @@ SET(MOD_CORE_HEADERS
 # deployment
 SET(MOD_INSTALL_DIRECTORIES
     ${MOD_DIR}/glsl
-    ${MOD_DIR}/workspaces
 )
 SET(MOD_INSTALL_FILES
     ${MOD_DIR}/ext/jama/license.txt

@@ -743,6 +743,17 @@ private:
         const rapidjson::Value* storedNode_;
     };
 
+    /**
+     * This function returns the default constructor of the template argument.
+     * This is essentially a workaround for MSVC < 1910 where a function's
+     * template parameter T is not visible inside lambda function used as
+     * default argument.
+     */
+    template<typename T>
+    static std::function<T()> DefaultConstructor() {
+        return [] { return T(); };
+    }
+
     /// Path to Json file the document was read from.
     std::string documentPath_;
 
@@ -893,16 +904,16 @@ private:
     void readFromValue(const rapidjson::Value& val, std::pair<S, T>& data);
 
     template<class T>
-    void readFromValue(const rapidjson::Value& val, std::vector<T>& data, const std::function<T()>& constructor = [] () { return T(); });
+    void readFromValue(const rapidjson::Value& val, std::vector<T>& data, const std::function<T()>& constructor = DefaultConstructor<T>());
 
     template<class T>
-    void readFromValue(const rapidjson::Value& val, std::deque<T>& data, const std::function<T()>& constructor = [] () { return T(); });
+    void readFromValue(const rapidjson::Value& val, std::deque<T>& data, const std::function<T()>& constructor = DefaultConstructor<T>());
 
     template<class T>
-    void readFromValue(const rapidjson::Value& val, std::list<T>& data, const std::function<T()>& constructor = [] () { return T(); });
+    void readFromValue(const rapidjson::Value& val, std::list<T>& data, const std::function<T()>& constructor = DefaultConstructor<T>());
 
     template<class T, class C>
-    void readFromValue(const rapidjson::Value& val, std::set<T, C>& data, const std::function<T()>& constructor = [] () { return T(); });
+    void readFromValue(const rapidjson::Value& val, std::set<T, C>& data, const std::function<T()>& constructor = DefaultConstructor<T>());
 
     template<class T, class U, class C>
     void readFromValue(const rapidjson::Value& val, std::map<T, U, C>& data);
