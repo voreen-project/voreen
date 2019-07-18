@@ -257,7 +257,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
         SimilarityMatrix& DistanceMatrix = similarityMatrices->getSimilarityMatrix(fieldName);
 
 #ifdef VRN_MODULE_OPENMP
-//#pragma omp parallel for shared(Flags), shared(DistanceMatrix)
+#pragma omp parallel for shared(Flags), shared(DistanceMatrix)
 #endif
         for (long i = 0; i < static_cast<long>(DistanceMatrix.getSize()); i++) {
             for (long j = 0; j <= i; j++) {
