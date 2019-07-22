@@ -128,8 +128,8 @@ void SlicePointRenderer3D::updateGeometry() {
 }
 
 tgt::Bounds SlicePointRenderer3D::getBoundingBox() const {
-    if (currentGeometry_)
-        return currentGeometry_->getBoundingBox();
+    if(inport_.isReady())
+        return inport_.getData()->getBoundingBox().getBoundingBox(false);
 
     return GeometryRendererBase::getBoundingBox();
 }
