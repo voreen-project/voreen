@@ -224,13 +224,7 @@ protected:
 
 private:
 
-    // HACK: this is necessary due to a bug in msvc
-    // https://connect.microsoft.com/VisualStudio/feedback/details/858357/
-#if (_MSC_VER <= 1800)
-    typedef std::chrono::system_clock Clock;
-#else
     typedef std::chrono::steady_clock Clock;
-#endif
     typedef std::chrono::time_point<Clock> TimePoint;
 
     const static std::chrono::milliseconds MINIMUM_PROGRESS_UPDATE_INTERVAL;

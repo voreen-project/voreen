@@ -13,15 +13,11 @@ IF(WIN32)
     )
     
     # set debug and release libraries
-    IF(VRN_MSVC2012)            
-		SET(HDF5_LIB_DIR "${MOD_DIR}/ext/hdf5/lib/msvc2012")
-	ELSEIF(VRN_MSVC2013)            
-		SET(HDF5_LIB_DIR "${MOD_DIR}/ext/hdf5/lib/msvc2013")
-	ELSEIF(VRN_MSVC2015)            
-		SET(HDF5_LIB_DIR "${MOD_DIR}/ext/hdf5/lib/msvc2015")
-	ELSEIF(VRN_MSVC2017)            
-		SET(HDF5_LIB_DIR "${MOD_DIR}/ext/hdf5/lib/msvc2017")
-	ENDIF()
+    IF(VRN_MSVC2015)            
+        SET(HDF5_LIB_DIR "${MOD_DIR}/ext/hdf5/lib/msvc2015")
+    ELSEIF(VRN_MSVC2017)            
+        SET(HDF5_LIB_DIR "${MOD_DIR}/ext/hdf5/lib/msvc2017")
+    ENDIF()
     
     # set libraries
     FOREACH(elem ${HDF5_LIB_NAMES})

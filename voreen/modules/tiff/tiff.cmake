@@ -3,29 +3,25 @@
 ################################################################################
 
 IF(WIN32)
-	SET(MOD_INCLUDE_DIRECTORIES "${MOD_DIR}/ext/libtiff/include")
-	
-	# deployment    
-	SET(MOD_INSTALL_FILES
-		${MOD_DIR}/ext/libtiff/COPYRIGHT
-	)
+    SET(MOD_INCLUDE_DIRECTORIES "${MOD_DIR}/ext/libtiff/include")
+    
+    # deployment    
+    SET(MOD_INSTALL_FILES
+        ${MOD_DIR}/ext/libtiff/COPYRIGHT
+    )
     
     # Define used libs:
     LIST(APPEND TIFF_LIB_NAMES "libtiff" "libtiff_i")
     
     # Define used dlls:
     LIST(APPEND TIFF_DLL_NAMES "libtiff")
-	
+    
     # set debug and release libraries
-    IF(VRN_MSVC2012)            
-		SET(TIFF_LIB_DIR "${MOD_DIR}/ext/libtiff/lib/msvc2012")
-	ELSEIF(VRN_MSVC2013)            
-		SET(TIFF_LIB_DIR "${MOD_DIR}/ext/libtiff/lib/msvc2013")
-	ELSEIF(VRN_MSVC2015)            
-		SET(TIFF_LIB_DIR "${MOD_DIR}/ext/libtiff/lib/msvc2015")
-	ELSEIF(VRN_MSVC2017)            
-		SET(TIFF_LIB_DIR "${MOD_DIR}/ext/libtiff/lib/msvc2017")
-	ENDIF()
+    IF(VRN_MSVC2015)            
+        SET(TIFF_LIB_DIR "${MOD_DIR}/ext/libtiff/lib/msvc2015")
+    ELSEIF(VRN_MSVC2017)            
+        SET(TIFF_LIB_DIR "${MOD_DIR}/ext/libtiff/lib/msvc2017")
+    ENDIF()
     
     # set libraries
     FOREACH(elem ${TIFF_LIB_NAMES})

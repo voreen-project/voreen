@@ -159,7 +159,6 @@ void PatchListReader::loadPatches() {
     file.close();
     
     size_t numFeatures = dims[1];
-    //size_t edgeLength = std::pow(numFeatures, 1.0/3.0); // std::cbrt(numFeatures) not supported prior to MSVC2013
     size_t edgeLength = std::cbrt(numFeatures);
 
     size_t numFeaturesResultingFromEdgeLength = std::pow(edgeLength, 3);

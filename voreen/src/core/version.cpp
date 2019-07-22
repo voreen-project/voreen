@@ -33,11 +33,7 @@ namespace voreen {
 const std::string VoreenVersion::getCompilerVersion() {
     std::stringstream ver;
 #if defined(WIN32) && defined(_MSC_VER)
-    #if _MSC_VER == 1700
-        ver << "Microsoft Visual C++ 2012";
-    #elif _MSC_VER == 1800
-        ver << "Microsoft Visual C++ 2013";
-    #elif _MSC_VER == 1900
+    #if _MSC_VER == 1900
         ver << "Microsoft Visual C++ 2015";
     #elif _MSC_VER >= 1910
         ver << "Microsoft Visual C++ 2017";
@@ -73,7 +69,7 @@ const std::string VoreenVersion::getRevision() {
 }
 
 const std::string VoreenVersion::getCopyright() {
-    return "Copyright (C) 2005-2018 University of Münster, Germany, \nDepartment of Computer Science.";
+    return "Copyright (C) 2005-2018 University of Mï¿½nster, Germany, \nDepartment of Computer Science.";
 }
 
 void VoreenVersion::logAll(const std::string& loggerCat) {

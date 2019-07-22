@@ -148,7 +148,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
             std::vector<VolumeReader*> readers = populator.getVolumeSerializer()->getReaders(url);
             if(readers.empty()) {
                 LERROR("No valid volume reader found for " << url);
-                break;
+                continue;
             }
 
             VolumeReader* reader = readers.front();

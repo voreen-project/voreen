@@ -354,17 +354,13 @@ private:
         struct jsontype { DeserializerType type; JsonDeserializer* serializer; } json;
 
         DeserializerUnion(XmlDeserializer& s)
-            //: xml(xmltype{ DeserializerType::XML, &s }) // Not supported by MSVC2012
+            : xml({ DeserializerType::XML, &s })
         {
-            xml.type = DeserializerType::XML;
-            xml.serializer = &s;
         }
 
         DeserializerUnion(JsonDeserializer& s)
-            //: json(jsontype{ DeserializerType::JSON, &s }) // Not supported by MSVC2012
+            : json({ DeserializerType::JSON, &s })
         {
-            json.type = DeserializerType::JSON;
-            json.serializer = &s;
         }
 
         ~DeserializerUnion() {

@@ -6,7 +6,7 @@
 IF(WIN32)
     
     #set these properties
-	SET(VRN_GDCM_VERSION 2.8)
+    SET(VRN_GDCM_VERSION 2.8)
     
     # include path
     SET(GDCM_INCLUDE_DIR ${MOD_DIR}/ext/gdcm-${VRN_GDCM_VERSION}/include)
@@ -27,15 +27,11 @@ IF(WIN32)
     LIST(APPEND GDCM_DLL_NAMES ${GDCM_LIB_NAMES})
     
     # set debug and release libraries
-    IF(VRN_MSVC2012)            
-		SET(GDCM_LIB_DIR "${MOD_DIR}/ext/gdcm-${VRN_GDCM_VERSION}/lib/msvc2012")
-	ELSEIF(VRN_MSVC2013)            
-		SET(GDCM_LIB_DIR "${MOD_DIR}/ext/gdcm-${VRN_GDCM_VERSION}/lib/msvc2013")
-	ELSEIF(VRN_MSVC2015)            
-		SET(GDCM_LIB_DIR "${MOD_DIR}/ext/gdcm-${VRN_GDCM_VERSION}/lib/msvc2015")
-	ELSEIF(VRN_MSVC2017)            
-		SET(GDCM_LIB_DIR "${MOD_DIR}/ext/gdcm-${VRN_GDCM_VERSION}/lib/msvc2017")
-	ENDIF()
+    IF(VRN_MSVC2015)            
+        SET(GDCM_LIB_DIR "${MOD_DIR}/ext/gdcm-${VRN_GDCM_VERSION}/lib/msvc2015")
+    ELSEIF(VRN_MSVC2017)            
+        SET(GDCM_LIB_DIR "${MOD_DIR}/ext/gdcm-${VRN_GDCM_VERSION}/lib/msvc2017")
+    ENDIF()
 
     IF(NOT EXISTS ${GDCM_LIB_DIR}/debug/gdcmCommon.lib)
         MESSAGE(FATAL_ERROR "GDCM 2.x (>1) library not found (${GDCM_LIB_DIR}/debug/gdcmCommon.lib). "

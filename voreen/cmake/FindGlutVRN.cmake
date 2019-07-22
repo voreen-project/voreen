@@ -13,25 +13,13 @@ IF(WIN32)
     SET(GLUT_INCLUDE_DIR "${GLUT_DIR}")
 
     # set debug and release library
-    IF(VRN_MSVC2012)
-        SET(GLUT_DEBUG_LIBRARY      "${GLUT_DIR}/lib/msvc2012/freeglutd.lib")
-        SET(GLUT_RELEASE_LIBRARY    "${GLUT_DIR}/lib/msvc2012/freeglut.lib")
-        
-        SET(GLUT_DEBUG_DLL          "${GLUT_DIR}/lib/msvc2012/freeglutd.dll")
-        SET(GLUT_RELEASE_DLL        "${GLUT_DIR}/lib/msvc2012/freeglut.dll")
-    ELSEIF(VRN_MSVC2013)
-        SET(GLUT_DEBUG_LIBRARY      "${GLUT_DIR}/lib/msvc2013/freeglutd.lib")
-        SET(GLUT_RELEASE_LIBRARY    "${GLUT_DIR}/lib/msvc2013/freeglut.lib")
-        
-        SET(GLUT_DEBUG_DLL          "${GLUT_DIR}/lib/msvc2013/freeglutd.dll")
-        SET(GLUT_RELEASE_DLL        "${GLUT_DIR}/lib/msvc2013/freeglut.dll")
-	ELSEIF(VRN_MSVC2015)
+    IF(VRN_MSVC2015)
         SET(GLUT_DEBUG_LIBRARY      "${GLUT_DIR}/lib/msvc2015/freeglutd.lib")
         SET(GLUT_RELEASE_LIBRARY    "${GLUT_DIR}/lib/msvc2015/freeglut.lib")
         
         SET(GLUT_DEBUG_DLL          "${GLUT_DIR}/lib/msvc2015/freeglutd.dll")
         SET(GLUT_RELEASE_DLL        "${GLUT_DIR}/lib/msvc2015/freeglut.dll")
-	ELSEIF(VRN_MSVC2017)
+    ELSEIF(VRN_MSVC2017)
         SET(GLUT_DEBUG_LIBRARY      "${GLUT_DIR}/lib/msvc2017/freeglutd.lib")
         SET(GLUT_RELEASE_LIBRARY    "${GLUT_DIR}/lib/msvc2017/freeglut.lib")
         

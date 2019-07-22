@@ -1,7 +1,3 @@
-if(VRN_MSVC2012 OR VRN_MSVC2013)
-    MESSAGE(FATAL_ERROR "Big Data Image Processing Extra Module does NOT compile with MSVC 2012 and MSVC 2013 - use MSVC 2015 or higher")
-ENDIF()
-
 IF(NOT VRN_MODULE_BIGDATAIMAGEPROCESSING)
     MESSAGE(FATAL_ERROR "Big Data Image Processing Module requires Big Data Image Processing Module")
 ENDIF()

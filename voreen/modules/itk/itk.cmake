@@ -42,15 +42,11 @@ IF(WIN32)
     ENDIF()
 
     # set debug and release libraries
-    IF(VRN_MSVC2012)            
-		SET(ITK_LIB_DIR "${MOD_DIR}/ext/InsightToolkit-${ITK_VERSION}/lib/msvc2012")
-	ELSEIF(VRN_MSVC2013)            
-		SET(ITK_LIB_DIR "${MOD_DIR}/ext/InsightToolkit-${ITK_VERSION}/lib/msvc2013")
-	ELSEIF(VRN_MSVC2015)            
-		SET(ITK_LIB_DIR "${MOD_DIR}/ext/InsightToolkit-${ITK_VERSION}/lib/msvc2015")
-	ELSEIF(VRN_MSVC2017)            
-		SET(ITK_LIB_DIR "${MOD_DIR}/ext/InsightToolkit-${ITK_VERSION}/lib/msvc2017")
-	ENDIF()
+    IF(VRN_MSVC2015)            
+        SET(ITK_LIB_DIR "${MOD_DIR}/ext/InsightToolkit-${ITK_VERSION}/lib/msvc2015")
+    ELSEIF(VRN_MSVC2017)            
+        SET(ITK_LIB_DIR "${MOD_DIR}/ext/InsightToolkit-${ITK_VERSION}/lib/msvc2017")
+    ENDIF()
 
     # set includes
     SET(MOD_INCLUDE_DIRECTORIES 
