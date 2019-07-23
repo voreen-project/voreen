@@ -30,7 +30,8 @@ Voreen Changelog
       o HDF5 module now supports loading a single multi-channel volume instead of only allowing for multiple single-channel volumes
       o Remove minMagnitude and maxMagnitude from VolumeRAM which did not have proper semantic
       o Introduce minNormalizedMagnitude and maxNormalizedMagnitude to VolumeRAM which is based on normalized Values
-      * tgt::Vector{2,3,4} are now hashable
+      o tgt::Vector{2,3,4} are now hashable
+      o Removed support for Visual Studio 2012 and 2013, since they don't fully support c++11 which some new features require
 
     * Bug Fixes/Minor Changes:
       o Fix crash when shader programs would fail to compile/link
