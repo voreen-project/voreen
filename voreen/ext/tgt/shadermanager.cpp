@@ -687,7 +687,6 @@ void Shader::detachObject(ShaderObject* obj) {
 
 void Shader::activate() {
     if (uniformsDirty_) {
-        uniformLocations_.clear();
         uniformNames_.clear();
         unsetUniforms_.clear();
     }
@@ -715,7 +714,6 @@ void Shader::activate() {
                     continue;
 
                 name = name.substr(0, name.find_first_of('[')); // Cut of array brackets.
-                uniformLocations_[name] = location;
                 uniformNames_[location] = name;
 
                 // Set uniform to unused, if not having gl_ prefix.
@@ -1161,19 +1159,21 @@ void Shader::loadSeparate(const std::vector<string>& filenames, const std::vecto
 
 std::vector<std::string> Shader::getUniformNames() const {
     std::vector<std::string> names;
-    names.reserve(uniformLocations_.size());
-    for (const auto& iter : uniformLocations_) {
-        names.push_back(iter.first);
+    names.reserve(uniformNames_.size());
+    for (const auto& iter : uniformNames_) {
+        names.push_back(iter.second);
     }
     return names;
 }
 
 std::vector<std::string> Shader::getUnsetUniformNames() const {
     std::vector<std::string> names;
+#ifdef TGT_DEBUG
     names.reserve(unsetUniforms_.size());
     for (GLint location : unsetUniforms_) {
         names.push_back(uniformNames_.at(location));
     }
+#endif
     return names;
 }
 
@@ -1184,6 +1184,7 @@ void Shader::setIgnoreUnsetUniform(const std::string& name) {
 }
 
 GLint Shader::useUniform(const std::string& name) {
+#ifdef TGT_DEBUG
     if(!isLinked_) {
         return -1;
     }
@@ -1196,21 +1197,16 @@ GLint Shader::useUniform(const std::string& name) {
     }
 
     return l;
+#else
+    return getUniformLocation(name);
+#endif
 }
 
 GLint Shader::getUniformLocation(const string& name) {
-    // Look for cached location.
-    // TODO: this might be slower than not having cached in the first place?
-    std::string trimmed = name.substr(0, name.find_first_of('[')); // Cut of array brackets.
-    auto location = uniformLocations_.find(trimmed);
-    if (location != uniformLocations_.end())
-        return location->second;
-
-    // If not cached, uniform actually does not exist, since each is cached after linking.
-    if (!ignoreError_)
-        LWARNING("Failed to locate uniform Location: " << trimmed);
-
-    return -1;
+    GLint location = glGetUniformLocation(id_, name.c_str());
+    if(location == -1 && !ignoreError_)
+        LWARNING("Failed to locate uniform Location: " << name);
+    return location;
 }
 
 void Shader::setIgnoreUniformLocationError(bool ignoreError) {

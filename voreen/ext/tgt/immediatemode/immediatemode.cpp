@@ -438,19 +438,17 @@ namespace tgt {
         shader.setIgnoreUniformLocationError(true);
 
         // set light source
-        std::string prefix = "lightSource_.";
-        shader.setUniform(prefix+"position_", lightSource_.position);
-        shader.setUniform(prefix+"ambientColor_", lightSource_.ambientColor);
-        shader.setUniform(prefix+"diffuseColor_", lightSource_.diffuseColor);
-        shader.setUniform(prefix+"specularColor_", lightSource_.specularColor);
-        shader.setUniform(prefix+"attenuation_", lightSource_.attenuation);
+        shader.setUniform("lightSource_.position_", lightSource_.position);
+        shader.setUniform("lightSource_.ambientColor_", lightSource_.ambientColor);
+        shader.setUniform("lightSource_.diffuseColor_", lightSource_.diffuseColor);
+        shader.setUniform("lightSource_.specularColor_", lightSource_.specularColor);
+        shader.setUniform("lightSource_.attenuation_", lightSource_.attenuation);
 
         // material
-        prefix = "material_.";
-        shader.setUniform(prefix+"ambientColor_", material_.ambientColor);
-        shader.setUniform(prefix+"diffuseColor_", material_.diffuseColor);
-        shader.setUniform(prefix+"specularColor_", material_.specularColor);
-        shader.setUniform(prefix+"shininess_", material_.shininess);
+        shader.setUniform("material_.ambientColor_", material_.ambientColor);
+        shader.setUniform("material_.diffuseColor_", material_.diffuseColor);
+        shader.setUniform("material_.specularColor_", material_.specularColor);
+        shader.setUniform("material_.shininess_", material_.shininess);
 
         // materialColor
         shader.setUniform("materialColorAmbient_", (bool)(materialColor_ & MATCOLAMBIENT));

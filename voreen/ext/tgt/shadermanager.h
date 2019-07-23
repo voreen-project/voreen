@@ -234,7 +234,7 @@ public:
 
     /**
      * Returns all names of the uniforms currently not being set.
-     * Returns an empty vector if program is not linked.
+     * Returns an empty vector if program is not linked or if not compiled in debug mode.
      */
     std::vector<std::string> getUnsetUniformNames() const;
 
@@ -348,7 +348,6 @@ protected:
     bool isLinked_;
     bool ignoreError_;
 
-    std::unordered_map<std::string, GLint> uniformLocations_; ///< Maps names to locations
     std::unordered_map<GLint, std::string> uniformNames_;     ///< Maps locations to names
     std::unordered_set<GLint> unsetUniforms_;                 ///< Holds all unused/unset uniform locations
     bool uniformsDirty_;                                      ///< Determines if uniform locations need to be updated
