@@ -92,9 +92,11 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         startPhaseFunction_.setGroupID("indicator");
         ON_CHANGE(startPhaseFunction_, FlowIndicatorDetection, onConfigChange);
     addProperty(startPhaseDuration_);
+        startPhaseDuration_.setTracking(false);
         startPhaseDuration_.setGroupID("indicator");
         ON_CHANGE(startPhaseDuration_, FlowIndicatorDetection, onConfigChange);
     addProperty(radius_);
+        radius_.setTracking(false);
         radius_.setGroupID("indicator");
         ON_CHANGE(radius_, FlowIndicatorDetection, onConfigChange);
     setPropertyGroupGuiName("indicator", "Indicator");

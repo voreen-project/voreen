@@ -33,11 +33,12 @@
     std::string tmp = name; \
     for(int PROPERTY ## i = 0; PROPERTY ## i < discretization ## PROPERTY; PROPERTY ## i++) { \
         TYPE PROPERTY = PROPERTY ## _.get().x; \
+        std::string name = tmp; \
         if(discretization ## PROPERTY > 1) { \
             PROPERTY += (PROPERTY ## _.get().y - PROPERTY ## _.get().x) \
                             * PROPERTY ## i / (discretization ## PROPERTY - 1); \
+            name += static_cast<char>('A' + PROPERTY ## i); \
         } \
-        std::string name = tmp + static_cast<char>('A' + PROPERTY ## i);
 //std::string name = tmp + std::string(#PROPERTY).substr(0, 3) + "=" + std::to_string(PROPERTY);
 
 #define PARAMETER_DISCRETIZATION_END }
