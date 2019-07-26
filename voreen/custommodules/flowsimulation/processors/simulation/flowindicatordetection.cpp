@@ -262,7 +262,7 @@ void FlowIndicatorDetection::onInputChange() {
             for (size_t i = frontIdx; i <= backIdx; i++) {
                 radius += edge.getVoxels().at(index(i)).avgDistToSurface_;
             }
-            radius /= backIdx - frontIdx + 1;
+            radius /= (backIdx - frontIdx + 1);
 
             FlowIndicator indicator;
             indicator.center_ = ref->pos_;
@@ -271,7 +271,7 @@ void FlowIndicatorDetection::onInputChange() {
             indicator.direction_ = FlowDirection::FD_NONE;
             // Define default values here:
             indicator.startPhaseFunction_ = FlowFunction::FF_SINUS;
-            indicator.startPhaseDuration_ = simulationTime_.get() * 0.25;
+            indicator.startPhaseDuration_ = simulationTime_.get() * 0.25f;
 
             // Estimate flow direction based on underlying velocities.
             if (volume) {

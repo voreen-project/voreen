@@ -599,10 +599,9 @@ int main(int argc, char* argv[]) {
     // TODO: implement measured data support!
 
     const int N = spatialResolution;
-    const T conversion = VOREEN_LENGTH_TO_SI * N * temporalResolution / characteristicLength;
-    UnitConverterFromResolutionAndLatticeVelocity<T, DESCRIPTOR> converter(
+    UnitConverterFromResolutionAndRelaxationTime<T, DESCRIPTOR> converter(
             N,                                                   // resolution for charPhysLength
-            (T) characteristicVelocity * conversion,             // max. lattice velocity
+            (T) temporalResolution,                              // relaxation time
             (T) characteristicLength * VOREEN_LENGTH_TO_SI,      // charPhysLength: reference length of simulation geometry
             (T) characteristicVelocity * VOREEN_LENGTH_TO_SI,    // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
             (T) viscosity * 0.001 / density,                     // physViscosity: physical kinematic viscosity in __m^2 / s__

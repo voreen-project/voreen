@@ -270,10 +270,9 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     }
 
     const int N = parameters.getSpatialResolution();
-    const T conversion = VOREEN_LENGTH_TO_SI * N * parameters.getTemporalResolution() / parameters.getCharacteristicLength();
-    UnitConverterFromResolutionAndLatticeVelocity<T, DESCRIPTOR> converter(
+    UnitConverterFromResolutionAndRelaxationTime<T, DESCRIPTOR> converter(
             N,                                                                      // resolution for charPhysLength
-            (T) parameters.getCharacteristicVelocity() * conversion,                // max. lattice velocity
+            (T) parameters.getTemporalResolution(),                                 // relaxation time
             (T) parameters.getCharacteristicLength() * VOREEN_LENGTH_TO_SI,         // charPhysLength: reference length of simulation geometry
             (T) parameters.getCharacteristicVelocity() * VOREEN_LENGTH_TO_SI,       // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
             (T) parameters.getViscosity() * 0.001 / parameters.getDensity(),        // physViscosity: physical kinematic viscosity in __m^2 / s__
