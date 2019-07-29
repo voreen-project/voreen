@@ -620,13 +620,14 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, tgt::plane p
 
     tgt::vec2 sp(tgt::min(volume->getSpacing()) / samplingRate);
     tgt::ivec2 res(tgt::iceil(b.diagonal().x / sp.x), tgt::iceil(b.diagonal().y / sp.y));
+    int numChannels = static_cast<int>(volume->getNumChannels());
 
     tgt::vec3 xVec = maxVec * (sp.x * res.x);
     tgt::vec3 yVec = temp * (sp.y * res.y);
 
     LGL_ERROR;
 
-    float* sliceData = new float[res.x*res.y]; //SliceTexture gets ownership and deletes the array
+    float* sliceData = new float[res.x*res.y*numChannels]; //SliceTexture gets ownership and deletes the array
 
     tgt::vec3 fetchX = normalize(xVec) * sp.x;
     tgt::vec3 fetchY = normalize(yVec) * sp.y;
@@ -634,23 +635,45 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, tgt::plane p
     tgt::mat4 wToV = volume->getWorldToVoxelMatrix();
     for(int x=0; x<res.x; x++) {
         for(int y=0; y<res.y; y++) {
-            tgt::vec3 pos = fetchOrigin + ((float)x * fetchX) + ((float)y * fetchY);
+            tgt::vec3 pos = fetchOrigin + ((float) x * fetchX) + ((float) y * fetchY);
             pos = wToV * pos;
-            float valueFloat = 0.0f;
-            if(hand(greaterThanEqual(pos, tgt::vec3(0.0f))) && hand(lessThanEqual(pos, dims)))
-                valueFloat = vol->getVoxelNormalizedLinear(pos);
-            //uint8_t value = tgt::iround(valueFloat * 255.0f);
+            for(int channel=0; channel < numChannels; channel++) {
 
-            sliceData[x+y*res.x] = valueFloat;
-            //tex->texel<tgt::col4>(x, y) = tgt::col4(value);
-            //tex->texel<tgt::col4>(x, y) = tgt::col4(128);
-            //tex->texel<tgt::col4>(x, y) = tgt::col4(x);
+                float valueFloat = 0.0f;
+                if (hand(greaterThanEqual(pos, tgt::vec3(0.0f))) && hand(lessThanEqual(pos, dims)))
+                    valueFloat = vol->getVoxelNormalizedLinear(pos, channel);
+
+                sliceData[y * res.x * numChannels + x * numChannels + channel] = valueFloat;
+            }
         }
     }
 
-    //TODO: make dependent on input, add support for multiple channels
+    GLint textureFormat, internalFormat;
+    switch(numChannels) {
+    case 1:
+        textureFormat = GL_RED;
+        internalFormat = GL_R32F;
+        break;
+    case 2:
+        textureFormat = GL_RG;
+        internalFormat = GL_RG32F;
+        break;
+    case 3:
+        textureFormat = GL_RGB;
+        internalFormat = GL_RGB32F;
+        break;
+    case 4:
+        textureFormat = GL_RGBA;
+        internalFormat = GL_RGBA32F;
+        break;
+    default:
+        tgtAssert(false, "unsupported channel count");
+        return nullptr;
+    }
+
+    //TODO: make dependent on input, add support for multiple channel
     SliceTexture* result = new SliceTexture(res, UNALIGNED_PLANE, volume->getFormat(), volume->getBaseType(),
-                             origin, xVec, yVec, volume->getRealWorldMapping(),static_cast<void*>(sliceData), GL_RED, GL_R32F, GL_FLOAT);
+                             origin, xVec, yVec, volume->getRealWorldMapping(),static_cast<void*>(sliceData), textureFormat, internalFormat, GL_FLOAT);
 
     return result;
 }
