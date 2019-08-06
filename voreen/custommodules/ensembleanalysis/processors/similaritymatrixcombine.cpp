@@ -145,7 +145,7 @@ SimilarityMatrixCombineOutput SimilarityMatrixCombine::compute(SimilarityMatrixC
                     outputDistanceMatrix(i, j) = statistics.getStdDev();
                     break;
                 case METHOD_MULTIPLY:
-                    outputDistanceMatrix(i, j) = d;
+                    outputDistanceMatrix(i, j) = 1.0f - d;
                     break;
                 }
             }
