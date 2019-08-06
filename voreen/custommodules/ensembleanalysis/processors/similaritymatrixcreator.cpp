@@ -51,6 +51,7 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     , singleChannelSimilarityMeasure_("singleChannelSimilarityMeasure", "Single Field Similarity Measure")
     , isoValue_("isoValue", "Iso-Value", 0.5f, 0.0f, 1.0f)
     , multiChannelSimilarityMeasure_("multiChannelSimilarityMeasure", "Multi Field Similarity Measure")
+    , weight_("weight", "Weight", 0.5f, 0.0f, 1.0f)
     , numSeedPoints_("numSeedPoints", "Number of Seed Points", 8192, 1, 131072)
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
 {
@@ -61,11 +62,11 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
 
     // Calculation
     addProperty(singleChannelSimilarityMeasure_);
-    singleChannelSimilarityMeasure_.addOption("isovalue", "Iso-Surface", MEASURE_ISOSURFACE);
-    singleChannelSimilarityMeasure_.addOption("multifield", "Multi-Field", MEASURE_MULTIFIELD);
-    singleChannelSimilarityMeasure_.set("multifield");
+    singleChannelSimilarityMeasure_.addOption("isovalue", "Iso-Contours", MEASURE_ISOCONTOURS);
+    singleChannelSimilarityMeasure_.addOption("generalized", "Generalized", MEASURE_GENERALIZED);
+    singleChannelSimilarityMeasure_.set("generalized");
     ON_CHANGE_LAMBDA(singleChannelSimilarityMeasure_, [this] {
-       isoValue_.setVisibleFlag(singleChannelSimilarityMeasure_.getValue() == MEASURE_ISOSURFACE);
+       isoValue_.setVisibleFlag(singleChannelSimilarityMeasure_.getValue() == MEASURE_ISOCONTOURS);
     });
 
     addProperty(isoValue_);
@@ -74,7 +75,14 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     addProperty(multiChannelSimilarityMeasure_);
     multiChannelSimilarityMeasure_.addOption("magnitude", "Magnitude", MEASURE_MAGNITUDE);
     multiChannelSimilarityMeasure_.addOption("angleDifference", "Angle Difference", MEASURE_ANGLEDIFFERENCE);
+    multiChannelSimilarityMeasure_.addOption("li_shen", "Li and Shen", MEASURE_LI_SHEN);
     multiChannelSimilarityMeasure_.addOption("crossproduct", "Crossproduct Magnitude", MEASURE_CROSSPRODUCT);
+    multiChannelSimilarityMeasure_.set("li_shen");
+    ON_CHANGE_LAMBDA(multiChannelSimilarityMeasure_, [this] {
+        weight_.setVisibleFlag(multiChannelSimilarityMeasure_.getValue() == MEASURE_LI_SHEN);
+    });
+
+    addProperty(weight_);
 
     addProperty(numSeedPoints_);
     addProperty(seedTime_);
@@ -173,7 +181,8 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
             std::move(seedPoints),
             singleChannelSimilarityMeasure_.getValue(),
             isoValue_.get(),
-            multiChannelSimilarityMeasure_.getValue()
+            multiChannelSimilarityMeasure_.getValue(),
+            weight_.get()
     };
 }
 
@@ -261,30 +270,42 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 #endif
         for (long i = 0; i < static_cast<long>(DistanceMatrix.getSize()); i++) {
             for (long j = 0; j <= i; j++) {
-                if(numChannels == 1) {
+                if(numChannels == 1 || input.multiChannelSimilarityMeasure == MEASURE_MAGNITUDE) {
 
-                    float minSamples = 0.0f;
-                    float maxSamples = 0.0f;
+                    float intersectionSamples = 0.0f;
+                    float unionSamples = 0.0f;
 
                     for (size_t k = 0; k < seedPoints.size(); k++) {
 
-                        float a = Flags[calcIndex(i, k)];
-                        float b = Flags[calcIndex(j, k)];
+                        float a = 0.0f;
+                        float b = 0.0f;
 
+                        // Calculate length.
+                        for (size_t ch = 0; ch < numChannels; ch++) {
+                            float flagA = Flags[calcIndex(i, k, ch)];
+                            a += flagA * flagA;
+
+                            float flagB = Flags[calcIndex(j, k, ch)];
+                            b += flagB * flagB;
+                        }
+                        a = std::sqrt(a);
+                        b = std::sqrt(b);
+
+                        // Normalize range to interval [0, 1].
                         a = mapRange(a, valueRange.x, valueRange.y, 0.0f, 1.0f);
                         b = mapRange(b, valueRange.x, valueRange.y, 0.0f, 1.0f);
 
-                        if(input.singleChannelSimilarityMeasure == MEASURE_ISOSURFACE) {
+                        if(input.singleChannelSimilarityMeasure == MEASURE_ISOCONTOURS) {
                             a = a < input.isoValue ? 1.0f : 0.0f;
                             b = b < input.isoValue ? 1.0f : 0.0f;
                         }
 
-                        minSamples += (1.0f - (a > b ? a : b));
-                        maxSamples += (1.0f - (a < b ? a : b));
+                        intersectionSamples += (1.0f - (a > b ? a : b));
+                        unionSamples += (1.0f - (a < b ? a : b));
                     }
 
-                    if (maxSamples > 0.0f)
-                        DistanceMatrix(i, j) = (maxSamples - minSamples) / maxSamples;
+                    if (unionSamples > 0.0f)
+                        DistanceMatrix(i, j) = (unionSamples - intersectionSamples) / unionSamples;
                     else
                         DistanceMatrix(i, j) = 1.0f;
                 }
@@ -302,16 +323,8 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                             direction_j[ch] = Flags[calcIndex(j, k, ch)];
                         }
 
-                        if(input.multiChannelSimilarityMeasure == MEASURE_MAGNITUDE) {
-                            float a = tgt::length(direction_i);
-                            float b = tgt::length(direction_j);
-                            diff += mapRange(std::abs(a - b), valueRange.x, valueRange.y, 0.0f, 1.0f);
-                        }
-                        else if(input.multiChannelSimilarityMeasure == MEASURE_ANGLEDIFFERENCE) {
-                            if (direction_i == tgt::vec4::zero && direction_j == tgt::vec4::zero) {
-                                //diff += 0.0f;
-                            }
-                            else if (direction_i != tgt::vec4::zero && direction_j != tgt::vec4::zero) {
+                        if(input.multiChannelSimilarityMeasure == MEASURE_ANGLEDIFFERENCE) {
+                            if (direction_i != tgt::vec4::zero && direction_j != tgt::vec4::zero) {
                                 tgt::vec4 normDirection_i = tgt::normalize(direction_i);
                                 tgt::vec4 normDirection_j = tgt::normalize(direction_j);
 
@@ -320,8 +333,33 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                                 tgtAssert(!tgt::isNaN(angle), "NaN value");
                                 diff += angle;
                             }
-                            else {
+                            else if (direction_i == tgt::vec4::zero && direction_j == tgt::vec4::zero) {
                                 //diff += 0.0f;
+                            }
+                            else {
+                                diff += 1.0f;
+                            }
+                        }
+                        else if(input.multiChannelSimilarityMeasure == MEASURE_LI_SHEN) {
+                            float a = tgt::length(direction_i);
+                            float b = tgt::length(direction_j);
+
+                            if (a > 0.0f && b > 0.0f) {
+                                tgt::vec4 normDirection_i = direction_i / a;
+                                tgt::vec4 normDirection_j = direction_j / b;
+
+                                float dot = tgt::dot(normDirection_i, normDirection_j);
+                                float angle = std::asin(tgt::clamp(dot, -1.0f, 1.0f));
+                                tgtAssert(!tgt::isNaN(angle), "NaN value");
+
+                                float magnitude = mapRange(std::abs(a - b), valueRange.x, valueRange.y, 0.0f, 1.0f);
+                                diff += (1.0f - input.weight) * std::exp(-magnitude) + input.weight * std::exp(-2.0f*angle);
+                            }
+                            else if (a == 0.0f && b == 0.0f) {
+                                //diff += 0.0f;
+                            }
+                            else {
+                                diff += 1.0f;
                             }
                         }
                         else if(input.multiChannelSimilarityMeasure == MEASURE_CROSSPRODUCT) {

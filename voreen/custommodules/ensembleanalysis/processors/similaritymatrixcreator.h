@@ -38,13 +38,14 @@
 namespace voreen {
 
 enum SingleChannelSimilarityMeasure {
-    MEASURE_ISOSURFACE,
-    MEASURE_MULTIFIELD,
+    MEASURE_ISOCONTOURS,
+    MEASURE_GENERALIZED,
 };
 
 enum MultiChannelSimilarityMeasure {
     MEASURE_MAGNITUDE,
     MEASURE_ANGLEDIFFERENCE,
+    MEASURE_LI_SHEN,
     MEASURE_CROSSPRODUCT,
 };
 
@@ -55,6 +56,7 @@ struct SimilarityMatrixCreatorInput {
     SingleChannelSimilarityMeasure singleChannelSimilarityMeasure;
     float isoValue;
     MultiChannelSimilarityMeasure multiChannelSimilarityMeasure;
+    float weight;
 };
 
 struct SimilarityMatrixCreatorOutput {
@@ -85,6 +87,7 @@ private:
     OptionProperty<SingleChannelSimilarityMeasure> singleChannelSimilarityMeasure_;
     FloatProperty isoValue_;
     OptionProperty<MultiChannelSimilarityMeasure> multiChannelSimilarityMeasure_;
+    FloatProperty weight_;
     IntProperty numSeedPoints_;
     IntProperty seedTime_;
 
