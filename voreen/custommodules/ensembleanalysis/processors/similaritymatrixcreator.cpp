@@ -266,7 +266,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
         SimilarityMatrix& DistanceMatrix = similarityMatrices->getSimilarityMatrix(fieldName);
 
 #ifdef VRN_MODULE_OPENMP
-#pragma omp parallel for shared(Flags), shared(DistanceMatrix)
+#pragma omp parallel for shared(Flags, DistanceMatrix)
 #endif
         for (long i = 0; i < static_cast<long>(DistanceMatrix.getSize()); i++) {
             for (long j = 0; j <= i; j++) {
@@ -353,7 +353,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                                 tgtAssert(!tgt::isNaN(angle), "NaN value");
 
                                 float magnitude = mapRange(std::abs(a - b), valueRange.x, valueRange.y, 0.0f, 1.0f);
-                                diff += (1.0f - input.weight) * std::exp(-magnitude) + input.weight * std::exp(-2.0f*angle);
+                                diff += 1.0f - ((1.0f - input.weight) * std::exp(-magnitude) + input.weight * std::exp(-2.0f*angle));
                             }
                             else if (a == 0.0f && b == 0.0f) {
                                 //diff += 0.0f;

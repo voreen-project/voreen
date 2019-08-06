@@ -543,12 +543,17 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                     continue;
                 }
 
-                //CirclePoiseuille3D<T> velocity(superGeometry, indicator.materialId_, maxVelocity[0]); // tends to crash
+                //*
+                // TODO: The following line tends to crash, if there is no overlap between the region and the wall.
+                CirclePoiseuille3D<T> velocity(superGeometry, indicator.materialId_, maxVelocity[0]);
+                /*/
+                // TODO: the following lines, however, lead to a strange behavior at in- and outlets.
                 const tgt::vec3& center = indicator.center_;
                 const tgt::vec3& normal = indicator.normal_;
                 T radius = indicator.radius_;
                 CirclePoiseuille3D<T> velocity(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
                                                normal[0], normal[1], normal[2], radius * VOREEN_LENGTH_TO_SI, maxVelocity[0]);
+                //*/
                 if (bouzidiOn) {
                     offBc.defineU(superGeometry, indicator.materialId_, velocity);
                 } else {

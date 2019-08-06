@@ -131,7 +131,7 @@ SimilarityMatrixCombineOutput SimilarityMatrixCombine::compute(SimilarityMatrixC
                     // We just need one or the other measure, but simply do both, since the calculation is cheap.
                     float dissimilarity = inputDistanceMatrix(i, j);
                     statistics.addSample(dissimilarity);
-                    d *= (1.0f - dissimilarity);
+                    d *= (1.0f - dissimilarity); // Transform to similarity
                 }
 
                 switch (input.method) {
@@ -145,7 +145,7 @@ SimilarityMatrixCombineOutput SimilarityMatrixCombine::compute(SimilarityMatrixC
                     outputDistanceMatrix(i, j) = statistics.getStdDev();
                     break;
                 case METHOD_MULTIPLY:
-                    outputDistanceMatrix(i, j) = 1.0f - d;
+                    outputDistanceMatrix(i, j) = 1.0f - d; // Transform to dissimilarity.
                     break;
                 }
             }
