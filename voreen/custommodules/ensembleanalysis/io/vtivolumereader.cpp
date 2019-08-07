@@ -46,6 +46,7 @@
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/volume/volumeminmax.h"
 #include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
+#include "voreen/core/datastructures/volume/volumefactory.h"
 
 namespace voreen {
 
@@ -65,23 +66,47 @@ Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vt
         if(!array)
             throw tgt::IOException("Field " + name + " could not be read.");
 
-        // Allocate volume.
-        switch (array->GetNumberOfComponents()) {
-            case 1:
-                dataset = new VolumeRAM_Float(dimensions);
+        //Convert vtk data type to voreen data type
+        std::string dataType;
+        switch (array->GetDataType()) {
+            case VTK_CHAR:
+            case VTK_SIGNED_CHAR:
+                dataType = "int8";
                 break;
-            case 2:
-                dataset = new VolumeRAM_2xFloat(dimensions);
+            case VTK_UNSIGNED_CHAR:
+                dataType = "uint8";
                 break;
-            case 3:
-                dataset = new VolumeRAM_3xFloat(dimensions);
+            case VTK_SHORT:
+                dataType = "int16";
                 break;
-            case 4:
-                dataset = new VolumeRAM_4xFloat(dimensions);
+            case VTK_UNSIGNED_SHORT:
+                dataType = "uint16";
+                break;
+            case VTK_INT:
+                dataType = "int32";
+                break;
+            case VTK_UNSIGNED_INT:
+                dataType = "uint32";
+                break;
+            case VTK_LONG:
+                dataType = "int64";
+                break;
+            case VTK_UNSIGNED_LONG:
+                dataType = "uint64";
+                break;
+            case VTK_FLOAT:
+                dataType = "float";
+                break;
+            case VTK_DOUBLE:
+                dataType = "double";
                 break;
             default:
-                throw tgt::IOException("Unsupported number of components");
+                throw tgt::UnsupportedFormatException("VTK format not supported.");
         }
+
+        //Create volume
+        std::string volumeFormat = VolumeFactory().getFormat(dataType, array->GetNumberOfComponents());
+        dataset = VolumeFactory().create(volumeFormat, dimensions);
 
         // Export data.
         array->ExportToVoidPointer(dataset->getData());
