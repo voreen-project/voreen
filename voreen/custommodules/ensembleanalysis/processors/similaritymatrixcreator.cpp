@@ -300,8 +300,8 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                             b = b < input.isoValue ? 1.0f : 0.0f;
                         }
 
-                        intersectionSamples += (1.0f - (a > b ? a : b));
-                        unionSamples += (1.0f - (a < b ? a : b));
+                        intersectionSamples += (1.0f - std::max(a, b));
+                        unionSamples += (1.0f - std::min(a, b));
                     }
 
                     if (unionSamples > 0.0f)
@@ -311,7 +311,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                 }
                 else {
 
-                    float diff = 0.0f;
+                    Statistics statistics(false);
 
                     for (size_t k = 0; k < seedPoints.size(); k++) {
 
@@ -331,13 +331,13 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                                 float dot = tgt::dot(normDirection_i, normDirection_j);
                                 float angle = std::acos(tgt::clamp(dot, -1.0f, 1.0f)) / tgt::PIf;
                                 tgtAssert(!tgt::isNaN(angle), "NaN value");
-                                diff += angle;
+                                statistics.addSample(angle);
                             }
                             else if (direction_i == tgt::vec4::zero && direction_j == tgt::vec4::zero) {
-                                //diff += 0.0f;
+                                statistics.addSample(0.0f);
                             }
                             else {
-                                diff += 1.0f;
+                                statistics.addSample(1.0f);
                             }
                         }
                         else if(input.multiChannelSimilarityMeasure == MEASURE_LI_SHEN) {
@@ -353,18 +353,18 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                                 tgtAssert(!tgt::isNaN(angle), "NaN value");
 
                                 float magnitude = mapRange(std::abs(a - b), valueRange.x, valueRange.y, 0.0f, 1.0f);
-                                diff += 1.0f - ((1.0f - input.weight) * std::exp(-magnitude) + input.weight * std::exp(-2.0f*angle));
+                                statistics.addSample(1.0f - ((1.0f - input.weight) * std::exp(-magnitude) + input.weight * std::exp(-2.0f*angle)));
                             }
                             else if (a == 0.0f && b == 0.0f) {
-                                //diff += 0.0f;
+                                statistics.addSample(0.0f);
                             }
                             else {
-                                diff += 1.0f;
+                                statistics.addSample(1.0f);
                             }
                         }
                         else if(input.multiChannelSimilarityMeasure == MEASURE_CROSSPRODUCT) {
                             if (direction_i == tgt::vec4::zero && direction_j == tgt::vec4::zero) {
-                                //diff += 0.0f;
+                                statistics.addSample(0.0f);
                             }
                             else if (direction_i != tgt::vec4::zero && direction_j != tgt::vec4::zero) {
                                 // Normalize vectors according to max magnitude within data set.
@@ -384,23 +384,25 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                                     float dot = tgt::dot(normA, normB);
                                     float angle = std::acos(tgt::clamp(dot, -1.0f, 1.0f));
                                     if(angle > tgt::PIf*0.5f) {
-                                        diff += tgt::abs(length_a + length_b) * 0.5f;
+                                        statistics.addSample(tgt::abs(length_a + length_b) * 0.5f);
                                     }
                                     else {
-                                        diff += tgt::abs(length_a - length_b) * 0.5f;
+                                        statistics.addSample(tgt::abs(length_a - length_b) * 0.5f);
                                     }
                                 }
                                 else {
-                                    diff += area;
+                                    statistics.addSample(area);
                                 }
                             }
                             else {
-                                //diff += 0.0f;
+                                statistics.addSample(0.0f);
                             }
                         }
                     }
 
-                    DistanceMatrix(i, j) = diff / seedPoints.size();
+                    DistanceMatrix(i, j) = statistics.getMean();
+                    //DistanceMatrix(i, j) = statistics.getMedian(); // Needs collecting samples enabled
+                    //DistanceMatrix(i, j) = statistics.getRelStdDev();
                 }
             }
         }
