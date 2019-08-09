@@ -32,8 +32,8 @@ namespace voreen {
 
 VolumeMinMaxMagnitude* createFromVolumeRAM(const VolumeRAM* volume, const RealWorldMapping& rwm) {
 
-    float minMagnitude = 0.f, maxMagnitude = 0.f;
-    float minNormMagnitude = 0.f, maxNormMagnitude = 0.f;
+    float minMagnitude     = std::numeric_limits<float>::max(), maxMagnitude     = 0.f;
+    float minNormMagnitude = std::numeric_limits<float>::max(), maxNormMagnitude = 0.f;
 
     for (size_t i=0; i<volume->getNumVoxels(); i++) {
         float magnitude = 0.0f, normalizedMagnitude = 0.0f;

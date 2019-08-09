@@ -117,7 +117,7 @@ SimilarityMatrixCombineOutput SimilarityMatrixCombine::compute(SimilarityMatrixC
         SimilarityMatrix& outputDistanceMatrix = outputMatrices->getSimilarityMatrix(fieldName);
         size_t size = outputDistanceMatrix.getSize();
 #ifdef VRN_MODULE_OPENMP
-#pragma omp parallel for shared(outputDistanceMatrix), shared(inputMatrixLists)
+#pragma omp parallel for shared(outputDistanceMatrix, inputMatrixLists)
 #endif
         for(long i=0; i<static_cast<long>(size); i++) {
             for(long j=0; j<=i; j++) {

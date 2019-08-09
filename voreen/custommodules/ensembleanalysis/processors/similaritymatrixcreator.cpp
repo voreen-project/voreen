@@ -329,7 +329,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                                 tgt::vec4 normDirection_j = tgt::normalize(direction_j);
 
                                 float dot = tgt::dot(normDirection_i, normDirection_j);
-                                float angle = std::acos(tgt::clamp(dot, -1.0f, 1.0f)) / tgt::PI;
+                                float angle = std::acos(tgt::clamp(dot, -1.0f, 1.0f)) / tgt::PIf;
                                 tgtAssert(!tgt::isNaN(angle), "NaN value");
                                 diff += angle;
                             }
