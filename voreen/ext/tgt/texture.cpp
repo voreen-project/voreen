@@ -54,14 +54,41 @@ Texture::Texture(const tgt::ivec3& dimensions, GLint format, GLint internalforma
     setWrapping(wrapping_);
 }
 
-Texture::~Texture()
-    {
-        if (id_)
-            glDeleteTextures(1, &id_);
-
-        if(ownsCpuTextureData_)
-            delete[] cpuTextureData_;
+Texture::Texture(Texture&& other)
+    : dimensions_(other.dimensions_)
+    , internalformat_(other.internalformat_)
+    , format_(other.format_)
+    , dataType_(other.dataType_)
+    , filter_(other.filter_)
+    , wrapping_(other.wrapping_)
+    , cpuTextureData_(other.cpuTextureData_)
+    , ownsCpuTextureData_(other.ownsCpuTextureData_)
+    , useMipMap_(other.useMipMap_)
+    , id_(other.id_)
+    , type_(other.type_)
+    , bpt_(other.bpt_)
+    , numChannels_(other.numChannels_)
+{
+    other.id_ = 0;
+    other.cpuTextureData_ = 0;
+    other.ownsCpuTextureData_ = false;
+}
+Texture& Texture::operator=(Texture&& other) {
+    if(&other != this) {
+        this->~Texture();
+        new(this) Texture(std::move(other));
     }
+    return *this;
+}
+
+Texture::~Texture()
+{
+    if (id_)
+        glDeleteTextures(1, &id_);
+
+    if(ownsCpuTextureData_)
+        delete[] cpuTextureData_;
+}
 
 //--------------------------------------------------------------------------------------
 // Getter and Setter

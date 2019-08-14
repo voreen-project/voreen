@@ -79,6 +79,8 @@ public:
             GLenum dataType = GL_UNSIGNED_BYTE, Filter filter = LINEAR, Wrapping wrapping = REPEAT,
             GLubyte* data = 0, bool ownership = true);
 
+    Texture(Texture&& other);
+    Texture& operator=(Texture&& other);
     /**
     * The destructor deletes the Texture in OpenGL.
     * Handled by the texturemanager!
