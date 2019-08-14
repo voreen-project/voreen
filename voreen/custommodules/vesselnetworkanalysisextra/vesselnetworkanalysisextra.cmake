@@ -41,17 +41,18 @@ ENDIF()
 
 SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/aortasegmentation.cpp
+    ${MOD_DIR}/processors/createTestVolume.cpp
+    ${MOD_DIR}/processors/createVesselAroundPoints.cpp
+    ${MOD_DIR}/processors/foldVessel.cpp
+    ${MOD_DIR}/processors/interactiveprojectionlabeling.cpp
     ${MOD_DIR}/processors/localandglobalthreshold.cpp
     ${MOD_DIR}/processors/lymphatictestvesselgenerator.cpp
     ${MOD_DIR}/processors/segmentationlistvalidation.cpp
     ${MOD_DIR}/processors/subgraphextractor.cpp
     ${MOD_DIR}/processors/templatesubgraphextractor.cpp
+    ${MOD_DIR}/processors/unfoldVessel.cpp
     ${MOD_DIR}/processors/vesselgraphstatplotter.cpp
     ${MOD_DIR}/processors/volumefloodfill.cpp
-    ${MOD_DIR}/processors/createTestVolume.cpp
-    ${MOD_DIR}/processors/createVesselAroundPoints.cpp
-    ${MOD_DIR}/processors/foldVessel.cpp
-    ${MOD_DIR}/processors/unfoldVessel.cpp
     ${MOD_DIR}/processors/volumelistloopfinalizer.cpp
     ${MOD_DIR}/processors/volumelistloopinitiator.cpp
     ${MOD_DIR}/processors/volumemultithreshold.cpp
@@ -59,17 +60,18 @@ SET(MOD_CORE_SOURCES
 
 SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/aortasegmentation.h
+    ${MOD_DIR}/processors/createTestVolume.h
+    ${MOD_DIR}/processors/createVesselAroundPoints.h
+    ${MOD_DIR}/processors/foldVessel.h
+    ${MOD_DIR}/processors/interactiveprojectionlabeling.h
     ${MOD_DIR}/processors/localandglobalthreshold.h
     ${MOD_DIR}/processors/lymphatictestvesselgenerator.h
     ${MOD_DIR}/processors/segmentationlistvalidation.h
     ${MOD_DIR}/processors/subgraphextractor.h
     ${MOD_DIR}/processors/templatesubgraphextractor.h
+    ${MOD_DIR}/processors/unfoldVessel.h
     ${MOD_DIR}/processors/vesselgraphstatplotter.h
     ${MOD_DIR}/processors/volumefloodfill.h
-    ${MOD_DIR}/processors/createTestVolume.h
-    ${MOD_DIR}/processors/foldVessel.h
-    ${MOD_DIR}/processors/unfoldVessel.h
-    ${MOD_DIR}/processors/createVesselAroundPoints.h
     ${MOD_DIR}/processors/volumelistloopfinalizer.h
     ${MOD_DIR}/processors/volumelistloopinitiator.h
     ${MOD_DIR}/processors/volumemultithreshold.h

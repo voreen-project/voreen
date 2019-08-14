@@ -22,52 +22,24 @@
  * contact the authors.                                                            *
  *                                                                                 *
  ***********************************************************************************/
-#include "vesselnetworkanalysisextramodule.h"
 
-#include "processors/aortasegmentation.h"
-#include "processors/createTestVolume.h"
-#include "processors/createVesselAroundPoints.h"
-#include "processors/foldVessel.h"
-#include "processors/interactiveprojectionlabeling.h"
-#include "processors/localandglobalthreshold.h"
-#include "processors/lymphatictestvesselgenerator.h"
-#include "processors/segmentationlistvalidation.h"
-#include "processors/subgraphextractor.h"
-#include "processors/templatesubgraphextractor.h"
-#include "processors/unfoldVessel.h"
-#include "processors/vesselgraphstatplotter.h"
-#include "processors/volumefloodfill.h"
-#include "processors/volumelistloopfinalizer.h"
-#include "processors/volumelistloopinitiator.h"
-#include "processors/volumemultithreshold.h"
+#version 330
 
-namespace voreen {
+uniform sampler2D projectionTex_;
+uniform sampler2D labelTex_;
 
-VesselNetworkAnalysisExtraModule::VesselNetworkAnalysisExtraModule(const std::string& modulePath)
-    : VoreenModule(modulePath)
-{
-    setID("VesselNetworkAnalysisExtra");
-    setGuiName("VesselNetworkAnalysisExtra");
+in vec4 frag_texcoord;
 
-    addShaderPath(getModulePath("glsl"));
+out vec4 color;
 
-    registerProcessor(new AortaSegmentation());
-    registerProcessor(new InteractiveProjectionLabeling());
-    registerProcessor(new LocalAndGlobalThreshold());
-    registerProcessor(new LymphaticTestVesselGenerator());
-    registerProcessor(new SegmentationListValidation());
-    registerProcessor(new SubGraphExtractor());
-    registerProcessor(new TemplateSubgraphExtractor());
-    registerProcessor(new VesselGraphStatPlotter());
-    registerProcessor(new VolumeFloodFill());
-    registerProcessor(new VolumeMultiThreshold());
-    registerProcessor(new createTestVolume());
-    registerProcessor(new createVesselAroundPoints());
-    registerProcessor(new foldVessel());
-    registerProcessor(new unfoldVessel());
+void main() {
+    vec2 fragCoord = frag_texcoord.xy;
 
-    registerProcessor(new VolumeListLoopInitiator());
-    registerProcessor(new VolumeListLoopFinalizer());
+    float projectionValue = texture(projectionTex_, fragCoord).x;
+    float labelValue = texture(labelTex_, fragCoord).x;
+    vec3 col = vec3(projectionValue);
+    if(labelValue > 0) {
+        col = (col + vec3(1.0, 0.0, 0.0))*0.5;
+    }
+    color = vec4(col, 1.0);
 }
-
-} // namespace
