@@ -114,7 +114,7 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
 
     std::function<float()> rnd(std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
 
-    size_t maxTries = 500; // TODO: choose a user defined approach
+    const size_t maxTries = -1; // TODO: choose a user defined approach
     std::vector<tgt::vec3> seedPoints;
     seedPoints.reserve(numSeedPoints_.get());
     for (int k = 0; k<numSeedPoints_.get(); k++) {

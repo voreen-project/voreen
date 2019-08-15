@@ -40,6 +40,7 @@ namespace voreen {
 enum SingleChannelSimilarityMeasure {
     MEASURE_ISOCONTOURS,
     MEASURE_GENERALIZED,
+    MEASURE_AVG_DIFFERENCE,
 };
 
 enum MultiChannelSimilarityMeasure {

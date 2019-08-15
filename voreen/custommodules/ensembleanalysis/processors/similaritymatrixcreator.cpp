@@ -64,6 +64,7 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     addProperty(singleChannelSimilarityMeasure_);
     singleChannelSimilarityMeasure_.addOption("isovalue", "Iso-Contours", MEASURE_ISOCONTOURS);
     singleChannelSimilarityMeasure_.addOption("generalized", "Generalized", MEASURE_GENERALIZED);
+    singleChannelSimilarityMeasure_.addOption("avgDifference", "Avg. Difference", MEASURE_AVG_DIFFERENCE);
     singleChannelSimilarityMeasure_.set("generalized");
     ON_CHANGE_LAMBDA(singleChannelSimilarityMeasure_, [this] {
        isoValue_.setVisibleFlag(singleChannelSimilarityMeasure_.getValue() == MEASURE_ISOCONTOURS);
@@ -156,7 +157,7 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
     std::function<float()> rnd(
             std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
 
-    size_t maxTries = 500; // TODO: choose a user defined approach
+    const size_t maxTries = -1; // TODO: choose a user defined approach
     std::vector<tgt::vec3> seedPoints;
     seedPoints.reserve(numSeedPoints_.get());
     for (int k = 0; k<numSeedPoints_.get(); k++) {
@@ -295,13 +296,19 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                         a = mapRange(a, valueRange.x, valueRange.y, 0.0f, 1.0f);
                         b = mapRange(b, valueRange.x, valueRange.y, 0.0f, 1.0f);
 
-                        if(input.singleChannelSimilarityMeasure == MEASURE_ISOCONTOURS) {
-                            a = a < input.isoValue ? 1.0f : 0.0f;
-                            b = b < input.isoValue ? 1.0f : 0.0f;
+                        if(input.singleChannelSimilarityMeasure == MEASURE_AVG_DIFFERENCE) {
+                            intersectionSamples = 1.0f - std::abs(a - b);
+                            unionSamples += 1.0f;
                         }
+                        else {
+                            if (input.singleChannelSimilarityMeasure == MEASURE_ISOCONTOURS) {
+                                a = a < input.isoValue ? 1.0f : 0.0f;
+                                b = b < input.isoValue ? 1.0f : 0.0f;
+                            }
 
-                        intersectionSamples += (1.0f - std::max(a, b));
-                        unionSamples += (1.0f - std::min(a, b));
+                            intersectionSamples += (1.0f - std::max(a, b));
+                            unionSamples += (1.0f - std::min(a, b));
+                        }
                     }
 
                     if (unionSamples > 0.0f)
@@ -352,7 +359,8 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                                 float angle = std::asin(tgt::clamp(dot, -1.0f, 1.0f));
                                 tgtAssert(!tgt::isNaN(angle), "NaN value");
 
-                                float magnitude = mapRange(std::abs(a - b), valueRange.x, valueRange.y, 0.0f, 1.0f);
+                                // We don't use the lower bound of the value range on purpose here!
+                                float magnitude = mapRange(std::abs(a - b), 0.0f, valueRange.y, 0.0f, 1.0f);
                                 statistics.addSample(1.0f - ((1.0f - input.weight) * std::exp(-magnitude) + input.weight * std::exp(-2.0f*angle)));
                             }
                             else if (a == 0.0f && b == 0.0f) {
