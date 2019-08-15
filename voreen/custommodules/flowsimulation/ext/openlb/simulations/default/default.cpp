@@ -276,12 +276,16 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                     continue;
                 }
 
-                //CirclePoiseuille3D<T> velocity(superGeometry, indicator.materialId_, maxVelocity[0]); // tends to crash
+                //*
+                // TODO: The following line tends to crash, if there is no overlap between the region and the wall.
+                CirclePoiseuille3D<T> velocity(superGeometry, indicator.materialId_, maxVelocity[0]);
+                /*/
                 const T* center = indicator.center_;
                 const T* normal = indicator.normal_;
                 T radius = indicator.radius_;
                 CirclePoiseuille3D<T> velocity(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
                                                normal[0], normal[1], normal[2], radius * VOREEN_LENGTH_TO_SI, maxVelocity[0]);
+                */
                 if (bouzidiOn) {
                     offBc.defineU(superGeometry, indicator.materialId_, velocity);
                 } else {
@@ -599,9 +603,9 @@ int main(int argc, char* argv[]) {
     // TODO: implement measured data support!
 
     const int N = spatialResolution;
-    UnitConverterFromResolutionAndRelaxationTime<T, DESCRIPTOR> converter(
-            N,                                                   // resolution for charPhysLength
-            (T) temporalResolution,                              // relaxation time
+    UnitConverter<T, DESCRIPTOR> converter(
+            (T) characteristicLength * VOREEN_LENGTH_TO_SI / N,  // resolution for charPhysLength
+            (T) temporalResolution * VOREEN_TIME_TO_SI,          // relaxation time
             (T) characteristicLength * VOREEN_LENGTH_TO_SI,      // charPhysLength: reference length of simulation geometry
             (T) characteristicVelocity * VOREEN_LENGTH_TO_SI,    // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
             (T) viscosity * 0.001 / density,                     // physViscosity: physical kinematic viscosity in __m^2 / s__

@@ -54,7 +54,8 @@ FlowParametrization::FlowParametrization()
     , outport_(Port::OUTPORT, "outport", "Parameter Inport")
     , parametrizationName_("parametrizationName", "Parametrization Name", "test_parametrization")
     , spatialResolution_("spatialResolution", "Spatial Resolution", 32, 8, 512)
-    , temporalResolution_("temporalResolution", "Temporal Resolution (s)", 0.1, 0.001, 1.0f)
+    , temporalResolution_("temporalResolutionDiscrete", "Temporal Resolution", 20, 10, 1000)
+    //, temporalResolution_("temporalResolution", "Temporal Resolution (s)", 0.1, 0.001, 1.0f)
     , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 10.0f, 0.1f, 1000.0f)
     , characteristicVelocity_("characteristicVelocity", "Characteristic Velocity (mm/s)", 10.0f, 0.0f, 1000.0f)
     , fluid_("fluid", "Fluid")
@@ -77,7 +78,7 @@ FlowParametrization::FlowParametrization()
     addProperty(spatialResolution_);
         spatialResolution_.setGroupID("parameters");
     addProperty(temporalResolution_);
-        temporalResolution_.adaptDecimalsToRange(3);
+        //temporalResolution_.adaptDecimalsToRange(3);
         temporalResolution_.setGroupID("parameters");
     addProperty(characteristicLength_);
         characteristicLength_.setGroupID("parameters");
@@ -156,7 +157,7 @@ void FlowParametrization::addParametrizations() {
     }
 
     PARAMETER_DISCRETIZATION_BEGIN(spatialResolution, int)
-    PARAMETER_DISCRETIZATION_BEGIN(temporalResolution, float)
+    PARAMETER_DISCRETIZATION_BEGIN(temporalResolution, int)
     PARAMETER_DISCRETIZATION_BEGIN(characteristicLength, float)
     PARAMETER_DISCRETIZATION_BEGIN(characteristicVelocity, float)
     PARAMETER_DISCRETIZATION_BEGIN(viscosity, float)
@@ -167,7 +168,8 @@ void FlowParametrization::addParametrizations() {
     {
         FlowParameters parameters(name);
         parameters.setSpatialResolution(spatialResolution);
-        parameters.setTemporalResolution(temporalResolution);
+        parameters.setTemporalResolution(characteristicLength / (spatialResolution * temporalResolution));
+        //parameters.setTemporalResolution(temporalResolution);
         parameters.setCharacteristicLength(characteristicLength);
         parameters.setCharacteristicVelocity(characteristicVelocity);
         parameters.setViscosity(viscosity);

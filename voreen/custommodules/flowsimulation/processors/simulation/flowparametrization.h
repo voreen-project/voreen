@@ -80,7 +80,8 @@ private:
 
     StringProperty parametrizationName_;
     IntIntervalProperty spatialResolution_;
-    FloatIntervalProperty temporalResolution_;
+    IntIntervalProperty temporalResolution_;
+    //FloatIntervalProperty temporalResolution_;
     FloatIntervalProperty characteristicLength_;
     FloatIntervalProperty characteristicVelocity_;
     OptionProperty<Fluid> fluid_;
