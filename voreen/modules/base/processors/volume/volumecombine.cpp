@@ -296,7 +296,8 @@ void VolumeCombine::combineVolumes(Volume* combinedVolume, const VolumeBase* fir
             }
 
             // assign clamped result to combined volume
-            vc->setVoxelNormalized(tgt::clamp(result, 0.f, 1.f), pos, referenceChannel);
+            //vc->setVoxelNormalized(tgt::clamp(result, 0.f, 1.f), pos, referenceChannel); //FIXME: clamp prevents working with float volumes
+            vc->setVoxelNormalized(result, pos, referenceChannel);
         }
     } // VRN_FOR_EACH_VOXEL_WITH_PROGRESS
 }
@@ -384,7 +385,7 @@ void VolumeCombine::combineVolumesOnCommonGrid(Volume* combinedVolume, const Vol
 
             // assign clamped result to combined volume
             //vc->setVoxelNormalized(tgt::clamp(result, 0.f, 1.f), pos, referenceChannel); //FIXME: clamp prevents working with float volumes
-            vc->setVoxelNormalized(result, pos, referenceChannel); //FIXME: clamp prevents working with float volumes
+            vc->setVoxelNormalized(result, pos, referenceChannel);
         } // for referenceChannel
     } // VRN_FOR_EACH_VOXEL_WITH_PROGRESS
 }
