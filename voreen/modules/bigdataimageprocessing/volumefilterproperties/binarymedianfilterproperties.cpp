@@ -103,7 +103,7 @@ VolumeFilter* BinaryMedianFilterProperties::getVolumeFilter(const VolumeBase& vo
     }
     Settings settings = instanceSettings_.at(instanceId);
     RealWorldMapping rwm;
-    if (volume.hasMetaData("RealWorldMapping")) {
+    if (volume.hasMetaData(VolumeBase::META_DATA_NAME_REAL_WORLD_MAPPING)) {
         rwm = volume.getRealWorldMapping();
     }
     return new BinaryMedianFilter(

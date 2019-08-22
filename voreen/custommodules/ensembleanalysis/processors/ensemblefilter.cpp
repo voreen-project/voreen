@@ -151,6 +151,55 @@ private:
 };
 
 //----------------------------------------
+// Filter : Remove first Time Step
+//----------------------------------------
+class FilterRemoveFirstTimeStep : public Filter {
+public:
+    FilterRemoveFirstTimeStep()
+            : enableRemoveFirstTimeStep_("enableRemoveFirstTimeStep", "Remove first Time Step", false)
+    {
+        enableRemoveFirstTimeStep_.setDescription("Removes the first time step of each run.");
+    }
+
+    Property& getProperty() {
+        return enableRemoveFirstTimeStep_;
+    }
+
+    EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
+
+        // Clone input, if not enabled.
+        if(!enableRemoveFirstTimeStep_.get()) {
+            return new EnsembleDataset(ensemble);
+        }
+
+        EnsembleDataset* dataset = new EnsembleDataset();
+
+        for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
+            if (run.timeSteps_.empty())
+                continue;
+
+            std::vector<EnsembleDataset::TimeStep> timeSteps;
+            for (size_t i = 1; i < run.timeSteps_.size(); i++) {
+                timeSteps.push_back(run.timeSteps_[i]);
+            }
+
+            dataset->addRun(EnsembleDataset::Run{ run.name_, run.color_, timeSteps });
+        }
+
+        dataset->setRoi(ensemble.getRoi());
+
+        return dataset;
+    }
+
+    void adjustToEnsemble(const EnsembleDataset* ensemble) {
+    }
+
+private:
+
+    BoolProperty enableRemoveFirstTimeStep_;
+};
+
+//----------------------------------------
 // Filter : Select last Time Step
 //----------------------------------------
 class FilterSelectLastTimeStep : public Filter {
@@ -375,6 +424,7 @@ EnsembleFilter::EnsembleFilter()
     addFilter(new FilterRun());
     //addFilter(new FilterTimeStep()); // replaced by FilterTimeInterval
     addFilter(new FilterTimeInterval());
+    addFilter(new FilterRemoveFirstTimeStep());
     addFilter(new FilterSelectLastTimeStep());
     addFilter(new FilterField());
     addFilter(new FilterROI());

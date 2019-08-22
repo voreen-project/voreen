@@ -356,7 +356,7 @@ void FlowSimulationCluster::enqueueSimulations() {
     int ret = executeCommand(command);
     if (ret != EXIT_SUCCESS) {
         VoreenApplication::app()->showMessageBox("Error", "Data could not be copied!", true);
-        LERROR("Could not fetch results");
+        LERROR("Data could not be copied");
         return;
     }
 
