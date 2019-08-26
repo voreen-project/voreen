@@ -65,6 +65,7 @@ private:
 
     BoolProperty usePredeterminedSeed_;
     IntProperty predeterminedSeed_;
+    BoolProperty preserveTopology_;
 
     std::random_device randomDevice_;
 

@@ -58,6 +58,7 @@ VolumeSurfaceNoise::VolumeSurfaceNoise()
     , binarizationThreshold_("binarizationThreshold", "Threshold", 0.5f, 0.0f, std::numeric_limits<float>::max(), Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_ADVANCED)
     , usePredeterminedSeed_("usePredeterminedSeed", "Use Predetermined Seed", false)
     , predeterminedSeed_("predeterminedSeed", "Seed", 0, std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
+    , preserveTopology_("preserveTopology", "Preserve Topology", true)
     , randomDevice_()
 {
     addPort(inport_);
@@ -67,10 +68,40 @@ VolumeSurfaceNoise::VolumeSurfaceNoise()
     addProperty(binarizationThreshold_);
     addProperty(usePredeterminedSeed_);
     addProperty(predeterminedSeed_);
+    addProperty(preserveTopology_);
 }
 
 VolumeSurfaceNoise::~VolumeSurfaceNoise() {
 }
+
+int8_t D_EULER_CHARACTERISTIC [128] = {
+     1, -1, -1,  1, -3, -1, -1,  1,
+    -1,  1,  1, -1,  3,  1,  1, -1,
+    -3, -1,  3,  1,  1, -1,  3,  1,
+    -1,  1,  1, -1,  3,  1,  1, -1,
+    -3,  3, -1,  1,  1,  3, -1,  1,
+    -1,  1,  1, -1,  3,  1,  1, -1,
+     1,  3,  3,  1,  5,  3,  3,  1,
+    -1,  1,  1, -1,  3,  1,  1, -1,
+    -7, -1, -1,  1, -3, -1, -1,  1,
+    -1,  1,  1, -1,  3,  1,  1, -1,
+    -3, -1,  3,  1,  1, -1,  3,  1,
+    -1,  1,  1, -1,  3,  1,  1, -1,
+    -3,  3, -1,  1,  1,  3, -1,  1,
+    -1,  1,  1, -1,  3,  1,  1, -1,
+     1,  3,  3,  1,  5,  3,  3,  1,
+    -1,  1,  1, -1,  3,  1,  1, -1
+};
+int8_t OCTANT_VOXEL_INDEX [8][7] {
+    {  0,  1,  3,  4,  9, 10, 12},
+    {  2,  1,  5,  4, 11, 10, 13},
+    {  6,  7,  3,  4, 14, 15, 12},
+    {  8,  7,  5,  4, 16, 15, 13},
+    { 17, 18, 20, 21,  9, 10, 12},
+    { 19, 18, 22, 21, 11, 10, 13},
+    { 23, 24, 20, 21, 14, 15, 12},
+    { 25, 24, 22, 21, 16, 15, 13}
+};
 
 struct VoxelSet {
     std::vector<tgt::ivec3> voxels;
@@ -111,6 +142,60 @@ struct VoxelSet {
         return voxels.size();
     }
 };
+
+template<int8_t Z, int8_t Y, int8_t X>
+void minimize(uint8_t (&neighborhood)[3][3][3], uint8_t& val) {
+    if(   X < 0 || X >= 3
+       || Y < 0 || Y >= 3
+       || Z < 0 || Z >= 3) {
+        return;
+    }
+    val = std::min(val, neighborhood[Z][Y][X]);
+}
+template<int8_t Z, int8_t Y, int8_t X>
+uint8_t min(uint8_t (&neighborhood)[3][3][3]) {
+    uint8_t id = 255;
+    minimize<Z-1,Y-1,X-1>(neighborhood, id);
+    minimize<Z-1,Y-1,X  >(neighborhood, id);
+    minimize<Z-1,Y-1,X+1>(neighborhood, id);
+    minimize<Z-1,Y  ,X-1>(neighborhood, id);
+    minimize<Z-1,Y  ,X  >(neighborhood, id);
+    minimize<Z-1,Y  ,X+1>(neighborhood, id);
+    minimize<Z-1,Y+1,X-1>(neighborhood, id);
+    minimize<Z-1,Y+1,X  >(neighborhood, id);
+    minimize<Z-1,Y+1,X+1>(neighborhood, id);
+    minimize<Z  ,Y-1,X-1>(neighborhood, id);
+    minimize<Z  ,Y-1,X  >(neighborhood, id);
+    minimize<Z  ,Y-1,X+1>(neighborhood, id);
+    minimize<Z  ,Y  ,X-1>(neighborhood, id);
+    minimize<Z  ,Y  ,X  >(neighborhood, id);
+    minimize<Z  ,Y  ,X+1>(neighborhood, id);
+    minimize<Z  ,Y+1,X-1>(neighborhood, id);
+    minimize<Z  ,Y+1,X  >(neighborhood, id);
+    minimize<Z  ,Y+1,X+1>(neighborhood, id);
+    minimize<Z+1,Y-1,X-1>(neighborhood, id);
+    minimize<Z+1,Y-1,X  >(neighborhood, id);
+    minimize<Z+1,Y-1,X+1>(neighborhood, id);
+    minimize<Z+1,Y  ,X-1>(neighborhood, id);
+    minimize<Z+1,Y  ,X  >(neighborhood, id);
+    minimize<Z+1,Y  ,X+1>(neighborhood, id);
+    minimize<Z+1,Y+1,X-1>(neighborhood, id);
+    minimize<Z+1,Y+1,X  >(neighborhood, id);
+    minimize<Z+1,Y+1,X+1>(neighborhood, id);
+    return id;
+}
+
+template<int8_t Z, int8_t Y, int8_t X>
+void linkNeighbors(uint8_t (&neighborhood)[3][3][3]) {
+    if(X == 1 && Y == 1 && Z == 1){
+        return;
+    }
+    if(neighborhood[Z][Y][X] == 255) {
+        return;
+    }
+    uint8_t minID = min<Z, Y, X>(neighborhood);
+    neighborhood[Z][Y][X] = minID;
+}
 
 void VolumeSurfaceNoise::process() {
     if(!enabledProp_.get()) {
@@ -197,6 +282,106 @@ void VolumeSurfaceNoise::process() {
         }
     };
 
+    auto isEulerInvariantVoxel = [&] (tgt::ivec3 pos) {
+        bool neighborhood[26];
+        int i = 0;
+        for(int dz = -1; dz<=1; ++dz) {
+            for(int dy = -1; dy<=1; ++dy) {
+                for(int dx = -1; dx<=1; ++dx) {
+                    if(dx != 0 || dy != 0 ||  dz!= 0) {
+                        neighborhood[i++] = (getVoxel(tgt::ivec3(pos.x + dx, pos.y + dy, pos.z + dz), FOREGROUND) == FOREGROUND);
+                    }
+                }
+            }
+        }
+        int eulerVal = 0;
+        for(int octant = 0; octant < 8; ++octant) {
+            int index = 0;
+            for(int voxel = 0; voxel < 7; ++voxel) {
+                index <<= 1;
+                index |= neighborhood[OCTANT_VOXEL_INDEX[octant][voxel]];
+            }
+            eulerVal += D_EULER_CHARACTERISTIC[index];
+        }
+        return eulerVal == 0;
+    };
+
+    auto isSimple = [&] (const tgt::svec3& pos) {
+        uint8_t neighborhood[3][3][3];
+        for(int dz = -1; dz<=1; ++dz) {
+            for(int dy = -1; dy<=1; ++dy) {
+                for(int dx = -1; dx<=1; ++dx) {
+                    neighborhood[dz+1][dy+1][dx+1] = 255;
+                }
+            }
+        }
+        uint8_t id = 0;
+        for(int dz = -1; dz<=1; ++dz) {
+            for(int dy = -1; dy<=1; ++dy) {
+                for(int dx = -1; dx<=1; ++dx) {
+                    if((dx != 0 || dy != 0 ||  dz!= 0)) {
+                        neighborhood[dz+1][dy+1][dx+1] = id++;
+                    } else {
+                        neighborhood[dz+1][dy+1][dx+1] = 255;
+                    }
+                }
+            }
+        }
+        //if(id == 1 /* exactly one neighbor */) {
+        //    return false;
+        //}
+        tgtAssert(id <= 28, "impossible");
+        uint8_t maxID = -2;
+        uint8_t prevMaxID = -1;
+        while(maxID != prevMaxID) {
+            linkNeighbors<0, 0, 0>(neighborhood);
+            linkNeighbors<0, 0, 1>(neighborhood);
+            linkNeighbors<0, 0, 2>(neighborhood);
+            linkNeighbors<0, 1, 0>(neighborhood);
+            linkNeighbors<0, 1, 1>(neighborhood);
+            linkNeighbors<0, 1, 2>(neighborhood);
+            linkNeighbors<0, 2, 0>(neighborhood);
+            linkNeighbors<0, 2, 1>(neighborhood);
+            linkNeighbors<0, 2, 2>(neighborhood);
+            linkNeighbors<1, 0, 0>(neighborhood);
+            linkNeighbors<1, 0, 1>(neighborhood);
+            linkNeighbors<1, 0, 2>(neighborhood);
+            linkNeighbors<1, 1, 0>(neighborhood);
+            //linkNeighbors<1, 1, 1>(neighborhood);
+            linkNeighbors<1, 1, 2>(neighborhood);
+            linkNeighbors<1, 2, 0>(neighborhood);
+            linkNeighbors<1, 2, 1>(neighborhood);
+            linkNeighbors<1, 2, 2>(neighborhood);
+            linkNeighbors<2, 0, 0>(neighborhood);
+            linkNeighbors<2, 0, 1>(neighborhood);
+            linkNeighbors<2, 0, 2>(neighborhood);
+            linkNeighbors<2, 1, 0>(neighborhood);
+            linkNeighbors<2, 1, 1>(neighborhood);
+            linkNeighbors<2, 1, 2>(neighborhood);
+            linkNeighbors<2, 2, 0>(neighborhood);
+            linkNeighbors<2, 2, 1>(neighborhood);
+            linkNeighbors<2, 2, 2>(neighborhood);
+
+            prevMaxID = maxID;
+            maxID = min<1, 1, 1>(neighborhood);
+            for(int dz = -1; dz<=1; ++dz) {
+                for(int dy = -1; dy<=1; ++dy) {
+                    for(int dx = -1; dx<=1; ++dx) {
+                        uint8_t id = neighborhood[dz+1][dy+1][dx+1];
+                        if(id != 255 && id > maxID) {
+                            maxID = id;
+                        }
+                    }
+                }
+            }
+        }
+        if(maxID == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    };
+
     VoxelSet surface;
 
     auto tryAddToSurface = [&] (tgt::ivec3 p) {
@@ -221,16 +406,19 @@ void VolumeSurfaceNoise::process() {
     const float noiseAmount = noiseAmount_.get();
     const size_t numSurfaceVoxelsToAdd = std::min(surface.size(), static_cast<size_t>(surface.size() * noiseAmount));
 
-    for(size_t i=0; i<numSurfaceVoxelsToAdd && surface.size() > 0; ++i) {
+    bool preserveTopology = preserveTopology_.get();
+    for(size_t i=0; i<numSurfaceVoxelsToAdd && surface.size() > 0;) {
         auto p = surface.drawRandom(randomEngine);
 
+        surface.remove(p);
+        if(preserveTopology && (!isSimple(p) || !isEulerInvariantVoxel(p))) {
+            continue;
+        }
         if(getVoxel(p, FOREGROUND) == FOREGROUND) {
             setVoxel(p, BACKGROUND);
         } else {
             setVoxel(p, FOREGROUND);
         }
-
-        surface.remove(p);
 
         tryAddToSurface(tgt::ivec3(p.x  , p.y  , p.z  ));
         tryAddToSurface(tgt::ivec3(p.x+1, p.y  , p.z  ));
@@ -239,6 +427,8 @@ void VolumeSurfaceNoise::process() {
         tryAddToSurface(tgt::ivec3(p.x  , p.y-1, p.z  ));
         tryAddToSurface(tgt::ivec3(p.x  , p.y  , p.z+1));
         tryAddToSurface(tgt::ivec3(p.x  , p.y  , p.z-1));
+
+        ++i;
     }
 
     Volume* outvol = new Volume(outputPtr, &inVol);
