@@ -69,7 +69,7 @@ VesselGraphCreator::VesselGraphCreator()
     , minElongation_("minElongation", "Minimum Elongation", 0, 0, 5, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_DEBUG)
     , minBulgeSize_("minBulgeSize", "Minimum Bulge Size", 1.0, 0, 10, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_DEFAULT)
     , saveDebugData_("saveDebugData", "Generate Debug Data", false, Processor::INVALID_RESULT, Property::LOD_DEBUG)
-    , binarizationThresholdSegmentation_("binarizationThresholdSegmentation", "Binarization Threshold (Segmentation)", 0.5f, 0.0f, 1.0f, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_ADVANCED)
+    , binarizationThresholdSegmentation_("binarizationThresholdSegmentation", "Binarization Threshold (Segmentation)", 0.5f, std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max(), Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_ADVANCED)
     , tmpStorageSizeInfo_("tmpStorageSizeInfo", "Required temporary storage (estimated)", "")
 {
     addPort(segmentedVolumeInport_);
