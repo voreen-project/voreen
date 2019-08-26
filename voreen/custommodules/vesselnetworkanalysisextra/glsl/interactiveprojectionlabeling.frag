@@ -36,10 +36,18 @@ void main() {
     vec2 fragCoord = frag_texcoord.xy;
 
     float projectionValue = texture(projectionTex_, fragCoord).x;
-    float labelValue = texture(labelTex_, fragCoord).x;
+    int labelValue = int(texture(labelTex_, fragCoord).x*255);
     vec3 col = vec3(projectionValue);
-    if(labelValue > 0) {
-        col = (col + vec3(1.0, 0.0, 0.0))*0.5;
+    vec3 mixColor;
+    if(labelValue == 0) {
+        mixColor = col;
+    } else if(labelValue == 1) {
+        mixColor = vec3(1.0, 0.0, 0.0);
+    } else if (labelValue == 2) {
+        mixColor = vec3(0.0, 1.0, 0.0);
+    } else {
+        mixColor = vec3(0.0, 0.0, 1.0);
     }
+    col = (col + mixColor)*0.5;
     color = vec4(col, 1.0);
 }

@@ -71,7 +71,10 @@ void LabelProjection::withLabels(std::function<void(VolumeAtomic<uint8_t>&)> fun
     labelTexture_->uploadTexture();
 }
 void InteractiveProjectionLabeling::drawEvent(tgt::MouseEvent* e, LabelProjection& p) {
-    if(e->modifiers() != tgt::Event::CTRL || e->button() != tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
+    auto button = e->button();
+    if(e->modifiers() != tgt::Event::CTRL
+            || ((button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_MIDDLE | tgt::MouseEvent::MOUSE_BUTTON_RIGHT)) == 0))
+             {
         return;
     }
     auto event_type = e->getEventType();
@@ -82,8 +85,18 @@ void InteractiveProjectionLabeling::drawEvent(tgt::MouseEvent* e, LabelProjectio
     auto norm_coords = tgt::vec2(coords)/tgt::vec2(viewport);
     tgt::svec2 labelcoords = tgt::round(norm_coords * tgt::vec2(p.labels().getDimensions().xy()));
 
+    uint8_t label=LabelProjection::UNLABELED;
+    if((button & tgt::MouseEvent::MOUSE_BUTTON_LEFT) == button) {
+        label = LabelProjection::FOREGROUND;
+    }
+    if((button & tgt::MouseEvent::MOUSE_BUTTON_MIDDLE) == button) {
+        label = LabelProjection::UNLABELED;
+    }
+    if((button & tgt::MouseEvent::MOUSE_BUTTON_RIGHT) == button) {
+        label = LabelProjection::BACKGROUND;
+    }
     p.withLabels([&] (VolumeAtomic<uint8_t>& vol) {
-            vol.voxel(labelcoords.x, labelcoords.y, 0) = LabelProjection::FOREGROUND;
+            vol.voxel(labelcoords.x, labelcoords.y, 0) = label;
     });
     if(event_type == tgt::MouseEvent::MOUSERELEASEEVENT) {
         //TODO sync labels => 3D
@@ -131,22 +144,6 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
 }
 
 void InteractiveProjectionLabeling::renderToPort(RenderPort& port, LabelProjection& p) {
-    //TODO not sure why the texture from p does not work.
-    //p.projectionTexture_ = tgt::Texture(p.projection().getDimensions(), GL_RED, GL_RED, GL_FLOAT, tgt::Texture::NEAREST, tgt::Texture::CLAMP_TO_EDGE, (GLubyte*) p.projection().voxel(), false);
-    //p.projectionTexture_.uploadTexture();
-    //p.labelTexture_ = tgt::Texture(p.labels().getDimensions(), GL_RED, GL_RED, GL_UNSIGNED_BYTE, tgt::Texture::NEAREST, tgt::Texture::CLAMP_TO_EDGE, (GLubyte*) p.labels().voxel(), false);
-    //p.labelTexture_.uploadTexture();
-    //VolumeAtomic<float> proj(p.projection().getDimensions());
-    //for(size_t i=0; i < tgt::hmul(proj.getDimensions()); ++i) {
-    //    proj.voxel(i) = p.projection().voxel(i);
-    //}
-    //LabelProjection o(std::move(proj));
-    //o.withLabels([&] (VolumeAtomic<uint8_t>& vol) {
-    //        for(size_t i=0; i < tgt::hmul(vol.getDimensions()); ++i) {
-    //            vol.voxel(i) = p.labels().voxel(i);
-    //        }
-    //});
-
     port.activateTarget();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
