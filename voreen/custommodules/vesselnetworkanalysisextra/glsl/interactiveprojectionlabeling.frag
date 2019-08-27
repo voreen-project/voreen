@@ -39,15 +39,21 @@ void main() {
     int labelValue = int(texture(labelTex_, fragCoord).x*255);
     vec3 col = vec3(projectionValue);
     vec3 mixColor;
-    if(labelValue == 0) {
+    float mixFactor = 0.6;
+    if(labelValue == UNLABELED) {
         mixColor = col;
-    } else if(labelValue == 1) {
-        mixColor = vec3(1.0, 0.0, 0.0);
-    } else if (labelValue == 2) {
+        mixFactor = 0.0;
+    } else if(labelValue == FOREGROUND) {
         mixColor = vec3(0.0, 1.0, 0.0);
-    } else {
+    } else if (labelValue == BACKGROUND) {
+        mixColor = vec3(1.0, 0.0, 0.0);
+    } else if (labelValue == SUGGESTED_FOREGROUND) {
         mixColor = vec3(0.0, 0.0, 1.0);
+        mixFactor = 0.3;
+    } else {
+        mixColor = vec3(1.0, 0.0, 1.0);
+        mixFactor = 1.0;
     }
-    col = (col + mixColor)*0.5;
+    col = mix(col, mixColor, mixFactor);
     color = vec4(col, 1.0);
 }

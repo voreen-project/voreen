@@ -35,11 +35,22 @@
 #include "voreen/core/properties/shaderproperty.h"
 #include "voreen/core/properties/eventproperty.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "modules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 
 #include "tgt/vector.h"
 
 namespace voreen {
 
+struct LabelProjection;
+
+struct LabelGuard {
+public:
+    LabelGuard(LabelProjection& labelProjection);
+    ~LabelGuard();
+    uint8_t& at(tgt::svec3);
+private:
+    LabelProjection& labelProjection_;
+};
 
 struct LabelProjection {
 
@@ -47,15 +58,19 @@ struct LabelProjection {
         UNLABELED = 0,
         FOREGROUND = 1,
         BACKGROUND = 2,
+        SUGGESTED_FOREGROUND = 3,
     };
 
     void withLabels(std::function<void(VolumeAtomic<uint8_t>&)>);
 
     LabelProjection();
-    LabelProjection(VolumeAtomic<float>&& projection);
+    LabelProjection(VolumeAtomic<float>&& projection, tgt::svec3 dimensionMask);
 
     const VolumeAtomic<uint8_t>& labels() const {
         return labels_;
+    }
+    LabelGuard labels_mut() {
+        return LabelGuard { *this };
     }
     const VolumeAtomic<float>& projection() const {
         return projection_;
@@ -64,12 +79,15 @@ struct LabelProjection {
     void bindLabelTexture();
 
 private:
+    friend struct LabelGuard;
     void ensureTexturesPresent();
+    size_t getVoxelIndex(tgt::svec3 pos3d);
 
     VolumeAtomic<float> projection_;
     VolumeAtomic<uint8_t> labels_;
     boost::optional<tgt::Texture> projectionTexture_;
     boost::optional<tgt::Texture> labelTexture_;
+    tgt::svec3 dimensionMask_;
 };
 
 class InteractiveProjectionLabeling : public RenderProcessor {
@@ -91,6 +109,8 @@ public:
 private:
     void drawEvent(tgt::MouseEvent* e, LabelProjection& p);
     void renderToPort(RenderPort& port, LabelProjection& p);
+    void syncLabels();
+    void withOutputVolume(std::function<void(LZ4SliceVolume<uint8_t>&)>);
 
     VolumePort inport_;
     VolumePort labelVolume_;
@@ -101,6 +121,8 @@ private:
     LabelProjection xy_;
     LabelProjection xz_;
     LabelProjection yz_;
+
+    boost::optional<LZ4SliceVolume<uint8_t>> outputVolume_;
 
     EventProperty<InteractiveProjectionLabeling> mouseDrawEvent_;
 
