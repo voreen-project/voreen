@@ -209,6 +209,7 @@ public:
 
 
     virtual void clear();
+    void fill(T value);
     virtual const void* getData() const;
     virtual void* getData();
 
@@ -730,7 +731,12 @@ float VolumeAtomic<T>::maxNormalizedMagnitude() const {
 
 template<class T>
 void VolumeAtomic<T>::clear() {
-    std::fill(data_, data_+getNumVoxels(), T(0.0f));
+    fill(T(0.0));
+}
+
+template<class T>
+void VolumeAtomic<T>::fill(T value) {
+    std::fill(data_, data_+getNumVoxels(), value);
     invalidate();
 }
 

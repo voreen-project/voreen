@@ -32,6 +32,7 @@ Voreen Changelog
       o Introduce minNormalizedMagnitude and maxNormalizedMagnitude to VolumeRAM which is based on normalized Values
       o tgt::Vector{2,3,4} are now hashable
       o Remove support for Visual Studio 2012 and 2013, since they don't fully support c++11 which some new features require
+      o Add fill(T val) method to VolumeAtomic
 
     * Bug Fixes/Minor Changes:
       o Fix crash when shader programs would fail to compile/link
