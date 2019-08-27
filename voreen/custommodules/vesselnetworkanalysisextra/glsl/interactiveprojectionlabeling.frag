@@ -31,34 +31,50 @@ uniform mat3 realToProjectedMat_;
 uniform mat3 projectedToRealMat_;
 
 uniform sampler3D volumeTex_;
-uniform sampler2D labelTex_;
+uniform sampler3D labelTex_;
 
 in vec4 frag_texcoord;
 
 out vec4 color;
+
+int combineLabels(int prev, int new) {
+    if(prev == UNLABELED) {
+        return new;
+    } else if(new == UNLABELED) {
+        return prev;
+    } else if(new != prev) {
+        return INCONSISTENT;
+    } else {
+        return prev;
+    }
+}
 
 void main() {
     ivec3 projectionDim = ivec3(realToProjectedMat_ * vec3(dimensions_));
     vec2 fragCoord = frag_texcoord.xy;
 
     float projectionValue = -1e10;
+    int projectionLabel = UNLABELED;
     for(int d=projectionRange_.x; d<=projectionRange_.y; ++d) {
         vec3 coord = projectedToRealMat_ * vec3(fragCoord, float(d)/float(projectionDim.z));
         float texValue = texture(volumeTex_, coord).x;
         projectionValue = max(texValue, projectionValue);
+
+        projectionLabel = combineLabels(projectionLabel, int(texture(labelTex_, coord).x*255));
     }
-    int labelValue = int(texture(labelTex_, fragCoord).x*255);
+    //vec3 coord = projectedToRealMat_ * vec3(fragCoord, 0);
+    //projectionLabel = int(texture(labelTex_, coord).x*255);
     vec3 col = vec3(projectionValue);
     vec3 mixColor;
     float mixFactor = 0.5;
-    if(labelValue == UNLABELED) {
+    if(projectionLabel == UNLABELED) {
         mixColor = col;
         mixFactor = 0.0;
-    } else if(labelValue == FOREGROUND) {
+    } else if(projectionLabel == FOREGROUND) {
         mixColor = vec3(0.0, 1.0, 0.0);
-    } else if (labelValue == BACKGROUND) {
+    } else if (projectionLabel == BACKGROUND) {
         mixColor = vec3(1.0, 0.0, 0.0);
-    } else if (labelValue == SUGGESTED_FOREGROUND) {
+    } else if (projectionLabel == SUGGESTED_FOREGROUND) {
         mixColor = vec3(0.0, 0.0, 1.0);
         mixFactor = 0.3;
     } else {

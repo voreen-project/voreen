@@ -60,12 +60,14 @@ struct LabelProjection {
         FOREGROUND = 1,
         BACKGROUND = 2,
         SUGGESTED_FOREGROUND = 3,
+        INCONSISTENT = 4,
     };
 
     void withLabels(std::function<void(VolumeAtomic<uint8_t>&)>);
+    void set(size_t x, size_t y, tgt::svec2 range, uint8_t val);
 
     LabelProjection();
-    LabelProjection(tgt::svec3 dimensions, tgt::svec3 dimensionMask, tgt::mat3 realToProjectedMat_);
+    LabelProjection(tgt::svec3 dimensions, tgt::mat3 realToProjectedMat_);
 
     const VolumeAtomic<uint8_t>& labels() const {
         return labels_;
@@ -87,12 +89,9 @@ struct LabelProjection {
 private:
     friend struct LabelGuard;
     void ensureTexturesPresent();
-    size_t getVoxelIndex(tgt::svec3 pos3d);
 
     VolumeAtomic<uint8_t> labels_;
-    boost::optional<tgt::Texture> projectionTexture_;
     boost::optional<tgt::Texture> labelTexture_;
-    tgt::svec3 dimensionMask_;
     tgt::mat3 realToProjectedMat_;
 };
 
@@ -113,6 +112,7 @@ public:
 
 
 private:
+    tgt::svec2 projectionRange(LabelProjection& p);
     void drawEvent(tgt::MouseEvent* e, LabelProjection& p);
     void renderToPort(RenderPort& port, LabelProjection& p);
     void syncLabels();

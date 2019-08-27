@@ -41,21 +41,18 @@ LabelGuard::~LabelGuard() {
     labelProjection_.labelTexture_->uploadTexture();
 }
 uint8_t& LabelGuard::at(tgt::svec3 p) {
-    return labelProjection_.labels_.voxel(labelProjection_.getVoxelIndex(p));
+    return labelProjection_.labels_.voxel(p);
 }
 
 LabelProjection::LabelProjection()
-    : LabelProjection(tgt::svec3(2), tgt::svec3(1,1,0), tgt::mat3::identity)
+    : LabelProjection(tgt::svec3(2), tgt::mat3::identity)
 {
 }
-LabelProjection::LabelProjection(tgt::svec3 dimensions, tgt::svec3 dimensionMask, tgt::mat3 realToProjectedMat)
+LabelProjection::LabelProjection(tgt::svec3 dimensions, tgt::mat3 realToProjectedMat)
     : labels_(dimensions)
-    , projectionTexture_(boost::none)
     , labelTexture_(boost::none)
-    , dimensionMask_(dimensionMask)
     , realToProjectedMat_(realToProjectedMat)
 {
-    tgtAssert(tgt::hadd(dimensionMask_) == 2, "Invalid dimensionMask");
     for(size_t i=0; i < tgt::hmul(labels_.getDimensions()); ++i) {
         labels_.voxel(i) = UNLABELED;
     }
@@ -66,23 +63,6 @@ void LabelProjection::ensureTexturesPresent() {
         labelTexture_->uploadTexture();
     }
 }
-size_t LabelProjection::getVoxelIndex(tgt::svec3 pos3d) {
-    int dim = 0;
-    size_t pos = 0;
-    size_t multiplier = 1;
-    for(int d=0; d<3; ++d) {
-        if(dimensionMask_[d] != 0) {
-            pos += pos3d[d] * multiplier;
-            multiplier *= labels_.getDimensions()[dim];
-            dim += 1;
-        }
-    }
-    return pos;
-}
-void LabelProjection::bindProjectionTexture() {
-    ensureTexturesPresent();
-    projectionTexture_->bind();
-}
 void LabelProjection::bindLabelTexture() {
     ensureTexturesPresent();
     labelTexture_->bind();
@@ -91,6 +71,15 @@ void LabelProjection::withLabels(std::function<void(VolumeAtomic<uint8_t>&)> fun
     fun(labels_);
     ensureTexturesPresent();
     labelTexture_->uploadTexture();
+}
+void LabelProjection::set(size_t x, size_t y, tgt::svec2 range, uint8_t val) {
+    withLabels([&] (VolumeAtomic<uint8_t>& vol) {
+        for(size_t z=range.x; z<=range.y; ++z) {
+            tgt::vec3 projected(x, y, z);
+            tgt::svec3 real = projectedToReal() * projected;
+            vol.voxel(real) = val;
+        }
+    });
 }
 void InteractiveProjectionLabeling::drawEvent(tgt::MouseEvent* e, LabelProjection& p) {
     auto button = e->button();
@@ -103,9 +92,11 @@ void InteractiveProjectionLabeling::drawEvent(tgt::MouseEvent* e, LabelProjectio
     tgt::ivec2 coords = e->coord();
     tgt::ivec2 viewport = e->viewport();
 
+    tgt::vec3 projectionDimensions = p.realToProjected() * p.labels().getDimensions();
+
     coords.y = viewport.y - coords.y - 1;
     auto norm_coords = tgt::vec2(coords)/tgt::vec2(viewport);
-    tgt::svec2 labelcoords = tgt::floor(norm_coords * tgt::vec2(p.labels().getDimensions().xy()));
+    tgt::svec2 labelcoords = tgt::floor(norm_coords * projectionDimensions.xy());
 
     uint8_t label=LabelProjection::UNLABELED;
     if((button & tgt::MouseEvent::MOUSE_BUTTON_LEFT) == button) {
@@ -117,9 +108,7 @@ void InteractiveProjectionLabeling::drawEvent(tgt::MouseEvent* e, LabelProjectio
     if((button & tgt::MouseEvent::MOUSE_BUTTON_RIGHT) == button) {
         label = LabelProjection::BACKGROUND;
     }
-    p.withLabels([&] (VolumeAtomic<uint8_t>& vol) {
-            vol.voxel(labelcoords.x, labelcoords.y, 0) = label;
-    });
+    p.set(labelcoords.x, labelcoords.y, projectionRange(p), label);
     if(event_type == tgt::MouseEvent::MOUSERELEASEEVENT) {
         syncLabels();
     }
@@ -193,10 +182,7 @@ void InteractiveProjectionLabeling::renderToPort(RenderPort& port, LabelProjecti
         LERROR("Shader not compiled!");
         return;
     }
-    tgt::ivec2 projectionRange(
-            (p.realToProjected() * projectionRegion_.get().getLLF()).z,
-            (p.realToProjected() * projectionRegion_.get().getURB()).z
-            );
+    tgt::ivec2 projectionRange(this->projectionRange(p));
     program->activate();
     program->setUniform("dimensions_", tgt::ivec3(vol.getDimensions()));
     program->setUniform("realToProjectedMat_", p.realToProjected());
@@ -226,14 +212,27 @@ void InteractiveProjectionLabeling::process() {
         header += "#define BACKGROUND " + std::to_string(LabelProjection::BACKGROUND) + "\n";
         header += "#define FOREGROUND " + std::to_string(LabelProjection::FOREGROUND) + "\n";
         header += "#define SUGGESTED_FOREGROUND " + std::to_string(LabelProjection::SUGGESTED_FOREGROUND) + "\n";
+        header += "#define INCONSISTENT " + std::to_string(LabelProjection::INCONSISTENT) + "\n";
         shader_.setHeader(header);
         shader_.rebuild();
     }
     renderToPort(xyProjectionOutport_, xy_);
     renderToPort(xzProjectionOutport_, xz_);
     renderToPort(yzProjectionOutport_, yz_);
+
+    //auto* vol = new VolumeAtomic<uint8_t>(xz_.labels().getDimensions());
+    //for(int i=0; i<tgt::hmul(xz_.labels().getDimensions()); ++i) {
+    //    vol->voxel(i) = xz_.labels().voxel(i);
+    //}
+    //labelVolume_.setData(new Volume(vol, inport_.getData()));
 }
 
+tgt::svec2 InteractiveProjectionLabeling::projectionRange(LabelProjection& p) {
+    return tgt::svec2(
+            (p.realToProjected() * projectionRegion_.get().getLLF()).z,
+            (p.realToProjected() * projectionRegion_.get().getURB()).z
+            );
+}
 void InteractiveProjectionLabeling::syncLabels() {
     if(!inport_.hasData()) {
         return;
@@ -297,38 +296,9 @@ void InteractiveProjectionLabeling::adjustPropertiesToInput() {
 
     projectionRegion_.setMaxValue(dim - tgt::svec3(1));
 
-    VolumeAtomic<float> xyProjection(tgt::svec3(dim.x, dim.y, 1));
-    VolumeAtomic<float> xzProjection(tgt::svec3(dim.x, dim.z, 1));
-    VolumeAtomic<float> yzProjection(tgt::svec3(dim.y, dim.z, 1));
-
-    for(size_t i=0; i < tgt::hmul(xyProjection.getDimensions()); ++i) {
-        xyProjection.voxel(i) = -std::numeric_limits<float>::infinity();
-    }
-    for(size_t i=0; i < tgt::hmul(xzProjection.getDimensions()); ++i) {
-        xzProjection.voxel(i) = -std::numeric_limits<float>::infinity();
-    }
-    for(size_t i=0; i < tgt::hmul(yzProjection.getDimensions()); ++i) {
-        yzProjection.voxel(i) = -std::numeric_limits<float>::infinity();
-    }
-
-    for(size_t z=0; z < dim.z; ++z) {
-        std::unique_ptr<VolumeRAM> slice(inport_.getData()->getSlice(z));
-        for(size_t y=0; y < dim.y; ++y) {
-            for(size_t x=0; x < dim.x; ++x) {
-                float volVoxel = slice->getVoxelNormalized(x, y, 0);
-                auto processVoxel = [volVoxel](float& current) {
-                    current = std::max(volVoxel, current);
-                };
-                processVoxel(xyProjection.voxel(x, y, 0));
-                processVoxel(xzProjection.voxel(x, z, 0));
-                processVoxel(yzProjection.voxel(y, z, 0));
-            }
-        }
-    }
-
-    xy_ = LabelProjection(xyProjection.getDimensions(), tgt::svec3(1,1,0), tgt::mat3(1,0,0, 0,1,0, 0,0,1));
-    xz_ = LabelProjection(xzProjection.getDimensions(), tgt::svec3(1,0,1), tgt::mat3(1,0,0, 0,0,1, 0,1,0));
-    yz_ = LabelProjection(yzProjection.getDimensions(), tgt::svec3(0,1,1), tgt::mat3(0,1,0, 0,0,1, 1,0,0));
+    xy_ = LabelProjection(dim, tgt::mat3(1,0,0, 0,1,0, 0,0,1));
+    xz_ = LabelProjection(dim, tgt::mat3(1,0,0, 0,0,1, 0,1,0));
+    yz_ = LabelProjection(dim, tgt::mat3(0,1,0, 0,0,1, 1,0,0));
 }
 VoreenSerializableObject* InteractiveProjectionLabeling::create() const {
     return new InteractiveProjectionLabeling();
