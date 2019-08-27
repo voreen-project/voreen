@@ -44,6 +44,13 @@ LZ4SliceVolumeMetadata::LZ4SliceVolumeMetadata(tgt::svec3 dimensions)
     , physicalToWorldTransformation_(tgt::mat4::identity)
 {
 }
+LZ4SliceVolumeMetadata LZ4SliceVolumeMetadata::fromVolume(const VolumeBase& vol) {
+    return LZ4SliceVolumeMetadata(vol.getDimensions())
+        .withSpacing(vol.getSpacing())
+        .withOffset(vol.getOffset())
+        .withPhysicalToWorldTransformation(vol.getPhysicalToWorldMatrix())
+        .withRealWorldMapping(vol.getRealWorldMapping());
+}
 
 LZ4SliceVolumeMetadata LZ4SliceVolumeMetadata::withOffset(tgt::vec3 offset) const {
     LZ4SliceVolumeMetadata metadata(*this);

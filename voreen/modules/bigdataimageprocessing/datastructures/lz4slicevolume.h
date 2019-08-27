@@ -46,6 +46,8 @@ public:
     explicit LZ4SliceVolumeMetadata(tgt::svec3 dimensions);
     LZ4SliceVolumeMetadata(const LZ4SliceVolumeMetadata&) = default;
 
+    static LZ4SliceVolumeMetadata fromVolume(const VolumeBase& vol);
+
     LZ4SliceVolumeMetadata withOffset(tgt::vec3 offset) const;
     LZ4SliceVolumeMetadata withSpacing(tgt::vec3 spacing) const;
     LZ4SliceVolumeMetadata withPhysicalToWorldTransformation(tgt::mat4 physicalToWorldTransformation) const;
@@ -227,6 +229,7 @@ public:
     LZ4WriteableSlab<Voxel> getNextWriteableSlice();
     LZ4WriteableSlab<Voxel> getNextWriteableSlab(size_t zSize);
     void pushSlice(const VolumeAtomic<Voxel>& slice);
+    void fill(Voxel value);
 
     LZ4SliceVolume<Voxel> finalize() &&;
     tgt::svec3 getDimensions() const;
@@ -586,6 +589,13 @@ void LZ4SliceVolumeBuilder<Voxel>::pushSlice(const VolumeAtomic<Voxel>& slice) {
     tgtAssert(numSlicesPushed_ < volumeInConstruction_.getNumSlices(), "Cannot push more slices");
     ++numSlicesPushed_;
     return volumeInConstruction_.writeSlice(slice, numSlicesPushed_-1);
+}
+template<typename Voxel>
+void LZ4SliceVolumeBuilder<Voxel>::fill(Voxel value) {
+    while(numSlicesPushed_ != volumeInConstruction_.getNumSlices()) {
+        auto slice = getNextWriteableSlice();
+        slice->fill(value);
+    }
 }
 
 template<typename Voxel>
