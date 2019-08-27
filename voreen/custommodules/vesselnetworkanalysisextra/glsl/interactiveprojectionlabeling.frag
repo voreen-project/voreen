@@ -25,7 +25,12 @@
 
 #version 330
 
-uniform sampler2D projectionTex_;
+uniform ivec3 dimensions_;
+uniform ivec2 projectionRange_;
+uniform mat3 realToProjectedMat_;
+uniform mat3 projectedToRealMat_;
+
+uniform sampler3D volumeTex_;
 uniform sampler2D labelTex_;
 
 in vec4 frag_texcoord;
@@ -33,13 +38,19 @@ in vec4 frag_texcoord;
 out vec4 color;
 
 void main() {
+    ivec3 projectionDim = ivec3(realToProjectedMat_ * vec3(dimensions_));
     vec2 fragCoord = frag_texcoord.xy;
 
-    float projectionValue = texture(projectionTex_, fragCoord).x;
+    float projectionValue = -1e10;
+    for(int d=projectionRange_.x; d<=projectionRange_.y; ++d) {
+        vec3 coord = projectedToRealMat_ * vec3(fragCoord, float(d)/float(projectionDim.z));
+        float texValue = texture(volumeTex_, coord).x;
+        projectionValue = max(texValue, projectionValue);
+    }
     int labelValue = int(texture(labelTex_, fragCoord).x*255);
     vec3 col = vec3(projectionValue);
     vec3 mixColor;
-    float mixFactor = 0.6;
+    float mixFactor = 0.5;
     if(labelValue == UNLABELED) {
         mixColor = col;
         mixFactor = 0.0;

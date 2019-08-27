@@ -31,6 +31,7 @@
 #include "voreen/core/ports/renderport.h"
 #include "voreen/core/properties/boolproperty.h"
 #include "voreen/core/properties/intproperty.h"
+#include "voreen/core/properties/boundingboxproperty.h"
 #include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/shaderproperty.h"
 #include "voreen/core/properties/eventproperty.h"
@@ -64,7 +65,7 @@ struct LabelProjection {
     void withLabels(std::function<void(VolumeAtomic<uint8_t>&)>);
 
     LabelProjection();
-    LabelProjection(VolumeAtomic<float>&& projection, tgt::svec3 dimensionMask);
+    LabelProjection(tgt::svec3 dimensions, tgt::svec3 dimensionMask, tgt::mat3 realToProjectedMat_);
 
     const VolumeAtomic<uint8_t>& labels() const {
         return labels_;
@@ -72,22 +73,27 @@ struct LabelProjection {
     LabelGuard labels_mut() {
         return LabelGuard { *this };
     }
-    const VolumeAtomic<float>& projection() const {
-        return projection_;
-    }
     void bindProjectionTexture();
     void bindLabelTexture();
+
+    tgt::mat3 realToProjected() const {
+        return realToProjectedMat_;
+    }
+    tgt::mat3 projectedToReal() const {
+        return tgt::transpose(realToProjectedMat_);
+    }
+
 
 private:
     friend struct LabelGuard;
     void ensureTexturesPresent();
     size_t getVoxelIndex(tgt::svec3 pos3d);
 
-    VolumeAtomic<float> projection_;
     VolumeAtomic<uint8_t> labels_;
     boost::optional<tgt::Texture> projectionTexture_;
     boost::optional<tgt::Texture> labelTexture_;
     tgt::svec3 dimensionMask_;
+    tgt::mat3 realToProjectedMat_;
 };
 
 class InteractiveProjectionLabeling : public RenderProcessor {
@@ -121,6 +127,8 @@ private:
     LabelProjection xy_;
     LabelProjection xz_;
     LabelProjection yz_;
+
+    IntBoundingBoxProperty projectionRegion_;
 
     boost::optional<LZ4SliceVolume<uint8_t>> outputVolume_;
 
