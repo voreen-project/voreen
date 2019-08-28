@@ -36,6 +36,7 @@
 #include "voreen/core/voreenapplication.h"
 #include "voreen/core/voreenmodule.h"
 #include "voreen/core/processors/processorwidgetfactory.h"
+#include "voreen/core/utils/commandqueue.h"
 
 #include "voreen/core/processors/processorwidget.h"
 #include "voreen/core/properties/eventproperty.h"
@@ -45,6 +46,7 @@
 #include "voreen/core/io/progressbar.h"
 
 #include <sstream>
+#include <thread>
 
 using tgt::vec3;
 using tgt::vec4;
@@ -155,6 +157,9 @@ void Processor::initialize() {
 }
 
 void Processor::deinitialize() {
+    // Remove all related commands.
+    VoreenApplication::app()->getCommandQueue()->removeAll(this);
+
     if (!isInitialized()) {
         LWARNING("deinitialize(): '" << getID() << "' (" << getClassName() << ") not initialized");
         return;

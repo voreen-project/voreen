@@ -27,6 +27,9 @@
 #define VRN_BACKGROUNDTHREAD_H
 
 #include "voreen/core/voreencoreapi.h"
+#include "voreen/core/voreenapplication.h"
+#include "voreen/core/utils/commandqueue.h"
+#include "voreen/core/datastructures/callback/lambdacallback.h"
 
 #include <boost/thread.hpp>
 
@@ -166,8 +169,13 @@ class ProcessorBackgroundThread : public BackgroundThread {
 
         /// invalidates the associated processor
         void invalidateProcessor() {
-            if (processor_)
-                processor_->invalidate();
+            // Invalidate the processor asynchronously before the next network update
+            if (processor_) {
+                T* proc = processor_;
+                VoreenApplication::app()->getCommandQueue()->enqueue(processor_, LambdaFunctionCallback([proc] {
+                    proc->invalidate();
+                }));
+            }
         }
 
         /// Calls threadMain. If finished: sets flag and invalidates processor. If interrupted handleInterruption() is called.
@@ -178,9 +186,7 @@ class ProcessorBackgroundThread : public BackgroundThread {
                 finished_ = true;
 
                 //invalidate processor
-                lockProcessorMutex();
                 invalidateProcessor();
-                unlockProcessorMutex();
             }
             catch (boost::thread_interrupted& /*interruption*/) {
                 //thread has been interrupted: handle the interruption
@@ -198,7 +204,7 @@ class ProcessorBackgroundThread : public BackgroundThread {
             state_.message_ = message;
             state_.progress_ = progress;
             stateMutex_.unlock();
-            processor_->invalidate();
+            invalidateProcessor();
         }
 
         T* processor_; ///< the processor starting the background thread

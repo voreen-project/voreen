@@ -184,13 +184,8 @@ void OptimizedProxyGeometry::adjustPropertiesToInput() {
 
     // interrupt background thread
     if (backgroundThread_) {
-        bool locked = isLocked();
         backgroundThread_->interrupt();
-        if (locked)
-            unlockMutex();
         delete backgroundThread_;
-        if (locked)
-            lockMutex();
         backgroundThread_ = 0;
     }
 
@@ -216,13 +211,8 @@ void OptimizedProxyGeometry::volumeDelete(const VolumeBase* source) {
     currentVolume_ = 0;
 
     if (backgroundThread_) {
-        bool locked = isLocked();
         backgroundThread_->interrupt();
-        if (locked)
-            unlockMutex();
         delete backgroundThread_;
-        if (locked)
-            lockMutex();
         backgroundThread_ = 0;
     }
 
@@ -239,13 +229,8 @@ void OptimizedProxyGeometry::volumeRepresentationDelete(const VolumeBase* source
     if (dynamic_cast<const VolumeRAM*>(rep)) {
 
         if (backgroundThread_) {
-            bool locked = isLocked();
             backgroundThread_->interrupt();
-            if (locked)
-                unlockMutex();
             delete backgroundThread_;
-            if (locked)
-                lockMutex();
             backgroundThread_ = 0;
         }
 
@@ -262,13 +247,8 @@ void OptimizedProxyGeometry::volumeDataDelete(const VolumeBase* source) {
     tgtAssert(currentVolume_ = source, "Notified by other volume than current");
 
     if (backgroundThread_) {
-        bool locked = isLocked();
         backgroundThread_->interrupt();
-        if (locked)
-            unlockMutex();
         delete backgroundThread_;
-        if (locked)
-            lockMutex();
         backgroundThread_ = 0;
     }
 
@@ -285,13 +265,8 @@ void OptimizedProxyGeometry::volumeChange(const VolumeBase* source) {
     tgtAssert(currentVolume_ = source, "Notified by other volume than current");
 
     if (backgroundThread_) {
-        bool locked = isLocked();
         backgroundThread_->interrupt();
-        if (locked)
-            unlockMutex();
         delete backgroundThread_;
-        if (locked)
-            lockMutex();
         backgroundThread_ = 0;
     }
 
@@ -336,13 +311,8 @@ void OptimizedProxyGeometry::process() {
 
 
         if (backgroundThread_) {
-            bool locked = isLocked();
             backgroundThread_->interrupt();
-            if (locked)
-                unlockMutex();
             delete backgroundThread_;
-            if (locked)
-                lockMutex();
             backgroundThread_ = 0;
         }
 
@@ -434,9 +404,7 @@ void OptimizedProxyGeometry::process() {
 
             if (waitForOptimization_.get()) {
                 // wait for background thread to finish computation
-                unlockMutex();
                 backgroundThread_->join();
-                lockMutex();
             }
             else {
                 //while background computation is not finished: use temporary bounding box geometry
@@ -550,13 +518,8 @@ void OptimizedProxyGeometry::onClipRegionChanged(){
     geometryInvalid_ = true;
 
     if (backgroundThread_) {
-        bool locked = isLocked();
         backgroundThread_->interrupt();
-        if (locked)
-            unlockMutex();
         delete backgroundThread_;
-        if (locked)
-            lockMutex();
         backgroundThread_ = 0;
     }
 }
@@ -609,13 +572,8 @@ void OptimizedProxyGeometry::adjustClipPropertiesVisibility() {
     geometryInvalid_ = true;
 
     if (backgroundThread_) {
-        bool locked = isLocked();
         backgroundThread_->interrupt();
-        if (locked)
-            unlockMutex();
         delete backgroundThread_;
-        if (locked)
-            lockMutex();
         backgroundThread_ = 0;
     }
 }
@@ -717,13 +675,8 @@ void OptimizedProxyGeometry::onThresholdChange() {
     geometryInvalid_ = true;
 
     if (backgroundThread_) {
-        bool locked = isLocked();
         backgroundThread_->interrupt();
-        if (locked)
-            unlockMutex();
         delete backgroundThread_;
-        if (locked)
-            lockMutex();
         backgroundThread_ = 0;
     }
 }
@@ -733,13 +686,8 @@ void OptimizedProxyGeometry::onModeChange() {
     geometryInvalid_ = true;
 
     if (backgroundThread_) {
-        bool locked = isLocked();
         backgroundThread_->interrupt();
-        if (locked)
-            unlockMutex();
         delete backgroundThread_;
-        if (locked)
-            lockMutex();
         backgroundThread_ = 0;
     }
 
@@ -751,13 +699,8 @@ void OptimizedProxyGeometry::onTransFuncChange() {
     geometryInvalid_ = true;
 
     if (backgroundThread_) {
-        bool locked = isLocked();
         backgroundThread_->interrupt();
-        if (locked)
-            unlockMutex();
         delete backgroundThread_;
-        if (locked)
-            lockMutex();
         backgroundThread_ = 0;
     }
 
@@ -874,13 +817,8 @@ void OptimizedProxyGeometry::onResolutionChange() {
     }
 
     if (backgroundThread_) {
-        bool locked = isLocked();
         backgroundThread_->interrupt();
-        if (locked)
-            unlockMutex();
         delete backgroundThread_;
-        if (locked)
-            lockMutex();
         backgroundThread_ = 0;
     }
 }
@@ -890,13 +828,8 @@ void OptimizedProxyGeometry::onResolutionVoxelChange() {
     structureInvalid_ = true;
 
     if (backgroundThread_) {
-        bool locked = isLocked();
         backgroundThread_->interrupt();
-        if (locked)
-            unlockMutex();
         delete backgroundThread_;
-        if (locked)
-            lockMutex();
         backgroundThread_ = 0;
     }
 }
