@@ -38,10 +38,18 @@ LabelGuard::LabelGuard(LabelProjection& labelProjection)
 {
 }
 LabelGuard::~LabelGuard() {
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     labelProjection_.labelTexture_->uploadTexture();
 }
 uint8_t& LabelGuard::at(tgt::svec3 p) {
     return labelProjection_.labels_.voxel(p);
+}
+void LabelGuard::set(size_t x, size_t y, tgt::svec2 range, uint8_t val) {
+    for(size_t z=range.x; z<=range.y; ++z) {
+        tgt::vec3 projected(x, y, z);
+        tgt::svec3 real = labelProjection_.projectedToReal() * projected;
+        labelProjection_.labels_.voxel(real) = val;
+    }
 }
 
 LabelProjection::LabelProjection()
@@ -60,26 +68,13 @@ LabelProjection::LabelProjection(tgt::svec3 dimensions, tgt::mat3 realToProjecte
 void LabelProjection::ensureTexturesPresent() {
     if(!labelTexture_) {
         labelTexture_ = tgt::Texture(labels_.getDimensions(), GL_RED, GL_RED, GL_UNSIGNED_BYTE, tgt::Texture::NEAREST, tgt::Texture::CLAMP_TO_EDGE, (GLubyte*) labels_.voxel(), false);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         labelTexture_->uploadTexture();
     }
 }
 void LabelProjection::bindLabelTexture() {
     ensureTexturesPresent();
     labelTexture_->bind();
-}
-void LabelProjection::withLabels(std::function<void(VolumeAtomic<uint8_t>&)> fun) {
-    fun(labels_);
-    ensureTexturesPresent();
-    labelTexture_->uploadTexture();
-}
-void LabelProjection::set(size_t x, size_t y, tgt::svec2 range, uint8_t val) {
-    withLabels([&] (VolumeAtomic<uint8_t>& vol) {
-        for(size_t z=range.x; z<=range.y; ++z) {
-            tgt::vec3 projected(x, y, z);
-            tgt::svec3 real = projectedToReal() * projected;
-            vol.voxel(real) = val;
-        }
-    });
 }
 void InteractiveProjectionLabeling::drawEvent(tgt::MouseEvent* e, LabelProjection& p) {
     auto button = e->button();
@@ -108,7 +103,7 @@ void InteractiveProjectionLabeling::drawEvent(tgt::MouseEvent* e, LabelProjectio
     if((button & tgt::MouseEvent::MOUSE_BUTTON_RIGHT) == button) {
         label = LabelProjection::BACKGROUND;
     }
-    p.set(labelcoords.x, labelcoords.y, projectionRange(p), label);
+    p.labels_mut().set(labelcoords.x, labelcoords.y, projectionRange(p), label);
     if(event_type == tgt::MouseEvent::MOUSERELEASEEVENT) {
         syncLabels();
     }

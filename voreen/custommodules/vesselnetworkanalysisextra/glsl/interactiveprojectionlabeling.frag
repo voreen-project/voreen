@@ -60,7 +60,8 @@ void main() {
         float texValue = texture(volumeTex_, coord).x;
         projectionValue = max(texValue, projectionValue);
 
-        projectionLabel = combineLabels(projectionLabel, int(texture(labelTex_, coord).x*255));
+        float labelValue = texture(labelTex_, coord).x*255;
+        projectionLabel = combineLabels(projectionLabel, int(labelValue));
     }
     //vec3 coord = projectedToRealMat_ * vec3(fragCoord, 0);
     //projectionLabel = int(texture(labelTex_, coord).x*255);

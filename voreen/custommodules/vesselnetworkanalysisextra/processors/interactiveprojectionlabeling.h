@@ -49,6 +49,7 @@ public:
     LabelGuard(LabelProjection& labelProjection);
     ~LabelGuard();
     uint8_t& at(tgt::svec3);
+    void set(size_t x, size_t y, tgt::svec2 range, uint8_t val);
 private:
     LabelProjection& labelProjection_;
 };
@@ -62,9 +63,6 @@ struct LabelProjection {
         SUGGESTED_FOREGROUND = 3,
         INCONSISTENT = 4,
     };
-
-    void withLabels(std::function<void(VolumeAtomic<uint8_t>&)>);
-    void set(size_t x, size_t y, tgt::svec2 range, uint8_t val);
 
     LabelProjection();
     LabelProjection(tgt::svec3 dimensions, tgt::mat3 realToProjectedMat_);
