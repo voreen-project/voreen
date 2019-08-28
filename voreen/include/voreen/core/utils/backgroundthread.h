@@ -45,89 +45,89 @@ namespace voreen {
  */
 class VRN_CORE_API BackgroundThread {
 
+/**
+ * struct for keeping track of the current state of a background thread.
+ */
+struct ThreadProgressState {
+
+    ThreadProgressState() : message_(""), progress_(0.f) {}
+
+    std::string message_;           ///< the current message (e.g. for setting it in a processor's progress bar)
+    float progress_;                ///< the current progress. should be within the range [0, 1]
+};
+
+public:
+
+    BackgroundThread() : finished_(false), running_(false) {}
+
     /**
-     * struct for keeping track of the current state of a background thread.
+     * Destructor waits for internal thread to finish (does NOT interrupt it... for interruption, interrupt()
+     * or interruptAndJoin() has to be called first).
+     *
+     * If the destructor of a derived class destroys data the internal thread is working on, join() or interruptAndJoin()
+     * have to be called within the destructor of the derived class (before destroying the data!) or (outside the destructor)
+     * before destroying the (derived) thread object, as otherwise the internal thread may still try to access the data.
      */
-    struct ThreadProgressState {
+    virtual ~BackgroundThread();
 
-        ThreadProgressState() : message_(""), progress_(0.f) {}
+    /// Call this method to start the internal thread. If it is already running, it is interrupted before starting the new computation.
+    virtual void run();
 
-        std::string message_;           ///< the current message (e.g. for setting it in a processor's progress bar)
-        float progress_;                ///< the current progress. should be within the range [0, 1]
-    };
+    /// wait for the thread to finish
+    virtual void join();
 
-    public:
+    /// sends and interrupt signal to the internal thread, but does not wait for it to finish
+    virtual void interrupt();
 
-        BackgroundThread() : finished_(false), running_(false) {}
+    /// interrupts the internal thread and waits for it to finish
+    virtual void interruptAndJoin();
 
-        /**
-         * Destructor waits for internal thread to finish (does NOT interrupt it... for interruption, interrupt()
-         * or interruptAndJoin() has to be called first).
-         *
-         * If the destructor of a derived class destroys data the internal thread is working on, join() or interruptAndJoin()
-         * have to be called within the destructor of the derived class (before destroying the data!) or (outside the destructor)
-         * before destroying the (derived) thread object, as otherwise the internal thread may still try to access the data.
-         */
-        virtual ~BackgroundThread();
+    /// indicates if the background computation is finished
+    virtual bool isFinished() { return finished_;}
 
-        /// Call this method to start the internal thread. If it is already running, it is interrupted before starting the new computation.
-        virtual void run();
+    /// indicates if the background thread is currently running
+    virtual bool isRunning() { return running_;}
 
-        /// wait for the thread to finish
-        virtual void join();
+    ThreadProgressState getProgress() const {
+        stateMutex_.lock();
+        ThreadProgressState copy = state_;
+        stateMutex_.unlock();
+        return copy;
+    }
 
-        /// sends and interrupt signal to the internal thread, but does not wait for it to finish
-        virtual void interrupt();
+protected:
 
-        /// interrupts the internal thread and waits for it to finish
-        virtual void interruptAndJoin();
+    /**
+     * This sets the current state of the background thread.
+     */
+    void setProgress(std::string message, float progress) {
+        stateMutex_.lock();
+        state_.message_ = message;
+        state_.progress_ = progress;
+        stateMutex_.unlock();
+    }
 
-        /// indicates if the background computation is finished
-        virtual bool isFinished() { return finished_;}
+    /// overwrite this method that the internal thread is supposed to execute
+    virtual void threadMain() = 0;
 
-        /// indicates if the background thread is currently running
-        virtual bool isRunning() { return running_;}
+    /// Overwrite for clean-ups. Is called in case a running background thread is interrupted (ie. interrupt()-call or interruptAndJoin()-call).
+    virtual void handleInterruption() {}
 
-        ThreadProgressState getProgress() const {
-            stateMutex_.lock();
-            ThreadProgressState copy = state_;
-            stateMutex_.unlock();
-            return copy;
-        }
+    /// Sets an interruption point. Worker thread may only be interrupted during execution of threadMain() when arriving at such a point.
+    inline void interruptionPoint() {
+        boost::this_thread::interruption_point();
+    }
 
-    protected:
+    /// calls threadMain and sets flag if finished. If interrupted handleInterruption() is called
+    virtual void execute();
 
-        /**
-         * This sets the current state of the background thread.
-         */
-        void setProgress(std::string message, float progress) {
-            stateMutex_.lock();
-            state_.message_ = message;
-            state_.progress_ = progress;
-            stateMutex_.unlock();
-        }
+    boost::thread internalThread_; ///< the actual boost::thread object
 
-        /// overwrite this method that the internal thread is supposed to execute
-        virtual void threadMain() = 0;
+    bool finished_; ///< indicates if background computation is complete
+    bool running_; ///< indicates if background computation is currently running
 
-        /// Overwrite for clean-ups. Is called in case a running background thread is interrupted (ie. interrupt()-call or interruptAndJoin()-call).
-        virtual void handleInterruption() {}
-
-        /// Sets an interruption point. Worker thread may only be interrupted during execution of threadMain() when arriving at such a point.
-        inline void interruptionPoint() {
-            boost::this_thread::interruption_point();
-        }
-
-        /// calls threadMain and sets flag if finished. If interrupted handleInterruption() is called
-        virtual void execute();
-
-        boost::thread internalThread_; ///< the actual boost::thread object
-
-        bool finished_; ///< indicates if background computation is complete
-        bool running_; ///< indicates if background computation is currently running
-
-        ThreadProgressState state_; ///< current state, can be set using setProgress() by the thread or queried by using getProgress (e.g. from the processor)
-        mutable boost::mutex stateMutex_;   ///< mutex for synchronizing setProgress() and getProgress()
+    ThreadProgressState state_; ///< current state, can be set using setProgress() by the thread or queried by using getProgress (e.g. from the processor)
+    mutable boost::mutex stateMutex_;   ///< mutex for synchronizing setProgress() and getProgress()
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -149,65 +149,51 @@ class VRN_CORE_API BackgroundThread {
 template <class T>
 class ProcessorBackgroundThread : public BackgroundThread {
 
-    public:
+public:
+    ProcessorBackgroundThread(T* p) : BackgroundThread(), processor_(p) {}
 
-        ProcessorBackgroundThread(T* p) : BackgroundThread(), processor_(p) {}
-
-    protected:
-
-        /// locks the mutex of the associated processor
-        void lockProcessorMutex() {
-            if (processor_)
-                processor_->lockMutex();
+protected:
+    /// invalidates the associated processor
+    void invalidateProcessor() {
+        // Invalidate the processor asynchronously before the next network update
+        if (processor_) {
+            T* proc = processor_;
+            VoreenApplication::app()->getCommandQueue()->enqueue(processor_, LambdaFunctionCallback([proc] {
+                proc->invalidate();
+            }));
         }
+    }
 
-        /// unlocks the mutex of the associated processor
-        void unlockProcessorMutex() {
-            if (processor_)
-                processor_->unlockMutex();
-        }
+    /// Calls threadMain. If finished: sets flag and invalidates processor. If interrupted handleInterruption() is called.
+    void execute() {
+        try {
+            threadMain();
+            running_ = false;
+            finished_ = true;
 
-        /// invalidates the associated processor
-        void invalidateProcessor() {
-            // Invalidate the processor asynchronously before the next network update
-            if (processor_) {
-                T* proc = processor_;
-                VoreenApplication::app()->getCommandQueue()->enqueue(processor_, LambdaFunctionCallback([proc] {
-                    proc->invalidate();
-                }));
-            }
-        }
-
-        /// Calls threadMain. If finished: sets flag and invalidates processor. If interrupted handleInterruption() is called.
-        void execute() {
-            try {
-                threadMain();
-                running_ = false;
-                finished_ = true;
-
-                //invalidate processor
-                invalidateProcessor();
-            }
-            catch (boost::thread_interrupted& /*interruption*/) {
-                //thread has been interrupted: handle the interruption
-                handleInterruption();
-                running_ = false;
-                return;
-            }
-        }
-
-        /**
-         * This sets the current state of the background thread and invalidates the processor afterwards.
-         */
-        void setProgressInvalidateProcessor(std::string message, float progress) {
-            stateMutex_.lock();
-            state_.message_ = message;
-            state_.progress_ = progress;
-            stateMutex_.unlock();
+            //invalidate processor
             invalidateProcessor();
         }
+        catch (boost::thread_interrupted& /*interruption*/) {
+            //thread has been interrupted: handle the interruption
+            handleInterruption();
+            running_ = false;
+            return;
+        }
+    }
 
-        T* processor_; ///< the processor starting the background thread
+    /**
+     * This sets the current state of the background thread and invalidates the processor afterwards.
+     */
+    void setProgressInvalidateProcessor(std::string message, float progress) {
+        stateMutex_.lock();
+        state_.message_ = message;
+        state_.progress_ = progress;
+        stateMutex_.unlock();
+        invalidateProcessor();
+    }
+
+    T* processor_; ///< the processor starting the background thread
 };
 
 } //namespace
