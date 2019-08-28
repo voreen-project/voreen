@@ -78,6 +78,8 @@ modules/modulelist.cmake
 modules/sample.cmake
 
 modules/base
+modules/bigdataimageprocessing
+
 modules/connexe
 modules/core
 
@@ -113,9 +115,11 @@ modules/pvm
 
 modules/python/*
 modules/python/core
+modules/python/processors
+modules/python/properties
 modules/python/qt
 modules/python/scripts
-#modules/python/veplugin
+modules/python/workspaces
 
 modules/randomwalker
 
@@ -130,6 +134,7 @@ modules/tiff/io
 
 modules/ultramicroscopydeployment
 
+modules/vesselnetworkanalysis
 modules/volumelabeling
 
 modules/zip/*
