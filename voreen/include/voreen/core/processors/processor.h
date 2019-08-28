@@ -465,9 +465,6 @@ protected:
     /// @look lockMutex()
     void unlockMutex();
 
-    /// returns true if the processor is currently locked, false otherwise
-    bool isLocked();
-
     /**
      * Registers a port.
      *
@@ -622,9 +619,6 @@ protected:
 
     /// This mutex is locked by the NetworkEvaluator before beforeProcess() and unlocked after afterProcess().
     boost::mutex mutex_;
-
-    /// for querying if a processor is locked (is updated when locking / unlocking the processor mutex)
-    bool locked_;
 
     /// Is true during the time interval between the processor deserialization and the first process() call.
     bool firstProcessAfterDeserialization_;

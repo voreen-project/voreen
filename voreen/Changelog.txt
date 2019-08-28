@@ -34,6 +34,7 @@ Voreen Changelog
       o Remove support for Visual Studio 2012 and 2013, since they don't fully support c++11 which some new features require
       o Add fill(T val) method to VolumeAtomic
       o Remove unused ProcessorBackgroundThread::{lock,unlock}ProcessorMutex
+      o Remove Processor::isLocked which should not be useful in concurrent context anyway
 
     * Bug Fixes/Minor Changes:
       o Fix crash when shader programs would fail to compile/link

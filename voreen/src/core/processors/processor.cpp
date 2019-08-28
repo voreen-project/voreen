@@ -70,7 +70,6 @@ Processor::Processor()
     , invalidationVisited_(false)
     , eventVisited_(false)
     , firstProcessAfterDeserialization_(false)
-    , locked_(false)
     , notReadyErrorMsg_(GENERIC_NOT_READY_ERROR_MSG)
 {
     //setDescriptions(); // not allowed
@@ -216,16 +215,10 @@ void Processor::clearOutports() {
 
 void Processor::lockMutex() {
     mutex_.lock();
-    locked_ = true;
 }
 
 void Processor::unlockMutex() {
     mutex_.unlock();
-    locked_ = false;
-}
-
-bool Processor::isLocked() {
-    return locked_;
 }
 
 bool Processor::isInitialized() const {
