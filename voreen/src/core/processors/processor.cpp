@@ -157,6 +157,12 @@ void Processor::initialize() {
 
 void Processor::deinitialize() {
     // Remove all related commands.
+    // Beware: This only works (reliably) for commands where the processor was passed as a
+    // Processor pointer (Processor*) as the owner of the command.
+    // In particular, the removal of commands may fail if a (specialized) processor
+    // inherits from multiple classes (e.g. class MyProcessor : OtherBaseClass, Processor)
+    // causing the specialized processor pointer and base class pointer to be different
+    // numerical values, i.e., (void*)myProcessor != (void*)(*Processor)myProcessor
     VoreenApplication::app()->getCommandQueue()->removeAll(this);
 
     if (!isInitialized()) {

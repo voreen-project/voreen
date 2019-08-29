@@ -157,7 +157,7 @@ protected:
     void invalidateProcessor() {
         // Invalidate the processor asynchronously before the next network update
         if (processor_) {
-            T* proc = processor_;
+            Processor* proc = processor_;
             VoreenApplication::app()->getCommandQueue()->enqueue(processor_, LambdaFunctionCallback([proc] {
                 proc->invalidate();
             }));
