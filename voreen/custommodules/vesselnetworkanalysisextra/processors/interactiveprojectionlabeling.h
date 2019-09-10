@@ -42,6 +42,35 @@
 
 namespace voreen {
 
+struct LabelProjection;
+struct LabelGuard {
+public:
+    LabelGuard(LabelProjection& labelProjection);
+    ~LabelGuard();
+    uint8_t& at(tgt::svec3);
+    void set(size_t x, size_t y, tgt::svec2 range, uint8_t val);
+private:
+    LabelProjection& labelProjection_;
+};
+
+struct LabelProjection {
+    LabelProjection();
+
+    const VolumeAtomic<uint8_t>& projection() const {
+        return projection_;
+    }
+    LabelGuard projection_mut() {
+        return LabelGuard { *this };
+    }
+    void bindTexture();
+private:
+    friend struct LabelGuard;
+    void ensureTexturesPresent();
+
+    VolumeAtomic<uint8_t> projection_;
+    boost::optional<tgt::Texture> projectionTexture_;
+};
+
 class InteractiveProjectionLabeling : public RenderProcessor {
 public:
     InteractiveProjectionLabeling();
@@ -85,6 +114,7 @@ private:
     static const std::string loggerCat_;
 
     tgt::Shader* copyShader_;
+    ShaderProperty projectionShader_;
 
     std::vector<tgt::vec2> displayLine_;
 };

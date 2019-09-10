@@ -35,6 +35,35 @@ namespace voreen {
 
 const std::string InteractiveProjectionLabeling::loggerCat_("voreen.vesselnetworkanalysisextra.interactiveprojectionlabeling");
 
+LabelGuard::LabelGuard(LabelProjection& labelProjection)
+    : labelProjection_(labelProjection)
+{
+}
+LabelGuard::~LabelGuard() {
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    labelProjection_.projectionTexture_->uploadTexture();
+}
+uint8_t& LabelGuard::at(tgt::svec3 p) {
+    return labelProjection_.projection_.voxel(p); //TODO
+}
+
+LabelProjection::LabelProjection() //TODO
+    : projection_(tgt::svec3(0))
+    , projectionTexture_(boost::none)
+{
+}
+void LabelProjection::ensureTexturesPresent() {
+    if(!projectionTexture_) {
+        projectionTexture_ = tgt::Texture(projection_.getDimensions(), GL_RED, GL_RED, GL_UNSIGNED_BYTE, tgt::Texture::NEAREST, tgt::Texture::CLAMP_TO_EDGE, (GLubyte*) projection_.voxel(), false);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        projectionTexture_->uploadTexture();
+    }
+}
+void LabelProjection::bindTexture() {
+    ensureTexturesPresent();
+    projectionTexture_->bind();
+}
+
 template<class Vec>
 struct PolyLinePoint {
     Vec pos_;
@@ -153,6 +182,7 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , lhp_(Port::INPORT, "interactiveprojectionlabeling.lhp", "Last hit points", false)
     , outputVolume_(boost::none)
     , copyShader_(nullptr)
+    , projectionShader_("shader", "Shader", "interactiveprojectionlabeling.frag", "oit_passthrough.vert")
     , displayLine_()
     , interpolationValue_("interpolationvalue", "interp", 0.0, 0.0, 1.0)
 {
@@ -166,6 +196,7 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
 
     overlayOutput_.onSizeReceiveChange<InteractiveProjectionLabeling>(this, &InteractiveProjectionLabeling::updateSizes);
 
+    addProperty(projectionShader_);
     addProperty(interpolationValue_);
 }
 
@@ -237,9 +268,41 @@ void InteractiveProjectionLabeling::renderOverlay() {
     overlayOutput_.deactivateTarget();
 }
 void InteractiveProjectionLabeling::renderProjection() {
+
+    if(!inport_.hasData()) {
+        return;
+    }
+    const auto& vol = *inport_.getData();
+
     projectionOutput_.activateTarget();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    tgt::TextureUnit unit;
+    unit.activate();
+    //p.bindLabelTexture();
+
+    auto program = projectionShader_.getShader();
+    if(!program || !program->isLinked()) {
+        LGL_ERROR;
+        LERROR("Shader not compiled!");
+        return;
+    }
+    program->activate();
+    //program->setUniform("dimensions_", tgt::ivec3(vol.getDimensions()));
+    //program->setUniform("realToProjectedMat_", p.realToProjected());
+    //program->setUniform("projectedToRealMat_", p.projectedToReal());
+    //program->setUniform("projectionRange_", projectionRange);
+    //program->setUniform("volumeTex_", volUnit.getUnitNumber());
+    //program->setUniform("labelTex_", labelUnit.getUnitNumber());
+
+    glDepthFunc(GL_ALWAYS);
+    renderQuad();
+    glDepthFunc(GL_LESS);
+
+    program->deactivate();
     projectionOutput_.deactivateTarget();
+    glActiveTexture(GL_TEXTURE0);
+    LGL_ERROR;
 }
 
 void InteractiveProjectionLabeling::withOutputVolume(std::function<void(LZ4SliceVolume<uint8_t>&)> func) {
@@ -254,6 +317,17 @@ InteractiveProjectionLabeling::~InteractiveProjectionLabeling() {
 }
 
 void InteractiveProjectionLabeling::process() {
+    if (getInvalidationLevel() == INVALID_PROGRAM) {
+        //std::string header;
+        //header += "#define UNLABELED " + std::to_string(LabelProjection::UNLABELED) + "\n";
+        //header += "#define BACKGROUND " + std::to_string(LabelProjection::BACKGROUND) + "\n";
+        //header += "#define FOREGROUND " + std::to_string(LabelProjection::FOREGROUND) + "\n";
+        //header += "#define SUGGESTED_FOREGROUND " + std::to_string(LabelProjection::SUGGESTED_FOREGROUND) + "\n";
+        //header += "#define INCONSISTENT " + std::to_string(LabelProjection::INCONSISTENT) + "\n";
+        //projectionShader_.setHeader(header);
+        projectionShader_.rebuild();
+    }
+
     renderOverlay();
     renderProjection();
     // initialize shader
