@@ -149,6 +149,8 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , overlayInput_(Port::INPORT, "interactiveprojectionlabeling.overlayinput", "Overlay Input", false, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_ORIGIN)
     , overlayOutput_(Port::OUTPORT, "interactiveprojectionlabeling.overlayoutput", "Overlay (3D)", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
     , projectionOutput_(Port::OUTPORT, "interactiveprojectionlabeling.projectionoutput", "Projection (2D)", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
+    , fhp_(Port::INPORT, "interactiveprojectionlabeling.fhp", "First hit points", false)
+    , lhp_(Port::INPORT, "interactiveprojectionlabeling.lhp", "Last hit points", false)
     , outputVolume_(boost::none)
     , copyShader_(nullptr)
     , displayLine_()
@@ -159,6 +161,8 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     addPort(overlayInput_);
     addPort(overlayOutput_);
     addPort(projectionOutput_);
+    addPort(fhp_);
+    addPort(lhp_);
 
     overlayOutput_.onSizeReceiveChange<InteractiveProjectionLabeling>(this, &InteractiveProjectionLabeling::updateSizes);
 

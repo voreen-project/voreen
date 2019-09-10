@@ -75,6 +75,9 @@ private:
     RenderPort overlayOutput_;
     RenderPort projectionOutput_;
 
+    RenderPort fhp_;
+    RenderPort lhp_;
+
     boost::optional<LZ4SliceVolume<uint8_t>> outputVolume_;
 
     FloatProperty interpolationValue_;
