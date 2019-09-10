@@ -27,100 +27,114 @@
 #include "voreen/core/datastructures/volume/volumeram.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
 #include <iostream>
+#include "tgt/textureunit.h"
 #include "tgt/init.h"
+#include "tgt/immediatemode/immediatemode.h"
 
 namespace voreen {
 
 const std::string InteractiveProjectionLabeling::loggerCat_("voreen.vesselnetworkanalysisextra.interactiveprojectionlabeling");
 
-LabelGuard::LabelGuard(LabelProjection& labelProjection)
-    : labelProjection_(labelProjection)
-{
-}
-LabelGuard::~LabelGuard() {
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    labelProjection_.labelTexture_->uploadTexture();
-}
-uint8_t& LabelGuard::at(tgt::svec3 p) {
-    return labelProjection_.labels_.voxel(p);
-}
-void LabelGuard::set(size_t x, size_t y, tgt::svec2 range, uint8_t val) {
-    for(size_t z=range.x; z<=range.y; ++z) {
-        tgt::vec3 projected(x, y, z);
-        tgt::svec3 real = labelProjection_.projectedToReal() * projected;
-        labelProjection_.labels_.voxel(real) = val;
+template<class Vec>
+struct PolyLinePoint {
+    Vec pos_;
+    float d_;
+};
+template<class Vec>
+struct PolyLine {
+    PolyLine(std::vector<Vec>& points)
+        : points_()
+    {
+        tgtAssert(!points.empty(), "Points must not be empty!")
+        float len = 0.0;
+        for(int i=0; i<((int)points.size())-1; ++i) {
+            len += tgt::distance(points[i], points[i+1]);
+        }
+        float norm_len = 0.0;
+        for(int i=0; i<((int)points.size())-1; ++i) {
+            points_.push_back( PolyLinePoint<Vec> {
+                    points[i],
+                    norm_len
+                    });
+            norm_len += tgt::distance(points[i], points[i+1])/len;
+        }
+        points_.push_back( PolyLinePoint<Vec> {
+                points.back(),
+                norm_len
+                });
     }
-}
 
-LabelProjection::LabelProjection()
-    : LabelProjection(tgt::svec3(2), tgt::mat3::identity)
-{
-}
-LabelProjection::LabelProjection(tgt::svec3 dimensions, tgt::mat3 realToProjectedMat)
-    : labels_(dimensions)
-    , labelTexture_(boost::none)
-    , realToProjectedMat_(realToProjectedMat)
-{
-    for(size_t i=0; i < tgt::hmul(labels_.getDimensions()); ++i) {
-        labels_.voxel(i) = UNLABELED;
+    std::vector<PolyLinePoint<Vec>> points_;
+
+    tgt::vec2 interpolate(float d) {
+        tgtAssert(0.0 <= d && d <= 1.0, "Invalid interpolation parameter");
+        if(points_.size() == 1) {
+            return points_[0].pos_;
+        }
+        int i;
+        for(i=0; i<((int)points_.size())-1; ++i) {
+            if(d <= points_[i+1].d_) {
+                break;
+            }
+        }
+        auto& p1 = points_[i];
+        auto& p2 = points_[i+1];
+        float alpha = (d - p1.d_) / (p2.d_- p1.d_);
+        return p1.pos_ * (1-alpha) + alpha * p2.pos_;
     }
+};
+
+void InteractiveProjectionLabeling::projectionEvent(tgt::MouseEvent* e) {
 }
-void LabelProjection::ensureTexturesPresent() {
-    if(!labelTexture_) {
-        labelTexture_ = tgt::Texture(labels_.getDimensions(), GL_RED, GL_RED, GL_UNSIGNED_BYTE, tgt::Texture::NEAREST, tgt::Texture::CLAMP_TO_EDGE, (GLubyte*) labels_.voxel(), false);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        labelTexture_->uploadTexture();
-    }
-}
-void LabelProjection::bindLabelTexture() {
-    ensureTexturesPresent();
-    labelTexture_->bind();
-}
-void InteractiveProjectionLabeling::drawEvent(tgt::MouseEvent* e, LabelProjection& p) {
+void InteractiveProjectionLabeling::overlayEvent(tgt::MouseEvent* e) {
     auto button = e->button();
     if(e->modifiers() != tgt::Event::CTRL
-            || ((button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_MIDDLE | tgt::MouseEvent::MOUSE_BUTTON_RIGHT)) == 0))
+            || ((button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT)) == 0))
              {
         return;
     }
-    auto event_type = e->getEventType();
     tgt::ivec2 coords = e->coord();
     tgt::ivec2 viewport = e->viewport();
 
-    tgt::vec3 projectionDimensions = p.realToProjected() * p.labels().getDimensions();
-
     coords.y = viewport.y - coords.y - 1;
-    auto norm_coords = tgt::vec2(coords)/tgt::vec2(viewport);
-    tgt::svec2 labelcoords = tgt::floor(norm_coords * projectionDimensions.xy());
+    auto mouse = tgt::vec2(coords)/tgt::vec2(viewport);
 
-    uint8_t label=LabelProjection::UNLABELED;
-    if((button & tgt::MouseEvent::MOUSE_BUTTON_LEFT) == button) {
-        label = LabelProjection::FOREGROUND;
+    boost::optional<int> nearest = boost::none;
+    int i = 0;
+    const float MOUSE_DRAG_DIST = 0.02;
+    for(auto& p : displayLine_) {
+        float dist = tgt::distance(p, mouse);
+        if (dist < MOUSE_DRAG_DIST && (!nearest || dist < tgt::distance(displayLine_[i], mouse))) {
+            nearest = i;
+        }
+        ++i;
     }
-    if((button & tgt::MouseEvent::MOUSE_BUTTON_MIDDLE) == button) {
-        label = LabelProjection::UNLABELED;
+    if(nearest) {
+        if(e->action() == tgt::MouseEvent::PRESSED && button == tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
+            displayLine_.erase(displayLine_.begin() + *nearest);
+        } else {
+            displayLine_[*nearest] = mouse;
+        }
+    } else {
+        if(e->action() == tgt::MouseEvent::PRESSED && button == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
+            displayLine_.push_back(mouse);
+        }
     }
-    if((button & tgt::MouseEvent::MOUSE_BUTTON_RIGHT) == button) {
-        label = LabelProjection::BACKGROUND;
-    }
-    p.labels_mut().set(labelcoords.x, labelcoords.y, projectionRange(p), label);
-    if(event_type == tgt::MouseEvent::MOUSERELEASEEVENT) {
-        syncLabels();
-    }
+
     invalidate();
     e->accept();
 }
 
 void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
     if(tgt::MouseEvent* me = dynamic_cast<tgt::MouseEvent*>(e)) {
-        if(port == &xyProjectionOutport_) {
-            drawEvent(me, xy_);
+        if(port == &overlayOutput_) {
+            overlayEvent(me);
         }
-        else if(port == &xzProjectionOutport_) {
-            drawEvent(me, xz_);
-        }
-        else if(port == &yzProjectionOutport_) {
-            drawEvent(me, yz_);
+        else if(port == &projectionOutput_) {
+            projectionEvent(me);
+
+            // Definitely consume events for this port.
+            me->accept();
         }
     }
     if(!e->isAccepted()) {
@@ -132,88 +146,113 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     : RenderProcessor()
     , inport_(Port::INPORT, "interactiveprojectionlabeling.inport", "Volume Input")
     , labelVolume_(Port::OUTPORT, "interactiveprojectionlabeling.labelVolume", "Labels Output")
-    , xyProjectionOutport_(Port::OUTPORT, "interactiveprojectionlabeling.xyProjectionOutport", "Projection (XY)", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
-    , xzProjectionOutport_(Port::OUTPORT, "interactiveprojectionlabeling.xzProjectionOutport", "Projection (XZ)", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
-    , yzProjectionOutport_(Port::OUTPORT, "interactiveprojectionlabeling.yzProjectionOutport", "Projection (YZ)", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
-    , shader_("shader", "Shader", "interactiveprojectionlabeling.frag", "oit_passthrough.vert")
-    , projectionRegion_("projectionRegion", "Projection Region")
-    , xy_()
-    , xz_()
-    , yz_()
+    , overlayInput_(Port::INPORT, "interactiveprojectionlabeling.overlayinput", "Overlay Input", false, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_ORIGIN)
+    , overlayOutput_(Port::OUTPORT, "interactiveprojectionlabeling.overlayoutput", "Overlay (3D)", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
+    , projectionOutput_(Port::OUTPORT, "interactiveprojectionlabeling.projectionoutput", "Projection (2D)", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
     , outputVolume_(boost::none)
+    , copyShader_(nullptr)
+    , displayLine_()
+    , interpolationValue_("interpolationvalue", "interp", 0.0, 0.0, 1.0)
 {
     addPort(inport_);
     addPort(labelVolume_);
-    addPort(xyProjectionOutport_);
-    addPort(xzProjectionOutport_);
-    addPort(yzProjectionOutport_);
+    addPort(overlayInput_);
+    addPort(overlayOutput_);
+    addPort(projectionOutput_);
 
-    addProperty(shader_);
-    addProperty(projectionRegion_);
+    overlayOutput_.onSizeReceiveChange<InteractiveProjectionLabeling>(this, &InteractiveProjectionLabeling::updateSizes);
+
+    addProperty(interpolationValue_);
 }
 
-void InteractiveProjectionLabeling::renderToPort(RenderPort& port, LabelProjection& p) {
-    if(!inport_.hasData()) {
-        return;
-    }
-    const auto& vol = *inport_.getData();
+void InteractiveProjectionLabeling::updateSizes() {
+    overlayInput_.requestSize(overlayOutput_.getReceivedSize());
+}
 
-    port.activateTarget();
+
+void InteractiveProjectionLabeling::initialize() {
+    RenderProcessor::initialize();
+
+    copyShader_ = ShdrMgr.loadSeparate("passthrough.vert", "copyimage.frag", RenderProcessor::generateHeader(), false);
+}
+
+void InteractiveProjectionLabeling::deinitialize() {
+    ShdrMgr.dispose(copyShader_);
+    copyShader_ = nullptr;
+
+    RenderProcessor::deinitialize();
+}
+void InteractiveProjectionLabeling::renderOverlay() {
+    overlayOutput_.activateTarget();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    tgtAssert(copyShader_, "Shader missing");
 
-    tgt::TextureUnit volUnit;
-    volUnit.activate();
-    auto volgl = vol.getRepresentation<VolumeGL>();
-    auto voltex = volgl->getTexture();
-    voltex->bind();
+    tgt::TextureUnit imageUnit, imageUnitDepth;
+    overlayInput_.bindTextures(imageUnit.getEnum(), imageUnitDepth.getEnum());
 
-    tgt::TextureUnit labelUnit;
-    labelUnit.activate();
-    p.bindLabelTexture();
-
-    auto program = shader_.getShader();
-    if(!program || !program->isLinked()) {
-        LGL_ERROR;
-        LERROR("Shader not compiled!");
-        return;
-    }
-    tgt::ivec2 projectionRange(this->projectionRange(p));
-    program->activate();
-    program->setUniform("dimensions_", tgt::ivec3(vol.getDimensions()));
-    program->setUniform("realToProjectedMat_", p.realToProjected());
-    program->setUniform("projectedToRealMat_", p.projectedToReal());
-    program->setUniform("projectionRange_", projectionRange);
-    program->setUniform("volumeTex_", volUnit.getUnitNumber());
-    program->setUniform("labelTex_", labelUnit.getUnitNumber());
-
-    glDepthFunc(GL_ALWAYS);
+    copyShader_->activate();
+    setGlobalShaderParameters(copyShader_);
+    overlayInput_.setTextureParameters(copyShader_, "texParams_");
+    copyShader_->setUniform("colorTex_", imageUnit.getUnitNumber());
+    copyShader_->setUniform("depthTex_", imageUnitDepth.getUnitNumber());
     renderQuad();
-    glDepthFunc(GL_LESS);
-
-    program->deactivate();
-    port.deactivateTarget();
-    glActiveTexture(GL_TEXTURE0);
+    copyShader_->deactivate();
     LGL_ERROR;
+
+    MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
+    MatStack.pushMatrix();
+    MatStack.ortho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
+
+    IMode.color(tgt::vec3(1.0, 1.0, 0.0));
+    IMode.begin(tgt::ImmediateMode::LINE_STRIP);
+    for(auto& p : displayLine_) {
+        IMode.vertex(p);
+    }
+    IMode.end();
+
+    glPointSize(5.0);
+    IMode.begin(tgt::ImmediateMode::POINTS);
+    for(auto& p : displayLine_) {
+        IMode.vertex(p);
+    }
+    IMode.end();
+
+    IMode.color(tgt::vec3(1.0, 0.0, 0.0));
+    if(!displayLine_.empty()) {
+        IMode.begin(tgt::ImmediateMode::POINTS);
+        IMode.vertex(PolyLine<tgt::vec2>(displayLine_).interpolate(interpolationValue_.get()));
+        IMode.end();
+    }
+
+    MatStack.popMatrix();
+
+    MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
+    IMode.color(tgt::vec4(1.0));
+    glPointSize(1.0);
+
+    overlayOutput_.deactivateTarget();
+}
+void InteractiveProjectionLabeling::renderProjection() {
+    projectionOutput_.activateTarget();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    projectionOutput_.deactivateTarget();
+}
+
+void InteractiveProjectionLabeling::withOutputVolume(std::function<void(LZ4SliceVolume<uint8_t>&)> func) {
+    if(outputVolume_) {
+        labelVolume_.setData(nullptr);
+        func(*outputVolume_);
+        labelVolume_.setData(LZ4SliceVolume<uint8_t>::open(outputVolume_->getFilePath()).toVolume().release());
+    }
 }
 
 InteractiveProjectionLabeling::~InteractiveProjectionLabeling() {
 }
 
 void InteractiveProjectionLabeling::process() {
+    renderOverlay();
+    renderProjection();
     // initialize shader
-    if (getInvalidationLevel() == INVALID_PROGRAM) {
-        std::string header;
-        header += "#define UNLABELED " + std::to_string(LabelProjection::UNLABELED) + "\n";
-        header += "#define BACKGROUND " + std::to_string(LabelProjection::BACKGROUND) + "\n";
-        header += "#define FOREGROUND " + std::to_string(LabelProjection::FOREGROUND) + "\n";
-        header += "#define SUGGESTED_FOREGROUND " + std::to_string(LabelProjection::SUGGESTED_FOREGROUND) + "\n";
-        header += "#define INCONSISTENT " + std::to_string(LabelProjection::INCONSISTENT) + "\n";
-        shader_.setHeader(header);
-        shader_.rebuild();
-    }
-    renderToPort(xyProjectionOutport_, xy_);
-    renderToPort(xzProjectionOutport_, xz_);
-    renderToPort(yzProjectionOutport_, yz_);
 
     //auto* vol = new VolumeAtomic<uint8_t>(xz_.labels().getDimensions());
     //for(int i=0; i<tgt::hmul(xz_.labels().getDimensions()); ++i) {
@@ -222,56 +261,6 @@ void InteractiveProjectionLabeling::process() {
     //labelVolume_.setData(new Volume(vol, inport_.getData()));
 }
 
-tgt::svec2 InteractiveProjectionLabeling::projectionRange(LabelProjection& p) {
-    return tgt::svec2(
-            (p.realToProjected() * projectionRegion_.get().getLLF()).z,
-            (p.realToProjected() * projectionRegion_.get().getURB()).z
-            );
-}
-void InteractiveProjectionLabeling::syncLabels() {
-    if(!inport_.hasData()) {
-        return;
-    }
-    const auto& vol = *inport_.getData();
-    auto dim = vol.getDimensions();
-
-    auto xy = xy_.labels_mut();
-    auto xz = xz_.labels_mut();
-    auto yz = yz_.labels_mut();
-
-    auto mark_suggested = [] (tgt::svec3 p, LabelGuard& m, LabelGuard& o1, LabelGuard& o2) {
-        if(m.at(p) == LabelProjection::UNLABELED && o1.at(p) == LabelProjection::FOREGROUND && o2.at(p) == LabelProjection::FOREGROUND) {
-            m.at(p) = LabelProjection::SUGGESTED_FOREGROUND;
-        }
-    };
-
-    withOutputVolume([&] (LZ4SliceVolume<uint8_t>& vol) {
-        for(size_t z=0; z < dim.z; ++z) {
-            auto slice = vol.getWriteableSlice(z);
-            for(size_t y=0; y < dim.y; ++y) {
-                for(size_t x=0; x < dim.x; ++x) {
-                    tgt::svec3 p(x,y,z);
-                    mark_suggested(p, xy, yz, xz);
-                    mark_suggested(p, yz, xy, xz);
-                    mark_suggested(p, xz, yz, xy);
-
-                    if(xy.at(p) == LabelProjection::FOREGROUND && yz.at(p) == LabelProjection::FOREGROUND && xz.at(p) == LabelProjection::FOREGROUND) {
-                        slice->voxel(p.x, p.y, 0) = LabelProjection::FOREGROUND;
-                    } else if(xy.at(p) == LabelProjection::BACKGROUND || yz.at(p) == LabelProjection::BACKGROUND || xz.at(p) == LabelProjection::BACKGROUND) {
-                        slice->voxel(p.x, p.y, 0) = LabelProjection::BACKGROUND;
-                    }
-                }
-            }
-        }
-    });
-}
-void InteractiveProjectionLabeling::withOutputVolume(std::function<void(LZ4SliceVolume<uint8_t>&)> func) {
-    if(outputVolume_) {
-        labelVolume_.setData(nullptr);
-        func(*outputVolume_);
-        labelVolume_.setData(LZ4SliceVolume<uint8_t>::open(outputVolume_->getFilePath()).toVolume().release());
-    }
-}
 
 void InteractiveProjectionLabeling::adjustPropertiesToInput() {
     labelVolume_.setData(nullptr);
@@ -285,15 +274,9 @@ void InteractiveProjectionLabeling::adjustPropertiesToInput() {
             VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION),
             LZ4SliceVolumeMetadata::fromVolume(vol).withRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint8_t>())
             );
-    builder.fill(LabelProjection::UNLABELED);
+    builder.fill(0);
     outputVolume_ = std::move(builder).finalize();
     withOutputVolume([&] (LZ4SliceVolume<uint8_t>& vol) { });
-
-    projectionRegion_.setMaxValue(dim - tgt::svec3(1));
-
-    xy_ = LabelProjection(dim, tgt::mat3(1,0,0, 0,1,0, 0,0,1));
-    xz_ = LabelProjection(dim, tgt::mat3(1,0,0, 0,0,1, 0,1,0));
-    yz_ = LabelProjection(dim, tgt::mat3(0,1,0, 0,0,1, 1,0,0));
 }
 VoreenSerializableObject* InteractiveProjectionLabeling::create() const {
     return new InteractiveProjectionLabeling();

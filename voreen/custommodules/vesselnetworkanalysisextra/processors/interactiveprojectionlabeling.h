@@ -42,57 +42,6 @@
 
 namespace voreen {
 
-struct LabelProjection;
-
-struct LabelGuard {
-public:
-    LabelGuard(LabelProjection& labelProjection);
-    ~LabelGuard();
-    uint8_t& at(tgt::svec3);
-    void set(size_t x, size_t y, tgt::svec2 range, uint8_t val);
-private:
-    LabelProjection& labelProjection_;
-};
-
-struct LabelProjection {
-
-    enum LabelVoxelState {
-        UNLABELED = 0,
-        FOREGROUND = 1,
-        BACKGROUND = 2,
-        SUGGESTED_FOREGROUND = 3,
-        INCONSISTENT = 4,
-    };
-
-    LabelProjection();
-    LabelProjection(tgt::svec3 dimensions, tgt::mat3 realToProjectedMat_);
-
-    const VolumeAtomic<uint8_t>& labels() const {
-        return labels_;
-    }
-    LabelGuard labels_mut() {
-        return LabelGuard { *this };
-    }
-    void bindProjectionTexture();
-    void bindLabelTexture();
-
-    tgt::mat3 realToProjected() const {
-        return realToProjectedMat_;
-    }
-    tgt::mat3 projectedToReal() const {
-        return tgt::transpose(realToProjectedMat_);
-    }
-
-
-private:
-    friend struct LabelGuard;
-    void ensureTexturesPresent();
-
-    VolumeAtomic<uint8_t> labels_;
-    boost::optional<tgt::Texture> labelTexture_;
-    tgt::mat3 realToProjectedMat_;
-};
-
 class InteractiveProjectionLabeling : public RenderProcessor {
 public:
     InteractiveProjectionLabeling();
@@ -107,34 +56,34 @@ public:
     virtual void process();
     virtual void adjustPropertiesToInput();
     virtual void onPortEvent(tgt::Event* e, Port* port);
+    virtual void initialize();
+    virtual void deinitialize();
 
 
 private:
-    tgt::svec2 projectionRange(LabelProjection& p);
-    void drawEvent(tgt::MouseEvent* e, LabelProjection& p);
-    void renderToPort(RenderPort& port, LabelProjection& p);
-    void syncLabels();
+    void updateSizes();
+    void renderOverlay();
+    void renderProjection();
     void withOutputVolume(std::function<void(LZ4SliceVolume<uint8_t>&)>);
+
+    void projectionEvent(tgt::MouseEvent* e);
+    void overlayEvent(tgt::MouseEvent* e);
 
     VolumePort inport_;
     VolumePort labelVolume_;
-    RenderPort xyProjectionOutport_;
-    RenderPort xzProjectionOutport_;
-    RenderPort yzProjectionOutport_;
-
-    LabelProjection xy_;
-    LabelProjection xz_;
-    LabelProjection yz_;
-
-    IntBoundingBoxProperty projectionRegion_;
+    RenderPort overlayInput_;
+    RenderPort overlayOutput_;
+    RenderPort projectionOutput_;
 
     boost::optional<LZ4SliceVolume<uint8_t>> outputVolume_;
 
-    EventProperty<InteractiveProjectionLabeling> mouseDrawEvent_;
-
-    ShaderProperty shader_;
+    FloatProperty interpolationValue_;
 
     static const std::string loggerCat_;
+
+    tgt::Shader* copyShader_;
+
+    std::vector<tgt::vec2> displayLine_;
 };
 
 } // namespace voreen
