@@ -6,6 +6,11 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="InteractiveProjectionLabeling" ref="ref1" />
+                    </values>
+                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="-488.690338135" y="17.123920441" />
                 </MetaItem>
@@ -416,7 +421,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref13">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-257" y="700" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="183" y="406" width="823" height="606" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="120" y="542" width="823" height="606" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="-1678" y="3" />
@@ -433,7 +438,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="183" y="406" />
+                            <value x="120" y="542" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="823" y="606" />
@@ -522,9 +527,9 @@
                             <urls protocol="hdf5">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../sciebo/lymphgefaessdaten/segmentation_control.h5" />
-                                        <item value="../../../home/dominik/sciebo/lymphgefaessdaten/segmentation_control.h5" />
-                                        <item value="/home/dominik/sciebo/lymphgefaessdaten/segmentation_control.h5" />
+                                        <item value="../../../../../../nosnapshot/sciebo/lymphgefaessdaten/segmentation_control.h5" />
+                                        <item value="../../../nosnapshot/sciebo/lymphgefaessdaten/segmentation_control.h5" />
+                                        <item value="/data/dominik/nosnapshot/sciebo/lymphgefaessdaten/segmentation_control.h5" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -742,6 +747,15 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="interpolationvalue" name="interpolationvalue" value="0" />
+                        <Property mapKey="shader" name="shader">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="250" y="602" width="700" height="700" />
+                            </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="interactiveprojectionlabeling.frag" modified="false" />
+                            </components>
+                        </Property>
                     </Properties>
                     <Inports>
                         <Port name="interactiveprojectionlabeling.fhp" direction="1" portID="interactiveprojectionlabeling.fhp" guiName="First hit points" allowMultipleConnections="false" invalidationLevel="1">

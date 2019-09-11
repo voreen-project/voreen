@@ -47,16 +47,15 @@ struct LabelGuard {
 public:
     LabelGuard(LabelProjection& labelProjection);
     ~LabelGuard();
-    uint8_t& at(tgt::svec3);
-    void set(size_t x, size_t y, tgt::svec2 range, uint8_t val);
+    float& at(tgt::svec2);
 private:
     LabelProjection& labelProjection_;
 };
 
 struct LabelProjection {
-    LabelProjection();
+    LabelProjection(tgt::svec2 dimensions);
 
-    const VolumeAtomic<uint8_t>& projection() const {
+    const VolumeAtomic<float>& projection() const {
         return projection_;
     }
     LabelGuard projection_mut() {
@@ -67,7 +66,7 @@ private:
     friend struct LabelGuard;
     void ensureTexturesPresent();
 
-    VolumeAtomic<uint8_t> projection_;
+    VolumeAtomic<float> projection_;
     boost::optional<tgt::Texture> projectionTexture_;
 };
 
@@ -94,6 +93,7 @@ private:
     void renderOverlay();
     void renderProjection();
     void withOutputVolume(std::function<void(LZ4SliceVolume<uint8_t>&)>);
+    void updateProjection();
 
     void projectionEvent(tgt::MouseEvent* e);
     void overlayEvent(tgt::MouseEvent* e);
@@ -116,6 +116,7 @@ private:
     tgt::Shader* copyShader_;
     ShaderProperty projectionShader_;
 
+    boost::optional<LabelProjection> projection_;
     std::vector<tgt::vec2> displayLine_;
 };
 
