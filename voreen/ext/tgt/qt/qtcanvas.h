@@ -86,6 +86,7 @@ public:
 
     virtual void swap();
     virtual void toggleFullScreen();
+    virtual ivec2 getPhyicalSize() const;
 
 protected:
 

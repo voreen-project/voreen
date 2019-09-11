@@ -99,7 +99,9 @@ void CanvasRenderer::process() {
 
     tgt::GLContextStateGuard guard(canvas_);
 
-    glViewport(0, 0, canvas_->getSize().x, canvas_->getSize().y);
+    tgt::ivec2 screenSize = canvas_->getPhyicalSize();
+
+    glViewport(0, 0, screenSize.x, screenSize.y);
 
     // render inport to image, if renderToImage flag has been set
     if (renderToImage_) {
@@ -134,8 +136,8 @@ void CanvasRenderer::process() {
         // manually pass the viewport dimensions to the shader,
         // since setGlobalShaderParameters() expects a render outport, which we do not have
         shader_->setIgnoreUniformLocationError(true);
-        shader_->setUniform("screenDim_", tgt::vec2(canvas_->getSize()));
-        shader_->setUniform("screenDimRCP_", 1.f / tgt::vec2(canvas_->getSize()));
+        shader_->setUniform("screenDim_", tgt::vec2(screenSize));
+        shader_->setUniform("screenDimRCP_", 1.f / tgt::vec2(screenSize));
         shader_->setUniform("useTexcoords", false);
         // pass texture parameters to the shader
         shader_->setUniform("colorTex_", 0);
@@ -158,8 +160,8 @@ void CanvasRenderer::process() {
             errorTex_->enable();
             // set texture parameter manually
             shader_->setIgnoreUniformLocationError(true);
-            shader_->setUniform("texParams_.dimensions_", tgt::vec2(getCanvas()->getSize()));
-            shader_->setUniform("texParams_.dimensionsRCP_", tgt::vec2(1.f) / tgt::vec2(getCanvas()->getSize()));
+            shader_->setUniform("texParams_.dimensions_", tgt::vec2(screenSize));
+            shader_->setUniform("texParams_.dimensionsRCP_", tgt::vec2(1.f) / tgt::vec2(screenSize));
             shader_->setUniform("texParams_.matrix_", tgt::mat4::identity);
             shader_->setIgnoreUniformLocationError(false);
 

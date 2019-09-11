@@ -102,6 +102,11 @@ void QtCanvas::resizeGL(int w, int h) {
     sizeChanged(ivec2(w, h));
 }
 
+ivec2 QtCanvas::getPhyicalSize() const {
+    float ratio = QPaintDevice::devicePixelRatioF();
+    return tgt::floor(tgt::vec2(getSize()) * ratio);
+}
+
 void QtCanvas::repaint() {
     // Trigger paint. Context is made active in super class.
     paint();
