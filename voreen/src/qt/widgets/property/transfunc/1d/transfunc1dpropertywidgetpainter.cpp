@@ -80,7 +80,8 @@ void TransFunc1DPropertyWidgetPainter::initialize() {
     tgt::Painter::initialize();
 }
 
-void TransFunc1DPropertyWidgetPainter::sizeChanged(const tgt::ivec2& size) {
+void TransFunc1DPropertyWidgetPainter::sizeChanged(const tgt::ivec2& _size) {
+    tgt::ivec2 size = canvas_->getPhysicalSize();
     domainSlider_->setCanvasSize(size);
     gammaSlider_->setCanvasSize(size);
 
@@ -97,7 +98,7 @@ void TransFunc1DPropertyWidgetPainter::sizeChanged(const tgt::ivec2& size) {
 void TransFunc1DPropertyWidgetPainter::paint() {
     tgtAssert(initialized_, "painter not initialized!");
 
-    tgt::ivec2 size = canvas_->getSize();
+    tgt::ivec2 size = canvas_->getPhysicalSize();
 
     glViewport(0, 0, size.x, size.y);
     MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
@@ -474,8 +475,8 @@ void TransFunc1DPropertyWidgetPainter::createInfoToolTip(QPoint mousePos) {
         qText = QString("<b>") + qText + QString(ittText.str().c_str());
         break;
     case DOMAIN_LEFT_SLIDER:
-        ittPos.setX(canvas_->getWidth() / 2);
-        ittPos.setY(canvas_->getHeight()+10);
+        ittPos.setX(canvas_->getPhysicalWidth() / 2);
+        ittPos.setY(canvas_->getPhysicalHeight()+10);
         ittText << "<nobr>Domain: [ <b>" << ftos(domainSlider_->getDomainValue().x,percision) << "</b> , " <<
                                     ftos(domainSlider_->getDomainValue().y,percision) << " ]</nobr>";
         ittWidth += ttMetr.width("Domain: [  ,  ]");
@@ -484,8 +485,8 @@ void TransFunc1DPropertyWidgetPainter::createInfoToolTip(QPoint mousePos) {
         qText = QString(ittText.str().c_str());
         break;
     case DOMAIN_RIGHT_SLIDER:
-        ittPos.setX(canvas_->getWidth() / 2);
-        ittPos.setY(canvas_->getHeight()+10);
+        ittPos.setX(canvas_->getPhysicalWidth() / 2);
+        ittPos.setY(canvas_->getPhysicalHeight()+10);
         ittText << "<nobr>Domain: [ " + ftos(domainSlider_->getDomainValue().x,percision) << " , <b>" <<
                                 ftos(domainSlider_->getDomainValue().y,percision) << "</b> ]</nobr>";
         ittWidth += ttMetr.width("Domain: [  ,  ]");
@@ -494,8 +495,8 @@ void TransFunc1DPropertyWidgetPainter::createInfoToolTip(QPoint mousePos) {
         qText = QString(ittText.str().c_str());
         break;
     case DOMAIN_BOTH_SLIDER:
-        ittPos.setX(canvas_->getWidth() / 2);
-        ittPos.setY(canvas_->getHeight()+10);
+        ittPos.setX(canvas_->getPhysicalWidth() / 2);
+        ittPos.setY(canvas_->getPhysicalHeight()+10);
         ittText << "<nobr>Domain: [ <b>" << ftos(domainSlider_->getDomainValue().x,percision) << "</b> , <b>" +
                                     ftos(domainSlider_->getDomainValue().y,percision) << "</b> ]</nobr>";
         ittWidth += ttMetr.width("Domain: [  ,  ]");

@@ -536,8 +536,9 @@ void RenderTargetViewer::keyPressEvent(QKeyEvent* e) {
 //-----------------------------------------------
 void RenderTargetViewer::updateMousePosition(QMouseEvent* e) {
     QPoint pos = canvas_->mapFromParent(e->pos());
-    mouseX_ = pos.x();
-    mouseY_ = canvas_->height() - pos.y();
+    tgt::vec2 dpiConversionFactor = canvas_->getPhysicalSize()/canvas_->getHeight();
+    mouseX_ = pos.x() * dpiConversionFactor.x;
+    mouseY_ = (canvas_->height() - pos.y()) * dpiConversionFactor.y;
 }
 
 void RenderTargetViewer::updateSelected() {
@@ -557,8 +558,8 @@ void RenderTargetViewer::updateSelected() {
     int countX = static_cast<int>(std::ceil(std::sqrt(static_cast<float>(renderPorts.size()))));
     int countY = static_cast<int>(std::ceil(static_cast<float>(renderPorts.size()) / countX));
 
-    int pixelPerPortWidth = static_cast<int>(std::ceil(static_cast<float>(canvas_->getSize().x) / countX));
-    int pixelPerPortHeight = static_cast<int>(std::ceil(static_cast<float>(canvas_->getSize().y) / countY));
+    int pixelPerPortWidth = static_cast<int>(std::ceil(static_cast<float>(canvas_->getPhysicalWidth()) / countX));
+    int pixelPerPortHeight = static_cast<int>(std::ceil(static_cast<float>(canvas_->getPhysicalHeight()) / countY));
 
     size_t index = mouseX_/pixelPerPortWidth + (countY - 1 - mouseY_/pixelPerPortHeight) * countX;
 

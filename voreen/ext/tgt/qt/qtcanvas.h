@@ -86,7 +86,7 @@ public:
 
     virtual void swap();
     virtual void toggleFullScreen();
-    virtual ivec2 getPhyicalSize() const;
+    virtual ivec2 getPhysicalSize() const;
 
 protected:
 
@@ -108,6 +108,8 @@ protected:
 
     // necessary to handle touch events
     virtual bool event(QEvent *event);
+
+    void broadcastEvent(tgt::Event* event);
 
 protected:
     // Inherited from GLContextBase

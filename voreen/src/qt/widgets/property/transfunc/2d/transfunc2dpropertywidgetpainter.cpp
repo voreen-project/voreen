@@ -97,7 +97,9 @@ void TransFunc2DPropertyWidgetPainter::initialize() {
     tgt::Painter::initialize();
 }
 
-void TransFunc2DPropertyWidgetPainter::sizeChanged(const tgt::ivec2& size) {
+void TransFunc2DPropertyWidgetPainter::sizeChanged(const tgt::ivec2& _size) {
+    tgt::ivec2 size = canvas_->getPhysicalSize();
+
     domainSliderX_->setCanvasSize(size); domainSliderY_->setCanvasSize(size);
     gammaSliderX_->setCanvasSize(size);  gammaSliderY_->setCanvasSize(size);
 
@@ -122,7 +124,7 @@ void TransFunc2DPropertyWidgetPainter::sizeChanged(const tgt::ivec2& size) {
 void TransFunc2DPropertyWidgetPainter::paint() {
     tgtAssert(initialized_, "painter not initialized!");
 
-    tgt::ivec2 size = canvas_->getSize();
+    tgt::ivec2 size = canvas_->getPhysicalSize();
 
     //fill canvas with background color
     glViewport(0,0,size.x,size.y);
@@ -452,16 +454,16 @@ void TransFunc2DPropertyWidgetPainter::mouseMoveEvent(tgt::MouseEvent* e) {
         tgtAssert(mousePressedPosition_ != tgt::ivec2(-1), "mousePressedPosition has not been set!");
         tgtAssert(domainLowerPressedPosition_ != -1, "domainLeftPressedPosition has not been set!");
         tgtAssert(domainUpperPressedPosition_ != -1, "domainRightPressedPosition has not been set!");
-        domainSliderX_->setLeftPosition( tgt::ivec2(domainLowerPressedPosition_, canvas_->getSize().y -1 - domainLowerPressedPosition_) - (mousePressedPosition_ - e->coord()));
-        domainSliderX_->setRightPosition(tgt::ivec2(domainUpperPressedPosition_, canvas_->getSize().y -1 - domainUpperPressedPosition_) - (mousePressedPosition_ -e->coord()));
+        domainSliderX_->setLeftPosition( tgt::ivec2(domainLowerPressedPosition_, canvas_->getPhysicalSize().y -1 - domainLowerPressedPosition_) - (mousePressedPosition_ - e->coord()));
+        domainSliderX_->setRightPosition(tgt::ivec2(domainUpperPressedPosition_, canvas_->getPhysicalSize().y -1 - domainUpperPressedPosition_) - (mousePressedPosition_ -e->coord()));
         canvas_->update();
     break;
     case DOMAIN_BOTH_SLIDER_Y:
         tgtAssert(mousePressedPosition_ != tgt::ivec2(-1), "mousePressedPosition has not been set!");
         tgtAssert(domainLowerPressedPosition_ != -1, "domainLeftPressedPosition has not been set!");
         tgtAssert(domainUpperPressedPosition_ != -1, "domainRightPressedPosition has not been set!");
-        domainSliderY_->setLeftPosition( tgt::ivec2(domainLowerPressedPosition_, canvas_->getSize().y -1 - domainLowerPressedPosition_) - (mousePressedPosition_ -e->coord()));
-        domainSliderY_->setRightPosition(tgt::ivec2(domainUpperPressedPosition_, canvas_->getSize().y -1 - domainUpperPressedPosition_) - (mousePressedPosition_ -e->coord()));
+        domainSliderY_->setLeftPosition( tgt::ivec2(domainLowerPressedPosition_, canvas_->getPhysicalSize().y -1 - domainLowerPressedPosition_) - (mousePressedPosition_ -e->coord()));
+        domainSliderY_->setRightPosition(tgt::ivec2(domainUpperPressedPosition_, canvas_->getPhysicalSize().y -1 - domainUpperPressedPosition_) - (mousePressedPosition_ -e->coord()));
         canvas_->update();
     break;
     default:
@@ -541,7 +543,7 @@ void TransFunc2DPropertyWidgetPainter::createInfoToolTip(QPoint mousePos) {
         ittWidth += bttMetr.width(ftos(gammaSliderY_->getGammaValue(),2).c_str());
         qText = QString("<b>") + qText + QString(ittText.str().c_str());
         //position
-        ittPos.setX(canvas_->getWidth() - ittWidth/2 - 3);
+        ittPos.setX(canvas_->getPhysicalWidth() - ittWidth/2 - 3);
         ittPos.setY(mousePos.y());
         break;
 
@@ -622,8 +624,6 @@ void TransFunc2DPropertyWidgetPainter::zoomIn() {
         float domSizeY = tf_->getDomain(1).y - tf_->getDomain(1).x;
         float viewSizeX = visibleDomainValues_[0].y - visibleDomainValues_[0].x;
         float viewSizeY = visibleDomainValues_[1].y - visibleDomainValues_[1].x;
-        float viewCenterX = domCenterX;
-        float viewCenterY = domCenterY;
 
         viewSizeX *= 0.5f; viewSizeY *= 0.5f;
         if(viewSizeX < domSizeX) viewSizeX = domSizeX;

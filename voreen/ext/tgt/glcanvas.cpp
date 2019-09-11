@@ -199,8 +199,14 @@ int GLCanvas::getStencilSize() const {
 ivec2 GLCanvas::getSize() const {
     return size_;
 }
-ivec2 GLCanvas::getPhyicalSize() const {
+ivec2 GLCanvas::getPhysicalSize() const {
     return getSize();
+}
+int GLCanvas::getPhysicalWidth() const {
+    return getPhysicalSize().x;
+}
+int GLCanvas::getPhysicalHeight() const {
+    return getPhysicalSize().y;
 }
 
 int GLCanvas::getWidth() const {

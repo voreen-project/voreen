@@ -129,7 +129,7 @@ void RenderTargetViewerPainter::sizeChanged(const tgt::ivec2& size) {
 void RenderTargetViewerPainter::initialize(){
     Painter::initialize();
     tgtAssert(canvas_, "no canvas");
-    glViewport(0,0, canvas_->getSize().x, canvas_->getSize().y);
+    glViewport(0,0, canvas_->getPhysicalSize().x, canvas_->getPhysicalSize().y);
 
     try {
         colorProgram_ = ShdrMgr.loadSeparate("passthrough.vert", "rendertargetviewer/color.frag", GLSL::generateStandardShaderHeader(), false);
@@ -141,7 +141,7 @@ void RenderTargetViewerPainter::initialize(){
 
     fbo_ = new tgt::FramebufferObject();
 
-    tgt::ivec3 size(canvas_->getSize().x, canvas_->getSize().y, 1);
+    tgt::ivec3 size(canvas_->getPhysicalSize().x, canvas_->getPhysicalSize().y, 1);
 
     colorTex_ = new tgt::Texture(size, GL_RGBA, GL_RGBA16, GL_UNSIGNED_SHORT, tgt::Texture::LINEAR, tgt::Texture::CLAMP_TO_EDGE);
     colorTex_->uploadTexture();
@@ -192,7 +192,7 @@ void RenderTargetViewerPainter::paint() {
     // render port contents
     MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
     MatStack.pushMatrix();
-    MatStack.multMatrix(tgt::mat4::createOrtho(0,canvas_->getSize().x,0,canvas_->getSize().y,-1,1));
+    MatStack.multMatrix(tgt::mat4::createOrtho(0,canvas_->getPhysicalSize().x,0,canvas_->getPhysicalSize().y,-1,1));
 
     MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
     MatStack.pushMatrix();
@@ -215,7 +215,7 @@ void RenderTargetViewerPainter::paint() {
     if (renderTargetViewer_->maximizeOnePort_) {
         if(renderTargetViewer_->selectedRenderPortIndex_ >= 0 && renderTargetViewer_->selectedRenderPortIndex_ < (int)renderPorts.size()) {
             paintPort(renderPorts[renderTargetViewer_->selectedRenderPortIndex_], renderTargetViewer_->selectedRenderPortIndex_,
-                      canvas_->getSize().x, canvas_->getSize().y);
+                      canvas_->getPhysicalSize().x, canvas_->getPhysicalSize().y);
         }
     }
     else {
@@ -223,8 +223,8 @@ void RenderTargetViewerPainter::paint() {
         int countX = static_cast<int>(std::ceil(std::sqrt(static_cast<float>(renderPorts.size()))));
         int countY = static_cast<int>(std::ceil(static_cast<float>(renderPorts.size()) / countX));
 
-        int pixelPerPortWidth = static_cast<int>(std::ceil(static_cast<float>(canvas_->getSize().x) / countX));
-        int pixelPerPortHeight = static_cast<int>(std::ceil(static_cast<float>(canvas_->getSize().y) / countY));
+        int pixelPerPortWidth = static_cast<int>(std::ceil(static_cast<float>(canvas_->getPhysicalSize().x) / countX));
+        int pixelPerPortHeight = static_cast<int>(std::ceil(static_cast<float>(canvas_->getPhysicalSize().y) / countY));
 
         for (int y = 0; y < countY; ++y) {
             for (int x = 0; x < countX; ++x) {
@@ -678,7 +678,7 @@ void RenderTargetViewerPainter::renderQuad(int requestedWidth, int requestedHeig
 }
 
 void RenderTargetViewerPainter::renderFont(float x, float y, QString text) {
-    font_->render(tgt::vec3(x, y, 0.0), text.toStdString(), canvas_->getSize());
+    font_->render(tgt::vec3(x, y, 0.0), text.toStdString(), canvas_->getPhysicalSize());
     LGL_ERROR;
 }
 

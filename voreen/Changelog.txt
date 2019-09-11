@@ -48,6 +48,7 @@ Voreen Changelog
       o Adjust maximum distance of LightSourceProperty based on diagonal of dataset in SingleVolumeRaycaster and GeometryRenderer
       o Fix saving files in symlinked folders in some cases
       o Fix deadlock in OptimizedProxyGeometry
+      o Fix rendering on hidpi displays
 
 
 2018-09-06: Voreen 5.0.1

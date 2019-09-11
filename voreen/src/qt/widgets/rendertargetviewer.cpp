@@ -574,8 +574,8 @@ void RenderTargetViewer::updateSelected() {
     int countX = (int)ceil(sqrt((float)renderPorts.size()));
     int countY = ceil((float)renderPorts.size() / countX);
 
-    int pixelPerPortWidth = canvas_->getSize().x / countX;
-    int pixelPerPortHeight = canvas_->getSize().y / countY;
+    int pixelPerPortWidth = canvas_->getPhysicalSize().x / countX;
+    int pixelPerPortHeight = canvas_->getPhysicalSize().y / countY;
 
     size_t index = mouseX_/pixelPerPortWidth + (countY - 1 - mouseY_/pixelPerPortHeight) * countX;
 

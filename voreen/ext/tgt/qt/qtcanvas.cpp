@@ -102,7 +102,7 @@ void QtCanvas::resizeGL(int w, int h) {
     sizeChanged(ivec2(w, h));
 }
 
-ivec2 QtCanvas::getPhyicalSize() const {
+ivec2 QtCanvas::getPhysicalSize() const {
     float ratio = QPaintDevice::devicePixelRatioF();
     return tgt::floor(tgt::vec2(getSize()) * ratio);
 }
@@ -148,21 +148,21 @@ void QtCanvas::toggleFullScreen() {
 void QtCanvas::enterEvent(QEvent* e) {
     tgt::MouseEvent* enterEv = new tgt::MouseEvent(0, 0, tgt::MouseEvent::ENTER,
         tgt::MouseEvent::MODIFIER_NONE, tgt::MouseEvent::MOUSE_BUTTON_NONE, tgt::ivec2(width(), height()));
-    eventHandler_->broadcast(enterEv);
+    broadcastEvent(enterEv);
     QOpenGLWidget::enterEvent(e);
 }
 
 void QtCanvas::leaveEvent(QEvent* e) {
     tgt::MouseEvent* leaveEv = new tgt::MouseEvent(0, 0, tgt::MouseEvent::EXIT,
         tgt::MouseEvent::MODIFIER_NONE, tgt::MouseEvent::MOUSE_BUTTON_NONE, tgt::ivec2(width(), height()));
-    eventHandler_->broadcast(leaveEv);
+    broadcastEvent(leaveEv);
     QOpenGLWidget::leaveEvent(e);
 }
 
 void QtCanvas::mousePressEvent(QMouseEvent* e) {
     tgt::MouseEvent* prEv = new tgt::MouseEvent(e->x(), e->y(), tgt::MouseEvent::PRESSED,
         getModifier(e), getButton(e), tgt::ivec2(width(), height()));
-    eventHandler_->broadcast(prEv);
+    broadcastEvent(prEv);
     QOpenGLWidget::mousePressEvent(e);
 }
 
@@ -170,7 +170,7 @@ void QtCanvas::mousePressEvent(QMouseEvent* e) {
 void QtCanvas::mouseReleaseEvent (QMouseEvent* e) {
     tgt::MouseEvent* relEv = new tgt::MouseEvent(e->x(), e->y(), tgt::MouseEvent::RELEASED,
         getModifier(e), getButton(e), tgt::ivec2(width(), height()));
-    eventHandler_->broadcast(relEv);
+    broadcastEvent(relEv);
     QOpenGLWidget::mouseReleaseEvent(e);
 }
 
@@ -178,7 +178,7 @@ void QtCanvas::mouseReleaseEvent (QMouseEvent* e) {
 void QtCanvas::mouseMoveEvent(QMouseEvent*  e) {
     tgt::MouseEvent* movEv = new tgt::MouseEvent(e->x(), e->y(), tgt::MouseEvent::MOTION,
         getModifier(e), getButtons(e), tgt::ivec2(width(), height())); // FIXME: submit information which mouse buttons are pressed
-    eventHandler_->broadcast(movEv);
+    broadcastEvent(movEv);
     QOpenGLWidget::mouseMoveEvent(e);
 }
 
@@ -186,7 +186,7 @@ void QtCanvas::mouseMoveEvent(QMouseEvent*  e) {
 void QtCanvas::mouseDoubleClickEvent(QMouseEvent* e) {
     tgt::MouseEvent* dcEv = new tgt::MouseEvent(e->x(), e->y(), tgt::MouseEvent::DOUBLECLICK,
                                                 getModifier(e), getButton(e), tgt::ivec2(width(), height()));
-    eventHandler_->broadcast(dcEv);
+    broadcastEvent(dcEv);
     QOpenGLWidget::mouseDoubleClickEvent(e);
 }
 
@@ -198,28 +198,28 @@ void QtCanvas::wheelEvent(QWheelEvent* e) {
         b = tgt::MouseEvent::MOUSE_WHEEL_UP;
     tgt::MouseEvent* wheelEv = new tgt::MouseEvent(e->x(),e->y(), tgt::MouseEvent::WHEEL,
                                                    getModifier(e), b, tgt::ivec2(width(), height()));
-    eventHandler_->broadcast(wheelEv);
+    broadcastEvent(wheelEv);
     QOpenGLWidget::wheelEvent(e);
 }
 
 // See mousePressEvent
 void QtCanvas::keyPressEvent(QKeyEvent* event) {
     tgt::KeyEvent* ke = new tgt::KeyEvent(getKey(event->key()), getModifier(event), event->isAutoRepeat(), true);
-    eventHandler_->broadcast(ke);
+    broadcastEvent(ke);
     QOpenGLWidget::keyPressEvent(event);
 }
 
 // See mousePressEvent
 void QtCanvas::keyReleaseEvent(QKeyEvent* event) {
     tgt::KeyEvent* ke = new tgt::KeyEvent(getKey(event->key()), getModifier(event), event->isAutoRepeat(), false);
-    eventHandler_->broadcast(ke);
+    broadcastEvent(ke);
     QOpenGLWidget::keyReleaseEvent(event);
 }
 
 // yes, we need this in voreen FL
 void QtCanvas::timerEvent(QTimerEvent* e) {
     tgt::TimeEvent* te = new tgt::TimeEvent();
-    eventHandler_->broadcast(te);
+    broadcastEvent(te);
     QOpenGLWidget::timerEvent(e);
 }
 
@@ -257,7 +257,7 @@ bool QtCanvas::event(QEvent *event) {
         }
 
         tgt::TouchEvent * te = new tgt::TouchEvent(tgt::Event::MODIFIER_NONE, (tgt::TouchPoint::State)states, (tgt::TouchEvent::DeviceType)deviceType, tps);
-        eventHandler_->broadcast(te);
+        broadcastEvent(te);
 
         break;
     }
@@ -273,6 +273,15 @@ bool QtCanvas::event(QEvent *event) {
     }
 
     return true;
+}
+
+void QtCanvas::broadcastEvent(tgt::Event* event) {
+    if(MouseEvent* me = dynamic_cast<tgt::MouseEvent*>(event)) {
+        float ratio = QPaintDevice::devicePixelRatioF();
+        me->setViewport(tgt::ivec2(tgt::vec2(me->viewport()) * ratio));
+        me->setCoord(tgt::ivec2(tgt::vec2(me->coord()) * ratio));
+    }
+    eventHandler_->broadcast(event);
 }
 
 tgt::MouseEvent::MouseButtons QtCanvas::getButton(QMouseEvent* e) {

@@ -143,9 +143,11 @@ public:
     int getDepthSize() const;
     int getStencilSize() const;
     ivec2 getSize() const;
-    virtual ivec2 getPhyicalSize() const; // Size in phyical pixels on screen. Important for Hidpi displays
     int getWidth() const;
     int getHeight() const;
+    virtual ivec2 getPhysicalSize() const; // Size in phyical pixels on screen. Important for Hidpi displays
+    int getPhysicalWidth() const;
+    int getPhysicalHeight() const;
     Buffers getBuffers() const;
     bool isDoubleBuffered() const { return doubleBuffered_; }
     bool isInitialized() const { return initialized_; }

@@ -99,7 +99,7 @@ void CanvasRenderer::process() {
 
     tgt::GLContextStateGuard guard(canvas_);
 
-    tgt::ivec2 screenSize = canvas_->getPhyicalSize();
+    tgt::ivec2 screenSize = canvas_->getPhysicalSize();
 
     glViewport(0, 0, screenSize.x, screenSize.y);
 
@@ -256,7 +256,7 @@ void CanvasRenderer::setCanvas(tgt::GLCanvas* canvas) {
         if (eh) {
             eh->addListenerToFront(this);
         }
-        inport_.requestSize(canvas_->getSize());
+        inport_.requestSize(canvas_->getPhysicalSize());
     }
 
     invalidate();
@@ -395,7 +395,7 @@ void CanvasRenderer::resizeCanvas(tgt::ivec2 newsize) {
     if (newsize != inport_.getSize()) {
         tgt::GLContextStateGuard guard(canvas_);
         glViewport(0, 0, static_cast<GLint>(newsize.x), static_cast<GLint>(newsize.y));
-        inport_.requestSize(newsize);
+        inport_.requestSize(canvas_->getPhysicalSize());
     }
 
     canvasSize_.set(newsize);
