@@ -122,8 +122,7 @@ void TransFunc2DPropertyWidgetPainter::sizeChanged(const tgt::ivec2& size) {
 void TransFunc2DPropertyWidgetPainter::paint() {
     tgtAssert(initialized_, "painter not initialized!");
 
-    tgt::ivec2 size = canvas_->getPhyicalSize();
-    tgt::vec2 virtualToPhysicalConversionFactor = tgt::vec2(canvas_->getPhyicalSize()) / tgt::vec2(canvas_->getSize());
+    tgt::ivec2 size = canvas_->getSize();
 
     //fill canvas with background color
     glViewport(0,0,size.x,size.y);
@@ -167,12 +166,12 @@ void TransFunc2DPropertyWidgetPainter::paint() {
         //render slider
         glDisable(GL_DEPTH_TEST);
         if(renderGammaSlider_) {
-            gammaSliderX_->paint(virtualToPhysicalConversionFactor);
-            gammaSliderY_->paint(virtualToPhysicalConversionFactor);
+            gammaSliderX_->paint();
+            gammaSliderY_->paint();
         }
         if(renderDomainSlider_) {
-            domainSliderX_->paint(virtualToPhysicalConversionFactor);
-            domainSliderY_->paint(virtualToPhysicalConversionFactor);
+            domainSliderX_->paint();
+            domainSliderY_->paint();
         }
         glColor4f(1.f,1.f,1.f,1.f);
         glEnable(GL_DEPTH_TEST);

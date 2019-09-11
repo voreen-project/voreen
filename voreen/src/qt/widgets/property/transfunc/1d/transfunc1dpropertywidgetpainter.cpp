@@ -97,9 +97,7 @@ void TransFunc1DPropertyWidgetPainter::sizeChanged(const tgt::ivec2& size) {
 void TransFunc1DPropertyWidgetPainter::paint() {
     tgtAssert(initialized_, "painter not initialized!");
 
-    tgt::ivec2 size = canvas_->getPhyicalSize();
-
-    tgt::vec2 virtualToPhysicalConversionFactor = tgt::vec2(canvas_->getPhyicalSize()) / tgt::vec2(canvas_->getSize());
+    tgt::ivec2 size = canvas_->getSize();
 
     glViewport(0, 0, size.x, size.y);
     MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
@@ -136,9 +134,9 @@ void TransFunc1DPropertyWidgetPainter::paint() {
         //render slider
         glDisable(GL_DEPTH_TEST);
         if(renderGammaSlider_)
-            gammaSlider_->paint(virtualToPhysicalConversionFactor);
+            gammaSlider_->paint();
         if(renderDomainSlider_)
-            domainSlider_->paint(virtualToPhysicalConversionFactor);
+            domainSlider_->paint();
         glColor4f(1.f,1.f,1.f,1.f);
         glEnable(GL_DEPTH_TEST);
     }
