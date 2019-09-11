@@ -23,6 +23,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/simulation/flowindicatorrenderer.cpp
     ${MOD_DIR}/processors/simulation/flowparametrization.cpp
     ${MOD_DIR}/processors/simulation/flowsimulationcluster.cpp
+    ${MOD_DIR}/processors/simulation/flowsimulationgeometry.cpp
     ${MOD_DIR}/processors/volume/volumelistadapter.cpp
 )
 
@@ -31,8 +32,6 @@ SET(MOD_CORE_HEADERS
 
     # datastructures
     ${MOD_DIR}/datastructures/flowparameters.h
-    ${MOD_DIR}/datastructures/volume/operators/volumeoperatorvectorsimilarity.h
-
 
     # ports
     ${MOD_DIR}/ports/flowparametrizationport.h
@@ -47,6 +46,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/simulation/flowindicatorrenderer.h
     ${MOD_DIR}/processors/simulation/flowparametrization.h
     ${MOD_DIR}/processors/simulation/flowsimulationcluster.h
+    ${MOD_DIR}/processors/simulation/flowsimulationgeometry.h
     ${MOD_DIR}/processors/volume/volumelistadapter.h
 )
 

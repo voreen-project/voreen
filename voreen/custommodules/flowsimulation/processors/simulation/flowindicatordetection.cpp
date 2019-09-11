@@ -29,7 +29,7 @@
 
 namespace voreen {
 
-const std::string FlowIndicatorDetection::loggerCat_("voreen.flowreen.FlowIndicatorDetection");
+const std::string FlowIndicatorDetection::loggerCat_("voreen.flowsimulation.FlowIndicatorDetection");
 
 FlowIndicatorDetection::FlowIndicatorDetection()
     : Processor()

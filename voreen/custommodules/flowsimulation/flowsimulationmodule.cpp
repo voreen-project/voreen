@@ -25,9 +25,6 @@
 
 #include "flowsimulationmodule.h"
 
-// volume operators
-#include "datastructures/volume/operators/volumeoperatorvectorsimilarity.h"
-
 // processors
 #include "processors/geometry/geometryclose.h"
 #include "processors/geometry/geometryoffsetremove.h"
@@ -38,6 +35,7 @@
 #include "processors/simulation/flowindicatorrenderer.h"
 #include "processors/simulation/flowparametrization.h"
 #include "processors/simulation/flowsimulationcluster.h"
+#include "processors/simulation/flowsimulationgeometry.h"
 #include "processors/volume/volumelistadapter.h"
 
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
@@ -68,6 +66,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerSerializableType(new FlowIndicatorRenderer());
     registerSerializableType(new FlowParametrization());
     registerSerializableType(new FlowSimulationCluster());
+    registerSerializableType(new FlowSimulationGeometry());
     registerSerializableType(new VolumeListAdapter());
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
     registerSerializableType(new FlowIndicatorDetection());
@@ -76,9 +75,6 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerSerializableType(new ImplicitRepresentation());
     registerSerializableType(new FlowSimulation());
 #endif
-
-    // volume operators
-    INST_VECTOR_TYPES(VolumeOperatorVectorSimilarity, VolumeOperatorVectorSimilarityGeneric);
 }
 
 void FlowSimulationModule::initialize() {

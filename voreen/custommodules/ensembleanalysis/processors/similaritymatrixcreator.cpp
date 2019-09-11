@@ -337,8 +337,13 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
                                 float dot = tgt::dot(normDirection_i, normDirection_j);
                                 float angle = std::acos(tgt::clamp(dot, -1.0f, 1.0f)) / tgt::PIf;
-                                tgtAssert(!tgt::isNaN(angle), "NaN value");
-                                statistics.addSample(angle);
+                                if(!tgt::isNaN(angle)) {
+                                    statistics.addSample(angle);
+                                }
+                                else {
+                                    tgtAssert(false, "NaN value");
+                                }
+
                             }
                             else if (direction_i == tgt::vec4::zero && direction_j == tgt::vec4::zero) {
                                 statistics.addSample(0.0f);
