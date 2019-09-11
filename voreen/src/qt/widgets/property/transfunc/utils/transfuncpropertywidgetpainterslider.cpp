@@ -82,7 +82,8 @@ TransFuncPropertyWidgetPainterGammaSlider::TransFuncPropertyWidgetPainterGammaSl
     valueRange_ = tgt::vec2(0.1f,5.f);
 }
 
-void TransFuncPropertyWidgetPainterGammaSlider::paint() {
+void TransFuncPropertyWidgetPainterGammaSlider::paint(tgt::vec2 virtualToPhysicalConversionFactor) {
+    tgt::vec3 convert(virtualToPhysicalConversionFactor, 1.0);
     //define variables
     tgt::vec3 point1, point2, point3;
     //switch orientation
@@ -110,6 +111,11 @@ void TransFuncPropertyWidgetPainterGammaSlider::paint() {
     default:
         tgtAssert(false, "unknwon orientation");
     }
+
+    point1 *= convert;
+    point2 *= convert;
+    point3 *= convert;
+
     //draw black arrow
     IMode.begin(tgt::ImmediateMode::TRIANGLES);
         IMode.color(tgt::vec4(0.f,0.f,0.f,1.f));
@@ -282,9 +288,11 @@ TransFuncPropertyWidgetPainterDomainSlider::TransFuncPropertyWidgetPainterDomain
 {
 }
 
-void TransFuncPropertyWidgetPainterDomainSlider::paint() {
-   tgt::vec3 pointLeft1, pointLeft2, pointLeft3;
-   tgt::vec3 pointRight1, pointRight2, pointRight3;
+void TransFuncPropertyWidgetPainterDomainSlider::paint(tgt::vec2 virtualToPhysicalConversionFactor) {
+    tgt::vec3 convert(virtualToPhysicalConversionFactor, 1.0);
+
+    tgt::vec3 pointLeft1, pointLeft2, pointLeft3;
+    tgt::vec3 pointRight1, pointRight2, pointRight3;
 
     switch(orientation_) {
     case SO_TOP:
@@ -322,6 +330,14 @@ void TransFuncPropertyWidgetPainterDomainSlider::paint() {
     default:
         tgtAssert(false, "unknwon orientation");
     }
+
+    pointLeft1 *= convert;
+    pointLeft2 *= convert;
+    pointLeft3 *= convert;
+    pointRight1 *= convert;
+    pointRight2 *= convert;
+    pointRight3 *= convert;
+
     //LEFT
     //draw black arrow
     IMode.begin(tgt::ImmediateMode::TRIANGLES);
