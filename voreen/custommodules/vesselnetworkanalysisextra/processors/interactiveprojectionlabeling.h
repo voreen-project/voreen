@@ -118,6 +118,7 @@ private:
 
     boost::optional<LabelProjection> projection_;
     std::deque<tgt::vec2> displayLine_;
+    std::deque<tgt::vec2> projectionLine_;
 };
 
 } // namespace voreen

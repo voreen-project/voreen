@@ -143,10 +143,11 @@ struct Line {
     }
 };
 
-void InteractiveProjectionLabeling::projectionEvent(tgt::MouseEvent* e) {
-}
-void InteractiveProjectionLabeling::overlayEvent(tgt::MouseEvent* e) {
+#define MOUSE_INTERACTION_DIST 0.02
+static void handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
+
     auto button = e->button();
+
     if(e->modifiers() != tgt::Event::CTRL
             || ((button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT)) == 0))
              {
@@ -160,44 +161,65 @@ void InteractiveProjectionLabeling::overlayEvent(tgt::MouseEvent* e) {
 
     boost::optional<int> nearest = boost::none;
     int i = 0;
-    const float MOUSE_DRAG_DIST = 0.02;
-    for(auto& p : displayLine_) {
+    for(auto& p : points) {
         float dist = tgt::distance(p, mouse);
-        if (dist < MOUSE_DRAG_DIST && (!nearest || dist < tgt::distance(displayLine_[i], mouse))) {
+        if (dist < MOUSE_INTERACTION_DIST && (!nearest || dist < tgt::distance(points[i], mouse))) {
             nearest = i;
         }
         ++i;
     }
     if(nearest) {
         if(e->action() == tgt::MouseEvent::RELEASED && button == tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
-            displayLine_.erase(displayLine_.begin() + *nearest);
+            points.erase(points.begin() + *nearest);
         } else {
-            displayLine_[*nearest] = mouse;
+            points[*nearest] = mouse;
         }
     } else if(e->action() == tgt::MouseEvent::RELEASED && button == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
         int insert_index = -1;
-        for(int i=0; i<((int)displayLine_.size())-1; ++i) {
-            Line line(displayLine_[i], displayLine_[i+1]);
+        for(int i=0; i<((int)points.size())-1; ++i) {
+            Line line(points[i], points[i+1]);
             float dist = line.dist(mouse);
-            if(dist < MOUSE_DRAG_DIST) {
+            if(dist < MOUSE_INTERACTION_DIST) {
                 insert_index = i;
             }
         }
         if(insert_index != -1) {
-            displayLine_.insert(displayLine_.begin() + insert_index+1, mouse);
+            points.insert(points.begin() + insert_index+1, mouse);
         } else {
-            if(displayLine_.empty() || tgt::distance(displayLine_.front(), mouse) < tgt::distance(displayLine_.back(), mouse)) {
-                displayLine_.push_front(mouse);
+            if(points.empty() || tgt::distance(points.front(), mouse) < tgt::distance(points.back(), mouse)) {
+                points.push_front(mouse);
             } else {
-                displayLine_.push_back(mouse);
+                points.push_back(mouse);
             }
         }
     }
+    e->accept();
+}
+void InteractiveProjectionLabeling::projectionEvent(tgt::MouseEvent* e) {
+
+    handleLineEvent(projectionLine_, e);
+
+    std::sort(projectionLine_.begin(), projectionLine_.end(), [] (const tgt::vec2& p1, const tgt::vec2& p2) {
+            return p1.x < p2.x;
+            });
+
+    invalidate();
+}
+
+void InteractiveProjectionLabeling::overlayEvent(tgt::MouseEvent* e) {
+    auto button = e->button();
+
+    if(e->modifiers() != tgt::Event::CTRL
+            || ((button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT)) == 0))
+             {
+        return;
+    }
+
+    handleLineEvent(displayLine_, e);
 
     updateProjection();
 
     invalidate();
-    e->accept();
 }
 
 void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
@@ -265,6 +287,31 @@ void InteractiveProjectionLabeling::deinitialize() {
 
     RenderProcessor::deinitialize();
 }
+static void renderLine(const std::deque<tgt::vec2>& points) {
+    MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
+    MatStack.pushMatrix();
+    MatStack.ortho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
+
+    IMode.color(tgt::vec3(1.0, 1.0, 0.0));
+    IMode.begin(tgt::ImmediateMode::LINE_STRIP);
+    for(auto& p : points) {
+        IMode.vertex(p);
+    }
+    IMode.end();
+
+    glPointSize(5.0);
+    IMode.begin(tgt::ImmediateMode::POINTS);
+    for(auto& p : points) {
+        IMode.vertex(p);
+    }
+    IMode.end();
+
+    MatStack.popMatrix();
+
+    MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
+    IMode.color(tgt::vec4(1.0));
+    glPointSize(1.0);
+}
 void InteractiveProjectionLabeling::renderOverlay() {
     overlayOutput_.activateTarget();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -282,36 +329,7 @@ void InteractiveProjectionLabeling::renderOverlay() {
     copyShader_->deactivate();
     LGL_ERROR;
 
-    MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
-    MatStack.pushMatrix();
-    MatStack.ortho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
-
-    IMode.color(tgt::vec3(1.0, 1.0, 0.0));
-    IMode.begin(tgt::ImmediateMode::LINE_STRIP);
-    for(auto& p : displayLine_) {
-        IMode.vertex(p);
-    }
-    IMode.end();
-
-    glPointSize(5.0);
-    IMode.begin(tgt::ImmediateMode::POINTS);
-    for(auto& p : displayLine_) {
-        IMode.vertex(p);
-    }
-    IMode.end();
-
-    IMode.color(tgt::vec3(1.0, 0.0, 0.0));
-    if(!displayLine_.empty()) {
-        IMode.begin(tgt::ImmediateMode::POINTS);
-        IMode.vertex(PolyLine<tgt::vec2>(displayLine_).interpolate(interpolationValue_.get()));
-        IMode.end();
-    }
-
-    MatStack.popMatrix();
-
-    MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
-    IMode.color(tgt::vec4(1.0));
-    glPointSize(1.0);
+    renderLine(displayLine_);
 
     overlayOutput_.deactivateTarget();
 }
@@ -348,6 +366,9 @@ void InteractiveProjectionLabeling::renderProjection() {
         program->deactivate();
         glActiveTexture(GL_TEXTURE0);
     }
+
+    renderLine(projectionLine_);
+
     projectionOutput_.deactivateTarget();
     LGL_ERROR;
 }
