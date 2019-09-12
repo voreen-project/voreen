@@ -117,7 +117,7 @@ private:
     ShaderProperty projectionShader_;
 
     boost::optional<LabelProjection> projection_;
-    std::vector<tgt::vec2> displayLine_;
+    std::deque<tgt::vec2> displayLine_;
 };
 
 } // namespace voreen

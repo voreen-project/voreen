@@ -73,7 +73,7 @@ struct PolyLinePoint {
 };
 template<class Vec>
 struct PolyLine {
-    PolyLine(std::vector<Vec>& points)
+    PolyLine(std::deque<Vec>& points)
         : points_()
     {
         tgtAssert(!points.empty(), "Points must not be empty!")
@@ -95,7 +95,7 @@ struct PolyLine {
                 });
     }
 
-    std::vector<PolyLinePoint<Vec>> points_;
+    std::deque<PolyLinePoint<Vec>> points_;
 
     tgt::vec2 interpolate(float d) {
         tgtAssert(0.0 <= d && d <= 1.0, "Invalid interpolation parameter");
@@ -112,6 +112,34 @@ struct PolyLine {
         auto& p2 = points_[i+1];
         float alpha = (d - p1.d_) / (p2.d_- p1.d_);
         return p1.pos_ * (1-alpha) + alpha * p2.pos_;
+    }
+};
+
+struct Line {
+    Line(tgt::vec2 p1, tgt::vec2 p2)
+        : p1_(p1)
+        , p2_(p2)
+    {
+    }
+    tgt::vec2 p1_;
+    tgt::vec2 p2_;
+
+    float len() {
+        return tgt::distance(p1_, p2_);
+    }
+    float dist(tgt::vec2 q) {
+        auto parallel = p1_-p2_;
+        auto parallel_norm = tgt::normalize(parallel);
+
+        float along = tgt::dot(parallel_norm, q - p2_);
+        if(0 > along || along > len()) {
+            return std::numeric_limits<float>::infinity();
+        }
+
+        tgt::vec2 orthogonal(parallel.y, -parallel.x);
+        auto orth_norm = tgt::normalize(orthogonal);
+        float dist = tgt::dot(orth_norm, p1_-q);
+        return tgt::abs(dist);
     }
 };
 
@@ -141,14 +169,28 @@ void InteractiveProjectionLabeling::overlayEvent(tgt::MouseEvent* e) {
         ++i;
     }
     if(nearest) {
-        if(e->action() == tgt::MouseEvent::PRESSED && button == tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
+        if(e->action() == tgt::MouseEvent::RELEASED && button == tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
             displayLine_.erase(displayLine_.begin() + *nearest);
         } else {
             displayLine_[*nearest] = mouse;
         }
-    } else {
-        if(e->action() == tgt::MouseEvent::PRESSED && button == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
-            displayLine_.push_back(mouse);
+    } else if(e->action() == tgt::MouseEvent::RELEASED && button == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
+        int insert_index = -1;
+        for(int i=0; i<((int)displayLine_.size())-1; ++i) {
+            Line line(displayLine_[i], displayLine_[i+1]);
+            float dist = line.dist(mouse);
+            if(dist < MOUSE_DRAG_DIST) {
+                insert_index = i;
+            }
+        }
+        if(insert_index != -1) {
+            displayLine_.insert(displayLine_.begin() + insert_index+1, mouse);
+        } else {
+            if(displayLine_.empty() || tgt::distance(displayLine_.front(), mouse) < tgt::distance(displayLine_.back(), mouse)) {
+                displayLine_.push_front(mouse);
+            } else {
+                displayLine_.push_back(mouse);
+            }
         }
     }
 
