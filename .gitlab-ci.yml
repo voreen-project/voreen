@@ -115,9 +115,7 @@ processorcreatetest_coreprofile:
 processorinittest_coreprofile:
   stage: test
   script:
-    - Xvfb ${XVFB_SERVER_ARGS} :98 -ac &
-    - export DISPLAY=:98
-    - ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=info --logFile=processorinittest-log.html
+    - xvfb-run --server-args="${XVFB_SERVER_ARGS}" -- ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=info --logFile=processorinittest-log.html
   artifacts:
     paths:
     - processorinittest-log.html
