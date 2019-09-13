@@ -61,8 +61,9 @@ protected:
 
 private:
 
+    FlowParametrizationPort flowParametrizationInport_;
+    FlowParametrizationPort flowParametrizationOutport_;
     GeometryPort geometryPort_;
-    FlowParametrizationPort flowIndicatorPort_;
 
     OptionProperty<FlowSimulationGeometryType> geometryType_;
     FloatProperty ratio_;

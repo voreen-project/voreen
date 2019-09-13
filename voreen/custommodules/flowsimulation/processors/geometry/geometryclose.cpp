@@ -31,7 +31,7 @@
 
 namespace voreen {
 
-const std::string GeometryClose::loggerCat_("voreen.flowreen.GeometryClose");
+const std::string GeometryClose::loggerCat_("voreen.flowsimulation.GeometryClose");
 
 GeometryClose::GeometryClose()
     : Processor()

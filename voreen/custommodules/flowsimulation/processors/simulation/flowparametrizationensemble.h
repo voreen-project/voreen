@@ -23,43 +23,58 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "geometryoffsetremove.h"
+#ifndef VRN_FLOWPARAMETRIZATIONENSEMBLE_H
+#define VRN_FLOWPARAMETRIZATIONENSEMBLE_H
 
-#include "voreen/core/datastructures/geometry/geometry.h"
+#include "voreen/core/processors/processor.h"
+
+#include "voreen/core/properties/stringproperty.h"
+#include "voreen/core/properties/floatproperty.h"
+#include "voreen/core/properties/intproperty.h"
+
+#include "../../ports/flowparametrizationport.h"
+
+#include "modules/base/properties/interactivelistproperty.h"
 
 namespace voreen {
 
-const std::string GeometryOffsetRemove::loggerCat_("voreen.flowsimulation.GeometryOffsetRemove");
+/**
+ * This processor is being used to parametrize a simulation ensemble.
+ */
+class VRN_CORE_API FlowParametrizationEnsemble : public Processor {
+public:
+    FlowParametrizationEnsemble();
+    virtual Processor* create() const         { return new FlowParametrizationEnsemble(); }
 
-GeometryOffsetRemove::GeometryOffsetRemove()
-    : Processor()
-    , inport_(Port::INPORT, "geometry.input", "Geometry Input")
-    , outport_(Port::OUTPORT, "geometry.output", "Geometry Output", false)
-    , enableProcessing_("enableProcessing", "Enable", true)
-{
-    addPort(inport_);
-    addPort(outport_);
+    virtual std::string getClassName() const  { return "FlowParametrizationEnsemble";     }
+    virtual std::string getCategory() const   { return "Simulation";                      }
+    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;           }
 
-    addProperty(enableProcessing_);
-}
+    virtual void process();
 
-Processor* GeometryOffsetRemove::create() const {
-    return new GeometryOffsetRemove();
-}
+protected:
 
-void GeometryOffsetRemove::process() {
-    const Geometry* inputGeometry = inport_.getData();
-    tgtAssert(inputGeometry, "no input geometry");
-    if (!enableProcessing_.get()) {
-        outport_.setData(inputGeometry, false);
-        return;
+    virtual void setDescriptions() {
+        setDescription("This processor is being used to parameterize a simulation ensemble.");
     }
 
-    // clone and transform input geometry
-    std::unique_ptr<Geometry> outputGeometry = inputGeometry->clone();
-    tgt::vec3 offset = outputGeometry->getBoundingBox(true).getLLF();
-    outputGeometry->transform(tgt::mat4::createTranslation(-offset));
-    outport_.setData(outputGeometry.release());
-}
+private:
 
-}   // namespace
+    void addFeature(const std::string& name, int id);
+
+    FlowParametrizationPort outport_;
+
+    StringProperty ensembleName_;
+    FloatProperty simulationTime_;
+    IntProperty numTimeSteps_;
+    IntProperty outputResolution_;
+
+    InteractiveListProperty flowFeatures_;
+    std::vector<int> flowFeatureIds_;
+
+    static const std::string loggerCat_;
+};
+
+}   //namespace
+
+#endif

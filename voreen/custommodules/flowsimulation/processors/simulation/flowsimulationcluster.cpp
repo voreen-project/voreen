@@ -33,7 +33,7 @@
 
 namespace voreen {
 
-const std::string FlowSimulationCluster::loggerCat_("voreen.flowreen.FlowSimulationCluster");
+const std::string FlowSimulationCluster::loggerCat_("voreen.flowsimulation.FlowSimulationCluster");
 
 FlowSimulationCluster::FlowSimulationCluster()
     : Processor()
@@ -212,6 +212,12 @@ void FlowSimulationCluster::enqueueSimulations() {
     if (!flowParametrization || flowParametrization->empty()) {
         VoreenApplication::app()->showMessageBox("Error", "No parametrization. Did you add one?", true);
         LERROR("No parametrization");
+        return;
+    }
+
+    if(flowParametrization->getFlowFeatures() == FT_NONE) {
+        VoreenApplication::app()->showMessageBox("Error", "No flow feature selected. Did you add one?", true);
+        LERROR("No flow feature selected");
         return;
     }
 

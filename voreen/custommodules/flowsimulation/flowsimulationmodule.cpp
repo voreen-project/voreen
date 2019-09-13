@@ -26,6 +26,7 @@
 #include "flowsimulationmodule.h"
 
 // processors
+#include "processors/features/wallshearstressextractor.h"
 #include "processors/geometry/geometryclose.h"
 #include "processors/geometry/geometryoffsetremove.h"
 #include "processors/render/unalignedsliceviewer.h"
@@ -33,7 +34,8 @@
 #include "processors/simulation/flowensemblecreator.h"
 //#include "processors/simulation/flowindicatorselection.h"
 #include "processors/simulation/flowindicatorrenderer.h"
-#include "processors/simulation/flowparametrization.h"
+#include "processors/simulation/flowparametrizationensemble.h"
+#include "processors/simulation/flowparametrizationrun.h"
 #include "processors/simulation/flowsimulationcluster.h"
 #include "processors/simulation/flowsimulationgeometry.h"
 #include "processors/volume/volumelistadapter.h"
@@ -45,7 +47,7 @@
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
 #include <olb3D.h>
 #include "processors/simulation/flowsimulation.h"
-#include "processors/geometry/implicitrepresentation.h"
+#include "processors/geometry/geometryinsidetest.h"
 #endif
 
 namespace voreen {
@@ -57,6 +59,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     setGuiName("FlowSimulation");
 
     // processors
+    registerSerializableType(new WallShearStressExtractor());
     registerSerializableType(new GeometryClose());
     registerSerializableType(new GeometryOffsetRemove());
     registerSerializableType(new UnalignedSliceViewer());
@@ -64,7 +67,8 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerSerializableType(new FlowEnsembleCreator());
     //registerSerializableType(new FlowIndicatorSelection());
     registerSerializableType(new FlowIndicatorRenderer());
-    registerSerializableType(new FlowParametrization());
+    registerSerializableType(new FlowParametrizationEnsemble());
+    registerSerializableType(new FlowParametrizationRun());
     registerSerializableType(new FlowSimulationCluster());
     registerSerializableType(new FlowSimulationGeometry());
     registerSerializableType(new VolumeListAdapter());
@@ -72,7 +76,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerSerializableType(new FlowIndicatorDetection());
 #endif
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
-    registerSerializableType(new ImplicitRepresentation());
+    registerSerializableType(new GeometryInsideTest());
     registerSerializableType(new FlowSimulation());
 #endif
 }

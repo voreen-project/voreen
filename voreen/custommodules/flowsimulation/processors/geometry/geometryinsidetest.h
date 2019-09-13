@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_IMPLICITREPRESENTATION_H
-#define VRN_IMPLICITREPRESENTATION_H
+#ifndef VRN_GEOMETRYINSIDETEST_H
+#define VRN_GEOMETRYINSIDETEST_H
 
 #include "voreen/core/processors/processor.h"
 #include "voreen/core/ports/geometryport.h"
@@ -34,12 +34,12 @@
 
 namespace voreen {
 
-class VRN_CORE_API ImplicitRepresentation : public Processor {
+class VRN_CORE_API GeometryInsideTest : public Processor {
 public:
-    ImplicitRepresentation();
+    GeometryInsideTest();
     virtual Processor* create() const;
 
-    virtual std::string getClassName() const { return "ImplicitRepresentation"; }
+    virtual std::string getClassName() const { return "GeometryInsideTest"; }
     virtual std::string getCategory() const  { return "Geometry";               }
     virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL;  }
     virtual bool usesExpensiveComputation() const { return true; }
@@ -47,7 +47,8 @@ public:
 protected:
 
     virtual void setDescriptions() {
-        setDescription("Creates an implicit representation of the incoming geometry."
+        setDescription("Creates a binary volume for the incoming geometry."
+                       "Value 1 determines inside, value 0 means outside."
                        "Ensure that the geometry has been converted to mm!");
         method_.setDescription("Method to be used for inside/outside test."
                                "Fast requires the geometry to be a close mesh."
@@ -73,4 +74,4 @@ private:
 
 }   //namespace
 
-#endif // VRN_IMPLICITREPRESENTATION_H
+#endif

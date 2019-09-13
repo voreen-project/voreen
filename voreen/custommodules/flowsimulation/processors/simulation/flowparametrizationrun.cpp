@@ -23,7 +23,7 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "flowparametrization.h"
+#include "flowparametrizationrun.h"
 
 #define PARAMETER_DISCRETIZATION_BEGIN(PROPERTY, TYPE) \
     int discretization ## PROPERTY = discretization_.get(); \
@@ -46,9 +46,9 @@
 
 namespace voreen {
 
-const std::string FlowParametrization::loggerCat_("voreen.flowsimulation.FlowParametrization");
+const std::string FlowParametrizationRun::loggerCat_("voreen.flowsimulation.FlowParametrizationRun");
 
-FlowParametrization::FlowParametrization()
+FlowParametrizationRun::FlowParametrizationRun()
     : Processor()
     , inport_(Port::INPORT, "inport", "Parameter Inport")
     , outport_(Port::OUTPORT, "outport", "Parameter Inport")
@@ -85,7 +85,7 @@ FlowParametrization::FlowParametrization()
     addProperty(characteristicVelocity_);
         characteristicVelocity_.setGroupID("parameters");
     addProperty(fluid_);
-        ON_CHANGE(fluid_, FlowParametrization, fluidChanged);
+        ON_CHANGE(fluid_, FlowParametrizationRun, fluidChanged);
         fluid_.addOption("water", "Water", FLUID_WATER);
         fluid_.addOption("blood", "Blood", FLUID_BLOOD);
         fluid_.setGroupID("parameters");
@@ -103,11 +103,11 @@ FlowParametrization::FlowParametrization()
     setPropertyGroupGuiName("parameters", "Parameters");
 
     addProperty(addParametrization_);
-    ON_CHANGE(addParametrization_, FlowParametrization, addParametrizations);
+    ON_CHANGE(addParametrization_, FlowParametrizationRun, addParametrizations);
     addProperty(removeParametrization_);
-    ON_CHANGE(removeParametrization_, FlowParametrization, removeParametrization);
+    ON_CHANGE(removeParametrization_, FlowParametrizationRun, removeParametrization);
     addProperty(clearParametrizations_);
-    ON_CHANGE(clearParametrizations_, FlowParametrization, clearParametrizations);
+    ON_CHANGE(clearParametrizations_, FlowParametrizationRun, clearParametrizations);
 
     addProperty(parametrizations_);
     parametrizations_.setColumnLabel(0, "Name");
@@ -121,7 +121,7 @@ FlowParametrization::FlowParametrization()
     parametrizations_.setColumnLabel(8, "Bouzidi");
 }
 
-void FlowParametrization::fluidChanged() {
+void FlowParametrizationRun::fluidChanged() {
     switch(fluid_.getValue()) {
     case FLUID_WATER:
         viscosity_.setMinValue(0.79722f);
@@ -145,7 +145,7 @@ void FlowParametrization::fluidChanged() {
     }
 }
 
-void FlowParametrization::addParametrizations() {
+void FlowParametrizationRun::addParametrizations() {
 
     std::string name = parametrizationName_.get();
     for(const FlowParameters& params : flowParameters_) {
@@ -199,7 +199,7 @@ void FlowParametrization::addParametrizations() {
     PARAMETER_DISCRETIZATION_END
 }
 
-void FlowParametrization::removeParametrization() {
+void FlowParametrizationRun::removeParametrization() {
     if(parametrizations_.getNumRows() > 0 && parametrizations_.getSelectedRowIndex() >= 0) {
         flowParameters_.erase(flowParameters_.begin() + parametrizations_.getSelectedRowIndex());
         parametrizations_.removeRow(parametrizations_.getSelectedRowIndex());
@@ -210,16 +210,16 @@ void FlowParametrization::removeParametrization() {
     }
 }
 
-void FlowParametrization::clearParametrizations() {
+void FlowParametrizationRun::clearParametrizations() {
     parametrizations_.reset();
     flowParameters_.clear();
 }
 
-void FlowParametrization::adjustPropertiesToInput() {
+void FlowParametrizationRun::adjustPropertiesToInput() {
     setPropertyGroupVisible("ensemble", !inport_.hasData());
 }
 
-void FlowParametrization::process() {
+void FlowParametrizationRun::process() {
 
     FlowParametrizationList* flowParametrizationList = new FlowParametrizationList(*inport_.getData());
 
@@ -230,12 +230,12 @@ void FlowParametrization::process() {
     outport_.setData(flowParametrizationList);
 }
 
-void FlowParametrization::serialize(Serializer& s) const {
+void FlowParametrizationRun::serialize(Serializer& s) const {
     Processor::serialize(s);
     s.serialize("flowParameters", flowParameters_);
 }
 
-void FlowParametrization::deserialize(Deserializer& s) {
+void FlowParametrizationRun::deserialize(Deserializer& s) {
     Processor::deserialize(s);
     s.deserialize("flowParameters", flowParameters_);
 }

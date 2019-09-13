@@ -23,43 +23,35 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "geometryoffsetremove.h"
+#include "wallshearstressextractor.h"
 
-#include "voreen/core/datastructures/geometry/geometry.h"
+#include "voreen/core/datastructures/volume/volume.h"
+#include "voreen/core/datastructures/volume/volumeram.h"
+#include "voreen/core/datastructures/geometry/glmeshgeometry.h"
+
+#ifdef VRN_MODULE_OPENMP
+#include "omp.h"
+#endif
 
 namespace voreen {
 
-const std::string GeometryOffsetRemove::loggerCat_("voreen.flowsimulation.GeometryOffsetRemove");
+const std::string WallShearStressExtractor::loggerCat_("voreen.flowsimulation.wallshearstressextractor");
 
-GeometryOffsetRemove::GeometryOffsetRemove()
-    : Processor()
-    , inport_(Port::INPORT, "geometry.input", "Geometry Input")
-    , outport_(Port::OUTPORT, "geometry.output", "Geometry Output", false)
-    , enableProcessing_("enableProcessing", "Enable", true)
+WallShearStressExtractor::WallShearStressExtractor()
+    : VolumeProcessor()
+    , inputVolume_(Port::INPORT, "wallshearstressextractor.inputVolume", "Volume Input")
+    , inputGeometry_(Port::INPORT, "wallshearstressextractor.inputGeometry", "Geometry Input")
+    , outputVolume_(Port::OUTPORT, "wallshearstressextractor.outputVolume", "Volume Output")
 {
-    addPort(inport_);
-    addPort(outport_);
-
-    addProperty(enableProcessing_);
+    addPort(inputVolume_);
+    addPort(inputGeometry_);
+    addPort(outputVolume_);
 }
 
-Processor* GeometryOffsetRemove::create() const {
-    return new GeometryOffsetRemove();
+void WallShearStressExtractor::process() {
+}
+Processor* WallShearStressExtractor::create() const {
+    return new WallShearStressExtractor();
 }
 
-void GeometryOffsetRemove::process() {
-    const Geometry* inputGeometry = inport_.getData();
-    tgtAssert(inputGeometry, "no input geometry");
-    if (!enableProcessing_.get()) {
-        outport_.setData(inputGeometry, false);
-        return;
-    }
-
-    // clone and transform input geometry
-    std::unique_ptr<Geometry> outputGeometry = inputGeometry->clone();
-    tgt::vec3 offset = outputGeometry->getBoundingBox(true).getLLF();
-    outputGeometry->transform(tgt::mat4::createTranslation(-offset));
-    outport_.setData(outputGeometry.release());
-}
-
-}   // namespace
+} // namespace voreen

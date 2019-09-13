@@ -23,8 +23,9 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include <include/voreen/core/datastructures/geometry/glmeshgeometry.h>
 #include "flowsimulationgeometry.h"
+
+#include "include/voreen/core/datastructures/geometry/glmeshgeometry.h"
 
 namespace voreen {
 
@@ -32,14 +33,16 @@ const std::string FlowSimulationGeometry::loggerCat_("voreen.flowsimulation.Flow
 
 FlowSimulationGeometry::FlowSimulationGeometry()
     : Processor()
+    , flowParametrizationInport_(Port::INPORT, "flowparametrization.inport", "Flow Parametrization Input")
+    , flowParametrizationOutport_(Port::OUTPORT, "flowparametrization.outport", "Flow Parametrization Output")
     , geometryPort_(Port::OUTPORT, "geometry", "Geometry Port")
-    , flowIndicatorPort_(Port::OUTPORT, "indicators", "Flow Indicators")
     , geometryType_("geometryType", "Geometry Type")
     , ratio_("ratio", "Ratio", 1.0f, 0.1f, 10.0f)
     , transformation_("transformation", "Transformation", tgt::mat4::identity)
 {
+    addPort(flowParametrizationInport_);
+    addPort(flowParametrizationOutport_);
     addPort(geometryPort_);
-    addPort(flowIndicatorPort_);
 
     addProperty(geometryType_);
     geometryType_.addOption("cylinder", "Cylinder", FSGT_CYLINDER);
@@ -49,8 +52,8 @@ FlowSimulationGeometry::FlowSimulationGeometry()
 
 void FlowSimulationGeometry::process() {
 
+    auto* flowParametrizationList = new FlowParametrizationList(*flowParametrizationInport_.getData());
     auto* geometry = new GlMeshGeometryUInt32Normal();
-    auto* flowParametrizationList = new FlowParametrizationList("");
 
     switch(geometryType_.getValue()) {
     case FSGT_CYLINDER: {
@@ -60,6 +63,8 @@ void FlowSimulationGeometry::process() {
 
         FlowIndicator inlet;
         inlet.direction_ = FD_IN;
+        inlet.startPhaseFunction_ = FF_SINUS;
+        inlet.startPhaseDuration_ = 0.25f;
         inlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 0.0f);
         inlet.normal_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 1.0f);
         inlet.radius_ = 1.0f;
@@ -79,8 +84,8 @@ void FlowSimulationGeometry::process() {
         break;
     }
 
+    flowParametrizationOutport_.setData(flowParametrizationList);
     geometryPort_.setData(geometry);
-    flowIndicatorPort_.setData(flowParametrizationList);
 }
 
 }   // namespace

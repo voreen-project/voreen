@@ -73,7 +73,7 @@ struct VRN_CORE_API FlowIndicator : public Serializable {
 };
 
 /**
- * Datastructure used to represent flow parameters for setting up a flow simulation. It is used in the flowreen module.
+ * Datastructure used to represent flow parameters for setting up a flow simulation. It is used in the flowsimulation module.
  */
 class VRN_CORE_API FlowParameters : public Serializable {
 public:
@@ -127,7 +127,7 @@ public:
     void setDensity(float density);
 
     /**
-     * Returns the constant for the Smagorinsky turbolence model.
+     * Returns the constant for the Smagorinsky turbulence model.
      */
     float getSmagorinskyConstant() const;
     void setSmagorinskyConstant(float smagorinskyConstant);

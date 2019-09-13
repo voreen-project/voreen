@@ -25,8 +25,6 @@
 
 #include "flowindicatorrenderer.h"
 
-#include "voreen/core/datastructures/callback/memberfunctioncallback.h"
-
 #include "tgt/immediatemode/immediatemode.h"
 
 namespace {

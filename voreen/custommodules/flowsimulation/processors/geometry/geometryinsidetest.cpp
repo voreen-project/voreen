@@ -23,7 +23,7 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "implicitrepresentation.h"
+#include "geometryinsidetest.h"
 
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
@@ -34,12 +34,12 @@ typedef double T;
 
 namespace voreen {
 
-const std::string ImplicitRepresentation::loggerCat_("voreen.flowreen.FlowGeometrySource");
+const std::string GeometryInsideTest::loggerCat_("voreen.flowsimulation.GeometryInsideTest");
 
-ImplicitRepresentation::ImplicitRepresentation()
+GeometryInsideTest::GeometryInsideTest()
     : Processor()
-    , inport_(Port::INPORT, "flowgeomertysource.inport", "")
-    , outport_(Port::OUTPORT, "flowgeometrysource.outport", "ID Volume Output", false)
+    , inport_(Port::INPORT, "geometryinsidetest.inport", "")
+    , outport_(Port::OUTPORT, "geometryinsidetest.outport", "ID Volume Output", false)
     , method_("method", "Method")
     , dimensions_("dimensions", "Dimensions", 256, 32, 1024)
     , path_("path", "STL geometry", "Path", "", "STL (*.stl)", FileDialogProperty::OPEN_FILE)
@@ -54,11 +54,11 @@ ImplicitRepresentation::ImplicitRepresentation()
     addProperty(path_);
 }
 
-Processor* ImplicitRepresentation::create() const {
-    return new ImplicitRepresentation();
+Processor* GeometryInsideTest::create() const {
+    return new GeometryInsideTest();
 }
 
-bool ImplicitRepresentation::isReady() const {
+bool GeometryInsideTest::isReady() const {
     if(!isInitialized()) {
         setNotReadyErrorMessage("Not initialized");
         return false;
@@ -72,7 +72,7 @@ bool ImplicitRepresentation::isReady() const {
     return true;
 }
 
-void ImplicitRepresentation::process() {
+void GeometryInsideTest::process() {
 
     const GlMeshGeometryBase* inputGeometry = dynamic_cast<const GlMeshGeometryBase*>(inport_.getData());
     tgtAssert(inputGeometry, "Invalid input");

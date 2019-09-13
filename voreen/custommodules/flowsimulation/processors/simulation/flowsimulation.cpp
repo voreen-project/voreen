@@ -41,7 +41,7 @@ namespace voreen {
 
 const T FlowSimulation::VOREEN_LENGTH_TO_SI = 0.001;
 const T FlowSimulation::VOREEN_TIME_TO_SI = 0.001;
-const std::string FlowSimulation::loggerCat_("voreen.flowreen.FlowSimulation");
+const std::string FlowSimulation::loggerCat_("voreen.flowsimulation.FlowSimulation");
 
 
 FlowSimulation::MeasuredDataMapper::MeasuredDataMapper(const VolumeBase* volume)
@@ -51,6 +51,8 @@ FlowSimulation::MeasuredDataMapper::MeasuredDataMapper(const VolumeBase* volume)
     tgtAssert(volume_, "No volume");
     tgtAssert(volume_->getNumChannels() == 3, "Num channels != 3");
     bounds_ = volume_->getBoundingBox(false).getBoundingBox(false);
+    representation_.reset(new VolumeRAMRepresentationLock(volume_));
+    physicalToVoxelMatrix_ = volume_->getPhysicalToVoxelMatrix();
 }
 
 bool FlowSimulation::MeasuredDataMapper::operator() (T output[], const T input[]) {
@@ -59,12 +61,12 @@ bool FlowSimulation::MeasuredDataMapper::operator() (T output[], const T input[]
         return false;
     }
 
-    const VolumeRAM_3xFloat* initialState = dynamic_cast<const VolumeRAM_3xFloat*>(volume_->getRepresentation<VolumeRAM>());
+    auto* initialState = dynamic_cast<const VolumeRAM_3xFloat*>(**representation_);
     if(!initialState)
         return false;
 
     for(size_t i=0; i < volume_->getNumChannels(); i++) {
-        tgt::vec3 voxel = initialState->getVoxelLinear(rwPos, 0, false);
+        tgt::vec3 voxel = initialState->getVoxelLinear(physicalToVoxelMatrix_ * rwPos, 0, false);
         output[i] = voxel[i] * VOREEN_LENGTH_TO_SI;
     }
 
@@ -156,6 +158,10 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     const FlowParametrizationList* flowParameterList = parameterPort_.getThreadSafeData();
     if(!flowParameterList || flowParameterList->empty()) {
         throw InvalidInputException("No parameterization", InvalidInputException::S_ERROR);
+    }
+
+    if(flowParameterList->getFlowFeatures() == FT_NONE) {
+        throw InvalidInputException("No flow feature selected", InvalidInputException::S_WARNING);
     }
 
     if(measuredData && !measuredData->empty()) {
@@ -618,8 +624,10 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
         sLattice.getStatistics().print(ti, converter.getPhysTime(ti));
     }
 
-    if (sLattice.getStatistics().getMaxU() > 0.3) {
-        LERROR("PROBLEM uMax=" << sLattice.getStatistics().getMaxU());
+    T tau = converter.getLatticeRelaxationFrequency();
+    T threshold = tau < 0.55 ? 0.125*(tau - 0.5) : 0.4;
+    if (sLattice.getStatistics().getMaxU() >= threshold) {
+        LERROR("uMax=" << sLattice.getStatistics().getMaxU() << " above threshold=" << threshold);
         return false;
     }
 

@@ -23,34 +23,33 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_FLOWINDICATORDETECTION_H
-#define VRN_FLOWINDICATORDETECTION_H
+#ifndef VRN_FLOWPARAMETRIZATIONRUN_H
+#define VRN_FLOWPARAMETRIZATIONRUN_H
 
 #include "voreen/core/processors/processor.h"
-#include "voreen/core/ports/volumeport.h"
+
+#include "voreen/core/properties/stringproperty.h"
+#include "voreen/core/properties/numeric/intervalproperty.h"
 #include "voreen/core/properties/string/stringtableproperty.h"
 
-#include "../../datastructures/flowparameters.h"
 #include "../../ports/flowparametrizationport.h"
-
-#include "modules/vesselnetworkanalysis/ports/vesselgraphport.h"
 
 namespace voreen {
 
 /**
- * This processor is being used to select in and out flow.
+ * This processor is being used to parametrize simulation runs.
  */
-class VRN_CORE_API FlowIndicatorDetection : public Processor {
+class VRN_CORE_API FlowParametrizationRun : public Processor {
 public:
-    FlowIndicatorDetection();
-    virtual Processor* create() const         { return new FlowIndicatorDetection();    }
+    FlowParametrizationRun();
+    virtual Processor* create() const         { return new FlowParametrizationRun(); }
 
-    virtual std::string getClassName() const  { return "FlowIndicatorDetection";        }
-    virtual std::string getCategory() const   { return "Simulation";                    }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;         }
+    virtual std::string getClassName() const  { return "FlowParametrizationRun";     }
+    virtual std::string getCategory() const   { return "Simulation";                 }
+    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;      }
 
-    virtual bool isReady() const;
     virtual void process();
+
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
 
@@ -59,34 +58,44 @@ protected:
     virtual void adjustPropertiesToInput();
 
     virtual void setDescriptions() {
-        setDescription("This processor is being used to select in and out flow.");
+        setDescription("This processor is being used to parameterize simulation runs.");
     }
 
 private:
 
-    void onSelectionChange();
-    void onConfigChange();
-    void onInputChange();
-    void buildTable();
+    enum Fluid {
+        FLUID_WATER,
+        FLUID_BLOOD,
+    };
 
-    FlowParametrizationPort flowParametrizationInport_;
-    VesselGraphPort vesselGraphPort_;
-    VolumePort volumePort_;
-    FlowParametrizationPort flowParametrizationOutport_;
+    void fluidChanged();
+    void addParametrizations();
+    void removeParametrization();
+    void clearParametrizations();
 
-    OptionProperty<FlowDirection> flowDirection_;
-    OptionProperty<FlowFunction> startPhaseFunction_;
-    FloatProperty startPhaseDuration_;
-    FloatProperty radius_;
+    std::vector<FlowParameters> flowParameters_;
 
-    StringTableProperty flowIndicatorTable_;
+    FlowParametrizationPort inport_;
+    FlowParametrizationPort outport_;
 
-    IntProperty firstRefNode_;
-    IntProperty numRefNodes_;
-    IntProperty angleThreshold_;
+    StringProperty parametrizationName_;
+    IntIntervalProperty spatialResolution_;
+    IntIntervalProperty temporalResolution_;
+    //FloatIntervalProperty temporalResolution_;
+    FloatIntervalProperty characteristicLength_;
+    FloatIntervalProperty characteristicVelocity_;
+    OptionProperty<Fluid> fluid_;
+    FloatIntervalProperty viscosity_;
+    FloatIntervalProperty density_;
+    FloatIntervalProperty smagorinskyConstant_;
+    BoolProperty bouzidi_;
+    IntProperty discretization_;
 
-    std::vector<FlowIndicator> flowIndicators_;
-    bool triggertBySelection_;
+    ButtonProperty addParametrization_;
+    ButtonProperty removeParametrization_;
+    ButtonProperty clearParametrizations_;
+
+    StringTableProperty parametrizations_;
 
     static const std::string loggerCat_;
 };

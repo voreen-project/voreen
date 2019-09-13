@@ -23,83 +23,37 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_FLOWPARAMETRIZATION_H
-#define VRN_FLOWPARAMETRIZATION_H
+#ifndef VRN_WALLSHEARSTRESSEXTRACTOR_H
+#define VRN_WALLSHEARSTRESSEXTRACTOR_H
 
-#include "voreen/core/processors/processor.h"
-
-#include "voreen/core/properties/stringproperty.h"
-#include "voreen/core/properties/numeric/intervalproperty.h"
-#include "voreen/core/properties/string/stringtableproperty.h"
-
-#include "../../ports/flowparametrizationport.h"
+#include "voreen/core/processors/volumeprocessor.h"
+#include "voreen/core/ports/geometryport.h"
 
 namespace voreen {
 
-/**
- * This processor is being used to parametrize a simulation.
- */
-class VRN_CORE_API FlowParametrization : public Processor {
+class WallShearStressExtractor : public VolumeProcessor {
 public:
-    FlowParametrization();
-    virtual Processor* create() const         { return new FlowParametrization(); }
+    WallShearStressExtractor();
 
-    virtual std::string getClassName() const  { return "FlowParametrization";     }
-    virtual std::string getCategory() const   { return "Simulation";              }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;  }
+    virtual std::string getClassName() const      { return "WallShearStressExtractor"; }
+    virtual std::string getCategory() const       { return "Feature Extraction"; }
+    virtual Processor* create() const;
+    virtual void setDescriptions() {
+    }
+    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
 
     virtual void process();
 
-    virtual void serialize(Serializer& s) const;
-    virtual void deserialize(Deserializer& s);
-
-protected:
-
-    virtual void adjustPropertiesToInput();
-
-    virtual void setDescriptions() {
-        setDescription("This processor is being used to parameterize a simulation.");
-    }
-
 private:
 
-    enum Fluid {
-        FLUID_WATER,
-        FLUID_BLOOD,
-    };
-
-    void fluidChanged();
-    void addParametrizations();
-    void removeParametrization();
-    void clearParametrizations();
-
-    std::vector<FlowParameters> flowParameters_;
-
-    FlowParametrizationPort inport_;
-    FlowParametrizationPort outport_;
-
-    StringProperty parametrizationName_;
-    IntIntervalProperty spatialResolution_;
-    IntIntervalProperty temporalResolution_;
-    //FloatIntervalProperty temporalResolution_;
-    FloatIntervalProperty characteristicLength_;
-    FloatIntervalProperty characteristicVelocity_;
-    OptionProperty<Fluid> fluid_;
-    FloatIntervalProperty viscosity_;
-    FloatIntervalProperty density_;
-    FloatIntervalProperty smagorinskyConstant_;
-    BoolProperty bouzidi_;
-    IntProperty discretization_;
-
-    ButtonProperty addParametrization_;
-    ButtonProperty removeParametrization_;
-    ButtonProperty clearParametrizations_;
-
-    StringTableProperty parametrizations_;
+    // Ports
+    VolumePort inputVolume_;
+    GeometryPort inputGeometry_;
+    VolumePort outputVolume_;
 
     static const std::string loggerCat_;
 };
 
-}   //namespace
+} // namespace voreen
 
-#endif
+#endif // VRN_ISOSURFACEEXTRACTOR_H

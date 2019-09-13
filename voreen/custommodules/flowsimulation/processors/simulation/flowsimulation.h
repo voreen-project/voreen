@@ -106,7 +106,9 @@ private:
 
     private:
         const VolumeBase* volume_;
+        std::unique_ptr<VolumeRAMRepresentationLock> representation_;
         tgt::Bounds bounds_;
+        tgt::mat4 physicalToVoxelMatrix_;
     };
 
     void runSimulation(     const FlowSimulationInput& input,

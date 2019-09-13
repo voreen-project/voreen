@@ -33,14 +33,10 @@ const std::string FlowIndicatorDetection::loggerCat_("voreen.flowsimulation.Flow
 
 FlowIndicatorDetection::FlowIndicatorDetection()
     : Processor()
-    , vesselGraphPort_(Port::INPORT, "vesselgraph.inport", "Vessel Graph (Optional)")
+    , flowParametrizationInport_(Port::INPORT, "floParametrization.inport", "Flow Parametrization Input")
+    , vesselGraphPort_(Port::INPORT, "vesselgraph.inport", "Vessel Graph")
     , volumePort_(Port::INPORT, "volume.inport", "Velocity Data Port (Optional)")
-    , flowParametrizationPort_(Port::OUTPORT, "flowParametrization.outport", "Flow Parametrization")
-    , ensembleName_("ensembleName", "Ensemble Name", "test_ensemble")
-    , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 20.0f)
-    , numTimeSteps_("numTimeSteps", "Num. Output Time Steps", 50, 1, 1000)
-    , outputResolution_("outputResolution", "Max. Output Resolution", 128, 32, 1024)
-    , flowFeatures_("flowFeatures", "Flow Features")
+    , flowParametrizationOutport_(Port::OUTPORT, "flowParametrization.outport", "Flow Parametrization Output")
     , flowDirection_("flowDirection", "Flow Direction")
     , startPhaseFunction_("startPhaseFunction", "Start Phase Function")
     , startPhaseDuration_("startPhaseDuration", "Start Phase Duration (s)", 0.0f, 0.0f, 20.0f)
@@ -51,33 +47,14 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , angleThreshold_("angleThreshold", "Angle Threshold", 15, 0, 90)
     , triggertBySelection_(false)
 {
+    addPort(flowParametrizationInport_);
+    ON_CHANGE(vesselGraphPort_, FlowIndicatorDetection, onInputChange);
     addPort(vesselGraphPort_);
     ON_CHANGE(vesselGraphPort_, FlowIndicatorDetection, onInputChange);
     addPort(volumePort_);
     volumePort_.addCondition(new PortConditionVolumeType3xFloat());
     ON_CHANGE(volumePort_, FlowIndicatorDetection, onInputChange);
-    addPort(flowParametrizationPort_);
-
-    addProperty(ensembleName_);
-        ensembleName_.setGroupID("ensemble");
-    addProperty(simulationTime_);
-        simulationTime_.setGroupID("ensemble");
-        ON_CHANGE_LAMBDA(simulationTime_, [this] {
-            startPhaseDuration_.setMaxValue(simulationTime_.get());
-        });
-    addProperty(numTimeSteps_);
-        numTimeSteps_.setGroupID("ensemble");
-    addProperty(outputResolution_);
-        outputResolution_.setGroupID("ensemble");
-
-    addProperty(flowFeatures_);
-    addFeature("Velocity", FT_VELOCITY);
-    addFeature("Magnitude", FT_MAGNITUDE);
-    addFeature("Pressure", FT_PRESSURE);
-    addFeature("Wall Shear Stress", FT_WALLSHEARSTRESS);
-    flowFeatures_.addInstance("Velocity"); // Default selection.
-    flowFeatures_.setGroupID("ensemble");
-    setPropertyGroupGuiName("ensemble", "Ensemble");
+    addPort(flowParametrizationOutport_);
 
     addProperty(flowDirection_);
         flowDirection_.addOption("none", "NONE", FlowDirection::FD_NONE);
@@ -142,23 +119,24 @@ bool FlowIndicatorDetection::isReady() const {
         return false;
     }
 
-    // Both inports are optional
+    if(!flowParametrizationInport_.isReady()) {
+        setNotReadyErrorMessage("No Input parametrization");
+        return false;
+    }
+
+    if(!vesselGraphPort_.isReady()) {
+        setNotReadyErrorMessage("No input vesselgraph");
+        return false;
+    }
+
+    // Reference volume is optional.
 
     return true;
 }
 
 void FlowIndicatorDetection::process() {
 
-    FlowParametrizationList* flowParametrizationList = new FlowParametrizationList(ensembleName_.get());
-    flowParametrizationList->setSimulationTime(simulationTime_.get());
-    flowParametrizationList->setNumTimeSteps(numTimeSteps_.get());
-    flowParametrizationList->setOutputResolution(outputResolution_.get());
-
-    int flowFeatures = FT_NONE;
-    for(const InteractiveListProperty::Instance& instance : flowFeatures_.getInstances()) {
-        flowFeatures |=  flowFeatureIds_[instance.itemId_];
-    }
-    flowParametrizationList->setFlowFeatures(flowFeatures);
+    FlowParametrizationList* flowParametrizationList = new FlowParametrizationList(*flowParametrizationInport_.getData());
 
     for(const FlowIndicator& indicator : flowIndicators_) {
         // NONE means invalid or not being selected for output.
@@ -167,12 +145,7 @@ void FlowIndicatorDetection::process() {
         }
     }
 
-    flowParametrizationPort_.setData(flowParametrizationList);
-}
-
-void FlowIndicatorDetection::addFeature(const std::string &name, int id) {
-    flowFeatures_.addItem(name);
-    flowFeatureIds_.push_back(id);
+    flowParametrizationOutport_.setData(flowParametrizationList);
 }
 
 void FlowIndicatorDetection::onSelectionChange() {
@@ -219,9 +192,10 @@ void FlowIndicatorDetection::onInputChange() {
 
     flowIndicators_.clear();
 
+    const FlowParametrizationList* flowParametrizationList = flowParametrizationInport_.getData();
     const VesselGraph* vesselGraph = vesselGraphPort_.getData();
-    if(!vesselGraph) {
-        flowParametrizationPort_.clear();
+    if(!flowParametrizationList || !vesselGraph) {
+        flowParametrizationOutport_.clear();
         buildTable();
         return;
     }
@@ -271,7 +245,7 @@ void FlowIndicatorDetection::onInputChange() {
             indicator.direction_ = FlowDirection::FD_NONE;
             // Define default values here:
             indicator.startPhaseFunction_ = FlowFunction::FF_SINUS;
-            indicator.startPhaseDuration_ = simulationTime_.get() * 0.25f;
+            indicator.startPhaseDuration_ = flowParametrizationList->getSimulationTime() * 0.25f;
 
             // Estimate flow direction based on underlying velocities.
             if (volume) {

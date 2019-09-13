@@ -511,8 +511,10 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
         sLattice.getStatistics().print(ti, converter.getPhysTime(ti));
     }
 
-    if (sLattice.getStatistics().getMaxU() > 0.3) {
-        clout << "PROBLEM uMax=" << sLattice.getStatistics().getMaxU() << std::endl;
+    T tau = converter.getLatticeRelaxationFrequency();
+    T threshold = tau < 0.55 ? 0.125*(tau - 0.5) : 0.4;
+    if (sLattice.getStatistics().getMaxU() >= threshold) {
+        LERROR("uMax=" << sLattice.getStatistics().getMaxU() << " above threshold=" << threshold);
         std::exit(EXIT_FAILURE);
     }
 }

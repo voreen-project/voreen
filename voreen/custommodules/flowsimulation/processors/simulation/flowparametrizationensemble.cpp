@@ -23,43 +23,62 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "geometryoffsetremove.h"
-
-#include "voreen/core/datastructures/geometry/geometry.h"
+#include "flowparametrizationensemble.h"
 
 namespace voreen {
 
-const std::string GeometryOffsetRemove::loggerCat_("voreen.flowsimulation.GeometryOffsetRemove");
+const std::string FlowParametrizationEnsemble::loggerCat_("voreen.flowsimulation.FlowParametrizationEnsemble");
 
-GeometryOffsetRemove::GeometryOffsetRemove()
+FlowParametrizationEnsemble::FlowParametrizationEnsemble()
     : Processor()
-    , inport_(Port::INPORT, "geometry.input", "Geometry Input")
-    , outport_(Port::OUTPORT, "geometry.output", "Geometry Output", false)
-    , enableProcessing_("enableProcessing", "Enable", true)
+    , outport_(Port::OUTPORT, "outport", "Parameter Inport")
+    , ensembleName_("ensembleName", "Ensemble Name", "test_ensemble")
+    , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 20.0f)
+    , numTimeSteps_("numTimeSteps", "Num. Output Time Steps", 50, 1, 1000)
+    , outputResolution_("outputResolution", "Max. Output Resolution", 128, 32, 1024)
+    , flowFeatures_("flowFeatures", "Flow Features")
 {
-    addPort(inport_);
     addPort(outport_);
 
-    addProperty(enableProcessing_);
+    addProperty(ensembleName_);
+    ensembleName_.setGroupID("ensemble");
+    addProperty(simulationTime_);
+    simulationTime_.setGroupID("ensemble");
+    addProperty(numTimeSteps_);
+    numTimeSteps_.setGroupID("ensemble");
+    addProperty(outputResolution_);
+    outputResolution_.setGroupID("ensemble");
+
+    addProperty(flowFeatures_);
+    addFeature("Velocity", FT_VELOCITY);
+    addFeature("Magnitude", FT_MAGNITUDE);
+    addFeature("Pressure", FT_PRESSURE);
+    addFeature("Wall Shear Stress", FT_WALLSHEARSTRESS);
+    flowFeatures_.addInstance("Velocity"); // Default selection.
+    flowFeatures_.setGroupID("ensemble");
+    setPropertyGroupGuiName("ensemble", "Ensemble");
 }
 
-Processor* GeometryOffsetRemove::create() const {
-    return new GeometryOffsetRemove();
-}
+void FlowParametrizationEnsemble::process() {
 
-void GeometryOffsetRemove::process() {
-    const Geometry* inputGeometry = inport_.getData();
-    tgtAssert(inputGeometry, "no input geometry");
-    if (!enableProcessing_.get()) {
-        outport_.setData(inputGeometry, false);
-        return;
+    FlowParametrizationList* flowParametrizationList = new FlowParametrizationList(ensembleName_.get());
+    flowParametrizationList->setSimulationTime(simulationTime_.get());
+    flowParametrizationList->setNumTimeSteps(numTimeSteps_.get());
+    flowParametrizationList->setOutputResolution(outputResolution_.get());
+
+    int flowFeatures = FT_NONE;
+    for(const InteractiveListProperty::Instance& instance : flowFeatures_.getInstances()) {
+        flowFeatures |=  flowFeatureIds_[instance.itemId_];
     }
+    flowParametrizationList->setFlowFeatures(flowFeatures);
 
-    // clone and transform input geometry
-    std::unique_ptr<Geometry> outputGeometry = inputGeometry->clone();
-    tgt::vec3 offset = outputGeometry->getBoundingBox(true).getLLF();
-    outputGeometry->transform(tgt::mat4::createTranslation(-offset));
-    outport_.setData(outputGeometry.release());
+    outport_.setData(flowParametrizationList);
+
+}
+
+void FlowParametrizationEnsemble::addFeature(const std::string &name, int id) {
+    flowFeatures_.addItem(name);
+    flowFeatureIds_.push_back(id);
 }
 
 }   // namespace
