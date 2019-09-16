@@ -27,6 +27,56 @@
 
 namespace voreen {
 
+InteractiveListProperty::Instance::Instance()
+    : itemId_(-1)
+    , instanceId_(-1)
+    , active_(false)
+{
+}
+
+InteractiveListProperty::Instance::Instance(int itemId, int instanceId)
+    : itemId_(itemId)
+    , instanceId_(instanceId)
+    , active_(true)
+{
+}
+
+void InteractiveListProperty::Instance::serialize(Serializer& s) const {
+    s.serialize("itemId", itemId_);
+    s.serialize("instanceId", instanceId_);
+    s.serialize("active", active_);
+    s.serialize("name", name_);
+}
+
+void InteractiveListProperty::Instance::deserialize(Deserializer& s) {
+    s.deserialize("itemId", itemId_);
+    s.deserialize("instanceId", instanceId_);
+    s.deserialize("active", active_);
+    s.deserialize("name", name_);
+}
+
+int InteractiveListProperty::Instance::getItemId() const {
+    return itemId_;
+}
+int InteractiveListProperty::Instance::getInstanceId() const {
+    return instanceId_;
+}
+
+bool InteractiveListProperty::Instance::isActive() const {
+    return active_;
+}
+void InteractiveListProperty::Instance::setActive(bool active) {
+    active_ = active;
+}
+
+const std::string& InteractiveListProperty::Instance::getName() const {
+    return name_;
+}
+void InteractiveListProperty::Instance::setName(const std::string& name) {
+    name_ = name;
+}
+
+
 InteractiveListProperty::InteractiveListProperty(const std::string& id, const std::string& guiText, bool allowDuplication,
                             int invalidationLevel, Property::LevelOfDetail lod)
     : Property(id, guiText, invalidationLevel, lod)
@@ -36,10 +86,10 @@ InteractiveListProperty::InteractiveListProperty(const std::string& id, const st
     // Setup default name generator.
     nameGenerator_ =
         [this] (const Instance& instance) {
-            std::string name = items_[instance.itemId_];
+            std::string name = items_[instance.getItemId()];
 
             if (allowDuplication_) {
-                name += " (" + std::to_string(instance.instanceId_) + ")";
+                name += " (" + std::to_string(instance.getInstanceId()) + ")";
             }
 
             return name;
@@ -58,14 +108,33 @@ void InteractiveListProperty::serialize(Serializer& s) const {
     Property::serialize(s);
     s.serialize("items", items_);
     s.serialize("inputItemIds", inputItemIds_);
-    s.serializeBinaryBlob("instances", instances_);
+    s.serialize("instancesExt", instances_);
 
 }
 void InteractiveListProperty::deserialize(Deserializer& s) {
     Property::deserialize(s);
     s.deserialize("items", items_);
     s.deserialize("inputItemIds", inputItemIds_);
-    s.deserializeBinaryBlob("instances", instances_);
+
+    try {
+        s.deserialize("instancesExt", instances_);
+    }
+    catch (SerializationNoSuchDataException&) {
+        s.removeLastError();
+        LINFO("trying old deserialization");
+
+        struct DeprecatedInstance { int itemId_; int instanceId_; };
+        std::vector<DeprecatedInstance> deprecatedInstances;
+        s.deserializeBinaryBlob("instances", deprecatedInstances);
+
+        instances_.clear();
+        for(const DeprecatedInstance& instance : deprecatedInstances) {
+            Instance instanceExt(instance.itemId_, instance.instanceId_);
+            instanceExt.setActive(true);
+            instanceExt.setName(nameGenerator_(instanceExt));
+            instances_.push_back(instanceExt);
+        }
+    }
 }
 
 size_t InteractiveListProperty::getNumItems() const {
@@ -130,10 +199,14 @@ const std::vector<InteractiveListProperty::Instance>& InteractiveListProperty::g
     return instances_;
 }
 
+std::vector<InteractiveListProperty::Instance>& InteractiveListProperty::getInstances() {
+    return instances_;
+}
+
 std::vector<InteractiveListProperty::Instance> InteractiveListProperty::getInstances(const std::string& item) const {
     std::vector<Instance> instances;
     for(const Instance& instance : instances_) {
-        if(items_[instance.itemId_] == item) {
+        if(items_[instance.getItemId()] == item) {
             instances.push_back(instance);
         }
     }
@@ -175,7 +248,7 @@ void InteractiveListProperty::removeInstance(int instanceId) {
         return;
 
     auto instance = instances_.begin() + idx;
-    int itemId = instance->itemId_;
+    int itemId = instance->getItemId();
     instances_.erase(instance);
 
     if(!allowDuplication_) {
@@ -283,7 +356,7 @@ int InteractiveListProperty::getIndexOfItem(const std::string& item) const {
 
 int InteractiveListProperty::getIndexOfInstance(int instanceId) const {
     for(size_t i = 0; i < instances_.size(); i++) {
-        if(instances_[i].instanceId_ == instanceId) {
+        if(instances_[i].getInstanceId() == instanceId) {
             return static_cast<int>(i);
         }
     }
@@ -293,7 +366,7 @@ int InteractiveListProperty::getIndexOfInstance(int instanceId) const {
 std::vector<int> InteractiveListProperty::getInstanceIds(const std::string& name) const {
     std::vector<int> ids;
     for(size_t i = 0; i < instances_.size(); i++) {
-        if(items_[instances_[i].itemId_] == name) {
+        if(items_[instances_[i].getItemId()] == name) {
             ids.push_back(static_cast<int>(i));
         }
     }
@@ -301,21 +374,18 @@ std::vector<int> InteractiveListProperty::getInstanceIds(const std::string& name
 }
 
 InteractiveListProperty::Instance InteractiveListProperty::createInstance(int itemId) const {
-    Instance instance;
-    instance.itemId_ = itemId;
-    instance.instanceId_ = 0;
 
     //TODO: useful IDs? / Reuse removed instance IDs?
+    int instanceId = 0;
     for(const Instance& other : instances_) {
-        instance.instanceId_ = std::max(other.instanceId_, instance.instanceId_);
+        instanceId = std::max(other.getInstanceId(), instanceId);
     }
-    instance.instanceId_++;
+    instanceId++;
+
+    Instance instance(itemId, instanceId);
+    instance.setName(nameGenerator_(instance));
 
     return instance;
-}
-
-std::string InteractiveListProperty::getInstanceName(const voreen::InteractiveListProperty::Instance& instance) const {
-    return nameGenerator_(instance);
 }
 
 void InteractiveListProperty::setNameGenerator(const NameGenerator& nameGenerator) {

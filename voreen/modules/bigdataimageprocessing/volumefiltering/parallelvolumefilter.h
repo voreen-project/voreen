@@ -97,11 +97,9 @@ std::unique_ptr<VolumeRAM> ParallelVolumeFilter<InputType, OutputType>::getFilte
 
     const tgt::ivec3& srcDim = src->getSignedDimensions();
 
-    std::string format = (OutputType::dim == 1) ?
-        sliceBaseType_ :
-        "Vector" + std::to_string(OutputType::dim) + "(" + sliceBaseType_ + ")"; // only SLIGHTLY hacky
-
-    std::unique_ptr<VolumeRAM> slice(VolumeFactory().create(format, tgt::svec3(srcDim.xy(), 1)));
+    VolumeFactory volumeFactory;
+    std::string format = volumeFactory.getFormat(sliceBaseType_, OutputType::dim);
+    std::unique_ptr<VolumeRAM> slice(volumeFactory.create(format, tgt::svec3(srcDim.xy(), 1)));
 
     std::function<InputType(const tgt::ivec3& p)> getValueFromReader = [src] (const tgt::ivec3& p) {
         InputType out;

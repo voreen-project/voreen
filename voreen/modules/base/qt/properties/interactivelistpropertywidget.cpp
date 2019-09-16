@@ -25,16 +25,21 @@
 
 #include "interactivelistpropertywidget.h"
 
+#include "voreen/core/voreenapplication.h"
+#include "voreen/core/utils/commandqueue.h"
+#include "voreen/core/datastructures/callback/lambdacallback.h"
+
 #include "../../properties/interactivelistproperty.h"
 
 #include "voreen/qt/widgets/customlabel.h"
 
 #include <QApplication>
 #include <QListWidget>
+#include <QDrag>
 #include <QDragLeaveEvent>
 #include <QDropEvent>
+#include <QMenu>
 #include <QMimeData>
-#include <QDrag>
 
 namespace voreen {
 
@@ -111,12 +116,12 @@ public:
 
     void dropEvent(QDropEvent* event) {
         if(event->mimeData()->hasFormat("filter/instance")) {
-            int instance = 0;
+            int instanceIdx = 0;
             QByteArray data = event->mimeData()->data("filter/instance");
             QDataStream dataStream(&data, QIODevice::ReadOnly);
-            dataStream >> instance;
+            dataStream >> instanceIdx;
             event->acceptProposedAction();
-            property_->removeInstance(property_->getInstances()[instance].instanceId_);
+            property_->removeInstance(property_->getInstances()[instanceIdx].getInstanceId());
         }
         else {
             event->ignore();
@@ -145,20 +150,29 @@ public:
     {
         setAcceptDrops(true);
         setMinimumHeight(150);
+        setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(this, &InstanceListWidget::customContextMenuRequested, this, &InstanceListWidget::showContextMenu);
+        connect(this, &InstanceListWidget::itemChanged, this, &InstanceListWidget::textChanged);
     }
 
     void rebuild() {
         clear();
 
         for (const InteractiveListProperty::Instance& instance : property_->getInstances()) {
-            QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(property_->getInstanceName(instance)));
+            QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(instance.getName()));
+            item->setFlags(item->flags() | Qt::ItemIsEditable);
             addItem(item);
+
+            // Disable item, if not active.
+            if(!instance.isActive()) {
+                item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+            }
         }
         setCurrentRow(property_->getSelectedInstance());
     }
 
     void mousePressEvent(QMouseEvent* event) {
-        if (event->button() == Qt::LeftButton) {
+        if (event->button() & (Qt::LeftButton | Qt::RightButton)) {
             dragStartPosition_ = event->pos();
             QListWidgetItem* selectedItem = itemAt(dragStartPosition_);
             if(selectedItem) {
@@ -218,12 +232,12 @@ public:
                 return;
             }
 
-            int instance = 0;
+            int instanceIdx = 0;
             QByteArray data = event->mimeData()->data("filter/instance");
             QDataStream dataStream(&data, QIODevice::ReadOnly);
-            dataStream >> instance;
+            dataStream >> instanceIdx;
 
-            property_->swapInstances(property_->getInstances()[instance].instanceId_, position);
+            property_->swapInstances(property_->getInstances()[instanceIdx].getInstanceId(), position);
             event->acceptProposedAction();
         }
         else if(event->mimeData()->hasFormat("filter/item")) {
@@ -260,7 +274,7 @@ public:
             current++;
         }
         else if(event->key() == Qt::Key_Delete) {
-            property_->removeInstance(instance.instanceId_);
+            property_->removeInstance(instance.getInstanceId());
             return;
         }
         else {
@@ -271,10 +285,38 @@ public:
         current = tgt::clamp(current, 0, count()-1);
 
         if(event->modifiers() & Qt::Modifier::CTRL) {
-            property_->swapInstances(instance.instanceId_, current);
+            property_->swapInstances(instance.getInstanceId(), current);
         }
         else {
             property_->setSelectedInstance(current);
+        }
+    }
+
+public slots:
+
+    void showContextMenu(const QPoint& pos) {
+        QListWidgetItem* item = itemAt(pos);
+        if(item) {
+            QMenu menu;
+            menu.addAction(tr("Rename"), [this, item] { editItem(item); });
+            menu.exec(mapToGlobal(pos));
+        }
+    }
+
+    void textChanged(QListWidgetItem* item) {
+        int instanceIdx = row(item);
+        InteractiveListProperty::Instance& instance = property_->getInstances()[instanceIdx];
+
+        // Update the instance's name accordingly.
+        if(!item->text().isEmpty()) {
+            instance.setName(item->text().toStdString());
+
+            // TODO: The state is well defined here, since both instance and widget are up to date.
+            //  However, owning processors have to be informed in order to be up to date as well.
+        }
+        // Otherwise, discard.
+        else {
+            item->setText(QString::fromStdString(instance.getName()));
         }
     }
 

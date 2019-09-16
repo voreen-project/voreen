@@ -108,6 +108,7 @@ private:
 
     void onFilterListChange();
     void onFilterPropertyChange();
+    void inputOutputChannelCheck();
 
     void addFilter(FilterProperties* filterProperties);
 

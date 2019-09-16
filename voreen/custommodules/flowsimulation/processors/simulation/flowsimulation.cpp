@@ -86,7 +86,7 @@ FlowSimulation::FlowSimulation()
 {
     addPort(geometryDataPort_);
     addPort(measuredDataPort_);
-    measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
+    //measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
     measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeType3xFloat()));
     addPort(parameterPort_);
 
@@ -167,15 +167,6 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     if(measuredData && !measuredData->empty()) {
         LINFO("Configuring a steered simulation");
         // Check for volume compatibility
-        VolumeBase* volumeT0 = measuredData->first();
-        if (volumeT0->getDimensions() != tgt::svec3(volumeT0->getDimensions().x)) {
-            throw InvalidInputException("Measured data must have dimensions: n x n x n",
-                                        InvalidInputException::S_ERROR);
-        }
-        if (volumeT0->getSpacing() != tgt::vec3(volumeT0->getSpacing().x)) {
-            throw InvalidInputException("Measured data must have spacing: n x n x n", InvalidInputException::S_ERROR);
-        }
-
         for (size_t i = 1; i < measuredData->size(); i++) {
             VolumeBase* volumeTi = measuredData->at(i);
 

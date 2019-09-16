@@ -56,23 +56,9 @@ DynamicPythonProcessor::DynamicPythonProcessor()
     //addProperty(pythonProperty_); // Don't add property here, since the editor is included as processor widget!
     pythonProperty_.setOwner(this); // ..but override owner!
     ON_CHANGE(pythonProperty_, DynamicPythonProcessor, onScriptChange);
-
-    /*
-    // TODO: define naming schema!
-    // Name Generator spitting out "<PortType>(<instance>)"
-    InteractiveListProperty::NameGenerator nameGenerator =
-            [this] (const InteractiveListProperty::Instance& instance) {
-                std::string name = portList_.getItems()[instance.itemId_];
-                name += "(" + std::to_string(portInstances_[name].size()) + ")";
-                return name;
-            };
-
-    portList_.setNameGenerator(nameGenerator);
-    */
 }
 
 DynamicPythonProcessor::~DynamicPythonProcessor() {
-    portInstances_.clear();
     portList_.clear(); // Will trigger onPortListChange an delete remaining ports.
 }
 
@@ -153,7 +139,7 @@ void DynamicPythonProcessor::onPortListChange() {
     for(Port* port : getPorts()) {
         bool found = false;
         for(auto iter = newPorts.begin(); iter != newPorts.end(); iter++) {
-            if(portList_.getInstanceName(*iter) == port->getID()) {
+            if(iter->getName() == port->getID()) {
                 found = true;
                 newPorts.erase(iter);
                 break;
@@ -174,8 +160,8 @@ void DynamicPythonProcessor::onPortListChange() {
 
     // Create new Ports.
     for (auto& newPort : newPorts) {
-        Port* item = portItems_[newPort.itemId_].get();
-        Port* port = item->create(item->isInport() ? Port::INPORT : Port::OUTPORT, portList_.getInstanceName(newPort));
+        Port* item = portItems_[newPort.getItemId()].get();
+        Port* port = item->create(item->isInport() ? Port::INPORT : Port::OUTPORT, newPort.getName());
         addPort(port);
         port->initialize();
     }

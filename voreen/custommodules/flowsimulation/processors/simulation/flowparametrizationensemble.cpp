@@ -68,7 +68,7 @@ void FlowParametrizationEnsemble::process() {
 
     int flowFeatures = FT_NONE;
     for(const InteractiveListProperty::Instance& instance : flowFeatures_.getInstances()) {
-        flowFeatures |=  flowFeatureIds_[instance.itemId_];
+        flowFeatures |=  flowFeatureIds_[instance.getItemId()];
     }
     flowParametrizationList->setFlowFeatures(flowFeatures);
 

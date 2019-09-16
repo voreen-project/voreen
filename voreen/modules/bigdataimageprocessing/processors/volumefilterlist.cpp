@@ -61,8 +61,6 @@ VolumeFilterList::VolumeFilterList()
     , propertyDisabler_(*this)
 {
     addPort(inport_);
-        // Currently, only single channel volumes are supported.
-        inport_.addCondition(new PortConditionVolumeChannelCount(1));
     addPort(outport_);
 
     addProperty(filterList_);
@@ -134,6 +132,8 @@ void VolumeFilterList::deserialize(Deserializer& s) {
     for(size_t i=0; i < filterProperties_.size(); i++) {
         filterProperties_[i]->deserialize(s);
     }
+
+    inputOutputChannelCheck();
 }
 
 VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
@@ -156,12 +156,16 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
     VolumeFilterStackBuilder builder(inputVolume);
     std::string baseType = inputVolume.getBaseType();
     for(const InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
-        VolumeFilter* filter = filterProperties_[instance.itemId_]->getVolumeFilter(inputVolume, instance.instanceId_);
+
+        if(!instance.isActive()) {
+            LINFO("Filter: '" << instance.getName() << "' is not active. Skipping.");
+            continue;
+        }
+
+        VolumeFilter* filter = filterProperties_[instance.getItemId()]->getVolumeFilter(inputVolume, instance.getInstanceId());
         if(!filter) {
-            LWARNING("Filter: '" << filterList_.getInstanceName(instance)
-                                 << "' has not been configured yet. Taking default.");
-            filter = filterProperties_[instance.itemId_]->getVolumeFilter(inputVolume,
-                                                                          FilterProperties::DEFAULT_SETTINGS);
+            LWARNING("Filter: '" << instance.getName() << "' has not been configured yet. Taking default.");
+            filter = filterProperties_[instance.getItemId()]->getVolumeFilter(inputVolume, FilterProperties::DEFAULT_SETTINGS);
         }
         tgtAssert(filter, "filter was null");
 
@@ -227,6 +231,9 @@ void VolumeFilterList::adjustPropertiesToInput() {
     for(auto& filterProperties : filterProperties_) {
         filterProperties->adjustPropertiesToInput(*input);
     }
+
+    // Check, if channels match at filter interfaces.
+    inputOutputChannelCheck();
 }
 
 // private methods
@@ -241,8 +248,8 @@ void VolumeFilterList::onFilterListChange() {
         if(numInstances_ > filterList_.getInstances().size() && selectedInstance_) {
             // Assumes that only the selected item can be removed!
             tgtAssert(numInstances_ == filterList_.getInstances().size() + 1, "Only single instance removal allowed!");
-            setPropertyGroupVisible(filterList_.getItems()[selectedInstance_->itemId_], false);
-            filterProperties_[selectedInstance_->itemId_]->removeInstance(selectedInstance_->instanceId_);
+            setPropertyGroupVisible(filterList_.getItems()[selectedInstance_->getItemId()], false);
+            filterProperties_[selectedInstance_->getItemId()]->removeInstance(selectedInstance_->getInstanceId());
             selectedInstance_.reset();
         }
         numInstances_ = filterList_.getInstances().size();
@@ -250,10 +257,10 @@ void VolumeFilterList::onFilterListChange() {
 
     // Hide old group.
     if(selectedInstance_) {
-        filterProperties_[selectedInstance_->itemId_]->storeVisibility();
+        filterProperties_[selectedInstance_->getItemId()]->storeVisibility();
         // No need to store the settings here, since it is done on change anyways.
         //filterProperties_[selectedInstance_->itemId_]->storeInstance(selectedInstance_->instanceId_);
-        setPropertyGroupVisible(filterList_.getItems()[selectedInstance_->itemId_], false);
+        setPropertyGroupVisible(filterList_.getItems()[selectedInstance_->getItemId()], false);
 
         // We need to reset here, because otherwise onFilterPropertyChange
         // will be triggered while the current instance is restored.
@@ -264,19 +271,51 @@ void VolumeFilterList::onFilterListChange() {
     boost::optional<InteractiveListProperty::Instance> currentInstance;
     if(filterList_.getSelectedInstance() != -1) {
         currentInstance = filterList_.getInstances()[filterList_.getSelectedInstance()];
-        setPropertyGroupVisible(filterList_.getItems()[currentInstance->itemId_], true);
-        filterProperties_[currentInstance->itemId_]->restoreVisibility();
-        filterProperties_[currentInstance->itemId_]->restoreInstance(currentInstance->instanceId_);
+        setPropertyGroupVisible(filterList_.getItems()[currentInstance->getItemId()], true);
+        filterProperties_[currentInstance->getItemId()]->restoreVisibility();
+        filterProperties_[currentInstance->getItemId()]->restoreInstance(currentInstance->getInstanceId());
     }
 
     selectedInstance_ = currentInstance;
+
+    // Check, if channels match at filter interfaces.
+    inputOutputChannelCheck();
 }
 
 void VolumeFilterList::onFilterPropertyChange() {
     // If any filter property was modified, we need to store the settings immediately.
     if(selectedInstance_) {
-        filterProperties_[selectedInstance_->itemId_]->storeInstance(selectedInstance_->instanceId_);
+        filterProperties_[selectedInstance_->getItemId()]->storeInstance(selectedInstance_->getInstanceId());
     }
+}
+
+void VolumeFilterList::inputOutputChannelCheck() {
+    // Reset filter active state.
+    for(InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
+        instance.setActive(false);
+    }
+
+    if(inport_.hasData()) {
+        const VolumeBase& volume = *inport_.getData();
+        size_t numOutputChannels = volume.getNumChannels();
+        for (InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
+            VolumeFilter* filter = filterProperties_[instance.getItemId()]->getVolumeFilter(volume,
+                                                                                            FilterProperties::DEFAULT_SETTINGS);
+            tgtAssert(filter, "filter was null");
+
+            if (numOutputChannels == filter->getNumInputChannels()) {
+                instance.setActive(true);
+                numOutputChannels = filter->getNumOutputChannels();
+            }
+            else {
+                LERROR("Input channel count of filter '" << instance.getName() << "' is not satisfied. Deactivating.");
+            }
+        }
+    }
+
+    // Don't invalidate here, since this will lead to infinite recursion.
+    // We just need to update the widgets only, anyways.
+    filterList_.updateWidgets();
 }
 
 void VolumeFilterList::addFilter(FilterProperties* filterProperties) {

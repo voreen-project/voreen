@@ -42,9 +42,30 @@ namespace voreen {
 class VRN_CORE_API InteractiveListProperty : public Property {
 public:
 
-    struct Instance {
-        int itemId_;        ///< id of associated item
-        int instanceId_;    ///< unique instance id
+    class Instance : public Serializable {
+    public:
+        Instance();
+        Instance(int itemId, int instanceId);
+
+        virtual void serialize(Serializer& s) const;
+        virtual void deserialize(Deserializer& s);
+
+        int getItemId() const;
+        int getInstanceId() const;
+
+        bool isActive() const;
+        void setActive(bool active);
+
+        const std::string& getName() const;
+        void setName(const std::string& name);
+
+    private:
+
+        int itemId_;            ///< id of associated item
+        int instanceId_;        ///< unique instance id
+
+        bool active_;           ///< active state
+        std::string name_;      ///< instance name
     };
 
     typedef std::function<std::string(const Instance&)> NameGenerator;
@@ -123,14 +144,19 @@ public:
 
     /**
      * Returns all instances of the item list.
-     * @note in case duplicates are allowed, the items will have the format "Input#1"
      * @return all instances of the item list
      */
     const std::vector<Instance>& getInstances() const;
 
     /**
+     * Returns all instances of the item list.
+     * @note In order to apply the changes, the property has to be invalidated first!
+     * @return all instances of the item list
+     */
+    std::vector<Instance>& getInstances();
+
+    /**
      * Returns all instances in the output list of a specific item.
-     * @note in case duplicates are allowed, the items will have the format "Input#1"
      * @param item item of which all instances should be returned
      * @return all instances of the specified item
      */
@@ -202,12 +228,6 @@ public:
      * @param index index to be selected
      */
     void setSelectedInstance(int index);
-
-    /**
-     * This function is used to generate names for instances.
-     * To specify a new naming scheme, use setNameGenerator.
-     */
-    std::string getInstanceName(const Instance& instance) const;
 
     /**
      * Sets the name generator for instance name generation.

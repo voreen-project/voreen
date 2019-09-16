@@ -70,7 +70,6 @@ private:
     void addPortItem(Port* port);
 
     std::vector<std::unique_ptr<Port>> portItems_;
-    std::map<std::string, std::vector<Port*>> portInstances_;
 
     InteractiveListProperty portList_;
     BoolProperty enabled_;
