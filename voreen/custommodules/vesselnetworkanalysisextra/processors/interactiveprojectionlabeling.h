@@ -36,6 +36,7 @@
 #include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/shaderproperty.h"
 #include "voreen/core/properties/eventproperty.h"
+#include "voreen/core/properties/cameraproperty.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 #include "modules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
@@ -121,7 +122,7 @@ private:
 
     boost::optional<LZ4SliceVolume<uint8_t>> outputVolume_;
 
-    FloatProperty interpolationValue_;
+    CameraProperty camera_;
 
     static const std::string loggerCat_;
 

@@ -319,7 +319,7 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , projectionOutput_(Port::OUTPORT, "interactiveprojectionlabeling.projectionoutput", "Projection (2D)", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
     , fhp_(Port::INPORT, "interactiveprojectionlabeling.fhp", "First hit points", false)
     , lhp_(Port::INPORT, "interactiveprojectionlabeling.lhp", "Last hit points", false)
-    , interpolationValue_("interpolationvalue", "interp", 0.0, 0.0, 1.0)
+    , camera_("camera", "Camera")
     , outputVolume_(boost::none)
     , copyShader_(nullptr)
     , projectionShader_("shader", "Shader", "interactiveprojectionlabeling.frag", "oit_passthrough.vert")
@@ -339,7 +339,7 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     overlayOutput_.onSizeReceiveChange<InteractiveProjectionLabeling>(this, &InteractiveProjectionLabeling::updateSizes);
 
     addProperty(projectionShader_);
-    addProperty(interpolationValue_);
+    addProperty(camera_);
 }
 
 void InteractiveProjectionLabeling::updateSizes() {
@@ -491,23 +491,55 @@ void InteractiveProjectionLabeling::updateProjection() {
     auto& front = *maybe_front;
     auto& back = *maybe_back;
 
+    tgt::vec3 camera = camera_.get().getPosition();
+
+    auto tex_to_world = vol.getTextureToWorldMatrix();
+    float min_dist = std::numeric_limits<float>::infinity();
+    for(int i=0; i<front.getNumVoxels(); ++i) {
+        auto& p = front.voxel(i);
+        if(p.a > 0) {
+            min_dist = std::min(min_dist, tgt::distance(camera, (tex_to_world * p).xyz()));
+        }
+    }
+    float max_dist = 0.0f;
+    for(int i=0; i<back.getNumVoxels(); ++i) {
+        auto& p = back.voxel(i);
+        if(p.a > 0) {
+            max_dist = std::max(max_dist, tgt::distance(camera, (tex_to_world * p).xyz()));
+        }
+    }
+
     auto line = PolyLine<tgt::vec2>(displayLine_);
 
-    auto tex_to_vox = vol.getTextureToVoxelMatrix();
+    auto world_to_vox = vol.getWorldToVoxelMatrix();
+
+    tgt::vec3 dimf = vol.getDimensions();
     for(int x = 0; x < dim.x; ++x) {
         float d = ((float)x)/(dim.x-1);
         auto p = line.interpolate(d);
 
         tgt::vec3 normalized_query(p, 0);
-        tgt::vec4 front_pos = tex_to_vox * front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
-        tgt::vec4 back_pos = tex_to_vox * back.getVoxelLinear(normalized_query * tgt::vec3(back.getDimensions()));
+        tgt::vec4 front_pos = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
+        tgt::vec4 back_pos = back.getVoxelLinear(normalized_query * tgt::vec3(back.getDimensions()));
+
+        tgt::vec4 front_world = tex_to_world * front_pos;
+        tgt::vec4 back_world = tex_to_world * back_pos;
+
+        tgt::vec3 view_dir = tgt::normalize(back_world.xyz() - front_world.xyz());
 
         for(int y = 0; y < dim.y; ++y) {
             float alpha = ((float)y)/(dim.y-1);
+            float alpha_rw = min_dist * alpha + (1.0 - alpha) * max_dist;
 
-            auto query_pos = front_pos * (1-alpha) + alpha * back_pos;
+            tgt::vec4 query_pos_rw(view_dir * alpha_rw + camera, 1.0);
+            tgt::vec3 query_pos = (world_to_vox * query_pos_rw).xyz();
 
-            float val = volram.getVoxelNormalizedLinear(query_pos.xyz());
+            float val;
+            if(tgt::hor(tgt::greaterThan(query_pos, dimf)) || tgt::hor(tgt::lessThan(query_pos, tgt::vec3::zero))) {
+                val = 0.5;
+            } else {
+                val = volram.getVoxelNormalizedLinear(query_pos);
+            }
 
             proj.at(tgt::svec2(x, y)) = val;
         }
