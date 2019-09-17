@@ -28,6 +28,7 @@
 
 #include "voreen/core/processors/renderprocessor.h"
 #include "voreen/core/ports/volumeport.h"
+#include "voreen/core/ports/geometryport.h"
 #include "voreen/core/ports/renderport.h"
 #include "voreen/core/properties/boolproperty.h"
 #include "voreen/core/properties/intproperty.h"
@@ -36,6 +37,7 @@
 #include "voreen/core/properties/shaderproperty.h"
 #include "voreen/core/properties/eventproperty.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 #include "modules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 
 #include "tgt/vector.h"
@@ -89,17 +91,27 @@ public:
 
 
 private:
+    enum State {
+        LABELING,
+        FREE,
+    };
+
     void updateSizes();
     void renderOverlay();
     void renderProjection();
     void withOutputVolume(std::function<void(LZ4SliceVolume<uint8_t>&)>);
     void updateProjection();
+    void finishProjection();
 
     void projectionEvent(tgt::MouseEvent* e);
     void overlayEvent(tgt::MouseEvent* e);
 
+    boost::optional<VolumeAtomic<tgt::vec4>> getFhp();
+    boost::optional<VolumeAtomic<tgt::vec4>> getLhp();
+
     VolumePort inport_;
     VolumePort labelVolume_;
+    GeometryPort labelGeometry_;
     RenderPort overlayInput_;
     RenderPort overlayOutput_;
     RenderPort projectionOutput_;
@@ -119,6 +131,10 @@ private:
     boost::optional<LabelProjection> projection_;
     std::deque<tgt::vec2> displayLine_;
     std::deque<tgt::vec2> projectionLine_;
+
+    PointSegmentListGeometryVec3 labelLines_;
+
+    State state_;
 };
 
 } // namespace voreen
