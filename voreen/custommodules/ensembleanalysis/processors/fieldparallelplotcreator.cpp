@@ -100,8 +100,21 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
     tgt::mat4 seedMaskPhysicalToVoxelMatrix;
     std::unique_ptr<VolumeRAMRepresentationLock> seedMaskLock;
     if(seedMask) {
+        tgt::Bounds roiBounds = roi;
+        seedMaskBounds = seedMask->getBoundingBox(false).getBoundingBox(false);
+
+        roiBounds.intersectVolume(seedMaskBounds);
+        if(!roiBounds.isDefined()) {
+            throw InvalidInputException("Seed Mask does not overlap with ensemble ROI", InvalidInputException::S_ERROR);
+        }
+
         seedMaskLock.reset(new VolumeRAMRepresentationLock(seedMask));
-        seedMaskBounds = seedMask->getBoundingBox(false).getBoundingBox();
+
+        VolumeMinMax* vmm = seedMask->getDerivedData<VolumeMinMax>();
+        if(vmm->getMinNormalized() == 0.0f && vmm->getMaxNormalized() == 0.0f) {
+            throw InvalidInputException("Seed Mask is empty", InvalidInputException::S_ERROR);
+        }
+
         seedMaskPhysicalToVoxelMatrix = seedMask->getPhysicalToVoxelMatrix();
         LINFO("Restricting seed points to volume mask");
     }
@@ -126,7 +139,8 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
             seedPoint = tgt::vec3(roi.getLLF()) + seedPoint * tgt::vec3(roi.diagonal());
             tries++;
         } while (tries < maxTries && seedMask && (!seedMaskBounds.containsPoint(seedPoint) ||
-                (*seedMaskLock)->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint) == 0.0f));
+                std::abs((*seedMaskLock)->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint)) <
+                    std::numeric_limits<float>::epsilon()));
 
         if(tries < maxTries) {
             seedPoints.push_back(seedPoint);
