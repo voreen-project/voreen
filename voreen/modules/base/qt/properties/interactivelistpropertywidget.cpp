@@ -25,10 +25,6 @@
 
 #include "interactivelistpropertywidget.h"
 
-#include "voreen/core/voreenapplication.h"
-#include "voreen/core/utils/commandqueue.h"
-#include "voreen/core/datastructures/callback/lambdacallback.h"
-
 #include "../../properties/interactivelistproperty.h"
 
 #include "voreen/qt/widgets/customlabel.h"
@@ -163,9 +159,11 @@ public:
             item->setFlags(item->flags() | Qt::ItemIsEditable);
             addItem(item);
 
-            // Disable item, if not active.
+            // Strike out item, if not active.
             if(!instance.isActive()) {
-                item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+                QFont font = item->font();
+                font.setStrikeOut(true);
+                item->setFont(font);
             }
         }
         setCurrentRow(property_->getSelectedInstance());

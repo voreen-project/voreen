@@ -61,6 +61,7 @@ VolumeFilterList::VolumeFilterList()
     , propertyDisabler_(*this)
 {
     addPort(inport_);
+        ON_CHANGE(inport_, VolumeFilterList, inputOutputChannelCheck);
     addPort(outport_);
 
     addProperty(filterList_);
@@ -231,9 +232,6 @@ void VolumeFilterList::adjustPropertiesToInput() {
     for(auto& filterProperties : filterProperties_) {
         filterProperties->adjustPropertiesToInput(*input);
     }
-
-    // Check, if channels match at filter interfaces.
-    inputOutputChannelCheck();
 }
 
 // private methods
@@ -292,7 +290,7 @@ void VolumeFilterList::onFilterPropertyChange() {
 void VolumeFilterList::inputOutputChannelCheck() {
     // Reset filter active state.
     for(InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
-        instance.setActive(false);
+        instance.setActive(true);
     }
 
     if(inport_.hasData()) {
@@ -304,10 +302,10 @@ void VolumeFilterList::inputOutputChannelCheck() {
             tgtAssert(filter, "filter was null");
 
             if (numOutputChannels == filter->getNumInputChannels()) {
-                instance.setActive(true);
                 numOutputChannels = filter->getNumOutputChannels();
             }
             else {
+                instance.setActive(false);
                 LERROR("Input channel count of filter '" << instance.getName() << "' is not satisfied. Deactivating.");
             }
         }

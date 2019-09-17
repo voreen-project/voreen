@@ -42,7 +42,7 @@ namespace voreen {
 class VRN_CORE_API InteractiveListProperty : public Property {
 public:
 
-    class Instance : public Serializable {
+    class VRN_CORE_API Instance : public Serializable {
     public:
         Instance();
         Instance(int itemId, int instanceId);

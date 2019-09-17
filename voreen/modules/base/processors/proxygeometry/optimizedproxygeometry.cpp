@@ -204,7 +204,7 @@ void OptimizedProxyGeometry::adjustPropertiesToInput() {
 }
 
 void OptimizedProxyGeometry::volumeDelete(const VolumeBase* source) {
-    tgtAssert(currentVolume_ = source, "Notified by other volume than current");
+    tgtAssert(currentVolume_ == source, "Notified by other volume than current");
 
     // we do not want to observe the old volume anymore (although it is deleted anyway)
     source->Observable<VolumeObserver>::removeObserver(this);
@@ -225,7 +225,7 @@ void OptimizedProxyGeometry::volumeDelete(const VolumeBase* source) {
 }
 
 void OptimizedProxyGeometry::volumeRepresentationDelete(const VolumeBase* source, const VolumeRepresentation* rep) {
-    tgtAssert(currentVolume_ = source, "Notified by other volume than current");
+    tgtAssert(currentVolume_ == source, "Notified by other volume than current");
     if (dynamic_cast<const VolumeRAM*>(rep)) {
 
         if (backgroundThread_) {
@@ -244,7 +244,7 @@ void OptimizedProxyGeometry::volumeRepresentationDelete(const VolumeBase* source
 }
 
 void OptimizedProxyGeometry::volumeDataDelete(const VolumeBase* source) {
-    tgtAssert(currentVolume_ = source, "Notified by other volume than current");
+    tgtAssert(currentVolume_ == source, "Notified by other volume than current");
 
     if (backgroundThread_) {
         backgroundThread_->interrupt();
@@ -262,7 +262,7 @@ void OptimizedProxyGeometry::volumeDataDelete(const VolumeBase* source) {
 
 
 void OptimizedProxyGeometry::volumeChange(const VolumeBase* source) {
-    tgtAssert(currentVolume_ = source, "Notified by other volume than current");
+    tgtAssert(currentVolume_ == source, "Notified by other volume than current");
 
     if (backgroundThread_) {
         backgroundThread_->interrupt();
