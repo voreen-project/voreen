@@ -39,6 +39,60 @@ private:
     tgt::ivec3 extent_;
 };
 
+template<typename  T>
+class MedianFilterVector : public ParallelVolumeFilter<ParallelFilterValue<T>, ParallelFilterValue<T>> {
+public:
+    MedianFilterVector(const tgt::ivec3& extent, const SamplingStrategy<T>& samplingStrategy, const std::string sliceBaseType);
+    virtual ~MedianFilterVector();
+    ParallelFilterValue<T> getValue(const typename MedianFilterVector<T>::Sample& sample, const tgt::ivec3& pos) const;
+private:
+    tgt::ivec3 extent_;
+};
+
+template<typename T>
+MedianFilterVector<T>::MedianFilterVector(const tgt::ivec3& extent, const SamplingStrategy<T>& samplingStrategy, const std::string sliceBaseType)
+    : ParallelVolumeFilter<ParallelFilterValue<T>, ParallelFilterValue<T>>(extent.z, samplingStrategy, sliceBaseType)
+    , extent_(extent)
+{
+}
+
+template<typename T>
+MedianFilterVector<T>::~MedianFilterVector() {
+}
+
+template<typename T>
+ParallelFilterValue<T> MedianFilterVector<T>::getValue(const typename MedianFilterVector<T>::Sample& sample, const tgt::ivec3& pos) const {
+    std::vector<T> values;
+    values.reserve(tgt::hmul(extent_));
+
+    for(int z = pos.z-extent_.z; z <= pos.z+extent_.z; ++z) {
+        for(int y = pos.y-extent_.y; y <= pos.y+extent_.y; ++y) {
+            for(int x = pos.x-extent_.x; x <= pos.x+extent_.x; ++x) {
+                values.push_back(sample(tgt::ivec3(x,y,z)));
+            }
+        }
+    }
+
+    size_t argMin = 0;
+    float minSum = std::numeric_limits<float>::max();
+    for(size_t i = 0; i < values.size(); i++) {
+        float sum = 0.0f;
+        for(size_t j = 0; j < values.size(); j++) {
+            sum += tgt::length(values[j] - values[i]);
+        }
+        if(sum < minSum) {
+            minSum = sum;
+            argMin = i;
+        }
+    }
+
+    return values[argMin];
+}
+
+typedef MedianFilterVector<tgt::vec2> MedianFilter2D;
+typedef MedianFilterVector<tgt::vec3> MedianFilter3D;
+typedef MedianFilterVector<tgt::vec4> MedianFilter4D;
+
 } // namespace voreen
 
 #endif // VRN_MEDIANFILTER_H

@@ -156,6 +156,7 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
 
     VolumeFilterStackBuilder builder(inputVolume);
     std::string baseType = inputVolume.getBaseType();
+    size_t numOutputChannels = inputVolume.getNumChannels();
     for(const InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
 
         if(!instance.isActive()) {
@@ -169,9 +170,11 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
             filter = filterProperties_[instance.getItemId()]->getVolumeFilter(inputVolume, FilterProperties::DEFAULT_SETTINGS);
         }
         tgtAssert(filter, "filter was null");
+        tgtAssert(numOutputChannels == filter->getNumInputChannels(), "channel mismatch");
 
-        // Base type of output volume is determined by last filter output type.
+        // Base and number of channels type of output volume is determined by last filter output type.
         baseType = filter->getSliceBaseType();
+        numOutputChannels = filter->getNumOutputChannels();
 
         builder.addLayer(std::unique_ptr<VolumeFilter>(filter));
     }
@@ -191,7 +194,7 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
 
     std::unique_ptr<HDF5FileVolume> outputVolume = nullptr;
     try {
-        outputVolume = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(volumeFilePath, volumeLocation, baseType, dim, 1, true, outputVolumeDeflateLevel_.get(), tgt::svec3(dim.x, dim.y, 1), false));
+        outputVolume = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(volumeFilePath, volumeLocation, baseType, dim, numOutputChannels, true, outputVolumeDeflateLevel_.get(), tgt::svec3(dim.x, dim.y, 1), false));
     } catch(tgt::IOException& e) {
         throw InvalidInputException("Could not create output volume.", InvalidInputException::S_ERROR);
     }

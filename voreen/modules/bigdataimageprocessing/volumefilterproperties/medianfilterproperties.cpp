@@ -70,11 +70,38 @@ VolumeFilter* MedianFilterProperties::getVolumeFilter(const VolumeBase& volume, 
         return nullptr;
     }
     Settings settings = instanceSettings_.at(instanceId);
-    return new MedianFilter(
-        tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
-        SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_)),
-        volume.getBaseType()
-    );
+
+    tgt::ivec3 extent(settings.extentX_, settings.extentY_, settings.extentZ_);
+    SamplingStrategy<float> samplingStrategy(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_));
+
+    switch (volume.getNumChannels()) {
+    case 1:
+        return new MedianFilter(
+                tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
+                SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_)),
+                volume.getBaseType()
+        );
+    case 2:
+        return new MedianFilter2D(
+                tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
+                SamplingStrategy<tgt::vec2>(settings.samplingStrategyType_, tgt::vec2(settings.outsideVolumeValue_)),
+                volume.getBaseType()
+        );
+    case 3:
+        return new MedianFilter3D(
+                tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
+                SamplingStrategy<tgt::vec3>(settings.samplingStrategyType_, tgt::vec3(settings.outsideVolumeValue_)),
+                volume.getBaseType()
+        );
+    case 4:
+        return new MedianFilter4D(
+                tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
+                SamplingStrategy<tgt::vec4>(settings.samplingStrategyType_, tgt::vec4(settings.outsideVolumeValue_)),
+                volume.getBaseType()
+        );
+    default:
+        return nullptr;
+    }
 }
 void MedianFilterProperties::restoreInstance(int instanceId) {
     auto iter = instanceSettings_.find(instanceId);
