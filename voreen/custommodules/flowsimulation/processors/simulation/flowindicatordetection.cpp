@@ -38,10 +38,11 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , volumePort_(Port::INPORT, "volume.inport", "Velocity Data Port (Optional)")
     , flowParametrizationOutport_(Port::OUTPORT, "flowParametrization.outport", "Flow Parametrization Output")
     , flowDirection_("flowDirection", "Flow Direction")
+    , flowProfile_("flowProfile", "Flow Profile")
     , startPhaseFunction_("startPhaseFunction", "Start Phase Function")
     , startPhaseDuration_("startPhaseDuration", "Start Phase Duration (s)", 0.0f, 0.0f, 20.0f)
     , radius_("radius", "Radius", 1.0f, 0.0f, 10.0f)
-    , flowIndicatorTable_("flowIndicators", "Flow Indicators", 4)
+    , flowIndicatorTable_("flowIndicators", "Flow Indicators", 5)
     , firstRefNode_("firstRefNode", "First Ref. Nodes", 0, 0, 20)
     , numRefNodes_("numRefNodes", "Num. Ref. Nodes", 3, 1, 10)
     , angleThreshold_("angleThreshold", "Angle Threshold", 15, 0, 90)
@@ -62,10 +63,16 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         flowDirection_.addOption("out", "OUT", FlowDirection::FD_OUT);
         flowDirection_.setGroupID("indicator");
         ON_CHANGE(flowDirection_, FlowIndicatorDetection, onConfigChange);
+    addProperty(flowProfile_);
+        flowProfile_.addOption("none", "NONE", FlowProfile::FP_NONE);
+        flowProfile_.addOption("poiseuille", "POISIEULLE", FlowProfile::FP_POISEUILLE);
+        flowProfile_.addOption("powerlaw", "POWERLAW", FlowProfile::FP_POWERLAW);
+        flowProfile_.addOption("constant", "CONSTANT", FlowProfile::FP_CONSTANT);
+        flowProfile_.setGroupID("indicator");
     addProperty(startPhaseFunction_);
-        startPhaseFunction_.addOption("none", "NONE", FlowFunction::FF_NONE); // get's selected automatically
-        startPhaseFunction_.addOption("constant", "CONSTANT", FlowFunction ::FF_CONSTANT);
-        startPhaseFunction_.addOption("sinus", "SINUS", FlowFunction::FF_SINUS);
+        startPhaseFunction_.addOption("none", "NONE", FlowStartPhase::FSP_NONE); // get's selected automatically
+        startPhaseFunction_.addOption("constant", "CONSTANT", FlowStartPhase ::FSP_CONSTANT);
+        startPhaseFunction_.addOption("sinus", "SINUS", FlowStartPhase::FSP_SINUS);
         startPhaseFunction_.setGroupID("indicator");
         ON_CHANGE(startPhaseFunction_, FlowIndicatorDetection, onConfigChange);
     addProperty(startPhaseDuration_);
@@ -80,11 +87,12 @@ FlowIndicatorDetection::FlowIndicatorDetection()
 
     addProperty(flowIndicatorTable_);
     flowIndicatorTable_.setColumnLabel(0, "Dir.");
-    flowIndicatorTable_.setColumnLabel(1, "St. Ph. Fun.");
-    flowIndicatorTable_.setColumnLabel(2, "St. Ph. Dur.");
-    flowIndicatorTable_.setColumnLabel(3, "Radius");
-    //flowIndicatorTable_.setColumnLabel(4, "Center");
-    //flowIndicatorTable_.setColumnLabel(5, "Normal");
+    flowIndicatorTable_.setColumnLabel(1, "Profile");
+    flowIndicatorTable_.setColumnLabel(2, "St. Ph. Fun.");
+    flowIndicatorTable_.setColumnLabel(3, "St. Ph. Dur.");
+    flowIndicatorTable_.setColumnLabel(4, "Radius");
+    //flowIndicatorTable_.setColumnLabel(5, "Center");
+    //flowIndicatorTable_.setColumnLabel(6, "Normal");
     ON_CHANGE(flowIndicatorTable_, FlowIndicatorDetection, onSelectionChange);
 
     addProperty(firstRefNode_);
@@ -154,6 +162,7 @@ void FlowIndicatorDetection::onSelectionChange() {
         triggertBySelection_ = true;
         size_t index = static_cast<size_t>(flowIndicatorTable_.getSelectedRowIndex());
         flowDirection_.selectByValue(flowIndicators_.at(index).direction_);
+        flowProfile_.selectByValue(flowIndicators_.at(index).flowProfile_);
         startPhaseFunction_.selectByValue(flowIndicators_.at(index).startPhaseFunction_);
         startPhaseDuration_.set(flowIndicators_.at(index).startPhaseDuration_);
         radius_.set(flowIndicators_.at(index).radius_);
@@ -161,6 +170,7 @@ void FlowIndicatorDetection::onSelectionChange() {
     }
 
     flowDirection_.setReadOnlyFlag(!validSelection);
+    flowProfile_.setReadOnlyFlag(!validSelection);
     startPhaseFunction_.setReadOnlyFlag(!validSelection);
     startPhaseDuration_.setReadOnlyFlag(!validSelection);
     radius_.setReadOnlyFlag(!validSelection);
@@ -180,6 +190,7 @@ void FlowIndicatorDetection::onConfigChange() {
 
         FlowIndicator& indicator = flowIndicators_[flowIndicatorTable_.getSelectedRowIndex()];
         indicator.direction_ = flowDirection_.getValue();
+        indicator.flowProfile_ = flowProfile_.getValue();
         indicator.startPhaseFunction_ = startPhaseFunction_.getValue();
         indicator.startPhaseDuration_ = startPhaseDuration_.get();
         indicator.radius_ = radius_.get(); // Estimate is quite accurate.
@@ -244,7 +255,8 @@ void FlowIndicatorDetection::onInputChange() {
             indicator.radius_ = radius;
             indicator.direction_ = FlowDirection::FD_NONE;
             // Define default values here:
-            indicator.startPhaseFunction_ = FlowFunction::FF_SINUS;
+            indicator.flowProfile_ = FlowProfile::FP_POISEUILLE;
+            indicator.startPhaseFunction_ = FlowStartPhase::FSP_SINUS;
             indicator.startPhaseDuration_ = flowParametrizationList->getSimulationTime() * 0.25f;
 
             // Estimate flow direction based on underlying velocities.
@@ -285,14 +297,17 @@ void FlowIndicatorDetection::buildTable() {
         std::vector<std::string> row(flowIndicatorTable_.getNumColumns());
         row[0] = indicator.direction_ == FlowDirection::FD_IN ? "IN" :
                 (indicator.direction_ == FlowDirection::FD_OUT ? "OUT" : "NONE");
-        row[1] = indicator.startPhaseFunction_ == FlowFunction::FF_CONSTANT ? "CONSTANT" :
-                (indicator.startPhaseFunction_ == FlowFunction::FF_SINUS ? "SINUS" : "NONE");
-        row[2] = std::to_string(indicator.startPhaseDuration_);
-        row[3] = std::to_string(indicator.radius_);
+        row[1] = indicator.flowProfile_ == FlowProfile ::FP_POISEUILLE ? "POISEUILLE" :
+                 (indicator.flowProfile_ == FlowProfile::FP_POWERLAW ? "POWERLAW" :
+                  (indicator.flowProfile_ == FlowProfile::FP_CONSTANT ? "CONSTANT" : "NONE"));
+        row[2] = indicator.startPhaseFunction_ == FlowStartPhase::FSP_CONSTANT ? "CONSTANT" :
+                 (indicator.startPhaseFunction_ == FlowStartPhase::FSP_SINUS ? "SINUS" : "NONE");
+        row[3] = std::to_string(indicator.startPhaseDuration_);
+        row[4] = std::to_string(indicator.radius_);
         /*
-        row[4] = "(" + std::to_string(indicator.center_.x) + ", " + std::to_string(indicator.center_.y) + ", " +
+        row[5] = "(" + std::to_string(indicator.center_.x) + ", " + std::to_string(indicator.center_.y) + ", " +
                  std::to_string(indicator.center_.z) + ")";
-        row[5] = "(" + std::to_string(indicator.normal_.x) + ", " + std::to_string(indicator.normal_.y) + ", " +
+        row[6] = "(" + std::to_string(indicator.normal_.x) + ", " + std::to_string(indicator.normal_.y) + ", " +
                  std::to_string(indicator.normal_.z) + ")";
         */
         flowIndicatorTable_.addRow(row);

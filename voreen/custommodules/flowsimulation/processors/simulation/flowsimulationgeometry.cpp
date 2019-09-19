@@ -39,6 +39,7 @@ FlowSimulationGeometry::FlowSimulationGeometry()
     , geometryType_("geometryType", "Geometry Type")
     , ratio_("ratio", "Ratio", 1.0f, 0.1f, 10.0f)
     , transformation_("transformation", "Transformation", tgt::mat4::identity)
+    , flowProfile_("flowProfile", "Flow Profile")
 {
     addPort(flowParametrizationInport_);
     addPort(flowParametrizationOutport_);
@@ -48,6 +49,10 @@ FlowSimulationGeometry::FlowSimulationGeometry()
     geometryType_.addOption("cylinder", "Cylinder", FSGT_CYLINDER);
     addProperty(ratio_);
     addProperty(transformation_);
+    addProperty(flowProfile_);
+    flowProfile_.addOption("poiseuille", "POISEUILLE", FlowProfile::FP_POISEUILLE);
+    flowProfile_.addOption("powerlaw", "POWERLAW", FlowProfile::FP_POWERLAW);
+    flowProfile_.addOption("constant", "CONSTANT", FlowProfile::FP_CONSTANT);
 }
 
 void FlowSimulationGeometry::process() {
@@ -63,7 +68,8 @@ void FlowSimulationGeometry::process() {
 
         FlowIndicator inlet;
         inlet.direction_ = FD_IN;
-        inlet.startPhaseFunction_ = FF_SINUS;
+        inlet.flowProfile_ = flowProfile_.getValue();
+        inlet.startPhaseFunction_ = FSP_SINUS;
         inlet.startPhaseDuration_ = 0.25f;
         inlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 0.0f);
         inlet.normal_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 1.0f);

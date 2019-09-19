@@ -25,30 +25,39 @@ enum Material {
 };
 
 enum FlowFeatures {
-    FT_NONE             = 0,
-    FT_VELOCITY         = 1 << 0,
-    FT_MAGNITUDE        = 1 << 1,
-    FT_PRESSURE         = 1 << 2,
-    FT_WALLSHEARSTRESS  = 1 << 3,
+    FF_NONE             = 0,
+    FF_VELOCITY         = 1,
+    FF_MAGNITUDE        = 2,
+    FF_PRESSURE         = 4,
+    FF_WALLSHEARSTRESS  = 8,
 };
 
 enum FlowDirection {
-    FD_NONE = -1,
-    FD_IN   =  0,
-    FD_OUT  =  1,
+    FD_NONE      = 0,
+    FD_IN        = 1,
+    FD_OUT       = 2,
+    FD_ARBITRARY = 3,
 };
 
-enum FlowFunction {
-    FF_NONE     = -1,
-    FF_CONSTANT =  0,
-    FF_SINUS    =  1,
+enum FlowProfile {
+    FP_NONE       = 0,
+    FP_POISEUILLE = 1,
+    FP_POWERLAW   = 2,
+    FP_CONSTANT   = 3,
+};
+
+enum FlowStartPhase {
+    FSP_NONE     = 0,
+    FSP_CONSTANT = 1,
+    FSP_SINUS    = 2,
 };
 
 // Indicates flux through an arbitrary, circle-shaped area.
 // This code is adapted from the voreen host code.
 struct FlowIndicator {
     FlowDirection   direction_{FD_NONE};
-    FlowFunction    startPhaseFunction_{FF_NONE};
+    FlowProfile     flowProfile_{FP_NONE};
+    FlowStartPhase  startPhaseFunction_{FSP_NONE};
     T               startPhaseDuration_{0};
     T               center_[3]{0};
     T               normal_[3]{0};
@@ -108,7 +117,7 @@ T temporalResolution = 0.0;
 int spatialResolution = 1;
 int numTimeSteps = 1;
 int outputResolution = 1;
-int flowFeatures = FT_NONE;
+int flowFeatures = FF_NONE;
 std::vector<FlowIndicator> flowIndicators;
 std::vector<MeasuredData> measuredData;
 
@@ -254,7 +263,7 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 T maxVelocity[1] = {T()};
 
                 switch(indicator.startPhaseFunction_) {
-                case FF_SINUS:
+                case FSP_SINUS:
                 {
                     int iTperiod = converter.getLatticeTime(indicator.startPhaseDuration_);
                     if(iT < iTperiod) {
@@ -264,32 +273,51 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                     }
                     // Else: fallthrough
                 }
-                case FF_CONSTANT:
+                case FSP_CONSTANT:
                 {
                     AnalyticalConst1D<T, int> nConstantStartScale(converter.getCharLatticeVelocity());
                     nConstantStartScale(maxVelocity, iTvec);
                     break;
                 }
-                case FF_NONE:
+                case FSP_NONE:
                 default:
                     // Skip!
                     continue;
                 }
 
-                //*
-                // TODO: The following line tends to crash, if there is no overlap between the region and the wall.
-                CirclePoiseuille3D<T> velocity(superGeometry, indicator.materialId_, maxVelocity[0]);
-                /*/
-                const T* center = indicator.center_;
-                const T* normal = indicator.normal_;
-                T radius = indicator.radius_;
-                CirclePoiseuille3D<T> velocity(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
-                                               normal[0], normal[1], normal[2], radius * VOREEN_LENGTH_TO_SI, maxVelocity[0]);
-                */
-                if (bouzidiOn) {
-                    offBc.defineU(superGeometry, indicator.materialId_, velocity);
-                } else {
-                    sLattice.defineU(superGeometry, indicator.materialId_, velocity);
+                // This function applies the velocity profile to the boundary condition and the lattice.
+                auto applyFlowProfile = [&] (AnalyticalF3D<T,T>& profile) {
+                    if (bouzidiOn) {
+                        offBc.defineU(superGeometry, indicator.materialId_, profile);
+                    } else {
+                        sLattice.defineU(superGeometry, indicator.materialId_, profile);
+                    }
+                };
+
+                switch(indicator.flowProfile_) {
+                case FP_POISEUILLE:
+                {
+                    CirclePoiseuille3D<T> profile(superGeometry, indicator.materialId_, maxVelocity[0]);
+                    applyFlowProfile(profile);
+                    break;
+                }
+                case FP_POWERLAW:
+                {
+                    T n = 1.03 * std::log(converter.getReynoldsNumber()) - 3.6; // Taken by OLB documentation.
+                    CirclePowerLawTurbulent3D<T> profile(superGeometry, indicator.materialId_, maxVelocity[0], n);
+                    applyFlowProfile(profile);
+                    break;
+                }
+                case FP_CONSTANT:
+                {
+                    AnalyticalConst3D<T, T> profile(maxVelocity[0]);
+                    applyFlowProfile(profile);
+                    break;
+                }
+                case FP_NONE:
+                default:
+                    // Skip!
+                    continue;
                 }
             }
         }
@@ -483,24 +511,24 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 #endif
     if (rank == 0 && ti % outputIter == 0) {
 
-        if(flowFeatures & FT_VELOCITY) {
+        if(flowFeatures & FF_VELOCITY) {
             SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
             writeResult(stlReader, converter, ti, tmax, velocity, "velocity");
         }
 
-        if(flowFeatures & FT_MAGNITUDE) {
+        if(flowFeatures & FF_MAGNITUDE) {
             SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
             SuperEuklidNorm3D<T, DESCRIPTOR> magnitude(velocity);
             writeResult(stlReader, converter, ti, tmax, magnitude, "magnitude");
         }
 
-        if(flowFeatures & FT_PRESSURE) {
+        if(flowFeatures & FF_PRESSURE) {
             SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
             writeResult(stlReader, converter, ti, tmax, pressure, "pressure");
         }
 
 #ifndef OLB_PRECOMPILED
-        if(flowFeatures & FT_WALLSHEARSTRESS) {
+        if(flowFeatures & FF_WALLSHEARSTRESS) {
             SuperLatticePhysWallShearStress3D<T, DESCRIPTOR> wallShearStress(sLattice, superGeometry, MAT_WALL,
                                                                              converter, stlReader);
             writeResult(stlReader, converter, ti, tmax, wallShearStress, "wallShearStress");
@@ -514,7 +542,7 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
     T tau = converter.getLatticeRelaxationFrequency();
     T threshold = tau < 0.55 ? 0.125*(tau - 0.5) : 0.4;
     if (sLattice.getStatistics().getMaxU() >= threshold) {
-        LERROR("uMax=" << sLattice.getStatistics().getMaxU() << " above threshold=" << threshold);
+        clout << "uMax=" << sLattice.getStatistics().getMaxU() << " above threshold=" << threshold;
         std::exit(EXIT_FAILURE);
     }
 }
@@ -589,7 +617,8 @@ int main(int argc, char* argv[]) {
     for(auto iter : indicators) {
         FlowIndicator indicator;
         indicator.direction_            = static_cast<FlowDirection>(std::atoi((*iter)["direction"].getAttribute("value").c_str()));
-        indicator.startPhaseFunction_   = static_cast<FlowFunction>(std::atoi((*iter)["startPhaseFunction"].getAttribute("value").c_str()));
+        indicator.flowProfile_          = static_cast<FlowProfile>(std::atoi((*iter)["flowProfile"].getAttribute("value").c_str()));
+        indicator.startPhaseFunction_   = static_cast<FlowStartPhase>(std::atoi((*iter)["startPhaseFunction"].getAttribute("value").c_str()));
         indicator.startPhaseDuration_   = std::atof((*iter)["startPhaseDuration"].getAttribute("value").c_str());
         indicator.center_[0]            = std::atof((*iter)["center"].getAttribute("x").c_str());
         indicator.center_[1]            = std::atof((*iter)["center"].getAttribute("y").c_str());

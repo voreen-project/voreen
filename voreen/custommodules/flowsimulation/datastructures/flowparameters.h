@@ -36,30 +36,40 @@
 namespace voreen {
 
 enum FlowFeatures {
-    FT_NONE             = 0,
-    FT_VELOCITY         = 1 << 0,
-    FT_MAGNITUDE        = 1 << 1,
-    FT_PRESSURE         = 1 << 2,
-    FT_WALLSHEARSTRESS  = 1 << 3,
+    FF_NONE             = 0,
+    FF_VELOCITY         = 1,
+    FF_MAGNITUDE        = 2,
+    FF_PRESSURE         = 4,
+    FF_WALLSHEARSTRESS  = 8,
 };
 
 enum FlowDirection {
-    FD_NONE = -1,
-    FD_IN   =  0,
-    FD_OUT  =  1,
+    FD_NONE      = 0,
+    FD_IN        = 1,
+    FD_OUT       = 2,
+    FD_ARBITRARY = 3,
 };
 
-enum FlowFunction {
-    FF_NONE     = -1,
-    FF_CONSTANT =  0,
-    FF_SINUS    =  1,
+enum FlowProfile {
+    FP_NONE       = 0,
+    FP_POISEUILLE = 1,
+    FP_POWERLAW   = 2,
+    FP_CONSTANT   = 3,
+};
+
+enum FlowStartPhase {
+    FSP_NONE     = 0,
+    FSP_CONSTANT = 1,
+    FSP_SINUS    = 2,
 };
 
 // Indicates flux through an arbitrary, circle-shaped area.
 struct VRN_CORE_API FlowIndicator : public Serializable {
     FlowDirection   direction_;
 
-    FlowFunction    startPhaseFunction_;
+    FlowProfile     flowProfile_;
+
+    FlowStartPhase  startPhaseFunction_;
     float           startPhaseDuration_;
 
     tgt::vec3       center_;
@@ -203,7 +213,7 @@ public:
     void setFlowFeatures(int flowFeatures);
 
     /** Overrides flow function for each inflow indicator. Therefore, no getter exists */
-    void setStartPhaseFunction(FlowFunction startPhaseFunction);
+    void setStartPhaseFunction(FlowStartPhase startPhaseFunction);
 
     void addFlowIndicator(const FlowIndicator& flowIndicator);
     const std::vector<FlowIndicator>& getFlowIndicators() const;
@@ -217,7 +227,6 @@ public:
     const FlowParameters& at(size_t index) const;
 
     /** Used to export parametrization file. */
-    std::string toCSVString(size_t param = ALL_PARAMETRIZATIONS) const;
     std::string toJSONString(size_t param = ALL_PARAMETRIZATIONS) const;
     std::string toXMLString(size_t param = ALL_PARAMETRIZATIONS) const;
 

@@ -68,6 +68,7 @@ private:
     OptionProperty<FlowSimulationGeometryType> geometryType_;
     FloatProperty ratio_;
     FloatMat4Property transformation_;
+    OptionProperty<FlowProfile> flowProfile_;
 
     static const std::string loggerCat_;
 };

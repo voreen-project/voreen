@@ -50,10 +50,10 @@ FlowParametrizationEnsemble::FlowParametrizationEnsemble()
     outputResolution_.setGroupID("ensemble");
 
     addProperty(flowFeatures_);
-    addFeature("Velocity", FT_VELOCITY);
-    addFeature("Magnitude", FT_MAGNITUDE);
-    addFeature("Pressure", FT_PRESSURE);
-    addFeature("Wall Shear Stress", FT_WALLSHEARSTRESS);
+    addFeature("Velocity", FF_VELOCITY);
+    addFeature("Magnitude", FF_MAGNITUDE);
+    addFeature("Pressure", FF_PRESSURE);
+    addFeature("Wall Shear Stress", FF_WALLSHEARSTRESS);
     flowFeatures_.addInstance("Velocity"); // Default selection.
     flowFeatures_.setGroupID("ensemble");
     setPropertyGroupGuiName("ensemble", "Ensemble");
@@ -66,7 +66,7 @@ void FlowParametrizationEnsemble::process() {
     flowParametrizationList->setNumTimeSteps(numTimeSteps_.get());
     flowParametrizationList->setOutputResolution(outputResolution_.get());
 
-    int flowFeatures = FT_NONE;
+    int flowFeatures = FF_NONE;
     for(const InteractiveListProperty::Instance& instance : flowFeatures_.getInstances()) {
         flowFeatures |=  flowFeatureIds_[instance.getItemId()];
     }

@@ -34,7 +34,8 @@ namespace voreen {
 
 FlowIndicator::FlowIndicator()
     : direction_(FD_NONE)
-    , startPhaseFunction_(FF_NONE)
+    , flowProfile_(FP_POISEUILLE)
+    , startPhaseFunction_(FSP_NONE)
     , startPhaseDuration_(0.0f)
     , center_(tgt::vec3::zero)
     , normal_(tgt::vec3::zero)
@@ -44,6 +45,7 @@ FlowIndicator::FlowIndicator()
 
 void FlowIndicator::serialize(Serializer& s) const {
     s.serialize("direction", direction_);
+    s.serialize("flowProfile", flowProfile_);
     s.serialize("startPhaseFunction", startPhaseFunction_);
     s.serialize("startPhaseDuration", startPhaseDuration_);
     s.serialize("center", center_);
@@ -55,9 +57,12 @@ void FlowIndicator::deserialize(Deserializer& s) {
     int direction = FD_NONE;
     s.deserialize("direction", direction);
     direction_ = static_cast<FlowDirection>(direction);
-    int function = FF_NONE;
+    int profile = FP_POISEUILLE;
+    s.deserialize("flowProfile", profile);
+    flowProfile_ = static_cast<FlowProfile>(profile);
+    int function = FSP_NONE;
     s.deserialize("function", function);
-    startPhaseFunction_ = static_cast<FlowFunction>(function);
+    startPhaseFunction_ = static_cast<FlowStartPhase>(function);
     s.deserialize("startPhaseDuration", startPhaseDuration_);
     s.deserialize("center", center_);
     s.deserialize("normal", normal_);
@@ -183,7 +188,7 @@ FlowParametrizationList::FlowParametrizationList(const std::string& name)
     , simulationTime_(0.0f)
     , numTimeSteps_(0)
     , outputResolution_(0)
-    , flowFeatures_(FT_NONE)
+    , flowFeatures_(FF_NONE)
 {
 }
 
@@ -238,7 +243,7 @@ void FlowParametrizationList::setFlowFeatures(int flowFeatures) {
     flowFeatures_ = flowFeatures;
 }
 
-void FlowParametrizationList::setStartPhaseFunction(FlowFunction startPhaseFunction) {
+void FlowParametrizationList::setStartPhaseFunction(FlowStartPhase startPhaseFunction) {
     notifyPendingDataInvalidation();
     for(FlowIndicator& flowIndicator : flowIndicators_) {
         if(flowIndicator.direction_ == FD_IN) {
@@ -273,53 +278,6 @@ size_t FlowParametrizationList::size() const {
 }
 const FlowParameters& FlowParametrizationList::at(size_t index) const {
     return flowParametrizations_.at(index);
-}
-
-std::string FlowParametrizationList::toCSVString(size_t param) const {
-    std::stringstream output;
-
-    output << VERSION;
-    output << ", " << simulationTime_;
-    output << ", " << numTimeSteps_;
-    output << ", " << outputResolution_;
-    output << ", " << flowFeatures_;
-
-    if(param == ALL_PARAMETRIZATIONS) {
-        output << ", " << flowParametrizations_.size();
-        for (const FlowParameters& flowParameters : flowParametrizations_) {
-            output << ", " << flowParameters.getSpatialResolution();
-            output << ", " << flowParameters.getTemporalResolution();
-            output << ", " << flowParameters.getCharacteristicLength();
-            output << ", " << flowParameters.getCharacteristicVelocity();
-            output << ", " << flowParameters.getViscosity();
-            output << ", " << flowParameters.getDensity();
-            output << ", " << flowParameters.getSmagorinskyConstant();
-            output << ", " << flowParameters.getBouzidi();
-        }
-    }
-    else {
-        output << ", " << 1;
-        output << ", " << flowParametrizations_[param].getSpatialResolution();
-        output << ", " << flowParametrizations_[param].getTemporalResolution();
-        output << ", " << flowParametrizations_[param].getCharacteristicLength();
-        output << ", " << flowParametrizations_[param].getCharacteristicVelocity();
-        output << ", " << flowParametrizations_[param].getViscosity();
-        output << ", " << flowParametrizations_[param].getDensity();
-        output << ", " << flowParametrizations_[param].getSmagorinskyConstant();
-        output << ", " << flowParametrizations_[param].getBouzidi();
-    }
-
-    output << ", " << flowIndicators_.size();
-    for(const FlowIndicator& flowIndicator : flowIndicators_) {
-        output << ", " << flowIndicator.direction_;
-        output << ", " << flowIndicator.startPhaseFunction_;
-        output << ", " << flowIndicator.startPhaseDuration_;
-        output << ", " << flowIndicator.center_.x << ", " << flowIndicator.center_.y << ", " << flowIndicator.center_.z;
-        output << ", " << flowIndicator.normal_.x << ", " << flowIndicator.normal_.y << ", " << flowIndicator.normal_.z;
-        output << ", " << flowIndicator.radius_;
-    }
-
-    return output.str();
 }
 
 std::string FlowParametrizationList::toJSONString(size_t param) const {

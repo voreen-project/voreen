@@ -215,7 +215,7 @@ void FlowSimulationCluster::enqueueSimulations() {
         return;
     }
 
-    if(flowParametrization->getFlowFeatures() == FT_NONE) {
+    if(flowParametrization->getFlowFeatures() == FF_NONE) {
         VoreenApplication::app()->showMessageBox("Error", "No flow feature selected. Did you add one?", true);
         LERROR("No flow feature selected");
         return;

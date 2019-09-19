@@ -75,7 +75,8 @@ private:
     FlowParametrizationPort flowParametrizationOutport_;
 
     OptionProperty<FlowDirection> flowDirection_;
-    OptionProperty<FlowFunction> startPhaseFunction_;
+    OptionProperty<FlowProfile> flowProfile_;
+    OptionProperty<FlowStartPhase> startPhaseFunction_;
     FloatProperty startPhaseDuration_;
     FloatProperty radius_;
 
