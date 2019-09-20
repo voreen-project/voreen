@@ -52,23 +52,23 @@ int GaussianFilter::suitableExtent(float standardDeviation) {
     return static_cast<int>(2.5*standardDeviation-0.5f);
 }
 
-GaussianFilter::GaussianFilter(float standardDeviation, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType)
-    : GaussianFilter(tgt::vec3(standardDeviation), samplingStrategy, sliceBaseType)
+GaussianFilter::GaussianFilter(float standardDeviation, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels)
+    : GaussianFilter(tgt::vec3(standardDeviation), samplingStrategy, sliceBaseType, numChannels)
 {
 }
 
-GaussianFilter::GaussianFilter(const tgt::vec3& standardDeviation, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType)
-    : GaussianFilter(standardDeviation, GaussianFilter::suitableExtent(standardDeviation), samplingStrategy, sliceBaseType)
+GaussianFilter::GaussianFilter(const tgt::vec3& standardDeviation, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels)
+    : GaussianFilter(standardDeviation, GaussianFilter::suitableExtent(standardDeviation), samplingStrategy, sliceBaseType, numChannels)
 {
 }
 
-GaussianFilter::GaussianFilter(int extent, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType)
-    : GaussianFilter(tgt::ivec3(extent), samplingStrategy, sliceBaseType)
+GaussianFilter::GaussianFilter(int extent, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels)
+    : GaussianFilter(tgt::ivec3(extent), samplingStrategy, sliceBaseType, numChannels)
 {
 }
 
-GaussianFilter::GaussianFilter(const tgt::ivec3& extent, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType)
-    : GaussianFilter(suitableStandardDeviation(extent), extent, samplingStrategy, sliceBaseType)
+GaussianFilter::GaussianFilter(const tgt::ivec3& extent, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels)
+    : GaussianFilter(suitableStandardDeviation(extent), extent, samplingStrategy, sliceBaseType, numChannels)
 {
 }
 
@@ -95,12 +95,12 @@ static float* initHalfKernel(int extent, float standardDeviation) {
     return halfKernel;
 }
 
-GaussianFilter::GaussianFilter(float standardDeviation, int extent, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType)
-    : GaussianFilter(tgt::vec3(standardDeviation), tgt::ivec3(extent), samplingStrategy, sliceBaseType)
+GaussianFilter::GaussianFilter(float standardDeviation, int extent, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels)
+    : GaussianFilter(tgt::vec3(standardDeviation), tgt::ivec3(extent), samplingStrategy, sliceBaseType, numChannels)
 {
 }
 
-GaussianFilter::GaussianFilter(const tgt::vec3& standardDeviation, const tgt::ivec3& extent, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType)
+GaussianFilter::GaussianFilter(const tgt::vec3& standardDeviation, const tgt::ivec3& extent, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels)
     : neighborhoodDimensions_(extent)
     , kernelDimensions_(2*extent+tgt::ivec3::one)
     , halfKernelX_(initHalfKernel(extent.x, standardDeviation.x))
@@ -108,6 +108,7 @@ GaussianFilter::GaussianFilter(const tgt::vec3& standardDeviation, const tgt::iv
     , halfKernelZ_(initHalfKernel(extent.z, standardDeviation.z))
     , samplingStrategy_(samplingStrategy)
     , sliceBaseType_(sliceBaseType)
+    , numChannels_(numChannels)
 {
     tgtAssert(tgt::hand(tgt::greaterThan(standardDeviation, tgt::vec3::zero)), "invalid standardDeviation");
     tgtAssert(tgt::hand(tgt::greaterThan(extent, tgt::ivec3::zero)), "invalid extent");
@@ -136,61 +137,76 @@ std::unique_ptr<VolumeRAM> GaussianFilter::getFilteredSlice(const CachingSliceRe
     tgtAssert(z >= 0 && z<src->getSignedDimensions().z, "Invalid z pos in slice request");
 
     const tgt::ivec3& dim = src->getSignedDimensions();
-    std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(sliceBaseType_, tgt::svec3(dim.xy(), 1)));
-    std::unique_ptr<VolumeRAM> srcSlice(VolumeFactory().create(sliceBaseType_, tgt::svec3(dim.xy(), 1)));
+    VolumeFactory volumeFactory;
+    std::string format = volumeFactory.getFormat(sliceBaseType_, numChannels_);
+    std::unique_ptr<VolumeRAM> outputSlice(volumeFactory.create(format, tgt::svec3(dim.xy(), 1)));
+    std::unique_ptr<VolumeRAM> srcSlice(volumeFactory.create(format, tgt::svec3(dim.xy(), 1)));
 
-    SamplingStrategy<float>::Sampler getValueFromReader = [src] (const tgt::ivec3& p) {
-        return src->getVoxelNormalized(p);
-    };
+    // TODO: Memory access-wise, iterating the channels first is a quite inefficient operation.
+    //  Either use templates for this class or make this a nested loop inside those iterating voxels.
+    //  However, for the single-channel-case being implemented before, this means practically no difference.
+    for(size_t channel = 0; channel < numChannels_; channel++) {
 
-    // z
-    #pragma omp parallel for
-    for(int y = 0; y < dim.y; ++y) {
-        for(int x = 0; x < dim.x; ++x) {
-            float accumulator = 0;
-            for(int dz = -neighborhoodDimensions_.z; dz <= neighborhoodDimensions_.z; ++dz) {
-                // Why does template parameter deduction fail here? We should be able to call .sample(...)
-                accumulator += getKernelValZ(dz)*samplingStrategy_.sample(tgt::ivec3(x, y, z+dz), dim, getValueFromReader);
+        SamplingStrategy<float>::Sampler getValueFromReader = [src, channel](const tgt::ivec3 &p) {
+            return src->getVoxelNormalized(p, channel);
+        };
+
+        // z
+        #pragma omp parallel for
+        for (int y = 0; y < dim.y; ++y) {
+            for (int x = 0; x < dim.x; ++x) {
+                float accumulator = 0;
+                for (int dz = -neighborhoodDimensions_.z; dz <= neighborhoodDimensions_.z; ++dz) {
+                    // Why does template parameter deduction fail here? We should be able to call .sample(...)
+                    accumulator += getKernelValZ(dz) *
+                                   samplingStrategy_.sample(tgt::ivec3(x, y, z + dz),
+                                                            dim, getValueFromReader);
+                }
+                outputSlice->setVoxelNormalized(accumulator, tgt::svec3(x, y, 0), channel);
             }
-            outputSlice->setVoxelNormalized(accumulator, tgt::svec3(x,y,0));
+        }
+
+        std::swap(outputSlice, srcSlice);
+        const VolumeRAM *srcSlicePtr = srcSlice.get();
+
+        SamplingStrategy<float>::Sampler getValueFromSrcSlice = [&srcSlicePtr, channel](const tgt::ivec3 &p) {
+            return srcSlicePtr->getVoxelNormalized(tgt::svec3(p), channel);
+        };
+
+        // y
+        #pragma omp parallel for
+        for (int y = 0; y < dim.y; ++y) {
+            for (int x = 0; x < dim.x; ++x) {
+                float accumulator = 0;
+                for (int dy = -neighborhoodDimensions_.y; dy <= neighborhoodDimensions_.y; ++dy) {
+                    accumulator += getKernelValY(dy) *
+                                   samplingStrategy_.sample(tgt::ivec3(x, y + dy, 0),
+                                                            dim /* wrong in z, but doesn't matter */,
+                                                            getValueFromSrcSlice);
+                }
+                outputSlice->setVoxelNormalized(accumulator, tgt::svec3(x, y, 0), channel);
+            }
+        }
+
+        std::swap(outputSlice, srcSlice);
+        srcSlicePtr = srcSlice.get();
+
+        // x
+        #pragma omp parallel for
+        for (int y = 0; y < dim.y; ++y) {
+            for (int x = 0; x < dim.x; ++x) {
+                float accumulator = 0;
+                for (int dx = -neighborhoodDimensions_.x; dx <= neighborhoodDimensions_.x; ++dx) {
+                    accumulator += getKernelValX(dx) *
+                                   samplingStrategy_.sample(tgt::ivec3(x + dx, y, 0),
+                                                            dim /* wrong in z, but doesn't matter */,
+                                                            getValueFromSrcSlice);
+                }
+                outputSlice->setVoxelNormalized(accumulator, tgt::svec3(x, y, 0), channel);
+            }
         }
     }
 
-    std::swap(outputSlice, srcSlice);
-    const VolumeRAM* srcSlicePtr = srcSlice.get();
-
-    SamplingStrategy<float>::Sampler getValueFromSrcSlice = [&srcSlicePtr] (const tgt::ivec3& p) {
-        return srcSlicePtr->getVoxelNormalized(tgt::svec3(p));
-    };
-
-    // y
-    #pragma omp parallel for
-    for(int y = 0; y < dim.y; ++y) {
-        for(int x = 0; x < dim.x; ++x) {
-            float accumulator = 0;
-            for(int dy = -neighborhoodDimensions_.y; dy <= neighborhoodDimensions_.y; ++dy) {
-                accumulator += getKernelValY(dy) *
-                    samplingStrategy_.sample(tgt::ivec3(x, y+dy, 0), dim /* wrong in z, but doesn't matter */, getValueFromSrcSlice);
-            }
-            outputSlice->setVoxelNormalized(accumulator, tgt::svec3(x,y,0));
-        }
-    }
-
-    std::swap(outputSlice, srcSlice);
-    srcSlicePtr = srcSlice.get();
-
-    // x
-    #pragma omp parallel for
-    for(int y = 0; y < dim.y; ++y) {
-        for(int x = 0; x < dim.x; ++x) {
-            float accumulator = 0;
-            for(int dx = -neighborhoodDimensions_.x; dx <= neighborhoodDimensions_.x; ++dx) {
-                accumulator += getKernelValX(dx) *
-                    samplingStrategy_.sample(tgt::ivec3(x+dx, y, 0), dim /* wrong in z, but doesn't matter */, getValueFromSrcSlice);
-            }
-            outputSlice->setVoxelNormalized(accumulator, tgt::svec3(x,y,0));
-        }
-    }
     return outputSlice;
 }
 
@@ -200,6 +216,14 @@ int GaussianFilter::zExtent() const {
 
 const std::string& GaussianFilter::getSliceBaseType() const {
     return sliceBaseType_;
+}
+
+size_t GaussianFilter::getNumInputChannels() const {
+    return numChannels_;
+}
+
+size_t GaussianFilter::getNumOutputChannels() const {
+    return numChannels_;
 }
 
 

@@ -291,26 +291,27 @@ void VolumeFilterList::onFilterPropertyChange() {
 }
 
 void VolumeFilterList::inputOutputChannelCheck() {
-    // Reset filter active state.
-    for(InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
-        instance.setActive(true);
-    }
-
     if(inport_.hasData()) {
         const VolumeBase& volume = *inport_.getData();
         size_t numOutputChannels = volume.getNumChannels();
         for (InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
-            VolumeFilter* filter = filterProperties_[instance.getItemId()]->getVolumeFilter(volume,
-                                                                                            FilterProperties::DEFAULT_SETTINGS);
+            VolumeFilter* filter = filterProperties_[instance.getItemId()]->getVolumeFilter(volume, FilterProperties::DEFAULT_SETTINGS);
             tgtAssert(filter, "filter was null");
 
             if (numOutputChannels == filter->getNumInputChannels()) {
+                instance.setActive(true);
                 numOutputChannels = filter->getNumOutputChannels();
             }
-            else {
+            else if(instance.isActive()) {
                 instance.setActive(false);
                 LERROR("Input channel count of filter '" << instance.getName() << "' is not satisfied. Deactivating.");
             }
+        }
+    }
+    else {
+        // Reset filter active state.
+        for(InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
+            instance.setActive(true);
         }
     }
 

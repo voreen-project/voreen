@@ -71,9 +71,6 @@ VolumeFilter* MedianFilterProperties::getVolumeFilter(const VolumeBase& volume, 
     }
     Settings settings = instanceSettings_.at(instanceId);
 
-    tgt::ivec3 extent(settings.extentX_, settings.extentY_, settings.extentZ_);
-    SamplingStrategy<float> samplingStrategy(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_));
-
     switch (volume.getNumChannels()) {
     case 1:
         return new MedianFilter(

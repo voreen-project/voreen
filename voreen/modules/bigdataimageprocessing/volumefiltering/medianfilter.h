@@ -32,7 +32,7 @@ namespace voreen {
 
 class MedianFilter : public ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue1D> {
 public:
-    MedianFilter(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string sliceBaseType);
+    MedianFilter(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string& sliceBaseType);
     virtual ~MedianFilter();
     ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos) const;
 private:
@@ -42,7 +42,7 @@ private:
 template<typename  T>
 class MedianFilterVector : public ParallelVolumeFilter<ParallelFilterValue<T>, ParallelFilterValue<T>> {
 public:
-    MedianFilterVector(const tgt::ivec3& extent, const SamplingStrategy<T>& samplingStrategy, const std::string sliceBaseType);
+    MedianFilterVector(const tgt::ivec3& extent, const SamplingStrategy<T>& samplingStrategy, const std::string& sliceBaseType);
     virtual ~MedianFilterVector();
     ParallelFilterValue<T> getValue(const typename MedianFilterVector<T>::Sample& sample, const tgt::ivec3& pos) const;
 private:
@@ -50,7 +50,7 @@ private:
 };
 
 template<typename T>
-MedianFilterVector<T>::MedianFilterVector(const tgt::ivec3& extent, const SamplingStrategy<T>& samplingStrategy, const std::string sliceBaseType)
+MedianFilterVector<T>::MedianFilterVector(const tgt::ivec3& extent, const SamplingStrategy<T>& samplingStrategy, const std::string& sliceBaseType)
     : ParallelVolumeFilter<ParallelFilterValue<T>, ParallelFilterValue<T>>(extent.z, samplingStrategy, sliceBaseType)
     , extent_(extent)
 {

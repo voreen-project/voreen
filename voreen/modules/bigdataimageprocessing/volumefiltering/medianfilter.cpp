@@ -27,7 +27,7 @@
 
 namespace voreen {
 
-MedianFilter::MedianFilter(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string sliceBaseType)
+MedianFilter::MedianFilter(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string& sliceBaseType)
     : ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue1D>(extent.z, samplingStrategy, sliceBaseType)
     , extent_(extent)
 {

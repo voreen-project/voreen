@@ -73,7 +73,7 @@ VolumeFilter* GaussianFilterProperties::getVolumeFilter(const VolumeBase& volume
     return new GaussianFilter(
         tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
         SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_)),
-        volume.getBaseType()
+        volume.getBaseType(), volume.getNumChannels()
     );
 }
 void GaussianFilterProperties::restoreInstance(int instanceId) {
