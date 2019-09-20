@@ -102,11 +102,9 @@ struct PolyLine {
         if(points_.size() == 1) {
             return points_[0].pos_;
         }
-        int i;
-        for(i=0; i<((int)points_.size())-1; ++i) {
-            if(d <= points_[i+1].d_) {
-                break;
-            }
+        int i=0;
+        while(d > points_[i+1].d_ && i < ((int)points_.size())-2) {
+            ++i;
         }
         auto& p1 = points_[i];
         auto& p2 = points_[i+1];
@@ -147,6 +145,34 @@ struct Line {
         return tgt::abs(dist);
     }
 };
+
+static tgt::vec2 projectionDepthRange(const VolumeBase& vol, const VolumeAtomic<tgt::vec4>& front, const VolumeAtomic<tgt::vec4>& back, PolyLine<tgt::vec2>& line, tgt::vec3 camera) {
+
+    auto dim = vol.getDimensions();
+
+    auto tex_to_world = vol.getTextureToWorldMatrix();
+
+    float min_dist = std::numeric_limits<float>::infinity();
+    float max_dist = 0.0f;
+    for(int x = 0; x < dim.x; ++x) {
+        float d = ((float)x)/(dim.x-1);
+        auto p = line.interpolate(d);
+
+        tgt::vec3 normalized_query(p, 0);
+        tgt::vec4 front_pos = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
+        tgt::vec4 back_pos = back.getVoxelLinear(normalized_query * tgt::vec3(back.getDimensions()));
+
+        if(front_pos.a > 0) {
+            min_dist = std::min(min_dist, tgt::distance(camera, (tex_to_world * front_pos).xyz()));
+        }
+        if(back_pos.a > 0) {
+            max_dist = std::max(max_dist, tgt::distance(camera, (tex_to_world * back_pos).xyz()));
+        }
+    }
+
+    return tgt::vec2(min_dist, max_dist);
+}
+
 
 #define MOUSE_INTERACTION_DIST 0.02
 static void handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
@@ -254,12 +280,14 @@ void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
                 break;
             }
             case tgt::KeyEvent::K_SPACE: {
-                finishProjection();
-                displayLine_.clear();
-                projectionLine_.clear();
-                state_ = FREE;
+                if(state_ == LABELING && !projectionLine_.empty()) {
+                    finishProjection();
+                    displayLine_.clear();
+                    projectionLine_.clear();
+                    state_ = FREE;
+                    invalidate();
+                }
                 ke->accept();
-                invalidate();
                 break;
             }
             default:;
@@ -291,24 +319,39 @@ void InteractiveProjectionLabeling::finishProjection() {
     auto& front = *maybe_front;
     auto& back = *maybe_back;
 
+    tgt::vec3 camera = camera_.get().getPosition();
+
+    auto line = PolyLine<tgt::vec2>(displayLine_);
+    auto tex_to_world = vol.getTextureToWorldMatrix();
+
+    auto minmax = projectionDepthRange(vol, front, back, line, camera);
+    float min_dist = minmax.x;
+    float max_dist = minmax.y;
+
 
     auto texture_to_world_mat = vol.getTextureToWorldMatrix();
     for(int i=0; i<NUM_SAMPLES; ++i) {
         float projection_d = static_cast<float>(i)/(NUM_SAMPLES-1);
 
         tgt::vec2 projectionPoint = projectionLine.interpolate(projection_d);
-        float depth = projectionPoint.y;
+        float normalized_depth = projectionPoint.y;
+
+        float depth = normalized_depth * (max_dist - min_dist) + min_dist;
+
         float display_d = projectionPoint.x;
 
         tgt::vec2 display_point = displayLine.interpolate(display_d);
 
         tgt::vec3 normalized_query(display_point, 0.0);
-        tgt::vec4 front_voxel = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
-        tgt::vec4 back_voxel = back.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
+        tgt::vec4 front_pos = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
+        tgt::vec4 back_pos = back.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
 
-        tgt::vec4 texture_voxel(front_voxel.xyz() * (1-depth) + depth * back_voxel.xyz(), 1.0);
+        tgt::vec4 front_world = tex_to_world * front_pos;
+        tgt::vec4 back_world = tex_to_world * back_pos;
 
-        tgt::vec3 point = (texture_to_world_mat * texture_voxel).xyz();
+        tgt::vec3 view_dir = tgt::normalize(back_world.xyz() - front_world.xyz());
+
+        tgt::vec3 point = camera + depth*view_dir;
         segment.push_back(point);
     }
     labelLines_.addSegment(segment);
@@ -471,6 +514,7 @@ boost::optional<VolumeAtomic<tgt::vec4>> InteractiveProjectionLabeling::getLhp()
     }
     return VolumeAtomic<tgt::vec4>((tgt::vec4*)lhp_.getColorTexture()->downloadTextureToBuffer(GL_RGBA, GL_FLOAT), tgt::svec3(lhp_.getSize(),1));
 }
+
 void InteractiveProjectionLabeling::updateProjection() {
     if(displayLine_.empty()) {
         return;
@@ -500,23 +544,10 @@ void InteractiveProjectionLabeling::updateProjection() {
 
     auto line = PolyLine<tgt::vec2>(displayLine_);
     auto tex_to_world = vol.getTextureToWorldMatrix();
-    float min_dist = std::numeric_limits<float>::infinity();
-    float max_dist = 0.0f;
-    for(int x = 0; x < dim.x; ++x) {
-        float d = ((float)x)/(dim.x-1);
-        auto p = line.interpolate(d);
 
-        tgt::vec3 normalized_query(p, 0);
-        tgt::vec4 front_pos = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
-        tgt::vec4 back_pos = back.getVoxelLinear(normalized_query * tgt::vec3(back.getDimensions()));
-
-        if(front_pos.a > 0) {
-            min_dist = std::min(min_dist, tgt::distance(camera, (tex_to_world * front_pos).xyz()));
-        }
-        if(back_pos.a > 0) {
-            max_dist = std::max(max_dist, tgt::distance(camera, (tex_to_world * back_pos).xyz()));
-        }
-    }
+    auto minmax = projectionDepthRange(vol, front, back, line, camera);
+    float min_dist = minmax.x;
+    float max_dist = minmax.y;
 
     auto world_to_vox = vol.getWorldToVoxelMatrix();
 
@@ -536,7 +567,7 @@ void InteractiveProjectionLabeling::updateProjection() {
 
         for(int y = 0; y < dim.y; ++y) {
             float alpha = ((float)y)/(dim.y-1);
-            float alpha_rw = min_dist * alpha + (1.0 - alpha) * max_dist;
+            float alpha_rw = max_dist * alpha + (1.0 - alpha) * min_dist;
 
             tgt::vec4 query_pos_rw(view_dir * alpha_rw + camera, 1.0);
             tgt::vec3 query_pos = (world_to_vox * query_pos_rw).xyz();
