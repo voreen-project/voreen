@@ -378,14 +378,12 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     //, labelVolume_(Port::OUTPORT, "interactiveprojectionlabeling.labelVolume", "Labels Output")
     , foregroundLabelGeometry_(Port::OUTPORT, "interactiveprojectionlabeling.foregroundLabelGeometry", "Foreground Labels Output")
     , backgroundLabelGeometry_(Port::OUTPORT, "interactiveprojectionlabeling.backgroundLabelGeometry", "Background Labels Output")
-    , overlayInput_(Port::INPORT, "interactiveprojectionlabeling.overlayinput", "Overlay Input", false, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_ORIGIN)
     , overlayOutput_(Port::OUTPORT, "interactiveprojectionlabeling.overlayoutput", "Overlay (3D)", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
     , projectionOutput_(Port::OUTPORT, "interactiveprojectionlabeling.projectionoutput", "Projection (2D)", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
     , fhp_(Port::INPORT, "interactiveprojectionlabeling.fhp", "First hit points", false)
     , lhp_(Port::INPORT, "interactiveprojectionlabeling.lhp", "Last hit points", false)
     , camera_("camera", "Camera")
     , outputVolume_(boost::none)
-    , copyShader_(nullptr)
     , projectionShader_("shader", "Shader", "interactiveprojectionlabeling.frag", "oit_passthrough.vert")
     , displayLine_()
     , projection_(boost::none)
@@ -395,7 +393,6 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     //addPort(labelVolume_);
     addPort(foregroundLabelGeometry_);
     addPort(backgroundLabelGeometry_);
-    addPort(overlayInput_);
     addPort(overlayOutput_);
     addPort(projectionOutput_);
     addPort(fhp_);
@@ -408,21 +405,15 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
 }
 
 void InteractiveProjectionLabeling::updateSizes() {
-    overlayInput_.requestSize(overlayOutput_.getReceivedSize());
     updateProjection();
 }
 
 
 void InteractiveProjectionLabeling::initialize() {
     RenderProcessor::initialize();
-
-    copyShader_ = ShdrMgr.loadSeparate("passthrough.vert", "copyimage.frag", RenderProcessor::generateHeader(), false);
 }
 
 void InteractiveProjectionLabeling::deinitialize() {
-    ShdrMgr.dispose(copyShader_);
-    copyShader_ = nullptr;
-
     RenderProcessor::deinitialize();
 }
 static void renderLine(const std::deque<tgt::vec2>& points, tgt::vec3 color) {
@@ -453,19 +444,6 @@ static void renderLine(const std::deque<tgt::vec2>& points, tgt::vec3 color) {
 void InteractiveProjectionLabeling::renderOverlay() {
     overlayOutput_.activateTarget();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    tgtAssert(copyShader_, "Shader missing");
-
-    tgt::TextureUnit imageUnit, imageUnitDepth;
-    overlayInput_.bindTextures(imageUnit.getEnum(), imageUnitDepth.getEnum());
-
-    copyShader_->activate();
-    setGlobalShaderParameters(copyShader_);
-    overlayInput_.setTextureParameters(copyShader_, "texParams_");
-    copyShader_->setUniform("colorTex_", imageUnit.getUnitNumber());
-    copyShader_->setUniform("depthTex_", imageUnitDepth.getUnitNumber());
-    renderQuad();
-    copyShader_->deactivate();
-    LGL_ERROR;
 
     renderLine(displayLine_, tgt::vec3(1.0, 0.0, 0.0));
 
@@ -505,9 +483,9 @@ void InteractiveProjectionLabeling::renderProjection() {
         glActiveTexture(GL_TEXTURE0);
     }
 
-    renderLine(projectionLabels_.lowerBackground_, tgt::vec3(0.0, 0.0, 1.0));
+    renderLine(projectionLabels_.lowerBackground_, tgt::vec3(0.0, 1.0, 0.0));
     renderLine(projectionLabels_.foreground_, tgt::vec3(1.0, 0.0, 0.0));
-    renderLine(projectionLabels_.upperBackground_, tgt::vec3(0.0, 0.0, 1.0));
+    renderLine(projectionLabels_.upperBackground_, tgt::vec3(0.0, 1.0, 0.0));
 
     projectionOutput_.deactivateTarget();
     LGL_ERROR;

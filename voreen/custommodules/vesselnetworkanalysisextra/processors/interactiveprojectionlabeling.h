@@ -120,7 +120,6 @@ private:
     //VolumePort labelVolume_;
     GeometryPort foregroundLabelGeometry_;
     GeometryPort backgroundLabelGeometry_;
-    RenderPort overlayInput_;
     RenderPort overlayOutput_;
     RenderPort projectionOutput_;
 
@@ -133,7 +132,6 @@ private:
 
     static const std::string loggerCat_;
 
-    tgt::Shader* copyShader_;
     ShaderProperty projectionShader_;
 
     boost::optional<LabelProjection> projection_;
