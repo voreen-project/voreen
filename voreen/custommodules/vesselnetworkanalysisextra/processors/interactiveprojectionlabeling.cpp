@@ -110,8 +110,13 @@ struct PolyLine {
         }
         auto& p1 = points_[i];
         auto& p2 = points_[i+1];
+        if(p1.d_ == p2.d_) {
+            return p1.pos_;
+        }
         float alpha = (d - p1.d_) / (p2.d_- p1.d_);
-        return p1.pos_ * (1-alpha) + alpha * p2.pos_;
+        tgt::vec2 res = p1.pos_ * (1-alpha) + alpha * p2.pos_;
+        tgtAssert(std::isfinite(res.x) && std::isfinite(res.y), "Invalid interpolation result");
+        return res;
     }
 };
 
@@ -312,7 +317,7 @@ void InteractiveProjectionLabeling::finishProjection() {
 InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     : RenderProcessor()
     , inport_(Port::INPORT, "interactiveprojectionlabeling.inport", "Volume Input")
-    , labelVolume_(Port::OUTPORT, "interactiveprojectionlabeling.labelVolume", "Labels Output")
+    //, labelVolume_(Port::OUTPORT, "interactiveprojectionlabeling.labelVolume", "Labels Output")
     , labelGeometry_(Port::OUTPORT, "interactiveprojectionlabeling.labelGeometry", "Labels Output")
     , overlayInput_(Port::INPORT, "interactiveprojectionlabeling.overlayinput", "Overlay Input", false, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_ORIGIN)
     , overlayOutput_(Port::OUTPORT, "interactiveprojectionlabeling.overlayoutput", "Overlay (3D)", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
@@ -328,7 +333,7 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , state_(FREE)
 {
     addPort(inport_);
-    addPort(labelVolume_);
+    //addPort(labelVolume_);
     addPort(labelGeometry_);
     addPort(overlayInput_);
     addPort(overlayOutput_);
@@ -448,9 +453,9 @@ void InteractiveProjectionLabeling::renderProjection() {
 
 void InteractiveProjectionLabeling::withOutputVolume(std::function<void(LZ4SliceVolume<uint8_t>&)> func) {
     if(outputVolume_) {
-        labelVolume_.setData(nullptr);
+        //labelVolume_.setData(nullptr);
         func(*outputVolume_);
-        labelVolume_.setData(LZ4SliceVolume<uint8_t>::open(outputVolume_->getFilePath()).toVolume().release());
+        //labelVolume_.setData(LZ4SliceVolume<uint8_t>::open(outputVolume_->getFilePath()).toVolume().release());
     }
 }
 
@@ -493,23 +498,25 @@ void InteractiveProjectionLabeling::updateProjection() {
 
     tgt::vec3 camera = camera_.get().getPosition();
 
+    auto line = PolyLine<tgt::vec2>(displayLine_);
     auto tex_to_world = vol.getTextureToWorldMatrix();
     float min_dist = std::numeric_limits<float>::infinity();
-    for(int i=0; i<front.getNumVoxels(); ++i) {
-        auto& p = front.voxel(i);
-        if(p.a > 0) {
-            min_dist = std::min(min_dist, tgt::distance(camera, (tex_to_world * p).xyz()));
-        }
-    }
     float max_dist = 0.0f;
-    for(int i=0; i<back.getNumVoxels(); ++i) {
-        auto& p = back.voxel(i);
-        if(p.a > 0) {
-            max_dist = std::max(max_dist, tgt::distance(camera, (tex_to_world * p).xyz()));
+    for(int x = 0; x < dim.x; ++x) {
+        float d = ((float)x)/(dim.x-1);
+        auto p = line.interpolate(d);
+
+        tgt::vec3 normalized_query(p, 0);
+        tgt::vec4 front_pos = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
+        tgt::vec4 back_pos = back.getVoxelLinear(normalized_query * tgt::vec3(back.getDimensions()));
+
+        if(front_pos.a > 0) {
+            min_dist = std::min(min_dist, tgt::distance(camera, (tex_to_world * front_pos).xyz()));
+        }
+        if(back_pos.a > 0) {
+            max_dist = std::max(max_dist, tgt::distance(camera, (tex_to_world * back_pos).xyz()));
         }
     }
-
-    auto line = PolyLine<tgt::vec2>(displayLine_);
 
     auto world_to_vox = vol.getWorldToVoxelMatrix();
 
@@ -576,20 +583,20 @@ void InteractiveProjectionLabeling::process() {
 
 
 void InteractiveProjectionLabeling::adjustPropertiesToInput() {
-    labelVolume_.setData(nullptr);
+    //labelVolume_.setData(nullptr);
     if(!inport_.hasData()) {
         return;
     }
     const auto& vol = *inport_.getData();
     auto dim = vol.getDimensions();
 
-    LZ4SliceVolumeBuilder<uint8_t> builder(
-            VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION),
-            LZ4SliceVolumeMetadata::fromVolume(vol).withRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint8_t>())
-            );
-    builder.fill(0);
-    outputVolume_ = std::move(builder).finalize();
-    withOutputVolume([&] (LZ4SliceVolume<uint8_t>& vol) { });
+    //LZ4SliceVolumeBuilder<uint8_t> builder(
+    //        VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION),
+    //        LZ4SliceVolumeMetadata::fromVolume(vol).withRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint8_t>())
+    //        );
+    //builder.fill(0);
+    //outputVolume_ = std::move(builder).finalize();
+    //withOutputVolume([&] (LZ4SliceVolume<uint8_t>& vol) { });
 
     updateProjection();
 }

@@ -111,7 +111,7 @@ private:
     boost::optional<VolumeAtomic<tgt::vec4>> getLhp();
 
     VolumePort inport_;
-    VolumePort labelVolume_;
+    //VolumePort labelVolume_;
     GeometryPort labelGeometry_;
     RenderPort overlayInput_;
     RenderPort overlayOutput_;
