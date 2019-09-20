@@ -45,7 +45,7 @@ OpenCLModule::OpenCLModule(const std::string& modulePath)
     , opencl_(nullptr)
     , context_(nullptr)
     , queue_(nullptr)
-    , glSharing_(true)
+    , glSharing_("sharingProp", "GL Sharing (change requires restart)", true)
     , deviceProp_("deviceProp", "Device:", Processor::INVALID_RESULT, true)
     , currentDeviceIdx_(-1)
 {
@@ -62,6 +62,7 @@ OpenCLModule::OpenCLModule(const std::string& modulePath)
 
     addShaderPath(getModulePath("glsl"));
     addProperty(deviceProp_);
+    addProperty(glSharing_);
 }
 
 void OpenCLModule::initializeGL() {
@@ -69,9 +70,9 @@ void OpenCLModule::initializeGL() {
     if (tgt::Singleton<tgt::GpuCapabilities>::isInited()) {
         VoreenModule::initializeGL();
     }
-    else if (glSharing_) {
+    else if (glSharing_.get()) {
         LWARNING("No OpenGL context available: disabling OpenGL sharing");
-        glSharing_ = false;
+        glSharing_.set(false);
     }
 
     // Initialize OpenCL in order to set up platform property.
@@ -182,12 +183,12 @@ void OpenCLModule::setupDevice() {
     currentDeviceIdx_ = deviceProp_.getValue();
     platform_ = opencl_->getPlatforms().at(devices_.at(currentDeviceIdx_).first);
     device_ = platform_.getDevices().at(devices_.at(currentDeviceIdx_).second);
-    
+
     // Log infos of selected device.
     device_.logInfos();
 
     // Create context.
-    if (glSharing_) {
+    if (glSharing_.get()) {
         LINFO("OpenGL sharing: enabled");
         context_ = new cl::Context(cl::Context::generateGlSharingProperties(), device_);
     }
@@ -246,12 +247,12 @@ void OpenCLModule::setGLSharing(bool enabled) {
         LWARNING("setGLSharing() no effect: OpenCL context already initialized");
     }
     else {
-        glSharing_ = enabled;
+        glSharing_.set(enabled);
     }
 }
 
 bool OpenCLModule::getGLSharing() const {
-    return glSharing_;
+    return glSharing_.get();
 }
 
 OpenCLModule* OpenCLModule::getInstance() {

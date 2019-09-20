@@ -31,6 +31,7 @@
 #include "modules/opencl/utils/clwrapper.h"
 
 #include "voreen/core/properties/stringproperty.h"
+#include "voreen/core/properties/boolproperty.h"
 
 #include <set>
 
@@ -134,10 +135,10 @@ private:
     std::vector<std::pair<int, int>> devices_;
     OptionProperty<int> deviceProp_;
     int currentDeviceIdx_;
-    
+
     std::set<cl::OpenCLProcessorBase*> processors_;
 
-    bool glSharing_;    ///< Determines whether OpenGL sharing is enabled
+    BoolProperty glSharing_;    ///< Determines whether OpenGL sharing is enabled
 
     static OpenCLModule* instance_;
 

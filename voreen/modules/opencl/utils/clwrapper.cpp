@@ -1759,6 +1759,7 @@ std::string clErrorToString(cl_int err) {
         case(CL_OUT_OF_HOST_MEMORY): msg = "CL_OUT_OF_HOST_MEMORY"; break;
         case(CL_OUT_OF_RESOURCES): msg = "CL_OUT_OF_RESOURCES"; break;
         case(CL_PROFILING_INFO_NOT_AVAILABLE): msg = "CL_PROFILING_INFO_NOT_AVAILABLE"; break;
+        case(CL_INVALID_PROPERTY): msg = "CL_INVALID_PROPERTY"; break;
         default:
            msg = "unknown";
     }
