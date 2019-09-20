@@ -30,13 +30,9 @@
 #include "voreen/core/ports/volumeport.h"
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/ports/renderport.h"
-#include "voreen/core/properties/boolproperty.h"
-#include "voreen/core/properties/intproperty.h"
-#include "voreen/core/properties/boundingboxproperty.h"
-#include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/shaderproperty.h"
-#include "voreen/core/properties/eventproperty.h"
 #include "voreen/core/properties/cameraproperty.h"
+#include "voreen/core/properties/optionproperty.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 #include "modules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
@@ -103,6 +99,12 @@ private:
         FREE,
     };
 
+    enum InitializationMode {
+        NONE,
+        BRIGHT_LUMEN,
+        //BRIGHT_WALL,
+    };
+
     void updateSizes();
     void renderOverlay();
     void renderProjection();
@@ -129,6 +131,7 @@ private:
     boost::optional<LZ4SliceVolume<uint8_t>> outputVolume_;
 
     CameraProperty camera_;
+    OptionProperty<InitializationMode> initializationMode_;
 
     static const std::string loggerCat_;
 

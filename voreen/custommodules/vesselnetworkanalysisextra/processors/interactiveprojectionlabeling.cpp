@@ -366,10 +366,16 @@ void InteractiveProjectionLabeling::finishProjection() {
         return segment;
     };
 
-    foregroundLabelLines_.addSegment(project3D(projectionLabels_.foreground_));
+    if(!projectionLabels_.foreground_.empty()) {
+        foregroundLabelLines_.addSegment(project3D(projectionLabels_.foreground_));
+    }
 
-    backgroundLabelLines_.addSegment(project3D(projectionLabels_.lowerBackground_));
-    backgroundLabelLines_.addSegment(project3D(projectionLabels_.upperBackground_));
+    if(!projectionLabels_.lowerBackground_.empty()) {
+        backgroundLabelLines_.addSegment(project3D(projectionLabels_.lowerBackground_));
+    }
+    if(!projectionLabels_.upperBackground_.empty()) {
+        backgroundLabelLines_.addSegment(project3D(projectionLabels_.upperBackground_));
+    }
 }
 
 InteractiveProjectionLabeling::InteractiveProjectionLabeling()
@@ -383,6 +389,7 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , fhp_(Port::INPORT, "interactiveprojectionlabeling.fhp", "First hit points", false)
     , lhp_(Port::INPORT, "interactiveprojectionlabeling.lhp", "Last hit points", false)
     , camera_("camera", "Camera")
+    , initializationMode_("initializationMode", "Initialization Mode")
     , outputVolume_(boost::none)
     , projectionShader_("shader", "Shader", "interactiveprojectionlabeling.frag", "oit_passthrough.vert")
     , displayLine_()
@@ -402,6 +409,10 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
 
     addProperty(projectionShader_);
     addProperty(camera_);
+    addProperty(initializationMode_);
+    initializationMode_.addOption("none", "None", NONE);
+    initializationMode_.addOption("brightlumen", "Bright Lumen", BRIGHT_LUMEN);
+    //initializationMode_.addOption("brightwall", "Bright Wall", BRIGHT_WALL);
 }
 
 void InteractiveProjectionLabeling::updateSizes() {
@@ -512,6 +523,82 @@ boost::optional<VolumeAtomic<tgt::vec4>> InteractiveProjectionLabeling::getLhp()
     return VolumeAtomic<tgt::vec4>((tgt::vec4*)lhp_.getColorTexture()->downloadTextureToBuffer(GL_RGBA, GL_FLOAT), tgt::svec3(lhp_.getSize(),1));
 }
 
+static std::vector<int> maxPath(const VolumeAtomic<float>& img) {
+    VolumeAtomic<int> paths(img.getDimensions());
+    tgt::ivec3 idim = img.getDimensions();
+    std::vector<float> global_cost(idim.x, 0.0);
+    const int MAX_NEIGHBOR_OFFSET = 3;
+    for(int y=0; y < idim.y; ++y) {
+        std::vector<float> next_global_cost(idim.x, 0.0);
+        for(int x=0; x < idim.x; ++x) {
+            int best_i = 0;
+            float best_val = 0.0;
+            for(int d=std::max(0, x-MAX_NEIGHBOR_OFFSET); d<std::min(idim.x, x+MAX_NEIGHBOR_OFFSET+1); ++d) {
+                float val = img.voxel(d, y, 0) + global_cost.at(d);
+                if(val > best_val) {
+                    best_val = val;
+                    best_i = d;
+                }
+            }
+            paths.voxel(x, y, 0) = best_i;
+            next_global_cost[x] = best_val;
+        }
+        global_cost = next_global_cost;
+    }
+
+    std::vector<int> path;
+    float best_begin_val = 0.0;
+    int best_begin_i = 0;
+    for(int x=0; x < idim.x; ++x) {
+        if(global_cost[x] > best_begin_val) {
+            best_begin_val = global_cost[x];
+            best_begin_i = x;
+        }
+    }
+    int x = best_begin_i;
+    path.push_back(x);
+    for(int y=idim.y-2; y >= 0; --y) {
+        x = paths.voxel(x, y, 0);
+        path.push_back(x);
+    }
+    std::reverse(path.begin(), path.end());
+    return path;
+}
+static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& labels) {
+    const auto& orig = proj.projection();
+    tgt::ivec3 idim = orig.getDimensions();
+    VolumeAtomic<float> top_gradients(tgt::svec3(idim.y, idim.x, idim.z));
+    VolumeAtomic<float> bottom_gradients(tgt::svec3(idim.y, idim.x, idim.z));
+
+    for(int y=0; y < idim.y; ++y) {
+        for(int x=0; x < idim.x; ++x) {
+            float diff = orig.voxel(x, std::max(0, y-1), 0) - orig.voxel(x, std::min(y+1, idim.y-1), 0);
+            top_gradients.voxel(y, x, 0) = std::max(0.0f, diff);
+            bottom_gradients.voxel(y, x, 0) = std::max(0.0f, -diff);
+        }
+    }
+
+    auto bottom_path = maxPath(bottom_gradients);
+    auto top_path = maxPath(top_gradients);
+
+    tgtAssert(bottom_path.size() == top_path.size(), "Path size mismatch");
+
+    labels.foreground_.clear();
+    labels.lowerBackground_.clear();
+    labels.upperBackground_.clear();
+    for(int x=0; x < top_path.size(); ++x) {
+        float x_pos = static_cast<float>(x)/(idim.x-1);
+        float y_top = static_cast<float>(top_path.at(x))/(idim.y-1);
+        float y_bottom = static_cast<float>(bottom_path.at(x))/(idim.y-1);
+
+        float width = y_top - y_bottom;
+        float center = (y_top + y_bottom)/2;
+        labels.foreground_.emplace_back(x_pos, center);
+        labels.lowerBackground_.emplace_back(x_pos, center-width);
+        labels.upperBackground_.emplace_back(x_pos, center+width);
+    }
+}
+
 void InteractiveProjectionLabeling::updateProjection() {
     if(displayLine_.empty()) {
         return;
@@ -571,13 +658,22 @@ void InteractiveProjectionLabeling::updateProjection() {
 
             float val;
             if(tgt::hor(tgt::greaterThan(query_pos, dimf)) || tgt::hor(tgt::lessThan(query_pos, tgt::vec3::zero))) {
-                val = 0.5;
+                val = std::numeric_limits<float>::quiet_NaN();
             } else {
                 val = volram.getVoxelNormalizedLinear(query_pos);
             }
 
             proj.at(tgt::svec2(x, y)) = val;
         }
+    }
+
+    switch(initializationMode_.getValue()) {
+        case BRIGHT_LUMEN:
+            {
+                initBrightLumen(*projection_, projectionLabels_);
+                break;
+            }
+        default:;
     }
 }
 
