@@ -73,6 +73,12 @@ private:
     boost::optional<tgt::Texture> projectionTexture_;
 };
 
+struct ProjectionLabels {
+    std::deque<tgt::vec2> foreground_;
+    std::deque<tgt::vec2> lowerBackground_;
+    std::deque<tgt::vec2> upperBackground_;
+};
+
 class InteractiveProjectionLabeling : public RenderProcessor {
 public:
     InteractiveProjectionLabeling();
@@ -112,7 +118,8 @@ private:
 
     VolumePort inport_;
     //VolumePort labelVolume_;
-    GeometryPort labelGeometry_;
+    GeometryPort foregroundLabelGeometry_;
+    GeometryPort backgroundLabelGeometry_;
     RenderPort overlayInput_;
     RenderPort overlayOutput_;
     RenderPort projectionOutput_;
@@ -131,9 +138,10 @@ private:
 
     boost::optional<LabelProjection> projection_;
     std::deque<tgt::vec2> displayLine_;
-    std::deque<tgt::vec2> projectionLine_;
+    ProjectionLabels projectionLabels_;
 
-    PointSegmentListGeometryVec3 labelLines_;
+    PointSegmentListGeometryVec3 foregroundLabelLines_;
+    PointSegmentListGeometryVec3 backgroundLabelLines_;
 
     State state_;
 };
