@@ -732,8 +732,14 @@ void RandomWalker::getSeedListsFromPorts(PointSegmentListGeometry<tgt::vec3>& fo
         if (!seedList)
             LWARNING("Invalid geometry. PointSegmentListGeometry<vec3> expected.");
         else {
-            for (int j=0; j<seedList->getNumSegments(); j++)
-                foregroundSeeds.addSegment(seedList->getSegment(j));
+            auto transformMat = seedList->getTransformationMatrix();
+            for (int j=0; j<seedList->getNumSegments(); j++) {
+                std::vector<tgt::vec3> points;
+                for(auto& vox : seedList->getSegment(j)) {
+                    points.push_back(transformMat.transform(vox));
+                }
+                foregroundSeeds.addSegment(points);
+            }
         }
     }
 
@@ -742,8 +748,14 @@ void RandomWalker::getSeedListsFromPorts(PointSegmentListGeometry<tgt::vec3>& fo
         if (!seedList)
             LWARNING("Invalid geometry. PointSegmentListGeometry<vec3> expected.");
         else {
-            for (int j=0; j<seedList->getNumSegments(); j++)
-                backgroundSeeds.addSegment(seedList->getSegment(j));
+            auto transformMat = seedList->getTransformationMatrix();
+            for (int j=0; j<seedList->getNumSegments(); j++) {
+                std::vector<tgt::vec3> points;
+                for(auto& vox : seedList->getSegment(j)) {
+                    points.push_back(transformMat.transform(vox));
+                }
+                backgroundSeeds.addSegment(points);
+            }
         }
     }
 }
