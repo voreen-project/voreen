@@ -43,6 +43,7 @@ public:
     virtual std::string getCategory() const       { return "Volume Processing"; }
     virtual CodeState getCodeState() const        { return CODE_STATE_STABLE;   }
     virtual bool usesExpensiveComputation() const { return true; }
+    virtual bool isReady() const;
 
 protected:
     virtual void setDescriptions() {
@@ -105,6 +106,7 @@ private:
     FloatProperty factorD_;
     StringOptionProperty filteringMode_;
     StringOptionProperty referenceVolume_;
+    BoolProperty pipeThroughIfSecondNotReady_;
 
     static const std::string loggerCat_; ///< category used in logging
 };

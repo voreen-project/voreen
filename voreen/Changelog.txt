@@ -18,6 +18,7 @@ Voreen Changelog
       o Introduce VolumeRAMRepresentationLock for asynchronous calculations which prevents a representation to be removed by the memory manager until it's destroyed
       o Add support for STL geometry files (both ASCII and binary) to GeometrySource
       o GlMeshGeometries (such as the output of IsoSurfaceCreator) can now be saved as .obj and .stl files using GeometrySave
+      o Add "pipe through" option to VolumeCombine
 
     * Framework/API Changes:
       o StringProperty: Renamed setReadOnly/isReadyOnly to setEditable/isEditable

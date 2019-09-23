@@ -49,6 +49,7 @@ VolumeCombine::VolumeCombine()
     , factorD_("factorD", "Factor d", 0.5f, -2.f, 2.f)
     , filteringMode_("filteringMode", "Filtering")
     , referenceVolume_("referenceVolume", "Reference Volume")
+    , pipeThroughIfSecondNotReady_("pipethrough", "Propagate First Volume if Second Not Ready", false)
 {
     addPort(inportFirst_);
     addPort(inportSecond_);
@@ -91,6 +92,7 @@ VolumeCombine::VolumeCombine()
     addProperty(factorD_);
     addProperty(filteringMode_);
     addProperty(referenceVolume_);
+    addProperty(pipeThroughIfSecondNotReady_);
 
     adjustPropertyVisibilities();
 }
@@ -101,18 +103,33 @@ Processor* VolumeCombine::create() const {
     return new VolumeCombine();
 }
 
+bool VolumeCombine::isReady() const {
+    bool ready = false;
+    if(combineFunction_.getValue() == OP_TAKE_FIRST) {
+        return inportFirst_.isReady();
+    } else if(combineFunction_.getValue() == OP_TAKE_SECOND) {
+        return inportSecond_.isReady();
+    } else if(pipeThroughIfSecondNotReady_.get()) {
+        return inportFirst_.isReady();
+    } else {
+        return inportFirst_.isReady() && inportSecond_.isReady();
+    }
+}
+
 void VolumeCombine::process() {
-    tgtAssert(inportFirst_.getData() && inportFirst_.getData()->getRepresentation<VolumeRAM>(), "No input volume");
-    tgtAssert(inportSecond_.getData() && inportSecond_.getData()->getRepresentation<VolumeRAM>(), "No input volume");
 
     const VolumeBase* firstVolume = inportFirst_.getData();
     const VolumeBase* secondVolume = inportSecond_.getData();
     Volume* combinedVolume = 0;
 
-    if (!enableProcessing_.get()) {
-        outport_.setData(const_cast<VolumeBase*>(inportFirst_.getData()), false);
+    if (!enableProcessing_.get() || pipeThroughIfSecondNotReady_.get() && !inportSecond_.isReady()) {
+        outport_.setData(inportFirst_.getData(), false);
         return;
     }
+
+    tgtAssert(inportFirst_.getData() && inportFirst_.getData()->getRepresentation<VolumeRAM>(), "No input volume");
+    tgtAssert(inportSecond_.getData() && inportSecond_.getData()->getRepresentation<VolumeRAM>(), "No input volume");
+
     if (firstVolume->getNumChannels() == secondVolume->getNumChannels()) {
         LINFO("Performing channel-wise combination.");
     }
