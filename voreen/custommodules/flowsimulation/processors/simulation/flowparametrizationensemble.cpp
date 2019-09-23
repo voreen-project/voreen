@@ -33,7 +33,7 @@ FlowParametrizationEnsemble::FlowParametrizationEnsemble()
     : Processor()
     , outport_(Port::OUTPORT, "outport", "Parameter Inport")
     , ensembleName_("ensembleName", "Ensemble Name", "test_ensemble")
-    , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.1f, 20.0f)
+    , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.0f, 20.0f)
     , numTimeSteps_("numTimeSteps", "Num. Output Time Steps", 50, 1, 1000)
     , outputResolution_("outputResolution", "Max. Output Resolution", 128, 32, 1024)
     , flowFeatures_("flowFeatures", "Flow Features")
@@ -76,7 +76,7 @@ void FlowParametrizationEnsemble::process() {
 
 }
 
-void FlowParametrizationEnsemble::addFeature(const std::string &name, int id) {
+void FlowParametrizationEnsemble::addFeature(const std::string& name, int id) {
     flowFeatures_.addItem(name);
     flowFeatureIds_.push_back(id);
 }

@@ -891,7 +891,7 @@ bool STLreader<T>::distance(T& distance, const Vector<T,3>& origin,
       }
     }
   }
-  clout << "Returning false" << std::endl;
+  //clout << "Returning false" << std::endl;
   return false;
 }
 

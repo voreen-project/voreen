@@ -65,8 +65,8 @@ bool FlowSimulation::MeasuredDataMapper::operator() (T output[], const T input[]
     if(!initialState)
         return false;
 
-    for(size_t i=0; i < volume_->getNumChannels(); i++) {
-        tgt::vec3 voxel = initialState->getVoxelLinear(physicalToVoxelMatrix_ * rwPos, 0, false);
+    tgt::vec3 voxel = initialState->getVoxelLinear(physicalToVoxelMatrix_ * rwPos, 0, true);
+    for(size_t i=0; i < initialState->getNumChannels(); i++) {
         output[i] = voxel[i] * VOREEN_LENGTH_TO_SI;
     }
 
@@ -347,7 +347,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
     // === 4th Step: Main Loop  ===
     const int tmax = converter.getLatticeTime(parametrizationList.getSimulationTime());
-    util::ValueTracer<T> converge( converter.getLatticeTime(1.0), 1e-5);
+    util::ValueTracer<T> converge( converter.getLatticeTime(0.5), 1e-5);
     for (int ti = 0; ti <= tmax; ti++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
@@ -487,7 +487,7 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
             lattice.iniEquilibrium(superGeometry, indicator.materialId_, rhoF, uF);
         }
     }
-    // Steered simulation.
+    // Steered simulation - currently only initializes the first time step!
     else {
         MeasuredDataMapper mapper(measuredData->first());
         lattice.defineU(superGeometry, MAT_FLUID, mapper);

@@ -26,6 +26,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/simulation/flowparametrizationrun.cpp
     ${MOD_DIR}/processors/simulation/flowsimulationcluster.cpp
     ${MOD_DIR}/processors/simulation/flowsimulationgeometry.cpp
+    ${MOD_DIR}/processors/volume/gaussiannoise.cpp
     ${MOD_DIR}/processors/volume/volumelistadapter.cpp
 )
 
@@ -51,6 +52,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/simulation/flowparametrizationrun.h
     ${MOD_DIR}/processors/simulation/flowsimulationcluster.h
     ${MOD_DIR}/processors/simulation/flowsimulationgeometry.h
+    ${MOD_DIR}/processors/volume/gaussiannoise.h
     ${MOD_DIR}/processors/volume/volumelistadapter.h
 )
 

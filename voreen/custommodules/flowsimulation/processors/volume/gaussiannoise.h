@@ -23,54 +23,48 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_FLOWCHARACTERISTICS_H
-#define VRN_FLOWCHARACTERISTICS_H
+#ifndef VRN_GAUSSIANNOISE
+#define VRN_GAUSSIANNOISE
 
-#include "voreen/core/processors/processor.h"
-
+#include "voreen/core/processors/volumeprocessor.h"
+#include "voreen/core/properties/boolproperty.h"
+#include "voreen/core/properties/intproperty.h"
+#include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/ports/volumeport.h"
 
-#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
-#include "modules/vesselnetworkanalysis/ports/vesselgraphport.h"
-#endif
+#include <random>
 
 namespace voreen {
 
-/**
- * Used to extract and set characteristics of a time series.
- */
-class VRN_CORE_API FlowCharacteristics : public Processor {
+class GaussianNoise : public VolumeProcessor {
 public:
-    FlowCharacteristics();
+    GaussianNoise();
+    virtual ~GaussianNoise();
 
-    virtual Processor* create() const { return new FlowCharacteristics(); }
-    virtual std::string getCategory() const  { return "Utility"; }
-    virtual std::string getClassName() const { return "FlowCharacteristics"; }
-    virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL; }
-
-    virtual bool isReady() const;
+    virtual Processor* create() const;
+    virtual std::string getClassName() const         { return "GaussianNoise";           }
+    virtual std::string getCategory() const          { return "Volume Processing";       }
+    virtual std::string setDescriptions() const      { return "Volume Processing";       }
+    virtual CodeState getCodeState() const           { return CODE_STATE_EXPERIMENTAL;   }
     virtual void process();
-
-protected:
-    virtual void setDescriptions() {
-        setDescription("Used to extract and set characteristics of a flow time series.");
-    }
 
 private:
 
-    VolumeListPort inport_;
-#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
-    VesselGraphPort vesselGraphPort_;
-#endif
+    VolumePort inport_;
+    VolumePort outport_;
 
-    FloatProperty temporalResolution_;
-    FloatProperty characteristicLength_;
-    FloatProperty minVelocity_;
-    FloatProperty maxVelocity_;
-    ButtonProperty resetButton_;
+    BoolProperty enabledProp_;
+    FloatProperty mean_;
+    FloatProperty stdDeviation_;
+
+    BoolProperty usePredeterminedSeed_;
+    IntProperty predeterminedSeed_;
+
+    std::random_device randomDevice_;
+
+    static const std::string loggerCat_;
 };
 
-}
+} // namespace voreen
 
 #endif
-

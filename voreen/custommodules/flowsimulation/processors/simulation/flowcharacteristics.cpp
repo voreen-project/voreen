@@ -37,7 +37,6 @@ FlowCharacteristics::FlowCharacteristics()
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
     , vesselGraphPort_(Port::INPORT, "vesselgraph.inport", "Vessel Graph")
 #endif
-    , simulationTime_("simulationTime", "Simulation time (s)", 1.0f, 0.1f, 100.0f, Processor::VALID)
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 1.0f, 200.0f, Processor::VALID)
     , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 22.46f, 0.1f, 100.0f, Processor::VALID)
     , minVelocity_("minVelocity", "Min. Velocity (mm/s)", 0.0f, 0.0f, 1000.0f, Processor::VALID)
@@ -51,7 +50,6 @@ FlowCharacteristics::FlowCharacteristics()
     addPort(vesselGraphPort_);
 #endif
 
-    addProperty(simulationTime_);
     addProperty(temporalResolution_);
     addProperty(characteristicLength_);
     addProperty(minVelocity_);
@@ -110,9 +108,9 @@ void FlowCharacteristics::process() {
     }
 #endif
     characteristicLength_.set(maxLength);
-    minVelocity_.setMaxValue(maxVelocity * 1.2f); // Allow for 20% adjustments.
+    minVelocity_.setMaxValue(maxVelocity);
     minVelocity_.set(minVelocity);
-    maxVelocity_.setMaxValue(maxVelocity * 1.2f); // Allow for 20% adjustments.
+    maxVelocity_.setMaxValue(maxVelocity);
     maxVelocity_.set(maxVelocity);
 }
 

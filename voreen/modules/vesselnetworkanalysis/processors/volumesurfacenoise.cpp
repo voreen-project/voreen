@@ -27,23 +27,9 @@
 #include "voreen/core/datastructures/volume/volumeram.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
 
-#include <boost/functional/hash.hpp>
-
 #include <unordered_map>
 #include <vector>
 #include <random>
-
-//Hash implementation for tgt::ivec3
-namespace std {
-    template <> struct hash<tgt::ivec3>
-    {
-        size_t operator()(const tgt::ivec3 & p) const
-        {
-            std::array<int, 3> array{ {p.x, p.y, p.z} };
-            return boost::hash_value(array);
-        }
-    };
-}
 
 namespace voreen {
 
@@ -213,7 +199,7 @@ void VolumeSurfaceNoise::process() {
     const VolumeRAM& input = *inputPtr;
 
     float binarizationThresholdNormalized;
-    if(inVol.hasMetaData("RealWorldMapping")) {
+    if(inVol.hasMetaData(VolumeBase::META_DATA_NAME_REAL_WORLD_MAPPING)) {
         // If the input volume does not have a RealWorldMapping we need to convert the binarizationThreshold to a normalized value.
         binarizationThresholdNormalized = inVol.getRealWorldMapping().realWorldToNormalized(binarizationThreshold_.get());
     } else {

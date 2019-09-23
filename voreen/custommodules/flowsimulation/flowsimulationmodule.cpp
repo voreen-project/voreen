@@ -38,6 +38,7 @@
 #include "processors/simulation/flowparametrizationrun.h"
 #include "processors/simulation/flowsimulationcluster.h"
 #include "processors/simulation/flowsimulationgeometry.h"
+#include "processors/volume/gaussiannoise.h"
 #include "processors/volume/volumelistadapter.h"
 
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
@@ -71,6 +72,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerSerializableType(new FlowParametrizationRun());
     registerSerializableType(new FlowSimulationCluster());
     registerSerializableType(new FlowSimulationGeometry());
+    registerSerializableType(new GaussianNoise());
     registerSerializableType(new VolumeListAdapter());
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
     registerSerializableType(new FlowIndicatorDetection());
