@@ -31,6 +31,7 @@
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/ports/renderport.h"
 #include "voreen/core/properties/shaderproperty.h"
+#include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/cameraproperty.h"
 #include "voreen/core/properties/optionproperty.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
@@ -133,6 +134,7 @@ private:
 
     CameraProperty camera_;
     OptionProperty<InitializationMode> initializationMode_;
+    FloatProperty maxLineSimplificationDistance_;
 
     static const std::string loggerCat_;
 
