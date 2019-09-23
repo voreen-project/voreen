@@ -46,7 +46,7 @@ struct LabelGuard {
 public:
     LabelGuard(LabelProjection& labelProjection);
     ~LabelGuard();
-    float& at(tgt::svec2);
+    tgt::vec2& at(tgt::svec2);
 private:
     LabelProjection& labelProjection_;
 };
@@ -54,7 +54,7 @@ private:
 struct LabelProjection {
     LabelProjection(tgt::svec2 dimensions);
 
-    const VolumeAtomic<float>& projection() const {
+    const VolumeAtomic<tgt::vec2>& projection() const {
         return projection_;
     }
     LabelGuard projection_mut() {
@@ -65,7 +65,7 @@ private:
     friend struct LabelGuard;
     void ensureTexturesPresent();
 
-    VolumeAtomic<float> projection_;
+    VolumeAtomic<tgt::vec2> projection_;
     boost::optional<tgt::Texture> projectionTexture_;
 };
 

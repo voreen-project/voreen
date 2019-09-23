@@ -44,7 +44,7 @@ LabelGuard::~LabelGuard() {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     labelProjection_.projectionTexture_->uploadTexture();
 }
-float& LabelGuard::at(tgt::svec2 p) {
+tgt::vec2& LabelGuard::at(tgt::svec2 p) {
     return labelProjection_.projection_.voxel(p.x, p.y, 0);
 }
 
@@ -56,7 +56,7 @@ LabelProjection::LabelProjection(tgt::svec2 dimensions)
 }
 void LabelProjection::ensureTexturesPresent() {
     if(!projectionTexture_) {
-        projectionTexture_ = tgt::Texture(projection_.getDimensions(), GL_RED, GL_RED, GL_FLOAT, tgt::Texture::LINEAR, tgt::Texture::CLAMP_TO_EDGE, (GLubyte*) projection_.voxel(), false);
+        projectionTexture_ = tgt::Texture(projection_.getDimensions(), GL_RG, GL_RG, GL_FLOAT, tgt::Texture::LINEAR, tgt::Texture::CLAMP_TO_EDGE, (GLubyte*) projection_.voxel(), false);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         projectionTexture_->uploadTexture();
     }
@@ -174,7 +174,7 @@ static tgt::vec2 projectionDepthRange(const VolumeBase& vol, const VolumeAtomic<
 }
 
 
-#define MOUSE_INTERACTION_DIST 0.02
+#define MOUSE_INTERACTION_DIST 0.02f
 static void handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
     auto button = e->button();
     if((button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT)) == 0) {
@@ -586,7 +586,14 @@ static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& label
 
     for(int y=0; y < idim.y; ++y) {
         for(int x=0; x < idim.x; ++x) {
-            float diff = orig.voxel(x, std::max(0, y-1), 0) - orig.voxel(x, std::min(y+1, idim.y-1), 0);
+            tgt::vec2 left = orig.voxel(x, std::max(0, y-1), 0);
+            tgt::vec2 right = orig.voxel(x, std::min(y+1, idim.y-1), 0);
+            float diff;
+            if(left.y > 0.0 && right.y > 0.0) {
+                diff = left.x - right.x;
+            } else {
+                diff = 0.0;
+            }
             top_gradients.voxel(y, x, 0) = std::max(0.0f, diff);
             bottom_gradients.voxel(y, x, 0) = std::max(0.0f, -diff);
         }
@@ -682,11 +689,11 @@ void InteractiveProjectionLabeling::updateProjection() {
             tgt::vec4 query_pos_rw(view_dir * alpha_rw + camera, 1.0);
             tgt::vec3 query_pos = (world_to_vox * query_pos_rw).xyz();
 
-            float val;
+            tgt::vec2 val;
             if(tgt::hor(tgt::greaterThan(query_pos, dimf)) || tgt::hor(tgt::lessThan(query_pos, tgt::vec3::zero))) {
-                val = std::numeric_limits<float>::quiet_NaN();
+                val = tgt::vec2(0.0, 0.0);
             } else {
-                val = volram.getVoxelNormalizedLinear(query_pos);
+                val = tgt::vec2(volram.getVoxelNormalizedLinear(query_pos), 1.0);
             }
 
             proj.at(tgt::svec2(x, y)) = val;
