@@ -35,6 +35,17 @@ void main() {
     vec2 fragCoord = frag_texcoord.xy;
 
     float texValue = texture(tex_, fragCoord).x;
-    vec3 col = vec3(texValue);
+
+    vec3 col;
+    if(isnan(texValue)) {
+        //Checkerboard pattern
+        if(((int(gl_FragCoord.x)/40) & 1) - ((int(gl_FragCoord.y)/40) & 1) == 0) {
+            col = vec3(0.3, 0.3, 0.3);
+        } else {
+            col = vec3(0.7, 0.7, 0.7);
+        }
+    } else {
+        col = vec3(texValue);
+    }
     color = vec4(col, 1.0);
 }

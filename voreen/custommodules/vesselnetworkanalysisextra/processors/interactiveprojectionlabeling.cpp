@@ -224,6 +224,10 @@ static void handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
     e->accept();
 }
 void InteractiveProjectionLabeling::projectionEvent(tgt::MouseEvent* e) {
+    auto button = e->button();
+    if((button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT)) == 0) {
+        return;
+    }
 
     if(e->modifiers() == tgt::Event::CTRL) {
         handleLineEvent(projectionLabels_.lowerBackground_, e);
@@ -240,7 +244,10 @@ void InteractiveProjectionLabeling::projectionEvent(tgt::MouseEvent* e) {
         std::sort(projectionLabels_.foreground_.begin(), projectionLabels_.foreground_.end(), [] (const tgt::vec2& p1, const tgt::vec2& p2) {
                 return p1.x < p2.x;
                 });
+    } else {
+        return;
     }
+    projectionLabelsModified_ = true;
 
     invalidate();
 }
@@ -265,8 +272,11 @@ void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
     if(tgt::MouseEvent* me = dynamic_cast<tgt::MouseEvent*>(e)) {
         if(port == &overlayOutput_) {
             overlayEvent(me);
-            if(!displayLine_.empty()) {
+            if(!displayLine_.empty() && state_ == FREE) {
                 state_ = LABELING;
+                projectionLabelsModified_ = false;
+            }
+            if(state_ == LABELING) {
                 me->accept();
             }
         }
@@ -377,7 +387,6 @@ void InteractiveProjectionLabeling::finishProjection() {
         backgroundLabelLines_.addSegment(project3D(projectionLabels_.upperBackground_));
     }
 }
-
 InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     : RenderProcessor()
     , inport_(Port::INPORT, "interactiveprojectionlabeling.inport", "Volume Input")
@@ -394,6 +403,10 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , projectionShader_("shader", "Shader", "interactiveprojectionlabeling.frag", "oit_passthrough.vert")
     , displayLine_()
     , projection_(boost::none)
+    , projectionLabels_()
+    , projectionLabelsModified_(false)
+    , foregroundLabelLines_()
+    , backgroundLabelLines_()
     , state_(FREE)
 {
     addPort(inport_);
@@ -410,8 +423,9 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     addProperty(projectionShader_);
     addProperty(camera_);
     addProperty(initializationMode_);
-    initializationMode_.addOption("none", "None", NONE);
-    initializationMode_.addOption("brightlumen", "Bright Lumen", BRIGHT_LUMEN);
+        initializationMode_.addOption("none", "None", NONE);
+        initializationMode_.addOption("brightlumen", "Bright Lumen", BRIGHT_LUMEN);
+        ON_CHANGE(initializationMode_, InteractiveProjectionLabeling, initializeProjectionLabels);
     //initializationMode_.addOption("brightwall", "Bright Wall", BRIGHT_WALL);
 }
 
@@ -583,9 +597,6 @@ static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& label
 
     tgtAssert(bottom_path.size() == top_path.size(), "Path size mismatch");
 
-    labels.foreground_.clear();
-    labels.lowerBackground_.clear();
-    labels.upperBackground_.clear();
     for(int x=0; x < top_path.size(); ++x) {
         float x_pos = static_cast<float>(x)/(idim.x-1);
         float y_top = static_cast<float>(top_path.at(x))/(idim.y-1);
@@ -598,6 +609,21 @@ static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& label
         labels.upperBackground_.emplace_back(x_pos, center+width);
     }
 }
+void InteractiveProjectionLabeling::initializeProjectionLabels() {
+    projectionLabels_.foreground_.clear();
+    projectionLabels_.lowerBackground_.clear();
+    projectionLabels_.upperBackground_.clear();
+    switch(initializationMode_.getValue()) {
+        case BRIGHT_LUMEN:
+            {
+                initBrightLumen(*projection_, projectionLabels_);
+                break;
+            }
+        default:;
+    }
+    projectionLabelsModified_ = false;
+}
+
 
 void InteractiveProjectionLabeling::updateProjection() {
     if(displayLine_.empty()) {
@@ -667,13 +693,8 @@ void InteractiveProjectionLabeling::updateProjection() {
         }
     }
 
-    switch(initializationMode_.getValue()) {
-        case BRIGHT_LUMEN:
-            {
-                initBrightLumen(*projection_, projectionLabels_);
-                break;
-            }
-        default:;
+    if(!projectionLabelsModified_) {
+        initializeProjectionLabels();
     }
 }
 

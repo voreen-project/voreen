@@ -111,6 +111,7 @@ private:
     void withOutputVolume(std::function<void(LZ4SliceVolume<uint8_t>&)>);
     void updateProjection();
     void finishProjection();
+    void initializeProjectionLabels();
 
     void projectionEvent(tgt::MouseEvent* e);
     void overlayEvent(tgt::MouseEvent* e);
@@ -140,6 +141,7 @@ private:
     boost::optional<LabelProjection> projection_;
     std::deque<tgt::vec2> displayLine_;
     ProjectionLabels projectionLabels_;
+    bool projectionLabelsModified_;
 
     PointSegmentListGeometryVec3 foregroundLabelLines_;
     PointSegmentListGeometryVec3 backgroundLabelLines_;
