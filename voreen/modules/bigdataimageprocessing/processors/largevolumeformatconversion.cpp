@@ -75,8 +75,8 @@ void LargeVolumeFormatConversion::adjustPropertiesToInput() {
 
 template<typename OutputFormat>
 void processDispatch(const VolumeBase& input, std::unique_ptr<Volume>& output, const std::string& outputPath, ProgressReporter& progressReporter) {
-    float scale = 1.0f;
-    float offset = 0.0f;
+    float scale;
+    float offset;
     RealWorldMapping destMapping;
 
     {
@@ -94,12 +94,12 @@ void processDispatch(const VolumeBase& input, std::unique_ptr<Volume>& output, c
         // map [min:max] to output range
         if (outputMetadata.isInteger() && outputMetadata.isSigned()) {
             // map [min:max] to [-1.0:1.0]
-            offset = -min - 1.f;
             scale = 1.f / (max - min + 1.f);
+            offset = -min * scale - 1.f;
         } else {
             // map [min:max] to [0.0:1.0]
-            offset = -min;
             scale = 1.f / (max - min);
+            offset = -min * scale;
         }
 
         // real world mapping has to revert the applied value transformation

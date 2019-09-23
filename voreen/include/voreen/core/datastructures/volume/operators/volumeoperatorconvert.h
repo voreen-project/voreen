@@ -186,13 +186,13 @@ Volume* VolumeOperatorConvert::apply(const VolumeBase* srcVolumeHandle) const {
             // map [min:max] to output range
             if (destVolume->isInteger() && destVolume->isSigned()) {
                 // map [min:max] to [-1.0:1.0]
-                offset = -min - 1.f;
                 scale = 1.f / (max - min + 1.f);
+                offset = -min * scale - 1.f;
             }
             else {
                 // map [min:max] to [0.0:1.0]
-                offset = -min;
                 scale = 1.f / (max - min);
+                offset = -min * scale;
             }
         }
         else {
