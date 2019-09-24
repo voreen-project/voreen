@@ -22,6 +22,7 @@
  **********************************************************************/
 
 #include "qtcanvas.h"
+#include <QtGlobal>
 
 #include "tgt/event/touchevent.h"
 #include "tgt/event/touchpoint.h"
@@ -31,6 +32,12 @@
 
 #include <QOpenGLContext>
 #include <QInputEvent>
+
+#if(QT_VERSION < QT_VERSION_CHECK(5, 6, 0))
+#define DEVICE_PIXEL_RATIO_FUNC devicePixelRatio
+#else
+#define DEVICE_PIXEL_RATIO_FUNC devicePixelRatioF
+#endif
 
 namespace tgt {
 
@@ -103,7 +110,7 @@ void QtCanvas::resizeGL(int w, int h) {
 }
 
 ivec2 QtCanvas::getPhysicalSize() const {
-    float ratio = QPaintDevice::devicePixelRatioF();
+    float ratio = QPaintDevice::DEVICE_PIXEL_RATIO_FUNC();
     return tgt::floor(tgt::vec2(getSize()) * ratio);
 }
 
@@ -277,7 +284,7 @@ bool QtCanvas::event(QEvent *event) {
 
 void QtCanvas::broadcastEvent(tgt::Event* event) {
     if(MouseEvent* me = dynamic_cast<tgt::MouseEvent*>(event)) {
-        float ratio = QPaintDevice::devicePixelRatioF();
+        float ratio = QPaintDevice::DEVICE_PIXEL_RATIO_FUNC();
         me->setViewport(tgt::ivec2(tgt::vec2(me->viewport()) * ratio));
         me->setCoord(tgt::ivec2(tgt::vec2(me->coord()) * ratio));
     }
