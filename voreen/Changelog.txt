@@ -19,6 +19,7 @@ Voreen Changelog
       o Add support for STL geometry files (both ASCII and binary) to GeometrySource
       o GlMeshGeometries (such as the output of IsoSurfaceCreator) can now be saved as .obj and .stl files using GeometrySave
       o Add "pipe through" option to VolumeCombine
+      o Add "Fix split position" option to Splitter
 
     * Framework/API Changes:
       o StringProperty: Renamed setReadOnly/isReadyOnly to setEditable/isEditable
