@@ -203,22 +203,31 @@ static void handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
             points[*nearest] = mouse;
         }
     } else if(e->action() == tgt::MouseEvent::RELEASED && button == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
+        if(points.empty()) {
+            points.push_back(mouse);
+            return;
+        }
+
         int insert_index = -1;
+        float nearest_dist = std::numeric_limits<float>::infinity();
         for(int i=0; i<((int)points.size())-1; ++i) {
             Line line(points[i], points[i+1]);
             float dist = line.dist(mouse);
-            if(dist < MOUSE_INTERACTION_DIST) {
+            if(dist < nearest_dist) {
                 insert_index = i;
+                nearest_dist = dist;
             }
         }
-        if(insert_index != -1) {
-            points.insert(points.begin() + insert_index+1, mouse);
+        //Ok since points is not empty:
+        float front_dist = tgt::distance(points.front(), mouse);
+        float back_dist = tgt::distance(points.back(), mouse);
+        if(front_dist < back_dist && front_dist < nearest_dist) {
+            points.push_front(mouse);
+        } else if(back_dist < front_dist && back_dist < nearest_dist) {
+            points.push_back(mouse);
         } else {
-            if(points.empty() || tgt::distance(points.front(), mouse) < tgt::distance(points.back(), mouse)) {
-                points.push_front(mouse);
-            } else {
-                points.push_back(mouse);
-            }
+            tgtAssert(insert_index != -1, "Invalid insert index");
+            points.insert(points.begin() + insert_index+1, mouse);
         }
     }
     e->accept();

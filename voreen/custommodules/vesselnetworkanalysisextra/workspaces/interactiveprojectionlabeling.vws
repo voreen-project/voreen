@@ -8,11 +8,11 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="InteractiveProjectionLabeling" ref="ref3" />
+                        <item type="Splitter" ref="ref1" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-164.117324829" y="329.713165283" />
+                    <value x="-204.037750244" y="980.268371582" />
                 </MetaItem>
                 <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.676345408" />
             </MetaData>
@@ -126,8 +126,8 @@
                             <urls protocol="hdf5">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../../../../../sciebo/lymphgefaessdaten/segmentation_control.h5" />
-                                        <item value="../../../sciebo/lymphgefaessdaten/segmentation_control.h5" />
+                                        <item value="../../../../../../home/dominik/sciebo/lymphgefaessdaten/segmentation_control.h5" />
+                                        <item value="../../../home/dominik/sciebo/lymphgefaessdaten/segmentation_control.h5" />
                                         <item value="/home/dominik/sciebo/lymphgefaessdaten/segmentation_control.h5" />
                                     </paths>
                                 </path>
@@ -362,6 +362,7 @@
                             <sceneURB x="0" y="0" z="0" />
                         </Property>
                         <Property mapKey="initializationMode" name="initializationMode" value="brightlumen" />
+                        <Property mapKey="maxLineSimplificationDistance_" name="maxLineSimplificationDistance_" value="0.01" />
                         <Property mapKey="shader" name="shader">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="250" y="602" width="700" height="700" />
@@ -588,6 +589,7 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-163" y="1549" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="fixSplitPosition" name="fixSplitPosition" value="true" />
                         <Property mapKey="gridColor" name="gridColor">
                             <value x="1" y="1" z="1" w="1" />
                         </Property>
