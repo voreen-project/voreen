@@ -89,6 +89,7 @@ protected:
     FloatProperty lineWidth_;
     OptionProperty<bool> vertical_;
     BoolProperty overlay_;
+    BoolProperty fixSplitPosition_;
     FloatProperty position_;
     IntProperty maximized_;
     BoolProperty maximizeOnDoubleClick_;

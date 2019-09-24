@@ -38,6 +38,7 @@ Splitter::Splitter()
     , lineWidth_("lineWidth", "Line Width", 1.0f, 0.0f, 10.0f)
     , vertical_("vertical", "Orientation", true)
     , overlay_("overlay", "Overlay", false)
+    , fixSplitPosition_("fixSplitPosition", "Fix Split Position", false)
     , maximized_("maximized", "Maximized sub-view", 0, 0, 4)
     , maximizeOnDoubleClick_("maximizeOnDoubleClick", "Maximize on double click", true)
     , maximizeEventProp_("mouseEvent.maximize", "Maximize Event", this, &Splitter::toggleMaximization,
@@ -59,6 +60,7 @@ Splitter::Splitter()
     addProperty(vertical_);
     addProperty(position_);
     addProperty(overlay_);
+    addProperty(fixSplitPosition_);
     ON_CHANGE(overlay_, Splitter, updateSizes);
     position_.onChange( MemberFunctionCallback<Splitter>(this, &Splitter::updateSizes));
     vertical_.onChange( MemberFunctionCallback<Splitter>(this, &Splitter::updateSizes));
@@ -251,14 +253,15 @@ void Splitter::mouseEvent(tgt::MouseEvent* e) {
     }
 
     tgt::MouseEvent::MouseAction action = e->action();
+    tgt::MouseEvent::Modifier modifier = e->modifiers();
     tgt::ivec2 viewport = e->viewport();
     int x = e->x();
     int y = viewport.y - e->y();
     float position = position_.get();
 
-    if (maximized_.get() == 0) {
+    if (maximized_.get() == 0 && !fixSplitPosition_.get()) {
         if (!vertical_.getValue()) {
-            if (action == tgt::MouseEvent::PRESSED && std::abs(y - viewport.y * position) < HANDLE_GRAB_TOLERANCE) {
+            if (action == tgt::MouseEvent::PRESSED && modifier == tgt::MouseEvent::MODIFIER_NONE && std::abs(y - viewport.y * position) < HANDLE_GRAB_TOLERANCE) {
                 isDragging_ = true;
                 e->accept();
                 return;
@@ -276,7 +279,7 @@ void Splitter::mouseEvent(tgt::MouseEvent* e) {
         }
         else {
 
-            if (action == tgt::MouseEvent::PRESSED && std::abs(x - viewport.x * position) < HANDLE_GRAB_TOLERANCE) {
+            if (action == tgt::MouseEvent::PRESSED && modifier == tgt::MouseEvent::MODIFIER_NONE && std::abs(x - viewport.x * position) < HANDLE_GRAB_TOLERANCE) {
                 isDragging_ = true;
                 e->accept();
                 return;
