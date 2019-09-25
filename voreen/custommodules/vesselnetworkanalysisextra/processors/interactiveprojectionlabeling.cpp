@@ -221,9 +221,9 @@ static void handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
         //Ok since points is not empty:
         float front_dist = tgt::distance(points.front(), mouse);
         float back_dist = tgt::distance(points.back(), mouse);
-        if(front_dist < back_dist && front_dist < nearest_dist) {
+        if(front_dist <= back_dist && front_dist < nearest_dist) {
             points.push_front(mouse);
-        } else if(back_dist < front_dist && back_dist < nearest_dist) {
+        } else if(back_dist <= front_dist && back_dist < nearest_dist) {
             points.push_back(mouse);
         } else {
             tgtAssert(insert_index != -1, "Invalid insert index");
