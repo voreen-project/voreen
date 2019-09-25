@@ -286,15 +286,14 @@ void handleProjectionEvent(tgt::MouseEvent* e, ProjectionLabels& labels) {
                 labels.background_.erase(std::remove_if(labels.background_.begin(),
                             labels.background_.end(),
                             [](std::deque<tgt::vec2>& q){ return q.empty(); }), labels.background_.end());
-            } else {
+            } else if(button == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
                 nearest->line->at(nearest->index) = mouse;
             }
-
             e->accept();
             return;
         }
     }
-    {
+    if(e->action() == tgt::MouseEvent::PRESSED && button == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
         float nearest_dist = std::numeric_limits<float>::infinity();
         boost::optional<NearestNode> nearest = boost::none;
 
