@@ -280,6 +280,12 @@ void handleProjectionEvent(tgt::MouseEvent* e, ProjectionLabels& labels) {
         if(nearest) {
             if(e->action() == tgt::MouseEvent::RELEASED && button == tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
                 nearest->line->erase(nearest->line->begin() + nearest->index);
+                labels.foreground_.erase(std::remove_if(labels.foreground_.begin(),
+                            labels.foreground_.end(),
+                            [](std::deque<tgt::vec2>& q){ return q.empty(); }), labels.foreground_.end());
+                labels.background_.erase(std::remove_if(labels.background_.begin(),
+                            labels.background_.end(),
+                            [](std::deque<tgt::vec2>& q){ return q.empty(); }), labels.background_.end());
             } else {
                 nearest->line->at(nearest->index) = mouse;
             }
