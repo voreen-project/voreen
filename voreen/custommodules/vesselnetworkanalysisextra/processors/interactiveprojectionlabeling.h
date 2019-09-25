@@ -71,9 +71,10 @@ private:
 };
 
 struct ProjectionLabels {
-    std::deque<tgt::vec2> foreground_;
-    std::deque<tgt::vec2> lowerBackground_;
-    std::deque<tgt::vec2> upperBackground_;
+    std::vector<std::deque<tgt::vec2>> foreground_;
+    std::vector<std::deque<tgt::vec2>> background_;
+
+    void clear();
 };
 
 class InteractiveProjectionLabeling : public RenderProcessor {

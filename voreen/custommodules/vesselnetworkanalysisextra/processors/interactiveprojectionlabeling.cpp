@@ -146,6 +146,11 @@ struct Line {
     }
 };
 
+void ProjectionLabels::clear() {
+    foreground_.clear();
+    background_.clear();
+}
+
 static tgt::vec2 projectionDepthRange(const VolumeBase& vol, const VolumeAtomic<tgt::vec4>& front, const VolumeAtomic<tgt::vec4>& back, PolyLine<tgt::vec2>& line, tgt::vec3 camera) {
 
     auto dim = vol.getDimensions();
@@ -232,27 +237,126 @@ static void handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
     }
     e->accept();
 }
-void InteractiveProjectionLabeling::projectionEvent(tgt::MouseEvent* e) {
+
+void handleProjectionEvent(tgt::MouseEvent* e, ProjectionLabels& labels) {
     auto button = e->button();
     if((button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT)) == 0) {
         return;
     }
 
-    if(e->modifiers() == tgt::Event::CTRL) {
-        handleLineEvent(projectionLabels_.lowerBackground_, e);
-        std::sort(projectionLabels_.lowerBackground_.begin(), projectionLabels_.lowerBackground_.end(), [] (const tgt::vec2& p1, const tgt::vec2& p2) {
-                return p1.x < p2.x;
-                });
-    } else if(e->modifiers() == tgt::Event::SHIFT) {
-        handleLineEvent(projectionLabels_.upperBackground_, e);
-        std::sort(projectionLabels_.upperBackground_.begin(), projectionLabels_.upperBackground_.end(), [] (const tgt::vec2& p1, const tgt::vec2& p2) {
-                return p1.x < p2.x;
-                });
+    tgt::ivec2 coords = e->coord();
+    tgt::ivec2 viewport = e->viewport();
+
+    struct NearestNode {
+        std::deque<tgt::vec2>* line;
+        int index;
+    };
+
+    coords.y = viewport.y - coords.y - 1;
+    auto mouse = tgt::vec2(coords)/tgt::vec2(viewport);
+    {
+        float nearest_dist = MOUSE_INTERACTION_DIST;
+        boost::optional<NearestNode> nearest = boost::none;
+        auto findNearestNode = [&] (std::deque<tgt::vec2>& line) {
+            int i = 0;
+            for(auto& p : line) {
+                float dist = tgt::distance(p, mouse);
+                if (dist < MOUSE_INTERACTION_DIST && (!nearest || dist < nearest_dist)) {
+                    nearest = NearestNode {
+                        &line, i
+                    };
+                    nearest_dist = dist;
+                }
+                ++i;
+            }
+        };
+        for(auto& line : labels.foreground_) {
+            findNearestNode(line);
+        }
+        for(auto& line : labels.background_) {
+            findNearestNode(line);
+        }
+
+        if(nearest) {
+            if(e->action() == tgt::MouseEvent::RELEASED && button == tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
+                nearest->line->erase(nearest->line->begin() + nearest->index);
+            } else {
+                nearest->line->at(nearest->index) = mouse;
+            }
+
+            e->accept();
+            return;
+        }
+    }
+    {
+        float nearest_dist = std::numeric_limits<float>::infinity();
+        boost::optional<NearestNode> nearest = boost::none;
+
+        auto findNewNodeInsertPos = [&] (std::deque<tgt::vec2>& points) {
+            int insert_index = -1;
+            for(int i=0; i<((int)points.size())-1; ++i) {
+                Line line(points[i], points[i+1]);
+                float dist = line.dist(mouse);
+                if(dist < nearest_dist) {
+                    nearest = NearestNode {
+                        &points,
+                        i+1 // insert betweeen points[i] and points[i+1]
+                    };
+                    nearest_dist = dist;
+                }
+            }
+            //Ok since points is not empty:
+            float front_dist = tgt::distance(points.front(), mouse);
+            float back_dist = tgt::distance(points.back(), mouse);
+            if(front_dist < nearest_dist) {
+                nearest = NearestNode {
+                    &points,
+                    0, // insert at the very beginning
+                };
+                nearest_dist = front_dist;
+            }
+            if(back_dist < nearest_dist) {
+                nearest = NearestNode {
+                    &points,
+                    (int)points.size(), // insert at the very end
+                };
+                nearest_dist = back_dist;
+            }
+        };
+
+        for(auto& line : labels.foreground_) {
+            findNewNodeInsertPos(line);
+        }
+        for(auto& line : labels.background_) {
+            findNewNodeInsertPos(line);
+        }
+        if(nearest) {
+            nearest->line->insert(nearest->line->begin() + nearest->index, mouse);
+
+            e->accept();
+            return;
+        }
+    }
+}
+
+void InteractiveProjectionLabeling::projectionEvent(tgt::MouseEvent* e) {
+    auto button = e->button();
+
+    tgt::ivec2 coords = e->coord();
+    tgt::ivec2 viewport = e->viewport();
+
+    coords.y = viewport.y - coords.y - 1;
+    auto mouse = tgt::vec2(coords)/tgt::vec2(viewport);
+    if((button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT)) == 0) {
+        return;
+    }
+
+    if(e->modifiers() == tgt::Event::CTRL && e->action() == tgt::MouseEvent::RELEASED) {
+        projectionLabels_.foreground_.push_back({mouse});
+    } else if(e->modifiers() == tgt::Event::SHIFT && e->action() == tgt::MouseEvent::RELEASED) {
+        projectionLabels_.foreground_.push_back({mouse});
     } else if(e->modifiers() == tgt::Event::MODIFIER_NONE) {
-        handleLineEvent(projectionLabels_.foreground_, e);
-        std::sort(projectionLabels_.foreground_.begin(), projectionLabels_.foreground_.end(), [] (const tgt::vec2& p1, const tgt::vec2& p2) {
-                return p1.x < p2.x;
-                });
+        handleProjectionEvent(e, projectionLabels_);
     } else {
         return;
     }
@@ -299,9 +403,7 @@ void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
         switch(ke->keyCode()) {
             case tgt::KeyEvent::K_ESCAPE: {
                 displayLine_.clear();
-                projectionLabels_.foreground_.clear();
-                projectionLabels_.lowerBackground_.clear();
-                projectionLabels_.upperBackground_.clear();
+                projectionLabels_.clear();
                 projection_ = boost::none;
                 state_ = FREE;
                 ke->accept();
@@ -312,9 +414,8 @@ void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
                 if(state_ == LABELING && !projectionLabels_.foreground_.empty()) {
                     finishProjection();
                     displayLine_.clear();
-                    projectionLabels_.foreground_.clear();
-                    projectionLabels_.lowerBackground_.clear();
-                    projectionLabels_.upperBackground_.clear();
+                    projectionLabels_.clear();
+                    projection_ = boost::none;
                     state_ = FREE;
                     invalidate();
                 }
@@ -385,15 +486,11 @@ void InteractiveProjectionLabeling::finishProjection() {
         return segment;
     };
 
-    if(!projectionLabels_.foreground_.empty()) {
-        foregroundLabelLines_.addSegment(project3D(projectionLabels_.foreground_));
+    for(auto& line : projectionLabels_.foreground_) {
+        foregroundLabelLines_.addSegment(project3D(line));
     }
-
-    if(!projectionLabels_.lowerBackground_.empty()) {
-        backgroundLabelLines_.addSegment(project3D(projectionLabels_.lowerBackground_));
-    }
-    if(!projectionLabels_.upperBackground_.empty()) {
-        backgroundLabelLines_.addSegment(project3D(projectionLabels_.upperBackground_));
+    for(auto& line : projectionLabels_.background_) {
+        backgroundLabelLines_.addSegment(project3D(line));
     }
 }
 InteractiveProjectionLabeling::InteractiveProjectionLabeling()
@@ -520,9 +617,12 @@ void InteractiveProjectionLabeling::renderProjection() {
         glActiveTexture(GL_TEXTURE0);
     }
 
-    renderLine(projectionLabels_.lowerBackground_, tgt::vec3(0.0, 1.0, 0.0));
-    renderLine(projectionLabels_.foreground_, tgt::vec3(1.0, 0.0, 0.0));
-    renderLine(projectionLabels_.upperBackground_, tgt::vec3(0.0, 1.0, 0.0));
+    for(auto& line : projectionLabels_.foreground_) {
+        renderLine(line, tgt::vec3(1.0, 0.0, 0.0));
+    }
+    for(auto& line : projectionLabels_.background_) {
+        renderLine(line, tgt::vec3(0.0, 1.0, 0.0));
+    }
 
     projectionOutput_.deactivateTarget();
     LGL_ERROR;
@@ -553,7 +653,7 @@ static std::vector<int> maxPath(const VolumeAtomic<float>& img) {
     VolumeAtomic<int> paths(img.getDimensions());
     tgt::ivec3 idim = img.getDimensions();
     std::vector<float> global_cost(idim.x, 0.0);
-    const int MAX_NEIGHBOR_OFFSET = 3;
+    const int MAX_NEIGHBOR_OFFSET = 1;
     for(int y=0; y < idim.y; ++y) {
         std::vector<float> next_global_cost(idim.x, 0.0);
         for(int x=0; x < idim.x; ++x) {
@@ -655,6 +755,9 @@ static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& label
 
     tgtAssert(bottom_path.size() == top_path.size(), "Path size mismatch");
 
+    std::deque<tgt::vec2> foreground;
+    std::deque<tgt::vec2> upperBackground;
+    std::deque<tgt::vec2> lowerBackground;
     for(int x=0; x < top_path.size(); ++x) {
         float x_pos = static_cast<float>(x)/(idim.x-1);
         float y_top = static_cast<float>(top_path.at(x))/(idim.y-1);
@@ -662,18 +765,20 @@ static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& label
 
         float width = y_top - y_bottom;
         float center = (y_top + y_bottom)/2;
-        labels.foreground_.emplace_back(x_pos, center);
-        labels.lowerBackground_.emplace_back(x_pos, center-width);
-        labels.upperBackground_.emplace_back(x_pos, center+width);
+        foreground.emplace_back(x_pos, center);
+        lowerBackground.emplace_back(x_pos, center-width);
+        upperBackground.emplace_back(x_pos, center+width);
     }
-    simplifyPath(labels.foreground_, max_line_dist);
-    simplifyPath(labels.lowerBackground_, max_line_dist);
-    simplifyPath(labels.upperBackground_, max_line_dist);
+    simplifyPath(foreground, max_line_dist);
+    simplifyPath(lowerBackground, max_line_dist);
+    simplifyPath(upperBackground, max_line_dist);
+
+    labels.foreground_.push_back(foreground);
+    labels.background_.push_back(lowerBackground);
+    labels.background_.push_back(upperBackground);
 }
 void InteractiveProjectionLabeling::initializeProjectionLabels() {
-    projectionLabels_.foreground_.clear();
-    projectionLabels_.lowerBackground_.clear();
-    projectionLabels_.upperBackground_.clear();
+    projectionLabels_.clear();
 
     if(!projection_) {
         return;
