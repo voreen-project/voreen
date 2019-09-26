@@ -727,19 +727,14 @@ void AsyncComputeProcessor<I,O>::process() {
         setProgressRange(tgt::vec2(0.0f, 1.0f));
         setProgress(0.0f);
         try {
-            computation_.setInput(std::move(prepareComputeInput()));
-            enableRunningState();
-            statusDisplay_.set("Running");
-            computationStartTime_ = Clock::now();
-            computation_.run();
-
             if(synchronousComputation_.get()) {
+                computation_.setInput(std::move(prepareComputeInput()));
                 unlockMutex();
-                computation_.join();
+                computation_.threadMain();
                 lockMutex();
 
                 std::unique_ptr<O> synchronous_result = computation_.retrieveOutput();
-                disableRunningState();
+
                 setProgressRange(tgt::vec2(0.0f, 1.0f));
                 if(synchronous_result) {
                     processComputeOutput(std::move(*synchronous_result));
@@ -750,6 +745,12 @@ void AsyncComputeProcessor<I,O>::process() {
                     statusDisplay_.set("Failed");
                     setProgress(0.0f);
                 }
+            } else {
+                computation_.setInput(std::move(prepareComputeInput()));
+                enableRunningState();
+                statusDisplay_.set("Running");
+                computationStartTime_ = Clock::now();
+                computation_.run();
             }
         } catch(InvalidInputException& e) {
             std::string msg = e.what();
