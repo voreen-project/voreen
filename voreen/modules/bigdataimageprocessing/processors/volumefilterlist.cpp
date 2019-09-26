@@ -214,6 +214,7 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
     outputVolume->writeSpacing(inputVolume.getSpacing() * scale);
     outputVolume->writeOffset(inputVolume.getOffset() + additionalOffset * inputVolume.getSpacing());
     outputVolume->writeRealWorldMapping(inputVolume.getRealWorldMapping());
+    outputVolume->writePhysicalToWorldTransformation(inputVolume.getPhysicalToWorldMatrix());
 
     return VolumeFilterListInput(
             std::move(sliceReader),
