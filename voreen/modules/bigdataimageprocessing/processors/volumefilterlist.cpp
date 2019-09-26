@@ -73,12 +73,14 @@ VolumeFilterList::VolumeFilterList()
     setPropertyGroupGuiName("filter", "Filter");
 
     // Add filters (this will add their properties!)
+    // IMPORANT: Add new filter at the bottom of this block and do not change the order,
+    // otherwise existing workspaces will be broken!
     addFilter(new BinaryMedianFilterProperties());
     addFilter(new MedianFilterProperties());
     addFilter(new GaussianFilterProperties());
     addFilter(new MorphologyFilterProperties());
-    addFilter(new ResampleFilterProperties());
     addFilter(new ThresholdingFilterProperties());
+    addFilter(new ResampleFilterProperties());
 
     // Technical stuff.
     addProperty(enabled_);
@@ -134,7 +136,11 @@ void VolumeFilterList::serialize(Serializer& s) const {
 void VolumeFilterList::deserialize(Deserializer& s) {
     AsyncComputeProcessor<ComputeInput, ComputeOutput>::deserialize(s);
     for(size_t i=0; i < filterProperties_.size(); i++) {
-        filterProperties_[i]->deserialize(s);
+        try {
+            filterProperties_[i]->deserialize(s);
+        } catch(voreen::SerializationException& e) {
+            LWARNING("Failed to deserialize Filterproperty '" << filterProperties_[i]->getVolumeFilterName() << "': " << e.what());
+        }
     }
 
     inputOutputChannelCheck();
