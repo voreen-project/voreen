@@ -217,7 +217,7 @@ VolumeBase* HDF5VolumeReaderBase::read(const VolumeURL& origin) {
     if (physicalToWorldTransformation.get()) {
         vol->setPhysicalToWorldMatrix(*physicalToWorldTransformation);
         if (physicalToWorldTransformationMetaData && physicalToWorldTransformationMetaData->getValue() != *physicalToWorldTransformation) {
-            LWARNING("Offset has been stored explicitly (" << *physicalToWorldTransformation
+            LWARNING("PhysicalToWorldTransformation has been stored explicitly (" << *physicalToWorldTransformation
                                                            << ") and differs from value stored in MetaDataContainer ("
                                                            << physicalToWorldTransformationMetaData->getValue()
                                                            << "). Taking explicit one.");
@@ -247,7 +247,7 @@ VolumeBase* HDF5VolumeReaderBase::read(const VolumeURL& origin) {
         for(VolumeDerivedData* d : derivedData) {
             vol->addDerivedData(d);
         }
-    }  else {
+    } else {
         // ... otherwise a static denomalizing mapping.
         vol->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping(baseType));
 
