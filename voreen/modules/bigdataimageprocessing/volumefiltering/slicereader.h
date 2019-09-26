@@ -151,8 +151,8 @@ protected:
     std::unique_ptr<VolumeRAM> currentSlice_;
     std::unique_ptr<VolumeFilter> filter_;
     int z_;
-    tgt::vec3 thisToBaseScale_;
-    tgt::vec3 thisToBaseOffset_;
+    float thisToBaseScale_;
+    float thisToBaseOffset_;
 };
 
 // VolumeFilterStackBuilder -------------------------------------------------------------------------------------

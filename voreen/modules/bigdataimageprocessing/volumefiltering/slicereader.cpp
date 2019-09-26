@@ -244,8 +244,8 @@ FilteringSliceReader::FilteringSliceReader(std::unique_ptr<CachingSliceReader> b
     , base_(std::move(base))
     , filter_(std::move(filter))
     , z_(std::numeric_limits<int>::max())
-    , thisToBaseScale_(tgt::vec3(base_->getDimensions()) / tgt::vec3(getDimensions()))
-    , thisToBaseOffset_(thisToBaseScale_ * tgt::vec3(0.5) - tgt::vec3(0.5))
+    , thisToBaseScale_(float(base_->getDimensions().z) / float(getDimensions().z))
+    , thisToBaseOffset_(thisToBaseScale_ * 0.5 - 0.5)
 {
     //tgt::vec3 base_begin(-0.5);
     //tgt::vec3 base_end = tgt::vec3(base->getDimensions()) - tgt::vec3(0.5);
@@ -260,7 +260,22 @@ FilteringSliceReader::FilteringSliceReader(std::unique_ptr<CachingSliceReader> b
 }
 
 void FilteringSliceReader::advance() {
-    seek(z_+1); //TODO fix efficiency
+    int currentBaseZ = nearestBaseZ(z_);
+    int newBaseZ = nearestBaseZ(z_+1);
+    tgtAssert(newBaseZ >= currentBaseZ, "Invalid z change in advance");
+    int diff = newBaseZ - currentBaseZ;
+    if(diff > 2*filter_->zExtent()+1) {
+        // Seek directly to avoid computing unneeded intermediate slices
+        seek(z_+1);
+    } else {
+        // New pos is close so we have an advantage when seeking
+        while(base_->getCurrentZPos() < newBaseZ) {
+            base_->advance();
+        }
+        tgtAssert(base_->getCurrentZPos() == newBaseZ, "advance missed target z");
+        ++z_;
+        updateCurrentSlice();
+    }
 }
 
 void FilteringSliceReader::seek(int z) {
@@ -296,7 +311,7 @@ size_t FilteringSliceReader::getNumChannels() const {
 }
 
 int FilteringSliceReader::nearestBaseZ(int thisZ) {
-    return tgt::round(thisToBaseScale_.z * thisZ + thisToBaseOffset_.z);
+    return tgt::round(thisToBaseScale_ * thisZ + thisToBaseOffset_);
 }
 void FilteringSliceReader::updateCurrentSlice() {
     if(z_ < 0 || z_ >= getSignedDimensions().z) {
