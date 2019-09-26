@@ -287,6 +287,9 @@ void VolumeFilterList::onFilterListChange() {
 
     // Check, if channels match at filter interfaces.
     inputOutputChannelCheck();
+
+    // Set min/max values etc. for new filters
+    adjustPropertiesToInput();
 }
 
 void VolumeFilterList::onFilterPropertyChange() {
