@@ -74,6 +74,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/volumefiltering/gaussianfilter.cpp
     ${MOD_DIR}/volumefiltering/medianfilter.cpp
     ${MOD_DIR}/volumefiltering/morphologyfilter.cpp
+    ${MOD_DIR}/volumefiltering/resamplefilter.cpp
     ${MOD_DIR}/volumefiltering/thresholdingfilter.cpp
 
     # Filter Properties
@@ -82,6 +83,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/volumefilterproperties/gaussianfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/medianfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/morphologyfilterproperties.cpp
+    ${MOD_DIR}/volumefilterproperties/resamplefilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/thresholdingfilterproperties.cpp
 
     # cell nuclei cluster splitting

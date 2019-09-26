@@ -37,6 +37,9 @@ SliceReader::SliceReader(const tgt::ivec3& signedDim)
 const tgt::ivec3& SliceReader::getSignedDimensions() const {
     return dim_;
 }
+tgt::svec3 SliceReader::getDimensions() const {
+    return dim_;
+}
 
 // CachingSliceReader --------------------------------------------------------------------------
 
@@ -60,10 +63,6 @@ CachingSliceReader::~CachingSliceReader() {
 
 int CachingSliceReader::getCurrentZPos() const {
     return base_->getCurrentZPos() - neighborhoodSize_;
-}
-
-const tgt::svec3& CachingSliceReader::getDimensions() const {
-    return base_->getDimensions();
 }
 
 VolumeRAM*& CachingSliceReader::getSlice(int dz) {
@@ -133,13 +132,6 @@ void CachingSliceReader::seek(int z) {
         delete slice;
         slice = base_->getCurrentSlice()->clone();
     }
-
-    // this loop will only be executed while z+dz >= getSignedDimensions().z => outside the volume
-    for(; dz <= neighborhoodSize_; ++dz) {
-        VolumeRAM*& slice = getSlice(dz);
-        delete slice;
-        slice = nullptr;
-    }
 }
 
 int CachingSliceReader::getZExtent() const {
@@ -151,7 +143,6 @@ int CachingSliceReader::getZExtent() const {
 VolumeSliceReader::VolumeSliceReader(const VolumeBase& volume)
     : SliceReader(tgt::ivec3(volume.getDimensions()))
     , volume_(volume)
-    , dimensions_(volume_.getDimensions())
     , currentZPos_(std::numeric_limits<int>::max()) // Not initialized, yet
     , currentSlice_(nullptr)
     , numChannels_(volume.getNumChannels())
@@ -175,10 +166,6 @@ void VolumeSliceReader::seek(int z) {
 
 int VolumeSliceReader::getCurrentZPos() const {
     return currentZPos_;
-}
-
-const tgt::svec3& VolumeSliceReader::getDimensions() const {
-    return dimensions_;
 }
 
 float VolumeSliceReader::getVoxelNormalized(const tgt::ivec3& xyz, size_t channel) const {
@@ -205,7 +192,6 @@ size_t VolumeSliceReader::getNumChannels() const {
 HDF5VolumeSliceReader::HDF5VolumeSliceReader(const HDF5FileVolume& volume)
     : SliceReader(tgt::ivec3(volume.getDimensions()))
     , volume_(volume)
-    , dimensions_(volume_.getDimensions())
     , currentZPos_(std::numeric_limits<int>::max()) // Not initialized, yet
     , currentSlice_(nullptr)
     , numChannels_(volume.getNumberOfChannels())
@@ -232,10 +218,6 @@ int HDF5VolumeSliceReader::getCurrentZPos() const {
     return currentZPos_;
 }
 
-const tgt::svec3& HDF5VolumeSliceReader::getDimensions() const {
-    return dimensions_;
-}
-
 float HDF5VolumeSliceReader::getVoxelNormalized(const tgt::ivec3& xyz, size_t channel) const {
     tgtAssert(currentSlice_, "No slice");
     tgtAssert(xyz.z == currentZPos_, "invalid z pos");
@@ -258,29 +240,41 @@ size_t HDF5VolumeSliceReader::getNumChannels() const {
 // FilteringSliceReader --------------------------------------------------------------------------
 
 FilteringSliceReader::FilteringSliceReader(std::unique_ptr<CachingSliceReader> base, std::unique_ptr<VolumeFilter> filter)
-    : SliceReader(tgt::ivec3(base->getDimensions()))
+    : SliceReader(tgt::ivec3(filter->getOverwrittenDimensions() ? *filter->getOverwrittenDimensions() : base->getDimensions()))
     , base_(std::move(base))
     , filter_(std::move(filter))
+    , z_(std::numeric_limits<int>::max())
+    , thisToBaseScale_(tgt::vec3(base_->getDimensions()) / tgt::vec3(getDimensions()))
+    , thisToBaseOffset_(thisToBaseScale_ * tgt::vec3(0.5) - tgt::vec3(0.5))
 {
+    //tgt::vec3 base_begin(-0.5);
+    //tgt::vec3 base_end = tgt::vec3(base->getDimensions()) - tgt::vec3(0.5);
+
+    //tgt::vec3 this_begin(-0.5);
+    //tgt::vec3 this_end = tgt::vec3(getDimensions()) - tgt::vec3(0.5);
+
+    //tgt::vec3 thisToBaseScale = (base_end - base_begin) / (this_end - this_begin);
+    //tgt::vec3 thisToBaseOffset = base_begin - thisToBaseScale * this_begin;
+
     tgtAssert(base_->getNumChannels() == filter_->getNumInputChannels(), "Number of channels mismatch");
 }
 
 void FilteringSliceReader::advance() {
-    base_->advance();
-    updateCurrentSlice();
+    seek(z_+1); //TODO fix efficiency
 }
 
 void FilteringSliceReader::seek(int z) {
-    base_->seek(z);
+    if(getCurrentZPos() == z) {
+        return;
+    }
+    base_->seek(nearestBaseZ(z));
+    z_ = z;
     updateCurrentSlice();
+
 }
 
 int FilteringSliceReader::getCurrentZPos() const {
-    return base_->getCurrentZPos();
-}
-
-const tgt::svec3& FilteringSliceReader::getDimensions() const {
-    return base_->getDimensions();
+    return z_;
 }
 
 float FilteringSliceReader::getVoxelNormalized(const tgt::ivec3& xyz, size_t channel) const {
@@ -301,13 +295,15 @@ size_t FilteringSliceReader::getNumChannels() const {
     return filter_->getNumOutputChannels();
 }
 
+int FilteringSliceReader::nearestBaseZ(int thisZ) {
+    return tgt::round(thisToBaseScale_.z * thisZ + thisToBaseOffset_.z);
+}
 void FilteringSliceReader::updateCurrentSlice() {
-    int z = base_->getCurrentZPos();
-    if(z < 0 || z >= getSignedDimensions().z) {
+    if(z_ < 0 || z_ >= getSignedDimensions().z) {
         currentSlice_.reset(nullptr);
         return;
     }
-    currentSlice_ = filter_->getFilteredSlice(base_.get(), z);
+    currentSlice_ = filter_->getFilteredSlice(base_.get(), z_);
     tgtAssert(currentSlice_->getNumChannels() == getNumChannels(), "filter produced slice with wrong number of channels");
 }
 

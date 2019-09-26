@@ -46,12 +46,12 @@ public:
     virtual void advance() = 0;
     virtual void seek(int z) = 0;
     virtual int getCurrentZPos() const = 0;
-    virtual const tgt::svec3& getDimensions() const = 0;
     virtual const VolumeRAM* getCurrentSlice() const = 0;
     virtual std::string getBaseType() const = 0;
     virtual size_t getNumChannels() const = 0;
 
     const tgt::ivec3& getSignedDimensions() const;
+    tgt::svec3 getDimensions() const;
 
     virtual float getVoxelNormalized(const tgt::ivec3& xyz, size_t channel = 0) const = 0;
 
@@ -68,7 +68,6 @@ public:
     void advance();
     void seek(int z);
     int getCurrentZPos() const;
-    const tgt::svec3& getDimensions() const;
 
     float getVoxelNormalized(const tgt::ivec3& xyz, size_t channel = 0) const;
     const VolumeRAM* getCurrentSlice() const;
@@ -95,7 +94,6 @@ public:
     void advance();
     void seek(int z);
     int getCurrentZPos() const;
-    const tgt::svec3& getDimensions() const;
     const VolumeRAM* getCurrentSlice() const;
     std::string getBaseType() const;
     float getVoxelNormalized(const tgt::ivec3& xyz, size_t channel = 0) const;
@@ -104,7 +102,6 @@ public:
 protected:
 
     const VolumeBase& volume_;
-    tgt::svec3 dimensions_;
     int currentZPos_;
     std::unique_ptr<VolumeRAM> currentSlice_;
     size_t numChannels_; // cache, because getting it from volume can be veeeeeeeery slow
@@ -118,7 +115,6 @@ public:
     void advance();
     void seek(int z);
     int getCurrentZPos() const;
-    const tgt::svec3& getDimensions() const;
     const VolumeRAM* getCurrentSlice() const;
     std::string getBaseType() const;
     float getVoxelNormalized(const tgt::ivec3& xyz, size_t channel = 0) const;
@@ -127,7 +123,6 @@ public:
 protected:
 
     const HDF5FileVolume& volume_;
-    tgt::svec3 dimensions_;
     int currentZPos_;
     std::unique_ptr<VolumeRAM> currentSlice_;
     size_t numChannels_; // cache, because getting it from volume can be veeeeeeeery slow
@@ -142,7 +137,6 @@ public:
     void advance();
     void seek(int z);
     int getCurrentZPos() const;
-    const tgt::svec3& getDimensions() const;
 
     float getVoxelNormalized(const tgt::ivec3& xyz, size_t channel = 0) const;
     const VolumeRAM* getCurrentSlice() const;
@@ -151,10 +145,14 @@ public:
 
 protected:
     void updateCurrentSlice();
+    int nearestBaseZ(int thisZ);
 
     std::unique_ptr<CachingSliceReader> base_;
     std::unique_ptr<VolumeRAM> currentSlice_;
     std::unique_ptr<VolumeFilter> filter_;
+    int z_;
+    tgt::vec3 thisToBaseScale_;
+    tgt::vec3 thisToBaseOffset_;
 };
 
 // VolumeFilterStackBuilder -------------------------------------------------------------------------------------

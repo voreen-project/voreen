@@ -36,6 +36,7 @@
 #include "../volumefiltering/gaussianfilter.h"
 #include "../volumefiltering/medianfilter.h"
 #include "../volumefiltering/morphologyfilter.h"
+#include "../volumefiltering/resamplefilter.h"
 #include "../volumefiltering/thresholdingfilter.h"
 
 // Include their properties.
@@ -43,6 +44,7 @@
 #include "../volumefilterproperties/gaussianfilterproperties.h"
 #include "../volumefilterproperties/medianfilterproperties.h"
 #include "../volumefilterproperties/morphologyfilterproperties.h"
+#include "../volumefilterproperties/resamplefilterproperties.h"
 #include "../volumefilterproperties/thresholdingfilterproperties.h"
 
 namespace voreen {
@@ -75,6 +77,7 @@ VolumeFilterList::VolumeFilterList()
     addFilter(new MedianFilterProperties());
     addFilter(new GaussianFilterProperties());
     addFilter(new MorphologyFilterProperties());
+    addFilter(new ResampleFilterProperties());
     addFilter(new ThresholdingFilterProperties());
 
     // Technical stuff.
@@ -186,7 +189,7 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
 
     const std::string volumeFilePath = outputVolumeFilePath_.get();
     const std::string volumeLocation = HDF5VolumeWriter::VOLUME_DATASET_NAME;
-    const tgt::svec3 dim = inputVolume.getDimensions();
+    const tgt::svec3 dim = sliceReader->getDimensions();
 
     if(volumeFilePath.empty()) {
         throw InvalidInputException("No volume file path specified!", InvalidInputException::S_ERROR);
@@ -199,8 +202,11 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
         throw InvalidInputException("Could not create output volume.", InvalidInputException::S_ERROR);
     }
 
-    outputVolume->writeSpacing(inputVolume.getSpacing());
-    outputVolume->writeOffset(inputVolume.getOffset());
+    tgt::vec3 scale(tgt::vec3(inputVolume.getDimensions()) / tgt::vec3(dim));
+    tgt::vec3 additionalOffset(scale * tgt::vec3(0.5) - tgt::vec3(0.5));
+
+    outputVolume->writeSpacing(inputVolume.getSpacing() * scale);
+    outputVolume->writeOffset(inputVolume.getOffset() + additionalOffset * inputVolume.getSpacing());
     outputVolume->writeRealWorldMapping(inputVolume.getRealWorldMapping());
 
     return VolumeFilterListInput(
