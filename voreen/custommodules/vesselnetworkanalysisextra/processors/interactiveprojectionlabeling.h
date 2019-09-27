@@ -121,6 +121,7 @@ private:
     boost::optional<VolumeAtomic<tgt::vec4>> getLhp();
 
     VolumePort inport_;
+    bool seedsChanged_;
     GeometryPort foregroundLabelGeometry_;
     GeometryPort backgroundLabelGeometry_;
     RenderPort overlayOutput_;

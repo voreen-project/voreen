@@ -497,6 +497,7 @@ void InteractiveProjectionLabeling::finishProjection() {
     for(auto& line : projectionLabels_.background_) {
         backgroundLabelLines_.addSegment(project3D(line));
     }
+    seedsChanged_ = true;
 }
 InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     : RenderProcessor()
@@ -520,6 +521,7 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , foregroundLabelLines_()
     , backgroundLabelLines_()
     , state_(FREE)
+    , seedsChanged_(true)
 {
     addPort(inport_);
     //addPort(labelVolume_);
@@ -893,8 +895,11 @@ void InteractiveProjectionLabeling::process() {
     renderOverlay();
     renderProjection();
 
-    foregroundLabelGeometry_.setData(&foregroundLabelLines_, false);
-    backgroundLabelGeometry_.setData(&backgroundLabelLines_, false);
+    if(seedsChanged_) {
+        foregroundLabelGeometry_.setData(&foregroundLabelLines_, false);
+        backgroundLabelGeometry_.setData(&backgroundLabelLines_, false);
+        seedsChanged_ = false;
+    }
 }
 
 
