@@ -34,9 +34,9 @@
 #include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/cameraproperty.h"
 #include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/transfunc/1d/1dkeys/transfunc1dkeysproperty.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
-#include "modules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 
 #include "tgt/vector.h"
 
@@ -110,7 +110,6 @@ private:
     void updateSizes();
     void renderOverlay();
     void renderProjection();
-    void withOutputVolume(std::function<void(LZ4SliceVolume<uint8_t>&)>);
     void updateProjection();
     void finishProjection();
     void initializeProjectionLabels();
@@ -122,7 +121,6 @@ private:
     boost::optional<VolumeAtomic<tgt::vec4>> getLhp();
 
     VolumePort inport_;
-    //VolumePort labelVolume_;
     GeometryPort foregroundLabelGeometry_;
     GeometryPort backgroundLabelGeometry_;
     RenderPort overlayOutput_;
@@ -131,10 +129,9 @@ private:
     RenderPort fhp_;
     RenderPort lhp_;
 
-    boost::optional<LZ4SliceVolume<uint8_t>> outputVolume_;
-
     CameraProperty camera_;
     OptionProperty<InitializationMode> initializationMode_;
+    TransFunc1DKeysProperty projectionTransfunc_;
     FloatProperty maxLineSimplificationDistance_;
 
     static const std::string loggerCat_;

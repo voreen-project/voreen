@@ -509,9 +509,9 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , fhp_(Port::INPORT, "interactiveprojectionlabeling.fhp", "First hit points", false)
     , lhp_(Port::INPORT, "interactiveprojectionlabeling.lhp", "Last hit points", false)
     , camera_("camera", "Camera")
+    , projectionTransfunc_("transferFunction", "Projection Transfer Function")
     , initializationMode_("initializationMode", "Initialization Mode")
     , maxLineSimplificationDistance_("maxLineSimplificationDistance_", "Maximum Line Simplification Distance", 0.01, 0.0, 1.0)
-    , outputVolume_(boost::none)
     , projectionShader_("shader", "Shader", "interactiveprojectionlabeling.frag", "oit_passthrough.vert")
     , displayLine_()
     , projection_(boost::none)
@@ -537,6 +537,7 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     addProperty(initializationMode_);
         initializationMode_.addOption("none", "None", NONE);
         initializationMode_.addOption("brightlumen", "Bright Lumen", BRIGHT_LUMEN);
+    addProperty(projectionTransfunc_);
         ON_CHANGE(initializationMode_, InteractiveProjectionLabeling, initializeProjectionLabels);
     addProperty(maxLineSimplificationDistance_);
         ON_CHANGE(maxLineSimplificationDistance_, InteractiveProjectionLabeling, initializeProjectionLabels);
@@ -589,6 +590,12 @@ void InteractiveProjectionLabeling::renderOverlay() {
     overlayOutput_.deactivateTarget();
 }
 void InteractiveProjectionLabeling::renderProjection() {
+    if(!inport_.hasData()) {
+        return;
+    }
+    const auto& vol = *inport_.getData();
+
+    projectionTransfunc_.setVolume(inport_.getData(), 0);
     auto program = projectionShader_.getShader();
     if(!program || !program->isLinked()) {
         LGL_ERROR;
@@ -606,13 +613,19 @@ void InteractiveProjectionLabeling::renderProjection() {
         unit.activate();
         p.bindTexture();
 
+        tgt::TextureUnit transferUnit1;
+        transferUnit1.activate();
+        projectionTransfunc_.get()->getTexture()->bind();
+        LGL_ERROR;
+
         program->activate();
-        //program->setUniform("dimensions_", tgt::ivec3(vol.getDimensions()));
-        //program->setUniform("realToProjectedMat_", p.realToProjected());
-        //program->setUniform("projectedToRealMat_", p.projectedToReal());
-        //program->setUniform("projectionRange_", projectionRange);
-        //program->setUniform("volumeTex_", volUnit.getUnitNumber());
+
+        projectionTransfunc_.get()->setUniform(program, "transFuncParams_", "transFuncTex_", transferUnit1.getUnitNumber());
         program->setUniform("tex_", unit.getUnitNumber());
+
+        auto rwm = vol.getRealWorldMapping();
+        program->setUniform("rwmOffset_", rwm.getOffset());
+        program->setUniform("rwmScale_", rwm.getScale());
 
         glDepthFunc(GL_ALWAYS);
         renderQuad();
@@ -631,14 +644,6 @@ void InteractiveProjectionLabeling::renderProjection() {
 
     projectionOutput_.deactivateTarget();
     LGL_ERROR;
-}
-
-void InteractiveProjectionLabeling::withOutputVolume(std::function<void(LZ4SliceVolume<uint8_t>&)> func) {
-    if(outputVolume_) {
-        //labelVolume_.setData(nullptr);
-        func(*outputVolume_);
-        //labelVolume_.setData(LZ4SliceVolume<uint8_t>::open(outputVolume_->getFilePath()).toVolume().release());
-    }
 }
 
 boost::optional<VolumeAtomic<tgt::vec4>> InteractiveProjectionLabeling::getFhp() {
@@ -879,13 +884,9 @@ InteractiveProjectionLabeling::~InteractiveProjectionLabeling() {
 
 void InteractiveProjectionLabeling::process() {
     if (getInvalidationLevel() == INVALID_PROGRAM) {
-        //std::string header;
-        //header += "#define UNLABELED " + std::to_string(LabelProjection::UNLABELED) + "\n";
-        //header += "#define BACKGROUND " + std::to_string(LabelProjection::BACKGROUND) + "\n";
-        //header += "#define FOREGROUND " + std::to_string(LabelProjection::FOREGROUND) + "\n";
-        //header += "#define SUGGESTED_FOREGROUND " + std::to_string(LabelProjection::SUGGESTED_FOREGROUND) + "\n";
-        //header += "#define INCONSISTENT " + std::to_string(LabelProjection::INCONSISTENT) + "\n";
-        //projectionShader_.setHeader(header);
+        std::string header;
+        header += projectionTransfunc_.get()->getShaderDefines();
+        projectionShader_.setHeader(header);
         projectionShader_.rebuild();
     }
 
@@ -894,31 +895,14 @@ void InteractiveProjectionLabeling::process() {
 
     foregroundLabelGeometry_.setData(&foregroundLabelLines_, false);
     backgroundLabelGeometry_.setData(&backgroundLabelLines_, false);
-    // initialize shader
-
-    //auto* vol = new VolumeAtomic<uint8_t>(xz_.labels().getDimensions());
-    //for(int i=0; i<tgt::hmul(xz_.labels().getDimensions()); ++i) {
-    //    vol->voxel(i) = xz_.labels().voxel(i);
-    //}
-    //labelVolume_.setData(new Volume(vol, inport_.getData()));
 }
 
 
 void InteractiveProjectionLabeling::adjustPropertiesToInput() {
-    //labelVolume_.setData(nullptr);
     if(!inport_.hasData()) {
         return;
     }
-    const auto& vol = *inport_.getData();
-    auto dim = vol.getDimensions();
-
-    //LZ4SliceVolumeBuilder<uint8_t> builder(
-    //        VoreenApplication::app()->getUniqueTmpFilePath("." + LZ4SliceVolumeBase::FILE_EXTENSION),
-    //        LZ4SliceVolumeMetadata::fromVolume(vol).withRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint8_t>())
-    //        );
-    //builder.fill(0);
-    //outputVolume_ = std::move(builder).finalize();
-    //withOutputVolume([&] (LZ4SliceVolume<uint8_t>& vol) { });
+    projectionTransfunc_.setVolume(inport_.getData(), 0);
 
     updateProjection();
 }

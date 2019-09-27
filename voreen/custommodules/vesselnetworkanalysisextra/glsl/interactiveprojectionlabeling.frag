@@ -25,7 +25,13 @@
 
 #version 330
 
+#include "modules/mod_transfunc.frag"
+
 uniform sampler2D tex_;
+uniform TF_SAMPLER_TYPE transFuncTex_;
+uniform TransFuncParameters transFuncParams_;
+uniform float rwmOffset_;
+uniform float rwmScale_;
 
 in vec2 frag_texcoord;
 
@@ -34,12 +40,13 @@ out vec4 color;
 void main() {
     vec2 fragCoord = frag_texcoord.xy;
 
-    float texValue = texture(tex_, fragCoord).x;
     float alpha = texture(tex_, fragCoord).y;
 
     vec3 col;
     if(alpha > 0.0) {
-        col = vec3(texValue);
+        float texValue = texture(tex_, fragCoord).x;
+        texValue = texValue * rwmScale_ + rwmOffset_;
+        col = applyTF(transFuncParams_, transFuncTex_, texValue).xyz;
     } else {
         //Checkerboard pattern
         if(((int(gl_FragCoord.x)/40) & 1) - ((int(gl_FragCoord.y)/40) & 1) == 0) {
