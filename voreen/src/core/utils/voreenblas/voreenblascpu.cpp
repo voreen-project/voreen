@@ -92,7 +92,7 @@ float VoreenBlasCPU::sSpInnerProductEll(const EllpackMatrix<float>& mat, const f
 }
 
 int VoreenBlasCPU::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* vec, float* result,
-                        float* initial, ConjGradPreconditioner precond, float threshold, int maxIterations) const {
+                        float* initial, ConjGradPreconditioner precond, float threshold, int maxIterations, ProgressReporter& progress) const {
 
     if (!mat.isSymmetric()) {
         LERROR("Symmetric matrix expected.");

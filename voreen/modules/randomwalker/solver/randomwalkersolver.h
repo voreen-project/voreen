@@ -113,8 +113,7 @@ public:
      * @return the number of iterations required to compute the solution
      * @throw VoreenException if the computation has failed
      */
-    int solve(const VoreenBlas* voreenBlas, float* oldSystemSolution, VoreenBlas::ConjGradPreconditioner preConditioner = VoreenBlas::Jacobi,
-        float errorThreshold = 1e-6f, int maxIterations = 0);
+    int solve(const VoreenBlas* voreenBlas, float* oldSystemSolution, VoreenBlas::ConjGradPreconditioner preConditioner, float errorThreshold, int maxIterations, ProgressReporter& progress);
 
     /// Returns the current state of the solver.
     SystemState getSystemState() const;

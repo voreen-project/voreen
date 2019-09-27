@@ -953,8 +953,14 @@ bool testSSpInnerProductEll() {
         return false;
     }
 }
+struct NoopProgressReporter : public ProgressReporter {
+    virtual void setProgressMessage(const std::string& message) { }
+    virtual std::string getProgressMessage() const {return std::string();}
+};
 
 bool testSSpConjGradEll() {
+
+    NoopProgressReporter progress;
 
     LINFO("sSpConjGrad-ELL Randomized Tests:");
     int numTests = 0;
@@ -984,7 +990,7 @@ bool testSSpConjGradEll() {
             // compute GPU solution
             clock_t start, end;
             start = clock();
-            int iterations = voreenBlasCL.sSpConjGradEll(randMat, x, y, 0, VoreenBlas::NoPreconditioner, numRows*1e-8f);
+            int iterations = voreenBlasCL.sSpConjGradEll(randMat, x, y, 0, VoreenBlas::NoPreconditioner, numRows*1e-8f, 1000, progress);
             end = clock();
             float duration = static_cast<float>(end-start)/CLOCKS_PER_SEC;
 
@@ -1004,7 +1010,7 @@ bool testSSpConjGradEll() {
             // CPU solution
             if (i <= 18) {
                 start = clock();
-                iterations = voreenBlasCPU.sSpConjGradEll(randMat, x, y, 0, VoreenBlas::NoPreconditioner, numRows*1e-8f);
+                iterations = voreenBlasCPU.sSpConjGradEll(randMat, x, y, 0, VoreenBlas::NoPreconditioner, numRows*1e-8f, 1000, progress);
                 end = clock();
                 duration = static_cast<float>(end-start)/CLOCKS_PER_SEC;
 
@@ -1049,7 +1055,7 @@ bool testSSpConjGradEll() {
             // compute GPU solution
             clock_t start, end;
             start = clock();
-            int iterations = voreenBlasCL.sSpConjGradEll(randMat, x, y, 0, VoreenBlas::NoPreconditioner, numRows*1e-8f);
+            int iterations = voreenBlasCL.sSpConjGradEll(randMat, x, y, 0, VoreenBlas::NoPreconditioner, numRows*1e-8f, 1000, progress);
             end = clock();
             float duration = static_cast<float>(end-start)/CLOCKS_PER_SEC;
 
@@ -1069,7 +1075,7 @@ bool testSSpConjGradEll() {
             // CPU solution
             if (i <= 18) {
                 start = clock();
-                iterations = voreenBlasCPU.sSpConjGradEll(randMat, x, y, 0, VoreenBlas::NoPreconditioner, numRows*1e-8f);
+                iterations = voreenBlasCPU.sSpConjGradEll(randMat, x, y, 0, VoreenBlas::NoPreconditioner, numRows*1e-8f, 1000, progress);
                 end = clock();
                 duration = static_cast<float>(end-start)/CLOCKS_PER_SEC;
 

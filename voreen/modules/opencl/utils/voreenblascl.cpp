@@ -315,7 +315,7 @@ float VoreenBlasCL::sSpInnerProductEll(const EllpackMatrix<float>& mat, const fl
 }
 
 int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* vec, float* result,
-                           float* initial, ConjGradPreconditioner precond, float threshold, int maxIterations) const {
+                           float* initial, ConjGradPreconditioner precond, float threshold, int maxIterations, ProgressReporter& progress) const {
 
     if (!mat.isSymmetric()) {
         LERROR("Symmetric matrix expected.");
@@ -379,137 +379,57 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
     Buffer rBuf(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float)*vecSize);
     Buffer pBuf(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float)*vecSize);
 
-    if (precond == Jacobi) {
-        preconditioner = new EllpackMatrix<float>(mat.getNumRows(), mat.getNumRows(), 1);
-        preconditioner->initializeBuffers();
-        for (size_t i=0; i<mat.getNumRows(); i++)
-            preconditioner->setValueByIndex(i, i, 0, 1.f / std::max(mat.getValue(i,i), 1e-6f));
-
-        precondBuf = new Buffer(context_, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
-            preconditioner->getMatrixBufferSize(), preconditioner->getMatrix());
-        precondIndicesBuf = new Buffer(context_, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, preconditioner->getIndicesBufferSize(), preconditioner->getIndices());
-
-        zBuf = new Buffer(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float)*vecSize);
-    }
-
-    int32_t mutex;
-    Buffer mutexBuf(context_, CL_MEM_ALLOC_HOST_PTR, sizeof(int32_t));
-    Buffer scalarBuf(context_, CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR, sizeof(float));
-    Buffer nominatorBuf(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float));
-    Buffer denominatorBuf(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float));
-    Buffer alphaBuf(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float));
-
-    // r <= A*x_0
-    kernelSpmv->setArg(0, vecSize);
-    kernelSpmv->setArg(1, vecSize);
-    kernelSpmv->setArg(2, mat.getNumColsPerRow());
-    kernelSpmv->setArg(3, indicesBuf);
-    kernelSpmv->setArg(4, matBuf);
-    kernelSpmv->setArg(5, xBuf);
-    kernelSpmv->setArg(6, rBuf);
-    queue_->enqueue(kernelSpmv, workSize);
-
-    // p <= -r + b
-    kernelSapxy->setArg(0, vecSize);
-    kernelSapxy->setArg(1, rBuf);
-    kernelSapxy->setArg(2, tmpBuf);
-    kernelSapxy->setArg(3, -1.f);
-    kernelSapxy->setArg(4, pBuf);
-    queue_->enqueue(kernelSapxy, workSize);
-
-    // r <= -r + b
-    kernelSapxy->setArg(0, vecSize);
-    kernelSapxy->setArg(1, rBuf);
-    kernelSapxy->setArg(2, tmpBuf);
-    kernelSapxy->setArg(3, -1.f);
-    kernelSapxy->setArg(4, rBuf);
-    queue_->enqueue(kernelSapxy, workSize);
-
-    // preconditioning
-    if (precond == Jacobi) {
-        kernelSpmv->setArg(0, vecSize);
-        kernelSpmv->setArg(1, vecSize);
-        kernelSpmv->setArg(2, preconditioner->getNumColsPerRow());
-        kernelSpmv->setArg(3, precondIndicesBuf);
-        kernelSpmv->setArg(4, precondBuf);
-        kernelSpmv->setArg(5, rBuf);
-        kernelSpmv->setArg(6, zBuf);
-        queue_->enqueue(kernelSpmv, workSize);
-
-        //memcpy(pBuf, zBuf, vecSize * sizeof(float));
-        kernelSapxy->setArg(0, vecSize);
-        kernelSapxy->setArg(1, zBuf);
-        kernelSapxy->setArg(2, zBuf);
-        kernelSapxy->setArg(3, 0.f);
-        kernelSapxy->setArg(4, pBuf);
-        queue_->enqueue(kernelSapxy, workSize);
-    }
-
     int iteration  = 0;
 
-    while (iteration < maxIterations) {
+    try {
 
-        iteration++;
+        if (precond == Jacobi) {
+            preconditioner = new EllpackMatrix<float>(mat.getNumRows(), mat.getNumRows(), 1);
+            preconditioner->initializeBuffers();
+            for (size_t i=0; i<mat.getNumRows(); i++)
+                preconditioner->setValueByIndex(i, i, 0, 1.f / std::max(mat.getValue(i,i), 1e-6f));
 
-        // r_k^T*r_k
-        kernelSdot->setArg(0, vecSize);
-        kernelSdot->setArg(1, rBuf);
-        if (precond == Jacobi)
-            kernelSdot->setArg(2, zBuf);
-        else
-            kernelSdot->setArg(2, rBuf);
-        kernelSdot->setArg(3, nominatorBuf);
-        kernelSdot->setArg(4, mutexBuf);
-        kernelSdot->setArg(5, sizeof(float)*localWorksize, 0);
-        mutex = 0;
-        queue_->enqueueWriteBuffer(&mutexBuf, &mutex, true);    //< initialize mutex
-        queue_->enqueue(kernelSdot, workSize, localWorksize);
+            precondBuf = new Buffer(context_, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
+                    preconditioner->getMatrixBufferSize(), preconditioner->getMatrix());
+            precondIndicesBuf = new Buffer(context_, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, preconditioner->getIndicesBufferSize(), preconditioner->getIndices());
 
-        // tmp <= A * p_k
+            zBuf = new Buffer(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float)*vecSize);
+        }
+
+        int32_t mutex;
+        Buffer mutexBuf(context_, CL_MEM_ALLOC_HOST_PTR, sizeof(int32_t));
+        Buffer scalarBuf(context_, CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR, sizeof(float));
+        Buffer nominatorBuf(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float));
+        Buffer denominatorBuf(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float));
+        Buffer alphaBuf(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float));
+
+        // r <= A*x_0
         kernelSpmv->setArg(0, vecSize);
         kernelSpmv->setArg(1, vecSize);
         kernelSpmv->setArg(2, mat.getNumColsPerRow());
         kernelSpmv->setArg(3, indicesBuf);
         kernelSpmv->setArg(4, matBuf);
-        kernelSpmv->setArg(5, pBuf);
-        kernelSpmv->setArg(6, tmpBuf);
+        kernelSpmv->setArg(5, xBuf);
+        kernelSpmv->setArg(6, rBuf);
         queue_->enqueue(kernelSpmv, workSize);
 
-        // dot(p_k^T, tmp)
-        kernelSdot->setArg(0, vecSize);
-        kernelSdot->setArg(1, pBuf);
-        kernelSdot->setArg(2, tmpBuf);
-        kernelSdot->setArg(3, denominatorBuf);
-        kernelSdot->setArg(4, mutexBuf);
-        kernelSdot->setArg(5, sizeof(float)*localWorksize, 0);
-        mutex = 0;
-        queue_->enqueueWriteBuffer(&mutexBuf, &mutex, true);
-        queue_->enqueue(kernelSdot, workSize, localWorksize);
-
-        float denominator;
-        float nominator;
-        queue_->enqueueReadBuffer(&nominatorBuf, (void*)(&nominator), true);
-        queue_->enqueueReadBuffer(&denominatorBuf, (void*)(&denominator), true);
-        float alpha = nominator / denominator;
-
-        // x <= alpha*p + x
+        // p <= -r + b
         kernelSapxy->setArg(0, vecSize);
-        kernelSapxy->setArg(1, pBuf);
-        kernelSapxy->setArg(2, xBuf);
-        kernelSapxy->setArg(3, alpha);
-        kernelSapxy->setArg(4, xBuf);
+        kernelSapxy->setArg(1, rBuf);
+        kernelSapxy->setArg(2, tmpBuf);
+        kernelSapxy->setArg(3, -1.f);
+        kernelSapxy->setArg(4, pBuf);
         queue_->enqueue(kernelSapxy, workSize);
 
-        // r <= -alpha*tmp + r
+        // r <= -r + b
         kernelSapxy->setArg(0, vecSize);
-        kernelSapxy->setArg(1, tmpBuf);
-        kernelSapxy->setArg(2, rBuf);
-        kernelSapxy->setArg(3, -alpha);
+        kernelSapxy->setArg(1, rBuf);
+        kernelSapxy->setArg(2, tmpBuf);
+        kernelSapxy->setArg(3, -1.f);
         kernelSapxy->setArg(4, rBuf);
         queue_->enqueue(kernelSapxy, workSize);
 
-        // norm(r_k+1)
-        float beta;
+        // preconditioning
         if (precond == Jacobi) {
             kernelSpmv->setArg(0, vecSize);
             kernelSpmv->setArg(1, vecSize);
@@ -520,49 +440,147 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
             kernelSpmv->setArg(6, zBuf);
             queue_->enqueue(kernelSpmv, workSize);
 
-            kernelSdot->setArg(0, vecSize);
-            kernelSdot->setArg(1, rBuf);
-            kernelSdot->setArg(2, zBuf);
-            kernelSdot->setArg(3, scalarBuf);
-            kernelSdot->setArg(4, mutexBuf);
-            kernelSdot->setArg(5, sizeof(float)*localWorksize, 0);
-            mutex = 0;
-            queue_->enqueueWriteBuffer(&mutexBuf, &mutex, true);
-            queue_->enqueue(kernelSdot, workSize, localWorksize);
-            queue_->enqueueReadBuffer(&scalarBuf, (void*)(&beta), true);
-        }
-        else {
-            kernelSdot->setArg(0, vecSize);
-            kernelSdot->setArg(1, rBuf);
-            kernelSdot->setArg(2, rBuf);
-            kernelSdot->setArg(3, scalarBuf);
-            kernelSdot->setArg(4, mutexBuf);
-            kernelSdot->setArg(5, sizeof(float)*localWorksize, 0);
-            mutex = 0;
-            queue_->enqueueWriteBuffer(&mutexBuf, &mutex, true);
-            queue_->enqueue(kernelSdot, workSize, localWorksize);
-            queue_->enqueueReadBuffer(&scalarBuf, (void*)(&beta), true);
-        }
-
-        if (sqrt(beta) < threshold)
-            break;
-
-        beta /= nominator;
-
-        // p <= beta*p + r
-        kernelSapxy->setArg(0, vecSize);
-        kernelSapxy->setArg(1, pBuf);
-        if (precond == Jacobi)
+            //memcpy(pBuf, zBuf, vecSize * sizeof(float));
+            kernelSapxy->setArg(0, vecSize);
+            kernelSapxy->setArg(1, zBuf);
             kernelSapxy->setArg(2, zBuf);
-        else
-            kernelSapxy->setArg(2, rBuf);
-        kernelSapxy->setArg(3, beta);
-        kernelSapxy->setArg(4, pBuf);
-        queue_->enqueue(kernelSapxy, workSize);
-    }
+            kernelSapxy->setArg(3, 0.f);
+            kernelSapxy->setArg(4, pBuf);
+            queue_->enqueue(kernelSapxy, workSize);
+        }
 
-    queue_->enqueueReadBuffer(&xBuf, (void*)(result), true);
+        while (iteration < maxIterations) {
+            progress.setProgress(static_cast<float>(iteration)/maxIterations);
+
+            iteration++;
+
+            // r_k^T*r_k
+            kernelSdot->setArg(0, vecSize);
+            kernelSdot->setArg(1, rBuf);
+            if (precond == Jacobi)
+                kernelSdot->setArg(2, zBuf);
+            else
+                kernelSdot->setArg(2, rBuf);
+            kernelSdot->setArg(3, nominatorBuf);
+            kernelSdot->setArg(4, mutexBuf);
+            kernelSdot->setArg(5, sizeof(float)*localWorksize, 0);
+            mutex = 0;
+            queue_->enqueueWriteBuffer(&mutexBuf, &mutex, true);    //< initialize mutex
+            queue_->enqueue(kernelSdot, workSize, localWorksize);
+
+            // tmp <= A * p_k
+            kernelSpmv->setArg(0, vecSize);
+            kernelSpmv->setArg(1, vecSize);
+            kernelSpmv->setArg(2, mat.getNumColsPerRow());
+            kernelSpmv->setArg(3, indicesBuf);
+            kernelSpmv->setArg(4, matBuf);
+            kernelSpmv->setArg(5, pBuf);
+            kernelSpmv->setArg(6, tmpBuf);
+            queue_->enqueue(kernelSpmv, workSize);
+
+            // dot(p_k^T, tmp)
+            kernelSdot->setArg(0, vecSize);
+            kernelSdot->setArg(1, pBuf);
+            kernelSdot->setArg(2, tmpBuf);
+            kernelSdot->setArg(3, denominatorBuf);
+            kernelSdot->setArg(4, mutexBuf);
+            kernelSdot->setArg(5, sizeof(float)*localWorksize, 0);
+            mutex = 0;
+            queue_->enqueueWriteBuffer(&mutexBuf, &mutex, true);
+            queue_->enqueue(kernelSdot, workSize, localWorksize);
+
+            float denominator;
+            float nominator;
+            queue_->enqueueReadBuffer(&nominatorBuf, (void*)(&nominator), true);
+            queue_->enqueueReadBuffer(&denominatorBuf, (void*)(&denominator), true);
+            float alpha = nominator / denominator;
+
+            // x <= alpha*p + x
+            kernelSapxy->setArg(0, vecSize);
+            kernelSapxy->setArg(1, pBuf);
+            kernelSapxy->setArg(2, xBuf);
+            kernelSapxy->setArg(3, alpha);
+            kernelSapxy->setArg(4, xBuf);
+            queue_->enqueue(kernelSapxy, workSize);
+
+            // r <= -alpha*tmp + r
+            kernelSapxy->setArg(0, vecSize);
+            kernelSapxy->setArg(1, tmpBuf);
+            kernelSapxy->setArg(2, rBuf);
+            kernelSapxy->setArg(3, -alpha);
+            kernelSapxy->setArg(4, rBuf);
+            queue_->enqueue(kernelSapxy, workSize);
+
+            // norm(r_k+1)
+            float beta;
+            if (precond == Jacobi) {
+                kernelSpmv->setArg(0, vecSize);
+                kernelSpmv->setArg(1, vecSize);
+                kernelSpmv->setArg(2, preconditioner->getNumColsPerRow());
+                kernelSpmv->setArg(3, precondIndicesBuf);
+                kernelSpmv->setArg(4, precondBuf);
+                kernelSpmv->setArg(5, rBuf);
+                kernelSpmv->setArg(6, zBuf);
+                queue_->enqueue(kernelSpmv, workSize);
+
+                kernelSdot->setArg(0, vecSize);
+                kernelSdot->setArg(1, rBuf);
+                kernelSdot->setArg(2, zBuf);
+                kernelSdot->setArg(3, scalarBuf);
+                kernelSdot->setArg(4, mutexBuf);
+                kernelSdot->setArg(5, sizeof(float)*localWorksize, 0);
+                mutex = 0;
+                queue_->enqueueWriteBuffer(&mutexBuf, &mutex, true);
+                queue_->enqueue(kernelSdot, workSize, localWorksize);
+                queue_->enqueueReadBuffer(&scalarBuf, (void*)(&beta), true);
+            }
+            else {
+                kernelSdot->setArg(0, vecSize);
+                kernelSdot->setArg(1, rBuf);
+                kernelSdot->setArg(2, rBuf);
+                kernelSdot->setArg(3, scalarBuf);
+                kernelSdot->setArg(4, mutexBuf);
+                kernelSdot->setArg(5, sizeof(float)*localWorksize, 0);
+                mutex = 0;
+                queue_->enqueueWriteBuffer(&mutexBuf, &mutex, true);
+                queue_->enqueue(kernelSdot, workSize, localWorksize);
+                queue_->enqueueReadBuffer(&scalarBuf, (void*)(&beta), true);
+            }
+
+            if (sqrt(beta) < threshold)
+                break;
+
+            beta /= nominator;
+
+            // p <= beta*p + r
+            kernelSapxy->setArg(0, vecSize);
+            kernelSapxy->setArg(1, pBuf);
+            if (precond == Jacobi)
+                kernelSapxy->setArg(2, zBuf);
+            else
+                kernelSapxy->setArg(2, rBuf);
+            kernelSapxy->setArg(3, beta);
+            kernelSapxy->setArg(4, pBuf);
+            queue_->enqueue(kernelSapxy, workSize);
+        }
+
+        queue_->enqueueReadBuffer(&xBuf, (void*)(result), true);
+
+    } catch(std::exception& e) {
+        queue_->finish();
+
+        if (initialAllocated)
+            delete[] initial;
+
+        delete preconditioner;
+        delete precondBuf;
+        delete precondIndicesBuf;
+        delete zBuf;
+
+        throw e;
+    }
     queue_->finish();
+    progress.setProgress(1.0);
 
     if (initialAllocated)
         delete[] initial;

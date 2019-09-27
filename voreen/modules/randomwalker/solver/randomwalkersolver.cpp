@@ -147,7 +147,7 @@ void RandomWalkerSolver::setupEquationSystem() {
     state_ = Setup;
 }
 
-int RandomWalkerSolver::solve(const VoreenBlas* voreenBlas, float* oldSystemSolution, VoreenBlas::ConjGradPreconditioner preConditioner, float errorThreshold, int maxIterations) {
+int RandomWalkerSolver::solve(const VoreenBlas* voreenBlas, float* oldSystemSolution, VoreenBlas::ConjGradPreconditioner preConditioner, float errorThreshold, int maxIterations, ProgressReporter& progress) {
 
     tgtAssert(voreenBlas, "null pointer passed");
 
@@ -167,7 +167,7 @@ int RandomWalkerSolver::solve(const VoreenBlas* voreenBlas, float* oldSystemSolu
     }
 
     int iterations = voreenBlas->sSpConjGradEll(mat_, vec_, solution_, oldSystemSolution,
-        preConditioner, errorThreshold, maxIterations);
+        preConditioner, errorThreshold, maxIterations, progress);
     state_ = Solved;
     return iterations;
 }

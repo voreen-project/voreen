@@ -360,6 +360,16 @@ static void getSeedListsFromPorts(std::vector<PortDataPointer<Geometry>>& geom, 
 }
 
 RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressReporter& progressReporter) const {
+    RandomWalkerOutput invalidResult = RandomWalkerOutput {
+        std::unique_ptr<RandomWalkerSolver>(nullptr),
+        std::chrono::duration<float>(0),
+        std::vector<const Volume*>(),
+        std::vector<float>(),
+    };
+
+    progressReporter.setProgress(0.0);
+    SubtaskProgressReporterCollection<3> globalProgressSteps(progressReporter, {0.1, 0.1, 0.8});
+
     auto start = clock::now();
     tgtAssert(input.inputHandle_, "No input Volume");
 
@@ -386,13 +396,14 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
                 }
                 catch (std::bad_alloc& e) {
                     LERROR("Failed create level-" << level << " volume (dim=" << levelDim << ") : bad allocation");
-                    throw(e);
+                    return invalidResult;
                 }
             }
         }
         auto end = clock::now();
         LINFO("...finished (" << (end-start).count() << " sec)");
     }
+    globalProgressSteps.get<0>().setProgress(1.0);
 
     // work resources
     std::unique_ptr<RandomWalkerSolver> solver = 0;
@@ -431,15 +442,23 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
     }
     catch (std::bad_alloc& e) {
         LERROR("Failed to convert input seed volumes: bad allocation");
-        throw e;
+        return invalidResult;
     }
+    globalProgressSteps.get<1>().setProgress(1.0);
 
     std::vector<float> newProbabilities;
 
     //
     // Multi Scale Loop
     //
+    auto& loopProgress = globalProgressSteps.get<2>();
+    int numSteps = input.startLevel_ - input.endLevel_ + 1;
+    int step = 0;
     for (int level = input.startLevel_; level >= input.endLevel_; level--) {
+        SubtaskProgressReporter iterationProgress(loopProgress, tgt::vec2(static_cast<float>(step)/numSteps, static_cast<float>(step+1)/numSteps));
+        loopProgress.setProgress(0.0);
+        ++step;
+
 
         LoopRecord loopRecord;
         loopRecord.iteration = input.startLevel_-level+1;
@@ -495,7 +514,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
             foregroundSeedVol.get(), backgroundSeedVol.get(), clipLLF, clipURB));
 
         /*
-         * 3. Set up Random Walker system.
+         * 2. Set up Random Walker system.
          */
         //LINFO("Constructing Random Walker equation system...");
 
@@ -514,11 +533,11 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
         }
         catch (tgt::Exception& e) {
             LERROR("Failed to setup Random Walker equation system: " << e.what());
-            throw e;
+            return invalidResult;
         }
 
         /*
-         * 4. Compute Random Walker solution.
+         * 3. Compute Random Walker solution.
          */
 
         // solve
@@ -539,7 +558,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
             }
 
             auto start = clock::now();
-            int iterations = solver->solve(input.blas_, initialization, input.precond_, input.errorThreshold_, input.maxIterations_);
+            int iterations = solver->solve(input.blas_, initialization, input.precond_, input.errorThreshold_, input.maxIterations_, loopProgress);
             auto finish = clock::now();
             loopRecord.timeSolving = finish - start;
             loopRecord.numIterations = iterations;
@@ -553,13 +572,13 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
         }
         catch (VoreenException& e) {
             LERROR("Failed to compute Random Walker solution: " << e.what());
-            throw e;
+            return invalidResult;
         }
 
         loopRecord.probabilityRange = solver->getProbabilityRange();
 
         /*
-         * 5. Derive seed volumes for next iteration
+         * 4. Derive seed volumes for next iteration
          */
         bool lastIteration = (level == input.endLevel_);
         if (!lastIteration) {
@@ -573,7 +592,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
             }
             catch (VoreenException& e) {
                 LERROR("computeRandomWalkerSolution() Failed to generate probability volume: " << e.what());
-                throw e;
+                return invalidResult;
             }
 
             // allocate seed volumes for next iteration
@@ -583,7 +602,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
             }
             catch (std::bad_alloc& e) {
                 LERROR("computeRandomWalkerSolution() Failed to create seed volumes: bad allocation");
-                throw e;
+                return invalidResult;
             }
 
             // threshold probability map to derive seeds
@@ -629,6 +648,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
 
         loopRecord.print();
 
+        loopProgress.setProgress(1.0);
     } // end loop
 
     tgtAssert(solver, "no random walker solver");
