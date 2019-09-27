@@ -359,7 +359,7 @@ void InteractiveProjectionLabeling::projectionEvent(tgt::MouseEvent* e) {
     if(e->modifiers() == tgt::Event::CTRL && e->action() == tgt::MouseEvent::RELEASED) {
         projectionLabels_.foreground_.push_back({mouse});
     } else if(e->modifiers() == tgt::Event::SHIFT && e->action() == tgt::MouseEvent::RELEASED) {
-        projectionLabels_.foreground_.push_back({mouse});
+        projectionLabels_.background_.push_back({mouse});
     } else if(e->modifiers() == tgt::Event::MODIFIER_NONE) {
         handleProjectionEvent(e, projectionLabels_);
     } else {
