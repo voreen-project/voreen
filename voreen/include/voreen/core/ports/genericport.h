@@ -58,6 +58,7 @@ public:
         : pointer_(other.pointer_)
         , owned_(other.owned_)
     {
+        other.pointer_ = nullptr;
     }
     ~PortDataPointer() {
         if(owned_) {
@@ -78,6 +79,9 @@ public:
         return *pointer_;
     }
     const T* operator->() const {
+        return pointer_;
+    }
+    const T* get() const {
         return pointer_;
     }
     operator const T*() const {
