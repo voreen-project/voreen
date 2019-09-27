@@ -29,9 +29,9 @@ namespace voreen {
 
 BinaryMedianFilterProperties::BinaryMedianFilterProperties()
     : useUniformExtent_(getId("useUniformExtent"), "Uniform Extent", true)
-    , extentX_(getId("extentx"), "Extent X", 1, 1, 10)
-    , extentY_(getId("extenty"), "Extent Y", 1, 1, 10)
-    , extentZ_(getId("extentz"), "Extent Z", 1, 1, 10)
+    , extentX_(getId("extentx"), "Extent X", 1, 1, 100)
+    , extentY_(getId("extenty"), "Extent Y", 1, 1, 100)
+    , extentZ_(getId("extentz"), "Extent Z", 1, 1, 100)
     , binarizationThreshold_(getId("binarizationThreshold"), "Threshold", 0.5f, 0.0f, std::numeric_limits<float>::max(), Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_ADVANCED)
     , samplingStrategyType_(getId("samplingStrategyType"), "Sampling Strategy", SamplingStrategyType::CLAMP_T)
     , outsideVolumeValue_(getId("outsideVolumeValue"), "Outside Volume Value", 0, 0, 1)
