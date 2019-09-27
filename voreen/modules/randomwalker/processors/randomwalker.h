@@ -26,7 +26,7 @@
 #ifndef VRN_RANDOMWALKER_H
 #define VRN_RANDOMWALKER_H
 
-#include "voreen/core/processors/volumeprocessor.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/properties/optionproperty.h"
 #include "voreen/core/properties/intproperty.h"
@@ -38,8 +38,6 @@
 #include "voreen/core/properties/boundingboxproperty.h"
 
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
-
-#include "voreen/core/processors/cache.h"
 
 #include "voreen/core/utils/voreenblas/voreenblascpu.h"
 #ifdef VRN_MODULE_OPENMP
@@ -59,13 +57,41 @@ class RandomWalkerSolver;
 class RandomWalkerSeeds;
 class RandomWalkerWeights;
 
+struct RandomWalkerInput {
+    PortDataPointer<VolumeBase> inputHandle_;
+    std::vector<PortDataPointer<Geometry>> foregroundGeomSeeds_;
+    std::vector<PortDataPointer<Geometry>> backgroundGeomSeeds_;
+    PortDataPointer<VolumeBase> foregroundVolSeeds_;
+    PortDataPointer<VolumeBase> backgroundVolSeeds_;
+    std::vector<const Volume*> lodVolumes_;
+    std::vector<float> prevProbabilities_;
+    int startLevel_;
+    int endLevel_;
+    boost::optional<tgt::IntBounds> clipRegion_;
+    std::unique_ptr<RandomWalkerWeights> weights_;
+    const VoreenBlas* blas_;
+    VoreenBlas::ConjGradPreconditioner precond_;
+    float lodForegroundSeedThresh_;
+    float lodBackgroundSeedThresh_;
+    float errorThreshold_;
+    int maxIterations_;
+    int lodSeedErosionKernelSize_;
+};
+
+struct RandomWalkerOutput {
+    std::unique_ptr<RandomWalkerSolver> solver_;
+    std::chrono::duration<float> duration_;
+    std::vector<const Volume*> lodVolumes_;
+    std::vector<float> newProbabilities_;
+};
+
 /**
  * Performs a semi-automatic volume segmentation using the 3D random walker algorithm.
  * User manual: http://voreen.uni-muenster.de/?q=random-walker
  *
  * @see RandomWalkerSolver
  */
-class RandomWalker : public VolumeProcessor {
+class RandomWalker : public AsyncComputeProcessor<RandomWalkerInput, RandomWalkerOutput> {
 public:
     RandomWalker();
     virtual ~RandomWalker();
@@ -75,7 +101,6 @@ public:
     virtual std::string getClassName() const            { return "RandomWalker";      }
     virtual Processor::CodeState getCodeState() const   { return CODE_STATE_TESTING;  }
 
-    virtual void invalidate(int inv = INVALID_RESULT);
     virtual bool isReady() const;
 
 protected:
@@ -84,16 +109,14 @@ protected:
                        "<p>See: <a href=\"http://voreen.uni-muenster.de/?q=random-walker\" >voreen.uni-muenster.de/?q=random-walker</a></p>");
     }
 
-    virtual void process();
-    virtual void beforeProcess();
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
+
     virtual void initialize();
     virtual void deinitialize();
 
 private:
-    RandomWalkerSolver* computeRandomWalkerSolution();
-
-    void getSeedListsFromPorts(PointSegmentListGeometry<tgt::vec3>& foregroundSeeds,
-        PointSegmentListGeometry<tgt::vec3>& backgroundSeeds) const;
 
     RandomWalkerWeights* getEdgeWeightsFromProperties() const;
 
@@ -103,12 +126,10 @@ private:
     void putOutProbabilities(const RandomWalkerSolver* solver);
     void putOutEdgeWeights(const RandomWalkerSolver* solver);
 
-    void computeButtonClicked();
     void segmentationPropsChanged();
     void lodMinLevelChanged();
     void lodMaxLevelChanged();
     void updateGuiState();
-    void clearCache();
 
     VolumePort inportVolume_;
     GeometryPort inportForegroundSeeds_;
@@ -119,7 +140,6 @@ private:
     VolumePort outportProbabilities_;
     VolumePort outportEdgeWeights_;
 
-    ButtonProperty computeButton_;
     BoolProperty usePrevProbAsInitialization_;
 
     IntProperty beta_;
@@ -148,11 +168,6 @@ private:
     FloatProperty foregroundThreshold_;
     BoolProperty resampleOutputVolumes_;
 
-    BoolProperty useCaching_;
-    ButtonProperty clearCache_;
-
-    BoolProperty runOnInit_;
-
     VoreenBlasCPU voreenBlasCPU_;
 #ifdef VRN_MODULE_OPENMP
     VoreenBlasMP voreenBlasMP_;
@@ -164,7 +179,6 @@ private:
     // Clock and duration used for time keeping
     typedef std::chrono::steady_clock clock;
 
-    Cache cache_;
     std::vector<const Volume*> lodVolumes_;
     std::vector<float> prevProbabilities_;
     bool recomputeRandomWalker_;

@@ -49,7 +49,7 @@ const std::string RandomWalker::loggerCat_("voreen.RandomWalker.RandomWalker");
 using tgt::vec3;
 
 RandomWalker::RandomWalker()
-    : VolumeProcessor(),
+    : AsyncComputeProcessor<RandomWalkerInput, RandomWalkerOutput>(),
     inportVolume_(Port::INPORT, "volume.input"),
     inportForegroundSeeds_(Port::INPORT, "geometry.seedsForeground", "geometry.seedsForeground", true),
     inportBackgroundSeeds_(Port::INPORT, "geometry.seedsBackground", "geometry.seedsBackground", true),
@@ -58,7 +58,6 @@ RandomWalker::RandomWalker()
     outportSegmentation_(Port::OUTPORT, "volume.segmentation", "volume.segmentation", false),
     outportProbabilities_(Port::OUTPORT, "volume.probabilities", "volume.probabilities", false),
     outportEdgeWeights_(Port::OUTPORT, "volume.edgeweights", "volume.edgeweights", false),
-    computeButton_("computeButton", "Compute"),
     usePrevProbAsInitialization_("usePrevProbAsInitialization", "Use Previous Probabilities as Initialization", false, Processor::VALID, Property::LOD_ADVANCED),
     beta_("beta", "Edge Weight Scale: 2^beta", 12, 0, 20),
     minEdgeWeight_("minEdgeWeight", "Min Edge Weight: 10^(-t)", 5, 0, 10),
@@ -81,11 +80,6 @@ RandomWalker::RandomWalker()
     edgeWeightBalance_("edgeWeightBalance", "Edge Weight Balance", 0.3f, 0.f, 1.f),
     foregroundThreshold_("foregroundThreshold", "Foreground Threshold", 0.5f, 0.f, 1.f),
     resampleOutputVolumes_("resampleOutputVolumes", "Resample to Input Dimensions", true),
-    useCaching_("useCaching", "Use Cache", false, VALID),
-    clearCache_("clearCache", "Clear Cache", VALID),
-    runOnInit_("runOnInit", "Run On Initialization", false),
-    cache_(this),
-    recomputeRandomWalker_(false),
     currentInputVolume_(0)
 {
     // ports
@@ -98,8 +92,6 @@ RandomWalker::RandomWalker()
     addPort(outportProbabilities_);
     addPort(outportEdgeWeights_);
 
-    computeButton_.onClick(MemberFunctionCallback<RandomWalker>(this, &RandomWalker::computeButtonClicked));
-    addProperty(computeButton_);
     addProperty(usePrevProbAsInitialization_);
 
     // random walker properties
@@ -187,14 +179,7 @@ RandomWalker::RandomWalker()
     foregroundThreshold_.setGroupID("output");
     addProperty(resampleOutputVolumes_);
     resampleOutputVolumes_.setGroupID("output");
-    addProperty(useCaching_);
-    useCaching_.setGroupID("output");
-    addProperty(clearCache_);
-    clearCache_.setGroupID("output");
     setPropertyGroupGuiName("output", "Output");
-    clearCache_.onClick(MemberFunctionCallback<RandomWalker>(this, &RandomWalker::clearCache));
-
-    addProperty(runOnInit_);
 }
 
 RandomWalker::~RandomWalker() {
@@ -205,21 +190,13 @@ Processor* RandomWalker::create() const {
 }
 
 void RandomWalker::initialize() {
-    VolumeProcessor::initialize();
+    AsyncComputeProcessor::initialize();
 
 #ifdef VRN_MODULE_OPENCL
     voreenBlasCL_.initialize();
 #endif
 
-    cache_.addAllInports();
-    cache_.addAllOutports();
-    cache_.addAllProperties();
-    cache_.initialize();
-
     updateGuiState();
-
-    if (runOnInit_.get())
-        computeButton_.clicked();
 }
 
 void RandomWalker::deinitialize() {
@@ -228,7 +205,7 @@ void RandomWalker::deinitialize() {
         delete lodVolumes_.at(i);
     lodVolumes_.clear();
 
-    VolumeProcessor::deinitialize();
+    AsyncComputeProcessor::deinitialize();
 }
 
 bool RandomWalker::isReady() const {
@@ -242,24 +219,8 @@ bool RandomWalker::isReady() const {
     return ready;
 }
 
-void RandomWalker::beforeProcess() {
-    VolumeProcessor::beforeProcess();
-
-    if (useCaching_.get() && recomputeRandomWalker_) {
-        if (cache_.restore()) {
-            recomputeRandomWalker_ = false;
-            setValid();
-            currentInputVolume_ = inportVolume_.getData()->getRepresentation<VolumeRAM>();
-            LINFO("Restored from cache");
-        }
-    }
-
-    // assign volume to transfer function
+RandomWalker::ComputeInput RandomWalker::prepareComputeInput() {
     edgeWeightTransFunc_.setVolume(inportVolume_.getData());
-    LGL_ERROR;
-}
-
-void RandomWalker::process() {
 
     tgtAssert(inportVolume_.hasData(), "no input volume");
 
@@ -292,49 +253,58 @@ void RandomWalker::process() {
 
         prevProbabilities_ = std::vector<float>();
     }
-    currentInputVolume_ = inportVolume_.getData()->getRepresentation<VolumeRAM>();
 
-    if (recomputeRandomWalker_) {
-        auto start = clock::now();
-        RandomWalkerSolver* solver = computeRandomWalkerSolution();
-        if (solver && solver->getSystemState() == RandomWalkerSolver::Solved) {
-            auto finish = clock::now();
-            LINFO("Total runtime: " << std::chrono::duration<float>(finish - start).count() << " sec");
+    const int startLevel = enableLevelOfDetail_.get() ? lodMaxLevel_.get() : 0;
+    const int endLevel = enableLevelOfDetail_.get() ? lodMinLevel_.get() : 0;
+    tgtAssert(startLevel-endLevel >= 0, "invalid level range");
 
-            // put out results
-            if (outportSegmentation_.isConnected())
-                putOutSegmentation(solver);
-            else
-                outportSegmentation_.setData(0);
-
-            if (outportProbabilities_.isConnected())
-                putOutProbabilities(solver);
-            else
-                outportProbabilities_.setData(0);
-
-            if (outportEdgeWeights_.isConnected())
-                putOutEdgeWeights(solver);
-            else
-                outportEdgeWeights_.setData(0);
-        }
-        else {
-            LERROR("Failed to compute Random Walker solution");
-        }
-        delete solver;
-        recomputeRandomWalker_ = false;
-
-        if (useCaching_.get())
-            cache_.store();
+    boost::optional<tgt::IntBounds> bounds = boost::none;
+    if (enableClipping_.get()) {
+        bounds = clipRegion_.get();
     }
 
-}
+    // 2. Edge weight calculator (independent from scale level)
+    std::unique_ptr<RandomWalkerWeights> weights(getEdgeWeightsFromProperties());
 
-void RandomWalker::invalidate(int inv) {
+    // select BLAS implementation and preconditioner
+    const VoreenBlas* voreenBlas = getVoreenBlasFromProperties();
+    VoreenBlas::ConjGradPreconditioner precond = VoreenBlas::NoPreconditioner;
+    if (preconditioner_.isSelected("jacobi"))
+        precond = VoreenBlas::Jacobi;
 
-    if (!recomputeRandomWalker_ && !inportVolume_.hasChanged())
-        return;
 
-    VolumeProcessor::invalidate(inv);
+    std::vector<float> prevProbs;
+    if(usePrevProbAsInitialization_.get()) {
+        prevProbs = std::vector<float>(prevProbabilities_);
+    }
+
+    float lodForegroundSeedThresh = lodForegroundSeedThresh_.get();
+    float lodBackgroundSeedThresh = lodBackgroundSeedThresh_.get();
+
+    float errorThresh = 1.f / pow(10.f, static_cast<float>(errorThreshold_.get()));
+    int maxIterations = maxIterations_.get();
+    int lodSeedErosionKernelSize = lodSeedErosionKernelSize_.getValue();
+
+    return ComputeInput {
+        inportVolume_.getThreadSafeData(),
+        inportForegroundSeeds_.getThreadSafeAllData(),
+        inportBackgroundSeeds_.getThreadSafeAllData(),
+        inportForegroundSeedsVolume_.getThreadSafeData(),
+        inportBackgroundSeedsVolume_.getThreadSafeData(),
+        std::move(lodVolumes_),
+        prevProbs,
+        startLevel,
+        endLevel,
+        bounds,
+        std::move(weights),
+        voreenBlas,
+        precond,
+        lodForegroundSeedThresh,
+        lodBackgroundSeedThresh,
+        errorThresh,
+        maxIterations,
+        lodSeedErosionKernelSize,
+    };
 }
 
 namespace {
@@ -370,40 +340,53 @@ namespace {
     };
 } // namespace anonymous
 
-RandomWalkerSolver* RandomWalker::computeRandomWalkerSolution() {
+static void getSeedListsFromPorts(std::vector<PortDataPointer<Geometry>>& geom, PointSegmentListGeometry<tgt::vec3>& seeds) {
 
-    if (!inportVolume_.hasData() || !inportVolume_.getData()->getRepresentation<VolumeRAM>()) {
-        LWARNING("No volume");
-        return 0;
+    for (size_t i=0; i<geom.size(); i++) {
+        const PointSegmentListGeometry<tgt::vec3>* seedList = dynamic_cast<const PointSegmentListGeometry<tgt::vec3>* >(geom.at(i).get());
+        if (!seedList)
+            LWARNINGC("voreen.RandomWalker.RandomWalker", "Invalid geometry. PointSegmentListGeometry<vec3> expected.");
+        else {
+            auto transformMat = seedList->getTransformationMatrix();
+           for (int j=0; j<seedList->getNumSegments(); j++) {
+                std::vector<tgt::vec3> points;
+                for(auto& vox : seedList->getSegment(j)) {
+                    points.push_back(transformMat.transform(vox));
+                }
+                seeds.addSegment(points);
+            }
+        }
     }
-    const VolumeBase* inputHandle = inportVolume_.getData();
-    const VolumeRAM* inputVolume = inputHandle->getRepresentation<VolumeRAM>();
+}
 
-    const int startLevel = enableLevelOfDetail_.get() ? lodMaxLevel_.get() : 0;
-    const int endLevel = enableLevelOfDetail_.get() ? lodMinLevel_.get() : 0;
-    tgtAssert(startLevel-endLevel >= 0, "invalid level range");
+RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressReporter& progressReporter) const {
+    auto start = clock::now();
+    tgtAssert(input.inputHandle_, "No input Volume");
+
+    const VolumeBase* inputHandle = input.inputHandle_;
+    const VolumeRAM* inputVolume = inputHandle->getRepresentation<VolumeRAM>();
 
     // create lod volumes, if not present
     bool computeLODs = false;
-    for (int level=std::max(endLevel, 1); level<=startLevel && !computeLODs; level++)
-        computeLODs |= ((level-1) >= (int)lodVolumes_.size()) || (lodVolumes_.at(level-1) == 0);
+    for (int level=std::max(input.endLevel_, 1); level<=input.startLevel_ && !computeLODs; level++)
+        computeLODs |= ((level-1) >= (int)input.lodVolumes_.size()) || (input.lodVolumes_.at(level-1) == 0);
     if (computeLODs) {
         LINFO("Computing level of detail volumes...");
         auto start = clock::now();
-        for (int level=std::max(endLevel, 1); level<=startLevel; level++) {
-            while ((level-1) >= (int)lodVolumes_.size())
-                lodVolumes_.push_back(0);
-            if (lodVolumes_.at(level-1) == 0) {
+        for (int level=std::max(input.endLevel_, 1); level<=input.startLevel_; level++) {
+            while ((level-1) >= (int)input.lodVolumes_.size())
+                input.lodVolumes_.push_back(0);
+            if (input.lodVolumes_.at(level-1) == 0) {
                 float scaleFactor = static_cast<float>(1 << level);
                 tgtAssert(scaleFactor >= 1.f, "invalid scale factor");
                 tgt::ivec3 levelDim = tgt::iround(tgt::vec3(inputVolume->getDimensions()) / scaleFactor);
                 try {
                     Volume* levelVolume = VolumeOperatorResample::APPLY_OP(inputHandle, levelDim, VolumeRAM::LINEAR);
-                    lodVolumes_.at(level-1) = levelVolume;
+                    input.lodVolumes_.at(level-1) = levelVolume;
                 }
-                catch (std::bad_alloc&) {
+                catch (std::bad_alloc& e) {
                     LERROR("Failed create level-" << level << " volume (dim=" << levelDim << ") : bad allocation");
-                    return 0;
+                    throw(e);
                 }
             }
         }
@@ -412,55 +395,54 @@ RandomWalkerSolver* RandomWalker::computeRandomWalkerSolution() {
     }
 
     // work resources
-    RandomWalkerSolver* solver = 0;
+    std::unique_ptr<RandomWalkerSolver> solver = 0;
     const VolumeBase* workVolume = 0;
-    VolumeRAM_UInt8* foregroundSeedVol = 0;
-    VolumeRAM_UInt8* backgroundSeedVol = 0;
+    std::unique_ptr<VolumeRAM_UInt8> foregroundSeedVol = 0;
+    std::unique_ptr<VolumeRAM_UInt8> backgroundSeedVol = 0;
 
     // input seed lists
     PointSegmentListGeometryVec3 foregroundSeedsPort;
     PointSegmentListGeometryVec3 backgroundSeedsPort;
-    getSeedListsFromPorts(foregroundSeedsPort, backgroundSeedsPort);
+    getSeedListsFromPorts(input.foregroundGeomSeeds_, foregroundSeedsPort);
+    getSeedListsFromPorts(input.backgroundGeomSeeds_, backgroundSeedsPort);
 
     // input seed volumes
     try {
-        if (inportForegroundSeedsVolume_.hasData()) {
-            const VolumeBase* inputSeedVol = inportForegroundSeedsVolume_.getData();
-            foregroundSeedVol = dynamic_cast<const VolumeRAM_UInt8*>(inputSeedVol->getRepresentation<VolumeRAM>())->clone();
+        if (input.foregroundVolSeeds_) {
+            foregroundSeedVol.reset(dynamic_cast<const VolumeRAM_UInt8*>(input.foregroundVolSeeds_->getRepresentation<VolumeRAM>())->clone());
 
             if (!foregroundSeedVol) {
                 VolumeOperatorConvert converter;
-                Volume* h = converter.apply<uint8_t>(inportForegroundSeedsVolume_.getData());
-                foregroundSeedVol = dynamic_cast<VolumeRAM_UInt8*>(h->getWritableRepresentation<VolumeRAM>());
+                std::unique_ptr<Volume> h(converter.apply<uint8_t>(input.foregroundVolSeeds_));
+                foregroundSeedVol.reset(dynamic_cast<VolumeRAM_UInt8*>(h->getWritableRepresentation<VolumeRAM>()));
                 h->releaseAllRepresentations();
-                delete h;
             }
         }
-        if (inportBackgroundSeedsVolume_.hasData()) {
-            const VolumeBase* inputSeedVol = inportBackgroundSeedsVolume_.getData();
-            backgroundSeedVol = dynamic_cast<const VolumeRAM_UInt8*>(inputSeedVol->getRepresentation<VolumeRAM>())->clone();
+        if (input.backgroundVolSeeds_) {
+            backgroundSeedVol.reset(dynamic_cast<const VolumeRAM_UInt8*>(input.backgroundVolSeeds_->getRepresentation<VolumeRAM>())->clone());
 
             if (!backgroundSeedVol) {
                 VolumeOperatorConvert converter;
-                Volume* h = converter.apply<uint8_t>(inportBackgroundSeedsVolume_.getData());
-                backgroundSeedVol = dynamic_cast<VolumeRAM_UInt8*>(h->getWritableRepresentation<VolumeRAM>());
+                std::unique_ptr<Volume> h(converter.apply<uint8_t>(input.backgroundVolSeeds_));
+                backgroundSeedVol.reset(dynamic_cast<VolumeRAM_UInt8*>(h->getWritableRepresentation<VolumeRAM>()));
                 h->releaseAllRepresentations();
-                delete h;
             }
         }
     }
-    catch (std::bad_alloc&) {
+    catch (std::bad_alloc& e) {
         LERROR("Failed to convert input seed volumes: bad allocation");
-        goto finalize;
+        throw e;
     }
+
+    std::vector<float> newProbabilities;
 
     //
     // Multi Scale Loop
     //
-    for (int level = startLevel; level >= endLevel; level--) {
+    for (int level = input.startLevel_; level >= input.endLevel_; level--) {
 
         LoopRecord loopRecord;
-        loopRecord.iteration = startLevel-level+1;
+        loopRecord.iteration = input.startLevel_-level+1;
         loopRecord.level = level;
         auto iterationStart = clock::now();
 
@@ -478,8 +460,8 @@ RandomWalkerSolver* RandomWalker::computeRandomWalkerSolution() {
         if (level == 0)
             workVolume = inputHandle;
         else {
-            tgtAssert((level-1) < (int)lodVolumes_.size() && lodVolumes_.at(level-1), "lod volume missing");
-            workVolume = lodVolumes_.at(level-1);
+            tgtAssert((level-1) < (int)input.lodVolumes_.size() && input.lodVolumes_.at(level-1), "lod volume missing");
+            workVolume = input.lodVolumes_.at(level-1);
         }
 
         /*
@@ -504,63 +486,52 @@ RandomWalkerSolver* RandomWalker::computeRandomWalkerSolution() {
         // adapted clipping planes
         tgt::ivec3 clipLLF(-1);
         tgt::ivec3 clipURB(-1);
-        if (enableClipping_.get()) {
-            clipLLF = tgt::iround(tgt::vec3(clipRegion_.get().getLLF()) / scaleFactor);
-            clipURB = tgt::iround(tgt::vec3(clipRegion_.get().getURB()) / scaleFactor);
+        if (input.clipRegion_) {
+            clipLLF = tgt::iround(tgt::vec3(input.clipRegion_->getLLF()) / scaleFactor);
+            clipURB = tgt::iround(tgt::vec3(input.clipRegion_->getURB()) / scaleFactor);
         }
 
-        RandomWalkerSeeds* seeds = new RandomWalkerTwoLabelSeeds(foregroundSeeds, backgroundSeeds,
-            foregroundSeedVol, backgroundSeedVol, clipLLF, clipURB);
-
-        /*
-         * 2. Edge weight calculator (independent from scale level)
-         */
-        RandomWalkerWeights* weights = getEdgeWeightsFromProperties();
+        std::unique_ptr<RandomWalkerSeeds> seeds(new RandomWalkerTwoLabelSeeds(foregroundSeeds, backgroundSeeds,
+            foregroundSeedVol.get(), backgroundSeedVol.get(), clipLLF, clipURB));
 
         /*
          * 3. Set up Random Walker system.
          */
         //LINFO("Constructing Random Walker equation system...");
-        delete solver;
-        solver = new RandomWalkerSolver(workVolume, seeds, weights);
+
+        loopRecord.numSeeds = seeds->getNumSeeds();
+        if (RandomWalkerTwoLabelSeeds* twoLabelSeeds = dynamic_cast<RandomWalkerTwoLabelSeeds*>(seeds.get())) {
+            loopRecord.numForegroundSeeds = twoLabelSeeds->getNumForegroundSeeds();
+            loopRecord.numBackgroundSeeds = twoLabelSeeds->getNumBackgroundSeeds();
+        }
+        solver.reset(new RandomWalkerSolver(workVolume, seeds.release(), input.weights_.release()));
         try {
             auto start = clock::now();
             solver->setupEquationSystem();
             auto finish = clock::now();
             //LINFO("...finished: " << std::chrono::duration<float>(finish-start).count() << " sec");
             loopRecord.timeSetup = finish - start;
-            loopRecord.numSeeds = seeds->getNumSeeds();
-            if (RandomWalkerTwoLabelSeeds* twoLabelSeeds = dynamic_cast<RandomWalkerTwoLabelSeeds*>(seeds)) {
-                loopRecord.numForegroundSeeds = twoLabelSeeds->getNumForegroundSeeds();
-                loopRecord.numBackgroundSeeds = twoLabelSeeds->getNumBackgroundSeeds();
-            }
         }
         catch (tgt::Exception& e) {
             LERROR("Failed to setup Random Walker equation system: " << e.what());
-            goto finalize;
+            throw e;
         }
 
         /*
          * 4. Compute Random Walker solution.
          */
-        // select BLAS implementation and preconditioner
-        const VoreenBlas* voreenBlas = getVoreenBlasFromProperties();
-        VoreenBlas::ConjGradPreconditioner precond = VoreenBlas::NoPreconditioner;
-        if (preconditioner_.isSelected("jacobi"))
-            precond = VoreenBlas::Jacobi;
 
         // solve
-        float errorThresh = 1.f / pow(10.f, static_cast<float>(errorThreshold_.get()));
         try {
             float* initialization = nullptr;
             std::vector<float> initializationStorage;
             initializationStorage.reserve(solver->getSystemSize());
-            if(usePrevProbAsInitialization_.get() && prevProbabilities_.size() > 0) {
-                tgtAssert(prevProbabilities_.size() == solver->getNumVoxels(), "Old and new probalities size missmatch");
+            if(!input.prevProbabilities_.empty()) {
+                tgtAssert(input.prevProbabilities_.size() == solver->getNumVoxels(), "Old and new probalities size missmatch");
                 // This is highly depends on the implementation of RandomWalkerSolver!
-                for(size_t i = 0; i < prevProbabilities_.size(); ++i) {
+                for(size_t i = 0; i < input.prevProbabilities_.size(); ++i) {
                     if(!solver->isSeedPoint(i)) {
-                        initializationStorage.push_back(prevProbabilities_[i]);
+                        initializationStorage.push_back(input.prevProbabilities_[i]);
                     }
                 }
                 LINFO("Using existing probalities as initialization");
@@ -568,21 +539,21 @@ RandomWalkerSolver* RandomWalker::computeRandomWalkerSolution() {
             }
 
             auto start = clock::now();
-            int iterations = solver->solve(voreenBlas, initialization, precond, errorThresh, maxIterations_.get());
+            int iterations = solver->solve(input.blas_, initialization, input.precond_, input.errorThreshold_, input.maxIterations_);
             auto finish = clock::now();
             loopRecord.timeSolving = finish - start;
             loopRecord.numIterations = iterations;
 
             tgtAssert(solver->getSystemState() == RandomWalkerSolver::Solved, "System not solved");
-            prevProbabilities_ = std::vector<float>();
-            prevProbabilities_.reserve(solver->getNumVoxels());
+            newProbabilities = std::vector<float>();
+            newProbabilities.reserve(solver->getNumVoxels());
             for(size_t i = 0; i < solver->getNumVoxels(); ++i) {
-                prevProbabilities_.push_back(solver->getProbabilityValue(i));
+                newProbabilities.push_back(solver->getProbabilityValue(i));
             }
         }
         catch (VoreenException& e) {
             LERROR("Failed to compute Random Walker solution: " << e.what());
-            goto finalize;
+            throw e;
         }
 
         loopRecord.probabilityRange = solver->getProbabilityRange();
@@ -590,42 +561,35 @@ RandomWalkerSolver* RandomWalker::computeRandomWalkerSolution() {
         /*
          * 5. Derive seed volumes for next iteration
          */
-        bool lastIteration = (level == lodMinLevel_.get());
+        bool lastIteration = (level == input.endLevel_);
         if (!lastIteration) {
 
             auto start = clock::now();
 
             // generate probability map from current solution
-            VolumeRAM_UInt16* probabilityVolume = 0;
+            std::unique_ptr<VolumeRAM_UInt16> probabilityVolume = 0;
             try {
-                probabilityVolume = solver->generateProbabilityVolume<VolumeRAM_UInt16>();
+                probabilityVolume.reset(solver->generateProbabilityVolume<VolumeRAM_UInt16>());
             }
             catch (VoreenException& e) {
                 LERROR("computeRandomWalkerSolution() Failed to generate probability volume: " << e.what());
-                goto finalize;
+                throw e;
             }
-
-            // previous seed volumes not needed anymore
-            delete foregroundSeedVol;
-            delete backgroundSeedVol;
-            foregroundSeedVol = 0;
-            backgroundSeedVol = 0;
 
             // allocate seed volumes for next iteration
             try {
-                foregroundSeedVol = new VolumeRAM_UInt8(workDim);
-                backgroundSeedVol = new VolumeRAM_UInt8(workDim);
+                foregroundSeedVol.reset(new VolumeRAM_UInt8(workDim));
+                backgroundSeedVol.reset(new VolumeRAM_UInt8(workDim));
             }
-            catch (std::bad_alloc&) {
+            catch (std::bad_alloc& e) {
                 LERROR("computeRandomWalkerSolution() Failed to create seed volumes: bad allocation");
-                delete probabilityVolume;
-                goto finalize;
+                throw e;
             }
 
             // threshold probability map to derive seeds
             float maxProbValue = probabilityVolume->elementRange().y;
-            int foregroundThresh = tgt::iround(lodForegroundSeedThresh_.get()*maxProbValue);
-            int backgroundThresh = tgt::iround(lodBackgroundSeedThresh_.get()*maxProbValue);
+            int foregroundThresh = tgt::iround(input.lodForegroundSeedThresh_*maxProbValue);
+            int backgroundThresh = tgt::iround(input.lodBackgroundSeedThresh_*maxProbValue);
             foregroundSeedVol->clear();
             backgroundSeedVol->clear();
 
@@ -636,23 +600,14 @@ RandomWalkerSolver* RandomWalker::computeRandomWalkerSolution() {
                 else if (probValue >= foregroundThresh)
                     foregroundSeedVol->voxel(i) = 255;
             }
-            delete probabilityVolume;
-            probabilityVolume = 0;
 
             // erode obtained fore- and background seed volumes
-            Volume* erh = VolumeOperatorCubeErosion::APPLY_OP(new Volume(foregroundSeedVol, vec3(1.0f), vec3(0.0f)), lodSeedErosionKernelSize_.getValue()); //FIXME: small memory leak
-            VolumeRAM_UInt8* er = static_cast<VolumeRAM_UInt8*>(erh->getWritableRepresentation<VolumeRAM>());
-            delete foregroundSeedVol;
-            foregroundSeedVol = er;
+            std::unique_ptr<Volume> erh(VolumeOperatorCubeErosion::APPLY_OP(new Volume(foregroundSeedVol.get(), vec3(1.0f), vec3(0.0f)), input.lodSeedErosionKernelSize_)); //FIXME: small memory leak
+            foregroundSeedVol.reset(static_cast<VolumeRAM_UInt8*>(erh->getWritableRepresentation<VolumeRAM>()));
             erh->releaseAllRepresentations();
-            delete erh;
-            erh = VolumeOperatorCubeErosion::APPLY_OP(new Volume(backgroundSeedVol, vec3(1.0f), vec3(0.0f)), lodSeedErosionKernelSize_.getValue()); //FIXME: small memory leak
-            er = static_cast<VolumeRAM_UInt8*>(erh->getWritableRepresentation<VolumeRAM>());
+            erh.reset(VolumeOperatorCubeErosion::APPLY_OP(new Volume(backgroundSeedVol.get(), vec3(1.0f), vec3(0.0f)), input.lodSeedErosionKernelSize_));
+            backgroundSeedVol.reset(static_cast<VolumeRAM_UInt8*>(erh->getWritableRepresentation<VolumeRAM>()));
             erh->releaseAllRepresentations();
-            delete erh;
-            erh = 0;
-            delete backgroundSeedVol;
-            backgroundSeedVol = er;
             for (size_t i=0; i<foregroundSeedVol->getNumVoxels(); i++) {
                     if (foregroundSeedVol->voxel(i) < 255)
                         foregroundSeedVol->voxel(i) = 0;
@@ -678,13 +633,37 @@ RandomWalkerSolver* RandomWalker::computeRandomWalkerSolution() {
 
     tgtAssert(solver, "no random walker solver");
 
-finalize:
-    // we can delete these because they are cloned/converted
-    delete foregroundSeedVol;
-    delete backgroundSeedVol;
+    auto finish = clock::now();
+    return ComputeOutput {
+        std::move(solver), finish - start, std::move(input.lodVolumes_), newProbabilities,
+    };
+}
+void RandomWalker::processComputeOutput(ComputeOutput output) {
+    if (output.solver_ && output.solver_->getSystemState() == RandomWalkerSolver::Solved) {
+        prevProbabilities_ = output.newProbabilities_;
+        lodVolumes_ = output.lodVolumes_;
 
-    // return solver carrying the computed random walker solution
-    return solver;
+        LINFO("Total runtime: " << output.duration_.count() << " sec");
+
+        // put out results
+        if (outportSegmentation_.isConnected())
+            putOutSegmentation(output.solver_.get());
+        else
+            outportSegmentation_.setData(0);
+
+        if (outportProbabilities_.isConnected())
+            putOutProbabilities(output.solver_.get());
+        else
+            outportProbabilities_.setData(0);
+
+        if (outportEdgeWeights_.isConnected())
+            putOutEdgeWeights(output.solver_.get());
+        else
+            outportEdgeWeights_.setData(0);
+    }
+    else {
+        LERROR("Failed to compute Random Walker solution");
+    }
 }
 
 void RandomWalker::putOutSegmentation(const RandomWalkerSolver* solver) {
@@ -721,44 +700,6 @@ void RandomWalker::putOutSegmentation(const RandomWalkerSolver* solver) {
     }
 }
 
-void RandomWalker::getSeedListsFromPorts(PointSegmentListGeometry<tgt::vec3>& foregroundSeeds,
-    PointSegmentListGeometry<tgt::vec3>& backgroundSeeds) const {
-
-    std::vector<const Geometry*> foregroundGeom = inportForegroundSeeds_.getAllData();
-    std::vector<const Geometry*> backgroundGeom = inportBackgroundSeeds_.getAllData();
-
-    for (size_t i=0; i<foregroundGeom.size(); i++) {
-        const PointSegmentListGeometry<tgt::vec3>* seedList = dynamic_cast<const PointSegmentListGeometry<tgt::vec3>* >(foregroundGeom.at(i));
-        if (!seedList)
-            LWARNING("Invalid geometry. PointSegmentListGeometry<vec3> expected.");
-        else {
-            auto transformMat = seedList->getTransformationMatrix();
-            for (int j=0; j<seedList->getNumSegments(); j++) {
-                std::vector<tgt::vec3> points;
-                for(auto& vox : seedList->getSegment(j)) {
-                    points.push_back(transformMat.transform(vox));
-                }
-                foregroundSeeds.addSegment(points);
-            }
-        }
-    }
-
-    for (size_t i=0; i<backgroundGeom.size(); i++) {
-        const PointSegmentListGeometry<tgt::vec3>* seedList = dynamic_cast<const PointSegmentListGeometry<tgt::vec3>* >(backgroundGeom.at(i));
-        if (!seedList)
-            LWARNING("Invalid geometry. PointSegmentListGeometry<vec3> expected.");
-        else {
-            auto transformMat = seedList->getTransformationMatrix();
-            for (int j=0; j<seedList->getNumSegments(); j++) {
-                std::vector<tgt::vec3> points;
-                for(auto& vox : seedList->getSegment(j)) {
-                    points.push_back(transformMat.transform(vox));
-                }
-                backgroundSeeds.addSegment(points);
-            }
-        }
-    }
-}
 
 RandomWalkerWeights* RandomWalker::getEdgeWeightsFromProperties() const {
     float beta = static_cast<float>(1<<beta_.get());
@@ -884,11 +825,6 @@ void RandomWalker::putOutEdgeWeights(const RandomWalkerSolver* solver) {
     outportEdgeWeights_.setData(ewHandle);
 }
 
-void RandomWalker::computeButtonClicked() {
-    recomputeRandomWalker_ = true;
-    invalidate(Processor::INVALID_RESULT);
-}
-
 void RandomWalker::lodMinLevelChanged() {
     lodMaxLevel_.set(std::max(lodMaxLevel_.get(), lodMinLevel_.get()));
 
@@ -931,10 +867,6 @@ void RandomWalker::updateGuiState() {
     lodMaxResolution_.setVisibleFlag(lodEnabled);
 
     resampleOutputVolumes_.setVisibleFlag(lodEnabled);
-}
-
-void RandomWalker::clearCache()  {
-    cache_.clearCache();
 }
 
 }   // namespace
