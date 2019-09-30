@@ -23,11 +23,41 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "thresholdingfilter.h"
+#ifndef VRN_BINARIZATIONFILTERPROPERTIES_H
+#define VRN_BINARIZATIONFILTERPROPERTIES_H
 
-#include "slicereader.h"
+#include "filterproperties.h"
+
+#include "../volumefiltering/binarizationfilter.h"
 
 namespace voreen {
 
+class BinarizationFilterProperties : public FilterProperties {
+public:
+    BinarizationFilterProperties();
 
-} // namespace voreen
+    virtual std::string getVolumeFilterName() const;
+
+    virtual void adjustPropertiesToInput(const VolumeBase& input);
+
+    virtual VolumeFilter* getVolumeFilter(const VolumeBase& volume, int instanceId) const;
+    virtual void restoreInstance(int instanceId);
+    virtual void storeInstance(int instanceId);
+    virtual void removeInstance(int instanceId);
+    virtual void addProperties();
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+
+private:
+
+    struct Settings {
+        float threshold_;
+    };
+    std::map<int, Settings> instanceSettings_;
+
+    FloatProperty threshold_;
+};
+
+}
+
+#endif

@@ -35,7 +35,7 @@ const std::string FilterProperties::loggerCat_ = "voreen.base.VolumeFilterList";
 FilterProperties::~FilterProperties() {
 }
 
-const std::vector<Property*> FilterProperties::getProperties() const {
+const std::vector<Property*>& FilterProperties::getProperties() const {
     return properties_;
 }
 

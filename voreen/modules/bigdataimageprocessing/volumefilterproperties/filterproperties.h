@@ -54,7 +54,7 @@ public:
 
     virtual ~FilterProperties();
 
-    const std::vector<Property*> getProperties() const;
+    const std::vector<Property*>& getProperties() const;
 
     void storeVisibility();
     void restoreVisibility();

@@ -25,13 +25,12 @@
 
 #include "volumefilterlist.h"
 
-#include "voreen/core/ports/conditions/portconditionvolumetype.h"
-
 #include "modules/hdf5/io/hdf5volumereader.h"
 #include "modules/hdf5/io/hdf5volumewriter.h"
 #include "modules/hdf5/io/hdf5filevolume.h"
 
 // Include actual Volume Filters.
+#include "../volumefiltering/binarizationfilter.h"
 #include "../volumefiltering/binarymedianfilter.h"
 #include "../volumefiltering/gaussianfilter.h"
 #include "../volumefiltering/medianfilter.h"
@@ -40,6 +39,7 @@
 #include "../volumefiltering/thresholdingfilter.h"
 
 // Include their properties.
+#include "../volumefilterproperties/binarizationfilterproperties.h"
 #include "../volumefilterproperties/binarymedianfilterproperties.h"
 #include "../volumefilterproperties/gaussianfilterproperties.h"
 #include "../volumefilterproperties/medianfilterproperties.h"
@@ -73,14 +73,15 @@ VolumeFilterList::VolumeFilterList()
     setPropertyGroupGuiName("filter", "Filter");
 
     // Add filters (this will add their properties!)
-    // IMPORANT: Add new filter at the bottom of this block and do not change the order,
-    // otherwise existing workspaces will be broken!
+    // Note: The items will appear in the order below.
+    // Reordering and removal of single items is possible.
+    addFilter(new BinarizationFilterProperties());
     addFilter(new BinaryMedianFilterProperties());
-    addFilter(new MedianFilterProperties());
     addFilter(new GaussianFilterProperties());
+    addFilter(new MedianFilterProperties());
     addFilter(new MorphologyFilterProperties());
-    addFilter(new ThresholdingFilterProperties());
     addFilter(new ResampleFilterProperties());
+    addFilter(new ThresholdingFilterProperties());
 
     // Technical stuff.
     addProperty(enabled_);
@@ -136,9 +137,10 @@ void VolumeFilterList::serialize(Serializer& s) const {
 void VolumeFilterList::deserialize(Deserializer& s) {
     AsyncComputeProcessor<ComputeInput, ComputeOutput>::deserialize(s);
     for(size_t i=0; i < filterProperties_.size(); i++) {
+        // In case a new filter was added, it won't be able to be deserialized.
         try {
             filterProperties_[i]->deserialize(s);
-        } catch(voreen::SerializationException& e) {
+        } catch(SerializationException& e) {
             LWARNING("Failed to deserialize Filterproperty '" << filterProperties_[i]->getVolumeFilterName() << "': " << e.what());
         }
     }

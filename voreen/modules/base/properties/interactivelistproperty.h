@@ -140,7 +140,7 @@ public:
      *
      * @return indices of available items
      */
-    const std::vector<int>& getInputIndices() const;
+    std::vector<int> getInputIndices() const;
 
     /**
      * Returns all instances of the item list.
@@ -251,7 +251,6 @@ private:
     //------------------
     NameGenerator nameGenerator_;
     std::vector<std::string> items_;
-    std::vector<int> inputItemIds_;
     std::vector<Instance> instances_;
 
     bool allowDuplication_;

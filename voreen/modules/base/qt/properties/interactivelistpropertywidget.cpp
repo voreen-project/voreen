@@ -81,9 +81,10 @@ public:
         if(!selectedItem)
             return;
 
+        int itemIdx = property_->getInputIndices()[row(selectedItem)];
         QByteArray data;
         QDataStream dataStream(&data, QIODevice::WriteOnly);
-        dataStream << row(selectedItem);
+        dataStream << itemIdx;
 
         QDrag* drag = new QDrag(this);
         QMimeData* mimeData = new QMimeData;
@@ -148,7 +149,6 @@ public:
         setMinimumHeight(150);
         setContextMenuPolicy(Qt::CustomContextMenu);
         connect(this, &InstanceListWidget::customContextMenuRequested, this, &InstanceListWidget::showContextMenu);
-        connect(this, &InstanceListWidget::itemChanged, this, &InstanceListWidget::textChanged);
     }
 
     void rebuild() {
@@ -239,12 +239,12 @@ public:
             event->acceptProposedAction();
         }
         else if(event->mimeData()->hasFormat("filter/item")) {
-            int item = 0;
+            int itemIdx = 0;
             QByteArray data = event->mimeData()->data("filter/item");
             QDataStream dataStream(&data, QIODevice::ReadOnly);
-            dataStream >> item;
+            dataStream >> itemIdx;
 
-            property_->addInstance(property_->getItems()[item]);
+            property_->addInstance(property_->getItems()[itemIdx]);
             event->acceptProposedAction();
         }
         else {
@@ -292,15 +292,32 @@ public:
 
 public slots:
 
+    /**
+     * This function will show the context menu for the item below the cursor.
+     */
     void showContextMenu(const QPoint& pos) {
-        QListWidgetItem* item = itemAt(pos);
-        if(item) {
+        QListWidgetItem* selectedItem = itemAt(pos);
+        if(selectedItem) {
             QMenu menu;
-            menu.addAction(tr("Rename"), [this, item] { editItem(item); });
+            // Note: using a lambda function would be good here, but it's supported since Qt version 5.6, only.
+            // Ubuntu 16.04 only provides 5.5.1.
+            menu.addAction(tr("Rename"), this, &InstanceListWidget::renameItem);
             menu.exec(mapToGlobal(pos));
         }
     }
 
+    /**
+     * So this slot has to be created in order for the rename action in the context menu (see above) to be executed.
+     */
+    void renameItem() {
+        QListWidgetItem* selectedItem = itemAt(dragStartPosition_);
+        tgtAssert(selectedItem, "item null");
+        editItem(selectedItem);
+    }
+
+    /**
+     * This slot is triggered, when the item got its name, be it after creation or change.
+     */
     void textChanged(QListWidgetItem* item) {
         int instanceIdx = row(item);
         InteractiveListProperty::Instance& instance = property_->getInstances()[instanceIdx];
@@ -311,6 +328,7 @@ public slots:
 
             // TODO: The state is well defined here, since both instance and widget are up to date.
             //  However, owning processors have to be informed in order to be up to date as well.
+            property_->invalidate();
         }
         // Otherwise, discard.
         else {

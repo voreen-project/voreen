@@ -396,10 +396,7 @@ void FieldParallelPlotViewer::renderPlot() {
     shader->setUniform("rangeY_", zoomY_.get());
 
     // Setup selection.
-    std::vector<GLint> runs(ensembleInport_.getData()->getRuns().size());
-    for (size_t i = 0; i < runs.size(); i++)
-        runs[i] = 0;
-
+    std::vector<GLint> runs(ensembleInport_.getData()->getRuns().size(), 0);
     for (int i : renderedRuns_.getSelectedRowIndices())
         runs[i] = 1;
 

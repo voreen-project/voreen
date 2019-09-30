@@ -26,7 +26,7 @@
 #ifndef VRN_THRESHOLDINGFILTER_H
 #define VRN_THRESHOLDINGFILTER_H
 
-#include "volumefilter.h"
+#include "parallelvolumefilter.h"
 
 #include <functional>
 
@@ -37,21 +37,14 @@ enum ThresholdingStrategyType {
     UPPER_T,
 };
 
-class ThresholdingFilter : public VolumeFilter {
+template<typename T>
+class ThresholdingFilter : public ParallelVolumeFilter<ParallelFilterValue<T>, ParallelFilterValue<T>> {
 public:
 
-    ThresholdingFilter(float threshold, float replacement, ThresholdingStrategyType thresholdingStrategyType, const std::string& sliceBaseType);
-    ThresholdingFilter(float threshold, ThresholdingStrategyType thresholdingStrategyType);
+    ThresholdingFilter(float threshold, const T& replacement, ThresholdingStrategyType thresholdingStrategyType,  const std::string& sliceBaseType);
     virtual ~ThresholdingFilter();
 
-    int zExtent() const;
-    const std::string& getSliceBaseType() const;
-
-    // For now we only support single channel volumes
-    size_t getNumInputChannels() const { return 1; };
-    size_t getNumOutputChannels() const { return 1; };
-
-    std::unique_ptr<VolumeRAM> getFilteredSlice(const CachingSliceReader* src, int z) const;
+    ParallelFilterValue<T> getValue(const typename ThresholdingFilter<T>::Sample& sample, const tgt::ivec3& pos) const;
 
     ThresholdingStrategyType getThresholdingStrategyType() const;
 
@@ -59,12 +52,70 @@ private:
 
     std::function<bool(float, float)> strategy_;
 
-    bool binarize_;
     const float threshold_;
-    const float replacement_;
+    const T replacement_;
     const ThresholdingStrategyType thresholdingStrategyType_;
-    const std::string sliceBaseType_;
 };
+
+// Implementation
+
+template<typename T>
+ThresholdingFilter<T>::ThresholdingFilter(float threshold, const T& replacement, ThresholdingStrategyType thresholdingStrategyType, const std::string& sliceBaseType)
+    : ParallelVolumeFilter<ParallelFilterValue<T>, ParallelFilterValue<T>>(0, SamplingStrategy<ParallelFilterValue<T>>::ASSERT_FALSE, sliceBaseType)
+    , threshold_(threshold)
+    , replacement_(replacement)
+    , thresholdingStrategyType_(thresholdingStrategyType)
+{
+    switch (thresholdingStrategyType_) {
+    case LOWER_T:
+        strategy_ = std::less<T>();
+        break;
+    case UPPER_T:
+        strategy_ = std::greater<T>();
+        break;
+    default:
+        tgtAssert(false, "Unimplemented Thresholding Strategy");
+        break;
+    }
+}
+
+template<typename T>
+ThresholdingFilter<T>::~ThresholdingFilter() {
+}
+
+template<typename T>
+static inline float getAbsoluteMagnitudeInternal(const T& value, typename std::enable_if<std::is_same<T, float>::value>::type* = 0) {
+    return value;
+}
+
+template<typename T>
+static inline float getAbsoluteMagnitudeInternal(const T& value, typename std::enable_if<!std::is_same<T, float>::value>::type* = 0) {
+    return tgt::length(value);
+}
+
+template<typename T>
+ParallelFilterValue<T> ThresholdingFilter<T>::getValue(const typename ThresholdingFilter<T>::Sample& sample, const tgt::ivec3& pos) const {
+
+    T sampleValue = sample(pos);
+    float value = getAbsoluteMagnitudeInternal<T>(sampleValue);
+    bool replace = strategy_(value, threshold_);
+
+    if (replace) {
+        value = replacement_;
+    }
+
+    return value;
+}
+
+template<typename T>
+ThresholdingStrategyType ThresholdingFilter<T>::getThresholdingStrategyType() const {
+    return thresholdingStrategyType_;
+}
+
+typedef ThresholdingFilter<float>     ThresholdingFilter1D;
+typedef ThresholdingFilter<tgt::vec2> ThresholdingFilter2D;
+typedef ThresholdingFilter<tgt::vec3> ThresholdingFilter3D;
+typedef ThresholdingFilter<tgt::vec4> ThresholdingFilter4D;
 
 } // namespace voreen
 

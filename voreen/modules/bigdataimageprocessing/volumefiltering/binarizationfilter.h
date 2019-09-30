@@ -23,11 +23,26 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "thresholdingfilter.h"
+#ifndef VRN_BINARIZATIONFILTER_H
+#define VRN_BINARIZATIONFILTER_H
 
-#include "slicereader.h"
+#include "parallelvolumefilter.h"
 
 namespace voreen {
 
+class BinarizationFilter : public ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue1D> {
+public:
+
+    BinarizationFilter(float threshold);
+    virtual ~BinarizationFilter();
+
+    ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos) const;
+
+private:
+
+    const float threshold_;
+};
 
 } // namespace voreen
+
+#endif // VRN_THRESHOLDINGFILTER_H

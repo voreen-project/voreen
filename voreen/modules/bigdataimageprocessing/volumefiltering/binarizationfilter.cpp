@@ -23,11 +23,23 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "thresholdingfilter.h"
-
-#include "slicereader.h"
+#include "binarizationfilter.h"
 
 namespace voreen {
 
+static const std::string BINARIZATION_SLICE_BASE_TYPE = "uint8";
+
+BinarizationFilter::BinarizationFilter(float threshold)
+    : ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue1D>(0, SamplingStrategy<ParallelFilterValue1D>::ASSERT_FALSE, BINARIZATION_SLICE_BASE_TYPE)
+    , threshold_(threshold)
+{
+}
+
+BinarizationFilter::~BinarizationFilter() {
+}
+
+ParallelFilterValue1D BinarizationFilter::getValue(const Sample& sample, const tgt::ivec3& pos) const {
+    return sample(pos) < threshold_ ? 0.0f : 1.0f;
+}
 
 } // namespace voreen

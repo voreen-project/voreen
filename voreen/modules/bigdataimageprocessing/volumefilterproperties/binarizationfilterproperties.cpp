@@ -1,3 +1,5 @@
+
+
 /***********************************************************************************
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
@@ -23,21 +25,13 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "thresholdingfilterproperties.h"
+#include "binarizationfilterproperties.h"
 
 namespace voreen {
 
-ThresholdingFilterProperties::ThresholdingFilterProperties()
-    : thresholdValue_(getId("thresholdValue"), "Threshold Value", 0, 0, 1)
-    , replacementValue_(getId("replacementValue"), "Replacement Value", 0, 0, 1)
-    , thresholdingStrategyType_(getId("thresholdingStrategyType"), "Thresholding Strategy", ThresholdingStrategyType::LOWER_T)
+BinarizationFilterProperties::BinarizationFilterProperties()
+    : threshold_(getId("threshold"), "Threshold", 0.5f, 0.0f, 1.0f)
 {
-    thresholdingStrategyType_.addOption("lower", "Lower", ThresholdingStrategyType::LOWER_T);
-    thresholdingStrategyType_.addOption("upper", "Upper", ThresholdingStrategyType::UPPER_T);
-
-    // Update property state.
-    thresholdingStrategyType_.invalidate();
-
     // Store default settings.
     storeInstance(DEFAULT_SETTINGS);
 
@@ -45,66 +39,40 @@ ThresholdingFilterProperties::ThresholdingFilterProperties()
     addProperties();
 }
 
-std::string ThresholdingFilterProperties::getVolumeFilterName() const {
-    return "Thresholding Filter";
+std::string BinarizationFilterProperties::getVolumeFilterName() const {
+    return "Binarization";
 }
 
-void ThresholdingFilterProperties::adjustPropertiesToInput(const VolumeBase& input) {
-    if (!input.hasDerivedData<VolumeMinMax>()) {
-        LINFO("Calculating VolumeMinMax. This may take a while...");
-    }
-    const VolumeMinMax* mm = input.getDerivedData<VolumeMinMax>();
-
-    thresholdValue_.setMinValue(mm->getMin());
-    thresholdValue_.setMaxValue(mm->getMax());
-    replacementValue_.setMinValue(mm->getMin());
-    replacementValue_.setMaxValue(mm->getMax());
+void BinarizationFilterProperties::adjustPropertiesToInput(const VolumeBase& input) {
 }
 
-VolumeFilter* ThresholdingFilterProperties::getVolumeFilter(const VolumeBase& volume, int instanceId) const {
+VolumeFilter* BinarizationFilterProperties::getVolumeFilter(const VolumeBase& volume, int instanceId) const {
     if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
         return nullptr;
     }
     Settings settings = instanceSettings_.at(instanceId);
-    RealWorldMapping rwm;
-    if (volume.hasMetaData(VolumeBase::META_DATA_NAME_REAL_WORLD_MAPPING)) {
-        rwm = volume.getRealWorldMapping();
-    }
-
-    // Currently, only 1D thresholding is supported.
-    return new ThresholdingFilter1D(
-            rwm.realWorldToNormalized(settings.thresholdValue_),
-            rwm.realWorldToNormalized(settings.replacementValue_),
-            settings.thresholdingStrategyType_,
-            volume.getBaseType()
-    );
+    return new BinarizationFilter(settings.threshold_);
 }
-void ThresholdingFilterProperties::restoreInstance(int instanceId) {
+void BinarizationFilterProperties::restoreInstance(int instanceId) {
     auto iter = instanceSettings_.find(instanceId);
     if (iter == instanceSettings_.end()) {
         instanceSettings_[instanceId] = instanceSettings_[DEFAULT_SETTINGS];
     }
 
     Settings settings = instanceSettings_[instanceId];
-    thresholdValue_.set(settings.thresholdValue_);
-    replacementValue_.set(settings.replacementValue_);
-    thresholdingStrategyType_.selectByValue(settings.thresholdingStrategyType_);
+    threshold_.set(settings.threshold_);
 }
-void ThresholdingFilterProperties::storeInstance(int instanceId) {
+void BinarizationFilterProperties::storeInstance(int instanceId) {
     Settings& settings = instanceSettings_[instanceId];
-    settings.thresholdValue_ = thresholdValue_.get();
-    settings.replacementValue_ = replacementValue_.get();
-    settings.thresholdingStrategyType_ = thresholdingStrategyType_.getValue();
+    settings.threshold_ = threshold_.get();
 }
-void ThresholdingFilterProperties::removeInstance(int instanceId) {
+void BinarizationFilterProperties::removeInstance(int instanceId) {
     instanceSettings_.erase(instanceId);
 }
-void ThresholdingFilterProperties::addProperties() {
-    properties_.push_back(&thresholdValue_);
-    properties_.push_back(&replacementValue_);
-    properties_.push_back(&thresholdingStrategyType_);
+void BinarizationFilterProperties::addProperties() {
+    properties_.push_back(&threshold_);
 }
-void ThresholdingFilterProperties::serialize(Serializer& s) const {
+void BinarizationFilterProperties::serialize(Serializer& s) const {
     std::vector<int> names;
     std::vector<Settings> settings;
     for (const auto& pair : instanceSettings_) {
@@ -114,7 +82,7 @@ void ThresholdingFilterProperties::serialize(Serializer& s) const {
     s.serializeBinaryBlob(getId("names"), names);
     s.serializeBinaryBlob(getId("settings"), settings);
 }
-void ThresholdingFilterProperties::deserialize(Deserializer& s) {
+void BinarizationFilterProperties::deserialize(Deserializer& s) {
     std::vector<int> names;
     std::vector<Settings> settings;
     s.deserializeBinaryBlob(getId("names"), names);

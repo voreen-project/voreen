@@ -106,18 +106,19 @@ InteractiveListProperty::~InteractiveListProperty()
 
 void InteractiveListProperty::serialize(Serializer& s) const {
     Property::serialize(s);
-    s.serialize("items", items_);
-    s.serialize("inputItemIds", inputItemIds_);
+    s.serialize("items", items_); // Serialize to check for changes in item list on next deserialization.
     s.serialize("instancesExt", instances_);
 
 }
 void InteractiveListProperty::deserialize(Deserializer& s) {
     Property::deserialize(s);
-    s.deserialize("items", items_);
-    s.deserialize("inputItemIds", inputItemIds_);
 
+    std::vector<std::string> oldItems;
+    s.deserialize("items", oldItems);
+
+    std::vector<Instance> oldInstances;
     try {
-        s.deserialize("instancesExt", instances_);
+        s.deserialize("instancesExt", oldInstances);
     }
     catch (SerializationNoSuchDataException&) {
         s.removeLastError();
@@ -127,12 +128,40 @@ void InteractiveListProperty::deserialize(Deserializer& s) {
         std::vector<DeprecatedInstance> deprecatedInstances;
         s.deserializeBinaryBlob("instances", deprecatedInstances);
 
-        instances_.clear();
         for(const DeprecatedInstance& instance : deprecatedInstances) {
             Instance instanceExt(instance.itemId_, instance.instanceId_);
             instanceExt.setActive(true);
             instanceExt.setName(nameGenerator_(instanceExt));
-            instances_.push_back(instanceExt);
+            oldInstances.push_back(instanceExt);
+        }
+    }
+
+    // Reordering items invalidates instances.
+    // Therefore, we need to remap old ids to their current equivalent.
+
+    // Figure out mapping between old and new item ids.
+    std::map<int, int> itemIdMappingTable;
+    for(size_t oldItemIdx=0; oldItemIdx<oldItems.size(); oldItemIdx++) {
+        for(size_t newItemIdx=0; newItemIdx<items_.size(); newItemIdx++) {
+            if(oldItems[oldItemIdx] == items_[newItemIdx]) {
+                itemIdMappingTable[oldItemIdx] = newItemIdx;
+                break;
+            }
+        }
+    }
+
+    // Note: Those old Item ids without a table entry have been deleted.
+    // Note: From now on, we no longer need the old Items.
+
+    // Only add instances, whose item still exists.
+    for(const Instance& oldInstance : oldInstances) {
+        auto it = itemIdMappingTable.find(oldInstance.getItemId());
+        if(it != itemIdMappingTable.end()) {
+            // Instance id remains.
+            Instance instance(itemIdMappingTable[it->second], oldInstance.getInstanceId());
+            instance.setActive(oldInstance.isActive());
+            instance.setName(oldInstance.getName());
+            instances_.push_back(instance);
         }
     }
 }
@@ -146,20 +175,14 @@ void InteractiveListProperty::reset() {
 
 void InteractiveListProperty::clear() {
     items_.clear();
-    inputItemIds_.clear();
     instances_.clear();
     selectedInstance_ = -1;
     invalidate();
 }
 
 void InteractiveListProperty::setItems(const std::vector<std::string>& items) {
-    inputItemIds_.clear();
     instances_.clear();
     items_ = items;
-
-    for(size_t i=0; i<getNumItems(); i++) {
-        inputItemIds_.push_back(static_cast<int>(i));
-    }
 
     selectedInstance_ = -1;
 
@@ -169,7 +192,6 @@ void InteractiveListProperty::setItems(const std::vector<std::string>& items) {
 void InteractiveListProperty::addItem(const std::string& item) {
     tgtAssert(std::find(items_.begin(), items_.end(), item) == items_.end(), "Item already added");
     items_.push_back(item);
-    inputItemIds_.push_back(static_cast<int>(items_.size()-1));
 
     invalidate();
 }
@@ -191,8 +213,21 @@ const std::vector<std::string>& InteractiveListProperty::getItems() const {
     return items_;
 }
 
-const std::vector<int>& InteractiveListProperty::getInputIndices() const {
-    return inputItemIds_;
+std::vector<int> InteractiveListProperty::getInputIndices() const {
+    if(allowDuplication_) {
+        std::vector<int> inputIndices(items_.size());
+        std::iota(inputIndices.begin(), inputIndices.end(), 0);
+        return inputIndices;
+    }
+    else {
+        std::vector<int> inputIndices;
+        for (size_t i=0; i<items_.size(); i++) {
+            if (!hasInstance(items_[i])) {
+                inputIndices.push_back(i);
+            }
+        }
+        return inputIndices;
+    }
 }
 
 const std::vector<InteractiveListProperty::Instance>& InteractiveListProperty::getInstances() const {
@@ -217,14 +252,6 @@ void InteractiveListProperty::addInstance(const std::string& item, int pos) {
     int index = getIndexOfItem(item);
     tgtAssert(index >= 0, "Item not contained");
 
-    auto iter = std::find(inputItemIds_.begin(), inputItemIds_.end(), index);
-    if(iter == inputItemIds_.end())
-        return;
-
-    if(!allowDuplication_) {
-        inputItemIds_.erase(iter);
-    }
-
     Instance instance = createInstance(index);
     if(pos < 0) {
         instances_.push_back(instance);
@@ -248,14 +275,7 @@ void InteractiveListProperty::removeInstance(int instanceId) {
         return;
 
     auto instance = instances_.begin() + idx;
-    int itemId = instance->getItemId();
     instances_.erase(instance);
-
-    if(!allowDuplication_) {
-        size_t pos = 0;
-        while(pos < inputItemIds_.size() && inputItemIds_[pos] < itemId) pos++;
-        inputItemIds_.insert(inputItemIds_.begin()+pos, itemId);
-    }
 
     if(selectedInstance_ > -1
        && (selectedInstance_ == static_cast<int>(instances_.size())

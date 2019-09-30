@@ -70,6 +70,7 @@ SET(MOD_CORE_SOURCES
     # Volumefiltering
     ${MOD_DIR}/volumefiltering/slicereader.cpp
     ${MOD_DIR}/volumefiltering/parallelvolumefilter.cpp
+    ${MOD_DIR}/volumefiltering/binarizationfilter.cpp
     ${MOD_DIR}/volumefiltering/binarymedianfilter.cpp
     ${MOD_DIR}/volumefiltering/gaussianfilter.cpp
     ${MOD_DIR}/volumefiltering/medianfilter.cpp
@@ -79,6 +80,7 @@ SET(MOD_CORE_SOURCES
 
     # Filter Properties
     ${MOD_DIR}/volumefilterproperties/filterproperties.cpp
+    ${MOD_DIR}/volumefilterproperties/binarizationfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/binarymedianfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/gaussianfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/medianfilterproperties.cpp
@@ -105,6 +107,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/volumefiltering/slicereader.h
     ${MOD_DIR}/volumefiltering/volumefilter.h
     ${MOD_DIR}/volumefiltering/parallelvolumefilter.h
+    ${MOD_DIR}/volumefiltering/binarizationfilter.h
     ${MOD_DIR}/volumefiltering/binarymedianfilter.h
     ${MOD_DIR}/volumefiltering/gaussianfilter.h
     ${MOD_DIR}/volumefiltering/medianfilter.h
@@ -113,6 +116,7 @@ SET(MOD_CORE_HEADERS
 
     # Filter Properties
     ${MOD_DIR}/volumefilterproperties/filterproperties.h
+    ${MOD_DIR}/volumefilterproperties/binarizationfilterproperties.h
     ${MOD_DIR}/volumefilterproperties/binarymedianfilterproperties.h
     ${MOD_DIR}/volumefilterproperties/gaussianfilterproperties.h
     ${MOD_DIR}/volumefilterproperties/medianfilterproperties.h
