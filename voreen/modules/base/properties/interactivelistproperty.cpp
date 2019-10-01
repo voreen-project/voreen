@@ -116,26 +116,6 @@ void InteractiveListProperty::deserialize(Deserializer& s) {
     std::vector<std::string> oldItems;
     s.deserialize("items", oldItems);
 
-    std::vector<Instance> oldInstances;
-    try {
-        s.deserialize("instancesExt", oldInstances);
-    }
-    catch (SerializationNoSuchDataException&) {
-        s.removeLastError();
-        LINFO("trying old deserialization");
-
-        struct DeprecatedInstance { int itemId_; int instanceId_; };
-        std::vector<DeprecatedInstance> deprecatedInstances;
-        s.deserializeBinaryBlob("instances", deprecatedInstances);
-
-        for(const DeprecatedInstance& instance : deprecatedInstances) {
-            Instance instanceExt(instance.itemId_, instance.instanceId_);
-            instanceExt.setActive(true);
-            instanceExt.setName(nameGenerator_(instanceExt));
-            oldInstances.push_back(instanceExt);
-        }
-    }
-
     // Reordering items invalidates instances.
     // Therefore, we need to remap old ids to their current equivalent.
 
@@ -150,15 +130,38 @@ void InteractiveListProperty::deserialize(Deserializer& s) {
         }
     }
 
-    // Note: Those old Item ids without a table entry have been deleted.
-    // Note: From now on, we no longer need the old Items.
+    std::vector<Instance> oldInstances;
+    try {
+        s.deserialize("instancesExt", oldInstances);
+    }
+    catch (SerializationNoSuchDataException&) {
+        // TODO: remove before new release!
+        s.removeLastError();
+        LINFO("trying old deserialization");
+
+        struct DeprecatedInstance { int itemId_; int instanceId_; };
+        std::vector<DeprecatedInstance> deprecatedInstances;
+        s.deserializeBinaryBlob("instances", deprecatedInstances);
+
+        for(const DeprecatedInstance& instance : deprecatedInstances) {
+            auto it = itemIdMappingTable.find(instance.itemId_);
+            if(it != itemIdMappingTable.end()) {
+                Instance instanceExt(it->second, instance.instanceId_);
+                instanceExt.setActive(true);
+                instanceExt.setName(nameGenerator_(instanceExt));
+                instances_.push_back(instanceExt);
+            }
+        }
+
+        return;
+    }
 
     // Only add instances, whose item still exists.
     for(const Instance& oldInstance : oldInstances) {
         auto it = itemIdMappingTable.find(oldInstance.getItemId());
         if(it != itemIdMappingTable.end()) {
             // Instance id remains.
-            Instance instance(itemIdMappingTable[it->second], oldInstance.getInstanceId());
+            Instance instance(it->second, oldInstance.getInstanceId());
             instance.setActive(oldInstance.isActive());
             instance.setName(oldInstance.getName());
             instances_.push_back(instance);

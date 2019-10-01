@@ -328,7 +328,7 @@ public slots:
 
             // TODO: The state is well defined here, since both instance and widget are up to date.
             //  However, owning processors have to be informed in order to be up to date as well.
-            property_->invalidate();
+            //property_->invalidate();
         }
         // Otherwise, discard.
         else {
