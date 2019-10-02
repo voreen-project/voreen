@@ -145,7 +145,7 @@ void InteractiveListProperty::deserialize(Deserializer& s) {
 
         for(const DeprecatedInstance& instance : deprecatedInstances) {
             auto it = itemIdMappingTable.find(instance.itemId_);
-            if(it != itemIdMappingTable.end()) {
+            if(it != itemIdMappingTable.end() && !allowDuplication_ && !hasInstance(items_[it->second])) {
                 Instance instanceExt(it->second, instance.instanceId_);
                 instanceExt.setActive(true);
                 instanceExt.setName(nameGenerator_(instanceExt));
@@ -159,7 +159,7 @@ void InteractiveListProperty::deserialize(Deserializer& s) {
     // Only add instances, whose item still exists.
     for(const Instance& oldInstance : oldInstances) {
         auto it = itemIdMappingTable.find(oldInstance.getItemId());
-        if(it != itemIdMappingTable.end()) {
+        if(it != itemIdMappingTable.end() && !allowDuplication_ && !hasInstance(items_[it->second])) {
             // Instance id remains.
             Instance instance(it->second, oldInstance.getInstanceId());
             instance.setActive(oldInstance.isActive());
@@ -252,6 +252,10 @@ std::vector<InteractiveListProperty::Instance> InteractiveListProperty::getInsta
 }
 
 void InteractiveListProperty::addInstance(const std::string& item, int pos) {
+
+    if(!allowDuplication_ && hasInstance(item))
+        return;
+
     int index = getIndexOfItem(item);
     tgtAssert(index >= 0, "Item not contained");
 
