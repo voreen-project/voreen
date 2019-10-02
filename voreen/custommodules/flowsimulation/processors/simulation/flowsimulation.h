@@ -61,8 +61,8 @@ class VRN_CORE_API FlowSimulation : public AsyncComputeProcessor<FlowSimulationI
 public:
     FlowSimulation();
     virtual ~FlowSimulation();
-    virtual Processor* create() const         { return new FlowSimulation();    }
 
+    virtual Processor* create() const         { return new FlowSimulation();    }
     virtual std::string getClassName() const  { return "FlowSimulation";        }
     virtual std::string getCategory() const   { return "Simulation";            }
     virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }

@@ -29,7 +29,6 @@
 
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 
-#include "voreen/core/datastructures/volume/volumefactory.h"
 #include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/ports/conditions/portconditionvolumelist.h"
 
@@ -569,7 +568,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 }
                 case FP_POWERLAW:
                 {
-                    T n = 1.03 * std::log(converter.getReynoldsNumber()) - 3.6; // Taken by OLB documentation.
+                    T n = 1.03 * std::log(converter.getReynoldsNumber()) - 3.6; // Taken from OLB documentation.
                     CirclePowerLawTurbulent3D<T> profile(superGeometry, indicator.materialId_, maxVelocity[0], n);
                     applyFlowProfile(profile);
                     break;
@@ -602,6 +601,17 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                  const std::string& simulationOutputPath) const {
 
     const int outputIter = tmax / parametrizationList.getNumTimeSteps();
+
+    if ( ti == 0 ) {
+        SuperVTMwriter3D<T> vtmWriter( "debug" );
+        SuperLatticeGeometry3D<T, DESCRIPTOR> geometry( sLattice, superGeometry );
+        SuperLatticeCuboid3D<T, DESCRIPTOR> cuboid( sLattice );
+        SuperLatticeRank3D<T, DESCRIPTOR> rank( sLattice );
+        vtmWriter.write( geometry );
+        vtmWriter.write( cuboid );
+        vtmWriter.write( rank );
+        vtmWriter.createMasterFile();
+    }
 
     if (ti % outputIter == 0) {
 

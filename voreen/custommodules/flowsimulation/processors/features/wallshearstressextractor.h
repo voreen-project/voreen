@@ -26,23 +26,36 @@
 #ifndef VRN_WALLSHEARSTRESSEXTRACTOR_H
 #define VRN_WALLSHEARSTRESSEXTRACTOR_H
 
-#include "voreen/core/processors/volumeprocessor.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
 #include "voreen/core/ports/geometryport.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 
 namespace voreen {
 
-class WallShearStressExtractor : public VolumeProcessor {
+struct WallShearStressExtractorInput {
+    std::string geometryPath;
+    const VolumeBase* measuredData;
+    float density;
+    float viscosity;
+    std::unique_ptr<VolumeRAM_Float> output;
+};
+
+struct WallShearStressExtractorOutput {
+    std::unique_ptr<VolumeBase> volume;
+};
+
+class WallShearStressExtractor : public AsyncComputeProcessor<WallShearStressExtractorInput, WallShearStressExtractorOutput> {
 public:
     WallShearStressExtractor();
 
-    virtual std::string getClassName() const      { return "WallShearStressExtractor"; }
-    virtual std::string getCategory() const       { return "Feature Extraction"; }
     virtual Processor* create() const;
-    virtual void setDescriptions() {
-    }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
+    virtual std::string getClassName() const      { return "WallShearStressExtractor"; }
+    virtual std::string getCategory() const       { return "Feature Extraction";       }
+    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;    }
 
-    virtual void process();
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
 
 private:
 
@@ -50,6 +63,9 @@ private:
     VolumePort inputVolume_;
     GeometryPort inputGeometry_;
     VolumePort outputVolume_;
+
+    FloatProperty viscosity_;
+    FloatProperty density_;
 
     static const std::string loggerCat_;
 };
