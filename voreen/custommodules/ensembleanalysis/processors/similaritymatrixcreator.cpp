@@ -79,6 +79,7 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     multiChannelSimilarityMeasure_.addOption("angleDifference", "Angle Difference", MEASURE_ANGLEDIFFERENCE);
     multiChannelSimilarityMeasure_.addOption("li_shen", "Li and Shen", MEASURE_LI_SHEN);
     multiChannelSimilarityMeasure_.addOption("crossproduct", "Crossproduct Magnitude", MEASURE_CROSSPRODUCT);
+    multiChannelSimilarityMeasure_.addOption("split_channels", "Split Channels", MEASURE_SPLIT_CHANNELS);
     multiChannelSimilarityMeasure_.set("li_shen");
     ON_CHANGE_LAMBDA(multiChannelSimilarityMeasure_, [this] {
         weight_.setVisibleFlag(multiChannelSimilarityMeasure_.getValue() == MEASURE_LI_SHEN);
@@ -286,26 +287,39 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 #endif
         for (long i = 0; i < static_cast<long>(DistanceMatrix.getSize()); i++) {
             for (long j = 0; j <= i; j++) {
-                if(numChannels == 1 || input.multiChannelSimilarityMeasure == MEASURE_MAGNITUDE) {
+                if(numChannels == 1 || input.multiChannelSimilarityMeasure == MEASURE_MAGNITUDE || input.multiChannelSimilarityMeasure == MEASURE_SPLIT_CHANNELS) {
 
                     float intersectionSamples = 0.0f;
                     float unionSamples = 0.0f;
 
-                    for (size_t k = 0; k < seedPoints.size(); k++) {
+                    // If we decide to split the channels, we consider each channel as flag.
+                    size_t numFlags = seedPoints.size();
+                    if(input.multiChannelSimilarityMeasure == MEASURE_SPLIT_CHANNELS) {
+                        numFlags *= numChannels;
+                    }
+
+                    for (size_t k = 0; k < numFlags; k++) {
 
                         float a = 0.0f;
                         float b = 0.0f;
 
-                        // Calculate length.
-                        for (size_t ch = 0; ch < numChannels; ch++) {
-                            float flagA = Flags[calcIndex(i, k, ch)];
-                            a += flagA * flagA;
+                        if(numChannels > 1 && input.multiChannelSimilarityMeasure == MEASURE_MAGNITUDE) {
+                            // Calculate length.
+                            for (size_t ch = 0; ch < numChannels; ch++) {
+                                float flagA = Flags[calcIndex(i, k, ch)];
+                                a += flagA * flagA;
 
-                            float flagB = Flags[calcIndex(j, k, ch)];
-                            b += flagB * flagB;
+                                float flagB = Flags[calcIndex(j, k, ch)];
+                                b += flagB * flagB;
+                            }
+
+                            a = std::sqrt(a);
+                            b = std::sqrt(b);
                         }
-                        a = std::sqrt(a);
-                        b = std::sqrt(b);
+                        else {
+                            a = Flags[calcIndex(i, k)];
+                            b = Flags[calcIndex(j, k)];
+                        }
 
                         // Normalize range to interval [0, 1].
                         a = mapRange(a, valueRange.x, valueRange.y, 0.0f, 1.0f);

@@ -48,6 +48,7 @@ enum MultiChannelSimilarityMeasure {
     MEASURE_ANGLEDIFFERENCE,
     MEASURE_LI_SHEN,
     MEASURE_CROSSPRODUCT,
+    MEASURE_SPLIT_CHANNELS,
 };
 
 struct SimilarityMatrixCreatorInput {
