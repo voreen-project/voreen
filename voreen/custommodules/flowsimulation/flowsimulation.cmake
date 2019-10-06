@@ -14,7 +14,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/ports/flowparametrizationport.cpp
 
     # processors
-    ${MOD_DIR}/processors/features/wallshearstressextractor.cpp
     ${MOD_DIR}/processors/geometry/geometryclose.cpp
     ${MOD_DIR}/processors/geometry/geometryoffsetremove.cpp
     ${MOD_DIR}/processors/render/unalignedsliceviewer.cpp
@@ -40,7 +39,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/ports/flowparametrizationport.h
 
     # processors
-    ${MOD_DIR}/processors/features/wallshearstressextractor.h
     ${MOD_DIR}/processors/geometry/geometryclose.h
     ${MOD_DIR}/processors/geometry/geometryoffsetremove.h
     ${MOD_DIR}/processors/render/unalignedsliceviewer.h
@@ -98,10 +96,12 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
     ADD_DEFINITIONS("-DVRN_FLOWSIMULATION_USE_OPENLB")
 
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
+        ${MOD_DIR}/processors/features/wallshearstressextractor.h
         ${MOD_DIR}/processors/simulation/flowsimulation.h
         ${MOD_DIR}/processors/geometry/geometryinsidetest.h
     )
     SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
+        ${MOD_DIR}/processors/features/wallshearstressextractor.cpp
         ${MOD_DIR}/processors/simulation/flowsimulation.cpp
         ${MOD_DIR}/processors/geometry/geometryinsidetest.cpp
     )

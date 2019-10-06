@@ -26,7 +26,6 @@
 #include "flowsimulationmodule.h"
 
 // processors
-#include "processors/features/wallshearstressextractor.h"
 #include "processors/geometry/geometryclose.h"
 #include "processors/geometry/geometryoffsetremove.h"
 #include "processors/render/unalignedsliceviewer.h"
@@ -47,6 +46,7 @@
 
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
 #include <olb3D.h>
+#include "processors/features/wallshearstressextractor.h"
 #include "processors/simulation/flowsimulation.h"
 #include "processors/geometry/geometryinsidetest.h"
 #endif
@@ -60,7 +60,6 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     setGuiName("FlowSimulation");
 
     // processors
-    registerSerializableType(new WallShearStressExtractor());
     registerSerializableType(new GeometryClose());
     registerSerializableType(new GeometryOffsetRemove());
     registerSerializableType(new UnalignedSliceViewer());
@@ -78,6 +77,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerSerializableType(new FlowIndicatorDetection());
 #endif
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
+    registerSerializableType(new WallShearStressExtractor());
     registerSerializableType(new GeometryInsideTest());
     registerSerializableType(new FlowSimulation());
 #endif
