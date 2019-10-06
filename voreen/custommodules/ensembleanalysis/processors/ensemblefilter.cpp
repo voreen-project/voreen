@@ -40,7 +40,7 @@ namespace voreen {
 
 class Filter {
 public:
-    virtual Property& getProperty() = 0;
+    virtual std::vector<Property*> getProperties() = 0;
     virtual EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) = 0;
     virtual void adjustToEnsemble(const EnsembleDataset* ensemble) = 0;
 };
@@ -57,8 +57,8 @@ public:
         runs_.setDescription("Selects multiple runs from the ensemble data.");
     }
 
-    Property& getProperty() {
-        return runs_;
+    std::vector<Property*> getProperties() {
+        return std::vector<Property*>(1, &runs_);
     }
 
     EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
@@ -106,8 +106,8 @@ public:
         timeSteps_.setDescription("Selects a range from time steps from the ensemble data.");
     }
 
-    Property& getProperty() {
-        return timeSteps_;
+    std::vector<Property*> getProperties() {
+        return std::vector<Property*>(1, &timeSteps_);
     }
 
     EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
@@ -156,13 +156,22 @@ private:
 class FilterRemoveFirstTimeStep : public Filter {
 public:
     FilterRemoveFirstTimeStep()
-            : enableRemoveFirstTimeStep_("enableRemoveFirstTimeStep", "Remove first Time Step", false)
+        : enableRemoveFirstTimeStep_("enableRemoveFirstTimeStep", "Remove first Time Step", false)
+        , keepIfOnlyTimeStep_("keepIfOnlyTimeStep", "Keep if only single Time Step", true)
     {
+        ON_CHANGE_LAMBDA(enableRemoveFirstTimeStep_, [this] {
+            keepIfOnlyTimeStep_.setVisibleFlag(enableRemoveFirstTimeStep_.get());
+        });
         enableRemoveFirstTimeStep_.setDescription("Removes the first time step of each run.");
+        keepIfOnlyTimeStep_.setDescription("Keep Time Step, if run only has a single one.");
+        enableRemoveFirstTimeStep_.invalidate();
     }
 
-    Property& getProperty() {
-        return enableRemoveFirstTimeStep_;
+    std::vector<Property*> getProperties() {
+        std::vector<Property*> properties;
+        properties.push_back(&enableRemoveFirstTimeStep_);
+        properties.push_back(&keepIfOnlyTimeStep_);
+        return properties;
     }
 
     EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
@@ -175,10 +184,13 @@ public:
         EnsembleDataset* dataset = new EnsembleDataset();
 
         for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
-            if (run.timeSteps_.empty())
-                continue;
-
             std::vector<EnsembleDataset::TimeStep> timeSteps;
+
+            // If the run only contains a single time step, we keep it
+            if(run.timeSteps_.size() == 1 && keepIfOnlyTimeStep_.get()) {
+                timeSteps.push_back(run.timeSteps_.front());
+            }
+
             for (size_t i = 1; i < run.timeSteps_.size(); i++) {
                 timeSteps.push_back(run.timeSteps_[i]);
             }
@@ -197,6 +209,7 @@ public:
 private:
 
     BoolProperty enableRemoveFirstTimeStep_;
+    BoolProperty keepIfOnlyTimeStep_;
 };
 
 //----------------------------------------
@@ -210,8 +223,8 @@ public:
         enableSelectLastTimeStep_.setDescription("Selects only the last time step of each run.");
     }
 
-    Property& getProperty() {
-        return enableSelectLastTimeStep_;
+    std::vector<Property*> getProperties() {
+        return std::vector<Property*>(1, &enableSelectLastTimeStep_);
     }
 
     EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
@@ -258,8 +271,8 @@ public:
         timeInterval_.setDescription("Selects all time steps within the configured interval from the ensemble data.");
     }
 
-    Property& getProperty() {
-        return timeInterval_;
+    std::vector<Property*> getProperties() {
+        return std::vector<Property*>(1, &timeInterval_);
     }
 
     EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
@@ -317,8 +330,8 @@ public:
         );
     }
 
-    Property& getProperty() {
-        return fields_;
+    std::vector<Property*> getProperties() {
+        return std::vector<Property*>(1, &fields_);
     }
 
     EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
@@ -377,8 +390,8 @@ public:
         regionOfInterest_.setDescription("Modifies the region of interest (ROI) of the ensemble dataset.");
     }
 
-    Property& getProperty() {
-        return regionOfInterest_;
+    std::vector<Property*> getProperties() {
+        return std::vector<Property*>(1, &regionOfInterest_);
     }
 
     EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
@@ -453,8 +466,9 @@ void EnsembleFilter::invalidate(int inv) {
 
 void EnsembleFilter::addFilter(Filter* filter) {
     filters_.push_back(std::unique_ptr<Filter>(filter));
-    addProperty(filter->getProperty());
-    ON_CHANGE_LAMBDA(filter->getProperty(), [this] { invalidate(Processor::INVALID_RESULT); });
+    for(Property* property : filter->getProperties()) {
+        addProperty(property);
+    }
 }
 
 void EnsembleFilter::adjustToEnsemble() {
