@@ -73,6 +73,7 @@ protected:
     GeometryPort outport_;       ///< Outport for a list of mesh geometries that were closed.
 
     BoolProperty enabled_;       ///< Determines whether the closing operation is performed.
+    FloatProperty epsilon_;      ///< Epsilon for equality check.
 
     /// category used in logging
     static const std::string loggerCat_;

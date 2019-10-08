@@ -453,12 +453,12 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
     for(const FlowIndicatorMaterial& indicator : flowIndicators) {
         if(indicator.direction_ == FD_IN) {
             if(bouzidiOn) {
-                // material=3 --> no dynamics + bouzidi velocity (inflow)
+                // no dynamics + bouzidi velocity (inflow)
                 lattice.defineDynamics(superGeometry, indicator.materialId_, &instances::getNoDynamics<T, DESCRIPTOR>());
                 offBc.addVelocityBoundary(superGeometry, indicator.materialId_, stlReader);
             }
             else {
-                // material=3 --> bulk dynamics + velocity (inflow)
+                // bulk dynamics + velocity (inflow)
                 lattice.defineDynamics(superGeometry, indicator.materialId_, &bulkDynamics);
                 bc.addVelocityBoundary(superGeometry, indicator.materialId_, omega);
             }

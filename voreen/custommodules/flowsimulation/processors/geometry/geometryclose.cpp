@@ -27,7 +27,37 @@
 
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 
+#include "../../ext/octree/Octree.hpp"
 #include "../../ext/halfedge/trimesh.h"
+
+namespace unibn {
+namespace traits {
+
+typedef voreen::GlMeshGeometryUInt32Normal::VertexType V;
+
+template <>
+struct access<V, 0> {
+    static float get(const V& p) {
+        return p.pos_.x;
+    }
+};
+
+template <>
+struct access<V, 1> {
+    static float get(const V& p) {
+        return p.pos_.y;
+    }
+};
+
+template <>
+struct access<V, 2> {
+    static float get(const V& p) {
+        return p.pos_.z;
+    }
+};
+
+}
+}
 
 namespace voreen {
 
@@ -38,11 +68,15 @@ GeometryClose::GeometryClose()
     , inport_(Port::INPORT, "geometry.input", "Geometry Input")
     , outport_(Port::OUTPORT, "geometry.output", "Geometry Output")
     , enabled_("enabled", "Enable", true)
+    , epsilon_("epsilon", "Epsilon", 1e-5f, 1e-7f, 1e-3f, Processor::INVALID_RESULT,FloatProperty::STATIC, Property::LOD_DEBUG)
 {
     addPort(inport_);
     addPort(outport_);
 
     addProperty(enabled_);
+    addProperty(epsilon_);
+    epsilon_.setTracking(false);
+    epsilon_.adaptDecimalsToRange(7);
 }
 
 GeometryClose::~GeometryClose()
@@ -70,7 +104,9 @@ void GeometryClose::process() {
 
     // Ensure the indices are set correctly.
     bool usesIndices = geometry->getNumIndices() > 0;
-    createIndices(geometry, true);
+    if(!usesIndices) {
+        createIndices(geometry, true);
+    }
 
     // Build the mesh.
     trimesh::trimesh_t mesh;
@@ -190,70 +226,41 @@ void GeometryClose::createIndices(GlMeshGeometryUInt32Normal* geometry, bool opt
     typedef uint32_t I;
 
     std::vector<I> indices = geometry->getIndices();
-    const std::vector<V> vertices = geometry->getVertices();
+    const std::vector<V>& vertices = geometry->getVertices();
 
     // Add trivial indices.
     if(indices.empty()) {
-        for(size_t i = 0; i < vertices.size(); i++) {
-            indices.push_back(static_cast<I>(indices.size()));
-        }
+        indices.resize(vertices.size());
+        std::iota(indices.begin(), indices.end(), 0);
     }
 
     if(optimize) {
 
-        // TODO: use octree for faster duplicate checks.
-        //*
-        std::vector<std::pair<V, I>> uniqueVertices;
+        // initializing the Octree with points from point cloud.
+        unibn::Octree<V> octree;
+        unibn::OctreeParams params;
+        octree.initialize(vertices, indices, params);
 
+        std::unordered_set<I> seenAlready;
         for (size_t i = 0; i < indices.size(); i++) {
+
+            if(seenAlready.find(i) != seenAlready.end()) {
+                continue;
+            }
+
             I& index = indices[i];
             const V& vertex = vertices[index];
 
-            auto iter = uniqueVertices.begin();
-            while(iter != uniqueVertices.end()) {
-                if(vertex.equals(iter->first)) {
-                    break;
-                }
-                iter++;
-            }
+            std::vector<I> neighbors;
+            octree.radiusNeighbors<unibn::L2Distance<V>>(vertex, epsilon_.get(), neighbors);
+            seenAlready.insert(index);
+            seenAlready.insert(neighbors.begin(), neighbors.end());
 
-            if (iter == uniqueVertices.end()) {
-                uniqueVertices.emplace_back(std::make_pair(vertex, index));
-            }
-            else {
-                index = iter->second;
+            // TODO: we assume that index positions are equal to their value here!
+            for(I neighborIdx : neighbors) {
+                indices[neighborIdx] = index;
             }
         }
-
-        /*/
-        // TODO: heuristic binning, to avoid false positives
-        tgt::vec3 diag = tgt::vec3(1000.0f);//getBoundingBox(false);
-        auto comp = [diag] (const V& x, const V& y) {
-            if(x.equals(y, std::numeric_limits<float>::epsilon())) {
-                return false;
-            }
-
-            // We need a proper one-way function to map positions to unique 'hashes'.
-            float hashX = x.pos_.z*diag.x*diag.y + x.pos_.y*diag.x + x.pos_.x;
-            float hashY = y.pos_.z*diag.x*diag.y + y.pos_.y*diag.x + y.pos_.x;
-
-            return hashX < hashY;
-        };
-
-        std::map<V, I, std::function<bool(const V&, const V&)>> uniqueVertices(comp);
-
-        for (size_t i = 0; i < indices.size(); i++) {
-            I & index = indices[i];
-            const V& vertex = vertices[index];
-
-            auto iter = uniqueVertices.find(vertex);
-            if (iter == uniqueVertices.end()) {
-                std::tie(iter, std::ignore) = uniqueVertices.insert(std::make_pair(vertex, index));
-            }
-
-            index = iter->second;
-        }
-        //*/
     }
 
     geometry->setIndices(indices);

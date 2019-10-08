@@ -71,15 +71,15 @@ void FlowSimulationGeometry::process() {
         inlet.flowProfile_ = flowProfile_.getValue();
         inlet.startPhaseFunction_ = FSP_SINUS;
         inlet.startPhaseDuration_ = 0.25f;
-        inlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 0.0f);
-        inlet.normal_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 1.0f);
+        inlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 0.1f);
+        inlet.normal_ = transformation_.get().getRotationalPart() * tgt::vec3(0.0f, 0.0f, 1.0f);
         inlet.radius_ = 1.0f;
         flowParametrizationList->addFlowIndicator(inlet);
 
         FlowIndicator outlet;
         outlet.direction_ = FD_OUT;
-        outlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 1.0f);
-        outlet.normal_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 1.0f);
+        outlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 0.9f);
+        outlet.normal_ = transformation_.get().getRotationalPart() * tgt::vec3(0.0f, 0.0f, 1.0f);
         outlet.radius_ = ratio_.get();
         flowParametrizationList->addFlowIndicator(outlet);
 

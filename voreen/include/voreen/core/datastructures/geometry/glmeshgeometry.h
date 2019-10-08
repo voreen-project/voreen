@@ -695,7 +695,7 @@ namespace {
     void writeVec2AsObj(std::ostream& s, const std::string& prefix, const tgt::vec2& v) {
         s << prefix << " " << v.x << " " << v.y << "\n";
     }
-    template <class I, class V>
+    template <typename I, typename V>
     void writeObjIndex(V v, std::ostream& s, std::unordered_map<tgt::vec3, I>& pos, std::unordered_map<tgt::vec2, I>& tex, std::unordered_map<tgt::vec3, I>& normal) {
 
         switch(V::layout & (VertexBase::TEXCOORD | VertexBase::NORMAL)) {
@@ -719,6 +719,26 @@ namespace {
                 tgtAssert(false, "Invalid layout");
             }
         }
+    }
+
+    template<typename V, typename iterator_type>
+    void writeStlFace(std::ostream& s, const tgt::mat4& m, const std::vector<V>& vertices, iterator_type collected) {
+        tgt::vec3 v0 = m * vertices.at(*(collected+0)).pos_;
+        tgt::vec3 v1 = m * vertices.at(*(collected+1)).pos_;
+        tgt::vec3 v2 = m * vertices.at(*(collected+2)).pos_;
+
+        tgt::vec3 normal = tgt::normalize(tgt::cross(v0-v1, v0-v2));
+
+        if(!tgt::isNaN(normal)) {
+            s << "facet normal " << normal.x << " " << normal.y << " " << normal.z << "\n";
+            s << "    outer loop\n";
+            s << "        vertex " << v0.x << " " << v0.y << " " << v0.z << "\n";
+            s << "        vertex " << v1.x << " " << v1.y << " " << v1.z << "\n";
+            s << "        vertex " << v2.x << " " << v2.y << " " << v2.z << "\n";
+            s << "    endloop\n";
+            s << "endfacet\n";
+        }
+        // else: encountered degenerated triangle
     }
 }
 
@@ -856,7 +876,7 @@ void GlMeshGeometry<I,V>::exportAsStl(std::ostream& s) const {
 
     s << "solid ascii" << "\n";
 
-    tgt::mat4 m = getTransformationMatrix();
+    const tgt::mat4& m = getTransformationMatrix();
     std::vector<I> out_indices;
     if(usesIndexedDrawing()) {
         out_indices.resize(indices_.size());
@@ -878,20 +898,7 @@ void GlMeshGeometry<I,V>::exportAsStl(std::ostream& s) const {
             }
             tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
             if(collected.size() == 3) {
-                tgt::vec3 v0 = m * vertices_.at(collected[0]).pos_;
-                tgt::vec3 v1 = m * vertices_.at(collected[1]).pos_;
-                tgt::vec3 v2 = m * vertices_.at(collected[2]).pos_;
-
-                tgt::vec3 normal = tgt::normalize(tgt::cross(v0-v1, v0-v2));
-
-                s << "facet normal " << normal.x << " " << normal.y << " " << normal.z << "\n";
-                s << "    outer loop\n";
-                s << "        vertex " << v0.x << " " << v0.y << " " << v0.z << "\n";
-                s << "        vertex " << v1.x << " " << v1.y << " " << v1.z << "\n";
-                s << "        vertex " << v2.x << " " << v2.y << " " << v2.z << "\n";
-                s << "    endloop\n";
-                s << "endfacet\n";
-
+                writeStlFace<V>(s, m, vertices_, collected.begin());
                 collected.clear();
             }
         }
@@ -909,20 +916,7 @@ void GlMeshGeometry<I,V>::exportAsStl(std::ostream& s) const {
             }
             tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
             if(collected.size() == 3) {
-                tgt::vec3 v0 = m * vertices_.at(collected[0]).pos_;
-                tgt::vec3 v1 = m * vertices_.at(collected[1]).pos_;
-                tgt::vec3 v2 = m * vertices_.at(collected[2]).pos_;
-
-                tgt::vec3 normal = tgt::normalize(tgt::cross(v0-v1, v0-v2));
-
-                s << "facet normal " << normal.x << " " << normal.y << " " << normal.z << "\n";
-                s << "    outer loop\n";
-                s << "        vertex " << v0.x << " " << v0.y << " " << v0.z << "\n";
-                s << "        vertex " << v1.x << " " << v1.y << " " << v1.z << "\n";
-                s << "        vertex " << v2.x << " " << v2.y << " " << v2.z << "\n";
-                s << "    endloop\n";
-                s << "endfacet\n";
-
+                writeStlFace<V>(s, m, vertices_, collected.begin());
                 collected.pop_front();
             }
         }
@@ -939,19 +933,7 @@ void GlMeshGeometry<I,V>::exportAsStl(std::ostream& s) const {
             }
             tgtAssert(collected.size() <= 3, "Invalid number of collected indices");
             if(collected.size() == 3) {
-                tgt::vec3 v0 = m * vertices_.at(collected[0]).pos_;
-                tgt::vec3 v1 = m * vertices_.at(collected[1]).pos_;
-                tgt::vec3 v2 = m * vertices_.at(collected[2]).pos_;
-
-                tgt::vec3 normal = tgt::normalize(tgt::cross(v0-v1, v0-v2));
-
-                s << "facet normal " << normal.x << " " << normal.y << " " << normal.z << "\n";
-                s << "    outer loop\n";
-                s << "        vertex " << v0.x << " " << v0.y << " " << v0.z << "\n";
-                s << "        vertex " << v1.x << " " << v1.y << " " << v1.z << "\n";
-                s << "        vertex " << v2.x << " " << v2.y << " " << v2.z << "\n";
-                s << "    endloop\n";
-                s << "endfacet\n";
+                writeStlFace<V>(s, m, vertices_, collected.begin());
 
                 // Not the most efficient, but the simplest for now...
                 I first = collected.front();
@@ -963,7 +945,7 @@ void GlMeshGeometry<I,V>::exportAsStl(std::ostream& s) const {
         break;
     }
     default:
-        throw tgt::Exception("Unsupported geometry type for .obj export");
+        throw tgt::Exception("Unsupported geometry type for .stl export");
     }
 }
 
@@ -1409,6 +1391,8 @@ void GlMeshGeometry<I,V>::setCylinderGeometry(tgt::vec4 color, float lowerRadius
         offset += 2 * (slices + 1);
     }
 
+    usesIndexedDrawing_ = true;
+
     setPrimitiveType(GL_TRIANGLES);
     disablePrimitiveRestart();
     invalidate();
@@ -1627,13 +1611,13 @@ void GlMeshGeometry<I,V>::createCylinderIndices(size_t tiles, size_t slices, siz
     for (size_t j = 0; j < tiles; ++j) {
         for (size_t i = 1; i < slices; ++i) {
             I idx = static_cast<I>(offset + i);
-            addIndex(static_cast<I>(idx - 1));
-            addIndex(static_cast<I>(idx + slices - 1));
-            addIndex(static_cast<I>(idx));
+            indices.push_back(static_cast<I>(idx - 1));
+            indices.push_back(static_cast<I>(idx + slices - 1));
+            indices.push_back(static_cast<I>(idx));
 
-            addIndex(static_cast<I>(idx));
-            addIndex(static_cast<I>(idx + slices - 1));
-            addIndex(static_cast<I>(idx + slices));
+            indices.push_back(static_cast<I>(idx));
+            indices.push_back(static_cast<I>(idx + slices - 1));
+            indices.push_back(static_cast<I>(idx + slices));
         }
         offset += slices;
     }

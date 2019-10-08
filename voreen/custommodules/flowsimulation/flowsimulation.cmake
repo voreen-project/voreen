@@ -123,6 +123,18 @@ SET(MOD_INSTALL_FILES
     ${MOD_DIR}/ext/halfedge/README
 )
 
+################################################################################
+# External dependency: Octree
+################################################################################
+
+SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
+    ${MOD_DIR}/ext/octree/Octree.hpp
+    )
+
+SET(MOD_INSTALL_FILES ${MOD_INSTALL_FILES}
+    ${MOD_DIR}/ext/octree/LICENSE
+)
+
 
 # TODO: Add mailio or alternative to parse palma feedback sent per mail.
 #SET(VRN_MAILIO_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/modules/${module_dir}/ext/mailio)
