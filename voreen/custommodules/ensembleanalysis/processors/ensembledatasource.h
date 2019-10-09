@@ -74,6 +74,7 @@ protected:
 
     void clearEnsembleDataset();
     void buildEnsembleDataset();
+    void printEnsembleDataset();
 
     std::vector<std::unique_ptr<const VolumeBase>> volumes_;
 
@@ -82,6 +83,7 @@ protected:
     ProgressProperty runProgress_;
     ProgressProperty timeStepProgress_;
     StringTableProperty loadedRuns_;
+    FileDialogProperty printEnsemble_;
     ColorMapProperty colorMap_;
     StringProperty hash_;
 

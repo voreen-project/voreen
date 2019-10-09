@@ -50,6 +50,7 @@ EnsembleDataSource::EnsembleDataSource()
     , runProgress_("runProgress", "Runs loaded")
     , timeStepProgress_("timeStepProgress", "Time Steps loaded")
     , loadedRuns_("loadedRuns", "Loaded Runs", 5)
+    , printEnsemble_("printEnsemble", "Print Ensemble", "Print Ensemble", "", "HTML (*.html)", FileDialogProperty::SAVE_FILE)
     , colorMap_("colorMap", "Color Map")
     , hash_("hash", "Hash", "", Processor::VALID, Property::LOD_DEBUG)
 {
@@ -67,6 +68,9 @@ EnsembleDataSource::EnsembleDataSource()
     loadedRuns_.setColumnLabel(3, "End Time");
     loadedRuns_.setColumnLabel(4, "Duration");
 
+    addProperty(printEnsemble_);
+    ON_CHANGE(printEnsemble_, EnsembleDataSource, printEnsembleDataset);
+
     addProperty(colorMap_);
     std::vector<tgt::Color> colors;
     colors.push_back(tgt::Color(0.0f, 0.0f, 1.0f, 1.0f));
@@ -77,7 +81,7 @@ EnsembleDataSource::EnsembleDataSource()
     addProperty(hash_);
     hash_.setEditable(false);
 
-    loadDatasetButton_.onChange(MemberFunctionCallback<EnsembleDataSource>(this, &EnsembleDataSource::buildEnsembleDataset));
+    ON_CHANGE(loadDatasetButton_, EnsembleDataSource, buildEnsembleDataset);
 }
 
 EnsembleDataSource::~EnsembleDataSource() {
@@ -246,6 +250,19 @@ void EnsembleDataSource::buildEnsembleDataset() {
     timeStepProgress_.setProgress(1.0f);
     setProgress(1.0f);
     loadDatasetButton_.setReadOnlyFlag(false);
+}
+
+void EnsembleDataSource::printEnsembleDataset() {
+
+    if(!outport_.hasData()) {
+        return;
+    }
+
+    std::fstream file(printEnsemble_.get(), std::ios::out);
+    file << outport_.getData()->toHTML();
+    if (!file.good()) {
+        LERROR("Could not write " << printEnsemble_.get() << " file");
+    }
 }
 
 } // namespace

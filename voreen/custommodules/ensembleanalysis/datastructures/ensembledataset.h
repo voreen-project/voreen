@@ -99,6 +99,8 @@ public:
 
     size_t pickTimeStep(size_t runIdx, float time) const;
 
+    std::string toHTML() const;
+
 private:
 
     struct RunMetaData {
@@ -121,6 +123,7 @@ private:
 
     std::vector<RunMetaData> runMetaData_;
     std::map<std::string, FieldMetaData> fieldMetaData_;
+    std::set<std::string> allParameters_;
 
     size_t minNumTimeSteps_;
     size_t maxNumTimeSteps_;

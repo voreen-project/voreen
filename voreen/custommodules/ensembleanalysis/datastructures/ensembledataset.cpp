@@ -81,7 +81,18 @@ void EnsembleDataset::addRun(const Run& run) {
             const std::string& fieldName = field.first;
             fields.push_back(fieldName);
 
+            // Retrieve volume.
             const VolumeBase* volume = field.second;
+
+            // Gather parameters (take first time step as representative).
+            if(t==0) {
+                for (const std::string& key : volume->getMetaDataKeys()) {
+                    if (key.find("Parameter") != std::string::npos) {
+                        allParameters_.insert(key);
+                    }
+                }
+            }
+
             // Bounds are stored in physical space, so don't transform to world space.
             tgt::Bounds bounds = volume->getBoundingBox(false).getBoundingBox();
             VolumeMinMax* vmm = volume->getDerivedData<VolumeMinMax>();
@@ -291,6 +302,60 @@ size_t EnsembleDataset::pickTimeStep(size_t runIdx, float time) const {
     while (t < runs_[runIdx].timeSteps_.size()-1 && runs_[runIdx].timeSteps_[t].time_ < time) t++;
     return t;
 
+}
+
+std::string EnsembleDataset::toHTML() const {
+
+    std::stringstream stream;
+
+    stream << "<html><head>"
+              "<meta content=\"text/html;charset=utf-8\" http-equiv=\"Content-Type\">\n"
+              "<meta content=\"utf-8\" http-equiv=\"encoding\">\n"
+              "<link src=\"https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css\" rel=\"stylesheet\">\n"
+              "<script src=\"https://code.jquery.com/jquery-3.4.1.min.js\"></script>\n"
+              "<script src=\"https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js\"></script>\n"
+              "<style>table,th,td {border: 1px solid black;}</style></head>"
+              "<body><table id=\"ensemble\"><thead>";
+    // Parameter names
+    stream << "  <tr>\n";
+    // Run Name and Color are mandatory.
+    stream << "    <th>Name</th>\n";
+    stream << "    <th>Color</th>\n";
+    stream << "    <th>Num. Time Steps</th>\n";
+    stream << "    <th>Start Time</th>\n";
+    stream << "    <th>End Time</th>\n";
+    for(const std::string& parameter : allParameters_) {
+        stream << "    <th>" << parameter << "</th>\n";
+
+    }
+    stream << "  </tr></thead><tbody>\n";
+
+    // Runs and their parameters.
+    for(size_t i=0; i<runs_.size(); i++) {
+        stream << "  <tr>\n";
+        stream << "    <th>" << runs_[i].name_ << "</th>\n";
+        tgt::ivec3 color(runs_[i].color_ * 255.0f);
+        stream << "    <th style=\"background-color: rgb(" << color.r << ", " << color.g << ", " << color.b << ")\"></th>\n";
+        stream << "    <th>" << runs_[i].timeSteps_.size() << "</th>\n";
+        stream << "    <th>" << runs_[i].timeSteps_.front().time_ << "</th>\n";
+        stream << "    <th>" << runs_[i].timeSteps_.back().time_ << "</th>\n";
+
+        for(const std::string& parameter : allParameters_) {
+            // TODO: assumes that all fields contain the same parameters.
+            const VolumeBase* reference = runs_[i].timeSteps_.front().fieldNames_.begin()->second;
+            stream << "    <th>";
+            if(reference->hasMetaData(parameter)) {
+                stream << reference->getMetaData(parameter)->toString();
+            }
+            stream << "</th>\n";
+        }
+        stream << "  </tr>\n";
+    }
+
+    stream <<"</tbody></table>"
+             "<script>$(document).ready( function () {$('#ensemble').DataTable({paging: false});} );</script>"
+             "</body></html>";
+    return stream.str();
 }
 
 }   // namespace
