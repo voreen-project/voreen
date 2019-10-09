@@ -44,15 +44,10 @@
                 </MetaItem>
                 <MetaItem name="NetworkScreenshotPlugin_Index" type="IntMetaData" value="0" />
                 <MetaItem name="NetworkScreenshotPlugin_Prefix" type="StringMetaData" value="snapshot" />
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="VolumeFilterList" ref="ref6" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="276.750823975" y="209.869384766" />
+                    <value x="876.377624512" y="765.677307129" />
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.433603048" />
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.216801509" />
                 <MetaItem name="autoLinkCameras" type="BoolMetaData" value="false" />
             </MetaData>
             <Processors>
@@ -69,10 +64,10 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="364" y="206" />
+                            <value x="128" y="445" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="1496" y="957" />
+                            <value x="2081" y="1204" />
                         </MetaItem>
                     </MetaData>
                     <Properties>
@@ -160,7 +155,7 @@
                         <Property mapKey="numRefinementIterations" name="numRefinementIterations" value="3" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="saveDebugData" name="saveDebugData" value="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 827 ms" id="ref202" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 12.266 sec" id="ref202" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="tmpStorageSizeInfo" name="tmpStorageSizeInfo" value="512 kB" />
@@ -348,9 +343,9 @@
                         <Property mapKey="uploadDataPath" name="uploadDataPath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/b06ce446-c27e-47df-a4e3-d10b64552c26" />
-                                    <item value="data/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/b06ce446-c27e-47df-a4e3-d10b64552c26" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/b06ce446-c27e-47df-a4e3-d10b64552c26" />
+                                    <item value="../../../data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/a76fbfb4-5989-4acc-8232-260830730951" />
+                                    <item value="data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/a76fbfb4-5989-4acc-8232-260830730951" />
+                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/a76fbfb4-5989-4acc-8232-260830730951" />
                                 </paths>
                             </paths>
                         </Property>
@@ -529,9 +524,9 @@
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="112.924888611" y="63.532089233" z="47.557624817" />
+                            <position x="69.780502319" y="108.252151489" z="53.023719788" />
                             <focus x="24.8046875" y="24.8046875" z="24.8046875" />
-                            <upVector x="-0.903448522" y="-0.411035269" z="0.121782087" />
+                            <upVector x="-0.485612869" y="-0.871769011" z="0.064798988" />
                             <trackball moveCenter="false">
                                 <center x="24.8046875" y="24.8046875" z="24.8046875" />
                             </trackball>
@@ -676,14 +671,14 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/e149e0b1-47fa-4b20-b36e-2d51ee1e85c3.h5" />
-                                    <item value="data/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/e149e0b1-47fa-4b20-b36e-2d51ee1e85c3.h5" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/e149e0b1-47fa-4b20-b36e-2d51ee1e85c3.h5" />
+                                    <item value="../../../data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/c9a0dd18-d945-4bfe-8921-ced29a4068d2.h5" />
+                                    <item value="data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/c9a0dd18-d945-4bfe-8921-ced29a4068d2.h5" />
+                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/c9a0dd18-d945-4bfe-8921-ced29a4068d2.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 323 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 6.537 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
@@ -829,9 +824,9 @@
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="112.924888611" y="63.532089233" z="47.557624817" />
+                            <position x="69.780502319" y="108.252151489" z="53.023719788" />
                             <focus x="24.8046875" y="24.8046875" z="24.8046875" />
-                            <upVector x="-0.903448522" y="-0.411035269" z="0.121782087" />
+                            <upVector x="-0.485612869" y="-0.871769011" z="0.064798988" />
                             <trackball moveCenter="false">
                                 <center x="24.8046875" y="24.8046875" z="24.8046875" />
                             </trackball>
@@ -1182,9 +1177,9 @@
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="112.924888611" y="63.532089233" z="47.557624817" />
+                            <position x="69.780502319" y="108.252151489" z="53.023719788" />
                             <focus x="24.8046875" y="24.8046875" z="24.8046875" />
-                            <upVector x="-0.903448522" y="-0.411035269" z="0.121782087" />
+                            <upVector x="-0.485612869" y="-0.871769011" z="0.064798988" />
                             <trackball moveCenter="false">
                                 <center x="24.8046875" y="24.8046875" z="24.8046875" />
                             </trackball>
@@ -1276,7 +1271,7 @@
                         <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="866.025390625">
                             <value x="48.728897095" y="17.872783661" z="22.664283752" w="1" />
                             <Center x="24.8046875" y="24.8046875" z="24.8046875" />
-                            <LightPos x="-16.199972153" y="-5.886310577" z="18.108360291" w="1" />
+                            <LightPos x="-24.187660217" y="-4.519057274" z="4.419913769" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -1898,7 +1893,7 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-416" y="-961" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="enabled" name="enabled" guiName="Close holes? (slow)" value="true" />
+                        <Property mapKey="enabled" name="enabled" guiName="Close holes?" value="true" />
                         <Property mapKey="epsilon" name="epsilon" value="0.00001" tracking="false" />
                     </Properties>
                     <Inports>
@@ -2534,6 +2529,9 @@
                                     <item value="0.000000" />
                                 </item>
                             </values>
+                        </Property>
+                        <Property mapKey="printEnsemble" name="printEnsemble" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="runProgress" name="runProgress" />
                         <Property mapKey="timeStepProgress" name="timeStepProgress" />
@@ -4656,7 +4654,7 @@ Volume Dimensions: {volDimensions}
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-96" y="-159" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="text" name="text" value="Finished in 827 ms" id="ref203" />
+                        <Property mapKey="text" name="text" value="Finished in 12.266 sec" id="ref203" />
                     </Properties>
                     <Inports />
                     <Outports>
@@ -5226,9 +5224,9 @@ for ensemble in os.listdir(inputPath):
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="112.924888611" y="63.532089233" z="47.557624817" />
+                            <position x="69.780502319" y="108.252151489" z="53.023719788" />
                             <focus x="24.8046875" y="24.8046875" z="24.8046875" />
-                            <upVector x="-0.903448522" y="-0.411035269" z="0.121782087" />
+                            <upVector x="-0.485612869" y="-0.871769011" z="0.064798988" />
                             <trackball moveCenter="false">
                                 <center x="24.8046875" y="24.8046875" z="24.8046875" />
                             </trackball>
@@ -5415,6 +5413,9 @@ for ensemble in os.listdir(inputPath):
                                     <item value="1.000000" />
                                 </item>
                             </values>
+                        </Property>
+                        <Property mapKey="printEnsemble" name="printEnsemble" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="runProgress" name="runProgress" />
                         <Property mapKey="timeStepProgress" name="timeStepProgress" />
@@ -9500,14 +9501,14 @@ for ensemble in os.listdir(inputPath):
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/f6ee98b5-4773-4eeb-a825-33c1705abace.h5" />
-                                    <item value="data/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/f6ee98b5-4773-4eeb-a825-33c1705abace.h5" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/f6ee98b5-4773-4eeb-a825-33c1705abace.h5" />
+                                    <item value="../../../data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/eaef1172-3351-417c-bfc4-74a598f141cb.h5" />
+                                    <item value="data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/eaef1172-3351-417c-bfc4-74a598f141cb.h5" />
+                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/eaef1172-3351-417c-bfc4-74a598f141cb.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 289 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 3.996 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
@@ -10622,15 +10623,15 @@ print("Done")]]>
                             <value x="4.78000021" y="4.78000021" />
                         </Property>
                         <Property mapKey="characteristicVelocity" minValue="0" maxValue="1000" minRange="0" maxRange="2147483648" stepping="0.01" id="ref316">
-                            <value x="150" y="350" />
+                            <value x="150" y="300" />
                         </Property>
                         <Property mapKey="clearParametrizations" name="clearParametrizations" />
                         <Property mapKey="density" minValue="988.099975586" maxValue="1000" minRange="0" maxRange="2147483648" stepping="0.01">
                             <value x="998.210021973" y="998.210021973" />
                         </Property>
-                        <Property mapKey="discretization" name="discretization" value="3" />
+                        <Property mapKey="discretization" name="discretization" value="1" />
                         <Property mapKey="fluid" name="fluid" value="water" />
-                        <Property mapKey="parametrizationName" name="parametrizationName" value="test_parametrization" />
+                        <Property mapKey="parametrizationName" name="parametrizationName" value="test-run" />
                         <Property mapKey="parametrizations" name="parametrizations" columnCount="9" selectedRow="-1">
                             <columnLabels>
                                 <item value="Name" />
@@ -10645,7 +10646,7 @@ print("Done")]]>
                             </columnLabels>
                             <values>
                                 <item>
-                                    <item value="test_parametrizationAA" />
+                                    <item value="test-run" />
                                     <item value="20" />
                                     <item value="0.011950" />
                                     <item value="4.780000" />
@@ -10653,94 +10654,6 @@ print("Done")]]>
                                     <item value="1.001600" />
                                     <item value="998.210022" />
                                     <item value="0.050000" />
-                                    <item value="1" />
-                                </item>
-                                <item>
-                                    <item value="test_parametrizationAB" />
-                                    <item value="20" />
-                                    <item value="0.011950" />
-                                    <item value="4.780000" />
-                                    <item value="150.000000" />
-                                    <item value="1.001600" />
-                                    <item value="998.210022" />
-                                    <item value="0.100000" />
-                                    <item value="1" />
-                                </item>
-                                <item>
-                                    <item value="test_parametrizationAC" />
-                                    <item value="20" />
-                                    <item value="0.011950" />
-                                    <item value="4.780000" />
-                                    <item value="150.000000" />
-                                    <item value="1.001600" />
-                                    <item value="998.210022" />
-                                    <item value="0.150000" />
-                                    <item value="1" />
-                                </item>
-                                <item>
-                                    <item value="test_parametrizationBA" />
-                                    <item value="20" />
-                                    <item value="0.011950" />
-                                    <item value="4.780000" />
-                                    <item value="250.000000" />
-                                    <item value="1.001600" />
-                                    <item value="998.210022" />
-                                    <item value="0.050000" />
-                                    <item value="1" />
-                                </item>
-                                <item>
-                                    <item value="test_parametrizationBB" />
-                                    <item value="20" />
-                                    <item value="0.011950" />
-                                    <item value="4.780000" />
-                                    <item value="250.000000" />
-                                    <item value="1.001600" />
-                                    <item value="998.210022" />
-                                    <item value="0.100000" />
-                                    <item value="1" />
-                                </item>
-                                <item>
-                                    <item value="test_parametrizationBC" />
-                                    <item value="20" />
-                                    <item value="0.011950" />
-                                    <item value="4.780000" />
-                                    <item value="250.000000" />
-                                    <item value="1.001600" />
-                                    <item value="998.210022" />
-                                    <item value="0.150000" />
-                                    <item value="1" />
-                                </item>
-                                <item>
-                                    <item value="test_parametrizationCA" />
-                                    <item value="20" />
-                                    <item value="0.011950" />
-                                    <item value="4.780000" />
-                                    <item value="350.000000" />
-                                    <item value="1.001600" />
-                                    <item value="998.210022" />
-                                    <item value="0.050000" />
-                                    <item value="1" />
-                                </item>
-                                <item>
-                                    <item value="test_parametrizationCB" />
-                                    <item value="20" />
-                                    <item value="0.011950" />
-                                    <item value="4.780000" />
-                                    <item value="350.000000" />
-                                    <item value="1.001600" />
-                                    <item value="998.210022" />
-                                    <item value="0.100000" />
-                                    <item value="1" />
-                                </item>
-                                <item>
-                                    <item value="test_parametrizationCC" />
-                                    <item value="20" />
-                                    <item value="0.011950" />
-                                    <item value="4.780000" />
-                                    <item value="350.000000" />
-                                    <item value="1.001600" />
-                                    <item value="998.210022" />
-                                    <item value="0.150000" />
                                     <item value="1" />
                                 </item>
                             </values>
@@ -10775,15 +10688,7 @@ print("Done")]]>
                     <CoProcessorOutports />
                     <InteractionHandlers />
                     <flowParameters>
-                        <item name="test_parametrizationAA" spatialResolution="20" temporalResolution="0.01195" characteristicLength="4.78000021" characteristicVelocity="150" viscosity="1.001600027" density="998.210021973" smagorinskyConstant="0.050000001" bouzidi="true" />
-                        <item name="test_parametrizationAB" spatialResolution="20" temporalResolution="0.01195" characteristicLength="4.78000021" characteristicVelocity="150" viscosity="1.001600027" density="998.210021973" smagorinskyConstant="0.100000009" bouzidi="true" />
-                        <item name="test_parametrizationAC" spatialResolution="20" temporalResolution="0.01195" characteristicLength="4.78000021" characteristicVelocity="150" viscosity="1.001600027" density="998.210021973" smagorinskyConstant="0.150000006" bouzidi="true" />
-                        <item name="test_parametrizationBA" spatialResolution="20" temporalResolution="0.01195" characteristicLength="4.78000021" characteristicVelocity="250" viscosity="1.001600027" density="998.210021973" smagorinskyConstant="0.050000001" bouzidi="true" />
-                        <item name="test_parametrizationBB" spatialResolution="20" temporalResolution="0.01195" characteristicLength="4.78000021" characteristicVelocity="250" viscosity="1.001600027" density="998.210021973" smagorinskyConstant="0.100000009" bouzidi="true" />
-                        <item name="test_parametrizationBC" spatialResolution="20" temporalResolution="0.01195" characteristicLength="4.78000021" characteristicVelocity="250" viscosity="1.001600027" density="998.210021973" smagorinskyConstant="0.150000006" bouzidi="true" />
-                        <item name="test_parametrizationCA" spatialResolution="20" temporalResolution="0.01195" characteristicLength="4.78000021" characteristicVelocity="350" viscosity="1.001600027" density="998.210021973" smagorinskyConstant="0.050000001" bouzidi="true" />
-                        <item name="test_parametrizationCB" spatialResolution="20" temporalResolution="0.01195" characteristicLength="4.78000021" characteristicVelocity="350" viscosity="1.001600027" density="998.210021973" smagorinskyConstant="0.100000009" bouzidi="true" />
-                        <item name="test_parametrizationCC" spatialResolution="20" temporalResolution="0.01195" characteristicLength="4.78000021" characteristicVelocity="350" viscosity="1.001600027" density="998.210021973" smagorinskyConstant="0.150000006" bouzidi="true" />
+                        <item name="test-run" spatialResolution="20" temporalResolution="0.01195" characteristicLength="4.78000021" characteristicVelocity="150" viscosity="1.001600027" density="998.210021973" smagorinskyConstant="0.050000001" bouzidi="true" />
                     </flowParameters>
                 </Processor>
                 <Processor type="GeometryInsideTest" name="GeometryInsideTest" id="ref32">
@@ -10796,9 +10701,9 @@ print("Done")]]>
                         <Property mapKey="path" name="path" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/a1c7b1f5-f895-4192-9484-2357882c73e0.stl" />
-                                    <item value="data/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/a1c7b1f5-f895-4192-9484-2357882c73e0.stl" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/a1c7b1f5-f895-4192-9484-2357882c73e0.stl" />
+                                    <item value="../../../data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/c5a1761e-3391-4e74-90c9-947fd66e1fc6.stl" />
+                                    <item value="data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/c5a1761e-3391-4e74-90c9-947fd66e1fc6.stl" />
+                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/c5a1761e-3391-4e74-90c9-947fd66e1fc6.stl" />
                                 </paths>
                             </paths>
                         </Property>
@@ -14064,7 +13969,7 @@ voreen.setPortData("Outport", volume)]]>
                 </value>
                 <value key="VelocityEnsemble.colorMap">
                     <First value="Analysis - Input" />
-                    <Second value="5" />
+                    <Second value="6" />
                 </value>
                 <value key="VelocityEnsemble.ensemblepath">
                     <First value="Analysis - Input" />
@@ -14077,6 +13982,10 @@ voreen.setPortData("Outport", volume)]]>
                 <value key="VelocityEnsemble.loadedRuns">
                     <First value="Analysis - Input" />
                     <Second value="4" />
+                </value>
+                <value key="VelocityEnsemble.printEnsemble">
+                    <First value="Analysis - Input" />
+                    <Second value="5" />
                 </value>
                 <value key="VelocityEnsemble.runProgress">
                     <First value="Analysis - Input" />
