@@ -113,8 +113,6 @@ const std::string META_DATA_NAME_REAL_WORLD_MAPPING = "RealWorldMapping";
 
 // Config
 T simulationTime = 0.0;
-T temporalResolution = 0.0;
-int spatialResolution = 1;
 int numTimeSteps = 1;
 int outputResolution = 1;
 int flowFeatures = FF_NONE;
@@ -122,6 +120,8 @@ std::vector<FlowIndicator> flowIndicators;
 std::vector<MeasuredData> measuredData;
 
 // Parameters
+int spatialResolution = 1;
+T temporalResolution = 0.0;
 T characteristicLength = 0.0;
 T characteristicVelocity = 0.0;
 T viscosity = 0.0;
@@ -201,12 +201,12 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
     for(const FlowIndicator& indicator : flowIndicators) {
         if(indicator.direction_ == FD_IN) {
             if(bouzidiOn) {
-                // material=3 --> no dynamics + bouzidi velocity (inflow)
+                // no dynamics + bouzidi velocity (inflow)
                 lattice.defineDynamics(superGeometry, indicator.materialId_, &instances::getNoDynamics<T, DESCRIPTOR>());
                 offBc.addVelocityBoundary(superGeometry, indicator.materialId_, stlReader);
             }
             else {
-                // material=3 --> bulk dynamics + velocity (inflow)
+                // bulk dynamics + velocity (inflow)
                 lattice.defineDynamics(superGeometry, indicator.materialId_, &bulkDynamics);
                 bc.addVelocityBoundary(superGeometry, indicator.materialId_, omega);
             }
@@ -303,7 +303,7 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 }
                 case FP_POWERLAW:
                 {
-                    T n = 1.03 * std::log(converter.getReynoldsNumber()) - 3.6; // Taken by OLB documentation.
+                    T n = 1.03 * std::log(converter.getReynoldsNumber()) - 3.6; // Taken from OLB documentation.
                     CirclePowerLawTurbulent3D<T> profile(superGeometry, indicator.materialId_, maxVelocity[0], n);
                     applyFlowProfile(profile);
                     break;
@@ -505,6 +505,17 @@ void getResults(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     const int outputIter = tmax / numTimeSteps;
 
+    if ( ti == 0 ) {
+        SuperVTMwriter3D<T> vtmWriter( "debug" );
+        SuperLatticeGeometry3D<T, DESCRIPTOR> geometry( sLattice, superGeometry );
+        SuperLatticeCuboid3D<T, DESCRIPTOR> cuboid( sLattice );
+        SuperLatticeRank3D<T, DESCRIPTOR> rank( sLattice );
+        vtmWriter.write( geometry );
+        vtmWriter.write( cuboid );
+        vtmWriter.write( rank );
+        vtmWriter.createMasterFile();
+    }
+
     int rank = 0;
 #ifdef PARALLEL_MODE_MPI
     rank = singleton::mpi().getRank();
@@ -698,7 +709,7 @@ int main(int argc, char* argv[]) {
 
     // === 4th Step: Main Loop with Timer ===
     clout << "starting simulation..." << std::endl;
-    util::ValueTracer<T> converge(converter.getLatticeTime(1.0), 1e-5);
+    util::ValueTracer<T> converge(converter.getLatticeTime(0.5), 1e-5);
     Timer<T> timer(converter.getLatticeTime(simulationTime), superGeometry.getStatistics().getNvoxel());
     timer.start();
 
