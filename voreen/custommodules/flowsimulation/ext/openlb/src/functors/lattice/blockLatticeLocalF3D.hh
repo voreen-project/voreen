@@ -570,6 +570,11 @@ bool BlockLatticePhysBoundaryForce3D<T, DESCRIPTOR>::operator()(T output[], cons
 }
 
 template <typename T, template <typename U> class DESCRIPTOR>
+size_t BlockLatticePhysWallShearStress3D<T,DESCRIPTOR>::index(size_t x, size_t y, size_t z) const {
+    return x*_blockGeometry.getNz()*_blockGeometry.getNy()*3 + y * _blockGeometry.getNz()*3 + z*3;
+}
+
+template <typename T, template <typename U> class DESCRIPTOR>
 BlockLatticePhysWallShearStress3D<T,DESCRIPTOR>::BlockLatticePhysWallShearStress3D(
   BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, BlockGeometryStructure3D<T>& blockGeometry,
   int material, const UnitConverter<T,DESCRIPTOR>& converter, IndicatorF3D<T>& indicator)
@@ -582,26 +587,26 @@ BlockLatticePhysWallShearStress3D<T,DESCRIPTOR>::BlockLatticePhysWallShearStress
   T dt = _converter.getConversionFactorTime();
   _physFactor = -omega * DESCRIPTOR<T>::invCs2 / dt * _converter.getPhysDensity() * _converter.getPhysViscosity();
   std::vector<int> discreteNormalOutwards(4, 0);
+
+  _discreteNormal.resize(_blockGeometry.getNx()*_blockGeometry.getNy()*_blockGeometry.getNz()*3);
+  _normal.resize(_blockGeometry.getNx()*_blockGeometry.getNy()*_blockGeometry.getNz()*3);
+
+  _blockGeometry.getStatistics().update(true);
+  const BlockGeometryStructure3D<T>* const geometry = &_blockGeometry;
+
+#pragma omp parallel private(discreteNormalOutwards)
   for (int iX = 0; iX < _blockGeometry.getNx(); iX++) {
-    _discreteNormal.resize(_blockGeometry.getNx());
-    _normal.resize(_blockGeometry.getNx());
     for (int iY = 0; iY < _blockGeometry.getNy(); iY++) {
-      _discreteNormal[iX].resize(_blockGeometry.getNy());
-      _normal[iX].resize(_blockGeometry.getNy());
       for (int iZ = 0; iZ < _blockGeometry.getNz(); iZ++) {
-        _discreteNormal[iX][iY].resize(_blockGeometry.getNz());
-        _normal[iX][iY].resize(_blockGeometry.getNz());
-        if (_blockGeometry.get(iX, iY, iZ) == _material) {
+        if (geometry->get(iX, iY, iZ) == _material) {
           discreteNormalOutwards = _blockGeometry.getStatistics().getType(iX, iY, iZ);
-          _discreteNormal[iX][iY][iZ].resize(3);
-          _normal[iX][iY][iZ].resize(3);
           // _discreteNormal pointing inside the fluid domain
-          _discreteNormal[iX][iY][iZ][0] = -discreteNormalOutwards[1];
-          _discreteNormal[iX][iY][iZ][1] = -discreteNormalOutwards[2];
-          _discreteNormal[iX][iY][iZ][2] = -discreteNormalOutwards[3];
+          _discreteNormal[index(iX,iY,iZ)+0] = -discreteNormalOutwards[1];
+          _discreteNormal[index(iX,iY,iZ)+1] = -discreteNormalOutwards[2];
+          _discreteNormal[index(iX,iY,iZ)+2] = -discreteNormalOutwards[3];
 
           T physR[3];
-          _blockGeometry.getPhysR(physR,iX, iY, iZ);
+          geometry->getPhysR(physR, iX, iY, iZ);
           Vector<T,3> origin(physR[0],physR[1],physR[2]);
           T distance = 0.;
           Vector<T,3> direction(0.,0.,0.);
@@ -680,9 +685,9 @@ BlockLatticePhysWallShearStress3D<T,DESCRIPTOR>::BlockLatticePhysWallShearStress
           normal[0] /= normalMagnitude;
           normal[1] /= normalMagnitude;
           normal[2] /= normalMagnitude;
-          _normal[iX][iY][iZ][0] = normal[0];
-          _normal[iX][iY][iZ][1] = normal[1];
-          _normal[iX][iY][iZ][2] = normal[2];
+          _normal[index(iX, iY, iZ)+0] = normal[0];
+          _normal[index(iX, iY, iZ)+1] = normal[1];
+          _normal[index(iX, iY, iZ)+2] = normal[2];
         }
       }
     }
@@ -697,32 +702,33 @@ bool BlockLatticePhysWallShearStress3D<T, DESCRIPTOR>::operator()(T output[], co
   if (_blockGeometry.get(input[0],input[1],input[2]) == _material) {
     T traction[3];
     T pi[6];
-    T rho = _blockLattice.get(input[0] + _discreteNormal[input[0]][input[1]][input[2]][0],
-                              input[1] + _discreteNormal[input[0]][input[1]][input[2]][1],
-                              input[2] + _discreteNormal[input[0]][input[1]][input[2]][2]).computeRho();
-    _blockLattice.get(input[0] +   _discreteNormal[input[0]][input[1]][input[2]][0],
-                      input[1] +   _discreteNormal[input[0]][input[1]][input[2]][1],
-                      input[2] +   _discreteNormal[input[0]][input[1]][input[2]][2]).computeStress(pi);
+    const size_t idx = index(input[0], input[1], input[2]);
+    T rho = _blockLattice.get(input[0] + _discreteNormal[idx+0],
+                              input[1] + _discreteNormal[idx+1],
+                              input[2] + _discreteNormal[idx+2]).computeRho();
+    _blockLattice.get(input[0] +   _discreteNormal[idx+0],
+                      input[1] +   _discreteNormal[idx+1],
+                      input[2] +   _discreteNormal[idx+2]).computeStress(pi);
 
-    traction[0] = pi[0]*_physFactor/rho*_normal[input[0]][input[1]][input[2]][0] +
-                  pi[1]*_physFactor/rho*_normal[input[0]][input[1]][input[2]][1] +
-                  pi[2]*_physFactor/rho*_normal[input[0]][input[1]][input[2]][2];
-    traction[1] = pi[1]*_physFactor/rho*_normal[input[0]][input[1]][input[2]][0] +
-                  pi[3]*_physFactor/rho*_normal[input[0]][input[1]][input[2]][1] +
-                  pi[4]*_physFactor/rho*_normal[input[0]][input[1]][input[2]][2];
-    traction[2] = pi[2]*_physFactor/rho*_normal[input[0]][input[1]][input[2]][0] +
-                  pi[4]*_physFactor/rho*_normal[input[0]][input[1]][input[2]][1] +
-                  pi[5]*_physFactor/rho*_normal[input[0]][input[1]][input[2]][2];
+    traction[0] = pi[0]*_physFactor/rho*_normal[idx+0] +
+                  pi[1]*_physFactor/rho*_normal[idx+1] +
+                  pi[2]*_physFactor/rho*_normal[idx+2];
+    traction[1] = pi[1]*_physFactor/rho*_normal[idx+0] +
+                  pi[3]*_physFactor/rho*_normal[idx+1] +
+                  pi[4]*_physFactor/rho*_normal[idx+2];
+    traction[2] = pi[2]*_physFactor/rho*_normal[idx+0] +
+                  pi[4]*_physFactor/rho*_normal[idx+1] +
+                  pi[5]*_physFactor/rho*_normal[idx+2];
 
     T traction_normal_SP;
     T tractionNormalComponent[3];
     // scalar product of traction and normal vector
-    traction_normal_SP = traction[0] * _normal[input[0]][input[1]][input[2]][0] +
-                         traction[1] * _normal[input[0]][input[1]][input[2]][1] +
-                         traction[2] * _normal[input[0]][input[1]][input[2]][2];
-    tractionNormalComponent[0] = traction_normal_SP * _normal[input[0]][input[1]][input[2]][0];
-    tractionNormalComponent[1] = traction_normal_SP * _normal[input[0]][input[1]][input[2]][1];
-    tractionNormalComponent[2] = traction_normal_SP * _normal[input[0]][input[1]][input[2]][2];
+    traction_normal_SP = traction[0] * _normal[idx+0] +
+                         traction[1] * _normal[idx+1] +
+                         traction[2] * _normal[idx+2];
+    tractionNormalComponent[0] = traction_normal_SP * _normal[idx+0];
+    tractionNormalComponent[1] = traction_normal_SP * _normal[idx+1];
+    tractionNormalComponent[2] = traction_normal_SP * _normal[idx+2];
 
     T WSS[3];
     WSS[0] = traction[0] - tractionNormalComponent[0];

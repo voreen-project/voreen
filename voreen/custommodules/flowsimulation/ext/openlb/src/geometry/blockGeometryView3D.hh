@@ -145,7 +145,9 @@ int& BlockGeometryView3D<T>::get(int iX, int iY, int iZ)
 template<typename T>
 const int& BlockGeometryView3D<T>::get(int iX, int iY, int iZ) const
 {
-  return _originalBlockGeometry->get(_x0+iX, _y0+iY, _z0+iZ);
+  // We need to cast to a const pointer here in order to call the const get function of BlockGeometry.
+  const BlockGeometryStructure3D<T>* geometry = _originalBlockGeometry;
+  return geometry->get(_x0+iX, _y0+iY, _z0+iZ);
 }
 
 template<typename T>

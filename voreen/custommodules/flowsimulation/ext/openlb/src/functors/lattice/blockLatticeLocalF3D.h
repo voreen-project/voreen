@@ -276,9 +276,10 @@ private:
   BlockLatticeStructure3D<T,DESCRIPTOR>& _blockLattice;
   int _material;
   const UnitConverter<T,DESCRIPTOR>& _converter;
-  std::vector<std::vector<std::vector<std::vector<int>>>> _discreteNormal;
-  std::vector<std::vector<std::vector<std::vector<T>>>> _normal;
+  std::vector<int> _discreteNormal;
+  std::vector<T> _normal;
   T _physFactor;
+  size_t index(size_t x, size_t y, size_t z) const;
 public:
   BlockLatticePhysWallShearStress3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
                                     BlockGeometryStructure3D<T>& blockGeometry, int material,

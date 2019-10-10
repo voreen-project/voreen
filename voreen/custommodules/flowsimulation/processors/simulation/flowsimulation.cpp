@@ -698,8 +698,7 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
             return;
     }
 
-    std::vector<float> rawFeatureData;
-    rawFeatureData.reserve(static_cast<size_t>(resolution * resolution * resolution * feature.getTargetDim()));
+    std::vector<float> rawFeatureData(resolution * resolution * resolution * feature.getTargetDim());
     AnalyticalFfromSuperF3D<T> interpolateFeature(feature, true);
 
     std::vector<T> minValue(feature.getTargetDim(), std::numeric_limits<T>::max());
@@ -708,6 +707,9 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
     T minMagnitude = std::numeric_limits<T>::max();
     T maxMagnitude = 0;
 
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel for
+#endif
     for (int z = 0; z < resolution; z++) {
         for (int y = 0; y < resolution; y++) {
             for (int x = 0; x < resolution; x++) {
@@ -732,7 +734,8 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
 
                 // Downgrade to float.
                 for (int i = 0; i < feature.getTargetDim(); i++) {
-                    rawFeatureData.push_back(static_cast<float>(val[i] / VOREEN_LENGTH_TO_SI));
+                    size_t index = z*resolution*resolution*feature.getTargetDim() + y*resolution*feature.getTargetDim() + x*feature.getTargetDim() + i;
+                    rawFeatureData[index] = static_cast<float>(val[i] / VOREEN_LENGTH_TO_SI);
                 }
             }
         }
