@@ -594,16 +594,17 @@ BlockLatticePhysWallShearStress3D<T,DESCRIPTOR>::BlockLatticePhysWallShearStress
   _blockGeometry.getStatistics().update(true);
   const BlockGeometryStructure3D<T>* const geometry = &_blockGeometry;
 
-#pragma omp parallel private(discreteNormalOutwards)
+#pragma omp parallel for private(discreteNormalOutwards)
   for (int iX = 0; iX < _blockGeometry.getNx(); iX++) {
     for (int iY = 0; iY < _blockGeometry.getNy(); iY++) {
       for (int iZ = 0; iZ < _blockGeometry.getNz(); iZ++) {
         if (geometry->get(iX, iY, iZ) == _material) {
+          const size_t idx = index(iX, iY, iZ);
           discreteNormalOutwards = _blockGeometry.getStatistics().getType(iX, iY, iZ);
           // _discreteNormal pointing inside the fluid domain
-          _discreteNormal[index(iX,iY,iZ)+0] = -discreteNormalOutwards[1];
-          _discreteNormal[index(iX,iY,iZ)+1] = -discreteNormalOutwards[2];
-          _discreteNormal[index(iX,iY,iZ)+2] = -discreteNormalOutwards[3];
+          _discreteNormal[idx+0] = -discreteNormalOutwards[1];
+          _discreteNormal[idx+1] = -discreteNormalOutwards[2];
+          _discreteNormal[idx+2] = -discreteNormalOutwards[3];
 
           T physR[3];
           geometry->getPhysR(physR, iX, iY, iZ);
@@ -685,9 +686,9 @@ BlockLatticePhysWallShearStress3D<T,DESCRIPTOR>::BlockLatticePhysWallShearStress
           normal[0] /= normalMagnitude;
           normal[1] /= normalMagnitude;
           normal[2] /= normalMagnitude;
-          _normal[index(iX, iY, iZ)+0] = normal[0];
-          _normal[index(iX, iY, iZ)+1] = normal[1];
-          _normal[index(iX, iY, iZ)+2] = normal[2];
+          _normal[idx+0] = normal[0];
+          _normal[idx+1] = normal[1];
+          _normal[idx+2] = normal[2];
         }
       }
     }
