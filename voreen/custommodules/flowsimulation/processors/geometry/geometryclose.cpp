@@ -147,7 +147,7 @@ void GeometryClose::process() {
         // Inner loop iterates vertices for each hole.
         std::vector<trimesh::index_t> ring;
         trimesh::index_t current = *start;
-        VertexNormal center;
+        VertexNormal center(tgt::vec3::zero, tgt::vec3::zero);
 
         while(true) {
             tgtAssert(boundary.find(current) != boundary.end(), "Not part of boundary");
