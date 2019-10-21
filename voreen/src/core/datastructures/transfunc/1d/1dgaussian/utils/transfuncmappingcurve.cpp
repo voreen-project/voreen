@@ -87,7 +87,7 @@ void TransFuncMappingCurve::setColorL(const tgt::ivec4& color) {
         setAllColors(colorL_);
     }
     if (!split_)
-        colorL_ = colorL_;
+        colorL_ = tgt::col4(color);
 }
 
 const tgt::col4& TransFuncMappingCurve::getColorL() const {
