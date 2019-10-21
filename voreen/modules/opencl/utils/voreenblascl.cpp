@@ -547,8 +547,9 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
                 queue_->enqueueReadBuffer(&scalarBuf, (void*)(&beta), true);
             }
 
-            if (sqrt(beta) < threshold)
+            if (sqrt(beta) < threshold) {
                 break;
+            }
 
             beta /= nominator;
 
@@ -566,7 +567,7 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
 
         queue_->enqueueReadBuffer(&xBuf, (void*)(result), true);
 
-    } catch(std::exception& e) {
+    } catch(boost::thread_interrupted& e) {
         queue_->finish();
 
         if (initialAllocated)
