@@ -143,54 +143,77 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
         }
     }
 
+    // Set up random generator.
+    std::function<float()> rnd(
+            std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
+
     const VolumeBase* seedMask = seedMask_.getThreadSafeData();
-    tgt::Bounds seedMaskBounds;
-    tgt::mat4 seedMaskPhysicalToVoxelMatrix;
-    std::unique_ptr<VolumeRAMRepresentationLock> seedMaskLock;
+    std::vector<tgt::vec3> seedPoints;
+    seedPoints.reserve(numSeedPoints_.get());
     if (seedMask) {
         tgt::Bounds roiBounds = roi;
-        seedMaskBounds = seedMask->getBoundingBox(false).getBoundingBox(false);
+        tgt::Bounds seedMaskBounds = seedMask->getBoundingBox(false).getBoundingBox(false);
 
         roiBounds.intersectVolume(seedMaskBounds);
         if(!roiBounds.isDefined()) {
             throw InvalidInputException("Seed Mask does not overlap with ensemble ROI", InvalidInputException::S_ERROR);
         }
 
-        seedMaskLock.reset(new VolumeRAMRepresentationLock(seedMask));
+        VolumeRAMRepresentationLock seedMaskLock(seedMask);
 
         VolumeMinMax* vmm = seedMask->getDerivedData<VolumeMinMax>();
         if(vmm->getMinNormalized() == 0.0f && vmm->getMaxNormalized() == 0.0f) {
             throw InvalidInputException("Seed Mask is empty", InvalidInputException::S_ERROR);
         }
 
-        seedMaskPhysicalToVoxelMatrix = seedMask->getPhysicalToVoxelMatrix();
-        LINFO("Restricting seed points to volume mask");
+        tgt::mat4 seedMaskPhysicalToVoxelMatrix = seedMask->getPhysicalToVoxelMatrix();
+
+        tgt::svec3 llf = tgt::round(seedMaskPhysicalToVoxelMatrix * roiBounds.getLLF());
+        tgt::svec3 urb = tgt::round(seedMaskPhysicalToVoxelMatrix * roiBounds.getURB());
+
+        std::vector<tgt::vec3> maskVoxels;
+        for(size_t z=llf.z; z < urb.z; z++) {
+            for(size_t y=llf.y; y < urb.y; y++) {
+                for(size_t x=llf.x; x < urb.x; x++) {
+                    if(seedMaskLock->getVoxelNormalized(x, y, z) != 0.0f) {
+                        maskVoxels.push_back(tgt::vec3(x, y, z));
+                    }
+                }
+            }
+        }
+
+        if (maskVoxels.empty()) {
+            throw InvalidInputException("No seed points found in ROI", InvalidInputException::S_ERROR);
+        }
+
+        // If we have more seed mask voxel than we want to have seed points, reduce the list size.
+        float probability = static_cast<float>(numSeedPoints_.get()) / maskVoxels.size();
+        tgt::mat4 seedMaskVoxelToPhysicalMatrix = seedMask->getVoxelToPhysicalMatrix();
+        for(const tgt::vec3& seedPoint : maskVoxels) {
+            // Determine for each seed point, if we will keep it.
+            if(probability >= 1.0f || rnd() < probability) {
+                seedPoints.push_back(seedMaskVoxelToPhysicalMatrix * seedPoint);
+            }
+        }
+
+        LINFO("Restricting seed points to volume mask using " << seedPoints.size() << " seeds");
     }
-
-    std::unique_ptr<SimilarityMatrixList> outputMatrices(new SimilarityMatrixList(input));
-
-    std::function<float()> rnd(
-            std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
-
-    const size_t maxTries = -1; // TODO: choose a user defined approach
-    std::vector<tgt::vec3> seedPoints;
-    seedPoints.reserve(numSeedPoints_.get());
-    for (int k = 0; k<numSeedPoints_.get(); k++) {
-        tgt::vec3 seedPoint;
-
-        size_t tries = 0;
-        do {
+    else {
+        // Without a seed mask, we uniformly sample the whole space enclosed by the roi.
+        for (int k = 0; k<numSeedPoints_.get(); k++) {
+            tgt::vec3 seedPoint;
             seedPoint = tgt::vec3(rnd(), rnd(), rnd());
             seedPoint = tgt::vec3(roi.getLLF()) + seedPoint * tgt::vec3(roi.diagonal());
-            tries++;
-        } while (tries < maxTries && seedMask && (!seedMaskBounds.containsPoint(seedPoint) ||
-                std::abs((*seedMaskLock)->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint)) <
-                    std::numeric_limits<float>::epsilon()));
-
-        if(tries < maxTries) {
             seedPoints.push_back(seedPoint);
         }
     }
+
+    tgtAssert(!seedPoints.empty(), "no seed points found");
+    if (seedPoints.empty()) {
+        throw InvalidInputException("No seed points found", InvalidInputException::S_ERROR);
+    }
+
+    std::unique_ptr<SimilarityMatrixList> outputMatrices(new SimilarityMatrixList(input));
 
     return SimilarityMatrixCreatorInput{
             input,
