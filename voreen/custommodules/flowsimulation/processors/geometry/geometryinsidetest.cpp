@@ -100,12 +100,14 @@ void GeometryInsideTest::process() {
     std::vector<Octree<T>*> leafs;
     stlReader.getTree()->getLeafs(leafs);
 
-    // TODO: loop could be parallelized.
-    for (auto it = leafs.begin(); it != leafs.end(); ++it) {
-        if((*it)->getInside()) {
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel for
+#endif
+    for (size_t i = 0; i < leafs.size(); i++) {
+        if(leafs[i]->getInside()) {
 
-            tgt::Vector3<T> center = tgt::Vector3<T>::fromPointer((*it)->getCenter().data);
-            T radius = (*it)->getRadius();
+            tgt::Vector3<T> center = tgt::Vector3<T>::fromPointer(leafs[i]->getCenter().data);
+            T radius = leafs[i]->getRadius();
 
             tgt::Vector3<T> min = center - radius - offset;
             tgt::Vector3<T> max = center + radius - offset;
@@ -113,8 +115,8 @@ void GeometryInsideTest::process() {
             tgt::svec3 llf = tgt::max(min / spacing, tgt::Vector3<T>::zero);
             tgt::svec3 urb = tgt::min(max / spacing, tgt::Vector3<T>(idVolume->getDimensions()));
 
-            VRN_FOR_EACH_VOXEL(i, llf, urb) {
-                idVolume->setVoxelNormalized(INSIDE, i);
+            VRN_FOR_EACH_VOXEL(j, llf, urb) {
+                idVolume->setVoxelNormalized(INSIDE, j);
             }
         }
     }
