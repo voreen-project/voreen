@@ -262,13 +262,5 @@ protected:
   void updateParticleDistribution();
 };
 
-// Magnetic particle type
-template<>
-void ParticleSystem3D<double, MagneticParticle3D>::integrateTorqueMag(double dT);
-template<>
-void ParticleSystem3D<double, MagneticParticle3D>::computeForce();
-template<>
-void ParticleSystem3D<double, MagneticParticle3D>::resetMag();
-
 }  //namespace olb
 #endif /* PARTICLE_SYSTEM_3D_H */

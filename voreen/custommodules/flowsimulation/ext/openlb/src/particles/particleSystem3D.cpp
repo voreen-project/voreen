@@ -92,4 +92,74 @@ setVelToFluidVel<descriptors::ForcedD3Q19Descriptor>(
 };
 #endif
 
+template<>
+void ParticleSystem3D<double, MagneticParticle3D>::resetMag()
+{
+  typename std::deque<MagneticParticle3D<double> >::iterator p;
+  int pInt = 0;
+  for (p = _particles.begin(); p != _particles.end(); ++p, ++pInt) {
+    if (p->getActive()) {
+      p->resetForce();
+      p->resetTorque();
+    }
+  }
+}
+
+template<>
+void ParticleSystem3D<double, MagneticParticle3D>::computeForce()
+{
+  typename std::deque<MagneticParticle3D<double> >::iterator p;
+  int pInt = 0;
+  for (p = _particles.begin(); p != _particles.end(); ++p, ++pInt) {
+    if (p->getActive()) {
+      for (auto f : _forces) {
+        f->applyForce(p, pInt, *this);
+      }
+    }
+  }
+}
+
+template<>
+void ParticleSystem3D<double, MagneticParticle3D>::integrateTorqueMag(double dT)
+{
+  for (auto& p : _particles) {
+    Vector<double, 3> deltaAngle;
+    double angle;
+    double epsilon = std::numeric_limits<double>::epsilon();
+    double damping = std::pow((1. - p.getADamping()), dT);
+    for (int i = 0; i < 3; i++) {
+      p.getAVel()[i] += (5. * (p.getTorque()[i]) * dT) / (2.  * p.getMass() * std::pow(p.getRad(), 2));
+      p.getAVel()[i] *= damping;
+      deltaAngle[i] = p.getAVel()[i] * dT;
+    }
+    angle = norm(deltaAngle);
+    if (angle > epsilon) {
+      std::vector<double> null(3, double());
+
+      RotationRoundAxis3D<double, double> rotRAxis(null, util::fromVector3(deltaAngle), angle);
+      double input[3] = {p.getMoment()[0], p.getMoment()[1], p.getMoment()[2]};
+      Vector<double, 3> in(input);
+      double output[3] = {double(), double(), double()};
+      rotRAxis(output, input);
+      Vector<double, 3> out(output);
+      // renormalize output
+      if (out.norm() > epsilon) {
+        out = (1. / out.norm()) * out;
+      }
+
+      p.getMoment()[0] = out[0];
+      p.getMoment()[1] = out[1];
+      p.getMoment()[2] = out[2];
+    }
+  }
+}
+
+// Magnetic particle type
+template<>
+void ParticleSystem3D<double, MagneticParticle3D>::integrateTorqueMag(double dT);
+template<>
+void ParticleSystem3D<double, MagneticParticle3D>::computeForce();
+template<>
+void ParticleSystem3D<double, MagneticParticle3D>::resetMag();
+
 }  // namespace olb
