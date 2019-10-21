@@ -298,7 +298,7 @@ bool PickableObject::isClicked() const{
 
 void PickableObject::refreshPositions(){
     oldScreenPosition_ = newScreenPosition_;
-    oldWorldPosition_ = oldWorldPosition_;
+    oldWorldPosition_ = newWorldPosition_;
 }
 
 }
