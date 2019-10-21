@@ -45,7 +45,7 @@ OpenCLModule::OpenCLModule(const std::string& modulePath)
     , opencl_(nullptr)
     , context_(nullptr)
     , queue_(nullptr)
-    , glSharing_("sharingProp", "GL Sharing (change requires restart)", true)
+    , glSharing_("sharingProp", "GL Sharing", true)
     , deviceProp_("deviceProp", "Device:", Processor::INVALID_RESULT, true)
     , currentDeviceIdx_(-1)
 {
@@ -135,6 +135,7 @@ void OpenCLModule::initializeGL() {
         }
     }
 
+    glSharing_.onChange(MemberFunctionCallback<OpenCLModule>(this, &OpenCLModule::setupDevice));
     deviceProp_.onChange(MemberFunctionCallback<OpenCLModule>(this, &OpenCLModule::setupDevice));
     deviceProp_.updateWidgets();
     setupDevice();
@@ -156,10 +157,6 @@ void OpenCLModule::deinitializeGL() {
 }
 
 void OpenCLModule::setupDevice() {
-
-    // Skip if device didn't change.
-    if (currentDeviceIdx_ == deviceProp_.getValue())
-        return;
 
     // Clear old resources.
     if (context_) {
@@ -243,12 +240,7 @@ cl::Device& OpenCLModule::getCLDevice() {
 }
 
 void OpenCLModule::setGLSharing(bool enabled) {
-    if (context_) {
-        LWARNING("setGLSharing() no effect: OpenCL context already initialized");
-    }
-    else {
-        glSharing_.set(enabled);
-    }
+    glSharing_.set(enabled);
 }
 
 bool OpenCLModule::getGLSharing() const {
