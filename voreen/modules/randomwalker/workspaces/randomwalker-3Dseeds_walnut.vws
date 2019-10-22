@@ -1,10 +1,15 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="true" GlobalDescription="">
-        <ProcessorNetwork version="19">
+        <ProcessorNetwork version="20">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="RandomWalker" ref="ref6" />
+                    </values>
                 </MetaItem>
                 <MetaItem name="Zoom" type="ZoomMetaData">
                     <transform.row0 x="0.39685088396072388" y="0" z="0" />
@@ -46,7 +51,7 @@
                                 <paths>
                                     <item value="../../../../../voreen-testdata/voreen-testdata/output/canvas-main.png" />
                                     <item value="../../voreen-testdata/voreen-testdata/output/canvas-main.png" />
-                                    <item value="C:/voreen-testdata/voreen-testdata/output/canvas-main.png" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/canvas-main.png" />
                                 </paths>
                             </paths>
                         </Property>
@@ -134,11 +139,11 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="false" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028209813" id="ref109">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028314985" id="ref109">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="722" y="373" />
                             </MetaData>
-                            <position x="2.159843206" y="2.452311516" z="1.339456081" />
+                            <position x="2.152030706" y="2.444499016" z="1.331643581" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             <upVector x="-0.292266846" y="-0.335775167" z="0.895452499" />
                             <trackball moveCenter="false">
@@ -437,7 +442,6 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="beta" name="beta" value="12" tracking="false" />
-                        <Property mapKey="clearCache" name="clearCache" />
                         <Property mapKey="clipRegion">
                             <bounds.llf x="0" y="0" z="0" />
                             <bounds.urb x="1" y="1" z="1" />
@@ -447,9 +451,9 @@
                             <maxRange x="2147483647" y="2147483647" z="2147483647" />
                             <stepping x="1" y="1" z="1" />
                         </Property>
-                        <Property mapKey="computeButton" name="computeButton" />
                         <Property mapKey="conjGradImplementation" name="conjGradImplementation" value="blasCL" />
                         <Property mapKey="conjGradIterations" name="conjGradIterations" value="1000" tracking="false" />
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="edgeWeightBalance" name="edgeWeightBalance" value="0.5" />
                         <Property mapKey="edgeWeightTransFunc" name="edgeWeightTransFunc" domainFittingStrategy="1" computeHistogram="true" id="ref81">
                             <MetaData>
@@ -486,18 +490,21 @@
                             <value x="32" y="24" z="29" />
                         </Property>
                         <Property mapKey="lodSeedErosionKernelSize" name="lodSeedErosionKernelSize" value="3" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="minEdgeWeight" name="minEdgeWeight" value="4" tracking="false" />
                         <Property mapKey="preconditioner" name="preconditioner" value="jacobi" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="resampleOutputVolumes" name="resampleOutputVolumes" value="true" />
-                        <Property mapKey="runOnInit" name="runOnInit" value="false" />
-                        <Property mapKey="useCaching" name="useCaching" value="false" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 2.196 sec" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="usePrevProbAsInitialization" name="usePrevProbAsInitialization" value="false" />
                     </Properties>
                     <Inports>
-                        <Port name="geometry.seedsBackground" direction="1" portID="geometry.seedsBackground" guiName="geometry.seedsBackground" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.seedsBackground" direction="1" portID="geometry.seedsBackground" guiName="geometry.seedsBackground" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties />
                         </Port>
-                        <Port name="geometry.seedsForeground" direction="1" portID="geometry.seedsForeground" guiName="geometry.seedsForeground" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.seedsForeground" direction="1" portID="geometry.seedsForeground" guiName="geometry.seedsForeground" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties />
                         </Port>
                         <Port name="volume.input" direction="1" portID="volume.input" guiName="" allowMultipleConnections="false" invalidationLevel="1">
@@ -605,12 +612,12 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
                         </Port>
-                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -788,12 +795,12 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
                         </Port>
-                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -1394,12 +1401,12 @@ void main() {
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
                         </Port>
-                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -1508,7 +1515,7 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
-                                <texDimensions x="1024" y="1" z="1" />
+                                <texDimensions x="4096" y="1" z="1" />
                                 <domain x="0" y="1" />
                                 <threshold x="0" y="1" />
                                 <Keys>
@@ -1667,12 +1674,12 @@ void main() {
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
                         </Port>
-                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -1800,7 +1807,7 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
-                                <texDimensions x="1024" y="1" z="1" />
+                                <texDimensions x="4096" y="1" z="1" />
                                 <domain x="0" y="1" />
                                 <threshold x="0" y="1" />
                                 <Keys>
@@ -2312,7 +2319,7 @@ void main() {
                         <Property mapKey="sliceIndex" name="sliceIndex" value="57" id="ref66" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
-                            <value x="-1" y="-1" z="-1" />
+                            <value x="10" y="35" z="57" />
                         </Property>
                         <Property mapKey="textureMode" name="textureMode" value="3d-texture" />
                         <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true" id="ref80">
@@ -2492,12 +2499,12 @@ void main() {
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
                         </Port>
-                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -2628,12 +2635,12 @@ void main() {
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
                         </Port>
-                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -2816,7 +2823,7 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
-                                <texDimensions x="1024" y="1" z="1" />
+                                <texDimensions x="4096" y="1" z="1" />
                                 <domain x="0" y="1" />
                                 <threshold x="0" y="1" />
                                 <Keys>
@@ -3309,7 +3316,7 @@ void main() {
                                 <paths>
                                     <item value="../../../../../voreen-testdata/voreen-testdata" />
                                     <item value="../../voreen-testdata/voreen-testdata" />
-                                    <item value="C:/voreen-testdata/voreen-testdata" />
+                                    <item value="/git/voreen-testdata/voreen-testdata" />
                                 </paths>
                             </paths>
                         </Property>
@@ -3381,7 +3388,7 @@ void main() {
                                 <paths>
                                     <item value="../../../../../voreen-testdata/voreen-testdata/output/segmentation.vvd" />
                                     <item value="../../voreen-testdata/voreen-testdata/output/segmentation.vvd" />
-                                    <item value="C:/voreen-testdata/voreen-testdata/output/segmentation.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/segmentation.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -3454,11 +3461,11 @@ void main() {
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-764" y="191" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028209813" id="ref107">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028314985" id="ref107">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="751" y="346" />
                             </MetaData>
-                            <position x="2.159843206" y="2.452311516" z="1.339456081" />
+                            <position x="2.152030706" y="2.444499016" z="1.331643581" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             <upVector x="-0.292266846" y="-0.335775167" z="0.895452499" />
                             <trackball moveCenter="false">
@@ -3474,7 +3481,7 @@ void main() {
                         <Property mapKey="useCulling" name="useCulling" value="true" />
                     </Properties>
                     <Inports>
-                        <Port name="proxgeometry.geometry" direction="1" portID="proxgeometry.geometry" guiName="Proxy Geometry Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="proxgeometry.geometry" direction="1" portID="proxgeometry.geometry" guiName="Proxy Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                     </Inports>
@@ -3524,18 +3531,18 @@ void main() {
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLightAttenuation" name="applyLightAttenuation" value="false" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028209813" id="ref106">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028314985" id="ref106">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="751" y="346" />
                             </MetaData>
-                            <position x="2.159843206" y="2.452311516" z="1.339456081" />
+                            <position x="2.152030706" y="2.444499016" z="1.331643581" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             <upVector x="-0.292266846" y="-0.335775167" z="0.895452499" />
                             <trackball moveCenter="false">
                                 <center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             </trackball>
-                            <sceneLLF x="-1" y="-0.75" z="-0.890625" />
-                            <sceneURB x="1" y="0.75" z="0.890625" />
+                            <sceneLLF x="-1.0078125" y="-0.7578125" z="-0.8984375" />
+                            <sceneURB x="0.9921875" y="0.7421875" z="0.8828125" />
                         </Property>
                         <Property mapKey="channelShift1" name="channelShift1">
                             <value x="0" y="0" z="0" />
@@ -3619,14 +3626,14 @@ void main() {
                         <Property mapKey="lightDiffuse" name="lightDiffuse">
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
                         </Property>
-                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="10">
+                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="30.696662903">
                             <MetaData>
                                 <MetaItem name="FollowCamera" type="BoolMetaData" value="false" />
                                 <MetaItem name="UseBackHemisphere" type="BoolMetaData" value="false" />
                             </MetaData>
                             <value x="1.274953842" y="0.828774214" z="0.828774214" w="1" />
                             <Center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <LightPos x="-0.408813059" y="0.21404767" z="1.682943821" w="1" />
+                            <LightPos x="-0.409144163" y="0.215489209" z="1.682679176" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -3696,7 +3703,7 @@ void main() {
                             <TransferFunction type="TransFuncIntensityGradient" alphaMode="1" filter="1" dataType="5126">
                                 <texDimensions x="256" y="256" z="1" />
                                 <gammaValues x="1" y="1" />
-                                <domains x="0" y="1" z="0" w="1" />
+                                <domains x="0" y="1" z="0" w="35.777088165" />
                                 <thresholds x="0" y="1" z="0" w="1" />
                                 <Primitives />
                             </TransferFunction>
@@ -3730,7 +3737,7 @@ void main() {
                         </Property>
                         <Property mapKey="transFuncGaussian1" name="transFuncGaussian1" domainFittingStrategy="1" computeHistogram="true">
                             <TransferFunction type="TransFuncGaussian" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
-                                <texDimensions x="1024" y="1" z="1" />
+                                <texDimensions x="256" y="1" z="1" />
                                 <domain x="0" y="1" />
                                 <threshold x="0" y="1" />
                                 <Curves>
@@ -3782,7 +3789,7 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
-                                <texDimensions x="1024" y="1" z="1" />
+                                <texDimensions x="256" y="1" z="1" />
                                 <domain x="0" y="1" />
                                 <threshold x="0" y="1" />
                                 <Keys>
@@ -3885,12 +3892,12 @@ void main() {
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-997" y="291" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028209813" id="ref108">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028314985" id="ref108">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="124" y="457" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="2.159843206" y="2.452311516" z="1.339456081" />
+                            <position x="2.152030706" y="2.444499016" z="1.331643581" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             <upVector x="-0.292266846" y="-0.335775167" z="0.895452499" />
                             <trackball moveCenter="false">
@@ -4056,7 +4063,7 @@ void main() {
                                 <paths>
                                     <item value="../../../../../voreen-testdata/voreen-testdata" />
                                     <item value="../../voreen-testdata/voreen-testdata" />
-                                    <item value="C:/voreen-testdata/voreen-testdata" />
+                                    <item value="/git/voreen-testdata/voreen-testdata" />
                                 </paths>
                             </paths>
                         </Property>
@@ -4100,7 +4107,7 @@ void main() {
                         <Property mapKey="showLegend" name="showLegend" value="false" />
                     </Properties>
                     <Inports>
-                        <Port name="geometry" direction="1" portID="geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="geometry" direction="1" portID="geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                         <Port name="volume" direction="1" portID="volume" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -4133,7 +4140,7 @@ void main() {
                                 <paths>
                                     <item value="../../../../../voreen-testdata/voreen-testdata/output/probabilities.vvd" />
                                     <item value="../../voreen-testdata/voreen-testdata/output/probabilities.vvd" />
-                                    <item value="C:/voreen-testdata/voreen-testdata/output/probabilities.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/probabilities.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -4167,7 +4174,7 @@ void main() {
                                     <paths>
                                         <item value="../../../resource/voreenve/volumes/walnut.vvd" />
                                         <item value="resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="C:/voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="/git/voreen1/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -4296,7 +4303,7 @@ void main() {
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="proxygeometry.geometry" direction="0" portID="proxygeometry.geometry" guiName="Proxy Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="proxygeometry.geometry" direction="0" portID="proxygeometry.geometry" guiName="Proxy Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>

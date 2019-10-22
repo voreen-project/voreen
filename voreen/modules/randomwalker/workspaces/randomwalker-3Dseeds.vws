@@ -1,10 +1,15 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="true" GlobalDescription="">
-        <ProcessorNetwork version="18">
+        <ProcessorNetwork version="20">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="RandomWalker" ref="ref6" />
+                    </values>
                 </MetaItem>
                 <MetaItem name="Zoom" type="ZoomMetaData">
                     <transform.row0 x="0.39685088396072388" y="0" z="0" />
@@ -143,8 +148,8 @@
                         </Property>
                         <Property mapKey="composeShader" name="composeShader">
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="forceAdaptToScene" name="forceAdaptToScene" />
@@ -153,14 +158,14 @@
                         </Property>
                         <Property mapKey="oirAddImageShader" name="oirAddImageShader">
                             <components>
-                                <item shaderType="1" originalFilename="oit_addimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="oit_addimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="oirBlendShader" name="oirBlendShader">
                             <components>
-                                <item shaderType="1" originalFilename="oit_blend.frag" modified="false" />
                                 <item shaderType="0" originalFilename="oit_passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="oit_blend.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="renderGeometries" name="renderGeometries" value="true" />
@@ -224,14 +229,14 @@
                         <Property mapKey="lineZWidth" name="lineZWidth" value="1" />
                         <Property mapKey="planeShaderOpaque" name="planeShaderOpaque">
                             <components>
-                                <item shaderType="1" originalFilename="slicepositionrenderer.frag" modified="false" />
                                 <item shaderType="0" originalFilename="slicepositionrenderer.vert" modified="false" />
+                                <item shaderType="1" originalFilename="slicepositionrenderer.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="planeShaderTransparent" name="planeShaderTransparent">
                             <components>
-                                <item shaderType="1" originalFilename="slicepositionrenderer.frag" modified="false" />
                                 <item shaderType="0" originalFilename="slicepositionrenderer.vert" modified="false" />
+                                <item shaderType="1" originalFilename="slicepositionrenderer.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="renderXSlice" name="renderXSlice" value="true" />
@@ -431,7 +436,6 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="beta" name="beta" value="12" tracking="false" />
-                        <Property mapKey="clearCache" name="clearCache" />
                         <Property mapKey="clipRegion">
                             <bounds.llf x="0" y="0" z="0" />
                             <bounds.urb x="1" y="1" z="1" />
@@ -441,9 +445,9 @@
                             <maxRange x="2147483647" y="2147483647" z="2147483647" />
                             <stepping x="1" y="1" z="1" />
                         </Property>
-                        <Property mapKey="computeButton" name="computeButton" />
                         <Property mapKey="conjGradImplementation" name="conjGradImplementation" value="blasCL" />
                         <Property mapKey="conjGradIterations" name="conjGradIterations" value="1000" tracking="false" />
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="edgeWeightBalance" name="edgeWeightBalance" value="0.5" />
                         <Property mapKey="edgeWeightTransFunc" name="edgeWeightTransFunc" domainFittingStrategy="1" computeHistogram="true" id="ref81">
                             <MetaData>
@@ -480,18 +484,21 @@
                             <value x="32" y="24" z="29" />
                         </Property>
                         <Property mapKey="lodSeedErosionKernelSize" name="lodSeedErosionKernelSize" value="3" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="minEdgeWeight" name="minEdgeWeight" value="4" tracking="false" />
                         <Property mapKey="preconditioner" name="preconditioner" value="jacobi" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="resampleOutputVolumes" name="resampleOutputVolumes" value="true" />
-                        <Property mapKey="runOnInit" name="runOnInit" value="false" />
-                        <Property mapKey="useCaching" name="useCaching" value="false" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Stopped" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="usePrevProbAsInitialization" name="usePrevProbAsInitialization" value="false" />
                     </Properties>
                     <Inports>
-                        <Port name="geometry.seedsBackground" direction="1" portID="geometry.seedsBackground" guiName="geometry.seedsBackground" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.seedsBackground" direction="1" portID="geometry.seedsBackground" guiName="geometry.seedsBackground" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties />
                         </Port>
-                        <Port name="geometry.seedsForeground" direction="1" portID="geometry.seedsForeground" guiName="geometry.seedsForeground" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.seedsForeground" direction="1" portID="geometry.seedsForeground" guiName="geometry.seedsForeground" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties />
                         </Port>
                         <Port name="volume.input" direction="1" portID="volume.input" guiName="" allowMultipleConnections="false" invalidationLevel="1">
@@ -581,8 +588,8 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
@@ -599,12 +606,12 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
                         </Port>
-                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -643,8 +650,8 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="weightFirst" name="weightFirst" value="1" />
@@ -714,8 +721,8 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
@@ -732,12 +739,12 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
                         </Port>
-                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -774,6 +781,7 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
                                         <![CDATA[/***********************************************************************************
@@ -844,7 +852,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -875,6 +882,7 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
                                         <![CDATA[/***********************************************************************************
@@ -985,7 +993,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -1016,6 +1023,7 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
                                         <![CDATA[/***********************************************************************************
@@ -1068,7 +1076,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -1287,8 +1294,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
@@ -1305,12 +1312,12 @@ void main() {
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
                         </Port>
-                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -1535,8 +1542,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
@@ -1553,12 +1560,12 @@ void main() {
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
                         </Port>
-                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -1750,6 +1757,7 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
                                         <![CDATA[/***********************************************************************************
@@ -1802,7 +1810,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -1833,6 +1840,7 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
                                         <![CDATA[/***********************************************************************************
@@ -1903,7 +1911,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -1934,6 +1941,7 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
                                         <![CDATA[/***********************************************************************************
@@ -2044,7 +2052,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -2077,8 +2084,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="weightFirst" name="weightFirst" value="1" />
@@ -2303,8 +2310,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
@@ -2321,12 +2328,12 @@ void main() {
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
                         </Port>
-                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -2409,8 +2416,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="copyimage.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
@@ -2427,12 +2434,12 @@ void main() {
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometry" direction="0" portID="geometry.roiGeometry" guiName="ROI Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
                         </Port>
-                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="geometry.roiGeometryLayer" direction="0" portID="geometry.roiGeometryLayer" guiName="ROI Geometry Layer" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -2624,6 +2631,7 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
                                         <![CDATA[/***********************************************************************************
@@ -2676,7 +2684,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -2707,6 +2714,7 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
                                         <![CDATA[/***********************************************************************************
@@ -2777,7 +2785,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -2808,6 +2815,7 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                                 <item shaderType="1" originalFilename="image/unary.frag" modified="true">
                                     <source>
                                         <![CDATA[/***********************************************************************************
@@ -2918,7 +2926,6 @@ void main() {
 ]]>
                                     </source>
                                 </item>
-                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
                             </components>
                         </Property>
                     </Properties>
@@ -2951,8 +2958,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="weightFirst" name="weightFirst" value="1" />
@@ -3000,8 +3007,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false">
@@ -3037,8 +3044,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/compositor.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="weightFirst" name="weightFirst" value="1" />
@@ -3115,8 +3122,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/edgedetect.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/edgedetect.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="showImage" name="showImage" value="true" />
@@ -3162,7 +3169,7 @@ void main() {
                         <Property mapKey="useCulling" name="useCulling" value="true" />
                     </Properties>
                     <Inports>
-                        <Port name="proxgeometry.geometry" direction="1" portID="proxgeometry.geometry" guiName="Proxy Geometry Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="proxgeometry.geometry" direction="1" portID="proxgeometry.geometry" guiName="Proxy Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                     </Inports>
@@ -3239,19 +3246,16 @@ void main() {
                         </Property>
                         <Property mapKey="classification" name="classification" value="transfer-function">
                             <Options>
-                                <Option Key="none" Description="none" Value="none">
-                                    <GuiColor r="0" g="0" b="0" a="0" />
-                                </Option>
                                 <Option Key="transfer-function" Description="Transfer Function" Value="transfer-function">
                                     <GuiColor r="0" g="0" b="0" a="0" />
                                 </Option>
                                 <Option Key="pre-integrated-gpu" Description="Pre-Integrated TF (GPU)" Value="pre-integrated-gpu">
                                     <GuiColor r="0" g="0" b="0" a="0" />
                                 </Option>
-                                <Option Key="pre-integrated-cpu" Description="Pre-integrated TF (CPU)" Value="pre-integrated-cpu">
+                                <Option Key="pre-integrated-cpu" Description="Pre-Integrated TF (CPU)" Value="pre-integrated-cpu">
                                     <GuiColor r="0" g="0" b="0" a="0" />
                                 </Option>
-                                <Option Key="pre-integrated-approximation" Description="Pre-integrated TF (Approximation)" Value="pre-integrated-approximation">
+                                <Option Key="pre-integrated-approximation" Description="Pre-Integrated TF (Approximation)" Value="pre-integrated-approximation">
                                     <GuiColor r="0" g="0" b="0" a="0" />
                                 </Option>
                             </Options>
@@ -3263,7 +3267,7 @@ void main() {
                         <Property mapKey="gammaValue" name="gammaValue" value="0" />
                         <Property mapKey="gammaValue1" name="gammaValue1" value="0" />
                         <Property mapKey="gammaValue2" name="gammaValue2" value="0" />
-                        <Property mapKey="gradient" name="gradient" value="central-differences">
+                        <Property mapKey="gradient" name="gradient" value="sobel">
                             <Options>
                                 <Option Key="none" Description="none" Value="none">
                                     <GuiColor r="0" g="0" b="0" a="0" />
@@ -3328,8 +3332,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="rc_singlevolume.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="rc_singlevolume.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="renderingQuality" name="renderingQuality" value="High">
@@ -3724,8 +3728,8 @@ void main() {
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
-                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
                             </components>
                         </Property>
                         <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false">
@@ -3771,7 +3775,7 @@ void main() {
                         <Property mapKey="showLegend" name="showLegend" value="false" />
                     </Properties>
                     <Inports>
-                        <Port name="geometry" direction="1" portID="geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="geometry" direction="1" portID="geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                         <Port name="volume" direction="1" portID="volume" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -3950,7 +3954,7 @@ void main() {
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="proxygeometry.geometry" direction="0" portID="proxygeometry.geometry" guiName="Proxy Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="proxygeometry.geometry" direction="0" portID="proxygeometry.geometry" guiName="Proxy Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
