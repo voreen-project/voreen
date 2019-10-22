@@ -104,7 +104,7 @@ class DiskArrayBuilder;
 template<typename Element>
 class DiskArrayStorage {
 public:
-    DiskArrayStorage(const std::string& storagefilename);
+    DiskArrayStorage(const std::string& storagefilename, size_t numElements = 0);
     ~DiskArrayStorage();
 
     // Note: The store must live longer than the returned DiskArray!
@@ -387,12 +387,15 @@ typename DiskArray<Element>::const_reverse_iterator DiskArray<Element>::rend() c
 
 /// Impl: DiskArrayStorage -----------------------------------------------------
 template<typename Element>
-DiskArrayStorage<Element>::DiskArrayStorage(const std::string& storagefilename)
+DiskArrayStorage<Element>::DiskArrayStorage(const std::string& storagefilename, size_t numElements)
     : file_()
-    , numElements_(0)
+    , numElements_(numElements)
     , storagefilename_(storagefilename)
     , physicalFileSize_(0)
 {
+    if(numElements_ > 0) {
+        ensureFit(numElements_);
+    }
 }
 
 template<typename Element>
