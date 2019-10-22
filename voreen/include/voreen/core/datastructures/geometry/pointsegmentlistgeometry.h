@@ -193,6 +193,7 @@ class PointSegmentListGeometryVec3 : public PointSegmentListGeometry<tgt::vec3> 
         clone->segmentList_ = segmentList_;
         clone->pointList_ = pointList_;
         clone->numPoints_ = numPoints_;
+        clone->setTransformationMatrix(getTransformationMatrix());
         return std::unique_ptr<Geometry>(clone);
     }
 };

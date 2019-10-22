@@ -149,6 +149,7 @@ public:
     virtual std::unique_ptr<Geometry> clone() const {
         PointListGeometryVec3* clone = new PointListGeometryVec3();
         clone->points_ = points_;
+        clone->setTransformationMatrix(getTransformationMatrix());
         return std::unique_ptr<Geometry>(clone);
     }
 };
