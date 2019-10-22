@@ -462,6 +462,9 @@ void InteractiveProjectionLabeling::finishProjection() {
     float min_dist = minmax.x;
     float max_dist = minmax.y;
 
+    auto world_to_physical = vol.getWorldToPhysicalMatrix();
+    auto bounds = tgt::Bounds(vol.getLLF(), vol.getURB());
+
     auto project3D = [&] (const PolyLine<tgt::vec2>& projectionLine) {
         std::vector<tgt::vec3> segment;
         for(int i=0; i<NUM_SAMPLES; ++i) {
@@ -473,6 +476,8 @@ void InteractiveProjectionLabeling::finishProjection() {
             float depth = normalized_depth * (max_dist - min_dist) + min_dist;
 
             float display_d = projectionPoint.x;
+            tgtAssert(-0.1 < display_d && display_d < 1.1, "Invalid interpolation value"); // might happen due to numerical inaccuracies.
+            display_d = tgt::clamp(display_d, 0.0f, 1.0f);
 
             tgt::vec2 display_point = displayLine.interpolate(display_d);
 
@@ -480,12 +485,21 @@ void InteractiveProjectionLabeling::finishProjection() {
             tgt::vec4 front_pos = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
             tgt::vec4 back_pos = back.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
 
+            if(front_pos.a == 0.0 || back_pos.a == 0) {
+                continue;
+            }
+
             tgt::vec4 front_world = tex_to_world * front_pos;
             tgt::vec4 back_world = tex_to_world * back_pos;
 
             tgt::vec3 view_dir = tgt::normalize(back_world.xyz() - front_world.xyz());
 
             tgt::vec3 point = camera + depth*view_dir;
+
+            // Perform clipping at volume boundary
+            if(!bounds.containsPoint(world_to_physical.transform(point))) {
+                continue;
+            }
             segment.push_back(point);
         }
         return segment;
