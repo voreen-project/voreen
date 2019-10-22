@@ -59,6 +59,7 @@ struct SimilarityMatrixCreatorInput {
     float isoValue;
     MultiChannelSimilarityMeasure multiChannelSimilarityMeasure;
     float weight;
+    std::string hash;
 };
 
 struct SimilarityMatrixCreatorOutput {
@@ -85,6 +86,8 @@ protected:
     virtual std::vector<std::reference_wrapper<Port>> getCriticalPorts();
 
 private:
+
+    std::string calculateHash() const;
 
     OptionProperty<SingleChannelSimilarityMeasure> singleChannelSimilarityMeasure_;
     FloatProperty isoValue_;

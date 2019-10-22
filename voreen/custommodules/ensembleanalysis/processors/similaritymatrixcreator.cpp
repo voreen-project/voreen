@@ -124,6 +124,17 @@ void SimilarityMatrixCreator::adjustPropertiesToInput() {
     //numSeedPoints_.set(32768);
 }
 
+std::string SimilarityMatrixCreator::calculateHash() const {
+    std::string hash;
+
+    hash = EnsembleHash(*inport_.getData()).getHash();
+    hash += seedMask_.getHash();
+    hash += std::to_string(seedTime_.get());
+    hash += std::to_string(numSeedPoints_.get());
+
+    return VoreenHash::getHash(hash);
+}
+
 SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
     const EnsembleDataset* inputPtr = inport_.getThreadSafeData();
     if (!inputPtr)
@@ -222,7 +233,8 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
             singleChannelSimilarityMeasure_.getValue(),
             isoValue_.get(),
             multiChannelSimilarityMeasure_.getValue(),
-            weight_.get()
+            weight_.get(),
+            calculateHash()
     };
 }
 
@@ -243,55 +255,103 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
              valueRange = input.dataset.getValueRange(fieldName);
         }
         else {
-            valueRange.x = std::numeric_limits<float>::max();
-            valueRange.y = 0.0f;
+            // If we use multi-channel volumes, we need to calculate the min. and max. magnitude in order
+            // to properly scale values later on to achieve a matrix whose values are within [0, 1].
+            valueRange = input.dataset.getMagnitudeRange(fieldName);
         }
 
         // Init empty flags.
+        const size_t numElements = input.dataset.getTotalNumTimeSteps() * seedPoints.size() * numChannels;
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
-        DiskArrayStorage<float> Flags(VoreenApplication::app()->getUniqueTmpFilePath());
+        std::unique_ptr<DiskArrayStorage<float>> flagStorage;
+        DiskArray<float> Flags;
 #else
         std::vector<float> Flags;
-        Flags.reserve(input.dataset.getTotalNumTimeSteps() * seedPoints.size() * numChannels);
+        Flags.reserve(numElements);
 #endif
 
-        SubtaskProgressReporter runProgressReporter(progress, tgt::vec2(fi, 0.9f*(fi+1))/tgt::vec2(fieldNames.size()));
-        float progressPerTimeStep = 1.0f / (input.dataset.getTotalNumTimeSteps());
-        size_t index = 0;
-        for (const EnsembleDataset::Run& run : input.dataset.getRuns()) {
-            for (const EnsembleDataset::TimeStep& timeStep : run.timeSteps_) {
+        std::string tmpPath =  VoreenApplication::app()->getUniqueTmpFilePath();
+        std::string flagFile = input.hash + ".flags";
 
-                const VolumeBase* volume = timeStep.fieldNames_.at(fieldName);
-                tgt::mat4 physicalToVoxelMatrix = volume->getPhysicalToVoxelMatrix();
-                RealWorldMapping rwm = volume->getRealWorldMapping();
+        std::string cachePath = tgt::FileSystem::cleanupPath(getCachePath() + "/" + flagFile);
+        bool cachedFileFound = VoreenApplication::app()->useCaching() && tgt::FileSystem::fileExists(cachePath);
 
-                VolumeRAMRepresentationLock lock(volume);
+        // Load cache file, if found one.
+        if(cachedFileFound) {
+            LINFO("Found cached flag file for field " << fieldName);
+#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
+            // Reuse memory mapped file. We need to create a copy because the file
+            // gets removed after DiskArrayStorage is destructed.
+            tgt::FileSystem::copyFile(cachePath, tmpPath);
+            flagStorage.reset(new DiskArrayStorage<float>(tmpPath, numElements));
+            Flags = flagStorage->asArray();
+#else
+            Flags.resize(numElements); // Actually set size.
+            std::fstream file(cachePath, std::ios_base::binary | std::ios_base::in);
+            file.read(reinterpret_cast<char*>(Flags.data()), Flags.size() * sizeof(float) / sizeof(char));
+            file.close();
+#endif
+            progress.setProgress(0.1f * (fi+1) / fieldNames.size());
+        }
+        else { // Or freshly create Flag array.
 
-                // If we use multi-channel volumes, we need to calculate the min. and max. magnitude in order
-                // to properly scale values later on to achieve a matrix whose values are within [0, 1].
-                // This is done right after the lock is acquired, since the derived data accesses the RAM repr.
-                if(numChannels > 1) {
-                    VolumeMinMaxMagnitude* vmm = volume->getDerivedData<VolumeMinMaxMagnitude>();
-                    valueRange.x = std::min(valueRange.x, vmm->getMinMagnitude());
-                    valueRange.y = std::max(valueRange.y, vmm->getMaxMagnitude());
-                }
-
-                for (const tgt::vec3& seedPoint : seedPoints) {
-                    for(size_t ch = 0; ch < numChannels; ch++) {
-                        float value = lock->getVoxelNormalized(physicalToVoxelMatrix * seedPoint, ch);
-                        value = rwm.normalizedToRealWorld(value);
+            LINFO("Creating flag file for " << fieldName);
 
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
-                        Flags.storeElement(value);
-#else
-                        Flags.push_back(value);
+            flagStorage.reset(new DiskArrayStorage<float>(tmpPath));
 #endif
-                    }
-                }
 
-                // Update progress.
-                runProgressReporter.setProgress(index * progressPerTimeStep);
-                index++;
+            SubtaskProgressReporter runProgressReporter(progress,
+                                                        tgt::vec2(fi, 0.8f * (fi + 1)) / tgt::vec2(fieldNames.size()));
+            float progressPerTimeStep = 1.0f / (input.dataset.getTotalNumTimeSteps());
+            size_t index = 0;
+            for (const EnsembleDataset::Run& run : input.dataset.getRuns()) {
+                for (const EnsembleDataset::TimeStep& timeStep : run.timeSteps_) {
+
+                    const VolumeBase* volume = timeStep.fieldNames_.at(fieldName);
+                    tgt::mat4 physicalToVoxelMatrix = volume->getPhysicalToVoxelMatrix();
+                    RealWorldMapping rwm = volume->getRealWorldMapping();
+
+                    VolumeRAMRepresentationLock lock(volume);
+                    for (const tgt::vec3& seedPoint : seedPoints) {
+                        for (size_t channel = 0; channel < numChannels; channel++) {
+                            float value = lock->getVoxelNormalized(physicalToVoxelMatrix * seedPoint, channel);
+                            value = rwm.normalizedToRealWorld(value);
+
+#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
+                            flagStorage->storeElement(value);
+#else
+                            Flags.push_back(value);
+#endif
+                        }
+                    }
+
+                    // Update progress.
+                    runProgressReporter.setProgress(index * progressPerTimeStep);
+                    index++;
+                }
+            }
+
+#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
+            Flags = flagStorage->asArray();
+#endif
+
+            // If caching is enabled, store the Flag file in the cache directory.
+            if (VoreenApplication::app()->useCaching()) {
+                tgt::FileSystem::createDirectoryRecursive(tgt::FileSystem::dirName(cachePath));
+#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
+                // Once we are done, copy the tmp file to the cache folder.
+                try {
+                    tgt::FileSystem::copyFile(tmpPath, cachePath);
+                }
+                catch (tgt::FileException& e) {
+                    LWARNING("Could not store Cache file of field " << fieldName << " - " << e.what());
+                }
+#else
+                std::fstream file(cachePath, std::ios_base::binary | std::ios_base::out);
+                file.write(reinterpret_cast<char*>(Flags.data()), Flags.size() * sizeof(float) / sizeof(char));
+                file.close();
+#endif
             }
         }
 
@@ -299,7 +359,9 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
         //Calculate distances for up-right corner and reflect them//
         ////////////////////////////////////////////////////////////
 
-        auto calcIndex = [&seedPoints, numChannels] (size_t timeStepIndex, size_t seedIndex, size_t channel = 0) {
+        LINFO("Calculating Distance Matrix for " << fieldName);
+
+        auto index = [&] (size_t timeStepIndex, size_t seedIndex, size_t channel = 0) {
             return timeStepIndex * seedPoints.size() * numChannels + seedIndex * numChannels + channel;
         };
 
@@ -328,11 +390,11 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
                         if(numChannels > 1 && input.multiChannelSimilarityMeasure == MEASURE_MAGNITUDE) {
                             // Calculate length.
-                            for (size_t ch = 0; ch < numChannels; ch++) {
-                                float flagA = Flags[calcIndex(i, k, ch)];
+                            for (size_t channel = 0; channel < numChannels; channel++) {
+                                float flagA = Flags[index(i, k, channel)];
                                 a += flagA * flagA;
 
-                                float flagB = Flags[calcIndex(j, k, ch)];
+                                float flagB = Flags[index(j, k, channel)];
                                 b += flagB * flagB;
                             }
 
@@ -340,8 +402,8 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                             b = std::sqrt(b);
                         }
                         else {
-                            a = Flags[calcIndex(i, k)];
-                            b = Flags[calcIndex(j, k)];
+                            a = Flags[index(i, k)];
+                            b = Flags[index(j, k)];
                         }
 
                         // Normalize range to interval [0, 1].
@@ -377,9 +439,9 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                         tgt::vec4 direction_i = tgt::vec4::zero;
                         tgt::vec4 direction_j = tgt::vec4::zero;
 
-                        for (size_t ch = 0; ch < numChannels; ch++) {
-                            direction_i[ch] = Flags[calcIndex(i, k, ch)];
-                            direction_j[ch] = Flags[calcIndex(j, k, ch)];
+                        for (size_t channel = 0; channel < numChannels; channel++) {
+                            direction_i[channel] = Flags[index(i, k, channel)];
+                            direction_j[channel] = Flags[index(j, k, channel)];
                         }
 
                         if(input.multiChannelSimilarityMeasure == MEASURE_ANGLEDIFFERENCE) {

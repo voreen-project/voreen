@@ -1022,7 +1022,7 @@ bool FileSystem::createDirectoryRecursive(const std::string& directory) {
     else {
         std::string dir = parentDir(directory);
         if(dir == directory) {
-            // Reached root of (potententially relative path), assuming / or current directory exists.
+            // Reached root of (potentially relative path), assuming / or current directory exists.
             return true;
         }
 
