@@ -171,55 +171,70 @@ int VoreenBlasMP::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
         memcpy(pBuf, zBuf, vecSize * sizeof(float));
     }
 
-    while (iteration < maxIterations) {
 
-        iteration++;
+    try {
+        while (iteration < maxIterations) {
+            progress.setProgress(static_cast<float>(iteration)/maxIterations);
 
-        // norm(r_k)
-        nominator = sDOT(vecSize, rBuf, rBuf);
+            iteration++;
 
-        if (precond == Jacobi)
-            nominator = sDOT(vecSize, rBuf, zBuf);
-        else
+            // norm(r_k)
             nominator = sDOT(vecSize, rBuf, rBuf);
 
-        // tmp <= A * p_k
-        sSpMVEll(mat, pBuf, tmpBuf);
+            if (precond == Jacobi)
+                nominator = sDOT(vecSize, rBuf, zBuf);
+            else
+                nominator = sDOT(vecSize, rBuf, rBuf);
 
-        // dot(p_k^T, tmp)
-        denominator = sDOT(vecSize, pBuf, tmpBuf);
+            // tmp <= A * p_k
+            sSpMVEll(mat, pBuf, tmpBuf);
 
-        float alpha = nominator / denominator;
+            // dot(p_k^T, tmp)
+            denominator = sDOT(vecSize, pBuf, tmpBuf);
 
-        // x <= alpha*p + x
-        sAXPY(vecSize, pBuf, xBuf, alpha, xBuf);
+            float alpha = nominator / denominator;
 
-        // r <= -alpha*tmp + r
-        sAXPY(vecSize, tmpBuf, rBuf, -alpha, rBuf);
+            // x <= alpha*p + x
+            sAXPY(vecSize, pBuf, xBuf, alpha, xBuf);
 
-        float beta;
+            // r <= -alpha*tmp + r
+            sAXPY(vecSize, tmpBuf, rBuf, -alpha, rBuf);
 
-        // norm(r_k+1)
-        if (precond == Jacobi) {
-            sSpMVEll(*preconditioner, rBuf, zBuf);
-            beta = sDOT(vecSize, rBuf, zBuf);
+            float beta;
+
+            // norm(r_k+1)
+            if (precond == Jacobi) {
+                sSpMVEll(*preconditioner, rBuf, zBuf);
+                beta = sDOT(vecSize, rBuf, zBuf);
+            }
+            else {
+                beta = sDOT(vecSize, rBuf, rBuf);
+            }
+
+            if (sqrt(beta) < threshold)
+                break;
+
+            beta /= nominator;
+
+            // p <= beta*p + r
+            if (precond == Jacobi) {
+                sAXPY(vecSize, pBuf, zBuf, beta, pBuf);
+            }
+            else {
+                sAXPY(vecSize, pBuf, rBuf, beta, pBuf);
+            }
         }
-        else {
-            beta = sDOT(vecSize, rBuf, rBuf);
-        }
+        progress.setProgress(1.0);
+    } catch(boost::thread_interrupted& e) {
+        delete[] rBuf;
+        delete[] pBuf;
+        delete[] zBuf;
+        delete preconditioner;
 
-        if (sqrt(beta) < threshold)
-            break;
+        if (initialAllocated)
+            delete[] initial;
 
-        beta /= nominator;
-
-        // p <= beta*p + r
-        if (precond == Jacobi) {
-            sAXPY(vecSize, pBuf, zBuf, beta, pBuf);
-        }
-        else {
-            sAXPY(vecSize, pBuf, rBuf, beta, pBuf);
-        }
+        throw e;
     }
 
     delete[] rBuf;
