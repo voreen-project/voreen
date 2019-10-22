@@ -102,23 +102,27 @@ void EnsembleDataset::addRun(const Run& run) {
                 minMax.y = std::max(minMax.y, vmm->getMax(c));
             }
 
-            /*
             // In further applications it might be useful to force derived data calculations
             // to improve responsivity after loading the data.
+            tgt::vec2 minMaxMagnitude = minMax;
             if(volume->getNumChannels() > 1) {
-                volume->getDerivedData<VolumeMinMaxMagnitude>();
+                VolumeMinMaxMagnitude* vmmm = volume->getDerivedData<VolumeMinMaxMagnitude>();
+                minMaxMagnitude.x = vmmm->getMinMagnitude();
+                minMaxMagnitude.y = vmmm->getMaxMagnitude();
             }
-            */
 
             bool firstFieldElement = fieldMetaData_.find(fieldName) == fieldMetaData_.end();
             FieldMetaData& fieldMetaData = fieldMetaData_[fieldName];
             if(firstFieldElement) {
                 fieldMetaData.valueRange_ = minMax;
+                fieldMetaData.magnitudeRange_ = minMaxMagnitude;
                 fieldMetaData.numChannels_ = volume->getNumChannels();
             }
             else {
                 fieldMetaData.valueRange_.x = std::min(fieldMetaData.valueRange_.x, minMax.x);
                 fieldMetaData.valueRange_.y = std::max(fieldMetaData.valueRange_.y, minMax.y);
+                fieldMetaData.magnitudeRange_.x = std::min(fieldMetaData.valueRange_.x, minMaxMagnitude.x);
+                fieldMetaData.magnitudeRange_.y = std::min(fieldMetaData.valueRange_.y, minMaxMagnitude.y);
                 if(fieldMetaData.numChannels_ != volume->getNumChannels()) {
                     LERRORC("voreen.EnsembleDataSet", "Number of channels inside channel differs, taking min.");
                     fieldMetaData.numChannels_ = std::min(fieldMetaData.numChannels_, volume->getNumChannels());
@@ -265,6 +269,11 @@ void EnsembleDataset::setRoi(tgt::Bounds roi) {
 const tgt::vec2& EnsembleDataset::getValueRange(const std::string& field) const {
     tgtAssert(fieldMetaData_.find(field) != fieldMetaData_.end(), "Field not available");
     return fieldMetaData_.at(field).valueRange_;
+}
+
+const tgt::vec2& EnsembleDataset::getMagnitudeRange(const std::string& field) const {
+    tgtAssert(fieldMetaData_.find(field) != fieldMetaData_.end(), "Field not available");
+    return fieldMetaData_.at(field).magnitudeRange_;
 }
 
 size_t EnsembleDataset::getNumChannels(const std::string& field) const {

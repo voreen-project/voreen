@@ -84,6 +84,7 @@ public:
     const tgt::vec2& getCommonTimeInterval() const;
 
     const tgt::vec2& getValueRange(const std::string& channel) const;
+    const tgt::vec2& getMagnitudeRange(const std::string& channel) const;
     size_t getNumChannels(const std::string& channel) const;
 
     // Bounds are defined in physical coordinates
@@ -111,6 +112,7 @@ private:
 
     struct FieldMetaData {
         tgt::vec2 valueRange_;
+        tgt::vec2 magnitudeRange_;
         size_t numChannels_{0};
     };
 
