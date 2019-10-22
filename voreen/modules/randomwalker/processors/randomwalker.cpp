@@ -368,7 +368,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
     };
 
     progressReporter.setProgress(0.0);
-    SubtaskProgressReporterCollection<3> globalProgressSteps(progressReporter, {0.1, 0.1, 0.8});
+    SubtaskProgressReporterCollection<3> globalProgressSteps(progressReporter, {0.01, 0.01, 0.98});
 
     auto start = clock::now();
     tgtAssert(input.inputHandle_, "No input Volume");
