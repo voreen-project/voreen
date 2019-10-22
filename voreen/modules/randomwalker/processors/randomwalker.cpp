@@ -348,7 +348,7 @@ static void getSeedListsFromPorts(std::vector<PortDataPointer<Geometry>>& geom, 
             LWARNINGC("voreen.RandomWalker.RandomWalker", "Invalid geometry. PointSegmentListGeometry<vec3> expected.");
         else {
             auto transformMat = seedList->getTransformationMatrix();
-           for (int j=0; j<seedList->getNumSegments(); j++) {
+            for (int j=0; j<seedList->getNumSegments(); j++) {
                 std::vector<tgt::vec3> points;
                 for(auto& vox : seedList->getSegment(j)) {
                     points.push_back(transformMat.transform(vox));
@@ -516,13 +516,8 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
         /*
          * 2. Set up Random Walker system.
          */
-        //LINFO("Constructing Random Walker equation system...");
 
-        loopRecord.numSeeds = seeds->getNumSeeds();
-        if (RandomWalkerTwoLabelSeeds* twoLabelSeeds = dynamic_cast<RandomWalkerTwoLabelSeeds*>(seeds.get())) {
-            loopRecord.numForegroundSeeds = twoLabelSeeds->getNumForegroundSeeds();
-            loopRecord.numBackgroundSeeds = twoLabelSeeds->getNumBackgroundSeeds();
-        }
+        const RandomWalkerSeeds* seedsRef = seeds.get(); // only valid until solver is deleted.
         solver.reset(new RandomWalkerSolver(workVolume, seeds.release(), input.weights_.release()));
         try {
             auto start = clock::now();
@@ -534,6 +529,11 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
         catch (tgt::Exception& e) {
             LERROR("Failed to setup Random Walker equation system: " << e.what());
             return invalidResult;
+        }
+        loopRecord.numSeeds = seedsRef->getNumSeeds();
+        if (const RandomWalkerTwoLabelSeeds* twoLabelSeeds = dynamic_cast<const RandomWalkerTwoLabelSeeds*>(seedsRef)) {
+            loopRecord.numForegroundSeeds = twoLabelSeeds->getNumForegroundSeeds();
+            loopRecord.numBackgroundSeeds = twoLabelSeeds->getNumBackgroundSeeds();
         }
 
         /*
