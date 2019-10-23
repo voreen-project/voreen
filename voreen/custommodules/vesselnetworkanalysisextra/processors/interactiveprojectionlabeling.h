@@ -73,6 +73,20 @@ private:
 struct ProjectionLabels {
     std::vector<std::deque<tgt::vec2>> foreground_;
     std::vector<std::deque<tgt::vec2>> background_;
+    void clear();
+};
+
+struct LabelUnit {
+    LabelUnit(const LabelUnit&) = delete;
+    LabelUnit(LabelUnit&&) = default;
+
+    tgt::Camera camera_;
+    std::deque<tgt::vec2> displayLine_;
+    ProjectionLabels projectionLabels_;
+
+    // result:
+    std::vector<std::vector<tgt::vec3>> backgroundLabels_;
+    std::vector<std::vector<tgt::vec3>> foregroundLabels_;
 
     void clear();
 };
@@ -94,8 +108,13 @@ public:
     virtual void initialize();
     virtual void deinitialize();
 
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
 
 private:
+    LabelUnit& currentUnit();
+    void startNewUnit();
+
     enum State {
         LABELING,
         FREE,
@@ -113,6 +132,7 @@ private:
     void updateProjection();
     void finishProjection();
     void initializeProjectionLabels();
+    void synchronizeUnitIndex();
 
     void projectionEvent(tgt::MouseEvent* e);
     void overlayEvent(tgt::MouseEvent* e);
@@ -140,14 +160,12 @@ private:
     ShaderProperty projectionShader_;
 
     boost::optional<LabelProjection> projection_;
-    std::deque<tgt::vec2> displayLine_;
-    ProjectionLabels projectionLabels_;
     bool projectionLabelsModified_;
 
-    PointSegmentListGeometryVec3 foregroundLabelLines_;
-    PointSegmentListGeometryVec3 backgroundLabelLines_;
-
     State state_;
+
+    std::vector<LabelUnit> labelUnits_;
+    IntProperty currentUnitIndex_;
 };
 
 } // namespace voreen

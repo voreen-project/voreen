@@ -150,6 +150,13 @@ void ProjectionLabels::clear() {
     foreground_.clear();
     background_.clear();
 }
+void LabelUnit::clear() {
+    projectionLabels_.clear();
+    displayLine_.clear();
+
+    foregroundLabels_.clear();
+    backgroundLabels_.clear();
+}
 
 static tgt::vec2 projectionDepthRange(const VolumeBase& vol, const VolumeAtomic<tgt::vec4>& front, const VolumeAtomic<tgt::vec4>& back, PolyLine<tgt::vec2>& line, tgt::vec3 camera) {
 
@@ -368,11 +375,11 @@ void InteractiveProjectionLabeling::projectionEvent(tgt::MouseEvent* e) {
     }
 
     if(e->modifiers() == tgt::Event::CTRL && e->action() == tgt::MouseEvent::RELEASED) {
-        projectionLabels_.foreground_.push_back({mouse});
+        currentUnit().projectionLabels_.foreground_.push_back({mouse});
     } else if(e->modifiers() == tgt::Event::SHIFT && e->action() == tgt::MouseEvent::RELEASED) {
-        projectionLabels_.background_.push_back({mouse});
+        currentUnit().projectionLabels_.background_.push_back({mouse});
     } else if(e->modifiers() == tgt::Event::MODIFIER_NONE) {
-        handleProjectionEvent(e, projectionLabels_);
+        handleProjectionEvent(e, currentUnit().projectionLabels_);
     } else {
         return;
     }
@@ -390,7 +397,7 @@ void InteractiveProjectionLabeling::overlayEvent(tgt::MouseEvent* e) {
         return;
     }
 
-    handleLineEvent(displayLine_, e);
+    handleLineEvent(currentUnit().displayLine_, e);
 
     updateProjection();
 
@@ -401,11 +408,12 @@ void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
     if(tgt::MouseEvent* me = dynamic_cast<tgt::MouseEvent*>(e)) {
         if(port == &overlayOutput_) {
             overlayEvent(me);
-            if(!displayLine_.empty() && state_ == FREE) {
+            if(!currentUnit().displayLine_.empty() && state_ == FREE) {
                 state_ = LABELING;
                 projectionLabelsModified_ = false;
             }
             if(state_ == LABELING) {
+                currentUnit().camera_ = camera_.get();
                 me->accept();
             }
         }
@@ -418,8 +426,7 @@ void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
     } else if(tgt::KeyEvent* ke = dynamic_cast<tgt::KeyEvent*>(e)) {
         switch(ke->keyCode()) {
             case tgt::KeyEvent::K_ESCAPE: {
-                displayLine_.clear();
-                projectionLabels_.clear();
+                currentUnit().clear(); //TODO: remove current, restore if old?
                 projection_ = boost::none;
                 state_ = FREE;
                 ke->accept();
@@ -427,10 +434,11 @@ void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
                 break;
             }
             case tgt::KeyEvent::K_SPACE: {
-                if(state_ == LABELING && !projectionLabels_.foreground_.empty()) {
+                if(state_ == LABELING && !currentUnit().projectionLabels_.foreground_.empty()) {
                     finishProjection();
-                    displayLine_.clear();
-                    projectionLabels_.clear();
+                    if(currentUnitIndex_.get() == currentUnitIndex_.getMaxValue()) {
+                        startNewUnit();
+                    }
                     projection_ = boost::none;
                     state_ = FREE;
                     invalidate();
@@ -448,6 +456,8 @@ void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
 
 void InteractiveProjectionLabeling::finishProjection() {
 
+    auto& current = currentUnit();
+
     if(!inport_.hasData()) {
         return;
     }
@@ -455,7 +465,7 @@ void InteractiveProjectionLabeling::finishProjection() {
 
     const int NUM_SAMPLES = 100;
 
-    PolyLine<tgt::vec2> displayLine(displayLine_);
+    PolyLine<tgt::vec2> displayLine(current.displayLine_);
 
     auto maybe_front = getFhp();
     auto maybe_back = getLhp();
@@ -465,7 +475,7 @@ void InteractiveProjectionLabeling::finishProjection() {
     auto& front = *maybe_front;
     auto& back = *maybe_back;
 
-    tgt::vec3 camera = camera_.get().getPosition();
+    tgt::vec3 camera = current.camera_.getPosition();
 
     auto tex_to_world = vol.getTextureToWorldMatrix();
 
@@ -516,11 +526,14 @@ void InteractiveProjectionLabeling::finishProjection() {
         return segment;
     };
 
-    for(auto& line : projectionLabels_.foreground_) {
-        foregroundLabelLines_.addSegment(project3D(line));
+    current.foregroundLabels_.clear();
+    current.backgroundLabels_.clear();
+
+    for(auto& line : current.projectionLabels_.foreground_) {
+        current.foregroundLabels_.push_back(project3D(line));
     }
-    for(auto& line : projectionLabels_.background_) {
-        backgroundLabelLines_.addSegment(project3D(line));
+    for(auto& line : current.projectionLabels_.background_) {
+        current.backgroundLabels_.push_back(project3D(line));
     }
     seedsChanged_ = true;
 }
@@ -539,15 +552,15 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , initializationMode_("initializationMode", "Initialization Mode")
     , maxLineSimplificationDistance_("maxLineSimplificationDistance_", "Maximum Line Simplification Distance", 0.01, 0.0, 1.0)
     , projectionShader_("shader", "Shader", "interactiveprojectionlabeling.frag", "oit_passthrough.vert")
-    , displayLine_()
     , projection_(boost::none)
-    , projectionLabels_()
     , projectionLabelsModified_(false)
-    , foregroundLabelLines_()
-    , backgroundLabelLines_()
     , state_(FREE)
     , seedsChanged_(true)
+    , labelUnits_()
+    , currentUnitIndex_("currentUnitIndex", "Current Unit Index", 0, 0, INT_MAX)
 {
+    startNewUnit();
+
     addPort(inport_);
     //addPort(labelVolume_);
     addPort(foregroundLabelGeometry_);
@@ -569,6 +582,15 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     addProperty(maxLineSimplificationDistance_);
         ON_CHANGE(maxLineSimplificationDistance_, InteractiveProjectionLabeling, initializeProjectionLabels);
     //initializationMode_.addOption("brightwall", "Bright Wall", BRIGHT_WALL);
+    //
+    addProperty(currentUnitIndex_);
+        ON_CHANGE(currentUnitIndex_, InteractiveProjectionLabeling, synchronizeUnitIndex);
+}
+
+void InteractiveProjectionLabeling::synchronizeUnitIndex() {
+    state_ = LABELING;
+    camera_.set(currentUnit().camera_);
+    updateProjection();
 }
 
 void InteractiveProjectionLabeling::updateSizes() {
@@ -612,7 +634,7 @@ void InteractiveProjectionLabeling::renderOverlay() {
     overlayOutput_.activateTarget();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    renderLine(displayLine_, tgt::vec3(1.0, 0.0, 0.0));
+    renderLine(currentUnit().displayLine_, tgt::vec3(1.0, 0.0, 0.0));
 
     overlayOutput_.deactivateTarget();
 }
@@ -662,10 +684,10 @@ void InteractiveProjectionLabeling::renderProjection() {
         glActiveTexture(GL_TEXTURE0);
     }
 
-    for(auto& line : projectionLabels_.foreground_) {
+    for(auto& line : currentUnit().projectionLabels_.foreground_) {
         renderLine(line, tgt::vec3(1.0, 0.0, 0.0));
     }
-    for(auto& line : projectionLabels_.background_) {
+    for(auto& line : currentUnit().projectionLabels_.background_) {
         renderLine(line, tgt::vec3(0.0, 1.0, 0.0));
     }
 
@@ -815,7 +837,7 @@ static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& label
     labels.background_.push_back(upperBackground);
 }
 void InteractiveProjectionLabeling::initializeProjectionLabels() {
-    projectionLabels_.clear();
+    currentUnit().projectionLabels_.clear();
 
     if(!projection_) {
         return;
@@ -824,7 +846,7 @@ void InteractiveProjectionLabeling::initializeProjectionLabels() {
     switch(initializationMode_.getValue()) {
         case BRIGHT_LUMEN:
             {
-                initBrightLumen(*projection_, projectionLabels_, maxLineSimplificationDistance_.get());
+                initBrightLumen(*projection_, currentUnit().projectionLabels_, maxLineSimplificationDistance_.get());
                 break;
             }
         default:;
@@ -834,7 +856,7 @@ void InteractiveProjectionLabeling::initializeProjectionLabels() {
 
 
 void InteractiveProjectionLabeling::updateProjection() {
-    if(displayLine_.empty()) {
+    if(currentUnit().displayLine_.empty()) {
         return;
     }
 
@@ -860,7 +882,7 @@ void InteractiveProjectionLabeling::updateProjection() {
 
     tgt::vec3 camera = camera_.get().getPosition();
 
-    auto line = PolyLine<tgt::vec2>(displayLine_);
+    auto line = PolyLine<tgt::vec2>(currentUnit().displayLine_);
     auto tex_to_world = vol.getTextureToWorldMatrix();
 
     auto minmax = projectionDepthRange(vol, front, back, line, camera);
@@ -921,8 +943,21 @@ void InteractiveProjectionLabeling::process() {
     renderProjection();
 
     if(seedsChanged_) {
-        foregroundLabelGeometry_.setData(&foregroundLabelLines_, false);
-        backgroundLabelGeometry_.setData(&backgroundLabelLines_, false);
+
+        std::unique_ptr<PointSegmentListGeometryVec3> foregroundLabelLines(new PointSegmentListGeometryVec3());
+        std::unique_ptr<PointSegmentListGeometryVec3> backgroundLabelLines(new PointSegmentListGeometryVec3());
+
+        for(auto& unit : labelUnits_) {
+            for(auto& l : unit.foregroundLabels_) {
+                foregroundLabelLines->addSegment(l);
+            }
+            for(auto& l : unit.backgroundLabels_) {
+                backgroundLabelLines->addSegment(l);
+            }
+        }
+
+        foregroundLabelGeometry_.setData(foregroundLabelLines.release());
+        backgroundLabelGeometry_.setData(backgroundLabelLines.release());
         seedsChanged_ = false;
     }
 }
@@ -938,6 +973,76 @@ void InteractiveProjectionLabeling::adjustPropertiesToInput() {
 }
 VoreenSerializableObject* InteractiveProjectionLabeling::create() const {
     return new InteractiveProjectionLabeling();
+}
+
+void InteractiveProjectionLabeling::serialize(Serializer& s) const {
+    Processor::serialize(s);
+
+
+    /*
+    // ---
+    // the following entities are static resources (i.e. already existing at this point)
+    // that should therefore not be dynamically created by the serializer
+    //
+    const bool usePointerContentSerialization = s.getUsePointerContentSerialization();
+    s.setUsePointerContentSerialization(true);
+
+    // serialize inports using a temporary map
+    std::map<std::string, Port*> inportMap;
+    for (std::vector<Port*>::const_iterator it = inports_.begin(); it != inports_.end(); ++it)
+        inportMap[(*it)->getID()] = *it;
+    try {
+        s.serialize("Inports", inportMap, "Port", "name");
+    }
+    catch (SerializationException& e) {
+        LWARNING(e.what());
+    }
+    */
+}
+
+void InteractiveProjectionLabeling::deserialize(Deserializer& s) {
+    Processor::deserialize(s);
+
+
+    /*
+    // ---
+    // the following entities are static resources that should not be dynamically created by the serializer
+    //
+    const bool usePointerContentSerialization = s.getUsePointerContentSerialization();
+    s.setUsePointerContentSerialization(true);
+
+    // deserialize inports using a temporary map
+    map<string, Port*> inportMap;
+    for (vector<Port*>::const_iterator it = inports_.begin(); it != inports_.end(); ++it)
+        inportMap[(*it)->getID()] = *it;
+    try {
+        s.deserialize("Inports", inportMap, "Port", "name");
+    }
+    catch (SerializationNoSuchDataException&){
+        // port key missing => just ignore
+        s.removeLastError();
+    }
+    */
+}
+
+LabelUnit& InteractiveProjectionLabeling::currentUnit() {
+    return labelUnits_.at(currentUnitIndex_.get());
+}
+
+void InteractiveProjectionLabeling::startNewUnit() {
+    labelUnits_.push_back({
+        camera_.get(),
+        std::deque<tgt::vec2>(),
+        ProjectionLabels {
+            std::vector<std::deque<tgt::vec2>>(),
+            std::vector<std::deque<tgt::vec2>>(),
+        },
+        std::vector<std::vector<tgt::vec3>>(),
+        std::vector<std::vector<tgt::vec3>>(),
+    });
+    int new_index = labelUnits_.size() - 1;
+    currentUnitIndex_.set(new_index);
+    currentUnitIndex_.setMaxValue(new_index);
 }
 
 } // namespace voreen
