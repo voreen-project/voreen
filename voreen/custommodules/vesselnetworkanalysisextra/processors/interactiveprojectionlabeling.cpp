@@ -299,6 +299,17 @@ void handleProjectionEvent(tgt::MouseEvent* e, ProjectionLabels& labels) {
 
         auto findNewNodeInsertPos = [&] (std::deque<tgt::vec2>& points) {
             int insert_index = -1;
+
+            if(points.size() == 1) {
+                // Special case lines with only one element
+                nearest = NearestNode {
+                    &points,
+                    1 // at end
+                };
+                nearest_dist = 0;
+                return;
+            }
+
             for(int i=0; i<((int)points.size())-1; ++i) {
                 Line line(points[i], points[i+1]);
                 float dist = line.dist(mouse);
