@@ -37,6 +37,7 @@ struct WallShearStressExtractorInput {
     const VolumeBase* measuredData;
     float density;
     float viscosity;
+    size_t padding;
     std::unique_ptr<VolumeRAM_Float> output;
 };
 
@@ -66,6 +67,7 @@ private:
 
     FloatProperty viscosity_;
     FloatProperty density_;
+    IntProperty padding_;
 
     static const std::string loggerCat_;
 };

@@ -30,10 +30,6 @@
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 #include "voreen/core/ports/conditions/portconditionvolumetype.h"
 
-#ifdef VRN_MODULE_OPENMP
-#include "omp.h"
-#endif
-
 #include <olb3D.h>
 #ifndef OLB_PRECOMPILED
 #include "olb3D.hh"
@@ -48,31 +44,43 @@ namespace voreen {
 
 const T VOREEN_LENGTH_TO_SI = 0.001;
 
+
 class MeasuredDataMapper : public AnalyticalF3D<T, T> {
 public:
+
     MeasuredDataMapper(const VolumeBase* volume)
-        : AnalyticalF3D<T, T>(3)
-        , volume_(volume)
-    {
+            : AnalyticalF3D<T, T>(3), volume_(volume) {
         tgtAssert(volume_, "No volume");
         tgtAssert(volume_->getNumChannels() == 3, "Num channels != 3");
+        bounds_ = volume_->getBoundingBox(false).getBoundingBox(false);
+        physicalToVoxelMatrix_ = volume_->getPhysicalToVoxelMatrix();
         representation_.reset(new VolumeRAMRepresentationLock(volume_));
         typedRepresentation_ = dynamic_cast<const VolumeRAM_3xFloat*>(**representation_);
         tgtAssert(typedRepresentation_, "cast failed");
     }
-    virtual bool operator() (T output[], const T input[]) {
-        tgt::vec3 voxel = typedRepresentation_->voxel(input[0], input[1], input[2]);
-        for(size_t i=0; i < typedRepresentation_->getNumChannels(); i++) {
+
+    bool operator()(T output[], const T input[]) {
+        tgt::vec3 rwPos = tgt::Vector3<T>::fromPointer(input);
+        if (!bounds_.containsPoint(rwPos)) {
+            return false;
+        }
+
+        tgt::vec3 voxel = typedRepresentation_->getVoxelLinear(physicalToVoxelMatrix_ * rwPos, 0, false);
+        for (size_t i = 0; i < typedRepresentation_->getNumChannels(); i++) {
             output[i] = voxel[i] * VOREEN_LENGTH_TO_SI;
         }
+
         return true;
     }
-
 private:
+
     const VolumeBase* volume_;
+    tgt::Bounds bounds_;
+    tgt::mat4 physicalToVoxelMatrix_;
     std::unique_ptr<VolumeRAMRepresentationLock> representation_;
     const VolumeRAM_3xFloat* typedRepresentation_;
 };
+
 
 const std::string WallShearStressExtractor::loggerCat_("voreen.flowsimulation.wallshearstressextractor");
 
@@ -83,6 +91,7 @@ WallShearStressExtractor::WallShearStressExtractor()
     , outputVolume_(Port::OUTPORT, "wallshearstressextractor.outputVolume", "Volume Output")
     , viscosity_("viscosity", "Dynamic Viscosity (e-3 kg/(m x s))", 3.5, 3, 4)
     , density_("density", "Density (kg/m^3)", 1000.0f, 1000.0f, 1100.0f)
+    , padding_("padding", "Add Padding", 1, 0, 5)
 {
     addPort(inputVolume_);
     inputVolume_.addCondition(new PortConditionVolumeChannelCount(3));
@@ -91,6 +100,7 @@ WallShearStressExtractor::WallShearStressExtractor()
 
     addProperty(viscosity_);
     addProperty(density_);
+    addProperty(padding_);
 }
 
 Processor* WallShearStressExtractor::create() const {
@@ -119,13 +129,18 @@ WallShearStressExtractorInput WallShearStressExtractor::prepareComputeInput() {
         throw InvalidInputException("Geometry could not be exported", InvalidInputException::S_ERROR);
     }
 
-    std::unique_ptr<VolumeRAM_Float> output(new VolumeRAM_Float(measuredData->getDimensions()));
+    // Add a voxel in each dimension
+    size_t padding = padding_.get();
+    tgt::svec3 dimensions = measuredData->getDimensions();
+    dimensions += tgt::svec3(padding*2);
+    std::unique_ptr<VolumeRAM_Float> output(new VolumeRAM_Float(dimensions));
 
     return WallShearStressExtractorInput{
             geometryPath,
             measuredData,
             viscosity,
             density,
+            padding,
             std::move(output)
     };
 }
@@ -133,9 +148,11 @@ WallShearStressExtractorInput WallShearStressExtractor::prepareComputeInput() {
 WallShearStressExtractorOutput WallShearStressExtractor::compute(WallShearStressExtractorInput input, ProgressReporter& progressReporter) const {
 
     // Needs to be initialized in each new thread to be used.
-    //olb::olbInit(nullptr, nullptr);
+    olb::olbInit(nullptr, nullptr);
 
     VolumeRAMRepresentationLock representation(input.measuredData);
+    tgt::svec3 dim = input.measuredData->getDimensions();
+    tgt::mat4 voxelToPhysicalMatrix = input.measuredData->getVoxelToPhysicalMatrix();
     float spacing = tgt::min(input.measuredData->getSpacing());
     float length = tgt::max(input.measuredData->getCubeSize());
 
@@ -149,55 +166,69 @@ WallShearStressExtractorOutput WallShearStressExtractor::compute(WallShearStress
 
     UnitConverter<T, DESCRIPTOR> converter(
             spacing,
-            spacing / 40,
-            (T) length,
-            (T) 1.0,
-            (T) input.viscosity * 0.001 / input.density,
-            (T) input.density
+            1.0,
+            length,
+            1.0,
+            input.viscosity * 0.001 / input.density,
+            input.density
     );
 
+    // Setup geometry.
     STLreader<T> stlReader(input.geometryPath, converter.getConversionFactorLength(), 1.0, 1);
     IndicatorLayer3D<T> extendedDomain(stlReader, converter.getConversionFactorLength());
-    Cuboid3D<T> cuboid(stlReader, converter.getConversionFactorLength());
-    BlockGeometry3D<T> geometry(cuboid);
-    geometry.rename(MAT_EMPTY, MAT_WALL, extendedDomain);
-    geometry.rename(MAT_WALL, MAT_FLUID, stlReader);
-    geometry.clean();
-    geometry.innerClean(MAT_COUNT);
-    geometry.checkForErrors();
+    CuboidGeometry3D<T> cuboidGeometry(extendedDomain, converter.getConversionFactorLength(), 1);
+    HeuristicLoadBalancer<T> loadBalancer(cuboidGeometry);
+    SuperGeometry3D<T> superGeometry(cuboidGeometry, loadBalancer, 2);
+    superGeometry.rename( MAT_EMPTY, MAT_WALL,  extendedDomain );
+    superGeometry.rename( MAT_WALL,  MAT_FLUID, stlReader );
+    superGeometry.clean();
+    superGeometry.innerClean(MAT_COUNT);
+    superGeometry.checkForErrors();
+
+    // Setup lattice.
+    SuperLattice3D<T, DESCRIPTOR> sLattice(superGeometry);
     BGKdynamics<T, DESCRIPTOR> bulkDynamics(converter.getLatticeRelaxationFrequency(), instances::getBulkMomenta<T, DESCRIPTOR>());
-    BlockLattice3D<T, DESCRIPTOR> lattice(geometry.getNx(), geometry.getNy(), geometry.getNz(), geometry);
-    lattice.defineDynamics(geometry, MAT_EMPTY, &instances::getNoDynamics<T, DESCRIPTOR>());
-    lattice.defineDynamics(geometry, MAT_FLUID, &bulkDynamics);
-    lattice.defineDynamics(geometry, MAT_WALL, &instances::getNoDynamics<T, DESCRIPTOR>());
-    //lattice.defineDynamics(geometry, MAT_WALL, &instances::getBounceBack<T, DESCRIPTOR>());
-
+    sOnLatticeBoundaryCondition3D<T, DESCRIPTOR> sBoundaryCondition(sLattice);
+    createInterpBoundaryCondition3D<T, DESCRIPTOR>(sBoundaryCondition);
+    sOffLatticeBoundaryCondition3D<T, DESCRIPTOR> sOffBoundaryCondition(sLattice);
+    createBouzidiBoundaryCondition3D<T, DESCRIPTOR>(sOffBoundaryCondition);
+    sLattice.defineDynamics(superGeometry, MAT_EMPTY, &instances::getNoDynamics<T, DESCRIPTOR>());
+    sLattice.defineDynamics(superGeometry, MAT_FLUID, &bulkDynamics);
+    sLattice.defineDynamics(superGeometry, MAT_WALL, &instances::getNoDynamics<T, DESCRIPTOR>());
+    sOffBoundaryCondition.addZeroVelocityBoundary(superGeometry, MAT_WALL, stlReader);
     MeasuredDataMapper mapper(input.measuredData);
-    //lattice.defineU(geometry, MAT_WALL, mapper);
-    lattice.defineU(geometry, MAT_FLUID, mapper);
+    sLattice.defineU(superGeometry, MAT_FLUID, mapper);
+    sLattice.initialize();
 
-    lattice.initialize();
-    lattice.collideAndStream();
+    // Retrieve result.
+    SuperLatticePhysWallShearStress3D<T, DESCRIPTOR> wallShearStress(sLattice, superGeometry, MAT_WALL, converter, stlReader);
+    AnalyticalFfromSuperF3D<T> interpolateFeature(wallShearStress, true);
 
-    BlockLatticePhysWallShearStress3D<T, DESCRIPTOR> wallShearStress(lattice, geometry, MAT_WALL, converter, stlReader);
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel for
+#endif
+    for (size_t z = 0; z < dim.z; z++) {
+        for (size_t y = 0; y < dim.y; y++) {
+            for (size_t x = 0; x < dim.x; x++) {
 
-    for(int z = 1; z < lattice.getNz()-1; z++) {
-        for(int y = 1; y < lattice.getNy()-1; y++) {
-            for(int x = 1; x < lattice.getNx()-1; x++) {
-                //if(geometry.get(x, y, z) == MAT_WALL) {
-                    // Calculate wall shear stress.
-                    T value[1];
-                    int position[] = {x, y, z};
-                    if(wallShearStress(value, position)) {
-                        output->voxel(x, y, z) = value[0];
-                    }
-                //}
+                tgt::Vector3<T> pos = voxelToPhysicalMatrix * tgt::vec3(x, y, z);
+
+                T value[1];
+                if(interpolateFeature(&value[0], pos.elem)) {
+                    output->voxel(x+input.padding, y+input.padding, z+input.padding) = static_cast<float>(value[0]);
+                }
             }
         }
-        progressReporter.setProgress(1.0f * z / lattice.getNz());
+#ifndef VRN_MODULE_OPENMP
+        progressReporter.setProgress(1.0f * z / dim.z);
+#endif
     }
 
-    std::unique_ptr<VolumeBase> volume(new Volume(output.release(), input.measuredData));
+    std::unique_ptr<Volume> volume(new Volume(output.release(), input.measuredData));
+    volume->setOffset(input.measuredData->getOffset() - tgt::vec3(input.padding) * spacing);
+
+    progressReporter.setProgress(1.0f);
+
     return WallShearStressExtractorOutput{
         std::move(volume)
     };
