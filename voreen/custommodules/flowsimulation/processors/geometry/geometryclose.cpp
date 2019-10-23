@@ -68,7 +68,7 @@ GeometryClose::GeometryClose()
     , inport_(Port::INPORT, "geometry.input", "Geometry Input")
     , outport_(Port::OUTPORT, "geometry.output", "Geometry Output")
     , enabled_("enabled", "Enable", true)
-    , epsilon_("epsilon", "Epsilon", 1e-5f, 1e-7f, 1e-3f, Processor::INVALID_RESULT,FloatProperty::STATIC, Property::LOD_DEBUG)
+    , epsilon_("epsilon", "Epsilon", 1e-4f, 1e-7f, 1e-3f, Processor::INVALID_RESULT,FloatProperty::STATIC, Property::LOD_DEBUG)
 {
     addPort(inport_);
     addPort(outport_);

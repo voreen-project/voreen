@@ -43,7 +43,10 @@ typedef double T;
 namespace voreen {
 
 const T VOREEN_LENGTH_TO_SI = 0.001;
-
+const int MAT_EMPTY = 0;
+const int MAT_FLUID = 1;
+const int MAT_WALL  = 2;
+const int MAT_COUNT = 3;
 
 class MeasuredDataMapper : public AnalyticalF3D<T, T> {
 public:
@@ -89,8 +92,8 @@ WallShearStressExtractor::WallShearStressExtractor()
     , inputVolume_(Port::INPORT, "wallshearstressextractor.inputVolume", "Volume Input")
     , inputGeometry_(Port::INPORT, "wallshearstressextractor.inputGeometry", "Geometry Input")
     , outputVolume_(Port::OUTPORT, "wallshearstressextractor.outputVolume", "Volume Output")
-    , viscosity_("viscosity", "Dynamic Viscosity (e-3 kg/(m x s))", 3.5, 3, 4)
-    , density_("density", "Density (kg/m^3)", 1000.0f, 1000.0f, 1100.0f)
+    , viscosity_("viscosity", "Dynamic Viscosity (e-3 kg/(m x s))", 3.5f, 0.79722f, 4.0f)
+    , density_("density", "Density (kg/m^3)", 1055.0f, 988.1f, 1057.0f)
     , padding_("padding", "Add Padding", 1, 0, 5)
 {
     addPort(inputVolume_);
@@ -159,11 +162,6 @@ WallShearStressExtractorOutput WallShearStressExtractor::compute(WallShearStress
     std::unique_ptr<VolumeRAM_Float> output = std::move(input.output);
     output->clear();
 
-    const int MAT_EMPTY = 0;
-    const int MAT_FLUID = 1;
-    const int MAT_WALL  = 2;
-    const int MAT_COUNT = 3;
-
     UnitConverter<T, DESCRIPTOR> converter(
             spacing,
             1.0,
@@ -175,6 +173,7 @@ WallShearStressExtractorOutput WallShearStressExtractor::compute(WallShearStress
 
     // Setup geometry.
     STLreader<T> stlReader(input.geometryPath, converter.getConversionFactorLength(), 1.0, 1);
+    tgt::FileSystem::deleteFile(input.geometryPath); // We no longer need the temporary file.
     IndicatorLayer3D<T> extendedDomain(stlReader, converter.getConversionFactorLength());
     CuboidGeometry3D<T> cuboidGeometry(extendedDomain, converter.getConversionFactorLength(), 1);
     HeuristicLoadBalancer<T> loadBalancer(cuboidGeometry);
@@ -226,7 +225,8 @@ WallShearStressExtractorOutput WallShearStressExtractor::compute(WallShearStress
 
     std::unique_ptr<Volume> volume(new Volume(output.release(), input.measuredData));
     volume->setOffset(input.measuredData->getOffset() - tgt::vec3(input.padding) * spacing);
-
+    volume->setMetaDataValue<StringMetaData>("name", "wallShearStress");
+    
     progressReporter.setProgress(1.0f);
 
     return WallShearStressExtractorOutput{
