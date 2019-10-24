@@ -77,8 +77,11 @@ struct ProjectionLabels {
 };
 
 struct LabelUnit {
-    LabelUnit(const LabelUnit&) = delete;
+    LabelUnit() = default;
+    LabelUnit(const LabelUnit&) = default;
+    LabelUnit& operator=(const LabelUnit&) = default;
     LabelUnit(LabelUnit&&) = default;
+    LabelUnit& operator=(LabelUnit&&) = default;
 
     tgt::Camera camera_;
     std::deque<tgt::vec2> displayLine_;
@@ -87,8 +90,6 @@ struct LabelUnit {
     // result:
     std::vector<std::vector<tgt::vec3>> backgroundLabels_;
     std::vector<std::vector<tgt::vec3>> foregroundLabels_;
-
-    void clear();
 };
 
 class InteractiveProjectionLabeling : public RenderProcessor {
@@ -113,6 +114,8 @@ public:
 
 private:
     LabelUnit& currentUnit();
+    void resetCurrentUnit();
+    boost::optional<size_t> currentUnitIndex();
     void startNewUnit();
 
     enum State {
@@ -161,6 +164,7 @@ private:
 
     boost::optional<LabelProjection> projection_;
     bool projectionLabelsModified_;
+    LabelUnit currentUnit_;
 
     State state_;
 

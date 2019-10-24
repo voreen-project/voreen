@@ -150,13 +150,6 @@ void ProjectionLabels::clear() {
     foreground_.clear();
     background_.clear();
 }
-void LabelUnit::clear() {
-    projectionLabels_.clear();
-    displayLine_.clear();
-
-    foregroundLabels_.clear();
-    backgroundLabels_.clear();
-}
 
 static tgt::vec2 projectionDepthRange(const VolumeBase& vol, const VolumeAtomic<tgt::vec4>& front, const VolumeAtomic<tgt::vec4>& back, PolyLine<tgt::vec2>& line, tgt::vec3 camera) {
 
@@ -425,9 +418,21 @@ void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
         }
     } else if(tgt::KeyEvent* ke = dynamic_cast<tgt::KeyEvent*>(e)) {
         switch(ke->keyCode()) {
+            case tgt::KeyEvent::K_DELETE: {
+                auto index = currentUnitIndex();
+                if(index) {
+                    labelUnits_.erase(labelUnits_.begin() + *index);
+                    currentUnitIndex_.setMaxValue(labelUnits_.size()-1);
+                }
+                seedsChanged_ = true;
+                resetCurrentUnit();
+                state_ = FREE;
+                ke->accept();
+                invalidate();
+                break;
+            }
             case tgt::KeyEvent::K_ESCAPE: {
-                currentUnit().clear(); //TODO: remove current, restore if old?
-                projection_ = boost::none;
+                resetCurrentUnit();
                 state_ = FREE;
                 ke->accept();
                 invalidate();
@@ -436,10 +441,14 @@ void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
             case tgt::KeyEvent::K_SPACE: {
                 if(state_ == LABELING && !currentUnit().projectionLabels_.foreground_.empty()) {
                     finishProjection();
-                    if(currentUnitIndex_.get() == currentUnitIndex_.getMaxValue()) {
-                        startNewUnit();
+                    auto index = currentUnitIndex();
+                    if(index) {
+                        labelUnits_.at(*index) = std::move(currentUnit());
+                    } else {
+                        labelUnits_.push_back(std::move(currentUnit()));
+                        currentUnitIndex_.setMaxValue(labelUnits_.size()-1);
                     }
-                    projection_ = boost::none;
+                    resetCurrentUnit();
                     state_ = FREE;
                     invalidate();
                 }
@@ -540,7 +549,6 @@ void InteractiveProjectionLabeling::finishProjection() {
 InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     : RenderProcessor()
     , inport_(Port::INPORT, "interactiveprojectionlabeling.inport", "Volume Input")
-    //, labelVolume_(Port::OUTPORT, "interactiveprojectionlabeling.labelVolume", "Labels Output")
     , foregroundLabelGeometry_(Port::OUTPORT, "interactiveprojectionlabeling.foregroundLabelGeometry", "Foreground Labels Output")
     , backgroundLabelGeometry_(Port::OUTPORT, "interactiveprojectionlabeling.backgroundLabelGeometry", "Background Labels Output")
     , overlayOutput_(Port::OUTPORT, "interactiveprojectionlabeling.overlayoutput", "Overlay (3D)", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
@@ -557,12 +565,9 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , state_(FREE)
     , seedsChanged_(true)
     , labelUnits_()
-    , currentUnitIndex_("currentUnitIndex", "Current Unit Index", 0, 0, INT_MAX)
+    , currentUnitIndex_("currentUnitIndex", "Current Unit Index", -1, -1, INT_MAX)
 {
-    startNewUnit();
-
     addPort(inport_);
-    //addPort(labelVolume_);
     addPort(foregroundLabelGeometry_);
     addPort(backgroundLabelGeometry_);
     addPort(overlayOutput_);
@@ -588,8 +593,14 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
 }
 
 void InteractiveProjectionLabeling::synchronizeUnitIndex() {
+    auto index = currentUnitIndex();
+    if(index) {
+        currentUnit() = labelUnits_.at(*index);
+        camera_.set(currentUnit().camera_);
+    } else {
+        resetCurrentUnit();
+    }
     state_ = LABELING;
-    camera_.set(currentUnit().camera_);
     updateProjection();
 }
 
@@ -1026,23 +1037,22 @@ void InteractiveProjectionLabeling::deserialize(Deserializer& s) {
 }
 
 LabelUnit& InteractiveProjectionLabeling::currentUnit() {
-    return labelUnits_.at(currentUnitIndex_.get());
+    return currentUnit_;
 }
 
-void InteractiveProjectionLabeling::startNewUnit() {
-    labelUnits_.push_back({
-        camera_.get(),
-        std::deque<tgt::vec2>(),
-        ProjectionLabels {
-            std::vector<std::deque<tgt::vec2>>(),
-            std::vector<std::deque<tgt::vec2>>(),
-        },
-        std::vector<std::vector<tgt::vec3>>(),
-        std::vector<std::vector<tgt::vec3>>(),
-    });
-    int new_index = labelUnits_.size() - 1;
-    currentUnitIndex_.set(new_index);
-    currentUnitIndex_.setMaxValue(new_index);
+void InteractiveProjectionLabeling::resetCurrentUnit() {
+    currentUnit() = LabelUnit();
+    currentUnitIndex_.set(-1);
+    projection_ = boost::none;
+}
+
+boost::optional<size_t> InteractiveProjectionLabeling::currentUnitIndex() {
+    auto index = currentUnitIndex_.get();
+    if(index != -1) {
+        return index;
+    } else {
+        return boost::none;
+    }
 }
 
 } // namespace voreen
