@@ -76,7 +76,7 @@ struct ProjectionLabels {
     void clear();
 };
 
-struct LabelUnit {
+struct LabelUnit : public Serializable {
     LabelUnit() = default;
     LabelUnit(const LabelUnit&) = default;
     LabelUnit& operator=(const LabelUnit&) = default;
@@ -90,6 +90,9 @@ struct LabelUnit {
     // result:
     std::vector<std::vector<tgt::vec3>> backgroundLabels_;
     std::vector<std::vector<tgt::vec3>> foregroundLabels_;
+
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
 };
 
 class InteractiveProjectionLabeling : public RenderProcessor {

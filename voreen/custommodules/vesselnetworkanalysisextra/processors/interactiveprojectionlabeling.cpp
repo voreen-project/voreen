@@ -417,45 +417,57 @@ void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
             me->accept();
         }
     } else if(tgt::KeyEvent* ke = dynamic_cast<tgt::KeyEvent*>(e)) {
-        switch(ke->keyCode()) {
-            case tgt::KeyEvent::K_DELETE: {
-                auto index = currentUnitIndex();
-                if(index) {
-                    labelUnits_.erase(labelUnits_.begin() + *index);
-                    currentUnitIndex_.setMaxValue(labelUnits_.size()-1);
+        if(ke->pressed()) {
+            switch(ke->keyCode()) {
+                case tgt::KeyEvent::K_UP: {
+                    currentUnitIndex_.set(std::min(currentUnitIndex_.get() + 1, currentUnitIndex_.getMaxValue()));
+                    ke->accept();
+                    break;
                 }
-                seedsChanged_ = true;
-                resetCurrentUnit();
-                state_ = FREE;
-                ke->accept();
-                invalidate();
-                break;
-            }
-            case tgt::KeyEvent::K_ESCAPE: {
-                resetCurrentUnit();
-                state_ = FREE;
-                ke->accept();
-                invalidate();
-                break;
-            }
-            case tgt::KeyEvent::K_SPACE: {
-                if(state_ == LABELING && !currentUnit().projectionLabels_.foreground_.empty()) {
-                    finishProjection();
+                case tgt::KeyEvent::K_DOWN: {
+                    currentUnitIndex_.set(std::max(currentUnitIndex_.get() - 1, currentUnitIndex_.getMinValue()));
+                    ke->accept();
+                    break;
+                }
+                case tgt::KeyEvent::K_DELETE: {
                     auto index = currentUnitIndex();
                     if(index) {
-                        labelUnits_.at(*index) = std::move(currentUnit());
-                    } else {
-                        labelUnits_.push_back(std::move(currentUnit()));
+                        labelUnits_.erase(labelUnits_.begin() + *index);
                         currentUnitIndex_.setMaxValue(labelUnits_.size()-1);
                     }
+                    seedsChanged_ = true;
                     resetCurrentUnit();
                     state_ = FREE;
+                    ke->accept();
                     invalidate();
+                    break;
                 }
-                ke->accept();
-                break;
+                case tgt::KeyEvent::K_ESCAPE: {
+                    resetCurrentUnit();
+                    state_ = FREE;
+                    ke->accept();
+                    invalidate();
+                    break;
+                }
+                case tgt::KeyEvent::K_SPACE: {
+                    if(state_ == LABELING && !currentUnit().projectionLabels_.foreground_.empty()) {
+                        finishProjection();
+                        auto index = currentUnitIndex();
+                        if(index) {
+                            labelUnits_.at(*index) = std::move(currentUnit());
+                        } else {
+                            labelUnits_.push_back(std::move(currentUnit()));
+                            currentUnitIndex_.setMaxValue(labelUnits_.size()-1);
+                        }
+                        resetCurrentUnit();
+                        state_ = FREE;
+                        invalidate();
+                    }
+                    ke->accept();
+                    break;
+                }
+                default:;
             }
-            default:;
         }
     }
     if(!e->isAccepted() && state_ == FREE) {
@@ -611,6 +623,7 @@ void InteractiveProjectionLabeling::updateSizes() {
 
 void InteractiveProjectionLabeling::initialize() {
     RenderProcessor::initialize();
+    currentUnitIndex_.setMaxValue(labelUnits_.size()-1);
 }
 
 void InteractiveProjectionLabeling::deinitialize() {
@@ -986,54 +999,81 @@ VoreenSerializableObject* InteractiveProjectionLabeling::create() const {
     return new InteractiveProjectionLabeling();
 }
 
+void LabelUnit::serialize(Serializer& s) const {
+    s.serialize("camera_position", camera_.getPosition());
+    s.serialize("camera_focus", camera_.getFocus());
+    s.serialize("camera_upVector", camera_.getUpVector());
+    s.serialize("camera_frustLeft", camera_.getFrustLeft());
+    s.serialize("camera_frustRight", camera_.getFrustRight());
+    s.serialize("camera_frustBottom", camera_.getFrustBottom());
+    s.serialize("camera_frustTop", camera_.getFrustTop());
+    s.serialize("camera_frustNear", camera_.getNearDist(false));
+    s.serialize("camera_frustFar", camera_.getFarDist(false));
+    s.serialize("camera_useOrthoZoomFactor", camera_.getUseOrthoZoomFactorFlag());
+    s.serialize("camera_orthoZoomFactor", camera_.getOrthoZoomFactor());
+    s.serialize("camera_useRealWorldFrustum", camera_.getUseRealWorldFrustum());
+
+    s.serialize("displayLine", displayLine_);
+
+    s.serialize("foregroundLabels2D", projectionLabels_.foreground_);
+    s.serialize("backgroundLabels2D", projectionLabels_.background_);
+
+    s.serialize("foregroundLabels3D", foregroundLabels_);
+    s.serialize("backgroundLabels3D", backgroundLabels_);
+}
+
+void LabelUnit::deserialize(Deserializer& s) {
+    {
+        float left, right, bottom, top, nearP, farP;
+        s.deserialize("camera_frustLeft", left);
+        s.deserialize("camera_frustRight", right);
+        s.deserialize("camera_frustBottom", bottom);
+        s.deserialize("camera_frustTop", top);
+        s.deserialize("camera_frustNear", nearP);
+        s.deserialize("camera_frustFar", farP);
+        camera_.setFrustum(tgt::Frustum(left, right, bottom, top, nearP, farP));
+    }
+    {
+        tgt::vec3 position, focus, upVector;
+        s.deserialize("camera_position", position);
+        s.deserialize("camera_focus", focus);
+        s.deserialize("camera_upVector", upVector);
+
+        camera_.setPosition(position);
+        camera_.setFocus(focus);
+        camera_.setUpVector(upVector);
+    }
+    {
+        float orthoZoomFactor;
+        bool useOrthoZoomFactor, useRealWorldFrustum;
+        s.deserialize("camera_useOrthoZoomFactor", useOrthoZoomFactor);
+        s.deserialize("camera_orthoZoomFactor", orthoZoomFactor);
+        s.deserialize("camera_useRealWorldFrustum", useRealWorldFrustum);
+
+        camera_.setUseOrthoZoomFactorFlag(useOrthoZoomFactor);
+        camera_.setOrthoZoomFactor(orthoZoomFactor);
+        camera_.setUseRealWorldFrustum(useRealWorldFrustum);
+    }
+
+    s.deserialize("displayLine", displayLine_);
+
+    s.deserialize("foregroundLabels2D", projectionLabels_.foreground_);
+    s.deserialize("backgroundLabels2D", projectionLabels_.background_);
+
+    s.deserialize("foregroundLabels3D", foregroundLabels_);
+    s.deserialize("backgroundLabels3D", backgroundLabels_);
+}
+
 void InteractiveProjectionLabeling::serialize(Serializer& s) const {
     Processor::serialize(s);
 
-
-    /*
-    // ---
-    // the following entities are static resources (i.e. already existing at this point)
-    // that should therefore not be dynamically created by the serializer
-    //
-    const bool usePointerContentSerialization = s.getUsePointerContentSerialization();
-    s.setUsePointerContentSerialization(true);
-
-    // serialize inports using a temporary map
-    std::map<std::string, Port*> inportMap;
-    for (std::vector<Port*>::const_iterator it = inports_.begin(); it != inports_.end(); ++it)
-        inportMap[(*it)->getID()] = *it;
-    try {
-        s.serialize("Inports", inportMap, "Port", "name");
-    }
-    catch (SerializationException& e) {
-        LWARNING(e.what());
-    }
-    */
+    s.serialize("labelUnits", labelUnits_);
 }
 
 void InteractiveProjectionLabeling::deserialize(Deserializer& s) {
     Processor::deserialize(s);
 
-
-    /*
-    // ---
-    // the following entities are static resources that should not be dynamically created by the serializer
-    //
-    const bool usePointerContentSerialization = s.getUsePointerContentSerialization();
-    s.setUsePointerContentSerialization(true);
-
-    // deserialize inports using a temporary map
-    map<string, Port*> inportMap;
-    for (vector<Port*>::const_iterator it = inports_.begin(); it != inports_.end(); ++it)
-        inportMap[(*it)->getID()] = *it;
-    try {
-        s.deserialize("Inports", inportMap, "Port", "name");
-    }
-    catch (SerializationNoSuchDataException&){
-        // port key missing => just ignore
-        s.removeLastError();
-    }
-    */
+    s.deserialize("labelUnits", labelUnits_);
 }
 
 LabelUnit& InteractiveProjectionLabeling::currentUnit() {
