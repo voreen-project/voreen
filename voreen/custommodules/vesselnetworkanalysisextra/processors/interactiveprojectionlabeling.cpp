@@ -930,21 +930,6 @@ void InteractiveProjectionLabeling::updateProjection() {
     }
     const auto& vol = *inport_.getData();
 
-    std::function<float(tgt::vec3)> sample;
-    if(vol.hasRepresentation<VolumeRAM>() || !vol.hasRepresentation<VolumeOctree>()) {
-        const auto volram = vol.getRepresentation<VolumeRAM>();
-        sample = [volram] (tgt::vec3 p) {
-            return volram->getVoxelNormalizedLinear(p);
-        };
-    } else {
-        const auto octree = vol.getRepresentation<VolumeOctree>();
-        sample = [octree] (tgt::vec3 p) {
-            uint16_t voxel = octree->getVoxel(tgt::round(p));
-            float val = static_cast<float>(voxel) / 0xffff;
-            return val;
-        };
-    }
-
     auto dim = overlayOutput_.getReceivedSize();
     projection_ = LabelProjection(dim);
     auto proj = projection_->projection_mut();
@@ -967,46 +952,67 @@ void InteractiveProjectionLabeling::updateProjection() {
     float max_dist = minmax.y;
 
     auto world_to_vox = vol.getWorldToVoxelMatrix();
+    auto tex_to_vox = vol.getTextureToVoxelMatrix();
 
     tgt::vec3 max_dim = vol.getDimensions() - tgt::svec3::one;
 
-    const int PIXEL_BLOCK_SIZE = 32;
-    for(int y_base = 0; y_base < dim.y; y_base+=PIXEL_BLOCK_SIZE) {
-        int y_max = std::min(dim.y, y_base + PIXEL_BLOCK_SIZE);
+    int y_block_size = 32;
 
-        for(int x_base = 0; x_base < dim.x; x_base+=PIXEL_BLOCK_SIZE) {
-            int x_max = std::min(dim.x, x_base + PIXEL_BLOCK_SIZE);
+    std::function<float(tgt::vec3)> sample;
+    if(vol.hasRepresentation<VolumeRAM>() || !vol.hasRepresentation<VolumeOctree>()) {
+        const auto volram = vol.getRepresentation<VolumeRAM>();
+        sample = [volram] (tgt::vec3 p) {
+            return volram->getVoxelNormalizedLinear(p);
+        };
+    } else {
+        const auto octree = vol.getRepresentation<VolumeOctree>();
 
-            for(int x = x_base; x < x_max; ++x) {
+        sample = [octree] (tgt::vec3 p) {
+            uint16_t voxel = octree->getVoxel(tgt::round(p));
+            float val = static_cast<float>(voxel) / 0xffff;
+            return val;
+        };
 
-                float d = ((float)x)/(dim.x-1);
-                auto p = line.interpolate(d);
+        // Estimate pixel block size for projection to cover roughly one leaf node of octree
+        // For VolumeRAM it doesn't really matter.
+        int voxels_per_block = tgt::hadd(octree->getBrickDim())/3; //roughly
+        float voxels_in_projection_depth = tgt::hadd(world_to_vox.transform(tgt::vec3(max_dist - min_dist)))/3.0f; //roughly
+        float blocks_in_projection_depth = voxels_in_projection_depth / std::max(1, voxels_per_block);
+        y_block_size = std::round(tgt::clamp(static_cast<float>(dim.y) / blocks_in_projection_depth, 1.0f, static_cast<float>(dim.y)));
+    }
 
-                tgt::vec3 normalized_query(p, 0);
-                tgt::vec4 front_pos = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
-                tgt::vec4 back_pos = back.getVoxelLinear(normalized_query * tgt::vec3(back.getDimensions()));
+    for(int y_base = 0; y_base < dim.y; y_base+=y_block_size) {
+        int y_max = std::min(dim.y, y_base + y_block_size);
 
-                tgt::vec4 front_world = tex_to_world * front_pos;
-                tgt::vec4 back_world = tex_to_world * back_pos;
+        for(int x = 0; x < dim.x; ++x) {
 
-                tgt::vec3 view_dir = tgt::normalize(back_world.xyz() - front_world.xyz());
+            float d = ((float)x)/(dim.x-1);
+            auto p = line.interpolate(d);
 
-                for(int y = y_base; y < y_max; ++y) {
-                    float alpha = ((float)y)/(dim.y-1);
-                    float alpha_rw = max_dist * alpha + (1.0 - alpha) * min_dist;
+            tgt::vec3 normalized_query(p, 0);
+            tgt::vec4 front_pos = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
+            tgt::vec4 back_pos = back.getVoxelLinear(normalized_query * tgt::vec3(back.getDimensions()));
 
-                    tgt::vec4 query_pos_rw(view_dir * alpha_rw + camera, 1.0);
-                    tgt::vec3 query_pos = (world_to_vox * query_pos_rw).xyz();
+            tgt::vec4 front_world = tex_to_world * front_pos;
+            tgt::vec4 back_world = tex_to_world * back_pos;
 
-                    tgt::vec2 val;
-                    if(tgt::hor(tgt::greaterThan(query_pos, max_dim)) || tgt::hor(tgt::lessThan(query_pos, tgt::vec3::zero))) {
-                        val = tgt::vec2(0.0, 0.0);
-                    } else {
-                        val = tgt::vec2(sample(query_pos), 1.0);
-                    }
+            tgt::vec3 view_dir = tgt::normalize(back_world.xyz() - front_world.xyz());
 
-                    proj.at(tgt::svec2(x, y)) = val;
+            for(int y = y_base; y < y_max; ++y) {
+                float alpha = ((float)y)/(dim.y-1);
+                float alpha_rw = max_dist * alpha + (1.0 - alpha) * min_dist;
+
+                tgt::vec4 query_pos_rw(view_dir * alpha_rw + camera, 1.0);
+                tgt::vec3 query_pos = (world_to_vox * query_pos_rw).xyz();
+
+                tgt::vec2 val;
+                if(tgt::hor(tgt::greaterThan(query_pos, max_dim)) || tgt::hor(tgt::lessThan(query_pos, tgt::vec3::zero))) {
+                    val = tgt::vec2(0.0, 0.0);
+                } else {
+                    val = tgt::vec2(sample(query_pos), 1.0);
                 }
+
+                proj.at(tgt::svec2(x, y)) = val;
             }
         }
     }
@@ -1135,9 +1141,9 @@ void InteractiveProjectionLabeling::serialize(Serializer& s) const {
 }
 
 void InteractiveProjectionLabeling::deserialize(Deserializer& s) {
-    Processor::deserialize(s);
-
     s.deserialize("labelUnits", labelUnits_);
+
+    Processor::deserialize(s);
 }
 
 LabelUnit& InteractiveProjectionLabeling::currentUnit() {
