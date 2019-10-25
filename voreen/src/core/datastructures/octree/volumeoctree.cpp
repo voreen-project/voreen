@@ -335,7 +335,7 @@ uint16_t VolumeOctree::getVoxel(const tgt::svec3& pos, size_t channel /*= 0*/) c
     svec3 nodeLLF, nodeURB;
     size_t nodeLevel = 0;
     vec3 dummy;
-    const VolumeOctreeNode* node = getNode(vec3(pos) / vec3(getVolumeDim()-svec3::one), nodeLevel, nodeLLF, nodeURB, dummy, dummy);
+    const VolumeOctreeNode* node = getNode(vec3(pos) / vec3(getVolumeDim()), nodeLevel, nodeLLF, nodeURB, dummy, dummy);
     tgtAssert(node, "null pointer returned as node");
 
     if (!node->hasBrick()) {
