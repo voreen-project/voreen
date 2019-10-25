@@ -181,10 +181,10 @@ static tgt::vec2 projectionDepthRange(const VolumeBase& vol, const VolumeAtomic<
 
 
 #define MOUSE_INTERACTION_DIST 0.02f
-static void handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
+static bool handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
     auto button = e->button();
     if((button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT)) == 0) {
-        return;
+        return false;
     }
 
     tgt::ivec2 coords = e->coord();
@@ -211,7 +211,7 @@ static void handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
     } else if(e->action() == tgt::MouseEvent::RELEASED && button == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
         if(points.empty()) {
             points.push_back(mouse);
-            return;
+            return true;
         }
 
         int insert_index = -1;
@@ -235,8 +235,11 @@ static void handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
             tgtAssert(insert_index != -1, "Invalid insert index");
             points.insert(points.begin() + insert_index+1, mouse);
         }
+    } else {
+        return false;
     }
     e->accept();
+    return true;
 }
 
 void handleProjectionEvent(tgt::MouseEvent* e, ProjectionLabels& labels) {
@@ -431,9 +434,10 @@ void InteractiveProjectionLabeling::overlayEvent(tgt::MouseEvent* e) {
         return;
     }
 
-    handleLineEvent(currentUnit().displayLine_, e);
-
-    updateProjection();
+    if(handleLineEvent(currentUnit().displayLine_, e)) {
+        // path modified
+        updateProjection();
+    }
 
     invalidate();
 }
