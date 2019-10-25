@@ -103,7 +103,7 @@ public:
     const OctreeBrickPoolManagerBase* getBrickPoolManager() const;
 
 
-    virtual uint16_t getVoxel(const tgt::svec3& pos, size_t channel = 0) const;
+    virtual uint16_t getVoxel(const tgt::svec3& pos, size_t channel = 0, size_t level = 0) const;
 
     virtual const VolumeOctreeNode* getRootNode() const;
 

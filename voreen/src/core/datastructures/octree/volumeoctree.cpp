@@ -326,16 +326,15 @@ const Histogram1D* VolumeOctree::getHistogram(size_t channel /*= 0*/) const {
     return histograms_.at(channel);
 }
 
-uint16_t VolumeOctree::getVoxel(const tgt::svec3& pos, size_t channel /*= 0*/) const {
+uint16_t VolumeOctree::getVoxel(const tgt::svec3& pos, size_t channel /*= 0*/, size_t nodeLevel /* = 0*/) const {
     tgtAssert(channel < getNumChannels(), "invalid channel");
 
     if (tgt::hor(tgt::greaterThanEqual(pos, getVolumeDim())))
         throw std::invalid_argument("Voxel outside volume dimensions: " + genericToString(pos));
 
     svec3 nodeLLF, nodeURB;
-    size_t nodeLevel = 0;
     vec3 dummy;
-    const VolumeOctreeNode* node = getNode(vec3(pos) / vec3(getVolumeDim()), nodeLevel, nodeLLF, nodeURB, dummy, dummy);
+    const VolumeOctreeNode* node = getNode(vec3(pos) / vec3(getVolumeDim()), nodeLevel, nodeLLF, nodeURB /*just outside the node*/, dummy, dummy);
     tgtAssert(node, "null pointer returned as node");
 
     if (!node->hasBrick()) {
@@ -346,10 +345,10 @@ uint16_t VolumeOctree::getVoxel(const tgt::svec3& pos, size_t channel /*= 0*/) c
         tgtAssert(brick, "no brick returned");
 
         // if the node has a brick it must be at level 0 (our target level), we can thus just sample using pos - nodeLLF within the brick
-        //svec3 brickPos = svec3(tgt::iround((vec3(pos-nodeLLF)/vec3(nodeURB-nodeLLF)) * vec3(getBrickDim()-svec3(1))));
-        //brickPos = tgt::clamp(brickPos, svec3::zero, getBrickDim()-svec3(1));
-        svec3 brickPos = pos - nodeLLF;
-        tgtAssert(tgt::hand(tgt::greaterThanEqual(brickPos, svec3::zero)) && tgt::hand(lessThanEqual(brickPos, getBrickDim() - svec3::one)), "Position within brick outside of brick dimensions!");
+        //svec3 brickPos = pos - nodeLLF;
+        svec3 brickPos = svec3(tgt::ifloor((vec3(pos-nodeLLF)/vec3(nodeURB-nodeLLF)) * vec3(getBrickDim())));
+        brickPos = tgt::clamp(brickPos, svec3::zero, getBrickDim()-svec3(1));
+        tgtAssert(tgt::hand(tgt::greaterThanEqual(brickPos, svec3::zero)) && tgt::hand(lessThan(brickPos, getBrickDim())), "Position within brick outside of brick dimensions!");
 
         size_t voxelOffset = cubicCoordToLinear(brickPos, getBrickDim()) * getNumChannels() + channel;
         tgtAssert(voxelOffset < (getBrickMemorySize() / getBytesPerVoxel() * getNumChannels()), "invalid voxel offset");
@@ -366,7 +365,7 @@ const VolumeOctreeNode* VolumeOctree::getRootNode() const {
 }
 
 const VolumeOctreeNode* VolumeOctree::getNode(const tgt::vec3& point, size_t& level,
-    tgt::svec3& voxelLLF, tgt::svec3& voxelURB, tgt::vec3& normLLF, tgt::vec3& normURB) const
+    tgt::svec3& voxelLLF, tgt::svec3& voxelURB /* just OUTSIDE */, tgt::vec3& normLLF, tgt::vec3& normURB) const
 {
     tgtAssert(rootNode_, "no root node");
     if (!inRange(point, vec3(0.f), vec3(1.f)))
@@ -385,7 +384,6 @@ const VolumeOctreeNode* VolumeOctree::getNode(const tgt::vec3& point, size_t& le
     level = resultLevel;
     normLLF = vec3(voxelLLF) / vec3(getVolumeDim());
     normURB = vec3(voxelURB) / vec3(getVolumeDim());
-    //voxelURB -= svec3(1); //< urb is the next voxel outside the actual node => subtract 1
 
     return node;
 }
@@ -871,8 +869,8 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
 }
 
 const VolumeOctreeNode* VolumeOctree::getNodeAtVoxel(const svec3& voxel, const size_t curLevel, const size_t targetLevel,
-    const VolumeOctreeNode* node, const svec3& nodeLlf, const svec3& nodeUrb,
-    size_t& resultLevel, svec3& resultLlf, svec3& resultUrb) const
+    const VolumeOctreeNode* node, const svec3& nodeLlf, const svec3& nodeUrb /* just OUTSIDE */,
+    size_t& resultLevel, svec3& resultLlf, svec3& resultUrb /* just OUTSIDE */) const
 {
     tgtAssert(node, "null pointer passed");
     tgtAssert(curLevel >= targetLevel && curLevel < getNumLevels(), "invalid current level");

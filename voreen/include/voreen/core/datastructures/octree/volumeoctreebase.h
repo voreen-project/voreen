@@ -204,7 +204,7 @@ public:
 
 
     /// Returns the voxel value at the passed voxel position for the specified channel.
-    virtual uint16_t getVoxel(const tgt::svec3& pos, size_t channel = 0) const = 0;
+    virtual uint16_t getVoxel(const tgt::svec3& pos, size_t channel = 0, size_t level = 0) const = 0;
 
     /// Returns the tree's root node, i.e,. the node that represents the entire volume at the coarsest resolution.
     virtual const VolumeOctreeNode* getRootNode() const = 0;
