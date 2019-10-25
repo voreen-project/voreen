@@ -972,18 +972,43 @@ void InteractiveProjectionLabeling::updateProjection() {
     } else {
         const auto octree = vol.getRepresentation<VolumeOctree>();
 
-        sample = [octree] (tgt::vec3 p) {
-            uint16_t voxel = octree->getVoxel(tgt::round(p));
-            float val = static_cast<float>(voxel) / 0xffff;
-            return val;
-        };
+        float dist_within_volume = max_dist - min_dist;
+        if(!std::isfinite(dist_within_volume)) {
+            dist_within_volume = tgt::length(vol.getCubeSize());
+        }
+        float voxels_in_projection_depth = tgt::min(world_to_vox.transform(tgt::vec3(dist_within_volume)));
+
+        float voxels_along_line = 0.0f;
+        for(int i=0; i<((int)line.points_.size())-1; ++i) {
+            auto& p1 = line.points_[i];
+            auto& p2 = line.points_[i+1];
+
+            auto to_vox = [&] (tgt::vec2 p) {
+                tgt::vec4 front_pos = front.getVoxelLinear(tgt::vec3(p, 0.0f) * tgt::vec3(front.getDimensions()));
+                return tex_to_vox * front_pos;
+            };
+
+            voxels_along_line += tgt::distance(to_vox(p1.pos_), to_vox(p2.pos_));
+        }
+
+        float level_y = std::log2(voxels_in_projection_depth / static_cast<float>(dim.y));
+        float level_x = std::log2(voxels_along_line / static_cast<float>(dim.x));
+        size_t level = tgt::clamp(std::floor(std::min(level_x, level_y)), 0.0f, static_cast<float>(octree->getNumLevels()-1));
 
         // Estimate pixel block size for projection to cover roughly one leaf node of octree
         // For VolumeRAM it doesn't really matter.
         int voxels_per_block = tgt::hadd(octree->getBrickDim())/3; //roughly
-        float voxels_in_projection_depth = tgt::hadd(world_to_vox.transform(tgt::vec3(max_dist - min_dist)))/3.0f; //roughly
         float blocks_in_projection_depth = voxels_in_projection_depth / std::max(1, voxels_per_block);
-        y_block_size = std::round(tgt::clamp(static_cast<float>(dim.y) / blocks_in_projection_depth, 1.0f, static_cast<float>(dim.y)));
+        y_block_size = tgt::clamp(static_cast<int>(std::round(static_cast<float>(dim.y) / blocks_in_projection_depth)), 1, dim.y);
+        tgtAssert(y_block_size >= 0, "invalid block size");
+
+
+        sample = [octree, level] (tgt::vec3 p) {
+            uint16_t voxel = octree->getVoxel(tgt::round(p), 0, level);
+            float val = static_cast<float>(voxel) / 0xffff;
+            return val;
+        };
+
     }
 
     for(int y_base = 0; y_base < dim.y; y_base+=y_block_size) {
