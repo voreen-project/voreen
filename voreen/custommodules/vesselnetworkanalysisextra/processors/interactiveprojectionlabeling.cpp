@@ -654,10 +654,11 @@ void InteractiveProjectionLabeling::synchronizeUnitIndex() {
     if(index) {
         currentUnit() = labelUnits_.at(*index);
         camera_.set(currentUnit().camera_);
+        state_ = LABELING;
     } else {
         resetCurrentUnit();
+        state_ = FREE;
     }
-    state_ = LABELING;
     updateProjection();
 }
 
