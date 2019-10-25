@@ -25,14 +25,13 @@
 
 #include "vtivolumereader.h"
 
-#include <limits>
-
-#include <vtkDataArray.h>
 #include <vtkAbstractArray.h>
+#include <vtkCellData.h>
+#include <vtkDataArray.h>
 #include <vtkDoubleArray.h>
 #include <vtkFloatArray.h>
-#include <vtkIntArray.h>
 #include <vtkImageData.h>
+#include <vtkIntArray.h>
 #include <vtkPointData.h>
 #include <vtkSmartPointer.h>
 #include <vtkXMLImageDataReader.h>
@@ -45,7 +44,6 @@
 #include "voreen/core/datastructures/meta/templatemetadata.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/volume/volumeminmax.h"
-#include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
 
 namespace voreen {
@@ -57,75 +55,87 @@ Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vt
     tgt::vec3 spacing = tgt::dvec3::fromPointer(imageData->GetSpacing());
     tgt::vec3 offset = tgt::dvec3::fromPointer(imageData->GetOrigin());
     std::string name = origin.getSearchParameter("name");
-    float min, max;
 
-    VolumeRAM* dataset;
+    // Try to retrieve data array - favor cell data.
+    vtkDataArray* array = imageData->GetCellData()->GetArray(name.c_str());
+    if(!array) {
+        array = imageData->GetPointData()->GetArray(name.c_str());
+    }
+    else {
+        // FIXME: Somehow it seems we need to substract 1 in each dimension for cell data?
+        dimensions -= tgt::svec3::one;
+    }
+    if(!array) {
+        throw tgt::IOException("Field " + name + " could not be read.");
+    }
+
+    // Convert vtk data type to voreen data type.
+    std::string dataType;
+    switch (array->GetDataType()) {
+    case VTK_CHAR:
+    case VTK_SIGNED_CHAR:
+        dataType = "int8";
+        break;
+    case VTK_UNSIGNED_CHAR:
+        dataType = "uint8";
+        break;
+    case VTK_SHORT:
+        dataType = "int16";
+        break;
+    case VTK_UNSIGNED_SHORT:
+        dataType = "uint16";
+        break;
+    case VTK_INT:
+        dataType = "int32";
+        break;
+    case VTK_UNSIGNED_INT:
+        dataType = "uint32";
+        break;
+    case VTK_LONG:
+        dataType = "int64";
+        break;
+    case VTK_UNSIGNED_LONG:
+        dataType = "uint64";
+        break;
+    case VTK_FLOAT:
+        dataType = "float";
+        break;
+    case VTK_DOUBLE:
+        dataType = "double";
+        break;
+    default:
+        throw tgt::UnsupportedFormatException("VTK format not supported.");
+    }
+
+    VolumeFactory volumeFactory;
+    std::string format = volumeFactory.getFormat(dataType, array->GetNumberOfComponents());
+
+    // Create volume.
+    VolumeRAM* dataset = nullptr;
     try {
-        // Try to retrieve data array.
-        vtkDataArray* array = imageData->GetPointData()->GetArray(name.c_str());
-        if(!array)
-            throw tgt::IOException("Field " + name + " could not be read.");
-
-        //Convert vtk data type to voreen data type
-        std::string dataType;
-        switch (array->GetDataType()) {
-            case VTK_CHAR:
-            case VTK_SIGNED_CHAR:
-                dataType = "int8";
-                break;
-            case VTK_UNSIGNED_CHAR:
-                dataType = "uint8";
-                break;
-            case VTK_SHORT:
-                dataType = "int16";
-                break;
-            case VTK_UNSIGNED_SHORT:
-                dataType = "uint16";
-                break;
-            case VTK_INT:
-                dataType = "int32";
-                break;
-            case VTK_UNSIGNED_INT:
-                dataType = "uint32";
-                break;
-            case VTK_LONG:
-                dataType = "int64";
-                break;
-            case VTK_UNSIGNED_LONG:
-                dataType = "uint64";
-                break;
-            case VTK_FLOAT:
-                dataType = "float";
-                break;
-            case VTK_DOUBLE:
-                dataType = "double";
-                break;
-            default:
-                throw tgt::UnsupportedFormatException("VTK format not supported.");
-        }
-
-        //Create volume
-        std::string volumeFormat = VolumeFactory().getFormat(dataType, array->GetNumberOfComponents());
-        dataset = VolumeFactory().create(volumeFormat, dimensions);
-
-        // Export data.
-        array->ExportToVoidPointer(dataset->getData());
-
-        // Extract range.
-        double range[2];
-        array->GetRange(range);
-        min = static_cast<float>(range[0]);
-        max = static_cast<float>(range[1]);
-
+        dataset = volumeFactory.create(format, dimensions);
     } catch (std::bad_alloc&) {
         throw; // throw it to the caller
     }
 
-    Volume* volumeHandle = new Volume(dataset, spacing, offset);
-    volumeHandle->addDerivedData(new VolumeMinMax(min, max, min, max));
-    volumeHandle->setOrigin(origin);
-    volumeHandle->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping(volumeHandle->getBaseType()));
-    volumeHandle->getMetaDataContainer().addMetaData("name", new StringMetaData(name));
+    // Export data.
+    array->ExportToVoidPointer(dataset->getData());
+
+    // Extract range.
+    std::vector<float> min;
+    std::vector<float> max;
+    for(int i=0; i<array->GetNumberOfComponents(); i++) {
+        double range[2];
+        array->GetRange(range, i);
+        min.push_back(range[0]);
+        max.push_back(range[1]);
+    }
+
+    Volume* volume = new Volume(dataset, spacing, offset);
+    volume->addDerivedData(new VolumeMinMax(min, max, min, max));
+    volume->setOrigin(origin);
+    volume->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping(volume->getBaseType()));
+    volume->getMetaDataContainer().addMetaData("name", new StringMetaData(name));
 
     // Read meta data.
     for(int i = 0; i < imageData->GetFieldData()->GetNumberOfArrays(); i++) {
@@ -133,27 +143,27 @@ Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vt
 
         MetaDataBase* metaData = nullptr;
         switch (array->GetDataType()) {
-            case VTK_INT:
-                metaData = new IntMetaData(vtkIntArray::FastDownCast(array)->GetValue(0));
-                break;
-            case VTK_FLOAT:
-                metaData = new FloatMetaData(vtkFloatArray::FastDownCast(array)->GetValue(0));
-                break;
-            case VTK_DOUBLE:
-                metaData = new DoubleMetaData(vtkDoubleArray::FastDownCast(array)->GetValue(0));
-                break;
-            default:
-                //LWARNING("Unsupported Meta Data found: " << array->GetName());
-                break;
+        case VTK_INT:
+            metaData = new IntMetaData(vtkIntArray::FastDownCast(array)->GetValue(0));
+            break;
+        case VTK_FLOAT:
+            metaData = new FloatMetaData(vtkFloatArray::FastDownCast(array)->GetValue(0));
+            break;
+        case VTK_DOUBLE:
+            metaData = new DoubleMetaData(vtkDoubleArray::FastDownCast(array)->GetValue(0));
+            break;
+        default:
+            //LWARNING("Unsupported Meta Data found: " << array->GetName());
+            break;
         }
 
         if(!metaData)
             continue;
 
-        volumeHandle->getMetaDataContainer().addMetaData(array->GetName(), metaData);
+        volume->getMetaDataContainer().addMetaData(array->GetName(), metaData);
     }
 
-    return volumeHandle;
+    return volume;
 }
 
 
@@ -175,7 +185,18 @@ std::vector<VolumeURL> VTIVolumeReader::listVolumes(const std::string& url) cons
     vtkSmartPointer<vtkXMLImageDataReader> reader = vtkSmartPointer<vtkXMLImageDataReader>::New();
     if(reader->CanReadFile(urlOrigin.getPath().c_str())) {
         reader->SetFileName(urlOrigin.getPath().c_str());
-        reader->Update();
+        reader->UpdateInformation();
+
+        for(int i = 0; i < reader->GetNumberOfCellArrays(); i++) {
+            const char* name = reader->GetCellArrayName(i);
+
+            if(!filterName.empty() && filterName != name)
+                continue;
+
+            VolumeURL subURL("vti", urlOrigin.getPath(), "");
+            subURL.addSearchParameter("name", name);
+            result.push_back(subURL);
+        }
 
         for(int i = 0; i < reader->GetNumberOfPointArrays(); i++) {
 

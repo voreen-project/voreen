@@ -44,6 +44,7 @@
 #include "io/similaritymatrixsave.h"
 #include "io/similaritymatrixsource.h"
 #ifdef VRN_USE_VTK
+#include "io/netcdfvolumereader.h"
 #include "io/vtivolumereader.h"
 #include "io/vtmvolumereader.h"
 #endif
@@ -80,6 +81,7 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     registerProcessor(new SimilarityMatrixSave());
     registerProcessor(new SimilarityMatrixSource());
 #ifdef VRN_USE_VTK
+    registerVolumeReader(new NetCDFVolumeReader());
     registerVolumeReader(new VTIVolumeReader());
     registerVolumeReader(new VTMVolumeReader());
 #endif
