@@ -26,6 +26,7 @@
 #include "interactiveprojectionlabeling.h"
 #include "voreen/core/datastructures/volume/volumeram.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
+#include "voreen/core/datastructures/octree/volumeoctree.h"
 #include <iostream>
 #include "tgt/textureunit.h"
 #include "tgt/init.h"
@@ -240,7 +241,7 @@ static void handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
 
 void handleProjectionEvent(tgt::MouseEvent* e, ProjectionLabels& labels) {
     auto button = e->button();
-    if((button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT)) == 0) {
+    if((button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT | tgt::MouseEvent::MOUSE_BUTTON_MIDDLE)) == 0) {
         return;
     }
 
@@ -293,7 +294,50 @@ void handleProjectionEvent(tgt::MouseEvent* e, ProjectionLabels& labels) {
             return;
         }
     }
-    if(e->action() == tgt::MouseEvent::PRESSED && button == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
+    if(e->action() == tgt::MouseEvent::PRESSED && button == tgt::MouseEvent::MOUSE_BUTTON_MIDDLE) {
+        struct NearestSegment {
+            std::vector<std::deque<tgt::vec2>>::iterator line;
+            int split_pos;
+        };
+        float nearest_dist = std::numeric_limits<float>::infinity();
+        boost::optional<NearestSegment> nearest = boost::none;
+
+        auto findSplitPos = [&] (std::vector<std::deque<tgt::vec2>>::iterator points) {
+            for(int i=0; i<((int)points->size())-1; ++i) {
+                Line line((*points)[i], (*points)[i+1]);
+                float dist = line.dist(mouse);
+                if(dist < nearest_dist) {
+                    nearest = NearestSegment {
+                        points,
+                        i+1 // insert betweeen points[i] and points[i+1]
+                    };
+                    nearest_dist = dist;
+                }
+            }
+        };
+
+        for(auto it = labels.foreground_.begin(); it != labels.foreground_.end(); ++it) {
+            findSplitPos(it);
+        }
+        for(auto it = labels.background_.begin(); it != labels.background_.end(); ++it) {
+            findSplitPos(it);
+        }
+
+        if(nearest) {
+            std::deque<tgt::vec2> right;
+            for(int i=nearest->split_pos; i < nearest->line->size(); ++i) {
+                tgt::vec2 elm = nearest->line->at(i);
+                right.push_back(elm);
+            }
+            nearest->line->resize(nearest->split_pos);
+            if(labels.foreground_.begin() <= nearest->line && nearest->line < labels.foreground_.end()) {
+                labels.foreground_.push_back(std::move(right));
+            } else {
+                tgtAssert(labels.background_.begin() <= nearest->line && nearest->line < labels.background_.end() , "Invalid label list pointer");
+                labels.background_.push_back(std::move(right));
+            }
+        }
+    } else if(e->action() == tgt::MouseEvent::PRESSED && button == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
         float nearest_dist = std::numeric_limits<float>::infinity();
         boost::optional<NearestNode> nearest = boost::none;
 
@@ -363,13 +407,10 @@ void InteractiveProjectionLabeling::projectionEvent(tgt::MouseEvent* e) {
 
     coords.y = viewport.y - coords.y - 1;
     auto mouse = tgt::vec2(coords)/tgt::vec2(viewport);
-    if((button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT)) == 0) {
-        return;
-    }
 
-    if(e->modifiers() == tgt::Event::CTRL && e->action() == tgt::MouseEvent::RELEASED) {
+    if(button == tgt::MouseEvent::MOUSE_BUTTON_LEFT && e->modifiers() == tgt::Event::CTRL && e->action() == tgt::MouseEvent::RELEASED) {
         currentUnit().projectionLabels_.foreground_.push_back({mouse});
-    } else if(e->modifiers() == tgt::Event::SHIFT && e->action() == tgt::MouseEvent::RELEASED) {
+    } else if(button == tgt::MouseEvent::MOUSE_BUTTON_LEFT && e->modifiers() == tgt::Event::SHIFT && e->action() == tgt::MouseEvent::RELEASED) {
         currentUnit().projectionLabels_.background_.push_back({mouse});
     } else if(e->modifiers() == tgt::Event::MODIFIER_NONE) {
         handleProjectionEvent(e, currentUnit().projectionLabels_);
@@ -889,8 +930,20 @@ void InteractiveProjectionLabeling::updateProjection() {
     }
     const auto& vol = *inport_.getData();
 
-    const auto volram_ptr = vol.getRepresentation<VolumeRAM>();
-    const auto& volram = *volram_ptr;
+    std::function<float(tgt::vec3)> sample;
+    if(vol.hasRepresentation<VolumeRAM>() || !vol.hasRepresentation<VolumeOctree>()) {
+        const auto volram = vol.getRepresentation<VolumeRAM>();
+        sample = [volram] (tgt::vec3 p) {
+            return volram->getVoxelNormalizedLinear(p);
+        };
+    } else {
+        const auto octree = vol.getRepresentation<VolumeOctree>();
+        sample = [octree] (tgt::vec3 p) {
+            uint16_t voxel = octree->getVoxel(tgt::round(p));
+            float val = static_cast<float>(voxel) / 0xffff;
+            return val;
+        };
+    }
 
     auto dim = overlayOutput_.getReceivedSize();
     projection_ = LabelProjection(dim);
@@ -915,35 +968,46 @@ void InteractiveProjectionLabeling::updateProjection() {
 
     auto world_to_vox = vol.getWorldToVoxelMatrix();
 
-    tgt::vec3 dimf = vol.getDimensions();
-    for(int x = 0; x < dim.x; ++x) {
-        float d = ((float)x)/(dim.x-1);
-        auto p = line.interpolate(d);
+    tgt::vec3 max_dim = vol.getDimensions() - tgt::svec3::one;
 
-        tgt::vec3 normalized_query(p, 0);
-        tgt::vec4 front_pos = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
-        tgt::vec4 back_pos = back.getVoxelLinear(normalized_query * tgt::vec3(back.getDimensions()));
+    const int PIXEL_BLOCK_SIZE = 32;
+    for(int y_base = 0; y_base < dim.y; y_base+=PIXEL_BLOCK_SIZE) {
+        int y_max = std::min(dim.y, y_base + PIXEL_BLOCK_SIZE);
 
-        tgt::vec4 front_world = tex_to_world * front_pos;
-        tgt::vec4 back_world = tex_to_world * back_pos;
+        for(int x_base = 0; x_base < dim.x; x_base+=PIXEL_BLOCK_SIZE) {
+            int x_max = std::min(dim.x, x_base + PIXEL_BLOCK_SIZE);
 
-        tgt::vec3 view_dir = tgt::normalize(back_world.xyz() - front_world.xyz());
+            for(int x = x_base; x < x_max; ++x) {
 
-        for(int y = 0; y < dim.y; ++y) {
-            float alpha = ((float)y)/(dim.y-1);
-            float alpha_rw = max_dist * alpha + (1.0 - alpha) * min_dist;
+                float d = ((float)x)/(dim.x-1);
+                auto p = line.interpolate(d);
 
-            tgt::vec4 query_pos_rw(view_dir * alpha_rw + camera, 1.0);
-            tgt::vec3 query_pos = (world_to_vox * query_pos_rw).xyz();
+                tgt::vec3 normalized_query(p, 0);
+                tgt::vec4 front_pos = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
+                tgt::vec4 back_pos = back.getVoxelLinear(normalized_query * tgt::vec3(back.getDimensions()));
 
-            tgt::vec2 val;
-            if(tgt::hor(tgt::greaterThan(query_pos, dimf)) || tgt::hor(tgt::lessThan(query_pos, tgt::vec3::zero))) {
-                val = tgt::vec2(0.0, 0.0);
-            } else {
-                val = tgt::vec2(volram.getVoxelNormalizedLinear(query_pos), 1.0);
+                tgt::vec4 front_world = tex_to_world * front_pos;
+                tgt::vec4 back_world = tex_to_world * back_pos;
+
+                tgt::vec3 view_dir = tgt::normalize(back_world.xyz() - front_world.xyz());
+
+                for(int y = y_base; y < y_max; ++y) {
+                    float alpha = ((float)y)/(dim.y-1);
+                    float alpha_rw = max_dist * alpha + (1.0 - alpha) * min_dist;
+
+                    tgt::vec4 query_pos_rw(view_dir * alpha_rw + camera, 1.0);
+                    tgt::vec3 query_pos = (world_to_vox * query_pos_rw).xyz();
+
+                    tgt::vec2 val;
+                    if(tgt::hor(tgt::greaterThan(query_pos, max_dim)) || tgt::hor(tgt::lessThan(query_pos, tgt::vec3::zero))) {
+                        val = tgt::vec2(0.0, 0.0);
+                    } else {
+                        val = tgt::vec2(sample(query_pos), 1.0);
+                    }
+
+                    proj.at(tgt::svec2(x, y)) = val;
+                }
             }
-
-            proj.at(tgt::svec2(x, y)) = val;
         }
     }
 
