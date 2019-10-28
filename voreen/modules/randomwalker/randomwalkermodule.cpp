@@ -25,6 +25,7 @@
 
 #include "randomwalkermodule.h"
 
+#include "processors/octreewalker.h"
 #include "processors/randomwalker.h"
 #include "processors/randomwalkeranalyzer.h"
 
@@ -39,6 +40,7 @@ RandomWalkerModule::RandomWalkerModule(const std::string& modulePath)
     setID("Random Walker");
     setGuiName("Random Walker");
 
+    registerSerializableType(new OctreeWalker());
     registerSerializableType(new RandomWalker());
     registerSerializableType(new RandomWalkerAnalyzer());
 
