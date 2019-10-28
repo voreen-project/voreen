@@ -426,7 +426,7 @@ VolumeBase* AnalyzeVolumeReader::read(const VolumeURL& origin) {
 }
 
 VolumeList* AnalyzeVolumeReader::read(const std::string &url) {
-    return read(url, -1);
+    return read(url, -1, -1);
 }
 
 VolumeList* AnalyzeVolumeReader::read(const std::string &url, int volId, int channel) {
@@ -709,32 +709,40 @@ VolumeList* AnalyzeVolumeReader::readNifti(const std::string &fileName, bool sta
     VolumeList* vc = new VolumeList();
     size_t volSize = hmul(tgt::svec3(dimensions)) * (header.bitpix / 8);
 
-    int start = 0;
-    int stop = numVolumes;
+    // Value -1 means loading all volumes / channels.
+    int startId = 0;
+    int stopId = numVolumes;
     if(volId != -1) {
-        //we want to load a single volume:
-        start = volId;
-        stop = start + 1;
+        startId = volId;
+        stopId = startId + 1;
+    }
+    int startChannel = 0;
+    int stopChannel = numChannels;
+    if(channel != -1) {
+        startChannel = channel;
+        stopChannel = startChannel +1;
     }
 
-    for(int i=start; i<stop; i++) {
-        size_t offset = headerskip + (i*numChannels + channel) * volSize;
-        VolumeRepresentation* volume = new VolumeDiskRaw(rawFilename, baseType, dimensions, offset, bigEndian);
-        Volume* vh = new Volume(volume, spacing, tgt::vec3::zero);
+    for(int i=startId; i < stopId; i++) {
+        for(int channelId=startChannel; channelId<stopChannel; channelId++) {
+            size_t offset = headerskip + (i * numChannels + channelId) * volSize;
+            VolumeRepresentation* volume = new VolumeDiskRaw(rawFilename, baseType, dimensions, offset, bigEndian);
+            Volume* vh = new Volume(volume, spacing, tgt::vec3::zero);
 
-        VolumeURL origin(fileName);
-        origin.addSearchParameter("volumeId", itos(i));
-        origin.addSearchParameter("channel", itos(channel));
-        vh->setOrigin(origin);
+            VolumeURL origin(fileName);
+            origin.addSearchParameter("volumeId", itos(i));
+            origin.addSearchParameter("channel", itos(channelId));
+            vh->setOrigin(origin);
 
-        vh->setPhysicalToWorldMatrix(pToW);
-        vh->setMetaDataValue<StringMetaData>("Description", std::string(header.descrip));
-        vh->setMetaDataValue<IntMetaData>("FrameTime", static_cast<int>(toffset + i * dt));
-        vh->setTimestep(toffset + i * dt);
-        if (applyRWM)
-            vh->setRealWorldMapping(RealWorldMapping::combine(denormalize, rwm));
+            vh->setPhysicalToWorldMatrix(pToW);
+            vh->setMetaDataValue<StringMetaData>("Description", std::string(header.descrip));
+            vh->setMetaDataValue<IntMetaData>("FrameTime", static_cast<int>(toffset + i * dt));
+            vh->setTimestep(toffset + i * dt);
+            if (applyRWM)
+                vh->setRealWorldMapping(RealWorldMapping::combine(denormalize, rwm));
 
-        vc->add(vh);
+            vc->add(vh);
+        }
     }
 
     return vc;
@@ -789,6 +797,9 @@ VolumeList* AnalyzeVolumeReader::readAnalyze(const std::string &fileName, int vo
     int numVolumes = dimension.dim[4];
     LINFO("Number of volumes: " << numVolumes);
 
+    int numChannels = dimension.dim[0] < 5 ? 1 : dimension.dim[5];
+    LINFO("Number of channels: " << numChannels);
+
     if (hor(lessThanEqual(dimensions, ivec3(0)))) {
         LERROR("Invalid resolution or resolution not specified: " << dimensions);
         throw tgt::CorruptedFileException("error while reading data", fileName);
@@ -830,15 +841,18 @@ VolumeList* AnalyzeVolumeReader::readAnalyze(const std::string &fileName, int vo
             throw tgt::UnsupportedFormatException("Unsupported datatype!");
     }
 
-    std::string objectType;
-    std::string gridType;
-
-    int start = 0;
-    int stop = numVolumes;
+    // Value -1 means loading all volumes / channels.
+    int startId = 0;
+    int stopId = numVolumes;
     if(volId != -1) {
-        //we want to load a single volume:
-        start = volId;
-        stop = start + 1;
+        startId = volId;
+        stopId = startId + 1;
+    }
+    int startChannel = 0;
+    int stopChannel = numChannels;
+    if(channel != -1) {
+        startChannel = channel;
+        stopChannel = startChannel +1;
     }
 
     // Nifti transformations give us the center of the first voxel, we translate to correct:
@@ -846,18 +860,22 @@ VolumeList* AnalyzeVolumeReader::readAnalyze(const std::string &fileName, int vo
 
     VolumeList* vc = new VolumeList();
     size_t volSize = hmul(tgt::svec3(dimensions)) * (dimension.bitpix / 8);
-    for(int i=start; i<stop; i++) {
-        VolumeRepresentation* volume = new VolumeDiskRaw(getRelatedImgFileName(fileName), baseType, dimensions, i * volSize, bigEndian);
-        Volume* vh = new Volume(volume, spacing, tgt::vec3::zero);
-        vh->setOrigin(VolumeURL(fileName));
-        vh->setPhysicalToWorldMatrix(pToW);
+    for(int i=startId; i<stopId; i++) {
+        for(int channelId=startChannel; channelId<stopChannel; channelId++) {
+            size_t offset = (i * numChannels + channelId) * volSize;
+            VolumeRepresentation* volume = new VolumeDiskRaw(getRelatedImgFileName(fileName), baseType, dimensions,
+                                                             offset, bigEndian);
+            Volume* vh = new Volume(volume, spacing, tgt::vec3::zero);
+            vh->setOrigin(VolumeURL(fileName));
+            vh->setPhysicalToWorldMatrix(pToW);
 
-        VolumeURL origin(fileName);
-        origin.addSearchParameter("volumeId", itos(i));
-        origin.addSearchParameter("channel", itos(channel));
-        vh->setOrigin(origin);
+            VolumeURL origin(fileName);
+            origin.addSearchParameter("volumeId", itos(i));
+            origin.addSearchParameter("channel", itos(channelId));
+            vh->setOrigin(origin);
 
-        vc->add(vh);
+            vc->add(vh);
+        }
     }
 
     return vc;
