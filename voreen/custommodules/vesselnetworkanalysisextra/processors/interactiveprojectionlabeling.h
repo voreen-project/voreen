@@ -133,7 +133,7 @@ private:
     enum InitializationMode {
         NONE,
         BRIGHT_LUMEN,
-        //BRIGHT_WALL,
+        BRIGHT_WALL,
     };
 
     void updateSizes();

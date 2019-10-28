@@ -465,12 +465,20 @@ void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
         if(ke->pressed()) {
             switch(ke->keyCode()) {
                 case tgt::KeyEvent::K_UP: {
-                    currentUnitIndex_.set(std::min(currentUnitIndex_.get() + 1, currentUnitIndex_.getMaxValue()));
+                    int new_val = currentUnitIndex_.get() + 1;
+                    if(new_val > currentUnitIndex_.getMaxValue()) {
+                        new_val = -1;
+                    }
+                    currentUnitIndex_.set(new_val);
                     ke->accept();
                     break;
                 }
                 case tgt::KeyEvent::K_DOWN: {
-                    currentUnitIndex_.set(std::max(currentUnitIndex_.get() - 1, currentUnitIndex_.getMinValue()));
+                    int new_val = currentUnitIndex_.get() - 1;
+                    if(new_val < currentUnitIndex_.getMinValue()) {
+                        new_val = currentUnitIndex_.getMaxValue();
+                    }
+                    currentUnitIndex_.set(new_val);
                     ke->accept();
                     break;
                 }
@@ -644,12 +652,12 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     addProperty(initializationMode_);
         initializationMode_.addOption("none", "None", NONE);
         initializationMode_.addOption("brightlumen", "Bright Lumen", BRIGHT_LUMEN);
+        initializationMode_.addOption("brightwall", "Bright Wall", BRIGHT_WALL);
     addProperty(projectionTransfunc_);
         ON_CHANGE(initializationMode_, InteractiveProjectionLabeling, initializeProjectionLabels);
     addProperty(maxLineSimplificationDistance_);
         ON_CHANGE(maxLineSimplificationDistance_, InteractiveProjectionLabeling, initializeProjectionLabels);
-    //initializationMode_.addOption("brightwall", "Bright Wall", BRIGHT_WALL);
-    //
+
     addProperty(currentUnitIndex_);
         ON_CHANGE(currentUnitIndex_, InteractiveProjectionLabeling, synchronizeUnitIndex);
 
@@ -668,6 +676,7 @@ void InteractiveProjectionLabeling::synchronizeUnitIndex() {
         resetCurrentUnit();
         state_ = FREE;
     }
+    projectionLabelsModified_ = true;
     projectionRequiresUpdate_ = true;
     invalidate();
 }
@@ -801,7 +810,7 @@ static std::vector<int> maxPath(const VolumeAtomic<float>& img) {
             float best_val = 0.0;
             for(int d=std::max(0, x-MAX_NEIGHBOR_OFFSET); d<std::min(idim.x, x+MAX_NEIGHBOR_OFFSET+1); ++d) {
                 float val = img.voxel(d, y, 0) + global_cost.at(d);
-                if(val > best_val) {
+                if(val > best_val || (val == best_val && std::abs(best_i - x) > std::abs(d - x))) {
                     best_val = val;
                     best_i = d;
                 }
@@ -869,6 +878,77 @@ void simplifyPath(std::deque<tgt::vec2>& input, float max_line_dist) {
     input = output;
 }
 
+static void initBrightWall(const LabelProjection& proj, ProjectionLabels& labels, float max_line_dist) {
+    const auto& orig = proj.projection();
+    tgt::ivec3 idim = orig.getDimensions();
+    VolumeAtomic<float> values(tgt::svec3(idim.y, idim.x, idim.z));
+
+    float sum = 0.0;
+
+    //Transpose for path search
+    for(int y=0; y < idim.y; ++y) {
+        for(int x=0; x < idim.x; ++x) {
+            tgt::vec2 p = orig.voxel(x, y, 0);
+
+            float val;
+            if(p.y > 0.0) {
+                val = p.x;
+            } else {
+                val = 0.0;
+            }
+            sum += val;
+            values.voxel(y, x, 0) = val;
+        }
+    }
+    float mean = sum / (idim.x * idim.y);
+
+    auto first_path = maxPath(values);
+    // Clear values around first path in order to find second maximum path
+    for(int x=0; x < first_path.size(); ++x) {
+        int y = first_path[x];
+        values.voxel(y, x, 0) = mean;
+        for(int wy = y+1; y < idim.y; ++wy) {
+            float& val = values.voxel(wy, x, 0);
+            if(val > mean) {
+                val = mean;
+            } else {
+                break;
+            }
+        }
+        for(int wy = y-1; y >= 0; --wy) {
+            float& val = values.voxel(wy, x, 0);
+            if(val > mean) {
+                val = mean;
+            } else {
+                break;
+            }
+        }
+    }
+    auto second_path = maxPath(values);
+
+    std::deque<tgt::vec2> foreground;
+    std::deque<tgt::vec2> upperBackground;
+    std::deque<tgt::vec2> lowerBackground;
+    for(int x=0; x < first_path.size(); ++x) {
+        float x_pos = static_cast<float>(x)/(idim.x-1);
+        float y_top = static_cast<float>(first_path.at(x))/(idim.y-1);
+        float y_bottom = static_cast<float>(second_path.at(x))/(idim.y-1);
+
+        float width = y_top - y_bottom;
+        float center = tgt::clamp((y_top + y_bottom)/2, 0.0f, 1.0f);
+        foreground.emplace_back(x_pos, center);
+        lowerBackground.emplace_back(x_pos, tgt::clamp(center-width, 0.0f, 1.0f));
+        upperBackground.emplace_back(x_pos, tgt::clamp(center+width, 0.0f, 1.0f));
+    }
+    simplifyPath(foreground, max_line_dist);
+    simplifyPath(lowerBackground, max_line_dist);
+    simplifyPath(upperBackground, max_line_dist);
+
+    labels.foreground_.push_back(foreground);
+    labels.background_.push_back(lowerBackground);
+    labels.background_.push_back(upperBackground);
+}
+
 static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& labels, float max_line_dist) {
     const auto& orig = proj.projection();
     tgt::ivec3 idim = orig.getDimensions();
@@ -917,6 +997,7 @@ static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& label
     labels.background_.push_back(lowerBackground);
     labels.background_.push_back(upperBackground);
 }
+
 void InteractiveProjectionLabeling::initializeProjectionLabels() {
     currentUnit().projectionLabels_.clear();
 
@@ -928,6 +1009,11 @@ void InteractiveProjectionLabeling::initializeProjectionLabels() {
         case BRIGHT_LUMEN:
             {
                 initBrightLumen(*projection_, currentUnit().projectionLabels_, maxLineSimplificationDistance_.get());
+                break;
+            }
+        case BRIGHT_WALL:
+            {
+                initBrightWall(*projection_, currentUnit().projectionLabels_, maxLineSimplificationDistance_.get());
                 break;
             }
         default:;
@@ -1049,7 +1135,7 @@ void InteractiveProjectionLabeling::updateProjection() {
 
                 tgt::vec2 val;
                 if(tgt::hor(tgt::greaterThan(query_pos, max_dim)) || tgt::hor(tgt::lessThan(query_pos, tgt::vec3::zero))
-                        || back_world.a != 1.0 || front_pos.a != 1.0) {
+                        || back_world.a == 0.0 || front_pos.a == 0.0) {
                     val = tgt::vec2(0.0, 0.0);
                 } else {
                     val = tgt::vec2(sample(query_pos), 1.0);
