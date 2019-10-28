@@ -1048,7 +1048,8 @@ void InteractiveProjectionLabeling::updateProjection() {
                 tgt::vec3 query_pos = (world_to_vox * query_pos_rw).xyz();
 
                 tgt::vec2 val;
-                if(tgt::hor(tgt::greaterThan(query_pos, max_dim)) || tgt::hor(tgt::lessThan(query_pos, tgt::vec3::zero))) {
+                if(tgt::hor(tgt::greaterThan(query_pos, max_dim)) || tgt::hor(tgt::lessThan(query_pos, tgt::vec3::zero))
+                        || back_world.a != 1.0 || front_pos.a != 1.0) {
                     val = tgt::vec2(0.0, 0.0);
                 } else {
                     val = tgt::vec2(sample(query_pos), 1.0);
