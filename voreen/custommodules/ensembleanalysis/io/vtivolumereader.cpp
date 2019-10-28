@@ -195,6 +195,7 @@ std::vector<VolumeURL> VTIVolumeReader::listVolumes(const std::string& url) cons
 
             VolumeURL subURL("vti", urlOrigin.getPath(), "");
             subURL.addSearchParameter("name", name);
+            subURL.getMetaDataContainer().addMetaData("name", new StringMetaData(name));
             result.push_back(subURL);
         }
 

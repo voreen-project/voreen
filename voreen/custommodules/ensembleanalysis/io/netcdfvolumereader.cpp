@@ -64,6 +64,7 @@ std::vector<VolumeURL> NetCDFVolumeReader::listVolumes(const std::string& url) c
                 VolumeURL subURL("nc", urlOrigin.getPath(), "");
                 subURL.addSearchParameter("name", name);
                 //subURL.addSearchParameter("timeStep", std::to_string(t));
+                subURL.getMetaDataContainer().addMetaData("name", new StringMetaData(name));
                 result.push_back(subURL);
             //}
         }
@@ -92,10 +93,10 @@ VolumeBase* NetCDFVolumeReader::read(const VolumeURL& origin) {
     }
 
     std::string name = origin.getSearchParameter("name");
-    double timeStep = std::stod(origin.getSearchParameter("timeStep"));
     reader->SetVariableArrayStatus(name.c_str(), 1);
+    //double timeStep = std::stod(origin.getSearchParameter("timeStep"));
+    //reader->UpdateTimeStep(timeStep);
     reader->SetOutputTypeToImage();
-    reader->UpdateTimeStep(timeStep);
     reader->Update();
 
     vtkImageData* imageData = vtkImageData::SafeDownCast(reader->GetOutput());

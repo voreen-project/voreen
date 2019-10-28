@@ -82,6 +82,7 @@ std::vector<VolumeURL> VTMVolumeReader::listVolumes(const std::string& url) cons
                 VolumeURL subURL("vtm", urlOrigin.getPath(), "");
                 subURL.addSearchParameter("name", name);
                 subURL.addSearchParameter("block", blockIdxString);
+                subURL.getMetaDataContainer().addMetaData("name", new StringMetaData(name));
                 result.push_back(subURL);
             }
 

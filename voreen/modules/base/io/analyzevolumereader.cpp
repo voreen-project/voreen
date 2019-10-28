@@ -35,6 +35,7 @@
 
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/volume/volumedisk.h"
+#include "voreen/core/datastructures/volume/volumefactory.h"
 
 using tgt::vec3;
 using tgt::mat4;
@@ -402,7 +403,12 @@ VolumeBase* AnalyzeVolumeReader::read(const VolumeURL& origin) {
     if (!tmp.empty())
         volumeId = stoi(tmp);
 
-    std::unique_ptr<VolumeList> collection(read(origin.getPath(), volumeId));
+    int channel = 0;
+    tmp = origin.getSearchParameter("channel");
+    if(!tmp.empty())
+        channel = stoi(tmp);
+
+    std::unique_ptr<VolumeList> collection(read(origin.getPath(), volumeId, channel));
 
     if (collection && collection->size() == 1) {
         result = collection->first();
@@ -423,7 +429,7 @@ VolumeList* AnalyzeVolumeReader::read(const std::string &url) {
     return read(url, -1);
 }
 
-VolumeList* AnalyzeVolumeReader::read(const std::string &url, int volId) {
+VolumeList* AnalyzeVolumeReader::read(const std::string &url, int volId, int channel) {
     VolumeURL origin(url);
     std::string fileName = origin.getPath();
 
@@ -431,7 +437,7 @@ VolumeList* AnalyzeVolumeReader::read(const std::string &url, int volId) {
 
     //extension .nii => standalone nifti
     if(fileName.find(".nii") != std::string::npos)
-        return readNifti(fileName, true, volId);
+        return readNifti(fileName, true, volId, channel);
     else {
         //check magic string:
         std::ifstream file(fileName.c_str(), std::ios::in | std::ios::binary);
@@ -454,21 +460,21 @@ VolumeList* AnalyzeVolumeReader::read(const std::string &url, int volId) {
 
         if( (header.magic[0] == 'n') && (header.magic[2] == '1') && (header.magic[3] == 0) ) {
             if(header.magic[1] == '+') {
-                return readNifti(fileName, true, volId);
+                return readNifti(fileName, true, volId, channel);
             }
             else if(header.magic[1] == 'i') {
-                return readNifti(fileName, false, volId);
+                return readNifti(fileName, false, volId, channel);
             }
             else
-                return readAnalyze(fileName, volId);
+                return readAnalyze(fileName, volId, channel);
         }
         else
-            return readAnalyze(fileName, volId);
+            return readAnalyze(fileName, volId, channel);
     }
     return 0;
 }
 
-VolumeList* AnalyzeVolumeReader::readNifti(const std::string &fileName, bool standalone, int volId) {
+VolumeList* AnalyzeVolumeReader::readNifti(const std::string &fileName, bool standalone, int volId, int channel) {
     LINFO("Loading nifti file " << fileName);
 
     std::ifstream file(fileName.c_str(), std::ios::in | std::ios::binary);
@@ -519,7 +525,10 @@ VolumeList* AnalyzeVolumeReader::readNifti(const std::string &fileName, bool sta
     int numVolumes = header.dim[4];
     LINFO("Number of volumes: " << numVolumes);
 
-    if (hor(lessThanEqual(dimensions, ivec3(0)))) {
+    int numChannels = header.dim[0] < 5 ? 1 : header.dim[5];
+    LINFO("Number of channels: " << numChannels);
+
+    if (hor(lessThanEqual(dimensions, tgt::ivec3::zero))) {
         LERROR("Invalid resolution or resolution not specified: " << dimensions);
         throw tgt::CorruptedFileException("error while reading data", fileName);
     }
@@ -569,7 +578,7 @@ VolumeList* AnalyzeVolumeReader::readNifti(const std::string &fileName, bool sta
     }
 
     LINFO("Datatype: " << header.datatype);
-    std::string voreenVoxelType = "";
+    std::string baseType = "";
     RealWorldMapping denormalize;
     bool applyRWM = header.scl_slope != 0.0f;
 
@@ -599,47 +608,52 @@ VolumeList* AnalyzeVolumeReader::readNifti(const std::string &fileName, bool sta
     //if (header.intent_code == IC_INTENT_SYMMATRIX) {
         //h.objectModel_ = "TENSOR_FUSION_LOW";
     //}
-    if(voreenVoxelType == "") {
+    if(baseType.empty()) {
         switch(header.datatype) {
             case VRN_ANALYZE_DT_UNSIGNED_CHAR:
-                voreenVoxelType = "uint8";
+                baseType = "uint8";
                 denormalize = RealWorldMapping::createDenormalizingMapping<uint8_t>();
                 break;
             case VRN_ANALYZE_DT_SIGNED_SHORT:
-                voreenVoxelType = "int16";
+                baseType = "int16";
                 denormalize = RealWorldMapping::createDenormalizingMapping<int16_t>();
                 break;
             case VRN_ANALYZE_DT_SIGNED_INT:
-                voreenVoxelType = "int32";
+                baseType = "int32";
                 denormalize = RealWorldMapping::createDenormalizingMapping<int32_t>();
                 break;
             case VRN_ANALYZE_DT_FLOAT:
-                voreenVoxelType = "float";
+                baseType = "float";
                 break;
             case VRN_ANALYZE_DT_DOUBLE:
-                voreenVoxelType = "double";
+                baseType = "double";
                 break;
             case VRN_ANALYZE_DT_RGB:
-                voreenVoxelType = "Vector3(uint8)";
+                baseType = "Vector3(uint8)";
                 applyRWM = false;
                 break;
             case VRN_ANALYZE_DT_RGBA32:         /* 4 byte RGBA (32 bits/voxel)  */
-                voreenVoxelType = "Vector4(uint8)";
+                baseType = "Vector4(uint8)";
                 applyRWM = false;
                 break;
             case VRN_ANALYZE_DT_INT8:           /* signed char (8 bits)         */
-                voreenVoxelType = "int8";
+                baseType = "int8";
                 break;
             case VRN_ANALYZE_DT_UINT16:         /* unsigned short (16 bits)     */
-                voreenVoxelType = "uint16";
+                baseType = "uint16";
                 denormalize = RealWorldMapping::createDenormalizingMapping<uint16_t>();
                 break;
             case VRN_ANALYZE_DT_UINT32:         /* unsigned int (32 bits)       */
-                voreenVoxelType = "uint32";
+                baseType = "uint32";
                 denormalize = RealWorldMapping::createDenormalizingMapping<uint32_t>();
                 break;
             case VRN_ANALYZE_DT_INT64:          /* long long (64 bits)          */
+                baseType = "int64";
+                break;
             case VRN_ANALYZE_DT_UINT64:         /* unsigned long long (64 bits) */
+                baseType = "uint64";
+                denormalize = RealWorldMapping::createDenormalizingMapping<uint64_t>();
+                break;
             case VRN_ANALYZE_DT_FLOAT128:       /* long double (128 bits)       */
             case VRN_ANALYZE_DT_COMPLEX128:     /* double pair (128 bits)       */
             case VRN_ANALYZE_DT_COMPLEX256:     /* long double pair (256 bits)  */
@@ -704,19 +718,20 @@ VolumeList* AnalyzeVolumeReader::readNifti(const std::string &fileName, bool sta
     }
 
     for(int i=start; i<stop; i++) {
-        VolumeRepresentation* volume = new VolumeDiskRaw(rawFilename, voreenVoxelType, dimensions, headerskip + (i * volSize), bigEndian);
-        Volume* vh = new Volume(volume, spacing, vec3(0.0f));
+        size_t offset = headerskip + (i*numChannels + channel) * volSize;
+        VolumeRepresentation* volume = new VolumeDiskRaw(rawFilename, baseType, dimensions, offset, bigEndian);
+        Volume* vh = new Volume(volume, spacing, tgt::vec3::zero);
 
         VolumeURL origin(fileName);
         origin.addSearchParameter("volumeId", itos(i));
+        origin.addSearchParameter("channel", itos(channel));
         vh->setOrigin(origin);
 
         vh->setPhysicalToWorldMatrix(pToW);
         vh->setMetaDataValue<StringMetaData>("Description", std::string(header.descrip));
-        //vh->addMetaData("ActualFrameDuration", new IntMetaData(ih_.frame_duration));
-        //vh->addMetaData("FrameTime", new IntMetaData(ih_.frame_start_time));
-        vh->setMetaDataValue<IntMetaData>("FrameTime", static_cast<int>(toffset + (i * dt)));
-        if(applyRWM)
+        vh->setMetaDataValue<IntMetaData>("FrameTime", static_cast<int>(toffset + i * dt));
+        vh->setTimestep(toffset + i * dt);
+        if (applyRWM)
             vh->setRealWorldMapping(RealWorldMapping::combine(denormalize, rwm));
 
         vc->add(vh);
@@ -725,7 +740,7 @@ VolumeList* AnalyzeVolumeReader::readNifti(const std::string &fileName, bool sta
     return vc;
 }
 
-VolumeList* AnalyzeVolumeReader::readAnalyze(const std::string &fileName, int volId) {
+VolumeList* AnalyzeVolumeReader::readAnalyze(const std::string &fileName, int volId, int channel) {
     LINFO("Loading analyze file " << fileName);
     LINFO("Related img file: " << getRelatedImgFileName(fileName));
 
@@ -787,25 +802,25 @@ VolumeList* AnalyzeVolumeReader::readAnalyze(const std::string &fileName, int vo
 
     LINFO("Datatype: " << dimension.datatype);
 
-    std::string voreenVoxelType;
+    std::string baseType;
     switch(dimension.datatype) {
         case VRN_ANALYZE_DT_UNSIGNED_CHAR:
-            voreenVoxelType = "uint8";
+            baseType = "uint8";
             break;
         case VRN_ANALYZE_DT_SIGNED_SHORT:
-            voreenVoxelType = "int16";
+            baseType = "int16";
             break;
         case VRN_ANALYZE_DT_SIGNED_INT:
-            voreenVoxelType = "int32";
+            baseType = "int32";
             break;
         case VRN_ANALYZE_DT_FLOAT:
-            voreenVoxelType = "float";
+            baseType = "float";
             break;
         case VRN_ANALYZE_DT_DOUBLE:
-            voreenVoxelType = "double";
+            baseType = "double";
             break;
         case VRN_ANALYZE_DT_RGB:
-            voreenVoxelType = "Vector3(uint8)";
+            baseType = "Vector3(uint8)";
             break;
         case VRN_ANALYZE_DT_ALL:
         case VRN_ANALYZE_DT_COMPLEX:
@@ -832,13 +847,14 @@ VolumeList* AnalyzeVolumeReader::readAnalyze(const std::string &fileName, int vo
     VolumeList* vc = new VolumeList();
     size_t volSize = hmul(tgt::svec3(dimensions)) * (dimension.bitpix / 8);
     for(int i=start; i<stop; i++) {
-        VolumeRepresentation* volume = new VolumeDiskRaw(getRelatedImgFileName(fileName), voreenVoxelType, dimensions, i * volSize, bigEndian);
-        Volume* vh = new Volume(volume, spacing, vec3(0.0f));
+        VolumeRepresentation* volume = new VolumeDiskRaw(getRelatedImgFileName(fileName), baseType, dimensions, i * volSize, bigEndian);
+        Volume* vh = new Volume(volume, spacing, tgt::vec3::zero);
         vh->setOrigin(VolumeURL(fileName));
         vh->setPhysicalToWorldMatrix(pToW);
 
         VolumeURL origin(fileName);
         origin.addSearchParameter("volumeId", itos(i));
+        origin.addSearchParameter("channel", itos(channel));
         vh->setOrigin(origin);
 
         vc->add(vh);
@@ -880,6 +896,7 @@ std::vector<VolumeURL> AnalyzeVolumeReader::listVolumes(const std::string& url) 
     dimensions.z = header.dim[3];
 
     int numVolumes = header.dim[4];
+    int numChannels = header.dim[0] < 5 ? 1 : header.dim[5];
 
     vec3 spacing;
     spacing.x = header.pixdim[1];
@@ -888,13 +905,17 @@ std::vector<VolumeURL> AnalyzeVolumeReader::listVolumes(const std::string& url) 
 
     std::vector<VolumeURL> result;
 
-    for(size_t i=0; i<static_cast<size_t>(numVolumes); i++) {
-        VolumeURL origin(/*"nii", */fileName);
-        origin.addSearchParameter("volumeId", itos(i));
-        origin.getMetaDataContainer().addMetaData("volumeId", new IntMetaData(static_cast<int>(i)));
-        origin.getMetaDataContainer().addMetaData("Spacing", new Vec3MetaData(spacing));
-        origin.getMetaDataContainer().addMetaData("Dimensions", new IVec3MetaData(dimensions));
-        result.push_back(origin);
+    for(int i=0; i<numVolumes; i++) {
+        for(int channel=0; channel<numChannels; channel++) {
+            VolumeURL origin(/*"nii", */fileName);
+            origin.addSearchParameter("volumeId", itos(i));
+            origin.addSearchParameter("channel", itos(channel));
+            origin.getMetaDataContainer().addMetaData("channel", new IntMetaData(channel));
+            origin.getMetaDataContainer().addMetaData("volumeId", new IntMetaData(i));
+            origin.getMetaDataContainer().addMetaData("Spacing", new Vec3MetaData(spacing));
+            origin.getMetaDataContainer().addMetaData("Dimensions", new IVec3MetaData(dimensions));
+            result.push_back(origin);
+        }
     }
 
     return result;

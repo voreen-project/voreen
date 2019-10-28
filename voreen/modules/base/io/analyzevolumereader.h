@@ -47,13 +47,13 @@ public:
     std::vector<VolumeURL> listVolumes(const std::string& url) const;
 
 private:
-    VolumeList* read(const std::string& url, int volId);
+    VolumeList* read(const std::string& url, int volId, int channel = 0);
 
     ///@param volId -1: read all, else: read volume volId
-    virtual VolumeList* readAnalyze(const std::string& fileName, int volId);
+    virtual VolumeList* readAnalyze(const std::string& fileName, int volId, int channel = 0);
 
     ///@param volId -1: read all, else: read volume volId
-    virtual VolumeList* readNifti(const std::string& fileName, bool standalone, int volId);
+    virtual VolumeList* readNifti(const std::string& fileName, bool standalone, int volId, int channel = 0);
 
     static const std::string loggerCat_;
 };
