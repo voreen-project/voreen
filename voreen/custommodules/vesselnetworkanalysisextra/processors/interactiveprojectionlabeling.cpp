@@ -436,7 +436,7 @@ void InteractiveProjectionLabeling::overlayEvent(tgt::MouseEvent* e) {
 
     if(handleLineEvent(currentUnit().displayLine_, e)) {
         // path modified
-        updateProjection();
+        projectionRequiresUpdate_ = true;
     }
 
     invalidate();
@@ -521,12 +521,16 @@ void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
 }
 
 void InteractiveProjectionLabeling::finishProjection() {
-
-    auto& current = currentUnit();
-
     if(!inport_.hasData()) {
         return;
     }
+
+    auto& current = currentUnit();
+
+    // Configuration that created these results
+    current.camera_ = camera_.get();
+    current.clippingRegion_ = clippingRegion_.get();
+
     const auto& vol = *inport_.getData();
 
     const int NUM_SAMPLES = 100;
@@ -591,7 +595,7 @@ void InteractiveProjectionLabeling::finishProjection() {
         }
         return segment;
     };
-
+    // Results
     current.foregroundLabels_.clear();
     current.backgroundLabels_.clear();
 
@@ -623,6 +627,7 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , seedsChanged_(true)
     , labelUnits_()
     , currentUnitIndex_("currentUnitIndex", "Current Unit Index", -1, -1, INT_MAX)
+    , clippingRegion_("clippingRegion", "Clip Region (Link with OptimizedProxyGeometry)", tgt::ivec3(0), tgt::ivec3(0), tgt::ivec3(INT_MAX))
 {
     addPort(inport_);
     addPort(foregroundLabelGeometry_);
@@ -647,6 +652,9 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     //
     addProperty(currentUnitIndex_);
         ON_CHANGE(currentUnitIndex_, InteractiveProjectionLabeling, synchronizeUnitIndex);
+
+    addProperty(clippingRegion_);
+        clippingRegion_.setReadOnlyFlag(true);
 }
 
 void InteractiveProjectionLabeling::synchronizeUnitIndex() {
@@ -654,16 +662,19 @@ void InteractiveProjectionLabeling::synchronizeUnitIndex() {
     if(index) {
         currentUnit() = labelUnits_.at(*index);
         camera_.set(currentUnit().camera_);
+        clippingRegion_.set(currentUnit().clippingRegion_);
         state_ = LABELING;
     } else {
         resetCurrentUnit();
         state_ = FREE;
     }
-    updateProjection();
+    projectionRequiresUpdate_ = true;
+    invalidate();
 }
 
 void InteractiveProjectionLabeling::updateSizes() {
-    updateProjection();
+    projectionRequiresUpdate_ = true;
+    invalidate();
 }
 
 
@@ -926,11 +937,12 @@ void InteractiveProjectionLabeling::initializeProjectionLabels() {
 
 
 void InteractiveProjectionLabeling::updateProjection() {
-    if(currentUnit().displayLine_.empty()) {
+    if(!inport_.hasData()) {
         return;
     }
 
-    if(!inport_.hasData()) {
+    projectionRequiresUpdate_ = false;
+    if(currentUnit().displayLine_.empty()) {
         return;
     }
     const auto& vol = *inport_.getData();
@@ -1063,8 +1075,13 @@ void InteractiveProjectionLabeling::process() {
         projectionShader_.rebuild();
     }
 
+    if(projectionRequiresUpdate_) {
+        updateProjection();
+    }
+
     renderOverlay();
     renderProjection();
+
 
     if(seedsChanged_) {
 
@@ -1093,7 +1110,7 @@ void InteractiveProjectionLabeling::adjustPropertiesToInput() {
     }
     projectionTransfunc_.setVolume(inport_.getData(), 0);
 
-    updateProjection();
+    projectionRequiresUpdate_ = true;
 }
 VoreenSerializableObject* InteractiveProjectionLabeling::create() const {
     return new InteractiveProjectionLabeling();
@@ -1113,6 +1130,7 @@ void LabelUnit::serialize(Serializer& s) const {
     s.serialize("camera_orthoZoomFactor", camera_.getOrthoZoomFactor());
     s.serialize("camera_useRealWorldFrustum", camera_.getUseRealWorldFrustum());
 
+    s.serialize("clippingRegion", clippingRegion_);
     s.serialize("displayLine", displayLine_);
 
     s.serialize("foregroundLabels2D", projectionLabels_.foreground_);
@@ -1155,6 +1173,7 @@ void LabelUnit::deserialize(Deserializer& s) {
         camera_.setUseRealWorldFrustum(useRealWorldFrustum);
     }
 
+    s.deserialize("clippingRegion", clippingRegion_);
     s.deserialize("displayLine", displayLine_);
 
     s.deserialize("foregroundLabels2D", projectionLabels_.foreground_);

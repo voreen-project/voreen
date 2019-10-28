@@ -34,6 +34,7 @@
 #include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/cameraproperty.h"
 #include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/boundingboxproperty.h"
 #include "voreen/core/properties/transfunc/1d/1dkeys/transfunc1dkeysproperty.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
@@ -83,7 +84,10 @@ struct LabelUnit : public Serializable {
     LabelUnit(LabelUnit&&) = default;
     LabelUnit& operator=(LabelUnit&&) = default;
 
+    // Configuration
     tgt::Camera camera_;
+    tgt::IntBounds clippingRegion_;
+
     std::deque<tgt::vec2> displayLine_;
     ProjectionLabels projectionLabels_;
 
@@ -167,12 +171,14 @@ private:
 
     boost::optional<LabelProjection> projection_;
     bool projectionLabelsModified_;
+    bool projectionRequiresUpdate_;
     LabelUnit currentUnit_;
 
     State state_;
 
     std::vector<LabelUnit> labelUnits_;
     IntProperty currentUnitIndex_;
+    IntBoundingBoxProperty clippingRegion_;
 };
 
 } // namespace voreen
