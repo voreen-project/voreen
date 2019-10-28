@@ -931,7 +931,11 @@ void PropertyLinkDialog::showProcessorAutoLinks() {
     autoArrows_.clear();
     foreach (PropertyGraphicsItem* leftProp, sourceItem_->getPropertyList()->getPropertyItems()) {
         foreach (PropertyGraphicsItem* rightProp, destinationItem_->getPropertyList()->getPropertyItems()) {
-            if (leftProp->getProperty()->getGuiName() == rightProp->getProperty()->getGuiName()
+            bool namesCompatible =
+                   leftProp->getProperty()->getGuiName().find(rightProp->getProperty()->getGuiName()) != std::string::npos
+                || rightProp->getProperty()->getGuiName().find(leftProp->getProperty()->getGuiName()) != std::string::npos;
+
+            if (namesCompatible
                     && (typeid(*leftProp->getProperty()) == typeid(*rightProp->getProperty()))
                     && (leftProp != rightProp)
                     && !(leftProp->getProperty()->isLinkedWith(rightProp->getProperty(),true))) {
