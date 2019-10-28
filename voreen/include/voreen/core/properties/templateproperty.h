@@ -172,7 +172,7 @@ void TemplateProperty<T>::set(const T& value) {
         if (value_ != value)
             return;
 
-        Property::invalidate();  // issues invalidateOwner and updateWidgets
+        invalidate();  // issues invalidateOwner and updateWidgets
     }
 }
 
