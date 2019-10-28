@@ -904,10 +904,10 @@ static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& label
         float y_bottom = static_cast<float>(bottom_path.at(x))/(idim.y-1);
 
         float width = y_top - y_bottom;
-        float center = (y_top + y_bottom)/2;
+        float center = tgt::clamp((y_top + y_bottom)/2, 0.0f, 1.0f);
         foreground.emplace_back(x_pos, center);
-        lowerBackground.emplace_back(x_pos, center-width);
-        upperBackground.emplace_back(x_pos, center+width);
+        lowerBackground.emplace_back(x_pos, tgt::clamp(center-width, 0.0f, 1.0f));
+        upperBackground.emplace_back(x_pos, tgt::clamp(center+width, 0.0f, 1.0f));
     }
     simplifyPath(foreground, max_line_dist);
     simplifyPath(lowerBackground, max_line_dist);
