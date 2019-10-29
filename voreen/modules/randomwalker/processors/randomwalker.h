@@ -39,11 +39,15 @@
 
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 
+#include "modules/randomwalker/solver/randomwalkersolver.h"
+#include "modules/randomwalker/solver/randomwalkerweights.h"
+
 #include "voreen/core/utils/voreenblas/voreenblascpu.h"
 #ifdef VRN_MODULE_OPENMP
 #include "modules/openmp/include/voreenblasmp.h"
 #endif
 #ifdef VRN_MODULE_OPENCL
+#include "modules/opencl/processors/openclprocessor.h"
 #include "modules/opencl/utils/voreenblascl.h"
 #endif
 
@@ -53,9 +57,7 @@
 namespace voreen {
 
 class Volume;
-class RandomWalkerSolver;
 class RandomWalkerSeeds;
-class RandomWalkerWeights;
 
 struct RandomWalkerInput {
     PortDataPointer<VolumeBase> inputHandle_;
@@ -91,7 +93,11 @@ struct RandomWalkerOutput {
  *
  * @see RandomWalkerSolver
  */
-class RandomWalker : public AsyncComputeProcessor<RandomWalkerInput, RandomWalkerOutput> {
+#ifdef VRN_MODULE_OPENCL
+class VRN_CORE_API RandomWalker : public cl::OpenCLProcessor<AsyncComputeProcessor<RandomWalkerInput, RandomWalkerOutput>> {
+#else
+class VRN_CORE_API RandomWalker : public AsyncComputeProcessor<RandomWalkerInput, RandomWalkerOutput> {
+#endif
 public:
     RandomWalker();
     virtual ~RandomWalker();
@@ -115,6 +121,12 @@ protected:
 
     virtual void initialize();
     virtual void deinitialize();
+
+#ifdef VRN_MODULE_OPENCL
+    virtual void initializeCL();
+    virtual void deinitializeCL();
+    virtual bool isDeviceChangeSupported() const;
+#endif
 
 private:
 

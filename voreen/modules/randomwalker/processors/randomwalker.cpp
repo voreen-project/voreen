@@ -49,7 +49,11 @@ const std::string RandomWalker::loggerCat_("voreen.RandomWalker.RandomWalker");
 using tgt::vec3;
 
 RandomWalker::RandomWalker()
+#ifdef VRN_MODULE_OPENCL
+    : cl::OpenCLProcessor<AsyncComputeProcessor<RandomWalkerInput, RandomWalkerOutput>>(),
+#else
     : AsyncComputeProcessor<RandomWalkerInput, RandomWalkerOutput>(),
+#endif
     inportVolume_(Port::INPORT, "volume.input"),
     inportForegroundSeeds_(Port::INPORT, "geometry.seedsForeground", "geometry.seedsForeground", true),
     inportBackgroundSeeds_(Port::INPORT, "geometry.seedsBackground", "geometry.seedsBackground", true),
@@ -190,11 +194,7 @@ Processor* RandomWalker::create() const {
 }
 
 void RandomWalker::initialize() {
-    AsyncComputeProcessor::initialize();
-
-#ifdef VRN_MODULE_OPENCL
-    voreenBlasCL_.initialize();
-#endif
+    cl::OpenCLProcessor<AsyncComputeProcessor>::initialize();
 
     updateGuiState();
 }
@@ -205,8 +205,24 @@ void RandomWalker::deinitialize() {
         delete lodVolumes_.at(i);
     lodVolumes_.clear();
 
-    AsyncComputeProcessor::deinitialize();
+    cl::OpenCLProcessor<AsyncComputeProcessor>::deinitialize();
 }
+
+#ifdef VRN_MODULE_OPENCL
+void RandomWalker::initializeCL() {
+    voreenBlasCL_.initialize();
+    invalidate();
+}
+
+void RandomWalker::deinitializeCL() {
+    interruptComputation();
+    voreenBlasCL_.deinitialize();
+}
+
+bool RandomWalker::isDeviceChangeSupported() const {
+    return true;
+}
+#endif
 
 bool RandomWalker::isReady() const {
     bool ready = false;
