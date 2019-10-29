@@ -49,6 +49,7 @@
 
 #include <exception>
 #include <chrono>
+#include <mutex>
 
 namespace voreen {
 
@@ -196,8 +197,6 @@ protected:
     /**
      * Stops the interrupts the background thread, waits until it was stopped
      * and restores property states to the non-running state
-     * Note! The processor lock is assumed to be locked when calling this method
-     * and will be locked, when returning from this method!
      */
     void stopComputeThread() throw();
 
@@ -205,9 +204,6 @@ protected:
      * Interrupts the computation and sets property states accordingly.
      * In contrast to stopComputeThread, this method should be noly called, if the
      * computation did not exit successfully.
-     *
-     * Note! The processor lock is assumed to be locked when calling this method
-     * and will be locked, when returning from this method!
      */
     void interruptComputation() throw();
 
@@ -302,6 +298,7 @@ private:
     private:
         std::unique_ptr<ComputeInput> input_;
         std::unique_ptr<ComputeOutput> output_;
+        std::mutex mutex_;
     };
 
     BoolProperty continuousUpdate_;
@@ -338,23 +335,27 @@ AsyncComputeProcessor<I, O>::ComputeThread::ComputeThread(AsyncComputeProcessor<
 
 template<class I, class O>
 void AsyncComputeProcessor<I, O>::ComputeThread::setInput(I&& input) {
+    std::lock_guard<std::mutex> guard(mutex_);
     input_.reset(new I(std::move(input)));
 }
 
 template<class I, class O>
 std::unique_ptr<O> AsyncComputeProcessor<I, O>::ComputeThread::retrieveOutput() {
+    std::lock_guard<std::mutex> guard(mutex_);
     return std::move(output_);
 }
 
 template<class I, class O>
 void AsyncComputeProcessor<I, O>::ComputeThread::clearOutput() {
+    std::lock_guard<std::mutex> guard(mutex_);
     return output_.reset(nullptr);
 }
 
 template<class I, class O>
 void AsyncComputeProcessor<I, O>::ComputeThread::threadMain() {
-    ProcessorBackgroundThread<AsyncComputeProcessor<I, O>>::processor_->lockMutex();
     tgtAssert(input_, "ComputeThread started without input!");
+
+    mutex_.lock();
     output_.reset();
 
     std::unique_ptr<ProgressReporter> progress;
@@ -364,13 +365,13 @@ void AsyncComputeProcessor<I, O>::ComputeThread::threadMain() {
         progress.reset(new ComputeProgressReporter(*ProcessorBackgroundThread<AsyncComputeProcessor<I, O>>::processor_));
     }
     I* input = input_.release();
-    ProcessorBackgroundThread<AsyncComputeProcessor<I, O>>::processor_->unlockMutex();
+    mutex_.unlock();
 
     O* output = new O(std::move(ProcessorBackgroundThread<AsyncComputeProcessor<I,O>>::processor_->compute(std::move(*input), *progress)));
 
-    ProcessorBackgroundThread<AsyncComputeProcessor<I, O>>::processor_->lockMutex();
+    mutex_.lock();
     output_.reset(output);
-    ProcessorBackgroundThread<AsyncComputeProcessor<I, O>>::processor_->unlockMutex();
+    mutex_.unlock();
 }
 
 // AsyncComputeProcessor::ComputeProgressReporter ------------------------------------
@@ -586,7 +587,6 @@ void AsyncComputeProcessor<I,O>::beforeConnectionRemoved(const Port*, const Port
 
 template<class I, class O>
 void AsyncComputeProcessor<I, O>::dataWillChange(const Port* source) {
-    lockMutex();
     interruptComputation();
     // Clear the result, if we have one already, as it will not be valid (i.e., corresponding to the input) afterwards.
     computation_.clearOutput();
@@ -595,26 +595,21 @@ void AsyncComputeProcessor<I, O>::dataWillChange(const Port* source) {
     if(source->isDataInvalidationObservable() && source->hasData()) {
         source->removeDataInvalidationObserver(static_cast<DataInvalidationObserver*>(this));
     }
-    unlockMutex();
 }
 
 template<class I, class O>
 void AsyncComputeProcessor<I, O>::dataHasChanged(const Port* source) {
-    lockMutex();
     interruptComputation();
     // The port stores new data.
     // The data might change later, so we register ourselves as an observer if this is possible
     if(source->isDataInvalidationObservable() && source->hasData()) {
         source->addDataInvalidationObserver(static_cast<DataInvalidationObserver*>(this));
     }
-    unlockMutex();
 }
 
 template<class I, class O>
 void AsyncComputeProcessor<I, O>::dataAboutToInvalidate(const DataInvalidationObservable* source) {
-    lockMutex();
     interruptComputation();
-    unlockMutex();
 }
 template<class I, class O>
 void AsyncComputeProcessor<I, O>::forceComputation() {
@@ -652,7 +647,6 @@ template<class I, class O>
 void AsyncComputeProcessor<I,O>::deinitialize() {
     // We obviously do not want the thread to keep running if the processor is deinitialized,
     // we will never retrieve the result, anyway.
-    lockMutex();
     stopComputeThread();
 
     for(auto port : getCriticalPorts()) {
@@ -664,17 +658,12 @@ void AsyncComputeProcessor<I,O>::deinitialize() {
         }
     }
 
-    unlockMutex();
     Processor::deinitialize();
 }
 
 template<class I, class O>
 void AsyncComputeProcessor<I,O>::stopComputeThread() throw() {
-    // We need to unlock the processor mutex, before interrupting and joining
-    // the computation thread, in order to avoid deadlocks (see backgroundprocess.h)
-    unlockMutex();
     computation_.interruptAndJoin();
-    lockMutex();
 
     disableRunningState();
 }
@@ -729,9 +718,7 @@ void AsyncComputeProcessor<I,O>::process() {
         try {
             if(synchronousComputation_.get()) {
                 computation_.setInput(std::move(prepareComputeInput()));
-                unlockMutex();
                 computation_.threadMain();
-                lockMutex();
 
                 std::unique_ptr<O> synchronous_result = computation_.retrieveOutput();
 
