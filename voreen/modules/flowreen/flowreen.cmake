@@ -27,6 +27,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/streamline/streamlineselector.cpp
     ${MOD_DIR}/processors/streamline/streamlinesource.cpp
     ${MOD_DIR}/processors/streamline/streamlinetoboundingbox.cpp
+    ${MOD_DIR}/processors/streamline/streamlinetogeometry.cpp
 
     # utils
     ${MOD_DIR}/utils/streamlinebundledetectorbackgroundthread.cpp
@@ -90,6 +91,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/streamline/streamlineselector.h
     ${MOD_DIR}/processors/streamline/streamlinesource.h
     ${MOD_DIR}/processors/streamline/streamlinetoboundingbox.h
+    ${MOD_DIR}/processors/streamline/streamlinetogeometry.h
 
     # utils
     ${MOD_DIR}/utils/streamlinebundledetectorbackgroundthread.h
