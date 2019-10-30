@@ -36,8 +36,10 @@
 #include "voreen/core/properties/transfunc/1d/1dkeys/transfunc1dkeysproperty.h"
 #include "voreen/core/properties/optionproperty.h"
 #include "voreen/core/properties/boundingboxproperty.h"
+#include "voreen/core/datastructures/octree/volumeoctree.h"
 
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 
 #include "voreen/core/utils/voreenblas/voreenblascpu.h"
 #ifdef VRN_MODULE_OPENMP
@@ -58,31 +60,46 @@ class RandomWalkerSeeds;
 class RandomWalkerWeights;
 
 struct OctreeWalkerInput {
-    PortDataPointer<VolumeBase> inputHandle_;
+    const VolumeBase& volume_;
+    const VolumeOctree& octree_;
     std::vector<PortDataPointer<Geometry>> foregroundGeomSeeds_;
     std::vector<PortDataPointer<Geometry>> backgroundGeomSeeds_;
-    PortDataPointer<VolumeBase> foregroundVolSeeds_;
-    PortDataPointer<VolumeBase> backgroundVolSeeds_;
-    std::vector<const Volume*> lodVolumes_;
-    std::vector<float> prevProbabilities_;
-    int startLevel_;
-    int endLevel_;
-    boost::optional<tgt::IntBounds> clipRegion_;
-    std::unique_ptr<RandomWalkerWeights> weights_;
+    int beta_;
+    int minWeight_;
     const VoreenBlas* blas_;
     VoreenBlas::ConjGradPreconditioner precond_;
-    float lodForegroundSeedThresh_;
-    float lodBackgroundSeedThresh_;
     float errorThreshold_;
     int maxIterations_;
-    int lodSeedErosionKernelSize_;
 };
 
 struct OctreeWalkerOutput {
-    std::unique_ptr<RandomWalkerSolver> solver_;
+    std::unique_ptr<VolumeBase> volume_;
     std::chrono::duration<float> duration_;
-    std::vector<const Volume*> lodVolumes_;
-    std::vector<float> newProbabilities_;
+};
+
+struct OctreeBrick {
+    OctreeBrick(const uint16_t* data, tgt::svec3 brickDataSize, tgt::svec3 llf, tgt::svec3 urb, size_t level)
+        : data_(const_cast<uint16_t*>(data), brickDataSize, false) // data is not owned!
+        , llf_(llf)
+        , urb_(urb)
+        , scale_(1 << level)
+        , dim_((urb_ - llf_)/scale_)
+    {
+    }
+
+    const VolumeAtomic<uint16_t> data_;
+    tgt::svec3 llf_; // in bottom-level voxels
+    tgt::svec3 urb_; // in bottom-level voxels
+    size_t scale_;
+    tgt::svec3 dim_; // brick voxels
+
+    tgt::mat4 voxelToBrick() const {
+        return tgt::mat4::createScale(tgt::vec3(1.0f/scale_)) * tgt::mat4::createTranslation(-llf_);
+    }
+
+    tgt::mat4 brickToVoxel() const {
+        return tgt::mat4::createTranslation(llf_) * tgt::mat4::createScale(tgt::vec3(scale_));
+    }
 };
 
 /**
@@ -113,32 +130,22 @@ protected:
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
     virtual void processComputeOutput(ComputeOutput output);
 
+    void processOctreeBrick(ComputeInput& input, OctreeBrick& brick, uint16_t* outputBrick, ProgressReporter& progressReporter) const;
+
+
     virtual void initialize();
     virtual void deinitialize();
 
 private:
-
-    RandomWalkerWeights* getEdgeWeightsFromProperties() const;
-
     const VoreenBlas* getVoreenBlasFromProperties() const;
 
-    void putOutSegmentation(const RandomWalkerSolver* solver);
-    void putOutProbabilities(const RandomWalkerSolver* solver);
-    void putOutEdgeWeights(const RandomWalkerSolver* solver);
-
     void segmentationPropsChanged();
-    void lodMinLevelChanged();
-    void lodMaxLevelChanged();
     void updateGuiState();
 
     VolumePort inportVolume_;
     GeometryPort inportForegroundSeeds_;
     GeometryPort inportBackgroundSeeds_;
-    VolumePort inportForegroundSeedsVolume_;
-    VolumePort inportBackgroundSeedsVolume_;
-    VolumePort outportSegmentation_;
     VolumePort outportProbabilities_;
-    VolumePort outportEdgeWeights_;
 
     BoolProperty usePrevProbAsInitialization_;
 
@@ -149,24 +156,9 @@ private:
     IntProperty maxIterations_;
     StringOptionProperty conjGradImplementation_;
 
-    BoolProperty enableLevelOfDetail_;
-    IntProperty lodMinLevel_;
-    IntProperty lodMaxLevel_;
-    FloatProperty lodForegroundSeedThresh_;
-    FloatProperty lodBackgroundSeedThresh_;
-    IntOptionProperty lodSeedErosionKernelSize_;
-    IntVec3Property lodMinResolution_;
-    IntVec3Property lodMaxResolution_;
-
-    BoolProperty enableClipping_;
-    IntBoundingBoxProperty clipRegion_;
-
     BoolProperty enableTransFunc_;
     TransFunc1DKeysProperty edgeWeightTransFunc_;
     FloatProperty edgeWeightBalance_;
-
-    FloatProperty foregroundThreshold_;
-    BoolProperty resampleOutputVolumes_;
 
     VoreenBlasCPU voreenBlasCPU_;
 #ifdef VRN_MODULE_OPENMP
@@ -179,8 +171,6 @@ private:
     // Clock and duration used for time keeping
     typedef std::chrono::steady_clock clock;
 
-    std::vector<const Volume*> lodVolumes_;
-    std::vector<float> prevProbabilities_;
     bool recomputeOctreeWalker_;
 
     const VolumeRAM* currentInputVolume_;

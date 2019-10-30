@@ -32,6 +32,7 @@
 #include "voreen/core/datastructures/volume/volumeram.h"
 #include "voreen/core/datastructures/volume/volume.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/datastructures/volume/volumeminmax.h"
 #include "voreen/core/datastructures/volume/operators/volumeoperatorconvert.h"
 #include "voreen/core/datastructures/volume/operators/volumeoperatormorphology.h"
 #include "voreen/core/datastructures/volume/operators/volumeoperatorresample.h"
@@ -39,6 +40,7 @@
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 #include "voreen/core/ports/conditions/portconditionvolumetype.h"
 #include "tgt/vector.h"
+#include "tgt/memory.h"
 
 #include "voreen/core/datastructures/transfunc/1d/transfunc1d.h"
 
@@ -292,6 +294,9 @@ RandomWalker::ComputeInput RandomWalker::prepareComputeInput() {
         prevProbabilities_ = std::vector<float>();
     }
 
+    auto vol = inportVolume_.getThreadSafeData();
+    tgtAssert(vol.get(), "No volume");
+
     const int startLevel = enableLevelOfDetail_.get() ? lodMaxLevel_.get() : 0;
     const int endLevel = enableLevelOfDetail_.get() ? lodMinLevel_.get() : 0;
     tgtAssert(startLevel-endLevel >= 0, "invalid level range");
@@ -302,7 +307,7 @@ RandomWalker::ComputeInput RandomWalker::prepareComputeInput() {
     }
 
     // 2. Edge weight calculator (independent from scale level)
-    std::unique_ptr<RandomWalkerWeights> weights(getEdgeWeightsFromProperties());
+    std::unique_ptr<RandomWalkerWeights> weights(getEdgeWeightsFromProperties(*vol));
 
     // select BLAS implementation and preconditioner
     const VoreenBlas* voreenBlas = getVoreenBlasFromProperties();
@@ -324,7 +329,7 @@ RandomWalker::ComputeInput RandomWalker::prepareComputeInput() {
     int lodSeedErosionKernelSize = lodSeedErosionKernelSize_.getValue();
 
     return ComputeInput {
-        inportVolume_.getThreadSafeData(),
+        std::move(vol),
         inportForegroundSeeds_.getThreadSafeAllData(),
         inportBackgroundSeeds_.getThreadSafeAllData(),
         inportForegroundSeedsVolume_.getThreadSafeData(),
@@ -548,8 +553,8 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
             clipURB = tgt::iround(tgt::vec3(input.clipRegion_->getURB()) / scaleFactor);
         }
 
-        std::unique_ptr<RandomWalkerSeeds> seeds(new RandomWalkerTwoLabelSeeds(foregroundSeeds, backgroundSeeds,
-            foregroundSeedVol.get(), backgroundSeedVol.get(), clipLLF, clipURB));
+        std::unique_ptr<RandomWalkerSeeds> seeds(new RandomWalkerTwoLabelSeeds(workVolume->getDimensions(),
+                    foregroundSeeds, backgroundSeeds, foregroundSeedVol.get(), backgroundSeedVol.get(), clipLLF, clipURB));
 
         /*
          * 2. Set up Random Walker system.
@@ -769,15 +774,21 @@ void RandomWalker::putOutSegmentation(const RandomWalkerSolver* solver) {
 }
 
 
-RandomWalkerWeights* RandomWalker::getEdgeWeightsFromProperties() const {
+RandomWalkerWeights* RandomWalker::getEdgeWeightsFromProperties(const VolumeBase& vol) const {
     float beta = static_cast<float>(1<<beta_.get());
     float minWeight = 1.f / pow(10.f, static_cast<float>(minEdgeWeight_.get()));
     float tfBlendFactor = edgeWeightBalance_.get();
 
-    if (enableTransFunc_.get())
-        return new RandomWalkerWeightsTransFunc(edgeWeightTransFunc_.get(), beta, tfBlendFactor, minWeight);
-    else
-        return new RandomWalkerWeightsIntensity(beta, minWeight);
+    auto vmm = vol.getDerivedData<VolumeMinMax>();
+    tgt::vec2 intensityRange(vmm->getMin(), vmm->getMax());
+    std::unique_ptr<RandomWalkerEdgeWeight> edgeWeightFun;
+    if (enableTransFunc_.get()) {
+        edgeWeightFun.reset(new RandomWalkerEdgeWeightTransfunc(edgeWeightTransFunc_.get(), intensityRange, beta, tfBlendFactor, minWeight));
+    } else {
+        edgeWeightFun.reset(new RandomWalkerEdgeWeightIntensity(intensityRange, beta, minWeight));
+    }
+    std::unique_ptr<RandomWalkerVoxelAccessor> voxelAccessor(new RandomWalkerVoxelAccessorVolume(vol));
+    return new RandomWalkerWeights(std::move(voxelAccessor), std::move(edgeWeightFun), vol.getDimensions());
 }
 
 const VoreenBlas* RandomWalker::getVoreenBlasFromProperties() const {

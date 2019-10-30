@@ -130,7 +130,7 @@ protected:
 
 private:
 
-    RandomWalkerWeights* getEdgeWeightsFromProperties() const;
+    RandomWalkerWeights* getEdgeWeightsFromProperties(const VolumeBase& vol) const;
 
     const VoreenBlas* getVoreenBlasFromProperties() const;
 

@@ -29,8 +29,10 @@
 #include "voreen/core/datastructures/volume/volume.h"
 #include "voreen/core/datastructures/volume/volumeminmax.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
-#include "voreen/core/datastructures/transfunc/1d/transfunc1d.h"
 #include "tgt/vector.h"
+#include "tgt/memory.h"
+
+namespace {
 
 inline size_t volumeCoordsToIndex(int x, int y, int z, const tgt::ivec3& dim) {
     return z*dim.y*dim.x + y*dim.x + x;
@@ -40,34 +42,23 @@ inline size_t volumeCoordsToIndex(const tgt::ivec3& coords, const tgt::ivec3& di
     return coords.z*dim.y*dim.x + coords.y*dim.x + coords.x;
 }
 
+}
+
 namespace voreen {
 
 const std::string RandomWalkerWeights::loggerCat_("voreen.RandomWalker.RandomWalkerWeights");
 
-void RandomWalkerWeights::initialize(const VolumeBase* volume, const RandomWalkerSeeds* /*seeds*/,
-                                     const RandomWalkerSolver* /*solver*/) {
-    volume_ = volume;
-    tgtAssert(volume_, "null pointer passed");
-
-    float min = volume_->getDerivedData<VolumeMinMax>()->getMinNormalized();
-    float max = volume_->getDerivedData<VolumeMinMax>()->getMaxNormalized();
-    RealWorldMapping rwm = volume_->getRealWorldMapping();
-    minIntensity_ = rwm.normalizedToRealWorld(min);
-    maxIntensity_ = rwm.normalizedToRealWorld(max);
-
-    intensityScale_ = 1.f / (maxIntensity_ - minIntensity_);
-    numVoxels_ = volume_->getNumVoxels();
-    volDim_ = volume_->getDimensions();
-
-    LDEBUG("intensity range: " << tgt::vec2(minIntensity_, maxIntensity_) << ", intensity scale: " << intensityScale_);
+RandomWalkerWeights::RandomWalkerWeights(std::unique_ptr<RandomWalkerVoxelAccessor> voxelFun, std::unique_ptr<RandomWalkerEdgeWeight> weightFun, tgt::ivec3 volDim)
+    : voxelFun_(std::move(voxelFun))
+    , weightFun_(std::move(weightFun))
+    , volDim_(volDim)
+{
 }
 
-void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalkerSeeds* seeds,
-    EllpackMatrix<float>& mat, float* &vec, const RandomWalkerSolver* solver, const VolumeRAM* vol, const RealWorldMapping& rwm)
+void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalkerSeeds* seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable)
 {
-    tgtAssert(volume_, "no volume");
     tgtAssert(seeds, "no seed definer passed");
-    tgtAssert(solver, "no solver passed");
+    tgtAssert(volumeIndexToRowTable, "no volumeIndexToRowTable passed");
     tgtAssert(mat.isInitialized(), "matrix not initialized");
 
     const int x = voxel.x;
@@ -78,13 +69,9 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
     if (seeds->isSeedPoint(index))
         return;
 
-    size_t curRow = solver->getRowIndex(index);
+    size_t curRow = volumeIndexToRowTable[index];
 
-    // For performance reasons calculated outside of the function (and the loop)
-    //const VolumeRAM* vol = volume_->getRepresentation<VolumeRAM>();
-    //RealWorldMapping rwm = volume_->getRealWorldMapping();
-
-    float curIntensity = rwm.normalizedToRealWorld(vol->getVoxelNormalized(voxel));
+    float curIntensity = voxelFun_->voxel(voxel);
 
     float weightSum = 0;
 
@@ -93,11 +80,11 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         tgt::ivec3 neighbor(x-1, y, z);
 
         size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim_);
-        float neighborIntensity = rwm.normalizedToRealWorld(vol->getVoxelNormalized(neighbor));
-        float weight = getEdgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
+        float neighborIntensity = voxelFun_->voxel(neighbor);
+        float weight = weightFun_->edgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
 
         if (!seeds->isSeedPoint(neighbor)) {
-            size_t nRow = solver->getRowIndex(neighborIndex);
+            size_t nRow = volumeIndexToRowTable[neighborIndex];
             //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
             mat.setValue(curRow, nRow, -weight);
         }
@@ -111,11 +98,11 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         tgt::ivec3 neighbor(x+1, y, z);
 
         size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim_);
-        float neighborIntensity = rwm.normalizedToRealWorld(vol->getVoxelNormalized(neighbor));
-        float weight = getEdgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
+        float neighborIntensity = voxelFun_->voxel(neighbor);
+        float weight = weightFun_->edgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
 
         if (!seeds->isSeedPoint(neighbor)) {
-            size_t nRow = solver->getRowIndex(neighborIndex);
+            size_t nRow = volumeIndexToRowTable[neighborIndex];
             //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
             mat.setValue(curRow, nRow, -weight);
         }
@@ -131,11 +118,11 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         tgt::ivec3 neighbor(x, y-1, z);
 
         size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim_);
-        float neighborIntensity = rwm.normalizedToRealWorld(vol->getVoxelNormalized(neighbor));
-        float weight = getEdgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
+        float neighborIntensity = voxelFun_->voxel(neighbor);
+        float weight = weightFun_->edgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
 
         if (!seeds->isSeedPoint(neighbor)) {
-            size_t nRow = solver->getRowIndex(neighborIndex);
+            size_t nRow = volumeIndexToRowTable[neighborIndex];
             //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
             mat.setValue(curRow, nRow, -weight);
         }
@@ -149,11 +136,11 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         tgt::ivec3 neighbor(x, y+1, z);
 
         size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim_);
-        float neighborIntensity = rwm.normalizedToRealWorld(vol->getVoxelNormalized(neighbor));
-        float weight = getEdgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
+        float neighborIntensity = voxelFun_->voxel(neighbor);
+        float weight = weightFun_->edgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
 
         if (!seeds->isSeedPoint(neighbor)) {
-            size_t nRow = solver->getRowIndex(neighborIndex);
+            size_t nRow = volumeIndexToRowTable[neighborIndex];
             //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
             mat.setValue(curRow, nRow, -weight);
         }
@@ -169,11 +156,11 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         tgt::ivec3 neighbor(x, y, z-1);
 
         size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim_);
-        float neighborIntensity = rwm.normalizedToRealWorld(vol->getVoxelNormalized(neighbor));
-        float weight = getEdgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
+        float neighborIntensity = voxelFun_->voxel(neighbor);
+        float weight = weightFun_->edgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
 
         if (!seeds->isSeedPoint(neighbor)) {
-            size_t nRow = solver->getRowIndex(neighborIndex);
+            size_t nRow = volumeIndexToRowTable[neighborIndex];
             //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
             mat.setValue(curRow, nRow, -weight);
         }
@@ -187,11 +174,11 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         tgt::ivec3 neighbor(x, y, z+1);
 
         size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim_);
-        float neighborIntensity = rwm.normalizedToRealWorld(vol->getVoxelNormalized(neighbor));
-        float weight = getEdgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
+        float neighborIntensity = voxelFun_->voxel(neighbor);
+        float weight = weightFun_->edgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
 
         if (!seeds->isSeedPoint(neighbor)) {
-            size_t nRow = solver->getRowIndex(neighborIndex);
+            size_t nRow = volumeIndexToRowTable[neighborIndex];
             //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
             mat.setValue(curRow, nRow, -weight);
         }
@@ -205,102 +192,97 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
     mat.setValue(curRow, curRow, weightSum);
 }
 
-//---------------------------------------------------------------------------------------
+RandomWalkerVoxelAccessorVolume::RandomWalkerVoxelAccessorVolume(const VolumeBase& volume)
+    : vol_(volume.getRepresentation<VolumeRAM>())
+    , rwm_(volume.getRealWorldMapping())
+{
+}
 
-RandomWalkerWeightsTransFunc::RandomWalkerWeightsTransFunc(const TransFunc1D* transFunc,
-        float beta, float blendFactor, float minWeight, float maxWeight) :
-   transFunc_(transFunc),
-   beta_(beta),
-   blendFactor_(blendFactor),
-   minWeight_(minWeight),
-   maxWeight_(maxWeight),
-   opacityBuffer_(0),
-   opacityBufferSize_(0)
+float RandomWalkerVoxelAccessorVolume::voxel(const tgt::svec3& voxel) {
+    return rwm_.normalizedToRealWorld(vol_->getVoxelNormalized(voxel));
+}
+
+//---------------------------------------------------------------------------------------
+RandomWalkerEdgeWeightTransfunc::RandomWalkerEdgeWeightTransfunc(const TransFunc1D* transFunc, tgt::vec2 intensityRange, float beta, float blendFactor, float minWeight, float maxWeight)
+    : transFunc(transFunc)
+    , beta(beta)
+    , blendFactor(blendFactor)
+    , minWeight(minWeight)
+    , maxWeight(maxWeight)
+    , opacityBuffer(transFunc->getDimensions().x, 0.0f)
+    , intensityScale(1.f / (intensityRange.y - intensityRange.x))
 {
     tgtAssert(transFunc, "null pointer passed as trans func");
     tgtAssert(beta >= 0.f, "beta must not be negative");
-    tgtAssert(maxWeight_ >= 0.f, "max weight must not be negative");
+    tgtAssert(maxWeight >= 0.f, "max weight must not be negative");
     tgtAssert(minWeight <= maxWeight, "min weight must be less or equal max weight");
-    tgtAssert(blendFactor_ >= 0.f && blendFactor <= 1.f, "blend factor must be between 0.0 and 1.0");
-}
-
-RandomWalkerWeightsTransFunc::~RandomWalkerWeightsTransFunc() {
-    delete[] opacityBuffer_;
-}
-
-void RandomWalkerWeightsTransFunc::initialize(const VolumeBase* volume, const RandomWalkerSeeds* seeds,
-        const RandomWalkerSolver* solver) {
-    RandomWalkerWeights::initialize(volume, seeds, solver);
+    tgtAssert(blendFactor >= 0.f && blendFactor <= 1.f, "blend factor must be between 0.0 and 1.0");
 
     // construct opacity buffer
-    if (!transFunc_)
+    if (!transFunc) {
         throw VoreenException("No compatible transfer function. Abort.");
+    }
 
-    opacityBufferSize_ = transFunc_->getDimensions().x;
-    tgtAssert(opacityBufferSize_ > 0, "invalid transfunc dimensions");
-    opacityBuffer_ = new float[opacityBufferSize_];
-    if(transFunc_->getDataType() == TransFuncBase::TF_FLOAT) {
-        for (size_t i=0; i<opacityBufferSize_; i++) {
-            opacityBuffer_[i] = (const_cast<TransFunc1D*>(transFunc_)->getTexture()->texel<tgt::Vector4<GLfloat> >(i)).a;
+
+    if(transFunc->getDataType() == TransFuncBase::TF_FLOAT) {
+        for (size_t i=0; i<opacityBuffer.size(); i++) {
+            opacityBuffer[i] = (const_cast<TransFunc1D*>(transFunc)->getTexture()->texel<tgt::Vector4<GLfloat> >(i)).a;
         }
     } else {
-        for (size_t i=0; i<opacityBufferSize_; i++) {
-            opacityBuffer_[i] = static_cast<float>((const_cast<TransFunc1D*>(transFunc_)->getTexture()->texel<tgt::Vector4<GLubyte> >(i)).a) / 255.f;
+        for (size_t i=0; i<opacityBuffer.size(); i++) {
+            opacityBuffer[i] = static_cast<float>((const_cast<TransFunc1D*>(transFunc)->getTexture()->texel<tgt::Vector4<GLubyte> >(i)).a) / 255.f;
         }
     }
 }
 
-float RandomWalkerWeightsTransFunc::getEdgeWeight(const tgt::ivec3& /*voxel*/, const tgt::ivec3& /*neighbor*/,
-        float voxelIntensity, float neighborIntensity) const
-{
+float RandomWalkerEdgeWeightTransfunc::edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor, float voxelIntensity, float neighborIntensity) {
     // intensity difference
-    float intDiff = (voxelIntensity - neighborIntensity) * intensityScale_;
+    float intDiff = (voxelIntensity - neighborIntensity) * intensityScale;
     float intDiffSqr = intDiff*intDiff;
 
     // Map realworld intensity values to TF space:
-    voxelIntensity = transFunc_->realWorldToNormalized(voxelIntensity);
-    neighborIntensity = transFunc_->realWorldToNormalized(neighborIntensity);
+    voxelIntensity = transFunc->realWorldToNormalized(voxelIntensity);
+    neighborIntensity = transFunc->realWorldToNormalized(neighborIntensity);
 
     // opacity difference
-    int opacityIndex = tgt::ifloor(voxelIntensity * (opacityBufferSize_-1));
-    int opacityIndexNeighbor = tgt::ifloor(neighborIntensity * (opacityBufferSize_-1));
-    tgtAssert(opacityIndex >= 0 && opacityIndex < (int)opacityBufferSize_, "invalid opacity buffer index");
-    tgtAssert(opacityIndexNeighbor >= 0 && opacityIndexNeighbor < (int)opacityBufferSize_,
+    int opacityIndex = tgt::ifloor(voxelIntensity * (opacityBuffer.size()-1));
+    int opacityIndexNeighbor = tgt::ifloor(neighborIntensity * (opacityBuffer.size()-1));
+    tgtAssert(opacityIndex >= 0 && opacityIndex < (int)opacityBuffer.size(), "invalid opacity buffer index");
+    tgtAssert(opacityIndexNeighbor >= 0 && opacityIndexNeighbor < (int)opacityBuffer.size(),
             "invalid opacity buffer index");
-    float opacity = opacityBuffer_[opacityIndex];
-    float nOpacity = opacityBuffer_[opacityIndexNeighbor];
+    float opacity = opacityBuffer[opacityIndex];
+    float nOpacity = opacityBuffer[opacityIndexNeighbor];
     float opacityDiff = nOpacity - opacity;
     float opacityDiffSqr = opacityDiff*opacityDiff;
 
     // blend
-    float grad = (1.f - blendFactor_)*intDiffSqr + blendFactor_*opacityDiffSqr;
+    float grad = (1.f - blendFactor)*intDiffSqr + blendFactor*opacityDiffSqr;
 
     // final weight
-    float weight = exp(-beta_ * grad);
-    weight = tgt::clamp(weight, minWeight_, maxWeight_);
+    float weight = exp(-beta * grad);
+    weight = tgt::clamp(weight, minWeight, maxWeight);
     return weight;
 }
 
 //---------------------------------------------------------------------------------------
 
-RandomWalkerWeightsIntensity::RandomWalkerWeightsIntensity(
-        float beta, float minWeight, float maxWeight) :
-    beta_(beta),
-    minWeight_(minWeight),
-    maxWeight_(maxWeight)
+RandomWalkerEdgeWeightIntensity::RandomWalkerEdgeWeightIntensity(tgt::vec2 intensityRange, float beta, float minWeight, float maxWeight)
+    : beta(beta)
+    , minWeight(minWeight)
+    , maxWeight(maxWeight)
+    , intensityScale(1.f / (intensityRange.y - intensityRange.x))
 {
     tgtAssert(beta >= 0.f, "beta must not be negative");
-    tgtAssert(maxWeight_ >= 0.f, "max weight must not be negative");
+    tgtAssert(maxWeight >= 0.f, "max weight must not be negative");
     tgtAssert(minWeight <= maxWeight, "min weight must be less or equal max weight");
 }
 
-float RandomWalkerWeightsIntensity::getEdgeWeight(const tgt::ivec3& /*voxel*/, const tgt::ivec3& /*neighbor*/,
-        float voxelIntensity, float neighborIntensity) const {
 
-    float intDiff = (voxelIntensity - neighborIntensity) * intensityScale_;
+float RandomWalkerEdgeWeightIntensity::edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor, float voxelIntensity, float neighborIntensity) {
+    float intDiff = (voxelIntensity - neighborIntensity) * intensityScale;
     float intDiffSqr = intDiff*intDiff;
-    float weight = exp(-beta_ * intDiffSqr);
-    weight = tgt::clamp(weight, minWeight_, maxWeight_);
+    float weight = exp(-beta * intDiffSqr);
+    weight = tgt::clamp(weight, minWeight, maxWeight);
 
     return weight;
 }

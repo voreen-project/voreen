@@ -83,7 +83,7 @@ void RandomWalkerSolver::setupEquationSystem() {
 
     // initialize seeds
     try {
-        seeds_->initialize(volume_->getRepresentation<VolumeRAM>());
+        seeds_->initialize();
     }
     catch (VoreenException& e) {
         throw VoreenException("Failed to initialize seeds: " + std::string(e.what()));
@@ -118,17 +118,6 @@ void RandomWalkerSolver::setupEquationSystem() {
     computeVolIndexToRowMapping(seeds_);
     tgtAssert(volIndexToRow_, "volIndexToRowBuffer empty");
 
-    // initialize edge weight computer
-    try {
-        edgeWeights_.initialize(volume_, seeds_, this);
-    }
-    catch (VoreenException& e) {
-        throw VoreenException("Failed to initialize edge weights: " + std::string(e.what()));
-    }
-
-    // For performance reasons, get VolumeRAM and rwm now and pass it to processVoxel.
-    const VolumeRAM* volram = volume_->getRepresentation<VolumeRAM>();
-    const RealWorldMapping& rwm = volume_->getRealWorldMapping();
     // iterate over volume and compute edge weights for each voxel
     #ifdef VRN_MODULE_OPENMP
     #pragma omp parallel for
@@ -136,7 +125,7 @@ void RandomWalkerSolver::setupEquationSystem() {
     for (int z=0; z<volDim_.z; z++) {
         for (int y=0; y<volDim_.y; y++) {
             for (int x=0; x<volDim_.x; x++) {
-                edgeWeights_.processVoxel(tgt::ivec3(x, y, z), seeds_, mat_, vec_, this, volram, rwm);
+                edgeWeights_.processVoxel(tgt::ivec3(x, y, z), seeds_, mat_, vec_, volIndexToRow_);
             }
         }
     }
