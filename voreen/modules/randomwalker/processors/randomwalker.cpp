@@ -194,7 +194,11 @@ Processor* RandomWalker::create() const {
 }
 
 void RandomWalker::initialize() {
-    cl::OpenCLProcessor<AsyncComputeProcessor<RandomWalkerInput, RandomWalkerOutput>>::initialize();
+#ifdef VRN_MODULE_OPENCL
+    cl::OpenCLProcessor<AsyncComputeProcessor>::initialize();
+#else
+    AsyncComputeProcessor::initialize();
+#endif
 
     updateGuiState();
 }
@@ -205,7 +209,11 @@ void RandomWalker::deinitialize() {
         delete lodVolumes_.at(i);
     lodVolumes_.clear();
 
-    cl::OpenCLProcessor<AsyncComputeProcessor<RandomWalkerInput, RandomWalkerOutput>>::deinitialize();
+#ifdef VRN_MODULE_OPENCL
+    cl::OpenCLProcessor<AsyncComputeProcessor>::deinitialize();
+#else
+    AsyncComputeProcessor::deinitialize();
+#endif
 }
 
 #ifdef VRN_MODULE_OPENCL
