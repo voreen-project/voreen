@@ -23,6 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
+#if 0
+
 #ifndef VRN_STREAMLINECREATORBACKGROUNDTHREAD_H
 #define VRN_STREAMLINECREATORBACKGROUNDTHREAD_H
 
@@ -38,48 +40,51 @@
 
 namespace voreen {
 
-    /**
-    * Background thread used to calculate the stream lines.
-    */
-    class VRN_CORE_API StreamlineCreatorBackgroundThread : public ProcessorBackgroundThread<StreamlineCreator> {
-    public:
-        /** Constructor */
-        StreamlineCreatorBackgroundThread(StreamlineCreator* processor, int seedTime, const VolumeBase* flow, StreamlineList* output,
-            int maxNumStreamlines, tgt::ivec2 streamlineLengthThreshold, tgt::vec2 absoluteMagnitudeThreshold,
+/**
+ * Background thread used to calculate the streamlines.
+ */
+class VRN_CORE_API StreamlineCreatorBackgroundThread : public ProcessorBackgroundThread<StreamlineCreator> {
+public:
+    /** Constructor */
+    StreamlineCreatorBackgroundThread(StreamlineCreator* processor,
+            int seedTime,
+            const VolumeBase* flow,
+            const VolumeBase* seedMask,
+            StreamlineList* output,
+            int maxNumStreamlines,
+            tgt::ivec2 streamlineLengthThreshold,
+            tgt::vec2 absoluteMagnitudeThreshold,
+            int stopIntegrationAngleTreshold,
             StreamlineCreator::FilterMode filterMode);
-        /** Destructor */
-        virtual ~StreamlineCreatorBackgroundThread();
-    protected:
-        /** Main-Function used to calculate the streamlines */
-        virtual void threadMain();
-        /** Used to clean up */
-        virtual void handleInterruption();
-        //-----------------
-        //  Helpers
-        //-----------------
-        /** Used to redefine a seed point. */
-        void reseedPosition(const size_t currentPosition);
-        /** Calcualtes a streamline */
-        Streamline computeStreamlineRungeKutta(const tgt::vec3& start);
-        /** Returns the vlocity in the selected filter mode. */
-        const tgt::vec3 getVelocityAt(const tgt::vec3& pos);
-    private:
-        //-----------
-        //  Members
-        //-----------
-        std::function<float()> rnd;
-        //derived from properties
-        const VolumeBase* flow_;               ///< input flow
-        VolumeRAMRepresentationLock representation_; ///< representation lock for input flow
-        StreamlineList* output_;               ///< output, which will be used by the processor
-        size_t maxNumStreamlines_;             ///< maximal number of streamlines
-        tgt::svec2 streamlineLengthThreshold_; ///< streamline length must be in this interval
-        tgt::vec2 absoluteMagnitudeThreshold_; ///< only magnitudes in this intervall are used
-        StreamlineCreator::FilterMode filterMode_; ///< filtering inside the volume
-        //created new
-        tgt::vec3* seedingPositions_;          ///< used seeding points. calculated on the fly
-    };
+
+protected:
+    /** Main-Function used to calculate the streamlines */
+    virtual void threadMain();
+
+    /** Calcualtes a streamline */
+    Streamline computeStreamlineRungeKutta(const tgt::vec3& start);
+    /** Returns the vlocity in the selected filter mode. */
+    tgt::vec3 getVelocityAt(const tgt::vec3& pos);
+private:
+
+    StreamlineList* output_;               ///< output, which will be used by the processor
+
+    std::function<float()> rnd;
+
+    const VolumeBase* flow_;               ///< input flow
+    VolumeRAMRepresentationLock flowRepresentation_; ///< representation lock for input flow
+    const VolumeBase* seedMask_;           ///< seed mask
+    std::unique_ptr<VolumeRAMRepresentationLock> seedMaskRepresentation_; ///< representation lock for input flow
+
+    size_t maxNumStreamlines_;             ///< maximal number of streamlines
+    tgt::svec2 streamlineLengthThreshold_; ///< streamline length must be in this interval
+    tgt::vec2 absoluteMagnitudeThreshold_; ///< only magnitudes in this interval are used
+    float stopIntegrationAngleThreshold_;    ///< stop integration if angle is exceeded
+    StreamlineCreator::FilterMode filterMode_; ///< filtering inside the volume
+};
 
 }   // namespace
 
 #endif  // VRN_STREAMLINECREATORBACKGROUNDTHREAD_H
+
+#endif

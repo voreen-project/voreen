@@ -39,12 +39,14 @@
 
 #include "voreen/core/interaction/camerainteractionhandler.h"
 
-#include "modules/flowreen/utils/colorcodingability.h"
+#include "voreen/core/properties/transfunc/1d/1dkeys/transfunc1dkeysproperty.h"
+
 #include "voreen/core/properties/buttonproperty.h"
 #include "voreen/core/properties/filedialogproperty.h"
 #include "voreen/core/properties/intproperty.h"
 #include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/matrixproperty.h"
+
 
 namespace voreen {
 
@@ -92,19 +94,16 @@ private:
         BUNDLE_STYLE_TUBES,
         BUNDLE_STYLE_ARROWS,
     };
-    friend class OptionProperty<StreamlineBundleStyle>;
 
     enum StreamlineStyle {
         STYLE_LINES,
         STYLE_ARROWS,
     };
-    friend class OptionProperty<StreamlineStyle>;
 
     enum StreamlineColorCoding {
         COLOR_VELOCITY,
         COLOR_DIRECTION,
     };
-    friend class OptionProperty<StreamlineColorCoding>;
 
     friend class PBLinkControl;
 

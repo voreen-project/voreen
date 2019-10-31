@@ -92,10 +92,6 @@ VolumeFactory::VolumeFactory() {
 
     //Tensor:
     generators_.push_back(new VolumeGeneratorTensor2Float());
-
-#ifdef VRN_MODULE_FLOWREEN
-    generators_.push_back(new VolumeGeneratorVolumeFlow3D());
-#endif
 }
 
 VolumeFactory::~VolumeFactory() {

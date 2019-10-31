@@ -32,10 +32,6 @@
 #include "voreen/core/utils/exception.h"
 #include "tgt/vector.h"
 
-#ifdef VRN_MODULE_FLOWREEN
-#include "modules/flowreen/datastructures/deprecated/volumeflow3d.h"
-#endif
-
 #include <vector>
 #include <limits>
 

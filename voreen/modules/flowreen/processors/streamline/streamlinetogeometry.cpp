@@ -37,7 +37,7 @@ StreamlineToGeometry::StreamlineToGeometry()
     // ports
     , inport_(Port::INPORT, "input", "Streamline Input", false)
     , outport_(Port::OUTPORT, "outport", "Geometry Output")
-    , geometryType_("geometryType", "Geometrcy Type")
+    , geometryType_("geometryType", "Geometry Type")
 {
     addPort(inport_);
     addPort(outport_);
@@ -56,14 +56,16 @@ void StreamlineToGeometry::process() {
         if(geometryType_.getValue() == GEOMETRY_GLMESH) {
             GlMeshGeometryUInt32Color* geometry = new GlMeshGeometryUInt32Color();
             geometry->setPrimitiveType(GL_LINE_STRIP);
+            geometry->enablePrimitiveRestart();
             for (const Streamline& streamline : streamlines->getStreamlines()) {
                 for (size_t i = 0; i < streamline.getNumElements(); i++) {
+                    const Streamline::StreamlineElement& element = streamline.getElementAt(i);
                     VertexColor vertex;
-                    vertex.pos_ = streamline.getElementAt(i).position_;
+                    vertex.pos_ = streamlines->getVoxelToWorldMatrix() * element.position_;
                     //TODO: convert to proper color here
-                    vertex.color_ = tgt::vec4(streamline.getElementAt(i).velocity_, 0.0f);
+                    vertex.color_ = tgt::vec4(element.velocity_, 1.0f);
+                    geometry->addIndex(static_cast<uint32_t>(geometry->getNumVertices()));
                     geometry->addVertex(vertex);
-                    geometry->addIndex(geometry->getNumIndices());
                 }
                 geometry->addIndex(geometry->getPrimitiveRestartIndex());
             }
@@ -74,7 +76,7 @@ void StreamlineToGeometry::process() {
             for (const Streamline& streamline : streamlines->getStreamlines()) {
                 std::vector<tgt::vec3> segment(streamline.getNumElements());
                 for (size_t i = 0; i < streamline.getNumElements(); i++) {
-                    segment[i] = streamline.getElementAt(i).position_;
+                    segment[i] = streamlines->getVoxelToWorldMatrix() * streamline.getElementAt(i).position_;
                 }
                 geometry->addSegment(segment);
             }

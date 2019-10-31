@@ -79,7 +79,7 @@ void StreamlineBundleDetectorBackgroundThread::threadMain() {
 
         interruptionPoint();
         if (i % updateProcess == 0) {
-            processor_->bundleDetectionProgressProp_.setProgress(static_cast<float>(i) / output_->getStreamlines().size());
+            //processor_->bundleDetectionProgressProp_.setProgress(static_cast<float>(i) / output_->getStreamlines().size());
         }
     }
 
@@ -96,7 +96,7 @@ void StreamlineBundleDetectorBackgroundThread::threadMain() {
     }
 
     // set progress to 100
-    processor_->bundleDetectionProgressProp_.setProgress(1.0f);
+    //processor_->bundleDetectionProgressProp_.setProgress(1.0f);
 }
 
 //---------------------------------------------------------------------------

@@ -23,6 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
+#if 0
+
 #include "streamlinecreatorbackgroundthread.h"
 
 #include "voreen/core/ports/conditions/portconditionvolumetype.h"
@@ -33,29 +35,35 @@
 
 namespace voreen {
 
-StreamlineCreatorBackgroundThread::StreamlineCreatorBackgroundThread(StreamlineCreator* processor, int seedTime,
-    const VolumeBase* flow, StreamlineList* output,
-    int maxNumStreamlines, tgt::ivec2 streamlineLengthThreshold,
-    tgt::vec2 absoluteMagnitudeThreshold, StreamlineCreator::FilterMode filterMode)
+StreamlineCreatorBackgroundThread::StreamlineCreatorBackgroundThread(
+        StreamlineCreator* processor,
+        int seedTime,
+        const VolumeBase* flow,
+        const VolumeBase* seedMask,
+        StreamlineList* output,
+        int maxNumStreamlines,
+        tgt::ivec2 streamlineLengthThreshold,
+        tgt::vec2 absoluteMagnitudeThreshold,
+        int stopIntegrationAngleThreshold,
+        StreamlineCreator::FilterMode filterMode)
     : ProcessorBackgroundThread<StreamlineCreator>(processor)
     , rnd(std::bind(std::uniform_real_distribution<float>(0.f, 1.f), std::mt19937(seedTime)))
-    , flow_(flow), representation_(flow), output_(output)
-    , maxNumStreamlines_(maxNumStreamlines), streamlineLengthThreshold_(tgt::svec2(streamlineLengthThreshold))
-    , absoluteMagnitudeThreshold_(absoluteMagnitudeThreshold), filterMode_(filterMode)
-    , seedingPositions_(0)
+    , flow_(flow)
+    , flowRepresentation_(flow)
+    , seedMask_(seedMask)
+    , output_(output)
+    , maxNumStreamlines_(maxNumStreamlines)
+    , streamlineLengthThreshold_(tgt::svec2(streamlineLengthThreshold))
+    , absoluteMagnitudeThreshold_(absoluteMagnitudeThreshold)
+    , stopIntegrationAngleThreshold_(stopIntegrationAngleThreshold * tgt::PIf / 180.0f)
+    , filterMode_(filterMode)
 {
+    if(seedMask_) {
+        seedMaskRepresentation_.reset(new VolumeRAMRepresentationLock(seedMask_));
+    }
+
     //progress is used to get Error-Messages
     setProgress("", 0.f);
-}
-
-StreamlineCreatorBackgroundThread::~StreamlineCreatorBackgroundThread() {
-    delete[] seedingPositions_;
-    seedingPositions_ = 0;
-}
-
-void StreamlineCreatorBackgroundThread::handleInterruption() {
-    delete[] seedingPositions_;
-    seedingPositions_ = 0;
 }
 
 void StreamlineCreatorBackgroundThread::threadMain() {
@@ -116,41 +124,6 @@ void StreamlineCreatorBackgroundThread::threadMain() {
         //we have a valid streamline
         output_->addStreamline(line);
 
-        i++; //go to next seed point
-        interruptionPoint();
-        if (i % updateProcess == 0) {
-            processor_->setProgress(0.2f + ((float)i / (float)maxNumStreamlines_)*0.75f);
-        }
-    }
-
-    //------------------------------------------------------------------------
-    delete[] seedingPositions_; seedingPositions_ = 0;
-}
-
-//---------------------------------------------------------------------------
-//          Helpers
-//---------------------------------------------------------------------------
-void StreamlineCreatorBackgroundThread::reseedPosition(const size_t currentPosition)
-{
-    tgt::vec3 randVec = tgt::vec3(rnd(), rnd(), rnd());
-    tgt::vec3 dimAsVec3 = tgt::vec3(flow_->getDimensions() - tgt::svec3::one);
-
-    // Use a "die" to determine wether a completely new random position
-    // will be taken or wether an exisiting one will be used.
-    // When the probability for a new position is low, the seeding positions
-    // seem be prone to cluster at single location.
-    if ((rnd() < 0.5) || (currentPosition <= 1)) {
-        seedingPositions_[currentPosition] = randVec * dimAsVec3;
-        return;
-    }
-
-    // if there are already random positions which lead to a vector-field value not being
-    // zero or which falls within the limits defined by thresholds, take this
-    // position to generate another.
-    // Use the position and add some random offset to it.
-    size_t index = tgt::iround(rnd() * (currentPosition - 1));
-    randVec *= rnd() * 9.f + 1.f;
-    seedingPositions_[currentPosition] = tgt::clamp((seedingPositions_[index] + randVec), tgt::vec3::zero, dimAsVec3);
 }
 
 Streamline StreamlineCreatorBackgroundThread::computeStreamlineRungeKutta(const tgt::vec3& start) {
@@ -195,10 +168,14 @@ Streamline StreamlineCreatorBackgroundThread::computeStreamlineRungeKutta(const 
                     lookupPos = false;
                 }
                 else {//check length
+                    tgt::vec3 oldVelR = velR;
                     velR = getVelocityAt(r);
                     float magnitudeR = tgt::length(velR);
                     if ((magnitudeR < absoluteMagnitudeThreshold_.x) ||
                         (magnitudeR > absoluteMagnitudeThreshold_.y)) {
+                        lookupPos = false;
+                    }
+                    else if(std::acos(tgt::dot(oldVelR, velR) / (tgt::length(oldVelR) * magnitudeR)) > stopIntegrationAngleThreshold_) {
                         lookupPos = false;
                     }
                     else {
@@ -232,10 +209,14 @@ Streamline StreamlineCreatorBackgroundThread::computeStreamlineRungeKutta(const 
                     lookupNeg = false;
                 }
                 else { //check length
+                    tgt::vec3 oldVelR_ = velR;
                     velR_ = getVelocityAt(r_);
                     float magnitudeR_ = tgt::length(velR_);
                     if ((magnitudeR_ < absoluteMagnitudeThreshold_.x) ||
                         (magnitudeR_ > absoluteMagnitudeThreshold_.y)) {
+                        lookupNeg = false;
+                    }
+                    else if(std::acos(tgt::dot(oldVelR_, velR_) / (tgt::length(oldVelR_) * magnitudeR_)) > stopIntegrationAngleThreshold_) {
                         lookupNeg = false;
                     }
                     else {
@@ -251,7 +232,7 @@ Streamline StreamlineCreatorBackgroundThread::computeStreamlineRungeKutta(const 
     return line;
 }
 
-const tgt::vec3 StreamlineCreatorBackgroundThread::getVelocityAt(const tgt::vec3& pos) {
+tgt::vec3 StreamlineCreatorBackgroundThread::getVelocityAt(const tgt::vec3& pos) {
 
     RealWorldMapping rwm = flow_->getRealWorldMapping();
 
@@ -259,16 +240,18 @@ const tgt::vec3 StreamlineCreatorBackgroundThread::getVelocityAt(const tgt::vec3
     if(filterMode_ == StreamlineCreator::NEAREST) {
         for (size_t channel = 0; channel < flow_->getNumChannels(); channel++) {
             voxel[channel] = rwm.normalizedToRealWorld(
-                    representation_->getVoxelNormalized(pos, channel));
+                    flowRepresentation_->getVoxelNormalized(pos, channel));
         }
     }
     else {
         for (size_t channel = 0; channel < flow_->getNumChannels(); channel++) {
             voxel[channel] = rwm.normalizedToRealWorld(
-                    representation_->getVoxelNormalizedLinear(pos, channel));
+                    flowRepresentation_->getVoxelNormalizedLinear(pos, channel));
         }
     }
     return voxel;
 }
 
 }   // namespace
+
+#endif
