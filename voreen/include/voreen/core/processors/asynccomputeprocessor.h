@@ -683,7 +683,6 @@ template<class I, class O>
 void AsyncComputeProcessor<I,O>::process() {
 
     bool abortNecessary = (getInvalidationLevel() >= INVALID_RESULT || updateForced_ || stopForced_) && computation_.isRunning();
-    stopForced_ = false;
 
     if(abortNecessary) {
         interruptComputation();
@@ -692,6 +691,8 @@ void AsyncComputeProcessor<I,O>::process() {
     std::unique_ptr<O> result = computation_.retrieveOutput();
 
     bool restartNecessary = (!result && getInvalidationLevel() >= INVALID_RESULT && continuousUpdate_.get()) && !stopForced_ || updateForced_;
+
+    stopForced_ = false;
     updateForced_ = false;
 
     //If we need to restart anyways, we don't care about the result
