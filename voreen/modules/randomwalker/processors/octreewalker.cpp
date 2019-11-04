@@ -37,6 +37,8 @@
 #include "voreen/core/datastructures/volume/operators/volumeoperatormorphology.h"
 #include "voreen/core/datastructures/volume/operators/volumeoperatorresample.h"
 #include "voreen/core/datastructures/volume/operators/volumeoperatornumsignificant.h"
+#include "voreen/core/datastructures/octree/octreebrickpoolmanagerdisk.h"
+#include "voreen/core/datastructures/octree/volumeoctreenodegeneric.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 #include "tgt/vector.h"
 #include "tgt/memory.h"
@@ -63,8 +65,6 @@ OctreeWalker::OctreeWalker()
     errorThreshold_("errorThreshold", "Error Threshold: 10^(-t)", 2, 0, 10),
     maxIterations_("conjGradIterations", "Max Iterations", 1000, 1, 5000),
     conjGradImplementation_("conjGradImplementation", "Implementation"),
-    edgeWeightTransFunc_("edgeWeightTransFunc", "Edge Weight TransFunc"),
-    edgeWeightBalance_("edgeWeightBalance", "Edge Weight Balance", 0.3f, 0.f, 1.f),
     currentInputVolume_(0)
 {
     // ports
@@ -104,17 +104,6 @@ OctreeWalker::OctreeWalker()
     maxIterations_.setGroupID("conjGrad");
     conjGradImplementation_.setGroupID("conjGrad");
     setPropertyGroupGuiName("conjGrad", "Conjugate Gradient Solver");
-
-
-    // transfer functions
-    addProperty(enableTransFunc_);
-    addProperty(edgeWeightTransFunc_);
-    addProperty(edgeWeightBalance_);
-    enableTransFunc_.setGroupID("classificationIncorporation");
-    edgeWeightBalance_.setGroupID("classificationIncorporation");
-    edgeWeightTransFunc_.setGroupID("classificationIncorporation");
-    setPropertyGroupGuiName("classificationIncorporation", "Classification");
-    enableTransFunc_.onChange(MemberFunctionCallback<OctreeWalker>(this, &OctreeWalker::updateGuiState));
 }
 
 OctreeWalker::~OctreeWalker() {
@@ -148,7 +137,7 @@ bool OctreeWalker::isReady() const {
 }
 
 OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
-    edgeWeightTransFunc_.setVolume(inportVolume_.getData());
+    //edgeWeightTransFunc_.setVolume(inportVolume_.getData());
 
     tgtAssert(inportVolume_.hasData(), "no input volume");
 
@@ -243,6 +232,21 @@ static void getSeedListsFromPorts(std::vector<PortDataPointer<Geometry>>& geom, 
         }
     }
 }
+
+/*
+struct OctreeBrickNeighbor {
+    const OctreeBrick* brick_;
+    tgt::mat4 toNeighborMat_;
+    bool isPresent() {
+        return brick_;
+    }
+    float readValue(tgt::ivec3 pos) {
+        tgtAssert(isPresent(), "Brick not present");
+        tgt::vec3 p = toNeighborMat_.transform(pos);
+        return brick_->data_.getVoxelNormalized(p);
+    }
+};
+*/
 
 struct RandomWalkerVoxelAccessorBrick : public RandomWalkerVoxelAccessor {
     RandomWalkerVoxelAccessorBrick(const OctreeBrick& brick)
@@ -430,9 +434,12 @@ void OctreeWalker::processOctreeBrick(ComputeInput& input, OctreeBrick& brick, u
     }
 }
 
+const std::string BRICK_BUFFER_SUBDIR =      "brickBuffer";
+const std::string BRICK_BUFFER_FILE_PREFIX = "buffer_";
+
 OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressReporter& progressReporter) const {
     OctreeWalkerOutput invalidResult = OctreeWalkerOutput {
-        std::unique_ptr<VolumeBase>(nullptr),
+        std::unique_ptr<Volume>(nullptr),
         std::chrono::duration<float>(0),
     };
 
@@ -440,18 +447,98 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 
     auto start = clock::now();
 
-    size_t level = input.octree_.getNumLevels()-1;
-    auto node = input.octree_.getRootNode();
-    const uint16_t* brickData = input.octree_.getNodeBrick(node);
+    const tgt::svec3 volumeDim = input.octree_.getDimensions();
+    const tgt::svec3 brickDim = input.octree_.getBrickDim();
+    const size_t brickSize = tgt::hmul(brickDim);
+    const size_t numChannels = 1;
+    const size_t maxLevel = input.octree_.getNumLevels()-1;
 
-    OctreeBrick brick(brickData, input.octree_.getBrickDim(), tgt::svec3::zero, input.octree_.getDimensions(), level);
+    std::string octreePath = "/home/dominik/nosnapshot/tmp/octreewalkertest/";
 
-    std::vector<uint16_t> outputBrick(tgt::hmul(input.octree_.getBrickDim()), 0);
-    processOctreeBrick(input, brick, outputBrick.data(), progressReporter);
+    std::string brickPoolPath = tgt::FileSystem::cleanupPath(octreePath + "/" + BRICK_BUFFER_SUBDIR);
+    if (!tgt::FileSystem::dirExists(brickPoolPath))
+        tgt::FileSystem::createDirectoryRecursive(brickPoolPath);
 
-    input.octree_.releaseNodeBrick(node);
+    size_t brickSizeInBytes = brickSize * sizeof(uint16_t);
+    OctreeBrickPoolManagerBase* brickPoolManager = new OctreeBrickPoolManagerDisk(brickSizeInBytes,
+            VoreenApplication::app()->getCpuRamLimit(), brickPoolPath, BRICK_BUFFER_FILE_PREFIX);
+    brickPoolManager->initialize(brickSizeInBytes);
 
-    std::unique_ptr<VolumeBase> output(nullptr);
+    struct NodeToProcess {
+        const VolumeOctreeNode* inputNode;
+        VolumeOctreeNode* outputNode;
+        tgt::svec3 llf;
+        tgt::svec3 urb;
+    };
+
+    std::vector<NodeToProcess> nodesToProcess;
+    VolumeOctreeNode* newRootNode = new VolumeOctreeNodeGeneric<1>(brickPoolManager->allocateBrick(), true);
+    nodesToProcess.push_back(
+        NodeToProcess {
+            input.octree_.getRootNode(),
+            newRootNode,
+            tgt::svec3::zero,
+            volumeDim
+        }
+    );
+
+    // Level order iteration => Previos level is always available
+    for(size_t level = maxLevel; level >=0; --level) {
+        float progressBegin = 1.0/(1 << (3 * (level + 1))); // 1/8 ^ (level+1 => next level)
+        float progressEnd = 1.0/(1 << (3 * (level))); // 1/8 ^ (level)
+        SubtaskProgressReporter levelProgress(progressReporter, tgt::vec2(progressBegin, progressEnd));
+
+        std::vector<NodeToProcess> nextNodesToProcess;
+        int i=0;
+        float perNodeProgress = 1.0f/nodesToProcess.size();
+        for(auto& node : nodesToProcess) {
+            SubtaskProgressReporter progress(levelProgress, tgt::vec2(i*perNodeProgress, (i+1)*perNodeProgress));
+            tgtAssert(node.inputNode, "No input node");
+            const uint16_t* brickData = input.octree_.getNodeBrick(node.inputNode);
+
+            tgtAssert(node.inputNode->hasBrick(), "No Brick");
+
+            OctreeBrick brick(brickData, brickDim, node.llf, node.urb, level);
+
+            auto newBrick = brickPoolManager->getWritableBrick(node.outputNode->getBrickAddress());
+
+            processOctreeBrick(input, brick, newBrick, progress);
+
+            input.octree_.releaseNodeBrick(node.inputNode);
+            brickPoolManager->releaseBrick(node.outputNode->getBrickAddress(), OctreeBrickPoolManagerBase::WRITE);
+
+            tgt::svec3 childBrickSize = brickDim * (1UL << (level-1));
+            VRN_FOR_EACH_VOXEL(child, tgt::svec3::zero, tgt::svec3::two) {
+                const size_t childId = volumeCoordsToIndex(child, tgt::svec3::two);
+                VolumeOctreeNode* inputChildNode = node.inputNode->children_[childId];
+                tgtAssert(inputChildNode, "No child node");
+
+                VolumeOctreeNode* outputChildNode;
+                if(inputChildNode->inVolume()) {
+                     outputChildNode = new VolumeOctreeNodeGeneric<1>(brickPoolManager->allocateBrick(), true);
+
+                     tgt::svec3 start = node.llf + childBrickSize * child;
+                     tgt::svec3 end = tgt::min(start + childBrickSize, volumeDim);
+                     nextNodesToProcess.push_back(
+                         NodeToProcess {
+                             inputChildNode,
+                             outputChildNode,
+                             start,
+                             end
+                         }
+                     );
+                 } else {
+                      outputChildNode = new VolumeOctreeNodeGeneric<1>(0, false);
+                 }
+                 node.outputNode->children_[childId] = outputChildNode;
+            }
+            ++i;
+        }
+        nodesToProcess = nextNodesToProcess;
+    }
+
+
+    auto output = tgt::make_unique<Volume>(new VolumeOctree(newRootNode, brickPoolManager, brickDim, input.octree_.getDimensions(), numChannels), &input.volume_);
     auto finish = clock::now();
     return ComputeOutput {
         std::move(output), finish - start,
@@ -485,9 +572,9 @@ const VoreenBlas* OctreeWalker::getVoreenBlasFromProperties() const {
 
 
 void OctreeWalker::updateGuiState() {
-    bool useTransFunc = enableTransFunc_.get();
-    edgeWeightTransFunc_.setVisibleFlag(useTransFunc);
-    edgeWeightBalance_.setVisibleFlag(useTransFunc);
+    //bool useTransFunc = enableTransFunc_.get();
+    //edgeWeightTransFunc_.setVisibleFlag(useTransFunc);
+    //edgeWeightBalance_.setVisibleFlag(useTransFunc);
 }
 
 }   // namespace

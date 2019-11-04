@@ -131,10 +131,6 @@ private:
     IntProperty maxIterations_;
     StringOptionProperty conjGradImplementation_;
 
-    BoolProperty enableTransFunc_;
-    TransFunc1DKeysProperty edgeWeightTransFunc_;
-    FloatProperty edgeWeightBalance_;
-
     VoreenBlasCPU voreenBlasCPU_;
 #ifdef VRN_MODULE_OPENMP
     VoreenBlasMP voreenBlasMP_;
