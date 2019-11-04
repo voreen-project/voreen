@@ -65,6 +65,8 @@ struct OctreeBrick {
 
 };
 
+const uint64_t NO_BRICK_ADDRESS = std::numeric_limits<uint64_t>::max();
+
 /**
  * Base class for octree nodes that represent a certain region of a volume.
  * Each node has up to eight child nodes and stores one average, min, and max
@@ -100,6 +102,7 @@ public:
 
     bool hasBrick() const;
     uint64_t getBrickAddress() const;
+    void setBrickAddress(uint64_t addr);
 
     bool isLeaf() const;
     virtual bool isHomogeneous() const;

@@ -76,7 +76,7 @@ VolumeOctreeNode::VolumeOctreeNode(uint64_t brickAddress, bool inVolume)
     children_[7] = 0;
 }
 VolumeOctreeNode::VolumeOctreeNode()
-    : VolumeOctreeNode(std::numeric_limits<uint64_t>::max(), true)
+    : VolumeOctreeNode(NO_BRICK_ADDRESS, true)
 {
 }
 
@@ -84,7 +84,11 @@ VolumeOctreeNode::~VolumeOctreeNode() {
 }
 
 bool VolumeOctreeNode::hasBrick() const {
-    return brickAddress_ != std::numeric_limits<uint64_t>::max();
+    return brickAddress_ != NO_BRICK_ADDRESS;
+}
+
+void VolumeOctreeNode::setBrickAddress(uint64_t addr) {
+    brickAddress_ = addr;
 }
 
 uint64_t VolumeOctreeNode::getBrickAddress() const {
