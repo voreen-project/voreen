@@ -69,15 +69,22 @@ public:
      * @throws std::exception If the octree construction fails.
      */
     VolumeOctree(const std::vector<const VolumeBase*>& channelVolumes, size_t brickDim, float homogeneityThreshold = 0.01f,
-        OctreeBrickPoolManagerBase* brickPoolManager = new OctreeBrickPoolManagerRAM(),
-        size_t numThreads = 1, ProgressReporter* progessReporter = 0);
+            OctreeBrickPoolManagerBase* brickPoolManager = new OctreeBrickPoolManagerRAM(),
+            size_t numThreads = 1, ProgressReporter* progessReporter = 0);
 
     /**
      * Convenience constructor for a single-channel octree.
      */
     VolumeOctree(const VolumeBase* volume, size_t brickDim, float homogeneityThreshold = 0.01f,
-        OctreeBrickPoolManagerBase* brickPoolManager = new OctreeBrickPoolManagerRAM(),
-        size_t numThreads = 1, ProgressReporter* progessReporter = 0);
+            OctreeBrickPoolManagerBase* brickPoolManager = new OctreeBrickPoolManagerRAM(),
+            size_t numThreads = 1, ProgressReporter* progessReporter = 0);
+
+    /**
+     * Construct a VolumeOctree from preprocessed parts, i.e., an existing hierarchy of nodes whose bricks are stored
+     * in the passed brickPoolManager.
+     */
+    VolumeOctree(VolumeOctreeNode* root, OctreeBrickPoolManagerBase* brickPoolManager, const tgt::svec3& brickDim,
+            const tgt::svec3& volumeDim, size_t numChannels);
 
     /// Default constructor for serialization only.
     VolumeOctree();
@@ -180,26 +187,6 @@ private:
     OctreeBrickPoolManagerBase* brickPoolManager_;
 
     std::vector<Histogram1D*> histograms_;
-
-    /// permanently allocated brick buffer storing one brick that can be used as temporary helper buffer (for reducing memory fragmentation)
-    uint16_t* tempBrickBuffer_;
-    //bool tempBrickBufferUsed_; //currently not used
-
-    //------------------------------
-    // legacy code not used anymore
-    //------------------------------
-
-    void buildOctreeRecursively(const std::vector<const VolumeBase*>& volumes,
-        bool octreeOptimization, uint16_t homogeneityThreshold, ProgressReporter* progessReporter);
-
-    template<class T>
-    VolumeOctreeNode* createTreeNodeRecursively(const tgt::svec3& llf, const tgt::svec3& urb,
-        const std::vector<const void*>& textureBuffers, const tgt::svec3& textureDim,
-        bool octreeOptimization, uint16_t homogeneityThreshold,
-        uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues,
-        std::vector< std::vector<uint64_t> >& histograms,
-        ProgressReporter* progessReporter);
-
 };
 
 } // namespace

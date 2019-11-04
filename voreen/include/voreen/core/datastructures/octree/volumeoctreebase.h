@@ -31,6 +31,7 @@
 #include "voreen/core/utils/exception.h"
 #include "voreen/core/datastructures/volume/volumerepresentation.h"
 #include "voreen/core/datastructures/volume/slice/slicehelper.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/meta/realworldmappingmetadata.h"
 
 #include "tgt/vector.h"
@@ -46,6 +47,23 @@ class VolumeOctreeBase;
 class Volume;
 class VolumeBase;
 class Histogram1D;
+
+/**
+ * Helper struct useful for sampling from octree bricks in different octree levels
+ */
+struct OctreeBrick {
+    OctreeBrick(const uint16_t* data, tgt::svec3 brickDataSize, tgt::svec3 llf, tgt::svec3 urb, size_t level);
+
+    tgt::mat4 voxelToBrick() const;
+    tgt::mat4 brickToVoxel() const;
+
+    const VolumeAtomic<uint16_t> data_;
+    tgt::svec3 llf_; // in bottom-level voxels
+    tgt::svec3 urb_; // in bottom-level voxels
+    size_t scale_;
+    tgt::svec3 dim_; // brick voxels
+
+};
 
 /**
  * Base class for octree nodes that represent a certain region of a volume.
@@ -71,6 +89,7 @@ class VRN_CORE_API VolumeOctreeNode {
     friend class VolumeOctreeBase;
 
 public:
+    VolumeOctreeNode(uint64_t brickAddress, bool inVolume);
     virtual ~VolumeOctreeNode();
 
     virtual size_t getNumChannels() const = 0;

@@ -61,10 +61,6 @@ OctreeBrickPoolManagerBase::~OctreeBrickPoolManagerBase() {
         LWARNING("~OctreeBrickPoolManagerBase(): not deinitialized");
 }
 
-OctreeBrickPoolManagerRAM* OctreeBrickPoolManagerRAM::create() const {
-    return new OctreeBrickPoolManagerRAM();
-}
-
 size_t OctreeBrickPoolManagerBase::getBrickMemorySizeInByte() const {
     return brickMemorySizeInByte_;
 }
@@ -119,6 +115,10 @@ OctreeBrickPoolManagerRAM::OctreeBrickPoolManagerRAM(size_t maxSingleBufferSize)
 OctreeBrickPoolManagerRAM::~OctreeBrickPoolManagerRAM() {
     if (isInitialized())
         deinitialize();
+}
+
+OctreeBrickPoolManagerRAM* OctreeBrickPoolManagerRAM::create() const {
+    return new OctreeBrickPoolManagerRAM();
 }
 
 size_t OctreeBrickPoolManagerRAM::getNumBrickBuffers() const {

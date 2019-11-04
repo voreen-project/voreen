@@ -141,7 +141,6 @@ VolumeOctree::VolumeOctree(const std::vector<const VolumeBase*>& channelVolumes,
                            OctreeBrickPoolManagerBase* brickPoolManager, size_t numThreads, ProgressReporter* progessReporter) 
     : VolumeOctreeBase(tgt::svec3(brickDim), !channelVolumes.empty() ? channelVolumes.front()->getDimensions() : svec3(brickDim), channelVolumes.size())
     , rootNode_(0)
-    , tempBrickBuffer_(0)
     //, tempBrickBufferUsed_(false)
 {
     if (channelVolumes.empty())
@@ -199,7 +198,6 @@ VolumeOctree::VolumeOctree(const VolumeBase* volume, size_t brickDim, float homo
                            OctreeBrickPoolManagerBase* brickPoolManager, size_t numThreads, ProgressReporter* progessReporter) 
     : VolumeOctreeBase(tgt::svec3(brickDim), volume ? volume->getDimensions() : svec3(brickDim), 1)
     , rootNode_(0)
-    , tempBrickBuffer_(0)
     //, tempBrickBufferUsed_(false)
 {
     if (!volume)
@@ -239,10 +237,22 @@ VolumeOctree::VolumeOctree(const VolumeBase* volume, size_t brickDim, float homo
     }
 }
 
+/**
+ * Construct a VolumeOctree from preprocessed parts, i.e., an existing hierarchy of nodes whose bricks are stored
+ * in the passed brickPoolManager.
+ */
+VolumeOctree::VolumeOctree(VolumeOctreeNode* root, OctreeBrickPoolManagerBase* brickPoolManager, const tgt::svec3& brickDim, const tgt::svec3& volumeDim, size_t numChannels)
+    : VolumeOctreeBase(brickDim, volumeDim, numChannels)
+    , rootNode_(root)
+    , brickPoolManager_(brickPoolManager)
+    , histograms_() // TODO: histogram?
+{
+    tgtAssert(tgt::hmul(brickDim) * sizeof(uint16_t) == brickPoolManager_->getBrickMemorySizeInByte(), "Brick size mismatch");
+}
+
 // default constructor for serialization (private)
 VolumeOctree::VolumeOctree()
     : rootNode_(0)
-    , tempBrickBuffer_(0)
     , brickPoolManager_(0)
 {}
 
@@ -257,9 +267,6 @@ VolumeOctree::~VolumeOctree() {
         brickPoolManager_->deinitialize();
     delete brickPoolManager_;
     brickPoolManager_ = 0;
-
-    delete[] tempBrickBuffer_;
-    tempBrickBuffer_ = 0;
 
     for (size_t i=0; i<histograms_.size(); i++)
         delete histograms_.at(i);
@@ -1654,221 +1661,15 @@ const OctreeBrickPoolManagerBase* VolumeOctree::getBrickPoolManager() const {
 }
 
 uint16_t* VolumeOctree::acquireTempBrickBuffer() {
-    /*if (tempBrickBufferUsed_) {
-        tgtAssert(false, "temp brick buffer already in use");
-        LERROR("Temp brick buffer already in use");
-    }
-
-    if (!tempBrickBuffer_)
-        tempBrickBuffer_ = new uint16_t[getBrickMemorySize()/2];
-
-    tempBrickBufferUsed_ = true;
-    return tempBrickBuffer_; */
-
     return new uint16_t[getBrickMemorySize()/2];
 }
 
 void VolumeOctree::releaseTempBrickBuffer(uint16_t* buffer) {
-    //tgtAssert(tempBrickBufferUsed_, "temp brick buffer not in use");
-    //tempBrickBufferUsed_ = false;
     tgtAssert(buffer, "null pointer passed");
 
     delete[] buffer;
 }
 
-
-//------------------------------
-// legacy code not used anymore
-//------------------------------
-
-void VolumeOctree::buildOctreeRecursively(const std::vector<const VolumeBase*>& volumes,
-    bool octreeOptimization, uint16_t homogeneityThreshold, ProgressReporter* progressReporter) {
-    tgtAssert(volumes.size() == getNumChannels(), "number of channel volumes does not match channel count");
-    tgtAssert(volumes.front(), "no volume");
-    tgtAssert(getNumChannels() <= MAX_CHANNELS, "more than max channels");
-    tgtAssert(brickPoolManager_, "brick pool manager not set");
-
-    // check that RAM representations are available
-    std::string inputDataFormat = volumes.front()->getFormat();
-    for (size_t i=0; i<volumes.size(); i++) {
-        tgtAssert(volumes.at(i)->getFormat() == inputDataFormat, "format of input volumes does not match"); //< checked by constructor
-        if (!volumes.at(i)->getRepresentation<VolumeRAM>())
-            throw VoreenException("Octree cannot be built recursively: VolumeRAM not available");
-    }
-
-    // initialize brick pool manager
-    tgtAssert(brickPoolManager_, "no brick pool manager");
-    brickPoolManager_->initialize(getBrickMemorySize());
-
-    // log construction / memory usage info
-    LDEBUG("Creating octree recursively ("   <<
-        "Volume dim: " << getVolumeDim()     << ", " <<
-        "Volume mem size: " << formatMemorySize((uint64_t)tgt::hmul(getVolumeDim())*(uint64_t)getBytesPerVoxel()) << ", " <<
-        "Channels:     " << getNumChannels() << ", " <<
-        "Octree dim:   " << getOctreeDim()   << ", " <<
-        "Octree depth: " << getNumLevels()   << ", " <<
-        "Brick dim:    " << getBrickDim()    << ", " <<
-        "Brick mem size: " << formatMemorySize(getBrickMemorySize()) << ", " <<
-        "Brick pool manager: " << brickPoolManager_->getClassName() << " [" << brickPoolManager_->getDescription() << "]" << ")";
-    );
-    LDEBUG(MemoryInfo::getProcessMemoryUsageAsString());
-    LDEBUG(MemoryInfo::getAvailableMemoryAsString());
-
-    // initialize histogram buffers
-    std::vector< std::vector<uint64_t> > histogramBuffers;
-    for (size_t ch=0; ch<getNumChannels(); ch++)
-        histogramBuffers.push_back(std::vector<uint64_t>(1<<16, 0));
-
-    if (progressReporter)
-        progressReporter->setProgress(0.f);
-
-    // construct octree
-    uint16_t avgValues[MAX_CHANNELS], minValues[MAX_CHANNELS], maxValues[MAX_CHANNELS];
-
-    // retrieve data buffers from input RAM representations
-    LDEBUG("Accessing RAM representations of input volumes");
-    std::vector<const void*> volumeBuffers;
-    for (size_t i=0; i<getNumChannels(); i++) {
-        tgtAssert(volumes.at(i), "null pointer passed as volume");
-        const VolumeRAM* volumeRAM = volumes.at(i)->getRepresentation<VolumeRAM>();
-        if (!volumeRAM)
-            throw VoreenException("Failed to retrieve RAM representation from channel volume: " + itos(i));
-        volumeBuffers.push_back(volumeRAM->getData());
-    }
-    tgtAssert(volumeBuffers.size() == getNumChannels(), "invalid number of volume buffers");
-
-    // create octree
-    LDEBUG("Starting recursive construction");
-    if (inputDataFormat == "uint8")
-        rootNode_ = createTreeNodeRecursively<uint8_t>(svec3::zero, getOctreeDim(), volumeBuffers, getVolumeDim(),
-        octreeOptimization, homogeneityThreshold, avgValues, minValues, maxValues, histogramBuffers, progressReporter);
-    else if (inputDataFormat == "int8")
-        rootNode_ = createTreeNodeRecursively<int8_t>(svec3::zero, getOctreeDim(), volumeBuffers, getVolumeDim(),
-        octreeOptimization, homogeneityThreshold, avgValues, minValues, maxValues, histogramBuffers, progressReporter);
-    else if (inputDataFormat == "uint16")
-        rootNode_ = createTreeNodeRecursively<uint16_t>(svec3::zero, getOctreeDim(), volumeBuffers, getVolumeDim(),
-        octreeOptimization, homogeneityThreshold, avgValues, minValues, maxValues, histogramBuffers, progressReporter);
-    else if (inputDataFormat == "int16")
-        rootNode_ = createTreeNodeRecursively<int16_t>(svec3::zero, getOctreeDim(), volumeBuffers, getVolumeDim(),
-        octreeOptimization, homogeneityThreshold, avgValues, minValues, maxValues, histogramBuffers, progressReporter);
-    else if (inputDataFormat == "uint32")
-        rootNode_ = createTreeNodeRecursively<uint32_t>(svec3::zero, getOctreeDim(), volumeBuffers, getVolumeDim(),
-        octreeOptimization, homogeneityThreshold, avgValues, minValues, maxValues, histogramBuffers, progressReporter);
-    else if (inputDataFormat == "int32")
-        rootNode_ = createTreeNodeRecursively<int32_t>(svec3::zero, getOctreeDim(), volumeBuffers, getVolumeDim(),
-        octreeOptimization, homogeneityThreshold, avgValues, minValues, maxValues, histogramBuffers, progressReporter);
-    else if (inputDataFormat == "float")
-        rootNode_ = createTreeNodeRecursively<float>(svec3::zero, getOctreeDim(), volumeBuffers, getVolumeDim(),
-        octreeOptimization, homogeneityThreshold, avgValues, minValues, maxValues, histogramBuffers, progressReporter);
-    else if (inputDataFormat == "double")
-        rootNode_ = createTreeNodeRecursively<double>(svec3::zero, getOctreeDim(), volumeBuffers, getVolumeDim(),
-        octreeOptimization, homogeneityThreshold, avgValues, minValues, maxValues, histogramBuffers, progressReporter);
-    else
-        throw VoreenException("Unknown/unsupported input data format: " + inputDataFormat);
-
-    tgtAssert(rootNode_, "no root node");
-    tgtAssert(rootNode_->getNumBricks() <= rootNode_->getNodeCount(), "number of bricks larger than number of nodes");
-    tgtAssert(minValues[0] <= avgValues[0] && avgValues[0] <= maxValues[0], "invalid avg/min/max values");
-    tgtAssert(rootNode_->getAvgValue() == avgValues[0], "avg value of root node differs from returned avg value");
-
-    // create histograms from buffers
-    tgtAssert(histogramBuffers.size() == getNumChannels(), "invalid histogram buffer");
-    const size_t numBuckets = 1<<std::min<size_t>(12, volumes.front()->getBytesPerVoxel()*8 / getNumChannels()); //< 4096 for 16 bit and more, 256 for 8 bit
-    const size_t bucketSize = (1<<16) / numBuckets;
-    const float realWorldMin = volumes.front()->getRealWorldMapping().normalizedToRealWorld(0.f);
-    const float realWorldMax = volumes.front()->getRealWorldMapping().normalizedToRealWorld(1.f);
-    for (size_t ch=0; ch<getNumChannels(); ch++) {
-        Histogram1D* channelHistogram = new Histogram1D(realWorldMin, realWorldMax, (int)numBuckets);
-        std::vector<uint64_t>& histBuffer = histogramBuffers.at(ch);
-        tgtAssert(histBuffer.size() == (1<<16), "invalid histogram buffer size");
-        for (size_t bucket=0; bucket<numBuckets; bucket++) {
-            uint64_t bucketValue = 0;
-            for (size_t i=bucket*bucketSize; i<(bucket+1)*bucketSize; i++)
-                bucketValue += histBuffer[i];
-            channelHistogram->increaseBucket(bucket, bucketValue);
-        }
-        histograms_.push_back(channelHistogram);
-    }
-
-    // log memory usage info
-    LDEBUG("Finished octree creation (" << brickPoolManager_->getClassName() << " [" << brickPoolManager_->getDescription() << "]" << ")");
-    LDEBUG("- " << MemoryInfo::getProcessMemoryUsageAsString());
-    LDEBUG("- " << MemoryInfo::getAvailableMemoryAsString());
-}
-
-template<class T>
-VolumeOctreeNode* VolumeOctree::createTreeNodeRecursively(const svec3& llf, const svec3& urb,
-    const std::vector<const void*>& textureBuffers, const tgt::svec3& textureDim,
-    bool octreeOptimization, uint16_t homogeneityThreshold,
-    uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues,
-    std::vector< std::vector<uint64_t> >& histograms,
-    ProgressReporter* progressReporter) {
-    tgtAssert(textureBuffers.size() == getNumChannels(), "number of texture buffers does not match channel count");
-    tgtAssert(getNumChannels() <= MAX_CHANNELS, "more than max channels");
-    tgtAssert(textureBuffers.front(), "null pointer passed");
-    tgtAssert(brickPoolManager_, "brick pool manager");
-    tgtAssert(avgValues && minValues && maxValues, "null pointer passed as avg/min/max value array");
-
-    tgtAssert(tgt::hand(tgt::lessThan(llf, getOctreeDim())), "invalid llf");
-    tgtAssert(tgt::hand(tgt::lessThanEqual(urb, getOctreeDim())), "invalid urb");
-    tgtAssert(tgt::hand(tgt::lessThan(llf, urb)), "llf larger than or equal urb");
-
-    // determine dimensions of node region
-    const svec3 nodeDim = urb-llf;
-    tgtAssert(isMultipleOf(nodeDim, getBrickDim()), "node dim is not a multiple of brick dimensions");
-
-    // create node
-    VolumeOctreeNode* node = 0;
-    if (octreeOptimization && tgt::hor(tgt::greaterThanEqual(llf, textureDim))) {
-        // brick completely outside volume texture => return homogeneous node, if tree optimization is enabled
-        node = VolumeOctreeBase::createNode(getNumChannels());
-        for (size_t i=0; i<getNumChannels(); i++) {
-            minValues[i] = 0;
-            maxValues[i] = 0;
-            avgValues[i] = 0;
-        }
-    }
-    else if (nodeDim == getBrickDim()) { //< last level reached => create node from volumes
-        node = createTreeNodeFromTexture<T>(llf, urb, textureBuffers, textureDim,
-            octreeOptimization, homogeneityThreshold,
-            avgValues, minValues, maxValues, histograms);
-    }
-    else { // recursively create child nodes
-        VolumeOctreeNode* children[8];
-        const svec3 childNodeDim = nodeDim / svec3(2);
-
-        VRN_FOR_EACH_VOXEL(child, svec3::zero, svec3::two) {
-            size_t childIndex = cubicCoordToLinear(child, svec3(2));
-            svec3 childLlf = llf + child*childNodeDim;
-            svec3 childUrb = childLlf + childNodeDim;
-            uint16_t childAvg[MAX_CHANNELS], childMin[MAX_CHANNELS], childMax[MAX_CHANNELS];
-            children[childIndex] = createTreeNodeRecursively<T>(childLlf, childUrb, textureBuffers, textureDim,
-                octreeOptimization, homogeneityThreshold,
-                childAvg, childMin, childMax, histograms, progressReporter);
-        }
-
-        node = createParentNode(children, octreeOptimization, homogeneityThreshold, avgValues, minValues, maxValues);
-    }
-    tgtAssert(node, "no node created");
-    tgtAssert(minValues[0] <= avgValues[0] && avgValues[0] <= maxValues[0], "invalid avg/min/max values");
-    tgtAssert(node->getAvgValue() == avgValues[0], "avg value mis-match");
-
-    // update progress bar (only on second level)
-    if (progressReporter && nodeDim.x == (getOctreeDim().x / 4)) {
-        /*if (progressReporter) {
-            tgtAssert(!histograms.empty() && !histograms.front(), "no histogram");
-            float progress = (float)histograms.front()->getNumSamples() / tgt::hmul(getVolumeDim());
-            progressReporter->setProgress(progress);
-        }*/
-        size_t curLevel = tgt::iround(logf((float)getOctreeDim().x / (float)(nodeDim.x)) / logf(2.f));
-        size_t treeDepth = getNumLevels();
-        float relativeSubtreeSize = (float)getCompleteTreeNodeCount(treeDepth - curLevel) / (float)getCompleteTreeNodeCount(treeDepth);
-        //float npotCorrection = (float)tgt::hmul(getOctreeDim()) / (float)tgt::hmul(getVolumeDim());
-        progressReporter->setProgress(progressReporter->getProgress() + relativeSubtreeSize*0.9f);
-    }
-
-    return node;
-}
 
 
 } // namespace

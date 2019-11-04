@@ -43,12 +43,28 @@ using tgt::vec3;
 
 namespace voreen {
 
+OctreeBrick::OctreeBrick(const uint16_t* data, tgt::svec3 brickDataSize, tgt::svec3 llf, tgt::svec3 urb, size_t level)
+    : data_(const_cast<uint16_t*>(data), brickDataSize, false) // data is not owned!
+    , llf_(llf)
+    , urb_(urb)
+    , scale_(1 << level)
+    , dim_((urb_ - llf_)/scale_)
+{
+}
+tgt::mat4 OctreeBrick::voxelToBrick() const {
+    return tgt::mat4::createScale(tgt::vec3(1.0f/scale_)) * tgt::mat4::createTranslation(-llf_);
+}
+
+tgt::mat4 OctreeBrick::brickToVoxel() const {
+    return tgt::mat4::createTranslation(llf_) * tgt::mat4::createScale(tgt::vec3(scale_));
+}
+
 //-------------------------------------------------------------------------------------------------
 // VolumeOctreeNode
 
-VolumeOctreeNode::VolumeOctreeNode()
-    : brickAddress_(std::numeric_limits<uint64_t>::max())
-    , inVolume_(true)
+VolumeOctreeNode::VolumeOctreeNode(uint64_t brickAddress, bool inVolume)
+    : brickAddress_(brickAddress)
+    , inVolume_(inVolume)
 {
     children_[0] = 0;
     children_[1] = 0;
@@ -58,6 +74,10 @@ VolumeOctreeNode::VolumeOctreeNode()
     children_[5] = 0;
     children_[6] = 0;
     children_[7] = 0;
+}
+VolumeOctreeNode::VolumeOctreeNode()
+    : VolumeOctreeNode(std::numeric_limits<uint64_t>::max(), true)
+{
 }
 
 VolumeOctreeNode::~VolumeOctreeNode() {

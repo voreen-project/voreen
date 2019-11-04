@@ -38,6 +38,7 @@ class VRN_CORE_API VolumeOctreeNodeGeneric : public virtual VolumeOctreeNode {
     friend class VolumeOctreeBase;
 
 public:
+    VolumeOctreeNodeGeneric(uint64_t brickAddress, bool inVolume, uint16_t defaultIntensityValue = 0);
     VolumeOctreeNodeGeneric(uint16_t defaultIntensityValue = 0);
 
     virtual uint16_t getAvgValue(size_t channel = 0) const;
@@ -52,7 +53,6 @@ public:
     virtual void deserializeContentFromBinaryBuffer(const char* buffer);
     virtual size_t getContentSize() const { return C*3*sizeof(uint16_t) + VolumeOctreeNode::getContentSize(); } ///< numChannels*sizeof(min/max/avg)
 
-protected:
     uint16_t avgValues_[C];    ///< The node's average voxel values (one per channel)
     uint16_t minValues_[C];    ///< The node's min voxel values (one per channel)
     uint16_t maxValues_[C];    ///< The node's max voxel values (one per channel)
@@ -61,6 +61,17 @@ protected:
 /*****************************************************************************************************************
  *      Implementation of VolumeOctreeNodeGeneric                                                                *
  *****************************************************************************************************************/
+template<size_t C>
+VolumeOctreeNodeGeneric<C>::VolumeOctreeNodeGeneric(uint64_t brickAddress, bool inVolume, uint16_t defaultIntensityValue)
+    : VolumeOctreeNode(brickAddress, inVolume)
+{
+    for (size_t i=0; i<C; i++) {
+        avgValues_[i] = defaultIntensityValue;
+        minValues_[i] = defaultIntensityValue;
+        maxValues_[i] = defaultIntensityValue;
+    }
+}
+
 template<size_t C>
 VolumeOctreeNodeGeneric<C>::VolumeOctreeNodeGeneric(uint16_t defaultIntensityValue)
     : VolumeOctreeNode()

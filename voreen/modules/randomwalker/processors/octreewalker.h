@@ -77,31 +77,6 @@ struct OctreeWalkerOutput {
     std::chrono::duration<float> duration_;
 };
 
-struct OctreeBrick {
-    OctreeBrick(const uint16_t* data, tgt::svec3 brickDataSize, tgt::svec3 llf, tgt::svec3 urb, size_t level)
-        : data_(const_cast<uint16_t*>(data), brickDataSize, false) // data is not owned!
-        , llf_(llf)
-        , urb_(urb)
-        , scale_(1 << level)
-        , dim_((urb_ - llf_)/scale_)
-    {
-    }
-
-    const VolumeAtomic<uint16_t> data_;
-    tgt::svec3 llf_; // in bottom-level voxels
-    tgt::svec3 urb_; // in bottom-level voxels
-    size_t scale_;
-    tgt::svec3 dim_; // brick voxels
-
-    tgt::mat4 voxelToBrick() const {
-        return tgt::mat4::createScale(tgt::vec3(1.0f/scale_)) * tgt::mat4::createTranslation(-llf_);
-    }
-
-    tgt::mat4 brickToVoxel() const {
-        return tgt::mat4::createTranslation(llf_) * tgt::mat4::createScale(tgt::vec3(scale_));
-    }
-};
-
 /**
  * Performs a semi-automatic volume segmentation using the 3D random walker algorithm.
  * User manual: http://voreen.uni-muenster.de/?q=random-walker
