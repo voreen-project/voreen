@@ -725,7 +725,7 @@ VolumeList* AnalyzeVolumeReader::readNifti(const std::string &fileName, bool sta
 
     for(int i=startId; i < stopId; i++) {
         for(int channelId=startChannel; channelId<stopChannel; channelId++) {
-            size_t offset = headerskip + (i * numChannels + channelId) * volSize;
+            size_t offset = headerskip + (channelId * numVolumes + i) * volSize;
             VolumeRepresentation* volume = new VolumeDiskRaw(rawFilename, baseType, dimensions, offset, bigEndian);
             Volume* vh = new Volume(volume, spacing, tgt::vec3::zero);
 
@@ -862,7 +862,7 @@ VolumeList* AnalyzeVolumeReader::readAnalyze(const std::string &fileName, int vo
     size_t volSize = hmul(tgt::svec3(dimensions)) * (dimension.bitpix / 8);
     for(int i=startId; i<stopId; i++) {
         for(int channelId=startChannel; channelId<stopChannel; channelId++) {
-            size_t offset = (i * numChannels + channelId) * volSize;
+            size_t offset = (channelId * numVolumes + i) * volSize;
             VolumeRepresentation* volume = new VolumeDiskRaw(getRelatedImgFileName(fileName), baseType, dimensions,
                                                              offset, bigEndian);
             Volume* vh = new Volume(volume, spacing, tgt::vec3::zero);
