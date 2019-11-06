@@ -70,6 +70,7 @@ struct OctreeWalkerInput {
     VoreenBlas::ConjGradPreconditioner precond_;
     float errorThreshold_;
     int maxIterations_;
+    float homogeneityThreshold_;
 };
 
 struct OctreeWalkerOutput {
@@ -105,9 +106,6 @@ protected:
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
     virtual void processComputeOutput(ComputeOutput output);
 
-    void processOctreeBrick(ComputeInput& input, OctreeBrick& brick, uint16_t* outputBrick, ProgressReporter& progressReporter, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg) const;
-
-
     virtual void initialize();
     virtual void deinitialize();
 
@@ -130,6 +128,7 @@ private:
     IntProperty errorThreshold_;
     IntProperty maxIterations_;
     StringOptionProperty conjGradImplementation_;
+    FloatProperty homogeneityThreshold_;
 
     VoreenBlasCPU voreenBlasCPU_;
 #ifdef VRN_MODULE_OPENMP

@@ -1161,7 +1161,7 @@ void SingleOctreeRaycasterCL::updateBrickBuffer(int keepLevel, size_t& numUsedIn
     const size_t numNodes = nodeBufferSize_;
     const size_t numChannels = octree->getNumChannels();
     const size_t brickMemorySize = octree->getBrickMemorySize();
-    tgtAssert(leastRecentlyUsedBricks_.size() == treeDepth, "invalid LRU list");
+    //tgtAssert(leastRecentlyUsedBricks_.size() == treeDepth, "invalid LRU list");
     //tgtAssert(nodeBufferToNodeMap_.size() == numNodes, "nodeBufferToNodeMap has invalid size");
 
     tgt::Stopwatch watch;

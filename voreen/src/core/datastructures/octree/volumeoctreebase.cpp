@@ -52,7 +52,7 @@ OctreeBrick::OctreeBrick(const uint16_t* data, tgt::svec3 brickDataSize, tgt::sv
 {
 }
 tgt::mat4 OctreeBrick::voxelToBrick() const {
-    return tgt::mat4::createScale(tgt::vec3(1.0f/scale_)) * tgt::mat4::createTranslation(-llf_);
+    return tgt::mat4::createScale(tgt::vec3(1.0f/scale_)) * tgt::mat4::createTranslation(-tgt::vec3(llf_));
 }
 
 tgt::mat4 OctreeBrick::brickToVoxel() const {
