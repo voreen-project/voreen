@@ -330,14 +330,14 @@ public:
         tgt::ivec3 llf = brick.brickToVoxel().transform(tgt::vec3(-1.0f));
         tgt::ivec3 urb = brick.brickToVoxel().transform(brick.dim_);
 
-        llfOffset_ = tgt::greaterThanEqual(llf, tgt::ivec3::zero) & tgt::Vector3<bool>(existingTreeRoot);
+        llfOffset_ = existingTreeRoot ? tgt::ivec3::one : tgt::ivec3::zero;//tgt::greaterThanEqual(llf, tgt::ivec3::zero) & tgt::Vector3<bool>(existingTreeRoot);
         // TODO: This might not work in upper levels if a single brick voxel partially extends out of the volume
-        urbOffset_ = tgt::lessThan(urb, tgt::ivec3(volumeDimensions)) & tgt::Vector3<bool>(existingTreeRoot);
+        urbOffset_ = existingTreeRoot ? tgt::ivec3::one : tgt::ivec3::zero;//tgt::lessThan(urb, tgt::ivec3(volumeDimensions)) & tgt::Vector3<bool>(existingTreeRoot);
 
         tgt::mat4 voxelToSeeds = tgt::mat4::createTranslation(llfOffset_) * brick.voxelToBrick();
         tgt::mat4 seedsToVoxel = brick.brickToVoxel() * tgt::mat4::createTranslation(-tgt::vec3(llfOffset_));
 
-        tgt::ivec3 volDim(brick.dim_ + llfOffset_ + urbOffset_);
+        tgt::svec3 volDim(brick.dim_ + llfOffset_ + urbOffset_);
 
         seedBuffer_ = VolumeAtomic<float>(volDim, true);
         seedBuffer_.fill(UNLABELED);
@@ -350,7 +350,7 @@ public:
                 size_t level = rootLevel;
 
                 tgt::ivec3 pointInNeighborSeeds = llfOffset_; // lower left corner of _actual brick_
-                pointInNeighborSeeds[dim] = sliceIndex; // force point outside of actual brick in _current dimension_
+                //pointInNeighborSeeds[dim] = sliceIndex; // force point outside of actual brick in _current dimension_
 
                 tgt::svec3 pointInNeighborGlobal = seedsToVoxel.transform(pointInNeighborSeeds);
 
@@ -368,7 +368,8 @@ public:
 
                     tgt::mat4 seedsToNeighborBrick = neighborBrick.voxelToBrick() * seedsToVoxel;
                     VRN_FOR_EACH_VOXEL(seed, begin, end) {
-                        tgt::vec3 local = seedsToNeighborBrick.transform(seed);
+                        tgt::vec3 seedSamplePoint = tgt::clamp(seed, llfOffset_, volDim - urbOffset_ - tgt::svec3(1));
+                        tgt::vec3 local = seedsToNeighborBrick.transform(seedSamplePoint);
                         // The local voxel might not be inside the brick we sample. This can happen in two cases:
                         // 1. We are sampling in the corner/edge of the current brick. These voxels are completely enclosed
                         //    by other seeds, so the concrete value does not matter.
@@ -390,12 +391,12 @@ public:
 
         numSeeds_ = 0;
 
-        collectLabelsFromNeighbor(llfOffset_.x, 0, 0);
-        collectLabelsFromNeighbor(urbOffset_.x, 0, volDim.x-1);
-        collectLabelsFromNeighbor(llfOffset_.y, 1, 0);
-        collectLabelsFromNeighbor(urbOffset_.y, 1, volDim.y-1);
-        collectLabelsFromNeighbor(llfOffset_.z, 2, 0);
-        collectLabelsFromNeighbor(urbOffset_.z, 2, volDim.z-1);
+        collectLabelsFromNeighbor(existingTreeRoot, 0, 0);
+        collectLabelsFromNeighbor(existingTreeRoot, 0, volDim.x-1);
+        collectLabelsFromNeighbor(existingTreeRoot, 1, 0);
+        collectLabelsFromNeighbor(existingTreeRoot, 1, volDim.y-1);
+        collectLabelsFromNeighbor(existingTreeRoot, 2, 0);
+        collectLabelsFromNeighbor(existingTreeRoot, 2, volDim.z-1);
         numSeeds_ += tgt::hmul(seedBuffer_.getDimensions()) - tgt::hmul(brick.dim_);
 
         // foreground geometry seeds
@@ -410,7 +411,7 @@ public:
                     tgt::vec3 dir = tgt::normalize(right - left);
                     for (float t=0.f; t<tgt::length(right-left); t += 1.f) {
                         tgt::ivec3 point = tgt::iround(left + t*dir);
-                        if(tgt::hor(tgt::lessThan(point, tgt::ivec3::zero)) || tgt::hor(tgt::greaterThanEqual(point, volDim))) {
+                        if(tgt::hor(tgt::lessThan(point, tgt::ivec3::zero)) || tgt::hor(tgt::greaterThanEqual(point, tgt::ivec3(volDim)))) {
                             continue;
                         }
                         if (seedBuffer_.voxel(point) == UNLABELED) {
