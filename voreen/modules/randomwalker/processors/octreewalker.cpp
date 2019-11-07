@@ -251,21 +251,21 @@ static const VolumeOctreeNode& findLeafNodeFor(const VolumeOctreeNode& root, tgt
     size_t newLevel = level - 1;
     tgt::svec3 brickSize = brickDataSize * (1UL << newLevel);
     size_t index = 0;
-    if(point.x > llf.x+brickSize.x) {
+    if(point.x >= llf.x+brickSize.x) {
         index += 1;
-        newLlf.x += brickSize.x;
+        newLlf.x = llf.x+brickSize.x;
     } else {
         newUrb.x = llf.x+brickSize.x;
     }
-    if(point.y > llf.y+brickSize.y) {
+    if(point.y >= llf.y+brickSize.y) {
         index += 2;
-        newLlf.y += brickSize.y;
+        newLlf.y = llf.y+brickSize.y;
     } else {
         newUrb.y = llf.y+brickSize.y;
     }
-    if(point.z > llf.z+brickSize.z) {
+    if(point.z >= llf.z+brickSize.z) {
         index += 4;
-        newLlf.z += brickSize.z;
+        newLlf.z = llf.z+brickSize.z;
     } else {
         newUrb.z = llf.z+brickSize.z;
     }
@@ -284,24 +284,28 @@ static const VolumeOctreeNode& findLeafNodeFor(const VolumeOctreeNode& root, tgt
 }
 
 struct RandomWalkerVoxelAccessorBrick : public RandomWalkerVoxelAccessor {
-    RandomWalkerVoxelAccessorBrick(const OctreeBrick& brick, tgt::svec3 seedBufferLLFOffset)
+    RandomWalkerVoxelAccessorBrick(const OctreeBrick& brick, tgt::svec3 seedBufferLLFOffset, RealWorldMapping rwm)
         : brick_(brick)
         , seedBufferLLFOffset_(seedBufferLLFOffset)
+        , rwm_(rwm)
     {
     }
     virtual float voxel(const tgt::svec3& pos) {
         tgt::ivec3 brickPos = pos - seedBufferLLFOffset_;
+        float normalized;
         if(tgt::hor(tgt::equal(brickPos, tgt::ivec3(-1)) | tgt::equal(brickPos, tgt::ivec3(brick_.dim_)))) {
             //TODO use neighbor bricks
-            //return 0.5f;
-            return brick_.data_.getVoxelNormalized(tgt::clamp(brickPos, tgt::ivec3(0), tgt::ivec3(brick_.dim_ - tgt::svec3(1))));
+            //normalized = 0.5f;
+            normalized = brick_.data_.getVoxelNormalized(tgt::clamp(brickPos, tgt::ivec3(0), tgt::ivec3(brick_.dim_ - tgt::svec3(1))));
         } else {
-            return brick_.data_.getVoxelNormalized(brickPos);
+            normalized = brick_.data_.getVoxelNormalized(brickPos);
         }
+        return rwm_.normalizedToRealWorld(normalized);
     }
 private:
     const OctreeBrick& brick_;
     tgt::svec3 seedBufferLLFOffset_;
+    RealWorldMapping rwm_;
 };
 
 namespace {
@@ -344,7 +348,13 @@ public:
                 tgt::svec3 llf(0);
                 tgt::svec3 urb(volumeDimensions);
                 size_t level = rootLevel;
-                const VolumeOctreeNode& neighborNode = findLeafNodeFor(*existingTreeRoot, llf, urb, level, tgt::svec3(seedsToVoxel.transform(tgt::vec3(0))), brick.data_.getDimensions(), seedLevel);
+
+                tgt::ivec3 pointInNeighborSeeds = llfOffset_; // lower left corner of _actual brick_
+                pointInNeighborSeeds[dim] = sliceIndex; // force point outside of actual brick in _current dimension_
+
+                tgt::svec3 pointInNeighborGlobal = seedsToVoxel.transform(pointInNeighborSeeds);
+
+                const VolumeOctreeNode& neighborNode = findLeafNodeFor(*existingTreeRoot, llf, urb, level, pointInNeighborGlobal, brick.data_.getDimensions(), seedLevel);
 
                 tgt::svec3 begin(0);
                 tgt::svec3 end(volDim);
@@ -470,6 +480,10 @@ const float RandomWalkerSeedsBrick::BACKGROUND = 0.0f;
 static void processOctreeBrick(OctreeWalkerInput& input, OctreeBrick& brick, uint16_t* outputBrick, ProgressReporter& progressReporter, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, const VolumeOctreeNode* existingRootNode, size_t rootLevel, OctreeBrickPoolManagerBase& brickPoolManager, size_t currentLevel) {
     //TODO: catch out of memory
 
+    //if(brick.llf_ == tgt::svec3(1664, 448, 1792)) {
+    //    asm("int $3");
+    //}
+
     //TODO: Only copy once
     PointSegmentListGeometryVec3 foregroundSeeds;
     PointSegmentListGeometryVec3 backgroundSeeds;
@@ -487,13 +501,13 @@ static void processOctreeBrick(OctreeWalkerInput& input, OctreeBrick& brick, uin
 
     // No way to decide between foreground and background
     if(numSeeds == 0) {
-        min = 0xffff/2;
-        max = 0xffff/2;
         avg = 0xffff/2;
+        min = avg;
+        max = avg;
         for(int i=0; i<numVoxels; ++i) {
             histogram.addSample(0.5f);
         }
-        std::fill_n(outputBrick, numVoxels, 0xffff/2);
+        std::fill_n(outputBrick, tgt::hmul(brick.data_.getDimensions()), avg);
         return;
     }
 
@@ -512,7 +526,7 @@ static void processOctreeBrick(OctreeWalkerInput& input, OctreeBrick& brick, uin
 
     edgeWeightFun.reset(new RandomWalkerEdgeWeightIntensity(intensityRange, beta, minWeight));
 
-    std::unique_ptr<RandomWalkerVoxelAccessor> voxelAccessor(new RandomWalkerVoxelAccessorBrick(brick, seeds.neighborOffsetLLF()));
+    std::unique_ptr<RandomWalkerVoxelAccessor> voxelAccessor(new RandomWalkerVoxelAccessorBrick(brick, seeds.neighborOffsetLLF(), input.volume_.getRealWorldMapping()));
 
     RandomWalkerWeights edgeWeights(std::move(voxelAccessor), std::move(edgeWeightFun), walkerBlockDim);
 
@@ -526,6 +540,7 @@ static void processOctreeBrick(OctreeWalkerInput& input, OctreeBrick& brick, uin
 
     int iterations = input.blas_->sSpConjGradEll(mat, vec.data(), solution.get(), oldSystemSolution,
         input.precond_, input.errorThreshold_, input.maxIterations_, progressReporter);
+    //TODO do something with iterations? do multiple blas runs? (Probably not necessary in most cases due to small bricks (and initialization (another TODO)?))
 
     tgt::svec3 physicalBrickDim = brick.data_.getDimensions();
     size_t physicalBrickSize = tgt::hmul(physicalBrickDim);
@@ -558,6 +573,64 @@ static void processOctreeBrick(OctreeWalkerInput& input, OctreeBrick& brick, uin
 const std::string BRICK_BUFFER_SUBDIR =      "brickBuffer";
 const std::string BRICK_BUFFER_FILE_PREFIX = "buffer_";
 
+template<typename C>
+struct DeinitPtr {
+    DeinitPtr(C* content)
+        : content_(content)
+    {
+    }
+    DeinitPtr(DeinitPtr&& other)
+        : content_(other.content_)
+    {
+        other.content_ = nullptr;
+    }
+    ~DeinitPtr() {
+        if(content_) {
+            content_->deinitialize();
+            delete content_;
+        }
+    }
+    C* release() {
+        C* ret = content_;
+        content_ = nullptr;
+        return ret;
+    }
+    C& operator* () {
+        return *content_;
+    }
+
+    C* operator-> () {
+        return content_;
+    }
+    C* content_;
+};
+
+struct VolumeOctreeNodeTree {
+    VolumeOctreeNodeTree(VolumeOctreeNode* root)
+        : root_(root)
+    {
+    }
+    VolumeOctreeNodeTree(VolumeOctreeNodeTree&& other)
+        : root_(other.root_)
+    {
+        other.root_ = nullptr;
+    }
+    ~VolumeOctreeNodeTree() {
+        if(root_) {
+            for(int i=0; i<8; ++i) {
+                VolumeOctreeNodeTree(root_->children_[i]); // delete recursively
+            }
+            delete root_;
+        }
+    }
+    VolumeOctreeNode* release() {
+        VolumeOctreeNode* ret = root_;
+        root_ = nullptr;
+        return ret;
+    }
+    VolumeOctreeNode* root_;
+};
+
 OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressReporter& progressReporter) const {
     OctreeWalkerOutput invalidResult = OctreeWalkerOutput {
         std::unique_ptr<Volume>(nullptr),
@@ -583,7 +656,9 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     size_t brickSizeInBytes = brickSize * sizeof(uint16_t);
     OctreeBrickPoolManagerDisk* brickPoolManagerDisk = new OctreeBrickPoolManagerDisk(brickSizeInBytes,
             VoreenApplication::app()->getCpuRamLimit(), brickPoolPath, BRICK_BUFFER_FILE_PREFIX);
-    OctreeBrickPoolManagerBase* brickPoolManager = brickPoolManagerDisk;
+
+    DeinitPtr<OctreeBrickPoolManagerBase> brickPoolManager(brickPoolManagerDisk);
+
     brickPoolManager->initialize(brickSizeInBytes);
 
     brickPoolManagerDisk->setRAMLimit(1UL * 1024 * 1024 * 1024); //TODO make configurable
@@ -605,6 +680,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             volumeDim
         }
     );
+    VolumeOctreeNodeTree tree(newRootNode);
 
     uint16_t globalMin = 0xffff;
     uint16_t globalMax = 0;
@@ -692,7 +768,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     }
 
 
-    auto output = tgt::make_unique<Volume>(new VolumeOctree(newRootNode, brickPoolManager, brickDim, input.octree_.getDimensions(), numChannels), &input.volume_);
+    auto output = tgt::make_unique<Volume>(new VolumeOctree(tree.release(), brickPoolManager.release(), brickDim, input.octree_.getDimensions(), numChannels), &input.volume_);
 
     float min = static_cast<float>(globalMin)/0xffff;
     float max = static_cast<float>(globalMax)/0xffff;
