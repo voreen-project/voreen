@@ -702,18 +702,26 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
         for(auto& node : nodesToProcess) {
             SubtaskProgressReporter progress(levelProgress, tgt::vec2(i*perNodeProgress, (i+1)*perNodeProgress));
             tgtAssert(node.inputNode, "No input node");
-            const uint16_t* brickData = input.octree_.getNodeBrick(node.inputNode);
-
-            tgtAssert(node.inputNode->hasBrick(), "No Brick");
-
-            OctreeBrick brick(brickData, brickDim, node.llf, node.urb, level);
-
-            auto newBrick = brickPoolManager->getWritableBrick(node.outputNode->getBrickAddress());
 
             uint16_t min = 0xffff;
             uint16_t max = 0;
             uint16_t avg = 0xffff/2;
-            processOctreeBrick(input, brick, newBrick, progress, histogram, min, max, avg, level==maxLevel ? nullptr : newRootNode, maxLevel, *brickPoolManager, level);
+            {
+                tgtAssert(node.inputNode->hasBrick(), "No Brick");
+                const uint16_t* brickData = input.octree_.getNodeBrick(node.inputNode);
+                tgt::ScopeGuard inputBrickGuard([&] {
+                    input.octree_.releaseNodeBrick(node.inputNode); // Release brick when exiting block
+                });
+
+                OctreeBrick brick(brickData, brickDim, node.llf, node.urb, level);
+
+                auto newBrick = brickPoolManager->getWritableBrick(node.outputNode->getBrickAddress());
+                tgt::ScopeGuard newBrickGuard([&] {
+                    brickPoolManager->releaseBrick(node.outputNode->getBrickAddress(), OctreeBrickPoolManagerBase::WRITE);// Release brick when exiting block
+                });
+
+                processOctreeBrick(input, brick, newBrick, progress, histogram, min, max, avg, level==maxLevel ? nullptr : newRootNode, maxLevel, *brickPoolManager, level);
+            }
 
             globalMin = std::min(globalMin, min);
             globalMax = std::max(globalMax, max);
@@ -724,14 +732,12 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             genericNode->minValues_[0] = min;
             genericNode->maxValues_[0] = max;
 
-            input.octree_.releaseNodeBrick(node.inputNode);
-            brickPoolManager->releaseBrick(node.outputNode->getBrickAddress(), OctreeBrickPoolManagerBase::WRITE);
-
             float range = static_cast<float>(max-min)/0xffff;
-            float fmin = static_cast<float>(min)/0xffff;
-            float fmax = static_cast<float>(max)/0xffff;
 
+            //float fmin = static_cast<float>(min)/0xffff;
+            //float fmax = static_cast<float>(max)/0xffff;
             //if(range < input.homogeneityThreshold_ || fmin > 0.6f || fmax < 0.4f) {
+
             if(range < input.homogeneityThreshold_) {
                 brickPoolManager->deleteBrick(node.outputNode->getBrickAddress());
                 node.outputNode->setBrickAddress(NO_BRICK_ADDRESS);
