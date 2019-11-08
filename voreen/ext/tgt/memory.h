@@ -28,6 +28,7 @@
 #include <memory>
 #include <type_traits>
 #include <utility>
+#include <functional>
 
 namespace tgt {
 
@@ -64,6 +65,29 @@ make_unique(size_t n) {
 template<class T, class... Args>
 typename _Unique_if<T>::_Known_bound
 make_unique(Args&&...) = delete;
+
+class ScopeGuard {
+public:
+    template< class Func >
+    ScopeGuard( Func const& cleanup )
+        : cleanup_( cleanup )
+    {}
+
+    ScopeGuard( ScopeGuard&& other )
+        : cleanup_( move( other.cleanup_ ) )
+    { other.dismiss(); }
+
+    ScopeGuard& operator=(ScopeGuard const&) = delete;
+    ScopeGuard(ScopeGuard const&) = delete;
+    ScopeGuard& operator=(ScopeGuard&&) = default;
+
+    ~ScopeGuard() { cleanup_(); }
+
+    void dismiss() { cleanup_ = []{}; }
+
+private:
+    std::function<void()> cleanup_;
+};
 
 } //namespace tgt
 
