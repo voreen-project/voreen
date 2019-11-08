@@ -158,10 +158,6 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
     }
 
-    if(filterList_.getInstances().empty()) {
-        throw InvalidInputException("No filter selected", InvalidInputException::S_ERROR);
-    }
-
     auto inputVolPtr = inport_.getThreadSafeData();
     const VolumeBase& inputVolume = *inputVolPtr;
 

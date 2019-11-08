@@ -115,7 +115,7 @@ std::vector<std::reference_wrapper<Port>> SimilarityMatrixCreator::getCriticalPo
     auto criticalPorts = AsyncComputeProcessor<ComputeInput, ComputeOutput>::getCriticalPorts();
     criticalPorts.erase(std::remove_if(criticalPorts.begin(), criticalPorts.end(), [this] (const std::reference_wrapper<Port>& port){
        return port.get().getID() == seedMask_.getID();
-    }));
+    }), criticalPorts.end());
     return criticalPorts;
 }
 

@@ -55,7 +55,7 @@ struct FlowSimulationOutput {
 };
 
 /**
- * This processor performs simulations using a parameter set and as input. TODO.
+ * This processor performs simulations using the incoming parameter set on the given geometry.
  */
 class VRN_CORE_API FlowSimulation : public AsyncComputeProcessor<FlowSimulationInput, FlowSimulationOutput> {
 public:
@@ -71,7 +71,7 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("This processor performs simulations using a parameter set and as input. TODO.");
+        setDescription("This processor performs simulations using the incoming parameter set on the given geometry.");
     }
 
     virtual void adjustPropertiesToInput();
