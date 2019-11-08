@@ -61,6 +61,9 @@ public:
     {
     }
 
+    // Save the current state of the properties as the state to be restored when calling `restore`.
+    //
+    // This function should be called at the very end of a `PropertyOwner`-constructor  in most cases.
     void saveState(std::function<bool(Property*)> shouldBeIgnored) {
         for(Property* property : owner_.getProperties()) {
             if(!shouldBeIgnored(property)) {

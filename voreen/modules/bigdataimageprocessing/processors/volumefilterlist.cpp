@@ -101,6 +101,8 @@ VolumeFilterList::VolumeFilterList()
     addProperty(outputVolumeDeflateLevel_);
         outputVolumeDeflateLevel_.setGroupID("output");
     setPropertyGroupGuiName("output", "Output");
+
+    propertyDisabler_.saveState([this] (Property* p) { return p == &enabled_; });
 }
 
 VolumeFilterList::~VolumeFilterList() {
@@ -120,7 +122,6 @@ bool VolumeFilterList::isReady() const {
 
 void VolumeFilterList::initialize() {
     AsyncComputeProcessor::initialize();
-    propertyDisabler_.saveState([this] (Property* p) { return p == &enabled_; });
 }
 
 Processor* VolumeFilterList::create() const {

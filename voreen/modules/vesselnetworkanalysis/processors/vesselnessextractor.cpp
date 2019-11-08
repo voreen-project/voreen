@@ -820,6 +820,7 @@ VesselnessExtractor::VesselnessExtractor()
     //addProperty(planeRejectorWeight_);
     //addProperty(intensityThreshold_);
         //intensityThreshold_.adaptDecimalsToRange(5);
+    propertyDisabler_.saveState([this] (Property* p) { return p == &enabled_; });
 }
 
 const static float BLOB_REJECTOR_WEIGHT = 0.5;
@@ -1000,6 +1001,5 @@ bool VesselnessExtractor::isReady() const {
 }
 void VesselnessExtractor::initialize() {
     AsyncComputeProcessor::initialize();
-    propertyDisabler_.saveState([this] (Property* p) { return p == &enabled_; });
 }
 }   // namespace
