@@ -64,29 +64,82 @@ protected:
 
 private:
 
-    void onSelectionChange();
-    void onConfigChange();
+    struct IndicatorSettings {
+        VGNodeID nodeId;
+        VGEdgeID edgeId;
+        int voxelId;
+    };
+
+    /**
+     * Callback that is triggered as soon as the selection was changed.
+     * This will set the related property values accordingly.
+     */
+    void onIndicatorSelectionChange();
+
+    /**
+     * Callback that is triggered as soon as properties of the selected indicator
+     * were changed. This will update the indicator accordingly.
+     */
+    void onIndicatorConfigChange();
+
+    /**
+     * Callback that is triggered as soon the voxel id has been changed.
+     * This will reset all
+     */
+    void onIndicatorPositionChange();
+
+    /**
+     * Callback that is triggered as soon as the vessel graph or reference volume changes.
+     * This will add new flow indicator candidates (and estimate their type).
+     */
     void onInputChange();
+
+    /**
+     * Callback for cloning the currently selected flow indicator (if any).
+     */
+    void onCloneFlowIndicator();
+
+    /**
+     * Callback for removing the currently selected flow indicator (if any).
+     */
+    void onRemoveFlowIndicator();
+
+    /**
+     * Estimates the indicator type. This does NOT overwrite already set indicator types.
+     */
+    FlowIndicatorType estimateType(const FlowIndicator& indicator, const tgt::vec3& velocity) const;
+
+    /**
+     * Updates the specified indicator according to the specified settings.
+     */
+    void updateIndicator(FlowIndicator& indicator, IndicatorSettings& settings);
+
+    /**
+     * Creates the overview table from the current flow indicator list.
+     * Note: This might remove the widget's focus!
+     */
     void buildTable();
 
-    FlowParametrizationPort flowParametrizationInport_;
+    FlowParametrizationPort parameterInport_;
     VesselGraphPort vesselGraphPort_;
     VolumePort volumePort_;
-    FlowParametrizationPort flowParametrizationOutport_;
+    FlowParametrizationPort parameterOutport;
 
-    OptionProperty<FlowDirection> flowDirection_;
+    OptionProperty<FlowIndicatorType> indicatorType_;
     OptionProperty<FlowProfile> flowProfile_;
     OptionProperty<FlowStartPhase> startPhaseFunction_;
     FloatProperty startPhaseDuration_;
     FloatProperty radius_;
+    FloatProperty targetVelocity_;
+    IntProperty voxelId_;
+    ButtonProperty cloneFlowIndicator_;
+    ButtonProperty removeFlowIndicator_;
 
     StringTableProperty flowIndicatorTable_;
-
-    IntProperty firstRefNode_;
-    IntProperty numRefNodes_;
     IntProperty angleThreshold_;
 
     std::vector<FlowIndicator> flowIndicators_;
+    std::vector<IndicatorSettings> indicatorSettings_;
     bool triggertBySelection_;
 
     static const std::string loggerCat_;

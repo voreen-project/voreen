@@ -32,11 +32,11 @@ enum FlowFeatures {
     FF_WALLSHEARSTRESS  = 8,
 };
 
-enum FlowDirection {
-    FD_NONE      = 0,
-    FD_IN        = 1,
-    FD_OUT       = 2,
-    FD_ARBITRARY = 3,
+enum FlowIndicatorType {
+    FIT_CANDIDATE       = 0,
+    FIT_GENERATOR       = 1,
+    FIT_PRESSURE        = 2,
+    FIT_MEASURE         = 3,
 };
 
 enum FlowProfile {
@@ -55,14 +55,14 @@ enum FlowStartPhase {
 // Indicates flux through an arbitrary, circle-shaped area.
 // This code is adapted from the voreen host code.
 struct FlowIndicator {
-    FlowDirection   direction_{FD_NONE};
-    FlowProfile     flowProfile_{FP_NONE};
-    FlowStartPhase  startPhaseFunction_{FSP_NONE};
-    T               startPhaseDuration_{0};
-    T               center_[3]{0};
-    T               normal_[3]{0};
-    T               radius_{0};
-    int             materialId_{0};
+    FlowIndicatorType   type_{FIT_CANDIDATE};
+    T                   center_[3]{0};
+    T                   normal_[3]{0};
+    T                   radius_{0};
+    FlowProfile         flowProfile_{FP_NONE};
+    FlowStartPhase      startPhaseFunction_{FSP_NONE};
+    T                   startPhaseDuration_{0};
+    int                 materialId_{0};
 };
 
 // Measured data.
@@ -199,7 +199,7 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
     }
 
     for(const FlowIndicator& indicator : flowIndicators) {
-        if(indicator.direction_ == FD_IN) {
+        if(indicator.type_ == FIT_GENERATOR) {
             if(bouzidiOn) {
                 // no dynamics + bouzidi velocity (inflow)
                 lattice.defineDynamics(superGeometry, indicator.materialId_, &instances::getNoDynamics<T, DESCRIPTOR>());
@@ -211,7 +211,7 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
                 bc.addVelocityBoundary(superGeometry, indicator.materialId_, omega);
             }
         }
-        else if(indicator.direction_ == FD_OUT) {
+        else if(indicator.type_ == FIT_PRESSURE) {
             lattice.defineDynamics(superGeometry, indicator.materialId_, &bulkDynamics);
             bc.addPressureBoundary(superGeometry, indicator.materialId_, omega);
         }
@@ -257,7 +257,7 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     if (iT % iTupdate == 0) {
         for(const FlowIndicator& indicator : flowIndicators) {
-            if (indicator.direction_ == FD_IN) {
+            if (indicator.type_ == FIT_GENERATOR) {
 
                 int iTvec[1] = {iT};
                 T maxVelocity[1] = {T()};
@@ -627,10 +627,7 @@ int main(int argc, char* argv[]) {
     XMLreader indicators = config["flowIndicators"];
     for(auto iter : indicators) {
         FlowIndicator indicator;
-        indicator.direction_            = static_cast<FlowDirection>(std::atoi((*iter)["direction"].getAttribute("value").c_str()));
-        indicator.flowProfile_          = static_cast<FlowProfile>(std::atoi((*iter)["flowProfile"].getAttribute("value").c_str()));
-        indicator.startPhaseFunction_   = static_cast<FlowStartPhase>(std::atoi((*iter)["startPhaseFunction"].getAttribute("value").c_str()));
-        indicator.startPhaseDuration_   = std::atof((*iter)["startPhaseDuration"].getAttribute("value").c_str());
+        indicator.type_                 = static_cast<FlowIndicatorType>(std::atoi((*iter)["type_"].getAttribute("value").c_str()));
         indicator.center_[0]            = std::atof((*iter)["center"].getAttribute("x").c_str());
         indicator.center_[1]            = std::atof((*iter)["center"].getAttribute("y").c_str());
         indicator.center_[2]            = std::atof((*iter)["center"].getAttribute("z").c_str());
@@ -638,6 +635,9 @@ int main(int argc, char* argv[]) {
         indicator.normal_[1]            = std::atof((*iter)["normal"].getAttribute("y").c_str());
         indicator.normal_[2]            = std::atof((*iter)["normal"].getAttribute("z").c_str());
         indicator.radius_               = std::atof((*iter)["radius"].getAttribute("value").c_str());
+        indicator.flowProfile_          = static_cast<FlowProfile>(std::atoi((*iter)["flowProfile"].getAttribute("value").c_str()));
+        indicator.startPhaseFunction_   = static_cast<FlowStartPhase>(std::atoi((*iter)["startPhaseFunction"].getAttribute("value").c_str()));
+        indicator.startPhaseDuration_   = std::atof((*iter)["startPhaseDuration"].getAttribute("value").c_str());
         flowIndicators.push_back(indicator);
     }
     clout << "Found " << flowIndicators.size() << " Flow Indicators" << std::endl;

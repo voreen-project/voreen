@@ -208,7 +208,7 @@ void FlowSimulationCluster::enqueueSimulations() {
         return;
     }
 
-    const FlowParametrizationList* flowParametrization = parameterPort_.getData();
+    const FlowParameterSetEnsemble* flowParametrization = parameterPort_.getData();
     if (!flowParametrization || flowParametrization->empty()) {
         VoreenApplication::app()->showMessageBox("Error", "No parametrization. Did you add one?", true);
         LERROR("No parametrization");
@@ -414,7 +414,7 @@ void FlowSimulationCluster::fetchResults() {
     std::string address = username + "@" + clusterAddress;
     std::string simulationPath = dataPath_.get() + "/" + username + "/simulations/" + simulationType_.get();
     std::string source = address + ":" + simulationPath;
-    const FlowParametrizationList* parametrizationList = parameterPort_.getData();
+    const FlowParameterSetEnsemble* parametrizationList = parameterPort_.getData();
     if (parametrizationList) {
         source += "/" + parametrizationList->getName();
 
@@ -426,7 +426,7 @@ void FlowSimulationCluster::fetchResults() {
 
         std::vector<std::string> failed;
         bool deletionFailed = false;
-        for(const FlowParameters& parameters : parametrizationList->getFlowParametrizations()) {
+        for(const FlowParameterSet& parameters : parametrizationList->getFlowParameterSets()) {
             std::string command = "scp -r ";
             command += source + "/" + parameters.getName() + " ";
             command += dest;

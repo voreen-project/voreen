@@ -23,57 +23,50 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_FLOWINDICATORRENDERER_H
-#define VRN_FLOWINDICATORRENDERER_H
+#ifndef VRN_FLOWINDICATORANALYSIS_H
+#define VRN_FLOWINDICATORANALYSIS_H
 
-#include "voreen/core/processors/geometryrendererbase.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
 
-#include "voreen/core/properties/colorproperty.h"
-#include "voreen/core/datastructures/geometry/glmeshgeometry.h"
-
+#include "voreen/core/ports/genericport.h"
+#include "modules/plotting/ports/plotport.h"
+#include "modules/plotting/datastructures/plotdata.h"
 #include "../../ports/flowparametrizationport.h"
 
 namespace voreen {
 
-/**
- * Used to render in and out flow locations.
- */
-class VRN_CORE_API FlowIndicatorRenderer : public GeometryRendererBase {
-public:
-    FlowIndicatorRenderer();
+struct FlowIndicatorAnalysisInput {
+    PortDataPointer<VolumeList> volumes;
+    std::vector<FlowIndicator> indicators;
+    std::unique_ptr<PlotData> output;
+};
 
-    virtual Processor* create() const { return new FlowIndicatorRenderer(); }
-    virtual std::string getCategory() const  { return "Geometry"; }
-    virtual std::string getClassName() const { return "FlowIndicatorRenderer"; }
+struct FlowIndicatorAnalysisOutput {
+    std::unique_ptr<PlotData> plotData;
+};
+
+class VRN_CORE_API FlowIndicatorAnalysis : public AsyncComputeProcessor<FlowIndicatorAnalysisInput, FlowIndicatorAnalysisOutput> {
+public:
+    FlowIndicatorAnalysis();
+    virtual Processor* create() const { return new FlowIndicatorAnalysis(); }
+
+    virtual std::string getCategory() const  { return "Plotting"; }
+    virtual std::string getClassName() const { return "FlowIndicatorAnalysis"; }
     virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL; }
 
-    virtual void render();
-
-    virtual tgt::Bounds getBoundingBox() const;
-
 protected:
-    virtual void setDescriptions() {
-        setDescription("Used to render in and out flow locations.");
-    }
 
-    void process();
-
-    virtual void initialize();
-    virtual void deinitialize();
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
 
 private:
 
-    FlowParametrizationPort inport_;
-
-    BoolProperty enable_;
-    ColorProperty flowGeneratorColor_;
-    ColorProperty pressureBoundaryColor_;
-    ColorProperty measureFluxColor_;
-
-    GlMeshGeometryUInt16Simple* geometry_;
+    FlowParametrizationPort parameterPort_;
+    VolumeListPort volumeListPort_;
+    PlotPort outport_;
 };
 
-}
-
+} //namespace
 #endif
 

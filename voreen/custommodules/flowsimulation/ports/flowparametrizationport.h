@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_FLOWPARAMETERPORT_H
-#define VRN_FLOWPARAMETERPORT_H
+#ifndef VRN_FLOWPARAMETRIZATIONPORT_H
+#define VRN_FLOWPARAMETRIZATIONPORT_H
 
 #include "voreen/core/ports/genericport.h"
 
@@ -33,11 +33,11 @@
 namespace voreen {
 
 /**
- * Port containing parametrizations for flow simulations.
+ * Port containing a parameter ensemble for flow simulations.
  *
- * @see FlowParameters
+ * @see FlowParameterSet
  */
-class FlowParametrizationPort : public GenericPort<FlowParametrizationList> {
+class FlowParametrizationPort : public GenericPort<FlowParameterSetEnsemble> {
 public:
     FlowParametrizationPort(PortDirection direction, const std::string& id, const std::string& guiName = "",
                        bool allowMultipleConnections = false, Processor::InvalidationLevel invalidationLevel = Processor::INVALID_RESULT);
@@ -51,4 +51,4 @@ public:
 
 } // namespace voreen
 
-#endif //VRN_FLOWPARAMETERPORT_H
+#endif //VRN_FLOWPARAMETRIZATIONPORT_H

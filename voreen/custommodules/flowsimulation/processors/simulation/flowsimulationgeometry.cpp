@@ -57,7 +57,7 @@ FlowSimulationGeometry::FlowSimulationGeometry()
 
 void FlowSimulationGeometry::process() {
 
-    auto* flowParametrizationList = new FlowParametrizationList(*flowParametrizationInport_.getData());
+    auto* flowParametrizationList = new FlowParameterSetEnsemble(*flowParametrizationInport_.getData());
     auto* geometry = new GlMeshGeometryUInt32Normal();
 
     switch(geometryType_.getValue()) {
@@ -67,7 +67,7 @@ void FlowSimulationGeometry::process() {
         geometry->setTransformationMatrix(transformation_.get());
 
         FlowIndicator inlet;
-        inlet.direction_ = FD_IN;
+        inlet.type_ = FIT_GENERATOR;
         inlet.flowProfile_ = flowProfile_.getValue();
         inlet.startPhaseFunction_ = FSP_SINUS;
         inlet.startPhaseDuration_ = 0.25f;
@@ -77,7 +77,7 @@ void FlowSimulationGeometry::process() {
         flowParametrizationList->addFlowIndicator(inlet);
 
         FlowIndicator outlet;
-        outlet.direction_ = FD_OUT;
+        outlet.type_ = FIT_PRESSURE;
         outlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 1.0f);
         outlet.normal_ = transformation_.get().getRotationalPart() * tgt::vec3(0.0f, 0.0f, 1.0f);
         outlet.radius_ = ratio_.get();

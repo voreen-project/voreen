@@ -28,7 +28,7 @@
 namespace voreen {
 
 FlowParametrizationPort::FlowParametrizationPort(PortDirection direction, const std::string& id, const std::string& guiName, bool allowMultipleConnections, Processor::InvalidationLevel invalidationLevel)
-    : GenericPort<FlowParametrizationList>(direction, id, guiName, allowMultipleConnections, invalidationLevel) {
+    : GenericPort<FlowParameterSetEnsemble>(direction, id, guiName, allowMultipleConnections, invalidationLevel) {
 }
 
 std::string FlowParametrizationPort::getClassName() const {
@@ -48,7 +48,7 @@ std::string FlowParametrizationPort::getContentDescription() const {
     strstr << Port::getContentDescription();
     if(hasData()) {
         strstr << std::endl << "Name: " << getData()->getName();
-        strstr << std::endl << "Members: " << getData()->getFlowParametrizations().size();
+        strstr << std::endl << "Members: " << getData()->getFlowParameterSets().size();
         strstr << std::endl << "Indicators: " << getData()->getFlowIndicators().size();
     }
     return strstr.str();
@@ -59,7 +59,7 @@ std::string FlowParametrizationPort::getContentDescriptionHTML() const {
     strstr << Port::getContentDescriptionHTML();
     if(hasData()) {
         strstr << "<br>" << "Name: " << getData()->getName();
-        strstr << "<br>" << "Members: " << getData()->getFlowParametrizations().size();
+        strstr << "<br>" << "Members: " << getData()->getFlowParameterSets().size();
         strstr << "<br>" << "Indicators: " << getData()->getFlowIndicators().size();
     }
     return strstr.str();

@@ -132,14 +132,14 @@ bool FlowSimulation::isReady() const {
 }
 
 void FlowSimulation::adjustPropertiesToInput() {
-    const FlowParametrizationList* flowParameterList = parameterPort_.getData();
-    if(!flowParameterList || flowParameterList->empty()) {
+    const FlowParameterSetEnsemble* flowParameterSetEnsemble = parameterPort_.getData();
+    if(!flowParameterSetEnsemble || flowParameterSetEnsemble->empty()) {
         selectedParametrization_.setMinValue(-1);
         selectedParametrization_.setMaxValue(-1);
     }
     else {
         selectedParametrization_.setMinValue(0);
-        selectedParametrization_.setMaxValue(static_cast<int>(flowParameterList->size())-1);
+        selectedParametrization_.setMaxValue(static_cast<int>(flowParameterSetEnsemble->size()) - 1);
         selectedParametrization_.set(0);
     }
 }
@@ -154,12 +154,12 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     const VolumeList* measuredData = measuredDataPort_.getThreadSafeData();
 
     tgtAssert(parameterPort_.isDataInvalidationObservable(), "FlowParametrizationPort must be DataInvalidationObservable!");
-    const FlowParametrizationList* flowParameterList = parameterPort_.getThreadSafeData();
-    if(!flowParameterList || flowParameterList->empty()) {
+    auto flowParameterSetEnsemble = parameterPort_.getThreadSafeData();
+    if(!flowParameterSetEnsemble || flowParameterSetEnsemble->empty()) {
         throw InvalidInputException("No parameterization", InvalidInputException::S_ERROR);
     }
 
-    if(flowParameterList->getFlowFeatures() == FF_NONE) {
+    if(flowParameterSetEnsemble->getFlowFeatures() == FF_NONE) {
         throw InvalidInputException("No flow feature selected", InvalidInputException::S_WARNING);
     }
 
@@ -193,12 +193,12 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
         throw InvalidInputException("No output directory selected", InvalidInputException::S_WARNING);
     }
 
-    std::string simulationPath = simulationResults_.get() + "/" + flowParameterList->getName() + "/";
+    std::string simulationPath = simulationResults_.get() + "/" + flowParameterSetEnsemble->getName() + "/";
     if (!tgt::FileSystem::createDirectoryRecursive(simulationPath)) {
         throw InvalidInputException("Output directory could not be created", InvalidInputException::S_ERROR);
     }
 
-    size_t selectedParametrization = FlowParametrizationList::ALL_PARAMETRIZATIONS;
+    size_t selectedParametrization = FlowParameterSetEnsemble::ALL_PARAMETER_SETS;
     if(!simulateAllParametrizations_.get()) {
         selectedParametrization = static_cast<size_t>(selectedParametrization_.get());
     }
@@ -206,7 +206,7 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     return FlowSimulationInput{
             geometryPath,
             measuredData,
-            flowParameterList,
+            flowParameterSetEnsemble,
             selectedParametrization,
             simulationPath,
             deleteOldSimulations_.get()
@@ -219,9 +219,9 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
     olb::olbInit(nullptr, nullptr);
 
     // Run either all or just a single simulation.
-    if(input.selectedParametrization == FlowParametrizationList::ALL_PARAMETRIZATIONS) {
+    if(input.selectedParametrization == FlowParameterSetEnsemble::ALL_PARAMETER_SETS) {
         progressReporter.setProgress(0.0f);
-        size_t numRuns = input.parametrizationList->size();
+        size_t numRuns = input.parameterSetEnsemble->size();
         for(size_t i=0; i<numRuns; i++) {
             // Define run input.
             FlowSimulationInput runInput = input;
@@ -250,8 +250,8 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
                                    ProgressReporter& progressReporter) const {
 
     const VolumeList* measuredData = input.measuredData;
-    const FlowParametrizationList& parametrizationList = *input.parametrizationList;
-    const FlowParameters& parameters = parametrizationList.at(input.selectedParametrization);
+    const FlowParameterSetEnsemble& parameterSetEnsemble = *input.parameterSetEnsemble;
+    const FlowParameterSet& parameters = parameterSetEnsemble.at(input.selectedParametrization);
 
     LINFO("Starting simulation run: " << parameters.getName());
     progressReporter.setProgress(0.0f);
@@ -287,9 +287,9 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     interruptionPoint();
 
     std::vector<FlowIndicatorMaterial> flowIndicators;
-    for(const FlowIndicator& indicator : parametrizationList.getFlowIndicators()) {
+    for(const FlowIndicator& indicator : parameterSetEnsemble.getFlowIndicators()) {
         FlowIndicatorMaterial indicatorMaterial;
-        indicatorMaterial.direction_            = indicator.direction_;
+        indicatorMaterial.type_            = indicator.type_;
         indicatorMaterial.flowProfile_          = indicator.flowProfile_;
         indicatorMaterial.startPhaseFunction_   = indicator.startPhaseFunction_;
         indicatorMaterial.startPhaseDuration_   = indicator.startPhaseDuration_;
@@ -313,7 +313,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     interruptionPoint();
 
     prepareGeometry(converter, extendedDomain, stlReader, superGeometry,
-                    parametrizationList, input.selectedParametrization,
+                    parameterSetEnsemble, input.selectedParametrization,
                     flowIndicators);
 
     interruptionPoint();
@@ -339,26 +339,26 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
                    sBoundaryCondition, sOffBoundaryCondition,
                    stlReader, superGeometry,
                    measuredData,
-                   parametrizationList, input.selectedParametrization,
+                   parameterSetEnsemble, input.selectedParametrization,
                    flowIndicators);
 
     interruptionPoint();
 
     // === 4th Step: Main Loop  ===
-    const int tmax = converter.getLatticeTime(parametrizationList.getSimulationTime());
+    const int tmax = converter.getLatticeTime(parameterSetEnsemble.getSimulationTime());
     util::ValueTracer<T> converge( converter.getLatticeTime(0.5), 1e-5);
     for (int ti = 0; ti <= tmax; ti++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
         setBoundaryValues(sLattice, sOffBoundaryCondition, converter, ti, superGeometry,
-                          parametrizationList, input.selectedParametrization, flowIndicators);
+                          parameterSetEnsemble, input.selectedParametrization, flowIndicators);
 
         // === 6th Step: Collide and Stream Execution ===
         sLattice.collideAndStream();
 
         // === 7th Step: Computation and Output of the Results ===
         bool success = getResults(sLattice, converter, ti, tmax, bulkDynamics, superGeometry, stlReader,
-                                  parametrizationList, input.selectedParametrization, flowIndicators,
+                                  parameterSetEnsemble, input.selectedParametrization, flowIndicators,
                                   simulationResultPath);
         if(!success) {
             break;
@@ -381,7 +381,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 // Stores data from stl file in geometry in form of material numbers
 void FlowSimulation::prepareGeometry( UnitConverter<T,DESCRIPTOR> const& converter, IndicatorF3D<T>& indicator,
                                       STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry,
-                                      const FlowParametrizationList& parametrizationList,
+                                      const FlowParameterSetEnsemble& parametrizationList,
                                       size_t selectedParametrization,
                                       std::vector<FlowIndicatorMaterial>& flowIndicators) const {
 
@@ -426,7 +426,7 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
                                      sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
                                      STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry,
                                      const VolumeList* measuredData,
-                                     const FlowParametrizationList& parametrizationList,
+                                     const FlowParameterSetEnsemble& parametrizationList,
                                      size_t selectedParametrization,
                                      std::vector<FlowIndicatorMaterial>& flowIndicators) const {
 
@@ -451,7 +451,7 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
     }
 
     for(const FlowIndicatorMaterial& indicator : flowIndicators) {
-        if(indicator.direction_ == FD_IN) {
+        if(indicator.type_ == FIT_GENERATOR) {
             if(bouzidiOn) {
                 // no dynamics + bouzidi velocity (inflow)
                 lattice.defineDynamics(superGeometry, indicator.materialId_, &instances::getNoDynamics<T, DESCRIPTOR>());
@@ -463,7 +463,7 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
                 bc.addVelocityBoundary(superGeometry, indicator.materialId_, omega);
             }
         }
-        else if(indicator.direction_ == FD_OUT) {
+        else if(indicator.type_ == FIT_PRESSURE) {
             lattice.defineDynamics(superGeometry, indicator.materialId_, &bulkDynamics);
             bc.addPressureBoundary(superGeometry, indicator.materialId_, omega);
         }
@@ -503,7 +503,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                         sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
                                         UnitConverter<T,DESCRIPTOR> const& converter, int iT,
                                         SuperGeometry3D<T>& superGeometry,
-                                        const FlowParametrizationList& parametrizationList,
+                                        const FlowParameterSetEnsemble& parametrizationList,
                                         size_t selectedParametrization,
                                         std::vector<FlowIndicatorMaterial>& flowIndicators) const {
     // No of time steps for smooth start-up
@@ -512,7 +512,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     if (iT % iTupdate == 0) {
         for(const FlowIndicatorMaterial& indicator : flowIndicators) {
-            if (indicator.direction_ == FD_IN) {
+            if (indicator.type_ == FIT_GENERATOR) {
 
                 int iTvec[1] = {iT};
                 T maxVelocity[1] = {T()};
@@ -595,7 +595,7 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                  Dynamics<T, DESCRIPTOR>& bulkDynamics,
                                  SuperGeometry3D<T>& superGeometry,
                                  STLreader<T>& stlReader,
-                                 const FlowParametrizationList& parametrizationList,
+                                 const FlowParameterSetEnsemble& parametrizationList,
                                  size_t selectedParametrization,
                                  std::vector<FlowIndicatorMaterial>& flowIndicators,
                                  const std::string& simulationOutputPath) const {
@@ -667,7 +667,7 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
 void FlowSimulation::writeResult(STLreader<T>& stlReader,
                                  UnitConverter<T,DESCRIPTOR>& converter, int ti, int tmax,
                                  SuperLatticeF3D<T, DESCRIPTOR>& feature,
-                                 const FlowParametrizationList& parametrizationList,
+                                 const FlowParameterSetEnsemble& parametrizationList,
                                  size_t selectedParametrization,
                                  const std::string& simulationOutputPath,
                                  const std::string& name) const {
@@ -761,7 +761,7 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
     std::string rawFilename = simulationOutputPath + featureFilename + ".raw";
     std::string vvdFilename = simulationOutputPath + featureFilename + ".vvd";
 
-    const FlowParameters& parameters = parametrizationList.at(selectedParametrization);
+    const FlowParameterSet& parameters = parametrizationList.at(selectedParametrization);
     const LatticeStatistics<T>& statistics = feature.getSuperLattice().getStatistics();
     std::fstream vvdFeatureFile(vvdFilename.c_str(), std::ios::out);
     vvdFeatureFile

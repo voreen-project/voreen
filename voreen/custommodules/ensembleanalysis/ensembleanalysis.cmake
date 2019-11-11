@@ -14,7 +14,6 @@ IF(NOT VRN_MODULE_PLOTTING) # for plotting
 ENDIF()
 
 SET(MOD_CORE_MODULECLASS EnsembleAnalysisModule)
-SET(MOD_OPENGL_CORE_PROFILE_COMPATIBLE ON)
 
 # External libraries
 OPTION(VRN_USE_VTK "Use VTK for conversion into HDF5" ON)

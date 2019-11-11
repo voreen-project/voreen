@@ -148,7 +148,7 @@ void FlowParametrizationRun::fluidChanged() {
 void FlowParametrizationRun::addParametrizations() {
 
     std::string name = parametrizationName_.get();
-    for(const FlowParameters& params : flowParameters_) {
+    for(const FlowParameterSet& params : flowParameters_) {
         if(params.getName().find(name) != std::string::npos) {
             VoreenApplication::app()->showMessageBox("Warning", "Already parametrization added with the same prefix");
             LWARNING("Already parametrization with prefix " << name);
@@ -166,7 +166,7 @@ void FlowParametrizationRun::addParametrizations() {
     bool bouzidi = bouzidi_.get();
 //   for (bool bouzidi : {true, false})
     {
-        FlowParameters parameters(name);
+        FlowParameterSet parameters(name);
         parameters.setSpatialResolution(spatialResolution);
         parameters.setTemporalResolution(characteristicLength / (spatialResolution * temporalResolution));
         //parameters.setTemporalResolution(temporalResolution);
@@ -221,10 +221,10 @@ void FlowParametrizationRun::adjustPropertiesToInput() {
 
 void FlowParametrizationRun::process() {
 
-    FlowParametrizationList* flowParametrizationList = new FlowParametrizationList(*inport_.getData());
+    FlowParameterSetEnsemble* flowParametrizationList = new FlowParameterSetEnsemble(*inport_.getData());
 
-    for (const FlowParameters& flowParameters : flowParameters_) {
-        flowParametrizationList->addFlowParameters(flowParameters);
+    for (const FlowParameterSet& flowParameters : flowParameters_) {
+        flowParametrizationList->addFlowParameterSet(flowParameters);
     }
 
     outport_.setData(flowParametrizationList);

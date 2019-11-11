@@ -61,7 +61,7 @@ FlowParametrizationEnsemble::FlowParametrizationEnsemble()
 
 void FlowParametrizationEnsemble::process() {
 
-    FlowParametrizationList* flowParametrizationList = new FlowParametrizationList(ensembleName_.get());
+    FlowParameterSetEnsemble* flowParametrizationList = new FlowParameterSetEnsemble(ensembleName_.get());
     flowParametrizationList->setSimulationTime(simulationTime_.get());
     flowParametrizationList->setNumTimeSteps(numTimeSteps_.get());
     flowParametrizationList->setOutputResolution(outputResolution_.get());

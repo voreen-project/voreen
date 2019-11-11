@@ -2,6 +2,16 @@
 # Core module resources
 ################################################################################
 
+IF(NOT VRN_MODULE_PYTHON) # for converting
+    MESSAGE(WARNING "FlowSimulation Module requires Python Module for converter scripts")
+ENDIF()
+IF(NOT VRN_MODULE_VESSELNETWORKANALYSIS) # for flow indicator detection
+    MESSAGE(WARNING "FlowSimulation Module requires VesselNetworkAnalysis Module for flow indicator detection")
+ENDIF()
+IF(NOT VRN_MODULE_PLOTTING) # for flow indicator analysis
+    MESSAGE(WARNING "FlowSimulation Module requires Plotting Module for flow indicator analysis")
+ENDIF()
+
 SET(MOD_CORE_MODULECLASS FlowSimulationModule)
 
 SET(MOD_CORE_SOURCES
@@ -27,6 +37,9 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/simulation/flowsimulationgeometry.cpp
     ${MOD_DIR}/processors/volume/gaussiannoise.cpp
     ${MOD_DIR}/processors/volume/volumelistadapter.cpp
+
+    # utils
+    ${MOD_DIR}/utils/utils.cpp
 )
 
 SET(MOD_CORE_HEADERS
@@ -52,6 +65,9 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/simulation/flowsimulationgeometry.h
     ${MOD_DIR}/processors/volume/gaussiannoise.h
     ${MOD_DIR}/processors/volume/volumelistadapter.h
+
+    # utils
+    ${MOD_DIR}/utils/utils.h
 )
 
 IF(VRN_MODULE_VESSELNETWORKANALYSIS)
@@ -60,6 +76,15 @@ IF(VRN_MODULE_VESSELNETWORKANALYSIS)
     )
     SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
         ${MOD_DIR}/processors/simulation/flowindicatordetection.cpp
+    )
+ENDIF()
+
+IF(VRN_MODULE_PLOTTING)
+    SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
+        ${MOD_DIR}/processors/simulation/flowindicatoranalysis.h
+    )
+    SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
+        ${MOD_DIR}/processors/simulation/flowindicatoranalysis.cpp
     )
 ENDIF()
 

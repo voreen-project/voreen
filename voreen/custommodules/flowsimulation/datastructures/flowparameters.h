@@ -35,6 +35,8 @@
 
 namespace voreen {
 
+// List of flow features which can be extracted during simulation.
+// Values have to be power of two (bitfield).
 enum FlowFeatures {
     FF_NONE             = 0,
     FF_VELOCITY         = 1,
@@ -43,11 +45,11 @@ enum FlowFeatures {
     FF_WALLSHEARSTRESS  = 8,
 };
 
-enum FlowDirection {
-    FD_NONE      = 0,
-    FD_IN        = 1,
-    FD_OUT       = 2,
-    FD_ARBITRARY = 3,
+enum FlowIndicatorType {
+    FIT_CANDIDATE = 0, ///< This indicator is just a candidate and has no function yet.
+    FIT_GENERATOR = 1, ///< This indicator is flow generating.
+    FIT_PRESSURE  = 2, ///< This indicator is a pressure boundary.
+    FIT_MEASURE   = 3, ///< This indicator serves as a flux measure.
 };
 
 enum FlowProfile {
@@ -65,32 +67,35 @@ enum FlowStartPhase {
 
 // Indicates flux through an arbitrary, circle-shaped area.
 struct VRN_CORE_API FlowIndicator : public Serializable {
-    FlowDirection   direction_;
 
-    FlowProfile     flowProfile_;
+    FlowIndicatorType   type_;
+    tgt::vec3           center_;
+    tgt::vec3           normal_;
+    float               radius_;
 
-    FlowStartPhase  startPhaseFunction_;
-    float           startPhaseDuration_;
+    // Used by generating flow indicators:
+    FlowProfile         flowProfile_;
 
-    tgt::vec3       center_;
-    tgt::vec3       normal_;
-    float           radius_;
+    FlowStartPhase      startPhaseFunction_;
+    float               startPhaseDuration_;
+
+    float               targetVelocity_; // TODO: remove.
 
     FlowIndicator();
 
-    virtual void serialize(Serializer& s) const override;
-    virtual void deserialize(Deserializer& s) override;
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
 };
 
 /**
  * Datastructure used to represent flow parameters for setting up a flow simulation. It is used in the flowsimulation module.
  */
-class VRN_CORE_API FlowParameters : public Serializable {
+class VRN_CORE_API FlowParameterSet : public Serializable {
 public:
 
     /** Constructor */
-    FlowParameters(); // For deserialization only.
-    explicit FlowParameters(const std::string& name);
+    FlowParameterSet(); // For deserialization only.
+    explicit FlowParameterSet(const std::string& name);
 
     /**
      * This function generates a unique and distinguishable name for each parametrization.
@@ -153,7 +158,7 @@ public:
 
 private:
 
-    // Identifier of the parameterization.
+    // Identifier of the parameter set.
     std::string name_;
 
     // All other relevant parameters.
@@ -170,16 +175,16 @@ private:
 /**
  * Parametrization List, implementing thread safety for AsyncComputeProcessor.
  */
-class VRN_CORE_API FlowParametrizationList : public DataInvalidationObservable, public Serializable {
+class VRN_CORE_API FlowParameterSetEnsemble : public DataInvalidationObservable, public Serializable {
 
     static const int VERSION;
 
 public:
 
-    static const size_t ALL_PARAMETRIZATIONS;
+    static const size_t ALL_PARAMETER_SETS;
 
-    explicit FlowParametrizationList(const std::string& name);
-    FlowParametrizationList(const FlowParametrizationList& origin);
+    explicit FlowParameterSetEnsemble(const std::string& name);
+    FlowParameterSetEnsemble(const FlowParameterSetEnsemble& origin);
 
     const std::string& getName() const;
 
@@ -212,23 +217,20 @@ public:
     int getFlowFeatures() const;
     void setFlowFeatures(int flowFeatures);
 
-    /** Overrides flow function for each inflow indicator. Therefore, no getter exists */
-    void setStartPhaseFunction(FlowStartPhase startPhaseFunction);
-
     void addFlowIndicator(const FlowIndicator& flowIndicator);
     const std::vector<FlowIndicator>& getFlowIndicators() const;
 
-    void addFlowParameters(const FlowParameters& parameters);
-    const std::vector<FlowParameters>& getFlowParametrizations() const;
+    void addFlowParameterSet(const FlowParameterSet& parameters);
+    const std::vector<FlowParameterSet>& getFlowParameterSets() const;
 
     // Shortcuts
     bool empty() const;
     size_t size() const;
-    const FlowParameters& at(size_t index) const;
+    const FlowParameterSet& at(size_t index) const;
 
     /** Used to export parametrization file. */
-    std::string toJSONString(size_t param = ALL_PARAMETRIZATIONS) const;
-    std::string toXMLString(size_t param = ALL_PARAMETRIZATIONS) const;
+    std::string toJSONString(size_t param = ALL_PARAMETER_SETS) const;
+    std::string toXMLString(size_t param = ALL_PARAMETER_SETS) const;
 
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
@@ -250,7 +252,7 @@ private:
     std::vector<FlowIndicator> flowIndicators_;
 
     // Actual parameters.
-    std::vector<FlowParameters> flowParametrizations_;
+    std::vector<FlowParameterSet> flowParameterSets;
 };
 
 }   // namespace

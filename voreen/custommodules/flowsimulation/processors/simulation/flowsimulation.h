@@ -44,7 +44,7 @@ namespace voreen {
 struct FlowSimulationInput {
     std::string geometryPath;
     const VolumeList* measuredData;
-    const FlowParametrizationList* parametrizationList;
+    const FlowParameterSetEnsemble* parameterSetEnsemble;
     size_t selectedParametrization;
     std::string simulationResultPath;
     bool deleteOldSimulations;
@@ -116,7 +116,7 @@ private:
 
     void prepareGeometry(   UnitConverter<T,DESCRIPTOR> const& converter, IndicatorF3D<T>& indicator,
                             STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry,
-                            const FlowParametrizationList& parametrizationList,
+                            const FlowParameterSetEnsemble& parametrizationList,
                             size_t selectedParametrization,
                             std::vector<FlowIndicatorMaterial>& flowIndicators) const;
 
@@ -127,7 +127,7 @@ private:
                             sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
                             STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry,
                             const VolumeList* measuredData,
-                            const FlowParametrizationList& parametrizationList,
+                            const FlowParameterSetEnsemble& parametrizationList,
                             size_t selectedParametrization,
                             std::vector<FlowIndicatorMaterial>& flowIndicators) const;
 
@@ -135,7 +135,7 @@ private:
                             sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
                             UnitConverter<T,DESCRIPTOR> const& converter, int iT,
                             SuperGeometry3D<T>& superGeometry,
-                            const FlowParametrizationList& parametrizationList,
+                            const FlowParameterSetEnsemble& parametrizationList,
                             size_t selectedParametrization,
                             std::vector<FlowIndicatorMaterial>& flowIndicators) const;
 
@@ -144,7 +144,7 @@ private:
                             Dynamics<T, DESCRIPTOR>& bulkDynamics,
                             SuperGeometry3D<T>& superGeometry,
                             STLreader<T>& stlReader,
-                            const FlowParametrizationList& parametrizationList,
+                            const FlowParameterSetEnsemble& parametrizationList,
                             size_t selectedParametrization,
                             std::vector<FlowIndicatorMaterial>& flowIndicators,
                             const std::string& simulationResultPath) const;
@@ -152,7 +152,7 @@ private:
     void writeResult(       STLreader<T>& stlReader,
                             UnitConverter<T,DESCRIPTOR>& converter, int ti, int tmax,
                             SuperLatticeF3D<T, DESCRIPTOR>& feature,
-                            const FlowParametrizationList& parametrizationList,
+                            const FlowParameterSetEnsemble& parametrizationList,
                             size_t selectedParametrization,
                             const std::string& simulationOutputPath,
                             const std::string& name) const;

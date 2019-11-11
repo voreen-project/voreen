@@ -27,26 +27,7 @@
 
 #include "tgt/immediatemode/immediatemode.h"
 
-namespace {
-
-tgt::mat4 createTransformationMatrix(const tgt::vec3& position, const tgt::vec3& velocity) {
-
-    tgt::vec3 tangent(tgt::normalize(velocity));
-
-    tgt::vec3 temp(0.0f, 0.0f, 1.0f);
-    if(1.0f - std::abs(tgt::dot(temp, tangent)) <= std::numeric_limits<float>::epsilon())
-        temp = tgt::vec3(0.0f, 1.0f, 0.0f);
-
-    tgt::vec3 binormal(tgt::normalize(tgt::cross(temp, tangent)));
-    tgt::vec3 normal(tgt::normalize(tgt::cross(tangent, binormal)));
-
-    return tgt::mat4(normal.x, binormal.x, tangent.x, position.x,
-                     normal.y, binormal.y, tangent.y, position.y,
-                     normal.z, binormal.z, tangent.z, position.z,
-                     0.0f, 0.0f, 0.0f, 1.0f);
-}
-
-}
+#include "../../utils/utils.h"
 
 namespace voreen {
 
@@ -54,15 +35,17 @@ FlowIndicatorRenderer::FlowIndicatorRenderer()
     : GeometryRendererBase()
     , inport_(Port::INPORT, "parametrization", "Parametrization Input")
     , enable_("enable", "Enable", true)
-    , inFlowColor_("inFlowColor", "In-Flow Color", tgt::vec4(1.0f, 0.0f, 0.0f, 0.8f))
-    , outFlowColor_("outFlowColor", "Out-Flow Color", tgt::vec4(0.0f, 0.0f, 1.0f, 0.8f))
+    , flowGeneratorColor_("flowGeneratorColor", "Flow Generator Color", tgt::vec4(0.0f, 1.0f, 0.0f, 0.8f))
+    , pressureBoundaryColor_("pressureBoundaryColor", "Pressure Boundary Color", tgt::vec4(1.0f, 0.0f, 0.0f, 0.8f))
+    , measureFluxColor_("measureFluxColor", "Flux Measure Color", tgt::vec4(0.0f, 0.0f, 1.0f, 0.8f))
     , geometry_(nullptr)
 {
     addPort(inport_);
 
     addProperty(enable_);
-    addProperty(inFlowColor_);
-    addProperty(outFlowColor_);
+    addProperty(flowGeneratorColor_);
+    addProperty(pressureBoundaryColor_);
+    addProperty(measureFluxColor_);
 }
 
 void FlowIndicatorRenderer::initialize() {
@@ -81,7 +64,7 @@ tgt::Bounds FlowIndicatorRenderer::getBoundingBox() const {
 
     tgt::Bounds bounds;
     if (inport_.hasData()) {
-        for (const FlowIndicator &indicator : inport_.getData()->getFlowIndicators()) {
+        for (const FlowIndicator& indicator : inport_.getData()->getFlowIndicators()) {
             bounds.addPoint(indicator.center_ - indicator.radius_);
             bounds.addPoint(indicator.center_ + indicator.radius_);
         }
@@ -100,13 +83,15 @@ void FlowIndicatorRenderer::render() {
 
         MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
         MatStack.pushMatrix();
-        MatStack.multMatrix(createTransformationMatrix(indicator.center_, indicator.normal_));
+        MatStack.multMatrix(utils::createTransformationMatrix(indicator.center_, indicator.normal_));
         MatStack.scale(tgt::vec3(indicator.radius_));
 
-        if(indicator.direction_ == FD_IN)
-            IMode.color(inFlowColor_.get());
-        else if(indicator.direction_ == FD_OUT)
-            IMode.color(outFlowColor_.get());
+        if(indicator.type_ == FIT_GENERATOR)
+            IMode.color(flowGeneratorColor_.get());
+        else if(indicator.type_ == FIT_PRESSURE)
+            IMode.color(pressureBoundaryColor_.get());
+        else if(indicator.type_ == FIT_MEASURE)
+            IMode.color(measureFluxColor_.get());
         else
             IMode.color(tgt::vec4::zero);
 

@@ -73,7 +73,7 @@ private:
     void removeParametrization();
     void clearParametrizations();
 
-    std::vector<FlowParameters> flowParameters_;
+    std::vector<FlowParameterSet> flowParameters_;
 
     FlowParametrizationPort inport_;
     FlowParametrizationPort outport_;

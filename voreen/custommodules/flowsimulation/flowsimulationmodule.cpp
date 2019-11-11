@@ -44,6 +44,10 @@
 #include "processors/simulation/flowindicatordetection.h"
 #endif
 
+#ifdef VRN_MODULE_PLOTTING
+#include "processors/simulation/flowindicatoranalysis.h"
+#endif
+
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
 #include <olb3D.h>
 #include "processors/features/wallshearstressextractor.h"
@@ -75,6 +79,9 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerSerializableType(new VolumeListAdapter());
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
     registerSerializableType(new FlowIndicatorDetection());
+#endif
+#ifdef VRN_MODULE_PLOTTING
+    registerSerializableType(new FlowIndicatorAnalysis());
 #endif
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
     registerSerializableType(new WallShearStressExtractor());

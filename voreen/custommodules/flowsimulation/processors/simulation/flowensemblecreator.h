@@ -44,7 +44,7 @@ struct FlowEnsembleCreatorOutput {
 };
 
 /**
- * Creates an ensemble dataset with disk representations (HDF5) from raw simulated data (local or cluster)
+ * Creates an ensemble dataset with disk representations (VVD) from raw simulated data (local or cluster)
  * and adds measured data. The created ensemble can be used by the ensemble analysis module.
  */
 class VRN_CORE_API FlowEnsembleCreator : public AsyncComputeProcessor<FlowEnsembleCreatorInput, FlowEnsembleCreatorOutput> {

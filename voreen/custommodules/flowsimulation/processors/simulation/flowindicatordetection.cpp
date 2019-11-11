@@ -26,6 +26,7 @@
 #include "flowindicatordetection.h"
 
 #include "voreen/core/ports/conditions/portconditionvolumetype.h"
+#include "../../utils/utils.h"
 
 namespace voreen {
 
@@ -33,78 +34,89 @@ const std::string FlowIndicatorDetection::loggerCat_("voreen.flowsimulation.Flow
 
 FlowIndicatorDetection::FlowIndicatorDetection()
     : Processor()
-    , flowParametrizationInport_(Port::INPORT, "floParametrization.inport", "Flow Parametrization Input")
+    , parameterInport_(Port::INPORT, "floParametrization.inport", "Flow Parametrization Input")
     , vesselGraphPort_(Port::INPORT, "vesselgraph.inport", "Vessel Graph")
     , volumePort_(Port::INPORT, "volume.inport", "Velocity Data Port (Optional)")
-    , flowParametrizationOutport_(Port::OUTPORT, "flowParametrization.outport", "Flow Parametrization Output")
-    , flowDirection_("flowDirection", "Flow Direction")
+    , parameterOutport(Port::OUTPORT, "flowParametrization.outport", "Flow Parametrization Output")
+    , indicatorType_("flowType", "Flow Type")
     , flowProfile_("flowProfile", "Flow Profile")
     , startPhaseFunction_("startPhaseFunction", "Start Phase Function")
     , startPhaseDuration_("startPhaseDuration", "Start Phase Duration (s)", 0.0f, 0.0f, 20.0f)
     , radius_("radius", "Radius", 1.0f, 0.0f, 10.0f)
-    , flowIndicatorTable_("flowIndicators", "Flow Indicators", 5)
-    , firstRefNode_("firstRefNode", "First Ref. Nodes", 0, 0, 20)
-    , numRefNodes_("numRefNodes", "Num. Ref. Nodes", 3, 1, 10)
-    , angleThreshold_("angleThreshold", "Angle Threshold", 15, 0, 90)
+    , targetVelocity_("targetVelocity", "Target Velocity", 0.0f, 0.0f, 1000.0f)
+    , voxelId_("voxelId", "Voxel ID", 0, 0, 0)
+    , cloneFlowIndicator_("cloneFlowIndicator", "Clone Flow Indicator")
+    , removeFlowIndicator_("removeFlowIndicator", "Remove Flow Indicator")
+    , flowIndicatorTable_("flowIndicators", "Flow Indicators", 3)
+    , angleThreshold_("angleThreshold", "Angle Threshold", 15, 0, 90, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
     , triggertBySelection_(false)
 {
-    addPort(flowParametrizationInport_);
-    ON_CHANGE(vesselGraphPort_, FlowIndicatorDetection, onInputChange);
+    addPort(parameterInport_);
     addPort(vesselGraphPort_);
     ON_CHANGE(vesselGraphPort_, FlowIndicatorDetection, onInputChange);
     addPort(volumePort_);
-    volumePort_.addCondition(new PortConditionVolumeType3xFloat());
+    volumePort_.addCondition(new PortConditionVolumeChannelCount(3));
     ON_CHANGE(volumePort_, FlowIndicatorDetection, onInputChange);
-    addPort(flowParametrizationOutport_);
+    addPort(parameterOutport);
 
-    addProperty(flowDirection_);
-        flowDirection_.addOption("none", "NONE", FlowDirection::FD_NONE);
-        flowDirection_.addOption("in", "IN", FlowDirection::FD_IN);
-        flowDirection_.addOption("out", "OUT", FlowDirection::FD_OUT);
-        flowDirection_.setGroupID("indicator");
-        ON_CHANGE(flowDirection_, FlowIndicatorDetection, onConfigChange);
+    addProperty(indicatorType_);
+        indicatorType_.addOption("candidate", "Candidate", FlowIndicatorType::FIT_CANDIDATE);
+        indicatorType_.addOption("generator", "Flow Generator", FlowIndicatorType::FIT_GENERATOR);
+        indicatorType_.addOption("pressure", "Pressure Boundary", FlowIndicatorType::FIT_PRESSURE);
+        indicatorType_.addOption("measure", "Flux Measure", FlowIndicatorType::FIT_MEASURE);
+        indicatorType_.setGroupID("indicator");
+        ON_CHANGE(indicatorType_, FlowIndicatorDetection, onIndicatorConfigChange);
     addProperty(flowProfile_);
-        flowProfile_.addOption("none", "NONE", FlowProfile::FP_NONE);
-        flowProfile_.addOption("poiseuille", "POISIEULLE", FlowProfile::FP_POISEUILLE);
-        flowProfile_.addOption("powerlaw", "POWERLAW", FlowProfile::FP_POWERLAW);
-        flowProfile_.addOption("constant", "CONSTANT", FlowProfile::FP_CONSTANT);
+        flowProfile_.addOption("none", "None", FlowProfile::FP_NONE);
+        flowProfile_.addOption("poiseuille", "Poiseuille", FlowProfile::FP_POISEUILLE);
+        flowProfile_.addOption("powerlaw", "Powerlaw", FlowProfile::FP_POWERLAW);
+        //flowProfile_.addOption("constant", "constant", FlowProfile::FP_CONSTANT); // Not really useful.
         flowProfile_.setGroupID("indicator");
+        ON_CHANGE(flowProfile_, FlowIndicatorDetection, onIndicatorConfigChange);
     addProperty(startPhaseFunction_);
-        startPhaseFunction_.addOption("none", "NONE", FlowStartPhase::FSP_NONE); // get's selected automatically
-        startPhaseFunction_.addOption("constant", "CONSTANT", FlowStartPhase ::FSP_CONSTANT);
-        startPhaseFunction_.addOption("sinus", "SINUS", FlowStartPhase::FSP_SINUS);
+        startPhaseFunction_.addOption("none", "None", FlowStartPhase::FSP_NONE); // get's selected automatically
+        startPhaseFunction_.addOption("constant", "Constant", FlowStartPhase ::FSP_CONSTANT);
+        startPhaseFunction_.addOption("sinus", "Sinus", FlowStartPhase::FSP_SINUS);
         startPhaseFunction_.setGroupID("indicator");
-        ON_CHANGE(startPhaseFunction_, FlowIndicatorDetection, onConfigChange);
+        ON_CHANGE(startPhaseFunction_, FlowIndicatorDetection, onIndicatorConfigChange);
     addProperty(startPhaseDuration_);
         startPhaseDuration_.setTracking(false);
         startPhaseDuration_.setGroupID("indicator");
-        ON_CHANGE(startPhaseDuration_, FlowIndicatorDetection, onConfigChange);
+        ON_CHANGE(startPhaseDuration_, FlowIndicatorDetection, onIndicatorConfigChange);
     addProperty(radius_);
         radius_.setTracking(false);
         radius_.setGroupID("indicator");
-        ON_CHANGE(radius_, FlowIndicatorDetection, onConfigChange);
+        ON_CHANGE(radius_, FlowIndicatorDetection, onIndicatorConfigChange);
+    addProperty(targetVelocity_);
+        targetVelocity_.setTracking(false);
+        targetVelocity_.setGroupID("indicator");
+        ON_CHANGE(targetVelocity_, FlowIndicatorDetection, onIndicatorConfigChange);
+    addProperty(voxelId_);
+        voxelId_.setTracking(false);
+        voxelId_.setGroupID("indicator");
+        ON_CHANGE(voxelId_, FlowIndicatorDetection, onIndicatorPositionChange);
+    addProperty(cloneFlowIndicator_);
+        cloneFlowIndicator_.setGroupID("indicator");
+        ON_CHANGE(cloneFlowIndicator_, FlowIndicatorDetection, onCloneFlowIndicator);
+    addProperty(removeFlowIndicator_);
+        removeFlowIndicator_.setGroupID("indicator");
+        ON_CHANGE(removeFlowIndicator_, FlowIndicatorDetection, onRemoveFlowIndicator);
     setPropertyGroupGuiName("indicator", "Indicator");
 
     addProperty(flowIndicatorTable_);
-    flowIndicatorTable_.setColumnLabel(0, "Dir.");
-    flowIndicatorTable_.setColumnLabel(1, "Profile");
-    flowIndicatorTable_.setColumnLabel(2, "St. Ph. Fun.");
-    flowIndicatorTable_.setColumnLabel(3, "St. Ph. Dur.");
-    flowIndicatorTable_.setColumnLabel(4, "Radius");
-    //flowIndicatorTable_.setColumnLabel(5, "Center");
-    //flowIndicatorTable_.setColumnLabel(6, "Normal");
-    ON_CHANGE(flowIndicatorTable_, FlowIndicatorDetection, onSelectionChange);
+    flowIndicatorTable_.setColumnLabel(0, "ID");
+    flowIndicatorTable_.setColumnLabel(1, "Type");
+    flowIndicatorTable_.setColumnLabel(2, "Profile");
+    //flowIndicatorTable_.setColumnLabel(3, "St. Ph. Fun.");
+    //flowIndicatorTable_.setColumnLabel(4, "St. Ph. Dur.");
+    //flowIndicatorTable_.setColumnLabel(5, "Radius");
+    ON_CHANGE(flowIndicatorTable_, FlowIndicatorDetection, onIndicatorSelectionChange);
 
-    addProperty(firstRefNode_);
-    ON_CHANGE(firstRefNode_, FlowIndicatorDetection, onInputChange);
-    addProperty(numRefNodes_);
-    ON_CHANGE(numRefNodes_, FlowIndicatorDetection, onInputChange);
     addProperty(angleThreshold_);
     ON_CHANGE(angleThreshold_, FlowIndicatorDetection, onInputChange);
 }
 
 void FlowIndicatorDetection::adjustPropertiesToInput() {
-
     if(!vesselGraphPort_.hasData())
         return;
 
@@ -127,13 +139,13 @@ bool FlowIndicatorDetection::isReady() const {
         return false;
     }
 
-    if(!flowParametrizationInport_.isReady()) {
-        setNotReadyErrorMessage("No Input parametrization");
+    if(!parameterInport_.isReady()) {
+        setNotReadyErrorMessage("No input parametrization");
         return false;
     }
 
     if(!vesselGraphPort_.isReady()) {
-        setNotReadyErrorMessage("No input vesselgraph");
+        setNotReadyErrorMessage("No input vessel graph");
         return false;
     }
 
@@ -144,56 +156,84 @@ bool FlowIndicatorDetection::isReady() const {
 
 void FlowIndicatorDetection::process() {
 
-    FlowParametrizationList* flowParametrizationList = new FlowParametrizationList(*flowParametrizationInport_.getData());
+    FlowParameterSetEnsemble* flowParameterSetEnsemble = new FlowParameterSetEnsemble(*parameterInport_.getData());
 
     for(const FlowIndicator& indicator : flowIndicators_) {
-        // NONE means invalid or not being selected for output.
-        if(indicator.direction_ != FD_NONE) {
-            flowParametrizationList->addFlowIndicator(indicator);
+        // Candidates wont be added until an automatic or manual selection was performed.
+        if(indicator.type_ != FIT_CANDIDATE) {
+            flowParameterSetEnsemble->addFlowIndicator(indicator);
         }
     }
 
-    flowParametrizationOutport_.setData(flowParametrizationList);
+    parameterOutport.setData(flowParameterSetEnsemble);
 }
 
-void FlowIndicatorDetection::onSelectionChange() {
+void FlowIndicatorDetection::onIndicatorSelectionChange() {
     bool validSelection = flowIndicatorTable_.getNumRows() > 0 && flowIndicatorTable_.getSelectedRowIndex() >= 0;
     if(validSelection) {
         triggertBySelection_ = true;
         size_t index = static_cast<size_t>(flowIndicatorTable_.getSelectedRowIndex());
-        flowDirection_.selectByValue(flowIndicators_.at(index).direction_);
+        indicatorType_.selectByValue(flowIndicators_.at(index).type_);
         flowProfile_.selectByValue(flowIndicators_.at(index).flowProfile_);
         startPhaseFunction_.selectByValue(flowIndicators_.at(index).startPhaseFunction_);
         startPhaseDuration_.set(flowIndicators_.at(index).startPhaseDuration_);
         radius_.set(flowIndicators_.at(index).radius_);
+        targetVelocity_.set(flowIndicators_.at(index).targetVelocity_);
+
+        const IndicatorSettings& settings = indicatorSettings_.at(index);
+        const VesselGraph* vesselGraph = vesselGraphPort_.getData();
+        voxelId_.setMaxValue(vesselGraph->getEdge(settings.edgeId).getVoxels().size());
+        voxelId_.set(settings.voxelId);
         triggertBySelection_ = false;
     }
 
-    flowDirection_.setReadOnlyFlag(!validSelection);
+    indicatorType_.setReadOnlyFlag(!validSelection);
     flowProfile_.setReadOnlyFlag(!validSelection);
     startPhaseFunction_.setReadOnlyFlag(!validSelection);
     startPhaseDuration_.setReadOnlyFlag(!validSelection);
     radius_.setReadOnlyFlag(!validSelection);
+    targetVelocity_.setReadOnlyFlag(!validSelection);
+    voxelId_.setReadOnlyFlag(!validSelection);
+    cloneFlowIndicator_.setReadOnlyFlag(!validSelection);
+    removeFlowIndicator_.setReadOnlyFlag(!validSelection);
 
     //setPropertyGroupVisible("indicator", flowIndicatorTable_.getSelectedRowIndex() >= 0);
 }
 
-void FlowIndicatorDetection::onConfigChange() {
+void FlowIndicatorDetection::onIndicatorConfigChange() {
 
-    // Ignore calls being triggert during selection callback.
+    // Ignore calls being triggered during selection callback.
     if(triggertBySelection_)
         return;
 
-    if(flowIndicatorTable_.getNumRows() > 0 &&
-       flowIndicatorTable_.getSelectedRowIndex() >= 0 &&
-       flowIndicatorTable_.getSelectedRowIndex() < static_cast<int>(flowIndicators_.size()) ) {
+    size_t indicatorIdx = static_cast<size_t>(flowIndicatorTable_.getSelectedRowIndex());
+    if(flowIndicatorTable_.getNumRows() > 0 && indicatorIdx < flowIndicators_.size()) {
 
-        FlowIndicator& indicator = flowIndicators_[flowIndicatorTable_.getSelectedRowIndex()];
-        indicator.direction_ = flowDirection_.getValue();
+        FlowIndicator& indicator = flowIndicators_[indicatorIdx];
+        indicator.type_ = indicatorType_.getValue();
         indicator.flowProfile_ = flowProfile_.getValue();
         indicator.startPhaseFunction_ = startPhaseFunction_.getValue();
         indicator.startPhaseDuration_ = startPhaseDuration_.get();
-        indicator.radius_ = radius_.get(); // Estimate is quite accurate.
+        indicator.radius_ = radius_.get();
+        indicator.targetVelocity_ = targetVelocity_.get();
+
+        buildTable();
+    }
+}
+
+void FlowIndicatorDetection::onIndicatorPositionChange() {
+
+    // Ignore calls being triggered during selection callback.
+    if(triggertBySelection_)
+        return;
+
+    size_t indicatorIdx = static_cast<size_t>(flowIndicatorTable_.getSelectedRowIndex());
+    if(flowIndicatorTable_.getNumRows() > 0 && indicatorIdx < flowIndicators_.size()) {
+
+        FlowIndicator& indicator = flowIndicators_[indicatorIdx];
+        IndicatorSettings& settings = indicatorSettings_[indicatorIdx];
+        settings.voxelId = voxelId_.get();
+        updateIndicator(indicator, settings);
 
         buildTable();
     }
@@ -201,92 +241,130 @@ void FlowIndicatorDetection::onConfigChange() {
 
 void FlowIndicatorDetection::onInputChange() {
 
+    // TODO: Dont ALWAYS discard deserialized values.
     flowIndicators_.clear();
+    indicatorSettings_.clear();
 
-    const FlowParametrizationList* flowParametrizationList = flowParametrizationInport_.getData();
+    const FlowParameterSetEnsemble* flowParameterSetEnsemble = parameterInport_.getData();
     const VesselGraph* vesselGraph = vesselGraphPort_.getData();
-    if(!flowParametrizationList || !vesselGraph) {
-        flowParametrizationOutport_.clear();
+    if(!flowParameterSetEnsemble || !vesselGraph) {
+        parameterOutport.clear();
         buildTable();
         return;
     }
-
-    const VolumeBase* volume = volumePort_.getData();
 
     for(const VesselGraphNode& node : vesselGraph->getNodes()) {
         // Look for end-nodes.
         if(node.getDegree() == 1) {
 
-            const VesselGraphEdge& edge = node.getEdges().back().get();
-            size_t numVoxels = edge.getVoxels().size();
-            if (numVoxels == 0) {
-                //tgtAssert(false, "No voxels assigned to edge");
-                continue;
-            }
+            IndicatorSettings settings;
+            settings.nodeId = node.getID();
+            settings.edgeId = node.getEdges().back().get().getID();
+            settings.voxelId = 0;
 
-            size_t mid = std::min<size_t>(firstRefNode_.get(), numVoxels-1);
-            size_t num = static_cast<size_t>(numRefNodes_.get());
-
-            size_t frontIdx = mid > num ? (mid - num) : 0;
-            size_t backIdx  = std::min(mid + num, numVoxels - 1);
-
-            std::function<size_t (size_t)> index;
-            if(edge.getNode1().getID() == node.getID()) {
-                index = [](size_t i) { return i; };
-            }
-            else {
-                index = [numVoxels](size_t i) { return numVoxels - 1 - i;  };
-            }
-
-            const VesselSkeletonVoxel* ref   = &edge.getVoxels().at(index(mid));
-            const VesselSkeletonVoxel* front = &edge.getVoxels().at(index(frontIdx));
-            const VesselSkeletonVoxel* back  = &edge.getVoxels().at(index(backIdx));
-
-            // Calculate average radius.
-            float radius = 0.0f;
-            for (size_t i = frontIdx; i <= backIdx; i++) {
-                radius += edge.getVoxels().at(index(i)).avgDistToSurface_;
-            }
-            radius /= (backIdx - frontIdx + 1);
-
+            // Default is candidate. However, we set initial values as if it was a flow generator,
+            // since it might be classified as one later.
             FlowIndicator indicator;
-            indicator.center_ = ref->pos_;
-            indicator.normal_ = tgt::normalize(back->pos_ - front->pos_);
-            indicator.radius_ = radius;
-            indicator.direction_ = FlowDirection::FD_NONE;
-            // Define default values here:
             indicator.flowProfile_ = FlowProfile::FP_POISEUILLE;
             indicator.startPhaseFunction_ = FlowStartPhase::FSP_SINUS;
-            indicator.startPhaseDuration_ = flowParametrizationList->getSimulationTime() * 0.25f;
-
-            // Estimate flow direction based on underlying velocities.
-            if (volume) {
-
-                tgt::vec3 velocity = tgt::vec3::zero;
-                if (auto velocities = dynamic_cast<const VolumeRAM_3xFloat*>(volume->getRepresentation<VolumeRAM>())) {
-                    tgt::svec3 voxel = volume->getWorldToVoxelMatrix() * indicator.center_;
-                    velocity = velocities->voxel(voxel);
-                }
-
-                if (velocity != tgt::vec3::zero) {
-                    velocity = tgt::normalize(velocity);
-                    float threshold = tgt::deg2rad(static_cast<float>(angleThreshold_.get()));
-                    float angle = std::acos(tgt::dot(velocity, indicator.normal_) /
-                        (tgt::length(velocity) * tgt::length(indicator.normal_)));
-                    if (angle < threshold) {
-                        indicator.direction_ = FlowDirection::FD_IN;
-                    }
-                    else if (tgt::PIf - angle < threshold) {
-                        indicator.direction_ = FlowDirection::FD_OUT;
-                    }
-                }
-            }
+            indicator.startPhaseDuration_ = flowParameterSetEnsemble->getSimulationTime() * 0.25f;
+            updateIndicator(indicator, settings);
 
             flowIndicators_.push_back(indicator);
+            indicatorSettings_.push_back(settings);
         }
     }
 
     buildTable();
+}
+
+FlowIndicatorType FlowIndicatorDetection::estimateType(const FlowIndicator& indicator, const tgt::vec3& velocity) const {
+
+    // Do not overwrite already set indicator types!
+    if(indicator.type_ != FlowIndicatorType::FIT_CANDIDATE) {
+        return indicator.type_;
+    }
+
+    if (velocity != tgt::vec3::zero) {
+        tgt::vec3 v = tgt::normalize(velocity);
+        float threshold = tgt::deg2rad(static_cast<float>(angleThreshold_.get()));
+        float angle = std::acos(tgt::dot(v, indicator.normal_));
+        if (angle < threshold) {
+            return FlowIndicatorType::FIT_GENERATOR;
+        }
+        else if (tgt::PIf - angle < threshold) {
+            return FlowIndicatorType::FIT_PRESSURE;
+        }
+    }
+
+    return FlowIndicatorType::FIT_CANDIDATE;
+}
+
+void FlowIndicatorDetection::onCloneFlowIndicator() {
+    size_t indicatorIdx = static_cast<size_t>(flowIndicatorTable_.getSelectedRowIndex());
+    if(flowIndicatorTable_.getNumRows() > 0 && indicatorIdx < flowIndicators_.size()) {
+        FlowIndicator clonedIndicator = flowIndicators_[indicatorIdx];
+        clonedIndicator.type_ = FIT_CANDIDATE; // This now becomes a candidate.
+        flowIndicators_.push_back(clonedIndicator);
+        indicatorSettings_.push_back(indicatorSettings_[indicatorIdx]);
+
+        buildTable();
+    }
+}
+
+void FlowIndicatorDetection::onRemoveFlowIndicator() {
+    size_t indicatorIdx = static_cast<size_t>(flowIndicatorTable_.getSelectedRowIndex());
+    if(flowIndicatorTable_.getNumRows() > 0 && indicatorIdx < flowIndicators_.size()) {
+        flowIndicators_.erase(flowIndicators_.begin() + indicatorIdx);
+        indicatorSettings_.erase(indicatorSettings_.begin() + indicatorIdx);
+
+        buildTable();
+    }
+}
+
+void FlowIndicatorDetection::updateIndicator(FlowIndicator& indicator, IndicatorSettings& settings) {
+    const VesselGraph* vesselGraph = vesselGraphPort_.getData();
+    const VesselGraphNode& node = vesselGraph->getNode(settings.nodeId);
+    const VesselGraphEdge& edge = vesselGraph->getEdge(settings.edgeId);
+
+    size_t numVoxels = edge.getVoxels().size();
+    if (numVoxels == 0) {
+        //tgtAssert(false, "No voxels assigned to edge");
+        return;
+    }
+
+    size_t mid = std::min<size_t>(voxelId_.get(), numVoxels - 1);
+    size_t num = 2; // Number of reference nodes.
+
+    size_t frontIdx = mid > num ? (mid - num) : 0;
+    size_t backIdx  = std::min(mid + num, numVoxels - 1);
+
+    std::function<size_t (size_t)> index;
+    if(edge.getNode1().getID() == node.getID()) {
+        index = [](size_t i) { return i; };
+    }
+    else {
+        index = [numVoxels](size_t i) { return numVoxels - 1 - i;  };
+    }
+
+    const VesselSkeletonVoxel* ref   = &edge.getVoxels().at(index(mid));
+    const VesselSkeletonVoxel* front = &edge.getVoxels().at(index(frontIdx));
+    const VesselSkeletonVoxel* back  = &edge.getVoxels().at(index(backIdx));
+
+    // Calculate average radius.
+    float radius = 0.0f;
+    for (size_t i = frontIdx; i <= backIdx; i++) {
+        radius += edge.getVoxels().at(index(i)).avgDistToSurface_;
+    }
+    radius /= (backIdx - frontIdx + 1);
+
+    indicator.center_ = ref->pos_;
+    indicator.normal_ = tgt::normalize(back->pos_ - front->pos_);
+    indicator.radius_ = radius;
+
+    tgt::vec3 velocity = utils::sampleDisk(volumePort_.getData(), indicator.center_, indicator.normal_, indicator.radius_);
+    indicator.type_ = estimateType(indicator, velocity);
+    indicator.targetVelocity_ = tgt::length(velocity);
 }
 
 void FlowIndicatorDetection::buildTable() {
@@ -295,19 +373,21 @@ void FlowIndicatorDetection::buildTable() {
 
     for(const FlowIndicator& indicator : flowIndicators_) {
         std::vector<std::string> row(flowIndicatorTable_.getNumColumns());
-        row[0] = indicator.direction_ == FlowDirection::FD_IN ? "IN" :
-                (indicator.direction_ == FlowDirection::FD_OUT ? "OUT" : "NONE");
-        row[1] = indicator.flowProfile_ == FlowProfile ::FP_POISEUILLE ? "POISEUILLE" :
-                 (indicator.flowProfile_ == FlowProfile::FP_POWERLAW ? "POWERLAW" :
-                  (indicator.flowProfile_ == FlowProfile::FP_CONSTANT ? "CONSTANT" : "NONE"));
-        row[2] = indicator.startPhaseFunction_ == FlowStartPhase::FSP_CONSTANT ? "CONSTANT" :
-                 (indicator.startPhaseFunction_ == FlowStartPhase::FSP_SINUS ? "SINUS" : "NONE");
-        row[3] = std::to_string(indicator.startPhaseDuration_);
-        row[4] = std::to_string(indicator.radius_);
+        row[0] = std::to_string(flowIndicatorTable_.getNumRows() + 1); // Very simple ID.
+        row[1] = indicator.type_ == FlowIndicatorType::FIT_GENERATOR ? "Generator" :
+                 (indicator.type_ == FlowIndicatorType::FIT_PRESSURE ? "Pressure" :
+                  (indicator.type_ == FlowIndicatorType::FIT_MEASURE ? "Measure" : "Candidate"));
+        row[2] = indicator.flowProfile_ == FlowProfile ::FP_POISEUILLE ? "Poiseuille" :
+                 (indicator.flowProfile_ == FlowProfile::FP_POWERLAW ? "Powerlaw" :
+                  (indicator.flowProfile_ == FlowProfile::FP_CONSTANT ? "Constant" : "None"));
         /*
-        row[5] = "(" + std::to_string(indicator.center_.x) + ", " + std::to_string(indicator.center_.y) + ", " +
+        row[3] = indicator.startPhaseFunction_ == FlowStartPhase::FSP_CONSTANT ? "Constant" :
+                 (indicator.startPhaseFunction_ == FlowStartPhase::FSP_SINUS ? "Sinus" : "None");
+        row[4] = std::to_string(indicator.startPhaseDuration_);
+        row[5] = std::to_string(indicator.radius_);
+        row[6] = "(" + std::to_string(indicator.center_.x) + ", " + std::to_string(indicator.center_.y) + ", " +
                  std::to_string(indicator.center_.z) + ")";
-        row[6] = "(" + std::to_string(indicator.normal_.x) + ", " + std::to_string(indicator.normal_.y) + ", " +
+        row[7] = "(" + std::to_string(indicator.normal_.x) + ", " + std::to_string(indicator.normal_.y) + ", " +
                  std::to_string(indicator.normal_.z) + ")";
         */
         flowIndicatorTable_.addRow(row);
