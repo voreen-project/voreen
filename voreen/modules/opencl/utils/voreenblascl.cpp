@@ -493,7 +493,12 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
             float nominator;
             queue_->enqueueReadBuffer(&nominatorBuf, (void*)(&nominator), true);
             queue_->enqueueReadBuffer(&denominatorBuf, (void*)(&denominator), true);
+            if (nominator == 0) {
+                break;
+            }
+            tgtAssert(denominator != 0.0f, "denominator = 0");
             float alpha = nominator / denominator;
+            tgtAssert(!std::isnan(alpha), "Alpha is nan");
 
             // x <= alpha*p + x
             kernelSapxy->setArg(0, vecSize);
@@ -547,6 +552,7 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
                 queue_->enqueueReadBuffer(&scalarBuf, (void*)(&beta), true);
             }
 
+            tgtAssert(!std::isnan(beta), "Beta is nan");
             if (sqrt(beta) < threshold) {
                 break;
             }
