@@ -421,8 +421,8 @@ struct BrickNeighborhood {
         const tgt::mat4 brickToVoxel = current.brickToVoxel();
         const tgt::mat4 voxelToBrick = current.voxelToBrick();
 
-        //const tgt::ivec3 neighborhoodSize = brickBaseSize;
-        const tgt::ivec3 neighborhoodSize = tgt::ivec3(0);
+        const tgt::ivec3 neighborhoodSize = brickBaseSize;
+        //const tgt::ivec3 neighborhoodSize = tgt::ivec3(0);
 
         const tgt::ivec3 brickLlf(0);
         const tgt::ivec3 brickUrb = voxelToBrick.transform(current.urb_);
@@ -638,7 +638,7 @@ static void processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outpu
     const tgt::svec3 brickDataSize = input.octree_.getBrickDim();
 
     //TODO construct outside and reuse?
-    OctreeWalkerNode inputRoot(*input.octree_.getRootNode(), input.octree_.getActualTreeDepth(), tgt::svec3(0), input.octree_.getDimensions());
+    OctreeWalkerNode inputRoot(*input.octree_.getRootNode(), input.octree_.getActualTreeDepth()-1, tgt::svec3(0), input.octree_.getDimensions());
 
     //TODO: Only copy once
     PointSegmentListGeometryVec3 foregroundSeeds;
@@ -685,15 +685,16 @@ static void processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outpu
     }
 
     auto solution = tgt::make_unique<float[]>(systemSize);
+    std::fill_n(solution.get(), systemSize, 0.5f);
 
     EllpackMatrix<float> mat;
     mat.setDimensions(systemSize, systemSize, 7);
     mat.initializeBuffers();
 
     auto rwm = input.volume_.getRealWorldMapping();
-    //auto vmm = input.volume_.getDerivedData<VolumeMinMax>();
-    //tgt::vec2 intensityRange(vmm->getMin(), vmm->getMax());
-    tgt::vec2 intensityRange(rwm.normalizedToRealWorld(inputNeighborhood.min_), rwm.normalizedToRealWorld(inputNeighborhood.max_));
+    auto vmm = input.volume_.getDerivedData<VolumeMinMax>();
+    tgt::vec2 intensityRange(vmm->getMin(), vmm->getMax());
+    //tgt::vec2 intensityRange(rwm.normalizedToRealWorld(inputNeighborhood.min_), rwm.normalizedToRealWorld(inputNeighborhood.max_));
     std::unique_ptr<RandomWalkerEdgeWeight> edgeWeightFun;
 
     float beta = static_cast<float>(1<<input.beta_);
@@ -713,8 +714,14 @@ static void processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outpu
         edgeWeights.processVoxel(pos, &seeds, mat, vec.data(), volIndexToRow.data());
     }
 
-    int iterations = input.blas_->sSpConjGradEll(mat, vec.data(), solution.get(), oldSystemSolution,
-        input.precond_, input.errorThreshold_, input.maxIterations_, progressReporter);
+    for(int i=0; i<10; ++i) {
+        int iterations = input.blas_->sSpConjGradEll(mat, vec.data(), solution.get(), oldSystemSolution,
+            input.precond_, input.errorThreshold_, input.maxIterations_, progressReporter);
+        if(iterations < input.maxIterations_) {
+            break;
+        }
+        LERRORC("Randomwalker", "MAX ITER NOT SUFFICIENT: " << i);
+    }
     //TODO do something with iterations? do multiple blas runs? (Probably not necessary in most cases due to small bricks (and initialization (another TODO)?))
 
     uint64_t sum = 0;
