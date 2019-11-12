@@ -742,7 +742,7 @@ static void processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outpu
 
     const tgt::svec3 brickStart = inputNeighborhood.centerBrickLlf_;
     const tgt::svec3 brickEnd = inputNeighborhood.centerBrickUrb_;
-    tgt::svec3 centerBrickSize = brickEnd - brickEnd;
+    tgt::svec3 centerBrickSize = brickEnd - brickStart;
 
     uint64_t sum = 0;
 
