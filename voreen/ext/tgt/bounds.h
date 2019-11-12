@@ -275,6 +275,10 @@ bool TemplateBounds<T>::inside(const typename tgt::Vector3<T>& v) const {
 
 template<typename T>
 TemplateBounds<T> TemplateBounds<T>::transform(const mat4& m) const {
+    if(!isDefined() && !onlyPoint()) {
+       // Undefined bounding box remains undefined.
+       return *this;
+    }
     TemplateBounds b;
     b.addPoint(m * typename tgt::Vector3<T>(llf_.x, llf_.y, llf_.z));
     b.addPoint(m * typename tgt::Vector3<T>(urb_.x, llf_.y, llf_.z));
