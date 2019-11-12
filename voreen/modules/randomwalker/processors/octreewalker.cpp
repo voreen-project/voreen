@@ -304,6 +304,10 @@ struct OctreeWalkerNode {
         return urb_ - llf_;
     }
 
+    tgt::svec3 brickDimensions() const {
+        return voxelDimensions() / scale(); //TODO check
+    }
+
     size_t scale() const {
         return 1 << level_;
     }
@@ -476,6 +480,7 @@ struct BrickNeighborhood {
                 tgt::mat4 centerToSampleBrick = node.voxelToBrick() * brickToVoxel;
                 VRN_FOR_EACH_VOXEL2(point, blockLlf, blockUrb) {
                     tgt::vec3 samplePos = centerToSampleBrick.transform(point);
+                    samplePos = tgt::clamp(samplePos, tgt::vec3(0), tgt::vec3(node.brickDimensions() - tgt::svec3(1)));
                     float val = brick.data_.getVoxelNormalized(samplePos);
                     tgt::vec3 neighborhoodBufferPos = point - regionLlf;
                     output.setVoxelNormalized(val, neighborhoodBufferPos);
