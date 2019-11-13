@@ -623,23 +623,72 @@ const float RandomWalkerSeedsBrick::FOREGROUND = 1.0f;
 const float RandomWalkerSeedsBrick::BACKGROUND = 0.0f;
 
 struct RandomWalkerVoxelAccessorBrick : public RandomWalkerVoxelAccessor {
-    RandomWalkerVoxelAccessorBrick(const BrickNeighborhood& brick, RealWorldMapping rwm)
+    RandomWalkerVoxelAccessorBrick(const VolumeAtomic<float>& brick, RealWorldMapping rwm)
         : brick_(brick)
         , rwm_(rwm)
     {
     }
     virtual float voxel(const tgt::svec3& pos) {
         tgt::ivec3 brickPos = pos;// - seedBufferLLFOffset_;
-        float normalized = brick_.data_.getVoxelNormalized(brickPos);
+        float normalized = brick_.getVoxelNormalized(brickPos);
         return rwm_.normalizedToRealWorld(normalized);
     }
 private:
-    const BrickNeighborhood& brick_;
+    const VolumeAtomic<float>& brick_;
     RealWorldMapping rwm_;
 };
 
 
-static void processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outputNode, OctreeWalkerNodeBrick& outputBrick, ProgressReporter& progressReporter, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, const OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot, tgt::vec2 intensityRange) {
+static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<float>& img) {
+    VolumeAtomic<float> output(img.getDimensions());
+    const tgt::ivec3 start(0);
+    const tgt::ivec3 end(img.getDimensions());
+    const size_t numVoxels = tgt::hmul(img.getDimensions());
+
+    const tgt::ivec3 neighborhoodSize(1);
+    const float varianceFactor = 0.142; //ONLY valid for neighborhoodSize 1
+
+    float sumOfDifferences = 0.0f;
+    VRN_FOR_EACH_VOXEL2(center, start, end) {
+        const tgt::ivec3 neighborhoodStart = tgt::max(start, center - neighborhoodSize);
+        const tgt::ivec3 neighborhoodEnd = tgt::min(end, center + neighborhoodSize + tgt::ivec3(1));
+
+        std::vector<float> vals;
+        VRN_FOR_EACH_VOXEL2(pos, neighborhoodStart, neighborhoodEnd) {
+            vals.push_back(img.voxel(pos));
+        }
+        int numNeighborhoodVoxels = vals.size();
+        int centerIndex = numNeighborhoodVoxels/2;
+        std::nth_element(vals.begin(), vals.begin()+centerIndex, vals.end());
+        float estimation = vals[centerIndex];
+
+        float val = img.voxel(center);
+        float diff = estimation - val;
+
+        float neighborhoodFactor;
+        if(numNeighborhoodVoxels > 1) {
+            neighborhoodFactor = static_cast<float>(numNeighborhoodVoxels)/static_cast<float>(numNeighborhoodVoxels-1);
+        } else {
+            neighborhoodFactor = 1.0f;
+        }
+
+        sumOfDifferences += neighborhoodFactor * diff * diff;
+
+        output.voxel(center) = estimation;
+    }
+
+    float rawVariance = sumOfDifferences/numVoxels;
+    float varianceEstimation = rawVariance * varianceFactor;
+    float stdEstimationInv = 1.0f/std::sqrt(varianceEstimation);
+
+    VRN_FOR_EACH_VOXEL2(center, start, end) {
+        output.voxel(center) *= stdEstimationInv;
+    }
+
+    return output;
+}
+
+static void processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outputNode, OctreeWalkerNodeBrick& outputBrick, ProgressReporter& progressReporter, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, const OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot) {
     //TODO: catch out of memory
     const OctreeBrickPoolManagerBase& inputPoolManager = *input.octree_.getBrickPoolManager();
     const tgt::svec3 brickDataSize = input.octree_.getBrickDim();
@@ -712,16 +761,18 @@ static void processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outpu
     mat.setDimensions(systemSize, systemSize, 7);
     mat.initializeBuffers();
 
-    auto rwm = input.volume_.getRealWorldMapping();
     //tgt::vec2 intensityRange(rwm.normalizedToRealWorld(inputNeighborhood.min_), rwm.normalizedToRealWorld(inputNeighborhood.max_));
     std::unique_ptr<RandomWalkerEdgeWeight> edgeWeightFun;
 
-    float beta = static_cast<float>(1<<input.beta_);
+    //float beta = static_cast<float>(1<<input.beta_);
+    float beta = 0.5f;
     float minWeight = 1.f / pow(10.f, static_cast<float>(input.minWeight_));
 
-    edgeWeightFun.reset(new RandomWalkerEdgeWeightIntensity(intensityRange, beta, minWeight));
+    edgeWeightFun.reset(new RandomWalkerEdgeWeightIntensity(tgt::vec2(0.0f, 1.0f)/*intensityRange*/, beta, minWeight));
 
-    std::unique_ptr<RandomWalkerVoxelAccessor> voxelAccessor(new RandomWalkerVoxelAccessorBrick(inputNeighborhood, rwm));
+    RealWorldMapping rwm(1.0f, 0.0f, "foo");
+    auto rwInput = preprocessImageForRandomWalker(inputNeighborhood.data_);
+    std::unique_ptr<RandomWalkerVoxelAccessor> voxelAccessor(new RandomWalkerVoxelAccessorBrick(rwInput, rwm));
 
     RandomWalkerWeights edgeWeights(std::move(voxelAccessor), std::move(edgeWeightFun), walkerBlockDim);
 
@@ -901,21 +952,6 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
         SubtaskProgressReporter levelProgress(progressReporter, tgt::vec2(progressBegin, progressEnd));
 
         LINFO("Level " << level << ": " << nodesToProcess.size() << " Nodes to process.");
-        float min = FLT_MAX;
-        float max = FLT_MIN;
-
-        for(auto& node : nodesToProcess) {
-            OctreeWalkerNodeBrickConst newBrick(node.inputNode->getBrickAddress(), brickDim, *input.octree_.getBrickPoolManager());
-            OctreeWalkerNode n(*node.inputNode, level, node.llf, node.urb);
-            const tgt::svec3 start(0);
-            const tgt::svec3 end(n.brickDimensions());
-            VRN_FOR_EACH_VOXEL2(index, start, end) {
-                float val = newBrick.data_.getVoxelNormalized(index);
-                min = std::min(val, min);
-                max = std::max(val, max);
-            }
-        }
-        tgt::vec2 intensityRange(rwm.normalizedToRealWorld(min), rwm.normalizedToRealWorld(max));
 
         std::vector<NodeToProcess> nextNodesToProcess;
         int i=0;
@@ -933,7 +969,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                 OctreeWalkerNodeBrick newBrick(node.outputNode->getBrickAddress(), brickDim, *brickPoolManager);
 
                 OctreeWalkerNode outputNode(*node.outputNode, level, node.llf, node.urb);
-                processOctreeBrick(input, outputNode, newBrick, progress, histogram, min, max, avg, *brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, intensityRange);
+                processOctreeBrick(input, outputNode, newBrick, progress, histogram, min, max, avg, *brickPoolManager, level == maxLevel ? nullptr : &outputRootNode);
             }
 
             globalMin = std::min(globalMin, min);
