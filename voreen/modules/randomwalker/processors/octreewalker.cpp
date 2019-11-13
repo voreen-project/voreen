@@ -378,9 +378,9 @@ inline size_t volumeCoordsToIndex(const tgt::ivec3& coords, const tgt::ivec3& di
 
 //TODO fix original macro
 #define VRN_FOR_EACH_VOXEL2(INDEX, POS, SIZE) \
-    for (auto (INDEX) = (POS); (INDEX).z < (SIZE).z; ++(INDEX).z)\
-        for ((INDEX).y = (POS).y; (INDEX).y < (SIZE).y; ++(INDEX).y)\
-            for ((INDEX).x = (POS).x; (INDEX).x < (SIZE).x; ++(INDEX).x)
+    for (auto INDEX = (POS); INDEX.z < (SIZE).z; ++INDEX.z)\
+        for (INDEX.y = (POS).y; INDEX.y < (SIZE).y; ++INDEX.y)\
+            for (INDEX.x = (POS).x; INDEX.x < (SIZE).x; ++INDEX.x)
 
 struct BrickNeighborhood {
     BrickNeighborhood() = delete;
@@ -639,7 +639,7 @@ private:
 };
 
 
-static void processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outputNode, OctreeWalkerNodeBrick& outputBrick, ProgressReporter& progressReporter, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, const OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot) {
+static void processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outputNode, OctreeWalkerNodeBrick& outputBrick, ProgressReporter& progressReporter, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, const OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot, tgt::vec2 intensityRange) {
     //TODO: catch out of memory
     const OctreeBrickPoolManagerBase& inputPoolManager = *input.octree_.getBrickPoolManager();
     const tgt::svec3 brickDataSize = input.octree_.getBrickDim();
@@ -713,8 +713,6 @@ static void processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outpu
     mat.initializeBuffers();
 
     auto rwm = input.volume_.getRealWorldMapping();
-    auto vmm = input.volume_.getDerivedData<VolumeMinMax>();
-    tgt::vec2 intensityRange(vmm->getMin(), vmm->getMax());
     //tgt::vec2 intensityRange(rwm.normalizedToRealWorld(inputNeighborhood.min_), rwm.normalizedToRealWorld(inputNeighborhood.max_));
     std::unique_ptr<RandomWalkerEdgeWeight> edgeWeightFun;
 
@@ -891,6 +889,11 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 
     Histogram1D histogram(0.0, 1.0, 256);
 
+    auto rwm = input.volume_.getRealWorldMapping();
+
+    //auto vmm = input.volume_.getDerivedData<VolumeMinMax>();
+    //tgt::vec2 intensityRange(vmm->getMin(), vmm->getMax());
+
     // Level order iteration => Previos level is always available
     for(int level = maxLevel; level >=0; --level) {
         float progressBegin = 1.0/(1 << (3 * (level + 1))); // 1/8 ^ (level+1 => next level)
@@ -898,6 +901,21 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
         SubtaskProgressReporter levelProgress(progressReporter, tgt::vec2(progressBegin, progressEnd));
 
         LINFO("Level " << level << ": " << nodesToProcess.size() << " Nodes to process.");
+        float min = FLT_MAX;
+        float max = FLT_MIN;
+
+        for(auto& node : nodesToProcess) {
+            OctreeWalkerNodeBrickConst newBrick(node.inputNode->getBrickAddress(), brickDim, *input.octree_.getBrickPoolManager());
+            OctreeWalkerNode n(*node.inputNode, level, node.llf, node.urb);
+            const tgt::svec3 start(0);
+            const tgt::svec3 end(n.brickDimensions());
+            VRN_FOR_EACH_VOXEL2(index, start, end) {
+                float val = newBrick.data_.getVoxelNormalized(index);
+                min = std::min(val, min);
+                max = std::max(val, max);
+            }
+        }
+        tgt::vec2 intensityRange(rwm.normalizedToRealWorld(min), rwm.normalizedToRealWorld(max));
 
         std::vector<NodeToProcess> nextNodesToProcess;
         int i=0;
@@ -915,7 +933,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                 OctreeWalkerNodeBrick newBrick(node.outputNode->getBrickAddress(), brickDim, *brickPoolManager);
 
                 OctreeWalkerNode outputNode(*node.outputNode, level, node.llf, node.urb);
-                processOctreeBrick(input, outputNode, newBrick, progress, histogram, min, max, avg, *brickPoolManager, level == maxLevel ? nullptr : &outputRootNode);
+                processOctreeBrick(input, outputNode, newBrick, progress, histogram, min, max, avg, *brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, intensityRange);
             }
 
             globalMin = std::min(globalMin, min);
