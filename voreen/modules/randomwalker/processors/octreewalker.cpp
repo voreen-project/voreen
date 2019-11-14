@@ -638,6 +638,7 @@ private:
     RealWorldMapping rwm_;
 };
 
+//#define VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
 
 static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<float>& img) {
     VolumeAtomic<float> output(img.getDimensions());
@@ -654,21 +655,24 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
         const tgt::ivec3 neighborhoodEnd = tgt::min(end, center + neighborhoodSize + tgt::ivec3(1));
 
         const int numNeighborhoodVoxels = tgt::hmul(neighborhoodEnd-neighborhoodStart);
-        // median
-        //std::vector<float> vals;
-        //VRN_FOR_EACH_VOXEL2(pos, neighborhoodStart, neighborhoodEnd) {
-        //    vals.push_back(img.voxel(pos));
-        //}
-        //int centerIndex = numNeighborhoodVoxels/2;
-        //std::nth_element(vals.begin(), vals.begin()+centerIndex, vals.end());
-        //float estimation = vals[centerIndex];
 
+#ifdef VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
         // mean
         float sum=0.0f;
         VRN_FOR_EACH_VOXEL2(pos, neighborhoodStart, neighborhoodEnd) {
             sum += img.voxel(pos);
         }
         float estimation = sum/numNeighborhoodVoxels;
+#else
+        // median
+        std::vector<float> vals;
+        VRN_FOR_EACH_VOXEL2(pos, neighborhoodStart, neighborhoodEnd) {
+            vals.push_back(img.voxel(pos));
+        }
+        int centerIndex = numNeighborhoodVoxels/2;
+        std::nth_element(vals.begin(), vals.begin()+centerIndex, vals.end());
+        float estimation = vals[centerIndex];
+#endif
 
         float val = img.voxel(center);
         float diff = estimation - val;
@@ -685,10 +689,13 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
         output.voxel(center) = estimation;
     }
 
-    //tgtAssert(k==1, "Invalid k for variance factor");
-    //const float varianceFactor = 0.142; //median
+#ifdef VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
     const int N=2*k+1;
     const float varianceFactor = 2.0f/(N*N*N*N); //mean
+#else
+    tgtAssert(k==1, "Invalid k for variance factor");
+    const float varianceFactor = 0.142; //median //TODO: this is for 2D. what about 3d?
+#endif
 
     float rawVariance = sumOfDifferences/numVoxels;
     float varianceEstimation = rawVariance * varianceFactor;
