@@ -808,6 +808,7 @@ static void processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outpu
         } else {
             valf = solution[volIndexToRow[logicalIndex]];
         }
+        valf = tgt::clamp(valf, 0.0f, 1.0f);
         uint16_t val = valf*0xffff;
 
         outputBrick.data_.voxel(pos - brickStart) = val;
