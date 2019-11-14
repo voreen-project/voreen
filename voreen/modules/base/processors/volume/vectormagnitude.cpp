@@ -53,20 +53,15 @@ Processor* VectorMagnitude::create() const {
 
 void VectorMagnitude::process() {
     const VolumeBase* inputHandle = inport_.getData();
-    const VolumeRAM* inputVolume = inport_.getData()->getRepresentation<VolumeRAM>();
-    tgtAssert(inputVolume, "no input volume");
+    tgtAssert(inputHandle, "no input volume");
 
     if (enableProcessing_.get()) {
         Volume* outputHandle = 0;
         VolumeOperatorMagnitude voOpMa;
-        tgtAssert(inputVolume->getNumChannels() > 0, "invalid channel count");
-        if (inputVolume->getNumChannels() == 3 || inputVolume->getNumChannels() == 4) {
-            // always output float volume
-            outputHandle = voOpMa.apply<float>(inputHandle);
-        }
-        else {
-            LWARNING("Input volume of format RGB or RGBA expected.");
-        }
+        tgtAssert(inputHandle->getNumChannels() > 0, "invalid channel count");
+
+        // always output float volume
+        outputHandle = voOpMa.apply<float>(inputHandle);
 
         // assign computed volume to outport
         if (outputHandle)
