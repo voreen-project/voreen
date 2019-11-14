@@ -645,22 +645,30 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
     const tgt::ivec3 end(img.getDimensions());
     const size_t numVoxels = tgt::hmul(img.getDimensions());
 
-    const tgt::ivec3 neighborhoodSize(1);
-    const float varianceFactor = 0.142; //ONLY valid for neighborhoodSize 1
+    const int k = 1;
+    const tgt::ivec3 neighborhoodSize(k);
 
     float sumOfDifferences = 0.0f;
     VRN_FOR_EACH_VOXEL2(center, start, end) {
         const tgt::ivec3 neighborhoodStart = tgt::max(start, center - neighborhoodSize);
         const tgt::ivec3 neighborhoodEnd = tgt::min(end, center + neighborhoodSize + tgt::ivec3(1));
 
-        std::vector<float> vals;
+        const int numNeighborhoodVoxels = tgt::hmul(neighborhoodEnd-neighborhoodStart);
+        // median
+        //std::vector<float> vals;
+        //VRN_FOR_EACH_VOXEL2(pos, neighborhoodStart, neighborhoodEnd) {
+        //    vals.push_back(img.voxel(pos));
+        //}
+        //int centerIndex = numNeighborhoodVoxels/2;
+        //std::nth_element(vals.begin(), vals.begin()+centerIndex, vals.end());
+        //float estimation = vals[centerIndex];
+
+        // mean
+        float sum=0.0f;
         VRN_FOR_EACH_VOXEL2(pos, neighborhoodStart, neighborhoodEnd) {
-            vals.push_back(img.voxel(pos));
+            sum += img.voxel(pos);
         }
-        int numNeighborhoodVoxels = vals.size();
-        int centerIndex = numNeighborhoodVoxels/2;
-        std::nth_element(vals.begin(), vals.begin()+centerIndex, vals.end());
-        float estimation = vals[centerIndex];
+        float estimation = sum/numNeighborhoodVoxels;
 
         float val = img.voxel(center);
         float diff = estimation - val;
@@ -676,6 +684,11 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
 
         output.voxel(center) = estimation;
     }
+
+    //tgtAssert(k==1, "Invalid k for variance factor");
+    //const float varianceFactor = 0.142; //median
+    const int N=2*k+1;
+    const float varianceFactor = 2.0f/(N*N*N*N); //mean
 
     float rawVariance = sumOfDifferences/numVoxels;
     float varianceEstimation = rawVariance * varianceFactor;
