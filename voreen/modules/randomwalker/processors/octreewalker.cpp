@@ -717,7 +717,17 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
 static uint16_t normToBrick(float val) {
     return tgt::clamp(val, 0.0f, 1.0f) * 0xffff;
 }
+static float brickToNorm(uint16_t val) {
+    return static_cast<float>(val)/0xffff;
+}
 static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outputNode, ProgressReporter& progressReporter, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot) {
+    auto canSkipChildren = [&] (float min, float max) {
+        float parentValueRange = max-min;
+        const float delta = 0.01;
+        bool minMaxSkip = max < 0.5-delta || min > 0.5+delta;
+        return parentValueRange < input.homogeneityThreshold_ || minMaxSkip;
+    };
+
     //TODO: catch out of memory
     const OctreeBrickPoolManagerBase& inputPoolManager = *input.octree_.getBrickPoolManager();
     const tgt::svec3 brickDataSize = input.octree_.getBrickDim();
@@ -740,10 +750,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
             tgt::svec3 seedBufferDimensions = seedsNeighborhood->data_.getDimensions();
             tgt::mat4 voxelToSeedTransform = seedsNeighborhood->voxelToNeighborhood();
 
-            // Will also stop in calling function due to missed range.
-            // TODO refactor
-            float parentValueRange = seedsNeighborhood->max_ - seedsNeighborhood->min_;
-            if(parentValueRange < input.homogeneityThreshold_) {
+            if(canSkipChildren(seedsNeighborhood->min_, seedsNeighborhood->max_)) {
                 LINFOC("Randomwalker", "skip block early");
                 stop = true;
                 avg = normToBrick(seedsNeighborhood->avg_);
@@ -785,7 +792,6 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
             }
         }
     }
-
 
     // No way to decide between foreground and background
     if(numSeeds == 0) {
@@ -840,30 +846,37 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
 
     uint64_t sum = 0;
 
-    OctreeWalkerNodeBrick outputBrick(outputPoolManager.allocateBrick(), brickDataSize, outputPoolManager);
+    uint64_t outputBrickAddr = outputPoolManager.allocateBrick();
+    {
+        OctreeWalkerNodeBrick outputBrick(outputBrickAddr, brickDataSize, outputPoolManager);
 
-    VRN_FOR_EACH_VOXEL(pos, brickStart, brickEnd) {
-        size_t logicalIndex = volumeCoordsToIndex(pos, walkerBlockDim);
-        float valf;
-        if (seeds.isSeedPoint(logicalIndex)) {
-            valf = seeds.getSeedValue(logicalIndex);
-        } else {
-            valf = solution[volIndexToRow[logicalIndex]];
+        VRN_FOR_EACH_VOXEL(pos, brickStart, brickEnd) {
+            size_t logicalIndex = volumeCoordsToIndex(pos, walkerBlockDim);
+            float valf;
+            if (seeds.isSeedPoint(logicalIndex)) {
+                valf = seeds.getSeedValue(logicalIndex);
+            } else {
+                valf = solution[volIndexToRow[logicalIndex]];
+            }
+            valf = tgt::clamp(valf, 0.0f, 1.0f);
+            uint16_t val = valf*0xffff;
+
+            outputBrick.data_.voxel(pos - brickStart) = val;
+
+            min = std::min(val, min);
+            max = std::max(val, max);
+            sum += val;
+
+            histogram.addSample(valf);
         }
-        valf = tgt::clamp(valf, 0.0f, 1.0f);
-        uint16_t val = valf*0xffff;
-
-        outputBrick.data_.voxel(pos - brickStart) = val;
-
-        min = std::min(val, min);
-        max = std::max(val, max);
-        sum += val;
-
-        histogram.addSample(valf);
+        avg = sum/tgt::hmul(centerBrickSize);
     }
-    avg = sum/tgt::hmul(centerBrickSize);
+    if(canSkipChildren(brickToNorm(min), brickToNorm(max))) {
+        outputPoolManager.deleteBrick(outputBrickAddr);
+        return NO_BRICK_ADDRESS;
+    }
 
-    return outputBrick.addr_;
+    return outputBrickAddr;
 }
 
 const std::string BRICK_BUFFER_SUBDIR =      "brickBuffer";
