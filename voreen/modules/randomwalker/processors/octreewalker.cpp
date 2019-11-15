@@ -427,7 +427,7 @@ struct BrickNeighborhood {
 
         //const tgt::ivec3 neighborhoodSize = brickBaseSize;
         //const tgt::ivec3 neighborhoodSize = tgt::ivec3(2);
-        const tgt::ivec3 neighborhoodSize = brickBaseSize/2UL;
+        const tgt::ivec3 neighborhoodSize = brickBaseSize/8UL;
 
         const tgt::ivec3 brickLlf(0);
         const tgt::ivec3 brickUrb = voxelToBrick.transform(current.urb_);
