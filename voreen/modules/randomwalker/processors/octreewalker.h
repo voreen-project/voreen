@@ -64,7 +64,6 @@ struct OctreeWalkerInput {
     const VolumeOctree& octree_;
     std::vector<PortDataPointer<Geometry>> foregroundGeomSeeds_;
     std::vector<PortDataPointer<Geometry>> backgroundGeomSeeds_;
-    int beta_;
     int minWeight_;
     const VoreenBlas* blas_;
     VoreenBlas::ConjGradPreconditioner precond_;
@@ -122,7 +121,6 @@ private:
 
     BoolProperty usePrevProbAsInitialization_;
 
-    IntProperty beta_;
     IntProperty minEdgeWeight_;
     StringOptionProperty preconditioner_;
     IntProperty errorThreshold_;

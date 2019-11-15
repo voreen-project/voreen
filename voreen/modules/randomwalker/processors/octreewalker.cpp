@@ -59,7 +59,6 @@ OctreeWalker::OctreeWalker()
     inportBackgroundSeeds_(Port::INPORT, "geometry.seedsBackground", "geometry.seedsBackground", true),
     outportProbabilities_(Port::OUTPORT, "volume.probabilities", "volume.probabilities", false),
     usePrevProbAsInitialization_("usePrevProbAsInitialization", "Use Previous Probabilities as Initialization", false, Processor::VALID, Property::LOD_ADVANCED),
-    beta_("beta", "Edge Weight Scale: 2^beta", 12, 0, 20),
     minEdgeWeight_("minEdgeWeight", "Min Edge Weight: 10^(-t)", 5, 0, 10),
     preconditioner_("preconditioner", "Preconditioner"),
     errorThreshold_("errorThreshold", "Error Threshold: 10^(-t)", 2, 0, 10),
@@ -77,9 +76,7 @@ OctreeWalker::OctreeWalker()
     addProperty(usePrevProbAsInitialization_);
 
     // random walker properties
-    addProperty(beta_);
     addProperty(minEdgeWeight_);
-    beta_.setGroupID("rwparam");
     minEdgeWeight_.setGroupID("rwparam");
     setPropertyGroupGuiName("rwparam", "Random Walker Parametrization");
     addProperty(homogeneityThreshold_);
@@ -176,7 +173,6 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
         *octreePtr,
         inportForegroundSeeds_.getThreadSafeAllData(),
         inportBackgroundSeeds_.getThreadSafeAllData(),
-        beta_.get(),
         minEdgeWeight_.get(),
         voreenBlas,
         precond,
@@ -785,7 +781,6 @@ static void processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outpu
     //tgt::vec2 intensityRange(rwm.normalizedToRealWorld(inputNeighborhood.min_), rwm.normalizedToRealWorld(inputNeighborhood.max_));
     std::unique_ptr<RandomWalkerEdgeWeight> edgeWeightFun;
 
-    //float beta = static_cast<float>(1<<input.beta_);
     float beta = 0.5f;
     float minWeight = 1.f / pow(10.f, static_cast<float>(input.minWeight_));
 
