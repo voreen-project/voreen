@@ -494,7 +494,6 @@ struct BrickNeighborhood {
                 min = std::min(val, min);
                 max = std::max(val, max);
                 sum += val * tgt::hmul(blockUrb - blockLlf);
-                // TODO: use fill?
                 VRN_FOR_EACH_VOXEL2(point, blockLlf, blockUrb) {
                     tgt::vec3 neighborhoodBufferPos = point - regionLlf;
                     output.setVoxelNormalized(val, neighborhoodBufferPos);
@@ -586,7 +585,6 @@ public:
     virtual ~RandomWalkerSeedsBrick() {}
     virtual void initialize() {};
 
-    // TODO check conversion here
     virtual bool isSeedPoint(size_t index) const {
         return seedBuffer_.voxel(index) != UNLABELED;
     }
@@ -882,38 +880,6 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
 const std::string BRICK_BUFFER_SUBDIR =      "brickBuffer";
 const std::string BRICK_BUFFER_FILE_PREFIX = "buffer_";
 
-template<typename C>
-struct DeinitPtr {
-    DeinitPtr(C* content)
-        : content_(content)
-    {
-    }
-    DeinitPtr(DeinitPtr&& other)
-        : content_(other.content_)
-    {
-        other.content_ = nullptr;
-    }
-    ~DeinitPtr() {
-        if(content_) {
-            content_->deinitialize();
-            delete content_;
-        }
-    }
-    C* release() {
-        C* ret = content_;
-        content_ = nullptr;
-        return ret;
-    }
-    C& operator* () {
-        return *content_;
-    }
-
-    C* operator-> () {
-        return content_;
-    }
-    C* content_;
-};
-
 struct VolumeOctreeNodeTree {
     VolumeOctreeNodeTree(VolumeOctreeNode* root)
         : root_(root)
@@ -967,7 +933,10 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     OctreeBrickPoolManagerDisk* brickPoolManagerDisk = new OctreeBrickPoolManagerDisk(brickSizeInBytes,
             VoreenApplication::app()->getCpuRamLimit(), brickPoolPath, BRICK_BUFFER_FILE_PREFIX);
 
-    DeinitPtr<OctreeBrickPoolManagerBase> brickPoolManager(brickPoolManagerDisk); //TODO use stackguard instead
+    std::unique_ptr<OctreeBrickPoolManagerBase> brickPoolManager(brickPoolManagerDisk);
+    tgt::ScopeGuard brickPoolManagerDeinitializer([&brickPoolManager] () {
+        brickPoolManager->deinitialize();
+    });
 
     brickPoolManager->initialize(brickSizeInBytes);
 
@@ -1075,7 +1044,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
         nodesToProcess = nextNodesToProcess;
     }
 
-
+    brickPoolManagerDeinitializer.dismiss();
     auto output = tgt::make_unique<Volume>(new VolumeOctree(tree.release(), brickPoolManager.release(), brickDim, input.octree_.getDimensions(), numChannels), &input.volume_);
 
     float min = static_cast<float>(globalMin)/0xffff;
