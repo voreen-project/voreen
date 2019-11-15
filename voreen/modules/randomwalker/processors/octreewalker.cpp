@@ -718,7 +718,7 @@ static uint16_t normToBrick(float val) {
 static float brickToNorm(uint16_t val) {
     return static_cast<float>(val)/0xffff;
 }
-static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outputNode, ProgressReporter& progressReporter, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot) {
+static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outputNode, ProgressReporter& progressReporter, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds) {
     auto canSkipChildren = [&] (float min, float max) {
         float parentValueRange = max-min;
         const float delta = 0.01;
@@ -730,14 +730,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
     const OctreeBrickPoolManagerBase& inputPoolManager = *input.octree_.getBrickPoolManager();
     const tgt::svec3 brickDataSize = input.octree_.getBrickDim();
 
-    //TODO construct outside and reuse?
     OctreeWalkerNode inputRoot(*input.octree_.getRootNode(), input.octree_.getActualTreeDepth()-1, tgt::svec3(0), input.octree_.getDimensions());
-
-    //TODO: Only copy once
-    PointSegmentListGeometryVec3 foregroundSeeds;
-    PointSegmentListGeometryVec3 backgroundSeeds;
-    getSeedListsFromPorts(input.foregroundGeomSeeds_, foregroundSeeds);
-    getSeedListsFromPorts(input.backgroundGeomSeeds_, backgroundSeeds);
 
     boost::optional<BrickNeighborhood> seedsNeighborhood = boost::none;
 
@@ -749,7 +742,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
             tgt::mat4 voxelToSeedTransform = seedsNeighborhood->voxelToNeighborhood();
 
             if(canSkipChildren(seedsNeighborhood->min_, seedsNeighborhood->max_)) {
-                LINFOC("Randomwalker", "skip block early");
+                //LINFOC("Randomwalker", "skip block early");
                 stop = true;
                 avg = normToBrick(seedsNeighborhood->avg_);
                 min = normToBrick(seedsNeighborhood->min_);
@@ -831,7 +824,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
     for(int i=0; i<10; ++i) {
         int iterations = input.blas_->sSpConjGradEll(mat, vec.data(), solution.get(), initialization.data(),
             input.precond_, input.errorThreshold_, input.maxIterations_, progressReporter);
-        LINFOC("Randomwalker", "iterations:" << iterations);
+        //LINFOC("Randomwalker", "iterations:" << iterations);
         if(iterations < input.maxIterations_) {
             break;
         }
@@ -969,6 +962,11 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 
     auto rwm = input.volume_.getRealWorldMapping();
 
+    PointSegmentListGeometryVec3 foregroundSeeds;
+    PointSegmentListGeometryVec3 backgroundSeeds;
+    getSeedListsFromPorts(input.foregroundGeomSeeds_, foregroundSeeds);
+    getSeedListsFromPorts(input.backgroundGeomSeeds_, backgroundSeeds);
+
     //auto vmm = input.volume_.getDerivedData<VolumeMinMax>();
     //tgt::vec2 intensityRange(vmm->getMin(), vmm->getMax());
 
@@ -998,7 +996,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                 tgtAssert(node.inputNode->hasBrick(), "No Brick");
 
                 OctreeWalkerNode outputNode(*node.outputNode, level, node.llf, node.urb);
-                newBrickAddr = processOctreeBrick(input, outputNode, progress, histogram, min, max, avg, *brickPoolManager, level == maxLevel ? nullptr : &outputRootNode);
+                newBrickAddr = processOctreeBrick(input, outputNode, progress, histogram, min, max, avg, *brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, foregroundSeeds, backgroundSeeds);
             }
 
             globalMin = std::min(globalMin, min);
