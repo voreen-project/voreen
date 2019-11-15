@@ -1005,8 +1005,11 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 
     // Level order iteration => Previos level is always available
     for(int level = maxLevel; level >=0; --level) {
-        float progressBegin = 1.0/(1 << (3 * (level + 1))); // 1/8 ^ (level+1 => next level)
-        float progressEnd = 1.0/(1 << (3 * (level))); // 1/8 ^ (level)
+        // Note in the following that 1/4 seems to better represent the actual progress (rather than 1/8).
+        // This may be due to the fact that the actual work we have to do happens on the (2D!) _surface_
+        // of objects in the volume.
+        float progressBegin = 1.0/(1 << (2 * (level + 1))); // 1/4 ^ (level+1 => next level)
+        float progressEnd = 1.0/(1 << (2 * (level))); // 1/4 ^ (level)
         SubtaskProgressReporter levelProgress(progressReporter, tgt::vec2(progressBegin, progressEnd));
 
         LINFO("Level " << level << ": " << nodesToProcess.size() << " Nodes to process.");
