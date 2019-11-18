@@ -899,6 +899,18 @@ struct VolumeOctreeNodeTree {
     VolumeOctreeNode* root_;
 };
 
+const tgt::svec3 OCTREEWALKER_CHILD_POSITIONS[] = {
+    tgt::svec3(0,0,0),
+    tgt::svec3(1,0,0),
+    tgt::svec3(1,1,0),
+    tgt::svec3(0,1,0),
+    tgt::svec3(0,1,1),
+    tgt::svec3(1,1,1),
+    tgt::svec3(1,0,1),
+    tgt::svec3(0,0,1),
+};
+
+
 OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressReporter& progressReporter) const {
     OctreeWalkerOutput invalidResult = OctreeWalkerOutput {
         std::unique_ptr<Volume>(nullptr),
@@ -1011,7 +1023,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             node.outputNode->setBrickAddress(newBrickAddr);
             if(newBrickAddr != NO_BRICK_ADDRESS && !node.inputNode->isLeaf() /* TODO handle early leaf (with current octree architecture not possible) */) {
                 tgt::svec3 childBrickSize = brickDim * (1UL << (level-1));
-                VRN_FOR_EACH_VOXEL(child, tgt::svec3::zero, tgt::svec3::two) {
+                for(auto child : OCTREEWALKER_CHILD_POSITIONS) {
                     const size_t childId = volumeCoordsToIndex(child, tgt::svec3::two);
                     VolumeOctreeNode* inputChildNode = node.inputNode->children_[childId];
                     tgtAssert(inputChildNode, "No child node");
@@ -1039,6 +1051,10 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             progress.setProgress(1.0f);
             ++i;
         }
+
+        // Make sure to hit LRU cache: Go from back to front in next iteration
+        std::reverse(nextNodesToProcess.begin(), nextNodesToProcess.end());
+
         nodesToProcess = nextNodesToProcess;
     }
 
