@@ -317,10 +317,7 @@ float VoreenBlasCL::sSpInnerProductEll(const EllpackMatrix<float>& mat, const fl
 int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* vec, float* result,
                            float* initial, ConjGradPreconditioner precond, float threshold, int maxIterations, ProgressReporter& progress) const {
 
-    if (!mat.isSymmetric()) {
-        LERROR("Symmetric matrix expected.");
-        return -1;
-    }
+    tgtAssert(mat.isSymmetric(), "Symmetric matrix expected.");
 
     if (!initialized_) {
         LERROR("Not initialized. Aborting.");
@@ -603,10 +600,7 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
 int VoreenBlasCL::hSpConjGradEll(const EllpackMatrix<int16_t>& mat, const float* vec, float* result,
                                    float* initial, float threshold, int maxIterations) const {
 
-    if (!mat.isSymmetric()) {
-        LERROR("Symmetric matrix expected.");
-        return -1;
-    }
+    tgtAssert(mat.isSymmetric(), "Symmetric matrix expected.");
 
     if (!initialized_) {
         LERROR("Not initialized. Aborting.");
