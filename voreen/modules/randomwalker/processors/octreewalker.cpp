@@ -842,7 +842,7 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
 
     mat.setValue(curRow, curRow, weightSum);
 }
-static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outputNode, ProgressReporter& progressReporter, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot, const OctreeWalkerNode inputRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds) {
+static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outputNode, ProgressReporter& progressReporter, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot, const OctreeWalkerNode inputRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
     auto canSkipChildren = [&] (float min, float max) {
         float parentValueRange = max-min;
         const float delta = 0.01;
@@ -941,9 +941,13 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
     }
 
     for(int i=0; i<10; ++i) {
-        int iterations = input.blas_->sSpConjGradEll(mat, vec.data(), solution.get(), initialization.data(),
-            input.precond_, input.errorThreshold_, input.maxIterations_, progressReporter);
+        int iterations;
+        {
+            std::lock_guard<std::mutex> guard(clMutex);
+            iterations = input.blas_->sSpConjGradEll(mat, vec.data(), solution.get(), initialization.data(),
+                input.precond_, input.errorThreshold_, input.maxIterations_, progressReporter);
         //LINFOC("Randomwalker", "iterations:" << iterations);
+        }
         if(iterations < input.maxIterations_) {
             break;
         }
@@ -1101,6 +1105,8 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     getSeedListsFromPorts(input.foregroundGeomSeeds_, foregroundSeeds);
     getSeedListsFromPorts(input.backgroundGeomSeeds_, backgroundSeeds);
 
+    std::mutex clMutex;
+
     //auto vmm = input.volume_.getDerivedData<VolumeMinMax>();
     //tgt::vec2 intensityRange(vmm->getMin(), vmm->getMax());
 
@@ -1118,7 +1124,9 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
         std::vector<NodeToProcess> nextNodesToProcess;
         int i=0;
         float perNodeProgress = 1.0f/nodesToProcess.size();
-        for(auto& node : nodesToProcess) {
+#pragma omp parallel for
+        for(int nodeId = 0; nodeId < nodesToProcess.size(); ++nodeId) {
+            auto& node = nodesToProcess[nodeId];
             SubtaskProgressReporter progress(levelProgress, tgt::vec2(i*perNodeProgress, (i+1)*perNodeProgress));
             tgtAssert(node.inputNode, "No input node");
 
@@ -1130,7 +1138,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                 tgtAssert(node.inputNode->hasBrick(), "No Brick");
 
                 OctreeWalkerNode outputNode(*node.outputNode, level, node.llf, node.urb);
-                newBrickAddr = processOctreeBrick(input, outputNode, progress, histogram, min, max, avg, *brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, foregroundSeeds, backgroundSeeds);
+                newBrickAddr = processOctreeBrick(input, outputNode, progress, histogram, min, max, avg, *brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, foregroundSeeds, backgroundSeeds, clMutex);
             }
 
             globalMin = std::min(globalMin, min);
@@ -1156,6 +1164,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 
                         tgt::svec3 start = node.llf + childBrickSize * child;
                         tgt::svec3 end = tgt::min(start + childBrickSize, volumeDim);
+#pragma omp critical
                         nextNodesToProcess.push_back(
                                 NodeToProcess {
                                 inputChildNode,
