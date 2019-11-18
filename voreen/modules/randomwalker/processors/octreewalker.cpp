@@ -522,8 +522,10 @@ public:
     RandomWalkerSeedsBrick(tgt::svec3 bufferDimensions, tgt::mat4 voxelToSeeds, const PointSegmentListGeometryVec3& foregroundSeedList, const PointSegmentListGeometryVec3& backgroundSeedList)
         : seedBuffer_(bufferDimensions)
     {
+        VolumeAtomic<uint16_t> seedCounts(bufferDimensions);
         numSeeds_ = 0;
         seedBuffer_.fill(UNLABELED);
+        seedCounts.fill(0);
 
         // foreground geometry seeds
         auto collectLabelsFromGeometry = [&] (const PointSegmentListGeometryVec3& seedList, uint8_t label) {
@@ -540,11 +542,18 @@ public:
                         if(tgt::hor(tgt::lessThan(point, tgt::ivec3::zero)) || tgt::hor(tgt::greaterThanEqual(point, tgt::ivec3(bufferDimensions)))) {
                             continue;
                         }
-                        if (seedBuffer_.voxel(point) == UNLABELED) {
-                            seedBuffer_.voxel(point) = label;
-                            numSeeds_++;
-                        //} else {
-                        //    seedBuffer_.voxel(point) = 0.5; //TODO revisit
+                        float& seedVal = seedBuffer_.voxel(point);
+                        if (seedVal == UNLABELED) {
+                            tgtAssert(seedCounts.voxel(point) == 0, "Invalid seed count");
+                            seedVal = label;
+                            ++numSeeds_;
+                            seedCounts.voxel(point) = 1;
+                        } else {
+                            // On multiple points per label: Use average
+                            tgtAssert(seedCounts.voxel(point) > 0, "Invalid seed count");
+                            auto& count = seedCounts.voxel(point);
+                            seedVal = ((seedVal*count)+label)/(count + 1);
+                            count++;
                         }
                     }
                 }
