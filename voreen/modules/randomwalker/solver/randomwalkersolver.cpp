@@ -153,7 +153,7 @@ int RandomWalkerSolver::solve(const VoreenBlas* voreenBlas, float* oldSystemSolu
     }
 
     int iterations = voreenBlas->sSpConjGradEll(mat_, vec_, solution_, oldSystemSolution,
-        preConditioner, errorThreshold, maxIterations, progress);
+        preConditioner, errorThreshold, maxIterations, &progress);
     state_ = Solved;
     return iterations;
 }

@@ -315,7 +315,7 @@ float VoreenBlasCL::sSpInnerProductEll(const EllpackMatrix<float>& mat, const fl
 }
 
 int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* vec, float* result,
-                           float* initial, ConjGradPreconditioner precond, float threshold, int maxIterations, ProgressReporter& progress) const {
+                           float* initial, ConjGradPreconditioner precond, float threshold, int maxIterations, ProgressReporter* progress) const {
 
     tgtAssert(mat.isSymmetric(), "Symmetric matrix expected.");
 
@@ -447,7 +447,7 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
         }
 
         while (iteration < maxIterations) {
-            progress.setProgress(static_cast<float>(iteration)/maxIterations);
+            if(progress) { progress->setProgress(static_cast<float>(iteration)/maxIterations); }
 
             iteration++;
 
@@ -584,7 +584,7 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
         throw e;
     }
     queue_->finish();
-    progress.setProgress(1.0);
+    if(progress) { progress->setProgress(1.0f); }
 
     if (initialAllocated)
         delete[] initial;

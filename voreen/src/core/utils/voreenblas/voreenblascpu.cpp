@@ -104,7 +104,7 @@ float VoreenBlasCPU::sSpInnerProductEll(const EllpackMatrix<float>& mat, const f
 }
 
 int VoreenBlasCPU::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* vec, float* result,
-                        float* initial, ConjGradPreconditioner precond, float threshold, int maxIterations, ProgressReporter& progress) const {
+                        float* initial, ConjGradPreconditioner precond, float threshold, int maxIterations, ProgressReporter* progress) const {
 
     if (!mat.isSymmetric()) {
         LERROR("Symmetric matrix expected.");
@@ -164,7 +164,7 @@ int VoreenBlasCPU::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* 
 
     try {
         while (iteration < maxIterations) {
-            progress.setProgress(static_cast<float>(iteration)/maxIterations);
+            if(progress) { progress->setProgress(static_cast<float>(iteration)/maxIterations); }
 
             iteration++;
 
@@ -214,7 +214,7 @@ int VoreenBlasCPU::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* 
                 sAXPY(vecSize, pBuf, rBuf, beta, pBuf);
             }
         }
-        progress.setProgress(1.0);
+        if(progress) { progress->setProgress(1.0f); }
     } catch(boost::thread_interrupted& e) {
         delete[] rBuf;
         delete[] pBuf;

@@ -49,6 +49,10 @@
 
 namespace voreen {
 
+#if defined(VRN_MODULE_OPENMP) && 1
+#define VRN_OCTREEWALKER_USE_OMP
+#endif
+
 const std::string OctreeWalker::loggerCat_("voreen.RandomWalker.OctreeWalker");
 using tgt::vec3;
 
@@ -842,7 +846,7 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
 
     mat.setValue(curRow, curRow, weightSum);
 }
-static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outputNode, ProgressReporter& progressReporter, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot, const OctreeWalkerNode inputRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
+static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outputNode, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot, const OctreeWalkerNode inputRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
     auto canSkipChildren = [&] (float min, float max) {
         float parentValueRange = max-min;
         const float delta = 0.01;
@@ -945,8 +949,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
         {
             std::lock_guard<std::mutex> guard(clMutex);
             iterations = input.blas_->sSpConjGradEll(mat, vec.data(), solution.get(), initialization.data(),
-                input.precond_, input.errorThreshold_, input.maxIterations_, progressReporter);
-        //LINFOC("Randomwalker", "iterations:" << iterations);
+                input.precond_, input.errorThreshold_, input.maxIterations_);
         }
         if(iterations < input.maxIterations_) {
             break;
@@ -1106,6 +1109,11 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     getSeedListsFromPorts(input.backgroundGeomSeeds_, backgroundSeeds);
 
     std::mutex clMutex;
+#ifdef VRN_OCTREEWALKER_USE_OMP
+    LINFO("Using parallel octree walker variant.");
+#else
+    LINFO("Using sequential octree walker variant.");
+#endif
 
     //auto vmm = input.volume_.getDerivedData<VolumeMinMax>();
     //tgt::vec2 intensityRange(vmm->getMin(), vmm->getMax());
@@ -1122,12 +1130,22 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
         LINFO("Level " << level << ": " << nodesToProcess.size() << " Nodes to process.");
 
         std::vector<NodeToProcess> nextNodesToProcess;
-        int i=0;
-        float perNodeProgress = 1.0f/nodesToProcess.size();
+
+        const int numNodes = nodesToProcess.size();
+        ThreadedTaskProgressReporter parallelProgress(levelProgress, numNodes);
+        bool aborted = false;
+
+#ifdef VRN_OCTREEWALKER_USE_OMP
+        std::cout << "OMP!!" << std::endl;
 #pragma omp parallel for
-        for(int nodeId = 0; nodeId < nodesToProcess.size(); ++nodeId) {
+#endif
+        for (int nodeId = 0; nodeId < numNodes; ++nodeId) {
+#ifdef VRN_OCTREEWALKER_USE_OMP
+            if(aborted) {
+                continue;
+            }
+#endif
             auto& node = nodesToProcess[nodeId];
-            SubtaskProgressReporter progress(levelProgress, tgt::vec2(i*perNodeProgress, (i+1)*perNodeProgress));
             tgtAssert(node.inputNode, "No input node");
 
             uint16_t min = 0xffff;
@@ -1138,7 +1156,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                 tgtAssert(node.inputNode->hasBrick(), "No Brick");
 
                 OctreeWalkerNode outputNode(*node.outputNode, level, node.llf, node.urb);
-                newBrickAddr = processOctreeBrick(input, outputNode, progress, histogram, min, max, avg, *brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                newBrickAddr = processOctreeBrick(input, outputNode, histogram, min, max, avg, *brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, foregroundSeeds, backgroundSeeds, clMutex);
             }
 
             globalMin = std::min(globalMin, min);
@@ -1164,23 +1182,37 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 
                         tgt::svec3 start = node.llf + childBrickSize * child;
                         tgt::svec3 end = tgt::min(start + childBrickSize, volumeDim);
-#pragma omp critical
-                        nextNodesToProcess.push_back(
-                                NodeToProcess {
-                                inputChildNode,
-                                outputChildNode,
-                                start,
-                                end
-                            }
-                        );
+                        #pragma omp critical
+                        {
+                            nextNodesToProcess.push_back(
+                                    NodeToProcess {
+                                    inputChildNode,
+                                    outputChildNode,
+                                    start,
+                                    end
+                                }
+                            );
+                        }
                     } else {
                         outputChildNode = new VolumeOctreeNodeGeneric<1>(NO_BRICK_ADDRESS, false);
                     }
                     node.outputNode->children_[childId] = outputChildNode;
                 }
             }
-            progress.setProgress(1.0f);
-            ++i;
+            if(parallelProgress.reportStepDone()) {
+#ifdef VRN_OCTREEWALKER_USE_OMP
+                #pragma omp critical
+                {
+                    aborted = true;
+                }
+#else
+                aborted = true;
+                break;
+#endif
+            }
+        }
+        if(aborted) {
+            throw boost::thread_interrupted();
         }
 
         // Make sure to hit LRU cache: Go from back to front in next iteration
