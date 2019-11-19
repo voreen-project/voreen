@@ -27,6 +27,7 @@
 #include "clwrapper.h"
 #include "modules/opencl/openclmodule.h"
 #include "tgt/filesystem.h"
+#include "tgt/memory.h"
 #include "voreen/core/utils/stringutils.h"
 
 #include <typeinfo>
@@ -1264,24 +1265,40 @@ cl_build_status Program::getBuildStatus(const Device& device) const {
 std::string Program::getBuildOptions(const Device& device) const {
     return getBuildInfo<std::string>(device, CL_PROGRAM_BUILD_OPTIONS);
 }
+std::map<std::string, Kernel*> Program::getCurrentKernels() const {
+    std::lock_guard<std::mutex> guard(kernelsMutex_);
+
+    std::map<std::string, Kernel*> res;
+    for(auto& kv : kernels_) {
+       res[kv.first.first] = kv.second.get();
+    }
+    return res;
+}
 
 Kernel* Program::getKernel(const std::string& name) {
-    if(kernels_.find(name) != kernels_.end()) {
-        return kernels_[name];
+    std::lock_guard<std::mutex> guard(kernelsMutex_);
+
+    std::pair<std::string, std::thread::id> kernelIdentifier(name, std::this_thread::get_id());
+
+    auto kernelIt = kernels_.find(kernelIdentifier);
+    if(kernelIt != kernels_.end()) {
+        return kernelIt->second.get();
     }
     else {
         if(id_ == 0)
-            return 0;
+            return nullptr;
 
         cl_int err;
         cl_kernel kernel = clCreateKernel(id_, name.c_str(), &err);
         LCL_ERROR(err);
         if((kernel != 0) && (err == CL_SUCCESS)) {
-            kernels_[name] = new Kernel(kernel);
-            return kernels_[name];
+            auto kernelPtr = tgt::make_unique<Kernel>(kernel);
+            auto res = kernelPtr.get();
+            kernels_[kernelIdentifier] = std::move(kernelPtr);
+            return res;
         }
         else
-            return 0;
+            return nullptr;
     }
 }
 
@@ -1295,19 +1312,19 @@ void Program::createKernels() {
     LCL_ERROR(clCreateKernelsInProgram(id_, numKernels, kernels, 0));
 
     for(size_t i=0; i<numKernels; ++i) {
-        Kernel* k = new Kernel(kernels[i]);
+        auto k = tgt::make_unique<Kernel>(kernels[i]);
         std::string name = k->getName();
+        std::pair<std::string, std::thread::id> kernelIdentifier(name, std::this_thread::get_id());
         LINFO("Found kernel '" << name << "' with " << k->getNumArgs() << " arguments." );
-        kernels_[name] = k;
+        kernels_[kernelIdentifier] = std::move(k);
     }
     delete[] kernels;
 }
 
 void Program::clearKernels() {
-    while(!kernels_.empty()) {
-        delete kernels_.begin()->second;
-        kernels_.erase(kernels_.begin());
-    }
+    std::lock_guard<std::mutex> guard(kernelsMutex_);
+
+    kernels_.clear();
 }
 
 //---------------------------------------------------------
