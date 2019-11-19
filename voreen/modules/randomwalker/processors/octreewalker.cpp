@@ -46,6 +46,10 @@
 
 #include <climits>
 
+#ifdef VRN_MODULE_OPENMP
+#include <omp.h>
+#endif
+
 namespace voreen {
 
 #if defined(VRN_MODULE_OPENMP) && 1
@@ -1114,6 +1118,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     LINFO("Using sequential octree walker variant.");
 #endif
 
+
     //auto vmm = input.volume_.getDerivedData<VolumeMinMax>();
     //tgt::vec2 intensityRange(vmm->getMin(), vmm->getMax());
 
@@ -1133,9 +1138,9 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
         const int numNodes = nodesToProcess.size();
         ThreadedTaskProgressReporter parallelProgress(levelProgress, numNodes);
         bool aborted = false;
-
 #ifdef VRN_OCTREEWALKER_USE_OMP
-#pragma omp parallel for
+        int numThreads = std::max(8 /* at least 8 threads for 8 children per node */, omp_get_num_procs());
+#pragma omp parallel for num_threads(numThreads) schedule(dynamic, 1) // Schedule: Process nodes/bricks locally to utilize brick cache
 #endif
         for (int nodeId = 0; nodeId < numNodes; ++nodeId) {
 #ifdef VRN_OCTREEWALKER_USE_OMP
