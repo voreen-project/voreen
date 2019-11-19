@@ -53,6 +53,8 @@ namespace voreen {
 #define VRN_OCTREEWALKER_USE_OMP
 #endif
 
+//#define VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
+
 const std::string OctreeWalker::loggerCat_("voreen.RandomWalker.OctreeWalker");
 using tgt::vec3;
 
@@ -630,8 +632,6 @@ private:
     RealWorldMapping rwm_;
 };
 
-//#define VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
-
 static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<float>& img) {
     VolumeAtomic<float> output(img.getDimensions());
     const tgt::ivec3 start(0);
@@ -1136,7 +1136,6 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
         bool aborted = false;
 
 #ifdef VRN_OCTREEWALKER_USE_OMP
-        std::cout << "OMP!!" << std::endl;
 #pragma omp parallel for
 #endif
         for (int nodeId = 0; nodeId < numNodes; ++nodeId) {
