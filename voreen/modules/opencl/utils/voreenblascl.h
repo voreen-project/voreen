@@ -32,6 +32,7 @@
 #include "modules/opencl/utils/clwrapper.h"
 
 #include <string>
+#include <thread>
 
 namespace voreen {
 
@@ -45,6 +46,8 @@ public:
     virtual void initialize();
     virtual void deinitialize();
     bool isInitialized() const;
+
+    cl::CommandQueue& getQueue() const;
 
     void sAXPY(size_t vecSize, const float* vecx, const float* vecy, float alpha, float* result) const;
 
@@ -71,7 +74,8 @@ private:
     cl::OpenCL* opencl_;
     cl::Context* context_;
     cl::Device device_;
-    cl::CommandQueue* queue_;
+    mutable std::mutex queueThreadMapMutex_; // Protects kernels_ in concurrent access.
+    mutable std::map<std::thread::id, std::unique_ptr<cl::CommandQueue>> perThreadQueues_;
     cl::Program* prog_;
 
     static const std::string loggerCat_; ///< category used in logging
