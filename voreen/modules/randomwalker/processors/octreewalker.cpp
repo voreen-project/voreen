@@ -620,19 +620,15 @@ const float RandomWalkerSeedsBrick::FOREGROUND = 1.0f;
 const float RandomWalkerSeedsBrick::BACKGROUND = 0.0f;
 
 struct RandomWalkerVoxelAccessorBrick final : public RandomWalkerVoxelAccessor {
-    RandomWalkerVoxelAccessorBrick(const VolumeAtomic<float>& brick, RealWorldMapping rwm)
+    RandomWalkerVoxelAccessorBrick(const VolumeAtomic<float>& brick)
         : brick_(brick)
-        , rwm_(rwm)
     {
     }
-    virtual float voxel(const tgt::svec3& pos) {
-        tgt::ivec3 brickPos = pos;// - seedBufferLLFOffset_;
-        float normalized = brick_.voxel(brickPos);
-        return rwm_.normalizedToRealWorld(normalized);
+    inline float voxel(const tgt::svec3& pos) {
+        return brick_.voxel(pos);
     }
 private:
     const VolumeAtomic<float>& brick_;
-    RealWorldMapping rwm_;
 };
 
 static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<float>& img) {
@@ -937,9 +933,8 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
 
     RandomWalkerEdgeWeightIntensity edgeWeightFun(tgt::vec2(0.0f, 1.0f), beta, minWeight);
 
-    RealWorldMapping rwm(1.0f, 0.0f, "foo"); //TODO remove. not required due to preprocessing
     auto rwInput = preprocessImageForRandomWalker(inputNeighborhood.data_);
-    RandomWalkerVoxelAccessorBrick voxelAccessor(rwInput, rwm);
+    RandomWalkerVoxelAccessorBrick voxelAccessor(rwInput);
 
     auto vec = std::vector<float>(systemSize, 0.0f);
 
