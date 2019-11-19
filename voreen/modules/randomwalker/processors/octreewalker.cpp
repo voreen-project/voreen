@@ -25,7 +25,6 @@
 
 #include "octreewalker.h"
 
-#include "../solver/randomwalkersolver.h"
 #include "../solver/randomwalkerseeds.h"
 #include "../solver/randomwalkerweights.h"
 
@@ -934,7 +933,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
 
     RandomWalkerEdgeWeightIntensity edgeWeightFun(tgt::vec2(0.0f, 1.0f), beta, minWeight);
 
-    RealWorldMapping rwm(1.0f, 0.0f, "foo");
+    RealWorldMapping rwm(1.0f, 0.0f, "foo"); //TODO remove. not required due to preprocessing
     auto rwInput = preprocessImageForRandomWalker(inputNeighborhood.data_);
     RandomWalkerVoxelAccessorBrick voxelAccessor(rwInput, rwm);
 
@@ -947,7 +946,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
     for(int i=0; i<10; ++i) {
         int iterations;
         {
-            std::lock_guard<std::mutex> guard(clMutex);
+            //std::lock_guard<std::mutex> guard(clMutex);
             iterations = input.blas_->sSpConjGradEll(mat, vec.data(), solution.get(), initialization.data(),
                 input.precond_, input.errorThreshold_, input.maxIterations_);
         }
