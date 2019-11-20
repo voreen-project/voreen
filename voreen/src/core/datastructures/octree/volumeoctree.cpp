@@ -398,8 +398,6 @@ const VolumeOctreeNode* VolumeOctree::getNode(const tgt::vec3& point, size_t& le
 const uint16_t* VolumeOctree::getNodeBrick(const VolumeOctreeNode* node) const {
     tgtAssert(brickPoolManager_, "no brick pool manager");
     tgtAssert(node, "null pointer");
-    tgtAssert((node->getBrickAddress() == 0) || (node->getBrickAddress() == std::numeric_limits<uint64_t>::max()) || isMultipleOf(node->getBrickAddress(), (uint64_t)getBrickMemorySize()),
-        "node brick offset is not a multiple of brick memory size");
 
     return brickPoolManager_->getBrick(node->getBrickAddress());
 }
@@ -407,8 +405,6 @@ const uint16_t* VolumeOctree::getNodeBrick(const VolumeOctreeNode* node) const {
 void VolumeOctree::releaseNodeBrick(const VolumeOctreeNode* node) const {
     tgtAssert(brickPoolManager_, "no brick pool manager");
     tgtAssert(node, "null pointer");
-    tgtAssert((node->getBrickAddress() == 0) || (node->getBrickAddress() == std::numeric_limits<uint64_t>::max()) || isMultipleOf(node->getBrickAddress(), (uint64_t)getBrickMemorySize()),
-        "node brick offset is not a multiple of brick memory size");
 
     return brickPoolManager_->releaseBrick(node->getBrickAddress());
 

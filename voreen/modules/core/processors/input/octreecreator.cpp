@@ -28,6 +28,7 @@
 #include "voreen/core/datastructures/octree/volumeoctree.h"
 #include "voreen/core/datastructures/octree/octreebrickpoolmanager.h"
 #include "voreen/core/datastructures/octree/octreebrickpoolmanagerdisk.h"
+#include "voreen/core/datastructures/octree/octreebrickpoolmanagermmap.h"
 #include "voreen/core/datastructures/octree/octreeutils.h"
 
 #include "voreen/core/voreenapplication.h"
@@ -165,6 +166,7 @@ OctreeCreator::OctreeCreator()
 
     brickPoolManager_.addOption("brickPoolManagerRAM",  "RAM (non-persistent)");
     brickPoolManager_.addOption("brickPoolManagerDisk", "Disk");
+    brickPoolManager_.addOption("brickPoolManagerMmap", "Mmap");
     brickPoolManager_.select("brickPoolManagerDisk");
     addProperty(brickPoolManager_);
     brickPoolManager_.onChange(MemberFunctionCallback<OctreeCreator>(this, &OctreeCreator::updatePropertyConfiguration));
@@ -312,6 +314,12 @@ OctreeCreatorInput OctreeCreator::prepareComputeInput() {
             tgt::FileSystem::createDirectoryRecursive(brickPoolPath);
         brickPoolManager = new OctreeBrickPoolManagerDisk(static_cast<size_t>(singleBufferMemorySize_.get()) << 20,
             VoreenApplication::app()->getCpuRamLimit(), brickPoolPath, BRICK_BUFFER_FILE_PREFIX);
+    }
+    else if (brickPoolManager_.isSelected("brickPoolManagerMmap")) {
+        std::string brickPoolPath = tgt::FileSystem::cleanupPath(getOctreeStoragePath() + "/" + BRICK_BUFFER_SUBDIR);
+        if (!tgt::FileSystem::dirExists(brickPoolPath))
+            tgt::FileSystem::createDirectoryRecursive(brickPoolPath);
+        brickPoolManager = new OctreeBrickPoolManagerMmap(brickPoolPath, BRICK_BUFFER_FILE_PREFIX);
     }
     else {
         throw InvalidInputException("Unknown brick pool manager: " + brickPoolManager_.get(), InvalidInputException::S_ERROR);
