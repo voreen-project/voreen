@@ -85,21 +85,17 @@ public:
     virtual uint64_t getBrickPoolMemoryAllocated() const;
     virtual std::string getDescription() const;
 
-    std::pair<uint64_t, uint64_t> blockAddrToStorageIndex;
+    std::string storageFileName(uint64_t fileIndex) const;
 
 protected:
     virtual void initialize(size_t brickMemorySizeInByte);
     virtual void deinitialize();
 private:
-    //--------------------
-    //  members
-    //--------------------
 
-    /// general defines
     std::string brickPoolPath_;                 //< directory where the buffer files are stored
     std::string bufferFilePrefix_;              //< filename prefix of the buffer files (may be empty)
 
-    std::atomic_uint64_t nextNewBrickAddr_;
+    std::atomic<uint64_t> nextNewBrickAddr_; // Addr (index) of the next (entirely new) brick that can be allocated
 
     mutable boost::shared_mutex storageMutex_; // R/RW for storage_, i.e,. either: read (shared) or modify (exclusive)
     mutable std::vector<boost::iostreams::mapped_file> storage_;

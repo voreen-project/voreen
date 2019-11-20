@@ -75,11 +75,9 @@ OctreeBrickPoolManagerMmap* OctreeBrickPoolManagerMmap::create() const {
 //-----------------------------------------------------------------------------------------------------------------------
 void OctreeBrickPoolManagerMmap::initialize(size_t brickMemorySizeInByte) {
     OctreeBrickPoolManagerBase::initialize(brickMemorySizeInByte);
-    // TODO
 }
 
 void OctreeBrickPoolManagerMmap::deinitialize() {
-    // TODO
     flushPoolToDisk();
 
     OctreeBrickPoolManagerBase::deinitialize();
@@ -90,69 +88,60 @@ void OctreeBrickPoolManagerMmap::deinitialize() {
 //-----------------------------------------------------------------------------------------------------------------------
 void OctreeBrickPoolManagerMmap::serialize(Serializer& s) const {
     OctreeBrickPoolManagerBase::serialize(s);
-    // TODO
 
-    /*
-    s.serialize("maxSingleBufferSizeBytes", maxBufferSizeBytes_);
-    s.serialize("singleBufferSizeBytes",    singleBufferSizeBytes_);
-    s.serialize("numBrickSlotsPerBuffer",   numBrickSlotsPerBuffer_);
-
-    //save relative pathes
-    std::vector<std::string> relBufferFiles;
-    for(size_t i = 0; i < bufferFiles_.size(); i++)
-        relBufferFiles.push_back(tgt::FileSystem::cleanupPath(tgt::FileSystem::relativePath(bufferFiles_[i],tgt::FileSystem::dirName(s.getDocumentPath())),false));
-    s.serialize("bufferFiles", relBufferFiles);
-
-
-    s.serialize("brickPoolPath", tgt::FileSystem::cleanupPath(tgt::FileSystem::relativePath(brickPoolPath_,tgt::FileSystem::dirName(s.getDocumentPath())),false));
+    s.serialize("brickPoolPath", tgt::FileSystem::cleanupPath(tgt::FileSystem::relativePath(brickPoolPath_,tgt::FileSystem::dirName(s.getDocumentPath())), false));
     s.serialize("bufferFilePrefix", bufferFilePrefix_);
 
-    s.serialize("nextVirtualMemoryAddress", nextVirtualMemoryAddress_);
-    */
+    size_t numFiles;
+    {
+        boost::shared_lock<boost::shared_mutex> rlock(storageMutex_);
+        numFiles = storage_.size();
+    }
+
+    std::vector<std::string> relBufferFiles;
+    for(uint64_t i=0; i<numFiles; ++i) {
+        relBufferFiles.push_back(tgt::FileSystem::cleanupPath(tgt::FileSystem::relativePath(storageFileName(i),tgt::FileSystem::dirName(s.getDocumentPath())),false));
+    }
+    s.serialize("bufferFiles", relBufferFiles);
+
+    uint64_t nextNewBrickAddr = nextNewBrickAddr_;
+    s.serialize("nextNewBrickAddr", nextNewBrickAddr);
 }
 
 void  OctreeBrickPoolManagerMmap::deserialize(Deserializer& s) {
     OctreeBrickPoolManagerBase::deserialize(s);
-    // TODO
-
-    /*
-    s.deserialize("maxSingleBufferSizeBytes", maxBufferSizeBytes_);
-    s.deserialize("singleBufferSizeBytes",    singleBufferSizeBytes_);
-    s.deserialize("numBrickSlotsPerBuffer", numBrickSlotsPerBuffer_);
-
-    s.deserialize("bufferFiles", bufferFiles_);
-    for(size_t i = 0; i < bufferFiles_.size(); i++)
-        bufferFiles_[i] = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(s.getDocumentPath()) + "/" + bufferFiles_[i],true);
 
     s.deserialize("brickPoolPath", brickPoolPath_);
-    brickPoolPath_ = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(s.getDocumentPath()) + "/" + brickPoolPath_,true);
+    brickPoolPath_ = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(s.getDocumentPath()) + "/" + brickPoolPath_, true);
 
     s.deserialize("bufferFilePrefix", bufferFilePrefix_);
 
-    s.deserialize("nextVirtualMemoryAddress", nextVirtualMemoryAddress_);
+    std::vector<std::string> relBufferFiles;
+    s.deserialize("bufferFiles", relBufferFiles);
+    {
+        boost::unique_lock<boost::shared_mutex> rlock(storageMutex_);
 
-    // check brick pool path
-    if (!tgt::FileSystem::dirExists(brickPoolPath_))
-        throw VoreenException("Brick pool path does not exist: " + brickPoolPath_);
+        for(uint64_t i=0; i<relBufferFiles.size(); ++i) {
+            size_t fileSize = numBricksInFile(i) * getBrickMemorySizeInByte();
 
-    // make sure that buffer files are present
-    if (bufferFiles_.empty())
-        throw VoreenException("No brick buffer files");
-    for (size_t i=0; i<bufferFiles_.size(); i++) {
-        if (!tgt::FileSystem::fileExists(bufferFiles_.at(i)))
-            throw VoreenException("Missing brick buffer file: " + bufferFiles_.at(i));
+            std::string filename = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(s.getDocumentPath()) + "/" + relBufferFiles[i],true);
+
+            boost::iostreams::mapped_file_params openParams;
+            openParams.path = filename;
+            openParams.mode = std::ios::in | std::ios::out;
+            openParams.length = fileSize;
+
+            storage_.emplace_back(openParams);
+        }
     }
+    uint64_t nextNewBrickAddr;
+    s.deserialize("nextNewBrickAddr", nextNewBrickAddr);
+    nextNewBrickAddr_ = nextNewBrickAddr;
+}
 
-    // check ram limit vs. buffer size
-    if (2*singleBufferSizeBytes_ > ramLimitInBytes_)
-        throw VoreenException("RAM memory limit is smaller than two times the size of a buffer. At least two buffer files have to fit in the RAM. "
-            "[" + itos(ramLimitInBytes_) + " bytes < 2*" + itos(singleBufferSizeBytes_) + " bytes]");
-
-    // init buffer vector
-    maxNumBuffersInRAM_ = ramLimitInBytes_/singleBufferSizeBytes_;
-    for (size_t i = 0; i < bufferFiles_.size(); i++)
-        bufferVector_.push_back(new BufferEntry(numBrickSlotsPerBuffer_, 0, 0));
-    */
+std::string OctreeBrickPoolManagerMmap::storageFileName(uint64_t fileIndex) const {
+    //TODO revisit if naming scheme changes e.g. when saving with octreesave (it shouldn't).
+    return tgt::FileSystem::cleanupPath(brickPoolPath_ + "/" + bufferFilePrefix_ + std::to_string(fileIndex));
 }
 
 //-----------------------------------------------------------------------------------------------------------------------
@@ -184,7 +173,7 @@ uint16_t* OctreeBrickPoolManagerMmap::getWritableBrick(uint64_t virtualMemoryAdd
                 size_t fileSize = numBricksInFile(newFileIndex) * getBrickMemorySizeInByte();
 
                 boost::iostreams::mapped_file_params openParams;
-                openParams.path = tgt::FileSystem::cleanupPath(brickPoolPath_ + "/" + bufferFilePrefix_ + std::to_string(newFileIndex));
+                openParams.path = storageFileName(newFileIndex);
                 openParams.mode = std::ios::in | std::ios::out;
                 openParams.length = fileSize;
                 openParams.new_file_size = fileSize; // Option: Do create the file (overwrite if it does exist)!
