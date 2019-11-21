@@ -50,6 +50,8 @@ class VRN_CORE_API OctreeBrickPoolManagerBase : public VoreenSerializableObject 
 
 public:
 
+    static const uint64_t NO_BRICK_ADDRESS = std::numeric_limits<uint64_t>::max();
+
     enum AccessMode{
         READ,
         WRITE

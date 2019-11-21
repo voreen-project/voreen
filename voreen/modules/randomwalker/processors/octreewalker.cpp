@@ -36,7 +36,7 @@
 #include "voreen/core/datastructures/volume/operators/volumeoperatormorphology.h"
 #include "voreen/core/datastructures/volume/operators/volumeoperatorresample.h"
 #include "voreen/core/datastructures/volume/operators/volumeoperatornumsignificant.h"
-#include "voreen/core/datastructures/octree/octreebrickpoolmanagerdisk.h"
+#include "voreen/core/datastructures/octree/octreebrickpoolmanagermmap.h"
 #include "voreen/core/datastructures/octree/volumeoctreenodegeneric.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 #include "tgt/vector.h"
@@ -885,7 +885,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
         }
     }();
     if(stop) {
-        return NO_BRICK_ADDRESS;
+        return OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS;
     }
 
     tgt::svec3 walkerBlockDim = seeds.bufferDimensions();
@@ -918,7 +918,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
         for(int i=0; i<numVoxels; ++i) {
             histogram.addSample(0.5f);
         }
-        return NO_BRICK_ADDRESS;
+        return OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS;
     }
 
     auto solution = tgt::make_unique<float[]>(systemSize);
@@ -989,7 +989,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
 
     if(canSkipChildren(brickToNorm(min), brickToNorm(max))) {
         outputPoolManager.deleteBrick(outputBrickAddr);
-        return NO_BRICK_ADDRESS;
+        return OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS;
     }
 
     return outputBrickAddr;
@@ -1060,8 +1060,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     }
 
     size_t brickSizeInBytes = brickSize * sizeof(uint16_t);
-    OctreeBrickPoolManagerDisk* brickPoolManagerDisk = new OctreeBrickPoolManagerDisk(brickSizeInBytes,
-            VoreenApplication::app()->getCpuRamLimit(), brickPoolPath, BRICK_BUFFER_FILE_PREFIX);
+    OctreeBrickPoolManagerMmap* brickPoolManagerDisk = new OctreeBrickPoolManagerMmap(brickPoolPath, BRICK_BUFFER_FILE_PREFIX);
 
     std::unique_ptr<OctreeBrickPoolManagerBase> brickPoolManager(brickPoolManagerDisk);
     tgt::ScopeGuard brickPoolManagerDeinitializer([&brickPoolManager] () {
@@ -1069,8 +1068,6 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     });
 
     brickPoolManager->initialize(brickSizeInBytes);
-
-    brickPoolManagerDisk->setRAMLimit(1UL * 1024 * 1024 * 1024); //TODO make configurable
 
     struct NodeToProcess {
         const VolumeOctreeNode* inputNode;
@@ -1167,7 +1164,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             genericNode->maxValues_[0] = max;
 
             node.outputNode->setBrickAddress(newBrickAddr);
-            if(newBrickAddr != NO_BRICK_ADDRESS && !node.inputNode->isLeaf() /* TODO handle early leaf (with current octree architecture not possible) */) {
+            if(newBrickAddr != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS && !node.inputNode->isLeaf() /* TODO handle early leaf (with current octree architecture not possible) */) {
                 tgt::svec3 childBrickSize = brickDim * (1UL << (level-1));
                 for(auto child : OCTREEWALKER_CHILD_POSITIONS) {
                     const size_t childId = volumeCoordsToIndex(child, tgt::svec3::two);
@@ -1176,7 +1173,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 
                     VolumeOctreeNode* outputChildNode;
                     if(inputChildNode->inVolume()) {
-                        outputChildNode = new VolumeOctreeNodeGeneric<1>(NO_BRICK_ADDRESS, true);
+                        outputChildNode = new VolumeOctreeNodeGeneric<1>(OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS, true);
 
                         tgt::svec3 start = node.llf + childBrickSize * child;
                         tgt::svec3 end = tgt::min(start + childBrickSize, volumeDim);
@@ -1192,7 +1189,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                             );
                         }
                     } else {
-                        outputChildNode = new VolumeOctreeNodeGeneric<1>(NO_BRICK_ADDRESS, false);
+                        outputChildNode = new VolumeOctreeNodeGeneric<1>(OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS, false);
                     }
                     node.outputNode->children_[childId] = outputChildNode;
                 }

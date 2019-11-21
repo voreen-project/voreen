@@ -37,8 +37,14 @@
 
 namespace voreen {
 
-static uint64_t numBricksInFile(uint64_t fileIndex) {
+static inline uint64_t numBricksInFile(uint64_t fileIndex) {
     return 1 << fileIndex;
+}
+static inline std::array<uint16_t, 4> packAddr(uint64_t addr) {
+    return { static_cast<uint16_t>(addr), static_cast<uint16_t>(addr >> 16), static_cast<uint16_t>(addr >> 32), static_cast<uint16_t>(addr >> 48) };
+}
+static inline uint64_t unpackAddr(std::array<uint16_t, 4> packed) {
+    return static_cast<uint64_t>(packed[0]) | static_cast<uint64_t>(packed[1]) << 16 | static_cast<uint64_t>(packed[2]) << 32 | static_cast<uint64_t>(packed[3]) << 48;
 }
 
 OctreeBrickPoolManagerMmapStorageIndex::OctreeBrickPoolManagerMmapStorageIndex(uint64_t brickAddr) {
@@ -57,6 +63,7 @@ OctreeBrickPoolManagerMmap::OctreeBrickPoolManagerMmap(const std::string& brickP
     , brickPoolPath_(brickPoolPath)
     , bufferFilePrefix_(bufferFilePrefix)
     , storage_()
+    , freeListHead_(NO_BRICK_ADDRESS)
     , nextNewBrickAddr_(1)
 {
     brickPoolPath_ = tgt::FileSystem::absolutePath(brickPoolPath);
@@ -106,6 +113,9 @@ void OctreeBrickPoolManagerMmap::serialize(Serializer& s) const {
 
     uint64_t nextNewBrickAddr = nextNewBrickAddr_;
     s.serialize("nextNewBrickAddr", nextNewBrickAddr);
+
+    uint64_t freeListHead = freeListHead_;
+    s.serialize("freeListHead_", freeListHead);
 }
 
 void  OctreeBrickPoolManagerMmap::deserialize(Deserializer& s) {
@@ -137,6 +147,10 @@ void  OctreeBrickPoolManagerMmap::deserialize(Deserializer& s) {
     uint64_t nextNewBrickAddr;
     s.deserialize("nextNewBrickAddr", nextNewBrickAddr);
     nextNewBrickAddr_ = nextNewBrickAddr;
+
+    uint64_t freeListHead;
+    s.deserialize("freeListHead", freeListHead);
+    freeListHead_ = freeListHead;
 }
 
 std::string OctreeBrickPoolManagerMmap::storageFileName(uint64_t fileIndex) const {
@@ -196,15 +210,55 @@ uint16_t* OctreeBrickPoolManagerMmap::getWritableBrick(uint64_t virtualMemoryAdd
 }
 
 void OctreeBrickPoolManagerMmap::releaseBrick(uint64_t virtualMemoryAddress, AccessMode mode) const {
-    // Nothing to do here
+    // Nothing to do here: Blocks are writting back to disk by OS.
 }
 
 uint64_t OctreeBrickPoolManagerMmap::allocateBrick() {
-    return nextNewBrickAddr_.fetch_add(1); //TODO use free list
+    uint64_t currentListHeadAddr;
+    uint64_t newListHeadAddr;
+
+    do {
+        // Start time copy (assuming no modifications in the meantime)
+        currentListHeadAddr = freeListHead_;
+
+        if(freeListHead_ == NO_BRICK_ADDRESS)  {
+            // No blocks in free list: allocate completely new block
+            return nextNewBrickAddr_.fetch_add(1);
+        }
+
+        // Read addr block after head in list from header block itself
+        const uint16_t* currentListHead = getBrick(currentListHeadAddr);
+        std::array<uint16_t, 4> newListHeadAddrPacked;
+        std::copy_n(currentListHead, newListHeadAddrPacked.size(), newListHeadAddrPacked.begin());
+        newListHeadAddr = unpackAddr(newListHeadAddrPacked);
+
+        // Store this after-head-block addr as new head addr
+        // Repeat if actual value has changed compared to start time copy
+    } while(!freeListHead_.compare_exchange_strong(currentListHeadAddr, newListHeadAddr));
+
+    //LINFO("Reusing block from free list" << currentListHeadAddr);
+    return currentListHeadAddr;
 }
 
 void OctreeBrickPoolManagerMmap::deleteBrick(uint64_t virtualMemoryAddress) {
-    //TODO use free list
+    tgtAssert(getBrickMemorySizeInByte() >= sizeof(uint64_t), "Bricks too small to host free list");
+    //LINFO("Deleting block" << virtualMemoryAddress);
+
+    uint16_t* newListHead = getWritableBrick(virtualMemoryAddress);
+
+    uint64_t currentListHeadAddr;
+    uint64_t newListHeadAddr;
+    do {
+        // Save the current list header addr as data in the deleted block
+        currentListHeadAddr = freeListHead_;
+        auto currentListHeadAddrPacked = packAddr(currentListHeadAddr);
+        std::copy(currentListHeadAddrPacked.begin(), currentListHeadAddrPacked.end(), newListHead);
+
+        // Make the deleted block address the new free list header
+        newListHeadAddr = virtualMemoryAddress;
+
+        // Repeat this as long as another thread has changed freeListHead_ in the mean time
+    } while(!freeListHead_.compare_exchange_strong(currentListHeadAddr, newListHeadAddr));
 }
 
 void OctreeBrickPoolManagerMmap::flushPoolToDisk(ProgressReporter* progressReporter /*= 0*/) {

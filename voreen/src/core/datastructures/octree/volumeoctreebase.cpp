@@ -27,6 +27,7 @@
 #include "voreen/core/datastructures/octree/volumeoctreenodegeneric.h"
 
 #include "voreen/core/datastructures/octree/octreeutils.h"
+#include "voreen/core/datastructures/octree/octreebrickpoolmanager.h"
 
 #include "voreen/core/utils/stringutils.h"
 #include "voreen/core/datastructures/volume/volume.h"
@@ -76,7 +77,7 @@ VolumeOctreeNode::VolumeOctreeNode(uint64_t brickAddress, bool inVolume)
     children_[7] = 0;
 }
 VolumeOctreeNode::VolumeOctreeNode()
-    : VolumeOctreeNode(NO_BRICK_ADDRESS, true)
+    : VolumeOctreeNode(OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS, true)
 {
 }
 
@@ -84,7 +85,7 @@ VolumeOctreeNode::~VolumeOctreeNode() {
 }
 
 bool VolumeOctreeNode::hasBrick() const {
-    return brickAddress_ != NO_BRICK_ADDRESS;
+    return brickAddress_ != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS;
 }
 
 void VolumeOctreeNode::setBrickAddress(uint64_t addr) {
