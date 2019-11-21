@@ -262,14 +262,15 @@ void OctreeBrickPoolManagerMmap::deleteBrick(uint64_t virtualMemoryAddress) {
 }
 
 void OctreeBrickPoolManagerMmap::flushPoolToDisk(ProgressReporter* progressReporter /*= 0*/) {
-    // TODO call fsync? See https://stackoverflow.com/questions/40972420/how-to-flush-memory-mapped-files-using-boosts-mapped-file-sink-class
+    // Bricks are automatically written back to disk.
+    // It may be possible to call fsync or similar, but it is unclear if this is in line with the semantics of this function.
 }
 
 //-----------------------------------------------------------------------------------------------------------------------
 //      GENERAL FUNCTIONS
 //-----------------------------------------------------------------------------------------------------------------------
 uint64_t OctreeBrickPoolManagerMmap::getBrickPoolMemoryUsed() const {
-    return 0; //TODO
+    return 0; // No way to query this. No memory is explicitly allocated.
 }
 
 std::string OctreeBrickPoolManagerMmap::getDescription() const {
@@ -277,7 +278,7 @@ std::string OctreeBrickPoolManagerMmap::getDescription() const {
 }
 
 uint64_t OctreeBrickPoolManagerMmap::getBrickPoolMemoryAllocated() const {
-    return 0; //TODO
+    return 0; // No way to query this. No memory is explicitly allocated.
 }
 
 } // namespace
