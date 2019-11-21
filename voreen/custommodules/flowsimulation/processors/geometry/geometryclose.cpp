@@ -102,6 +102,12 @@ void GeometryClose::process() {
         return;
     }
 
+    if(geometry->getNumVertices() == 0) {
+        LERROR("Geometry is empty!");
+        outport_.setData(nullptr);
+        return;
+    }
+
     // Ensure the indices are set correctly.
     bool usesIndices = geometry->getNumIndices() > 0;
     if(!usesIndices) {
