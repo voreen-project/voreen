@@ -1131,8 +1131,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
         ThreadedTaskProgressReporter parallelProgress(levelProgress, numNodes);
         bool aborted = false;
 #ifdef VRN_OCTREEWALKER_USE_OMP
-        int numThreads = std::max(8 /* at least 8 threads for 8 children per node */, omp_get_num_procs());
-#pragma omp parallel for num_threads(numThreads) schedule(dynamic, 1) // Schedule: Process nodes/bricks locally to utilize brick cache
+#pragma omp parallel for schedule(dynamic, 1) // Schedule: Process nodes/bricks locally to utilize brick cache
 #endif
         for (int nodeId = 0; nodeId < numNodes; ++nodeId) {
 #ifdef VRN_OCTREEWALKER_USE_OMP
