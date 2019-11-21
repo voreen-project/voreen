@@ -30,6 +30,7 @@
 #include "voreen/core/datastructures/octree/brickpoolmanagerqueue.h"
 
 #include <map>
+#include <atomic>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
