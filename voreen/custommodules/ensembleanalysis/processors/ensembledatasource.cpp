@@ -45,7 +45,8 @@ const std::string EnsembleDataSource::loggerCat_("voreen.ensembleanalysis.Ensemb
 EnsembleDataSource::EnsembleDataSource()
     : Processor()
     , outport_(Port::OUTPORT, "ensembledataset", "EnsembleDataset Output", false)
-    , ensemblePath_("ensemblepath", "Ensemble Path", "Select Ensemble root folder", "", "", FileDialogProperty::DIRECTORY)
+    , ensemblePath_("ensemblepath", "Ensemble Path", "Select Ensemble root folder", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_PATH)
+    , autoLoad_("autoLoad", "Auto Load", false, Processor::VALID, Property::LOD_ADVANCED)
     , loadDatasetButton_("loadDataset", "Load Dataset")
     , runProgress_("runProgress", "Runs loaded")
     , timeStepProgress_("timeStepProgress", "Time Steps loaded")
@@ -56,6 +57,7 @@ EnsembleDataSource::EnsembleDataSource()
 {
     addPort(outport_);
     addProperty(ensemblePath_);
+    addProperty(autoLoad_);
     addProperty(loadDatasetButton_);
     addProperty(runProgress_);
     addProgressBar(&runProgress_);
@@ -84,20 +86,27 @@ EnsembleDataSource::EnsembleDataSource()
     ON_CHANGE(loadDatasetButton_, EnsembleDataSource, buildEnsembleDataset);
 }
 
-EnsembleDataSource::~EnsembleDataSource() {
-}
-
 Processor* EnsembleDataSource::create() const {
     return new EnsembleDataSource();
 }
 
 void EnsembleDataSource::process() {
-    // Nothing to do.
+
+    // Reload whole ensemble, if file watching was enabled and some file changed.
+    if(invalidationLevel_ >= INVALID_PATH && ensemblePath_.isFileWatchEnabled()) {
+        buildEnsembleDataset();
+    }
+
+    // Just set the data, because connecting another port would require to reload the data otherwise.
+    // This also enables file watching.
+    outport_.setData(output_.get(), false);
 }
 
 void EnsembleDataSource::initialize() {
     Processor::initialize();
-    //buildEnsembleDataset();
+    if(autoLoad_.get()) {
+        buildEnsembleDataset();
+    }
 }
 
 void EnsembleDataSource::deinitialize() {
@@ -106,7 +115,8 @@ void EnsembleDataSource::deinitialize() {
 }
 
 void EnsembleDataSource::clearEnsembleDataset() {
-    outport_.clear(); // Important: clear the output before deleting volumes!
+    outport_.clear();
+    output_.reset(); // Important: clear the output before deleting volumes!
     volumes_.clear();
     setProgress(0.0f);
     timeStepProgress_.setProgress(0.0f);
@@ -124,7 +134,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
     loadDatasetButton_.setReadOnlyFlag(true);
 
-    EnsembleDataset* dataset = new EnsembleDataset();
+    std::unique_ptr<EnsembleDataset> dataset(new EnsembleDataset());
 
     std::vector<std::string> runs = tgt::FileSystem::listSubDirectories(ensemblePath_.get(), true);
     float progressPerRun = 1.0f / runs.size();
@@ -245,7 +255,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
     }
 
     hash_.set(EnsembleHash(*dataset).getHash());
-    outport_.setData(dataset, true);
+    output_ = std::move(dataset);
 
     timeStepProgress_.setProgress(1.0f);
     setProgress(1.0f);

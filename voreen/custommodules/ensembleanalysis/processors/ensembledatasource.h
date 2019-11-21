@@ -42,8 +42,7 @@
 namespace voreen {
 
 /**
- * Loads multiple volumes and provides them
- * as VolumeList through its outport.
+ * Loads an Ensemble of Volumes, organized into multiple runs.
  */
 class VRN_CORE_API EnsembleDataSource : public Processor {
 
@@ -55,7 +54,6 @@ class VRN_CORE_API EnsembleDataSource : public Processor {
 
 public:
     EnsembleDataSource();
-    virtual ~EnsembleDataSource();
     virtual Processor* create() const;
 
     virtual std::string getClassName() const  { return "EnsembleDataSource";    }
@@ -65,7 +63,15 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Loads multiple volumes and provides them as VolumeList.");
+        setDescription("Loads an Ensemble of Volumes, organized into multiple runs.");
+        ensemblePath_.setDescription("Expects a folder containing a separate folder for each ensemble member "
+                                     "(aka run). Each folder must contain a single file (of any supported format) "
+                                     "for each time step of the respective run. Each of those files may contain multiple"
+                                     "volumes which will be interpreted as time steps, in lexicographic order."
+                                     "The volume files might contain time step meta information which do not need to "
+                                     "match the files' names. ");
+        autoLoad_.setDescription("If enabled, this will force the ensemble to be loaded automatically "
+                                 "when the workspace is loaded the next time.");
     }
 
     void process();
@@ -77,8 +83,10 @@ protected:
     void printEnsembleDataset();
 
     std::vector<std::unique_ptr<const VolumeBase>> volumes_;
+    std::unique_ptr<EnsembleDataset> output_;
 
     FileDialogProperty ensemblePath_;
+    BoolProperty autoLoad_;
     ButtonProperty loadDatasetButton_;
     ProgressProperty runProgress_;
     ProgressProperty timeStepProgress_;
