@@ -77,12 +77,6 @@ struct OctreeWalkerOutput {
     std::chrono::duration<float> duration_;
 };
 
-/**
- * Performs a semi-automatic volume segmentation using the 3D random walker algorithm.
- * User manual: http://voreen.uni-muenster.de/?q=random-walker
- *
- * @see OctreeWalkerSolver
- */
 class OctreeWalker : public AsyncComputeProcessor<OctreeWalkerInput, OctreeWalkerOutput> {
 public:
     OctreeWalker();
@@ -97,8 +91,7 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Performs a semi-automatic volume segmentation using the 3D random walker algorithm. "
-                       "<p>See: <a href=\"http://voreen.uni-muenster.de/?q=random-walker\" >voreen.uni-muenster.de/?q=random-walker</a></p>");
+        setDescription("Performs a semi-automatic octree volume segmentation using a hierarchical 3D random walker algorithm.");
     }
 
     virtual ComputeInput prepareComputeInput();
@@ -140,8 +133,6 @@ private:
     typedef std::chrono::steady_clock clock;
 
     bool recomputeOctreeWalker_;
-
-    const VolumeRAM* currentInputVolume_;
 
     static const std::string loggerCat_; ///< category used in logging
 };

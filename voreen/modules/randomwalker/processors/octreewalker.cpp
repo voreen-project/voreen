@@ -59,7 +59,6 @@ namespace voreen {
 //#define VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
 
 const std::string OctreeWalker::loggerCat_("voreen.RandomWalker.OctreeWalker");
-using tgt::vec3;
 
 OctreeWalker::OctreeWalker()
     : AsyncComputeProcessor<OctreeWalkerInput, OctreeWalkerOutput>(),
@@ -73,8 +72,7 @@ OctreeWalker::OctreeWalker()
     errorThreshold_("errorThreshold", "Error Threshold: 10^(-t)", 2, 0, 10),
     maxIterations_("conjGradIterations", "Max Iterations", 1000, 1, 5000),
     conjGradImplementation_("conjGradImplementation", "Implementation"),
-    homogeneityThreshold_("homogeneityThreshold", "Homogeneity Threshold", 0.01, 0.0, 1.0),
-    currentInputVolume_(0)
+    homogeneityThreshold_("homogeneityThreshold", "Homogeneity Threshold", 0.01, 0.0, 1.0)
 {
     // ports
     addPort(inportVolume_);
