@@ -28,10 +28,13 @@ tgt::vec3 sampleDisk(const VolumeBase* volume, const tgt::vec3& origin, const tg
         return tgt::vec3::zero;
     }
 
+    RealWorldMapping rwm = volume->getRealWorldMapping();
+
     tgt::mat4 worldToIndicatorSpaceMatrix = volume->getWorldToVoxelMatrix();
     worldToIndicatorSpaceMatrix *= utils::createTransformationMatrix(origin, normal);
 
     VolumeRAMRepresentationLock representation(volume);
+    tgtAssert(*representation, "No representation");
 
     tgt::vec3 meanVelocity = tgt::vec3::zero;
     float maxVelocityMagnitude = 0.0f;
@@ -50,7 +53,7 @@ tgt::vec3 sampleDisk(const VolumeBase* volume, const tgt::vec3& origin, const tg
             // Determine velocity at the calculated location.
             tgt::vec3 velocity = tgt::vec3::zero;
             for(size_t channel=0; channel < representation->getNumChannels(); channel++) {
-                velocity[channel] = representation->getVoxelNormalizedLinear(voxel, channel);
+                velocity[channel] = rwm.normalizedToRealWorld(representation->getVoxelNormalizedLinear(voxel, channel));
             }
 
             // Gather statistics.

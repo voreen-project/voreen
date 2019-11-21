@@ -38,11 +38,11 @@ namespace voreen {
 // List of flow features which can be extracted during simulation.
 // Values have to be power of two (bitfield).
 enum FlowFeatures {
-    FF_NONE             = 0,
-    FF_VELOCITY         = 1,
-    FF_MAGNITUDE        = 2,
-    FF_PRESSURE         = 4,
-    FF_WALLSHEARSTRESS  = 8,
+    FF_NONE             = 0, ///< No flow feature
+    FF_VELOCITY         = 1, ///< Velocity vector field
+    FF_MAGNITUDE        = 2, ///< Magnitude scalar field (from velocity vector field)
+    FF_PRESSURE         = 4, ///< Pressure scalar field
+    FF_WALLSHEARSTRESS  = 8, ///< Wall shear stress scalar field
 };
 
 enum FlowIndicatorType {
@@ -53,33 +53,35 @@ enum FlowIndicatorType {
 };
 
 enum FlowProfile {
-    FP_NONE       = 0,
-    FP_POISEUILLE = 1,
-    FP_POWERLAW   = 2,
-    FP_CONSTANT   = 3,
+    FP_NONE       = 0, ///< No flow profile
+    FP_POISEUILLE = 1, ///< Poiseuille flow profile
+    FP_POWERLAW   = 2, ///< Power law flow profile
+    FP_CONSTANT   = 3, ///< constant flow profile
 };
 
 enum FlowStartPhase {
-    FSP_NONE     = 0,
-    FSP_CONSTANT = 1,
-    FSP_SINUS    = 2,
+    FSP_NONE     = 0, ///< No start phase
+    FSP_CONSTANT = 1, ///< constant start phase
+    FSP_SINUS    = 2, ///< sinusoidal start phase
 };
 
 // Indicates flux through an arbitrary, circle-shaped area.
 struct VRN_CORE_API FlowIndicator : public Serializable {
 
-    FlowIndicatorType   type_;
-    tgt::vec3           center_;
-    tgt::vec3           normal_;
-    float               radius_;
+    FlowIndicatorType   type_;      ///< Indicator type, @see FlowIndicatorType.
+    int                 id_;        ///< Unique identifier. Also used by OpenLB to indicate material.
+
+    tgt::vec3           center_;    ///< Center position of the circle shaped area in world space.
+    tgt::vec3           normal_;    ///< (Normalized) Normal vector defining the orientation.
+    float               radius_;    ///< Radius of the disk.
 
     // Used by generating flow indicators:
-    FlowProfile         flowProfile_;
+    FlowProfile         flowProfile_;    ///< Flow profile, @see FlowProfile.
+    FlowStartPhase      startPhaseFunction_; ///< Start phase function, @see FlowStartPhase.
+    float               startPhaseDuration_; ///< Start phase duration in seconds.
+    float               targetVelocity_; ///< Used to indicate the area's peak velocity.
 
-    FlowStartPhase      startPhaseFunction_;
-    float               startPhaseDuration_;
-
-    float               targetVelocity_; // TODO: remove.
+    bool                selected_;       ///< Used to indicate the currently selected indicator in UI.
 
     FlowIndicator();
 
@@ -178,10 +180,19 @@ private:
 class VRN_CORE_API FlowParameterSetEnsemble : public DataInvalidationObservable, public Serializable {
 
     static const int VERSION;
+    static const int FLOW_INDICATOR_ID_OFFSET;
 
 public:
 
     static const size_t ALL_PARAMETER_SETS;
+
+    /**
+     * Returns the offset used to generate flow indicator ids.
+     * Note: the offset depends on the simulation framework.
+     * E.g. OpenLB uses requires an offset of 2.
+     */
+    static int getFlowIndicatorIdOffset();
+
 
     explicit FlowParameterSetEnsemble(const std::string& name);
     FlowParameterSetEnsemble(const FlowParameterSetEnsemble& origin);
@@ -205,7 +216,7 @@ public:
      * Returns the output resolution of the intermediate time steps for each volume and their dimension.
      * This enforces basically a resampling of the simulation domain.
      * Note: this currently acts as the max(!) resolution. If all the features can be captured by a lower resolution
-     *       the latter will be taken. TODO: rename, if tested properly!
+     *       the latter will be taken.
      */
     int getOutputResolution() const;
     void setOutputResolution(int outputResolution);
@@ -217,6 +228,10 @@ public:
     int getFlowFeatures() const;
     void setFlowFeatures(int flowFeatures);
 
+    /**
+     * Add a flow indicator to the internal list.
+     * Note: This will set the unique id within the parameter set ensemble.
+     */
     void addFlowIndicator(const FlowIndicator& flowIndicator);
     const std::vector<FlowIndicator>& getFlowIndicators() const;
 
@@ -232,12 +247,13 @@ public:
     std::string toJSONString(size_t param = ALL_PARAMETER_SETS) const;
     std::string toXMLString(size_t param = ALL_PARAMETER_SETS) const;
 
-    virtual void serialize(Serializer& s) const;
-    virtual void deserialize(Deserializer& s);
+    void serialize(Serializer& s) const;
+    void deserialize(Deserializer& s);
 
 private:
 
     void serializeInternal(Serializer& s, size_t param) const;
+    int generateIndicatorId() const;
 
     // Ensemble name.
     std::string name_;

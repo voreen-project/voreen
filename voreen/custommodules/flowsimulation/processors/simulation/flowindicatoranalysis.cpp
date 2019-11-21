@@ -65,7 +65,7 @@ FlowIndicatorAnalysisInput FlowIndicatorAnalysis::prepareComputeInput() {
     std::unique_ptr<PlotData> output(new PlotData(1, indicators.size()));
     output->setColumnLabel(0, "Time [s]");
     for(size_t i=0; i<indicators.size(); i++) {
-        output->setColumnLabel(i+1, "Indicator " + std::to_string(i+1));
+        output->setColumnLabel(i+1, "Indicator " + std::to_string(indicators[i].id_));
     }
 
     return FlowIndicatorAnalysisInput {
@@ -97,10 +97,10 @@ FlowIndicatorAnalysisOutput FlowIndicatorAnalysis::compute(FlowIndicatorAnalysis
         progressReporter.setProgress((t+1.0f) / volumes->size());
     }
 
-    // If we only have a single row, copy and shift to make the line visible.
+    // If we only have a single row, copy and shift to render the line visible.
     if(data->getRowsCount() == 1) {
         std::vector<PlotCellValue> copy = data->getRow(0).getCells();
-        copy[0] = PlotCellValue(copy[0].getValue() + 1.0); // Add one seconds.
+        copy[0] = PlotCellValue(copy[0].getValue() + 1.0); // Add one second.
         data->insert(copy);
     }
 

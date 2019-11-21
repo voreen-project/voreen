@@ -64,17 +64,28 @@ protected:
 
 private:
 
-    struct IndicatorSettings {
-        VGNodeID nodeId;
-        VGEdgeID edgeId;
-        int voxelId;
+    /**
+     * This helper struct stores the settings of each indicator
+     * with respect to the current vessel graph.
+     */
+    struct FlowIndicatorSettings {
+        VGNodeID nodeId_{VGNodeID::INVALID};
+        VGEdgeID edgeId_{VGEdgeID::INVALID};
+        int centerlinePosition_{-1};
+        bool invertDirection_{false};
     };
+
+    /**
+     * Callback that is triggered as soon as the vessel graph changes.
+     * This will add new flow indicator candidates (and estimate their type).
+     */
+    void detectFlowIndicators(bool forced);
 
     /**
      * Callback that is triggered as soon as the selection was changed.
      * This will set the related property values accordingly.
      */
-    void onIndicatorSelectionChange();
+    void updateIndicatorUI();
 
     /**
      * Callback that is triggered as soon as properties of the selected indicator
@@ -83,16 +94,10 @@ private:
     void onIndicatorConfigChange();
 
     /**
-     * Callback that is triggered as soon the voxel id has been changed.
-     * This will reset all
+     * Callback that is triggered as soon the voxel id has been changed
+     * or the direction was inverted.
      */
-    void onIndicatorPositionChange();
-
-    /**
-     * Callback that is triggered as soon as the vessel graph or reference volume changes.
-     * This will add new flow indicator candidates (and estimate their type).
-     */
-    void onInputChange();
+    void onIndicatorSettingsChange();
 
     /**
      * Callback for cloning the currently selected flow indicator (if any).
@@ -105,14 +110,15 @@ private:
     void onRemoveFlowIndicator();
 
     /**
-     * Estimates the indicator type. This does NOT overwrite already set indicator types.
+     * Estimates the indicator type.
      */
     FlowIndicatorType estimateType(const FlowIndicator& indicator, const tgt::vec3& velocity) const;
 
     /**
-     * Updates the specified indicator according to the specified settings.
+     * Initializes a flow indicator according to the specified settings.
+     * This includes position and normal and radius.
      */
-    void updateIndicator(FlowIndicator& indicator, IndicatorSettings& settings);
+    FlowIndicator initializeIndicator(const FlowIndicatorSettings& settings);
 
     /**
      * Creates the overview table from the current flow indicator list.
@@ -123,7 +129,7 @@ private:
     FlowParametrizationPort parameterInport_;
     VesselGraphPort vesselGraphPort_;
     VolumePort volumePort_;
-    FlowParametrizationPort parameterOutport;
+    FlowParametrizationPort parameterOutport_;
 
     OptionProperty<FlowIndicatorType> indicatorType_;
     OptionProperty<FlowProfile> flowProfile_;
@@ -131,16 +137,20 @@ private:
     FloatProperty startPhaseDuration_;
     FloatProperty radius_;
     FloatProperty targetVelocity_;
-    IntProperty voxelId_;
+    IntProperty centerlinePosition_;
+    BoolProperty invertDirection_;
     ButtonProperty cloneFlowIndicator_;
     ButtonProperty removeFlowIndicator_;
 
     StringTableProperty flowIndicatorTable_;
+    ButtonProperty resetFlowIndicators_;
     IntProperty angleThreshold_;
 
     std::vector<FlowIndicator> flowIndicators_;
-    std::vector<IndicatorSettings> indicatorSettings_;
+    std::vector<FlowIndicatorSettings> flowIndicatorSettings_;
     bool triggertBySelection_;
+
+    std::string vesselGraphHash_;
 
     static const std::string loggerCat_;
 };

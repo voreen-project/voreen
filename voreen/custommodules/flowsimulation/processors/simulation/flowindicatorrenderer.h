@@ -70,7 +70,8 @@ private:
     ColorProperty pressureBoundaryColor_;
     ColorProperty measureFluxColor_;
 
-    GlMeshGeometryUInt16Simple* geometry_;
+    std::unique_ptr<GlMeshGeometryUInt16Simple> diskGeometry_;
+    std::unique_ptr<GlMeshGeometryUInt16Simple> coneGeometry_;
 };
 
 }

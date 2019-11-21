@@ -38,7 +38,6 @@ FlowIndicatorRenderer::FlowIndicatorRenderer()
     , flowGeneratorColor_("flowGeneratorColor", "Flow Generator Color", tgt::vec4(0.0f, 1.0f, 0.0f, 0.8f))
     , pressureBoundaryColor_("pressureBoundaryColor", "Pressure Boundary Color", tgt::vec4(1.0f, 0.0f, 0.0f, 0.8f))
     , measureFluxColor_("measureFluxColor", "Flux Measure Color", tgt::vec4(0.0f, 0.0f, 1.0f, 0.8f))
-    , geometry_(nullptr)
 {
     addPort(inport_);
 
@@ -50,13 +49,28 @@ FlowIndicatorRenderer::FlowIndicatorRenderer()
 
 void FlowIndicatorRenderer::initialize() {
     GeometryRendererBase::initialize();
-    geometry_ = new GlMeshGeometryUInt16Simple();
-    geometry_->setDiskGeometry(0.0f, 1.0f, 16);
+
+    const int numSlices = 16;
+
+    // Disk.
+    diskGeometry_.reset(new GlMeshGeometryUInt16Simple());
+    diskGeometry_->setDiskGeometry(0.0f, 1.0f, numSlices);
+
+    // Cone.
+    coneGeometry_.reset(new GlMeshGeometryUInt16Simple());
+    coneGeometry_->setPrimitiveType(GL_TRIANGLE_FAN);
+    coneGeometry_->addVertex(VertexBase(tgt::vec3(0.0f, 0.0f, 1.0f)));
+    for(size_t i=0; i <= numSlices; ++i) {
+        float s = std::sin(tgt::PIf*2*i/numSlices);
+        float c = std::cos(tgt::PIf*2*i/numSlices);
+        tgt::vec3 vertPos(s, c, 0);
+        coneGeometry_->addVertex(vertPos);
+    }
 }
 
 void FlowIndicatorRenderer::deinitialize() {
-    delete geometry_;
-    geometry_ = nullptr;
+    diskGeometry_.reset();
+    coneGeometry_.reset();
     GeometryRendererBase::deinitialize();
 }
 
@@ -86,16 +100,18 @@ void FlowIndicatorRenderer::render() {
         MatStack.multMatrix(utils::createTransformationMatrix(indicator.center_, indicator.normal_));
         MatStack.scale(tgt::vec3(indicator.radius_));
 
-        if(indicator.type_ == FIT_GENERATOR)
+        if(indicator.type_ == FIT_GENERATOR) {
             IMode.color(flowGeneratorColor_.get());
-        else if(indicator.type_ == FIT_PRESSURE)
+            coneGeometry_->render();
+        }
+        else if(indicator.type_ == FIT_PRESSURE) {
             IMode.color(pressureBoundaryColor_.get());
-        else if(indicator.type_ == FIT_MEASURE)
+            diskGeometry_->render();
+        }
+        else if(indicator.type_ == FIT_MEASURE) {
             IMode.color(measureFluxColor_.get());
-        else
-            IMode.color(tgt::vec4::zero);
-
-        geometry_->render();
+            diskGeometry_->render();
+        }
 
         MatStack.popMatrix();
     }

@@ -286,20 +286,6 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
     interruptionPoint();
 
-    std::vector<FlowIndicatorMaterial> flowIndicators;
-    for(const FlowIndicator& indicator : parameterSetEnsemble.getFlowIndicators()) {
-        FlowIndicatorMaterial indicatorMaterial;
-        indicatorMaterial.type_            = indicator.type_;
-        indicatorMaterial.flowProfile_          = indicator.flowProfile_;
-        indicatorMaterial.startPhaseFunction_   = indicator.startPhaseFunction_;
-        indicatorMaterial.startPhaseDuration_   = indicator.startPhaseDuration_;
-        indicatorMaterial.center_               = indicator.center_;
-        indicatorMaterial.normal_               = indicator.normal_;
-        indicatorMaterial.radius_               = indicator.radius_;
-        indicatorMaterial.materialId_           = MAT_EMPTY;
-        flowIndicators.push_back(indicatorMaterial);
-    }
-
     // Instantiation of a cuboidGeometry with weights
     const int noOfCuboids = 1;
     CuboidGeometry3D<T> cuboidGeometry(extendedDomain, converter.getConversionFactorLength(), noOfCuboids);
@@ -313,8 +299,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     interruptionPoint();
 
     prepareGeometry(converter, extendedDomain, stlReader, superGeometry,
-                    parameterSetEnsemble, input.selectedParametrization,
-                    flowIndicators);
+                    parameterSetEnsemble, input.selectedParametrization);
 
     interruptionPoint();
 
@@ -339,8 +324,8 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
                    sBoundaryCondition, sOffBoundaryCondition,
                    stlReader, superGeometry,
                    measuredData,
-                   parameterSetEnsemble, input.selectedParametrization,
-                   flowIndicators);
+                   parameterSetEnsemble,
+                   input.selectedParametrization);
 
     interruptionPoint();
 
@@ -351,15 +336,14 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
         setBoundaryValues(sLattice, sOffBoundaryCondition, converter, ti, superGeometry,
-                          parameterSetEnsemble, input.selectedParametrization, flowIndicators);
+                          parameterSetEnsemble, input.selectedParametrization);
 
         // === 6th Step: Collide and Stream Execution ===
         sLattice.collideAndStream();
 
         // === 7th Step: Computation and Output of the Results ===
         bool success = getResults(sLattice, converter, ti, tmax, bulkDynamics, superGeometry, stlReader,
-                                  parameterSetEnsemble, input.selectedParametrization, flowIndicators,
-                                  simulationResultPath);
+                                  parameterSetEnsemble, input.selectedParametrization, simulationResultPath);
         if(!success) {
             break;
         }
@@ -382,8 +366,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 void FlowSimulation::prepareGeometry( UnitConverter<T,DESCRIPTOR> const& converter, IndicatorF3D<T>& indicator,
                                       STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry,
                                       const FlowParameterSetEnsemble& parametrizationList,
-                                      size_t selectedParametrization,
-                                      std::vector<FlowIndicatorMaterial>& flowIndicators) const {
+                                      size_t selectedParametrization) const {
 
     LINFO("Prepare Geometry ...");
 
@@ -392,8 +375,7 @@ void FlowSimulation::prepareGeometry( UnitConverter<T,DESCRIPTOR> const& convert
 
     superGeometry.clean();
 
-    int materialId = MAT_COUNT;
-
+    const std::vector<FlowIndicator>& flowIndicators = parametrizationList.getFlowIndicators();
     for (size_t i = 0; i < flowIndicators.size(); i++) {
 
         const tgt::vec3& center = flowIndicators[i].center_;
@@ -404,9 +386,7 @@ void FlowSimulation::prepareGeometry( UnitConverter<T,DESCRIPTOR> const& convert
         IndicatorCircle3D<T> flow(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
                                   normal[0], normal[1], normal[2], radius*VOREEN_LENGTH_TO_SI);
         IndicatorCylinder3D<T> layerFlow(flow, 2. * converter.getConversionFactorLength());
-        superGeometry.rename(MAT_WALL, materialId, MAT_FLUID, layerFlow);
-        flowIndicators[i].materialId_ = materialId;
-        materialId++;
+        superGeometry.rename(MAT_WALL, flowIndicators[i].id_, MAT_FLUID, layerFlow);
     }
 
     // Removes all not needed boundary voxels outside the surface
@@ -426,13 +406,12 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
                                      sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
                                      STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry,
                                      const VolumeList* measuredData,
-                                     const FlowParameterSetEnsemble& parametrizationList,
-                                     size_t selectedParametrization,
-                                     std::vector<FlowIndicatorMaterial>& flowIndicators) const {
+                                     const FlowParameterSetEnsemble& parameterSetEnsemble,
+                                     size_t selectedParametrization) const {
 
     LINFO("Prepare Lattice ...");
 
-    const bool bouzidiOn = parametrizationList.at(selectedParametrization).getBouzidi();
+    const bool bouzidiOn = parameterSetEnsemble.at(selectedParametrization).getBouzidi();
     const T omega = converter.getLatticeRelaxationFrequency();
 
     // material=0 --> do nothing
@@ -450,22 +429,22 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
         lattice.defineDynamics(superGeometry, MAT_WALL, &instances::getBounceBack<T, DESCRIPTOR>());
     }
 
-    for(const FlowIndicatorMaterial& indicator : flowIndicators) {
+    for(const FlowIndicator& indicator : parameterSetEnsemble.getFlowIndicators()) {
         if(indicator.type_ == FIT_GENERATOR) {
             if(bouzidiOn) {
                 // no dynamics + bouzidi velocity (inflow)
-                lattice.defineDynamics(superGeometry, indicator.materialId_, &instances::getNoDynamics<T, DESCRIPTOR>());
-                offBc.addVelocityBoundary(superGeometry, indicator.materialId_, stlReader);
+                lattice.defineDynamics(superGeometry, indicator.id_, &instances::getNoDynamics<T, DESCRIPTOR>());
+                offBc.addVelocityBoundary(superGeometry, indicator.id_, stlReader);
             }
             else {
                 // bulk dynamics + velocity (inflow)
-                lattice.defineDynamics(superGeometry, indicator.materialId_, &bulkDynamics);
-                bc.addVelocityBoundary(superGeometry, indicator.materialId_, omega);
+                lattice.defineDynamics(superGeometry, indicator.id_, &bulkDynamics);
+                bc.addVelocityBoundary(superGeometry, indicator.id_, omega);
             }
         }
         else if(indicator.type_ == FIT_PRESSURE) {
-            lattice.defineDynamics(superGeometry, indicator.materialId_, &bulkDynamics);
-            bc.addPressureBoundary(superGeometry, indicator.materialId_, omega);
+            lattice.defineDynamics(superGeometry, indicator.id_, &bulkDynamics);
+            bc.addPressureBoundary(superGeometry, indicator.id_, omega);
         }
     }
 
@@ -481,9 +460,9 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
         lattice.iniEquilibrium(superGeometry, MAT_FLUID, rhoF, uF);
 
         // Initialize all values of distribution functions to their local equilibrium
-        for (const FlowIndicatorMaterial& indicator : flowIndicators) {
-            lattice.defineRhoU(superGeometry, indicator.materialId_, rhoF, uF);
-            lattice.iniEquilibrium(superGeometry, indicator.materialId_, rhoF, uF);
+        for (const FlowIndicator& indicator : parameterSetEnsemble.getFlowIndicators()) {
+            lattice.defineRhoU(superGeometry, indicator.id_, rhoF, uF);
+            lattice.iniEquilibrium(superGeometry, indicator.id_, rhoF, uF);
         }
     }
     // Steered simulation - currently only initializes the first time step!
@@ -501,17 +480,17 @@ void FlowSimulation::prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
 // Generates a slowly increasing sinuidal inflow
 void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                         sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
-                                        UnitConverter<T,DESCRIPTOR> const& converter, int iT,
+                                        UnitConverter<T,DESCRIPTOR> const& converter,
+                                        int iT,
                                         SuperGeometry3D<T>& superGeometry,
-                                        const FlowParameterSetEnsemble& parametrizationList,
-                                        size_t selectedParametrization,
-                                        std::vector<FlowIndicatorMaterial>& flowIndicators) const {
+                                        const FlowParameterSetEnsemble& parameterSetEnsemble,
+                                        size_t selectedParametrization) const {
     // No of time steps for smooth start-up
     int iTupdate = 50;
-    bool bouzidiOn = parametrizationList.at(selectedParametrization).getBouzidi();
+    bool bouzidiOn = parameterSetEnsemble.at(selectedParametrization).getBouzidi();
 
     if (iT % iTupdate == 0) {
-        for(const FlowIndicatorMaterial& indicator : flowIndicators) {
+        for(const FlowIndicator& indicator : parameterSetEnsemble.getFlowIndicators()) {
             if (indicator.type_ == FIT_GENERATOR) {
 
                 int iTvec[1] = {iT};
@@ -522,7 +501,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 {
                     int iTperiod = converter.getLatticeTime(indicator.startPhaseDuration_);
                     if(iT < iTperiod) {
-                        SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getCharLatticeVelocity());
+                        SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getLatticeVelocity(indicator.targetVelocity_));
                         nSinusStartScale(maxVelocity, iTvec);
                         break;
                     }
@@ -530,7 +509,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 }
                 case FSP_CONSTANT:
                 {
-                    AnalyticalConst1D<T, int> nConstantStartScale(converter.getCharLatticeVelocity());
+                    AnalyticalConst1D<T, int> nConstantStartScale(converter.getLatticeVelocity(indicator.targetVelocity_));
                     nConstantStartScale(maxVelocity, iTvec);
                     break;
                 }
@@ -543,39 +522,37 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 // This function applies the velocity profile to the boundary condition and the lattice.
                 auto applyFlowProfile = [&] (AnalyticalF3D<T,T>& profile) {
                     if (bouzidiOn) {
-                        offBc.defineU(superGeometry, indicator.materialId_, profile);
+                        offBc.defineU(superGeometry, indicator.id_, profile);
                     } else {
-                        sLattice.defineU(superGeometry, indicator.materialId_, profile);
+                        sLattice.defineU(superGeometry, indicator.id_, profile);
                     }
                 };
 
+                // Create shortcuts.
+                const tgt::vec3& center = indicator.center_;
+                const tgt::vec3& normal = indicator.normal_;
+                T radius = indicator.radius_;
+
+                // Apply the indicator's profile.
                 switch(indicator.flowProfile_) {
                 case FP_POISEUILLE:
                 {
-                    //*
-                    // TODO: The following line tends to crash, if there is no overlap between the region and the wall.
-                    CirclePoiseuille3D<T> profile(superGeometry, indicator.materialId_, maxVelocity[0]);
-                    /*/
-                    // TODO: the following lines, however, lead to a strange behavior at in- and outlets.
-                    const tgt::vec3& center = indicator.center_;
-                    const tgt::vec3& normal = indicator.normal_;
-                    T radius = indicator.radius_;
                     CirclePoiseuille3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
                                                   normal[0], normal[1], normal[2], radius * VOREEN_LENGTH_TO_SI, maxVelocity[0]);
-                    //*/
                     applyFlowProfile(profile);
                     break;
                 }
                 case FP_POWERLAW:
                 {
                     T n = 1.03 * std::log(converter.getReynoldsNumber()) - 3.6; // Taken from OLB documentation.
-                    CirclePowerLawTurbulent3D<T> profile(superGeometry, indicator.materialId_, maxVelocity[0], n);
+                    CirclePowerLawTurbulent3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
+                                                         normal[0], normal[1], normal[2], radius * VOREEN_LENGTH_TO_SI, maxVelocity[0], n);
                     applyFlowProfile(profile);
                     break;
                 }
                 case FP_CONSTANT:
                 {
-                    AnalyticalConst3D<T, T> profile(maxVelocity[0]);
+                    AnalyticalConst3D<T, T> profile(normal[0] * maxVelocity[0], normal[1] * maxVelocity[0], normal[2] * maxVelocity[0]);
                     applyFlowProfile(profile);
                     break;
                 }
@@ -595,12 +572,11 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                                  Dynamics<T, DESCRIPTOR>& bulkDynamics,
                                  SuperGeometry3D<T>& superGeometry,
                                  STLreader<T>& stlReader,
-                                 const FlowParameterSetEnsemble& parametrizationList,
+                                 const FlowParameterSetEnsemble& parameterSetEnsemble,
                                  size_t selectedParametrization,
-                                 std::vector<FlowIndicatorMaterial>& flowIndicators,
                                  const std::string& simulationOutputPath) const {
 
-    const int outputIter = tmax / parametrizationList.getNumTimeSteps();
+    const int outputIter = tmax / parameterSetEnsemble.getNumTimeSteps();
 
     if ( ti == 0 ) {
         SuperVTMwriter3D<T> vtmWriter( "debug" );
@@ -615,30 +591,30 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     if (ti % outputIter == 0) {
 
-        if(parametrizationList.getFlowFeatures() & FF_VELOCITY) {
+        if(parameterSetEnsemble.getFlowFeatures() & FF_VELOCITY) {
             SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
-            writeResult(stlReader, converter, ti, tmax, velocity, parametrizationList, selectedParametrization,
+            writeResult(stlReader, converter, ti, tmax, velocity, parameterSetEnsemble, selectedParametrization,
                         simulationOutputPath, "velocity");
         }
 
-        if(parametrizationList.getFlowFeatures() & FF_MAGNITUDE) {
+        if(parameterSetEnsemble.getFlowFeatures() & FF_MAGNITUDE) {
             SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
             SuperEuklidNorm3D<T, DESCRIPTOR> magnitude(velocity);
-            writeResult(stlReader, converter, ti, tmax, magnitude, parametrizationList, selectedParametrization,
+            writeResult(stlReader, converter, ti, tmax, magnitude, parameterSetEnsemble, selectedParametrization,
                         simulationOutputPath, "magnitude");
         }
 
-        if(parametrizationList.getFlowFeatures() & FF_PRESSURE) {
+        if(parameterSetEnsemble.getFlowFeatures() & FF_PRESSURE) {
             SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
-            writeResult(stlReader, converter, ti, tmax, pressure, parametrizationList, selectedParametrization,
+            writeResult(stlReader, converter, ti, tmax, pressure, parameterSetEnsemble, selectedParametrization,
                         simulationOutputPath, "pressure");
         }
 
 #ifndef OLB_PRECOMPILED
-        if(parametrizationList.getFlowFeatures() & FF_WALLSHEARSTRESS) {
+        if(parameterSetEnsemble.getFlowFeatures() & FF_WALLSHEARSTRESS) {
             SuperLatticePhysWallShearStress3D<T, DESCRIPTOR> wallShearStress(sLattice, superGeometry, MAT_WALL,
                                                                              converter, stlReader);
-            writeResult(stlReader, converter, ti, tmax, wallShearStress, parametrizationList,
+            writeResult(stlReader, converter, ti, tmax, wallShearStress, parameterSetEnsemble,
                         selectedParametrization,
                         simulationOutputPath, "wallShearStress");
         }
@@ -667,7 +643,7 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
 void FlowSimulation::writeResult(STLreader<T>& stlReader,
                                  UnitConverter<T,DESCRIPTOR>& converter, int ti, int tmax,
                                  SuperLatticeF3D<T, DESCRIPTOR>& feature,
-                                 const FlowParameterSetEnsemble& parametrizationList,
+                                 const FlowParameterSetEnsemble& parameterSetEnsemble,
                                  size_t selectedParametrization,
                                  const std::string& simulationOutputPath,
                                  const std::string& name) const {
@@ -678,7 +654,7 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
     const Vector<T, 3> len = (max - min);
     const T maxLen = std::max({len[0], len[1], len[2]});
     const int gridResolution = static_cast<int>(std::round(maxLen / converter.getConversionFactorLength()));
-    const int resolution = std::min(parametrizationList.getOutputResolution(), gridResolution);
+    const int resolution = std::min(parameterSetEnsemble.getOutputResolution(), gridResolution);
 
     Vector<T, 3> offset = min + (len - maxLen) * 0.5;
     Vector<T, 3> spacing(maxLen / (resolution-1));
@@ -761,7 +737,7 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
     std::string rawFilename = simulationOutputPath + featureFilename + ".raw";
     std::string vvdFilename = simulationOutputPath + featureFilename + ".vvd";
 
-    const FlowParameterSet& parameters = parametrizationList.at(selectedParametrization);
+    const FlowParameterSet& parameters = parameterSetEnsemble.at(selectedParametrization);
     const LatticeStatistics<T>& statistics = feature.getSuperLattice().getStatistics();
     std::fstream vvdFeatureFile(vvdFilename.c_str(), std::ios::out);
     vvdFeatureFile

@@ -93,11 +93,6 @@ private:
         MAT_COUNT,
     };
 
-    // Extends FlowIndicator by it's Material id.
-    struct FlowIndicatorMaterial : public FlowIndicator {
-        int materialId_{MAT_EMPTY};
-    };
-
     // Allow for simulation lattice initialization by volume data.
     class MeasuredDataMapper : public AnalyticalF3D<T, T> {
     public:
@@ -115,44 +110,47 @@ private:
                             ProgressReporter& progressReporter) const;
 
     void prepareGeometry(   UnitConverter<T,DESCRIPTOR> const& converter, IndicatorF3D<T>& indicator,
-                            STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry,
-                            const FlowParameterSetEnsemble& parametrizationList,
-                            size_t selectedParametrization,
-                            std::vector<FlowIndicatorMaterial>& flowIndicators) const;
+                            STLreader<T>& stlReader,
+                            SuperGeometry3D<T>& superGeometry,
+                            const FlowParameterSetEnsemble& parameterSetEnsemble,
+                            size_t selectedParametrization) const;
 
     void prepareLattice(    SuperLattice3D<T, DESCRIPTOR>& lattice,
                             UnitConverter<T,DESCRIPTOR> const& converter,
                             Dynamics<T, DESCRIPTOR>& bulkDynamics,
                             sOnLatticeBoundaryCondition3D<T, DESCRIPTOR>& bc,
                             sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
-                            STLreader<T>& stlReader, SuperGeometry3D<T>& superGeometry,
+                            STLreader<T>& stlReader,
+                            SuperGeometry3D<T>& superGeometry,
                             const VolumeList* measuredData,
-                            const FlowParameterSetEnsemble& parametrizationList,
-                            size_t selectedParametrization,
-                            std::vector<FlowIndicatorMaterial>& flowIndicators) const;
+                            const FlowParameterSetEnsemble& parameterSetEnsemble,
+                            size_t selectedParametrization) const;
 
     void setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                             sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
-                            UnitConverter<T,DESCRIPTOR> const& converter, int iT,
+                            UnitConverter<T,DESCRIPTOR> const& converter,
+                            int iT,
                             SuperGeometry3D<T>& superGeometry,
-                            const FlowParameterSetEnsemble& parametrizationList,
-                            size_t selectedParametrization,
-                            std::vector<FlowIndicatorMaterial>& flowIndicators) const;
+                            const FlowParameterSetEnsemble& parameterSetEnsemble,
+                            size_t selectedParametrization) const;
 
     bool getResults(        SuperLattice3D<T, DESCRIPTOR>& sLattice,
-                            UnitConverter<T,DESCRIPTOR>& converter, int ti, int tmax,
+                            UnitConverter<T,DESCRIPTOR>& converter,
+                            int ti,
+                            int tmax,
                             Dynamics<T, DESCRIPTOR>& bulkDynamics,
                             SuperGeometry3D<T>& superGeometry,
                             STLreader<T>& stlReader,
-                            const FlowParameterSetEnsemble& parametrizationList,
+                            const FlowParameterSetEnsemble& parameterSetEnsemble,
                             size_t selectedParametrization,
-                            std::vector<FlowIndicatorMaterial>& flowIndicators,
                             const std::string& simulationResultPath) const;
 
     void writeResult(       STLreader<T>& stlReader,
-                            UnitConverter<T,DESCRIPTOR>& converter, int ti, int tmax,
+                            UnitConverter<T,DESCRIPTOR>& converter,
+                            int ti,
+                            int tmax,
                             SuperLatticeF3D<T, DESCRIPTOR>& feature,
-                            const FlowParameterSetEnsemble& parametrizationList,
+                            const FlowParameterSetEnsemble& parameterSetEnsemble,
                             size_t selectedParametrization,
                             const std::string& simulationOutputPath,
                             const std::string& name) const;

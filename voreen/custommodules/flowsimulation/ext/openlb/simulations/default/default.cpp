@@ -56,13 +56,14 @@ enum FlowStartPhase {
 // This code is adapted from the voreen host code.
 struct FlowIndicator {
     FlowIndicatorType   type_{FIT_CANDIDATE};
+    int                 id_{0};
     T                   center_[3]{0};
     T                   normal_[3]{0};
     T                   radius_{0};
     FlowProfile         flowProfile_{FP_NONE};
     FlowStartPhase      startPhaseFunction_{FSP_NONE};
     T                   startPhaseDuration_{0};
-    int                 materialId_{0};
+    T                   targetVelocity_{0};
 };
 
 // Measured data.
@@ -143,22 +144,19 @@ void prepareGeometry(UnitConverter<T, DESCRIPTOR> const& converter, IndicatorF3D
 
     superGeometry.clean();
 
-    int materialId = MAT_COUNT;
-
     for (size_t i = 0; i < flowIndicators.size(); i++) {
 
         const T* center = flowIndicators[i].center_;
         const T* normal = flowIndicators[i].normal_;
         T radius = flowIndicators[i].radius_;
+        int id = flowIndicators[i].id_;
 
         // Set material number for inflow
         IndicatorCircle3D<T> flow(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
                                   normal[0], normal[1], normal[2],
                                   radius*VOREEN_LENGTH_TO_SI);
         IndicatorCylinder3D<T> layerFlow(flow, 2. * converter.getConversionFactorLength());
-        superGeometry.rename(MAT_WALL, materialId, MAT_FLUID, layerFlow);
-        flowIndicators[i].materialId_ = materialId;
-        materialId++;
+        superGeometry.rename(MAT_WALL, id, MAT_FLUID, layerFlow);
     }
 
     // Removes all not needed boundary voxels outside the surface
@@ -202,18 +200,18 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
         if(indicator.type_ == FIT_GENERATOR) {
             if(bouzidiOn) {
                 // no dynamics + bouzidi velocity (inflow)
-                lattice.defineDynamics(superGeometry, indicator.materialId_, &instances::getNoDynamics<T, DESCRIPTOR>());
-                offBc.addVelocityBoundary(superGeometry, indicator.materialId_, stlReader);
+                lattice.defineDynamics(superGeometry, indicator.id_, &instances::getNoDynamics<T, DESCRIPTOR>());
+                offBc.addVelocityBoundary(superGeometry, indicator.id_, stlReader);
             }
             else {
                 // bulk dynamics + velocity (inflow)
-                lattice.defineDynamics(superGeometry, indicator.materialId_, &bulkDynamics);
-                bc.addVelocityBoundary(superGeometry, indicator.materialId_, omega);
+                lattice.defineDynamics(superGeometry, indicator.id_, &bulkDynamics);
+                bc.addVelocityBoundary(superGeometry, indicator.id_, omega);
             }
         }
         else if(indicator.type_ == FIT_PRESSURE) {
-            lattice.defineDynamics(superGeometry, indicator.materialId_, &bulkDynamics);
-            bc.addPressureBoundary(superGeometry, indicator.materialId_, omega);
+            lattice.defineDynamics(superGeometry, indicator.id_, &bulkDynamics);
+            bc.addPressureBoundary(superGeometry, indicator.id_, omega);
         }
     }
 
@@ -230,8 +228,8 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
 
         // Initialize all values of distribution functions to their local equilibrium
         for (const FlowIndicator& indicator : flowIndicators) {
-            lattice.defineRhoU(superGeometry, indicator.materialId_, rhoF, uF);
-            lattice.iniEquilibrium(superGeometry, indicator.materialId_, rhoF, uF);
+            lattice.defineRhoU(superGeometry, indicator.id_, rhoF, uF);
+            lattice.iniEquilibrium(superGeometry, indicator.id_, rhoF, uF);
         }
     }
     // Steered simulation.
@@ -267,7 +265,7 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 {
                     int iTperiod = converter.getLatticeTime(indicator.startPhaseDuration_);
                     if(iT < iTperiod) {
-                        SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getCharLatticeVelocity());
+                        SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getLatticeVelocity(indicator.targetVelocity_));
                         nSinusStartScale(maxVelocity, iTvec);
                         break;
                     }
@@ -275,7 +273,7 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 }
                 case FSP_CONSTANT:
                 {
-                    AnalyticalConst1D<T, int> nConstantStartScale(converter.getCharLatticeVelocity());
+                    AnalyticalConst1D<T, int> nConstantStartScale(converter.getLatticeVelocity(indicator.targetVelocity_));
                     nConstantStartScale(maxVelocity, iTvec);
                     break;
                 }
@@ -288,29 +286,37 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 // This function applies the velocity profile to the boundary condition and the lattice.
                 auto applyFlowProfile = [&] (AnalyticalF3D<T,T>& profile) {
                     if (bouzidiOn) {
-                        offBc.defineU(superGeometry, indicator.materialId_, profile);
+                        offBc.defineU(superGeometry, indicator.id_, profile);
                     } else {
-                        sLattice.defineU(superGeometry, indicator.materialId_, profile);
+                        sLattice.defineU(superGeometry, indicator.id_, profile);
                     }
                 };
+
+                // Create shortcuts.
+                const T* center = indicator.center_;
+                const T* normal = indicator.normal_;
+                T radius = indicator.radius_;
 
                 switch(indicator.flowProfile_) {
                 case FP_POISEUILLE:
                 {
-                    CirclePoiseuille3D<T> profile(superGeometry, indicator.materialId_, maxVelocity[0]);
+                    CirclePoiseuille3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
+                                                  normal[0], normal[1], normal[2], radius * VOREEN_LENGTH_TO_SI, maxVelocity[0]);
+
                     applyFlowProfile(profile);
                     break;
                 }
                 case FP_POWERLAW:
                 {
                     T n = 1.03 * std::log(converter.getReynoldsNumber()) - 3.6; // Taken from OLB documentation.
-                    CirclePowerLawTurbulent3D<T> profile(superGeometry, indicator.materialId_, maxVelocity[0], n);
+                    CirclePowerLawTurbulent3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
+                                                         normal[0], normal[1], normal[2], radius * VOREEN_LENGTH_TO_SI, maxVelocity[0], n);
                     applyFlowProfile(profile);
                     break;
                 }
                 case FP_CONSTANT:
                 {
-                    AnalyticalConst3D<T, T> profile(maxVelocity[0]);
+                    AnalyticalConst3D<T, T> profile(normal[0] * maxVelocity[0], normal[1] * maxVelocity[0], normal[2] * maxVelocity[0]);
                     applyFlowProfile(profile);
                     break;
                 }
@@ -628,6 +634,7 @@ int main(int argc, char* argv[]) {
     for(auto iter : indicators) {
         FlowIndicator indicator;
         indicator.type_                 = static_cast<FlowIndicatorType>(std::atoi((*iter)["type_"].getAttribute("value").c_str()));
+        indicator.id_                   = std::atoi((*iter)["id_"].getAttribute("value").c_str());
         indicator.center_[0]            = std::atof((*iter)["center"].getAttribute("x").c_str());
         indicator.center_[1]            = std::atof((*iter)["center"].getAttribute("y").c_str());
         indicator.center_[2]            = std::atof((*iter)["center"].getAttribute("z").c_str());
@@ -638,6 +645,7 @@ int main(int argc, char* argv[]) {
         indicator.flowProfile_          = static_cast<FlowProfile>(std::atoi((*iter)["flowProfile"].getAttribute("value").c_str()));
         indicator.startPhaseFunction_   = static_cast<FlowStartPhase>(std::atoi((*iter)["startPhaseFunction"].getAttribute("value").c_str()));
         indicator.startPhaseDuration_   = std::atof((*iter)["startPhaseDuration"].getAttribute("value").c_str());
+        indicator.targetVelocity_       = std::atof((*iter)["targetVelocity"].getAttribute("value").c_str());
         flowIndicators.push_back(indicator);
     }
     clout << "Found " << flowIndicators.size() << " Flow Indicators" << std::endl;
@@ -731,6 +739,10 @@ int main(int argc, char* argv[]) {
             clout << "Simulation converged!" << std::endl;
             break;
         }
+
+        // === 9th Step: Write checkpoint
+        // TODO: implement!
+        //sLattice.save("simulation.checkpoint");
     }
 
     timer.stop();

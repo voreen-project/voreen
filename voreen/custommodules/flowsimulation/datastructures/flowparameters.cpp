@@ -34,6 +34,7 @@ namespace voreen {
 
 FlowIndicator::FlowIndicator()
     : type_(FIT_CANDIDATE)
+    , id_(-1)
     , center_(tgt::vec3::zero)
     , normal_(tgt::vec3::zero)
     , radius_(0.0f)
@@ -41,11 +42,13 @@ FlowIndicator::FlowIndicator()
     , startPhaseFunction_(FSP_NONE)
     , startPhaseDuration_(0.0f)
     , targetVelocity_(0.0f)
+    , selected_(false)
 {
 }
 
 void FlowIndicator::serialize(Serializer& s) const {
     s.serialize("type_", type_); // "type" is a reserved xml keyword.
+    s.serialize("id_", id_); // "id" is a reserved xml keyword.
     s.serialize("center", center_);
     s.serialize("normal", normal_);
     s.serialize("radius", radius_);
@@ -59,6 +62,7 @@ void FlowIndicator::deserialize(Deserializer& s) {
     int type = FIT_CANDIDATE;
     s.deserialize("type_", type);
     type_ = static_cast<FlowIndicatorType>(type);
+    s.deserialize("id_", id_);
     s.deserialize("center", center_);
     s.deserialize("normal", normal_);
     s.deserialize("radius", radius_);
@@ -66,7 +70,7 @@ void FlowIndicator::deserialize(Deserializer& s) {
     s.deserialize("flowProfile", profile);
     flowProfile_ = static_cast<FlowProfile>(profile);
     int function = FSP_NONE;
-    s.deserialize("function", function);
+    s.deserialize("startPhaseFunction", function);
     startPhaseFunction_ = static_cast<FlowStartPhase>(function);
     s.deserialize("startPhaseDuration", startPhaseDuration_);
     s.deserialize("targetVelocity", targetVelocity_);
@@ -184,7 +188,16 @@ void FlowParameterSet::deserialize(Deserializer& s) {
 
 
 const int FlowParameterSetEnsemble::VERSION = 1;
+const int FlowParameterSetEnsemble::FLOW_INDICATOR_ID_OFFSET = 2;
 const size_t FlowParameterSetEnsemble::ALL_PARAMETER_SETS = static_cast<size_t>(-1);
+
+int FlowParameterSetEnsemble::getFlowIndicatorIdOffset() {
+    // TODO: The offset is determined by the number of reserved material IDs of the
+    //  simulation framework. OpenLB has an default empty (0) and fluid(1) material.
+    //  Thus, the offset is set to 2. This should be set explicitly by something like:
+    //  SimulationFramework::RESERVED_MATERIAL_IDS
+    return FLOW_INDICATOR_ID_OFFSET;
+}
 
 FlowParameterSetEnsemble::FlowParameterSetEnsemble(const std::string& name)
     : name_(name)
@@ -248,7 +261,11 @@ void FlowParameterSetEnsemble::setFlowFeatures(int flowFeatures) {
 
 void FlowParameterSetEnsemble::addFlowIndicator(const FlowIndicator& flowIndicator) {
     notifyPendingDataInvalidation();
-    flowIndicators_.push_back(flowIndicator);
+
+    // Copy the indicator and set its id.
+    FlowIndicator indicator = flowIndicator;
+    indicator.id_ = generateIndicatorId();
+    flowIndicators_.push_back(indicator);
 }
 
 const std::vector<FlowIndicator>& FlowParameterSetEnsemble::getFlowIndicators() const {
@@ -319,6 +336,10 @@ void FlowParameterSetEnsemble::serializeInternal(Serializer& s, size_t param) co
     else {
         s.serialize("flowParameters", flowParameterSets[param]);
     }
+}
+
+int FlowParameterSetEnsemble::generateIndicatorId() const {
+    return static_cast<int>(flowIndicators_.size()) + getFlowIndicatorIdOffset();
 }
 
 }   // namespace

@@ -95,7 +95,6 @@ class VRN_CORE_API RenderPort : public Port {
 
     friend class RenderProcessor;
     friend class StereoCanvasRenderer;
-    friend class Aggregation;
     friend class NetworkEvaluator;
 
 public:
