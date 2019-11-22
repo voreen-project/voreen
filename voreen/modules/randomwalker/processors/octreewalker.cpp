@@ -459,7 +459,6 @@ struct BrickNeighborhood {
             if(node.node_.hasBrick()) {
                 OctreeWalkerNodeBrickConst brick(node.node_.getBrickAddress(), brickBaseSize, brickPoolManager);
 
-                float sum = 0.0f;
                 tgt::mat4 centerToSampleBrick = node.voxelToBrick() * brickToVoxel;
                 VRN_FOR_EACH_VOXEL(point, blockLlf, blockUrb) {
                     tgt::vec3 samplePos = centerToSampleBrick.transform(point);
@@ -497,6 +496,7 @@ struct BrickNeighborhood {
 };
 
 class RandomWalkerSeedsBrick : public RandomWalkerSeeds {
+    static const float CONFLICT;
     static const float UNLABELED;
     static const float FOREGROUND;
     static const float BACKGROUND;
@@ -504,13 +504,11 @@ public:
     RandomWalkerSeedsBrick(tgt::svec3 bufferDimensions, tgt::mat4 voxelToSeeds, const PointSegmentListGeometryVec3& foregroundSeedList, const PointSegmentListGeometryVec3& backgroundSeedList)
         : seedBuffer_(bufferDimensions)
     {
-        VolumeAtomic<uint16_t> seedCounts(bufferDimensions);
         numSeeds_ = 0;
         seedBuffer_.fill(UNLABELED);
-        seedCounts.fill(0);
 
         // foreground geometry seeds
-        auto collectLabelsFromGeometry = [&] (const PointSegmentListGeometryVec3& seedList, uint8_t label) {
+        auto collectLabelsFromGeometry = [&] (const PointSegmentListGeometryVec3& seedList, float label) {
             for (int m=0; m<seedList.getNumSegments(); m++) {
                 const std::vector<tgt::vec3>& foregroundPoints = seedList.getData()[m];
                 if (foregroundPoints.empty())
@@ -526,16 +524,12 @@ public:
                         }
                         float& seedVal = seedBuffer_.voxel(point);
                         if (seedVal == UNLABELED) {
-                            tgtAssert(seedCounts.voxel(point) == 0, "Invalid seed count");
                             seedVal = label;
                             ++numSeeds_;
-                            seedCounts.voxel(point) = 1;
-                        } else {
-                            // On multiple points per label: Use average
-                            tgtAssert(seedCounts.voxel(point) > 0, "Invalid seed count");
-                            auto& count = seedCounts.voxel(point);
-                            seedVal = ((seedVal*count)+label)/(count + 1);
-                            count++;
+                        } else if(seedVal != label && seedVal != CONFLICT) {
+                            seedVal = CONFLICT;
+                            --numSeeds_;
+                            ++numConflicts_;
                         }
                     }
                 }
@@ -584,15 +578,19 @@ public:
     virtual void initialize() {};
 
     virtual bool isSeedPoint(size_t index) const {
-        return seedBuffer_.voxel(index) != UNLABELED;
+        float val = seedBuffer_.voxel(index);
+        return val != UNLABELED && val != CONFLICT;
     }
     virtual bool isSeedPoint(const tgt::ivec3& voxel) const {
-        return seedBuffer_.voxel(voxel) != UNLABELED;
+        float val = seedBuffer_.voxel(voxel);
+        return val != UNLABELED && val != CONFLICT;
     }
     virtual float getSeedValue(size_t index) const {
+        tgtAssert(isSeedPoint(index), "Getting seed value from non-seed");
         return seedBuffer_.voxel(index);
     }
     virtual float getSeedValue(const tgt::ivec3& voxel) const {
+        tgtAssert(isSeedPoint(voxel), "Getting seed value from non-seed");
         return seedBuffer_.voxel(voxel);
     }
 
@@ -616,10 +614,16 @@ public:
     tgt::svec3 bufferDimensions() const {
         return seedBuffer_.getDimensions();
     }
+    uint64_t numConflicts() const {
+        return numConflicts_;
+    }
 
 private:
     VolumeAtomic<float> seedBuffer_;
+    uint64_t numConflicts_;
 };
+
+const float RandomWalkerSeedsBrick::CONFLICT = -2.0f;
 const float RandomWalkerSeedsBrick::UNLABELED = -1.0f;
 const float RandomWalkerSeedsBrick::FOREGROUND = 1.0f;
 const float RandomWalkerSeedsBrick::BACKGROUND = 0.0f;
@@ -903,6 +907,53 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
     // Note: outputNode is used here for the region specification only!
     BrickNeighborhood inputNeighborhood = BrickNeighborhood::fromNode(outputNode, outputNode.level_, inputRoot, brickDataSize, inputPoolManager);
 
+    if(numSeeds == 0) {
+        // No way to decide between foreground and background
+        if(seeds.numConflicts() == 0) {
+            avg = 0xffff/2;
+            min = avg;
+            max = avg;
+            for(int i=0; i<numVoxels; ++i) {
+                histogram.addSample(0.5f);
+            }
+            return OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS;
+        } else {
+            // There are seeds, but they all overlap (=> conflicts). We need to try again in lower levels.
+            uint64_t outputBrickAddr = outputPoolManager.allocateBrick();
+            OctreeWalkerNodeBrick outputBrick(outputBrickAddr, brickDataSize, outputPoolManager);
+
+            const tgt::svec3 brickStart = inputNeighborhood.centerBrickLlf_;
+            const tgt::svec3 brickEnd = inputNeighborhood.centerBrickUrb_;
+            tgt::svec3 centerBrickSize = brickEnd - brickStart;
+            if(seedsNeighborhood) {
+                auto& parentProbs = *seedsNeighborhood;
+                float sum = 0.5f;
+                VRN_FOR_EACH_VOXEL(pos, brickStart, brickEnd) {
+                    uint16_t val = parentProbs.data_.voxel(pos);
+
+                    outputBrick.data_.voxel(pos - brickStart) = val;
+
+                    min = std::min(val, min);
+                    max = std::max(val, max);
+                    sum += val;
+
+                    histogram.addSample(brickToNorm(val));
+                }
+                avg = sum/tgt::hmul(brickEnd);
+            } else {
+                avg = 0xffff/2;
+                min = avg;
+                max = avg;
+                float avgf = brickToNorm(avg);
+                VRN_FOR_EACH_VOXEL(pos, brickStart, brickEnd) {
+                    outputBrick.data_.voxel(pos) = avg;
+                    histogram.addSample(avgf);
+                }
+            }
+            return outputBrickAddr;
+        }
+    }
+
     auto volIndexToRow = seeds.generateVolumeToRowsTable();
 
     std::vector<float> initialization(systemSize, 0.0f);
@@ -914,17 +965,6 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
                 initialization[volIndexToRow[logicalIndex]] = neighborhood.data_.voxel(pos);
             }
         }
-    }
-
-    // No way to decide between foreground and background
-    if(numSeeds == 0) {
-        avg = 0xffff/2;
-        min = avg;
-        max = avg;
-        for(int i=0; i<numVoxels; ++i) {
-            histogram.addSample(0.5f);
-        }
-        return OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS;
     }
 
     auto solution = tgt::make_unique<float[]>(systemSize);
@@ -993,7 +1033,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
         avg = sum/tgt::hmul(centerBrickSize);
     }
 
-    if(canSkipChildren(brickToNorm(min), brickToNorm(max))) {
+    if(canSkipChildren(brickToNorm(min), brickToNorm(max)) && seeds.numConflicts() == 0) {
         outputPoolManager.deleteBrick(outputBrickAddr);
         return OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS;
     }
