@@ -546,9 +546,11 @@ public:
     }
     RandomWalkerSeedsBrick(RandomWalkerSeedsBrick&& other) = default;
 
-    void addNeighborhoodBorderSeeds(const BrickNeighborhood& neighborhood) {
+    void addNeighborhoodBorderSeeds(const BrickNeighborhood& neighborhood, tgt::svec3 volumeDimensions) {
         tgtAssert(neighborhood.data_.getDimensions() == neighborhood.dimensions_, "Invalid buffer dimensions");
 
+        tgt::ivec3 volumeLlfSeeds = neighborhood.voxelToNeighborhood().transform(tgt::vec3(0.0));
+        tgt::ivec3 volumeUrbSeeds = neighborhood.voxelToNeighborhood().transform(volumeDimensions);
         auto collectLabelsFromNeighbor = [&] (size_t dim, size_t sliceIndex) {
             tgt::svec3 begin(0);
             tgt::svec3 end(neighborhood.dimensions_);
@@ -556,10 +558,15 @@ public:
             begin[dim] = sliceIndex;
             end[dim] = sliceIndex+1;
 
+            // Do not collect parent level border labels at the border of the volume. There is no additional information in this case.
+            if(begin[dim] == volumeLlfSeeds[dim] || end[dim] == volumeUrbSeeds[dim]) {
+                return;
+            }
+
             VRN_FOR_EACH_VOXEL(seed, begin, end) {
-                float val = neighborhood.data_.voxel(seed);
                 float& seedVal = seedBuffer_.voxel(seed);
                 if (seedVal == UNLABELED) {
+                    float val = neighborhood.data_.voxel(seed);
                     seedVal = val;
                     ++numSeeds_;
                 }
@@ -854,6 +861,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
     //TODO: catch out of memory
     const OctreeBrickPoolManagerBase& inputPoolManager = *input.octree_.getBrickPoolManager();
     const tgt::svec3 brickDataSize = input.octree_.getBrickDim();
+    const tgt::svec3 volumeDim = input.octree_.getDimensions();
 
     boost::optional<BrickNeighborhood> seedsNeighborhood = boost::none;
 
@@ -873,7 +881,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
             }
 
             RandomWalkerSeedsBrick seeds(seedBufferDimensions, voxelToSeedTransform, foregroundSeeds, backgroundSeeds);
-            seeds.addNeighborhoodBorderSeeds(*seedsNeighborhood);
+            seeds.addNeighborhoodBorderSeeds(*seedsNeighborhood, volumeDim);
             return seeds;
         } else {
             tgt::svec3 seedBufferDimensions = outputNode.voxelDimensions() / outputNode.scale();
