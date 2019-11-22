@@ -33,10 +33,11 @@ enum FlowFeatures {
 };
 
 enum FlowIndicatorType {
-    FIT_CANDIDATE       = 0,
-    FIT_GENERATOR       = 1,
-    FIT_PRESSURE        = 2,
-    FIT_MEASURE         = 3,
+    FIT_INVALID         = -1,
+    FIT_CANDIDATE       =  0,
+    FIT_GENERATOR       =  1,
+    FIT_PRESSURE        =  2,
+    FIT_MEASURE         =  3,
 };
 
 enum FlowProfile {
@@ -55,7 +56,7 @@ enum FlowStartPhase {
 // Indicates flux through an arbitrary, circle-shaped area.
 // This code is adapted from the voreen host code.
 struct FlowIndicator {
-    FlowIndicatorType   type_{FIT_CANDIDATE};
+    FlowIndicatorType   type_{FIT_INVALID};
     int                 id_{0};
     T                   center_[3]{0};
     T                   normal_[3]{0};
@@ -257,6 +258,8 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
         for(const FlowIndicator& indicator : flowIndicators) {
             if (indicator.type_ == FIT_GENERATOR) {
 
+                T targetVelocity = converter.getLatticeVelocity(indicator.targetVelocity_ * VOREEN_LENGTH_TO_SI);
+
                 int iTvec[1] = {iT};
                 T maxVelocity[1] = {T()};
 
@@ -265,7 +268,7 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 {
                     int iTperiod = converter.getLatticeTime(indicator.startPhaseDuration_);
                     if(iT < iTperiod) {
-                        SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getLatticeVelocity(indicator.targetVelocity_));
+                        SinusStartScale<T, int> nSinusStartScale(iTperiod, targetVelocity);
                         nSinusStartScale(maxVelocity, iTvec);
                         break;
                     }
@@ -273,7 +276,7 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 }
                 case FSP_CONSTANT:
                 {
-                    AnalyticalConst1D<T, int> nConstantStartScale(converter.getLatticeVelocity(indicator.targetVelocity_));
+                    AnalyticalConst1D<T, int> nConstantStartScale(targetVelocity);
                     nConstantStartScale(maxVelocity, iTvec);
                     break;
                 }

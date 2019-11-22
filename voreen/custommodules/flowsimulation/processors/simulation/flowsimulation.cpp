@@ -493,6 +493,8 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
         for(const FlowIndicator& indicator : parameterSetEnsemble.getFlowIndicators()) {
             if (indicator.type_ == FIT_GENERATOR) {
 
+                T targetVelocity = converter.getLatticeVelocity(indicator.targetVelocity_ * VOREEN_LENGTH_TO_SI);
+
                 int iTvec[1] = {iT};
                 T maxVelocity[1] = {T()};
 
@@ -501,7 +503,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 {
                     int iTperiod = converter.getLatticeTime(indicator.startPhaseDuration_);
                     if(iT < iTperiod) {
-                        SinusStartScale<T, int> nSinusStartScale(iTperiod, converter.getLatticeVelocity(indicator.targetVelocity_));
+                        SinusStartScale<T, int> nSinusStartScale(iTperiod, targetVelocity);
                         nSinusStartScale(maxVelocity, iTvec);
                         break;
                     }
@@ -509,7 +511,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 }
                 case FSP_CONSTANT:
                 {
-                    AnalyticalConst1D<T, int> nConstantStartScale(converter.getLatticeVelocity(indicator.targetVelocity_));
+                    AnalyticalConst1D<T, int> nConstantStartScale(targetVelocity);
                     nConstantStartScale(maxVelocity, iTvec);
                     break;
                 }

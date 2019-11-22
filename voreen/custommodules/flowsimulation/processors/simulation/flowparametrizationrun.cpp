@@ -84,6 +84,7 @@ FlowParametrizationRun::FlowParametrizationRun()
         characteristicLength_.setGroupID("parameters");
     addProperty(characteristicVelocity_);
         characteristicVelocity_.setGroupID("parameters");
+        characteristicVelocity_.setVisibleFlag(false); // Currently not used by simulation.
     addProperty(fluid_);
         ON_CHANGE(fluid_, FlowParametrizationRun, fluidChanged);
         fluid_.addOption("water", "Water", FLUID_WATER);
@@ -159,7 +160,8 @@ void FlowParametrizationRun::addParametrizations() {
     PARAMETER_DISCRETIZATION_BEGIN(spatialResolution, int)
     PARAMETER_DISCRETIZATION_BEGIN(temporalResolution, int)
     PARAMETER_DISCRETIZATION_BEGIN(characteristicLength, float)
-    PARAMETER_DISCRETIZATION_BEGIN(characteristicVelocity, float)
+    //PARAMETER_DISCRETIZATION_BEGIN(characteristicVelocity, float)
+    float characteristicVelocity = 1.0f; // Currently not used by simulation.
     PARAMETER_DISCRETIZATION_BEGIN(viscosity, float)
     PARAMETER_DISCRETIZATION_BEGIN(density, float)
     PARAMETER_DISCRETIZATION_BEGIN(smagorinskyConstant, float)
@@ -196,7 +198,7 @@ void FlowParametrizationRun::addParametrizations() {
     PARAMETER_DISCRETIZATION_END
     PARAMETER_DISCRETIZATION_END
     PARAMETER_DISCRETIZATION_END
-    PARAMETER_DISCRETIZATION_END
+    //PARAMETER_DISCRETIZATION_END
 }
 
 void FlowParametrizationRun::removeParametrization() {

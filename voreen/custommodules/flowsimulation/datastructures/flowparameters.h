@@ -46,10 +46,11 @@ enum FlowFeatures {
 };
 
 enum FlowIndicatorType {
-    FIT_CANDIDATE = 0, ///< This indicator is just a candidate and has no function yet.
-    FIT_GENERATOR = 1, ///< This indicator is flow generating.
-    FIT_PRESSURE  = 2, ///< This indicator is a pressure boundary.
-    FIT_MEASURE   = 3, ///< This indicator serves as a flux measure.
+    FIT_INVALID   = -1, ///< Denotes an invalid indicator.
+    FIT_CANDIDATE =  0, ///< This indicator is just a candidate and has no function yet.
+    FIT_GENERATOR =  1, ///< This indicator is flow generating.
+    FIT_PRESSURE  =  2, ///< This indicator is a pressure boundary.
+    FIT_MEASURE   =  3, ///< This indicator serves as a flux measure.
 };
 
 enum FlowProfile {

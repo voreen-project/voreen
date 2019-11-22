@@ -127,6 +127,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     addProperty(configPartition_);
     configPartition_.addOption("normal", "normal");
     configPartition_.addOption("express", "express");
+    configPartition_.addOption("gpu2080", "gpu2080");
     configPartition_.setGroupID("cluster-resources");
     addProperty(configTimeDays_);
     configTimeDays_.setGroupID("cluster-resources");

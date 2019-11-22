@@ -33,7 +33,7 @@
 namespace voreen {
 
 FlowIndicator::FlowIndicator()
-    : type_(FIT_CANDIDATE)
+    : type_(FIT_INVALID)
     , id_(-1)
     , center_(tgt::vec3::zero)
     , normal_(tgt::vec3::zero)

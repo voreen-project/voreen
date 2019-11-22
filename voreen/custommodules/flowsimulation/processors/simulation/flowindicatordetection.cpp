@@ -326,7 +326,9 @@ void FlowIndicatorDetection::detectFlowIndicators(bool forced) {
 
             // Initialize indicator according to those settings.
             FlowIndicator indicator = initializeIndicator(settings);
-            flowIndicators_.push_back(indicator);
+            if(indicator.type_ != FIT_INVALID) {
+                flowIndicators_.push_back(indicator);
+            }
         }
     }
 
@@ -374,22 +376,14 @@ void FlowIndicatorDetection::onRemoveFlowIndicator() {
 
 FlowIndicator FlowIndicatorDetection::initializeIndicator(const FlowIndicatorSettings& settings) {
 
-    // Default is candidate. However, we set initial values as if it was a flow generator,
-    // since it might be classified as one later.
-
-    FlowIndicator indicator;
-    indicator.id_ = flowIndicators_.size() + FlowParameterSetEnsemble::getFlowIndicatorIdOffset(); // TODO: The should be determined by the FlowParameterSetEnsemble
-    indicator.type_ = FlowIndicatorType::FIT_CANDIDATE;
-    indicator.flowProfile_ = FlowProfile::FP_POISEUILLE;
-    indicator.startPhaseFunction_ = FlowStartPhase::FSP_SINUS;
-    indicator.startPhaseDuration_ = 0.2f;
-
     const VesselGraph* vesselGraph = vesselGraphPort_.getData();
     const VesselGraphNode& node = vesselGraph->getNode(settings.nodeId_);
     const VesselGraphEdge& edge = vesselGraph->getEdge(settings.edgeId_);
 
     size_t numVoxels = edge.getVoxels().size();
-    tgtAssert(numVoxels > 0, "No voxels assigned to edge");
+    if(numVoxels == 0) {
+        return FlowIndicator(); // Invalid by default.
+    }
 
     size_t mid = std::min<size_t>(settings.centerlinePosition_, numVoxels - 1);
     size_t num = 2; // Number of reference nodes in both directions.
@@ -415,6 +409,15 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(const FlowIndicatorSet
         radius += edge.getVoxels().at(index(i)).avgDistToSurface_;
     }
     radius /= (backIdx - frontIdx + 1);
+
+    // Default is candidate. However, we set initial values as if it was a flow generator,
+    // since it might be classified as one later.
+    FlowIndicator indicator;
+    indicator.id_ = flowIndicators_.size() + FlowParameterSetEnsemble::getFlowIndicatorIdOffset(); // TODO: The should be determined by FlowParameterSetEnsemble.
+    indicator.type_ = FlowIndicatorType::FIT_CANDIDATE;
+    indicator.flowProfile_ = FlowProfile::FP_POISEUILLE;
+    indicator.startPhaseFunction_ = FlowStartPhase::FSP_SINUS;
+    indicator.startPhaseDuration_ = 0.2f;
 
     indicator.center_ = ref->pos_;
     indicator.normal_ = tgt::normalize(back->pos_ - front->pos_);
