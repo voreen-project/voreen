@@ -1109,6 +1109,9 @@ void InteractiveProjectionLabeling::updateProjection() {
 
     }
 
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel for
+#endif
     for(int y_base = 0; y_base < dim.y; y_base+=y_block_size) {
         int y_max = std::min(dim.y, y_base + y_block_size);
 
