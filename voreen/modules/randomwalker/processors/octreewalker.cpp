@@ -503,6 +503,7 @@ class RandomWalkerSeedsBrick : public RandomWalkerSeeds {
 public:
     RandomWalkerSeedsBrick(tgt::svec3 bufferDimensions, tgt::mat4 voxelToSeeds, const PointSegmentListGeometryVec3& foregroundSeedList, const PointSegmentListGeometryVec3& backgroundSeedList)
         : seedBuffer_(bufferDimensions)
+        , numConflicts_(0)
     {
         numSeeds_ = 0;
         seedBuffer_.fill(UNLABELED);
