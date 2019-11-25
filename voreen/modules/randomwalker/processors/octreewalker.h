@@ -96,6 +96,8 @@ public:
 
     virtual bool isReady() const;
 
+    static const std::string loggerCat_; ///< category used in logging
+
 protected:
     virtual void setDescriptions() {
         setDescription("Performs a semi-automatic octree volume segmentation using a hierarchical 3D random walker algorithm.");
@@ -145,8 +147,6 @@ private:
     typedef std::chrono::steady_clock clock;
 
     bool recomputeOctreeWalker_;
-
-    static const std::string loggerCat_; ///< category used in logging
 };
 
 } //namespace

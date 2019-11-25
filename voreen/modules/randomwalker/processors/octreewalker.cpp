@@ -52,7 +52,7 @@
 
 namespace voreen {
 
-#if defined(VRN_MODULE_OPENMP) && 0
+#if defined(VRN_MODULE_OPENMP) && 1
 #define VRN_OCTREEWALKER_USE_OMP
 #endif
 
@@ -208,7 +208,7 @@ static void getSeedListsFromPorts(std::vector<PortDataPointer<Geometry>>& geom, 
     for (size_t i=0; i<geom.size(); i++) {
         const PointSegmentListGeometry<tgt::vec3>* seedList = dynamic_cast<const PointSegmentListGeometry<tgt::vec3>* >(geom.at(i).get());
         if (!seedList)
-            LWARNINGC("voreen.RandomWalker.OctreeWalker", "Invalid geometry. PointSegmentListGeometry<vec3> expected.");
+            LWARNINGC(OctreeWalker::loggerCat_, "Invalid geometry. PointSegmentListGeometry<vec3> expected.");
         else {
             auto transformMat = seedList->getTransformationMatrix();
             for (int j=0; j<seedList->getNumSegments(); j++) {
@@ -862,7 +862,7 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
 
     mat.setValue(curRow, curRow, weightSum);
 }
-static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outputNode, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, bool& hasSeedConflicts, OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot, const OctreeWalkerNode inputRoot, boost::optional<OctreeWalkerNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
+static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outputNode, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, bool& hasSeedConflicts, bool parentHadSeedsConflicts, OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot, const OctreeWalkerNode inputRoot, boost::optional<OctreeWalkerNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
     auto canSkipChildren = [&] (float min, float max) {
         float parentValueRange = max-min;
         const float delta = 0.01;
@@ -884,8 +884,8 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
             tgt::svec3 seedBufferDimensions = seedsNeighborhood->data_.getDimensions();
             tgt::mat4 voxelToSeedTransform = seedsNeighborhood->voxelToNeighborhood();
 
-            if(canSkipChildren(seedsNeighborhood->min_, seedsNeighborhood->max_) && seeds.numConflicts() == 0) {
-                //LINFOC("Randomwalker", "skip block early");
+            if(canSkipChildren(seedsNeighborhood->min_, seedsNeighborhood->max_) && !parentHadSeedsConflicts) {
+                //LINFOC(OctreeWalker::loggerCat_, "skip block early");
                 stop = true;
                 avg = normToBrick(seedsNeighborhood->avg_);
                 min = normToBrick(seedsNeighborhood->min_);
@@ -1007,7 +1007,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
         if(iterations < input.maxIterations_) {
             break;
         }
-        LERRORC("Randomwalker", "MAX ITER NOT SUFFICIENT: " << i);
+        LWARNINGC(OctreeWalker::loggerCat_, "MAX ITER NOT SUFFICIENT: " << i);
     }
 
     const tgt::svec3 brickStart = inputNeighborhood.centerBrickLlf_;
@@ -1157,6 +1157,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
         VolumeOctreeNode* outputNode;
         tgt::svec3 llf;
         tgt::svec3 urb;
+        bool parentHadSeedsConflicts;
     };
 
     std::vector<NodeToProcess> nodesToProcess;
@@ -1166,7 +1167,8 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             input.octree_.getRootNode(),
             newRootNode,
             tgt::svec3::zero,
-            volumeDim
+            volumeDim,
+            false,
         }
     );
     VolumeOctreeNodeTree tree(newRootNode);
@@ -1234,7 +1236,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                 tgtAssert(node.inputNode->hasBrick(), "No Brick");
 
                 OctreeWalkerNode outputNode(*node.outputNode, level, node.llf, node.urb);
-                newBrickAddr = processOctreeBrick(input, outputNode, histogram, min, max, avg, hasSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                newBrickAddr = processOctreeBrick(input, outputNode, histogram, min, max, avg, hasSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
             }
 
             globalMin = std::min(globalMin, min);
@@ -1286,7 +1288,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                                 nodesToSave.insert(&prevNode.node_);
                             }
                             processChildren = false;
-                            LINFO("Using similar branch from previous iteration");
+                            //LINFO("Using similar branch from previous iteration");
                         }
                     }
                 }
@@ -1311,7 +1313,8 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                                         inputChildNode,
                                         outputChildNode,
                                         start,
-                                        end
+                                        end,
+                                        hasSeedsConflicts,
                                     }
                                 );
                             }
