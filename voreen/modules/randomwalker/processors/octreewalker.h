@@ -74,6 +74,7 @@ struct OctreeWalkerInput {
     float errorThreshold_;
     int maxIterations_;
     float homogeneityThreshold_;
+    float incrementalSimilarityThreshold_;
 };
 
 struct OctreeWalkerOutput {
@@ -126,6 +127,7 @@ private:
     IntProperty maxIterations_;
     StringOptionProperty conjGradImplementation_;
     FloatProperty homogeneityThreshold_;
+    FloatProperty incrementalSimilarityThreshold_;
 
     VoreenBlasCPU voreenBlasCPU_;
 #ifdef VRN_MODULE_OPENMP

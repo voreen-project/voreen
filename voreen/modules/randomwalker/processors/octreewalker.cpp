@@ -73,6 +73,7 @@ OctreeWalker::OctreeWalker()
     , maxIterations_("conjGradIterations", "Max Iterations", 1000, 1, 5000)
     , conjGradImplementation_("conjGradImplementation", "Implementation")
     , homogeneityThreshold_("homogeneityThreshold", "Homogeneity Threshold", 0.01, 0.0, 1.0)
+    , incrementalSimilarityThreshold_("incrementalSimilarityThreshold", "Incremental Similarity Treshold", 0.01, 0.0, 1.0)
     , previousOctree_(nullptr)
     , previousVolume_(nullptr)
     , brickPoolManager_(nullptr)
@@ -86,35 +87,38 @@ OctreeWalker::OctreeWalker()
     addProperty(usePrevProbAsInitialization_);
 
     // random walker properties
-    addProperty(minEdgeWeight_);
-    minEdgeWeight_.setGroupID("rwparam");
     setPropertyGroupGuiName("rwparam", "Random Walker Parametrization");
+    addProperty(minEdgeWeight_);
+        minEdgeWeight_.setGroupID("rwparam");
     addProperty(homogeneityThreshold_);
-    homogeneityThreshold_.setGroupID("rwparam");
-    homogeneityThreshold_.adaptDecimalsToRange(5);
+        homogeneityThreshold_.setGroupID("rwparam");
+        homogeneityThreshold_.adaptDecimalsToRange(5);
+    addProperty(incrementalSimilarityThreshold_);
+        incrementalSimilarityThreshold_.setGroupID("rwparam");
+        incrementalSimilarityThreshold_.adaptDecimalsToRange(5);
 
     // conjugate gradient solver
-    preconditioner_.addOption("none", "None");
-    preconditioner_.addOption("jacobi", "Jacobi");
-    preconditioner_.select("jacobi");
+    setPropertyGroupGuiName("conjGrad", "Conjugate Gradient Solver");
     addProperty(preconditioner_);
+        preconditioner_.addOption("none", "None");
+        preconditioner_.addOption("jacobi", "Jacobi");
+        preconditioner_.select("jacobi");
+        preconditioner_.setGroupID("conjGrad");
     addProperty(errorThreshold_);
+        errorThreshold_.setGroupID("conjGrad");
     addProperty(maxIterations_);
-    conjGradImplementation_.addOption("blasCPU", "CPU");
+        maxIterations_.setGroupID("conjGrad");
+    addProperty(conjGradImplementation_);
+        conjGradImplementation_.addOption("blasCPU", "CPU");
 #ifdef VRN_MODULE_OPENMP
-    conjGradImplementation_.addOption("blasMP", "OpenMP");
-    conjGradImplementation_.select("blasMP");
+        conjGradImplementation_.addOption("blasMP", "OpenMP");
+        conjGradImplementation_.select("blasMP");
 #endif
 #ifdef VRN_MODULE_OPENCL
-    conjGradImplementation_.addOption("blasCL", "OpenCL");
-    conjGradImplementation_.select("blasCL");
+        conjGradImplementation_.addOption("blasCL", "OpenCL");
+        conjGradImplementation_.select("blasCL");
 #endif
-    addProperty(conjGradImplementation_);
-    preconditioner_.setGroupID("conjGrad");
-    errorThreshold_.setGroupID("conjGrad");
-    maxIterations_.setGroupID("conjGrad");
-    conjGradImplementation_.setGroupID("conjGrad");
-    setPropertyGroupGuiName("conjGrad", "Conjugate Gradient Solver");
+        conjGradImplementation_.setGroupID("conjGrad");
 }
 
 OctreeWalker::~OctreeWalker() {
@@ -188,6 +192,7 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
         errorThresh,
         maxIterations,
         homogeneityThreshold_.get(),
+        incrementalSimilarityThreshold_.get(),
     };
 }
 
@@ -857,7 +862,7 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
 
     mat.setValue(curRow, curRow, weightSum);
 }
-static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outputNode, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot, const OctreeWalkerNode inputRoot, boost::optional<OctreeWalkerNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
+static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& outputNode, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, bool& hasSeedConflicts, OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot, const OctreeWalkerNode inputRoot, boost::optional<OctreeWalkerNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
     auto canSkipChildren = [&] (float min, float max) {
         float parentValueRange = max-min;
         const float delta = 0.01;
@@ -879,7 +884,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
             tgt::svec3 seedBufferDimensions = seedsNeighborhood->data_.getDimensions();
             tgt::mat4 voxelToSeedTransform = seedsNeighborhood->voxelToNeighborhood();
 
-            if(canSkipChildren(seedsNeighborhood->min_, seedsNeighborhood->max_)) {
+            if(canSkipChildren(seedsNeighborhood->min_, seedsNeighborhood->max_) && seeds.numConflicts() == 0) {
                 //LINFOC("Randomwalker", "skip block early");
                 stop = true;
                 avg = normToBrick(seedsNeighborhood->avg_);
@@ -897,6 +902,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
             return seeds;
         }
     }();
+    hasSeedConflicts = seeds.numConflicts() != 0;
     if(stop) {
         return OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS;
     }
@@ -912,7 +918,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
 
     if(numSeeds == 0) {
         // No way to decide between foreground and background
-        if(seeds.numConflicts() == 0) {
+        if(!hasSeedConflicts) {
             avg = 0xffff/2;
             min = avg;
             max = avg;
@@ -1036,7 +1042,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNode& o
         avg = sum/tgt::hmul(centerBrickSize);
     }
 
-    if(canSkipChildren(brickToNorm(min), brickToNorm(max)) && seeds.numConflicts() == 0) {
+    if(canSkipChildren(brickToNorm(min), brickToNorm(max)) && !hasSeedConflicts) {
         outputPoolManager.deleteBrick(outputBrickAddr);
         return OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS;
     }
@@ -1085,6 +1091,12 @@ const tgt::svec3 OCTREEWALKER_CHILD_POSITIONS[] = {
     tgt::svec3(0,0,1),
 };
 
+static uint16_t absdiff(uint16_t v1, uint16_t v2) {
+    return std::max(v1, v2) - std::min(v1, v2);
+}
+static float absdiffRel(uint16_t v1, uint16_t v2) {
+    return static_cast<float>(absdiff(v1, v2))/0xffff;
+}
 
 OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressReporter& progressReporter) const {
     /*
@@ -1217,11 +1229,12 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             uint16_t max = 0;
             uint16_t avg = 0xffff/2;
             uint64_t newBrickAddr;
+            bool hasSeedsConflicts;
             {
                 tgtAssert(node.inputNode->hasBrick(), "No Brick");
 
                 OctreeWalkerNode outputNode(*node.outputNode, level, node.llf, node.urb);
-                newBrickAddr = processOctreeBrick(input, outputNode, histogram, min, max, avg, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                newBrickAddr = processOctreeBrick(input, outputNode, histogram, min, max, avg, hasSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
             }
 
             globalMin = std::min(globalMin, min);
@@ -1235,17 +1248,20 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 
             node.outputNode->setBrickAddress(newBrickAddr);
             if(newBrickAddr != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS && !node.inputNode->isLeaf()) {
-
                 // Check if previous result is sufficiently close to current one.
                 // If this is the case: copy branch from old octree.
                 bool processChildren = true;
-                if(level != 0 && prevRoot) {
+                if(level != 0 && prevRoot && !hasSeedsConflicts) {
                     auto prevNode = prevRoot->findChildNode(node.llf, brickDim, level);
-                    if(prevNode.node_.hasBrick()) {
-                        uint64_t sumOfDiffs = 0;
+
+                    if(prevNode.node_.hasBrick()
+                        && absdiffRel(prevNode.node_.getMinValue(), min) < input.incrementalSimilarityThreshold_
+                        && absdiffRel(prevNode.node_.getMaxValue(), max) < input.incrementalSimilarityThreshold_
+                        && absdiffRel(prevNode.node_.getAvgValue(), avg) < input.incrementalSimilarityThreshold_
+                    ) {
+                        uint16_t maxDiff = 0;
                         const tgt::svec3 begin(0);
                         const tgt::svec3 end(prevNode.brickDimensions());
-                        // TODO: use quick queck using min/max before doing expensive voxel level comparison
                         {
                             OctreeWalkerNodeBrickConst prevBrick(prevNode.node_.getBrickAddress(), brickDim, brickPoolManager);
                             OctreeWalkerNodeBrickConst currentBrick(newBrickAddr, brickDim, brickPoolManager);
@@ -1253,16 +1269,12 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                             VRN_FOR_EACH_VOXEL(pos, begin, end) {
                                 uint16_t current = currentBrick.data_.voxel(pos);
                                 uint16_t prev = prevBrick.data_.voxel(pos);
-                                int64_t diff = static_cast<int64_t>(current) - static_cast<uint64_t>(prev);
-                                sumOfDiffs += diff*diff;
+                                uint16_t diff = absdiff(current, prev);
+                                maxDiff = std::max(maxDiff, diff);
                             }
                         }
-                        float variance = static_cast<float>(sumOfDiffs / tgt::hmul(end)) / 0xffff / 0xffff;
-                        float std = std::sqrt(variance);
-                        const float prevResultThreshold = 0.01;
-                        // TODO: check other measures, maybe use maximum difference?
-                        // TODO: separate threshold
-                        if(std < prevResultThreshold) {
+                        float reldiff = static_cast<float>(maxDiff) / 0xffff;
+                        if(reldiff < input.incrementalSimilarityThreshold_) {
                             for(int i=0; i<8; ++i) {
                                 node.outputNode->children_[i] = prevNode.node_.children_[i];
                             }
@@ -1274,6 +1286,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                                 nodesToSave.insert(&prevNode.node_);
                             }
                             processChildren = false;
+                            LINFO("Using similar branch from previous iteration");
                         }
                     }
                 }
