@@ -115,7 +115,7 @@ void OctreeBrickPoolManagerMmap::serialize(Serializer& s) const {
     s.serialize("nextNewBrickAddr", nextNewBrickAddr);
 
     uint64_t freeListHead = freeListHead_;
-    s.serialize("freeListHead_", freeListHead);
+    s.serialize("freeListHead", freeListHead);
 }
 
 void  OctreeBrickPoolManagerMmap::deserialize(Deserializer& s) {
