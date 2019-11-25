@@ -88,7 +88,6 @@ public:
 
     std::string storageFileName(uint64_t fileIndex) const;
 
-protected:
     virtual void initialize(size_t brickMemorySizeInByte);
     virtual void deinitialize();
 private:

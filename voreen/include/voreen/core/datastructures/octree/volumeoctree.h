@@ -86,8 +86,16 @@ public:
     VolumeOctree(VolumeOctreeNode* root, OctreeBrickPoolManagerBase* brickPoolManager, const tgt::svec3& brickDim,
             const tgt::svec3& volumeDim, size_t numChannels);
 
+    /**
+     * Decompose the VolumeOctree into its components. The caller takes ownership of the components.
+     */
+    std::pair<OctreeBrickPoolManagerBase*, VolumeOctreeNode*> decompose() &&;
+
     /// Default constructor for serialization only.
     VolumeOctree();
+    VolumeOctree(VolumeOctree&& other);
+    VolumeOctree& operator=(VolumeOctree&& other);
+
     virtual ~VolumeOctree();
     virtual VolumeOctree* create() const;
 

@@ -250,6 +250,30 @@ VolumeOctree::VolumeOctree(VolumeOctreeNode* root, OctreeBrickPoolManagerBase* b
     tgtAssert(tgt::hmul(brickDim) * sizeof(uint16_t) == brickPoolManager_->getBrickMemorySizeInByte(), "Brick size mismatch");
 }
 
+std::pair<OctreeBrickPoolManagerBase*, VolumeOctreeNode*> VolumeOctree::decompose() && {
+    auto tmp = std::move(*this);
+    auto ret = std::make_pair(tmp.brickPoolManager_, tmp.rootNode_);
+    tmp.rootNode_ = nullptr;
+    tmp.brickPoolManager_ = nullptr;
+    return ret;
+}
+
+
+VolumeOctree::VolumeOctree(VolumeOctree&& other)
+    : rootNode_(other.rootNode_)
+    , brickPoolManager_(other.brickPoolManager_)
+{
+    other.rootNode_ = nullptr;
+    other.brickPoolManager_ = nullptr;
+}
+VolumeOctree& VolumeOctree::operator=(VolumeOctree&& other) {
+    if(&other != this) {
+        this->~VolumeOctree();
+        new(this) VolumeOctree(std::move(other));
+    }
+    return *this;
+}
+
 // default constructor for serialization (private)
 VolumeOctree::VolumeOctree()
     : rootNode_(0)

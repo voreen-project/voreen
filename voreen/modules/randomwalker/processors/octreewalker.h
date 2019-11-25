@@ -51,6 +51,7 @@
 
 #include <string>
 #include <chrono>
+#include <unordered_set>
 
 namespace voreen {
 
@@ -58,8 +59,11 @@ class Volume;
 class RandomWalkerSolver;
 class RandomWalkerSeeds;
 class RandomWalkerWeights;
+class OctreeBrickPoolManagerMmap;
 
 struct OctreeWalkerInput {
+    const VolumeOctree* previousResult_;
+    std::unique_ptr<OctreeBrickPoolManagerMmap>& brickPoolManager_;
     const VolumeBase& volume_;
     const VolumeOctree& octree_;
     std::vector<PortDataPointer<Geometry>> foregroundGeomSeeds_;
@@ -73,7 +77,9 @@ struct OctreeWalkerInput {
 };
 
 struct OctreeWalkerOutput {
+    VolumeOctree* octree_;
     std::unique_ptr<VolumeBase> volume_;
+    std::unordered_set<const VolumeOctreeNode*> previousNodesToSave;
     std::chrono::duration<float> duration_;
 };
 
@@ -128,6 +134,10 @@ private:
 #ifdef VRN_MODULE_OPENCL
     VoreenBlasCL voreenBlasCL_;
 #endif
+
+    VolumeOctree* previousOctree_;                  // NEVER owns its own brickpool manager, ALWAYS a representation of previousVolume
+    std::unique_ptr<VolumeBase> previousVolume_;     // ALWAYS store reference to representation in previousOctree_
+    std::unique_ptr<OctreeBrickPoolManagerMmap> brickPoolManager_;
 
     // Clock and duration used for time keeping
     typedef std::chrono::steady_clock clock;
