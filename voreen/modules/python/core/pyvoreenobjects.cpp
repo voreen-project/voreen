@@ -47,7 +47,7 @@ PyObject* VolumeObject_new(PyTypeObject *type, PyObject */*args*/, PyObject */*k
             return NULL;
         }
         self->dimX = self->dimY = self->dimZ = 0u;
-        self->spacingX = self->spacingY = self->spacingZ = 0.0f;
+        self->spacingX = self->spacingY = self->spacingZ = 1.0f;
         self->offsetX = self->offsetY = self->offsetZ = 0.0f;
         self->rwmScale = 1.0f;
         self->rwmOffset = 0.0f;
