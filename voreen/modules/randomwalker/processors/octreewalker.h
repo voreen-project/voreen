@@ -62,7 +62,7 @@ class RandomWalkerWeights;
 class OctreeBrickPoolManagerMmap;
 
 struct OctreeWalkerInput {
-    const VolumeOctree* previousResult_;
+    VolumeOctree* previousResult_;
     std::unique_ptr<OctreeBrickPoolManagerMmap>& brickPoolManager_;
     const VolumeBase& volume_;
     const VolumeOctree& octree_;

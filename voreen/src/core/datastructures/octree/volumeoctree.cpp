@@ -394,6 +394,9 @@ uint16_t VolumeOctree::getVoxel(const tgt::svec3& pos, size_t channel /*= 0*/, s
 const VolumeOctreeNode* VolumeOctree::getRootNode() const {
     return rootNode_;
 }
+VolumeOctreeNode* VolumeOctree::getRootNode() {
+    return rootNode_;
+}
 
 const VolumeOctreeNode* VolumeOctree::getNode(const tgt::vec3& point, size_t& level,
     tgt::svec3& voxelLLF, tgt::svec3& voxelURB /* just OUTSIDE */, tgt::vec3& normLLF, tgt::vec3& normURB) const

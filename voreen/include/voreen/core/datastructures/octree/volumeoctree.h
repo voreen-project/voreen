@@ -121,6 +121,7 @@ public:
     virtual uint16_t getVoxel(const tgt::svec3& pos, size_t channel = 0, size_t level = 0) const;
 
     virtual const VolumeOctreeNode* getRootNode() const;
+    virtual VolumeOctreeNode* getRootNode();
 
     virtual const VolumeOctreeNode* getNode(const tgt::vec3& point, size_t& level,
         tgt::svec3& voxelLLF, tgt::svec3& voxelURB, tgt::vec3& normLLF, tgt::vec3& normURB) const;
