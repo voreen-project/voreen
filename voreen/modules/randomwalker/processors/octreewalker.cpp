@@ -56,6 +56,8 @@ namespace voreen {
 #define VRN_OCTREEWALKER_USE_OMP
 #endif
 
+#define VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
+
 namespace {
 
 inline size_t volumeCoordsToIndex(int x, int y, int z, const tgt::ivec3& dim) {
@@ -94,10 +96,15 @@ static float absdiffRel(uint16_t v1, uint16_t v2) {
     return static_cast<float>(absdiff(v1, v2))/0xffff;
 }
 
+static uint16_t normToBrick(float val) {
+    return tgt::clamp(val, 0.0f, 1.0f) * 0xffff;
+}
+static float brickToNorm(uint16_t val) {
+    return static_cast<float>(val)/0xffff;
 }
 
+}
 
-//#define VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
 
 const std::string OctreeWalker::loggerCat_("voreen.RandomWalker.OctreeWalker");
 
@@ -238,13 +245,6 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
         homogeneityThreshold_.get(),
         incrementalSimilarityThreshold_.get(),
     };
-}
-
-static uint16_t normToBrick(float val) {
-    return tgt::clamp(val, 0.0f, 1.0f) * 0xffff;
-}
-static float brickToNorm(uint16_t val) {
-    return static_cast<float>(val)/0xffff;
 }
 
 static void getSeedListsFromPorts(std::vector<PortDataPointer<Geometry>>& geom, PointSegmentListGeometry<tgt::vec3>& seeds) {
@@ -1108,15 +1108,6 @@ const tgt::svec3 OCTREEWALKER_CHILD_POSITIONS[] = {
 };
 
 OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressReporter& progressReporter) const {
-    /*
-    OctreeWalkerOutput invalidResult = OctreeWalkerOutput {
-        nullptr,
-        std::unique_ptr<Volume>(nullptr),
-        std::vector<const VolumeOctreeNode*>(),
-        std::chrono::duration<float>(0),
-    };
-    */
-
     progressReporter.setProgress(0.0);
 
     auto start = clock::now();

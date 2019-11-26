@@ -48,6 +48,34 @@ __kernel void sAXPY(
 }
 
 /**
+ * Single-precision vector sum: z = alpha*(nom/den)*X + Y;
+ */
+__kernel void sAXPYDiv(
+  vrn_size_t n,
+  __global const float* X,
+  __global const float* Y,
+  float alpha,
+  __global const float* nom,
+  __global const float* den,
+  __global float* z
+)
+{
+    // get work item id
+    size_t gid = get_global_id(0);
+    size_t globalSize = get_global_size(0);
+
+    float m = nom[0];
+    float d = den[0];
+    float scalar = alpha * (m == d ? 1.0 : m / d); // Special case for nom==den==0.0
+
+    size_t block = 0;
+    while ((block*globalSize+gid) < n) {
+        z[block*globalSize+gid] = scalar*X[block*globalSize+gid] + Y[block*globalSize+gid];
+        block++;
+    }
+}
+
+/**
  * Single-precision dot product: z = X*Y
  */
 __kernel void sDOT(

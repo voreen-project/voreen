@@ -338,6 +338,8 @@ float VoreenBlasCL::sSpInnerProductEll(const EllpackMatrix<float>& mat, const fl
 int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* vec, float* result,
                            float* initial, ConjGradPreconditioner precond, float threshold, int maxIterations, ProgressReporter* progress) const {
 
+    const int betaCheckPeriod = 1;
+
     tgtAssert(mat.isSymmetric(), "Symmetric matrix expected.");
 
     if (!initialized_) {
@@ -348,6 +350,12 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
     Kernel* kernelSapxy = prog_->getKernel("sAXPY");
     if (!kernelSapxy) {
         LERROR("No kernel 'sAXPY' found");
+        return -1;
+    }
+
+    Kernel* kernelSapxydiv = prog_->getKernel("sAXPYDiv");
+    if (!kernelSapxydiv) {
+        LERROR("No kernel 'sAXPYDiv' found");
         return -1;
     }
 
@@ -394,8 +402,8 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
 
     Buffer tmpBuf(context_, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(float)*vecSize, const_cast<float*>(vec));
     Buffer xBuf(context_, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(float)*vecSize, initial);
-    Buffer rBuf(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float)*vecSize);
-    Buffer pBuf(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float)*vecSize);
+    Buffer rBuf(context_, CL_MEM_READ_WRITE, sizeof(float)*vecSize);
+    Buffer pBuf(context_, CL_MEM_READ_WRITE, sizeof(float)*vecSize);
 
     int iteration  = 0;
 
@@ -416,10 +424,9 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
 
         int32_t mutex;
         Buffer mutexBuf(context_, CL_MEM_ALLOC_HOST_PTR, sizeof(int32_t));
-        Buffer scalarBuf(context_, CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR, sizeof(float));
-        Buffer nominatorBuf(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float));
-        Buffer denominatorBuf(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float));
-        Buffer alphaBuf(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float));
+        Buffer scalarBuf(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float));
+        Buffer nominatorBuf(context_, CL_MEM_READ_WRITE, sizeof(float));
+        Buffer denominatorBuf(context_, CL_MEM_READ_WRITE, sizeof(float));
 
         // r <= A*x_0
         kernelSpmv->setArg(0, vecSize);
@@ -507,35 +514,27 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
             getQueue().enqueueWriteBuffer(&mutexBuf, &mutex, false);
             getQueue().enqueue(kernelSdot, workSize, localWorksize);
 
-            float denominator;
-            float nominator;
-            getQueue().enqueueReadBuffer(&nominatorBuf, (void*)(&nominator), true);
-            getQueue().enqueueReadBuffer(&denominatorBuf, (void*)(&denominator), true);
-            if (nominator == 0) {
-                break;
-            }
-            tgtAssert(denominator != 0.0f, "denominator = 0");
-            float alpha = nominator / denominator;
-            tgtAssert(!std::isnan(alpha), "Alpha is nan");
-
             // x <= alpha*p + x
-            kernelSapxy->setArg(0, vecSize);
-            kernelSapxy->setArg(1, pBuf);
-            kernelSapxy->setArg(2, xBuf);
-            kernelSapxy->setArg(3, alpha);
-            kernelSapxy->setArg(4, xBuf);
-            getQueue().enqueue(kernelSapxy, workSize);
+            kernelSapxydiv->setArg(0, vecSize);
+            kernelSapxydiv->setArg(1, pBuf);
+            kernelSapxydiv->setArg(2, xBuf);
+            kernelSapxydiv->setArg(3, 1.0f);
+            kernelSapxydiv->setArg(4, nominatorBuf);
+            kernelSapxydiv->setArg(5, denominatorBuf);
+            kernelSapxydiv->setArg(6, xBuf);
+            getQueue().enqueue(kernelSapxydiv, workSize);
 
             // r <= -alpha*tmp + r
-            kernelSapxy->setArg(0, vecSize);
-            kernelSapxy->setArg(1, tmpBuf);
-            kernelSapxy->setArg(2, rBuf);
-            kernelSapxy->setArg(3, -alpha);
-            kernelSapxy->setArg(4, rBuf);
-            getQueue().enqueue(kernelSapxy, workSize);
+            kernelSapxydiv->setArg(0, vecSize);
+            kernelSapxydiv->setArg(1, tmpBuf);
+            kernelSapxydiv->setArg(2, rBuf);
+            kernelSapxydiv->setArg(3, -1.0f);
+            kernelSapxydiv->setArg(4, nominatorBuf);
+            kernelSapxydiv->setArg(5, denominatorBuf);
+            kernelSapxydiv->setArg(6, rBuf);
+            getQueue().enqueue(kernelSapxydiv, workSize);
 
             // norm(r_k+1)
-            float beta;
             if (precond == Jacobi) {
                 kernelSpmv->setArg(0, vecSize);
                 kernelSpmv->setArg(1, vecSize);
@@ -555,7 +554,6 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
                 mutex = 0;
                 getQueue().enqueueWriteBuffer(&mutexBuf, &mutex, false);
                 getQueue().enqueue(kernelSdot, workSize, localWorksize);
-                getQueue().enqueueReadBuffer(&scalarBuf, (void*)(&beta), true);
             }
             else {
                 kernelSdot->setArg(0, vecSize);
@@ -567,26 +565,32 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
                 mutex = 0;
                 getQueue().enqueueWriteBuffer(&mutexBuf, &mutex, false);
                 getQueue().enqueue(kernelSdot, workSize, localWorksize);
+            }
+            if((iteration % betaCheckPeriod) == 0) {
+                float beta;
                 getQueue().enqueueReadBuffer(&scalarBuf, (void*)(&beta), true);
+
+                tgtAssert(!std::isnan(beta), "Beta is nan");
+                if (sqrt(beta) < threshold) {
+                    break;
+                }
             }
 
-            tgtAssert(!std::isnan(beta), "Beta is nan");
-            if (sqrt(beta) < threshold) {
-                break;
-            }
 
-            beta /= nominator;
+            //beta /= nominator;
 
-            // p <= beta*p + r
-            kernelSapxy->setArg(0, vecSize);
-            kernelSapxy->setArg(1, pBuf);
+            // p <= beta/nominator*p + r
+            kernelSapxydiv->setArg(0, vecSize);
+            kernelSapxydiv->setArg(1, pBuf);
             if (precond == Jacobi)
-                kernelSapxy->setArg(2, zBuf);
+                kernelSapxydiv->setArg(2, zBuf);
             else
-                kernelSapxy->setArg(2, rBuf);
-            kernelSapxy->setArg(3, beta);
-            kernelSapxy->setArg(4, pBuf);
-            getQueue().enqueue(kernelSapxy, workSize);
+                kernelSapxydiv->setArg(2, rBuf);
+            kernelSapxydiv->setArg(3, 1.0f);
+            kernelSapxydiv->setArg(4, scalarBuf);
+            kernelSapxydiv->setArg(5, nominatorBuf);
+            kernelSapxydiv->setArg(6, pBuf);
+            getQueue().enqueue(kernelSapxydiv, workSize);
         }
 
         getQueue().enqueueReadBuffer(&xBuf, (void*)(result), true);
@@ -628,8 +632,8 @@ int VoreenBlasCL::hSpConjGradEll(const EllpackMatrix<int16_t>& mat, const float*
         return -1;
     }
 
-    Kernel* kernelSapxy = prog_->getKernel("sAXPY");
-    if (!kernelSapxy) {
+    Kernel* kernelSaxpy = prog_->getKernel("sAXPY");
+    if (!kernelSaxpy) {
         LERROR("No kernel 'sAXPY' found");
         return -1;
     }
@@ -687,20 +691,20 @@ int VoreenBlasCL::hSpConjGradEll(const EllpackMatrix<int16_t>& mat, const float*
     getQueue().enqueue(kernelSpmv, workSize);
 
     // p <= -r + b
-    kernelSapxy->setArg(0, vecSize);
-    kernelSapxy->setArg(1, rBuf);
-    kernelSapxy->setArg(2, tmpBuf);
-    kernelSapxy->setArg(3, -1.f);
-    kernelSapxy->setArg(4, pBuf);
-    getQueue().enqueue(kernelSapxy, workSize);
+    kernelSaxpy->setArg(0, vecSize);
+    kernelSaxpy->setArg(1, rBuf);
+    kernelSaxpy->setArg(2, tmpBuf);
+    kernelSaxpy->setArg(3, -1.f);
+    kernelSaxpy->setArg(4, pBuf);
+    getQueue().enqueue(kernelSaxpy, workSize);
 
     // r <= -r + b
-    kernelSapxy->setArg(0, vecSize);
-    kernelSapxy->setArg(1, rBuf);
-    kernelSapxy->setArg(2, tmpBuf);
-    kernelSapxy->setArg(3, -1.f);
-    kernelSapxy->setArg(4, rBuf);
-    getQueue().enqueue(kernelSapxy, workSize);
+    kernelSaxpy->setArg(0, vecSize);
+    kernelSaxpy->setArg(1, rBuf);
+    kernelSaxpy->setArg(2, tmpBuf);
+    kernelSaxpy->setArg(3, -1.f);
+    kernelSaxpy->setArg(4, rBuf);
+    getQueue().enqueue(kernelSaxpy, workSize);
 
     int iteration  = 0;
 
@@ -747,20 +751,20 @@ int VoreenBlasCL::hSpConjGradEll(const EllpackMatrix<int16_t>& mat, const float*
         float alpha = nominator / denominator;
 
         // x <= alpha*p + x
-        kernelSapxy->setArg(0, vecSize);
-        kernelSapxy->setArg(1, pBuf);
-        kernelSapxy->setArg(2, xBuf);
-        kernelSapxy->setArg(3, alpha);
-        kernelSapxy->setArg(4, xBuf);
-        getQueue().enqueue(kernelSapxy, workSize);
+        kernelSaxpy->setArg(0, vecSize);
+        kernelSaxpy->setArg(1, pBuf);
+        kernelSaxpy->setArg(2, xBuf);
+        kernelSaxpy->setArg(3, alpha);
+        kernelSaxpy->setArg(4, xBuf);
+        getQueue().enqueue(kernelSaxpy, workSize);
 
         // r <= -alpha*tmp + r
-        kernelSapxy->setArg(0, vecSize);
-        kernelSapxy->setArg(1, tmpBuf);
-        kernelSapxy->setArg(2, rBuf);
-        kernelSapxy->setArg(3, -alpha);
-        kernelSapxy->setArg(4, rBuf);
-        getQueue().enqueue(kernelSapxy, workSize);
+        kernelSaxpy->setArg(0, vecSize);
+        kernelSaxpy->setArg(1, tmpBuf);
+        kernelSaxpy->setArg(2, rBuf);
+        kernelSaxpy->setArg(3, -alpha);
+        kernelSaxpy->setArg(4, rBuf);
+        getQueue().enqueue(kernelSaxpy, workSize);
 
         // norm(r_k+1)
         kernelSdot->setArg(0, vecSize);
@@ -781,12 +785,12 @@ int VoreenBlasCL::hSpConjGradEll(const EllpackMatrix<int16_t>& mat, const float*
         beta /= nominator;
 
         // p <= beta*p + r
-        kernelSapxy->setArg(0, vecSize);
-        kernelSapxy->setArg(1, pBuf);
-        kernelSapxy->setArg(2, rBuf);
-        kernelSapxy->setArg(3, beta);
-        kernelSapxy->setArg(4, pBuf);
-        getQueue().enqueue(kernelSapxy, workSize);
+        kernelSaxpy->setArg(0, vecSize);
+        kernelSaxpy->setArg(1, pBuf);
+        kernelSaxpy->setArg(2, rBuf);
+        kernelSaxpy->setArg(3, beta);
+        kernelSaxpy->setArg(4, pBuf);
+        getQueue().enqueue(kernelSaxpy, workSize);
     }
 
     getQueue().enqueueReadBuffer(&xBuf, (void*)(result), true);
