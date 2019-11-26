@@ -110,6 +110,8 @@ protected:
     virtual void initialize();
     virtual void deinitialize();
 
+    void clearPreviousResults();
+
 private:
     const VoreenBlas* getVoreenBlasFromProperties() const;
 

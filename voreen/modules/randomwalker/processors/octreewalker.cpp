@@ -121,6 +121,7 @@ OctreeWalker::OctreeWalker()
 {
     // ports
     addPort(inportVolume_);
+        ON_CHANGE(inportVolume_, OctreeWalker, clearPreviousResults);
     addPort(inportForegroundSeeds_);
     addPort(inportBackgroundSeeds_);
     addPort(outportProbabilities_);
@@ -180,22 +181,7 @@ void OctreeWalker::initialize() {
 }
 
 void OctreeWalker::deinitialize() {
-    outportProbabilities_.setData(nullptr);
-
-    // previousOctree_ is now not referenced anymore, so we are free to clean up.
-    if(previousOctree_) {
-        tgtAssert(previousOctree_, "Previous result volume without octree");
-
-        auto res = std::move(*previousOctree_).decompose();
-        // Brickpoolmanager reference is not required here. The important thing is that the previous result does not deconstruct the brickPoolManager
-
-        // Clean up old tree
-        freeNodes(res.second);
-    }
-    previousVolume_.reset(nullptr);
-    if(brickPoolManager_) {
-        brickPoolManager_->deinitialize();
-    }
+    clearPreviousResults();
 
     AsyncComputeProcessor::deinitialize();
 }
@@ -1161,7 +1147,6 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 
     boost::optional<OctreeWalkerNode> prevRoot = [&] () -> boost::optional<OctreeWalkerNode> {
         if(input.previousResult_) {
-            // TODO: check compatibility of prev result and current input. Possible: Throw away prev result when input changes.
             auto& prev = *input.previousResult_;
             tgtAssert(volumeDim == prev.getDimensions(), "prev result: Dimension mismatch");
             tgtAssert(prev.getRootNode(), "prev result: No root");
@@ -1416,6 +1401,28 @@ void OctreeWalker::processComputeOutput(ComputeOutput output) {
 
     previousOctree_ = output.octree_;
     previousVolume_ = std::move(output.volume_);
+}
+void OctreeWalker::clearPreviousResults() {
+    // First: Reset output
+    outportProbabilities_.setData(nullptr, false);
+
+    // previousOctree_ is now not referenced anymore, so we are free to clean up.
+    if(previousOctree_) {
+        tgtAssert(previousVolume_, "Previous result octree without volume");
+
+        auto res = std::move(*previousOctree_).decompose();
+        // Brickpoolmanager reference is not required here. The important thing is that the previous result does not deconstruct the brickPoolManager
+
+        // Clean up old tree
+        freeNodes(res.second);
+    }
+    previousOctree_ = nullptr;
+    previousVolume_.reset(nullptr);
+
+    if(brickPoolManager_) {
+        brickPoolManager_->deinitialize();
+    }
+    brickPoolManager_.reset(nullptr);
 }
 
 const VoreenBlas* OctreeWalker::getVoreenBlasFromProperties() const {
