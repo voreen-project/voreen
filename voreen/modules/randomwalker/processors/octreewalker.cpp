@@ -56,6 +56,42 @@ namespace voreen {
 #define VRN_OCTREEWALKER_USE_OMP
 #endif
 
+namespace {
+
+inline size_t volumeCoordsToIndex(int x, int y, int z, const tgt::ivec3& dim) {
+    return z*dim.y*dim.x + y*dim.x + x;
+}
+
+inline size_t volumeCoordsToIndex(const tgt::ivec3& coords, const tgt::ivec3& dim) {
+    return coords.z*dim.y*dim.x + coords.y*dim.x + coords.x;
+}
+
+static void freeTreeComponents(VolumeOctreeNode* root, std::unordered_set<const VolumeOctreeNode*>& nodesToSave, OctreeBrickPoolManagerMmap& brickPoolManager) {
+    if(root && nodesToSave.find(root) == nodesToSave.end()) {
+        if(root->hasBrick()) {
+            brickPoolManager.deleteBrick(root->getBrickAddress());
+        }
+        for(int i=0; i<8; ++i) {
+            freeTreeComponents(root->children_[i], nodesToSave, brickPoolManager);
+        }
+    }
+
+    // The node object itself is never reused. Only its contents.
+    delete root;
+}
+
+static void freeNodes(VolumeOctreeNode* root) {
+    if(root) {
+        for(int i=0; i<8; ++i) {
+            freeNodes(root->children_[i]);
+        }
+    }
+    delete root;
+}
+
+}
+
+
 //#define VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
 
 const std::string OctreeWalker::loggerCat_("voreen.RandomWalker.OctreeWalker");
@@ -139,6 +175,23 @@ void OctreeWalker::initialize() {
 }
 
 void OctreeWalker::deinitialize() {
+    outportProbabilities_.setData(nullptr);
+
+    // previousOctree_ is now not referenced anymore, so we are free to clean up.
+    if(previousOctree_) {
+        tgtAssert(previousOctree_, "Previous result volume without octree");
+
+        auto res = std::move(*previousOctree_).decompose();
+        // Brickpoolmanager reference is not required here. The important thing is that the previous result does not deconstruct the brickPoolManager
+
+        // Clean up old tree
+        freeNodes(res.second);
+    }
+    previousVolume_.reset(nullptr);
+    if(brickPoolManager_) {
+        brickPoolManager_->deinitialize();
+    }
+
     AsyncComputeProcessor::deinitialize();
 }
 
@@ -355,18 +408,6 @@ struct OctreeWalkerNodeBrickConst {
     const VolumeAtomic<uint16_t> data_;
     const OctreeBrickPoolManagerBase& pool_;
 };
-
-namespace {
-
-inline size_t volumeCoordsToIndex(int x, int y, int z, const tgt::ivec3& dim) {
-    return z*dim.y*dim.x + y*dim.x + x;
-}
-
-inline size_t volumeCoordsToIndex(const tgt::ivec3& coords, const tgt::ivec3& dim) {
-    return coords.z*dim.y*dim.x + coords.y*dim.x + coords.x;
-}
-}
-
 struct BrickNeighborhood {
     BrickNeighborhood() = delete;
     BrickNeighborhood(const BrickNeighborhood& other) = delete;
@@ -1364,20 +1405,6 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     };
 }
 
-static void freeTree(VolumeOctreeNode* root, std::unordered_set<const VolumeOctreeNode*>& nodesToSave, OctreeBrickPoolManagerMmap& brickPoolManager) {
-    if(root && nodesToSave.find(root) == nodesToSave.end()) {
-        if(root->hasBrick()) {
-            brickPoolManager.deleteBrick(root->getBrickAddress());
-        }
-        for(int i=0; i<8; ++i) {
-            freeTree(root->children_[i], nodesToSave, brickPoolManager);
-        }
-    }
-
-    // The node object itself is never reused. Only its contents.
-    delete root;
-}
-
 void OctreeWalker::processComputeOutput(ComputeOutput output) {
     if (!output.volume_) {
         LERROR("Failed to compute Random Walker solution");
@@ -1396,7 +1423,7 @@ void OctreeWalker::processComputeOutput(ComputeOutput output) {
         // Brickpoolmanager reference is not required here. The important thing is that the previous result does not deconstruct the brickPoolManager
 
         // Clean up old tree
-        freeTree(res.second, output.previousNodesToSave, *brickPoolManager_);
+        freeTreeComponents(res.second, output.previousNodesToSave, *brickPoolManager_);
     }
 
     previousOctree_ = output.octree_;
