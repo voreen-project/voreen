@@ -1222,25 +1222,25 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 #pragma omp parallel for schedule(dynamic, 1) // Schedule: Process nodes/bricks locally to utilize brick cache
 #endif
         for (int nodeId = 0; nodeId < numNodes; ++nodeId) {
+
 #ifdef VRN_OCTREEWALKER_USE_OMP
             if(aborted) {
                 continue;
             }
-#endif
-
             if(parallelProgress.reportStepDone()) {
-#ifdef VRN_OCTREEWALKER_USE_OMP
                 #pragma omp critical
-                {
-                    aborted = true;
-                }
-#else
                 aborted = true;
-                break;
-#endif
             }
+#else
+            if(parallelProgress.reportStepDone()) {
+                aborted = true;
+                break
+            }
+#endif
 
-            auto& node = nodesToProcess[nodeId];
+            // Make sure to hit LRU cache: Go from back to front
+            auto& node = nodesToProcess[numNodes-nodeId-1];
+
             tgtAssert(node.inputNode, "No input node");
             if(!node.inputNode->inVolume()) {
                 node.outputNode() = new VolumeOctreeNodeGeneric<1>(OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS, false);
@@ -1344,9 +1344,6 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
         if(aborted) {
             throw boost::thread_interrupted();
         }
-
-        // Make sure to hit LRU cache: Go from back to front in next iteration
-        std::reverse(nextNodesToProcess.begin(), nextNodesToProcess.end());
 
         nodesToProcess = nextNodesToProcess;
     }
