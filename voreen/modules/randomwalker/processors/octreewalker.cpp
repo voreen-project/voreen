@@ -1234,7 +1234,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 #else
             if(parallelProgress.reportStepDone()) {
                 aborted = true;
-                break
+                break;
             }
 #endif
 
