@@ -148,7 +148,7 @@ void voreen::EllpackMatrix<T>::initializeBuffers() {
 
     for (size_t i=0; i<numRows_*numColsPerRow_; ++i) {
         M_[i] = static_cast<T>(0);
-        indices_[i] = 0;
+        indices_[i] = -1;
     }
 }
 
@@ -247,8 +247,9 @@ size_t voreen::EllpackMatrix<T>::getNumRowEntries(size_t row) const {
 
     size_t entries = 0;
     for (size_t i=0; i<numColsPerRow_; i++) {
-        if (getValueByIndex(row, i) != static_cast<T>(0))
+        if (indices_[internalIndex(row, i)] == -1) {
             entries++;
+        }
     }
     return entries;
 }
@@ -326,6 +327,9 @@ bool voreen::EllpackMatrix<T>::isSymmetric() const {
     for (size_t row=0; row < numRows_; row++) {
         for (size_t colIndex=0; colIndex<getNumColsPerRow(); colIndex++) {
             size_t col = getColumn(row, colIndex);
+            if(col == -1) {
+                break;
+            }
             if (getValue(row, col) != getValue(col, row))
                 return false;
         }
@@ -364,7 +368,7 @@ size_t voreen::EllpackMatrix<T>::getNextFreeColIndex(size_t row) const {
     tgtAssert(row < numRows_ , "Invalid row");
 #endif
     for (size_t i=0; i<numColsPerRow_; ++i) {
-        if (static_cast<T>(M_[internalIndex(row, i)]) == static_cast<T>(0)) {
+        if (indices_[internalIndex(row, i)] == -1) {
             return i;
         }
     }

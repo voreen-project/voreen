@@ -190,7 +190,10 @@ __kernel void sSpMV_Ell(
         for (size_t n = 0; n < num_cols_per_row ; n++){
             //const size_t index = num_cols_per_row * row + n;  //< row-order
             size_t index = n*num_rows + row;
-            dot += M[index] * x[indices[index]];
+            size_t col = indices[index];
+            if(col != -1) {
+                dot += M[index] * x[col];
+            }
         }
         y[row] = dot;
         block++;
@@ -228,7 +231,10 @@ __kernel void hSpMV_Ell(
         for (size_t n = 0; n < num_cols_per_row ; n++){
             //const size_t index = num_cols_per_row * row + n;  //< row-order
             size_t index = n*num_rows + row;
-            dot += (M[index]*valueScale) * x[indices[index]];
+            size_t col = indices[index];
+            if(col != -1) {
+                dot += (M[index]*valueScale) * x[col];
+            }
         }
         y[row] = dot;
         block++;
@@ -269,7 +275,9 @@ __kernel void sInnerProduct_Ell(
             //size_t index = num_cols_per_row * row + n;  //< row-order
             size_t index = n*num_rows + row;
             size_t col = indices[index];
-            dot += A[index] * y[col];
+            if(col != -1) {
+                dot += A[index] * y[col];
+            }
         }
         partialProduct += dot * x[row];
         block++;
