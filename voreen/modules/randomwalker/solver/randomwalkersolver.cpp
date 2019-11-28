@@ -39,7 +39,6 @@ const std::string RandomWalkerSolver::loggerCat_("voreen.RandomWalker.RandomWalk
 
 RandomWalkerSolver::RandomWalkerSolver(const VolumeBase* volume,
         RandomWalkerSeeds* seeds, RandomWalkerWeights& edgeWeights) :
-    volume_(volume),
     seeds_(seeds),
     edgeWeights_(edgeWeights),
     mat_(),
@@ -49,7 +48,6 @@ RandomWalkerSolver::RandomWalkerSolver(const VolumeBase* volume,
     numSeeds_(0),
     state_(Initial)
 {
-    tgtAssert(volume_, "no volume");
     tgtAssert(seeds_, "no seed point definer");
 
     volDim_ = volume->getDimensions();
