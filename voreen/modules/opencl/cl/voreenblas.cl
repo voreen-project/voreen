@@ -82,8 +82,7 @@ __kernel void sDOT(
   vrn_size_t n,
   __global const float* X,
   __global const float* Y,
-  __global float* z,
-  __global int* mutex,
+  __global int* z,
   __local float* sdata
 )
 {
@@ -115,18 +114,20 @@ __kernel void sDOT(
         barrier(CLK_LOCAL_MEM_FENCE);
     }
 
-    // first global item initializes result buffer and releases mutex
-    if (gid==0) {
-        z[0] = 0.0;
-        atom_xchg(mutex,1);
-    }
+    union FloatBits {
+        int i;
+        float f;
+    };
 
     // no sdata[0] of each workgroup contains the sum of the workgroup's component products
     // => first item of each workgroup adds this to the final result
     if (tid == 0) {
-        while (atom_cmpxchg(mutex,1,0)==0);  // acquire mutex
-        z[0] += sdata[0];
-        atom_xchg(mutex,1);
+        union FloatBits initial;
+        union FloatBits new;
+        do {
+            initial.i = *z;
+            new.f = initial.f + sdata[0];
+        } while (atom_cmpxchg(z,initial.i,new.i)!=initial.i);
     }
 }
 

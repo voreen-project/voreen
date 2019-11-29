@@ -164,17 +164,14 @@ float VoreenBlasCL::sDOT(size_t vecSize, const float* vecx, const float* vecy) c
     Buffer xBuffer(context_, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float)*vecSize, const_cast<float*>(vecx));
     Buffer yBuffer(context_, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float)*vecSize, const_cast<float*>(vecy));
 
-    Buffer resultBuffer(context_, CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR, sizeof(float));
-    int32_t mutex = 0;
-    Buffer mutexBuffer(context_, CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, sizeof(int32_t), &mutex);
-    //Buffer mutexBuffer(context_, CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, sizeof(int32_t), &mutex);
+    float zero = 0;
+    Buffer resultBuffer(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float), &zero);
 
     kernel->setArg(0, vecSize);
     kernel->setArg(1, xBuffer);
     kernel->setArg(2, yBuffer);
     kernel->setArg(3, resultBuffer);
-    kernel->setArg(4, mutexBuffer);
-    kernel->setArg(5, sizeof(float)*localWorkSize, 0);
+    kernel->setArg(4, sizeof(float)*localWorkSize, 0);
 
     getQueue().enqueue(kernel, workSize, localWorkSize);
 
@@ -407,6 +404,8 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
 
     int iteration  = 0;
 
+    float zero = 0.0f;
+
     try {
 
         if (precond == Jacobi) {
@@ -422,8 +421,6 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
             zBuf = new Buffer(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float)*vecSize);
         }
 
-        int32_t mutex;
-        Buffer mutexBuf(context_, CL_MEM_ALLOC_HOST_PTR, sizeof(int32_t));
         Buffer scalarBuf(context_, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float));
         Buffer nominatorBuf(context_, CL_MEM_READ_WRITE, sizeof(float));
         Buffer denominatorBuf(context_, CL_MEM_READ_WRITE, sizeof(float));
@@ -487,10 +484,8 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
             else
                 kernelSdot->setArg(2, rBuf);
             kernelSdot->setArg(3, nominatorBuf);
-            kernelSdot->setArg(4, mutexBuf);
-            kernelSdot->setArg(5, sizeof(float)*localWorksize, 0);
-            mutex = 0;
-            getQueue().enqueueWriteBuffer(&mutexBuf, &mutex, false);    //< initialize mutex
+            kernelSdot->setArg(4, sizeof(float)*localWorksize, 0);
+            getQueue().enqueueWriteBuffer(&nominatorBuf, &zero, false);    //< intialize output buffer
             getQueue().enqueue(kernelSdot, workSize, localWorksize);
 
             // tmp <= A * p_k
@@ -508,10 +503,8 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
             kernelSdot->setArg(1, pBuf);
             kernelSdot->setArg(2, tmpBuf);
             kernelSdot->setArg(3, denominatorBuf);
-            kernelSdot->setArg(4, mutexBuf);
-            kernelSdot->setArg(5, sizeof(float)*localWorksize, 0);
-            mutex = 0;
-            getQueue().enqueueWriteBuffer(&mutexBuf, &mutex, false);
+            kernelSdot->setArg(4, sizeof(float)*localWorksize, 0);
+            getQueue().enqueueWriteBuffer(&denominatorBuf, &zero, false);    //< intialize output buffer
             getQueue().enqueue(kernelSdot, workSize, localWorksize);
 
             // x <= alpha*p + x
@@ -549,10 +542,8 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
                 kernelSdot->setArg(1, rBuf);
                 kernelSdot->setArg(2, zBuf);
                 kernelSdot->setArg(3, scalarBuf);
-                kernelSdot->setArg(4, mutexBuf);
-                kernelSdot->setArg(5, sizeof(float)*localWorksize, 0);
-                mutex = 0;
-                getQueue().enqueueWriteBuffer(&mutexBuf, &mutex, false);
+                kernelSdot->setArg(4, sizeof(float)*localWorksize, 0);
+                getQueue().enqueueWriteBuffer(&scalarBuf, &zero, false);    //< intialize output buffer
                 getQueue().enqueue(kernelSdot, workSize, localWorksize);
             }
             else {
@@ -560,10 +551,8 @@ int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* v
                 kernelSdot->setArg(1, rBuf);
                 kernelSdot->setArg(2, rBuf);
                 kernelSdot->setArg(3, scalarBuf);
-                kernelSdot->setArg(4, mutexBuf);
-                kernelSdot->setArg(5, sizeof(float)*localWorksize, 0);
-                mutex = 0;
-                getQueue().enqueueWriteBuffer(&mutexBuf, &mutex, false);
+                kernelSdot->setArg(4, sizeof(float)*localWorksize, 0);
+                getQueue().enqueueWriteBuffer(&scalarBuf, &zero, false);    //< intialize output buffer
                 getQueue().enqueue(kernelSdot, workSize, localWorksize);
             }
             if((iteration % betaCheckPeriod) == 0) {
@@ -708,6 +697,8 @@ int VoreenBlasCL::hSpConjGradEll(const EllpackMatrix<int16_t>& mat, const float*
 
     int iteration  = 0;
 
+    float zero = 0.0f;
+
     while (iteration < maxIterations) {
 
         iteration++;
@@ -717,10 +708,8 @@ int VoreenBlasCL::hSpConjGradEll(const EllpackMatrix<int16_t>& mat, const float*
         kernelSdot->setArg(1, rBuf);
         kernelSdot->setArg(2, rBuf);
         kernelSdot->setArg(3, nominatorBuf);
-        kernelSdot->setArg(4, mutexBuf);
-        kernelSdot->setArg(5, sizeof(float)*localWorksize, 0);
-        mutex = 0;
-        getQueue().enqueueWriteBuffer(&mutexBuf, &mutex, true);    //< initialize mutex
+        kernelSdot->setArg(4, sizeof(float)*localWorksize, 0);
+        getQueue().enqueueWriteBuffer(&nominatorBuf, &zero, false);
         getQueue().enqueue(kernelSdot, workSize, localWorksize);
 
         // tmp <= A * p_k
@@ -738,10 +727,8 @@ int VoreenBlasCL::hSpConjGradEll(const EllpackMatrix<int16_t>& mat, const float*
         kernelSdot->setArg(1, pBuf);
         kernelSdot->setArg(2, tmpBuf);
         kernelSdot->setArg(3, denominatorBuf);
-        kernelSdot->setArg(4, mutexBuf);
-        kernelSdot->setArg(5, sizeof(float)*localWorksize, 0);
-        mutex = 0;
-        getQueue().enqueueWriteBuffer(&mutexBuf, &mutex, true);
+        kernelSdot->setArg(4, sizeof(float)*localWorksize, 0);
+        getQueue().enqueueWriteBuffer(&denominatorBuf, &zero, false);
         getQueue().enqueue(kernelSdot, workSize, localWorksize);
 
         float denominator;
@@ -771,10 +758,8 @@ int VoreenBlasCL::hSpConjGradEll(const EllpackMatrix<int16_t>& mat, const float*
         kernelSdot->setArg(1, rBuf);
         kernelSdot->setArg(2, rBuf);
         kernelSdot->setArg(3, scalarBuf);
-        kernelSdot->setArg(4, mutexBuf);
-        kernelSdot->setArg(5, sizeof(float)*localWorksize, 0);
-        mutex = 0;
-        getQueue().enqueueWriteBuffer(&mutexBuf, &mutex, true);
+        kernelSdot->setArg(4, sizeof(float)*localWorksize, 0);
+        getQueue().enqueueWriteBuffer(&scalarBuf, &zero, false);
         getQueue().enqueue(kernelSdot, workSize, localWorksize);
         float beta;
         getQueue().enqueueReadBuffer(&scalarBuf, (void*)(&beta), true);
