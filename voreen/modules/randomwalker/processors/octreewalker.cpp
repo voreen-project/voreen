@@ -546,6 +546,53 @@ struct BrickNeighborhood {
     }
 };
 
+struct NSmallestHeap14 {
+    NSmallestHeap14()
+        : data()
+        , numElements(0)
+    {
+        std::fill(data.begin(), data.end(), FLT_MIN); // sentinels for last 13 values (lower push branch)
+        data[0] = FLT_MAX; //sentinel for first 14 values (upper push branch)
+    }
+    float nthlargest() {
+        return data[1];
+    }
+    void push(float val) {
+        if(numElements < 14) {
+            numElements++;
+            uint8_t i=numElements;
+            data[i] = val;
+            uint8_t parent = i>>1;
+            while(data[parent] < val) {
+                std::swap(data[parent], data[i]);
+                i=parent;
+                parent = i>>1;
+            }
+        } else {
+            if(val < nthlargest()) {
+                uint8_t i = 1;
+                data[i] = val;
+                while(true) {
+                    uint8_t child1 = i<<1;
+                    uint8_t child2 = child1+1;
+                    uint8_t c = data[child1] > data[child2] ? child1 : child2;
+                    if(data[c] > val) {
+                        std::swap(data[c], data[i]);
+                        i = c;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    void clear() {
+        numElements = 0;
+    }
+    std::array<float, 32> data;
+    uint8_t numElements;
+};
+
 class RandomWalkerSeedsBrick : public RandomWalkerSeeds {
     static const float CONFLICT;
     static const float UNLABELED;
@@ -747,64 +794,20 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
     }
 #else
     tgt::ivec3 last = end - tgt::ivec3(1);
-    for (auto center = start; center.z < end.z; ++center.z) {
-        for (center.y = start.y; center.y < end.y; ++center.y) {
-            center.x = start.x;
+    const size_t HEAP_SIZE = N*N*N/2+1;
+    tgtAssert(HEAP_SIZE == 14, "Invalid neighborhood size");
+    NSmallestHeap14 heap;
+    VRN_FOR_EACH_VOXEL(center, start, end) {
+        const tgt::ivec3 neighborhoodStart = center - neighborhoodSize;
+        const tgt::ivec3 neighborhoodEnd = center + neighborhoodSize + tgt::ivec3(1);
 
-            tgt::ivec3 neighborhoodStart = center - neighborhoodSize;
-            tgt::ivec3 neighborhoodEnd = center + neighborhoodSize + tgt::ivec3(1);
-
-            std::array<float, N*N*N> vals;
-            int i=0;
-            if(center.x < end.x) {
-                VRN_FOR_EACH_VOXEL(pos, neighborhoodStart, neighborhoodEnd) {
-                    tgt::ivec3 p = tgt::clamp(pos, start, last);
-                    vals[i++] = img.voxel(p);
-                }
-                tgtAssert(i==N*N*N, "OI");
-                std::sort(vals.begin(), vals.end());
-                int centerIndex = i/2;
-                output.voxel(center) = vals[centerIndex];
-            }
-
-            auto replace = [&] (float oldVal, float newVal) {
-                auto slot = std::lower_bound(vals.begin(), vals.end(), oldVal);
-                tgtAssert(slot, "Invalid pos");
-                int index = std::distance(vals.begin(), slot);
-                vals[index] = newVal;
-                if(index > 0 && vals[index] < vals[index-1]) {
-                    while(index > 0 && vals[index] < vals[index-1]) {
-                        std::swap(vals[index], vals[index-1]);
-                        --index;
-                    }
-                } else if(index < i-1 && vals[index] > vals[index+1]) {
-                    while(index < i-1 && vals[index] > vals[index+1]) {
-                        std::swap(vals[index], vals[index+1]);
-                        ++index;
-                    }
-                }
-            };
-
-            center.x++;
-            for (; center.x < end.x; ++center.x) {
-                tgt::ivec3 neighborhoodStart = center - neighborhoodSize;
-                tgt::ivec3 neighborhoodEnd = center + neighborhoodSize + tgt::ivec3(1);
-
-                for (int z = neighborhoodStart.z; z < neighborhoodEnd.z; ++z) {
-                    for (int y = neighborhoodStart.y; y < neighborhoodEnd.y; ++y) {
-                        tgt::vec3 oldPos = tgt::clamp(tgt::ivec3(neighborhoodStart.x-1, y, z), start, last);
-                        tgt::vec3 newPos = tgt::clamp(tgt::ivec3(neighborhoodEnd.x-1, y, z), start, last);
-                        float oldVal = img.voxel(oldPos);
-                        float newVal = img.voxel(newPos);
-                        replace(oldVal, newVal);
-                    }
-                }
-
-                int centerIndex = N*N*N/2;
-                std::sort(vals.begin(), vals.end());
-                output.voxel(center) = vals[centerIndex];
-            }
+        heap.clear();
+        VRN_FOR_EACH_VOXEL(pos, neighborhoodStart, neighborhoodEnd) {
+            tgt::ivec3 p = tgt::clamp(pos, start, last);
+            float val = img.voxel(p);
+            heap.push(val);
         }
+        output.voxel(center) = heap.nthlargest();
     }
 #endif
 #endif
