@@ -118,7 +118,7 @@ __kernel void sDOT(
     // first global item initializes result buffer and releases mutex
     if (gid==0) {
         z[0] = 0.0;
-        atom_cmpxchg(mutex,0,1);
+        atom_xchg(mutex,1);
     }
 
     // no sdata[0] of each workgroup contains the sum of the workgroup's component products
@@ -126,7 +126,7 @@ __kernel void sDOT(
     if (tid == 0) {
         while (atom_cmpxchg(mutex,1,0)==0);  // acquire mutex
         z[0] += sdata[0];
-        atom_cmpxchg(mutex,0,1);             // release mutex
+        atom_xchg(mutex,1);
     }
 }
 
@@ -175,7 +175,7 @@ __kernel void sNRM2(
     if (gid==0) {
         y[0] = 0.0;
         semaphor[0] = 0;
-        atom_cmpxchg(mutex,0,1);
+        atom_xchg(mutex,1);
     }
 
     // no sdata[0] of each workgroup contains the sum of the workgroup's component products
@@ -186,7 +186,7 @@ __kernel void sNRM2(
         semaphor[0]++;                       // count number of groups
         if (semaphor[0] == numGroups)        // all groups have passed => compute final result
             y[0] = sqrt(y[0]);
-        atom_cmpxchg(mutex,0,1);             // release mutex
+        atom_xchg(mutex,1);             // release mutex
     }
 }
 
@@ -328,7 +328,7 @@ __kernel void sInnerProduct_Ell(
     // first global item initializes result buffer and releases mutex
     if (gid==0) {
         z[0] = 0.0;
-        atom_cmpxchg(mutex,0,1);
+        atom_xchg(mutex,1); //release mutex
     }
 
     // no sdata[0] of each workgroup contains the sum of the workgroup's component products
@@ -336,6 +336,6 @@ __kernel void sInnerProduct_Ell(
     if (tid == 0) {
         while (atom_cmpxchg(mutex,1,0)==0);  // acquire mutex
         z[0] += sdata[0];
-        atom_cmpxchg(mutex,0,1);             // release mutex
+        atom_xchg(mutex,1);             // release mutex
     }
 }
