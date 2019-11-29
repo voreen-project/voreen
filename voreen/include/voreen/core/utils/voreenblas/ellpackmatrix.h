@@ -57,6 +57,7 @@ public:
 
     inline void setValue(size_t row, size_t col, T value);
     inline T getValue(size_t row, size_t col) const;
+    inline T& getWritableValue(size_t row, size_t col);
 
     inline void setValueByIndex(size_t row, size_t col, size_t colIndex, T value);
     inline T getValueByIndex(size_t row, size_t colIndex) const;
@@ -209,6 +210,36 @@ T voreen::EllpackMatrix<T>::getValue(size_t row, size_t col) const {
     else {
         // No entry for matrix element
         return static_cast<T>(0);
+    }
+}
+
+template<class T>
+T& voreen::EllpackMatrix<T>::getWritableValue(size_t row, size_t col) {
+
+#ifdef VRN_BLAS_DEBUG
+    tgtAssert(M_ && indices_, "Data buffers not initialized");
+    tgtAssert(row < numRows_ && col < numCols_, "Invalid indices");
+#endif
+
+    // value already set for these coordinates?
+    int colIndex = getColumnIndex(row, col);
+
+    // if no value for indices assigned, get next free col index
+    if (colIndex == -1)
+        colIndex = static_cast<int>(getNextFreeColIndex(row));
+
+    if (colIndex >= 0) {
+        // next free col index available
+        size_t index = internalIndex(row, colIndex);
+        indices_[index] = col;
+        return M_[index];
+    }
+    else {
+        // row is full
+        LWARNINGC("EllMatrix", "Too many entries for row " << row);
+        tgtAssert(false, "Too many entries for row");
+        static T dummy;
+        return dummy;
     }
 }
 

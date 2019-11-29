@@ -777,136 +777,59 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
     tgtAssert(volumeIndexToRowTable, "no volumeIndexToRowTable passed");
     tgtAssert(mat.isInitialized(), "matrix not initialized");
 
-    const int x = voxel.x;
-    const int y = voxel.y;
-    const int z = voxel.z;
-
     size_t index = volumeCoordsToIndex(voxel, volDim);
-    if (seeds->isSeedPoint(index))
-        return;
-
-    size_t curRow = volumeIndexToRowTable[index];
 
     float curIntensity = voxelFun.voxel(voxel);
 
     float weightSum = 0;
 
-    // x-neighbors
-    if (x > 0) {
-        tgt::ivec3 neighbor(x-1, y, z);
+    bool currentIsSeedpoint = seeds->isSeedPoint(index);
 
-        size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim);
-        float neighborIntensity = voxelFun.voxel(neighbor);
-        float weight = edgeWeight(curIntensity, neighborIntensity);
+    for(int dim=0; dim<3; ++dim) {
+        if(voxel[dim] > 0) {
+            tgt::ivec3 neighbor = voxel;
+            neighbor[dim] -= 1;
 
-        if (!seeds->isSeedPoint(neighbor)) {
-            size_t nRow = volumeIndexToRowTable[neighborIndex];
-            //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
-            mat.setValue(curRow, nRow, -weight);
+            size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim);
+            float neighborIntensity = voxelFun.voxel(neighbor);
+
+            float weight = edgeWeight(curIntensity, neighborIntensity);
+
+            if(seeds->isSeedPoint(neighbor)) {
+                if(!currentIsSeedpoint) {
+                    size_t curRow = volumeIndexToRowTable[index];
+                    vec[curRow] += weight * seeds->getSeedValue(neighbor);
+                }
+            } else {
+                size_t nRow = volumeIndexToRowTable[neighborIndex];
+                if(!currentIsSeedpoint) {
+                    size_t curRow = volumeIndexToRowTable[index];
+                    //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
+                    tgtAssert(mat.getColumnIndex(curRow, nRow) == -1, "foo");
+                    tgtAssert(mat.getColumnIndex(nRow, curRow) == -1, "foo");
+                    mat.setValue(curRow, nRow, -weight);
+                    mat.setValue(nRow, curRow, -weight);
+                } else {
+                    vec[nRow] += weight * seeds->getSeedValue(voxel);
+                }
+
+                tgtAssert(mat.getColumnIndex(nRow, nRow) != -1, "foo");
+                // Update weight sum of neighbor with smaller index.
+                mat.getWritableValue(nRow, nRow) += weight;
+            }
+
+            weightSum += weight;
         }
-        else {
-            vec[curRow] += weight * seeds->getSeedValue(neighbor);
-        }
-
-        weightSum += weight;
-    }
-    if (x < volDim.x-1) {
-        tgt::ivec3 neighbor(x+1, y, z);
-
-        size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim);
-        float neighborIntensity = voxelFun.voxel(neighbor);
-        float weight = edgeWeight(curIntensity, neighborIntensity);
-
-        if (!seeds->isSeedPoint(neighbor)) {
-            size_t nRow = volumeIndexToRowTable[neighborIndex];
-            //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
-            mat.setValue(curRow, nRow, -weight);
-        }
-        else {
-            vec[curRow] += weight * seeds->getSeedValue(neighbor);
-        }
-
-        weightSum += weight;
-    }
-
-    // y-neighbors
-    if (y > 0) {
-        tgt::ivec3 neighbor(x, y-1, z);
-
-        size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim);
-        float neighborIntensity = voxelFun.voxel(neighbor);
-        float weight = edgeWeight(curIntensity, neighborIntensity);
-
-        if (!seeds->isSeedPoint(neighbor)) {
-            size_t nRow = volumeIndexToRowTable[neighborIndex];
-            //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
-            mat.setValue(curRow, nRow, -weight);
-        }
-        else {
-            vec[curRow] += weight * seeds->getSeedValue(neighbor);
-        }
-
-        weightSum += weight;
-    }
-    if (y < volDim.y-1) {
-        tgt::ivec3 neighbor(x, y+1, z);
-
-        size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim);
-        float neighborIntensity = voxelFun.voxel(neighbor);
-        float weight = edgeWeight(curIntensity, neighborIntensity);
-
-        if (!seeds->isSeedPoint(neighbor)) {
-            size_t nRow = volumeIndexToRowTable[neighborIndex];
-            //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
-            mat.setValue(curRow, nRow, -weight);
-        }
-        else {
-            vec[curRow] += weight * seeds->getSeedValue(neighbor);
-        }
-
-        weightSum += weight;
     }
 
-    // z-neighbors
-    if (z > 0) {
-        tgt::ivec3 neighbor(x, y, z-1);
-
-        size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim);
-        float neighborIntensity = voxelFun.voxel(neighbor);
-        float weight = edgeWeight(curIntensity, neighborIntensity);
-
-        if (!seeds->isSeedPoint(neighbor)) {
-            size_t nRow = volumeIndexToRowTable[neighborIndex];
-            //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
-            mat.setValue(curRow, nRow, -weight);
-        }
-        else {
-            vec[curRow] += weight * seeds->getSeedValue(neighbor);
-        }
-
-        weightSum += weight;
+    if(!currentIsSeedpoint) {
+        // This is the first time writing to mat at this location, so overwriting is fine.
+        size_t curRow = volumeIndexToRowTable[index];
+        tgtAssert(mat.getColumnIndex(curRow, curRow) == -1, "foo");
+        mat.setValue(curRow, curRow, weightSum);
     }
-    if (z < volDim.z-1) {
-        tgt::ivec3 neighbor(x, y, z+1);
-
-        size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim);
-        float neighborIntensity = voxelFun.voxel(neighbor);
-        float weight = edgeWeight(curIntensity, neighborIntensity);
-
-        if (!seeds->isSeedPoint(neighbor)) {
-            size_t nRow = volumeIndexToRowTable[neighborIndex];
-            //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
-            mat.setValue(curRow, nRow, -weight);
-        }
-        else {
-            vec[curRow] += weight * seeds->getSeedValue(neighbor);
-        }
-
-        weightSum += weight;
-    }
-
-    mat.setValue(curRow, curRow, weightSum);
 }
+
 static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNodeGeometry& outputNodeGeometry, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, bool& hasSeedConflicts, bool parentHadSeedsConflicts, OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot, const OctreeWalkerNode inputRoot, boost::optional<OctreeWalkerNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
     auto canSkipChildren = [&] (float min, float max) {
         float parentValueRange = max-min;
@@ -1022,8 +945,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNodeGeo
     auto solution = tgt::make_unique<float[]>(systemSize);
     std::fill_n(solution.get(), systemSize, 0.5f);
 
-    EllpackMatrix<float> mat;
-    mat.setDimensions(systemSize, systemSize, 7);
+    EllpackMatrix<float> mat(systemSize, systemSize, 7);
     mat.initializeBuffers();
 
     float beta = 0.5f;
