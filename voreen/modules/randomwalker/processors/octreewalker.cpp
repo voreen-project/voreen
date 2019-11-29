@@ -102,7 +102,6 @@ static uint16_t normToBrick(float val) {
 static float brickToNorm(uint16_t val) {
     return static_cast<float>(val)/0xffff;
 }
-
 }
 
 
@@ -703,21 +702,33 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
     const int N=2*k+1;
     const tgt::ivec3 neighborhoodSize(k);
 
-    float sumOfDifferences = 0.0f;
+#ifdef VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
+    auto conv = [&] (const VolumeAtomic<float>& input, VolumeAtomic<float>& output, int dim) {
+        VRN_FOR_EACH_VOXEL(center, start, end) {
+            tgt::ivec3 neigh(0);
+            neigh[dim] = neighborhoodSize[dim];
+            const tgt::ivec3 neighborhoodStart = tgt::max(start, center - neigh);
+            const tgt::ivec3 neighborhoodEnd = tgt::min(end, center + neigh + tgt::ivec3(1));
+
+            const int numNeighborhoodVoxels = tgt::hmul(neighborhoodEnd-neighborhoodStart);
+
+            float sum=0.0f;
+            VRN_FOR_EACH_VOXEL(pos, neighborhoodStart, neighborhoodEnd) {
+                sum += input.voxel(pos);
+            }
+            float estimation = sum/numNeighborhoodVoxels;
+            output.voxel(center) = estimation;
+        }
+    };
+    VolumeAtomic<float> tmp(img.getDimensions());
+    conv(img, output, 0);
+    conv(output, tmp, 1);
+    conv(tmp, output, 2);
+#else
     VRN_FOR_EACH_VOXEL(center, start, end) {
         const tgt::ivec3 neighborhoodStart = tgt::max(start, center - neighborhoodSize);
         const tgt::ivec3 neighborhoodEnd = tgt::min(end, center + neighborhoodSize + tgt::ivec3(1));
 
-        const int numNeighborhoodVoxels = tgt::hmul(neighborhoodEnd-neighborhoodStart);
-
-#ifdef VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
-        // mean
-        float sum=0.0f;
-        VRN_FOR_EACH_VOXEL(pos, neighborhoodStart, neighborhoodEnd) {
-            sum += img.voxel(pos);
-        }
-        float estimation = sum/numNeighborhoodVoxels;
-#else
         // median
         std::array<float, N*N*N> vals;
         int i=0;
@@ -728,8 +739,18 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
         std::nth_element(vals.begin(), vals.begin()+centerIndex, vals.begin()+i);
         //std::sort(vals.begin(), vals.begin()+i);
         float estimation = vals[centerIndex];
+        output.voxel(center) = estimation;
+    }
 #endif
 
+    float sumOfDifferences = 0.0f;
+    VRN_FOR_EACH_VOXEL(center, start, end) {
+        const tgt::ivec3 neighborhoodStart = tgt::max(start, center - neighborhoodSize);
+        const tgt::ivec3 neighborhoodEnd = tgt::min(end, center + neighborhoodSize + tgt::ivec3(1));
+
+        const int numNeighborhoodVoxels = tgt::hmul(neighborhoodEnd-neighborhoodStart);
+
+        float estimation = output.voxel(center);
         float val = img.voxel(center);
         float diff = estimation - val;
 
