@@ -56,7 +56,7 @@ namespace voreen {
 #define VRN_OCTREEWALKER_USE_OMP
 #endif
 
-#define VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
+//#define VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
 
 namespace {
 
@@ -703,6 +703,7 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
     const tgt::ivec3 neighborhoodSize(k);
 
 #ifdef VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
+    // mean
     auto conv = [&] (const VolumeAtomic<float>& input, VolumeAtomic<float>& output, int dim) {
         VRN_FOR_EACH_VOXEL(center, start, end) {
             tgt::ivec3 neigh(0);
@@ -725,22 +726,87 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
     conv(output, tmp, 1);
     conv(tmp, output, 2);
 #else
+    // median
+#if 0
+    tgt::ivec3 last = end - tgt::ivec3(1);
     VRN_FOR_EACH_VOXEL(center, start, end) {
-        const tgt::ivec3 neighborhoodStart = tgt::max(start, center - neighborhoodSize);
-        const tgt::ivec3 neighborhoodEnd = tgt::min(end, center + neighborhoodSize + tgt::ivec3(1));
+        const tgt::ivec3 neighborhoodStart = center - neighborhoodSize;
+        const tgt::ivec3 neighborhoodEnd = center + neighborhoodSize + tgt::ivec3(1);
 
-        // median
         std::array<float, N*N*N> vals;
         int i=0;
         VRN_FOR_EACH_VOXEL(pos, neighborhoodStart, neighborhoodEnd) {
-            vals[i++] = img.voxel(pos);
+            tgt::ivec3 p = tgt::clamp(pos, start, last);
+            vals[i++] = img.voxel(p);
         }
+        tgtAssert(i==N*N*N, "OI");
         int centerIndex = i/2;
-        std::nth_element(vals.begin(), vals.begin()+centerIndex, vals.begin()+i);
+        std::nth_element(vals.begin(), vals.begin()+centerIndex, vals.end());
         //std::sort(vals.begin(), vals.begin()+i);
-        float estimation = vals[centerIndex];
-        output.voxel(center) = estimation;
+        output.voxel(center) = vals[centerIndex];
     }
+#else
+    tgt::ivec3 last = end - tgt::ivec3(1);
+    for (auto center = start; center.z < end.z; ++center.z) {
+        for (center.y = start.y; center.y < end.y; ++center.y) {
+            center.x = start.x;
+
+            tgt::ivec3 neighborhoodStart = center - neighborhoodSize;
+            tgt::ivec3 neighborhoodEnd = center + neighborhoodSize + tgt::ivec3(1);
+
+            std::array<float, N*N*N> vals;
+            int i=0;
+            if(center.x < end.x) {
+                VRN_FOR_EACH_VOXEL(pos, neighborhoodStart, neighborhoodEnd) {
+                    tgt::ivec3 p = tgt::clamp(pos, start, last);
+                    vals[i++] = img.voxel(p);
+                }
+                tgtAssert(i==N*N*N, "OI");
+                std::sort(vals.begin(), vals.end());
+                int centerIndex = i/2;
+                output.voxel(center) = vals[centerIndex];
+            }
+
+            auto replace = [&] (float oldVal, float newVal) {
+                auto slot = std::lower_bound(vals.begin(), vals.end(), oldVal);
+                tgtAssert(slot, "Invalid pos");
+                int index = std::distance(vals.begin(), slot);
+                vals[index] = newVal;
+                if(index > 0 && vals[index] < vals[index-1]) {
+                    while(index > 0 && vals[index] < vals[index-1]) {
+                        std::swap(vals[index], vals[index-1]);
+                        --index;
+                    }
+                } else if(index < i-1 && vals[index] > vals[index+1]) {
+                    while(index < i-1 && vals[index] > vals[index+1]) {
+                        std::swap(vals[index], vals[index+1]);
+                        ++index;
+                    }
+                }
+            };
+
+            center.x++;
+            for (; center.x < end.x; ++center.x) {
+                tgt::ivec3 neighborhoodStart = center - neighborhoodSize;
+                tgt::ivec3 neighborhoodEnd = center + neighborhoodSize + tgt::ivec3(1);
+
+                for (int z = neighborhoodStart.z; z < neighborhoodEnd.z; ++z) {
+                    for (int y = neighborhoodStart.y; y < neighborhoodEnd.y; ++y) {
+                        tgt::vec3 oldPos = tgt::clamp(tgt::ivec3(neighborhoodStart.x-1, y, z), start, last);
+                        tgt::vec3 newPos = tgt::clamp(tgt::ivec3(neighborhoodEnd.x-1, y, z), start, last);
+                        float oldVal = img.voxel(oldPos);
+                        float newVal = img.voxel(newPos);
+                        replace(oldVal, newVal);
+                    }
+                }
+
+                int centerIndex = N*N*N/2;
+                std::sort(vals.begin(), vals.end());
+                output.voxel(center) = vals[centerIndex];
+            }
+        }
+    }
+#endif
 #endif
 
     float sumOfDifferences = 0.0f;
