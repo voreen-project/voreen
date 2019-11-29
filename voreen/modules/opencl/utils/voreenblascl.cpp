@@ -338,7 +338,7 @@ float VoreenBlasCL::sSpInnerProductEll(const EllpackMatrix<float>& mat, const fl
 int VoreenBlasCL::sSpConjGradEll(const EllpackMatrix<float>& mat, const float* vec, float* result,
                            float* initial, ConjGradPreconditioner precond, float threshold, int maxIterations, ProgressReporter* progress) const {
 
-    const int betaCheckPeriod = 1;
+    const int betaCheckPeriod = 2;
 
     tgtAssert(mat.isSymmetric(), "Symmetric matrix expected.");
 
