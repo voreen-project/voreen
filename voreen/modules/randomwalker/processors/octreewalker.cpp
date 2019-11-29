@@ -551,8 +551,8 @@ struct NSmallestHeap14 {
         : data()
         , numElements(0)
     {
-        std::fill(data.begin(), data.end(), FLT_MIN); // sentinels for last 13 values (lower push branch)
         data[0] = FLT_MAX; //sentinel for first 14 values (upper push branch)
+        data[15] = FLT_MIN; //sentinel for child2 of index 7
     }
     float nthlargest() {
         return data[1];
@@ -562,34 +562,41 @@ struct NSmallestHeap14 {
             numElements++;
             uint8_t i=numElements;
             data[i] = val;
-            uint8_t parent = i>>1;
-            while(data[parent] < val) {
-                std::swap(data[parent], data[i]);
-                i=parent;
-                parent = i>>1;
-            }
+            uint8_t parent;
+
+            parent = i>>1; if(data[parent] >= val) { return; } std::swap(data[parent], data[i]); i=parent; // 15->7
+            parent = i>>1; if(data[parent] >= val) { return; } std::swap(data[parent], data[i]); i=parent; // 7->3
+            parent = i>>1; if(data[parent] >= val) { return; } std::swap(data[parent], data[i]);           // 3->1
         } else {
             if(val < nthlargest()) {
                 uint8_t i = 1;
                 data[i] = val;
-                while(true) {
-                    uint8_t child1 = i<<1;
-                    uint8_t child2 = child1+1;
-                    uint8_t c = data[child1] > data[child2] ? child1 : child2;
-                    if(data[c] > val) {
-                        std::swap(data[c], data[i]);
-                        i = c;
-                    } else {
-                        break;
-                    }
-                }
+                uint8_t child1, child2, c;
+
+                // 1->3
+                child1 = i<<1;
+                child2 = child1+1;
+                c = data[child1] > data[child2] ? child1 : child2;
+                if(data[c] > val) { std::swap(data[c], data[i]); i = c; } else { return; }
+
+                // 3->7
+                child1 = i<<1;
+                child2 = child1+1;
+                c = data[child1] > data[child2] ? child1 : child2;
+                if(data[c] > val) { std::swap(data[c], data[i]); i = c; } else { return; }
+
+                // 7->15
+                child1 = i<<1;
+                child2 = child1+1;
+                c = data[child1] > data[child2] ? child1 : child2;
+                if(data[c] > val) { std::swap(data[c], data[i]); }
             }
         }
     }
     void clear() {
         numElements = 0;
     }
-    std::array<float, 32> data;
+    std::array<float, 16> data;
     uint8_t numElements;
 };
 
