@@ -763,7 +763,7 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
     return output;
 }
 template<typename Accessor>
-static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds* seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, Accessor& voxelFun, const tgt::svec3& volDim, float minWeight) {
+static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, Accessor& voxelFun, const tgt::svec3& volDim, float minWeight) {
     auto edgeWeight = [minWeight] (float voxelIntensity, float neighborIntensity) {
         float beta = 0.5f;
         float intDiff = (voxelIntensity - neighborIntensity);
@@ -773,7 +773,6 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
 
         return weight;
     };
-    tgtAssert(seeds, "no seed definer passed");
     tgtAssert(volumeIndexToRowTable, "no volumeIndexToRowTable passed");
     tgtAssert(mat.isInitialized(), "matrix not initialized");
 
@@ -783,7 +782,7 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
 
     float weightSum = 0;
 
-    bool currentIsSeedpoint = seeds->isSeedPoint(index);
+    bool currentIsSeedpoint = seeds.isSeedPoint(index);
 
     for(int dim=0; dim<3; ++dim) {
         if(voxel[dim] > 0) {
@@ -795,25 +794,25 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
 
             float weight = edgeWeight(curIntensity, neighborIntensity);
 
-            if(seeds->isSeedPoint(neighbor)) {
+            if(seeds.isSeedPoint(neighbor)) {
                 if(!currentIsSeedpoint) {
                     size_t curRow = volumeIndexToRowTable[index];
-                    vec[curRow] += weight * seeds->getSeedValue(neighbor);
+                    vec[curRow] += weight * seeds.getSeedValue(neighbor);
                 }
             } else {
                 size_t nRow = volumeIndexToRowTable[neighborIndex];
                 if(!currentIsSeedpoint) {
                     size_t curRow = volumeIndexToRowTable[index];
                     //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
-                    tgtAssert(mat.getColumnIndex(curRow, nRow) == -1, "foo");
-                    tgtAssert(mat.getColumnIndex(nRow, curRow) == -1, "foo");
+                    tgtAssert(mat.getIndex(curRow, nRow) == -1, "foo");
+                    tgtAssert(mat.getIndex(nRow, curRow) == -1, "foo");
                     mat.setValue(curRow, nRow, -weight);
                     mat.setValue(nRow, curRow, -weight);
                 } else {
-                    vec[nRow] += weight * seeds->getSeedValue(voxel);
+                    vec[nRow] += weight * seeds.getSeedValue(voxel);
                 }
 
-                tgtAssert(mat.getColumnIndex(nRow, nRow) != -1, "foo");
+                tgtAssert(mat.getIndex(nRow, nRow) != -1, "foo");
                 // Update weight sum of neighbor with smaller index.
                 mat.getWritableValue(nRow, nRow) += weight;
             }
@@ -825,7 +824,7 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
     if(!currentIsSeedpoint) {
         // This is the first time writing to mat at this location, so overwriting is fine.
         size_t curRow = volumeIndexToRowTable[index];
-        tgtAssert(mat.getColumnIndex(curRow, curRow) == -1, "foo");
+        tgtAssert(mat.getIndex(curRow, curRow) == -1, "foo");
         mat.setValue(curRow, curRow, weightSum);
     }
 }
@@ -959,7 +958,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNodeGeo
     auto vec = std::vector<float>(systemSize, 0.0f);
 
     VRN_FOR_EACH_VOXEL(pos, tgt::ivec3(0), tgt::ivec3(walkerBlockDim)) {
-        processVoxelWeights(pos, &seeds, mat, vec.data(), volIndexToRow.data(), voxelAccessor, walkerBlockDim, minWeight);
+        processVoxelWeights(pos, seeds, mat, vec.data(), volIndexToRow.data(), voxelAccessor, walkerBlockDim, minWeight);
     }
 
     for(int i=0; i<10; ++i) {
