@@ -63,7 +63,7 @@ public:
     inline T getValueByIndex(size_t row, size_t colIndex) const;
 
     inline size_t getColumn(size_t row, size_t colIndex) const;
-    inline int getColumnIndex(size_t row, size_t col) const;
+    inline int getIndex(size_t row, size_t col) const;
     inline size_t getNumRowEntries(size_t row) const;
 
     T* getMatrix() const;
@@ -82,13 +82,13 @@ public:
     std::string toString() const;
 
 private:
+    inline std::pair<size_t, size_t> rowIndexRange(size_t row) const;
     inline size_t internalIndex(size_t row, size_t col) const;
-    inline size_t getNextFreeColIndex(size_t row) const;
+    inline size_t getNextFreeIndex(size_t row) const;
 
     size_t numRows_;
     size_t numCols_;
     size_t numColsPerRow_;
-    bool columnOrder_;
 
     T* M_;
     size_t* indices_;
@@ -105,7 +105,6 @@ voreen::EllpackMatrix<T>::EllpackMatrix() :
     numRows_(0),
     numCols_(0),
     numColsPerRow_(0),
-    columnOrder_(true),
     M_(0),
     indices_(0)
 {}
@@ -115,7 +114,6 @@ voreen::EllpackMatrix<T>::EllpackMatrix(size_t numRows, size_t numCols, size_t n
     numRows_(numRows),
     numCols_(numCols),
     numColsPerRow_(numColsPerRow),
-    columnOrder_(true),
     M_(0),
     indices_(0)
 {}
@@ -176,15 +174,14 @@ void voreen::EllpackMatrix<T>::setValue(size_t row, size_t col, T value) {
 #endif
 
     // value already set for these coordinates?
-    int colIndex = getColumnIndex(row, col);
+    int index = getIndex(row, col);
 
     // if no value for indices assigned, get next free col index
-    if (colIndex == -1)
-        colIndex = static_cast<int>(getNextFreeColIndex(row));
+    if (index == -1)
+        index = static_cast<int>(getNextFreeIndex(row));
 
-    if (colIndex >= 0) {
+    if (index >= 0) {
         // next free col index available
-        size_t index = internalIndex(row, colIndex);
         M_[index] = value;
         indices_[index] = col;
     }
@@ -202,9 +199,8 @@ T voreen::EllpackMatrix<T>::getValue(size_t row, size_t col) const {
     tgtAssert(row < numRows_ && col < numCols_, "Invalid indices");
 #endif
 
-    int colIndex = getColumnIndex(row, col);
-    if (colIndex >= 0) {
-        size_t index = internalIndex(row, colIndex);
+    int index = getIndex(row, col);
+    if (index >= 0) {
         return M_[index];
     }
     else {
@@ -222,15 +218,14 @@ T& voreen::EllpackMatrix<T>::getWritableValue(size_t row, size_t col) {
 #endif
 
     // value already set for these coordinates?
-    int colIndex = getColumnIndex(row, col);
+    int index = getIndex(row, col);
 
     // if no value for indices assigned, get next free col index
-    if (colIndex == -1)
-        colIndex = static_cast<int>(getNextFreeColIndex(row));
+    if (index == -1)
+        index = static_cast<int>(getNextFreeIndex(row));
 
-    if (colIndex >= 0) {
+    if (index >= 0) {
         // next free col index available
-        size_t index = internalIndex(row, colIndex);
         indices_[index] = col;
         return M_[index];
     }
@@ -254,16 +249,17 @@ size_t voreen::EllpackMatrix<T>::getColumn(size_t row, size_t colIndex) const {
 }
 
 template<class T>
-int voreen::EllpackMatrix<T>::getColumnIndex(size_t row, size_t col) const {
+int voreen::EllpackMatrix<T>::getIndex(size_t row, size_t col) const {
 
 #ifdef VRN_BLAS_DEBUG
     tgtAssert(M_ && indices_, "Data buffers not initialized");
     tgtAssert(row < numRows_ && col < numCols_, "Invalid indices");
 #endif
 
-    for (size_t i=0; i<numColsPerRow_; ++i) {
-        if (indices_[internalIndex(row, i)] == col)
-            return static_cast<int>(i);
+    auto range = rowIndexRange(row);
+    for (size_t index = range.first; index != range.second; ++index) {
+        if (indices_[index] == col)
+            return static_cast<int>(index);
     }
     return -1;
 }
@@ -306,7 +302,7 @@ void voreen::EllpackMatrix<T>::setValueByIndex(size_t row, size_t col, size_t co
     tgtAssert(colIndex < numColsPerRow_, "Invalid col index");
 #endif
 
-    M_[row*numColsPerRow_ + colIndex] = value;
+    M_[internalIndex(row, colIndex)] = value;
     indices_[internalIndex(row, colIndex)] = col;
 }
 
@@ -385,23 +381,30 @@ std::string voreen::EllpackMatrix<T>::toString() const {
 }
 
 template<class T>
+std::pair<size_t, size_t> voreen::EllpackMatrix<T>::rowIndexRange(size_t row) const {
+    size_t start = row*numColsPerRow_;
+    size_t end = start + numColsPerRow_;
+    return std::make_pair(start, end);
+}
+
+template<class T>
 size_t voreen::EllpackMatrix<T>::internalIndex(size_t row, size_t col) const {
 #ifdef VRN_BLAS_DEBUG
     tgtAssert(row < numRows_ && col < numColsPerRow_, "Invalid indices");
 #endif
-    return (columnOrder_ ? col*numRows_ + row : row*numColsPerRow_ + col);
+    return row*numColsPerRow_ + col;
 }
 
 template<class T>
-size_t voreen::EllpackMatrix<T>::getNextFreeColIndex(size_t row) const {
+size_t voreen::EllpackMatrix<T>::getNextFreeIndex(size_t row) const {
 #ifdef VRN_BLAS_DEBUG
     tgtAssert(M_ && indices_, "Data buffers not initialized");
     tgtAssert(row < numRows_ , "Invalid row");
 #endif
-    for (size_t i=0; i<numColsPerRow_; ++i) {
-        if (indices_[internalIndex(row, i)] == -1) {
-            return i;
-        }
+    auto range = rowIndexRange(row);
+    for (size_t index = range.first; index != range.second; ++index) {
+        if (indices_[index] == -1)
+            return index;
     }
     return -1;
 }

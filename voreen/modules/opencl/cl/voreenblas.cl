@@ -215,9 +215,9 @@ __kernel void sSpMV_Ell(
         size_t row = block*globalSize+gid;
         float dot = 0.0;
         // iterate over cols of current matrix row
-        for (size_t n = 0; n < num_cols_per_row ; n++){
-            //const size_t index = num_cols_per_row * row + n;  //< row-order
-            size_t index = n*num_rows + row;
+        const size_t start = num_cols_per_row * row;
+        const size_t end = start + num_cols_per_row;
+        for (size_t index = start; index != end; index++) {
             size_t col = indices[index];
             if(col != -1) {
                 dot += M[index] * x[col];
@@ -256,9 +256,9 @@ __kernel void hSpMV_Ell(
         size_t row = block*globalSize+gid;
         float dot = 0.0;
         // iterate over cols of current matrix row
-        for (size_t n = 0; n < num_cols_per_row ; n++){
-            //const size_t index = num_cols_per_row * row + n;  //< row-order
-            size_t index = n*num_rows + row;
+        const size_t start = num_cols_per_row * row;
+        const size_t end = start + num_cols_per_row;
+        for (size_t index = start; index != end; index++) {
             size_t col = indices[index];
             if(col != -1) {
                 dot += (M[index]*valueScale) * x[col];
@@ -299,9 +299,9 @@ __kernel void sInnerProduct_Ell(
         size_t row = block*globalSize+gid;
         float dot = 0.0;
         // iterate over cols of current matrix row
-        for (size_t n = 0; n < num_cols_per_row ; n++){
-            //size_t index = num_cols_per_row * row + n;  //< row-order
-            size_t index = n*num_rows + row;
+        const size_t start = num_cols_per_row * row;
+        const size_t end = start + num_cols_per_row;
+        for (size_t index = start; index != end; index++) {
             size_t col = indices[index];
             if(col != -1) {
                 dot += A[index] * y[col];
