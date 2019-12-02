@@ -52,7 +52,7 @@
 
 namespace voreen {
 
-#if defined(VRN_MODULE_OPENMP) && 1
+#if defined(VRN_MODULE_OPENMP) && 0
 #define VRN_OCTREEWALKER_USE_OMP
 #endif
 
@@ -546,60 +546,6 @@ struct BrickNeighborhood {
     }
 };
 
-struct NSmallestHeap14 {
-    NSmallestHeap14()
-        : data()
-        , numElements(0)
-    {
-        data[0] = FLT_MAX; //sentinel for first 14 values (upper push branch)
-        data[15] = FLT_MIN; //sentinel for child2 of index 7
-    }
-    float nthlargest() {
-        return data[1];
-    }
-    void push(float val) {
-        if(numElements < 14) {
-            numElements++;
-            uint8_t i=numElements;
-            data[i] = val;
-            uint8_t parent;
-
-            parent = i>>1; if(data[parent] >= val) { return; } std::swap(data[parent], data[i]); i=parent; // 15->7
-            parent = i>>1; if(data[parent] >= val) { return; } std::swap(data[parent], data[i]); i=parent; // 7->3
-            parent = i>>1; if(data[parent] >= val) { return; } std::swap(data[parent], data[i]);           // 3->1
-        } else {
-            if(val < nthlargest()) {
-                uint8_t i = 1;
-                data[i] = val;
-                uint8_t child1, child2, c;
-
-                // 1->3
-                child1 = i<<1;
-                child2 = child1+1;
-                c = data[child1] > data[child2] ? child1 : child2;
-                if(data[c] > val) { std::swap(data[c], data[i]); i = c; } else { return; }
-
-                // 3->7
-                child1 = i<<1;
-                child2 = child1+1;
-                c = data[child1] > data[child2] ? child1 : child2;
-                if(data[c] > val) { std::swap(data[c], data[i]); i = c; } else { return; }
-
-                // 7->15
-                child1 = i<<1;
-                child2 = child1+1;
-                c = data[child1] > data[child2] ? child1 : child2;
-                if(data[c] > val) { std::swap(data[c], data[i]); }
-            }
-        }
-    }
-    void clear() {
-        numElements = 0;
-    }
-    std::array<float, 16> data;
-    uint8_t numElements;
-};
-
 class RandomWalkerSeedsBrick : public RandomWalkerSeeds {
     static const float CONFLICT;
     static const float UNLABELED;
@@ -746,6 +692,70 @@ private:
     const VolumeAtomic<float>& brick_;
 };
 
+template<typename Compare>
+struct NSmallestHeap14 {
+    NSmallestHeap14()
+        : data()
+        , numElements(0)
+    {
+        data[0] = INFINITY; //sentinel for first 14 values (upper push branch)
+        data[15] = -INFINITY; //sentinel for child2 of index 7
+
+        if(Compare()(data[0], data[15])) {
+            std::swap(data[15], data[0]);
+        }
+    }
+    float top() {
+        return data[1];
+    }
+    void push(float val) {
+        Compare comp;
+        if(numElements < 14) {
+            numElements++;
+            uint8_t i=numElements;
+            uint8_t parent;
+
+            parent = i>>1; if(!comp(data[parent], val)) { goto end; } data[i] = data[parent]; i=parent; // 15->7
+            parent = i>>1; if(!comp(data[parent], val)) { goto end; } data[i] = data[parent]; i=parent; // 7->3
+            parent = i>>1; if(!comp(data[parent], val)) { goto end; } data[i] = data[parent]; i=parent; // 3->1
+end:
+            data[i] = val;
+        } else {
+            if(comp(val, top())) {
+                uint8_t i = 1;
+                data[i] = val;
+                uint8_t child1, child2, c;
+
+                // 1->3
+                child1 = i<<1;
+                child2 = child1+1;
+                c = comp(data[child2], data[child1]) ? child1 : child2;
+                if(comp(val, data[c])) { std::swap(data[c], data[i]); } else { return; } i = c;
+
+                // 3->7
+                child1 = i<<1;
+                child2 = child1+1;
+                c = comp(data[child2], data[child1]) ? child1 : child2;
+                if(comp(val, data[c])) { std::swap(data[c], data[i]); } else { return; } i = c;
+
+                // 7->15
+                child1 = i<<1;
+                child2 = child1+1;
+                c = comp(data[child2], data[child1]) ? child1 : child2;
+                if(comp(val, data[c])) { std::swap(data[c], data[i]); }
+            }
+        }
+    }
+    void clear() {
+        numElements = 0;
+    }
+    std::array<float, 16> data;
+    uint8_t numElements;
+};
+
+static clock_t time_sum = 0;
+static clock_t numRuns = 0;
+
 static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<float>& img) {
     VolumeAtomic<float> output(img.getDimensions());
     const tgt::ivec3 start(0);
@@ -756,6 +766,7 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
     const int N=2*k+1;
     const tgt::ivec3 neighborhoodSize(k);
 
+    clock_t tbegin = clock();
 #ifdef VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
     // mean
     auto conv = [&] (const VolumeAtomic<float>& input, VolumeAtomic<float>& output, int dim) {
@@ -803,21 +814,40 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
     tgt::ivec3 last = end - tgt::ivec3(1);
     const size_t HEAP_SIZE = N*N*N/2+1;
     tgtAssert(HEAP_SIZE == 14, "Invalid neighborhood size");
-    NSmallestHeap14 heap;
+    NSmallestHeap14<std::less<float>> smaller;
+    //NSmallestHeap14<std::greater<float>> greater;
+
     VRN_FOR_EACH_VOXEL(center, start, end) {
         const tgt::ivec3 neighborhoodStart = center - neighborhoodSize;
         const tgt::ivec3 neighborhoodEnd = center + neighborhoodSize + tgt::ivec3(1);
 
-        heap.clear();
+
+        float pivot = img.voxel(start);
+        smaller.clear();
+        //greater.clear();
         VRN_FOR_EACH_VOXEL(pos, neighborhoodStart, neighborhoodEnd) {
             tgt::ivec3 p = tgt::clamp(pos, start, last);
             float val = img.voxel(p);
-            heap.push(val);
+            //if((val > pivot || greater.numElements == 14) && smaller.numElements != 14) {
+            //    greater.push(val);
+            //} else {
+            //    smaller.push(val);
+            //}
+            smaller.push(val);
         }
-        output.voxel(center) = heap.nthlargest();
+        //if(greater.numElements == 14) {
+        //    output.voxel(center) = greater.top();
+        //} else {
+        //    output.voxel(center) = smaller.top();
+        //}
+        output.voxel(center) = smaller.top();
     }
 #endif
 #endif
+    clock_t tend = clock();
+    auto time = tend-tbegin;
+    time_sum += time;
+    numRuns += 1;
 
     float sumOfDifferences = 0.0f;
     VRN_FOR_EACH_VOXEL(center, start, end) {
@@ -1404,6 +1434,8 @@ void OctreeWalker::processComputeOutput(ComputeOutput output) {
         // Clean up old tree
         freeTreeComponents(res.second, output.previousNodesToSave, *brickPoolManager_);
     }
+
+    std::cout << "TIME: " << time_sum / numRuns << std::endl;
 
     previousOctree_ = output.octree_;
     previousVolume_ = std::move(output.volume_);
