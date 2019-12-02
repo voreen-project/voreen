@@ -52,7 +52,7 @@
 
 namespace voreen {
 
-#if defined(VRN_MODULE_OPENMP) && 0
+#if defined(VRN_MODULE_OPENMP) && 1
 #define VRN_OCTREEWALKER_USE_OMP
 #endif
 
@@ -707,8 +707,8 @@ struct NSmallestHeap14 {
     void push(float val) {
         if(numElements < 14) {
             numElements++;
-            uint8_t i=numElements;
-            uint8_t parent;
+            size_t i=numElements;
+            size_t parent;
 
             parent = i>>1; if(data[parent] >= val) { goto end; } data[i] = data[parent]; i=parent; // 15->7
             parent = i>>1; if(data[parent] >= val) { goto end; } data[i] = data[parent]; i=parent; // 7->3
@@ -717,9 +717,9 @@ end:
             data[i] = val;
         } else {
             if(val < top()) {
-                uint8_t i = 1;
+                size_t i = 1;
                 data[i] = val;
-                uint8_t child1, child2, c;
+                size_t child1, child2, c;
 
                 // 1->3
                 child1 = i<<1;
@@ -745,11 +745,8 @@ end:
         numElements = 0;
     }
     std::array<float, 16> data;
-    uint8_t numElements;
+    size_t numElements;
 };
-
-static clock_t time_sum = 0;
-static clock_t numRuns = 0;
 
 static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<float>& img) {
     VolumeAtomic<float> output(img.getDimensions());
@@ -787,25 +784,6 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
     conv(tmp, output, 2);
 #else
     // median
-#if 0
-    tgt::ivec3 last = end - tgt::ivec3(1);
-    VRN_FOR_EACH_VOXEL(center, start, end) {
-        const tgt::ivec3 neighborhoodStart = center - neighborhoodSize;
-        const tgt::ivec3 neighborhoodEnd = center + neighborhoodSize + tgt::ivec3(1);
-
-        std::array<float, N*N*N> vals;
-        int i=0;
-        VRN_FOR_EACH_VOXEL(pos, neighborhoodStart, neighborhoodEnd) {
-            tgt::ivec3 p = tgt::clamp(pos, start, last);
-            vals[i++] = img.voxel(p);
-        }
-        tgtAssert(i==N*N*N, "OI");
-        int centerIndex = i/2;
-        std::nth_element(vals.begin(), vals.begin()+centerIndex, vals.end());
-        //std::sort(vals.begin(), vals.begin()+i);
-        output.voxel(center) = vals[centerIndex];
-    }
-#else
     tgt::ivec3 last = end - tgt::ivec3(1);
     const size_t HEAP_SIZE = N*N*N/2+1;
     tgtAssert(HEAP_SIZE == 14, "Invalid neighborhood size");
@@ -826,11 +804,6 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
         output.voxel(center) = heap.top();
     }
 #endif
-#endif
-    clock_t tend = clock();
-    auto time = tend-tbegin;
-    time_sum += time;
-    numRuns += 1;
 
     float sumOfDifferences = 0.0f;
     VRN_FOR_EACH_VOXEL(center, start, end) {
@@ -1417,8 +1390,6 @@ void OctreeWalker::processComputeOutput(ComputeOutput output) {
         // Clean up old tree
         freeTreeComponents(res.second, output.previousNodesToSave, *brickPoolManager_);
     }
-
-    std::cout << "TIME: " << time_sum / numRuns << std::endl;
 
     previousOctree_ = output.octree_;
     previousVolume_ = std::move(output.volume_);
