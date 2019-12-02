@@ -704,40 +704,45 @@ struct NSmallestHeap14 {
     float top() {
         return data[1];
     }
+#ifdef UNIX // This works on gcc and clang
+    void __attribute__ ((noinline)) push(float val) {
+#else
     void push(float val) {
+#endif
         if(numElements < 14) {
             numElements++;
             size_t i=numElements;
             size_t parent;
 
-            parent = i>>1; if(data[parent] >= val) { goto end; } data[i] = data[parent]; i=parent; // 15->7
-            parent = i>>1; if(data[parent] >= val) { goto end; } data[i] = data[parent]; i=parent; // 7->3
-            parent = i>>1; if(data[parent] >= val) { goto end; } data[i] = data[parent]; i=parent; // 3->1
-end:
+            parent = i>>1; if(data[parent] >= val) { goto end_not_full; } data[i] = data[parent]; i=parent; // 15->7
+            parent = i>>1; if(data[parent] >= val) { goto end_not_full; } data[i] = data[parent]; i=parent; // 7->3
+            parent = i>>1; if(data[parent] >= val) { goto end_not_full; } data[i] = data[parent]; i=parent; // 3->1
+end_not_full:
             data[i] = val;
         } else {
             if(val < top()) {
                 size_t i = 1;
-                data[i] = val;
                 size_t child1, child2, c;
 
                 // 1->3
-                child1 = i<<1;
-                child2 = child1+1;
+                child1 = 2;
+                child2 = 3;
                 c = data[child2] < data[child1] ? child1 : child2;
-                if(val < data[c]) { std::swap(data[c], data[i]); } else { return; } i = c;
+                if(val >= data[c]) { goto end_full; } data[i] = data[c]; i = c;
 
                 // 3->7
                 child1 = i<<1;
                 child2 = child1+1;
                 c = data[child2] < data[child1] ? child1 : child2;
-                if(val < data[c]) { std::swap(data[c], data[i]); } else { return; } i = c;
+                if(val >= data[c]) { goto end_full; } data[i] = data[c]; i = c;
 
                 // 7->15
                 child1 = i<<1;
                 child2 = child1+1;
                 c = data[child2] < data[child1] ? child1 : child2;
-                if(val < data[c]) { std::swap(data[c], data[i]); }
+                if(val >= data[c]) { goto end_full; } data[i] = data[c]; i = c;
+end_full:
+                data[i] = val;
             }
         }
     }
