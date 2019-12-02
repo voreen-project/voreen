@@ -692,7 +692,6 @@ private:
     const VolumeAtomic<float>& brick_;
 };
 
-template<typename Compare>
 struct NSmallestHeap14 {
     NSmallestHeap14()
         : data()
@@ -701,27 +700,23 @@ struct NSmallestHeap14 {
         data[0] = INFINITY; //sentinel for first 14 values (upper push branch)
         data[15] = -INFINITY; //sentinel for child2 of index 7
 
-        if(Compare()(data[0], data[15])) {
-            std::swap(data[15], data[0]);
-        }
     }
     float top() {
         return data[1];
     }
     void push(float val) {
-        Compare comp;
         if(numElements < 14) {
             numElements++;
             uint8_t i=numElements;
             uint8_t parent;
 
-            parent = i>>1; if(!comp(data[parent], val)) { goto end; } data[i] = data[parent]; i=parent; // 15->7
-            parent = i>>1; if(!comp(data[parent], val)) { goto end; } data[i] = data[parent]; i=parent; // 7->3
-            parent = i>>1; if(!comp(data[parent], val)) { goto end; } data[i] = data[parent]; i=parent; // 3->1
+            parent = i>>1; if(data[parent] >= val) { goto end; } data[i] = data[parent]; i=parent; // 15->7
+            parent = i>>1; if(data[parent] >= val) { goto end; } data[i] = data[parent]; i=parent; // 7->3
+            parent = i>>1; if(data[parent] >= val) { goto end; } data[i] = data[parent]; i=parent; // 3->1
 end:
             data[i] = val;
         } else {
-            if(comp(val, top())) {
+            if(val < top()) {
                 uint8_t i = 1;
                 data[i] = val;
                 uint8_t child1, child2, c;
@@ -729,20 +724,20 @@ end:
                 // 1->3
                 child1 = i<<1;
                 child2 = child1+1;
-                c = comp(data[child2], data[child1]) ? child1 : child2;
-                if(comp(val, data[c])) { std::swap(data[c], data[i]); } else { return; } i = c;
+                c = data[child2] < data[child1] ? child1 : child2;
+                if(val < data[c]) { std::swap(data[c], data[i]); } else { return; } i = c;
 
                 // 3->7
                 child1 = i<<1;
                 child2 = child1+1;
-                c = comp(data[child2], data[child1]) ? child1 : child2;
-                if(comp(val, data[c])) { std::swap(data[c], data[i]); } else { return; } i = c;
+                c = data[child2] < data[child1] ? child1 : child2;
+                if(val < data[c]) { std::swap(data[c], data[i]); } else { return; } i = c;
 
                 // 7->15
                 child1 = i<<1;
                 child2 = child1+1;
-                c = comp(data[child2], data[child1]) ? child1 : child2;
-                if(comp(val, data[c])) { std::swap(data[c], data[i]); }
+                c = data[child2] < data[child1] ? child1 : child2;
+                if(val < data[c]) { std::swap(data[c], data[i]); }
             }
         }
     }
@@ -814,8 +809,7 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
     tgt::ivec3 last = end - tgt::ivec3(1);
     const size_t HEAP_SIZE = N*N*N/2+1;
     tgtAssert(HEAP_SIZE == 14, "Invalid neighborhood size");
-    NSmallestHeap14<std::less<float>> smaller;
-    //NSmallestHeap14<std::greater<float>> greater;
+    NSmallestHeap14 heap;
 
     VRN_FOR_EACH_VOXEL(center, start, end) {
         const tgt::ivec3 neighborhoodStart = center - neighborhoodSize;
@@ -823,24 +817,13 @@ static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<flo
 
 
         float pivot = img.voxel(start);
-        smaller.clear();
-        //greater.clear();
+        heap.clear();
         VRN_FOR_EACH_VOXEL(pos, neighborhoodStart, neighborhoodEnd) {
             tgt::ivec3 p = tgt::clamp(pos, start, last);
             float val = img.voxel(p);
-            //if((val > pivot || greater.numElements == 14) && smaller.numElements != 14) {
-            //    greater.push(val);
-            //} else {
-            //    smaller.push(val);
-            //}
-            smaller.push(val);
+            heap.push(val);
         }
-        //if(greater.numElements == 14) {
-        //    output.voxel(center) = greater.top();
-        //} else {
-        //    output.voxel(center) = smaller.top();
-        //}
-        output.voxel(center) = smaller.top();
+        output.voxel(center) = heap.top();
     }
 #endif
 #endif
