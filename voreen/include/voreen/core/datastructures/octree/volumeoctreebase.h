@@ -138,17 +138,36 @@ struct VolumeOctreeNodeLocation {
     tgt::svec3 urb_;
 };
 
+struct LocatedVolumeOctreeNodeConst;
+
 struct LocatedVolumeOctreeNode {
     LocatedVolumeOctreeNode(VolumeOctreeNode* node, size_t level, tgt::svec3 llf, tgt::svec3 urb);
-    LocatedVolumeOctreeNode findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel) const;
+
+    LocatedVolumeOctreeNode findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel);
 
     VolumeOctreeNode& node();
     const VolumeOctreeNode& node() const;
     VolumeOctreeNodeLocation& location();
     const VolumeOctreeNodeLocation& location() const;
 
+    LocatedVolumeOctreeNodeConst asConst() const;
+
     VolumeOctreeNode* node_; // Never null
     VolumeOctreeNodeLocation geometry_;
+};
+
+struct LocatedVolumeOctreeNodeConst {
+    LocatedVolumeOctreeNodeConst(const VolumeOctreeNode* node, size_t level, tgt::svec3 llf, tgt::svec3 urb);
+    LocatedVolumeOctreeNodeConst(LocatedVolumeOctreeNode node);
+
+    LocatedVolumeOctreeNodeConst findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel) const;
+
+    const VolumeOctreeNode& node() const;
+    VolumeOctreeNodeLocation& location();
+    const VolumeOctreeNodeLocation& location() const;
+
+private:
+    LocatedVolumeOctreeNode inner_;
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -242,6 +261,7 @@ public:
 
     /// Returns the tree's root node, i.e,. the node that represents the entire volume at the coarsest resolution.
     virtual const VolumeOctreeNode* getRootNode() const = 0;
+    LocatedVolumeOctreeNodeConst getLocatedRootNode() const;
 
     /**
      * Returns the node containing the passed coordinates at the specified level.

@@ -255,7 +255,7 @@ LocatedVolumeOctreeNode::LocatedVolumeOctreeNode(VolumeOctreeNode* node, size_t 
     , geometry_(level, llf, urb)
 {
 }
-LocatedVolumeOctreeNode LocatedVolumeOctreeNode::findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel) const {
+LocatedVolumeOctreeNode LocatedVolumeOctreeNode::findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel) {
     size_t level = geometry_.level();
     tgt::svec3 llf = geometry_.voxelLLF();
     tgt::svec3 urb = geometry_.voxelURB();
@@ -277,6 +277,29 @@ VolumeOctreeNodeLocation& LocatedVolumeOctreeNode::location() {
 }
 const VolumeOctreeNodeLocation& LocatedVolumeOctreeNode::location() const {
     return geometry_;
+}
+
+//-----------------------------------------------------------------------------
+// LocatedVolumeOctreeNode
+LocatedVolumeOctreeNodeConst::LocatedVolumeOctreeNodeConst(const VolumeOctreeNode* node, size_t level, tgt::svec3 llf, tgt::svec3 urb)
+    : inner_(const_cast<VolumeOctreeNode*>(node), level, llf, urb)
+{
+}
+LocatedVolumeOctreeNodeConst::LocatedVolumeOctreeNodeConst(LocatedVolumeOctreeNode node)
+    : inner_(node)
+{
+}
+LocatedVolumeOctreeNodeConst LocatedVolumeOctreeNodeConst::findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel) const {
+    return const_cast<LocatedVolumeOctreeNode&>(inner_).findChildNode(point, brickDataSize, targetLevel);
+}
+const VolumeOctreeNode& LocatedVolumeOctreeNodeConst::node() const {
+  return inner_.node();
+}
+VolumeOctreeNodeLocation& LocatedVolumeOctreeNodeConst::location() {
+    return inner_.location();
+}
+const VolumeOctreeNodeLocation& LocatedVolumeOctreeNodeConst::location() const {
+    return inner_.location();
 }
 
 //-----------------------------------------------------------------------------
@@ -363,6 +386,10 @@ size_t VolumeOctreeBase::getBrickMemorySize() const {
 
 size_t VolumeOctreeBase::getNumLevels() const {
     return numLevels_;
+}
+
+LocatedVolumeOctreeNodeConst VolumeOctreeBase::getLocatedRootNode() const {
+    return LocatedVolumeOctreeNodeConst(getRootNode(), getActualTreeDepth()-1, tgt::svec3(0), getDimensions());
 }
 
 const std::string& VolumeOctreeBase::getOctreeConfigurationHash() const {

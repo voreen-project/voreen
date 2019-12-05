@@ -350,7 +350,7 @@ struct BrickNeighborhood {
             0.0f,
         };
     }
-    static BrickNeighborhood fromNode(const VolumeOctreeNodeLocation& current, size_t sampleLevel, const LocatedVolumeOctreeNode& root, const tgt::svec3& brickBaseSize, const OctreeBrickPoolManagerBase& brickPoolManager) {
+    static BrickNeighborhood fromNode(const VolumeOctreeNodeLocation& current, size_t sampleLevel, const LocatedVolumeOctreeNodeConst& root, const tgt::svec3& brickBaseSize, const OctreeBrickPoolManagerBase& brickPoolManager) {
         const tgt::svec3 volumeDim = root.location().voxelDimensions();
 
         const tgt::mat4 brickToVoxel = current.brickToVoxel();
@@ -408,10 +408,10 @@ struct BrickNeighborhood {
             if(node.node().hasBrick()) {
                 OctreeWalkerNodeBrickConst brick(node.node().getBrickAddress(), brickBaseSize, brickPoolManager);
 
-                tgt::mat4 centerToSampleBrick = node.geometry_.voxelToBrick() * brickToVoxel;
+                tgt::mat4 centerToSampleBrick = node.location().voxelToBrick() * brickToVoxel;
                 VRN_FOR_EACH_VOXEL(point, blockLlf, blockUrb) {
                     tgt::vec3 samplePos = centerToSampleBrick.transform(point);
-                    samplePos = tgt::clamp(samplePos, tgt::vec3(0), tgt::vec3(node.geometry_.brickDimensions() - tgt::svec3(1)));
+                    samplePos = tgt::clamp(samplePos, tgt::vec3(0), tgt::vec3(node.location().brickDimensions() - tgt::svec3(1)));
                     float val = brick.getVoxelNormalized(samplePos);
                     tgt::vec3 neighborhoodBufferPos = point - regionLlf;
                     output.setVoxelNormalized(val, neighborhoodBufferPos);
@@ -815,7 +815,7 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
     }
 }
 
-static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLocation& outputNodeGeometry, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, bool& hasSeedConflicts, bool parentHadSeedsConflicts, OctreeBrickPoolManagerBase& outputPoolManager, LocatedVolumeOctreeNode* outputRoot, const LocatedVolumeOctreeNode inputRoot, boost::optional<LocatedVolumeOctreeNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
+static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLocation& outputNodeGeometry, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, bool& hasSeedConflicts, bool parentHadSeedsConflicts, OctreeBrickPoolManagerBase& outputPoolManager, LocatedVolumeOctreeNode* outputRoot, const LocatedVolumeOctreeNodeConst& inputRoot, boost::optional<LocatedVolumeOctreeNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
     auto canSkipChildren = [&] (float min, float max) {
         float parentValueRange = max-min;
         const float delta = 0.01;
@@ -1087,7 +1087,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
         }
     );
 
-    const LocatedVolumeOctreeNode inputRoot(const_cast<VolumeOctreeNode*>(input.octree_.getRootNode()), input.octree_.getActualTreeDepth()-1, tgt::svec3(0), input.octree_.getDimensions());
+    LocatedVolumeOctreeNodeConst inputRoot = input.octree_.getLocatedRootNode();
 
     uint16_t globalMin = 0xffff;
     uint16_t globalMax = 0;
