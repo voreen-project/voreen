@@ -211,6 +211,7 @@ static bool handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
     } else if(e->action() == tgt::MouseEvent::RELEASED && button == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
         if(points.empty()) {
             points.push_back(mouse);
+            e->accept();
             return true;
         }
 
@@ -235,8 +236,6 @@ static bool handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
             tgtAssert(insert_index != -1, "Invalid insert index");
             points.insert(points.begin() + insert_index+1, mouse);
         }
-    } else {
-        return false;
     }
     e->accept();
     return true;
