@@ -1066,8 +1066,49 @@ void InteractiveProjectionLabeling::updateProjection() {
         sample = [volram] (tgt::vec3 p) {
             return volram->getVoxelNormalizedLinear(p);
         };
+
+
+
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel for
+#endif
+        for(int x = 0; x < dim.x; ++x) {
+
+            float d = ((float)x)/(dim.x-1);
+            auto p = line.interpolate(d);
+
+            tgt::vec3 normalized_query(p, 0);
+            tgt::vec4 front_pos = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
+            tgt::vec4 back_pos = back.getVoxelLinear(normalized_query * tgt::vec3(back.getDimensions()));
+
+            tgt::vec4 front_world = tex_to_world * front_pos;
+            tgt::vec4 back_world = tex_to_world * back_pos;
+
+            tgt::vec3 view_dir = tgt::normalize(back_world.xyz() - front_world.xyz());
+
+            for(int y = 0; y < dim.y; ++y) {
+                float alpha = ((float)y)/(dim.y-1);
+                float alpha_rw = max_dist * alpha + (1.0 - alpha) * min_dist;
+
+                tgt::vec4 query_pos_rw(view_dir * alpha_rw + camera, 1.0);
+                tgt::vec3 query_pos = (world_to_vox * query_pos_rw).xyz();
+
+                tgt::vec2 val;
+                if(tgt::hor(tgt::greaterThan(query_pos, max_dim)) || tgt::hor(tgt::lessThan(query_pos, tgt::vec3::zero))
+                        || back_world.a == 0.0 || front_pos.a == 0.0) {
+                    val = tgt::vec2(0.0, 0.0);
+                } else {
+                    val = tgt::vec2(sample(query_pos), 1.0);
+                }
+
+                proj.at(tgt::svec2(x, y)) = val;
+            }
+        }
+
     } else {
         const auto octree = vol.getRepresentation<VolumeOctree>();
+
+        const auto root = octree->getLocatedRootNode();
 
         float dist_within_volume = max_dist - min_dist;
         if(!std::isfinite(dist_within_volume)) {
@@ -1106,44 +1147,43 @@ void InteractiveProjectionLabeling::updateProjection() {
             return val;
         };
 
-    }
-
 #ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for
 #endif
-    for(int y_base = 0; y_base < dim.y; y_base+=y_block_size) {
-        int y_max = std::min(dim.y, y_base + y_block_size);
+        for(int y_base = 0; y_base < dim.y; y_base+=y_block_size) {
+            int y_max = std::min(dim.y, y_base + y_block_size);
 
-        for(int x = 0; x < dim.x; ++x) {
+            for(int x = 0; x < dim.x; ++x) {
 
-            float d = ((float)x)/(dim.x-1);
-            auto p = line.interpolate(d);
+                float d = ((float)x)/(dim.x-1);
+                auto p = line.interpolate(d);
 
-            tgt::vec3 normalized_query(p, 0);
-            tgt::vec4 front_pos = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
-            tgt::vec4 back_pos = back.getVoxelLinear(normalized_query * tgt::vec3(back.getDimensions()));
+                tgt::vec3 normalized_query(p, 0);
+                tgt::vec4 front_pos = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
+                tgt::vec4 back_pos = back.getVoxelLinear(normalized_query * tgt::vec3(back.getDimensions()));
 
-            tgt::vec4 front_world = tex_to_world * front_pos;
-            tgt::vec4 back_world = tex_to_world * back_pos;
+                tgt::vec4 front_world = tex_to_world * front_pos;
+                tgt::vec4 back_world = tex_to_world * back_pos;
 
-            tgt::vec3 view_dir = tgt::normalize(back_world.xyz() - front_world.xyz());
+                tgt::vec3 view_dir = tgt::normalize(back_world.xyz() - front_world.xyz());
 
-            for(int y = y_base; y < y_max; ++y) {
-                float alpha = ((float)y)/(dim.y-1);
-                float alpha_rw = max_dist * alpha + (1.0 - alpha) * min_dist;
+                for(int y = y_base; y < y_max; ++y) {
+                    float alpha = ((float)y)/(dim.y-1);
+                    float alpha_rw = max_dist * alpha + (1.0 - alpha) * min_dist;
 
-                tgt::vec4 query_pos_rw(view_dir * alpha_rw + camera, 1.0);
-                tgt::vec3 query_pos = (world_to_vox * query_pos_rw).xyz();
+                    tgt::vec4 query_pos_rw(view_dir * alpha_rw + camera, 1.0);
+                    tgt::vec3 query_pos = (world_to_vox * query_pos_rw).xyz();
 
-                tgt::vec2 val;
-                if(tgt::hor(tgt::greaterThan(query_pos, max_dim)) || tgt::hor(tgt::lessThan(query_pos, tgt::vec3::zero))
-                        || back_world.a == 0.0 || front_pos.a == 0.0) {
-                    val = tgt::vec2(0.0, 0.0);
-                } else {
-                    val = tgt::vec2(sample(query_pos), 1.0);
+                    tgt::vec2 val;
+                    if(tgt::hor(tgt::greaterThan(query_pos, max_dim)) || tgt::hor(tgt::lessThan(query_pos, tgt::vec3::zero))
+                            || back_world.a == 0.0 || front_pos.a == 0.0) {
+                        val = tgt::vec2(0.0, 0.0);
+                    } else {
+                        val = tgt::vec2(sample(query_pos), 1.0);
+                    }
+
+                    proj.at(tgt::svec2(x, y)) = val;
                 }
-
-                proj.at(tgt::svec2(x, y)) = val;
             }
         }
     }
