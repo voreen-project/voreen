@@ -265,108 +265,6 @@ static void getSeedListsFromPorts(std::vector<PortDataPointer<Geometry>>& geom, 
     }
 }
 
-static VolumeOctreeNode* findLeafNodeFor(VolumeOctreeNode* root, tgt::svec3& llf, tgt::svec3& urb, size_t& level, const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel) {
-    tgtAssert(tgt::hand(tgt::lessThanEqual(llf, point)) && tgt::hand(tgt::lessThan(point, urb)), "Invalid point pos");
-    tgtAssert(root, "No root");
-
-    if(root->isLeaf() || level == targetLevel) {
-        return root;
-    }
-
-    tgtAssert(level >= 0, "Invalid level");
-    tgt::svec3 newLlf = llf;
-    tgt::svec3 newUrb = urb;
-    size_t newLevel = level - 1;
-    tgt::svec3 brickSize = brickDataSize * (1UL << newLevel);
-    size_t index = 0;
-    if(point.x >= llf.x+brickSize.x) {
-        index += 1;
-        newLlf.x = llf.x+brickSize.x;
-    } else {
-        newUrb.x = llf.x+brickSize.x;
-    }
-    if(point.y >= llf.y+brickSize.y) {
-        index += 2;
-        newLlf.y = llf.y+brickSize.y;
-    } else {
-        newUrb.y = llf.y+brickSize.y;
-    }
-    if(point.z >= llf.z+brickSize.z) {
-        index += 4;
-        newLlf.z = llf.z+brickSize.z;
-    } else {
-        newUrb.z = llf.z+brickSize.z;
-    }
-
-    VolumeOctreeNode* child = root->children_[index];
-    tgtAssert(child, "No child in non leaf node");
-
-    if(child->isHomogeneous()) {
-        // Parent has better resolution
-        return root;
-    }
-    level = newLevel;
-    urb = newUrb;
-    llf = newLlf;
-    return findLeafNodeFor(child, llf, urb, level, point, brickDataSize, targetLevel);
-}
-struct OctreeWalkerNodeGeometry {
-    OctreeWalkerNodeGeometry(size_t level, tgt::svec3 llf, tgt::svec3 urb)
-        : level_(level)
-        , llf_(llf)
-        , urb_(urb)
-    {
-    }
-
-    tgt::svec3 voxelDimensions() const {
-        return urb_ - llf_;
-    }
-
-    tgt::svec3 brickDimensions() const {
-        return voxelDimensions() / scale();
-    }
-
-    size_t scale() const {
-        return 1 << level_;
-    }
-
-    tgt::mat4 voxelToBrick() const {
-        return tgt::mat4::createScale(tgt::vec3(1.0f/scale())) * tgt::mat4::createTranslation(-tgt::vec3(llf_));
-    }
-
-    tgt::mat4 brickToVoxel() const {
-        return tgt::mat4::createTranslation(llf_) * tgt::mat4::createScale(tgt::vec3(scale()));
-    }
-
-    size_t level_;
-    tgt::svec3 llf_;
-    tgt::svec3 urb_;
-};
-struct OctreeWalkerNode {
-    OctreeWalkerNode(VolumeOctreeNode* node, size_t level, tgt::svec3 llf, tgt::svec3 urb)
-        : node_(node)
-        , geometry_(level, llf, urb)
-    {
-    }
-    OctreeWalkerNode findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel) const {
-        size_t level = geometry_.level_;
-        tgt::svec3 llf = geometry_.llf_;
-        tgt::svec3 urb = geometry_.urb_;
-
-        tgtAssert(level >= targetLevel, "Invalid target level");
-
-        VolumeOctreeNode* node = findLeafNodeFor(node_, llf, urb, level, point, brickDataSize, targetLevel);
-        return OctreeWalkerNode(node, level, llf, urb);
-    }
-
-    VolumeOctreeNode& node() {
-        return *node_;
-    }
-
-    VolumeOctreeNode* node_; // Never null
-    OctreeWalkerNodeGeometry geometry_;
-};
-
 // TODO Move OctreeBrickPoolManager and generate from member function => Const and mutable variant
 struct OctreeWalkerNodeBrick {
     OctreeWalkerNodeBrick() = delete;
@@ -452,8 +350,8 @@ struct BrickNeighborhood {
             0.0f,
         };
     }
-    static BrickNeighborhood fromNode(const OctreeWalkerNodeGeometry& current, size_t sampleLevel, const OctreeWalkerNode& root, const tgt::svec3& brickBaseSize, const OctreeBrickPoolManagerBase& brickPoolManager) {
-        const tgt::svec3 volumeDim = root.geometry_.voxelDimensions();
+    static BrickNeighborhood fromNode(const VolumeOctreeNodeLocation& current, size_t sampleLevel, const LocatedVolumeOctreeNode& root, const tgt::svec3& brickBaseSize, const OctreeBrickPoolManagerBase& brickPoolManager) {
+        const tgt::svec3 volumeDim = root.location().voxelDimensions();
 
         const tgt::mat4 brickToVoxel = current.brickToVoxel();
         const tgt::mat4 voxelToBrick = current.voxelToBrick();
@@ -917,7 +815,7 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
     }
 }
 
-static uint64_t processOctreeBrick(OctreeWalkerInput& input, OctreeWalkerNodeGeometry& outputNodeGeometry, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, bool& hasSeedConflicts, bool parentHadSeedsConflicts, OctreeBrickPoolManagerBase& outputPoolManager, OctreeWalkerNode* outputRoot, const OctreeWalkerNode inputRoot, boost::optional<OctreeWalkerNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
+static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLocation& outputNodeGeometry, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, bool& hasSeedConflicts, bool parentHadSeedsConflicts, OctreeBrickPoolManagerBase& outputPoolManager, LocatedVolumeOctreeNode* outputRoot, const LocatedVolumeOctreeNode inputRoot, boost::optional<LocatedVolumeOctreeNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
     auto canSkipChildren = [&] (float min, float max) {
         float parentValueRange = max-min;
         const float delta = 0.01;
@@ -1145,13 +1043,13 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 
     auto& brickPoolManager = *input.brickPoolManager_;
 
-    boost::optional<OctreeWalkerNode> prevRoot = [&] () -> boost::optional<OctreeWalkerNode> {
+    boost::optional<LocatedVolumeOctreeNode> prevRoot = [&] () -> boost::optional<LocatedVolumeOctreeNode> {
         if(input.previousResult_) {
             auto& prev = *input.previousResult_;
             tgtAssert(volumeDim == prev.getDimensions(), "prev result: Dimension mismatch");
             tgtAssert(prev.getRootNode(), "prev result: No root");
             tgtAssert(input.octree_.getNumLevels() == prev.getNumLevels(), "prev result: num levels mismatch");
-            return OctreeWalkerNode(prev.getRootNode(), maxLevel, tgt::svec3(0), prev.getDimensions());
+            return LocatedVolumeOctreeNode(prev.getRootNode(), maxLevel, tgt::svec3(0), prev.getDimensions());
         } else {
             return boost::none;
         }
@@ -1172,10 +1070,10 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     // These contain nodes whose CHILDREN AND BRICKS are still referenced and thus must not be deleted.
     std::unordered_set<const VolumeOctreeNode*> nodesToSave;
 
-    OctreeWalkerNode outputRootNode(nullptr, maxLevel, tgt::svec3(0), volumeDim);
+    LocatedVolumeOctreeNode outputRootNode(nullptr, maxLevel, tgt::svec3(0), volumeDim);
     // If computation is canceled: Delete new nodes, but spare nodes that are part of another tree.
     tgt::ScopeGuard nodeCleanup([&] () {
-        freeTreeComponents(outputRootNode.node_, nodesToSave, *brickPoolManager_);
+        freeTreeComponents(&outputRootNode.node(), nodesToSave, *brickPoolManager_);
     });
 
     std::vector<NodeToProcess> nodesToProcess;
@@ -1189,7 +1087,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
         }
     );
 
-    const OctreeWalkerNode inputRoot(const_cast<VolumeOctreeNode*>(input.octree_.getRootNode()), input.octree_.getActualTreeDepth()-1, tgt::svec3(0), input.octree_.getDimensions());
+    const LocatedVolumeOctreeNode inputRoot(const_cast<VolumeOctreeNode*>(input.octree_.getRootNode()), input.octree_.getActualTreeDepth()-1, tgt::svec3(0), input.octree_.getDimensions());
 
     uint16_t globalMin = 0xffff;
     uint16_t globalMax = 0;
@@ -1264,7 +1162,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             {
                 tgtAssert(node.inputNode->hasBrick(), "No Brick");
 
-                OctreeWalkerNodeGeometry outputNodeGeometry(level, node.llf, node.urb);
+                VolumeOctreeNodeLocation outputNodeGeometry(level, node.llf, node.urb);
                 newBrickAddr = processOctreeBrick(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
             }
 

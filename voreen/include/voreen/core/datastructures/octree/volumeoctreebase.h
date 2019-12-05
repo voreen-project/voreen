@@ -49,23 +49,6 @@ class VolumeBase;
 class Histogram1D;
 
 /**
- * Helper struct useful for sampling from octree bricks in different octree levels
- */
-struct OctreeBrick {
-    OctreeBrick(const uint16_t* data, tgt::svec3 brickDataSize, tgt::svec3 llf, tgt::svec3 urb, size_t level);
-
-    tgt::mat4 voxelToBrick() const;
-    tgt::mat4 brickToVoxel() const;
-
-    const VolumeAtomic<uint16_t> data_;
-    tgt::svec3 llf_; // in bottom-level voxels
-    tgt::svec3 urb_; // in bottom-level voxels
-    size_t scale_;
-    tgt::svec3 dim_; // brick voxels
-
-};
-
-/**
  * Base class for octree nodes that represent a certain region of a volume.
  * Each node has up to eight child nodes and stores one average, min, and max
  * value per channel.
@@ -135,6 +118,37 @@ protected:
     /// True, if the node lies completely or partially inside the volume.
     bool inVolume_;
 
+};
+
+// Helps specify where in the octree a specific node is located.
+struct VolumeOctreeNodeLocation {
+    VolumeOctreeNodeLocation(size_t level, tgt::svec3 llf, tgt::svec3 urb);
+
+    tgt::svec3 voxelDimensions() const;
+    tgt::svec3 brickDimensions() const;
+    size_t scale() const;
+    tgt::mat4 voxelToBrick() const;
+    tgt::mat4 brickToVoxel() const;
+    size_t level() const;
+    tgt::svec3 voxelLLF() const;
+    tgt::svec3 voxelURB() const;
+
+    size_t level_;
+    tgt::svec3 llf_;
+    tgt::svec3 urb_;
+};
+
+struct LocatedVolumeOctreeNode {
+    LocatedVolumeOctreeNode(VolumeOctreeNode* node, size_t level, tgt::svec3 llf, tgt::svec3 urb);
+    LocatedVolumeOctreeNode findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel) const;
+
+    VolumeOctreeNode& node();
+    const VolumeOctreeNode& node() const;
+    VolumeOctreeNodeLocation& location();
+    const VolumeOctreeNodeLocation& location() const;
+
+    VolumeOctreeNode* node_; // Never null
+    VolumeOctreeNodeLocation geometry_;
 };
 
 //-------------------------------------------------------------------------------------------------

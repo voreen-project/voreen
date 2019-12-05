@@ -44,22 +44,6 @@ using tgt::vec3;
 
 namespace voreen {
 
-OctreeBrick::OctreeBrick(const uint16_t* data, tgt::svec3 brickDataSize, tgt::svec3 llf, tgt::svec3 urb, size_t level)
-    : data_(const_cast<uint16_t*>(data), brickDataSize, false) // data is not owned!
-    , llf_(llf)
-    , urb_(urb)
-    , scale_(1 << level)
-    , dim_((urb_ - llf_)/scale_)
-{
-}
-tgt::mat4 OctreeBrick::voxelToBrick() const {
-    return tgt::mat4::createScale(tgt::vec3(1.0f/scale_)) * tgt::mat4::createTranslation(-tgt::vec3(llf_));
-}
-
-tgt::mat4 OctreeBrick::brickToVoxel() const {
-    return tgt::mat4::createTranslation(llf_) * tgt::mat4::createScale(tgt::vec3(scale_));
-}
-
 //-------------------------------------------------------------------------------------------------
 // VolumeOctreeNode
 
@@ -174,6 +158,125 @@ void VolumeOctreeNode::deserializeContentFromBinaryBuffer(const char* buffer) {
     memcpy(const_cast<uint64_t*>(&brickAddress_), buffer, sizeof(uint64_t));
     buffer += sizeof(uint64_t);
     memcpy(const_cast<bool*>(&inVolume_), buffer, sizeof(bool));
+}
+
+//-----------------------------------------------------------------------------
+// VolumeOctreeNodeLocation
+//
+VolumeOctreeNodeLocation::VolumeOctreeNodeLocation(size_t level, tgt::svec3 llf, tgt::svec3 urb)
+    : level_(level)
+    , llf_(llf)
+    , urb_(urb)
+{
+}
+
+tgt::svec3 VolumeOctreeNodeLocation::voxelDimensions() const {
+    return urb_ - llf_;
+}
+
+tgt::svec3 VolumeOctreeNodeLocation::brickDimensions() const {
+    return voxelDimensions() / scale();
+}
+
+size_t VolumeOctreeNodeLocation::scale() const {
+    return 1 << level_;
+}
+
+tgt::mat4 VolumeOctreeNodeLocation::voxelToBrick() const {
+    return tgt::mat4::createScale(tgt::vec3(1.0f/scale())) * tgt::mat4::createTranslation(-tgt::vec3(llf_));
+}
+
+tgt::mat4 VolumeOctreeNodeLocation::brickToVoxel() const {
+    return tgt::mat4::createTranslation(llf_) * tgt::mat4::createScale(tgt::vec3(scale()));
+}
+size_t VolumeOctreeNodeLocation::level() const {
+    return level_;
+}
+tgt::svec3 VolumeOctreeNodeLocation::voxelLLF() const {
+    return llf_;
+}
+tgt::svec3 VolumeOctreeNodeLocation::voxelURB() const {
+    return urb_;
+}
+
+// Helper for traversing octree node trees with geometry.
+namespace {
+static VolumeOctreeNode* findLeafNodeFor(VolumeOctreeNode* root, tgt::svec3& llf, tgt::svec3& urb, size_t& level, const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel) {
+    tgtAssert(tgt::hand(tgt::lessThanEqual(llf, point)) && tgt::hand(tgt::lessThan(point, urb)), "Invalid point pos");
+    tgtAssert(root, "No root");
+
+    if(root->isLeaf() || level == targetLevel) {
+        return root;
+    }
+
+    tgtAssert(level >= 0, "Invalid level");
+    tgt::svec3 newLlf = llf;
+    tgt::svec3 newUrb = urb;
+    size_t newLevel = level - 1;
+    tgt::svec3 brickSize = brickDataSize * (1UL << newLevel);
+    size_t index = 0;
+    if(point.x >= llf.x+brickSize.x) {
+        index += 1;
+        newLlf.x = llf.x+brickSize.x;
+    } else {
+        newUrb.x = llf.x+brickSize.x;
+    }
+    if(point.y >= llf.y+brickSize.y) {
+        index += 2;
+        newLlf.y = llf.y+brickSize.y;
+    } else {
+        newUrb.y = llf.y+brickSize.y;
+    }
+    if(point.z >= llf.z+brickSize.z) {
+        index += 4;
+        newLlf.z = llf.z+brickSize.z;
+    } else {
+        newUrb.z = llf.z+brickSize.z;
+    }
+
+    VolumeOctreeNode* child = root->children_[index];
+    tgtAssert(child, "No child in non leaf node");
+
+    if(child->isHomogeneous()) {
+        // Parent has better resolution
+        return root;
+    }
+    level = newLevel;
+    urb = newUrb;
+    llf = newLlf;
+    return findLeafNodeFor(child, llf, urb, level, point, brickDataSize, targetLevel);
+}
+}
+
+//-----------------------------------------------------------------------------
+// LocatedVolumeOctreeNode
+LocatedVolumeOctreeNode::LocatedVolumeOctreeNode(VolumeOctreeNode* node, size_t level, tgt::svec3 llf, tgt::svec3 urb)
+    : node_(node)
+    , geometry_(level, llf, urb)
+{
+}
+LocatedVolumeOctreeNode LocatedVolumeOctreeNode::findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel) const {
+    size_t level = geometry_.level();
+    tgt::svec3 llf = geometry_.voxelLLF();
+    tgt::svec3 urb = geometry_.voxelURB();
+
+    tgtAssert(level >= targetLevel, "Invalid target level");
+
+    VolumeOctreeNode* node = findLeafNodeFor(node_, llf, urb, level, point, brickDataSize, targetLevel);
+    return LocatedVolumeOctreeNode(node, level, llf, urb);
+}
+
+VolumeOctreeNode& LocatedVolumeOctreeNode::node() {
+  return *node_;
+}
+const VolumeOctreeNode& LocatedVolumeOctreeNode::node() const {
+  return *node_;
+}
+VolumeOctreeNodeLocation& LocatedVolumeOctreeNode::location() {
+    return geometry_;
+}
+const VolumeOctreeNodeLocation& LocatedVolumeOctreeNode::location() const {
+    return geometry_;
 }
 
 //-----------------------------------------------------------------------------
