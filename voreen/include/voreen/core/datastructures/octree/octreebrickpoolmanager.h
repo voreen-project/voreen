@@ -50,6 +50,9 @@ struct BrickPoolBrick {
     BrickPoolBrick(const BrickPoolBrick&) = delete;
     BrickPoolBrick& operator=(const BrickPoolBrick&) = delete;
 
+    BrickPoolBrick(BrickPoolBrick&& other);
+    BrickPoolBrick& operator=(BrickPoolBrick&& other);
+
     BrickPoolBrick(uint64_t addr, const tgt::svec3& brickDataSize, const OctreeBrickPoolManagerBase& pool);
     ~BrickPoolBrick();
     float getVoxelNormalized(const tgt::svec3& pos) const;
@@ -69,6 +72,9 @@ struct BrickPoolBrickConst {
     BrickPoolBrickConst() = delete;
     BrickPoolBrickConst(const BrickPoolBrickConst&) = delete;
     BrickPoolBrickConst& operator=(const BrickPoolBrickConst&) = delete;
+
+    BrickPoolBrickConst(BrickPoolBrickConst&& other);
+    BrickPoolBrickConst& operator=(BrickPoolBrickConst&& other);
 
     BrickPoolBrickConst(uint64_t addr, const tgt::svec3& brickDataSize, const OctreeBrickPoolManagerBase& pool);
     ~BrickPoolBrickConst();

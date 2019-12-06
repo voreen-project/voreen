@@ -52,7 +52,7 @@
 
 namespace voreen {
 
-#if defined(VRN_MODULE_OPENMP) && 1
+#if defined(VRN_MODULE_OPENMP) && 0
 #define VRN_OCTREEWALKER_USE_OMP
 #endif
 
@@ -294,18 +294,6 @@ struct BrickNeighborhood {
     float max_;
     float avg_;
 
-    static BrickNeighborhood empty(tgt::svec3 dimensions, int scale) {
-        return BrickNeighborhood {
-            VolumeAtomic<float>(tgt::svec3(0)),
-            tgt::svec3(0),
-            dimensions,
-            dimensions,
-            tgt::mat4::identity,
-            0.0f,
-            0.0f,
-            0.0f,
-        };
-    }
     static BrickNeighborhood fromNode(const VolumeOctreeNodeLocation& current, size_t sampleLevel, const LocatedVolumeOctreeNodeConst& root, const tgt::svec3& brickBaseSize, const OctreeBrickPoolManagerBase& brickPoolManager) {
         const tgt::svec3 volumeDim = root.location().voxelDimensions();
 
@@ -317,13 +305,13 @@ struct BrickNeighborhood {
         const tgt::ivec3 neighborhoodSize = brickBaseSize/8UL;
 
         const tgt::ivec3 brickLlf(0);
-        const tgt::ivec3 brickUrb = voxelToBrick.transform(current.urb_);
+        const tgt::ivec3 brickUrb = tgt::round(voxelToBrick.transform(current.urb_));
 
-        const tgt::svec3 voxelLlf = tgt::max(tgt::vec3(0),         brickToVoxel.transform(brickLlf - neighborhoodSize));
-        const tgt::svec3 voxelUrb = tgt::min(tgt::vec3(volumeDim), brickToVoxel.transform(brickUrb + neighborhoodSize));
+        const tgt::svec3 voxelLlf = tgt::max(tgt::vec3(0),         tgt::round(brickToVoxel.transform(brickLlf - neighborhoodSize)));
+        const tgt::svec3 voxelUrb = tgt::min(tgt::vec3(volumeDim), tgt::round(brickToVoxel.transform(brickUrb + neighborhoodSize)));
 
-        const tgt::ivec3 regionLlf = voxelToBrick.transform(voxelLlf);
-        const tgt::ivec3 regionUrb = voxelToBrick.transform(voxelUrb);
+        const tgt::ivec3 regionLlf = tgt::round(voxelToBrick.transform(voxelLlf));
+        const tgt::ivec3 regionUrb = tgt::round(voxelToBrick.transform(voxelUrb));
 
         const tgt::svec3 regionDim = regionUrb - regionLlf;
 
@@ -359,17 +347,17 @@ struct BrickNeighborhood {
             if(tgt::hor(tgt::equal(blockDimensions, tgt::svec3(0)))) {
                 continue;
             }
-            tgt::svec3 samplePoint = brickToVoxel.transform(blockLlf);
+            tgt::svec3 samplePoint = tgt::round(brickToVoxel.transform(blockLlf));
             auto node = root.findChildNode(samplePoint, brickBaseSize, sampleLevel);
             if(node.node().hasBrick()) {
                 BrickPoolBrickConst brick(node.node().getBrickAddress(), brickBaseSize, brickPoolManager);
 
                 tgt::mat4 centerToSampleBrick = node.location().voxelToBrick() * brickToVoxel;
                 VRN_FOR_EACH_VOXEL(point, blockLlf, blockUrb) {
-                    tgt::vec3 samplePos = centerToSampleBrick.transform(point);
-                    samplePos = tgt::clamp(samplePos, tgt::vec3(0), tgt::vec3(node.location().brickDimensions() - tgt::svec3(1)));
+                    tgt::svec3 samplePos = tgt::round(centerToSampleBrick.transform(tgt::vec3(point)));
+                    samplePos = tgt::clamp(samplePos, tgt::svec3(0), node.location().brickDimensions() - tgt::svec3(1));
                     float val = brick.getVoxelNormalized(samplePos);
-                    tgt::vec3 neighborhoodBufferPos = point - regionLlf;
+                    tgt::svec3 neighborhoodBufferPos = point - regionLlf;
                     output.setVoxelNormalized(val, neighborhoodBufferPos);
                     min = std::min(val, min);
                     max = std::max(val, max);
@@ -381,7 +369,7 @@ struct BrickNeighborhood {
                 max = std::max(val, max);
                 sum += val * tgt::hmul(blockUrb - blockLlf);
                 VRN_FOR_EACH_VOXEL(point, blockLlf, blockUrb) {
-                    tgt::vec3 neighborhoodBufferPos = point - regionLlf;
+                    tgt::svec3 neighborhoodBufferPos = point - regionLlf;
                     output.setVoxelNormalized(val, neighborhoodBufferPos);
                 }
             }
@@ -449,8 +437,8 @@ public:
     void addNeighborhoodBorderSeeds(const BrickNeighborhood& neighborhood, tgt::svec3 volumeDimensions) {
         tgtAssert(neighborhood.data_.getDimensions() == neighborhood.dimensions_, "Invalid buffer dimensions");
 
-        tgt::ivec3 volumeLlfSeeds = neighborhood.voxelToNeighborhood().transform(tgt::vec3(0.0));
-        tgt::ivec3 volumeUrbSeeds = neighborhood.voxelToNeighborhood().transform(volumeDimensions);
+        tgt::ivec3 volumeLlfSeeds = tgt::round(neighborhood.voxelToNeighborhood().transform(tgt::vec3(0.0)));
+        tgt::ivec3 volumeUrbSeeds = tgt::round(neighborhood.voxelToNeighborhood().transform(volumeDimensions));
         auto collectLabelsFromNeighbor = [&] (size_t dim, size_t sliceIndex) {
             tgt::svec3 begin(0);
             tgt::svec3 end(neighborhood.dimensions_);

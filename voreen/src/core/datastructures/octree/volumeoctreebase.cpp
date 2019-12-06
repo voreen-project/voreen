@@ -183,11 +183,19 @@ size_t VolumeOctreeNodeLocation::scale() const {
 }
 
 tgt::mat4 VolumeOctreeNodeLocation::voxelToBrick() const {
-    return tgt::mat4::createScale(tgt::vec3(1.0f/scale())) * tgt::mat4::createTranslation(-tgt::vec3(llf_));
+    auto voxelToSep = tgt::mat4::createTranslation(tgt::vec3(0.5));
+    auto sepToVoxel = tgt::mat4::createTranslation(tgt::vec3(-0.5));
+    auto sepScaleVoxelToBrick = tgt::mat4::createScale(tgt::vec3(1.0f/scale()));
+    auto voxelTranslation = tgt::mat4::createTranslation(-tgt::vec3(llf_));
+    return sepToVoxel * sepScaleVoxelToBrick * voxelToSep * voxelTranslation;
 }
 
 tgt::mat4 VolumeOctreeNodeLocation::brickToVoxel() const {
-    return tgt::mat4::createTranslation(llf_) * tgt::mat4::createScale(tgt::vec3(scale()));
+    auto voxelToSep = tgt::mat4::createTranslation(tgt::vec3(0.5));
+    auto sepToVoxel = tgt::mat4::createTranslation(tgt::vec3(-0.5));
+    auto sepScaleBrickToVoxel = tgt::mat4::createScale(tgt::vec3(scale()));
+    auto voxelTranslation = tgt::mat4::createTranslation(tgt::vec3(llf_));
+    return voxelTranslation * sepToVoxel * sepScaleBrickToVoxel * voxelToSep;
 }
 size_t VolumeOctreeNodeLocation::level() const {
     return level_;
