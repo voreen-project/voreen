@@ -265,50 +265,6 @@ static void getSeedListsFromPorts(std::vector<PortDataPointer<Geometry>>& geom, 
     }
 }
 
-// TODO Move OctreeBrickPoolManager and generate from member function => Const and mutable variant
-struct OctreeWalkerNodeBrick {
-    OctreeWalkerNodeBrick() = delete;
-    OctreeWalkerNodeBrick(const OctreeWalkerNodeBrick&) = delete;
-    OctreeWalkerNodeBrick& operator=(const OctreeWalkerNodeBrick&) = delete;
-
-    OctreeWalkerNodeBrick(uint64_t addr, const tgt::svec3& brickDataSize, const OctreeBrickPoolManagerBase& pool)
-        : addr_(addr)
-        , data_(pool.getWritableBrick(addr_), brickDataSize, false) // data is not owned!
-        , pool_(pool)
-    {
-    }
-    ~OctreeWalkerNodeBrick() {
-        pool_.releaseBrick(addr_, OctreeBrickPoolManagerBase::WRITE);
-    }
-    float getVoxelNormalized(const tgt::svec3& pos) const {
-        return brickToNorm(data_.voxel(pos));
-    }
-    uint64_t addr_;
-    VolumeAtomic<uint16_t> data_;
-    const OctreeBrickPoolManagerBase& pool_;
-};
-struct OctreeWalkerNodeBrickConst {
-    OctreeWalkerNodeBrickConst() = delete;
-    OctreeWalkerNodeBrickConst(const OctreeWalkerNodeBrickConst&) = delete;
-    OctreeWalkerNodeBrickConst& operator=(const OctreeWalkerNodeBrickConst&) = delete;
-
-    OctreeWalkerNodeBrickConst(uint64_t addr, const tgt::svec3& brickDataSize, const OctreeBrickPoolManagerBase& pool)
-        : addr_(addr)
-        , data_(const_cast<uint16_t*>(pool.getBrick(addr_)), brickDataSize, false) // data is not owned!
-        , pool_(pool)
-    {
-    }
-    ~OctreeWalkerNodeBrickConst() {
-        pool_.releaseBrick(addr_, OctreeBrickPoolManagerBase::READ);
-    }
-
-    float getVoxelNormalized(const tgt::svec3& pos) const {
-        return brickToNorm(data_.voxel(pos));
-    }
-    uint64_t addr_;
-    const VolumeAtomic<uint16_t> data_;
-    const OctreeBrickPoolManagerBase& pool_;
-};
 struct BrickNeighborhood {
     BrickNeighborhood() = delete;
     BrickNeighborhood(const BrickNeighborhood& other) = delete;
@@ -406,7 +362,7 @@ struct BrickNeighborhood {
             tgt::svec3 samplePoint = brickToVoxel.transform(blockLlf);
             auto node = root.findChildNode(samplePoint, brickBaseSize, sampleLevel);
             if(node.node().hasBrick()) {
-                OctreeWalkerNodeBrickConst brick(node.node().getBrickAddress(), brickBaseSize, brickPoolManager);
+                BrickPoolBrickConst brick(node.node().getBrickAddress(), brickBaseSize, brickPoolManager);
 
                 tgt::mat4 centerToSampleBrick = node.location().voxelToBrick() * brickToVoxel;
                 VRN_FOR_EACH_VOXEL(point, blockLlf, blockUrb) {
@@ -880,7 +836,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
         } else {
             // There are seeds, but they all overlap (=> conflicts). We need to try again in lower levels.
             uint64_t outputBrickAddr = outputPoolManager.allocateBrick();
-            OctreeWalkerNodeBrick outputBrick(outputBrickAddr, brickDataSize, outputPoolManager);
+            BrickPoolBrick outputBrick(outputBrickAddr, brickDataSize, outputPoolManager);
 
             const tgt::svec3 brickStart = inputNeighborhood.centerBrickLlf_;
             const tgt::svec3 brickEnd = inputNeighborhood.centerBrickUrb_;
@@ -891,7 +847,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
                 VRN_FOR_EACH_VOXEL(pos, brickStart, brickEnd) {
                     uint16_t val = parentProbs.data_.voxel(pos);
 
-                    outputBrick.data_.voxel(pos - brickStart) = val;
+                    outputBrick.data().voxel(pos - brickStart) = val;
 
                     min = std::min(val, min);
                     max = std::max(val, max);
@@ -906,7 +862,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
                 max = avg;
                 float avgf = brickToNorm(avg);
                 VRN_FOR_EACH_VOXEL(pos, brickStart, brickEnd) {
-                    outputBrick.data_.voxel(pos) = avg;
+                    outputBrick.data().voxel(pos) = avg;
                     histogram.addSample(avgf);
                 }
             }
@@ -968,7 +924,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
 
     uint64_t outputBrickAddr = outputPoolManager.allocateBrick();
     {
-        OctreeWalkerNodeBrick outputBrick(outputBrickAddr, brickDataSize, outputPoolManager);
+        BrickPoolBrick outputBrick(outputBrickAddr, brickDataSize, outputPoolManager);
 
         VRN_FOR_EACH_VOXEL(pos, brickStart, brickEnd) {
             size_t logicalIndex = volumeCoordsToIndex(pos, walkerBlockDim);
@@ -981,7 +937,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
             valf = tgt::clamp(valf, 0.0f, 1.0f);
             uint16_t val = valf*0xffff;
 
-            outputBrick.data_.voxel(pos - brickStart) = val;
+            outputBrick.data().voxel(pos - brickStart) = val;
 
             min = std::min(val, min);
             max = std::max(val, max);
@@ -1186,12 +1142,12 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                     const tgt::svec3 begin(0);
                     const tgt::svec3 end(prevNode.geometry_.brickDimensions());
                     {
-                        OctreeWalkerNodeBrickConst prevBrick(prevNode.node().getBrickAddress(), brickDim, brickPoolManager);
-                        OctreeWalkerNodeBrickConst currentBrick(newBrickAddr, brickDim, brickPoolManager);
+                        BrickPoolBrickConst prevBrick(prevNode.node().getBrickAddress(), brickDim, brickPoolManager);
+                        BrickPoolBrickConst currentBrick(newBrickAddr, brickDim, brickPoolManager);
 
                         VRN_FOR_EACH_VOXEL(pos, begin, end) {
-                            uint16_t current = currentBrick.data_.voxel(pos);
-                            uint16_t prev = prevBrick.data_.voxel(pos);
+                            uint16_t current = currentBrick.data().voxel(pos);
+                            uint16_t prev = prevBrick.data().voxel(pos);
                             uint16_t diff = absdiff(current, prev);
                             maxDiff = std::max(maxDiff, diff);
                         }

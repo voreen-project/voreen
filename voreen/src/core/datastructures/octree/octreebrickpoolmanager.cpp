@@ -44,11 +44,55 @@
 
 using tgt::svec3;
 using tgt::vec3;
-
 //-----------------------------------------------------------------------------
 
 namespace voreen {
+namespace {
+static float brickToNorm(uint16_t val) {
+    return static_cast<float>(val)/0xffff;
+}
+}
 
+/// BrickPoolBrick -------------------------------------------------------------
+
+BrickPoolBrick::BrickPoolBrick(uint64_t addr, const tgt::svec3& brickDataSize, const OctreeBrickPoolManagerBase& pool)
+    : addr_(addr)
+    , data_(pool.getWritableBrick(addr_), brickDataSize, false) // data is not owned!
+    , pool_(pool)
+{
+}
+BrickPoolBrick::~BrickPoolBrick() {
+    pool_.releaseBrick(addr_, OctreeBrickPoolManagerBase::WRITE);
+}
+float BrickPoolBrick::getVoxelNormalized(const tgt::svec3& pos) const {
+    return brickToNorm(data_.voxel(pos));
+}
+VolumeAtomic<uint16_t>& BrickPoolBrick::data() {
+    return data_;
+}
+const VolumeAtomic<uint16_t>& BrickPoolBrick::data() const {
+    return data_;
+}
+
+/// BrickPoolBrickConst --------------------------------------------------------
+
+BrickPoolBrickConst::BrickPoolBrickConst(uint64_t addr, const tgt::svec3& brickDataSize, const OctreeBrickPoolManagerBase& pool)
+    : addr_(addr)
+    , data_(pool.getWritableBrick(addr_), brickDataSize, false) // data is not owned!
+    , pool_(pool)
+{
+}
+BrickPoolBrickConst::~BrickPoolBrickConst() {
+    pool_.releaseBrick(addr_, OctreeBrickPoolManagerBase::WRITE);
+}
+float BrickPoolBrickConst::getVoxelNormalized(const tgt::svec3& pos) const {
+    return brickToNorm(data_.voxel(pos));
+}
+const VolumeAtomic<uint16_t>& BrickPoolBrickConst::data() const {
+    return data_;
+}
+
+/// BrickPoolManagerBase -------------------------------------------------------
 const std::string OctreeBrickPoolManagerBase::loggerCat_("voreen.OctreeBrickPoolManagerBase");
 
 OctreeBrickPoolManagerBase::OctreeBrickPoolManagerBase()
