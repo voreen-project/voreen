@@ -1108,7 +1108,7 @@ void InteractiveProjectionLabeling::updateProjection() {
     } else {
         const auto octree = vol.getRepresentation<VolumeOctree>();
 
-        const auto root = octree->getLocatedRootNode();
+        LocatedVolumeOctreeNodeConst root = octree->getLocatedRootNode();
 
         float dist_within_volume = max_dist - min_dist;
         if(!std::isfinite(dist_within_volume)) {
@@ -1140,18 +1140,30 @@ void InteractiveProjectionLabeling::updateProjection() {
         y_block_size = tgt::clamp(static_cast<int>(std::round(static_cast<float>(dim.y) / blocks_in_projection_depth)), 1, dim.y);
         tgtAssert(y_block_size >= 0, "invalid block size");
 
+        const tgt::svec3 brickDataSize = octree->getBrickDim();
 
-        sample = [octree, level] (tgt::vec3 p) {
-            uint16_t voxel = octree->getVoxel(tgt::round(p), 0, level);
-            float val = static_cast<float>(voxel) / 0xffff;
-            return val;
+        struct BrickCacheEntry {
+            LocatedVolumeOctreeNodeConst node;
+            tgt::mat4 voxelToBrick;
+            BrickPoolBrickConst brick;
+
+            BrickCacheEntry(LocatedVolumeOctreeNodeConst node, tgt::svec3 brickDataSize, const OctreeBrickPoolManagerBase& brickPoolManager)
+                : node(node)
+                , voxelToBrick(node.location().voxelToBrick())
+                , brick(node.node().getBrickAddress(), brickDataSize, brickPoolManager)
+            {
+            }
         };
+
+        const size_t BRICK_CACHE_SIZE = 8;
 
 #ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for
 #endif
         for(int y_base = 0; y_base < dim.y; y_base+=y_block_size) {
             int y_max = std::min(dim.y, y_base + y_block_size);
+
+            std::deque<BrickCacheEntry> brickCache;
 
             for(int x = 0; x < dim.x; ++x) {
 
@@ -1179,7 +1191,27 @@ void InteractiveProjectionLabeling::updateProjection() {
                             || back_world.a == 0.0 || front_pos.a == 0.0) {
                         val = tgt::vec2(0.0, 0.0);
                     } else {
-                        val = tgt::vec2(sample(query_pos), 1.0);
+                        tgt::svec3 pVoxel = tgt::round(query_pos);
+                        BrickCacheEntry* cacheEntry = nullptr;
+                        for(auto it = brickCache.begin(); it != brickCache.end(); ++it) {
+                            auto prevLlf = it->node.location().voxelLLF();
+                            auto prevUrb = it->node.location().voxelURB();
+                            if(tgt::hand(tgt::lessThanEqual(prevLlf, pVoxel) & tgt::lessThan(pVoxel, prevUrb))) {
+                                cacheEntry = &*it;
+                                break;
+                            }
+                        }
+                        if(cacheEntry == nullptr) {
+                            brickCache.emplace_back(root.findChildNode(pVoxel, brickDataSize, level), brickDataSize, *octree->getBrickPoolManager());
+                            if(brickCache.size() > BRICK_CACHE_SIZE) {
+                                brickCache.pop_front();
+                            }
+                            cacheEntry = &brickCache.back();
+                        }
+                        tgt::svec3 pos = tgt::round(cacheEntry->voxelToBrick.transform(query_pos));
+                        float voxel = cacheEntry->brick.getVoxelNormalized(pos);
+
+                        val = tgt::vec2(voxel, 1.0);
                     }
 
                     proj.at(tgt::svec2(x, y)) = val;
