@@ -67,7 +67,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/algorithm/volumemask.h
     ${MOD_DIR}/datastructures/vesselgraph.h
     ${MOD_DIR}/datastructures/protovesselgraph.h
-    ${MOD_DIR}/datastructures/diskarraystorage.h
     ${MOD_DIR}/datastructures/kdtree.h
     ${MOD_DIR}/ports/vesselgraphport.h
     ${MOD_DIR}/ports/vesselgraphlistport.h

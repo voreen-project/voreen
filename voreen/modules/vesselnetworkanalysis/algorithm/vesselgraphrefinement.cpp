@@ -26,7 +26,7 @@
 #include "vesselgraphrefinement.h"
 
 #include "voreen/core/voreenapplication.h"
-#include "../datastructures/diskarraystorage.h"
+#include "voreen/core/datastructures/diskarraystorage.h"
 
 #include "tgt/assert.h"
 

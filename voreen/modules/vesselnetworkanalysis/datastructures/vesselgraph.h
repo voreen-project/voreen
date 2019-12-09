@@ -32,7 +32,7 @@
 #include "tgt/matrix.h"
 #include "tgt/bounds.h"
 
-#include "../datastructures/diskarraystorage.h"
+#include "voreen/core/datastructures/diskarraystorage.h"
 
 #ifndef VRN_VESSELNETWORKANALYSIS_MINIMAL_VESSELGRAPH
 #include "voreen/core/io/serialization/serialization.h"

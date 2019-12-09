@@ -26,7 +26,9 @@
 
 #include "tgt/vector.h"
 #include "tgt/filesystem.h"
-#include "diskarraystorage.h"
+
+#include "voreen/core/datastructures/diskarraystorage.h"
+
 #include <fstream>
 #include <vector>
 #include <boost/iostreams/device/mapped_file.hpp>

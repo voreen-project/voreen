@@ -28,12 +28,15 @@
 #include "tgt/vector.h"
 #include "tgt/matrix.h"
 #include "tgt/memory.h"
-#include "../datastructures/kdtree.h"
-#include "../datastructures/diskarraystorage.h"
+
+#include "voreen/core/datastructures/diskarraystorage.h"
 #include "voreen/core/datastructures/volume/volume.h"
+
 #include "modules/bigdataimageprocessing/volumefiltering/slicereader.h"
 #include "modules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
+
 #include "../algorithm/idvolume.h"
+#include "../datastructures/kdtree.h"
 #include "vesselgraph.h"
 
 namespace voreen {

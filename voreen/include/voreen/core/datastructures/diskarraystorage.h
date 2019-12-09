@@ -22,7 +22,10 @@
  * contact the authors.                                                            *
  *                                                                                 *
  ***********************************************************************************/
-#pragma once
+
+#ifndef VRN_DISKARRAYSTORAGE_H
+#define VRN_DISKARRAYSTORAGE_H
+
 #include <string>
 #include <vector>
 #include <fstream>
@@ -476,11 +479,7 @@ DiskArray<Element> DiskArrayStorage<Element>::store_internal(const Arr& array) {
 
 template<typename Element>
 size_t DiskArrayStorage<Element>::storeElement(const Element& elm) {
-#ifdef _MSC_VER
-    return storeElement(std::move(Element(elm)));
-#else
-    return storeElement(Element(elm));
-#endif
+    return storeElement(std::move(Element(elm))); // We need to explicitly move here for MSVC.
 }
 
 template<typename Element>
@@ -559,3 +558,5 @@ DiskArray<Element> DiskArrayBuilder<Element>::finalize() && {
     (void)tmp;
     return DiskArray<Element>(&storage_.file_, begin_, end_);
 }
+
+#endif

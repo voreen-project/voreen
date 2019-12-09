@@ -32,12 +32,15 @@
 #include "voreen/core/datastructures/volume/volume.h"
 #include "voreen/core/datastructures/volume/volumeram.h"
 #include "voreen/core/datastructures/volume/volumeminmax.h"
-#include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 
 #include <random>
 
-#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
-#include "modules/vesselnetworkanalysis/datastructures/diskarraystorage.h"
+// Determine if we want to use memory mapped files for storing the flags.
+// This in general is necessary since matrices will get too big for large ensembles.
+#define USE_MEMORY_MAPPED_FILES
+
+#ifdef USE_MEMORY_MAPPED_FILES
+#include "voreen/core/datastructures/diskarraystorage.h"
 #endif
 
 namespace voreen {
@@ -262,7 +265,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
         // Init empty flags.
         const size_t numElements = input.dataset.getTotalNumTimeSteps() * seedPoints.size() * numChannels;
-#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
+#ifdef USE_MEMORY_MAPPED_FILES
         std::unique_ptr<DiskArrayStorage<float>> flagStorage;
         DiskArray<float> Flags;
 #else
@@ -279,7 +282,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
         // Load cache file, if found one.
         if(cachedFileFound) {
             LINFO("Found cached flag file for field " << fieldName);
-#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
+#ifdef USE_MEMORY_MAPPED_FILES
             // Reuse memory mapped file. We need to create a copy because the file
             // gets removed after DiskArrayStorage is destructed.
             tgt::FileSystem::copyFile(cachePath, tmpPath);
@@ -297,7 +300,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
             LINFO("Creating flag file for " << fieldName);
 
-#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
+#ifdef USE_MEMORY_MAPPED_FILES
             flagStorage.reset(new DiskArrayStorage<float>(tmpPath));
 #endif
 
@@ -318,7 +321,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                             float value = lock->getVoxelNormalized(physicalToVoxelMatrix * seedPoint, channel);
                             value = rwm.normalizedToRealWorld(value);
 
-#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
+#ifdef USE_MEMORY_MAPPED_FILES
                             flagStorage->storeElement(value);
 #else
                             Flags.push_back(value);
@@ -332,14 +335,14 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                 }
             }
 
-#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
+#ifdef USE_MEMORY_MAPPED_FILES
             Flags = flagStorage->asArray();
 #endif
 
             // If caching is enabled, store the Flag file in the cache directory.
             if (VoreenApplication::app()->useCaching()) {
                 tgt::FileSystem::createDirectoryRecursive(tgt::FileSystem::dirName(cachePath));
-#ifdef VRN_MODULE_VESSELNETWORKANALYSIS
+#ifdef USE_MEMORY_MAPPED_FILES
                 // Once we are done, copy the tmp file to the cache folder.
                 try {
                     tgt::FileSystem::copyFile(tmpPath, cachePath);

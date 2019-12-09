@@ -26,18 +26,19 @@
 #ifndef VRN_STREAMING_COMPONENTS_VESSELNETWORKANALYSIS_H
 #define VRN_STREAMING_COMPONENTS_VESSELNETWORKANALYSIS_H
 
-#include "voreen/core/datastructures/volume/volume.h"
-#include "modules/hdf5/io/hdf5filevolume.h"
 #include "voreen/core/io/progressreporter.h"
+#include "voreen/core/datastructures/volume/volume.h"
+#include "voreen/core/datastructures/diskarraystorage.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
 
-#include "../datastructures/vesselgraph.h"
-#include "../datastructures/protovesselgraph.h"
-#include "../datastructures/diskarraystorage.h"
-#include "../algorithm/volumemask.h"
-#include "../util/tasktimelogger.h"
 #include "modules/bigdataimageprocessing/volumefiltering/slicereader.h"
 #include "modules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
+#include "modules/hdf5/io/hdf5filevolume.h"
+
+#include "../algorithm/volumemask.h"
+#include "../datastructures/vesselgraph.h"
+#include "../datastructures/protovesselgraph.h"
+#include "../util/tasktimelogger.h"
 
 #include "tgt/vector.h"
 #include "tgt/memory.h"

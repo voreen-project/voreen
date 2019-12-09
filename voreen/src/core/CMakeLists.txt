@@ -342,6 +342,7 @@ SET(VRN_CORE_HEADERS
     ../../include/voreen/core/datastructures/callback/memberfunctioncallback.h
     ../../include/voreen/core/datastructures/cloneable.h
     ../../include/voreen/core/datastructures/datetime.h
+    ../../include/voreen/core/datastructures/diskarraystorage.h
     ../../include/voreen/core/datastructures/datainvalidationobserver.h
     ../../include/voreen/core/datastructures/imagesequence.h
     ../../include/voreen/core/datastructures/rendertarget/rendertarget.h
