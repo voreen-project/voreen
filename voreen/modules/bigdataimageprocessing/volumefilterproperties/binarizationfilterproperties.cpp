@@ -30,7 +30,7 @@
 namespace voreen {
 
 BinarizationFilterProperties::BinarizationFilterProperties()
-    : threshold_(getId("threshold"), "Threshold", 0.5f, 0.0f, 1.0f)
+    : threshold_(getId("threshold"), "Binarization Threshold", 0.5f, 0.0f, 1.0f)
 {
     // Store default settings.
     storeInstance(DEFAULT_SETTINGS);
@@ -44,6 +44,13 @@ std::string BinarizationFilterProperties::getVolumeFilterName() const {
 }
 
 void BinarizationFilterProperties::adjustPropertiesToInput(const VolumeBase& input) {
+    if (!input.hasDerivedData<VolumeMinMax>()) {
+        LINFO("Calculating VolumeMinMax. This may take a while...");
+    }
+    const VolumeMinMax* mm = input.getDerivedData<VolumeMinMax>();
+
+    threshold_.setMinValue(mm->getMin());
+    threshold_.setMaxValue(mm->getMax());
 }
 
 VolumeFilter* BinarizationFilterProperties::getVolumeFilter(const VolumeBase& volume, int instanceId) const {
@@ -51,7 +58,13 @@ VolumeFilter* BinarizationFilterProperties::getVolumeFilter(const VolumeBase& vo
         return nullptr;
     }
     Settings settings = instanceSettings_.at(instanceId);
-    return new BinarizationFilter(settings.threshold_);
+
+    RealWorldMapping rwm;
+    if (volume.hasMetaData(VolumeBase::META_DATA_NAME_REAL_WORLD_MAPPING)) {
+        rwm = volume.getRealWorldMapping();
+    }
+
+    return new BinarizationFilter(rwm.realWorldToNormalized(settings.threshold_));
 }
 void BinarizationFilterProperties::restoreInstance(int instanceId) {
     auto iter = instanceSettings_.find(instanceId);
