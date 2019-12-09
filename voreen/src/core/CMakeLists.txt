@@ -774,9 +774,6 @@ IF(MSVC)
 ENDIF()
 INCLUDE_DIRECTORIES(${VRN_INCLUDE_DIRECTORIES})
 TARGET_LINK_LIBRARIES(voreen_core tgt efsw ${VRN_EXTERNAL_LIBRARIES})
-IF (VRN_USE_COTIRE)
-    cotire(voreen_core)
-ENDIF()
 
 # group source files by subdir
 IF(VRN_GROUP_SOURCE_FILES)

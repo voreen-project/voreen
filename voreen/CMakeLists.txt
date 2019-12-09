@@ -1,4 +1,3 @@
-include(cmake/cotire.cmake)
 PROJECT(Voreen)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.0 FATAL_ERROR)
 
