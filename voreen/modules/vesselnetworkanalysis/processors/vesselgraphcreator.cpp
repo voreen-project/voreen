@@ -1029,9 +1029,12 @@ VesselGraphCreatorOutput VesselGraphCreator::compute(VesselGraphCreatorInput inp
             std::move(*processedInput.sampleMask).deleteFromDisk();
         }
 
-    } catch(InterruptionException&) {
-        // Finish up work and save out results collected so far
-        LINFO("Graph extraction interrupted.");
+    // This does not work with the current AsyncComputeProcessor/interrupt
+    // model. We will need to provide a proper way for producing intermediate
+    // results later.
+    //} catch(InterruptionException&) {
+    //    // Finish up work and save out results collected so far
+    //    LINFO("Graph extraction interrupted.");
     } catch(tgt::IOException& e) {
         LERROR("IO Exception occured in VesselGraphCreator compute thread");
         std::cout << e.what() << std::endl;
