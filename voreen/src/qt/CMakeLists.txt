@@ -508,7 +508,12 @@ SET(VRN_QT_HEADERS_NONMOC
     ../../ext/tgt/qt/qttimer.h
 )
 
-# TODO: still necessary?
+# If the experimental backend has been tested successfully, make it opt-out!
+OPTION(VRN_USE_EXPERIMENTAL_QT_OPENGL_BACKEND "Use faster but experimental Qt-OpenGL backend?" OFF)
+IF(VRN_USE_EXPERIMENTAL_QT_OPENGL_BACKEND)
+    ADD_DEFINITIONS("-DVRN_USE_EXPERIMENTAL_QT_OPENGL_BACKEND")
+ENDIF()
+
 # we need to link against cocoa
 IF(APPLE)
     FIND_LIBRARY(COCOA_LIB Cocoa)
