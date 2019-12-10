@@ -343,8 +343,8 @@ void CameraProperty::adaptInteractionToScene(const tgt::Bounds& bounds, float ne
     if (!adaptOnChange_)
         return;
 
-    if(bounds.volume() == 0.f) {
-        LWARNING("Tried to set scene bounds with extent 0, not adapting to scene.");
+    if(!bounds.isDefined()) {
+        LWARNING("Tried to adapt camare to undefined bounds, not adapting to scene");
         return;
     }
 
