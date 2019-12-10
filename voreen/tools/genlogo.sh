@@ -12,7 +12,7 @@
 if [ $# -ne 3 ]
 then
     echo "Usage:   ./`basename $0` figlet_font string outfile"
-    echo "Example: ./`basename $0` standard voreen logo.h"
+    echo "Example: ./`basename $0` standard voreen logo.txt"
     exit 1
 fi
 

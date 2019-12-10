@@ -61,7 +61,7 @@ const std::string VoreenVersion::getCompilerVersion() {
 }
 
 const std::string VoreenVersion::getVersion() {
-    return "5.0.1";
+    return "5.1.0";
 }
 
 const std::string VoreenVersion::getRevision() {
@@ -69,7 +69,7 @@ const std::string VoreenVersion::getRevision() {
 }
 
 const std::string VoreenVersion::getCopyright() {
-    return "Copyright (C) 2005-2018 University of M�nster, Germany, \nDepartment of Computer Science.";
+    return "Copyright (C) 2005-2019 University of Münster, Germany, \nDepartment of Computer Science.";
 }
 
 void VoreenVersion::logAll(const std::string& loggerCat) {

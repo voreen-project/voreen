@@ -195,7 +195,7 @@ void VoreenApplication::printAsciiLogo() const {
         std::cout << std::string("\033[1;33m"); // switch to yellow
 #endif
         std::cout << std::string(
-                                #include "resource/voreencore/fonts/logo.h"
+                                #include "logo.txt"
                                 ) << std::endl;
 #ifdef WIN32
         if (hStdOut != INVALID_HANDLE_VALUE)
