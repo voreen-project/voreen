@@ -30,7 +30,7 @@ build_options=(
     -DVRN_MODULE_TIFF=ON
     -DVRN_MODULE_BIGDATAIMAGEPROCESSING=ON
     -DVRN_MODULE_VESSELNETWORKANALYSIS=ON
-    -DVRN_MODULE_PYTHON=ON
+    -DVRN_MODULE_PYTHON=OFF # Crashes voreen if local python version does not match Appimage-Version
     -DVRN_MODULE_GDCM=ON
     -DVRN_MODULE_STAGING=ON
 )
