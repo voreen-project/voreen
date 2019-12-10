@@ -25,8 +25,8 @@
 
 #include "octreewalker.h"
 
-#include "../solver/randomwalkerseeds.h"
 #include "../solver/randomwalkerweights.h"
+#include "../util/preprocessing.h"
 
 #include "voreen/core/datastructures/volume/volumeram.h"
 #include "voreen/core/datastructures/volume/volume.h"
@@ -55,8 +55,6 @@ namespace voreen {
 #if defined(VRN_MODULE_OPENMP) && 1
 #define VRN_OCTREEWALKER_USE_OMP
 #endif
-
-//#define VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
 
 namespace {
 
@@ -113,7 +111,6 @@ OctreeWalker::OctreeWalker()
     , inportForegroundSeeds_(Port::INPORT, "geometry.seedsForeground", "geometry.seedsForeground", true)
     , inportBackgroundSeeds_(Port::INPORT, "geometry.seedsBackground", "geometry.seedsBackground", true)
     , outportProbabilities_(Port::OUTPORT, "volume.probabilities", "volume.probabilities", false)
-    , usePrevProbAsInitialization_("usePrevProbAsInitialization", "Use Previous Probabilities as Initialization", false, Processor::VALID, Property::LOD_ADVANCED)
     , minEdgeWeight_("minEdgeWeight", "Min Edge Weight: 10^(-t)", 5, 0, 10)
     , preconditioner_("preconditioner", "Preconditioner")
     , errorThreshold_("errorThreshold", "Error Threshold: 10^(-t)", 2, 0, 10)
@@ -131,8 +128,6 @@ OctreeWalker::OctreeWalker()
     addPort(inportForegroundSeeds_);
     addPort(inportBackgroundSeeds_);
     addPort(outportProbabilities_);
-
-    addProperty(usePrevProbAsInitialization_);
 
     // random walker properties
     setPropertyGroupGuiName("rwparam", "Random Walker Parametrization");
@@ -534,164 +529,6 @@ private:
     const VolumeAtomic<float>& brick_;
 };
 
-struct NSmallestHeap14 {
-    NSmallestHeap14()
-        : data()
-        , numElements(0)
-    {
-        data[0] = INFINITY; //sentinel for first 14 values (upper push branch)
-        data[15] = -INFINITY; //sentinel for child2 of index 7
-
-    }
-    float top() {
-        return data[1];
-    }
-#ifdef UNIX // This works on gcc and clang
-    void __attribute__ ((noinline)) push(float val) {
-#else
-    void push(float val) {
-#endif
-        if(numElements < 14) {
-            numElements++;
-            size_t i=numElements;
-            size_t parent;
-
-            parent = i>>1; if(data[parent] >= val) { goto end_not_full; } data[i] = data[parent]; i=parent; // 15->7
-            parent = i>>1; if(data[parent] >= val) { goto end_not_full; } data[i] = data[parent]; i=parent; // 7->3
-            parent = i>>1; if(data[parent] >= val) { goto end_not_full; } data[i] = data[parent]; i=parent; // 3->1
-end_not_full:
-            data[i] = val;
-        } else {
-            if(val < top()) {
-                size_t i = 1;
-                size_t child1, child2, c;
-
-                // 1->3
-                child1 = 2;
-                child2 = 3;
-                c = data[child2] < data[child1] ? child1 : child2;
-                if(val >= data[c]) { goto end_full; } data[i] = data[c]; i = c;
-
-                // 3->7
-                child1 = i<<1;
-                child2 = child1+1;
-                c = data[child2] < data[child1] ? child1 : child2;
-                if(val >= data[c]) { goto end_full; } data[i] = data[c]; i = c;
-
-                // 7->15
-                child1 = i<<1;
-                child2 = child1+1;
-                c = data[child2] < data[child1] ? child1 : child2;
-                if(val >= data[c]) { goto end_full; } data[i] = data[c]; i = c;
-end_full:
-                data[i] = val;
-            }
-        }
-    }
-    void clear() {
-        numElements = 0;
-    }
-    std::array<float, 16> data;
-    size_t numElements;
-};
-
-static VolumeAtomic<float> preprocessImageForRandomWalker(const VolumeAtomic<float>& img) {
-    VolumeAtomic<float> output(img.getDimensions());
-    const tgt::ivec3 start(0);
-    const tgt::ivec3 end(img.getDimensions());
-    const size_t numVoxels = tgt::hmul(img.getDimensions());
-
-    const int k = 1;
-    const int N=2*k+1;
-    const tgt::ivec3 neighborhoodSize(k);
-
-    clock_t tbegin = clock();
-#ifdef VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
-    // mean
-    auto conv = [&] (const VolumeAtomic<float>& input, VolumeAtomic<float>& output, int dim) {
-        VRN_FOR_EACH_VOXEL(center, start, end) {
-            tgt::ivec3 neigh(0);
-            neigh[dim] = neighborhoodSize[dim];
-            const tgt::ivec3 neighborhoodStart = tgt::max(start, center - neigh);
-            const tgt::ivec3 neighborhoodEnd = tgt::min(end, center + neigh + tgt::ivec3(1));
-
-            const int numNeighborhoodVoxels = tgt::hmul(neighborhoodEnd-neighborhoodStart);
-
-            float sum=0.0f;
-            VRN_FOR_EACH_VOXEL(pos, neighborhoodStart, neighborhoodEnd) {
-                sum += input.voxel(pos);
-            }
-            float estimation = sum/numNeighborhoodVoxels;
-            output.voxel(center) = estimation;
-        }
-    };
-    VolumeAtomic<float> tmp(img.getDimensions());
-    conv(img, output, 0);
-    conv(output, tmp, 1);
-    conv(tmp, output, 2);
-#else
-    // median
-    tgt::ivec3 last = end - tgt::ivec3(1);
-    const size_t HEAP_SIZE = N*N*N/2+1;
-    tgtAssert(HEAP_SIZE == 14, "Invalid neighborhood size");
-    NSmallestHeap14 heap;
-
-    VRN_FOR_EACH_VOXEL(center, start, end) {
-        const tgt::ivec3 neighborhoodStart = center - neighborhoodSize;
-        const tgt::ivec3 neighborhoodEnd = center + neighborhoodSize + tgt::ivec3(1);
-
-
-        float pivot = img.voxel(start);
-        heap.clear();
-        VRN_FOR_EACH_VOXEL(pos, neighborhoodStart, neighborhoodEnd) {
-            tgt::ivec3 p = tgt::clamp(pos, start, last);
-            float val = img.voxel(p);
-            heap.push(val);
-        }
-        output.voxel(center) = heap.top();
-    }
-#endif
-
-    float sumOfDifferences = 0.0f;
-    VRN_FOR_EACH_VOXEL(center, start, end) {
-        const tgt::ivec3 neighborhoodStart = tgt::max(start, center - neighborhoodSize);
-        const tgt::ivec3 neighborhoodEnd = tgt::min(end, center + neighborhoodSize + tgt::ivec3(1));
-
-        const int numNeighborhoodVoxels = tgt::hmul(neighborhoodEnd-neighborhoodStart);
-
-        float estimation = output.voxel(center);
-        float val = img.voxel(center);
-        float diff = estimation - val;
-
-        float neighborhoodFactor;
-        if(numNeighborhoodVoxels > 1) {
-            neighborhoodFactor = static_cast<float>(numNeighborhoodVoxels)/static_cast<float>(numNeighborhoodVoxels-1);
-        } else {
-            neighborhoodFactor = 1.0f;
-        }
-
-        sumOfDifferences += neighborhoodFactor * diff * diff;
-
-        output.voxel(center) = estimation;
-    }
-
-#ifdef VRN_OCTREEWALKER_MEAN_NOT_MEDIAN
-    const float varianceFactor = 2.0f/(N*N*N*N); //mean
-#else
-    tgtAssert(k==1, "Invalid k for variance factor");
-    const float varianceFactor = 0.142; //median //TODO: this is for 2D. what about 3d?
-#endif
-
-    float rawVariance = sumOfDifferences/numVoxels;
-    float varianceEstimation = rawVariance * varianceFactor;
-    float stdEstimationInv = 1.0f/std::sqrt(varianceEstimation);
-
-    VRN_FOR_EACH_VOXEL(center, start, end) {
-        output.voxel(center) *= stdEstimationInv;
-    }
-
-    return output;
-}
 template<typename Accessor>
 static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, Accessor& voxelFun, const tgt::svec3& volDim, float minWeight) {
     auto edgeWeight = [minWeight] (float voxelIntensity, float neighborIntensity) {
@@ -882,7 +719,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
 
     RandomWalkerEdgeWeightIntensity edgeWeightFun(tgt::vec2(0.0f, 1.0f), beta, minWeight);
 
-    auto rwInput = preprocessImageForRandomWalker(inputNeighborhood.data_);
+    auto rwInput = preprocessForAdaptiveParameterSetting(inputNeighborhood.data_);
     RandomWalkerVoxelAccessorBrick voxelAccessor(rwInput);
 
     auto vec = std::vector<float>(systemSize, 0.0f);

@@ -123,8 +123,6 @@ private:
     GeometryPort inportBackgroundSeeds_;
     VolumePort outportProbabilities_;
 
-    BoolProperty usePrevProbAsInitialization_;
-
     IntProperty minEdgeWeight_;
     StringOptionProperty preconditioner_;
     IntProperty errorThreshold_;
@@ -147,8 +145,6 @@ private:
 
     // Clock and duration used for time keeping
     typedef std::chrono::steady_clock clock;
-
-    bool recomputeOctreeWalker_;
 };
 
 } //namespace

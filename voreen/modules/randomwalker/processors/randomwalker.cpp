@@ -28,6 +28,7 @@
 #include "../solver/randomwalkersolver.h"
 #include "../solver/randomwalkerseeds.h"
 #include "../solver/randomwalkerweights.h"
+#include "../util/preprocessing.h"
 
 #include "voreen/core/datastructures/volume/volumeram.h"
 #include "voreen/core/datastructures/volume/volume.h"
@@ -66,6 +67,7 @@ RandomWalker::RandomWalker()
     outportProbabilities_(Port::OUTPORT, "volume.probabilities", "volume.probabilities", false),
     outportEdgeWeights_(Port::OUTPORT, "volume.edgeweights", "volume.edgeweights", false),
     usePrevProbAsInitialization_("usePrevProbAsInitialization", "Use Previous Probabilities as Initialization", false, Processor::VALID, Property::LOD_ADVANCED),
+    useAdaptiveParameterSetting_("useAdaptiveParameterSetting", "Use Adaptive Parameter Setting", false),
     beta_("beta", "Edge Weight Scale: 2^beta", 12, 0, 20),
     minEdgeWeight_("minEdgeWeight", "Min Edge Weight: 10^(-t)", 5, 0, 10),
     preconditioner_("preconditioner", "Preconditioner"),
@@ -105,8 +107,13 @@ RandomWalker::RandomWalker()
     addProperty(usePrevProbAsInitialization_);
 
     // random walker properties
+    addProperty(useAdaptiveParameterSetting_);
+    ON_CHANGE_LAMBDA(useAdaptiveParameterSetting_, [this] () {
+            beta_.setVisibleFlag(!useAdaptiveParameterSetting_.get());
+            });
     addProperty(beta_);
     addProperty(minEdgeWeight_);
+    useAdaptiveParameterSetting_.setGroupID("rwparam");
     beta_.setGroupID("rwparam");
     minEdgeWeight_.setGroupID("rwparam");
     setPropertyGroupGuiName("rwparam", "Random Walker Parametrization");
@@ -775,7 +782,7 @@ void RandomWalker::putOutSegmentation(const RandomWalkerSolver* solver) {
 
 
 RandomWalkerWeights* RandomWalker::getEdgeWeightsFromProperties(const VolumeBase& vol) const {
-    float beta = static_cast<float>(1<<beta_.get());
+    float beta = useAdaptiveParameterSetting_.get() ? 0.5 : static_cast<float>(1<<beta_.get());
     float minWeight = 1.f / pow(10.f, static_cast<float>(minEdgeWeight_.get()));
     float tfBlendFactor = edgeWeightBalance_.get();
 
@@ -787,7 +794,12 @@ RandomWalkerWeights* RandomWalker::getEdgeWeightsFromProperties(const VolumeBase
     } else {
         edgeWeightFun.reset(new RandomWalkerEdgeWeightIntensity(intensityRange, beta, minWeight));
     }
-    std::unique_ptr<RandomWalkerVoxelAccessor> voxelAccessor(new RandomWalkerVoxelAccessorVolume(vol));
+    std::unique_ptr<RandomWalkerVoxelAccessor> voxelAccessor;
+    if(useAdaptiveParameterSetting_.get()) {
+        voxelAccessor.reset(new RandomWalkerVoxelAccessorVolumeAtomic(preprocessForAdaptiveParameterSetting(*vol.getRepresentation<VolumeRAM>()), vol.getRealWorldMapping()));
+    } else {
+        voxelAccessor.reset(new RandomWalkerVoxelAccessorVolume(vol));
+    }
     return new RandomWalkerWeights(std::move(voxelAccessor), std::move(edgeWeightFun), vol.getDimensions());
 }
 

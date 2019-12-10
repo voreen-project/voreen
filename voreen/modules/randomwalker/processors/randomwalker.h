@@ -154,6 +154,7 @@ private:
 
     BoolProperty usePrevProbAsInitialization_;
 
+    BoolProperty useAdaptiveParameterSetting_;
     IntProperty beta_;
     IntProperty minEdgeWeight_;
     StringOptionProperty preconditioner_;

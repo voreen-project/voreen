@@ -202,6 +202,16 @@ float RandomWalkerVoxelAccessorVolume::voxel(const tgt::svec3& voxel) {
     return rwm_.normalizedToRealWorld(vol_->getVoxelNormalized(voxel));
 }
 
+RandomWalkerVoxelAccessorVolumeAtomic::RandomWalkerVoxelAccessorVolumeAtomic(VolumeAtomic<float>&& volume, RealWorldMapping rwm)
+    : vol_(std::move(volume))
+    , rwm_(rwm)
+{
+}
+
+float RandomWalkerVoxelAccessorVolumeAtomic::voxel(const tgt::svec3& voxel) {
+    return rwm_.normalizedToRealWorld(vol_.voxel(voxel));
+}
+
 //---------------------------------------------------------------------------------------
 RandomWalkerEdgeWeightTransfunc::RandomWalkerEdgeWeightTransfunc(const TransFunc1D* transFunc, tgt::vec2 intensityRange, float beta, float blendFactor, float minWeight, float maxWeight)
     : transFunc(transFunc)

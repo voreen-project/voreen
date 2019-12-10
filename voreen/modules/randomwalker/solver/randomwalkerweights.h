@@ -48,6 +48,13 @@ private:
     const VolumeRAM* vol_;
     RealWorldMapping rwm_;
 };
+struct RandomWalkerVoxelAccessorVolumeAtomic : public RandomWalkerVoxelAccessor {
+    RandomWalkerVoxelAccessorVolumeAtomic(VolumeAtomic<float>&& vol, RealWorldMapping rwm);
+    virtual float voxel(const tgt::svec3& voxel);
+private:
+    VolumeAtomic<float> vol_;
+    RealWorldMapping rwm_;
+};
 
 //---------------------------------------------------------------------------------------
 
