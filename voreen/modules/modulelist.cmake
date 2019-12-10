@@ -1,5 +1,5 @@
 ####################################################################################################
-#  Module activation options                                                                       #   
+#  Module activation options                                                                       #
 ####################################################################################################
 
 # standard modules without external dependencies (enabled by default)
@@ -12,7 +12,7 @@ OPTION(VRN_MODULE_POI                               "Points of interest in 2D an
 OPTION(VRN_MODULE_PVM                               "Provides a volume reader for Stefan Roettger's PVM format"                                 ON )
 OPTION(VRN_MODULE_SAMPLE                            "Contains example processors"                                                               OFF)
 OPTION(VRN_MODULE_SEGY                              "Provides a volume reader for the SEGY format"                                              ON )
-OPTION(VRN_MODULE_STEREOSCOPY                       "Provides stereo rendering"                                                                 OFF)
+OPTION(VRN_MODULE_STEREOSCOPY                       "Provides stereo rendering"                                                                 ON )
 OPTION(VRN_MODULE_STAGING                           "Experimental code almost ready for productive use"                                         ON )
 OPTION(VRN_MODULE_SURFACE                           "Provides isosurface extraction"                                                            ON )
 OPTION(VRN_MODULE_RANDOMWALKER                      "3D random walker implementation"                                                           ON )
