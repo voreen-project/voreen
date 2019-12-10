@@ -35,6 +35,7 @@ data                            - location for user-generated data (log files, s
 
 resource                        - contains read-only resources, grouped by the corresponding Voreen component (i.e., voreencore, voreenqt, voreenve)
 resource/<...>/fonts            - (possibly) necessary fonts
+resource/<...>/geometry         - sample geometry data
 resource/<...>/scripts          - Python scripts which can be executed from within Voreen
 resource/<...>/transferfuncs    - pre-defined transfer functions
 resource/<...>/volumes          - sample volume data
