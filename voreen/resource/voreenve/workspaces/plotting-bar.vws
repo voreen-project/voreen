@@ -1,21 +1,26 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="true" GlobalDescription='&lt;font color=&quot;#808080&quot;&gt;&lt;h4&gt;1D Bar Plot&lt;/h4&gt; &lt;p&gt;This workspace demonstrates a bar plot.&lt;/p&gt;&lt;/font&gt;'>
-        <ProcessorNetwork version="19">
+        <ProcessorNetwork version="20">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-278.5" y="46" />
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="BarPlot" ref="ref1" />
+                    </values>
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="4.328000069" />
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-296.931488037" y="52.69078064" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="3.435135841" />
             </MetaData>
             <Processors>
                 <Processor type="Canvas" name="Canvas" id="ref2">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-327" y="111" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="369" y="188" width="512" height="512" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="75" y="265" width="512" height="512" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="8" y="8" />
@@ -32,7 +37,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="369" y="188" />
+                            <value x="75" y="265" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="512" y="512" />
@@ -76,9 +81,9 @@
                         <Property mapKey="inputFile" name="inputFile" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../voreen-development/voreen/modules/plotting/data/data_fmo.csv" />
+                                    <item value="../../../modules/plotting/data/data_fmo.csv" />
                                     <item value="modules/plotting/data/data_fmo.csv" />
-                                    <item value="C:/voreen-development/voreen/modules/plotting/data/data_fmo.csv" />
+                                    <item value="/git/voreen0/voreen/modules/plotting/data/data_fmo.csv" />
                                 </paths>
                             </paths>
                         </Property>
@@ -117,7 +122,7 @@
                         <Property mapKey="labelAdditive" name="labelAdditive" enabled="true" mouseAction="7" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="marginBottom" name="marginBottom" value="40" />
                         <Property mapKey="marginLeft" name="marginLeft" value="60" />
-                        <Property mapKey="marginRight" name="marginRight" value="40" />
+                        <Property mapKey="marginRight" name="marginRight" value="54" />
                         <Property mapKey="marginTop" name="marginTop" value="40" />
                         <Property mapKey="pLVPC" name="pLVPC" value="true" />
                         <Property mapKey="plotDataTable" name="plotDataTable">
@@ -256,7 +261,7 @@
                             <values />
                         </Property>
                         <Property mapKey="shear" name="shear">
-                            <value x="35" y="70" />
+                            <value x="0" y="0" />
                         </Property>
                         <Property mapKey="squeezeFactor" name="squeezeFactor" value="0.899999976" />
                         <Property mapKey="updateFile" name="updateFile" />

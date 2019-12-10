@@ -17,7 +17,7 @@
                     <transform.row2 x="242" y="347" z="1" />
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-97.5" y="-187" />
+                    <value x="-320.187896729" y="-268.490905762" />
                 </MetaItem>
                 <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.199295759" />
                 <MetaItem name="autoLinkCameras" type="BoolMetaData" value="false" />
@@ -35,7 +35,7 @@
                                     <paths>
                                         <item value="../volumes/walnut.vvd" />
                                         <item value="resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="/git/voreen0/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -68,7 +68,7 @@
                                     <paths>
                                         <item value="../volumes/walnut.vvd" />
                                         <item value="resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="/git/voreen0/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -101,7 +101,7 @@
                                     <paths>
                                         <item value="../volumes/walnut.vvd" />
                                         <item value="resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="/git/voreen0/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -224,15 +224,15 @@
                         <Property mapKey="brickDimensions" name="brickDimensions" value="treeDepth" />
                         <Property mapKey="brickPoolManager" name="brickPoolManager" value="brickPoolManagerDisk" />
                         <Property mapKey="clearOctree" name="clearOctree" />
-                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="false" />
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="homogeneityThreshold" name="homogeneityThreshold" value="0" tracking="false" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="numThreads" name="numThreads" value="8" />
-                        <Property mapKey="octreeHash" name="octreeHash" value="" />
+                        <Property mapKey="octreeHash" name="octreeHash" value="9e28188432a789ce48745bc633b37d59-771b295626ff755f49d3982b00dcc2fc" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="progressMessage" name="progressMessage" value="Octree found in cache!" />
+                        <Property mapKey="progressMessage" name="progressMessage" value="Octree generated." />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 441 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="treeDepth" name="treeDepth" value="6" tracking="false" />
@@ -699,7 +699,7 @@
                                 <paths>
                                     <item value="" />
                                     <item value="resource/voreenve/workspaces" />
-                                    <item value="/data/home/a_sche26/voreen-development/voreen/resource/voreenve/workspaces" />
+                                    <item value="/git/voreen0/voreen/resource/voreenve/workspaces" />
                                 </paths>
                             </paths>
                         </Property>
@@ -723,7 +723,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref19">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="134" y="175" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="323" y="92" width="1024" height="1024" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="360" y="331" width="1024" height="1024" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="0" />
@@ -740,7 +740,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="323" y="92" />
+                            <value x="360" y="331" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1024" y="1024" />
@@ -855,7 +855,7 @@
                         <Property mapKey="invert" name="invert" guiName="Invert Plane" value="false" id="ref22" />
                         <Property mapKey="lineWidth" name="lineWidth" value="2" />
                         <Property mapKey="manipulatorCenter" name="manipulatorCenter">
-                            <value x="0.5" y="0.5" z="0" />
+                            <value x="-nan" y="-nan" z="-nan" />
                         </Property>
                         <Property mapKey="mouseEvent.clipplaneManipulation" name="mouseEvent.clipplaneManipulation" enabled="true" mouseAction="7" mouseButtons="127" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="planeColor" name="planeColor">
@@ -1292,7 +1292,7 @@
                         <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number Z" value="57" id="ref59" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
-                            <value x="124" y="41" z="57" />
+                            <value x="4" y="21" z="57" />
                         </Property>
                         <Property mapKey="textureMode" name="textureMode" value="2d-texture" id="ref70" />
                         <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true" id="ref42">
@@ -1541,7 +1541,7 @@
                                 <paths>
                                     <item value="../../../modules/opencl/cl/singleoctreeraycaster.cl" />
                                     <item value="modules/opencl/cl/singleoctreeraycaster.cl" />
-                                    <item value="/data/home/a_sche26/voreen-development/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="/git/voreen0/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                 </paths>
                             </programFilenamePaths>
                         </Property>
