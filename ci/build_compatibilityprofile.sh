@@ -57,7 +57,6 @@ build_options=(
 
     # custom modules
     -DVRN_MODULE_GRAPHLAYOUT=ON
-    -DVRN_MODULE_BIGDATAIMAGEPROCESSING=ON
 
     # do not block on failed assertions
     -DVRN_NON_INTERACTIVE=ON
