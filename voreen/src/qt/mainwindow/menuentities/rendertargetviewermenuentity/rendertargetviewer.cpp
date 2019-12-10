@@ -27,7 +27,6 @@
 #include "voreen/qt/mainwindow/menuentities/rendertargetviewermenuentity/rendertargetviewerpainter.h"
 
 #include "voreen/core/voreenapplication.h"
-#include "voreen/core/network/processornetwork.h"
 #include "voreen/core/network/networkevaluator.h"
 #include "voreen/core/ports/renderport.h"
 #include "voreen/core/datastructures/rendertarget/rendertarget.h"
@@ -41,7 +40,6 @@
 #include "tgt/gpucapabilities.h"
 #include "tgt/logmanager.h"
 
-#include <math.h>
 #include <QMouseEvent>
 #include <QString>
 #include <QMenu>
@@ -49,16 +47,12 @@
 #include <QApplication>
 #include <QUrl>
 #include <QMessageBox>
-#include <QMainWindow>
 #include <QLayout>
 #include <QDesktopServices>
 #include <QWidget>
 
 #include <iostream>
-#include <sstream>
-#include <iomanip>
 
-using namespace std;
 using tgt::Texture;
 
 
@@ -169,8 +163,9 @@ RenderTargetViewer::RenderTargetViewer()
 
     //create rendering canvas
     canvas_ = new tgt::QtCanvas("RenderTargetViewer", tgt::ivec2(10, 10), tgt::GLCanvas::RGBADD, 0);
-    QHBoxLayout* mainLayout = new QHBoxLayout();
-    mainLayout->addWidget(canvas_);
+    QGridLayout* mainLayout = new QGridLayout();
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->addWidget(canvas_, 0, 0);
     setLayout(mainLayout);
 
     RenderTargetViewerPainter* painter = new RenderTargetViewerPainter(canvas_, this);
@@ -522,7 +517,7 @@ void RenderTargetViewer::keyPressEvent(QKeyEvent* e) {
         if (e->key() == Qt::Key_Plus)
             zoomScale_ += 0.5;
         if (e->key() == Qt::Key_Minus)
-            zoomScale_ = max(1.0, zoomScale_ - 0.5);
+            zoomScale_ = std::max(1.0, zoomScale_ - 0.5);
         if (e->key() == Qt::Key_Escape) {
             zoomScale_ = 1;
             maximizeOnePort_ = false;

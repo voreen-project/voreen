@@ -54,6 +54,9 @@ QtMainGLContext::QtMainGLContext()
     : GLContextBase("main")
 {
     QSurfaceFormat format = QtCanvas::getSurfaceFormat(tgt::GLCanvas::RGBADD);
+#ifdef VRN_DEBUG_QT_MAIN_GL_CONTEXT
+    format.setOption(QSurfaceFormat::DebugContext);
+#endif
 
     context_ = new QOpenGLContext();
     context_->setFormat(format);
@@ -66,6 +69,13 @@ QtMainGLContext::QtMainGLContext()
 
     // Activate directly because further initialization needs an active gl context.
     activate();
+
+#ifdef VRN_DEBUG_QT_MAIN_GL_CONTEXT
+    // Attach debugger.
+    handler.logger_.initialize();
+    QObject::connect(&handler.logger_, &QOpenGLDebugLogger::messageLogged, &handler, &LogHandler::onMessageLogged);
+    handler.logger_.startLogging(QOpenGLDebugLogger::SynchronousLogging);
+#endif
 }
 QtMainGLContext::~QtMainGLContext() {
     // Release active context before deletion.
@@ -77,13 +87,6 @@ QtMainGLContext::~QtMainGLContext() {
 
 void QtMainGLContext::activate() {
     context_->makeCurrent(surface_);
-
-#ifdef VRN_DEBUG_QT_MAIN_GL_CONTEXT
-    // Attach debugger.
-    handler.logger_.initialize();
-    QObject::connect(&handler.logger_, &QOpenGLDebugLogger::messageLogged, &handler, &LogHandler::onMessageLogged);
-    handler.logger_.startLogging(QOpenGLDebugLogger::SynchronousLogging);
-#endif
 }
 
 bool QtMainGLContext::isActive() {

@@ -41,12 +41,6 @@
 #include "voreen/core/properties/cameraproperty.h"
 #include "voreen/core/interaction/camerainteractionhandler.h"
 
-#ifdef VRN_MODULE_HEADTRACKING
-    //if headtracking is used
-    #include "voreen/core/ports/genericcoprocessorport.h"
-    #include "custommodules/headtracking/processors/trackingprocessorbase.h"
-#endif
-
 namespace tgt {
 class GLCanvas;
 class Texture;
