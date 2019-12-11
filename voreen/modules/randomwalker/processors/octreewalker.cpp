@@ -58,6 +58,10 @@ namespace voreen {
 
 namespace {
 
+const std::string PREV_RESULT_OCTREE_FILE_NAME = "prev_result_octree.vvod";
+const std::string BRICK_BUFFER_SUBDIR =      "brickBuffer";
+const std::string BRICK_BUFFER_FILE_PREFIX = "buffer_";
+
 inline size_t volumeCoordsToIndex(int x, int y, int z, const tgt::ivec3& dim) {
     return z*dim.y*dim.x + y*dim.x + x;
 }
@@ -100,6 +104,7 @@ static uint16_t normToBrick(float val) {
 static float brickToNorm(uint16_t val) {
     return static_cast<float>(val)/0xffff;
 }
+
 }
 
 
@@ -118,6 +123,8 @@ OctreeWalker::OctreeWalker()
     , conjGradImplementation_("conjGradImplementation", "Implementation")
     , homogeneityThreshold_("homogeneityThreshold", "Homogeneity Threshold", 0.01, 0.0, 1.0)
     , incrementalSimilarityThreshold_("incrementalSimilarityThreshold", "Incremental Similarity Treshold", 0.01, 0.0, 1.0)
+    , resultPath_("resultPath", "Result Cache Path", "Result Cache Path", "", "", FileDialogProperty::DIRECTORY)
+    , prevResultPath_("")
     , previousOctree_(nullptr)
     , previousVolume_(nullptr)
     , brickPoolManager_(nullptr)
@@ -161,6 +168,14 @@ OctreeWalker::OctreeWalker()
         conjGradImplementation_.select("blasCL");
 #endif
         conjGradImplementation_.setGroupID("conjGrad");
+
+    // conjugate gradient solver
+    addProperty(resultPath_);
+        ON_CHANGE_LAMBDA(resultPath_, [this] () {
+                if(resultPath_.get() != prevResultPath_) {
+                    clearPreviousResults();
+                }
+                });
 }
 
 OctreeWalker::~OctreeWalker() {
@@ -176,8 +191,6 @@ void OctreeWalker::initialize() {
 #ifdef VRN_MODULE_OPENCL
     voreenBlasCL_.initialize();
 #endif
-
-    updateGuiState();
 }
 
 void OctreeWalker::deinitialize() {
@@ -195,12 +208,70 @@ bool OctreeWalker::isReady() const {
     return ready;
 }
 
-const std::string BRICK_BUFFER_SUBDIR =      "brickBuffer";
-const std::string BRICK_BUFFER_FILE_PREFIX = "buffer_";
+void OctreeWalker::serialize(Serializer& ser) const {
+    AsyncComputeProcessor<OctreeWalkerInput, OctreeWalkerOutput>::serialize(ser);
+    ser.serialize("prevResultPath", prevResultPath_);
+
+    if(previousOctree_) {
+        std::string previousResultDir = resultPath_.get();
+        std::string previousResultFile = tgt::FileSystem::cleanupPath(previousResultDir + "/" + PREV_RESULT_OCTREE_FILE_NAME);
+
+        XmlSerializer s(previousResultDir);
+        std::ofstream fs(previousResultFile);
+        s.serialize("Octree", *previousOctree_);
+        s.write(fs);
+    }
+}
+
+void OctreeWalker::deserialize(Deserializer& s) {
+    AsyncComputeProcessor<OctreeWalkerInput, OctreeWalkerOutput>::deserialize(s);
+    try {
+        s.deserialize("prevResultPath", prevResultPath_);
+    } catch (SerializationException& e) {
+        s.removeLastError();
+    }
+
+    std::string previousResultFile = tgt::FileSystem::cleanupPath(prevResultPath_ + "/" + PREV_RESULT_OCTREE_FILE_NAME);
+
+    if(!prevResultPath_.empty() && tgt::FileSystem::fileExists(previousResultFile)) {
+        XmlDeserializer d(prevResultPath_);
+
+        previousOctree_ = new VolumeOctree();
+        try {
+            std::ifstream fs(previousResultFile);
+            d.read(fs);
+            d.deserialize("Octree", *previousOctree_);
+
+            resultPath_.set(prevResultPath_);
+        } catch (std::exception& e) {
+            LERROR("Failed to deserialize previous solution: " << e.what());
+            delete previousOctree_;
+            previousOctree_ = nullptr;
+        } catch (SerializationException& e) {
+            d.removeLastError();
+            LERROR("Failed to deserialize previous solution: " << e.what());
+            delete previousOctree_;
+            previousOctree_ = nullptr;
+        }
+    }
+
+    if(previousOctree_) {
+        tgt::vec3 spacing(1.0f);
+        tgt::vec3 offset(1.0f);
+
+        OctreeBrickPoolManagerMmap* obpmm = dynamic_cast<OctreeBrickPoolManagerMmap*>(previousOctree_->getBrickPoolManager());
+        if(obpmm) {
+            previousVolume_.reset(new Volume(previousOctree_, spacing, offset));
+            brickPoolManager_.reset(obpmm);
+        } else {
+            delete previousOctree_;
+            previousOctree_ = nullptr;
+        }
+    }
+}
+
 
 OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
-    //edgeWeightTransFunc_.setVolume(inportVolume_.getData());
-
     tgtAssert(inportVolume_.hasData(), "no input volume");
 
     // clear previous results and update property ranges, if input volume has changed
@@ -231,9 +302,8 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
     float errorThresh = 1.f / pow(10.f, static_cast<float>(errorThreshold_.get()));
     int maxIterations = maxIterations_.get();
 
-    std::string octreePath = "/home/dominik/nosnapshot/tmp/octreewalkertest/";
-
-    std::string brickPoolPath = tgt::FileSystem::cleanupPath(octreePath + "/" + BRICK_BUFFER_SUBDIR);
+    prevResultPath_ = resultPath_.get();
+    std::string brickPoolPath = tgt::FileSystem::cleanupPath(prevResultPath_ + "/" + BRICK_BUFFER_SUBDIR);
     if (!tgt::FileSystem::dirExists(brickPoolPath)) {
         tgt::FileSystem::createDirectoryRecursive(brickPoolPath);
     }
@@ -247,16 +317,19 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
 
     // Check if the previous result is compatible with the current input
     if(previousOctree_ && (
-               previousOctree_->getDimensions() != volumeDim
-            || previousOctree_->getBrickDim() != brickDim
-            || previousOctree_->getNumLevels() != octree.getNumLevels()
-            || brickPoolManager_->getBrickMemorySizeInByte() != brickSizeInBytes)) {
+              previousOctree_->getDimensions() != volumeDim
+           || previousOctree_->getBrickDim() != brickDim
+           || previousOctree_->getNumLevels() != octree.getNumLevels()
+           || brickPoolManager_->getBrickMemorySizeInByte() != brickSizeInBytes)) {
 
         // If not, clear previous results
         clearPreviousResults();
-        LINFO("Not resuing previous solution for incompatible input volume");
-    } else {
+    }
+
+    if(previousOctree_) {
         LINFO("Resuing previous solution for compatible input volume");
+    } else {
+        LINFO("Not resuing previous solution for incompatible input volume");
     }
 
     // Create a new brickpool if we need a new one
@@ -280,43 +353,6 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
         homogeneityThreshold_.get(),
         incrementalSimilarityThreshold_.get(),
     };
-}
-
-void OctreeWalker::serialize(Serializer& s) const {
-    AsyncComputeProcessor<OctreeWalkerInput, OctreeWalkerOutput>::serialize(s);
-
-    if(previousOctree_) {
-        s.serialize("previousResult", *previousOctree_);
-    }
-}
-void OctreeWalker::deserialize(Deserializer& s) {
-    AsyncComputeProcessor<OctreeWalkerInput, OctreeWalkerOutput>::deserialize(s);
-
-    try {
-        previousOctree_ = new VolumeOctree();
-        s.deserialize("previousResult", *previousOctree_);
-    } catch (SerializationNoSuchDataException&) {
-        s.removeLastError();
-        previousOctree_ = nullptr;
-    } catch (SerializationException& e) {
-        s.removeLastError();
-        LERROR("Failed to deserialize previous solution: " << e.what());
-        previousOctree_ = nullptr;
-    }
-
-    if(previousOctree_) {
-        tgt::vec3 spacing(1.0f);
-        tgt::vec3 offset(1.0f);
-
-        OctreeBrickPoolManagerMmap* obpmm = dynamic_cast<OctreeBrickPoolManagerMmap*>(previousOctree_->getBrickPoolManager());
-        if(obpmm) {
-            previousVolume_.reset(new Volume(previousOctree_, spacing, offset));
-            brickPoolManager_.reset(obpmm);
-        } else {
-            delete previousOctree_;
-            previousOctree_ = nullptr;
-        }
-    }
 }
 
 static void getSeedListsFromPorts(std::vector<PortDataPointer<Geometry>>& geom, PointSegmentListGeometry<tgt::vec3>& seeds) {
@@ -1160,6 +1196,7 @@ void OctreeWalker::clearPreviousResults() {
         brickPoolManager_->deinitialize();
     }
     brickPoolManager_.reset(nullptr);
+    prevResultPath_ = "";
 }
 
 const VoreenBlas* OctreeWalker::getVoreenBlasFromProperties() const {
@@ -1176,13 +1213,6 @@ const VoreenBlas* OctreeWalker::getVoreenBlasFromProperties() const {
 #endif
 
     return &voreenBlasCPU_;
-}
-
-
-void OctreeWalker::updateGuiState() {
-    //bool useTransFunc = enableTransFunc_.get();
-    //edgeWeightTransFunc_.setVisibleFlag(useTransFunc);
-    //edgeWeightBalance_.setVisibleFlag(useTransFunc);
 }
 
 }   // namespace

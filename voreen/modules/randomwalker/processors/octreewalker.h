@@ -33,6 +33,7 @@
 #include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/boolproperty.h"
 #include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/temppathproperty.h"
 #include "voreen/core/datastructures/octree/volumeoctree.h"
 
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
@@ -110,14 +111,10 @@ protected:
     virtual void initialize();
     virtual void deinitialize();
 
-    void ensurePreviousResultCompatibility();
     void clearPreviousResults();
 
 private:
     const VoreenBlas* getVoreenBlasFromProperties() const;
-
-    void segmentationPropsChanged();
-    void updateGuiState();
 
     VolumePort inportVolume_;
     GeometryPort inportForegroundSeeds_;
@@ -139,6 +136,9 @@ private:
 #ifdef VRN_MODULE_OPENCL
     VoreenBlasCL voreenBlasCL_;
 #endif
+
+    TempPathProperty resultPath_;
+    std::string prevResultPath_;
 
     VolumeOctree* previousOctree_;                  // NEVER owns its own brickpool manager, ALWAYS a representation of previousVolume
     std::unique_ptr<VolumeBase> previousVolume_;     // ALWAYS store reference to representation in previousOctree_
