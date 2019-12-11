@@ -58,8 +58,7 @@ resource/voreenve/image
 resource/voreenve/volumes
 resource/voreenve/widgetstyle
 resource/voreenve/workspaces/*
-resource/voreenve/workspaces/tools
-resource/voreenve/workspaces/ultramicroscopy
+resource/voreenve/workspaces/advanced
 
 # tfs
 resource/voreencore/transferfuncs/presets
