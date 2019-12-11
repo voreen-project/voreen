@@ -32,10 +32,7 @@
 #include "voreen/core/properties/intproperty.h"
 #include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/boolproperty.h"
-#include "voreen/core/properties/vectorproperty.h"
-#include "voreen/core/properties/transfunc/1d/1dkeys/transfunc1dkeysproperty.h"
 #include "voreen/core/properties/optionproperty.h"
-#include "voreen/core/properties/boundingboxproperty.h"
 #include "voreen/core/datastructures/octree/volumeoctree.h"
 
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
@@ -107,9 +104,13 @@ protected:
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
     virtual void processComputeOutput(ComputeOutput output);
 
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+
     virtual void initialize();
     virtual void deinitialize();
 
+    void ensurePreviousResultCompatibility();
     void clearPreviousResults();
 
 private:

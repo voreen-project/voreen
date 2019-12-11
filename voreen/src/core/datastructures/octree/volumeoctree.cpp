@@ -240,12 +240,14 @@ VolumeOctree::VolumeOctree(const VolumeBase* volume, size_t brickDim, float homo
 /**
  * Construct a VolumeOctree from preprocessed parts, i.e., an existing hierarchy of nodes whose bricks are stored
  * in the passed brickPoolManager.
+ *
+ * Note that the VolumeOctree takes ownership of the passed histograms.
  */
-VolumeOctree::VolumeOctree(VolumeOctreeNode* root, OctreeBrickPoolManagerBase* brickPoolManager, const tgt::svec3& brickDim, const tgt::svec3& volumeDim, size_t numChannels)
+VolumeOctree::VolumeOctree(VolumeOctreeNode* root, OctreeBrickPoolManagerBase* brickPoolManager, std::vector<Histogram1D*>&& histograms, const tgt::svec3& brickDim, const tgt::svec3& volumeDim, size_t numChannels)
     : VolumeOctreeBase(brickDim, volumeDim, numChannels)
     , rootNode_(root)
     , brickPoolManager_(brickPoolManager)
-    , histograms_() // TODO: histogram?
+    , histograms_(std::move(histograms))
 {
     tgtAssert(tgt::hmul(brickDim) * sizeof(uint16_t) == brickPoolManager_->getBrickMemorySizeInByte(), "Brick size mismatch");
 }
@@ -1680,6 +1682,9 @@ VolumeOctreeNode* VolumeOctree::deserializeNodeBuffer(const char* binaryBuffer, 
 }
 
 const OctreeBrickPoolManagerBase* VolumeOctree::getBrickPoolManager() const {
+    return brickPoolManager_;
+}
+OctreeBrickPoolManagerBase* VolumeOctree::getBrickPoolManager() {
     return brickPoolManager_;
 }
 

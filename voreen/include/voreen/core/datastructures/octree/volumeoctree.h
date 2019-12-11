@@ -83,8 +83,8 @@ public:
      * Construct a VolumeOctree from preprocessed parts, i.e., an existing hierarchy of nodes whose bricks are stored
      * in the passed brickPoolManager.
      */
-    VolumeOctree(VolumeOctreeNode* root, OctreeBrickPoolManagerBase* brickPoolManager, const tgt::svec3& brickDim,
-            const tgt::svec3& volumeDim, size_t numChannels);
+    VolumeOctree(VolumeOctreeNode* root, OctreeBrickPoolManagerBase* brickPoolManager, std::vector<Histogram1D*>&& histograms,
+            const tgt::svec3& brickDim, const tgt::svec3& volumeDim, size_t numChannels);
 
     /**
      * Decompose the VolumeOctree into its components. The caller takes ownership of the components.
@@ -116,6 +116,7 @@ public:
     virtual const Histogram1D* getHistogram(size_t channel = 0) const;
 
     const OctreeBrickPoolManagerBase* getBrickPoolManager() const;
+    OctreeBrickPoolManagerBase* getBrickPoolManager();
 
 
     virtual uint16_t getVoxel(const tgt::svec3& pos, size_t channel = 0, size_t level = 0) const;

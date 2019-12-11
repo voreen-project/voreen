@@ -124,7 +124,6 @@ OctreeWalker::OctreeWalker()
 {
     // ports
     addPort(inportVolume_);
-        ON_CHANGE(inportVolume_, OctreeWalker, clearPreviousResults);
     addPort(inportForegroundSeeds_);
     addPort(inportBackgroundSeeds_);
     addPort(outportProbabilities_);
@@ -196,6 +195,9 @@ bool OctreeWalker::isReady() const {
     return ready;
 }
 
+const std::string BRICK_BUFFER_SUBDIR =      "brickBuffer";
+const std::string BRICK_BUFFER_FILE_PREFIX = "buffer_";
+
 OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
     //edgeWeightTransFunc_.setVolume(inportVolume_.getData());
 
@@ -213,6 +215,11 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
     }
     const VolumeOctree* octreePtr = vol->getRepresentation<VolumeOctree>();
     tgtAssert(octreePtr, "No octree");
+    const VolumeOctree& octree = *octreePtr;
+
+    if (octree.getNumChannels() != 1) {
+        throw InvalidInputException("Only single channel volumes are supported.", InvalidInputException::S_ERROR);
+    }
 
 
     // select BLAS implementation and preconditioner
@@ -223,6 +230,40 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
 
     float errorThresh = 1.f / pow(10.f, static_cast<float>(errorThreshold_.get()));
     int maxIterations = maxIterations_.get();
+
+    std::string octreePath = "/home/dominik/nosnapshot/tmp/octreewalkertest/";
+
+    std::string brickPoolPath = tgt::FileSystem::cleanupPath(octreePath + "/" + BRICK_BUFFER_SUBDIR);
+    if (!tgt::FileSystem::dirExists(brickPoolPath)) {
+        tgt::FileSystem::createDirectoryRecursive(brickPoolPath);
+    }
+
+    const tgt::svec3 volumeDim = octree.getDimensions();
+    const tgt::svec3 brickDim = octree.getBrickDim();
+    const size_t brickSize = tgt::hmul(brickDim);
+    const size_t numChannels = 1;
+    const size_t maxLevel = octree.getNumLevels()-1;
+    size_t brickSizeInBytes = brickSize * sizeof(uint16_t);
+
+    // Check if the previous result is compatible with the current input
+    if(previousOctree_ && (
+               previousOctree_->getDimensions() != volumeDim
+            || previousOctree_->getBrickDim() != brickDim
+            || previousOctree_->getNumLevels() != octree.getNumLevels()
+            || brickPoolManager_->getBrickMemorySizeInByte() != brickSizeInBytes)) {
+
+        // If not, clear previous results
+        clearPreviousResults();
+        LINFO("Not resuing previous solution for incompatible input volume");
+    } else {
+        LINFO("Resuing previous solution for compatible input volume");
+    }
+
+    // Create a new brickpool if we need a new one
+    if(!brickPoolManager_) {
+        brickPoolManager_.reset(new OctreeBrickPoolManagerMmap(brickPoolPath, BRICK_BUFFER_FILE_PREFIX));
+        brickPoolManager_->initialize(brickSizeInBytes);
+    }
 
     return ComputeInput {
         previousOctree_,
@@ -239,6 +280,43 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
         homogeneityThreshold_.get(),
         incrementalSimilarityThreshold_.get(),
     };
+}
+
+void OctreeWalker::serialize(Serializer& s) const {
+    AsyncComputeProcessor<OctreeWalkerInput, OctreeWalkerOutput>::serialize(s);
+
+    if(previousOctree_) {
+        s.serialize("previousResult", *previousOctree_);
+    }
+}
+void OctreeWalker::deserialize(Deserializer& s) {
+    AsyncComputeProcessor<OctreeWalkerInput, OctreeWalkerOutput>::deserialize(s);
+
+    try {
+        previousOctree_ = new VolumeOctree();
+        s.deserialize("previousResult", *previousOctree_);
+    } catch (SerializationNoSuchDataException&) {
+        s.removeLastError();
+        previousOctree_ = nullptr;
+    } catch (SerializationException& e) {
+        s.removeLastError();
+        LERROR("Failed to deserialize previous solution: " << e.what());
+        previousOctree_ = nullptr;
+    }
+
+    if(previousOctree_) {
+        tgt::vec3 spacing(1.0f);
+        tgt::vec3 offset(1.0f);
+
+        OctreeBrickPoolManagerMmap* obpmm = dynamic_cast<OctreeBrickPoolManagerMmap*>(previousOctree_->getBrickPoolManager());
+        if(obpmm) {
+            previousVolume_.reset(new Volume(previousOctree_, spacing, offset));
+            brickPoolManager_.reset(obpmm);
+        } else {
+            delete previousOctree_;
+            previousOctree_ = nullptr;
+        }
+    }
 }
 
 static void getSeedListsFromPorts(std::vector<PortDataPointer<Geometry>>& geom, PointSegmentListGeometry<tgt::vec3>& seeds) {
@@ -781,9 +859,6 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
     return outputBrickAddr;
 }
 
-const std::string BRICK_BUFFER_SUBDIR =      "brickBuffer";
-const std::string BRICK_BUFFER_FILE_PREFIX = "buffer_";
-
 const tgt::svec3 OCTREEWALKER_CHILD_POSITIONS[] = {
     tgt::svec3(0,0,0),
     tgt::svec3(1,0,0),
@@ -805,22 +880,6 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     const size_t brickSize = tgt::hmul(brickDim);
     const size_t numChannels = 1;
     const size_t maxLevel = input.octree_.getNumLevels()-1;
-
-    std::string octreePath = "/home/dominik/nosnapshot/tmp/octreewalkertest/";
-
-    std::string brickPoolPath = tgt::FileSystem::cleanupPath(octreePath + "/" + BRICK_BUFFER_SUBDIR);
-    if (!tgt::FileSystem::dirExists(brickPoolPath)) {
-        tgt::FileSystem::createDirectoryRecursive(brickPoolPath);
-    }
-
-    size_t brickSizeInBytes = brickSize * sizeof(uint16_t);
-    if(!input.brickPoolManager_ || input.brickPoolManager_->getBrickMemorySizeInByte() != brickSizeInBytes) {
-        if(input.brickPoolManager_) {
-            input.brickPoolManager_->deinitialize();
-        }
-        input.brickPoolManager_.reset(new OctreeBrickPoolManagerMmap(brickPoolPath, BRICK_BUFFER_FILE_PREFIX));
-        input.brickPoolManager_->initialize(brickSizeInBytes);
-    }
 
     auto& brickPoolManager = *input.brickPoolManager_;
 
@@ -1037,7 +1096,9 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     }
 
     nodeCleanup.dismiss();
-    auto octree = new VolumeOctree(outputRootNode.node_, &brickPoolManager, brickDim, input.octree_.getDimensions(), numChannels);
+    std::vector<Histogram1D*> octreeHistograms;
+    octreeHistograms.push_back(new Histogram1D(histogram));
+    auto octree = new VolumeOctree(outputRootNode.node_, &brickPoolManager, std::move(octreeHistograms), brickDim, input.octree_.getDimensions(), numChannels);
     auto output = tgt::make_unique<Volume>(octree, &input.volume_);
 
     float min = static_cast<float>(globalMin)/0xffff;
@@ -1095,7 +1156,7 @@ void OctreeWalker::clearPreviousResults() {
     previousOctree_ = nullptr;
     previousVolume_.reset(nullptr);
 
-    if(brickPoolManager_) {
+    if(brickPoolManager_ && brickPoolManager_->isInitialized()) {
         brickPoolManager_->deinitialize();
     }
     brickPoolManager_.reset(nullptr);
