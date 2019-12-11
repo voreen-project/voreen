@@ -31,27 +31,21 @@
 #define __gl3_h_
 #endif
 
-#include <QWidget>
+#include <QOpenGLWidget>
 #include <QSurfaceFormat>
 
-#include <memory>
-
+class QOpenGLContext;
+class QOffscreenSurface;
+class QOpenGLPaintDevice;
+class QOpenGLFramebufferObject;
 class QInputEvent;
 
 namespace tgt {
 
-class CanvasBackend;
-class CanvasBackendOwner {
-public:
-    virtual void onInitializeGL() = 0;
-    virtual void onPaintGL() = 0;
-    virtual void onResizeGL(int w, int h) = 0;
-};
-
 /**
  * Qt implementation of GLCanvas. Inherits QOpenGLWidget and combines the Qt methods and tgt methods.
  */
-class VRN_QT_API QtCanvas : public QWidget, public GLCanvas, public CanvasBackendOwner {
+class VRN_QT_API QtCanvas : public QOpenGLWidget, public GLCanvas {
 public:
     /**
      * The constructor.
@@ -68,7 +62,7 @@ public:
     /**
      * Destructor. Closes window (if canvas is a window).
      */
-    virtual ~QtCanvas();
+    ~QtCanvas();
 
     /**
      * @return an image of the current framebuffer state.
@@ -96,14 +90,11 @@ public:
 
 protected:
 
-    // Inherited from CanvasBackendOwner
-    virtual void onInitializeGL();
-    virtual void onPaintGL();
-    virtual void onResizeGL(int w, int h);
+    // Inherited from QOpenGLWidget
+    virtual void initializeGL();
+    virtual void paintGL();
+    virtual void resizeGL(int w, int h);
 
-protected:
-
-    // Inherited from QWidget
     virtual void enterEvent(QEvent* e);
     virtual void leaveEvent(QEvent* e);
     virtual void mousePressEvent(QMouseEvent* e);
@@ -127,7 +118,6 @@ protected:
 
 private:
 
-    std::unique_ptr<CanvasBackend> backend_;
     bool initializedGL_;
 
 public:

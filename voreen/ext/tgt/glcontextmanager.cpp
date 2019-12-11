@@ -166,6 +166,8 @@ const std::string& GLContextManager::getDebugName(GLContextBase* context) const 
 //
 ///////////////////////////////////////////////////////////
 
+const int GLContextStateGuard::SYNC_PASS_TIMEOUT = 1000; // in milliseconds
+
 GLContextStateGuard::GLContextStateGuard(GLContextBase* context)
     : context_(context)
 {
@@ -176,7 +178,6 @@ GLContextStateGuard::GLContextStateGuard(GLContextBase* context)
 #ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
         glFlush();
 #else
-        const GLuint64 SYNC_PASS_TIMEOUT = GL_TIMEOUT_IGNORED; // in milliseconds
         GLsync sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
         glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, SYNC_PASS_TIMEOUT);
         glDeleteSync(sync);
@@ -187,7 +188,7 @@ GLContextStateGuard::GLContextStateGuard(GLContextBase* context)
     GLContextMgr.pushContext(context);
 
 #ifdef TGT_DEBUG
-    // Check FBO completeness.
+    // Check FBO completness.
     FramebufferObject::isComplete();
 #endif
 }

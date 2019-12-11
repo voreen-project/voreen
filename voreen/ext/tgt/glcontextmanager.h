@@ -91,6 +91,7 @@ private:
 * @note: Also flushes the pipeline within the old context without stalling if possible.
 */
 class TGT_API GLContextStateGuard {
+    static const int SYNC_PASS_TIMEOUT;
 public:
     GLContextStateGuard(GLContextBase* context = GLContextManager::getRef().getMainContext());
     ~GLContextStateGuard();

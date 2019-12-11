@@ -30,12 +30,8 @@
 #include "tgt/glcontextmanager.h"
 #include "tgt/painter.h"
 
-#include <QCoreApplication>
-#include <QInputEvent>
 #include <QOpenGLContext>
-#include <QOpenGLWidget>
-#include <QOpenGLWindow>
-#include <QGridLayout>
+#include <QInputEvent>
 
 #if(QT_VERSION < QT_VERSION_CHECK(5, 6, 0))
 #define DEVICE_PIXEL_RATIO_FUNC devicePixelRatio
@@ -45,218 +41,42 @@
 
 namespace tgt {
 
-/**
- * This class is the base for an exchangeable Qt backend.
- */
-class CanvasBackend {
-public:
-    CanvasBackend(CanvasBackendOwner* owner) : owner_(owner) {}
-    virtual ~CanvasBackend() {}
-
-    virtual QWidget* getWidget() = 0;
-    virtual void update() = 0;
-    virtual QOpenGLContext* context() const = 0;
-    virtual void makeCurrent() = 0;
-    virtual QImage grabFramebuffer() = 0;
-
-protected:
-
-    CanvasBackendOwner* owner_;
-};
-
-/**
- * This is basically the old QOpenGLWidget-based Qt rendering backend.
- * It has been tested successfully for some time now and is stable.
- * However, it is quite slow compared to the newer backend (see below).
- * Additionally, it does NOT support stereo rendering due to the
- * internal framebuffer being used by Qt which has only a single color attachment.
- */
-class CanvasBackendQOpenGLWidget : public CanvasBackend, public QOpenGLWidget {
-public:
-
-    CanvasBackendQOpenGLWidget(CanvasBackendOwner* owner, const QSurfaceFormat& format)
-        : CanvasBackend(owner)
-    {
-        setFormat(format);
-        setUpdateBehavior(NoPartialUpdate);
-        create(); // Creates internal window handle.
-        QResizeEvent event(this->size(), this->size());
-        QOpenGLWidget::resizeEvent(&event); // Enforces OpenGL initialization.
-    }
-
-    virtual QWidget* getWidget() {
-        return this;
-    }
-
-    virtual void update() {
-        QOpenGLWidget::update();
-    }
-
-    virtual QOpenGLContext* context() const {
-        return QOpenGLWidget::context();
-    }
-
-    virtual void makeCurrent() {
-        QOpenGLWidget::makeCurrent();
-    }
-
-    virtual QImage grabFramebuffer() {
-        return QOpenGLWidget::grabFramebuffer();
-    }
-
-    virtual bool event(QEvent* event) {
-        // Since the show event might force a context-recreation when passed to QOpenGLWidget,
-        // which will lead to context problems, we pass it directly to QWidget instead!
-        if(event->type() == QEvent::Show) {
-            return QWidget::event(event);
-        }
-
-        // Pass to superclass otherwise.
-        return QOpenGLWidget::event(event);
-    }
-
-protected:
-
-    virtual void initializeGL() {
-        owner_->onInitializeGL();
-    }
-
-    virtual void paintGL() {
-        owner_->onPaintGL();
-    }
-
-    virtual void resizeGL(int w, int h) {
-        owner_->onResizeGL(w, h);
-    }
-};
-
-/**
- * This is the newer, QOpenGLWindow based backend which should replace the older one (see above), perspectively.
- * It is much faster and does have any limitations in terms of OpenGL usage.
- * That said, it's necessary to be used for stereo rendering but needs to be tested in order to become default.
- */
-class CanvasBackendQOpenGLWindow : public CanvasBackend, public QOpenGLWindow {
-public:
-
-    CanvasBackendQOpenGLWindow(CanvasBackendOwner* owner, const QSurfaceFormat& format)
-        : CanvasBackend(owner)
-        , QOpenGLWindow(QOpenGLContext::globalShareContext(), NoPartialUpdate)
-        , widget_(nullptr)
-    {
-
-        setFormat(format);
-        create();
-        QResizeEvent event(this->size(), this->size());
-        QOpenGLWindow::resizeEvent(&event); // Enforces OpenGL initialization.
-
-        // Wrap the window inside a container widget.
-        widget_ = QWidget::createWindowContainer(this);
-    }
-
-    virtual QWidget* getWidget() {
-        return widget_;
-    }
-
-    virtual void update() {
-        QOpenGLWindow::update();
-    }
-
-    virtual QOpenGLContext* context() const {
-        return QOpenGLWindow::context();
-    }
-
-    virtual void makeCurrent() {
-        QOpenGLWindow::makeCurrent();
-    }
-
-    virtual QImage grabFramebuffer() {
-        return QOpenGLWindow::grabFramebuffer();
-    }
-
-    virtual bool event(QEvent* event) {
-        // Since an embedded QWindow inside a QWidget eats up all events, we need to send the
-        // required (only consider Input Events) to the embedding widget to be processed properly.
-        if(dynamic_cast<QInputEvent*>(event)) {
-            QCoreApplication::sendEvent(widget_, event);
-        }
-
-        return QOpenGLWindow::event(event);
-    }
-
-protected:
-
-    virtual void initializeGL() {
-        owner_->onInitializeGL();
-    }
-
-    virtual void paintGL() {
-        owner_->onPaintGL();
-    }
-
-    virtual void resizeGL(int w, int h) {
-        // FIXME: Somehow width and height both are 0 the first time the function is called.
-        if(w > 0 && h > 0) {
-            owner_->onResizeGL(w, h);
-        }
-    }
-
-private:
-    QWidget* widget_;
-};
-
-
 QtCanvas::QtCanvas(const std::string& title,
                    const ivec2& size,
                    const Buffers buffers,
                    QWidget* parent,
                    Qt::WindowFlags f)
-    : QWidget(parent, f)
+    : QOpenGLWidget(nullptr, f) // Set parent at the very end to ensure widgets visibility is not limited by parent.
     , GLCanvas(title, size, buffers)
     , initializedGL_(false)
 {
     setWindowTitle(QString(title.c_str()));
     setFocusPolicy(Qt::StrongFocus);
     setAttribute(Qt::WA_AcceptTouchEvents); // enable this line to receive touch events
-    setAutoFlush(false);
+    setFormat(getSurfaceFormat(buffers));
+    setUpdateBehavior(PartialUpdate);
     resize(size.x, size.y);
+    setAutoFlush(false);
 
     // The following code is needed to force Qt to initialize the internal OpenGL data.
     // This is usually done as soon as the widget gets shown the first time.
     // Since we use a global share context, the context will never be touched again, once created.
     // The guard is necessary to restore the correct context after the initialization is done.
     GLContextStateGuard guard;
-
-    // Select the backend.
-    bool useExperimentalQtOpenGLBackend = buffers & QUAD_BUFFER; // Stereo rendering requires new backend.
-#ifdef VRN_USE_EXPERIMENTAL_QT_OPENGL_BACKEND
-    useExperimentalQtOpenGLBackend = true; // This enforces the new backend.
-#endif
-    if(useExperimentalQtOpenGLBackend) {
-        backend_.reset(new CanvasBackendQOpenGLWindow(this, getSurfaceFormat(buffers)));
-    }
-    else {
-        backend_.reset(new CanvasBackendQOpenGLWidget(this, getSurfaceFormat(buffers)));
-    }
-
-    // Embed the backend's widget into a proper layout.
-    QGridLayout* layout = new QGridLayout;
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->addWidget(backend_->getWidget(), 0, 0);
-    setLayout(layout);
-
-    // Check if initialization was successful.
+    create(); // Creates internal window handle.
+    QResizeEvent event(this->size(), this->size());
+    resizeEvent(&event); // Forces OpenGL initialization.
     tgtAssert(initializedGL_, "Initialization failed");
 
     // Configure other format related settings, once the context is created.
-    QSurfaceFormat format = backend_->context()->format();
-    rgbaSize_ = ivec4(format.redBufferSize(),
-                      format.greenBufferSize(),
-                      format.blueBufferSize(),
-                      format.alphaBufferSize());
-    stencilSize_ = format.stencilBufferSize();
-    depthSize_ = format.depthBufferSize();
-    doubleBuffered_ = format.swapBehavior() == QSurfaceFormat::DoubleBuffer;
-    quadBuffered_ = format.stereo();
+    rgbaSize_ = ivec4(format().redBufferSize(),
+                      format().greenBufferSize(),
+                      format().blueBufferSize(),
+                      format().alphaBufferSize());
+    stencilSize_ = format().stencilBufferSize();
+    depthSize_ = format().depthBufferSize();
+    doubleBuffered_ = format().swapBehavior() == QSurfaceFormat::DoubleBuffer;
+    quadBuffered_ = format().stereo();
 
     // Finally set parent.
     setParent(parent);
@@ -266,24 +86,25 @@ QtCanvas::~QtCanvas() {
 }
 
 void QtCanvas::activate() {
-    backend_->makeCurrent();
+    // Activate context.
+    makeCurrent();
 }
 
 bool QtCanvas::isActive() {
-    return QOpenGLContext::currentContext() == backend_->context();
+    return QOpenGLContext::currentContext() == context();
 }
 
-void QtCanvas::onInitializeGL() {
+void QtCanvas::initializeGL() {
     tgtAssert(!initializedGL_, "Context already initialized");
     initializedGL_ = true;
 }
 
-void QtCanvas::onPaintGL() {
+void QtCanvas::paintGL() {
     // Trigger paint. Context is made active in super class.
     paint();
 }
 
-void QtCanvas::onResizeGL(int w, int h) {
+void QtCanvas::resizeGL(int w, int h) {
     // Pass to super class.
     sizeChanged(ivec2(w, h));
 }
@@ -300,8 +121,7 @@ void QtCanvas::repaint() {
 
 void QtCanvas::update() {
     // Pass to super class.
-    backend_->update();
-    QWidget::update();
+    QOpenGLWidget::update();
 }
 
 void QtCanvas::swap() {
@@ -312,7 +132,7 @@ QImage QtCanvas::grabFramebuffer() {
     // QOpenGLWidget::grabFramebuffer() might leave another
     // context bound than before. That's why we need a guard here.
     GLContextStateGuard guard(this);
-    return backend_->grabFramebuffer();
+    return QOpenGLWidget::grabFramebuffer();
 }
 
 void QtCanvas::toggleFullScreen() {
@@ -336,21 +156,21 @@ void QtCanvas::enterEvent(QEvent* e) {
     tgt::MouseEvent* enterEv = new tgt::MouseEvent(0, 0, tgt::MouseEvent::ENTER,
         tgt::MouseEvent::MODIFIER_NONE, tgt::MouseEvent::MOUSE_BUTTON_NONE, tgt::ivec2(width(), height()));
     broadcastEvent(enterEv);
-    QWidget::enterEvent(e);
+    QOpenGLWidget::enterEvent(e);
 }
 
 void QtCanvas::leaveEvent(QEvent* e) {
     tgt::MouseEvent* leaveEv = new tgt::MouseEvent(0, 0, tgt::MouseEvent::EXIT,
         tgt::MouseEvent::MODIFIER_NONE, tgt::MouseEvent::MOUSE_BUTTON_NONE, tgt::ivec2(width(), height()));
     broadcastEvent(leaveEv);
-    QWidget::leaveEvent(e);
+    QOpenGLWidget::leaveEvent(e);
 }
 
 void QtCanvas::mousePressEvent(QMouseEvent* e) {
     tgt::MouseEvent* prEv = new tgt::MouseEvent(e->x(), e->y(), tgt::MouseEvent::PRESSED,
         getModifier(e), getButton(e), tgt::ivec2(width(), height()));
     broadcastEvent(prEv);
-    QWidget::mousePressEvent(e);
+    QOpenGLWidget::mousePressEvent(e);
 }
 
 // See mousePressEvent
@@ -358,7 +178,7 @@ void QtCanvas::mouseReleaseEvent (QMouseEvent* e) {
     tgt::MouseEvent* relEv = new tgt::MouseEvent(e->x(), e->y(), tgt::MouseEvent::RELEASED,
         getModifier(e), getButton(e), tgt::ivec2(width(), height()));
     broadcastEvent(relEv);
-    QWidget::mouseReleaseEvent(e);
+    QOpenGLWidget::mouseReleaseEvent(e);
 }
 
 // See mousePressEvent
@@ -366,7 +186,7 @@ void QtCanvas::mouseMoveEvent(QMouseEvent*  e) {
     tgt::MouseEvent* movEv = new tgt::MouseEvent(e->x(), e->y(), tgt::MouseEvent::MOTION,
         getModifier(e), getButtons(e), tgt::ivec2(width(), height())); // FIXME: submit information which mouse buttons are pressed
     broadcastEvent(movEv);
-    QWidget::mouseMoveEvent(e);
+    QOpenGLWidget::mouseMoveEvent(e);
 }
 
 // See mousePressEvent
@@ -374,7 +194,7 @@ void QtCanvas::mouseDoubleClickEvent(QMouseEvent* e) {
     tgt::MouseEvent* dcEv = new tgt::MouseEvent(e->x(), e->y(), tgt::MouseEvent::DOUBLECLICK,
                                                 getModifier(e), getButton(e), tgt::ivec2(width(), height()));
     broadcastEvent(dcEv);
-    QWidget::mouseDoubleClickEvent(e);
+    QOpenGLWidget::mouseDoubleClickEvent(e);
 }
 
 // See mousePressEvent
@@ -386,28 +206,28 @@ void QtCanvas::wheelEvent(QWheelEvent* e) {
     tgt::MouseEvent* wheelEv = new tgt::MouseEvent(e->x(),e->y(), tgt::MouseEvent::WHEEL,
                                                    getModifier(e), b, tgt::ivec2(width(), height()));
     broadcastEvent(wheelEv);
-    QWidget::wheelEvent(e);
+    QOpenGLWidget::wheelEvent(e);
 }
 
 // See mousePressEvent
 void QtCanvas::keyPressEvent(QKeyEvent* event) {
     tgt::KeyEvent* ke = new tgt::KeyEvent(getKey(event->key()), getModifier(event), event->isAutoRepeat(), true);
     broadcastEvent(ke);
-    QWidget::keyPressEvent(event);
+    QOpenGLWidget::keyPressEvent(event);
 }
 
 // See mousePressEvent
 void QtCanvas::keyReleaseEvent(QKeyEvent* event) {
     tgt::KeyEvent* ke = new tgt::KeyEvent(getKey(event->key()), getModifier(event), event->isAutoRepeat(), false);
     broadcastEvent(ke);
-    QWidget::keyReleaseEvent(event);
+    QOpenGLWidget::keyReleaseEvent(event);
 }
 
 // yes, we need this in voreen FL
 void QtCanvas::timerEvent(QTimerEvent* e) {
     tgt::TimeEvent* te = new tgt::TimeEvent();
     broadcastEvent(te);
-    QWidget::timerEvent(e);
+    QOpenGLWidget::timerEvent(e);
 }
 
 bool QtCanvas::event(QEvent *event) {
@@ -448,9 +268,15 @@ bool QtCanvas::event(QEvent *event) {
 
         break;
     }
+
+    // Since the show event might force a context-recreation when passed to QOpenGLWidget,
+    // which will lead to big context problems, we pass it directly to QWidget instead!
+    case QEvent::Show:
+        return QWidget::event(event);
+
     // All other events will be passed to superclass.
     default:
-        return QWidget::event(event);
+        return QOpenGLWidget::event(event);
     }
 
     return true;

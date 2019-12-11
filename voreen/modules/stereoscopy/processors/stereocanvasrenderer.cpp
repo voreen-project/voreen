@@ -288,6 +288,10 @@ void StereoCanvasRenderer::process() {
         LERROR("StereoCanvas: Unknown StereoMode!!!");
         break;
     }
+#ifdef VRN_MODULE_HEADTRACKING
+     //head tracking
+    getTrackingUpdate();
+#endif
     LGL_ERROR;
 }
 

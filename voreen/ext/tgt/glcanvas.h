@@ -150,7 +150,6 @@ public:
     int getPhysicalHeight() const;
     Buffers getBuffers() const;
     bool isDoubleBuffered() const { return doubleBuffered_; }
-    bool isQuadBuffered() const { return quadBuffered_; }
     bool isInitialized() const { return initialized_; }
 
 protected:
