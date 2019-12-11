@@ -20,11 +20,7 @@ struct NSmallestHeap14 {
     float top() {
         return data[1];
     }
-#ifdef UNIX // This works on gcc and clang
-    void __attribute__ ((noinline)) push(float val) {
-#else
     void push(float val) {
-#endif
         if(numElements < 14) {
             numElements++;
             size_t i=numElements;
