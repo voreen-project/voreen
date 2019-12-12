@@ -150,8 +150,10 @@ RandomWalker::RandomWalker()
     conjGradImplementation_.select("blasMP");
 #endif
 #ifdef VRN_MODULE_OPENCL
-    conjGradImplementation_.addOption("blasCL", "OpenCL");
-    conjGradImplementation_.select("blasCL");
+    if(isInitializedCL()) {
+        conjGradImplementation_.addOption("blasCL", "OpenCL");
+        conjGradImplementation_.select("blasCL");
+    }
 #endif
     addProperty(conjGradImplementation_);
     preconditioner_.setGroupID("conjGrad");
@@ -195,7 +197,11 @@ Processor* RandomWalker::create() const {
 
 void RandomWalker::initialize() {
 #ifdef VRN_MODULE_OPENCL
-    cl::OpenCLProcessor<AsyncComputeProcessor>::initialize();
+    if(isInitializedCL()) {
+        cl::OpenCLProcessor<AsyncComputeProcessor>::initialize();
+    } else {
+        AsyncComputeProcessor::initialize();
+    }
 #else
     AsyncComputeProcessor::initialize();
 #endif
@@ -210,7 +216,11 @@ void RandomWalker::deinitialize() {
     lodVolumes_.clear();
 
 #ifdef VRN_MODULE_OPENCL
-    cl::OpenCLProcessor<AsyncComputeProcessor>::deinitialize();
+    if(isInitializedCL()) {
+        cl::OpenCLProcessor<AsyncComputeProcessor>::deinitialize();
+    } else {
+        AsyncComputeProcessor::deinitialize();
+    }
 #else
     AsyncComputeProcessor::deinitialize();
 #endif
