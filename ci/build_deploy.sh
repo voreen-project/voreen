@@ -33,6 +33,7 @@ build_options=(
     -DVRN_MODULE_PYTHON=OFF # Crashes voreen if local python version does not match Appimage-Version
     -DVRN_MODULE_GDCM=ON
     -DVRN_MODULE_STAGING=ON
+    -DVRN_MODULE_ULTRAMICROSCOPYDEPLOYMENT=ON
 )
 cmake "${build_options[@]}" $VRN_DIR
 
