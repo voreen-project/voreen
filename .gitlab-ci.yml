@@ -40,6 +40,9 @@ build_compatprofile:
     paths:
     - "${COMPATPROFILE_BUILD_DIR}/bin/*"
     expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 build_coreprofile:
   stage: build
@@ -49,6 +52,9 @@ build_coreprofile:
     paths:
     - "${COREPROFILE_BUILD_DIR}/bin/*"
     expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 # Daily builds
 build_default:
@@ -57,6 +63,9 @@ build_default:
     - ci/build_default.sh $(mktemp -d)
   only:
     - schedules
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 build_no_modules:
   stage: build
@@ -64,6 +73,9 @@ build_no_modules:
     - ci/build_no_modules.sh $(mktemp -d)
   only:
     - schedules
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 build_release:
   stage: build
@@ -93,6 +105,9 @@ serializertest_coreprofile:
     paths:
     - serializer-log.html
     expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 descriptiontest_coreprofile:
   stage: test
@@ -102,6 +117,9 @@ descriptiontest_coreprofile:
     paths:
     - descriptiontest-log.html
     expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 processorcreatetest_coreprofile:
   stage: test
@@ -111,6 +129,9 @@ processorcreatetest_coreprofile:
     paths:
     - processorcreatetest-log.html
     expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 processorinittest_coreprofile:
   stage: test
@@ -120,6 +141,9 @@ processorinittest_coreprofile:
     paths:
     - processorinittest-log.html
     expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 # octreetest, networkevaluatortest, processornetworktest and volumeorigintest are boost tests and need a "--"
 # before specifying application options, but only for newer boost versions...
@@ -131,6 +155,9 @@ octreetest_coreprofile:
     paths:
     - octreetest-log.html
     expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 networkevaluatortest_coreprofile:
   stage: test
@@ -140,6 +167,9 @@ networkevaluatortest_coreprofile:
     paths:
     - networkevaluatortest-log.html
     expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 processornetworktest_coreprofile:
   stage: test
@@ -149,6 +179,9 @@ processornetworktest_coreprofile:
     paths:
     - processornetworktest-log.html
     expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 volumeorigintest_coreprofile:
   stage: test
@@ -158,6 +191,9 @@ volumeorigintest_coreprofile:
     paths:
     - volumeorigintest-log.html
     expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 #only available with opencl
 #blastest_coreprofile:
@@ -169,11 +205,17 @@ valgrind_memcheck_processorcreate_coreprofile:
   stage: test
   script:
     - valgrind --leak-check=full --error-exitcode=1 --suppressions=ci/voreen.supp ${COREPROFILE_BUILD_DIR}/bin/processorcreatetest
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 valgrind_memcheck_processorinit_coreprofile:
   stage: test
   script:
     - xvfb-run --server-args="${XVFB_SERVER_ARGS}" -- valgrind --leak-check=full --error-exitcode=1 --suppressions=ci/voreen.supp ${COREPROFILE_BUILD_DIR}/bin/processorinittest
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 regressiontest_coreprofile:
   stage: test
@@ -187,6 +229,9 @@ regressiontest_coreprofile:
     reports:
       junit: regressiontest-junit.xml
     expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 regressiontest_compatprofile:
   stage: test
@@ -201,6 +246,9 @@ regressiontest_compatprofile:
     reports:
       junit: regressiontest-junit.xml
     expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 # Deployment stage
 
