@@ -1,8 +1,8 @@
 Voreen Changelog
 ----------------
 
-(UNRELEASED): Voreen 5.1.0
-----------------------
+2019-12-12: Voreen 5.1.0
+------------------------
 
     * Features:
       o Add BigDataImageProcessing module. This module provides support for various basic image prossessing procedure which can be applied to volumes which exceed the size of main memory.
