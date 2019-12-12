@@ -14,7 +14,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="VesselGraphCreator" ref="ref11" />
+                        <item type="VolumeFilterList" ref="ref26" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -70,7 +70,7 @@
                         <Property mapKey="numRefinementIterations" name="numRefinementIterations" value="100" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="saveDebugData" name="saveDebugData" value="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 6.271 sec" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="tmpStorageSizeInfo" name="tmpStorageSizeInfo" value="34.7 kB" />
@@ -753,7 +753,7 @@
                             </components>
                         </Property>
                         <Property mapKey="enabledProp" name="enabledProp" value="true" />
-                        <Property mapKey="isoValueProp" name="isoValueProp" guiName="Binarization Threshold" value="20" id="ref147" />
+                        <Property mapKey="isoValueProp" name="isoValueProp" guiName="Binarization Threshold" value="0.5" id="ref147" />
                         <Property mapKey="marchingCubesShaderProp" name="marchingCubesShaderProp">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="0" y="0" width="700" height="700" />
@@ -912,7 +912,7 @@
                             <value x="0.06666667" y="1" z="0.125490203" w="1" />
                         </Property>
                         <Property mapKey="segmentEnabled" name="segmentEnabled" value="true" />
-                        <Property mapKey="segmentList" name="segmentList" value="0" />
+                        <Property mapKey="segmentList" name="segmentList" value="" />
                         <Property mapKey="sphereDiameter" name="sphereDiameter" value="0.02" />
                         <Property mapKey="sphereSlicesStacks" name="sphereSlicesStacks" value="20" />
                     </Properties>
@@ -986,7 +986,7 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLabeling" name="applyLabeling" value="false" />
-                        <Property mapKey="binarizationThreshold" name="binarizationThreshold" value="20" id="ref146" />
+                        <Property mapKey="binarizationThreshold" name="binarizationThreshold" value="0.5" id="ref146" />
                         <Property mapKey="componentStatFilePath" name="componentStatFilePath" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -1008,7 +1008,7 @@
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" guiName="Progress (Cavity Removal)" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 290 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 194 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="writeComponentStatFile" name="writeComponentStatFile" value="false" />
@@ -1061,7 +1061,7 @@
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" guiName="Progress (Object Removal)" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 194 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 202 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="writeComponentStatFile" name="writeComponentStatFile" value="false" />
@@ -1161,7 +1161,7 @@
                         <Property mapKey="buttonHoverColor" name="buttonHoverColor">
                             <value x="0.699999988" y="0.699999988" z="0.699999988" w="1" />
                         </Property>
-                        <Property mapKey="currentView" name="currentView" value="third" />
+                        <Property mapKey="currentView" name="currentView" value="first" />
                         <Property mapKey="enableTab3" name="enableTab3" value="true" />
                         <Property mapKey="enableTab4" name="enableTab4" value="false" />
                         <Property mapKey="hideTabbar_" name="hideTabbar_" value="false" />
@@ -1180,7 +1180,7 @@
                             <value x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="voreen.fontprop" name="voreen.fontprop" fontSize="12" fontName="VeraMono.ttf" textAlignment="3" lineWidth="459">
-                            <fontColor x="0.899999976" y="0.899999976" z="0.899999976" w="1" />
+                            <fontColor x="0" y="0" z="0" w="1" />
                         </Property>
                     </Properties>
                     <Inports>
@@ -2185,20 +2185,20 @@
                 <Processor type="Canvas" name="Canvas" id="ref28">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="910" y="351" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="0" y="0" width="1406" height="1149" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="49" y="811" width="1406" height="1149" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
-                            <value x="0" y="0" />
+                            <value x="-1920" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
-                            <value x="1406" y="1149" />
+                            <value x="1501" y="1132" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-12" y="809" />
+                            <value x="49" y="811" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="1245" y="750" />
+                            <value x="1406" y="1149" />
                         </MetaItem>
                     </MetaData>
                     <Properties>
@@ -2441,7 +2441,7 @@
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="yz-plane" id="ref135" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" id="ref63" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" id="ref61" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="42" id="ref110" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="30" id="ref110" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" id="ref57" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="-1" y="-1" z="-1" />
@@ -2950,7 +2950,7 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="93" y="-594" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="Binarization_threshold" name="Binarization_threshold" value="20" id="ref145" />
+                        <Property mapKey="Binarization_threshold" name="Binarization_threshold" value="0.5" id="ref145" />
                         <Property mapKey="Binary_Median_Filter_binarizationThreshold" name="Binary_Median_Filter_binarizationThreshold" value="255" />
                         <Property mapKey="Binary_Median_Filter_extentx" name="Binary_Median_Filter_extentx" value="1" />
                         <Property mapKey="Binary_Median_Filter_extenty" name="Binary_Median_Filter_extenty" value="1" />
@@ -3166,7 +3166,7 @@
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="yz-plane" id="ref134" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="42" id="ref133" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="30" id="ref133" />
                         <Property mapKey="solidcolor" name="solidcolor" id="ref142">
                             <value x="1" y="0" z="0.015686275" w="1" />
                         </Property>
@@ -3483,7 +3483,7 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="98" y="-727" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="Binarization_threshold" name="Binarization_threshold" value="20" id="ref144" />
+                        <Property mapKey="Binarization_threshold" name="Binarization_threshold" value="0.5" id="ref144" />
                         <Property mapKey="Binary_Median_Filter_binarizationThreshold" name="Binary_Median_Filter_binarizationThreshold" value="0.5" />
                         <Property mapKey="Binary_Median_Filter_extentx" name="Binary_Median_Filter_extentx" value="1" />
                         <Property mapKey="Binary_Median_Filter_extenty" name="Binary_Median_Filter_extenty" value="1" />
@@ -3516,7 +3516,7 @@
                         <Property mapKey="Thresholding_Filter_replacementValue" name="Thresholding_Filter_replacementValue" value="0" />
                         <Property mapKey="Thresholding_Filter_thresholdValue" name="Thresholding_Filter_thresholdValue" value="0" />
                         <Property mapKey="Thresholding_Filter_thresholdingStrategyType" name="Thresholding_Filter_thresholdingStrategyType" value="lower" />
-                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="false" />
                         <Property mapKey="enabled" name="enabled" value="true" />
                         <Property mapKey="filterList" name="filterList">
                             <items>
@@ -3544,7 +3544,7 @@
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" guiName="Progress (Thresholding)" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 407 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 517 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
