@@ -83,6 +83,9 @@ build_release:
     - ci/build_release.sh $(mktemp -d)
   only:
     - schedules
+  except:
+    variables:
+      - $DEPLOY_ONLY
 
 build_deploy:
   stage: build
