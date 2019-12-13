@@ -9,6 +9,7 @@ Doxyfile
 LICENSE.txt
 LICENSE-academic.txt
 readme.txt
+logo.txt
 
 # framework
 cmake
