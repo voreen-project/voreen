@@ -188,13 +188,13 @@ void FlowParameterSet::deserialize(Deserializer& s) {
 
 
 const int FlowParameterSetEnsemble::VERSION = 1;
-const int FlowParameterSetEnsemble::FLOW_INDICATOR_ID_OFFSET = 2;
+const int FlowParameterSetEnsemble::FLOW_INDICATOR_ID_OFFSET = 3;
 const size_t FlowParameterSetEnsemble::ALL_PARAMETER_SETS = static_cast<size_t>(-1);
 
 int FlowParameterSetEnsemble::getFlowIndicatorIdOffset() {
     // TODO: The offset is determined by the number of reserved material IDs of the
-    //  simulation framework. OpenLB has an default empty (0) and fluid(1) material.
-    //  Thus, the offset is set to 2. This should be set explicitly by something like:
+    //  simulation framework. OpenLB has an default empty (0) and fluid(1) and wall (2) material.
+    //  Thus, the offset is set to 3. This should be set explicitly by something like:
     //  SimulationFramework::RESERVED_MATERIAL_IDS
     return FLOW_INDICATOR_ID_OFFSET;
 }

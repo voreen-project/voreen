@@ -149,15 +149,18 @@ void prepareGeometry(UnitConverter<T, DESCRIPTOR> const& converter, IndicatorF3D
 
         const T* center = flowIndicators[i].center_;
         const T* normal = flowIndicators[i].normal_;
-        T radius = flowIndicators[i].radius_;
+        T radius = flowIndicators[i].radius_ + converter.getConversionFactorLength();
         int id = flowIndicators[i].id_;
 
-        // Set material number for inflow
+        // Define a local disk volume.
         IndicatorCircle3D<T> flow(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
                                   normal[0], normal[1], normal[2],
                                   radius*VOREEN_LENGTH_TO_SI);
         IndicatorCylinder3D<T> layerFlow(flow, 2. * converter.getConversionFactorLength());
+
+        // Rename both, wall and fluid, since the indicator might also be inside the fluid domain.
         superGeometry.rename(MAT_WALL, id, MAT_FLUID, layerFlow);
+        superGeometry.rename(MAT_FLUID, id,  layerFlow);
     }
 
     // Removes all not needed boundary voxels outside the surface
@@ -298,11 +301,12 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 // Create shortcuts.
                 const T* center = indicator.center_;
                 const T* normal = indicator.normal_;
-                T radius = indicator.radius_;
+                T radius = indicator.radius_ + converter.getConversionFactorLength();
 
                 switch(indicator.flowProfile_) {
                 case FP_POISEUILLE:
                 {
+//                    CirclePoiseuille3D<T> profile(superGeometry, indicator.id_, maxVelocity[0]); // This is the alternative way, but how does it work?
                     CirclePoiseuille3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
                                                   normal[0], normal[1], normal[2], radius * VOREEN_LENGTH_TO_SI, maxVelocity[0]);
 
