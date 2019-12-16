@@ -1,4 +1,5 @@
 stages:
+  - pack
   - build
   - test
   - deploy
@@ -19,6 +20,8 @@ variables:
   REGRESSION_TEST_UPLOAD_URL: 'https://uni-muenster.sciebo.de/s/YdhJ4czrPsfqPL6'
   #REGRESSION_TEST_UPLOAD_PASSWORD: configured in gitlab
   XVFB_SERVER_ARGS: -screen 0 640x480x24
+  SNAPSHOT_NAME_UNIX: voreen-src-unix-nightly
+  SNAPSHOT_NAME_WIN: voreen-src-win32-nightly
 
 before_script:
   - export LIBGL_ALWAYS_SOFTWARE="true"
@@ -31,6 +34,51 @@ before_script:
   - export IDENTIFIER_COMPATPROFILE=${IDENTIFIER}--compatibilityprofile
   - export CMAKE_PREFIX_PATH="/usr/local/Qt-5.12.4/lib/cmake/" # Find Qt cmake scripts in docker image
   - export PATH="/usr/local/Qt-5.12.4/bin:$PATH"               # Find qmake in docker image
+
+# Pack stack
+
+src_snapshot_unix:
+  stage: pack
+  only:
+    - schedules
+  script:
+    - cd ${TOOLS_DIR}/.. # Apparently make-snapshot.sh requires us to be exactly here
+    - tools/snapshot/make-snapshot.sh unix ${SNAPSHOT_NAME_UNIX} --force
+  artifacts:
+    paths:
+    - "voreen/$SNAPSHOT_NAME_UNIX.tar.gz"
+    expire_in: 1 day
+
+src_snapshot_win32:
+  stage: pack
+  only:
+    - schedules
+  script:
+    - cd ${TOOLS_DIR}/.. # Apparently make-snapshot.sh requires us to be exactly here
+    - tools/snapshot/make-snapshot.sh win32 ${SNAPSHOT_NAME_WIN} --force
+  artifacts:
+    paths:
+    - "voreen/$SNAPSHOT_NAME_WIN.zip"
+    expire_in: 1 day
+
+# Build stage
+
+build_deploy: #Builds from source snapshot!
+  stage: build
+  script:
+    - export SRC_DIR=$(mktemp -d)
+    - export BUILD_DIR=$(realpath $(mktemp -d))
+    - tar -xf "voreen/$SNAPSHOT_NAME_UNIX.tar.gz" --directory $SRC_DIR
+    - ls $SRC_DIR
+    - ls $SRC_DIR/$SNAPSHOT_NAME_UNIX
+    - ci/build_deploy.sh $BUILD_DIR $DEPLOY_INSTALL_DIR $SRC_DIR/$SNAPSHOT_NAME_UNIX
+    - ${TOOLS_DIR}/snapshot/deployment-linux/linuxdeployment.sh ${DEPLOY_INSTALL_DIR} ${TOOLS_DIR}/snapshot/deployment-linux/
+  artifacts:
+    paths:
+    - "${DEPLOY_INSTALL_DIR}/VoreenVE.tar.gz"
+    expire_in: 1 day
+    only:
+    - schedules
 
 build_compatprofile:
   stage: build
@@ -56,7 +104,6 @@ build_coreprofile:
     variables:
       - $DEPLOY_ONLY
 
-# Daily builds
 build_default:
   stage: build
   script:
@@ -87,19 +134,12 @@ build_release:
     variables:
       - $DEPLOY_ONLY
 
-build_deploy:
-  stage: build
+dummy:
+  stage: test
   script:
-    - export BUILD_DIR=$(mktemp -d)
-    - ci/build_deploy.sh $BUILD_DIR $DEPLOY_INSTALL_DIR
-  artifacts:
-    paths:
-    - "${DEPLOY_INSTALL_DIR}/VoreenVE.tar.gz"
-    expire_in: 1 day
-  only:
-    - schedules
+    - "true"
 
-# Tests
+# Test Stage
 serializertest_coreprofile:
   stage: test
   script:
@@ -253,32 +293,27 @@ regressiontest_compatprofile:
     variables:
       - $DEPLOY_ONLY
 
-# Deployment stage
-
-src_snapshot_unix:
+# Deployment stage: Upload results to sciebo
+deploy_src_unix:
   stage: deploy
-  only:
-    - schedules
+  #only:
+  #  - schedules
   script:
-    - export SNAPSHOT_NAME=voreen-src-unix-nightly
-    - cd ${TOOLS_DIR}/.. # Apparently make-snapshot.sh requires us to be exactly here
-    - tools/snapshot/make-snapshot.sh unix ${SNAPSHOT_NAME} --force
-    - tools/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME}.tar.gz voreen-src-unix-nightly.tar.gz
+    - export SNAPSHOT_NAME="voreen/$SNAPSHOT_NAME_UNIX.tar.gz"
+    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME} voreen-src-unix-nightly.tar.gz
 
-src_snapshot_win32:
+deploy_src_win:
   stage: deploy
-  only:
-    - schedules
+  #only:
+  #  - schedules
   script:
-    - export SNAPSHOT_NAME=voreen-src-win32-nightly
-    - cd ${TOOLS_DIR}/.. # Apparently make-snapshot.sh requires us to be exactly here
-    - tools/snapshot/make-snapshot.sh win32 ${SNAPSHOT_NAME} --force
-    - tools/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME}.zip voreen-src-win32-nightly.zip
+    - export SNAPSHOT_NAME="voreen/$SNAPSHOT_NAME_WIN.zip"
+    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME}.zip voreen-src-win32-nightly.zip
 
 appimage:
   stage: deploy
-  only:
-    - schedules
+  #only:
+  #  - schedules
   script:
     - ls ${DEPLOY_INSTALL_DIR}
     - export DEPLOY_FILE=${DEPLOY_INSTALL_DIR}/VoreenVE.tar.gz

@@ -10,9 +10,9 @@
 ######################################################################
 
 # Configuration
-INSTALL_DIR=$1
-TOOLS_DIR=$2
-DEPLOYMENT_TOOL="linuxdeployqt-continuous-x86_64.AppImage"
+INSTALL_DIR=$(realpath $1)
+TOOLS_DIR=$(realpath $2)
+DEPLOYMENT_TOOL="$TOOLS_DIR/linuxdeployqt-continuous-x86_64.AppImage"
 DEPLOY_DIR="VoreenVE"
 
 # Prepare deployment
@@ -41,7 +41,7 @@ echo "* ---------------------------------------------------"
 echo "*  Executing deployment tool ...                     "
 echo "* ---------------------------------------------------"
 # To run inside docker, we need to extract the appimage manually first
-./$DEPLOYMENT_TOOL --appimage-extract
+$DEPLOYMENT_TOOL --appimage-extract
 # The arch sometimes fails to detect. We are not planning to distribute binaries for other arches anyway
 ARCH="x86_64" squashfs-root/AppRun ./tmp/usr/share/applications/voreenve.desktop -appimage -bundle-non-qt-libs -extra-plugins=iconengines/libqsvgicon.so
 # remove the folder where the appimage was extracted to

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VRN_DIR=$(pwd)/voreen
+VRN_DIR=$(realpath $3)
 
 INSTALL_DIR=$(realpath $2)
 rm -rf $INSTALL_DIR
