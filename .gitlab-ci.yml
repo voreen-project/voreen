@@ -35,7 +35,9 @@ before_script:
   - export CMAKE_PREFIX_PATH="/usr/local/Qt-5.12.4/lib/cmake/" # Find Qt cmake scripts in docker image
   - export PATH="/usr/local/Qt-5.12.4/bin:$PATH"               # Find qmake in docker image
 
+######################################################################
 # Pack stack
+######################################################################
 
 src_snapshot_unix:
   stage: pack
@@ -61,8 +63,9 @@ src_snapshot_win32:
     - "voreen/$SNAPSHOT_NAME_WIN.zip"
     expire_in: 1 day
 
+######################################################################
 # Build stage
-
+######################################################################
 build_deploy: #Builds from source snapshot!
   stage: build
   script:
@@ -77,8 +80,8 @@ build_deploy: #Builds from source snapshot!
     paths:
     - "${DEPLOY_INSTALL_DIR}/VoreenVE.tar.gz"
     expire_in: 1 day
-    only:
-    - schedules
+  only:
+  - schedules
 
 build_compatprofile:
   stage: build
@@ -134,12 +137,9 @@ build_release:
     variables:
       - $DEPLOY_ONLY
 
-dummy:
-  stage: test
-  script:
-    - "true"
-
+######################################################################
 # Test Stage
+######################################################################
 serializertest_coreprofile:
   stage: test
   script:
@@ -293,27 +293,29 @@ regressiontest_compatprofile:
     variables:
       - $DEPLOY_ONLY
 
-# Deployment stage: Upload results to sciebo
+######################################################################
+# Deployment Stage: Upload results to sciebo
+######################################################################
 deploy_src_unix:
   stage: deploy
-  #only:
-  #  - schedules
+  only:
+    - schedules
   script:
     - export SNAPSHOT_NAME="voreen/$SNAPSHOT_NAME_UNIX.tar.gz"
     - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME} voreen-src-unix-nightly.tar.gz
 
 deploy_src_win:
   stage: deploy
-  #only:
-  #  - schedules
+  only:
+    - schedules
   script:
     - export SNAPSHOT_NAME="voreen/$SNAPSHOT_NAME_WIN.zip"
     - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME}.zip voreen-src-win32-nightly.zip
 
 appimage:
   stage: deploy
-  #only:
-  #  - schedules
+  only:
+    - schedules
   script:
     - ls ${DEPLOY_INSTALL_DIR}
     - export DEPLOY_FILE=${DEPLOY_INSTALL_DIR}/VoreenVE.tar.gz
