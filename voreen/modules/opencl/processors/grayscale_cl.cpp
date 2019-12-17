@@ -69,6 +69,8 @@ void GrayscaleCL::process() {
     if (prog_) {
         Kernel* k = prog_->getKernel("gr");
         if(k) {
+            const bool sharing = OpenCLModule::getInstance()->getGLSharing();
+
             cl::Context* context = OpenCLModule::getInstance()->getCLContext();
             cl::CommandQueue* commandQueue = OpenCLModule::getInstance()->getCLCommandQueue();
             tgtAssert(context, "No OpenCL context");
@@ -76,23 +78,36 @@ void GrayscaleCL::process() {
 
             glFinish();
 
-            SharedTexture in(context, CL_MEM_READ_ONLY, inport_.getColorTexture());
-            SharedTexture out(context, CL_MEM_WRITE_ONLY, outport_.getColorTexture());
+            std::unique_ptr<cl::MemoryObject> in;
+            std::unique_ptr<cl::MemoryObject> out;
+            if(sharing) {
+                in.reset(new SharedTexture(context, CL_MEM_READ_ONLY, inport_.getColorTexture()));
+                out.reset(new SharedTexture(context, CL_MEM_WRITE_ONLY, outport_.getColorTexture()));
+            } else {
+                in.reset(new cl::ImageObject2D(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, inport_.getColorTexture()));
+                out.reset(new cl::ImageObject2D(context, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR, outport_.getColorTexture()));
+            }
 
-            k->setArg(0, in);
-            k->setArg(1, out);
+            k->setArg(0, in.get());
+            k->setArg(1, out.get());
             k->setArg(2, saturation_.get());
 
-            commandQueue->enqueueAcquireGLObject(&in);
-            commandQueue->enqueueAcquireGLObject(&out);
-            Event e;
-            commandQueue->enqueue(k, inport_.getSize(), &e);
-            commandQueue->enqueueReleaseGLObject(&in);
-            commandQueue->enqueueReleaseGLObject(&out);
+            if(sharing) {
+                commandQueue->enqueueAcquireGLObject(in.get());
+                commandQueue->enqueueAcquireGLObject(out.get());
+            }
+            commandQueue->enqueue(k, inport_.getSize());
+            if(sharing) {
+                commandQueue->enqueueReleaseGLObject(in.get());
+                commandQueue->enqueueReleaseGLObject(out.get());
+            } else {
+                cl::ImageObject2D* outPtr = dynamic_cast<cl::ImageObject2D*>(out.get());
+                tgtAssert(outPtr, "Expected image ImageObject2D");
+                commandQueue->enqueueReadImage(*outPtr, outport_.getColorTexture(), true);
+                outport_.getColorTexture()->uploadTexture();
+            }
 
-            e.wait();
             commandQueue->finish();
-            e.releaseEvent();
 
             outport_.validateResult();
             outport_.invalidatePort();
