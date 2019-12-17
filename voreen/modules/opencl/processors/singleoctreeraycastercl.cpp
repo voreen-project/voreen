@@ -1674,6 +1674,8 @@ void SingleOctreeRaycasterCL::renderFrame(DisplayMode displayMode, const VolumeB
     } else {
         // entry/exit points
         LDEBUG("Binding entry/exit point textures");
+        entryPointsInport_.getColorTexture()->downloadTexture();
+        exitPointsInport_.getColorTexture()->downloadTexture();
         entryTex.reset(new cl::ImageObject2D(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, entryPointsInport_.getColorTexture()));
         exitTex.reset(new cl::ImageObject2D(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, exitPointsInport_.getColorTexture()));
 
