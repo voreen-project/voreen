@@ -84,6 +84,7 @@ void GrayscaleCL::process() {
                 in.reset(new SharedTexture(context, CL_MEM_READ_ONLY, inport_.getColorTexture()));
                 out.reset(new SharedTexture(context, CL_MEM_WRITE_ONLY, outport_.getColorTexture()));
             } else {
+                inport_.getColorTexture()->downloadTexture();
                 in.reset(new cl::ImageObject2D(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, inport_.getColorTexture()));
                 out.reset(new cl::ImageObject2D(context, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR, outport_.getColorTexture()));
             }
