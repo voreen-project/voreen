@@ -150,10 +150,8 @@ RandomWalker::RandomWalker()
     conjGradImplementation_.select("blasMP");
 #endif
 #ifdef VRN_MODULE_OPENCL
-    if(isInitializedCL()) {
-        conjGradImplementation_.addOption("blasCL", "OpenCL");
-        conjGradImplementation_.select("blasCL");
-    }
+    conjGradImplementation_.addOption("blasCL", "OpenCL");
+    conjGradImplementation_.select("blasCL");
 #endif
     addProperty(conjGradImplementation_);
     preconditioner_.setGroupID("conjGrad");
@@ -197,9 +195,10 @@ Processor* RandomWalker::create() const {
 
 void RandomWalker::initialize() {
 #ifdef VRN_MODULE_OPENCL
-    if(isInitializedCL()) {
+    if(OpenCLModule::getInstance()->isInitialized()) {
         cl::OpenCLProcessor<AsyncComputeProcessor>::initialize();
     } else {
+        conjGradImplementation_.removeOption("blasCL");
         AsyncComputeProcessor::initialize();
     }
 #else
@@ -216,7 +215,7 @@ void RandomWalker::deinitialize() {
     lodVolumes_.clear();
 
 #ifdef VRN_MODULE_OPENCL
-    if(isInitializedCL()) {
+    if(OpenCLModule::getInstance()->isInitialized()) {
         cl::OpenCLProcessor<AsyncComputeProcessor>::deinitialize();
     } else {
         AsyncComputeProcessor::deinitialize();
@@ -255,6 +254,7 @@ bool RandomWalker::isReady() const {
 
 RandomWalker::ComputeInput RandomWalker::prepareComputeInput() {
     edgeWeightTransFunc_.setVolume(inportVolume_.getData());
+
 
     tgtAssert(inportVolume_.hasData(), "no input volume");
 
