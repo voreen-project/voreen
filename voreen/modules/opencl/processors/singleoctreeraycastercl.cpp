@@ -911,7 +911,7 @@ void SingleOctreeRaycasterCL::afterProcess() {
         processedInInteraction_ = true;
 
     // refinement not finished
-    if (renderState_ < RENDER_STATE_FINISHED) {
+    if (renderState_ < RENDER_STATE_FINISHED && openclKernel_.getProgram()) {
         invalidate();
         renderOutport_.invalidatePort();
     }
@@ -1637,6 +1637,7 @@ void SingleOctreeRaycasterCL::renderFrame(DisplayMode displayMode, const VolumeB
     tgtAssert(rayBufferDim_ == tgt::svec2(internalRenderPort_.getSize()), "invalid ray buffer size");
 
     const uint32_t coarsenessFactor = tgt::iround((float)renderOutport_.getSize().x / (float)internalRenderPort_.getSize().x);
+    const bool sharing = OpenCLModule::getInstance()->getGLSharing();
 
     // retrieve CL kernel
     cl::Program* clProgram = openclKernel_.getProgram(displayMode);
@@ -1655,15 +1656,32 @@ void SingleOctreeRaycasterCL::renderFrame(DisplayMode displayMode, const VolumeB
     tgtAssert(context, "No OpenCL context");
     tgtAssert(commandQueue, "No OpenCL command queue");
 
-    // entry/exit points
-    LDEBUG("Binding entry/exit point textures");
-    cl::SharedTexture entryTex(context, CL_MEM_READ_ONLY, entryPointsInport_.getColorTexture());
-    cl::SharedTexture exitTex(context, CL_MEM_READ_ONLY, exitPointsInport_.getColorTexture());
+    std::unique_ptr<cl::MemoryObject> entryTex;
+    std::unique_ptr<cl::MemoryObject> exitTex;
 
-    // output texture
-    LDEBUG("Binding output textures");
-    cl::SharedTexture outTex(context, CL_MEM_WRITE_ONLY, internalRenderPort_.getColorTexture());
-    cl::SharedTexture outTexDepth(context, CL_MEM_WRITE_ONLY, internalRenderPortDepth_.getColorTexture());
+    std::unique_ptr<cl::MemoryObject> outTex;
+    std::unique_ptr<cl::MemoryObject> outTexDepth;
+    if(sharing) {
+        // entry/exit points
+        LDEBUG("Binding entry/exit point textures");
+        entryTex.reset(new cl::SharedTexture(context, CL_MEM_READ_ONLY, entryPointsInport_.getColorTexture()));
+        exitTex.reset(new cl::SharedTexture(context, CL_MEM_READ_ONLY, exitPointsInport_.getColorTexture()));
+
+        // output texture
+        LDEBUG("Binding output textures");
+        outTex.reset(new cl::SharedTexture(context, CL_MEM_WRITE_ONLY, internalRenderPort_.getColorTexture()));
+        outTexDepth.reset(new cl::SharedTexture(context, CL_MEM_WRITE_ONLY, internalRenderPortDepth_.getColorTexture()));
+    } else {
+        // entry/exit points
+        LDEBUG("Binding entry/exit point textures");
+        entryTex.reset(new cl::ImageObject2D(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, entryPointsInport_.getColorTexture()));
+        exitTex.reset(new cl::ImageObject2D(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, exitPointsInport_.getColorTexture()));
+
+        // output texture
+        LDEBUG("Binding output textures");
+        outTex.reset(new cl::ImageObject2D(context, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR, internalRenderPort_.getColorTexture()));
+        outTexDepth.reset(new cl::ImageObject2D(context, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR, internalRenderPortDepth_.getColorTexture()));
+    }
 
     // transfer function
     tgtAssert(transfuncTexture_ && transfuncTextureCL_, "no transfunc tex");
@@ -1680,8 +1698,9 @@ void SingleOctreeRaycasterCL::renderFrame(DisplayMode displayMode, const VolumeB
 
     // configure kernel
     cl_uint paramID = 0;
-    renderKernel->setArg(paramID++, entryTex);
-    renderKernel->setArg(paramID++, exitTex);
+    // entry/exit textures already set above...
+    renderKernel->setArg(paramID++, entryTex.get());
+    renderKernel->setArg(paramID++, exitTex.get());
     renderKernel->setArg(paramID++, internalRenderPort_.getSize());
     renderKernel->setArg(paramID++, coarsenessFactor);
 
@@ -1698,8 +1717,8 @@ void SingleOctreeRaycasterCL::renderFrame(DisplayMode displayMode, const VolumeB
     renderKernel->setArg(paramID++, transfuncTextureCL_);
     renderKernel->setArg(paramID++, 4*sizeof(tgt::vec2), &transFuncDomains);
 
-    renderKernel->setArg(paramID++, outTex);
-    renderKernel->setArg(paramID++, outTexDepth);
+    renderKernel->setArg(paramID++, outTex.get());
+    renderKernel->setArg(paramID++, outTexDepth.get());
 
     renderKernel->setArg(paramID++, rayBufferCL_);
     renderKernel->setArg(paramID++, static_cast<uint32_t>(renderState_ == RENDER_STATE_FIRST_ITERATIVE_FRAME));
@@ -1718,15 +1737,28 @@ void SingleOctreeRaycasterCL::renderFrame(DisplayMode displayMode, const VolumeB
     globalWorkSize.y = tgt::iceil(internalRenderPort_.getSize().y / (float)RENDER_WORKGROUP_SIZE.y) * RENDER_WORKGROUP_SIZE.y;
 
     // execute kernel
-    commandQueue->enqueueAcquireGLObject(&entryTex);
-    commandQueue->enqueueAcquireGLObject(&exitTex);
-    commandQueue->enqueueAcquireGLObject(&outTex);
-    commandQueue->enqueueAcquireGLObject(&outTexDepth);
+    if(sharing) {
+        commandQueue->enqueueAcquireGLObject(entryTex.get());
+        commandQueue->enqueueAcquireGLObject(exitTex.get());
+        commandQueue->enqueueAcquireGLObject(outTex.get());
+        commandQueue->enqueueAcquireGLObject(outTexDepth.get());
+    }
     commandQueue->enqueue(renderKernel, globalWorkSize, RENDER_WORKGROUP_SIZE);
-    commandQueue->enqueueReleaseGLObject(&entryTex);
-    commandQueue->enqueueReleaseGLObject(&exitTex);
-    commandQueue->enqueueReleaseGLObject(&outTex);
-    commandQueue->enqueueReleaseGLObject(&outTexDepth);
+    if(sharing) {
+        commandQueue->enqueueReleaseGLObject(entryTex.get());
+        commandQueue->enqueueReleaseGLObject(exitTex.get());
+        commandQueue->enqueueReleaseGLObject(outTex.get());
+        commandQueue->enqueueReleaseGLObject(outTexDepth.get());
+    } else {
+        cl::ImageObject2D* outTexPtr = dynamic_cast<cl::ImageObject2D*>(outTex.get());
+        cl::ImageObject2D* outTexDepthPtr = dynamic_cast<cl::ImageObject2D*>(outTexDepth.get());
+        tgtAssert(outTexPtr, "Expected image ImageObject2D");
+        tgtAssert(outTexDepthPtr, "Expected image ImageObject2D");
+        commandQueue->enqueueReadImage(*outTexPtr, internalRenderPort_.getColorTexture(), false);
+        commandQueue->enqueueReadImage(*outTexDepthPtr, internalRenderPortDepth_.getColorTexture(), true);
+        internalRenderPort_.getColorTexture()->uploadTexture();
+        internalRenderPortDepth_.getColorTexture()->uploadTexture();
+    }
 
     // read back flag buffer
     commandQueue->enqueueReadBuffer(brickFlagBufferCL_, brickFlagBuffer_, true);
