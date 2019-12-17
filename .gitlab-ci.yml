@@ -310,7 +310,7 @@ deploy_src_win:
     - schedules
   script:
     - export SNAPSHOT_NAME="voreen/$SNAPSHOT_NAME_WIN.zip"
-    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME}.zip voreen-src-win32-nightly.zip
+    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME} voreen-src-win32-nightly.zip
 
 appimage:
   stage: deploy
