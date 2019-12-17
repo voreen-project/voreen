@@ -1450,7 +1450,14 @@ ImageObject2D::ImageObject2D(const Context *context,
                              tgt::Texture *tex)
     : MemoryObject()
 {
-    if (!tex || !tex->getCpuTextureData()) {
+    if (!tex) {
+        LERRORC("voreen.OpenCL.ImageObject2D", "tex is not a valid texture");
+        return ;
+    }
+    if (!tex->getCpuTextureData()) {
+      tex->downloadTexture();
+    }
+    if (!tex->getCpuTextureData()) {
         LERRORC("voreen.OpenCL.ImageObject2D", "tex is not a valid texture");
         return ;
     }
@@ -1485,8 +1492,14 @@ ImageObject2D::ImageObject2D(const Context *context,
         break;
     }
 
-    // FIXME what about RGBA and so on? FL
     switch(texFormat) {
+    case GL_RGBA:
+        image_format.image_channel_order = CL_RGBA;
+        break;
+    case GL_RGB:
+        image_format.image_channel_order = CL_RGB;
+        break;
+    case GL_DEPTH_COMPONENT:
     case GL_ALPHA:
 #ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
     case GL_LUMINANCE:
