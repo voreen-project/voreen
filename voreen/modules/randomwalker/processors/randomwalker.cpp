@@ -195,7 +195,7 @@ Processor* RandomWalker::create() const {
 
 void RandomWalker::initialize() {
 #ifdef VRN_MODULE_OPENCL
-    if(OpenCLModule::getInstance()->isInitialized()) {
+    if(OpenCLModule::getInstance()->getCLDevice().getId() != 0) {
         cl::OpenCLProcessor<AsyncComputeProcessor>::initialize();
     } else {
         conjGradImplementation_.removeOption("blasCL");
@@ -215,7 +215,7 @@ void RandomWalker::deinitialize() {
     lodVolumes_.clear();
 
 #ifdef VRN_MODULE_OPENCL
-    if(OpenCLModule::getInstance()->isInitialized()) {
+    if(OpenCLModule::getInstance()->getCLDevice().getId() != 0) {
         cl::OpenCLProcessor<AsyncComputeProcessor>::deinitialize();
     } else {
         AsyncComputeProcessor::deinitialize();
