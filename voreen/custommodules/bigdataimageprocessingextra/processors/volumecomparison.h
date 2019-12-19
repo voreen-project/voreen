@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_SEGMENTATIONQUANTIFICATION_H
-#define VRN_SEGMENTATIONQUANTIFICATION_H
+#ifndef VRN_VOLUMECOMPARISON_H
+#define VRN_VOLUMECOMPARISON_H
 
 #include "voreen/core/processors/processor.h"
 
@@ -42,15 +42,27 @@
 namespace voreen {
 
 /**
- * Allows the quantification of the volume of a single (binary) segmentation or the quantification of two segmentationi volumes (including the density of one within the other). 
+ * Allows the quantification of the volume of a single (binary) segmentation or the quantification of two segmentationi volumes (including the density of one within the other).
  */
-class VRN_CORE_API SegmentationQuantification : public Processor {
+class VRN_CORE_API VolumeComparison : public Processor {
 
 public:
-    SegmentationQuantification();
+
+    struct ScanSummary {
+        ScanSummary();
+
+        size_t numForegroundOnlyOne_;
+        size_t numForegroundOnlyTwo_;
+        size_t numForegroundBoth_;
+        size_t numBackgroundBoth_;
+
+        size_t totalNumberOfVoxels() const;
+    };
+
+    VolumeComparison();
     virtual Processor* create() const;
 
-    virtual std::string getClassName() const { return "SegmentationQuantification";     }
+    virtual std::string getClassName() const { return "VolumeComparison";     }
     virtual std::string getCategory() const  { return "Quantification";         }
     virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL;  }
 
@@ -63,10 +75,9 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        // TODO: document supported volume types and how to deal with non-binary volumes
         setDescription("Quantifies the volume of one or two segmentation (i.e., binary) volumes. If two volumes are given as input, the amount of overlap is also computed. \
                 The result can be exported to a CSV file. <br> \
-                <b> Caution: <\\b> The processor only supports float and unsigned integer (i.e., unsigned 8-bit, 16-bit, or 32-bit) volumes. For an unsigned integer volume, 0 is interpreted as background, and every value not equal to 0 as foreground. A float volume is interpreted as a probability volume, i.e., values < 0.5 are interpreted as background, and values >= 0.5 are interpreted as foreground.<br><br> \
+                <b> Caution: <\\b> For segmentation analysis, the processor assumes any value different from 0 to be a foreground voxel and treats only voxels exactly equal to zero as background.<br><br> \
                 For two input volumes, the dimensions and data type have to be the same. The processor only allows single-channel volumes.");
     }
 
@@ -90,10 +101,7 @@ protected:
     ButtonProperty saveToCsv_;
 
     // quantification results
-    size_t numVoxelsTotal_;
-    size_t numVoxelsInOne_;
-    size_t numVoxelsInTwo_;
-    size_t numVoxelsInBoth_;
+    ScanSummary lastSummary_;
 
     /// plotting port for quantification results
     //PlotPort quantificationPlot_;
@@ -109,56 +117,7 @@ private:
 
     void adjustToInputVolumes();
 
-    template<typename T>
-    bool genericQuantification(const VolumeRAM* slice1, const VolumeRAM* slice2, size_t& numVoxelsTotal, size_t& numVoxelsInOne, size_t& numVoxelsInTwo, size_t& numVoxelsInBoth, tgt::svec3 llf, tgt::svec3 urb) {
-
-        const VolumeAtomic<T>* genericSlice1 = 0;
-        const VolumeAtomic<T>* genericSlice2 = 0;
-
-        // try to cast to generic type
-        if (slice1) {
-            genericSlice1 = dynamic_cast<const VolumeAtomic<T>*>(slice1);
-            if (!genericSlice1)
-                return false;
-        }
-
-        if (slice2) {
-            genericSlice2 = dynamic_cast<const VolumeAtomic<T>*>(slice2);
-            if (!genericSlice2)
-                return false;
-        }
-
-        for (size_t y = llf.y; y <= urb.y; ++y) {
-            for (size_t x = llf.x; x <= urb.x; ++x) {
-                
-                T voxel1 = 0;
-                T voxel2 = 0;
-                if (genericSlice1)
-                    voxel1 = genericSlice1->voxel(x,y,0);
-                if (genericSlice2)
-                    voxel2 = genericSlice2->voxel(x,y,0);
-
-                numVoxelsTotal++;
-
-                if (voxel1 != 0) 
-                    numVoxelsInOne++;
-                
-                if (voxel2 != 0)
-                    numVoxelsInTwo++;
-
-                if (voxel1 != 0 && voxel2 != 0)
-                    numVoxelsInBoth++;
-            }
-        }
-
-        return true;
-    }
-
 };
-
-
-template<>
-bool SegmentationQuantification::genericQuantification<float>(const VolumeRAM* slice1, const VolumeRAM* slice2, size_t& numVoxelsTotal, size_t& numVoxelsInOne, size_t& numVoxelsInTwo, size_t& numVoxelsInBoth, tgt::svec3 llf, tgt::svec3 urb);
 
 } // namespace
 

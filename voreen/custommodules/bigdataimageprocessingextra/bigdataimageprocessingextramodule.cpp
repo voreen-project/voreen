@@ -27,10 +27,10 @@
 
 #include "processors/binarymedian.h"
 #include "processors/fatcellquantification.h"
-#include "processors/segmentationquantification.h"
 #include "processors/segmentationslicedensity.h"
 #include "processors/volumebricksave.h"
 #include "processors/volumebricksource.h"
+#include "processors/volumecomparison.h"
 
 namespace voreen {
 
@@ -42,11 +42,10 @@ BigDataImageProcessingExtraModule::BigDataImageProcessingExtraModule(const std::
 
     registerProcessor(new BinaryMedian());
     registerProcessor(new FatCellQuantification());
-    registerProcessor(new SegmentationQuantification());
     registerProcessor(new SegmentationSliceDensity());
-
-    registerProcessor(new VolumeBrickSource());
     registerProcessor(new VolumeBrickSave());
+    registerProcessor(new VolumeBrickSource());
+    registerProcessor(new VolumeComparison());
 }
 
 } // namespace
