@@ -113,7 +113,7 @@ RUN mkdir -p /build/ \
     && cd pocl-1.4/ \
     && mkdir build \
     && cd build/ \
-    && cmake -DCMAKE_BUILD_TYPE=Release .. \
+    && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib .. \
     && make \
     && make install \
     && rm -rf /build/
