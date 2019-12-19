@@ -1,6 +1,12 @@
 Voreen Changelog
 ----------------
 
+(UNRELEASED): Voreen 5.1.1
+------------------------
+
+    * Bug Fixes/Minor Changes:
+      o Fix initialization of opencl solver for RandomWalker processor
+
 2019-12-12: Voreen 5.1.0
 ------------------------
 
