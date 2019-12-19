@@ -45,7 +45,7 @@ OpenCLModule::OpenCLModule(const std::string& modulePath)
     , opencl_(nullptr)
     , context_(nullptr)
     , queue_(nullptr)
-    , glSharing_("sharingProp", "GL Sharing", true)
+    , glSharing_("sharingProp", "GL Sharing", false)
     , deviceProp_("deviceProp", "Device:", Processor::INVALID_RESULT, true)
     , currentDeviceIdx_(-1)
 {
