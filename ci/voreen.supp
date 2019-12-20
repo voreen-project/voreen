@@ -84,3 +84,18 @@
    fun:driswCreateDrawable
    ...
 }
+
+{
+   pocl_leak
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/libpocl.so.2.4.0
+   ...
+}
+{
+   pocl_llvm_leak
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-6.0.so.1
+   ...
+}
