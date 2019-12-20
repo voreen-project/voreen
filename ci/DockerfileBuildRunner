@@ -106,6 +106,10 @@ RUN mkdir -p /build/ \
     && cd /\
     && rm -rf /build/
 
+# "core2" is required here because the ci runs on a very old cpu.
+# If we don't specify the architecture, more modern instructions (e.g., sse4, avx instructions)
+# will be used and tests to be aborted with a SIGILL.
+# So much for the portability of docker containers!
 RUN mkdir -p /build/ \
     && cd /build \
     && curl -L "https://github.com/pocl/pocl/archive/v1.4.tar.gz" -o v1.4.tar.gz \
@@ -113,7 +117,14 @@ RUN mkdir -p /build/ \
     && cd pocl-1.4/ \
     && mkdir build \
     && cd build/ \
-    && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib .. \
+    && cmake \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_INSTALL_LIBDIR=lib \
+        -DCMAKE_CXX_FLAGS="-march=core2" \
+        -DCMAKE_C_FLAGS="-march=core2" \
+        -DLLC_HOST_CPU="core2" \
+        .. \
     && make \
     && make install \
     && rm -rf /build/
