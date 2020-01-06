@@ -105,6 +105,9 @@ void genericQuantification(const VolumeRAM* slice1, const VolumeRAM* slice2, Vol
     genericSlice2 = dynamic_cast<const VolumeAtomic<T>*>(slice2);
     tgtAssert(genericSlice2, "Failed dynamic_cast");
 
+    size_t channels = genericSlice1->getNumChannels();
+    tgtAssert(genericSlice2->getNumChannels() == channels, "Number of channel mismatch");
+
     for (size_t y = llf.y; y <= urb.y; ++y) {
         for (size_t x = llf.x; x <= urb.x; ++x) {
 
@@ -126,6 +129,15 @@ void genericQuantification(const VolumeRAM* slice1, const VolumeRAM* slice2, Vol
                 summary.numForegroundOnlyOne_++;
             if (!foregroundOne && !foregroundTwo)
                 summary.numBackgroundBoth_++;
+
+            for(size_t c = 0; c < channels; ++c) {
+                float v1 = genericSlice1->getVoxelNormalized(x, y, 0, c);
+                float v2 = genericSlice2->getVoxelNormalized(x, y, 0, c);
+
+                float diff = std::abs(v1 - v2);
+                summary.sumOfVoxelDiffsSquared_ += diff*diff;
+                summary.sumOfVoxelDiffsAbs_ += diff;
+            }
         }
     }
 }
@@ -282,6 +294,8 @@ VolumeComparison::ScanSummary::ScanSummary()
     , numForegroundOnlyOne_(0)
     , numForegroundOnlyTwo_(0)
     , numBackgroundBoth_(0)
+    , sumOfVoxelDiffsSquared_(0.0f)
+    , sumOfVoxelDiffsAbs_(0.0f)
 {
 }
 

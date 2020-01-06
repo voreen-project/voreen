@@ -878,16 +878,27 @@ void simplifyPath(std::deque<tgt::vec2>& input, float max_line_dist) {
 }
 
 static void initBrightWall(const LabelProjection& proj, ProjectionLabels& labels, float max_line_dist) {
-    const auto& orig = proj.projection();
-    tgt::ivec3 idim = orig.getDimensions();
-    VolumeAtomic<float> values(tgt::svec3(idim.y, idim.x, idim.z));
+    const auto& source = proj.projection();
+    tgt::ivec3 idim = source.getDimensions();
+    VolumeAtomic<float> original(tgt::svec3(idim.y, idim.x, idim.z));
+
+    // Idea:
+    // - find first possible run (possible wall) first
+    // - clear around first run
+    // - find second run
+    //
+    // In order to avoid crossing of runs:
+    // - divide at center of initial lines
+    // - find first wall in upper half
+    // - find second wall in lower half
+    // - find inner as center of both
 
     float sum = 0.0;
 
     //Transpose for path search
     for(int y=0; y < idim.y; ++y) {
         for(int x=0; x < idim.x; ++x) {
-            tgt::vec2 p = orig.voxel(x, y, 0);
+            tgt::vec2 p = source.voxel(x, y, 0);
 
             float val;
             if(p.y > 0.0) {
@@ -896,18 +907,20 @@ static void initBrightWall(const LabelProjection& proj, ProjectionLabels& labels
                 val = 0.0;
             }
             sum += val;
-            values.voxel(y, x, 0) = val;
+            original.voxel(y, x, 0) = val;
         }
     }
     float mean = sum / (idim.x * idim.y);
 
-    auto first_path = maxPath(values);
+    auto first_path = maxPath(original);
+
     // Clear values around first path in order to find second maximum path
+    VolumeAtomic<float> masked(original.copy());
     for(int x=0; x < first_path.size(); ++x) {
         int y = first_path[x];
-        values.voxel(y, x, 0) = mean;
+        masked.voxel(y, x, 0) = mean;
         for(int wy = y+1; y < idim.y; ++wy) {
-            float& val = values.voxel(wy, x, 0);
+            float& val = masked.voxel(wy, x, 0);
             if(val > mean) {
                 val = mean;
             } else {
@@ -915,7 +928,7 @@ static void initBrightWall(const LabelProjection& proj, ProjectionLabels& labels
             }
         }
         for(int wy = y-1; y >= 0; --wy) {
-            float& val = values.voxel(wy, x, 0);
+            float& val = masked.voxel(wy, x, 0);
             if(val > mean) {
                 val = mean;
             } else {
@@ -923,15 +936,34 @@ static void initBrightWall(const LabelProjection& proj, ProjectionLabels& labels
             }
         }
     }
-    auto second_path = maxPath(values);
+    auto second_path = maxPath(masked);
+
+    // Create to new images with below/above center path masked
+    VolumeAtomic<float> upper_masked(original.copy());
+    VolumeAtomic<float> lower_masked(original.copy());
+    for(int x=0; x < first_path.size(); ++x) {
+        int center = (first_path[x] + second_path[x])/2;
+
+        int y = 0;
+        for(; y < center; ++y) {
+            upper_masked.voxel(y, x, 0) = mean;
+        }
+        for(; y < idim.y; ++y) {
+            lower_masked.voxel(y, x, 0) = mean;
+        }
+    }
+
+    // Create upper/lower paths from masks
+    auto upper_path = maxPath(lower_masked);
+    auto lower_path = maxPath(upper_masked);
 
     std::deque<tgt::vec2> foreground;
     std::deque<tgt::vec2> upperBackground;
     std::deque<tgt::vec2> lowerBackground;
-    for(int x=0; x < first_path.size(); ++x) {
+    for(int x=0; x < upper_path.size(); ++x) {
         float x_pos = static_cast<float>(x)/(idim.x-1);
-        float y_top = static_cast<float>(first_path.at(x))/(idim.y-1);
-        float y_bottom = static_cast<float>(second_path.at(x))/(idim.y-1);
+        float y_top = static_cast<float>(upper_path.at(x))/(idim.y-1);
+        float y_bottom = static_cast<float>(lower_path.at(x))/(idim.y-1);
 
         float width = y_top - y_bottom;
         float center = tgt::clamp((y_top + y_bottom)/2, 0.0f, 1.0f);
