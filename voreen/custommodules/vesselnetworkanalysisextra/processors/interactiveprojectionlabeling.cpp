@@ -243,9 +243,6 @@ static bool handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
 
 void handleProjectionEvent(tgt::MouseEvent* e, ProjectionLabels& labels) {
     auto button = e->button();
-    if((button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT | tgt::MouseEvent::MOUSE_BUTTON_MIDDLE)) == 0) {
-        return;
-    }
 
     tgt::ivec2 coords = e->coord();
     tgt::ivec2 viewport = e->viewport();
@@ -414,7 +411,8 @@ void InteractiveProjectionLabeling::projectionEvent(tgt::MouseEvent* e) {
         currentUnit().projectionLabels_.foreground_.push_back({mouse});
     } else if(button == tgt::MouseEvent::MOUSE_BUTTON_LEFT && e->modifiers() == tgt::Event::SHIFT && e->action() == tgt::MouseEvent::RELEASED) {
         currentUnit().projectionLabels_.background_.push_back({mouse});
-    } else if(e->modifiers() == tgt::Event::MODIFIER_NONE) {
+    } else if(e->modifiers() == tgt::Event::MODIFIER_NONE &&
+            (button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT | tgt::MouseEvent::MOUSE_BUTTON_MIDDLE)) != 0) {
         handleProjectionEvent(e, currentUnit().projectionLabels_);
     } else {
         return;
@@ -515,6 +513,33 @@ void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
                         state_ = FREE;
                         invalidate();
                     }
+                    ke->accept();
+                    break;
+                }
+                case tgt::KeyEvent::K_1: {
+                    initializationMode_.selectByValue(NONE);
+                    ke->accept();
+                    break;
+                }
+                case tgt::KeyEvent::K_2: {
+                    initializationMode_.selectByValue(BRIGHT_LUMEN);
+                    ke->accept();
+                    break;
+                }
+                case tgt::KeyEvent::K_3: {
+                    initializationMode_.selectByValue(BRIGHT_WALL);
+                    ke->accept();
+                    break;
+                }
+                case tgt::KeyEvent::K_Q: {
+                    float new_val = tgt::clamp(maxLineSimplificationDistance_.get() - 0.01, 0.0, 1.0);
+                    maxLineSimplificationDistance_.set(new_val);
+                    ke->accept();
+                    break;
+                }
+                case tgt::KeyEvent::K_W: {
+                    float new_val = tgt::clamp(maxLineSimplificationDistance_.get() + 0.01, 0.0, 1.0);
+                    maxLineSimplificationDistance_.set(new_val);
                     ke->accept();
                     break;
                 }
@@ -652,8 +677,8 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
         initializationMode_.addOption("none", "None", NONE);
         initializationMode_.addOption("brightlumen", "Bright Lumen", BRIGHT_LUMEN);
         initializationMode_.addOption("brightwall", "Bright Wall", BRIGHT_WALL);
-    addProperty(projectionTransfunc_);
         ON_CHANGE(initializationMode_, InteractiveProjectionLabeling, initializeProjectionLabels);
+    addProperty(projectionTransfunc_);
     addProperty(maxLineSimplificationDistance_);
         ON_CHANGE(maxLineSimplificationDistance_, InteractiveProjectionLabeling, initializeProjectionLabels);
 
@@ -797,17 +822,19 @@ boost::optional<VolumeAtomic<tgt::vec4>> InteractiveProjectionLabeling::getLhp()
     return VolumeAtomic<tgt::vec4>((tgt::vec4*)lhp_.getColorTexture()->downloadTextureToBuffer(GL_RGBA, GL_FLOAT), tgt::svec3(lhp_.getSize(),1));
 }
 
+const int IPL_MAX_NEIGHBOR_OFFSET = 1;
+const float IPL_BACKGROUND_DIST_MULTIPLIER = 1.5f;
+
 static std::vector<int> maxPath(const VolumeAtomic<float>& img) {
     VolumeAtomic<int> paths(img.getDimensions());
     tgt::ivec3 idim = img.getDimensions();
     std::vector<float> global_cost(idim.x, 0.0);
-    const int MAX_NEIGHBOR_OFFSET = 1;
     for(int y=0; y < idim.y; ++y) {
         std::vector<float> next_global_cost(idim.x, 0.0);
         for(int x=0; x < idim.x; ++x) {
             int best_i = 0;
             float best_val = 0.0;
-            for(int d=std::max(0, x-MAX_NEIGHBOR_OFFSET); d<std::min(idim.x, x+MAX_NEIGHBOR_OFFSET+1); ++d) {
+            for(int d=std::max(0, x-IPL_MAX_NEIGHBOR_OFFSET); d<std::min(idim.x, x+IPL_MAX_NEIGHBOR_OFFSET+1); ++d) {
                 float val = img.voxel(d, y, 0) + global_cost.at(d);
                 if(val > best_val || (val == best_val && std::abs(best_i - x) > std::abs(d - x))) {
                     best_val = val;
@@ -875,6 +902,35 @@ void simplifyPath(std::deque<tgt::vec2>& input, float max_line_dist) {
     }
 
     input = output;
+}
+
+static void addLabelsFromWalls(ProjectionLabels& labels, const std::vector<int> lower_wall, const std::vector<int> upper_wall, float max_line_dist, tgt::ivec2 img_dim) {
+
+    tgtAssert(lower_wall.size() == upper_wall.size(), "Path size mismatch");
+
+    std::deque<tgt::vec2> foreground;
+    std::deque<tgt::vec2> upperBackground;
+    std::deque<tgt::vec2> lowerBackground;
+
+    for(int x=0; x < upper_wall.size(); ++x) {
+        float x_pos = static_cast<float>(x)/(img_dim.x-1);
+        float y_top = static_cast<float>(upper_wall.at(x))/(img_dim.y-1);
+        float y_bottom = static_cast<float>(lower_wall.at(x))/(img_dim.y-1);
+
+        float width = y_top - y_bottom;
+        float center = tgt::clamp((y_top + y_bottom)/2, 0.0f, 1.0f);
+        foreground.emplace_back(x_pos, center);
+        lowerBackground.emplace_back(x_pos, tgt::clamp(center-width * IPL_BACKGROUND_DIST_MULTIPLIER, 0.0f, 1.0f));
+        upperBackground.emplace_back(x_pos, tgt::clamp(center+width * IPL_BACKGROUND_DIST_MULTIPLIER, 0.0f, 1.0f));
+    }
+
+    simplifyPath(foreground, max_line_dist);
+    simplifyPath(lowerBackground, max_line_dist);
+    simplifyPath(upperBackground, max_line_dist);
+
+    labels.foreground_.push_back(foreground);
+    labels.background_.push_back(lowerBackground);
+    labels.background_.push_back(upperBackground);
 }
 
 static void initBrightWall(const LabelProjection& proj, ProjectionLabels& labels, float max_line_dist) {
@@ -957,27 +1013,7 @@ static void initBrightWall(const LabelProjection& proj, ProjectionLabels& labels
     auto upper_path = maxPath(lower_masked);
     auto lower_path = maxPath(upper_masked);
 
-    std::deque<tgt::vec2> foreground;
-    std::deque<tgt::vec2> upperBackground;
-    std::deque<tgt::vec2> lowerBackground;
-    for(int x=0; x < upper_path.size(); ++x) {
-        float x_pos = static_cast<float>(x)/(idim.x-1);
-        float y_top = static_cast<float>(upper_path.at(x))/(idim.y-1);
-        float y_bottom = static_cast<float>(lower_path.at(x))/(idim.y-1);
-
-        float width = y_top - y_bottom;
-        float center = tgt::clamp((y_top + y_bottom)/2, 0.0f, 1.0f);
-        foreground.emplace_back(x_pos, center);
-        lowerBackground.emplace_back(x_pos, tgt::clamp(center-width, 0.0f, 1.0f));
-        upperBackground.emplace_back(x_pos, tgt::clamp(center+width, 0.0f, 1.0f));
-    }
-    simplifyPath(foreground, max_line_dist);
-    simplifyPath(lowerBackground, max_line_dist);
-    simplifyPath(upperBackground, max_line_dist);
-
-    labels.foreground_.push_back(foreground);
-    labels.background_.push_back(lowerBackground);
-    labels.background_.push_back(upperBackground);
+    addLabelsFromWalls(labels, upper_path, lower_path, max_line_dist, idim.xy());
 }
 
 static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& labels, float max_line_dist) {
@@ -1001,32 +1037,10 @@ static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& label
         }
     }
 
-    auto bottom_path = maxPath(bottom_gradients);
-    auto top_path = maxPath(top_gradients);
+    auto lower_path = maxPath(bottom_gradients);
+    auto upper_path = maxPath(top_gradients);
 
-    tgtAssert(bottom_path.size() == top_path.size(), "Path size mismatch");
-
-    std::deque<tgt::vec2> foreground;
-    std::deque<tgt::vec2> upperBackground;
-    std::deque<tgt::vec2> lowerBackground;
-    for(int x=0; x < top_path.size(); ++x) {
-        float x_pos = static_cast<float>(x)/(idim.x-1);
-        float y_top = static_cast<float>(top_path.at(x))/(idim.y-1);
-        float y_bottom = static_cast<float>(bottom_path.at(x))/(idim.y-1);
-
-        float width = y_top - y_bottom;
-        float center = tgt::clamp((y_top + y_bottom)/2, 0.0f, 1.0f);
-        foreground.emplace_back(x_pos, center);
-        lowerBackground.emplace_back(x_pos, tgt::clamp(center-width, 0.0f, 1.0f));
-        upperBackground.emplace_back(x_pos, tgt::clamp(center+width, 0.0f, 1.0f));
-    }
-    simplifyPath(foreground, max_line_dist);
-    simplifyPath(lowerBackground, max_line_dist);
-    simplifyPath(upperBackground, max_line_dist);
-
-    labels.foreground_.push_back(foreground);
-    labels.background_.push_back(lowerBackground);
-    labels.background_.push_back(upperBackground);
+    addLabelsFromWalls(labels, upper_path, lower_path, max_line_dist, idim.xy());
 }
 
 void InteractiveProjectionLabeling::initializeProjectionLabels() {
