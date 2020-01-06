@@ -84,6 +84,8 @@ public:
     virtual VolumeAtomic<T>* createNew(const tgt::svec3& dimensions, bool allocMem = false) const;
     virtual VolumeAtomic<T>* getSubVolume(tgt::svec3 dimensions, tgt::svec3 offset = tgt::svec3(0,0,0)) const;
 
+    VolumeAtomic<T> copy() const;
+
     virtual size_t getBitsAllocated() const;
 
     virtual size_t getNumChannels() const;
@@ -261,7 +263,7 @@ protected:
 private:
     /*
      *  Automatically generated copy constructor copies data_,
-     * we therefore disable it. Use clone() instead.
+     * we therefore disable it. Use clone()/copy() instead.
      *
      * The implementation is intentionally omitted to provoke a linker error
      * when accidentally using this constructor.
@@ -421,6 +423,20 @@ VolumeAtomic<T>* VolumeAtomic<T>::clone(void* data) const {
         // create volume without allocating memory
         newVolume = new VolumeAtomic<T>(dimensions_, false);
     }
+
+    return newVolume;
+}
+
+template<class T>
+VolumeAtomic<T> VolumeAtomic<T>::copy() const {
+    // create clone
+    VolumeAtomic<T> newVolume(dimensions_);
+
+    // copy over the voxel data
+    T* dst = newVolume.data_;
+    const T* src = data_;
+    size_t len = getNumVoxels();
+    std::copy(src, src+len, dst);
 
     return newVolume;
 }
