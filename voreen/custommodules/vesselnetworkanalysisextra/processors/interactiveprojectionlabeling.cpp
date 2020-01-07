@@ -532,14 +532,42 @@ void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
                     break;
                 }
                 case tgt::KeyEvent::K_Q: {
-                    float new_val = tgt::clamp(maxLineSimplificationDistance_.get() - 0.01, 0.0, 1.0);
+                    float new_val = tgt::clamp(
+                            maxLineSimplificationDistance_.get() - 0.01f,
+                            maxLineSimplificationDistance_.getMinValue(),
+                            maxLineSimplificationDistance_.getMaxValue()
+                            );
                     maxLineSimplificationDistance_.set(new_val);
                     ke->accept();
                     break;
                 }
                 case tgt::KeyEvent::K_W: {
-                    float new_val = tgt::clamp(maxLineSimplificationDistance_.get() + 0.01, 0.0, 1.0);
+                    float new_val = tgt::clamp(
+                            maxLineSimplificationDistance_.get() + 0.01f,
+                            maxLineSimplificationDistance_.getMinValue(),
+                            maxLineSimplificationDistance_.getMaxValue()
+                            );
                     maxLineSimplificationDistance_.set(new_val);
+                    ke->accept();
+                    break;
+                }
+                case tgt::KeyEvent::K_A: {
+                    float new_val = tgt::clamp(
+                            backgroundLineDistanceMultiplier_.get() - 0.1f,
+                            backgroundLineDistanceMultiplier_.getMinValue(),
+                            backgroundLineDistanceMultiplier_.getMaxValue()
+                            );
+                    backgroundLineDistanceMultiplier_.set(new_val);
+                    ke->accept();
+                    break;
+                }
+                case tgt::KeyEvent::K_S: {
+                    float new_val = tgt::clamp(
+                            backgroundLineDistanceMultiplier_.get() + 0.1f,
+                            backgroundLineDistanceMultiplier_.getMinValue(),
+                            backgroundLineDistanceMultiplier_.getMaxValue()
+                            );
+                    backgroundLineDistanceMultiplier_.set(new_val);
                     ke->accept();
                     break;
                 }
@@ -652,6 +680,7 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , projectionTransfunc_("transferFunction", "Projection Transfer Function")
     , initializationMode_("initializationMode", "Initialization Mode")
     , maxLineSimplificationDistance_("maxLineSimplificationDistance_", "Maximum Line Simplification Distance", 0.01, 0.0, 1.0)
+    , backgroundLineDistanceMultiplier_("backgroundLineDistanceMultiplier", "Background Label Distance Multiplier", 1.00, 0.01, 5.0)
     , projectionShader_("shader", "Shader", "interactiveprojectionlabeling.frag", "oit_passthrough.vert")
     , projection_(boost::none)
     , projectionLabelsModified_(false)
@@ -681,6 +710,8 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     addProperty(projectionTransfunc_);
     addProperty(maxLineSimplificationDistance_);
         ON_CHANGE(maxLineSimplificationDistance_, InteractiveProjectionLabeling, initializeProjectionLabels);
+    addProperty(backgroundLineDistanceMultiplier_);
+        ON_CHANGE(backgroundLineDistanceMultiplier_, InteractiveProjectionLabeling, initializeProjectionLabels);
 
     addProperty(currentUnitIndex_);
         ON_CHANGE(currentUnitIndex_, InteractiveProjectionLabeling, synchronizeUnitIndex);
@@ -904,7 +935,7 @@ void simplifyPath(std::deque<tgt::vec2>& input, float max_line_dist) {
     input = output;
 }
 
-static void addLabelsFromWalls(ProjectionLabels& labels, const std::vector<int> lower_wall, const std::vector<int> upper_wall, float max_line_dist, tgt::ivec2 img_dim) {
+static void addLabelsFromWalls(ProjectionLabels& labels, const std::vector<int> lower_wall, const std::vector<int> upper_wall, float max_line_dist, tgt::ivec2 img_dim, float background_line_distance_multiplier) {
 
     tgtAssert(lower_wall.size() == upper_wall.size(), "Path size mismatch");
 
@@ -920,8 +951,8 @@ static void addLabelsFromWalls(ProjectionLabels& labels, const std::vector<int> 
         float width = y_top - y_bottom;
         float center = tgt::clamp((y_top + y_bottom)/2, 0.0f, 1.0f);
         foreground.emplace_back(x_pos, center);
-        lowerBackground.emplace_back(x_pos, tgt::clamp(center-width * IPL_BACKGROUND_DIST_MULTIPLIER, 0.0f, 1.0f));
-        upperBackground.emplace_back(x_pos, tgt::clamp(center+width * IPL_BACKGROUND_DIST_MULTIPLIER, 0.0f, 1.0f));
+        lowerBackground.emplace_back(x_pos, tgt::clamp(center-width * background_line_distance_multiplier, 0.0f, 1.0f));
+        upperBackground.emplace_back(x_pos, tgt::clamp(center+width * background_line_distance_multiplier, 0.0f, 1.0f));
     }
 
     simplifyPath(foreground, max_line_dist);
@@ -933,7 +964,7 @@ static void addLabelsFromWalls(ProjectionLabels& labels, const std::vector<int> 
     labels.background_.push_back(upperBackground);
 }
 
-static void initBrightWall(const LabelProjection& proj, ProjectionLabels& labels, float max_line_dist) {
+static void initBrightWall(const LabelProjection& proj, ProjectionLabels& labels, float max_line_dist, float background_line_distance_multiplier) {
     const auto& source = proj.projection();
     tgt::ivec3 idim = source.getDimensions();
     VolumeAtomic<float> original(tgt::svec3(idim.y, idim.x, idim.z));
@@ -1013,10 +1044,10 @@ static void initBrightWall(const LabelProjection& proj, ProjectionLabels& labels
     auto upper_path = maxPath(lower_masked);
     auto lower_path = maxPath(upper_masked);
 
-    addLabelsFromWalls(labels, upper_path, lower_path, max_line_dist, idim.xy());
+    addLabelsFromWalls(labels, upper_path, lower_path, max_line_dist, idim.xy(), background_line_distance_multiplier);
 }
 
-static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& labels, float max_line_dist) {
+static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& labels, float max_line_dist, float background_line_distance_multiplier) {
     const auto& orig = proj.projection();
     tgt::ivec3 idim = orig.getDimensions();
     VolumeAtomic<float> top_gradients(tgt::svec3(idim.y, idim.x, idim.z));
@@ -1040,7 +1071,7 @@ static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& label
     auto lower_path = maxPath(bottom_gradients);
     auto upper_path = maxPath(top_gradients);
 
-    addLabelsFromWalls(labels, upper_path, lower_path, max_line_dist, idim.xy());
+    addLabelsFromWalls(labels, upper_path, lower_path, max_line_dist, idim.xy(), background_line_distance_multiplier);
 }
 
 void InteractiveProjectionLabeling::initializeProjectionLabels() {
@@ -1053,12 +1084,12 @@ void InteractiveProjectionLabeling::initializeProjectionLabels() {
     switch(initializationMode_.getValue()) {
         case BRIGHT_LUMEN:
             {
-                initBrightLumen(*projection_, currentUnit().projectionLabels_, maxLineSimplificationDistance_.get());
+                initBrightLumen(*projection_, currentUnit().projectionLabels_, maxLineSimplificationDistance_.get(), backgroundLineDistanceMultiplier_.get());
                 break;
             }
         case BRIGHT_WALL:
             {
-                initBrightWall(*projection_, currentUnit().projectionLabels_, maxLineSimplificationDistance_.get());
+                initBrightWall(*projection_, currentUnit().projectionLabels_, maxLineSimplificationDistance_.get(), backgroundLineDistanceMultiplier_.get());
                 break;
             }
         default:;
