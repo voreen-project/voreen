@@ -121,8 +121,8 @@ void EnsembleDataset::addRun(const Run& run) {
             else {
                 fieldMetaData.valueRange_.x = std::min(fieldMetaData.valueRange_.x, minMax.x);
                 fieldMetaData.valueRange_.y = std::max(fieldMetaData.valueRange_.y, minMax.y);
-                fieldMetaData.magnitudeRange_.x = std::min(fieldMetaData.valueRange_.x, minMaxMagnitude.x);
-                fieldMetaData.magnitudeRange_.y = std::min(fieldMetaData.valueRange_.y, minMaxMagnitude.y);
+                fieldMetaData.magnitudeRange_.x = std::min(fieldMetaData.magnitudeRange_.x, minMaxMagnitude.x);
+                fieldMetaData.magnitudeRange_.y = std::max(fieldMetaData.magnitudeRange_.y, minMaxMagnitude.y);
                 if(fieldMetaData.numChannels_ != volume->getNumChannels()) {
                     LERRORC("voreen.EnsembleDataSet", "Number of channels inside channel differs, taking min.");
                     fieldMetaData.numChannels_ = std::min(fieldMetaData.numChannels_, volume->getNumChannels());

@@ -404,6 +404,12 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                             a = std::sqrt(a);
                             b = std::sqrt(b);
                         }
+                        else if(numChannels > 1 && input.multiChannelSimilarityMeasure == MEASURE_SPLIT_CHANNELS) {
+                            size_t newK = k/numChannels;                //k of the current channel
+                            size_t channel = k / (numFlags/numChannels);
+                            a = Flags[index(i, newK, channel)];
+                            b = Flags[index(j, newK, channel)];
+                        }
                         else {
                             a = Flags[index(i, k)];
                             b = Flags[index(j, k)];
