@@ -953,6 +953,10 @@ static void addLabelsFromWalls(ProjectionLabels& labels, const std::vector<int> 
         foreground.emplace_back(x_pos, center);
         lowerBackground.emplace_back(x_pos, tgt::clamp(center-width * background_line_distance_multiplier, 0.0f, 1.0f));
         upperBackground.emplace_back(x_pos, tgt::clamp(center+width * background_line_distance_multiplier, 0.0f, 1.0f));
+
+        // Actual detected borders (useful for debugging)
+        //lowerBackground.emplace_back(x_pos, tgt::clamp(y_bottom, 0.0f, 1.0f));
+        //upperBackground.emplace_back(x_pos, tgt::clamp(y_top, 0.0f, 1.0f));
     }
 
     simplifyPath(foreground, max_line_dist);
@@ -1097,13 +1101,32 @@ static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& label
     top_gradients.clear();
     bottom_gradients.clear();
 
-    for(int y=0; y < idim.y; ++y) {
-        for(int x=0; x < idim.x; ++x) {
+    // Transpose matrix for better memory locality and fill invalid values with nearest valid ones
+    int valid = 0;
+    for(int x=0; x < idim.x; ++x) {
+        float first = std::nan("");
+        float last = 0.0;
+        for(int y=0; y < idim.y; ++y) {
+            tgt::vec2 val = orig.voxel(x, y, 0);
+            if(val.y > 0.0) {
+                if(std::isnan(first)) {
+                    first = val.x;
+                }
+                last = val.x;
+            }
+        }
+        bool before_first_valid = true;
+        for(int y=0; y < idim.y; ++y) {
             tgt::vec2 val = orig.voxel(x, y, 0);
             if(val.y > 0.0) {
                 transposed.voxel(y, x, 0) = val.x;
+                before_first_valid = false;
             } else {
-                transposed.voxel(y, x, 0) = 0.0f;
+                if(before_first_valid) {
+                    transposed.voxel(y, x, 0) = first;
+                } else {
+                    transposed.voxel(y, x, 0) = last;
+                }
             }
         }
     }
