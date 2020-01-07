@@ -1047,29 +1047,125 @@ static void initBrightWall(const LabelProjection& proj, ProjectionLabels& labels
     addLabelsFromWalls(labels, upper_path, lower_path, max_line_dist, idim.xy(), background_line_distance_multiplier);
 }
 
+static inline std::vector<float> gaussFirstDerivativeKernel(float stddev, int extent) {
+    auto func =  [stddev] (float x) {
+        return -std::exp(-0.5f * x*x / (stddev*stddev))*x/(std::sqrt(2*tgt::PIf)*stddev*stddev*stddev);
+    };
+    auto gauss = [] (float stdev) {
+        return [stdev] (float x) {
+            return std::exp(-0.5f * x*x / (stdev*stdev))/(std::sqrt(2*tgt::PIf)*stdev);
+        };
+    };
+    std::vector<float> kernel(2*extent + 1);
+    float positiveSum = 0;
+    float negativeSum = 0;
+    for(int i = -extent; i <= extent; ++i) {
+        int radius = 5;
+        float sum = 0.0f;
+        for(int d = -radius; d <= radius; ++d) {
+            float df = static_cast<float>(d)/radius;
+            float samplePos = static_cast<float>(i)-0.5f*df;
+            sum += func(samplePos);
+        }
+        float val = sum/(2*radius + 1);
+        if(val > 0) {
+            positiveSum += val;
+        } else {
+            negativeSum += val;
+        }
+        kernel[i + extent] = val;
+    }
+    float positiveNormalizationFactor = std::abs(gauss(stddev)(0)/positiveSum);
+    float negativeNormalizationFactor = std::abs(gauss(stddev)(0)/negativeSum);
+    // Normalize so that all values sum to 0
+    for(int i = -extent; i <= extent; ++i) {
+        if(kernel[i + extent] > 0) {
+            kernel[i + extent] *= positiveNormalizationFactor;
+        } else {
+            kernel[i + extent] *= negativeNormalizationFactor;
+        }
+    }
+    return kernel;
+}
+
 static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& labels, float max_line_dist, float background_line_distance_multiplier) {
     const auto& orig = proj.projection();
     tgt::ivec3 idim = orig.getDimensions();
+    VolumeAtomic<float> transposed(tgt::svec3(idim.y, idim.x, idim.z));
     VolumeAtomic<float> top_gradients(tgt::svec3(idim.y, idim.x, idim.z));
     VolumeAtomic<float> bottom_gradients(tgt::svec3(idim.y, idim.x, idim.z));
+    top_gradients.clear();
+    bottom_gradients.clear();
 
     for(int y=0; y < idim.y; ++y) {
         for(int x=0; x < idim.x; ++x) {
-            tgt::vec2 left = orig.voxel(x, std::max(0, y-1), 0);
-            tgt::vec2 right = orig.voxel(x, std::min(y+1, idim.y-1), 0);
-            float diff;
-            if(left.y > 0.0 && right.y > 0.0) {
-                diff = left.x - right.x;
+            tgt::vec2 val = orig.voxel(x, y, 0);
+            if(val.y > 0.0) {
+                transposed.voxel(y, x, 0) = val.x;
             } else {
-                diff = 0.0;
+                transposed.voxel(y, x, 0) = 0.0f;
             }
-            top_gradients.voxel(y, x, 0) = std::max(0.0f, diff);
-            bottom_gradients.voxel(y, x, 0) = std::max(0.0f, -diff);
         }
     }
 
-    auto lower_path = maxPath(bottom_gradients);
-    auto upper_path = maxPath(top_gradients);
+    float std_dev_max = idim.y/10;
+    std::vector<std::vector<float>> kernels;
+    for(int stddev = 1; stddev < std_dev_max; stddev = stddev << 1) {
+        int extent = 2*stddev;
+        kernels.push_back(gaussFirstDerivativeKernel(stddev, extent));
+    }
+
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel for
+#endif
+    for(int x=0; x < idim.x; ++x) {
+        for(auto& kernel : kernels) {
+            int extent = kernel.size() / 2; //kernel always has size 2extent+1
+            for(int y=0; y < idim.y; ++y) {
+
+                float sum = 0.0f;
+                int extent_begin = std::max(y-extent,0) - y;
+                int extent_end = std::min(y+extent,idim.y) - y;
+
+                float* transposed_row_begin = &transposed.voxel(y+extent_begin, x, 0);
+                int len = extent_end - extent_begin;
+
+#ifdef __clang__
+#pragma clang loop vectorize(enable) interleave(enable)
+#endif
+                for(int i=0; i<len; ++i) {
+                    float val = transposed_row_begin[i];
+                    sum += val * kernel[i];
+                }
+
+                float& top = top_gradients.voxel(y, x, 0);
+                float& bottom = bottom_gradients.voxel(y, x, 0);
+                top = std::max(top, -sum);
+                bottom = std::max(bottom, sum);
+            }
+        }
+    }
+
+    auto lower_path_init = maxPath(bottom_gradients);
+    auto upper_path_init = maxPath(top_gradients);
+
+    VolumeAtomic<float> top_gradients_masked(top_gradients.copy());
+    VolumeAtomic<float> bottom_gradients_masked(bottom_gradients.copy());
+
+    for(int x=0; x < lower_path_init.size(); ++x) {
+        int center = (lower_path_init[x] + upper_path_init[x])/2;
+
+        int y = 0;
+        for(; y < center; ++y) {
+            bottom_gradients_masked.voxel(y, x, 0) = 0.0f;
+        }
+        for(; y < idim.y; ++y) {
+            top_gradients_masked.voxel(y, x, 0) = 0.0f;
+        }
+    }
+
+    auto lower_path = maxPath(bottom_gradients_masked);
+    auto upper_path = maxPath(top_gradients_masked);
 
     addLabelsFromWalls(labels, upper_path, lower_path, max_line_dist, idim.xy(), background_line_distance_multiplier);
 }
