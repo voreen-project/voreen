@@ -948,11 +948,12 @@ static void addLabelsFromWalls(ProjectionLabels& labels, const std::vector<int> 
         float y_top = static_cast<float>(upper_wall.at(x))/(img_dim.y-1);
         float y_bottom = static_cast<float>(lower_wall.at(x))/(img_dim.y-1);
 
-        float width = y_top - y_bottom;
         float center = tgt::clamp((y_top + y_bottom)/2, 0.0f, 1.0f);
+        float top_dist = y_top - center;
+        float bottom_dist = y_bottom - center;
         foreground.emplace_back(x_pos, center);
-        lowerBackground.emplace_back(x_pos, tgt::clamp(center-width * background_line_distance_multiplier, 0.0f, 1.0f));
-        upperBackground.emplace_back(x_pos, tgt::clamp(center+width * background_line_distance_multiplier, 0.0f, 1.0f));
+        lowerBackground.emplace_back(x_pos, tgt::clamp(center+top_dist * background_line_distance_multiplier, 0.0f, 1.0f));
+        upperBackground.emplace_back(x_pos, tgt::clamp(center+bottom_dist * background_line_distance_multiplier, 0.0f, 1.0f));
 
         // Actual detected borders (useful for debugging)
         //lowerBackground.emplace_back(x_pos, tgt::clamp(y_bottom, 0.0f, 1.0f));
@@ -1153,8 +1154,8 @@ static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& label
                 float* transposed_row_begin = &transposed.voxel(y+extent_begin, x, 0);
                 int len = extent_end - extent_begin;
 
-#ifdef __clang__
-#pragma clang loop vectorize(enable) interleave(enable)
+#ifdef VRN_MODULE_OPENMP
+#pragma omp simd
 #endif
                 for(int i=0; i<len; ++i) {
                     float val = transposed_row_begin[i];
