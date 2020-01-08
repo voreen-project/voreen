@@ -76,9 +76,18 @@ struct OctreeWalkerInput {
 };
 
 struct OctreeWalkerOutput {
+    OctreeWalkerOutput(
+        VolumeOctree* octree,
+        std::unique_ptr<VolumeBase>&& volume,
+        std::unordered_set<const VolumeOctreeNode*>&& sharedNodes,
+        std::chrono::duration<float> duration
+    );
+    ~OctreeWalkerOutput();
+    OctreeWalkerOutput(OctreeWalkerOutput&& other);
+
     VolumeOctree* octree_;
     std::unique_ptr<VolumeBase> volume_;
-    std::unordered_set<const VolumeOctreeNode*> previousNodesToSave;
+    std::unordered_set<const VolumeOctreeNode*> sharedNodes_;
     std::chrono::duration<float> duration_;
 };
 

@@ -76,7 +76,7 @@ inline size_t volumeCoordsToIndex(const tgt::ivec3& coords, const tgt::ivec3& di
     return coords.z*dim.y*dim.x + coords.y*dim.x + coords.x;
 }
 
-static void freeTreeComponents(VolumeOctreeNode* root, std::unordered_set<const VolumeOctreeNode*>& nodesToSave, OctreeBrickPoolManagerMmap& brickPoolManager) {
+static void freeTreeComponents(VolumeOctreeNode* root, std::unordered_set<const VolumeOctreeNode*>& nodesToSave, OctreeBrickPoolManagerBase& brickPoolManager) {
     if(root && nodesToSave.find(root) == nodesToSave.end()) {
         if(root->hasBrick()) {
             brickPoolManager.deleteBrick(root->getBrickAddress());
@@ -111,6 +111,43 @@ static float brickToNorm(uint16_t val) {
     return static_cast<float>(val)/0xffff;
 }
 
+}
+
+OctreeWalkerOutput::OctreeWalkerOutput(
+    VolumeOctree* octree,
+    std::unique_ptr<VolumeBase>&& volume,
+    std::unordered_set<const VolumeOctreeNode*>&& sharedNodes,
+    std::chrono::duration<float> duration
+)   : octree_(octree)
+    , volume_(std::move(volume))
+    , sharedNodes_(std::move(sharedNodes))
+    , duration_(duration)
+{ }
+
+OctreeWalkerOutput::OctreeWalkerOutput(OctreeWalkerOutput&& other)
+    : octree_(other.octree_)
+    , volume_(std::move(other.volume_))
+    , sharedNodes_(std::move(other.sharedNodes_))
+    , duration_(other.duration_)
+{
+    other.octree_ = nullptr;
+    other.volume_ = nullptr;
+}
+
+OctreeWalkerOutput::~OctreeWalkerOutput() {
+    // If OctreeWalkerOutput is dropped prematurely (e.g., if the computation
+    // is interrupted after the final result was created, we need to make sure
+    // NOT to drop the Brickpoolmanager, BUT free all nodes of the (now
+    // discarded) tree.
+    if(volume_) {
+        tgtAssert(octree_, "Previous result octree without volume");
+
+        auto res = std::move(*octree_).decompose();
+        // Brickpoolmanager reference is not required here. The important thing is that the previous result does not deconstruct the brickPoolManager
+
+        // Clean up old tree
+        freeTreeComponents(res.second, sharedNodes_, *res.first);
+    }
 }
 
 
@@ -1157,12 +1194,12 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     output->setHash(hash);
 
     auto finish = clock::now();
-    return ComputeOutput {
+    return ComputeOutput (
         octree,
         std::move(output),
-        nodesToSave,
-        finish - start,
-    };
+        std::move(nodesToSave),
+        finish - start
+    );
 }
 
 void OctreeWalker::processComputeOutput(ComputeOutput output) {
@@ -1183,11 +1220,13 @@ void OctreeWalker::processComputeOutput(ComputeOutput output) {
         // Brickpoolmanager reference is not required here. The important thing is that the previous result does not deconstruct the brickPoolManager
 
         // Clean up old tree
-        freeTreeComponents(res.second, output.previousNodesToSave, *brickPoolManager_);
+        freeTreeComponents(res.second, output.sharedNodes_, *brickPoolManager_);
     }
 
     previousOctree_ = output.octree_;
     previousVolume_ = std::move(output.volume_);
+
+    output.octree_ = nullptr;
 }
 void OctreeWalker::clearPreviousResults() {
     // First: Reset output
