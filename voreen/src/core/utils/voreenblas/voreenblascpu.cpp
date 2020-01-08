@@ -59,8 +59,12 @@ void VoreenBlasCPU::sSpMVEll(const EllpackMatrix<float>& mat, const float* vec, 
 
     for (size_t row=0; row < numRows; ++row) {
         result[row] = 0.f;
-        for (size_t colIndex=0; colIndex < numColsPerRow; ++colIndex)
-            result[row] += mat.getValueByIndex(row, colIndex) * vec[mat.getColumn(row, colIndex)];
+        for (size_t colIndex=0; colIndex < numColsPerRow; ++colIndex) {
+            size_t col = mat.getColumn(row, colIndex);
+            if(col != -1) {
+                result[row] += mat.getValueByIndex(row, colIndex) * vec[col];
+            }
+        }
     }
 }
 void VoreenBlasCPU::hSpMVEll(const EllpackMatrix<int16_t>& mat, const float* vec, float* result) const {
@@ -71,8 +75,12 @@ void VoreenBlasCPU::hSpMVEll(const EllpackMatrix<int16_t>& mat, const float* vec
 
     for (size_t row=0; row < numRows; ++row) {
         result[row] = 0.f;
-        for (size_t colIndex=0; colIndex < numColsPerRow; ++colIndex)
-            result[row] += (mat.getValueByIndex(row, colIndex) * vec[mat.getColumn(row, colIndex)]) / maxValue;
+        for (size_t colIndex=0; colIndex < numColsPerRow; ++colIndex) {
+            size_t col = mat.getColumn(row, colIndex);
+            if(col != -1) {
+                result[row] += (mat.getValueByIndex(row, colIndex) * vec[col]) / maxValue;
+            }
+        }
     }
 }
 
@@ -84,8 +92,12 @@ float VoreenBlasCPU::sSpInnerProductEll(const EllpackMatrix<float>& mat, const f
     float result = 0.f;
     for (size_t row=0; row < numRows; ++row) {
         float dot = 0.f;
-        for (size_t colIndex=0; colIndex < numColsPerRow; ++colIndex)
-            dot += mat.getValueByIndex(row, colIndex) * vecy[mat.getColumn(row, colIndex)];
+        for (size_t colIndex=0; colIndex < numColsPerRow; ++colIndex) {
+            size_t col = mat.getColumn(row, colIndex);
+            if(col != -1) {
+                dot += mat.getValueByIndex(row, colIndex) * vecy[col];
+            }
+        }
         result += dot*vecx[row];
     }
     return result;

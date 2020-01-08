@@ -73,8 +73,12 @@ void VoreenBlasMP::sSpMVEll(const EllpackMatrix<float>& mat, const float* vec, f
     #pragma omp parallel for
     for (int row=0; row < numRows; ++row) {
         result[row] = 0.f;
-        for (size_t colIndex=0; colIndex < numColsPerRow; ++colIndex)
-            result[row] += mat.getValueByIndex(row, colIndex) * vec[mat.getColumn(row, colIndex)];
+        for (size_t colIndex=0; colIndex < numColsPerRow; ++colIndex) {
+            size_t col = mat.getColumn(row, colIndex);
+            if(col != -1) {
+                result[row] += mat.getValueByIndex(row, colIndex) * vec[col];
+            }
+        }
     }
 
 }
@@ -88,8 +92,12 @@ void VoreenBlasMP::hSpMVEll(const EllpackMatrix<int16_t>& mat, const float* vec,
     #pragma omp parallel for
     for (int row=0; row < numRows; ++row) {
         result[row] = 0.f;
-        for (size_t colIndex=0; colIndex < numColsPerRow; ++colIndex)
-            result[row] += (mat.getValueByIndex(row, colIndex) * vec[mat.getColumn(row, colIndex)]) / maxValue;
+        for (size_t colIndex=0; colIndex < numColsPerRow; ++colIndex) {
+            size_t col = mat.getColumn(row, colIndex);
+            if(col != -1) {
+                result[row] += mat.getValueByIndex(row, colIndex) * vec[col];
+            }
+        }
     }
 }
 
@@ -103,8 +111,12 @@ float VoreenBlasMP::sSpInnerProductEll(const EllpackMatrix<float>& mat, const fl
     #pragma omp parallel for reduction(+:result)
     for (int row=0; row < numRows; ++row) {
         float dot = 0.f;
-        for (size_t colIndex=0; colIndex < numColsPerRow; ++colIndex)
-            dot += mat.getValueByIndex(row, colIndex) * vecy[mat.getColumn(row, colIndex)];
+        for (size_t colIndex=0; colIndex < numColsPerRow; ++colIndex) {
+            size_t col = mat.getColumn(row, colIndex);
+            if(col != -1) {
+                dot += mat.getValueByIndex(row, colIndex) * vecy[col];
+            }
+        }
         result += dot*vecx[row];
     }
     return result;
