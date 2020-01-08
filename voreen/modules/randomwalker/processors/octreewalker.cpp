@@ -39,8 +39,14 @@
 #include "voreen/core/datastructures/octree/octreebrickpoolmanagermmap.h"
 #include "voreen/core/datastructures/octree/volumeoctreenodegeneric.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
+#include "voreen/core/utils/hashing.h"
 #include "tgt/vector.h"
 #include "tgt/memory.h"
+
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include "voreen/core/datastructures/transfunc/1d/transfunc1d.h"
 
@@ -327,9 +333,9 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
     }
 
     if(previousOctree_) {
-        LINFO("Resuing previous solution for compatible input volume");
+        LINFO("Reusing previous solution for compatible input volume");
     } else {
-        LINFO("Not resuing previous solution for incompatible input volume");
+        LINFO("Not reusing previous solution for incompatible input volume");
     }
 
     // Create a new brickpool if we need a new one
@@ -1142,6 +1148,14 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     output->addDerivedData(new VolumeMinMax(min, max, min, max));
     output->addDerivedData(new VolumeHistogramIntensity(histogram));
     output->setRealWorldMapping(RealWorldMapping(1.0, 0.0f, "Probability"));
+
+    // It's not really feasible, but also not important to compute an actual hash
+    boost::uuids::basic_random_generator<boost::mt19937> uuidGenerator{};
+    boost::uuids::uuid uuid = uuidGenerator();
+    std::string uuidstr = boost::lexical_cast<std::string>(uuid);
+    std::string hash = VoreenHash::getHash(uuidstr.data(), uuidstr.size());
+    output->setHash(hash);
+
     auto finish = clock::now();
     return ComputeOutput {
         octree,
