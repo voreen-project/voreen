@@ -1139,6 +1139,8 @@ static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& label
         kernels.push_back(gaussFirstDerivativeKernel(stddev, extent));
     }
 
+    auto center_path = maxPath(transposed);
+
 #ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for
 #endif
@@ -1164,32 +1166,20 @@ static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& label
 
                 float& top = top_gradients.voxel(y, x, 0);
                 float& bottom = bottom_gradients.voxel(y, x, 0);
-                top = std::max(top, -sum);
-                bottom = std::max(bottom, sum);
+
+                // mask below/above center line for top/bottom gradients
+                int center = center_path[x];
+                if(y < center) {
+                    top = std::max(top, -sum);
+                } else {
+                    bottom = std::max(bottom, sum);
+                }
             }
         }
     }
 
-    auto lower_path_init = maxPath(bottom_gradients);
-    auto upper_path_init = maxPath(top_gradients);
-
-    VolumeAtomic<float> top_gradients_masked(top_gradients.copy());
-    VolumeAtomic<float> bottom_gradients_masked(bottom_gradients.copy());
-
-    for(int x=0; x < lower_path_init.size(); ++x) {
-        int center = (lower_path_init[x] + upper_path_init[x])/2;
-
-        int y = 0;
-        for(; y < center; ++y) {
-            bottom_gradients_masked.voxel(y, x, 0) = 0.0f;
-        }
-        for(; y < idim.y; ++y) {
-            top_gradients_masked.voxel(y, x, 0) = 0.0f;
-        }
-    }
-
-    auto lower_path = maxPath(bottom_gradients_masked);
-    auto upper_path = maxPath(top_gradients_masked);
+    auto lower_path = maxPath(bottom_gradients);
+    auto upper_path = maxPath(top_gradients);
 
     addLabelsFromWalls(labels, upper_path, lower_path, max_line_dist, idim.xy(), background_line_distance_multiplier);
 }
