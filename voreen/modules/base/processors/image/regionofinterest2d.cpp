@@ -347,7 +347,7 @@ RegionOfInterest2D::RegionOfInterest2D()
     , maskBackgroundColor_("maskBackgroundColor", "Mask Background", tgt::Color(0.f, 0.f, 0.f, 0.f))
     , size_("size", "Line/Point size", 3.f, 1.f, 35.f)
     , antialiasing_("antialiasing", "Antialiasing", false)
-    , currentLayer_("roiLayer", "ROI Layer", 0, 0, 1000)
+    , currentLayer_("roiLayer", "ROI Layer", 0, 0, 10000)
     , renderCurrentLayerOnly_("renderCurrentLayerOnly", "Render current layer only", false)
     , boundingBoxColor_("boundingBoxColor", "Bounding Box Color", tgt::Color(0.8f, 0.8f, 0.8f, 0.8f))
     , minRoiPointDistance_("minRoiPointDistance", "Min ROI Point Distance", 2.f, 0.f, 20.f)
@@ -360,7 +360,7 @@ RegionOfInterest2D::RegionOfInterest2D()
     , clearROIs_("clearROIs", "Clear ROIs")
     , removeLastROI_("deleteLastRoi", "Remove Last ROI")
     , removeLastROIInCurSlice_("deleteLastRoiInSlice", "Remove Last ROI in Slice")
-    , numberOfROIs_("numberOfRois", "Number of ROIs", 0, 0, 10000, Processor::VALID)
+    , numberOfROIs_("numberOfRois", "Number of ROIs", 0, 0, 100000, Processor::VALID)
     , mouseEventAddROI_("mouseEvent.addROI", "Add ROI", this, &RegionOfInterest2D::addROIEvent,
         tgt::MouseEvent::MOUSE_BUTTON_LEFT,
         static_cast<tgt::MouseEvent::MouseAction>(tgt::MouseEvent::MOTION | tgt::MouseEvent::PRESSED | tgt::MouseEvent::RELEASED),
