@@ -39,40 +39,29 @@ VolumeComparison::VolumeComparison()
     : Processor()
     , firstSegmentationVolume_(Port::INPORT, "firstsegmentation", "First Segmentation Volume", false)
     , secondSegmentationVolume_(Port::INPORT, "secondsegmentation", "Second Segmentation Volume", false)
+    , enabled_("enabled", "Enabled", true)
     , useClipRegion_("useClipRegion", "Use Clip Region", false)
     , clipRegion_("clipRegion", "Clip Region", tgt::IntBounds(tgt::ivec3(0), tgt::ivec3(1)), tgt::ivec3(0), tgt::ivec3(1))
     , binarizationThreshold_("binarizationThreshold", "Binarization Threshold", 0.5, 0.0, 1.0)
-    , startComputation_("startComputation", "Start Computation")
     , progressProperty_("progressProperty", "Quantification Progress")
     , csvSaveFile_("csvFileProp", "CSV Export Path", "CSV Export Path", ".", "Comma seperated values (*.csv)", FileDialogProperty::SAVE_FILE)
-    , saveToCsv_("savetocsv", "Save to CSV")
-    , lastSummary_()
-    //, channel_("channel", "Quantification Channel", 0, 0, 0, Processor::INVALID_RESULT, NumericProperty<int>::DYNAMIC, Property::LOD_ADVANCED)
-    //, quantificationPlot_(Port::OUTPORT, "QuantificationPlot", "Quantification Score Plot")
 {
     addPort(firstSegmentationVolume_);
     addPort(secondSegmentationVolume_);
-    //addPort(quantificationPlot_);
 
     addProperty(useClipRegion_);
     clipRegion_.setVisibleFlag(false);
     addProperty(clipRegion_);
-    addProperty(startComputation_);
 
     addProperty(progressProperty_);
     addProgressBar(&progressProperty_);
 
     addProperty(csvSaveFile_);
-    addProperty(saveToCsv_);
-    ON_CHANGE(saveToCsv_, VolumeComparison, exportToCSV);
-    saveToCsv_.setReadOnlyFlag(true);
 
     ON_CHANGE(firstSegmentationVolume_, VolumeComparison, adjustToInputVolumes);
     ON_CHANGE(secondSegmentationVolume_, VolumeComparison, adjustToInputVolumes);
 
     ON_CHANGE(useClipRegion_, VolumeComparison, useClipRegionChanged);
-
-    ON_CHANGE(startComputation_, VolumeComparison, computeQuantification);
 }
 
 Processor* VolumeComparison::create() const {
@@ -81,11 +70,6 @@ Processor* VolumeComparison::create() const {
 
 bool VolumeComparison::isReady() const {
     return isInitialized() && (firstSegmentationVolume_.isReady() || secondSegmentationVolume_.isReady());
-}
-
-void VolumeComparison::process() {
-    // nothing
-
 }
 
 void VolumeComparison::initialize() {
@@ -123,7 +107,10 @@ void quantification(const VolumeRAM* slice1, const VolumeRAM* slice2, VolumeComp
     }
 }
 
-void VolumeComparison::computeQuantification() {
+void VolumeComparison::process() {
+    if(!enabled_.get()) {
+        return;
+    }
 
     setProgress(0.f);
     //quantificationPlot_.clear();
@@ -132,8 +119,9 @@ void VolumeComparison::computeQuantification() {
     const VolumeBase* volume1Ptr = firstSegmentationVolume_.getData();
     const VolumeBase* volume2Ptr = secondSegmentationVolume_.getData();
 
-    tgtAssert(volume1Ptr, "no volume 1");
-    tgtAssert(volume2Ptr, "no volume 2");
+    if(!volume1Ptr || !volume2Ptr) {
+        return;
+    }
 
     const VolumeBase& volume1 = *volume1Ptr;
     const VolumeBase& volume2 = *volume2Ptr;
@@ -160,10 +148,7 @@ void VolumeComparison::computeQuantification() {
         return;
     }
 
-    lastSummary_ = ScanSummary();
-
-    tgt::Stopwatch timer;
-    timer.start();
+    ScanSummary summary{};
 
     // get the quantification dimensions
     tgt::svec3 llf, urb;
@@ -186,63 +171,40 @@ void VolumeComparison::computeQuantification() {
         tgtAssert(slice2, "No slice 2");
 
         // quantify slice according to the data type
-        quantification(slice1.get(), slice2.get(), lastSummary_, llf, urb, rwm, binarizationThreshold_.get());
+        quantification(slice1.get(), slice2.get(), summary, llf, urb, rwm, binarizationThreshold_.get());
 
         setProgress(std::min(0.99f, static_cast<float>(z - llf.z) / static_cast<float>(urb.z - llf.z)));
     }
 
     setProgress(1.f);
 
-    timer.stop();
-    LINFO("Quantification Time: " << (float) timer.getRuntime() / 1000.f << " seconds");
+    std::stringstream header, line;
+    size_t numVoxels = summary.totalNumberOfVoxels();
+    float avgDiffAbs = summary.sumOfVoxelDiffsAbs_ / numVoxels;
+    float variance = summary.sumOfVoxelDiffsSquared_ / (numVoxels * numVoxels);
+    header << "Number_of_voxels,voxels_in_volume1,voxels_in_volume2,voxels_in_both,dice_score,sumDiffAbs,avgDiffAbs,sumDiffSquared,variance" << std::endl;
+    line << numVoxels
+        << "," << summary.numForegroundOnlyOne_
+        << "," << summary.numForegroundOnlyTwo_
+        << "," << summary.numForegroundBoth_
+        << "," << summary.diceScore()
+        << "," << summary.sumOfVoxelDiffsAbs_
+        << "," << avgDiffAbs
+        << "," << summary.sumOfVoxelDiffsSquared_
+        << "," << variance;
 
-    saveToCsv_.setReadOnlyFlag(false);
+    LINFO("Header: " << header.str());
+    LINFO("Result: " << line.str());
 
-    /*
-    PlotData* plotData = new PlotData(0, 4);
-    plotData->setColumnLabel(0, "Time Step");
-    plotData->setColumnLabel(1, "Raw sum of voxels");
-    plotData->setColumnLabel(2, "Weighted absolute sum");
-    plotData->setColumnLabel(3, "Weighted normalized sum (quantification score)");
-
-    PlotData* normalizedPlotData = new PlotData(0,2);
-    normalizedPlotData->setColumnLabel(0, "Time Step");
-    normalizedPlotData->setColumnLabel(1, "Weighted normalized sum (quantification score)");
-
-    for (size_t i = static_cast<size_t>(quantificationFrame_.get().x); i <= static_cast<size_t>(quantificationFrame_.get().y); ++i) {
-        std::vector<PlotCellValue> v(4);
-        v.at(0) = PlotCellValue(static_cast<plot_t>(i));
-        v.at(1) = PlotCellValue(static_cast<plot_t>(sumResults.at(i)));
-        v.at(2) = PlotCellValue(static_cast<plot_t>(absoluteResults.at(i)));
-        v.at(3) = PlotCellValue(static_cast<plot_t>(normalizedResults.at(i)));
-
-        std::vector<PlotCellValue> v2(2);
-        v2.at(0) = PlotCellValue(static_cast<plot_t>(i));
-        v2.at(1) = PlotCellValue(static_cast<plot_t>(normalizedResults.at(i)));
-
-        bool inserted1 = plotData->insert(v);
-        bool inserted2 = normalizedPlotData->insert(v2);
-        if (!inserted1 || !inserted2) {
-            LERROR("Could not insert data into plot");
-            delete plotData;
-            delete normalizedPlotData;
-            plotData = 0;
-            normalizedPlotData = 0;
-            break;
-        }
-    }
-
-    quantificationPlot_.setData(plotData, true);
-    normalizedQuantificationPlot_.setData(normalizedPlotData, true);*/
+    std::ofstream file(csvSaveFile_.get());
+    file << header.str();
+    file << line.str();
+    file.close();
 }
 
 void VolumeComparison::adjustToInputVolumes() {
     if (!isInitialized())
         return;
-
-    // new input volumes -> reset results
-    lastSummary_ = ScanSummary();
-    saveToCsv_.setReadOnlyFlag(true);
 
     // adjust clipping area to input
     const VolumeBase* firstVol = firstSegmentationVolume_.getData();
@@ -267,26 +229,6 @@ void VolumeComparison::adjustToInputVolumes() {
 
 void VolumeComparison::useClipRegionChanged() {
     clipRegion_.setVisibleFlag(useClipRegion_.get());
-}
-
-void VolumeComparison::exportToCSV() {
-    std::ofstream file(csvSaveFile_.get());
-    size_t numVoxels = lastSummary_.totalNumberOfVoxels();
-    float avgDiffAbs = lastSummary_.sumOfVoxelDiffsAbs_ / numVoxels;
-    float variance = lastSummary_.sumOfVoxelDiffsSquared_ / (numVoxels * numVoxels);
-    file << "Number_of_voxels,voxels_in_volume1,voxels_in_volume2,voxels_in_both,dice_score,sumDiffAbs,avgDiffAbs,sumDiffSquared,variance" << std::endl;
-    file << numVoxels
-        << "," << lastSummary_.numForegroundOnlyOne_
-        << "," << lastSummary_.numForegroundOnlyTwo_
-        << "," << lastSummary_.numForegroundBoth_
-        << "," << lastSummary_.diceScore()
-        << "," << lastSummary_.sumOfVoxelDiffsAbs_
-        << "," << avgDiffAbs
-        << "," << lastSummary_.sumOfVoxelDiffsSquared_
-        << "," << variance
-        << std::endl;
-
-    file.close();
 }
 
 VolumeComparison::ScanSummary::ScanSummary()

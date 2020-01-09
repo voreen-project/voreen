@@ -79,21 +79,14 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Quantifies the volume of one or two segmentation (i.e., binary) volumes. If two volumes are given as input, the amount of overlap is also computed. \
-                The result can be exported to a CSV file. <br> \
-                <b> Caution: <\\b> For segmentation analysis, the processor assumes any value different from 0 to be a foreground voxel and treats only voxels exactly equal to zero as background.<br><br> \
-                For two input volumes, the dimensions and data type have to be the same. The processor only allows single-channel volumes.");
+        setDescription("Compares two volumes voxel wise and stores the result in a csv file. Only supports volume with 1 channel and with the same dimensions and real world mapping.");
     }
 
     virtual void process();
     virtual void initialize();
 
-    virtual void computeQuantification();
-
-    virtual void exportToCSV();
-
     /// starts the quantification for all time steps
-    ButtonProperty startComputation_;
+    BoolProperty enabled_;
 
     /// progress in application mode
     ProgressProperty progressProperty_;
@@ -104,10 +97,6 @@ protected:
     FloatProperty binarizationThreshold_;
 
     FileDialogProperty csvSaveFile_;
-    ButtonProperty saveToCsv_;
-
-    // quantification results
-    ScanSummary lastSummary_;
 
     /// plotting port for quantification results
     //PlotPort quantificationPlot_;
