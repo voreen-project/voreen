@@ -26,6 +26,7 @@
 #include "volumecomparison.h"
 
 #include "voreen/core/datastructures/volume/volumedisk.h"
+#include "voreen/core/datastructures/volume/volumeminmax.h"
 #include "voreen/core/utils/stringutils.h"
 
 #include "tgt/stopwatch.h"
@@ -40,6 +41,7 @@ VolumeComparison::VolumeComparison()
     , secondSegmentationVolume_(Port::INPORT, "secondsegmentation", "Second Segmentation Volume", false)
     , useClipRegion_("useClipRegion", "Use Clip Region", false)
     , clipRegion_("clipRegion", "Clip Region", tgt::IntBounds(tgt::ivec3(0), tgt::ivec3(1)), tgt::ivec3(0), tgt::ivec3(1))
+    , binarizationThreshold_("binarizationThreshold", "Binarization Threshold", 0.5, 0.0, 1.0)
     , startComputation_("startComputation", "Start Computation")
     , progressProperty_("progressProperty", "Quantification Progress")
     , csvSaveFile_("csvFileProp", "CSV Export Path", "CSV Export Path", ".", "Comma seperated values (*.csv)", FileDialogProperty::SAVE_FILE)
@@ -92,34 +94,18 @@ void VolumeComparison::initialize() {
     adjustToInputVolumes();
 }
 
-template<typename T>
-void genericQuantification(const VolumeRAM* slice1, const VolumeRAM* slice2, VolumeComparison::ScanSummary& summary, tgt::svec3 llf, tgt::svec3 urb) {
+void quantification(const VolumeRAM* slice1, const VolumeRAM* slice2, VolumeComparison::ScanSummary& summary, tgt::svec3 llf, tgt::svec3 urb, RealWorldMapping rwm, float rwThreadhold) {
 
-    const VolumeAtomic<T>* genericSlice1 = 0;
-    const VolumeAtomic<T>* genericSlice2 = 0;
+    float threshold = rwm.realWorldToNormalized(rwThreadhold);
 
-    // try to cast to generic type
-    genericSlice1 = dynamic_cast<const VolumeAtomic<T>*>(slice1);
-    tgtAssert(genericSlice1, "Failed dynamic_cast");
-
-    genericSlice2 = dynamic_cast<const VolumeAtomic<T>*>(slice2);
-    tgtAssert(genericSlice2, "Failed dynamic_cast");
-
-    size_t channels = genericSlice1->getNumChannels();
-    tgtAssert(genericSlice2->getNumChannels() == channels, "Number of channel mismatch");
 
     for (size_t y = llf.y; y <= urb.y; ++y) {
         for (size_t x = llf.x; x <= urb.x; ++x) {
+            float v1 = slice1->getVoxelNormalized(x, y, 0);
+            float v2 = slice2->getVoxelNormalized(x, y, 0);
 
-            T voxel1(0);
-            T voxel2(0);
-            if (genericSlice1)
-                voxel1 = genericSlice1->voxel(x,y,0);
-            if (genericSlice2)
-                voxel2 = genericSlice2->voxel(x,y,0);
-
-            bool foregroundOne = voxel1 != T(0);
-            bool foregroundTwo = voxel1 != T(0);
+            bool foregroundOne = v1 > threshold;
+            bool foregroundTwo = v2 > threshold;
 
             if (foregroundOne && foregroundTwo)
                 summary.numForegroundBoth_++;
@@ -130,14 +116,9 @@ void genericQuantification(const VolumeRAM* slice1, const VolumeRAM* slice2, Vol
             if (!foregroundOne && !foregroundTwo)
                 summary.numBackgroundBoth_++;
 
-            for(size_t c = 0; c < channels; ++c) {
-                float v1 = genericSlice1->getVoxelNormalized(x, y, 0, c);
-                float v2 = genericSlice2->getVoxelNormalized(x, y, 0, c);
-
-                float diff = std::abs(v1 - v2);
-                summary.sumOfVoxelDiffsSquared_ += diff*diff;
-                summary.sumOfVoxelDiffsAbs_ += diff;
-            }
+            float diff = std::abs(v1 - v2);
+            summary.sumOfVoxelDiffsSquared_ += diff*diff;
+            summary.sumOfVoxelDiffsAbs_ += diff;
         }
     }
 }
@@ -167,18 +148,19 @@ void VolumeComparison::computeQuantification() {
         return;
     }
 
-    std::string format = volume1.getFormat();
-    if(volume2.getFormat() != format) {
-        LERROR("Volumes do not have the same data type!");
-    }
-
     tgt::svec3 dimensions = volume1.getDimensions();
     if (dimensions != volume2.getDimensions()) {
         LERROR("Volumes are not of the same size!");
         return;
     }
 
-    ScanSummary summary;
+    RealWorldMapping rwm = volume1.getRealWorldMapping();
+    if (rwm != volume2.getRealWorldMapping()) {
+        LERROR("Real world mappings differ!");
+        return;
+    }
+
+    lastSummary_ = ScanSummary();
 
     tgt::Stopwatch timer;
     timer.start();
@@ -187,7 +169,7 @@ void VolumeComparison::computeQuantification() {
     tgt::svec3 llf, urb;
     llf = tgt::svec3::zero;
 
-    urb = dimensions;
+    urb = dimensions - tgt::svec3::one;
 
     // if the clip region is used, crop our bounds
     if (useClipRegion_.get()) {
@@ -204,7 +186,7 @@ void VolumeComparison::computeQuantification() {
         tgtAssert(slice2, "No slice 2");
 
         // quantify slice according to the data type
-        DISPATCH_FOR_FORMAT(format, genericQuantification, slice1.get(), slice2.get(), summary, llf, urb);
+        quantification(slice1.get(), slice2.get(), lastSummary_, llf, urb, rwm, binarizationThreshold_.get());
 
         setProgress(std::min(0.99f, static_cast<float>(z - llf.z) / static_cast<float>(urb.z - llf.z)));
     }
@@ -265,6 +247,7 @@ void VolumeComparison::adjustToInputVolumes() {
     // adjust clipping area to input
     const VolumeBase* firstVol = firstSegmentationVolume_.getData();
     const VolumeBase* secondVol = secondSegmentationVolume_.getData();
+    const VolumeBase* someVol = firstVol ? firstVol : secondVol;
     if (firstVol && secondVol) {
         // check if dimensions are the same and adjust clipping area
         if (firstVol->getDimensions() == secondVol->getDimensions())
@@ -275,6 +258,11 @@ void VolumeComparison::adjustToInputVolumes() {
     else if (secondVol)
         clipRegion_.setMaxValue(tgt::ivec3(secondVol->getDimensions() - tgt::svec3::one));
 
+    if(someVol) {
+        auto vmm = someVol->getDerivedData<VolumeMinMax>();
+        binarizationThreshold_.setMinValue(vmm->getMin());
+        binarizationThreshold_.setMaxValue(vmm->getMax());
+    }
 }
 
 void VolumeComparison::useClipRegionChanged() {
@@ -283,8 +271,20 @@ void VolumeComparison::useClipRegionChanged() {
 
 void VolumeComparison::exportToCSV() {
     std::ofstream file(csvSaveFile_.get());
-    file << "Number_of_voxels,voxels_in_volume1,voxels_in_volume2,voxels_in_both" << std::endl;
-    file << lastSummary_.totalNumberOfVoxels() << "," << lastSummary_.numForegroundOnlyOne_ << "," << lastSummary_.numForegroundOnlyTwo_ << "," << lastSummary_.numForegroundBoth_ << std::endl;
+    size_t numVoxels = lastSummary_.totalNumberOfVoxels();
+    float avgDiffAbs = lastSummary_.sumOfVoxelDiffsAbs_ / numVoxels;
+    float variance = lastSummary_.sumOfVoxelDiffsSquared_ / (numVoxels * numVoxels);
+    file << "Number_of_voxels,voxels_in_volume1,voxels_in_volume2,voxels_in_both,dice_score,sumDiffAbs,avgDiffAbs,sumDiffSquared,variance" << std::endl;
+    file << numVoxels
+        << "," << lastSummary_.numForegroundOnlyOne_
+        << "," << lastSummary_.numForegroundOnlyTwo_
+        << "," << lastSummary_.numForegroundBoth_
+        << "," << lastSummary_.diceScore()
+        << "," << lastSummary_.sumOfVoxelDiffsAbs_
+        << "," << avgDiffAbs
+        << "," << lastSummary_.sumOfVoxelDiffsSquared_
+        << "," << variance
+        << std::endl;
 
     file.close();
 }
@@ -301,6 +301,9 @@ VolumeComparison::ScanSummary::ScanSummary()
 
 size_t VolumeComparison::ScanSummary::totalNumberOfVoxels() const {
     return numForegroundBoth_ + numForegroundOnlyOne_ + numForegroundOnlyTwo_ + numBackgroundBoth_;
+}
+float VolumeComparison::ScanSummary::diceScore() const {
+    return 2.0f * numForegroundBoth_ / (numForegroundOnlyOne_ + numForegroundOnlyTwo_ + 2*numForegroundBoth_);
 }
 
 } // namespace

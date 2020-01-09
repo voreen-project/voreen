@@ -34,6 +34,7 @@
 #include "voreen/core/properties/buttonproperty.h"
 #include "voreen/core/properties/progressproperty.h"
 #include "voreen/core/properties/boundingboxproperty.h"
+#include "voreen/core/properties/floatproperty.h"
 
 #include "voreen/core/properties/filedialogproperty.h"
 
@@ -55,8 +56,11 @@ public:
         size_t numForegroundOnlyTwo_;
         size_t numForegroundBoth_;
         size_t numBackgroundBoth_;
+        float sumOfVoxelDiffsSquared_;
+        float sumOfVoxelDiffsAbs_;
 
         size_t totalNumberOfVoxels() const;
+        float diceScore() const;
     };
 
     VolumeComparison();
@@ -96,6 +100,8 @@ protected:
 
     BoolProperty useClipRegion_;
     IntBoundingBoxProperty clipRegion_;
+
+    FloatProperty binarizationThreshold_;
 
     FileDialogProperty csvSaveFile_;
     ButtonProperty saveToCsv_;
