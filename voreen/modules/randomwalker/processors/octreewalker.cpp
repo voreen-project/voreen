@@ -64,7 +64,7 @@ namespace voreen {
 
 namespace {
 
-const std::string PREV_RESULT_OCTREE_FILE_NAME = "prev_result_octree.vvod";
+const std::string RESULT_OCTREE_FILE_NAME = "prev_result_octree.vvod";
 const std::string BRICK_BUFFER_SUBDIR =      "brickBuffer";
 const std::string BRICK_BUFFER_FILE_PREFIX = "buffer_";
 
@@ -254,16 +254,6 @@ bool OctreeWalker::isReady() const {
 void OctreeWalker::serialize(Serializer& ser) const {
     AsyncComputeProcessor<OctreeWalkerInput, OctreeWalkerOutput>::serialize(ser);
     ser.serialize("prevResultPath", prevResultPath_);
-
-    if(previousOctree_) {
-        std::string previousResultDir = resultPath_.get();
-        std::string previousResultFile = tgt::FileSystem::cleanupPath(previousResultDir + "/" + PREV_RESULT_OCTREE_FILE_NAME);
-
-        XmlSerializer s(previousResultDir);
-        std::ofstream fs(previousResultFile);
-        s.serialize("Octree", *previousOctree_);
-        s.write(fs);
-    }
 }
 
 void OctreeWalker::deserialize(Deserializer& s) {
@@ -274,7 +264,7 @@ void OctreeWalker::deserialize(Deserializer& s) {
         s.removeLastError();
     }
 
-    std::string previousResultFile = tgt::FileSystem::cleanupPath(prevResultPath_ + "/" + PREV_RESULT_OCTREE_FILE_NAME);
+    std::string previousResultFile = tgt::FileSystem::cleanupPath(prevResultPath_ + "/" + RESULT_OCTREE_FILE_NAME);
 
     if(!prevResultPath_.empty() && tgt::FileSystem::fileExists(previousResultFile)) {
         XmlDeserializer d(prevResultPath_);
@@ -1227,6 +1217,20 @@ void OctreeWalker::processComputeOutput(ComputeOutput output) {
     previousVolume_ = std::move(output.volume_);
 
     output.octree_ = nullptr;
+
+    if(previousOctree_) {
+        std::string previousResultDir = resultPath_.get();
+        std::string previousResultFile = tgt::FileSystem::cleanupPath(previousResultDir + "/" + RESULT_OCTREE_FILE_NAME);
+        previousVolume_->setOrigin(previousResultFile);
+
+        XmlSerializer s(previousResultDir);
+        std::ofstream fs(previousResultFile);
+        s.serialize("Octree", *previousOctree_);
+        s.write(fs);
+
+        tgtAssert(previousVolume_, "Previous result octree without volume");
+        previousVolume_->setOrigin(previousResultFile);
+    }
 }
 void OctreeWalker::clearPreviousResults() {
     // First: Reset output
