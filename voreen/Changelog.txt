@@ -6,6 +6,7 @@ Voreen Changelog
 
     * Bug Fixes/Minor Changes:
       o Fix initialization of opencl solver for RandomWalker processor
+      o Fix sparse matrix blas implementations for partially filled rows
 
 2019-12-12: Voreen 5.1.0
 ------------------------
