@@ -691,6 +691,9 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , clippingRegion_("clippingRegion", "Clip Region (Link with OptimizedProxyGeometry)", tgt::ivec3(0), tgt::ivec3(0), tgt::ivec3(INT_MAX))
 {
     addPort(inport_);
+    ON_CHANGE_LAMBDA(inport_, [this] () {
+        seedsChanged_ = true;
+    });
     addPort(foregroundLabelGeometry_);
     addPort(backgroundLabelGeometry_);
     addPort(overlayOutput_);
