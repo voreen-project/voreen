@@ -25,6 +25,10 @@
 
 #include "volumefilterlist.h"
 
+#include "voreen/core/properties/intproperty.h"
+#include "voreen/core/properties/floatproperty.h"
+#include "voreen/core/properties/vectorproperty.h"
+
 #include "modules/hdf5/io/hdf5volumereader.h"
 #include "modules/hdf5/io/hdf5volumewriter.h"
 #include "modules/hdf5/io/hdf5filevolume.h"
@@ -340,12 +344,43 @@ void VolumeFilterList::addFilter(FilterProperties* filterProperties) {
     filterProperties_.push_back(std::unique_ptr<FilterProperties>(filterProperties));
     for(Property* property : filterProperties->getProperties()) {
         addProperty(property);
+        disableTracking(property);
         property->setGroupID(filterProperties->getVolumeFilterName());
         ON_CHANGE((*property), VolumeFilterList, onFilterPropertyChange);
     }
     filterProperties->storeVisibility();
     setPropertyGroupGuiName(filterProperties->getVolumeFilterName(), filterProperties->getVolumeFilterName());
     setPropertyGroupVisible(filterProperties->getVolumeFilterName(), false);
+}
+
+void VolumeFilterList::disableTracking(Property* property) {
+    // HACK: This is not the nice way of doing things.
+    //  However, NumericProperty is a template class and has no non-template interface.
+    //  Therefore, we just manually check for related properties here.
+    if(auto prop = dynamic_cast<FloatProperty*>(property)) {
+        prop->setTracking(false);
+    }
+    else if(auto prop = dynamic_cast<IntProperty*>(property)) {
+        prop->setTracking(false);
+    }
+    else if(auto prop = dynamic_cast<FloatVec2Property*>(property)) {
+        prop->setTracking(false);
+    }
+    else if(auto prop = dynamic_cast<FloatVec3Property*>(property)) {
+        prop->setTracking(false);
+    }
+    else if(auto prop = dynamic_cast<FloatVec4Property*>(property)) {
+        prop->setTracking(false);
+    }
+    else if(auto prop = dynamic_cast<IntVec2Property*>(property)) {
+        prop->setTracking(false);
+    }
+    else if(auto prop = dynamic_cast<IntVec3Property*>(property)) {
+        prop->setTracking(false);
+    }
+    else if(auto prop = dynamic_cast<IntVec4Property*>(property)) {
+        prop->setTracking(false);
+    }
 }
 
 }   // namespace

@@ -111,6 +111,7 @@ private:
     void inputOutputChannelCheck();
 
     void addFilter(FilterProperties* filterProperties);
+    void disableTracking(Property* property);
 
     /// Filter list
     std::vector<std::unique_ptr<FilterProperties>> filterProperties_;
