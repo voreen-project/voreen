@@ -490,7 +490,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
     int step = 0;
     for (int level = input.startLevel_; level >= input.endLevel_; level--) {
         SubtaskProgressReporter iterationProgress(loopProgress, tgt::vec2(static_cast<float>(step)/numSteps, static_cast<float>(step+1)/numSteps));
-        loopProgress.setProgress(0.0);
+        iterationProgress.setProgress(0.0);
         ++step;
 
 
@@ -552,7 +552,8 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
          */
 
         const RandomWalkerSeeds* seedsRef = seeds.get(); // only valid until solver is deleted.
-        solver.reset(new RandomWalkerSolver(workVolume, seeds.release(), input.weights_.release()));
+        tgtAssert(input.weights_, "No random walker weights")
+        solver.reset(new RandomWalkerSolver(workVolume, seeds.release(), *input.weights_));
         try {
             auto start = clock::now();
             solver->setupEquationSystem();
@@ -592,7 +593,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
             }
 
             auto start = clock::now();
-            int iterations = solver->solve(input.blas_, initialization, input.precond_, input.errorThreshold_, input.maxIterations_, loopProgress);
+            int iterations = solver->solve(input.blas_, initialization, input.precond_, input.errorThreshold_, input.maxIterations_, iterationProgress);
             auto finish = clock::now();
             loopRecord.timeSolving = finish - start;
             loopRecord.numIterations = iterations;
@@ -655,12 +656,21 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
             }
 
             // erode obtained fore- and background seed volumes
-            std::unique_ptr<Volume> erh(VolumeOperatorCubeErosion::APPLY_OP(new Volume(foregroundSeedVol.get(), vec3(1.0f), vec3(0.0f)), input.lodSeedErosionKernelSize_)); //FIXME: small memory leak
+            std::unique_ptr<Volume> erh;
+            {
+                std::unique_ptr<Volume> tmpvol(new Volume(foregroundSeedVol.release(), vec3(1.0f), vec3(0.0f)));
+                erh.reset(VolumeOperatorCubeErosion::APPLY_OP(tmpvol.get(), input.lodSeedErosionKernelSize_));
+            }
             foregroundSeedVol.reset(static_cast<VolumeRAM_UInt8*>(erh->getWritableRepresentation<VolumeRAM>()));
             erh->releaseAllRepresentations();
-            erh.reset(VolumeOperatorCubeErosion::APPLY_OP(new Volume(backgroundSeedVol.get(), vec3(1.0f), vec3(0.0f)), input.lodSeedErosionKernelSize_));
+
+            {
+                std::unique_ptr<Volume>  tmpvol(new Volume(backgroundSeedVol.release(), vec3(1.0f), vec3(0.0f)));
+                erh.reset(VolumeOperatorCubeErosion::APPLY_OP(tmpvol.get(), input.lodSeedErosionKernelSize_));
+            }
             backgroundSeedVol.reset(static_cast<VolumeRAM_UInt8*>(erh->getWritableRepresentation<VolumeRAM>()));
             erh->releaseAllRepresentations();
+
             for (size_t i=0; i<foregroundSeedVol->getNumVoxels(); i++) {
                     if (foregroundSeedVol->voxel(i) < 255)
                         foregroundSeedVol->voxel(i) = 0;
@@ -682,7 +692,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
 
         loopRecord.print();
 
-        loopProgress.setProgress(1.0);
+        iterationProgress.setProgress(1.0);
     } // end loop
 
     tgtAssert(solver, "no random walker solver");

@@ -38,7 +38,7 @@ namespace voreen {
 const std::string RandomWalkerSolver::loggerCat_("voreen.RandomWalker.RandomWalkerSolver");
 
 RandomWalkerSolver::RandomWalkerSolver(const VolumeBase* volume,
-        RandomWalkerSeeds* seeds, RandomWalkerWeights* edgeWeights) :
+        RandomWalkerSeeds* seeds, RandomWalkerWeights& edgeWeights) :
     volume_(volume),
     seeds_(seeds),
     edgeWeights_(edgeWeights),
@@ -51,7 +51,6 @@ RandomWalkerSolver::RandomWalkerSolver(const VolumeBase* volume,
 {
     tgtAssert(volume_, "no volume");
     tgtAssert(seeds_, "no seed point definer");
-    tgtAssert(edgeWeights_, "no edge weight calculator");
 
     volDim_ = volume->getDimensions();
     numVoxels_ = tgt::hmul(volDim_);
@@ -68,9 +67,7 @@ RandomWalkerSolver::~RandomWalkerSolver() {
     solution_ = 0;
 
     delete seeds_;
-    delete edgeWeights_;
     seeds_ = 0;
-    edgeWeights_ = 0;
 }
 
 void RandomWalkerSolver::setupEquationSystem() {
@@ -123,7 +120,7 @@ void RandomWalkerSolver::setupEquationSystem() {
 
     // initialize edge weight computer
     try {
-        edgeWeights_->initialize(volume_, seeds_, this);
+        edgeWeights_.initialize(volume_, seeds_, this);
     }
     catch (VoreenException& e) {
         throw VoreenException("Failed to initialize edge weights: " + std::string(e.what()));
@@ -139,7 +136,7 @@ void RandomWalkerSolver::setupEquationSystem() {
     for (int z=0; z<volDim_.z; z++) {
         for (int y=0; y<volDim_.y; y++) {
             for (int x=0; x<volDim_.x; x++) {
-                edgeWeights_->processVoxel(tgt::ivec3(x, y, z), seeds_, mat_, vec_, this, volram, rwm);
+                edgeWeights_.processVoxel(tgt::ivec3(x, y, z), seeds_, mat_, vec_, this, volram, rwm);
             }
         }
     }

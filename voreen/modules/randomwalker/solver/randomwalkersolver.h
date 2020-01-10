@@ -84,7 +84,7 @@ public:
      *
      * @see RandomWalkerTwoLabelSeeds, RandomWalkerWeightsIntensity, RandomWalkerWeightsTransFunc
      */
-    RandomWalkerSolver(const VolumeBase* volume, RandomWalkerSeeds* seeds, RandomWalkerWeights* edgeWeights);
+    RandomWalkerSolver(const VolumeBase* volume, RandomWalkerSeeds* seeds, RandomWalkerWeights& edgeWeights);
 
     /// Frees the allocated resources.
     ~RandomWalkerSolver();
@@ -199,7 +199,7 @@ private:
 
     const VolumeBase* volume_;
     RandomWalkerSeeds* seeds_;
-    RandomWalkerWeights* edgeWeights_;
+    RandomWalkerWeights& edgeWeights_;
 
     //const float* opacityBuffer_;
     //size_t opacityBufferSize_;

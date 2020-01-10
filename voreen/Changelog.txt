@@ -9,6 +9,7 @@ Voreen Changelog
       o Fix sparse matrix blas implementations for partially filled rows
       o Disable tracking of numeric properties of VolumeFilterList to improve usability when continuous update is enabled
       o Fix crash in SliceReaders (affecting VolumeFilterList and VesselnessExtractor) when using very large convolutions
+      o Fix crash when using LOD mode of RandomWalker
 
 2019-12-12: Voreen 5.1.0
 ------------------------
