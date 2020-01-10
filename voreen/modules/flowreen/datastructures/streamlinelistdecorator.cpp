@@ -33,21 +33,21 @@ namespace voreen {
 
 StreamlineListDecoratorIdentity::StreamlineListDecoratorIdentity(StreamlineListBase* base)
     : StreamlineListBase()
-    , basePointer_(base)
+    , decorated_(base)
 {
-    tgtAssert(base, "Decorator without base pointer!!!");
-    base->addObserver(this);
+    tgtAssert(base, "Decorator without base pointer");
+    decorated_->Observable<StreamlineListObserver>::addObserver(this);
 }
 
 StreamlineListDecoratorIdentity::~StreamlineListDecoratorIdentity() {
 }
 
 StreamlineListBase* StreamlineListDecoratorIdentity::clone() const {
-    if(basePointer_) {
-        return basePointer_->clone();
+    if(decorated_) {
+        return decorated_->clone();
     } else {
         tgtAssert(false,"missing base pointer");
-        return 0;
+        return nullptr;
     }
 }
 
@@ -55,158 +55,118 @@ StreamlineListBase* StreamlineListDecoratorIdentity::clone() const {
     //  Observer
     //------------------------
 void StreamlineListDecoratorIdentity::beforeStreamlineListDelete(const StreamlineListBase* source) {
-    tgtAssert(source == basePointer_, "Notified by other StreamlineList than decorated!");
+    tgtAssert(source == decorated_, "Notified by other StreamlineList than decorated!");
 
-    // not ideal, but the best we can do here: notify observers about deletion of data
-    basePointer_->removeObserver(this);
-    std::vector<StreamlineListObserver*> observers = getObservers();
+    decorated_->Observable<StreamlineListObserver>::removeObserver(this);
+    std::vector<StreamlineListObserver*> observers = Observable<StreamlineListObserver>::getObservers();
     for (size_t i = 0; i < observers.size(); ++i)
-        observers[i]->beforeStreamlineListDecoratorPointerReset(this);
-    basePointer_ = 0;
+        observers[i]->beforeStreamlineListDelete(this);
+    decorated_ = nullptr;
 }
 
     //------------------------
     //  Streamline Handling
     //------------------------
 void StreamlineListDecoratorIdentity::addStreamline(const Streamline& line) {
-    if(basePointer_) {
-        basePointer_->addStreamline(line);
-    } else {
-        tgtAssert(false,"missing base pointer");
-    }
+    tgtAssert(decorated_, "missing base pointer");
+    decorated_->addStreamline(line);
 }
 
 void StreamlineListDecoratorIdentity::addStreamlineList(const StreamlineListBase& list) {
-    if(basePointer_) {
-        basePointer_->addStreamlineList(list);
-    } else {
-        tgtAssert(false,"missing base pointer");
-    }
+    tgtAssert(decorated_, "missing base pointer");
+    decorated_->addStreamlineList(list);
 }
 
-const std::vector<Streamline>& StreamlineListDecoratorIdentity::removeStreamline(size_t pos) {
-    tgtAssert(basePointer_, "missing base pointer");
-    return basePointer_->removeStreamline(pos);
+void StreamlineListDecoratorIdentity::removeStreamline(size_t pos) {
+    tgtAssert(decorated_, "missing base pointer");
+    decorated_->removeStreamline(pos);
+}
+
+void StreamlineListDecoratorIdentity::clearStreamlines() {
+    tgtAssert(decorated_, "missing base pointer");
+    decorated_->clearStreamlines();
 }
 
 const std::vector<Streamline>& StreamlineListDecoratorIdentity::getStreamlines() const {
-    tgtAssert(basePointer_, "missing base pointer");
-    return basePointer_->getStreamlines();
-}
-
-
-    //------------------------------
-    //  Streamline Bundle Handling
-    //------------------------------
-void StreamlineListDecoratorIdentity::addStreamlineBundle(const StreamlineBundle& bundle) {
-    tgtAssert(basePointer_, "missing base pointer");
-    basePointer_->addStreamlineBundle(bundle);
-}
-
-const std::vector<StreamlineBundle>& StreamlineListDecoratorIdentity::removeStreamlineBundle(size_t pos) {
-    tgtAssert(basePointer_, "missing base pointer");
-    return basePointer_->removeStreamlineBundle(pos);
-}
-
-const std::vector<StreamlineBundle>& StreamlineListDecoratorIdentity::getStreamlineBundles() const {
-    tgtAssert(basePointer_, "missing base pointer");
-    return basePointer_->getStreamlineBundles();
-}
-
-void StreamlineListDecoratorIdentity::setStreamlineNoiseFlag(size_t pos) {
-    tgtAssert(basePointer_, "missing base pointer");
-    basePointer_->setStreamlineNoiseFlag(pos);
-}
-
-const std::vector<size_t>& StreamlineListDecoratorIdentity::getStreamlineNoise() const {
-    tgtAssert(basePointer_, "missing base pointer");
-    return basePointer_->getStreamlineNoise();
+    tgtAssert(decorated_, "missing base pointer");
+    return decorated_->getStreamlines();
 }
 
     //----------------
     //  Meta
     //----------------
 const tgt::svec3& StreamlineListDecoratorIdentity::getOriginalDimensions() const {
-    tgtAssert(basePointer_, "missing base pointer");
-    return basePointer_->getOriginalDimensions();
+    tgtAssert(decorated_, "missing base pointer");
+    return decorated_->getOriginalDimensions();
 }
 
 const tgt::vec3& StreamlineListDecoratorIdentity::getOriginalSpacing() const {
-    tgtAssert(basePointer_, "missing base pointer");
-    return basePointer_->getOriginalSpacing();
+    tgtAssert(decorated_, "missing base pointer");
+    return decorated_->getOriginalSpacing();
 }
 
 const tgt::Bounds& StreamlineListDecoratorIdentity::getOriginalVoxelBounds() const {
-    tgtAssert(basePointer_, "missing base pointer");
-    return basePointer_->getOriginalVoxelBounds();
+    tgtAssert(decorated_, "missing base pointer");
+    return decorated_->getOriginalVoxelBounds();
 }
 
 const tgt::Bounds& StreamlineListDecoratorIdentity::getOriginalWorldBounds() const {
-    tgtAssert(basePointer_, "missing base pointer");
-    return basePointer_->getOriginalWorldBounds();
+    tgtAssert(decorated_, "missing base pointer");
+    return decorated_->getOriginalWorldBounds();
 }
 
 const tgt::mat4& StreamlineListDecoratorIdentity::getOriginalVoxelToWorldMatrix() const {
-    tgtAssert(basePointer_, "missing base pointer");
-    return basePointer_->getOriginalVoxelToWorldMatrix();
+    tgtAssert(decorated_, "missing base pointer");
+    return decorated_->getOriginalVoxelToWorldMatrix();
 }
 
 const tgt::mat4& StreamlineListDecoratorIdentity::getOriginalWorldToVoxelMatrix() const {
-    tgtAssert(basePointer_, "missing base pointer");
-    return basePointer_->getOriginalWorldToVoxelMatrix();
+    tgtAssert(decorated_, "missing base pointer");
+    return decorated_->getOriginalWorldToVoxelMatrix();
 }
 
 float StreamlineListDecoratorIdentity::getMinMagnitude() const {
-    tgtAssert(basePointer_, "missing base pointer");
-    return basePointer_->getMinMagnitude();
+    tgtAssert(decorated_, "missing base pointer");
+    return decorated_->getMinMagnitude();
 }
 
 float StreamlineListDecoratorIdentity::getMaxMagnitude() const {
-    tgtAssert(basePointer_, "missing base pointer");
-    return basePointer_->getMaxMagnitude();
+    tgtAssert(decorated_, "missing base pointer");
+    return decorated_->getMaxMagnitude();
 }
 
 const tgt::mat4& StreamlineListDecoratorIdentity::getListTransformMatrix() const {
-    tgtAssert(basePointer_, "missing base pointer");
-    return basePointer_->getListTransformMatrix();
+    tgtAssert(decorated_, "missing base pointer");
+    return decorated_->getListTransformMatrix();
 }
 
 const tgt::mat4& StreamlineListDecoratorIdentity::getVelocityTransformMatrix() const {
-    tgtAssert(basePointer_, "missing base pointer");
-    return basePointer_->getVelocityTransformMatrix();
+    tgtAssert(decorated_, "missing base pointer");
+    return decorated_->getVelocityTransformMatrix();
 }
 
 const tgt::mat4 StreamlineListDecoratorIdentity::getVoxelToWorldMatrix() const {
-    tgtAssert(basePointer_, "missing base pointer");
-    return basePointer_->getVoxelToWorldMatrix();
+    tgtAssert(decorated_, "missing base pointer");
+    return decorated_->getVoxelToWorldMatrix();
 }
 
 void StreamlineListDecoratorIdentity::setTransformMatrices(const tgt::mat4& listMatrix, const tgt::mat4& velocityMatrix) {
-    if(basePointer_) {
-        basePointer_->setTransformMatrices(listMatrix, velocityMatrix);
-    } else {
-        tgtAssert(false,"missing base pointer");
-    }
+    tgtAssert(decorated_, "missing base pointer");
+    notifyPendingDataInvalidation();
+    decorated_->setTransformMatrices(listMatrix, velocityMatrix);
 }
 
     //----------------
     //  Storage
     //----------------
 std::string StreamlineListDecoratorIdentity::metaToCSVString() const {
-    if(basePointer_) {
-        return basePointer_->metaToCSVString();
-    } else {
-        tgtAssert(false,"missing base pointer");
-        return "";
-    }
+    tgtAssert(decorated_, "missing base pointer");
+    return decorated_->metaToCSVString();
 }
 
 void StreamlineListDecoratorIdentity::serialize(Serializer& s) const {
-    if(basePointer_) {
-        basePointer_->serialize(s);
-    } else {
-        tgtAssert(false,"missing base pointer");
-    }
+    tgtAssert(decorated_, "missing base pointer");
+    decorated_->serialize(s);
 }
 
 void StreamlineListDecoratorIdentity::deserialize(Deserializer& s) {
@@ -228,8 +188,8 @@ StreamlineListDecoratorReplaceTransformation::StreamlineListDecoratorReplaceTran
 {}
 
 StreamlineListBase* StreamlineListDecoratorReplaceTransformation::clone() const {
-    if(basePointer_) {
-        StreamlineListBase* tmp = basePointer_->clone();
+    if(decorated_) {
+        StreamlineListBase* tmp = decorated_->clone();
         tmp->setTransformMatrices(decoratorListTransformMatrix_, decoratorVelocityTransformMatrix_);
         return tmp;
     } else {
@@ -251,25 +211,24 @@ const tgt::mat4 StreamlineListDecoratorReplaceTransformation::getVoxelToWorldMat
 }
 
 void StreamlineListDecoratorReplaceTransformation::setTransformMatrices(const tgt::mat4& listMatrix, const tgt::mat4& velocityMatrix) {
+    notifyPendingDataInvalidation();
     decoratorListTransformMatrix_ = listMatrix;
     decoratorVelocityTransformMatrix_ = velocityMatrix;
 }
 
 void StreamlineListDecoratorReplaceTransformation::serialize(Serializer& s) const {
-    if(basePointer_) {
+    if(decorated_) {
         tgt::mat4 tmpTransformMatrix, tmpVelocityMatrix;
-        tmpTransformMatrix = basePointer_->getListTransformMatrix();
-        tmpVelocityMatrix  = basePointer_->getVelocityTransformMatrix();
-        basePointer_->setTransformMatrices(decoratorListTransformMatrix_, decoratorVelocityTransformMatrix_);
+        tmpTransformMatrix = decorated_->getListTransformMatrix();
+        tmpVelocityMatrix  = decorated_->getVelocityTransformMatrix();
+        decorated_->setTransformMatrices(decoratorListTransformMatrix_, decoratorVelocityTransformMatrix_);
 
-        basePointer_->serialize(s);
+        decorated_->serialize(s);
 
-        basePointer_->setTransformMatrices(tmpTransformMatrix, tmpVelocityMatrix);
+        decorated_->setTransformMatrices(tmpTransformMatrix, tmpVelocityMatrix);
     } else {
         tgtAssert(false,"missing base pointer");
     }
-};
-
-
+}
 
 }   // namespace

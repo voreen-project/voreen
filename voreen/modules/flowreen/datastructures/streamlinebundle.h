@@ -39,53 +39,30 @@
 
 namespace voreen {
 
-    /**
-     * This class represents a bundle of streamlines, therefore storing the index of every streamline
-     * being assigned. Those indices refer to the StreamlineList, the bundles are being created on.
-     */
-    class VRN_CORE_API StreamlineBundle : public Serializable {
-    public:
+/**
+ * This class represents a bundle of streamlines, therefore storing the index of every streamline
+ * being assigned. Those indices refer to the StreamlineList, the bundles are being created on.
+ */
+class VRN_CORE_API StreamlineBundle {
+public:
 
-        /**
-         * Within the current implementation, a node contains no more information than a StreamlineElement.
-         * Thus, we use the existing code and add information later on, if needed.
-         */
-        typedef Streamline::StreamlineElement Node;
+    StreamlineBundle(); // Only for trivial construction and assignment.
+    StreamlineBundle(Streamline&& prototype);
 
-    public:
+    /** Assignes a streamline to this bundle. */
+    void addStreamline(Streamline&& streamline);
 
-        StreamlineBundle();
-        StreamlineBundle(size_t index, const Streamline& prototype);
+    /** Returns all assigned streamlines. */
+    const std::vector<Streamline>& getStreamlines() const;
 
-        /** Assignes a streamline to this bundle. */
-        void addStreamline(size_t index, const Streamline& streamline);
+    /** Returns the Centroid Streamline of this bundle. */
+    const Streamline& getCentroid() const;
 
-        /** Returns the indices of all assigned streamlines. */
-        const std::vector<size_t>& getStreamlines() const;
+private:
 
-        /** Returns the Centroid Streamline of this bundle. */
-        Streamline getCentroid() const;
-
-        /** Returns a radius representing the extrution of the centroid. */
-        float getRadius() const;
-
-        //----------------
-        //  Storage
-        //----------------
-        /** Used to save as CSV file. Transforms the voxel position to world space. */
-        std::string toCSVString(const tgt::mat4& transfomationMatrix = tgt::mat4::identity) const;
-        /** @override */
-        virtual void serialize(Serializer& s) const;
-        /** @override */
-        virtual void deserialize(Deserializer& s);
-
-    private:
-
-        std::vector<size_t> streamlines_; ///< list containing all assigned streamlines
-        std::vector<Node> nodes_;         ///< list containing all nodes
-        float radius_;                    ///< a radius representing the extrution of the centroid
-
-    };
+    std::vector<Streamline> streamlines_;
+    Streamline centroid_;
+};
 
 }
 

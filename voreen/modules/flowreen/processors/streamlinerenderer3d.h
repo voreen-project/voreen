@@ -79,24 +79,10 @@ protected:
     virtual void deinitialize();
 
 private:
-    //------------------
-    // Enums
-    //------------------
-    enum RenderingOption {
-        OPTION_STREAMLINES,
-        OPTION_STREAMLINEBUNDLES_NOISE_OFF,
-        OPTION_STREAMLINEBUNDLES_NOISE_ON,
-    };
-    friend class OptionProperty<RenderingOption>;
-
-    enum StreamlineBundleStyle {
-        BUNDLE_STYLE_LINES,
-        BUNDLE_STYLE_TUBES,
-        BUNDLE_STYLE_ARROWS,
-    };
 
     enum StreamlineStyle {
         STYLE_LINES,
+        STYLE_TUBES,
         STYLE_ARROWS,
     };
 
@@ -121,10 +107,9 @@ private:
     virtual std::string generateHeader(const tgt::GpuCapabilities::GlVersion* version = 0);
     void compile();
     void rebuild();
-    void buildStreamlineData(const std::vector<Streamline>& streamlines = std::vector<Streamline>());
-    void buildStreamlineBundleData(const std::vector<StreamlineBundle>& bundles = std::vector<StreamlineBundle>());
-    GlMeshGeometryUInt32Color* createStreamTube(const StreamlineBundle& bundle) const;
-    GlMeshGeometryUInt32Color* createArrowPath(const StreamlineBundle& bundle) const;
+    GlMeshGeometryUInt32Color* createLineGeometry(const std::vector<Streamline>& streamlines);
+    GlMeshGeometryUInt32Color* createTubeGeometry(const Streamline& streamline) const;
+    GlMeshGeometryUInt32Color* createArrowGeometry(const Streamline& streamline) const;
     tgt::mat4 createTransformationMatrix(const tgt::vec3& position, const tgt::vec3& velocity) const;
 
     //------------------
@@ -135,13 +120,10 @@ private:
     RenderPort imgOutport_;
         //style
     OptionProperty<StreamlineStyle> streamlineStyleProp_;                ///< used to change streamline representations
-    OptionProperty<StreamlineBundleStyle> streamlineBundleStyleProp_;    ///< used to change streamline bundle representations
-        //options
-    OptionProperty<RenderingOption> renderingOptionProp_;                ///< used to determine rendering output
         //color
     OptionProperty<StreamlineColorCoding> colorProp_;   ///< color encoding
     TransFunc1DKeysProperty tfProp_;                    ///< tf for velocity color coding
-        VolumeBase* tfVolume_;                          ///< volume for tf fit to data
+    std::unique_ptr<VolumeBase> tfVolume_;              ///< volume for tf fit to data
     FloatMat4Property colorRotationMatrix_;             ///< rotation matrix for the direction encoding color
     FloatOptionProperty rotateAroundX_;                 ///< rotate around x to get nice color coding
     FloatOptionProperty rotateAroundY_;                 ///< rotate around y to get nice color coding
@@ -149,13 +131,12 @@ private:
 
         //must haves
     ShaderProperty streamlineShaderProp_;               ///< used for rendering
-        bool requiresRecompileShader_;
+    bool requiresRecompileShader_;
     CameraProperty cameraProp_;                         ///< the camera
-        CameraInteractionHandler* cameraHandler_;       ///< handler to allow navigation
+    CameraInteractionHandler* cameraHandler_;           ///< handler to allow navigation
 
         //rendering
-    std::vector<GlMeshGeometryUInt32Color* > meshes_;   ///< all other meshes to be rendered
-    size_t bundleMeshStartIndex_;                       ///< determines the position of the first bundle mesh
+    std::vector<std::unique_ptr<GlMeshGeometryUInt32Color>> meshes_;   ///< all other meshes to be rendered
     bool requiresRebuild_;
 };
 

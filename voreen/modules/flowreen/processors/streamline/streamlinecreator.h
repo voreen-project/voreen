@@ -56,8 +56,6 @@ struct StreamlineCreatorOutput {
 /**
  * This processor is used to create streamlines from a vec3 volume.
  * It can be used with the StreamlineRenderer3D. At the moment only RAM volumes are supported.
- *
- * @Note: It uses a background thread to handle changed parameters during calculation.
  */
 class VRN_CORE_API StreamlineCreator : public AsyncComputeProcessor<StreamlineCreatorInput, StreamlineCreatorOutput> {
 public:
@@ -88,26 +86,15 @@ protected:
                                                       "to the maximum threshold.");
         absoluteMagnitudeThresholdProp_.setDescription("Flow data points outside the threshold intervall will not be used for streamline construction.");
         relativeMagnitudeThresholdProp_.setDescription("Can be used to adjust the absolut magnitude correctly.");
-        /*
-        detectStreamlineBundlesProp_.setDescription("If checked, at any time a streamline calculation has finished a bundle detection process is triggered. " \
-                                                    "This may take another few minutes. In the meantime observing the calculated streamlines is possible.");
-        maxAverageDistanceThresholdProp_.setDescription("In principle, this parameter specifies an approximate diameter of the main streams/flows which shall be detected. " \
-                                                        "Increasing this value leads to less but bigger bundles, decreasing leads to more but smaller bundles. " \
-                                                        "As a general rule of thumb, for the first results, a value of the same magnitude as the diameter of the vessels " \
-                                                        "etc. in the actual dataset should be chosen, if existent.");
-        minNumStreamlinesPerBundleProp_.setDescription("Each bundle having been detected has to contain at least this amount of streamlines " \
-                                                       "(in percent according to the total amount) in order to be not filtered out as noise.");
-        resampleSizeProp_.setDescription("The underlying algorithm needs each streamline to be resampled to a fixed number of elements/segments. " \
-                                         "A higher value could improve the result on a dataset with very curvy or twisty streamlines, but slows down the process.");
-                                     */
     }
 
 private:
 
     struct IntegrationInput {
         const VolumeRAM* representation;
-        RealWorldMapping rwm;
+        tgt::vec3 stepSize;
         VolumeRAM::Filter filterMode;
+        RealWorldMapping rwm;
         tgt::ivec2 streamlineLengthThreshold;
         tgt::vec2 absoluteMagnitudeThreshold;
         float stopIntegrationAngleThreshold;
@@ -135,14 +122,6 @@ private:
     FloatIntervalProperty relativeMagnitudeThresholdProp_;  ///< debug output
     IntProperty stopIntegrationAngleThresholdProp_;         ///< stop integration when exceeding threshold?
     OptionProperty<VolumeRAM::Filter> filterModeProp_;      ///< filtering inside the dataset
-/*
-    //streamline bundle settings
-    BoolProperty detectStreamlineBundlesProp_;              ///< determines if bundles shall be detected
-    ProgressProperty bundleDetectionProgressProp_;          ///< progress bar for the bundle-detection thread
-    FloatProperty maxAverageDistanceThresholdProp_;         ///< distance threshold for the bundle algorithm
-    FloatProperty minNumStreamlinesPerBundleProp_;          ///< bundle must contain more than this percentage of streamlines
-    IntProperty resampleSizeProp_;                          ///< streamlines are resampled to this value
-*/
 };
 
 }   // namespace

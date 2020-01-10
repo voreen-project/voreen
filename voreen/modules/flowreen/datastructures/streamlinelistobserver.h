@@ -30,8 +30,7 @@
 
 namespace voreen {
 
-    class StreamlineListBase;
-    class StreamlineListDecoratorIdentity;
+class StreamlineListBase;
 
 /**
  * Interface for streamlinelist observers.
@@ -39,18 +38,11 @@ namespace voreen {
 class VRN_CORE_API StreamlineListObserver : public Observer {
 public:
     /**
-     * This method is called by the observed StreamlineListBase's destructor.
+     * This method is called on destruction of a streamline list.
      *
      * @param source the calling StreamlineListBase
      */
     virtual void beforeStreamlineListDelete(const StreamlineListBase* source) = 0;
-
-    /**
-     * This method is called by the observed StreamlineListDeorator's on beforeStreamlineListDelete.
-     *
-     * @param source the calling StreamlineListDecorator
-     */
-    virtual void beforeStreamlineListDecoratorPointerReset(const StreamlineListDecoratorIdentity* source) = 0;
 };
 
 } //namespace

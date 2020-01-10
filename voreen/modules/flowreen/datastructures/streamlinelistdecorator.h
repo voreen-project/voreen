@@ -56,7 +56,6 @@ public:
     //  Observer Functions
     //------------------------------
     virtual void beforeStreamlineListDelete(const StreamlineListBase* source) override;
-    virtual void beforeStreamlineListDecoratorPointerReset(const StreamlineListDecoratorIdentity* source) override {};
 
     //------------------------------
     //  Streamline Handling
@@ -66,23 +65,11 @@ public:
     /** Adds and copies all Streamlines. No meta data is copied except min/max magnitude. */
     virtual void addStreamlineList(const StreamlineListBase& list) override;
     /** Removes a Streamline and returns all remaining ones. */
-    virtual const std::vector<Streamline>& removeStreamline(size_t pos) override;
+    virtual void removeStreamline(size_t pos) override;
+    /** Removes all streamlines */
+    virtual void clearStreamlines() override ;
     /** Returns all Streamlines. */
     virtual const std::vector<Streamline>& getStreamlines() const override;
-
-    //----------------------------
-    //  Streamline Bundle Handling
-    //----------------------------
-    /** Adds a Streamline Bundle and copies it. */
-    void addStreamlineBundle(const StreamlineBundle& bundle) override;
-    /** Removes a Streamline Bundle and returns all remaining ones. */
-    const std::vector<StreamlineBundle>& removeStreamlineBundle(size_t pos) override;
-    /** Returns all Streamline Bundles. */
-    const std::vector<StreamlineBundle>& getStreamlineBundles() const override;
-    /** Classifies a given streamline in terms of being noise in relation to bundles. */
-    void setStreamlineNoiseFlag(size_t pos) override;
-    /** Returns all Streamlines being classified as noise. */
-    const std::vector<size_t>& getStreamlineNoise() const override;
 
     //------------------------------
     //  Meta
@@ -116,7 +103,7 @@ public:
     //  Members
     //------------------------------
 protected:
-    mutable StreamlineListBase* basePointer_; ///< pointer to the base StreamlineListBase...
+    mutable StreamlineListBase* decorated_; ///< pointer to the base StreamlineListBase...
 };
 
 

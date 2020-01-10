@@ -32,36 +32,40 @@
 #include "voreen/core/io/serialization/xmlserializer.h"
 #include "voreen/core/io/serialization/xmldeserializer.h"
 
+#include "voreen/core/utils/statistics.h"
+
 #include "tgt/vector.h"
 
 #include <deque>
 
 namespace voreen {
 
-    /**
-     * Datastructure used to represent streamlines. It is used in the flowreen module.
-     * A streamline consists of multiple StreamlineElements each storing a position and the velocity at this position.
-     */
+/**
+ * Datastructure used to represent streamlines. It is used in the flowreen module.
+ * A streamline consists of multiple StreamlineElements each storing a position and the velocity at this position.
+ */
 class VRN_CORE_API Streamline : public Serializable {
     friend class StreamlineList;
 public:
     /**
-     * A streamline consits of a vector of these elements.
+     * A streamline consists of a vector of these elements.
      */
     struct StreamlineElement {
         tgt::vec3 position_;    ///< position in voxel space
-        tgt::vec3 velocity_;
+        tgt::vec3 velocity_;    ///< local velocity
+        float radius_;
 
         StreamlineElement()
             : position_(tgt::vec3::zero)
             , velocity_(tgt::vec3::zero)
+            , radius_(0.0f)
         {}
 
-        StreamlineElement(tgt::vec3 position, tgt::vec3 velocity)
+        StreamlineElement(const tgt::vec3& position, const tgt::vec3& velocity, float radius = 0.0f)
             : position_(position)
             , velocity_(velocity)
+            , radius_(radius)
         {
-            //tgtAssert(tgt::length(velocity) > 16.f, "ohoh"); debug
         }
     };
 
@@ -87,7 +91,6 @@ public:
     size_t getNumElements() const;
     float getMinMagnitude() const;
     float getMaxMagnitude() const;
-    float getLength() const;
 
     //----------------
     //  Utility
@@ -111,9 +114,7 @@ public:
     //----------------
 private:
    std::deque<StreamlineElement> streamlineElements_;   ///< list of all streamline elements from front to back
-   float minMagnitude_;                                 ///< min magnitude value for color map configuration
-   float maxMagnitude_;                                 ///< max magnitude value for color map configuration
-   float length_;                                       ///< the actual length of the streamline
+   Statistics magnitudeStatistics_;                     ///< statistics of the contained magnitudes
 };
 
 }   // namespace

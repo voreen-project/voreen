@@ -33,7 +33,6 @@ namespace voreen {
 
     // TODO: Could be adjustable via Property ( debug ).
     static const uint32_t GEOMETRY_TESSELATION = 16;
-    static const float CENTROID_LINE_WIDTH = 3.0f;
 
 StreamlineRenderer3D::StreamlineRenderer3D()
     : RenderProcessor()
@@ -41,15 +40,11 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     , streamlineInport_(Port::INPORT, "streamlineInport", "Streamline Input")
     , imgOutport_(Port::OUTPORT, "image.streamlines", "Streamline Image Output", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
     //properties
-        //rendering option
-    , renderingOptionProp_("renderingOption", "Render:")
         //style
     , streamlineStyleProp_("streamlineStyle", "Streamline Style:")
-    , streamlineBundleStyleProp_("streamlineBundleStyle", "Streamline Bundle Style:")
         //color
     , colorProp_("colorProp","Color:")
     , tfProp_("tfProp","Color Map:")
-    , tfVolume_(0)
     , colorRotationMatrix_("colorRotationMatrix", "To be linked with FlowDirectionOverlay", tgt::mat4::identity,
                            tgt::mat4(-1.1f), tgt::mat4(1.1f), Processor::INVALID_RESULT, NumericProperty<tgt::mat4>::STATIC, Property::LOD_DEBUG)
     , rotateAroundX_("rotationaroundx", "x-Axis Rotation (degrees)")
@@ -60,7 +55,6 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     ,       requiresRecompileShader_(true)
     , cameraProp_("camera", "Camera: ", tgt::Camera(),true,true,500.f,Processor::INVALID_RESULT,Property::LOD_DEBUG)
     ,       cameraHandler_(0)
-    , bundleMeshStartIndex_(0)
     , requiresRebuild_(false)
 {
     //ports
@@ -68,23 +62,12 @@ StreamlineRenderer3D::StreamlineRenderer3D()
         streamlineInport_.onNewData(MemberFunctionCallback<StreamlineRenderer3D>(this, &StreamlineRenderer3D::onStreamlineDataChange));
     addPort(imgOutport_);
     //properties
-        // rendering option
-    addProperty(renderingOptionProp_);
-        renderingOptionProp_.addOption("streamlines", "Streamlines (No Bundles available)", OPTION_STREAMLINES);
-        renderingOptionProp_.addOption("streamlinebundles noise off", "Streamline Bundles - Noise off", OPTION_STREAMLINEBUNDLES_NOISE_OFF);
-        renderingOptionProp_.addOption("streamlinebundles noise on", "Streamline Bundles - Noise on", OPTION_STREAMLINEBUNDLES_NOISE_ON);
-        renderingOptionProp_.setReadOnlyFlag(true);
-        renderingOptionProp_.onChange(LambdaFunctionCallback([this] { requiresRebuild_ = true; }));
-    // style
+        // style
     addProperty(streamlineStyleProp_);
         streamlineStyleProp_.addOption("lines", "Lines", STYLE_LINES);
+        streamlineStyleProp_.addOption("tubes", "Tubes", STYLE_TUBES);
         streamlineStyleProp_.addOption("arrows", "Arrows", STYLE_ARROWS);
         streamlineStyleProp_.onChange(MemberFunctionCallback<StreamlineRenderer3D>(this, &StreamlineRenderer3D::onStyleChange));
-    addProperty(streamlineBundleStyleProp_);
-        streamlineBundleStyleProp_.addOption("lines", "Lines", BUNDLE_STYLE_LINES);
-        streamlineBundleStyleProp_.addOption("tubes", "Tubes", BUNDLE_STYLE_TUBES);
-        streamlineBundleStyleProp_.addOption("arrows", "Arrows", BUNDLE_STYLE_ARROWS);
-        streamlineBundleStyleProp_.onChange(LambdaFunctionCallback([this] { requiresRebuild_ = true; })); // force mesh rebuild
         // color
     addProperty(colorProp_);
         colorProp_.addOption("velocity" , "Velocity" , COLOR_VELOCITY);
@@ -125,7 +108,6 @@ StreamlineRenderer3D::StreamlineRenderer3D()
 
 StreamlineRenderer3D::~StreamlineRenderer3D() {
     delete cameraHandler_;
-    delete tfVolume_;
 }
 
 void StreamlineRenderer3D::initialize() {
@@ -141,8 +123,6 @@ void StreamlineRenderer3D::initialize() {
 void StreamlineRenderer3D::deinitialize() {
 
     // clear mesh data
-    for(GlMeshGeometryUInt32Color* mesh : meshes_)
-        delete mesh;
     meshes_.clear();
 
     RenderProcessor::deinitialize();
@@ -192,7 +172,6 @@ void StreamlineRenderer3D::process() {
 
         // Render every Mesh being created before.
         for(size_t i = 0; i < meshes_.size(); i++) {
-            glLineWidth((i >= bundleMeshStartIndex_) ? CENTROID_LINE_WIDTH : 1.0f);
             meshes_[i]->render();
         }
 
@@ -214,39 +193,33 @@ void StreamlineRenderer3D::onStreamlineDataChange() {
     cameraProp_.adaptInteractionToScene(streamlineInport_.getData()->getOriginalWorldBounds());
 
     //update tf
-    delete tfVolume_;
     float* data = new float[2];
     data[0] = streamlineInport_.getData()->getMinMagnitude();
     data[1] = streamlineInport_.getData()->getMaxMagnitude();
     VolumeRAM_Float* rep = new VolumeRAM_Float(data, tgt::svec3(2,1,1));
-    tfVolume_ = new Volume(rep, tgt::vec3::one, tgt::vec3::zero);
+    tfVolume_.reset(new Volume(rep, tgt::vec3::one, tgt::vec3::zero));
     tfVolume_->addDerivedData(new VolumeMinMax(data[0], data[1], data[0], data[1])); //to save time by not triggering an background thread
-    tfProp_.setVolume(tfVolume_, 0);
-
-    // Update Rendering Option selection.
-    if (streamlineInport_.getData()->getStreamlineBundles().empty()) {
-        renderingOptionProp_.setReadOnlyFlag(true);
-        renderingOptionProp_.setOptionDescription("streamlines", "Streamlines (No Bundles available)");
-        renderingOptionProp_.selectByValue(OPTION_STREAMLINES);
-    }
-    else {
-        renderingOptionProp_.setReadOnlyFlag(false);
-        renderingOptionProp_.setOptionDescription("streamlines", "Streamlines");
-    }
+    tfProp_.setVolume(tfVolume_.get(), 0);
 
     // Force rebuild
     requiresRebuild_ = true;
 }
 
 void StreamlineRenderer3D::onStyleChange() {
+    requiresRebuild_ = true;
+    /*
     //update shaders
     switch(streamlineStyleProp_.getValue()) {
     case STYLE_LINES:
+    case STYLE_TUBES:
+    case STYLE_ARROWS:
         requiresRecompileShader_ = true;
         break;
+
     default:
         LERROR("Unsupported style");
     }
+     */
 }
 
 void StreamlineRenderer3D::onColorChange() {
@@ -297,9 +270,7 @@ void StreamlineRenderer3D::computeDirectionColorRotationMatrix() {
 //--------------------------------------------------------------------------------------
 std::string StreamlineRenderer3D::generateHeader(const tgt::GpuCapabilities::GlVersion*) {
     //generate basic header
-    tgt::GpuCapabilities::GlVersion* version = new tgt::GpuCapabilities::GlVersion(3,3,0);
-    std::string header = RenderProcessor::generateHeader(version);
-    delete version;
+    std::string header = RenderProcessor::generateHeader(&tgt::GpuCapabilities::GlVersion::SHADER_VERSION_330);
     //add define for fragment shader
     switch(colorProp_.getValue()) {
     case COLOR_VELOCITY:
@@ -325,33 +296,23 @@ void StreamlineRenderer3D::compile() {
 void StreamlineRenderer3D::rebuild() {
 
     // clear old mesh data
-    for (GlMeshGeometryUInt32Color* mesh : meshes_)
-        delete mesh;
     meshes_.clear();
 
     // create new meshes according to selected option
-    switch (renderingOptionProp_.getValue()) {
-    case OPTION_STREAMLINES:
-        buildStreamlineData(streamlineInport_.getData()->getStreamlines());
-        bundleMeshStartIndex_ = 1;
+    switch (streamlineStyleProp_.getValue()) {
+    case STYLE_LINES:
+        meshes_.push_back(std::unique_ptr<GlMeshGeometryUInt32Color>(createLineGeometry(streamlineInport_.getData()->getStreamlines())));
         break;
-    case OPTION_STREAMLINEBUNDLES_NOISE_OFF:
-        buildStreamlineBundleData(streamlineInport_.getData()->getStreamlineBundles());
-        bundleMeshStartIndex_ = 0;
+    case STYLE_TUBES:
+        for(const Streamline& streamline : streamlineInport_.getData()->getStreamlines()) {
+            meshes_.push_back(std::unique_ptr<GlMeshGeometryUInt32Color>(createTubeGeometry(streamline)));
+        }
         break;
-    case OPTION_STREAMLINEBUNDLES_NOISE_ON:
-    {
-        std::vector<Streamline> noise;
-        noise.reserve(streamlineInport_.getData()->getStreamlineNoise().size());
-        for (size_t i : streamlineInport_.getData()->getStreamlineNoise())
-            noise.push_back(streamlineInport_.getData()->getStreamlines()[i]);
-
-        buildStreamlineData(noise);
-        bundleMeshStartIndex_ = meshes_.size();
-        buildStreamlineBundleData(streamlineInport_.getData()->getStreamlineBundles());
-
+    case STYLE_ARROWS:
+        for(const Streamline& streamline : streamlineInport_.getData()->getStreamlines()) {
+            meshes_.push_back(std::unique_ptr<GlMeshGeometryUInt32Color>(createArrowGeometry(streamline)));
+        }
         break;
-    }
     default:
         LERROR("Unsupported option");
     }
@@ -359,10 +320,7 @@ void StreamlineRenderer3D::rebuild() {
     requiresRebuild_ = false;
 }
 
-void StreamlineRenderer3D::buildStreamlineData(const std::vector<Streamline>& streamlines) {
-
-    if(streamlines.empty())
-        return;
+GlMeshGeometryUInt32Color* StreamlineRenderer3D::createLineGeometry(const std::vector<Streamline>& streamlines) {
 
     GlMeshGeometryUInt32Color* mesh = new GlMeshGeometryUInt32Color();
     mesh->setPrimitiveType(GL_LINE_STRIP);
@@ -376,68 +334,20 @@ void StreamlineRenderer3D::buildStreamlineData(const std::vector<Streamline>& st
         mesh->addIndex(mesh->getPrimitiveRestartIndex());
     }
 
-    meshes_.push_back(mesh);
+    return mesh;
 }
 
-void StreamlineRenderer3D::buildStreamlineBundleData(const std::vector<StreamlineBundle>& bundles) {
-
-    if(bundles.empty())
-        return;
-
-    switch(streamlineBundleStyleProp_.getValue()) {
-    case BUNDLE_STYLE_LINES:
-    {
-        std::vector<Streamline> streamlines;
-        streamlines.reserve(bundles.size());
-        for (const StreamlineBundle& bundle : bundles) {
-            streamlines.push_back(bundle.getCentroid());
-        }
-
-        buildStreamlineData(streamlines);
-
-        break;
-    }
-    case BUNDLE_STYLE_TUBES:
-
-        // Create one mesh for each bundle
-        for (const StreamlineBundle& bundle : bundles) {
-            meshes_.push_back(createStreamTube(bundle));
-        }
-
-        break;
-
-    case BUNDLE_STYLE_ARROWS:
-
-        // Create one mesh for each bundle
-        for (const StreamlineBundle& bundle : bundles) {
-            meshes_.push_back(createArrowPath(bundle));
-        }
-
-        break;
-
-    default:
-        LERROR("Unsupported style");
-    }
-}
-
-GlMeshGeometryUInt32Color* StreamlineRenderer3D::createStreamTube(const StreamlineBundle& bundle) const {
+GlMeshGeometryUInt32Color* StreamlineRenderer3D::createTubeGeometry(const Streamline& streamline) const {
 
     GlMeshGeometryUInt32Color* mesh = new GlMeshGeometryUInt32Color();
     mesh->setPrimitiveType(GL_TRIANGLES);
 
     const uint32_t tesselation = GEOMETRY_TESSELATION;
     const float angleStep = (tgt::PIf * 2.0f) / tesselation;
-    const float radius = bundle.getRadius();
 
-    // Return an empty mesh in case of a zero radius.
-    if(radius == 0.0f)
-        return mesh;
+    for (size_t k = 0; k < streamline.getNumElements(); k++) {
 
-    Streamline centroid = bundle.getCentroid();
-
-    for (size_t k = 0; k < centroid.getNumElements(); k++) {
-
-        const Streamline::StreamlineElement& element = centroid.getElementAt(k);
+        const Streamline::StreamlineElement& element = streamline.getElementAt(k);
         tgt::mat4 transformation = createTransformationMatrix(element.position_, element.velocity_);
 
         uint32_t offset = static_cast<uint32_t>(k) * tesselation;
@@ -448,12 +358,12 @@ GlMeshGeometryUInt32Color* StreamlineRenderer3D::createStreamTube(const Streamli
 
             // Calculate Vertex and add it to the mesh.
             float angle = angleStep * i;
-            v.x = radius * cosf(angle);
-            v.y = radius * sinf(angle);
+            v.x = element.radius_ * cosf(angle);
+            v.y = element.radius_ * sinf(angle);
             mesh->addVertex(VertexColor((transformation * v).xyz(), tgt::vec4(color, 1.0f)));
 
             // Calculate indices and add them to the mesh.
-            if (k < centroid.getNumElements() - 1) {
+            if (k < streamline.getNumElements() - 1) {
 
                 unsigned int j = (i + 1) % tesselation;
 
@@ -470,7 +380,7 @@ GlMeshGeometryUInt32Color* StreamlineRenderer3D::createStreamTube(const Streamli
     return mesh;
 }
 
-GlMeshGeometryUInt32Color* StreamlineRenderer3D::createArrowPath(const StreamlineBundle& bundle) const {
+GlMeshGeometryUInt32Color* StreamlineRenderer3D::createArrowGeometry(const Streamline& streamline) const {
 
     GlMeshGeometryUInt32Color* mesh = new GlMeshGeometryUInt32Color();
     mesh->setPrimitiveType(GL_TRIANGLES);
@@ -478,31 +388,27 @@ GlMeshGeometryUInt32Color* StreamlineRenderer3D::createArrowPath(const Streamlin
     // Define some constants for easier access.
     const uint32_t tesselation = GEOMETRY_TESSELATION;
     const float angleStep = (tgt::PIf * 2.0f) / tesselation;
-    const float radius = bundle.getRadius();
 
-    // Return an empty mesh in case of a zero radius.
-    if(radius == 0.0f)
-        return mesh;
-
-    // Get the streamline-representation of the bundle in order to use the resample function.
-    Streamline centroid = bundle.getCentroid();
+    // FIXME: radius and length not correct.
+    float radius = streamline.getFirstElement().radius_;
+    float length = streamline.getNumElements() * 0.5f;
 
     // Calculate the number of arrows the bundle will be split into.
-    const float desiredLengthOfArrow = std::min(radius * 4.0f, centroid.getLength());
-    const size_t samples = std::max<size_t>(2, centroid.getLength() / desiredLengthOfArrow);
+    const float desiredLengthOfArrow = std::min(radius * 4.0f, length);
+    const size_t samples = std::max<size_t>(2, length / desiredLengthOfArrow);
 
     // Resample the bundle.
-    centroid = centroid.resample(samples);
+    Streamline centroid = streamline.resample(samples);
 
     // Specify the dimensions of each arrow-submesh.
     const float arrowRatio = 0.9f;
-    const float lengthOfArrow = (centroid.getLength() / static_cast<float>(samples - 1)) * arrowRatio;
+    const float lengthOfArrow = (length / static_cast<float>(samples - 1)) * arrowRatio;
     const float lengthOfCylinder = lengthOfArrow * 0.7f;
 
-    const float radiusOfCylinder = radius * 0.7f;
-    const float radiusOfCone = radius * 1.1f;
-
     for (size_t k = 0; k < centroid.getNumElements() - 1; k++) {
+
+        const float radiusOfCylinder = centroid.getElementAt(k).radius_ * 0.7f;
+        const float radiusOfCone     = centroid.getElementAt(k).radius_ * 1.1f;
 
         const tgt::vec3& p0 = centroid.getElementAt(k).position_;
         const tgt::vec3& p1 = centroid.getElementAt(k+1).position_;

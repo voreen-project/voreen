@@ -29,7 +29,24 @@
 
 namespace voreen {
 
-StreamlineListBase::StreamlineListBase() {
+/// ----------------------------------------------------------------------------
+/// VolumeBaseDataInvalidator --------------------------------------------------
+/// ----------------------------------------------------------------------------
+StreamlineListDataInvalidator::StreamlineListDataInvalidator(StreamlineListBase& base)
+    : base_(base)
+{
+}
+
+void StreamlineListDataInvalidator::beforeStreamlineListDelete(const StreamlineListBase *source) {
+    tgtAssert(source == &base_, "Invalid streamlinelist observation");
+    base_.notifyPendingDataInvalidation();
+}
+
+
+StreamlineListBase::StreamlineListBase()
+    : dataInvalidator_(*this)
+{
+    Observable<StreamlineListObserver>::addObserver(&dataInvalidator_);
 }
 
 StreamlineListBase::~StreamlineListBase() {
@@ -40,7 +57,7 @@ StreamlineListBase::~StreamlineListBase() {
     //  Notifications
     //------------------------
 void StreamlineListBase::notifyDelete() {
-    std::vector<StreamlineListObserver*> observers = getObservers();
+    std::vector<StreamlineListObserver*> observers = Observable<StreamlineListObserver>::getObservers();
     for (size_t i=0; i<observers.size(); ++i)
         observers[i]->beforeStreamlineListDelete(this);
 }

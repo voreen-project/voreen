@@ -57,8 +57,6 @@ StreamlineListBase* StreamlineList::clone() const{
     StreamlineList* result = new StreamlineList();
 
     result->streamlines_             = this->streamlines_;
-    result->streamlineBundles_       = this->streamlineBundles_;
-    result->streamlineNoise_         = this->streamlineNoise_;
     result->dimensions_              = this->dimensions_;
     result->spacing_                 = this->spacing_;
     result->worldBounds_             = this->worldBounds_;
@@ -77,6 +75,8 @@ StreamlineListBase* StreamlineList::clone() const{
     //  Streamline Handling
     //------------------------
 void StreamlineList::addStreamline(const Streamline& line) {
+    notifyPendingDataInvalidation();
+
     streamlines_.push_back(line);
 
     //ignore degenerated lines
@@ -93,6 +93,9 @@ void StreamlineList::addStreamline(const Streamline& line) {
 void StreamlineList::addStreamlineList(const StreamlineListBase& list) {
     //return if list is empty
     if(list.getStreamlines().empty()) return;
+
+    notifyPendingDataInvalidation();
+
     //adapt min and max value
     if(minMagnitude_ < 0.f || minMagnitude_ > list.getMinMagnitude()) {
         minMagnitude_ = list.getMinMagnitude();
@@ -101,53 +104,23 @@ void StreamlineList::addStreamlineList(const StreamlineListBase& list) {
         maxMagnitude_ = list.getMaxMagnitude();
     }
 
-    //copy noise streamlines - add number of streamlines as offset
-    for(size_t i : list.getStreamlineNoise())
-        streamlineNoise_.push_back(streamlines_.size() + i);
-
-    //copy streamline bundles
-    streamlineBundles_.insert(streamlineBundles_.end(), list.getStreamlineBundles().begin(), list.getStreamlineBundles().end());
-
     //copy streamlines
     streamlines_.insert(streamlines_.end(), list.getStreamlines().begin(), list.getStreamlines().end());
 }
 
-const std::vector<Streamline>& StreamlineList::removeStreamline(size_t pos) {
+void StreamlineList::removeStreamline(size_t pos) {
     tgtAssert(pos < streamlines_.size(), "Index out of bounds.");
+    notifyPendingDataInvalidation();
     streamlines_[pos] = streamlines_[streamlines_.size()-1];
     streamlines_.pop_back();
-    return streamlines_;
+}
+
+void StreamlineList::clearStreamlines() {
+    streamlines_.clear();
 }
 
 const std::vector<Streamline>& StreamlineList::getStreamlines() const {
     return streamlines_;
-}
-
-    //------------------------
-    //  Streamline Bundle Handling
-    //------------------------
-
-void StreamlineList::addStreamlineBundle(const StreamlineBundle& bundle) {
-    streamlineBundles_.push_back(bundle);
-}
-
-const std::vector<StreamlineBundle>& StreamlineList::removeStreamlineBundle(size_t pos) {
-    tgtAssert(pos < streamlineBundles_.size(), "Index out of bounds.");
-    streamlineBundles_[pos] = streamlineBundles_[streamlineBundles_.size() - 1];
-    streamlineBundles_.pop_back();
-    return streamlineBundles_;
-}
-
-const std::vector<StreamlineBundle>& StreamlineList::getStreamlineBundles() const {
-    return streamlineBundles_;
-}
-
-void StreamlineList::setStreamlineNoiseFlag(size_t pos) {
-    streamlineNoise_.push_back(pos);
-}
-
-const std::vector<size_t>& StreamlineList::getStreamlineNoise() const {
-    return streamlineNoise_;
 }
 
     //----------------
@@ -198,6 +171,7 @@ const tgt::mat4 StreamlineList::getVoxelToWorldMatrix() const {
 }
 
 void StreamlineList::setTransformMatrices(const tgt::mat4& listMatrix, const tgt::mat4& velocityMatrix) {
+    notifyPendingDataInvalidation();
     listTransformMatrix_ = listMatrix;
     velocityTransformMatrix_ = velocityMatrix;
 }
@@ -208,7 +182,6 @@ void StreamlineList::setTransformMatrices(const tgt::mat4& listMatrix, const tgt
 std::string StreamlineList::metaToCSVString() const {
     std::stringstream output;
     output << streamlines_.size() << std::endl;
-    output << streamlineBundles_.size() << std::endl;
     output << minMagnitude_ << ", " << maxMagnitude_ << std::endl;
     output << dimensions_.x << ", " << dimensions_.y << ", " << dimensions_.z << std::endl;
     output << spacing_.x << ", " << spacing_.y << ", " << spacing_.z << std::endl;
@@ -238,16 +211,6 @@ void StreamlineList::serialize(Serializer& s) const {
     for(size_t i = 0; i < streamlines_.size(); i++) {
         s.serialize("Streamline" + itos(i,5), streamlines_[i]);
     }
-
-    s.serialize("NumStreamlineBundles", static_cast<int>(streamlineBundles_.size()));
-    for (size_t i = 0; i < streamlineBundles_.size(); i++) {
-        s.serialize("StreamlineBundle" + itos(i, 5), streamlineBundles_[i]);
-    }
-
-    s.serialize("NumNoiseStreamlines", static_cast<int>(streamlineNoise_.size()));
-    for(size_t i = 0; i < streamlineNoise_.size(); i++) {
-        s.serialize("NoiseStreamline" + itos(i, 5), streamlineNoise_[i]);
-    }
 }
 
 void StreamlineList::deserialize(Deserializer& s) {
@@ -270,22 +233,6 @@ void StreamlineList::deserialize(Deserializer& s) {
     streamlines_.resize(numStreamlines);
     for(size_t i = 0; i < numStreamlines; i++) {
         s.deserialize("Streamline" + itos(i,5), streamlines_[i]);
-    }
-
-    size_t numStreamlineBundles = 0;
-    s.optionalDeserialize<size_t>("NumStreamlineBundles", numStreamlineBundles, 0);
-    streamlineBundles_.clear();
-    streamlineBundles_.resize(numStreamlineBundles);
-    for (size_t i = 0; i < numStreamlineBundles; i++) {
-        s.deserialize("StreamlineBundle" + itos(i, 5), streamlineBundles_[i]);
-    }
-
-    size_t numNoiseStreamlines = 0;
-    s.optionalDeserialize<size_t>("NumNoiseStreamlines", numNoiseStreamlines, 0);
-    streamlineNoise_.clear();
-    streamlineNoise_.resize(numNoiseStreamlines);
-    for(size_t i = 0; i < numNoiseStreamlines; i++) {
-        s.deserialize("NoiseStreamline" + itos(i, 5), streamlineNoise_[i]);
     }
 }
 

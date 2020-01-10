@@ -27,16 +27,29 @@
 #define VRN_STREAMLINELISTBASE_H
 
 #include "voreen/core/io/serialization/serializable.h"
-#include "streamlinelistobserver.h"
+#include "voreen/core/datastructures/datainvalidationobserver.h"
 
 #include "streamline.h"
 #include "streamlinebundle.h"
+#include "streamlinelistobserver.h"
 
 #include "tgt/vector.h"
 #include "tgt/matrix.h"
 #include "tgt/bounds.h"
 
 namespace voreen {
+
+/*
+ * Helper struct to delegate VolumeObserver calls to DataInvalidationObservable
+ * You probably should not be using this yourself.
+ */
+struct VRN_CORE_API StreamlineListDataInvalidator : public StreamlineListObserver {
+    StreamlineListDataInvalidator(StreamlineListBase& base);
+
+    // Methods from StreamlineListObserver. Used to delegate events to DataInvalidationObservable
+    virtual void beforeStreamlineListDelete(const StreamlineListBase* source);
+    StreamlineListBase& base_;
+};
 
 #ifdef DLL_TEMPLATE_INST
 template class VRN_CORE_API Observable<StreamlineListObserver>;
@@ -48,7 +61,10 @@ template class VRN_CORE_API Observable<StreamlineListObserver>;
  * stored in the class StreamlineList
  * We use a base class, since a StreamlineListDecorator is used to override the transformation matrix.
  */
-class VRN_CORE_API StreamlineListBase : public Serializable, public Observable<StreamlineListObserver> {
+class VRN_CORE_API StreamlineListBase : public Serializable,
+                                        public Observable<StreamlineListObserver>,
+                                        public DataInvalidationObservable {
+
     friend class StreamlineRotation;
     friend class StreamlineListDecoratorIdentity;
     friend class StreamlineListDecoratorReplaceTransformation;
@@ -74,7 +90,7 @@ public:
     //------------------------------
     //  Observer Notification
     //------------------------------
-    /** Notifies the registered StremlineListObservers about the pending deletion of the Volume. */
+    /** Notifies the registered StreamlineListObservers about the pending deletion of the Volume. */
     void notifyDelete();
 
     //------------------------------
@@ -85,23 +101,11 @@ public:
     /** Adds and copies all Streamlines. No meta data is copied except min/max magnitude. */
     virtual void addStreamlineList(const StreamlineListBase& list) = 0;
     /** Removes a Streamline and returns all remaining ones. */
-    virtual const std::vector<Streamline>& removeStreamline(size_t pos) = 0;
+    virtual void removeStreamline(size_t pos) = 0;
+    /** Removes all streamlines */
+    virtual void clearStreamlines() = 0;
     /** Returns all Streamlines. */
     virtual const std::vector<Streamline>& getStreamlines() const = 0;
-
-    //----------------------------
-    //  Streamline Bundle Handling
-    //----------------------------
-    /** Adds a Streamline Bundle and copies it. */
-    virtual void addStreamlineBundle(const StreamlineBundle& bundle) = 0;
-    /** Removes a Streamline Bundle and returns all remaining ones. */
-    virtual const std::vector<StreamlineBundle>& removeStreamlineBundle(size_t pos) = 0;
-    /** Returns all Streamline Bundles. */
-    virtual const std::vector<StreamlineBundle>& getStreamlineBundles() const = 0;
-    /** Classifies a given streamline in terms of being noise in relation to bundles. */
-    virtual void setStreamlineNoiseFlag(size_t pos) = 0;
-    /** Returns all Streamlines being classified as noise. */
-    virtual const std::vector<size_t>& getStreamlineNoise() const = 0;
 
     //------------------------------
     //  Meta
@@ -135,6 +139,9 @@ public:
     virtual std::string metaToCSVString() const = 0;
     virtual void serialize(Serializer& s) const override = 0;
     virtual void deserialize(Deserializer& s) override = 0;
+
+private:
+    StreamlineListDataInvalidator dataInvalidator_;
 };
 
 }   // namespace

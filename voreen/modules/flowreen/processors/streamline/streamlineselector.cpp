@@ -305,33 +305,21 @@ void StreamlineSelectorBackgroundThread::threadMain() {
 void StreamlineSelectorBackgroundThread::selectBegin() {
 
     size_t numStreamlines = output_->getStreamlines().size();
-    size_t numStreamlineBundles = output_->getStreamlineBundles().size();
-    size_t totalAmount = numStreamlines + numStreamlineBundles;
 
-    size_t updateProcess = std::max<size_t>(1, std::min<size_t>(totalAmount / 9, 100));
-    for (size_t i = 0, j = 0; i < numStreamlines + numStreamlineBundles; i++, j++) {
+    size_t updateProcess = std::max<size_t>(1, std::min<size_t>(numStreamlines / 9, 100));
+    for (size_t i = 0; i < numStreamlines; i++) {
+        size_t index = numStreamlines - i - 1;
+
         //handle interruption and progress
         interruptionPoint();
-        if(j % updateProcess == 0) {
-            processor_->setProgress(0.95f * j / totalAmount);
+        if(i % updateProcess == 0) {
+            processor_->setProgress(0.95f * i / numStreamlines);
         }
 
         //check, if inside for
-        if (i < numStreamlines) { // a) streamlines
-            bool inside = roi_.inside(output_->getStreamlines()[i].getFirstElement().position_);
-            if ((inside_ ? !inside : inside)) {
-                numStreamlines = output_->removeStreamline(i).size();
-                i--;
-                continue;
-            }
-        } else { // b) bundles
-            size_t index = i - numStreamlines;
-            bool inside = roi_.inside(output_->getStreamlineBundles()[index].getCentroid().getFirstElement().position_);
-            if ((inside_ ? !inside : inside)) {
-                numStreamlineBundles = output_->removeStreamlineBundle(index).size();
-                i--;
-                continue;
-            }
+        bool inside = roi_.inside(output_->getStreamlines()[index].getFirstElement().position_);
+        if (inside_ == !inside) {
+            output_->removeStreamline(index);
         }
     }
 }
@@ -339,33 +327,21 @@ void StreamlineSelectorBackgroundThread::selectBegin() {
 void StreamlineSelectorBackgroundThread::selectEnd() {
 
     size_t numStreamlines = output_->getStreamlines().size();
-    size_t numStreamlineBundles = output_->getStreamlineBundles().size();
-    size_t totalAmount = numStreamlines + numStreamlineBundles;
 
-    size_t updateProcess = std::max<size_t>(1, std::min<size_t>(totalAmount / 9, 100));
-    for(size_t i = 0, j = 0; i < numStreamlines + numStreamlineBundles; i++,j++) {
+    size_t updateProcess = std::max<size_t>(1, std::min<size_t>(numStreamlines / 9, 100));
+    for(size_t i = 0; i < numStreamlines; i++) {
+        size_t index = numStreamlines - i - 1;
+
         //handle interruption and progress
         interruptionPoint();
-        if(j % updateProcess == 0) {
-            processor_->setProgress(0.95f * j / totalAmount);
+        if(i % updateProcess == 0) {
+            processor_->setProgress(0.95f * i / numStreamlines);
         }
 
         //check, if inside for
-        if (i < numStreamlines) { // a) streamlines
-            bool inside = roi_.inside(output_->getStreamlines()[i].getLastElement().position_);
-            if ((inside_ ? !inside : inside)) {
-                numStreamlines = output_->removeStreamline(i).size();
-                i--;
-                continue;
-            }
-        } else { // b) bundles
-            size_t index = i - numStreamlines;
-            bool inside = roi_.inside(output_->getStreamlineBundles()[index].getCentroid().getLastElement().position_);
-            if ((inside_ ? !inside : inside)) {
-                numStreamlineBundles = output_->removeStreamlineBundle(index).size();
-                i--;
-                continue;
-            }
+        bool inside = roi_.inside(output_->getStreamlines()[index].getLastElement().position_);
+        if (inside_ == !inside) {
+            output_->removeStreamline(index);
         }
     }
 }
@@ -373,18 +349,16 @@ void StreamlineSelectorBackgroundThread::selectEnd() {
 void StreamlineSelectorBackgroundThread::selectIntersect() {
 
     size_t numStreamlines = output_->getStreamlines().size();
-    size_t numStreamlineBundles = output_->getStreamlineBundles().size();
-    size_t totalAmount = numStreamlines + numStreamlineBundles;
+    size_t updateProcess = std::max<size_t>(1, std::min<size_t>(numStreamlines / 9, 100));
+    for (size_t i = 0; i < numStreamlines; i++) {
+        size_t index = numStreamlines - i - 1;
+        const Streamline& streamline = output_->getStreamlines()[index];
 
-    size_t updateProcess = std::max<size_t>(1, std::min<size_t>(totalAmount / 9, 100));
-    for (size_t i = 0, j = 0; i < numStreamlines + numStreamlineBundles; i++, j++) {
         //handle interruption and progress
         interruptionPoint();
-        if(j % updateProcess == 0) {
-            processor_->setProgress(0.95f * j / totalAmount);
+        if(i % updateProcess == 0) {
+            processor_->setProgress(0.95f * i / numStreamlines);
         }
-
-        Streamline streamline = (i < numStreamlines) ? output_->getStreamlines()[i] : output_->getStreamlineBundles()[i - numStreamlines].getCentroid();
 
         //check, if inside
         bool removeStreamline;
@@ -413,11 +387,7 @@ void StreamlineSelectorBackgroundThread::selectIntersect() {
         }
         //remove streamline if needed
         if(removeStreamline) {
-            if (i < numStreamlines)
-                numStreamlines = output_->removeStreamline(i).size();
-            else
-                numStreamlineBundles = output_->removeStreamlineBundle(i - numStreamlines).size();
-            i--;
+            output_->removeStreamline(index);
         }
     }
 }

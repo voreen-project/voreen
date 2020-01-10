@@ -26,103 +26,55 @@
 #include "streamlinebundle.h"
 #include "streamline.h"
 
-#include "voreen/core/io/serialization/serialization.h"
-
 #include <sstream>
 
 namespace voreen {
 
-//-------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------
-//      StreamlineBundle
-//-------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------
 StreamlineBundle::StreamlineBundle()
-    : radius_(0.0f)
 {
 }
 
-StreamlineBundle::StreamlineBundle(size_t index, const Streamline& prototype)
-    : radius_(0.0f)
+StreamlineBundle::StreamlineBundle(Streamline&& prototype)
 {
-    nodes_.reserve(prototype.getNumElements());
-    for(size_t i = 0; i < prototype.getNumElements(); i++) {
-        Node node;
-        node.position_ = prototype.getElementAt(i).position_;
-        node.velocity_ = prototype.getElementAt(i).velocity_;
-        nodes_.push_back(node);
-    }
-
-    streamlines_.push_back(index);
+    centroid_ = prototype;
+    streamlines_.emplace_back(prototype);
 }
 
-void StreamlineBundle::addStreamline(size_t index, const Streamline& streamline) {
+void StreamlineBundle::addStreamline(Streamline&& streamline) {
 
-    // Get current centroid.
-    Streamline centroid = getCentroid();
-
-    // Update the approximate radius.
-    float minimalDistanceSq = std::numeric_limits<float>::max();
-    for(size_t k = 0; k < nodes_.size(); k++) {
-        for(size_t j = 0; j < streamline.getNumElements(); j++) {
-            minimalDistanceSq = std::min(minimalDistanceSq, tgt::distanceSq(centroid.getElementAt(k).position_, streamline.getElementAt(j).position_));
-        }
-
-        nodes_[k].position_ += streamline.getElementAt(k).position_;
-        nodes_[k].velocity_ += streamline.getElementAt(k).velocity_;
+    if(streamline.getNumElements() != centroid_.getNumElements()) {
+        tgtAssert(false, "Number of elements does not match");
+        return;
     }
 
-    // Update radius.
-    radius_ += sqrtf(minimalDistanceSq);
+    // Update the centroid (using rolling mean).
+    Streamline updatedCentroid;
+    for(size_t i=0; i<centroid_.getNumElements(); i++) {
+        const tgt::vec3& centroidPosition = centroid_.getElementAt(i).position_;
+        const tgt::vec3& centroidVelocity = centroid_.getElementAt(i).velocity_;
 
-    // Add streamline to bundle
-    streamlines_.push_back(index);
+        tgt::dvec3 deltaPosition = streamline.getElementAt(i).position_ - centroidPosition;
+        tgt::dvec3 deltaVelocity = streamline.getElementAt(i).velocity_ - centroidVelocity;
+
+        tgt::vec3 updatedPosition = tgt::dvec3(centroidPosition) + deltaPosition / static_cast<double>(streamlines_.size() + 1);
+        tgt::vec3 updatedVelocity = tgt::dvec3(centroidVelocity) + deltaVelocity / static_cast<double>(streamlines_.size() + 1);
+
+        float updatedRadius = std::max(centroid_.getElementAt(i).radius_, tgt::distance(updatedPosition, centroidPosition));
+
+        updatedCentroid.addElementAtEnd(Streamline::StreamlineElement(updatedPosition, updatedVelocity, updatedRadius));
+    }
+    centroid_ = updatedCentroid;
+
+    // Add the streamline to the bundle.
+    streamlines_.emplace_back(streamline);
 }
 
-const std::vector<size_t>& StreamlineBundle::getStreamlines() const {
+const Streamline& StreamlineBundle::getCentroid() const {
+    return centroid_;
+}
+
+const std::vector<Streamline>& StreamlineBundle::getStreamlines() const {
     return streamlines_;
-}
-
-Streamline StreamlineBundle::getCentroid() const {
-
-    Streamline streamline;
-
-    for(size_t i = 0; i < nodes_.size(); i++) {
-        Streamline::StreamlineElement element;
-        element.position_ = nodes_[i].position_ / static_cast<float>(streamlines_.size());
-        element.velocity_ = nodes_[i].velocity_ / static_cast<float>(streamlines_.size());
-        streamline.addElementAtEnd(element);
-    }
-
-    return streamline;
-}
-
-float StreamlineBundle::getRadius() const {
-    return radius_ / streamlines_.size();
-}
-
-//----------------
-//  Storage
-//----------------
-std::string StreamlineBundle::toCSVString(const tgt::mat4& transformationMatrix) const {
-    std::stringstream output;
-
-    output << streamlines_.size() << ", " << getRadius() << ", ";
-    output << getCentroid().toCSVString(transformationMatrix);
-
-    return output.str();
-}
-
-void StreamlineBundle::serialize(Serializer& s) const {
-    s.serialize("Radius", radius_);
-    s.serializeBinaryBlob("AbsorbedStreamlines", streamlines_);
-    s.serializeBinaryBlob("StreamlineBundleNodes", nodes_);
-}
-
-void StreamlineBundle::deserialize(Deserializer& s) {
-    s.deserialize("Radius", radius_);
-    s.deserializeBinaryBlob("AbsorbedStreamlines", streamlines_);
-    s.deserializeBinaryBlob("StreamlineBundleNodes", nodes_);
 }
 
 }

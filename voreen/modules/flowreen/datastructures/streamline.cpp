@@ -33,64 +33,42 @@
 
 namespace voreen {
 
-Streamline::Streamline() :
-        minMagnitude_(-1.f), maxMagnitude_(-1.f), length_(0.0f)
+Streamline::Streamline()
+    : magnitudeStatistics_(false)
 {
 }
 
 Streamline::~Streamline() {
 }
 
-    //----------------
-    //  Construction
-    //----------------
+//----------------
+//  Construction
+//----------------
 void Streamline::addElementAtEnd(const StreamlineElement& element) {
-
-    if(!streamlineElements_.empty())
-        length_ += tgt::distance(element.position_, getLastElement().position_);
-
     streamlineElements_.push_back(element);
     float length = tgt::length(element.velocity_);
-    if(minMagnitude_ < 0.f || minMagnitude_ > length) {
-        minMagnitude_ = length;
-    }
-    if(maxMagnitude_ < 0.f || maxMagnitude_ < length) {
-        maxMagnitude_ = length;
-    }
+    magnitudeStatistics_.addSample(length);
 }
 
 void Streamline::addElementAtFront(const StreamlineElement& element) {
-
-    if(!streamlineElements_.empty())
-        length_ += tgt::distance(element.position_, getFirstElement().position_);
-
     streamlineElements_.push_front(element);
     float length = tgt::length(element.velocity_);
-    if(minMagnitude_ < 0.f || minMagnitude_ > length) {
-        minMagnitude_ = length;
-    }
-    if(maxMagnitude_ < 0.f || maxMagnitude_ < length) {
-        maxMagnitude_ = length;
-    }
+    magnitudeStatistics_.addSample(length);
 }
 
-    //----------------
-    //  Access
-    //----------------
+//----------------
+//  Access
+//----------------
 size_t Streamline::getNumElements() const {
     return streamlineElements_.size();
 }
 
 float Streamline::getMinMagnitude() const {
-    return std::max(0.f,minMagnitude_);
+    return magnitudeStatistics_.getMin();
 }
 
 float Streamline::getMaxMagnitude() const {
-    return std::max(0.f,maxMagnitude_);
-}
-
-float Streamline::getLength() const {
-    return length_;
+    return magnitudeStatistics_.getMax();
 }
 
 const Streamline::StreamlineElement& Streamline::getElementAt(size_t pos) const {
@@ -106,9 +84,9 @@ const Streamline::StreamlineElement& Streamline::getLastElement() const {
     return streamlineElements_.back();
 }
 
-    //----------------
-    //  Utilitiy
-    //----------------
+//----------------
+//  Utilitiy
+//----------------
 Streamline Streamline::resample(size_t samples) const {
 
     // This will hold the resampled streamline.
@@ -151,12 +129,12 @@ Streamline Streamline::resample(size_t samples) const {
 
 }
 
-    //----------------
-    //  Storage
-    //----------------
+//----------------
+//  Storage
+//----------------
 std::string Streamline::toCSVString(const tgt::mat4& transformationMatrix, const tgt::mat4& velocityTransfomationMatrix) const {
     std::stringstream output;
-    output << getNumElements() << ", " << getMinMagnitude() << ", " << getMaxMagnitude() << ", " << getLength();
+    output << getNumElements() << ", " << getMinMagnitude() << ", " << getMaxMagnitude();
     for(size_t i = 0; i < streamlineElements_.size(); i++) {
         tgt::vec4 transformedPosition = transformationMatrix * tgt::vec4(streamlineElements_[i].position_,1.f);
         tgt::vec4 transformedVelocity = velocityTransfomationMatrix * tgt::vec4(streamlineElements_[i].velocity_,1.f);
@@ -171,9 +149,8 @@ std::string Streamline::toCSVString(const tgt::mat4& transformationMatrix, const
 }
 
 void Streamline::serialize(Serializer& s) const {
-    s.serialize("minMagnitude_",minMagnitude_);
-    s.serialize("maxMagnitude_",maxMagnitude_);
-    s.serialize("length_", length_);
+    s.serialize("minMagnitude_",magnitudeStatistics_.getMin());
+    s.serialize("maxMagnitude_",magnitudeStatistics_.getMax());
     //serialize elements as blob
     std::vector<StreamlineElement> vec(streamlineElements_.size());
     std::copy(streamlineElements_.begin(),streamlineElements_.end(),vec.begin());
@@ -181,13 +158,16 @@ void Streamline::serialize(Serializer& s) const {
 }
 
 void Streamline::deserialize(Deserializer& s) {
-    s.deserialize("minMagnitude_",minMagnitude_);
-    s.deserialize("maxMagnitude_",maxMagnitude_);
-    s.deserialize("length_", length_);
+    //s.deserialize("minMagnitude_",minMagnitude_);
+    //s.deserialize("maxMagnitude_",maxMagnitude_);
     //deserialize streamlines from binary blob
     std::vector<Streamline::StreamlineElement> vec;
     s.deserializeBinaryBlob("StreamlineElements",vec);
-    streamlineElements_ = std::deque<StreamlineElement>(vec.begin(),vec.end());
+    // We add each element manually since we need to update the statistics.
+    streamlineElements_.clear();
+    for(const StreamlineElement& element : vec) {
+        addElementAtEnd(element);
+    }
 }
 
 }   // namespace

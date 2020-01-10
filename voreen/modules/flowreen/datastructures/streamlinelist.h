@@ -42,7 +42,6 @@ namespace voreen {
  * Implementation of StreamlineListBase, storing the streamlines.
  */
 class VRN_CORE_API StreamlineList : public StreamlineListBase {
-//    friend class StreamlineRotation;
 public:
 
     //------------------------------
@@ -50,7 +49,7 @@ public:
     //------------------------------
 
     /** Constructor, gets the meta informations from the passed volume */
-    StreamlineList(const VolumeBase* vol = 0);
+    StreamlineList(const VolumeBase* vol = nullptr);
     /** Destructor */
     virtual ~StreamlineList();
     /** No Copy-Constructor. Use clone instead. */
@@ -71,23 +70,11 @@ public:
     /** Adds and copies all Streamlines. No meta data is copied except min/max magnitude. */
     virtual void addStreamlineList(const StreamlineListBase& list) override;
     /** Removes a Streamline and returns all remaining ones. */
-    virtual const std::vector<Streamline>& removeStreamline(size_t pos) override;
+    virtual void removeStreamline(size_t pos) override;
+    /** Removes all streamlines */
+    virtual void clearStreamlines() override ;
     /** Returns all Streamlines. */
     virtual const std::vector<Streamline>& getStreamlines() const override;
-
-    //----------------------------
-    //  Streamline Bundle Handling
-    //----------------------------
-    /** Adds a Streamline Bundle and copies it. */
-    void addStreamlineBundle(const StreamlineBundle& bundle) override;
-    /** Removes a Streamline Bundle and returns all remaining ones. */
-    const std::vector<StreamlineBundle>& removeStreamlineBundle(size_t pos) override;
-    /** Returns all Streamline Bundles. */
-    const std::vector<StreamlineBundle>& getStreamlineBundles() const override;
-    /** Classifies a given streamline in terms of being noise in relation to bundles. */
-    void setStreamlineNoiseFlag(size_t pos) override;
-    /** Returns all Streamlines being classified as noise. */
-    const std::vector<size_t>& getStreamlineNoise() const override;
 
     //------------------------------
     //  Meta
@@ -127,9 +114,7 @@ public:
     //----------------
 protected:
 
-    std::vector<Streamline> streamlines_;               ///< list of streamlines
-    std::vector<StreamlineBundle> streamlineBundles_;   ///< list of streamlinebundles
-    std::vector<size_t> streamlineNoise_;               ///< list of indices classifying streamlines as noise
+    std::vector<Streamline> streamlines_; ///< list of streamlines
 
     //meta
     tgt::svec3 dimensions_;               ///< original dimensions of the input volume

@@ -29,6 +29,7 @@ in vData
 {
     vec3 position;
     vec3 velocity;
+    float radius;
 } frag;
 
 #ifdef COLOR_VELOCITY
