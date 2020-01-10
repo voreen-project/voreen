@@ -8,6 +8,7 @@ Voreen Changelog
       o Fix initialization of opencl solver for RandomWalker processor
       o Fix sparse matrix blas implementations for partially filled rows
       o Disable tracking of numeric properties of VolumeFilterList to improve usability when continuous update is enabled
+      o Fix crash in SliceReaders (affecting VolumeFilterList and VesselnessExtractor) when using very large convolutions
 
 2019-12-12: Voreen 5.1.0
 ------------------------
