@@ -29,6 +29,7 @@
 #include "voreen/core/voreenapplication.h"
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/datastructures/callback/memberfunctioncallback.h"
+#include "voreen/core/ports/conditions/portconditionvolumetype.h"
 
 #include "modules/bigdataimageprocessing/volumefiltering/gaussianfilter.h"
 #include "tgt/tgt_math.h"
@@ -784,6 +785,7 @@ VesselnessExtractor::VesselnessExtractor()
     , propertyDisabler_(*this)
 {
     addPort(inport_);
+    inport_.addCondition(new PortConditionVolumeChannelCount(1));
     addPort(outport_);
 
     addProperty(enabled_);
