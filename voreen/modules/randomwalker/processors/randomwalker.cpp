@@ -37,6 +37,7 @@
 #include "voreen/core/datastructures/volume/operators/volumeoperatorresample.h"
 #include "voreen/core/datastructures/volume/operators/volumeoperatornumsignificant.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
+#include "voreen/core/ports/conditions/portconditionvolumetype.h"
 #include "tgt/vector.h"
 
 #include "voreen/core/datastructures/transfunc/1d/transfunc1d.h"
@@ -88,10 +89,13 @@ RandomWalker::RandomWalker()
 {
     // ports
     addPort(inportVolume_);
+    inportVolume_.addCondition(new PortConditionVolumeChannelCount(1));
     addPort(inportForegroundSeeds_);
     addPort(inportBackgroundSeeds_);
     addPort(inportForegroundSeedsVolume_);
+    inportForegroundSeedsVolume_.addCondition(new PortConditionVolumeChannelCount(1));
     addPort(inportBackgroundSeedsVolume_);
+    inportBackgroundSeedsVolume_.addCondition(new PortConditionVolumeChannelCount(1));
     addPort(outportSegmentation_);
     addPort(outportProbabilities_);
     addPort(outportEdgeWeights_);
