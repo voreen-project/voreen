@@ -126,11 +126,19 @@ void CachingSliceReader::seek(int z) {
 
     // now z+dz >= 0 => inside the volume!
     base_->seek(z+dz-1);
-    for(; z+dz < getSignedDimensions().z && dz <= neighborhoodSize_; ++dz) {
+    for(;dz <= neighborhoodSize_; ++dz) {
         base_->advance();
         VolumeRAM*& slice = getSlice(dz);
         delete slice;
-        slice = base_->getCurrentSlice()->clone();
+
+        const VolumeRAM* baseSlice = base_->getCurrentSlice();
+        if(baseSlice) {
+            slice = baseSlice->clone();
+        } else {
+            // This happens if base is outside its volume bounds. That's okay!
+            // In that case we will never sample from this slice anyway.
+            slice = nullptr;
+        }
     }
 }
 
@@ -176,7 +184,6 @@ float VolumeSliceReader::getVoxelNormalized(const tgt::ivec3& xyz, size_t channe
 }
 
 const VolumeRAM* VolumeSliceReader::getCurrentSlice() const {
-    tgtAssert(currentSlice_, "no slice");
     return currentSlice_.get();
 }
 
@@ -226,7 +233,6 @@ float HDF5VolumeSliceReader::getVoxelNormalized(const tgt::ivec3& xyz, size_t ch
 }
 
 const VolumeRAM* HDF5VolumeSliceReader::getCurrentSlice() const {
-    tgtAssert(currentSlice_, "no slice");
     return currentSlice_.get();
 }
 
