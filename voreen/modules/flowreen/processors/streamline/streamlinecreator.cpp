@@ -229,17 +229,44 @@ StreamlineCreatorOutput StreamlineCreator::compute(StreamlineCreatorInput input,
         input.stopIntegrationAngleThreshold
     };
 
-    for (size_t i=0; i<seedPoints.size(); i++) {
+    ThreadedTaskProgressReporter progress(progressReporter, seedPoints.size());
+    bool aborted = false;
+
+#ifdef VRN_MODULE_OPENMP
+    #pragma omp parallel for
+    for (long i=0; i<static_cast<long>(seedPoints.size()); i++) {
+        if (aborted) {
+            continue;
+        }
+#else
+    for(size_t i=0; i<seedPoints.size(); i++) {
+#endif
+
         const tgt::vec3& start = seedPoints[i];
 
         Streamline streamline = computeStreamlineRungeKutta(start, integrationInput);
 
         if (streamline.getNumElements() >= input.streamlineLengthThreshold.x &&
             streamline.getNumElements() <= input.streamlineLengthThreshold.y) {
+#ifdef VRN_MODULE_OPENMP
+            #pragma omp critical
+#endif
             output->addStreamline(streamline);
         }
 
-        progressReporter.setProgress(1.0f * i / seedPoints.size());
+        if (progress.reportStepDone()) {
+#ifdef VRN_MODULE_OPENMP
+            #pragma omp critical
+            aborted = true;
+#else
+            aborted = true;
+            break;
+#endif
+        }
+    }
+
+    if (aborted) {
+        throw boost::thread_interrupted();
     }
 
     return StreamlineCreatorOutput {
