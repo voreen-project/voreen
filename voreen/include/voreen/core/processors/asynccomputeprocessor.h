@@ -50,6 +50,7 @@
 #include <exception>
 #include <chrono>
 #include <mutex>
+#include <cstdlib>
 
 namespace voreen {
 
@@ -617,6 +618,10 @@ void AsyncComputeProcessor<I,O>::initialize() {
 
     // Populate propertyWritablilityMap in case stopComputeThread gets called before any computation
     savePropertyEnableStates();
+
+    if(std::getenv("VRN_ASYNCCOMPUTEPROCESSOR_WAIT_FOR_RESULT")) {
+        synchronousComputation_.set(true);
+    }
 }
 
 template<class I, class O>
