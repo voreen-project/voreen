@@ -15,7 +15,7 @@
 ; Configuration
 
   !define AppName "VoreenVE"               ;  displayed in the installer and used as app directory name and shortcut name       
-  !define Version "5.1.0"                  ;  added to appname    
+  !define Version "5.1.1"                  ;  added to appname    
   !define ExecutableName "voreenve.exe"    ;  filename of the executable
   
   ; settings for the "Add/Remove Programs" entry

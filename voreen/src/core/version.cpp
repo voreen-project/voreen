@@ -61,7 +61,7 @@ const std::string VoreenVersion::getCompilerVersion() {
 }
 
 const std::string VoreenVersion::getVersion() {
-    return "5.1.0";
+    return "5.1.1";
 }
 
 const std::string VoreenVersion::getRevision() {
