@@ -1,4 +1,4 @@
-The Voreen software package is Copyright (C) 2005-2019 University of Muenster, 
+The Voreen software package is Copyright (C) 2005-2020 University of Muenster, 
 Germany, Department of Computer Science.
 
 You may use, distribute and copy the Voreen software package under the terms
