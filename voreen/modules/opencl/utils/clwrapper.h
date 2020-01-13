@@ -41,6 +41,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <mutex>
 #include <thread>
 #include "tgt/vector.h"
 #include "tgt/texture.h"
