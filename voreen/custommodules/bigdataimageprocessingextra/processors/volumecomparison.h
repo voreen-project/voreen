@@ -74,8 +74,7 @@ public:
     virtual bool usesExpensiveComputation() const { return true;    }
 
     virtual bool isEndProcessor() const {return true;   }
-
-    virtual bool isReady() const;
+    virtual void adjustPropertiesToInput();
 
 protected:
     virtual void setDescriptions() {

@@ -58,9 +58,6 @@ VolumeComparison::VolumeComparison()
 
     addProperty(csvSaveFile_);
 
-    ON_CHANGE(firstSegmentationVolume_, VolumeComparison, adjustToInputVolumes);
-    ON_CHANGE(secondSegmentationVolume_, VolumeComparison, adjustToInputVolumes);
-
     ON_CHANGE(useClipRegion_, VolumeComparison, useClipRegionChanged);
 }
 
@@ -68,14 +65,10 @@ Processor* VolumeComparison::create() const {
     return new VolumeComparison();
 }
 
-bool VolumeComparison::isReady() const {
-    return isInitialized() && (firstSegmentationVolume_.isReady() || secondSegmentationVolume_.isReady());
-}
-
 void VolumeComparison::initialize() {
     Processor::initialize();
 
-    adjustToInputVolumes();
+    adjustPropertiesToInput();
 }
 
 void quantification(const VolumeRAM* slice1, const VolumeRAM* slice2, VolumeComparison::ScanSummary& summary, tgt::svec3 llf, tgt::svec3 urb, RealWorldMapping rwm, float rwThreadhold) {
@@ -202,7 +195,7 @@ void VolumeComparison::process() {
     file.close();
 }
 
-void VolumeComparison::adjustToInputVolumes() {
+void VolumeComparison::adjustPropertiesToInput() {
     if (!isInitialized())
         return;
 
