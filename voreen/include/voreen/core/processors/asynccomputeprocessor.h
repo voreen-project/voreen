@@ -241,12 +241,6 @@ private:
         ComputeProgressReporter(AsyncComputeProcessor<ComputeInput, ComputeOutput>& processor);
         virtual ~ComputeProgressReporter();
 
-        virtual void setProgress(float progress);
-        virtual float getProgress() const;
-
-        virtual void setProgressRange(const tgt::vec2& progressRange);
-        virtual tgt::vec2 getProgressRange() const;
-
         virtual void setProgressMessage(const std::string& message);
         virtual std::string getProgressMessage() const;
 
@@ -255,6 +249,7 @@ private:
         AsyncComputeProcessor<ComputeInput, ComputeOutput>& processor_;
         TimePoint startTime_;
         TimePoint lastUpdate_;
+        std::string message_;
     };
 
     /**
@@ -394,7 +389,18 @@ AsyncComputeProcessor<I,O>::ComputeProgressReporter::~ComputeProgressReporter()
 }
 
 template<class I, class O>
-void AsyncComputeProcessor<I,O>::ComputeProgressReporter::setProgress(float progress) {
+void AsyncComputeProcessor<I,O>::ComputeProgressReporter::setProgressMessage(const std::string& message) {
+    message_ = message;
+}
+
+template<class I, class O>
+std::string AsyncComputeProcessor<I,O>::ComputeProgressReporter::getProgressMessage() const {
+    return message_;
+}
+
+template<class I, class O>
+void AsyncComputeProcessor<I,O>::ComputeProgressReporter::update() {
+    float progress = getProgress();
     if(progress != 0) {
         TimePoint now = Clock::now();
 
@@ -420,39 +426,6 @@ void AsyncComputeProcessor<I,O>::ComputeProgressReporter::setProgress(float prog
     }
 
     interruptionPoint();
-}
-
-template<class I, class O>
-float AsyncComputeProcessor<I,O>::ComputeProgressReporter::getProgress() const {
-    tgtAssert(processor_.getProgress() == processor_.progressDisplay_.getProgress(), "Progress mismatch");
-    return processor_.getProgress();
-}
-
-template<class I, class O>
-void AsyncComputeProcessor<I,O>::ComputeProgressReporter::setProgressRange(const tgt::vec2& progressRange) {
-    processor_.setProgressRange(progressRange);
-}
-
-template<class I, class O>
-tgt::vec2 AsyncComputeProcessor<I,O>::ComputeProgressReporter::getProgressRange() const {
-    tgtAssert(processor_.getProgressRange() == processor_.progressDisplay_.getProgressRange(), "ProgressRange mismatch");
-    return processor_.getProgressRange();
-}
-
-template<class I, class O>
-void AsyncComputeProcessor<I,O>::ComputeProgressReporter::setProgressMessage(const std::string& message) {
-    processor_.setProgressMessage(message);
-}
-
-template<class I, class O>
-std::string AsyncComputeProcessor<I,O>::ComputeProgressReporter::getProgressMessage() const {
-    tgtAssert(processor_.getProgressMessage() == processor_.progressDisplay_.getProgressMessage(), "ProgressMessage mismatch");
-    return processor_.getProgressMessage();
-}
-
-template<class I, class O>
-void AsyncComputeProcessor<I,O>::ComputeProgressReporter::update() {
-    processor_.update();
 }
 
 // AsyncComputeProcessor::NoopProgressReporter ---------------------------------------
