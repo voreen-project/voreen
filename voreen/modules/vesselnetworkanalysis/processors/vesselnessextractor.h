@@ -130,6 +130,8 @@ protected:
     virtual bool isEndProcessor() const       { return true; }
     virtual void initialize();
 
+    virtual void process();
+
     virtual VesselnessExtractorInput prepareComputeInput();
     virtual VesselnessExtractorOutput compute(VesselnessExtractorInput input, ProgressReporter& progressReporter) const;
     virtual void processComputeOutput(VesselnessExtractorOutput output);

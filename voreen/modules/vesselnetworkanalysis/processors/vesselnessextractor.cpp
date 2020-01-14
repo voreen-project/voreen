@@ -794,7 +794,6 @@ VesselnessExtractor::VesselnessExtractor()
                 this->outport_.setData(nullptr);
                 propertyDisabler_.restore();
             } else {
-                this->forceComputation();
                 propertyDisabler_.saveState([this] (Property* p) { return p == &enabled_; });
                 propertyDisabler_.disable();
             }
@@ -881,11 +880,14 @@ static std::unique_ptr<SliceReader> buildStack(const VolumeBase& input, const tg
         .build(0);
 }
 
-VesselnessExtractorInput VesselnessExtractor::prepareComputeInput() {
+void VesselnessExtractor::process() {
     if(!enabled_.get()) {
         outport_.setData(inport_.getData(), false);
-        throw InvalidInputException("", InvalidInputException::S_IGNORE);
+        return;
     }
+    AsyncComputeProcessor<VesselnessExtractorInput, VesselnessExtractorOutput>::process();
+}
+VesselnessExtractorInput VesselnessExtractor::prepareComputeInput() {
     const VolumeBase* inputVol = inport_.getData();
     if(!inputVol) {
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
