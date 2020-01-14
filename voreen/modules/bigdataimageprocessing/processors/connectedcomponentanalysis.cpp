@@ -79,8 +79,8 @@ ConnectedComponentAnalysis::ConnectedComponentAnalysis()
 {
     addPort(inport_);
         inport_.onChange(LambdaFunctionCallback([this] () {
-                    outport_.setData(nullptr);
-                    }));
+            outport_.setData(nullptr);
+        }));
     addPort(outport_);
 
         addProperty(outputVolumeFilePath_);
@@ -281,9 +281,16 @@ void ConnectedComponentAnalysis::adjustPropertiesToInput() {
     minBoundsDiagonal_.setMaxValue(getDiagonalLength(*input));
     minBoundsDiagonal_.adaptDecimalsToRange(2);
 
-    binarizationThreshold_.setMinValue(mm->getMin());
-    binarizationThreshold_.setMaxValue(mm->getMax());
-    binarizationThreshold_.adaptDecimalsToRange(4);
+    // HACK: In most cases, when min and max are equal something went wrong
+    // (e.g., too low/high threshold). Normaly this is not what we want though
+    // and it overwrites the value of the property with min=max.
+    float min = mm->getMin();
+    float max = mm->getMax();
+    if(min != max) {
+        binarizationThreshold_.setMinValue(min);
+        binarizationThreshold_.setMaxValue(max);
+        binarizationThreshold_.adaptDecimalsToRange(4);
+    }
 
     // Volumes without an a RWM are expected to have normalized max and min values (and normalized values in general).
     tgtAssert(input->hasMetaData("RealWorldMapping") || mm->getMin() == mm->getMinNormalized() && mm->getMax() == mm->getMaxNormalized(), "Missing RealWorldMapping or invalid VolumeMinMax");
