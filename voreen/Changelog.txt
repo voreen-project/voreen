@@ -1,7 +1,7 @@
 Voreen Changelog
 ----------------
 
-2020-01-14: Voreen 5.1.1
+2020-01-15: Voreen 5.1.1
 ------------------------
 
     * Bug Fixes/Minor Changes:
@@ -10,6 +10,7 @@ Voreen Changelog
       o Disable tracking of numeric properties of VolumeFilterList to improve usability when continuous update is enabled
       o Fix crash in SliceReaders (affecting VolumeFilterList and VesselnessExtractor) when using very large convolutions
       o Fix crash when using LOD mode of RandomWalker
+      o Improve usability of default feature-vesselnessworkanalysis workspace
 
 2019-12-12: Voreen 5.1.0
 ------------------------
