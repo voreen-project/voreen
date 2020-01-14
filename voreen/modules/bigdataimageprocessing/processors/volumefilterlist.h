@@ -107,7 +107,7 @@ protected:
 private:
 
     void onFilterListChange();
-    void onFilterPropertyChange();
+    void onFilterPropertyChange(Property* property);
     void inputOutputChannelCheck();
 
     void addFilter(FilterProperties* filterProperties);

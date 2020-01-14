@@ -48,6 +48,7 @@ public:
     virtual void addProperties();
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
+    virtual std::vector<int> getStoredInstances() const;
 
 private:
 

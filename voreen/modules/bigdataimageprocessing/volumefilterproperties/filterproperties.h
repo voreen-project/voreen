@@ -65,6 +65,7 @@ public:
     virtual void storeInstance(int instanceId) = 0;
     virtual void restoreInstance(int instanceId) = 0;
     virtual void removeInstance(int instanceId) = 0;
+    virtual std::vector<int> getStoredInstances() const = 0;
 
 protected:
 

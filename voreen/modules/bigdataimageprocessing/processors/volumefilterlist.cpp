@@ -302,10 +302,69 @@ void VolumeFilterList::onFilterListChange() {
     adjustPropertiesToInput();
 }
 
-void VolumeFilterList::onFilterPropertyChange() {
-    // If any filter property was modified, we need to store the settings immediately.
+void VolumeFilterList::onFilterPropertyChange(Property* property) {
+
+    // If any filter property was modified, we need to store the settings
+    // immediately.
+    //
+    // However, this function may also be called if (e.g. via linking) a
+    // property of a different filter has been changed. So we only use the
+    // selected filter if it does have a matching property.
+    //
+    // FIXME: This can still go wrong/unexpected if:
+    // 1. There are more than one instance of a particular Filter
+    // 2. One of the two instances is selected
+    // 3. The corresponding property is linked in the expectation that the
+    //    value of the OTHER instance changes.
+    // Unfortunately, we cannot even warn in this case, because here we cannot
+    // distinguish property changes through links and changes through user
+    // interaction. It would be quite annoying to warn about linking in case of
+    // multiple filter instances when the user has not linked anything and just
+    // wants to change values manually.
     if(selectedInstance_) {
-        filterProperties_[selectedInstance_->getItemId()]->storeInstance(selectedInstance_->getInstanceId());
+        FilterProperties& fp = *filterProperties_[selectedInstance_->getItemId()];
+        auto& props = fp.getProperties();
+        if(std::find(props.begin(), props.end(), property) != props.end()) {
+            fp.storeInstance(selectedInstance_->getInstanceId());
+            return;
+        }
+    }
+
+
+    // Otherwise, search through all filterProperties and see if one matches
+    // the changed property
+    for(auto& fp_ptr : filterProperties_) {
+        FilterProperties& fp = *fp_ptr;
+        auto& props = fp.getProperties();
+        if(std::find(props.begin(), props.end(), property) != props.end()) {
+
+            // We found the corresponding type of filter.
+            auto instances = fp.getStoredInstances();
+            switch (instances.size()) {
+                case 1: {
+                    // If there is exactly one we are lucky and can (trivially)
+                    // match the corresponding instance
+                    fp.storeInstance(instances[0]);
+                    break;
+                }
+                case 0: {
+                    // There is no instance. Either something has gone horribly
+                    // wrong or someone has linked a property without a
+                    // corresponding filter instance (probably by mistake).
+                    LWARNING("Property without corresponding filter instance changed.");
+                    break;
+                }
+                default: {
+                    // We have no chance of finding the corresponding filter.
+                    // It does not make much sense to change one at random or
+                    // both. Instead just warn the user about her/his
+                    // configuration mistake.
+                    LWARNING("Linking properties with multiple filter instances of the same type is not supported.");
+                    break;
+                }
+            }
+            return;
+        }
     }
 }
 
@@ -346,7 +405,8 @@ void VolumeFilterList::addFilter(FilterProperties* filterProperties) {
         addProperty(property);
         disableTracking(property);
         property->setGroupID(filterProperties->getVolumeFilterName());
-        ON_CHANGE((*property), VolumeFilterList, onFilterPropertyChange);
+        auto update = [this,property] () { this->onFilterPropertyChange(property); };
+        ON_CHANGE_LAMBDA((*property), update);
     }
     filterProperties->storeVisibility();
     setPropertyGroupGuiName(filterProperties->getVolumeFilterName(), filterProperties->getVolumeFilterName());

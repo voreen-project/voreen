@@ -185,5 +185,14 @@ void BinaryMedianFilterProperties::updateObjectVoxelThreshold() {
         objectVoxelThreshold_.set(objectVoxelThreshold_.getMaxValue() / 2);
     }
 }
+std::vector<int> BinaryMedianFilterProperties::getStoredInstances() const {
+    std::vector<int> output;
+    for(auto& kv : instanceSettings_) {
+        if(kv.first != DEFAULT_SETTINGS) {
+            output.push_back(kv.first);
+        }
+    }
+    return output;
+}
 
 }

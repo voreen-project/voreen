@@ -103,5 +103,14 @@ void BinarizationFilterProperties::deserialize(Deserializer& s) {
         instanceSettings_[names[i]] = settings[i];
     }
 }
+std::vector<int> BinarizationFilterProperties::getStoredInstances() const {
+    std::vector<int> output;
+    for(auto& kv : instanceSettings_) {
+        if(kv.first != DEFAULT_SETTINGS) {
+            output.push_back(kv.first);
+        }
+    }
+    return output;
+}
 
 }

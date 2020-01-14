@@ -124,5 +124,14 @@ void ThresholdingFilterProperties::deserialize(Deserializer& s) {
         instanceSettings_[names[i]] = settings[i];
     }
 }
+std::vector<int> ThresholdingFilterProperties::getStoredInstances() const {
+    std::vector<int> output;
+    for(auto& kv : instanceSettings_) {
+        if(kv.first != DEFAULT_SETTINGS) {
+            output.push_back(kv.first);
+        }
+    }
+    return output;
+}
 
 }
