@@ -411,9 +411,9 @@ void SymMat3::getEigenValues(float& l1, float& l2, float& l3) const {
     std::complex<double> cl2 = g1 * omega  + g2 * omega2 + offset;
     std::complex<double> cl3 = g1 * omega2 + g2 * omega  + offset;
 
-    tgtAssert(std::abs(cl1.imag()) <= std::abs(cl1.real()), "Invalid eigenvalue for symmat");
-    tgtAssert(std::abs(cl2.imag()) <= std::abs(cl2.real()), "Invalid eigenvalue for symmat");
-    tgtAssert(std::abs(cl3.imag()) <= std::abs(cl3.real()), "Invalid eigenvalue for symmat");
+    //tgtAssert(std::abs(cl1.imag()) <= std::abs(cl1.real()), "Invalid eigenvalue for symmat");
+    //tgtAssert(std::abs(cl2.imag()) <= std::abs(cl2.real()), "Invalid eigenvalue for symmat");
+    //tgtAssert(std::abs(cl3.imag()) <= std::abs(cl3.real()), "Invalid eigenvalue for symmat");
 
     l1=cl1.real();
     l2=cl2.real();
