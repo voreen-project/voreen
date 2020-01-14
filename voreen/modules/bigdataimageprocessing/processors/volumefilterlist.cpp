@@ -405,8 +405,7 @@ void VolumeFilterList::addFilter(FilterProperties* filterProperties) {
         addProperty(property);
         disableTracking(property);
         property->setGroupID(filterProperties->getVolumeFilterName());
-        auto update = [this,property] () { this->onFilterPropertyChange(property); };
-        ON_CHANGE_LAMBDA((*property), update);
+        ON_CHANGE_LAMBDA((*property), ([this,property] () { this->onFilterPropertyChange(property); }));
     }
     filterProperties->storeVisibility();
     setPropertyGroupGuiName(filterProperties->getVolumeFilterName(), filterProperties->getVolumeFilterName());
