@@ -42,19 +42,18 @@ SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${VRN_BINARY_OUTPUT_DIR})
 SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${VRN_BINARY_OUTPUT_DIR})
 
 # detect compiler and architecture
-IF(${CMAKE_GENERATOR} STREQUAL "Visual Studio 14" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 14 2015" OR
-   ${CMAKE_GENERATOR} STREQUAL "Visual Studio 15" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 15 2017")
-   MESSAGE(FATAL_ERROR "32 Bit builds are no longer supported: ${CMAKE_GENERATOR}. Please use a 64 Bit generator.")
-ELSEIF(${CMAKE_GENERATOR} STREQUAL "Visual Studio 14 Win64" OR
-       ${CMAKE_GENERATOR} STREQUAL "Visual Studio 14 2015 Win64")
+IF(${CMAKE_GENERATOR} STREQUAL "Visual Studio 14 Win64" OR
+   ${CMAKE_GENERATOR} STREQUAL "Visual Studio 14 2015 Win64" OR
+   (${CMAKE_GENERATOR} STREQUAL "Visual Studio 14" AND "${CMAKE_GENERATOR_PLATFORM}" STREQUAL "x64"))
     SET(VRN_MSVC2015 TRUE)
     SET(VRN_MSVC TRUE)
-    MESSAGE(STATUS "Visual Studio 2015 Build (64 bit)")
+    MESSAGE(STATUS "Visual Studio 2015 Build")
 ELSEIF(${CMAKE_GENERATOR} STREQUAL "Visual Studio 15 Win64" OR
-       ${CMAKE_GENERATOR} STREQUAL "Visual Studio 15 2017 Win64")
+       ${CMAKE_GENERATOR} STREQUAL "Visual Studio 15 2017 Win64" OR
+       (${CMAKE_GENERATOR} STREQUAL "Visual Studio 15" AND "${CMAKE_GENERATOR_PLATFORM}" STREQUAL "x64"))
     SET(VRN_MSVC2017 TRUE)
     SET(VRN_MSVC TRUE)
-    MESSAGE(STATUS "Visual Studio 2017 Build (64 bit)")
+    MESSAGE(STATUS "Visual Studio 2017 Build")
 ELSEIF(${CMAKE_GENERATOR} MATCHES "Unix" OR ${CMAKE_GENERATOR} MATCHES "Ninja")
     SET(VRN_UNIX TRUE)
     MESSAGE(STATUS "Unix Build")
@@ -63,7 +62,7 @@ ELSEIF(${CMAKE_GENERATOR} MATCHES "Xcode")
     SET(VRN_XCODE TRUE)
     MESSAGE(STATUS "Xcode Build")
 ELSE()
-    MESSAGE(FATAL_ERROR "Unsupported or unknown generator: ${CMAKE_GENERATOR}. Please use VS14, VS15 or Unix or Xcode.")
+    MESSAGE(FATAL_ERROR "Unsupported or unknown generator: ${CMAKE_GENERATOR}. Please use VS14/VS15 (x64), Unix or Xcode.")
 ENDIF()
 
 # common include directories
