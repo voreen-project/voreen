@@ -31,13 +31,13 @@
 namespace voreen {
 
 enum MorphologyOperatorType {
-    DILATION_T,
-    EROSION_T,
+    DILATION_T = 0,
+    EROSION_T = 1,
 };
 
 enum MorphologyOperatorShape {
-    CUBE_T,
-    SPHERE_T,
+    CUBE_T = 0,
+    SPHERE_T = 1,
 };
 
 class MorphologyFilter : public VolumeFilter {

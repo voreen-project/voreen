@@ -140,7 +140,6 @@ void VolumeFilterList::serialize(Serializer& s) const {
 }
 
 void VolumeFilterList::deserialize(Deserializer& s) {
-    AsyncComputeProcessor<ComputeInput, ComputeOutput>::deserialize(s);
     for(size_t i=0; i < filterProperties_.size(); i++) {
         // In case a new filter was added, it won't be able to be deserialized.
         try {
@@ -148,6 +147,15 @@ void VolumeFilterList::deserialize(Deserializer& s) {
         } catch(SerializationException& e) {
             LWARNING("Failed to deserialize Filterproperty '" << filterProperties_[i]->getVolumeFilterName() << "': " << e.what());
         }
+    }
+
+    AsyncComputeProcessor<ComputeInput, ComputeOutput>::deserialize(s);
+
+    // If we deleted an instance of an item the related properties remain set to the instance's values
+    // until another instance is selected which restores proper values.
+    // Here we enforce valid values from the last instance of each item to not accidentally serialize incorrect values.
+    for(auto& instance : filterList_.getInstances()) {
+        filterProperties_[instance.getItemId()]->restoreInstance(instance.getInstanceId());
     }
 
     inputOutputChannelCheck();
@@ -304,6 +312,10 @@ void VolumeFilterList::onFilterListChange() {
 
 void VolumeFilterList::onFilterPropertyChange(Property* property) {
 
+    if(!isInitialized()) {
+        return;
+    }
+
     // If any filter property was modified, we need to store the settings
     // immediately.
     //
@@ -351,7 +363,10 @@ void VolumeFilterList::onFilterPropertyChange(Property* property) {
                     // There is no instance. Either something has gone horribly
                     // wrong or someone has linked a property without a
                     // corresponding filter instance (probably by mistake).
-                    LWARNING("Property without corresponding filter instance changed.");
+                    // FIXME: Since adjusting properties to new input might lead to their invalidation and thus
+                    //  trigger this callback, despite there is no instance for the related filter, there might
+                    //  be unnecessarily generated warnings.
+                    //LWARNING("Property without corresponding filter instance changed.");
                     break;
                 }
                 default: {

@@ -31,8 +31,8 @@ GaussianFilterProperties::GaussianFilterProperties()
     : extentX_(getId("extentx"), "Extent X", 1, 1, 100)
     , extentY_(getId("extenty"), "Extent Y", 1, 1, 100)
     , extentZ_(getId("extentz"), "Extent Z", 1, 1, 100)
-    , samplingStrategyType_(getId("samplingStrategyType"), "Sampling Strategy", SamplingStrategyType::CLAMP_T)
-    , outsideVolumeValue_(getId("outsideVolumeValue"), "Outside Volume Value", 0, 0, 1)
+    , samplingStrategyType_(getId("samplingStrategyType"), "Sampling Strategy", Processor::INVALID_RESULT)
+    , outsideVolumeValue_(getId("outsideVolumeValue"), "Outside Volume Value", 0, 0, 1, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
 {
     samplingStrategyType_.addOption("clamp", "Clamp", SamplingStrategyType::CLAMP_T);
     samplingStrategyType_.addOption("mirror", "Mirror", SamplingStrategyType::MIRROR_T);
@@ -115,13 +115,39 @@ void GaussianFilterProperties::serialize(Serializer& s) const {
         settings.push_back(pair.second);
     }
     s.serializeBinaryBlob(getId("names"), names);
-    s.serializeBinaryBlob(getId("settings"), settings);
+    s.serializeBinaryBlob(getId("settingsV2"), settings);
 }
 void GaussianFilterProperties::deserialize(Deserializer& s) {
     std::vector<int> names;
+
     std::vector<Settings> settings;
     s.deserializeBinaryBlob(getId("names"), names);
-    s.deserializeBinaryBlob(getId("settings"), settings);
+    try {
+        struct DeprecatedSettings {
+            int extentX_;
+            int extentY_;
+            int extentZ_;
+            SamplingStrategyType samplingStrategyType_;
+            int outsideVolumeValue_;
+        };
+
+        std::vector<DeprecatedSettings> deprecatedSettings;
+        s.deserializeBinaryBlob(getId("settings"), deprecatedSettings);
+        for(const DeprecatedSettings& depSettings : deprecatedSettings) {
+            Settings newSettings;
+            newSettings.extentX_ = depSettings.extentX_;
+            newSettings.extentY_ = depSettings.extentY_;
+            newSettings.extentZ_ = depSettings.extentZ_;
+            newSettings.samplingStrategyType_ = depSettings.samplingStrategyType_;
+            newSettings.outsideVolumeValue_ = depSettings.outsideVolumeValue_;
+            settings.push_back(newSettings);
+        }
+    }
+    catch (SerializationException&) {
+        s.removeLastError();
+        s.deserializeBinaryBlob(getId("settingsV2"), settings);
+    }
+
     tgtAssert(names.size() == settings.size(), "number of keys and values does not match");
     for (size_t i = 0; i < names.size(); i++) {
         instanceSettings_[names[i]] = settings[i];

@@ -56,14 +56,14 @@ private:
         int extentY_;
         int extentZ_;
         SamplingStrategyType samplingStrategyType_;
-        int outsideVolumeValue_;
+        float outsideVolumeValue_;
     };
     std::map<int, Settings> instanceSettings_;
 
     IntProperty extentX_;
     IntProperty extentY_;
     IntProperty extentZ_;
-    IntProperty outsideVolumeValue_;
+    FloatProperty outsideVolumeValue_;
     OptionProperty<SamplingStrategyType> samplingStrategyType_;
 };
 

@@ -28,9 +28,9 @@
 namespace voreen {
 
 ThresholdingFilterProperties::ThresholdingFilterProperties()
-    : thresholdValue_(getId("thresholdValue"), "Threshold Value", 0, 0, 1)
-    , replacementValue_(getId("replacementValue"), "Replacement Value", 0, 0, 1)
-    , thresholdingStrategyType_(getId("thresholdingStrategyType"), "Thresholding Strategy", ThresholdingStrategyType::LOWER_T)
+    : thresholdValue_(getId("thresholdValue"), "Threshold Value", 0, 0, 1, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
+    , replacementValue_(getId("replacementValue"), "Replacement Value", 0, 0, 1, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
+    , thresholdingStrategyType_(getId("thresholdingStrategyType"), "Thresholding Strategy", Processor::INVALID_RESULT)
 {
     thresholdingStrategyType_.addOption("lower", "Lower", ThresholdingStrategyType::LOWER_T);
     thresholdingStrategyType_.addOption("upper", "Upper", ThresholdingStrategyType::UPPER_T);

@@ -58,7 +58,7 @@ private:
         MorphologyOperatorType morphologyOperatorType_;
         MorphologyOperatorShape morphologyOperatorShape_;
         SamplingStrategyType samplingStrategyType_;
-        int outsideVolumeValue_;
+        float outsideVolumeValue_;
     };
     std::map<int, Settings> instanceSettings_;
 
@@ -68,7 +68,7 @@ private:
     OptionProperty<MorphologyOperatorType> morphologyOperatorType_;
     OptionProperty<MorphologyOperatorShape> morphologyOperatorShape_;
     OptionProperty<SamplingStrategyType> samplingStrategyType_;
-    IntProperty outsideVolumeValue_;
+    FloatProperty outsideVolumeValue_;
 };
 
 }

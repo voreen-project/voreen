@@ -32,11 +32,11 @@ BinaryMedianFilterProperties::BinaryMedianFilterProperties()
     , extentX_(getId("extentx"), "Extent X", 1, 1, 100)
     , extentY_(getId("extenty"), "Extent Y", 1, 1, 100)
     , extentZ_(getId("extentz"), "Extent Z", 1, 1, 100)
-    , binarizationThreshold_(getId("binarizationThreshold"), "Threshold", 0.5f, 0.0f, std::numeric_limits<float>::max(), Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_ADVANCED)
-    , samplingStrategyType_(getId("samplingStrategyType"), "Sampling Strategy", SamplingStrategyType::CLAMP_T)
-    , outsideVolumeValue_(getId("outsideVolumeValue"), "Outside Volume Value", 0, 0, 1)
+    , binarizationThreshold_(getId("binarizationThreshold"), "Threshold", 0.5f, 0.0f, std::numeric_limits<float>::max(), Processor::INVALID_RESULT, FloatProperty::DYNAMIC, Property::LOD_ADVANCED)
+    , samplingStrategyType_(getId("samplingStrategyType"), "Sampling Strategy", Processor::INVALID_RESULT)
+    , outsideVolumeValue_(getId("outsideVolumeValue"), "Outside Volume Value", 0, 0, 1, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
     , forceMedian_(getId("forceMedian"), "Force Median", true)
-    , objectVoxelThreshold_(getId("objectVoxelThreshold"), "Object Voxel Threshold", 0, 0, std::numeric_limits<int>::max())
+    , objectVoxelThreshold_(getId("objectVoxelThreshold"), "Object Voxel Threshold", 0, 0, std::numeric_limits<int>::max(), Processor::INVALID_RESULT, IntProperty::DYNAMIC)
 {
     samplingStrategyType_.addOption("clamp", "Clamp", SamplingStrategyType::CLAMP_T);
     samplingStrategyType_.addOption("mirror", "Mirror", SamplingStrategyType::MIRROR_T);

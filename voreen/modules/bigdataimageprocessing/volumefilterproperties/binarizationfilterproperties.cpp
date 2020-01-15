@@ -28,7 +28,7 @@
 namespace voreen {
 
 BinarizationFilterProperties::BinarizationFilterProperties()
-    : threshold_(getId("threshold"), "Binarization Threshold", 0.5f, 0.0f, 1.0f)
+    : threshold_(getId("threshold"), "Binarization Threshold", 0.5f, 0.0f, 1.0f, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
 {
     // Store default settings.
     storeInstance(DEFAULT_SETTINGS);
