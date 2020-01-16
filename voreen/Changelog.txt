@@ -1,7 +1,7 @@
 Voreen Changelog
 ----------------
 
-2020-01-15: Voreen 5.1.1
+2020-01-17: Voreen 5.1.1
 ------------------------
 
     * Bug Fixes/Minor Changes:
@@ -11,6 +11,8 @@ Voreen Changelog
       o Fix crash in SliceReaders (affecting VolumeFilterList and VesselnessExtractor) when using very large convolutions
       o Fix crash when using LOD mode of RandomWalker
       o Improve usability of default feature-vesselnessworkanalysis workspace
+      o Fix portability of VolumeFilterList workspaces (unfortunately, this requires all VolumeFilterList processors in existing workspaces to be reconfigured)
+      o Add support for newest CMake versions
 
 2019-12-12: Voreen 5.1.0
 ------------------------
