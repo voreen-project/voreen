@@ -52,8 +52,11 @@ public:
 
 private:
 
-    struct Settings {
+    struct Settings : public Serializable {
         tgt::svec3 dimensions_;
+
+        virtual void serialize(Serializer& s) const;
+        virtual void deserialize(Deserializer& s);
     };
     std::map<int, Settings> instanceSettings_;
 

@@ -51,8 +51,11 @@ public:
 
 private:
 
-    struct Settings {
+    struct Settings : public Serializable {
         float threshold_;
+
+        virtual void serialize(Serializer& s) const;
+        virtual void deserialize(Deserializer& s);
     };
     std::map<int, Settings> instanceSettings_;
 

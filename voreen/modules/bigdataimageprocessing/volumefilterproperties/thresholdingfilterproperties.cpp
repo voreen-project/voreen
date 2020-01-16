@@ -105,23 +105,15 @@ void ThresholdingFilterProperties::addProperties() {
     properties_.push_back(&thresholdingStrategyType_);
 }
 void ThresholdingFilterProperties::serialize(Serializer& s) const {
-    std::vector<int> names;
-    std::vector<Settings> settings;
-    for (const auto& pair : instanceSettings_) {
-        names.push_back(pair.first);
-        settings.push_back(pair.second);
-    }
-    s.serializeBinaryBlob(getId("names"), names);
-    s.serializeBinaryBlob(getId("settings"), settings);
+    s.serialize(getId("instanceSettings"), instanceSettings_);
 }
 void ThresholdingFilterProperties::deserialize(Deserializer& s) {
-    std::vector<int> names;
-    std::vector<Settings> settings;
-    s.deserializeBinaryBlob(getId("names"), names);
-    s.deserializeBinaryBlob(getId("settings"), settings);
-    tgtAssert(names.size() == settings.size(), "number of keys and values does not match");
-    for (size_t i = 0; i < names.size(); i++) {
-        instanceSettings_[names[i]] = settings[i];
+    try {
+        s.deserialize(getId("instanceSettings"), instanceSettings_);
+    }
+    catch (SerializationException&) {
+        s.removeLastError();
+        LERROR("You need to reconfigure " << getVolumeFilterName() << " instances of " << ( properties_[0]->getOwner() ? properties_[0]->getOwner()->getGuiName() : "VolumeFilterList"));
     }
 }
 std::vector<int> ThresholdingFilterProperties::getStoredInstances() const {
@@ -132,6 +124,19 @@ std::vector<int> ThresholdingFilterProperties::getStoredInstances() const {
         }
     }
     return output;
+}
+
+void ThresholdingFilterProperties::Settings::serialize(Serializer& s) const {
+    s.serialize("thresholdValue", thresholdValue_);
+    s.serialize("replacementValue", replacementValue_);
+    s.serialize("thresholdingStrategyType", thresholdingStrategyType_);
+}
+void ThresholdingFilterProperties::Settings::deserialize(Deserializer& s) {
+    s.deserialize("thresholdValue", thresholdValue_);
+    s.deserialize("replacementValue", replacementValue_);
+    int thresholdingStrategyType = 0;
+    s.deserialize("thresholdingStrategyType", thresholdingStrategyType);
+    thresholdingStrategyType_ = static_cast<ThresholdingStrategyType>(thresholdingStrategyType);
 }
 
 }

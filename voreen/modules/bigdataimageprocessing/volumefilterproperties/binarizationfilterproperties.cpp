@@ -84,23 +84,15 @@ void BinarizationFilterProperties::addProperties() {
     properties_.push_back(&threshold_);
 }
 void BinarizationFilterProperties::serialize(Serializer& s) const {
-    std::vector<int> names;
-    std::vector<Settings> settings;
-    for (const auto& pair : instanceSettings_) {
-        names.push_back(pair.first);
-        settings.push_back(pair.second);
-    }
-    s.serializeBinaryBlob(getId("names"), names);
-    s.serializeBinaryBlob(getId("settings"), settings);
+    s.serialize(getId("instanceSettings"), instanceSettings_);
 }
 void BinarizationFilterProperties::deserialize(Deserializer& s) {
-    std::vector<int> names;
-    std::vector<Settings> settings;
-    s.deserializeBinaryBlob(getId("names"), names);
-    s.deserializeBinaryBlob(getId("settings"), settings);
-    tgtAssert(names.size() == settings.size(), "number of keys and values does not match");
-    for (size_t i = 0; i < names.size(); i++) {
-        instanceSettings_[names[i]] = settings[i];
+    try {
+        s.deserialize(getId("instanceSettings"), instanceSettings_);
+    }
+    catch (SerializationException&) {
+        s.removeLastError();
+        LERROR("You need to reconfigure " << getVolumeFilterName() << " instances of " << ( properties_[0]->getOwner() ? properties_[0]->getOwner()->getGuiName() : "VolumeFilterList"));
     }
 }
 std::vector<int> BinarizationFilterProperties::getStoredInstances() const {
@@ -111,6 +103,13 @@ std::vector<int> BinarizationFilterProperties::getStoredInstances() const {
         }
     }
     return output;
+}
+
+void BinarizationFilterProperties::Settings::serialize(Serializer& s) const {
+    s.serialize("threshold", threshold_);
+}
+void BinarizationFilterProperties::Settings::deserialize(Deserializer& s) {
+    s.deserialize("threshold", threshold_);
 }
 
 }

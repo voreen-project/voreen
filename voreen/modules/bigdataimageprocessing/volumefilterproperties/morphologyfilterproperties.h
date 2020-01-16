@@ -51,7 +51,7 @@ public:
 
 private:
 
-    struct Settings {
+    struct Settings : public Serializable {
         int extentX_;
         int extentY_;
         int extentZ_;
@@ -59,6 +59,9 @@ private:
         MorphologyOperatorShape morphologyOperatorShape_;
         SamplingStrategyType samplingStrategyType_;
         float outsideVolumeValue_;
+
+        virtual void serialize(Serializer& s) const;
+        virtual void deserialize(Deserializer& s);
     };
     std::map<int, Settings> instanceSettings_;
 

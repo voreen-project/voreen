@@ -107,7 +107,7 @@ InteractiveListProperty::~InteractiveListProperty()
 void InteractiveListProperty::serialize(Serializer& s) const {
     Property::serialize(s);
     s.serialize("items", items_); // Serialize to check for changes in item list on next deserialization.
-    s.serialize("instancesExt", instances_);
+    s.serialize("instances", instances_);
 
 }
 void InteractiveListProperty::deserialize(Deserializer& s) {
@@ -132,28 +132,11 @@ void InteractiveListProperty::deserialize(Deserializer& s) {
 
     std::vector<Instance> oldInstances;
     try {
-        s.deserialize("instancesExt", oldInstances);
+        s.deserialize("instances", oldInstances);
     }
-    catch (SerializationNoSuchDataException&) {
-        // TODO: remove before new release!
+    catch(SerializationException&) {
         s.removeLastError();
-        LINFO("trying old deserialization");
-
-        struct DeprecatedInstance { int itemId_; int instanceId_; };
-        std::vector<DeprecatedInstance> deprecatedInstances;
-        s.deserializeBinaryBlob("instances", deprecatedInstances);
-
-        for(const DeprecatedInstance& instance : deprecatedInstances) {
-            auto it = itemIdMappingTable.find(instance.itemId_);
-            if(it != itemIdMappingTable.end() && (allowDuplication_ || !hasInstance(items_[it->second]))) {
-                Instance instanceExt(it->second, instance.instanceId_);
-                instanceExt.setActive(true);
-                instanceExt.setName(nameGenerator_(instanceExt));
-                instances_.push_back(instanceExt);
-            }
-        }
-
-        return;
+        LERROR("You need to reconfigure InteractiveList: " << ( getOwner() ? getOwner()->getGuiName() : getGuiName()));
     }
 
     // Only add instances, whose item still exists.

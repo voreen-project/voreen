@@ -53,7 +53,7 @@ private:
 
     void updateObjectVoxelThreshold();
 
-    struct Settings {
+    struct Settings : public Serializable {
         bool useUniformExtent_;
         int extentX_;
         int extentY_;
@@ -63,6 +63,9 @@ private:
         float outsideVolumeValue_;
         bool forceMedian_;
         int objectVoxelThreshold_;
+
+        virtual void serialize(Serializer& s) const;
+        virtual void deserialize(Deserializer& s);
     };
     std::map<int, Settings> instanceSettings_;
 

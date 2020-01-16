@@ -23,7 +23,7 @@
                                 <path noPathSet="false">
                                     <paths>
                                         <item value="../../voreen/resource/voreenve/volumes/nucleon.vvd" />
-                                        <item value="resource/voreenve/volumes/nucleon.vvd" />
+                                        <item value="../../voreen/voreen/resource/voreenve/volumes/nucleon.vvd" />
                                         <item value="/home/s_leis06/programming/voreen/voreen/resource/voreenve/volumes/nucleon.vvd" />
                                     </paths>
                                 </path>
@@ -45,7 +45,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeFilterList" name="Binary Median" Binarization_names.numItems="1" Binarization_names.data="/////w==" Binarization_settings.numItems="1" Binarization_settings.data="AAAAPw==" Binary_Median_Filter_names.numItems="2" Binary_Median_Filter_names.data="/////wEAAAA=" Binary_Median_Filter_settings.numItems="2" Binary_Median_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAD8BAAAAAAAAAAEAAAANAAAAAAAAAAMAAAACAAAAAQAAAAAASEIBAAAAAAAAAAEAAAA0AAAA" Gaussian_Filter_names.numItems="1" Gaussian_Filter_names.data="/////w==" Gaussian_Filter_settingsV2.numItems="1" Gaussian_Filter_settingsV2.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Median_Filter_names.numItems="1" Median_Filter_names.data="/////w==" Median_Filter_settingsV2.numItems="1" Median_Filter_settingsV2.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Morphology_Filter_names.numItems="1" Morphology_Filter_names.data="/////w==" Morphology_Filter_settingsV2.numItems="1" Morphology_Filter_settingsV2.data="AQAAAAEAAAABAAAAAAAAAAEAAAAAAAAAAAAAAA==" Resample_Filter_names.numItems="1" Resample_Filter_names.data="/////w==" Resample_Filter_settings.numItems="1" Resample_Filter_settings.data="oIYBAAAAAACghgEAAAAAAKCGAQAAAAAA" Thresholding_Filter_names.numItems="1" Thresholding_Filter_names.data="/////w==" Thresholding_Filter_settings.numItems="1" Thresholding_Filter_settings.data="AAAAAAAAAAAAAAAA" id="ref1">
+                <Processor type="VolumeFilterList" name="Binary Median" id="ref1">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-338" y="107" />
                     </MetaData>
@@ -95,18 +95,18 @@
                                 <item value="Resample Filter" />
                                 <item value="Thresholding Filter" />
                             </items>
-                            <instancesExt>
+                            <instances>
                                 <item itemId="1" instanceId="1" active="true" name="Binary Median Filter (1)" />
-                            </instancesExt>
+                            </instances>
                         </Property>
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/a76fbfb4-5989-4acc-8232-260830730951.h5" />
-                                    <item value="data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/a76fbfb4-5989-4acc-8232-260830730951.h5" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/a76fbfb4-5989-4acc-8232-260830730951.h5" />
+                                    <item value="../../../voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/c5a1761e-3391-4e74-90c9-947fd66e1fc6.h5" />
+                                    <item value="data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/c5a1761e-3391-4e74-90c9-947fd66e1fc6.h5" />
+                                    <item value="/home/s_leis06/programming/voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/c5a1761e-3391-4e74-90c9-947fd66e1fc6.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -134,6 +134,30 @@
                     <CoProcessorInports />
                     <CoProcessorOutports />
                     <InteractionHandlers />
+                    <Binarization_instanceSettings>
+                        <value key="-1" threshold="0.5" />
+                    </Binarization_instanceSettings>
+                    <Binary_Median_Filter_instanceSettings>
+                        <value key="-1" useUniformExtent_="true" extentX="1" extentY="1" extentZ="1" binarizationThreshold="0.5" samplingStrategyType="1" outsideVolumeValue="0" forceMedian="true" objectVoxelThreshold="13" />
+                        <value key="1" useUniformExtent_="false" extentX="3" extentY="2" extentZ="1" binarizationThreshold="50" samplingStrategyType="1" outsideVolumeValue="0" forceMedian="true" objectVoxelThreshold="52" />
+                    </Binary_Median_Filter_instanceSettings>
+                    <Gaussian_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Gaussian_Filter_instanceSettings>
+                    <Median_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Median_Filter_instanceSettings>
+                    <Morphology_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" morphologyOperatorType="0" morphologyOperatorShape="0" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Morphology_Filter_instanceSettings>
+                    <Resample_Filter_instanceSettings>
+                        <value key="-1">
+                            <dimensions x="100000" y="100000" z="100000" />
+                        </value>
+                    </Resample_Filter_instanceSettings>
+                    <Thresholding_Filter_instanceSettings>
+                        <value key="-1" thresholdValue="0" replacementValue="0" thresholdingStrategyType="0" />
+                    </Thresholding_Filter_instanceSettings>
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave" id="ref9">
                     <MetaData>
@@ -145,7 +169,7 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/binary_median.vvd" />
-                                    <item value="../test-data/voreen-testdata/output/binary_median.vvd" />
+                                    <item value="../../voreen/test-data/voreen-testdata/output/binary_median.vvd" />
                                     <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/binary_median.vvd" />
                                 </paths>
                             </paths>
@@ -168,7 +192,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeFilterList" name="Median" Binarization_names.numItems="1" Binarization_names.data="/////w==" Binarization_settings.numItems="1" Binarization_settings.data="AAAAPw==" Binary_Median_Filter_names.numItems="1" Binary_Median_Filter_names.data="/////w==" Binary_Median_Filter_settings.numItems="1" Binary_Median_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAD8BAAAAAAAAAAEAAAANAAAA" Gaussian_Filter_names.numItems="1" Gaussian_Filter_names.data="/////w==" Gaussian_Filter_settingsV2.numItems="1" Gaussian_Filter_settingsV2.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Median_Filter_names.numItems="2" Median_Filter_names.data="/////wEAAAA=" Median_Filter_settingsV2.numItems="2" Median_Filter_settingsV2.data="AQAAAAEAAAABAAAAAQAAAAAAAAACAAAABAAAAAcAAAAAAAAAAAAAAA==" Morphology_Filter_names.numItems="1" Morphology_Filter_names.data="/////w==" Morphology_Filter_settingsV2.numItems="1" Morphology_Filter_settingsV2.data="AQAAAAEAAAABAAAAAAAAAAEAAAAAAAAAAAAAAA==" Resample_Filter_names.numItems="1" Resample_Filter_names.data="/////w==" Resample_Filter_settings.numItems="1" Resample_Filter_settings.data="oIYBAAAAAACghgEAAAAAAKCGAQAAAAAA" Thresholding_Filter_names.numItems="1" Thresholding_Filter_names.data="/////w==" Thresholding_Filter_settings.numItems="1" Thresholding_Filter_settings.data="AAAAAAAAAAAAAAAA" id="ref7">
+                <Processor type="VolumeFilterList" name="Median" id="ref7">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-32" y="107" />
                     </MetaData>
@@ -218,18 +242,18 @@
                                 <item value="Resample Filter" />
                                 <item value="Thresholding Filter" />
                             </items>
-                            <instancesExt>
+                            <instances>
                                 <item itemId="3" instanceId="1" active="true" name="Median Filter (1)" />
-                            </instancesExt>
+                            </instances>
                         </Property>
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/c9a0dd18-d945-4bfe-8921-ced29a4068d2.h5" />
-                                    <item value="data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/c9a0dd18-d945-4bfe-8921-ced29a4068d2.h5" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/c9a0dd18-d945-4bfe-8921-ced29a4068d2.h5" />
+                                    <item value="../../../voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/681bd495-c396-44ce-92bd-4b397cd48c04.h5" />
+                                    <item value="data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/681bd495-c396-44ce-92bd-4b397cd48c04.h5" />
+                                    <item value="/home/s_leis06/programming/voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/681bd495-c396-44ce-92bd-4b397cd48c04.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -257,6 +281,30 @@
                     <CoProcessorInports />
                     <CoProcessorOutports />
                     <InteractionHandlers />
+                    <Binarization_instanceSettings>
+                        <value key="-1" threshold="0.5" />
+                    </Binarization_instanceSettings>
+                    <Binary_Median_Filter_instanceSettings>
+                        <value key="-1" useUniformExtent_="true" extentX="1" extentY="1" extentZ="1" binarizationThreshold="0.5" samplingStrategyType="1" outsideVolumeValue="0" forceMedian="true" objectVoxelThreshold="13" />
+                    </Binary_Median_Filter_instanceSettings>
+                    <Gaussian_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Gaussian_Filter_instanceSettings>
+                    <Median_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                        <value key="1" extentX="2" extentY="4" extentZ="7" samplingStrategyType="0" outsideVolumeValue="0" />
+                    </Median_Filter_instanceSettings>
+                    <Morphology_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" morphologyOperatorType="0" morphologyOperatorShape="0" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Morphology_Filter_instanceSettings>
+                    <Resample_Filter_instanceSettings>
+                        <value key="-1">
+                            <dimensions x="100000" y="100000" z="100000" />
+                        </value>
+                    </Resample_Filter_instanceSettings>
+                    <Thresholding_Filter_instanceSettings>
+                        <value key="-1" thresholdValue="0" replacementValue="0" thresholdingStrategyType="0" />
+                    </Thresholding_Filter_instanceSettings>
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave 2" id="ref10">
                     <MetaData>
@@ -268,7 +316,7 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/median.vvd" />
-                                    <item value="../test-data/voreen-testdata/output/median.vvd" />
+                                    <item value="../../voreen/test-data/voreen-testdata/output/median.vvd" />
                                     <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/median.vvd" />
                                 </paths>
                             </paths>
@@ -291,7 +339,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeFilterList" name="Gaussian" Binarization_names.numItems="1" Binarization_names.data="/////w==" Binarization_settings.numItems="1" Binarization_settings.data="AAAAPw==" Binary_Median_Filter_names.numItems="1" Binary_Median_Filter_names.data="/////w==" Binary_Median_Filter_settings.numItems="1" Binary_Median_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAD8BAAAAAAAAAAEAAAANAAAA" Gaussian_Filter_names.numItems="2" Gaussian_Filter_names.data="/////wEAAAA=" Gaussian_Filter_settingsV2.numItems="2" Gaussian_Filter_settingsV2.data="AQAAAAEAAAABAAAAAQAAAAAAAAADAAAAAQAAAAkAAAADAAAAAABIQg==" Median_Filter_names.numItems="1" Median_Filter_names.data="/////w==" Median_Filter_settingsV2.numItems="1" Median_Filter_settingsV2.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Morphology_Filter_names.numItems="1" Morphology_Filter_names.data="/////w==" Morphology_Filter_settingsV2.numItems="1" Morphology_Filter_settingsV2.data="AQAAAAEAAAABAAAAAAAAAAEAAAAAAAAAAAAAAA==" Resample_Filter_names.numItems="1" Resample_Filter_names.data="/////w==" Resample_Filter_settings.numItems="1" Resample_Filter_settings.data="oIYBAAAAAACghgEAAAAAAKCGAQAAAAAA" Thresholding_Filter_names.numItems="1" Thresholding_Filter_names.data="/////w==" Thresholding_Filter_settings.numItems="1" Thresholding_Filter_settings.data="AAAAAAAAAAAAAAAA" id="ref2">
+                <Processor type="VolumeFilterList" name="Gaussian" id="ref2">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="267" y="107" />
                     </MetaData>
@@ -341,18 +389,18 @@
                                 <item value="Resample Filter" />
                                 <item value="Thresholding Filter" />
                             </items>
-                            <instancesExt>
+                            <instances>
                                 <item itemId="2" instanceId="1" active="true" name="Gaussian Filter (1)" />
-                            </instancesExt>
+                            </instances>
                         </Property>
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/81c041f3-483e-477d-9475-d108280de2a9.h5" />
-                                    <item value="data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/81c041f3-483e-477d-9475-d108280de2a9.h5" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/81c041f3-483e-477d-9475-d108280de2a9.h5" />
+                                    <item value="../../../voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/a3668681-09b1-48f0-a7b1-f6b24183a469.h5" />
+                                    <item value="data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/a3668681-09b1-48f0-a7b1-f6b24183a469.h5" />
+                                    <item value="/home/s_leis06/programming/voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/a3668681-09b1-48f0-a7b1-f6b24183a469.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -380,6 +428,30 @@
                     <CoProcessorInports />
                     <CoProcessorOutports />
                     <InteractionHandlers />
+                    <Binarization_instanceSettings>
+                        <value key="-1" threshold="0.5" />
+                    </Binarization_instanceSettings>
+                    <Binary_Median_Filter_instanceSettings>
+                        <value key="-1" useUniformExtent_="true" extentX="1" extentY="1" extentZ="1" binarizationThreshold="0.5" samplingStrategyType="1" outsideVolumeValue="0" forceMedian="true" objectVoxelThreshold="13" />
+                    </Binary_Median_Filter_instanceSettings>
+                    <Gaussian_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                        <value key="1" extentX="3" extentY="1" extentZ="9" samplingStrategyType="3" outsideVolumeValue="50" />
+                    </Gaussian_Filter_instanceSettings>
+                    <Median_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Median_Filter_instanceSettings>
+                    <Morphology_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" morphologyOperatorType="0" morphologyOperatorShape="0" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Morphology_Filter_instanceSettings>
+                    <Resample_Filter_instanceSettings>
+                        <value key="-1">
+                            <dimensions x="100000" y="100000" z="100000" />
+                        </value>
+                    </Resample_Filter_instanceSettings>
+                    <Thresholding_Filter_instanceSettings>
+                        <value key="-1" thresholdValue="0" replacementValue="0" thresholdingStrategyType="0" />
+                    </Thresholding_Filter_instanceSettings>
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave 3" id="ref11">
                     <MetaData>
@@ -391,7 +463,7 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/gaussian.vvd" />
-                                    <item value="../test-data/voreen-testdata/output/gaussian.vvd" />
+                                    <item value="../../voreen/test-data/voreen-testdata/output/gaussian.vvd" />
                                     <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/gaussian.vvd" />
                                 </paths>
                             </paths>
@@ -414,7 +486,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeFilterList" name="Dilation" Binarization_names.numItems="1" Binarization_names.data="/////w==" Binarization_settings.numItems="1" Binarization_settings.data="AAAAPw==" Binary_Median_Filter_names.numItems="1" Binary_Median_Filter_names.data="/////w==" Binary_Median_Filter_settings.numItems="1" Binary_Median_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAD8BAAAAAAAAAAEAAAANAAAA" Gaussian_Filter_names.numItems="1" Gaussian_Filter_names.data="/////w==" Gaussian_Filter_settingsV2.numItems="1" Gaussian_Filter_settingsV2.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Median_Filter_names.numItems="1" Median_Filter_names.data="/////w==" Median_Filter_settingsV2.numItems="1" Median_Filter_settingsV2.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Morphology_Filter_names.numItems="2" Morphology_Filter_names.data="/////wEAAAA=" Morphology_Filter_settingsV2.numItems="2" Morphology_Filter_settingsV2.data="AQAAAAEAAAABAAAAAAAAAAEAAAAAAAAAAAAAAAEAAAAFAAAACQAAAAAAAAAAAAAAAAAAAAAAAAA=" Resample_Filter_names.numItems="1" Resample_Filter_names.data="/////w==" Resample_Filter_settings.numItems="1" Resample_Filter_settings.data="oIYBAAAAAACghgEAAAAAAKCGAQAAAAAA" Thresholding_Filter_names.numItems="1" Thresholding_Filter_names.data="/////w==" Thresholding_Filter_settings.numItems="1" Thresholding_Filter_settings.data="AAAAAAAAAAAAAAAA" id="ref3">
+                <Processor type="VolumeFilterList" name="Dilation" id="ref3">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="567" y="103" />
                     </MetaData>
@@ -445,7 +517,7 @@
                         <Property mapKey="Morphology_Filter_morphologyOperatorShape" name="Morphology_Filter_morphologyOperatorShape" value="cube" />
                         <Property mapKey="Morphology_Filter_morphologyOperatorType" name="Morphology_Filter_morphologyOperatorType" value="dilation" />
                         <Property mapKey="Morphology_Filter_outsideVolumeValue" name="Morphology_Filter_outsideVolumeValue" value="0" minValue="0" maxValue="249" tracking="false" />
-                        <Property mapKey="Morphology_Filter_samplingStrategyType" name="Morphology_Filter_samplingStrategyType" value="mirror" />
+                        <Property mapKey="Morphology_Filter_samplingStrategyType" name="Morphology_Filter_samplingStrategyType" value="clamp" />
                         <Property mapKey="Resample_Filter_dimensions" name="Resample_Filter_dimensions" tracking="false">
                             <value x="41" y="41" z="41" />
                         </Property>
@@ -464,18 +536,18 @@
                                 <item value="Resample Filter" />
                                 <item value="Thresholding Filter" />
                             </items>
-                            <instancesExt>
+                            <instances>
                                 <item itemId="4" instanceId="1" active="true" name="Morphology Filter (1)" />
-                            </instancesExt>
+                            </instances>
                         </Property>
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/92e8f8c3-0985-4c0d-8e38-92cbbf365409.h5" />
-                                    <item value="data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/92e8f8c3-0985-4c0d-8e38-92cbbf365409.h5" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/92e8f8c3-0985-4c0d-8e38-92cbbf365409.h5" />
+                                    <item value="../../../voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/3451168c-3c76-4628-aee4-7c231bd100c3.h5" />
+                                    <item value="data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/3451168c-3c76-4628-aee4-7c231bd100c3.h5" />
+                                    <item value="/home/s_leis06/programming/voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/3451168c-3c76-4628-aee4-7c231bd100c3.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -503,6 +575,30 @@
                     <CoProcessorInports />
                     <CoProcessorOutports />
                     <InteractionHandlers />
+                    <Binarization_instanceSettings>
+                        <value key="-1" threshold="0.5" />
+                    </Binarization_instanceSettings>
+                    <Binary_Median_Filter_instanceSettings>
+                        <value key="-1" useUniformExtent_="true" extentX="1" extentY="1" extentZ="1" binarizationThreshold="0.5" samplingStrategyType="1" outsideVolumeValue="0" forceMedian="true" objectVoxelThreshold="13" />
+                    </Binary_Median_Filter_instanceSettings>
+                    <Gaussian_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Gaussian_Filter_instanceSettings>
+                    <Median_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Median_Filter_instanceSettings>
+                    <Morphology_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" morphologyOperatorType="0" morphologyOperatorShape="0" samplingStrategyType="1" outsideVolumeValue="0" />
+                        <value key="1" extentX="1" extentY="5" extentZ="9" morphologyOperatorType="0" morphologyOperatorShape="0" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Morphology_Filter_instanceSettings>
+                    <Resample_Filter_instanceSettings>
+                        <value key="-1">
+                            <dimensions x="100000" y="100000" z="100000" />
+                        </value>
+                    </Resample_Filter_instanceSettings>
+                    <Thresholding_Filter_instanceSettings>
+                        <value key="-1" thresholdValue="0" replacementValue="0" thresholdingStrategyType="0" />
+                    </Thresholding_Filter_instanceSettings>
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave 4" id="ref12">
                     <MetaData>
@@ -514,7 +610,7 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/dilation.vvd" />
-                                    <item value="../test-data/voreen-testdata/output/dilation.vvd" />
+                                    <item value="../../voreen/test-data/voreen-testdata/output/dilation.vvd" />
                                     <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/dilation.vvd" />
                                 </paths>
                             </paths>
@@ -537,7 +633,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeFilterList" name="Erosion" Binarization_names.numItems="1" Binarization_names.data="/////w==" Binarization_settings.numItems="1" Binarization_settings.data="AAAAPw==" Binary_Median_Filter_names.numItems="1" Binary_Median_Filter_names.data="/////w==" Binary_Median_Filter_settings.numItems="1" Binary_Median_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAD8BAAAAAAAAAAEAAAANAAAA" Gaussian_Filter_names.numItems="1" Gaussian_Filter_names.data="/////w==" Gaussian_Filter_settingsV2.numItems="1" Gaussian_Filter_settingsV2.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Median_Filter_names.numItems="1" Median_Filter_names.data="/////w==" Median_Filter_settingsV2.numItems="1" Median_Filter_settingsV2.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Morphology_Filter_names.numItems="2" Morphology_Filter_names.data="/////wEAAAA=" Morphology_Filter_settingsV2.numItems="2" Morphology_Filter_settingsV2.data="AQAAAAEAAAABAAAAAAAAAAEAAAAAAAAAAAAAAAkAAAACAAAAAQAAAAEAAAABAAAAAQAAAAAAAAA=" Resample_Filter_names.numItems="1" Resample_Filter_names.data="/////w==" Resample_Filter_settings.numItems="1" Resample_Filter_settings.data="oIYBAAAAAACghgEAAAAAAKCGAQAAAAAA" Thresholding_Filter_names.numItems="1" Thresholding_Filter_names.data="/////w==" Thresholding_Filter_settings.numItems="1" Thresholding_Filter_settings.data="AAAAAAAAAAAAAAAA" id="ref4">
+                <Processor type="VolumeFilterList" name="Erosion" id="ref4">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="867" y="107" />
                     </MetaData>
@@ -568,7 +664,7 @@
                         <Property mapKey="Morphology_Filter_morphologyOperatorShape" name="Morphology_Filter_morphologyOperatorShape" value="sphere" />
                         <Property mapKey="Morphology_Filter_morphologyOperatorType" name="Morphology_Filter_morphologyOperatorType" value="erosion" />
                         <Property mapKey="Morphology_Filter_outsideVolumeValue" name="Morphology_Filter_outsideVolumeValue" value="0" minValue="0" maxValue="249" tracking="false" />
-                        <Property mapKey="Morphology_Filter_samplingStrategyType" name="Morphology_Filter_samplingStrategyType" value="clamp" />
+                        <Property mapKey="Morphology_Filter_samplingStrategyType" name="Morphology_Filter_samplingStrategyType" value="mirror" />
                         <Property mapKey="Resample_Filter_dimensions" name="Resample_Filter_dimensions" tracking="false">
                             <value x="41" y="41" z="41" />
                         </Property>
@@ -587,18 +683,18 @@
                                 <item value="Resample Filter" />
                                 <item value="Thresholding Filter" />
                             </items>
-                            <instancesExt>
+                            <instances>
                                 <item itemId="4" instanceId="1" active="true" name="Morphology Filter (1)" />
-                            </instancesExt>
+                            </instances>
                         </Property>
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/eaef1172-3351-417c-bfc4-74a598f141cb.h5" />
-                                    <item value="data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/eaef1172-3351-417c-bfc4-74a598f141cb.h5" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/eaef1172-3351-417c-bfc4-74a598f141cb.h5" />
+                                    <item value="../../../voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55.h5" />
+                                    <item value="data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55.h5" />
+                                    <item value="/home/s_leis06/programming/voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -626,6 +722,30 @@
                     <CoProcessorInports />
                     <CoProcessorOutports />
                     <InteractionHandlers />
+                    <Binarization_instanceSettings>
+                        <value key="-1" threshold="0.5" />
+                    </Binarization_instanceSettings>
+                    <Binary_Median_Filter_instanceSettings>
+                        <value key="-1" useUniformExtent_="true" extentX="1" extentY="1" extentZ="1" binarizationThreshold="0.5" samplingStrategyType="1" outsideVolumeValue="0" forceMedian="true" objectVoxelThreshold="13" />
+                    </Binary_Median_Filter_instanceSettings>
+                    <Gaussian_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Gaussian_Filter_instanceSettings>
+                    <Median_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Median_Filter_instanceSettings>
+                    <Morphology_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" morphologyOperatorType="0" morphologyOperatorShape="0" samplingStrategyType="1" outsideVolumeValue="0" />
+                        <value key="1" extentX="9" extentY="2" extentZ="1" morphologyOperatorType="1" morphologyOperatorShape="1" samplingStrategyType="0" outsideVolumeValue="0" />
+                    </Morphology_Filter_instanceSettings>
+                    <Resample_Filter_instanceSettings>
+                        <value key="-1">
+                            <dimensions x="100000" y="100000" z="100000" />
+                        </value>
+                    </Resample_Filter_instanceSettings>
+                    <Thresholding_Filter_instanceSettings>
+                        <value key="-1" thresholdValue="0" replacementValue="0" thresholdingStrategyType="0" />
+                    </Thresholding_Filter_instanceSettings>
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave 5" id="ref13">
                     <MetaData>
@@ -637,7 +757,7 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/erosion.vvd" />
-                                    <item value="../test-data/voreen-testdata/output/erosion.vvd" />
+                                    <item value="../../voreen/test-data/voreen-testdata/output/erosion.vvd" />
                                     <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/erosion.vvd" />
                                 </paths>
                             </paths>
@@ -660,7 +780,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeFilterList" name="Thresholding" Binarization_names.numItems="1" Binarization_names.data="/////w==" Binarization_settings.numItems="1" Binarization_settings.data="AAAAPw==" Binary_Median_Filter_names.numItems="1" Binary_Median_Filter_names.data="/////w==" Binary_Median_Filter_settings.numItems="1" Binary_Median_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAD8BAAAAAAAAAAEAAAANAAAA" Gaussian_Filter_names.numItems="1" Gaussian_Filter_names.data="/////w==" Gaussian_Filter_settingsV2.numItems="1" Gaussian_Filter_settingsV2.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Median_Filter_names.numItems="1" Median_Filter_names.data="/////w==" Median_Filter_settingsV2.numItems="1" Median_Filter_settingsV2.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Morphology_Filter_names.numItems="1" Morphology_Filter_names.data="/////w==" Morphology_Filter_settingsV2.numItems="1" Morphology_Filter_settingsV2.data="AQAAAAEAAAABAAAAAAAAAAEAAAAAAAAAAAAAAA==" Resample_Filter_names.numItems="1" Resample_Filter_names.data="/////w==" Resample_Filter_settings.numItems="1" Resample_Filter_settings.data="oIYBAAAAAACghgEAAAAAAKCGAQAAAAAA" Thresholding_Filter_names.numItems="2" Thresholding_Filter_names.data="/////wIAAAA=" Thresholding_Filter_settings.numItems="2" Thresholding_Filter_settings.data="AAAAAAAAAAAAAAAAAADIQgAAAAAAAAAA" id="ref5">
+                <Processor type="VolumeFilterList" name="Thresholding" id="ref5">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="1166" y="107" />
                     </MetaData>
@@ -710,18 +830,18 @@
                                 <item value="Resample Filter" />
                                 <item value="Thresholding Filter" />
                             </items>
-                            <instancesExt>
-                                <item itemId="6" instanceId="2" active="true" name="Thresholding Filter (2)" />
-                            </instancesExt>
+                            <instances>
+                                <item itemId="6" instanceId="1" active="true" name="Thresholding Filter (1)" />
+                            </instances>
                         </Property>
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/5994a946-119f-4db4-aafe-00ae73b5b800.h5" />
-                                    <item value="data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/5994a946-119f-4db4-aafe-00ae73b5b800.h5" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/5994a946-119f-4db4-aafe-00ae73b5b800.h5" />
+                                    <item value="../../../voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/9538e4ed-27e6-4c37-b989-9859dc0d49e8.h5" />
+                                    <item value="data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/9538e4ed-27e6-4c37-b989-9859dc0d49e8.h5" />
+                                    <item value="/home/s_leis06/programming/voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/9538e4ed-27e6-4c37-b989-9859dc0d49e8.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -749,6 +869,30 @@
                     <CoProcessorInports />
                     <CoProcessorOutports />
                     <InteractionHandlers />
+                    <Binarization_instanceSettings>
+                        <value key="-1" threshold="0.5" />
+                    </Binarization_instanceSettings>
+                    <Binary_Median_Filter_instanceSettings>
+                        <value key="-1" useUniformExtent_="true" extentX="1" extentY="1" extentZ="1" binarizationThreshold="0.5" samplingStrategyType="1" outsideVolumeValue="0" forceMedian="true" objectVoxelThreshold="13" />
+                    </Binary_Median_Filter_instanceSettings>
+                    <Gaussian_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Gaussian_Filter_instanceSettings>
+                    <Median_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Median_Filter_instanceSettings>
+                    <Morphology_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" morphologyOperatorType="0" morphologyOperatorShape="0" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Morphology_Filter_instanceSettings>
+                    <Resample_Filter_instanceSettings>
+                        <value key="-1">
+                            <dimensions x="100000" y="100000" z="100000" />
+                        </value>
+                    </Resample_Filter_instanceSettings>
+                    <Thresholding_Filter_instanceSettings>
+                        <value key="-1" thresholdValue="0" replacementValue="0" thresholdingStrategyType="0" />
+                        <value key="1" thresholdValue="100" replacementValue="0" thresholdingStrategyType="0" />
+                    </Thresholding_Filter_instanceSettings>
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave 6" id="ref14">
                     <MetaData>
@@ -760,7 +904,7 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/thresholding.vvd" />
-                                    <item value="../test-data/voreen-testdata/output/thresholding.vvd" />
+                                    <item value="../../voreen/test-data/voreen-testdata/output/thresholding.vvd" />
                                     <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/thresholding.vvd" />
                                 </paths>
                             </paths>
@@ -783,7 +927,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeFilterList" name="Multiple" Binarization_names.numItems="1" Binarization_names.data="/////w==" Binarization_settings.numItems="1" Binarization_settings.data="AAAAPw==" Binary_Median_Filter_names.numItems="1" Binary_Median_Filter_names.data="/////w==" Binary_Median_Filter_settings.numItems="1" Binary_Median_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAD8BAAAAAAAAAAEAAAANAAAA" Gaussian_Filter_names.numItems="2" Gaussian_Filter_names.data="/////wIAAAA=" Gaussian_Filter_settingsV2.numItems="2" Gaussian_Filter_settingsV2.data="AQAAAAEAAAABAAAAAQAAAAAAAAABAAAABwAAAAEAAAADAAAAAABUQg==" Median_Filter_names.numItems="2" Median_Filter_names.data="/////wEAAAA=" Median_Filter_settingsV2.numItems="2" Median_Filter_settingsV2.data="AQAAAAEAAAABAAAAAQAAAAAAAAACAAAAAQAAAAUAAAABAAAAAAAAAA==" Morphology_Filter_names.numItems="3" Morphology_Filter_names.data="/////wMAAAAEAAAA" Morphology_Filter_settingsV2.numItems="3" Morphology_Filter_settingsV2.data="AQAAAAEAAAABAAAAAAAAAAEAAAAAAAAAAAAAAAEAAAABAAAABwAAAAAAAAAAAAAAAAAAAAAAAAABAAAABgAAAAEAAAAAAAAAAQAAAAEAAAAAAAAA" Resample_Filter_names.numItems="1" Resample_Filter_names.data="/////w==" Resample_Filter_settings.numItems="1" Resample_Filter_settings.data="oIYBAAAAAACghgEAAAAAAKCGAQAAAAAA" Thresholding_Filter_names.numItems="2" Thresholding_Filter_names.data="/////wUAAAA=" Thresholding_Filter_settings.numItems="2" Thresholding_Filter_settings.data="AAAAAAAAAAAAAAAAAABIQgAAAAAAAAAA" id="ref6">
+                <Processor type="VolumeFilterList" name="Multiple" id="ref6">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="1467" y="107" />
                     </MetaData>
@@ -833,22 +977,22 @@
                                 <item value="Resample Filter" />
                                 <item value="Thresholding Filter" />
                             </items>
-                            <instancesExt>
+                            <instances>
                                 <item itemId="3" instanceId="1" active="true" name="Median Filter (1)" />
-                                <item itemId="4" instanceId="3" active="true" name="Morphology Filter (3)" />
-                                <item itemId="2" instanceId="2" active="true" name="Gaussian Filter (2)" />
+                                <item itemId="4" instanceId="2" active="true" name="Morphology Filter (2)" />
+                                <item itemId="2" instanceId="3" active="true" name="Gaussian Filter (3)" />
                                 <item itemId="4" instanceId="4" active="true" name="Morphology Filter (4)" />
                                 <item itemId="6" instanceId="5" active="true" name="Thresholding Filter (5)" />
-                            </instancesExt>
+                            </instances>
                         </Property>
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/c5a1761e-3391-4e74-90c9-947fd66e1fc6.h5" />
-                                    <item value="data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/c5a1761e-3391-4e74-90c9-947fd66e1fc6.h5" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/c5a1761e-3391-4e74-90c9-947fd66e1fc6.h5" />
+                                    <item value="../../../voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/851ab59d-1fd7-45c7-a775-29797327cafc.h5" />
+                                    <item value="data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/851ab59d-1fd7-45c7-a775-29797327cafc.h5" />
+                                    <item value="/home/s_leis06/programming/voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/851ab59d-1fd7-45c7-a775-29797327cafc.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -876,6 +1020,34 @@
                     <CoProcessorInports />
                     <CoProcessorOutports />
                     <InteractionHandlers />
+                    <Binarization_instanceSettings>
+                        <value key="-1" threshold="0.5" />
+                    </Binarization_instanceSettings>
+                    <Binary_Median_Filter_instanceSettings>
+                        <value key="-1" useUniformExtent_="true" extentX="1" extentY="1" extentZ="1" binarizationThreshold="0.5" samplingStrategyType="1" outsideVolumeValue="0" forceMedian="true" objectVoxelThreshold="13" />
+                    </Binary_Median_Filter_instanceSettings>
+                    <Gaussian_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                        <value key="3" extentX="1" extentY="7" extentZ="1" samplingStrategyType="3" outsideVolumeValue="53" />
+                    </Gaussian_Filter_instanceSettings>
+                    <Median_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                        <value key="1" extentX="2" extentY="1" extentZ="5" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Median_Filter_instanceSettings>
+                    <Morphology_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" morphologyOperatorType="0" morphologyOperatorShape="0" samplingStrategyType="1" outsideVolumeValue="0" />
+                        <value key="2" extentX="1" extentY="1" extentZ="7" morphologyOperatorType="0" morphologyOperatorShape="0" samplingStrategyType="0" outsideVolumeValue="0" />
+                        <value key="4" extentX="1" extentY="6" extentZ="1" morphologyOperatorType="0" morphologyOperatorShape="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Morphology_Filter_instanceSettings>
+                    <Resample_Filter_instanceSettings>
+                        <value key="-1">
+                            <dimensions x="100000" y="100000" z="100000" />
+                        </value>
+                    </Resample_Filter_instanceSettings>
+                    <Thresholding_Filter_instanceSettings>
+                        <value key="-1" thresholdValue="0" replacementValue="0" thresholdingStrategyType="0" />
+                        <value key="5" thresholdValue="50" replacementValue="0" thresholdingStrategyType="0" />
+                    </Thresholding_Filter_instanceSettings>
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave 7" id="ref15">
                     <MetaData>
@@ -887,7 +1059,7 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/multiple.vvd" />
-                                    <item value="../test-data/voreen-testdata/output/multiple.vvd" />
+                                    <item value="../../voreen/test-data/voreen-testdata/output/multiple.vvd" />
                                     <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/multiple.vvd" />
                                 </paths>
                             </paths>
@@ -910,7 +1082,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeFilterList" name="Binarization" Binarization_names.numItems="2" Binarization_names.data="/////wEAAAA=" Binarization_settings.numItems="2" Binarization_settings.data="AAAAPwAAAEM=" Binary_Median_Filter_names.numItems="1" Binary_Median_Filter_names.data="/////w==" Binary_Median_Filter_settings.numItems="1" Binary_Median_Filter_settings.data="AQAAAAEAAAABAAAAAQAAAAAAAD8BAAAAAAAAAAEAAAANAAAA" Gaussian_Filter_names.numItems="1" Gaussian_Filter_names.data="/////w==" Gaussian_Filter_settingsV2.numItems="1" Gaussian_Filter_settingsV2.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Median_Filter_names.numItems="1" Median_Filter_names.data="/////w==" Median_Filter_settingsV2.numItems="1" Median_Filter_settingsV2.data="AQAAAAEAAAABAAAAAQAAAAAAAAA=" Morphology_Filter_names.numItems="1" Morphology_Filter_names.data="/////w==" Morphology_Filter_settingsV2.numItems="1" Morphology_Filter_settingsV2.data="AQAAAAEAAAABAAAAAAAAAAEAAAAAAAAAAAAAAA==" Resample_Filter_names.numItems="1" Resample_Filter_names.data="/////w==" Resample_Filter_settings.numItems="1" Resample_Filter_settings.data="oIYBAAAAAACghgEAAAAAAKCGAQAAAAAA" Thresholding_Filter_names.numItems="1" Thresholding_Filter_names.data="/////w==" Thresholding_Filter_settings.numItems="1" Thresholding_Filter_settings.data="AAAAAAAAAAAAAAAA" id="ref8">
+                <Processor type="VolumeFilterList" name="Binarization" id="ref8">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="1734" y="107" />
                     </MetaData>
@@ -926,10 +1098,10 @@
                         <Property mapKey="Binary_Median_Filter_samplingStrategyType" name="Binary_Median_Filter_samplingStrategyType" value="clamp" />
                         <Property mapKey="Binary_Median_Filter_useUniformExtent" name="Binary_Median_Filter_useUniformExtent" value="false" />
                         <Property mapKey="Gaussian_Filter_extentx" name="Gaussian_Filter_extentx" value="1" tracking="false" />
-                        <Property mapKey="Gaussian_Filter_extenty" name="Gaussian_Filter_extenty" value="7" tracking="false" />
+                        <Property mapKey="Gaussian_Filter_extenty" name="Gaussian_Filter_extenty" value="1" tracking="false" />
                         <Property mapKey="Gaussian_Filter_extentz" name="Gaussian_Filter_extentz" value="1" tracking="false" />
                         <Property mapKey="Gaussian_Filter_outsideVolumeValue" name="Gaussian_Filter_outsideVolumeValue" value="0" minValue="0" maxValue="249" tracking="false" />
-                        <Property mapKey="Gaussian_Filter_samplingStrategyType" name="Gaussian_Filter_samplingStrategyType" value="set" />
+                        <Property mapKey="Gaussian_Filter_samplingStrategyType" name="Gaussian_Filter_samplingStrategyType" value="clamp" />
                         <Property mapKey="Median_Filter_extentx" name="Median_Filter_extentx" value="2" tracking="false" />
                         <Property mapKey="Median_Filter_extenty" name="Median_Filter_extenty" value="1" tracking="false" />
                         <Property mapKey="Median_Filter_extentz" name="Median_Filter_extentz" value="5" tracking="false" />
@@ -960,18 +1132,18 @@
                                 <item value="Resample Filter" />
                                 <item value="Thresholding Filter" />
                             </items>
-                            <instancesExt>
+                            <instances>
                                 <item itemId="0" instanceId="1" active="true" name="Binarization (1)" />
-                            </instancesExt>
+                            </instances>
                         </Property>
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/681bd495-c396-44ce-92bd-4b397cd48c04.h5" />
-                                    <item value="data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/681bd495-c396-44ce-92bd-4b397cd48c04.h5" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/4c9fdea7-ba0c-45cc-8f66-240980c37d5c/681bd495-c396-44ce-92bd-4b397cd48c04.h5" />
+                                    <item value="../../../voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/16ded395-a862-4198-b3af-ba8c7fb298bb.h5" />
+                                    <item value="data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/16ded395-a862-4198-b3af-ba8c7fb298bb.h5" />
+                                    <item value="/home/s_leis06/programming/voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/16ded395-a862-4198-b3af-ba8c7fb298bb.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -999,6 +1171,30 @@
                     <CoProcessorInports />
                     <CoProcessorOutports />
                     <InteractionHandlers />
+                    <Binarization_instanceSettings>
+                        <value key="-1" threshold="0.5" />
+                        <value key="1" threshold="128" />
+                    </Binarization_instanceSettings>
+                    <Binary_Median_Filter_instanceSettings>
+                        <value key="-1" useUniformExtent_="true" extentX="1" extentY="1" extentZ="1" binarizationThreshold="0.5" samplingStrategyType="1" outsideVolumeValue="0" forceMedian="true" objectVoxelThreshold="13" />
+                    </Binary_Median_Filter_instanceSettings>
+                    <Gaussian_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Gaussian_Filter_instanceSettings>
+                    <Median_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Median_Filter_instanceSettings>
+                    <Morphology_Filter_instanceSettings>
+                        <value key="-1" extentX="1" extentY="1" extentZ="1" morphologyOperatorType="0" morphologyOperatorShape="0" samplingStrategyType="1" outsideVolumeValue="0" />
+                    </Morphology_Filter_instanceSettings>
+                    <Resample_Filter_instanceSettings>
+                        <value key="-1">
+                            <dimensions x="100000" y="100000" z="100000" />
+                        </value>
+                    </Resample_Filter_instanceSettings>
+                    <Thresholding_Filter_instanceSettings>
+                        <value key="-1" thresholdValue="0" replacementValue="0" thresholdingStrategyType="0" />
+                    </Thresholding_Filter_instanceSettings>
                 </Processor>
                 <Processor type="VolumeSave" name="VolumeSave 8" id="ref16">
                     <MetaData>
@@ -1010,7 +1206,7 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/binarization.vvd" />
-                                    <item value="../test-data/voreen-testdata/output/binarization.vvd" />
+                                    <item value="../../voreen/test-data/voreen-testdata/output/binarization.vvd" />
                                     <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/binarization.vvd" />
                                 </paths>
                             </paths>

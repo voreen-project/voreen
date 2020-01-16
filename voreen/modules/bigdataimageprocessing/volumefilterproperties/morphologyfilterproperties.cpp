@@ -124,52 +124,15 @@ void MorphologyFilterProperties::addProperties() {
     properties_.push_back(&outsideVolumeValue_);
 }
 void MorphologyFilterProperties::serialize(Serializer& s) const {
-    std::vector<int> names;
-    std::vector<Settings> settings;
-    for (const auto& pair : instanceSettings_) {
-        names.push_back(pair.first);
-        settings.push_back(pair.second);
-    }
-    s.serializeBinaryBlob(getId("names"), names);
-    s.serializeBinaryBlob(getId("settingsV2"), settings);
+    s.serialize(getId("instanceSettings"), instanceSettings_);
 }
 void MorphologyFilterProperties::deserialize(Deserializer& s) {
-    std::vector<int> names;
-    std::vector<Settings> settings;
-    s.deserializeBinaryBlob(getId("names"), names);
     try {
-        struct DeprecatedSettings {
-            int extentX_;
-            int extentY_;
-            int extentZ_;
-            MorphologyOperatorType morphologyOperatorType_;
-            MorphologyOperatorShape morphologyOperatorShape_;
-            SamplingStrategyType samplingStrategyType_;
-            int outsideVolumeValue_;
-        };
-
-        std::vector<DeprecatedSettings> deprecatedSettings;
-        s.deserializeBinaryBlob(getId("settings"), deprecatedSettings);
-        for(const DeprecatedSettings& depSettings : deprecatedSettings) {
-            Settings newSettings;
-            newSettings.extentX_ = depSettings.extentX_;
-            newSettings.extentY_ = depSettings.extentY_;
-            newSettings.extentZ_ = depSettings.extentZ_;
-            newSettings.morphologyOperatorType_ = depSettings.morphologyOperatorType_;
-            newSettings.morphologyOperatorShape_ = depSettings.morphologyOperatorShape_;
-            newSettings.samplingStrategyType_ = depSettings.samplingStrategyType_;
-            newSettings.outsideVolumeValue_ = depSettings.outsideVolumeValue_;
-            settings.push_back(newSettings);
-        }
+        s.deserialize(getId("instanceSettings"), instanceSettings_);
     }
     catch (SerializationException&) {
         s.removeLastError();
-        s.deserializeBinaryBlob(getId("settingsV2"), settings);
-    }
-
-    tgtAssert(names.size() == settings.size(), "number of keys and values does not match");
-    for (size_t i = 0; i < names.size(); i++) {
-        instanceSettings_[names[i]] = settings[i];
+        LERROR("You need to reconfigure " << getVolumeFilterName() << " instances of " << ( properties_[0]->getOwner() ? properties_[0]->getOwner()->getGuiName() : "VolumeFilterList"));
     }
 }
 std::vector<int> MorphologyFilterProperties::getStoredInstances() const {
@@ -180,6 +143,31 @@ std::vector<int> MorphologyFilterProperties::getStoredInstances() const {
         }
     }
     return output;
+}
+
+void MorphologyFilterProperties::Settings::serialize(Serializer& s) const {
+    s.serialize("extentX", extentX_);
+    s.serialize("extentY", extentY_);
+    s.serialize("extentZ", extentZ_);
+    s.serialize("morphologyOperatorType", morphologyOperatorType_);
+    s.serialize("morphologyOperatorShape", morphologyOperatorShape_);
+    s.serialize("samplingStrategyType", samplingStrategyType_);
+    s.serialize("outsideVolumeValue", outsideVolumeValue_);
+}
+void MorphologyFilterProperties::Settings::deserialize(Deserializer& s) {
+    s.deserialize("extentX", extentX_);
+    s.deserialize("extentY", extentY_);
+    s.deserialize("extentZ", extentZ_);
+    int morphologyOperatorType = 0;
+    s.deserialize("morphologyOperatorType", morphologyOperatorType);
+    morphologyOperatorType_ = static_cast<MorphologyOperatorType>(morphologyOperatorType);
+    int morphologyOperatorShape = 0;
+    s.deserialize("morphologyOperatorShape", morphologyOperatorShape);
+    morphologyOperatorShape_ = static_cast<MorphologyOperatorShape>(morphologyOperatorShape);
+    int samplingStrategyType = 0;
+    s.deserialize("samplingStrategyType", samplingStrategyType);
+    samplingStrategyType_ = static_cast<SamplingStrategyType>(samplingStrategyType);
+    s.deserialize("outsideVolumeValue", outsideVolumeValue_);
 }
 
 }

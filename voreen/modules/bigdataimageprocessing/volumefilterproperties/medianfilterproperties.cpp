@@ -132,48 +132,15 @@ void MedianFilterProperties::addProperties() {
     properties_.push_back(&outsideVolumeValue_);
 }
 void MedianFilterProperties::serialize(Serializer& s) const {
-    std::vector<int> names;
-    std::vector<Settings> settings;
-    for (const auto& pair : instanceSettings_) {
-        names.push_back(pair.first);
-        settings.push_back(pair.second);
-    }
-    s.serializeBinaryBlob(getId("names"), names);
-    s.serializeBinaryBlob(getId("settingsV2"), settings);
+    s.serialize(getId("instanceSettings"), instanceSettings_);
 }
 void MedianFilterProperties::deserialize(Deserializer& s) {
-    std::vector<int> names;
-    std::vector<Settings> settings;
-    s.deserializeBinaryBlob(getId("names"), names);
     try {
-        struct DeprecatedSettings {
-            int extentX_;
-            int extentY_;
-            int extentZ_;
-            SamplingStrategyType samplingStrategyType_;
-            int outsideVolumeValue_;
-        };
-
-        std::vector<DeprecatedSettings> deprecatedSettings;
-        s.deserializeBinaryBlob(getId("settings"), deprecatedSettings);
-        for(const DeprecatedSettings& depSettings : deprecatedSettings) {
-            Settings newSettings;
-            newSettings.extentX_ = depSettings.extentX_;
-            newSettings.extentY_ = depSettings.extentY_;
-            newSettings.extentZ_ = depSettings.extentZ_;
-            newSettings.samplingStrategyType_ = depSettings.samplingStrategyType_;
-            newSettings.outsideVolumeValue_ = depSettings.outsideVolumeValue_;
-            settings.push_back(newSettings);
-        }
+        s.deserialize(getId("instanceSettings"), instanceSettings_);
     }
     catch (SerializationException&) {
         s.removeLastError();
-        s.deserializeBinaryBlob(getId("settingsV2"), settings);
-    }
-
-    tgtAssert(names.size() == settings.size(), "number of keys and values does not match");
-    for (size_t i = 0; i < names.size(); i++) {
-        instanceSettings_[names[i]] = settings[i];
+        LERROR("You need to reconfigure " << getVolumeFilterName() << " instances of " << ( properties_[0]->getOwner() ? properties_[0]->getOwner()->getGuiName() : "VolumeFilterList"));
     }
 }
 std::vector<int> MedianFilterProperties::getStoredInstances() const {
@@ -184,6 +151,23 @@ std::vector<int> MedianFilterProperties::getStoredInstances() const {
         }
     }
     return output;
+}
+
+void MedianFilterProperties::Settings::serialize(Serializer& s) const {
+    s.serialize("extentX", extentX_);
+    s.serialize("extentY", extentY_);
+    s.serialize("extentZ", extentZ_);
+    s.serialize("samplingStrategyType", samplingStrategyType_);
+    s.serialize("outsideVolumeValue", outsideVolumeValue_);
+}
+void MedianFilterProperties::Settings::deserialize(Deserializer& s) {
+    s.deserialize("extentX", extentX_);
+    s.deserialize("extentY", extentY_);
+    s.deserialize("extentZ", extentZ_);
+    int samplingStrategyType = 0;
+    s.deserialize("samplingStrategyType", samplingStrategyType);
+    samplingStrategyType_ = static_cast<SamplingStrategyType>(samplingStrategyType);
+    s.deserialize("outsideVolumeValue", outsideVolumeValue_);
 }
 
 }
