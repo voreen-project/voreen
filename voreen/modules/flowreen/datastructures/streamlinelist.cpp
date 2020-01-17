@@ -116,6 +116,7 @@ void StreamlineList::removeStreamline(size_t pos) {
 }
 
 void StreamlineList::clearStreamlines() {
+    notifyPendingDataInvalidation();
     streamlines_.clear();
 }
 
@@ -217,7 +218,7 @@ void StreamlineList::deserialize(Deserializer& s) {
     tgt::ivec3 tmpDim = dimensions_;
     s.deserialize("OriginalDimensions",tmpDim);
     dimensions_ = tmpDim;
-    s.optionalDeserialize("OriginalSpacing", spacing_, tgt::vec3(1.f)); //added later
+    s.deserialize("OriginalSpacing", spacing_);
     s.deserialize("OriginalWorldBounds",worldBounds_);
     s.deserialize("OriginalVoxelBounds",voxelBounds_);
     s.deserialize("VoxelToWorld",voxelToWorldMatrix_);

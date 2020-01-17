@@ -41,10 +41,16 @@ tgt::mat4 createTransformationMatrix(const tgt::vec3& position, const tgt::vec3&
  * Samples a disk inside a 3D-Vectorfield volume.
  * The returned vector is the normalized average of all sampled velocities
  * in the indicator space multiplied by the maximum magnitude.
+ * @param volume The vector field volume
+ * @param origin The disk's origin
+ * @param normal The disk's normal
+ * @param radius The disk's radius
+ * @param div Number of samples for each, angle and radius
  */
 tgt::vec3 sampleDisk(const VolumeBase* volume, const tgt::vec3& origin, const tgt::vec3& normal, float radius, size_t div = 5);
 
 }
+
 }
 
 #endif

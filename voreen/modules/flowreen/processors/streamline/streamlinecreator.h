@@ -39,7 +39,7 @@
 namespace voreen {
 
 struct StreamlineCreatorInput {
-    tgt::ivec2 streamlineLengthThreshold;
+    tgt::svec2 streamlineLengthThreshold;
     tgt::vec2 absoluteMagnitudeThreshold;
     float stopIntegrationAngleThreshold;
     VolumeRAM::Filter filterMode;

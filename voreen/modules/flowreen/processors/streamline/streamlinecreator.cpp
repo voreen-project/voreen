@@ -217,7 +217,7 @@ StreamlineCreatorOutput StreamlineCreator::compute(StreamlineCreatorInput input,
     std::unique_ptr<StreamlineListBase> output = std::move(input.output);
 
     // We use half the steps we had before.
-    tgt::vec3 stepSize = 0.5f * flowVolume->getSpacing();
+    tgt::vec3 stepSize = 0.5f * tgt::max(flowVolume->getSpacing()) / flowVolume->getSpacing();
 
     IntegrationInput integrationInput {
         *representation,
