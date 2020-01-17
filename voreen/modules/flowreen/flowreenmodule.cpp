@@ -26,8 +26,10 @@
 #include "modules/flowreen/flowreenmodule.h"
 
 // processors
-#include "processors/flowdirectionoverlay.h"
-#include "processors/streamlinerenderer3d.h"
+#include "processors/geometry/streamlinetoboundingbox.h"
+#include "processors/geometry/streamlinetogeometry.h"
+#include "processors/render/flowdirectionoverlay.h"
+#include "processors/render/streamlinerenderer3d.h"
 #include "processors/streamline/streamlinebundlecreator.h"
 #include "processors/streamline/streamlinecombine.h"
 #include "processors/streamline/streamlinecreator.h"
@@ -35,8 +37,6 @@
 #include "processors/streamline/streamlinesave.h"
 #include "processors/streamline/streamlineselector.h"
 #include "processors/streamline/streamlinesource.h"
-#include "processors/streamline/streamlinetoboundingbox.h"
-#include "processors/streamline/streamlinetogeometry.h"
 
 namespace voreen {
 

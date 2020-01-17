@@ -244,7 +244,7 @@ StreamlineCreatorOutput StreamlineCreator::compute(StreamlineCreatorInput input,
 
         const tgt::vec3& start = seedPoints[i];
 
-        Streamline streamline = computeStreamlineRungeKutta(start, integrationInput);
+        Streamline streamline = integrateStreamline(start, integrationInput);
 
         if (streamline.getNumElements() >= input.streamlineLengthThreshold.x &&
             streamline.getNumElements() <= input.streamlineLengthThreshold.y) {
@@ -311,7 +311,7 @@ void StreamlineCreator::reseedPosition(size_t currentPosition) {
 }
 */
 
-Streamline StreamlineCreator::computeStreamlineRungeKutta(const tgt::vec3& start, const IntegrationInput& input) const {
+Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const IntegrationInput& input) const {
 
     const tgt::vec3 dimAsVec3 = tgt::vec3(input.representation->getDimensions() - tgt::svec3::one);
     const size_t maxNumElements = input.streamlineLengthThreshold.y;
@@ -321,7 +321,7 @@ Streamline StreamlineCreator::computeStreamlineRungeKutta(const tgt::vec3& start
     tgt::vec3 r_(start);
 
     // Velocity.
-    tgt::vec3 velR = getVelocity(r, input);
+    tgt::vec3 velR = sampleVelocity(r, input);
     tgt::vec3 velR_ = velR;
 
     // Return an empty line in case the initial velocity was zero already.
@@ -341,13 +341,13 @@ Streamline StreamlineCreator::computeStreamlineRungeKutta(const tgt::vec3& start
 
         if (lookupPositiveDirection) {
 
-            // Execute Runge-Kutta step.
+            // Execute 4th order Runge-Kutta step.
             tgt::vec3 k1 = tgt::normalize(velR) * input.stepSize; //v != zero
-            tgt::vec3 k2 = getVelocity(r + (k1 / 2.0f), input);
+            tgt::vec3 k2 = sampleVelocity(r + (k1 / 2.0f), input);
             if (k2 != tgt::vec3::zero) k2 = tgt::normalize(k2) * input.stepSize;
-            tgt::vec3 k3 = getVelocity(r + (k2 / 2.0f), input);
+            tgt::vec3 k3 = sampleVelocity(r + (k2 / 2.0f), input);
             if (k3 != tgt::vec3::zero) k3 = tgt::normalize(k3) * input.stepSize;
-            tgt::vec3 k4 = getVelocity(r + k3, input);
+            tgt::vec3 k4 = sampleVelocity(r + k3, input);
             if (k4 != tgt::vec3::zero) k4 = tgt::normalize(k4) * input.stepSize;
             r += ((k1 / 6.0f) + (k2 / 3.0f) + (k3 / 3.0f) + (k4 / 6.0f));
 
@@ -355,7 +355,7 @@ Streamline StreamlineCreator::computeStreamlineRungeKutta(const tgt::vec3& start
             lookupPositiveDirection &= (r == tgt::clamp(r, tgt::vec3::zero, dimAsVec3)); // Ran out of bounds?
             lookupPositiveDirection &= (r != line.getLastElement().position_); // Progress in current direction?
 
-            velR = getVelocity(r, input);
+            velR = sampleVelocity(r, input);
             float magnitude = tgt::length(velR);
             lookupPositiveDirection &= velR != tgt::vec3::zero;
             lookupPositiveDirection &= (magnitude >= input.absoluteMagnitudeThreshold.x &&
@@ -373,13 +373,13 @@ Streamline StreamlineCreator::computeStreamlineRungeKutta(const tgt::vec3& start
 
         if (lookupNegativeDirection) {
 
-            // Execute Runge-Kutta step.
+            // Execute 4th order Runge-Kutta step.
             tgt::vec3 k1 = tgt::normalize(velR_) * input.stepSize; // velR_ != zero
-            tgt::vec3 k2 = getVelocity(r_ - (k1 / 2.0f), input);
+            tgt::vec3 k2 = sampleVelocity(r_ - (k1 / 2.0f), input);
             if (k2 != tgt::vec3::zero) k2 = tgt::normalize(k2) * input.stepSize;
-            tgt::vec3 k3 = getVelocity(r_ - (k2 / 2.0f), input);
+            tgt::vec3 k3 = sampleVelocity(r_ - (k2 / 2.0f), input);
             if (k3 != tgt::vec3::zero) k3 = tgt::normalize(k3) * input.stepSize;
-            tgt::vec3 k4 = getVelocity(r_ - k3, input);
+            tgt::vec3 k4 = sampleVelocity(r_ - k3, input);
             if (k4 != tgt::vec3::zero) k4 = tgt::normalize(k4) * input.stepSize;
             r_ -= ((k1 / 6.0f) + (k2 / 3.0f) + (k3 / 3.0f) + (k4 / 6.0f));
 
@@ -387,7 +387,7 @@ Streamline StreamlineCreator::computeStreamlineRungeKutta(const tgt::vec3& start
             lookupNegativeDirection &= (r_ == tgt::clamp(r_, tgt::vec3::zero, dimAsVec3)); // Ran out of bounds?
             lookupNegativeDirection &= (r_ != line.getFirstElement().position_); // Progress in current direction?
 
-            velR_ = getVelocity(r_, input);
+            velR_ = sampleVelocity(r_, input);
             float magnitude = tgt::length(velR_);
             lookupNegativeDirection &= velR_ != tgt::vec3::zero;
             lookupNegativeDirection &= (magnitude >= input.absoluteMagnitudeThreshold.x &&
@@ -407,7 +407,7 @@ Streamline StreamlineCreator::computeStreamlineRungeKutta(const tgt::vec3& start
     return line;
 }
 
-tgt::vec3 StreamlineCreator::getVelocity(const tgt::vec3& pos, const IntegrationInput& input) const {
+tgt::vec3 StreamlineCreator::sampleVelocity(const tgt::vec3& pos, const IntegrationInput& input) const {
 
         tgt::vec3 voxel = tgt::vec3::zero;
         if(input.filterMode == VolumeRAM::NEAREST) {

@@ -28,7 +28,7 @@
 
 #include "voreen/core/processors/processor.h"
 
-#include "modules/flowreen/processors/streamlinerenderer3d.h"
+#include "modules/flowreen/processors/render/streamlinerenderer3d.h"
 
 #include "voreen/core/ports/volumeport.h"
 

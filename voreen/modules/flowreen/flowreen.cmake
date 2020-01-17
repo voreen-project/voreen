@@ -17,8 +17,15 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/ports/streamlinelistport.cpp
 
     # processors
-    ${MOD_DIR}/processors/flowdirectionoverlay.cpp
-    ${MOD_DIR}/processors/streamlinerenderer3d.cpp
+    # geometry
+    ${MOD_DIR}/processors/geometry/streamlinetoboundingbox.cpp
+    ${MOD_DIR}/processors/geometry/streamlinetogeometry.cpp
+
+    # render
+    ${MOD_DIR}/processors/render/flowdirectionoverlay.cpp
+    ${MOD_DIR}/processors/render/streamlinerenderer3d.cpp
+
+    # streamline
     ${MOD_DIR}/processors/streamline/streamlinebundlecreator.cpp
     ${MOD_DIR}/processors/streamline/streamlinecombine.cpp
     ${MOD_DIR}/processors/streamline/streamlinecreator.cpp
@@ -26,8 +33,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/streamline/streamlinesave.cpp
     ${MOD_DIR}/processors/streamline/streamlineselector.cpp
     ${MOD_DIR}/processors/streamline/streamlinesource.cpp
-    ${MOD_DIR}/processors/streamline/streamlinetoboundingbox.cpp
-    ${MOD_DIR}/processors/streamline/streamlinetogeometry.cpp
 )
     
 SET(MOD_CORE_HEADERS
@@ -45,8 +50,15 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/ports/streamlinelistport.h
 
     # processors
-    ${MOD_DIR}/processors/flowdirectionoverlay.h
-    ${MOD_DIR}/processors/streamlinerenderer3d.h
+    # geometry
+    ${MOD_DIR}/processors/geometry/streamlinetoboundingbox.h
+    ${MOD_DIR}/processors/geometry/streamlinetogeometry.h
+
+    # render
+    ${MOD_DIR}/processors/render/flowdirectionoverlay.h
+    ${MOD_DIR}/processors/render/streamlinerenderer3d.h
+
+    # streamline
     ${MOD_DIR}/processors/streamline/streamlinebundlecreator.h
     ${MOD_DIR}/processors/streamline/streamlinecombine.h
     ${MOD_DIR}/processors/streamline/streamlinecreator.h
@@ -54,8 +66,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/streamline/streamlinesave.h
     ${MOD_DIR}/processors/streamline/streamlineselector.h
     ${MOD_DIR}/processors/streamline/streamlinesource.h
-    ${MOD_DIR}/processors/streamline/streamlinetoboundingbox.h
-    ${MOD_DIR}/processors/streamline/streamlinetogeometry.h
 )
 
 # Deployment

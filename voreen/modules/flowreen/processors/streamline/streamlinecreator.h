@@ -103,8 +103,8 @@ private:
     /** Adjusts the relative threshold according to the absolute one. */
     void adjustRelativeThreshold();
 
-    Streamline computeStreamlineRungeKutta(const tgt::vec3& start, const IntegrationInput& input) const;
-    tgt::vec3 getVelocity(const tgt::vec3& pos, const IntegrationInput& input) const;
+    Streamline integrateStreamline(const tgt::vec3& start, const IntegrationInput& input) const;
+    tgt::vec3 sampleVelocity(const tgt::vec3& pos, const IntegrationInput& input) const;
 
 
     VolumePort volInport_;
