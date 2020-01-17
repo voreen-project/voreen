@@ -40,7 +40,6 @@ namespace voreen {
 
     /**
      * Processor for laoding velocity data provided by P. Bovenkamp.
-     * TODO: Find clearTarget error in render port, if loading is canceled.
      */
 class PBReader : public Processor {
 public:

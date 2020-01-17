@@ -116,10 +116,7 @@ void PBReader::initialize() {
 }
 
 bool PBReader::isReady() const {
-    if(magnitudeOutport_.isConnected() || velocityOutport_.isConnected())
-        return true;
-
-    return false;
+    return magnitudeOutport_.isConnected() || velocityOutport_.isConnected();
 }
 
 void PBReader::process() {
@@ -149,8 +146,9 @@ void PBReader::process() {
         VolumeList* magnitudeList = new VolumeList();
         if(isMagnitudeDataPresent_) {
             for (int t = 0; t < timesteps; t++) {
-                VolumeDiskPB* magnitude = new VolumeDiskPB(folderProp_.get() + "/" + FILE_MAGNITUDE, invertPosition, dimensions, t);
-                Volume* volume = new Volume(magnitude, spacing, tgt::vec3::zero);
+                std::unique_ptr<VolumeDiskPB> disk(new VolumeDiskPB(folderProp_.get() + "/" + FILE_MAGNITUDE, invertPosition, dimensions, t));
+                Volume* volume = new Volume(disk->loadVolume(), spacing, tgt::vec3::zero);
+                //Volume* volume = new Volume(disk.release(), spacing, tgt::vec3::zero); // FIXME: Currently only loading the full volume is supported.
                 volume->setMetaDataValue<StringMetaData>("name", "magnitude");
                 magnitudeList->add(volume);
                 magnitudeVolumes_.push_back(std::unique_ptr<Volume>(volume));
@@ -163,13 +161,14 @@ void PBReader::process() {
         if(isVelocityDataPresent_) {
             tgt::bvec3 invertVelocity(invertXVelocityProp_.get(), invertYVelocityProp_.get(), invertZVelocityProp_.get());
             for (int t = 0; t < timesteps; t++) {
-                VolumeDiskPB* velocity = new VolumeDiskPB(
+                std::unique_ptr<VolumeDisk> disk(new VolumeDiskPB(
                     folderProp_.get() + "/" + FILE_VELOCITYX,
                     folderProp_.get() + "/" + FILE_VELOCITYY,
                     folderProp_.get() + "/" + FILE_VELOCITYZ,
                     invertPosition, invertVelocity,
-                    dimensions, t);
-                Volume* volume = new Volume(velocity, spacing, tgt::vec3::zero);
+                    dimensions, t));
+                Volume* volume = new Volume(disk->loadVolume(), spacing, tgt::vec3::zero);
+                //Volume* volume = new Volume(disk.release(), spacing, tgt::vec3::zero); // FIXME: Currently only loading the full volume is supported.
                 volume->setMetaDataValue<StringMetaData>("name", "velocity");
                 velocityList->add(volume);
                 velocityVolumes_.push_back(std::unique_ptr<Volume>(volume));
