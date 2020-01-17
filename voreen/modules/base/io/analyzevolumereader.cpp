@@ -683,6 +683,12 @@ VolumeList* AnalyzeVolumeReader::readNifti(const std::string &fileName, bool sta
                   header.srow_z[0], header.srow_z[1], header.srow_z[2], header.srow_z[3],
                   0.0f, 0.0f, 0.0f, 1.0f);
 
+        // When exporting, e.g. from matlab, the transformation might be present but invalid.
+        if(vToW.getRotationalPartMat3() == tgt::mat3::zero) {
+            vToW = mat4::identity;
+            LWARNING("Invalid transformation, setting to identity");
+        }
+
         mat4 pToV = mat4::createScale(1.0f/spacing); //no offset
         pToW = vToW * pToV;
     }
