@@ -38,7 +38,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/volume/gaussiannoise.cpp
     ${MOD_DIR}/processors/volume/volumelistadapter.cpp
     ${MOD_DIR}/processors/volume/volumelistcombine.cpp
-    ${MOD_DIR}/processors/volume/volumelistsubset.cpp
+    ${MOD_DIR}/processors/volume/volumeselectormultichannel.cpp
 
     # utils
     ${MOD_DIR}/utils/utils.cpp
@@ -68,7 +68,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volume/gaussiannoise.h
     ${MOD_DIR}/processors/volume/volumelistadapter.h
     ${MOD_DIR}/processors/volume/volumelistcombine.h
-    ${MOD_DIR}/processors/volume/volumelistsubset.h
+    ${MOD_DIR}/processors/volume/volumeselectormultichannel.h
 
     # utils
     ${MOD_DIR}/utils/utils.h

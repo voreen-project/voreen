@@ -23,30 +23,32 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VOLUMELISTSUBSET_H
-#define VRN_VOLUMELISTSUBSET_H
+#ifndef VRN_VOLUMESELECTORMULTICHANNEL_H
+#define VRN_VOLUMESELECTORMULTICHANNEL_H
 
 #include "voreen/core/processors/processor.h"
 #include "voreen/core/ports/genericport.h"
+#include "voreen/core/ports/volumeport.h"
 
 namespace voreen {
 
 /**
- * This processor creates a subset from an incoming volume list.
+ * Selects all channel volumes of the same separated multi-channel volume out of a input list.
  */
-class VRN_CORE_API VolumeListSubset : public Processor {
+class VRN_CORE_API VolumeSelectorMultiChannel : public Processor {
 public:
-    VolumeListSubset();
-    virtual ~VolumeListSubset();
+    VolumeSelectorMultiChannel();
+    virtual ~VolumeSelectorMultiChannel();
     virtual Processor* create() const;
 
-    virtual std::string getClassName() const  { return "VolumeListSubset";      }
-    virtual std::string getCategory() const   { return "Volume Processing";     }
+    virtual std::string getClassName() const  { return "VolumeSelectorMultiChannel"; }
+    virtual std::string getCategory() const   { return "Input"; }
     virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
+    virtual bool isUtility() const { return true; }
 
 protected:
     virtual void setDescriptions() {
-        setDescription("This processor creates a subset from an incoming volume list.");
+        setDescription("Selects all channel volumes of the same separated multi-channel volume out of a input list.");
     }
 
 
@@ -57,11 +59,14 @@ private:
 
     // for vector fields:
     IntProperty numChannels_;
-    IntProperty timeStep_;
+    IntProperty selectedVolume_;
     StringOptionProperty layout_;
 
     VolumeListPort inport_;
-    VolumeListPort outport_;
+    VolumePort volumeOutport_;
+    VolumePort volumeOutport2_;
+    VolumePort volumeOutport3_;
+    VolumePort volumeOutport4_;
 };
 
 }   //namespace

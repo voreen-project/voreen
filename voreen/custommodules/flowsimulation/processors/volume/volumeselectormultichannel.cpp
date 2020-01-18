@@ -23,73 +23,79 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "volumelistsubset.h"
+#include "volumeselectormultichannel.h"
 
 namespace voreen {
 
-VolumeListSubset::VolumeListSubset()
+VolumeSelectorMultiChannel::VolumeSelectorMultiChannel()
     : Processor()
     , inport_(Port::INPORT, "volumelist.input", "Volume Input", false)
-    , outport_(Port::OUTPORT, "volumelist.output", "Volume Output", false)
+    , volumeOutport_(Port::OUTPORT, "volume.output", "Volume Output", false)
+    , volumeOutport2_(Port::OUTPORT, "volume.output2", "Volume Output 2", false)
+    , volumeOutport3_(Port::OUTPORT, "volume.output3", "Volume Output 3", false)
+    , volumeOutport4_(Port::OUTPORT, "volume.output4", "Volume Output 4", false)
     , numChannels_("numChannels", "Num. Channels", 1, 1, 4)
-    , timeStep_("timeStep", "Time Step", 0, 0, std::numeric_limits<int>::max())
+    , selectedVolume_("selectedVolume", "Selected Volume", 0, 0, std::numeric_limits<int>::max())
     , layout_("layout", "Layout")
 {
     addPort(inport_);
-    addPort(outport_);
-    addProperty(numChannels_);
-    ON_CHANGE(numChannels_, VolumeListSubset, adjustPropertiesToInput);
+    addPort(volumeOutport_);
+    addPort(volumeOutport2_);
+    addPort(volumeOutport3_);
+    addPort(volumeOutport4_);
 
-    addProperty(timeStep_);
+    addProperty(numChannels_);
+    ON_CHANGE(numChannels_, VolumeSelectorMultiChannel, adjustPropertiesToInput);
+    addProperty(selectedVolume_);
     addProperty(layout_);
     layout_.addOption("xyzxyz", "xyzxyz");
     layout_.addOption("xxyyzz", "xxyyzz");
 }
 
-VolumeListSubset::~VolumeListSubset() {}
+VolumeSelectorMultiChannel::~VolumeSelectorMultiChannel() {}
 
-Processor* VolumeListSubset::create() const {
-    return new VolumeListSubset();
+Processor* VolumeSelectorMultiChannel::create() const {
+    return new VolumeSelectorMultiChannel();
 }
 
-void VolumeListSubset::adjustPropertiesToInput() {
+void VolumeSelectorMultiChannel::adjustPropertiesToInput() {
     const VolumeList* input = inport_.getData();
     if(!input) {
         return;
     }
 
-    timeStep_.setMaxValue(input->size() / numChannels_.get() - 1);
+    selectedVolume_.setMaxValue(input->size() / numChannels_.get() - 1);
 }
 
-void VolumeListSubset::process() {
+void VolumeSelectorMultiChannel::process() {
 
     const VolumeList* input = inport_.getData();
     tgtAssert(input, "no input");
 
+    VolumePort* channelPorts[] = { &volumeOutport_, &volumeOutport2_, &volumeOutport3_, &volumeOutport4_ };
+    for (VolumePort* port : channelPorts) {
+        port->clear();
+    }
+
     if(input->size() < numChannels_.get()) {
-        outport_.clear();
         return;
     }
 
-    VolumeList* output = new VolumeList();
-
     if(layout_.get() == "xyzxyz") {
         for(int channel = 0; channel < numChannels_.get(); channel++) {
-            size_t index = timeStep_.get() * numChannels_.get() + channel;
-            output->add(input->at(index));
+            size_t index = selectedVolume_.get() * numChannels_.get() + channel;
+            channelPorts[channel]->setData(input->at(index), false);
         }
     }
     else if(layout_.get() == "xxyyzz") {
         for(int channel = 0; channel < numChannels_.get(); channel++) {
-            size_t index = channel * timeStep_.get() + timeStep_.getMaxValue();
-            output->add(input->at(index));
+            size_t index = channel * selectedVolume_.get() + selectedVolume_.getMaxValue();
+            channelPorts[channel]->setData(input->at(index), false);
         }
     }
     else {
         tgtAssert(false, "unknown layout");
     }
-
-    outport_.setData(output, true);
 }
 
 }   // namespace
