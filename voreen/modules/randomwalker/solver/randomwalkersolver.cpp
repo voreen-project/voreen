@@ -142,17 +142,35 @@ int RandomWalkerSolver::solve(const VoreenBlas* voreenBlas, float* oldSystemSolu
     tgtAssert(volIndexToRow_, "volIndexToRow buffer vector not created");
     tgtAssert(!solution_, "solution buffer already created");
 
+    size_t systemSize = getSystemSize();
+
     // create solution buffer
     try {
-        solution_ = new float[getSystemSize()];
+        solution_ = new float[systemSize];
     }
     catch (std::bad_alloc&) {
         throw VoreenException("Bad allocation during creation of solution buffer");
     }
 
-    int iterations = voreenBlas->sSpConjGradEll(mat_, vec_, solution_, oldSystemSolution,
+    float* initialization;
+    if(oldSystemSolution) {
+        initialization = oldSystemSolution;
+    } else {
+        try {
+            initialization = new float[systemSize];
+            std::fill_n(initialization, systemSize, 0.5f);
+        } catch (std::bad_alloc&) {
+            throw VoreenException("Bad allocation during creation of initialization buffer");
+        }
+    }
+
+    int iterations = voreenBlas->sSpConjGradEll(mat_, vec_, solution_, initialization,
         preConditioner, errorThreshold, maxIterations, &progress);
     state_ = Solved;
+    if(!oldSystemSolution) {
+        // Slightly ugly: We only own the initialization if we have no oldSystemSolution
+        delete[] initialization;
+    }
     return iterations;
 }
 
