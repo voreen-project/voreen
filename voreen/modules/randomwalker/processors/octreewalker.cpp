@@ -844,7 +844,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
 
     auto volIndexToRow = seeds.generateVolumeToRowsTable();
 
-    std::vector<float> initialization(systemSize, 0.0f);
+    std::vector<float> initialization(systemSize, 0.5f);
     if(seedsNeighborhood) {
         auto& neighborhood = *seedsNeighborhood;
         VRN_FOR_EACH_VOXEL(pos, tgt::svec3(0), neighborhood.data_.getDimensions()) {
