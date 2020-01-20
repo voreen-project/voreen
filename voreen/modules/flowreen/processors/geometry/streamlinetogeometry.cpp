@@ -61,7 +61,7 @@ void StreamlineToGeometry::process() {
                 for (size_t i = 0; i < streamline.getNumElements(); i++) {
                     const Streamline::StreamlineElement& element = streamline.getElementAt(i);
                     VertexColor vertex;
-                    vertex.pos_ = streamlines->getVoxelToWorldMatrix() * element.position_;
+                    vertex.pos_ = element.position_;
                     //TODO: convert to proper color here
                     vertex.color_ = tgt::vec4(element.velocity_, 1.0f);
                     geometry->addIndex(static_cast<uint32_t>(geometry->getNumVertices()));
@@ -76,7 +76,7 @@ void StreamlineToGeometry::process() {
             for (const Streamline& streamline : streamlines->getStreamlines()) {
                 std::vector<tgt::vec3> segment(streamline.getNumElements());
                 for (size_t i = 0; i < streamline.getNumElements(); i++) {
-                    segment[i] = streamlines->getVoxelToWorldMatrix() * streamline.getElementAt(i).position_;
+                    segment[i] = streamline.getElementAt(i).position_;
                 }
                 geometry->addSegment(segment);
             }
