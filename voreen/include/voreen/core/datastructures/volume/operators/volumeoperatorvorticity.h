@@ -71,7 +71,10 @@ Volume* VolumeOperatorVorticity::apply(const VolumeBase* srcVolume, VolumeOperat
             } //case float
             else if (dynamic_cast<const VolumeAtomic<tgt::vec3>*>(srcVolume->getRepresentation<VolumeRAM>())){
                 return calcVorticities<float,U>(srcVolume, VolumeOperatorGradient::VOG_CENTRAL_DIFFERENCE);
-            } //wrong input
+            } //case double
+            else if (dynamic_cast<const VolumeAtomic<tgt::dvec3>*>(srcVolume->getRepresentation<VolumeRAM>())) {
+                return calcVorticities<double, U>(srcVolume, VolumeOperatorGradient::VOG_CENTRAL_DIFFERENCE);
+            } //unsupported input
             else {
                 LERRORC("calcVorticitiesCentralDifferences", "Unsupported input");
                 return 0;
@@ -84,7 +87,14 @@ Volume* VolumeOperatorVorticity::apply(const VolumeBase* srcVolume, VolumeOperat
             }  //case uint16_t
             else if (dynamic_cast<const VolumeAtomic<tgt::Vector3<uint16_t> >*>(srcVolume->getRepresentation<VolumeRAM>())){
                 return calcVorticities<uint16_t,U>(srcVolume, VolumeOperatorGradient::VOG_LINEAR_REGRESSION);
-            } else {
+            } //case float
+            else if (dynamic_cast<const VolumeAtomic<tgt::vec3>*>(srcVolume->getRepresentation<VolumeRAM>())) {
+                return calcVorticities<float, U>(srcVolume, VolumeOperatorGradient::VOG_LINEAR_REGRESSION);
+            } //case double
+            else if (dynamic_cast<const VolumeAtomic<tgt::dvec3>*>(srcVolume->getRepresentation<VolumeRAM>())) {
+                return calcVorticities<double, U>(srcVolume, VolumeOperatorGradient::VOG_LINEAR_REGRESSION);
+            } //unsupported input
+            else {
                 LERRORC("calcVorticitiesLinearRegression", "calcVorticitiesLinearRegression needs a 8-, 12- or 16-bit dataset as input");
                 return 0;
             }
@@ -96,7 +106,14 @@ Volume* VolumeOperatorVorticity::apply(const VolumeBase* srcVolume, VolumeOperat
             }  //case uint16_t
             else if (dynamic_cast<const VolumeAtomic<tgt::Vector3<uint16_t> >*>(srcVolume->getRepresentation<VolumeRAM>())){
                 return calcVorticities<uint16_t,U>(srcVolume, VolumeOperatorGradient::VOG_SOBEL);
-            } else {
+            } //case float
+            else if (dynamic_cast<const VolumeAtomic<tgt::vec3>*>(srcVolume->getRepresentation<VolumeRAM>())) {
+                return calcVorticities<float, U>(srcVolume, VolumeOperatorGradient::VOG_SOBEL);
+            } //case double
+            else if (dynamic_cast<const VolumeAtomic<tgt::dvec3>*>(srcVolume->getRepresentation<VolumeRAM>())) {
+                return calcVorticities<double, U>(srcVolume, VolumeOperatorGradient::VOG_SOBEL);
+            } //unsupported input
+            else {
                 LERRORC("calcVorticitiesSobel", "calcVorticitiesSobel needs a 8-, 12- or 16-bit dataset as input");
                 return 0;
             }
@@ -149,25 +166,34 @@ Volume* VolumeOperatorVorticity::apply(const VolumeBase* srcVolume, VolumeOperat
         Volume* zValsVol = new Volume(zVals, handle);
 
         VolumeOperatorGradient voOpGr;
+
         Volume* xvh = voOpGr.apply<U>(xValsVol, gt);
-        delete xValsVol;
         const VolumeAtomic<tgt::Vector3<U> >* xGrad = xvh->getRepresentation<VolumeAtomic<tgt::Vector3<U> > >();
+        delete xValsVol;
+
         Volume* yvh = voOpGr.apply<U>(yValsVol, gt);
-        delete yValsVol;
         const VolumeAtomic<tgt::Vector3<U> >* yGrad = yvh->getRepresentation<VolumeAtomic<tgt::Vector3<U> > >();
+        delete yValsVol;
+
         Volume* zvh = voOpGr.apply<U>(zValsVol, gt);
-        delete zValsVol;
         const VolumeAtomic<tgt::Vector3<U> >* zGrad = zvh->getRepresentation<VolumeAtomic<tgt::Vector3<U> > >();
+        delete zValsVol;
 
         for (pos.z = 0; pos.z < dim.z; pos.z++) {
             for (pos.y = 0; pos.y < dim.y; pos.y++) {
                 for (pos.x = 0; pos.x < dim.x; pos.x++) {
-                    //tgt::Vector3<U> gradientX = xGrad->voxel(pos);
-                    //tgt::Vector3<U> gradientY = yGrad->voxel(pos);
-                    //tgt::Vector3<U> gradientZ = zGrad->voxel(pos);
-                    tgt::Vector3<U> gradientX = normalize(static_cast<tgt::vec3>(xGrad->voxel(pos)));
-                    tgt::Vector3<U> gradientY = normalize(static_cast<tgt::vec3>(yGrad->voxel(pos)));
-                    tgt::Vector3<U> gradientZ = normalize(static_cast<tgt::vec3>(zGrad->voxel(pos)));
+                    tgt::Vector3<U> gradientX = xGrad->voxel(pos);
+                    if (gradientX != tgt::Vector3<U>::zero) {
+                        gradientX = tgt::normalize(gradientX);
+                    }
+                    tgt::Vector3<U> gradientY = yGrad->voxel(pos);
+                    if (gradientY != tgt::Vector3<U>::zero) {
+                        gradientY = tgt::normalize(gradientY);
+                    }
+                    tgt::Vector3<U> gradientZ = zGrad->voxel(pos);
+                    if (gradientZ != tgt::Vector3<U>::zero) {
+                        gradientZ = tgt::normalize(gradientZ);
+                    }
 
                     vorticity.x = static_cast<float>(gradientZ.y - gradientY.z);
                     vorticity.y = static_cast<float>(gradientX.z - gradientZ.x);
@@ -179,10 +205,11 @@ Volume* VolumeOperatorVorticity::apply(const VolumeBase* srcVolume, VolumeOperat
                     storeVorticity(vorticity, pos, result);
                 }
             }
-        }
+        } 
         delete xvh;
         delete yvh;
         delete zvh;
+
         return new Volume(result, handle);
     }
 
