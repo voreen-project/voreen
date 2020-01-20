@@ -83,7 +83,8 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     multiChannelSimilarityMeasure_.addOption("li_shen", "Li and Shen", MEASURE_LI_SHEN);
     multiChannelSimilarityMeasure_.addOption("crossproduct", "Crossproduct Magnitude", MEASURE_CROSSPRODUCT);
     multiChannelSimilarityMeasure_.addOption("split_channels", "Split Channels", MEASURE_SPLIT_CHANNELS);
-    multiChannelSimilarityMeasure_.set("li_shen");
+    multiChannelSimilarityMeasure_.addOption("vector_difference_magnitude", "Magnitude of Vector Difference", MEASURE_VECTOR_DIFFERENCE_MAGNITUDE);
+    multiChannelSimilarityMeasure_.set("vector_difference_magnitude");
     ON_CHANGE_LAMBDA(multiChannelSimilarityMeasure_, [this] {
         weight_.setVisibleFlag(multiChannelSimilarityMeasure_.getValue() == MEASURE_LI_SHEN);
     });
@@ -304,8 +305,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
             flagStorage.reset(new DiskArrayStorage<float>(tmpPath));
 #endif
 
-            SubtaskProgressReporter runProgressReporter(progress,
-                                                        tgt::vec2(fi, 0.8f * (fi + 1)) / tgt::vec2(fieldNames.size()));
+            SubtaskProgressReporter runProgressReporter(progress,tgt::vec2(fi, 0.7f * (fi + 1)) / tgt::vec2(fieldNames.size()));
             float progressPerTimeStep = 1.0f / (input.dataset.getTotalNumTimeSteps());
             size_t index = 0;
             for (const EnsembleDataset::Run& run : input.dataset.getRuns()) {
@@ -368,12 +368,27 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
             return timeStepIndex * seedPoints.size() * numChannels + seedIndex * numChannels + channel;
         };
 
-        SimilarityMatrix& DistanceMatrix = similarityMatrices->getSimilarityMatrix(fieldName);
+        SimilarityMatrix& distanceMatrix = similarityMatrices->getSimilarityMatrix(fieldName);
+        long size = static_cast<long>(distanceMatrix.getSize());
+
+        SubtaskProgressReporter flagsProgress(progress,tgt::vec2(0.7f*(fi+1), (fi+1)) / tgt::vec2(fieldNames.size()));
+        ThreadedTaskProgressReporter threadedProgress(flagsProgress, size);
+        bool aborted = false;
 
 #ifdef VRN_MODULE_OPENMP
-#pragma omp parallel for shared(Flags, DistanceMatrix)
+#pragma omp parallel for schedule(dynamic)
 #endif
-        for (long i = 0; i < static_cast<long>(DistanceMatrix.getSize()); i++) {
+        for (long i = 0; i < size; i++) {
+#ifdef VRN_MODULE_OPENMP
+            if(aborted) {
+                continue;
+            }
+#else
+            if(aborted) {
+                break;
+            }
+#endif
+
             for (long j = 0; j <= i; j++) {
                 if(numChannels == 1 || input.multiChannelSimilarityMeasure == MEASURE_MAGNITUDE || input.multiChannelSimilarityMeasure == MEASURE_SPLIT_CHANNELS) {
 
@@ -435,9 +450,9 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                     }
 
                     if (unionSamples > 0.0f)
-                        DistanceMatrix(i, j) = (unionSamples - intersectionSamples) / unionSamples;
+                        distanceMatrix(i, j) = (unionSamples - intersectionSamples) / unionSamples;
                     else
-                        DistanceMatrix(i, j) = 1.0f;
+                        distanceMatrix(i, j) = 1.0f;
                 }
                 else {
 
@@ -445,20 +460,20 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
                     for (size_t k = 0; k < seedPoints.size(); k++) {
 
-                        tgt::vec4 direction_i = tgt::vec4::zero;
-                        tgt::vec4 direction_j = tgt::vec4::zero;
+                        tgt::vec4 vector_i = tgt::vec4::zero;
+                        tgt::vec4 vector_j = tgt::vec4::zero;
 
                         for (size_t channel = 0; channel < numChannels; channel++) {
-                            direction_i[channel] = Flags[index(i, k, channel)];
-                            direction_j[channel] = Flags[index(j, k, channel)];
+                            vector_i[channel] = Flags[index(i, k, channel)];
+                            vector_j[channel] = Flags[index(j, k, channel)];
                         }
 
                         if(input.multiChannelSimilarityMeasure == MEASURE_ANGLEDIFFERENCE) {
-                            if (direction_i != tgt::vec4::zero && direction_j != tgt::vec4::zero) {
-                                tgt::vec4 normDirection_i = tgt::normalize(direction_i);
-                                tgt::vec4 normDirection_j = tgt::normalize(direction_j);
+                            if (vector_i != tgt::vec4::zero && vector_j != tgt::vec4::zero) {
+                                tgt::vec4 normVector_i = tgt::normalize(vector_i);
+                                tgt::vec4 normVector_j = tgt::normalize(vector_j);
 
-                                float dot = tgt::dot(normDirection_i, normDirection_j);
+                                float dot = tgt::dot(normVector_i, normVector_j);
                                 float angle = std::acos(tgt::clamp(dot, -1.0f, 1.0f)) / tgt::PIf;
                                 if(!tgt::isNaN(angle)) {
                                     statistics.addSample(angle);
@@ -468,7 +483,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                                 }
 
                             }
-                            else if (direction_i == tgt::vec4::zero && direction_j == tgt::vec4::zero) {
+                            else if (vector_i == tgt::vec4::zero && vector_j == tgt::vec4::zero) {
                                 statistics.addSample(0.0f);
                             }
                             else {
@@ -476,14 +491,14 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                             }
                         }
                         else if(input.multiChannelSimilarityMeasure == MEASURE_LI_SHEN) {
-                            float a = tgt::length(direction_i);
-                            float b = tgt::length(direction_j);
+                            float a = tgt::length(vector_i);
+                            float b = tgt::length(vector_j);
 
                             if (a > 0.0f && b > 0.0f) {
-                                tgt::vec4 normDirection_i = direction_i / a;
-                                tgt::vec4 normDirection_j = direction_j / b;
+                                tgt::vec4 normVector_i = vector_i / a;
+                                tgt::vec4 normVector_j = vector_j / b;
 
-                                float dot = tgt::dot(normDirection_i, normDirection_j);
+                                float dot = tgt::dot(normVector_i, normVector_j);
                                 float angle = std::asin(tgt::clamp(dot, -1.0f, 1.0f));
                                 tgtAssert(!tgt::isNaN(angle), "NaN value");
 
@@ -499,13 +514,13 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                             }
                         }
                         else if(input.multiChannelSimilarityMeasure == MEASURE_CROSSPRODUCT) {
-                            if (direction_i == tgt::vec4::zero && direction_j == tgt::vec4::zero) {
+                            if (vector_i == tgt::vec4::zero && vector_j == tgt::vec4::zero) {
                                 statistics.addSample(0.0f);
                             }
-                            else if (direction_i != tgt::vec4::zero && direction_j != tgt::vec4::zero) {
+                            else if (vector_i != tgt::vec4::zero && vector_j != tgt::vec4::zero) {
                                 // Normalize vectors according to max magnitude within data set.
-                                tgt::vec3 a = direction_i.xyz() / valueRange.y;
-                                tgt::vec3 b = direction_j.xyz() / valueRange.y;
+                                tgt::vec3 a = vector_i.xyz() / valueRange.y;
+                                tgt::vec3 b = vector_j.xyz() / valueRange.y;
 
                                 float area = tgt::length(tgt::cross(a, b));
                                 // In case area is 0, we have to account for colinear vectors.
@@ -534,13 +549,31 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                                 statistics.addSample(0.0f);
                             }
                         }
+                        else if(input.multiChannelSimilarityMeasure == MEASURE_VECTOR_DIFFERENCE_MAGNITUDE) {
+                            statistics.addSample(tgt::lengthSq(vector_i - vector_j) / (2*2*valueRange.y*valueRange.y));
+                        }
                     }
 
-                    DistanceMatrix(i, j) = statistics.getMean();
+                    distanceMatrix(i, j) = statistics.getMean();
                     //DistanceMatrix(i, j) = statistics.getMedian(); // Needs collecting samples enabled
                     //DistanceMatrix(i, j) = statistics.getRelStdDev();
                 }
             }
+
+
+            if (threadedProgress.reportStepDone()) {
+#ifdef VRN_MODULE_OPENMP
+                #pragma omp critical
+                aborted = true;
+#else
+                aborted = true;
+                break;
+#endif
+            }
+        }
+
+        if (aborted) {
+            throw boost::thread_interrupted();
         }
     }
 
