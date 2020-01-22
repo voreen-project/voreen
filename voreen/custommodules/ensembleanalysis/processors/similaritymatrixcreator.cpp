@@ -550,7 +550,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                             }
                         }
                         else if(input.multiChannelSimilarityMeasure == MEASURE_VECTOR_DIFFERENCE_MAGNITUDE) {
-                            statistics.addSample(tgt::lengthSq(vector_i - vector_j) / (2*2*valueRange.y*valueRange.y));
+                            statistics.addSample(tgt::length(vector_i - vector_j) / (2*valueRange.y));
                         }
                     }
 
