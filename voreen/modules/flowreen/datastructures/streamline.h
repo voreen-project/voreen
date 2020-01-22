@@ -51,9 +51,9 @@ public:
      * A streamline consists of a vector of these elements.
      */
     struct StreamlineElement {
-        tgt::vec3 position_;    ///< position in voxel space
+        tgt::vec3 position_;    ///< position in world space
         tgt::vec3 velocity_;    ///< local velocity
-        float radius_;
+        float radius_;          ///< local radius in world space
 
         StreamlineElement()
             : position_(tgt::vec3::zero)
@@ -101,7 +101,7 @@ public:
     //----------------
     //  Storage
     //----------------
-    /** Used to save as CSV file. Transforms the voxel position to world space. */
+    /** Used to save as CSV file. */
     std::string toCSVString(const tgt::mat4& transfomationMatrix = tgt::mat4::identity,
                             const tgt::mat4& velocityTransfomationMatrix = tgt::mat4::identity) const;
     /** @override */

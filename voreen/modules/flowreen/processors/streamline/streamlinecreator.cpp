@@ -224,6 +224,7 @@ StreamlineCreatorOutput StreamlineCreator::compute(StreamlineCreatorInput input,
         stepSize,
         input.filterMode,
         flowVolume->getRealWorldMapping(),
+        flowVolume->getVoxelToWorldMatrix(),
         input.streamlineLengthThreshold,
         input.absoluteMagnitudeThreshold,
         input.stopIntegrationAngleThreshold
@@ -331,7 +332,7 @@ Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const 
 
     // Resulting streamline.
     Streamline line;
-    line.addElementAtEnd(Streamline::StreamlineElement(r, velR));
+    line.addElementAtEnd(Streamline::StreamlineElement(input.voxelToWorldMatrix * r, velR));
 
     bool lookupPositiveDirection = true;
     bool lookupNegativeDirection = true;
@@ -365,7 +366,7 @@ Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const 
                                        input.stopIntegrationAngleThreshold;
 
             if (lookupPositiveDirection) {
-                line.addElementAtEnd(Streamline::StreamlineElement(r, velR));
+                line.addElementAtEnd(Streamline::StreamlineElement(input.voxelToWorldMatrix * r, velR));
                 if (line.getNumElements() == maxNumElements)
                     break;
             }
@@ -397,7 +398,7 @@ Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const 
                                        input.stopIntegrationAngleThreshold;
 
             if (lookupNegativeDirection) {
-                line.addElementAtFront(Streamline::StreamlineElement(r_, velR_));
+                line.addElementAtFront(Streamline::StreamlineElement(input.voxelToWorldMatrix * r_, velR_));
                 if (line.getNumElements() == maxNumElements)
                     break;
             }

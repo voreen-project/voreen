@@ -31,7 +31,6 @@ layout(location=2) in float radius_;
 uniform mat4 projectionMatrix_;
 uniform mat4 viewMatrix_;
 //set manuell in process
-uniform mat4 voxelToWorldMatrix_;
 uniform mat4 velocityTransformMatrix_;
 
 out vData
@@ -43,7 +42,7 @@ out vData
 
 void main()
 {
-    gl_Position = projectionMatrix_ * viewMatrix_ * voxelToWorldMatrix_ * vec4(position_,1);
+    gl_Position = projectionMatrix_ * viewMatrix_ * vec4(position_,1);
     vertex.position = gl_Position.xyz;
     vertex.velocity = (velocityTransformMatrix_* vec4(velocity_,1.0)).xyz;
     vertex.radius = radius_;

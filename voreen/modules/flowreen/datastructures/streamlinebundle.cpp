@@ -59,7 +59,7 @@ void StreamlineBundle::addStreamline(Streamline&& streamline) {
         tgt::vec3 updatedPosition = tgt::dvec3(centroidPosition) + deltaPosition / static_cast<double>(streamlines_.size() + 1);
         tgt::vec3 updatedVelocity = tgt::dvec3(centroidVelocity) + deltaVelocity / static_cast<double>(streamlines_.size() + 1);
 
-        float updatedRadius = std::max(centroid_.getElementAt(i).radius_, tgt::distance(updatedPosition, centroidPosition));
+        float updatedRadius = std::max(centroid_.getElementAt(i).radius_, 0.5f * tgt::distance(updatedPosition, centroidPosition));
 
         updatedCentroid.addElementAtEnd(Streamline::StreamlineElement(updatedPosition, updatedVelocity, updatedRadius));
     }

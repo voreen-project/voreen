@@ -95,6 +95,7 @@ private:
         tgt::vec3 stepSize;
         VolumeRAM::Filter filterMode;
         RealWorldMapping rwm;
+        tgt::mat4 voxelToWorldMatrix;
         tgt::ivec2 streamlineLengthThreshold;
         tgt::vec2 absoluteMagnitudeThreshold;
         float stopIntegrationAngleThreshold;

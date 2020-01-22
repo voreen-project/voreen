@@ -38,12 +38,17 @@ StreamlineToGeometry::StreamlineToGeometry()
     , inport_(Port::INPORT, "input", "Streamline Input", false)
     , outport_(Port::OUTPORT, "outport", "Geometry Output")
     , geometryType_("geometryType", "Geometry Type")
+    , targetCoordinateSystem_("targetCoordinateSystem", "Target Coordinate System")
 {
     addPort(inport_);
     addPort(outport_);
+
     addProperty(geometryType_);
     geometryType_.addOption("glmesh", "GLMeshGeometry", GEOMETRY_GLMESH);
     geometryType_.addOption("pointsegmentlist", "PointSegmentListGeometry", GEOMETRY_POINTSEGMENTLIST);
+    addProperty(targetCoordinateSystem_);
+    targetCoordinateSystem_.addOption("worldspace", "World Space", WORLD_SPACE);
+    targetCoordinateSystem_.addOption("voxelspace", "Voxel Space", VOXEL_SPACE);
 }
 
 StreamlineToGeometry::~StreamlineToGeometry() {
@@ -55,8 +60,12 @@ void StreamlineToGeometry::process() {
     if(streamlines) {
         if(geometryType_.getValue() == GEOMETRY_GLMESH) {
             GlMeshGeometryUInt32Color* geometry = new GlMeshGeometryUInt32Color();
+            if(targetCoordinateSystem_.getValue() == VOXEL_SPACE) {
+                geometry->setTransformationMatrix(streamlines->getOriginalWorldToVoxelMatrix());
+            } // else: streamline data is in world space by default.
             geometry->setPrimitiveType(GL_LINE_STRIP);
             geometry->enablePrimitiveRestart();
+
             for (const Streamline& streamline : streamlines->getStreamlines()) {
                 for (size_t i = 0; i < streamline.getNumElements(); i++) {
                     const Streamline::StreamlineElement& element = streamline.getElementAt(i);
@@ -69,10 +78,15 @@ void StreamlineToGeometry::process() {
                 }
                 geometry->addIndex(geometry->getPrimitiveRestartIndex());
             }
+
             outport_.setData(geometry);
         }
         else if(geometryType_.getValue() == GEOMETRY_POINTSEGMENTLIST) {
             PointSegmentListGeometryVec3* geometry = new PointSegmentListGeometryVec3();
+            if(targetCoordinateSystem_.getValue() == VOXEL_SPACE) {
+                geometry->setTransformationMatrix(streamlines->getOriginalWorldToVoxelMatrix());
+            } // else: streamline data is in world space by default.
+
             for (const Streamline& streamline : streamlines->getStreamlines()) {
                 std::vector<tgt::vec3> segment(streamline.getNumElements());
                 for (size_t i = 0; i < streamline.getNumElements(); i++) {
@@ -80,6 +94,7 @@ void StreamlineToGeometry::process() {
                 }
                 geometry->addSegment(segment);
             }
+
             outport_.setData(geometry);
         }
         else {

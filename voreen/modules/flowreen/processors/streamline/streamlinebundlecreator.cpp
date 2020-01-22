@@ -75,10 +75,14 @@ bool StreamlineBundleCreator::isReady() const {
 }
 
 void StreamlineBundleCreator::adjustPropertiesToInput() {
-    /*
-    tgt::vec3 length = volInport_.getData()->getSpacing() * tgt::vec3(volInport_.getData()->getDimensions());
+    const StreamlineListBase* streamlines = streamlineInport_.getData();
+    if(!streamlines) {
+        return;
+    }
+
+    tgt::vec3 length = streamlines->getOriginalSpacing() * tgt::vec3(streamlines->getOriginalDimensions());
     maxAverageDistanceThresholdProp_.setMaxValue(tgt::length(length));
-    */
+    maxAverageDistanceThresholdProp_.adaptDecimalsToRange(3);
 }
 
 StreamlineBundleCreatorInput StreamlineBundleCreator::prepareComputeInput() {
@@ -100,7 +104,8 @@ StreamlineBundleCreatorOutput StreamlineBundleCreator::compute(StreamlineBundleC
 
     PortDataPointer<StreamlineListBase> streamlines = std::move(input.streamlines);
 
-    // Create output.
+    // Create output. This is done by cloning the input list to copy it's properties like spacing
+    // and removing the contained streamlines.
     StreamlineListBase* emptyList = streamlines->clone();
     emptyList->clearStreamlines();
 
@@ -108,14 +113,15 @@ StreamlineBundleCreatorOutput StreamlineBundleCreator::compute(StreamlineBundleC
     std::unique_ptr<StreamlineListBase> streamlineNoiseOutput(emptyList->clone());
 
     // MDF metric used by QuickBundles.
+    // Returns MDS distance between to streamlines in physical space.
     auto calculateMDF = [&] (const Streamline& s, const Streamline& t) -> float {
         // We actually calculate the average distance here, since our streamline calculation stores
         // the elements in sorted order. Thus, we can save some time and ignore the flipped distance calculation.
 
         float sum = 0.0f;
 
-        for(size_t i = 0; i < input.resampleSize; i++) {
-            sum += tgt::length((s.getElementAt(i).position_ - t.getElementAt(i).position_) * streamlines->getOriginalSpacing());
+        for(int i = 0; i < input.resampleSize; i++) {
+            sum += tgt::distance(s.getElementAt(i).position_, t.getElementAt(i).position_);
         }
 
         return sum / input.resampleSize;

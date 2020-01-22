@@ -68,9 +68,15 @@ private:
         GEOMETRY_POINTSEGMENTLIST
     };
 
+    enum TargetCoordinateSystem {
+        VOXEL_SPACE,
+        WORLD_SPACE,
+    };
+
     StreamlineListPort inport_;         ///< inport containing the streamlines to get the bounding box
     GeometryPort outport_;              ///< port containing the 2 points of the bounding box
     OptionProperty<GeometryType> geometryType_; ///< geometry type to be used as output
+    OptionProperty<TargetCoordinateSystem> targetCoordinateSystem_;
 
     static const std::string loggerCat_;
 };

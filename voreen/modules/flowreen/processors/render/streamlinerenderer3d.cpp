@@ -149,7 +149,6 @@ void StreamlineRenderer3D::process() {
 
         // set transformation uniforms
         setGlobalShaderParameters(shader,&cameraProp_.get(),imgOutport_.getSize());
-        shader->setUniform("voxelToWorldMatrix_", streamlineInport_.getData()->getVoxelToWorldMatrix());
         shader->setUniform("velocityTransformMatrix_",streamlineInport_.getData()->getVelocityTransformMatrix());
 
         //set color uniforms
@@ -166,7 +165,7 @@ void StreamlineRenderer3D::process() {
             shader->setUniform("colorRotationMatrix_", colorRotationMatrix_.get(), true);
             break;
         default:
-            tgtAssert(false,"Should not get here!");
+            tgtAssert(false,"Unknown Color Coding");
             LERROR("Unknown Color Coding");
         }
 

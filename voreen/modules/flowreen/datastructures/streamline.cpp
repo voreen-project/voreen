@@ -27,8 +27,6 @@
 
 #include "voreen/core/utils/stringutils.h"
 
-#include "tgt/assert.h"
-
 #include <sstream>
 
 namespace voreen {
@@ -85,7 +83,7 @@ const Streamline::StreamlineElement& Streamline::getLastElement() const {
 }
 
 //----------------
-//  Utilitiy
+//  Utility
 //----------------
 Streamline Streamline::resample(size_t samples) const {
 
@@ -117,6 +115,7 @@ Streamline Streamline::resample(size_t samples) const {
             Streamline::StreamlineElement element;
             element.position_ = streamlineElements_[pos].position_ * (1.0f - t) + streamlineElements_[pos + 1].position_ * t;
             element.velocity_ = streamlineElements_[pos].velocity_ * (1.0f - t) + streamlineElements_[pos + 1].velocity_ * t;
+            element.radius_   = streamlineElements_[pos].radius_   * (1.0f - t) + streamlineElements_[pos + 1].radius_   * t;
 
             resampled.addElementAtEnd(element);
         }
@@ -158,8 +157,8 @@ void Streamline::serialize(Serializer& s) const {
 }
 
 void Streamline::deserialize(Deserializer& s) {
-    //s.deserialize("minMagnitude_",minMagnitude_);
-    //s.deserialize("maxMagnitude_",maxMagnitude_);
+    //s.deserialize("minMagnitude_",minMagnitude_); // Will be calculated below.
+    //s.deserialize("maxMagnitude_",maxMagnitude_); // Will be calculated below.
     //deserialize streamlines from binary blob
     std::vector<Streamline::StreamlineElement> vec;
     s.deserializeBinaryBlob("StreamlineElements",vec);

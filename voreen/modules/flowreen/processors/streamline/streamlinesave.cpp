@@ -117,8 +117,7 @@ void StreamlineSave::saveStreamlines() {
             outFile << streamlineInport_.getData()->metaToCSVString().c_str() << "\n";
             //write streamlines
             for(size_t i = 0; i < streamlineInport_.getData()->getStreamlines().size(); i++) {
-                outFile << streamlineInport_.getData()->getStreamlines().at(i).toCSVString(streamlineInport_.getData()->getVoxelToWorldMatrix(),
-                                                                                           streamlineInport_.getData()->getVelocityTransformMatrix()).c_str() << "\n";
+                outFile << streamlineInport_.getData()->getStreamlines().at(i).toCSVString(tgt::mat4::identity,streamlineInport_.getData()->getVelocityTransformMatrix()).c_str() << "\n";
             }
         } else { // case vsd
             XmlSerializer s;
