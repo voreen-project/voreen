@@ -28,44 +28,40 @@
 
 #include "randomwalkersolver.h"
 #include "randomwalkerseeds.h"
+#include "voreen/core/datastructures/transfunc/1d/transfunc1d.h"
 
 #include <string>
 
 namespace voreen {
 
-class TransFunc1D;
+//---------------------------------------------------------------------------------------
 
-/**
- * Abstract base class for Random Walker edge weight computation,
- * used by RandomWalkerSolver.
- */
-class RandomWalkerWeights {
+struct RandomWalkerVoxelAccessor {
+    virtual ~RandomWalkerVoxelAccessor() {}
+    virtual float voxel(const tgt::svec3& voxel) = 0;
+};
 
-public:
-    virtual ~RandomWalkerWeights() {}
-
-    virtual void initialize(const VolumeBase* volume, const RandomWalkerSeeds* seeds,
-        const RandomWalkerSolver* solver);
-
-    virtual void processVoxel(const tgt::ivec3& voxel, const RandomWalkerSeeds* seeds,
-        EllpackMatrix<float>& mat, float* &vec, const RandomWalkerSolver* solver,
-        const VolumeRAM* vol, const RealWorldMapping& rwm);
-
-    virtual float getEdgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor,
-        float voxelIntensity, float neighborIntensity) const = 0;
-
-protected:
-    const VolumeBase* volume_;
-    size_t numVoxels_;
-    tgt::ivec3 volDim_;
-    float minIntensity_;
-    float maxIntensity_;
-    float intensityScale_;
-
-    static const std::string loggerCat_;
+struct RandomWalkerVoxelAccessorVolume : public RandomWalkerVoxelAccessor {
+    RandomWalkerVoxelAccessorVolume(const VolumeBase& vol);
+    virtual float voxel(const tgt::svec3& voxel);
+private:
+    const VolumeRAM* vol_;
+    RealWorldMapping rwm_;
+};
+struct RandomWalkerVoxelAccessorVolumeAtomic : public RandomWalkerVoxelAccessor {
+    RandomWalkerVoxelAccessorVolumeAtomic(VolumeAtomic<float>&& vol, RealWorldMapping rwm);
+    virtual float voxel(const tgt::svec3& voxel);
+private:
+    VolumeAtomic<float> vol_;
+    RealWorldMapping rwm_;
 };
 
 //---------------------------------------------------------------------------------------
+
+struct RandomWalkerEdgeWeight {
+    virtual ~RandomWalkerEdgeWeight() {}
+    virtual float edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor, float voxelIntensity, float neighborIntensity) = 0;
+};
 
 /**
  * Derives edge weights from the intensity difference of two neighored voxels:
@@ -73,19 +69,15 @@ protected:
  *
  * The weights are clamped to the range [minWeight, maxWeight].
  */
-class RandomWalkerWeightsIntensity : public RandomWalkerWeights {
 
-public:
-    RandomWalkerWeightsIntensity(float beta = 4000.f,
-        float minWeight = 1e-6f, float maxWeight = 1.f);
-
-    virtual float getEdgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor,
-        float voxelIntensity, float neighborIntensity) const;
-
-protected:
-    const float beta_;
-    const float minWeight_;
-    const float maxWeight_;
+struct RandomWalkerEdgeWeightIntensity : public RandomWalkerEdgeWeight {
+    RandomWalkerEdgeWeightIntensity(tgt::vec2 intensityRange, float beta = 4000.f, float minWeight = 1e-6f, float maxWeight = 1.f);
+    virtual float edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor, float voxelIntensity, float neighborIntensity);
+private:
+    float beta;
+    float minWeight;
+    float maxWeight;
+    float intensityScale;
 };
 
 //---------------------------------------------------------------------------------------
@@ -97,31 +89,52 @@ protected:
  *
  * The weights are clamped to the range [minWeight, maxWeight].
  */
-class RandomWalkerWeightsTransFunc : public RandomWalkerWeights {
-
-public:
-    RandomWalkerWeightsTransFunc(const TransFunc1D* transFunc, float beta = 4000.f,
-        float blendFactor = 0.5f, float minWeight = 1e-6f, float maxWeight = 1.f);
-
-    ~RandomWalkerWeightsTransFunc();
-
-    virtual void initialize(const VolumeBase* volume, const RandomWalkerSeeds* seeds,
-        const RandomWalkerSolver* solver);
-
-    virtual float getEdgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor,
-        float voxelIntensity, float neighborIntensity) const;
-
+struct RandomWalkerEdgeWeightTransfunc : public RandomWalkerEdgeWeight {
+    RandomWalkerEdgeWeightTransfunc(const TransFunc1D* transFunc, tgt::vec2 intensityRange, float beta = 4000.f, float blendFactor = 0.5f, float minWeight = 1e-6f, float maxWeight = 1.f);
+    virtual float edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor, float voxelIntensity, float neighborIntensity);
 private:
-    const TransFunc1D* transFunc_;
-    const float beta_;
-    const float blendFactor_;
-    const float minWeight_;
-    const float maxWeight_;
-
-    float* opacityBuffer_;
-    size_t opacityBufferSize_;
+    const TransFunc1D* transFunc;
+    float beta;
+    float blendFactor;
+    float minWeight;
+    float maxWeight;
+    std::vector<float> opacityBuffer;
+    float intensityScale;
 };
 
+/**
+ * Composite class for Random Walker edge weight computation,
+ * used by RandomWalkerSolver.
+ */
+class RandomWalkerWeights {
+
+public:
+    RandomWalkerWeights(std::unique_ptr<RandomWalkerVoxelAccessor> voxelFun, std::unique_ptr<RandomWalkerEdgeWeight> weightFun, tgt::ivec3 volDim);
+    virtual ~RandomWalkerWeights() {}
+
+    virtual void processVoxel(const tgt::ivec3& voxel, const RandomWalkerSeeds* seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable);
+
+protected:
+    std::unique_ptr<RandomWalkerVoxelAccessor> voxelFun_;
+    std::unique_ptr<RandomWalkerEdgeWeight> weightFun_;
+    tgt::ivec3 volDim_;
+
+    static const std::string loggerCat_;
+};
+
+class RandomWalkerWeightsVoxelSource {
+    virtual float getVoxel(tgt::svec3& voxel) const = 0;
+};
+
+class RandomWalkerWeightsSourceVolume {
+    virtual float getVoxel(tgt::svec3& voxel) const;
+};
+
+class RandomWalkerEdgeFunc {
+public:
+    virtual float getEdgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor,
+        float voxelIntensity, float neighborIntensity) const = 0;
+};
 } //namespace
 
 #endif

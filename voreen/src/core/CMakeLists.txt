@@ -66,6 +66,7 @@ SET(VRN_CORE_SOURCES
     datastructures/meta/windowstatemetadata.cpp
     datastructures/octree/octreebrickpoolmanager.cpp
     datastructures/octree/octreebrickpoolmanagerdisk.cpp
+    datastructures/octree/octreebrickpoolmanagermmap.cpp
     datastructures/octree/volumeoctree.cpp
     datastructures/octree/volumeoctreebase.cpp
     datastructures/roi/roiaggregation.cpp
@@ -371,6 +372,7 @@ SET(VRN_CORE_HEADERS
     ../../include/voreen/core/datastructures/octree/brickpoolmanagerqueue.h
     ../../include/voreen/core/datastructures/octree/octreebrickpoolmanager.h
     ../../include/voreen/core/datastructures/octree/octreebrickpoolmanagerdisk.h
+    ../../include/voreen/core/datastructures/octree/octreebrickpoolmanagermmap.h
     ../../include/voreen/core/datastructures/octree/octreeutils.h
     ../../include/voreen/core/datastructures/octree/volumeoctree.h
     ../../include/voreen/core/datastructures/octree/volumeoctreebase.h

@@ -164,6 +164,7 @@ private:
     OptionProperty<InitializationMode> initializationMode_;
     TransFunc1DKeysProperty projectionTransfunc_;
     FloatProperty maxLineSimplificationDistance_;
+    FloatProperty backgroundLineDistanceMultiplier_;
 
     static const std::string loggerCat_;
 

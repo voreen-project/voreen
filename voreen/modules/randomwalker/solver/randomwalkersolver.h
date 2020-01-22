@@ -197,7 +197,6 @@ public:
 private:
     void computeVolIndexToRowMapping(const RandomWalkerSeeds* seeds);
 
-    const VolumeBase* volume_;
     RandomWalkerSeeds* seeds_;
     RandomWalkerWeights& edgeWeights_;
 

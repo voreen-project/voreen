@@ -16,6 +16,7 @@ variables:
   COREPROFILE_BUILD_DIR: 'build_coreprofile'
   COMPATPROFILE_BUILD_DIR: 'build_compatibilityprofile'
   DEPLOY_INSTALL_DIR: 'build_deploy'
+  SPECIAL_DEPLOY_INSTALL_DIR: 'build_special_deploy'
   TEST_DATA_DIR: 'test-data/voreen-testdata'
   REGRESSION_TEST_UPLOAD_URL: 'https://uni-muenster.sciebo.de/s/YdhJ4czrPsfqPL6'
   #REGRESSION_TEST_UPLOAD_PASSWORD: configured in gitlab
@@ -50,6 +51,9 @@ src_snapshot_unix:
     paths:
     - "voreen/$SNAPSHOT_NAME_UNIX.tar.gz"
     expire_in: 1 day
+  except:
+    variables:
+      - $SPECIAL_DEPLOY_ONLY
 
 src_snapshot_win32:
   stage: pack
@@ -62,6 +66,9 @@ src_snapshot_win32:
     paths:
     - "voreen/$SNAPSHOT_NAME_WIN.zip"
     expire_in: 1 day
+  except:
+    variables:
+      - $SPECIAL_DEPLOY_ONLY
 
 ######################################################################
 # Build stage
@@ -82,6 +89,23 @@ build_deploy: #Builds from source snapshot!
     expire_in: 1 day
   only:
   - schedules
+  except:
+    variables:
+      - $SPECIAL_DEPLOY_ONLY
+
+build_deploy_special:
+  stage: build
+  script:
+    - export BUILD_DIR=$(mktemp -d)
+    - ci/build_deploy.sh ${BUILD_DIR} ${SPECIAL_DEPLOY_INSTALL_DIR}
+    - ${TOOLS_DIR}/snapshot/deployment-linux/linuxdeployment.sh ${SPECIAL_DEPLOY_INSTALL_DIR} ${TOOLS_DIR}/snapshot/deployment-linux/
+  artifacts:
+    paths:
+    - "${SPECIAL_DEPLOY_INSTALL_DIR}/VoreenVE.tar.gz"
+    expire_in: 1 day
+  only:
+    variables:
+      - $SPECIAL_DEPLOY_ONLY
 
 build_compatprofile:
   stage: build
@@ -94,6 +118,7 @@ build_compatprofile:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 build_coreprofile:
   stage: build
@@ -106,6 +131,7 @@ build_coreprofile:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 build_default:
   stage: build
@@ -116,6 +142,7 @@ build_default:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 build_no_modules:
   stage: build
@@ -126,6 +153,7 @@ build_no_modules:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 build_release:
   stage: build
@@ -136,6 +164,7 @@ build_release:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 ######################################################################
 # Test Stage
@@ -151,6 +180,7 @@ serializertest_coreprofile:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 descriptiontest_coreprofile:
   stage: test
@@ -163,6 +193,7 @@ descriptiontest_coreprofile:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 processorcreatetest_coreprofile:
   stage: test
@@ -175,6 +206,7 @@ processorcreatetest_coreprofile:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 processorinittest_coreprofile:
   stage: test
@@ -187,6 +219,7 @@ processorinittest_coreprofile:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 # octreetest, networkevaluatortest, processornetworktest and volumeorigintest are boost tests and need a "--"
 # before specifying application options, but only for newer boost versions...
@@ -201,6 +234,7 @@ octreetest_coreprofile:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 networkevaluatortest_coreprofile:
   stage: test
@@ -213,6 +247,7 @@ networkevaluatortest_coreprofile:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 processornetworktest_coreprofile:
   stage: test
@@ -225,6 +260,7 @@ processornetworktest_coreprofile:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 volumeorigintest_coreprofile:
   stage: test
@@ -237,6 +273,7 @@ volumeorigintest_coreprofile:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 #only available with opencl
 #blastest_coreprofile:
@@ -251,6 +288,7 @@ valgrind_memcheck_processorcreate_coreprofile:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 valgrind_memcheck_processorinit_coreprofile:
   stage: test
@@ -259,6 +297,7 @@ valgrind_memcheck_processorinit_coreprofile:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 regressiontest_coreprofile:
   stage: test
@@ -275,6 +314,7 @@ regressiontest_coreprofile:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 regressiontest_compatprofile:
   stage: test
@@ -292,6 +332,7 @@ regressiontest_compatprofile:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 ######################################################################
 # Deployment Stage: Upload results to sciebo
@@ -303,6 +344,9 @@ deploy_src_unix:
   script:
     - export SNAPSHOT_NAME="voreen/$SNAPSHOT_NAME_UNIX.tar.gz"
     - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME} voreen-src-unix-nightly.tar.gz
+  except:
+    variables:
+      - $SPECIAL_DEPLOY_ONLY
 
 deploy_src_win:
   stage: deploy
@@ -311,6 +355,9 @@ deploy_src_win:
   script:
     - export SNAPSHOT_NAME="voreen/$SNAPSHOT_NAME_WIN.zip"
     - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME} voreen-src-win32-nightly.zip
+  except:
+    variables:
+      - $SPECIAL_DEPLOY_ONLY
 
 appimage:
   stage: deploy
@@ -321,3 +368,6 @@ appimage:
     - export DEPLOY_FILE=${DEPLOY_INSTALL_DIR}/VoreenVE.tar.gz
     - ls ${DEPLOY_FILE}
     - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${DEPLOY_FILE} VoreenVE-nightly.tar.gz
+  except:
+    variables:
+      - $SPECIAL_DEPLOY_ONLY

@@ -287,9 +287,9 @@ for (size_t i = 0; i \< numVoxels_; ++i)
 \endcode
 */
 #define VRN_FOR_EACH_VOXEL(INDEX, POS, SIZE) \
-    for (tgt::svec3 (INDEX) = (POS); (INDEX).z < (SIZE).z; ++(INDEX).z)\
-        for ((INDEX).y = (POS).y; (INDEX).y < (SIZE).y; ++(INDEX).y)\
-            for ((INDEX).x = (POS).x; (INDEX).x < (SIZE).x; ++(INDEX).x)
+    for (auto INDEX = (POS); INDEX.z < (SIZE).z; ++INDEX.z)\
+        for (INDEX.y = (POS).y; INDEX.y < (SIZE).y; ++INDEX.y)\
+            for (INDEX.x = (POS).x; INDEX.x < (SIZE).x; ++INDEX.x)
 
 } // namespace voreen
 

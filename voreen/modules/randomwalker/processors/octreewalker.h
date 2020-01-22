@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2020 University of Muenster, Germany,                        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
  * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_RANDOMWALKER_H
-#define VRN_RANDOMWALKER_H
+#ifndef VRN_OCTREEWALKER_H
+#define VRN_OCTREEWALKER_H
 
 #include "voreen/core/processors/asynccomputeprocessor.h"
 #include "voreen/core/ports/geometryport.h"
@@ -32,154 +32,111 @@
 #include "voreen/core/properties/intproperty.h"
 #include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/boolproperty.h"
-#include "voreen/core/properties/vectorproperty.h"
-#include "voreen/core/properties/transfunc/1d/1dkeys/transfunc1dkeysproperty.h"
 #include "voreen/core/properties/optionproperty.h"
-#include "voreen/core/properties/boundingboxproperty.h"
+#include "voreen/core/properties/temppathproperty.h"
+#include "voreen/core/datastructures/octree/volumeoctree.h"
 
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
-
-#include "modules/randomwalker/solver/randomwalkersolver.h"
-#include "modules/randomwalker/solver/randomwalkerweights.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 
 #include "voreen/core/utils/voreenblas/voreenblascpu.h"
 #ifdef VRN_MODULE_OPENMP
 #include "modules/openmp/include/voreenblasmp.h"
 #endif
 #ifdef VRN_MODULE_OPENCL
-#include "modules/opencl/processors/openclprocessor.h"
 #include "modules/opencl/utils/voreenblascl.h"
 #endif
 
 #include <string>
 #include <chrono>
+#include <unordered_set>
 
 namespace voreen {
 
 class Volume;
+class RandomWalkerSolver;
 class RandomWalkerSeeds;
+class RandomWalkerWeights;
+class OctreeBrickPoolManagerMmap;
 
-struct RandomWalkerInput {
-    PortDataPointer<VolumeBase> inputHandle_;
+struct OctreeWalkerInput {
+    VolumeOctree* previousResult_;
+    std::unique_ptr<OctreeBrickPoolManagerMmap>& brickPoolManager_;
+    const VolumeBase& volume_;
+    const VolumeOctree& octree_;
     std::vector<PortDataPointer<Geometry>> foregroundGeomSeeds_;
     std::vector<PortDataPointer<Geometry>> backgroundGeomSeeds_;
-    PortDataPointer<VolumeBase> foregroundVolSeeds_;
-    PortDataPointer<VolumeBase> backgroundVolSeeds_;
-    std::vector<const Volume*> lodVolumes_;
-    std::vector<float> prevProbabilities_;
-    int startLevel_;
-    int endLevel_;
-    boost::optional<tgt::IntBounds> clipRegion_;
-    std::unique_ptr<RandomWalkerWeights> weights_;
+    int minWeight_;
     const VoreenBlas* blas_;
     VoreenBlas::ConjGradPreconditioner precond_;
-    float lodForegroundSeedThresh_;
-    float lodBackgroundSeedThresh_;
     float errorThreshold_;
     int maxIterations_;
-    int lodSeedErosionKernelSize_;
+    float homogeneityThreshold_;
+    float incrementalSimilarityThreshold_;
 };
 
-struct RandomWalkerOutput {
-    std::unique_ptr<RandomWalkerSolver> solver_;
+struct OctreeWalkerOutput {
+    OctreeWalkerOutput(
+        VolumeOctree* octree,
+        std::unique_ptr<VolumeBase>&& volume,
+        std::unordered_set<const VolumeOctreeNode*>&& sharedNodes,
+        std::chrono::duration<float> duration
+    );
+    ~OctreeWalkerOutput();
+    OctreeWalkerOutput(OctreeWalkerOutput&& other);
+
+    VolumeOctree* octree_;
+    std::unique_ptr<VolumeBase> volume_;
+    std::unordered_set<const VolumeOctreeNode*> sharedNodes_;
     std::chrono::duration<float> duration_;
-    std::vector<const Volume*> lodVolumes_;
-    std::vector<float> newProbabilities_;
 };
 
-/**
- * Performs a semi-automatic volume segmentation using the 3D random walker algorithm.
- * User manual: http://voreen.uni-muenster.de/?q=random-walker
- *
- * @see RandomWalkerSolver
- */
-#ifdef VRN_MODULE_OPENCL
-class VRN_CORE_API RandomWalker : public cl::OpenCLProcessor<AsyncComputeProcessor<RandomWalkerInput, RandomWalkerOutput>> {
-#else
-class VRN_CORE_API RandomWalker : public AsyncComputeProcessor<RandomWalkerInput, RandomWalkerOutput> {
-#endif
+class OctreeWalker : public AsyncComputeProcessor<OctreeWalkerInput, OctreeWalkerOutput> {
 public:
-    RandomWalker();
-    virtual ~RandomWalker();
+    OctreeWalker();
+    virtual ~OctreeWalker();
     virtual Processor* create() const;
 
     virtual std::string getCategory() const             { return "Volume Processing"; }
-    virtual std::string getClassName() const            { return "RandomWalker";      }
-    virtual Processor::CodeState getCodeState() const   { return CODE_STATE_TESTING;  }
+    virtual std::string getClassName() const            { return "OctreeWalker";      }
+    virtual Processor::CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL;  }
 
     virtual bool isReady() const;
 
+    static const std::string loggerCat_; ///< category used in logging
+
 protected:
     virtual void setDescriptions() {
-        setDescription("Performs a semi-automatic volume segmentation using the 3D random walker algorithm. "
-                       "<p>See: <a href=\"http://voreen.uni-muenster.de/?q=random-walker\" >voreen.uni-muenster.de/?q=random-walker</a></p>");
+        setDescription("Performs a semi-automatic octree volume segmentation using a hierarchical 3D random walker algorithm.");
     }
 
     virtual ComputeInput prepareComputeInput();
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
     virtual void processComputeOutput(ComputeOutput output);
 
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+
     virtual void initialize();
     virtual void deinitialize();
 
-#ifdef VRN_MODULE_OPENCL
-    virtual void initializeCL();
-    virtual void deinitializeCL();
-    virtual bool isDeviceChangeSupported() const;
-#endif
+    void clearPreviousResults();
 
 private:
-
-    RandomWalkerWeights* getEdgeWeightsFromProperties(const VolumeBase& vol) const;
-
     const VoreenBlas* getVoreenBlasFromProperties() const;
-
-    void putOutSegmentation(const RandomWalkerSolver* solver);
-    void putOutProbabilities(const RandomWalkerSolver* solver);
-    void putOutEdgeWeights(const RandomWalkerSolver* solver);
-
-    void segmentationPropsChanged();
-    void lodMinLevelChanged();
-    void lodMaxLevelChanged();
-    void updateGuiState();
 
     VolumePort inportVolume_;
     GeometryPort inportForegroundSeeds_;
     GeometryPort inportBackgroundSeeds_;
-    VolumePort inportForegroundSeedsVolume_;
-    VolumePort inportBackgroundSeedsVolume_;
-    VolumePort outportSegmentation_;
     VolumePort outportProbabilities_;
-    VolumePort outportEdgeWeights_;
 
-    BoolProperty usePrevProbAsInitialization_;
-
-    BoolProperty useAdaptiveParameterSetting_;
-    IntProperty beta_;
     IntProperty minEdgeWeight_;
     StringOptionProperty preconditioner_;
     IntProperty errorThreshold_;
     IntProperty maxIterations_;
     StringOptionProperty conjGradImplementation_;
-
-    BoolProperty enableLevelOfDetail_;
-    IntProperty lodMinLevel_;
-    IntProperty lodMaxLevel_;
-    FloatProperty lodForegroundSeedThresh_;
-    FloatProperty lodBackgroundSeedThresh_;
-    IntOptionProperty lodSeedErosionKernelSize_;
-    IntVec3Property lodMinResolution_;
-    IntVec3Property lodMaxResolution_;
-
-    BoolProperty enableClipping_;
-    IntBoundingBoxProperty clipRegion_;
-
-    BoolProperty enableTransFunc_;
-    TransFunc1DKeysProperty edgeWeightTransFunc_;
-    FloatProperty edgeWeightBalance_;
-
-    FloatProperty foregroundThreshold_;
-    BoolProperty resampleOutputVolumes_;
+    FloatProperty homogeneityThreshold_;
+    FloatProperty incrementalSimilarityThreshold_;
 
     VoreenBlasCPU voreenBlasCPU_;
 #ifdef VRN_MODULE_OPENMP
@@ -189,16 +146,15 @@ private:
     VoreenBlasCL voreenBlasCL_;
 #endif
 
+    TempPathProperty resultPath_;
+    std::string prevResultPath_;
+
+    VolumeOctree* previousOctree_;                  // NEVER owns its own brickpool manager, ALWAYS a representation of previousVolume
+    std::unique_ptr<VolumeBase> previousVolume_;     // ALWAYS store reference to representation in previousOctree_
+    std::unique_ptr<OctreeBrickPoolManagerMmap> brickPoolManager_;
+
     // Clock and duration used for time keeping
     typedef std::chrono::steady_clock clock;
-
-    std::vector<const Volume*> lodVolumes_;
-    std::vector<float> prevProbabilities_;
-    bool recomputeRandomWalker_;
-
-    const VolumeRAM* currentInputVolume_;
-
-    static const std::string loggerCat_; ///< category used in logging
 };
 
 } //namespace

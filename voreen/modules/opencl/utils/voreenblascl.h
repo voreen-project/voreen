@@ -32,6 +32,7 @@
 #include "modules/opencl/utils/clwrapper.h"
 
 #include <string>
+#include <thread>
 
 namespace voreen {
 
@@ -46,6 +47,8 @@ public:
     virtual void deinitialize();
     bool isInitialized() const;
 
+    cl::CommandQueue& getQueue() const;
+
     void sAXPY(size_t vecSize, const float* vecx, const float* vecy, float alpha, float* result) const;
 
     float sDOT(size_t vecSize, const float* vecx, const float* vecy) const;
@@ -59,7 +62,7 @@ public:
     float sSpInnerProductEll(const EllpackMatrix<float>& mat, const float* vecx, const float* vecy) const;
 
     int sSpConjGradEll(const EllpackMatrix<float>& mat, const float* vec, float* result,
-        float* initial, ConjGradPreconditioner precond, float threshold, int maxIterations, ProgressReporter& progress) const;
+        float* initial, ConjGradPreconditioner precond, float threshold, int maxIterations, ProgressReporter* progress=nullptr) const;
 
     int hSpConjGradEll(const EllpackMatrix<int16_t>& mat, const float* vec, float* result,
         float* initial = 0, float threshold = 1e-4f, int maxIterations = 1000) const;
@@ -71,7 +74,8 @@ private:
     cl::OpenCL* opencl_;
     cl::Context* context_;
     cl::Device device_;
-    cl::CommandQueue* queue_;
+    mutable std::mutex queueThreadMapMutex_; // Protects kernels_ in concurrent access.
+    mutable std::map<std::thread::id, std::unique_ptr<cl::CommandQueue>> perThreadQueues_;
     cl::Program* prog_;
 
     static const std::string loggerCat_; ///< category used in logging

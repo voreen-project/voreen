@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2020 University of Muenster, Germany,                        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
  * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -23,29 +23,20 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "randomwalkermodule.h"
+#ifndef VRN_RANDOM_WALKER_PREPROCESSING_H
+#define VRN_RANDOM_WALKER_PREPROCESSING_H
 
-#include "processors/octreewalker.h"
-#include "processors/randomwalker.h"
-#include "processors/randomwalkeranalyzer.h"
-
-#include "processors/rwmultilabelloopinitializer.h"
-#include "processors/rwmultilabelloopfinalizer.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 
 namespace voreen {
 
-RandomWalkerModule::RandomWalkerModule(const std::string& modulePath)
-    : VoreenModule(modulePath)
-{
-    setID("Random Walker");
-    setGuiName("Random Walker");
+// Normalize image values according to
+//
+// A. Bian, X Jiang: Statistical Modeling Based Adaptive Parameter Setting for Random Walk Segmentation
+// https://link.springer.com/chapter/10.1007%2F978-3-319-48680-2_61
+VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeRAM& img);
+VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<float>& img);
 
-    registerSerializableType(new OctreeWalker());
-    registerSerializableType(new RandomWalker());
-    registerSerializableType(new RandomWalkerAnalyzer());
-
-    registerSerializableType(new RWMultiLabelLoopInitializer());
-    registerSerializableType(new RWMultiLabelLoopFinalizer());
 }
 
-} // namespace
+#endif

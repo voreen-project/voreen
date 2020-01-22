@@ -76,10 +76,9 @@
 #else //TGT_DEBUG
 
     /**
-     * No functionality in the release version, but mark b as used and avoid
-     * "unused variable" warnings in release mode (via "(void)(b)").
+     * No functionality in the release version
     */
-    #define tgtAssert(b, description) (void)(b);
+    #define tgtAssert(b, description)
 
 #endif //TGT_DEBUG
 

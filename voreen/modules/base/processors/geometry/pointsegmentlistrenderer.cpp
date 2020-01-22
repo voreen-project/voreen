@@ -298,7 +298,7 @@ void PointSegmentListRenderer::render() {
 
 void PointSegmentListRenderer::invalidateGeometry() {
 
-    if (!isInitialized())
+    if (!isInitialized() || !geometryInport_.hasData())
         return;
 
     // Delete old mesh.

@@ -31,6 +31,7 @@
 #include "voreen/core/utils/exception.h"
 #include "voreen/core/datastructures/volume/volumerepresentation.h"
 #include "voreen/core/datastructures/volume/slice/slicehelper.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/meta/realworldmappingmetadata.h"
 
 #include "tgt/vector.h"
@@ -71,6 +72,7 @@ class VRN_CORE_API VolumeOctreeNode {
     friend class VolumeOctreeBase;
 
 public:
+    VolumeOctreeNode(uint64_t brickAddress, bool inVolume);
     virtual ~VolumeOctreeNode();
 
     virtual size_t getNumChannels() const = 0;
@@ -81,6 +83,7 @@ public:
 
     bool hasBrick() const;
     uint64_t getBrickAddress() const;
+    void setBrickAddress(uint64_t addr);
 
     bool isLeaf() const;
     virtual bool isHomogeneous() const;
@@ -115,6 +118,56 @@ protected:
     /// True, if the node lies completely or partially inside the volume.
     bool inVolume_;
 
+};
+
+// Helps specify where in the octree a specific node is located.
+struct VolumeOctreeNodeLocation {
+    VolumeOctreeNodeLocation(size_t level, tgt::svec3 llf, tgt::svec3 urb);
+
+    tgt::svec3 voxelDimensions() const;
+    tgt::svec3 brickDimensions() const;
+    size_t scale() const;
+    tgt::mat4 voxelToBrick() const;
+    tgt::mat4 brickToVoxel() const;
+    size_t level() const;
+    tgt::svec3 voxelLLF() const;
+    tgt::svec3 voxelURB() const;
+
+    size_t level_;
+    tgt::svec3 llf_;
+    tgt::svec3 urb_;
+};
+
+struct LocatedVolumeOctreeNodeConst;
+
+struct LocatedVolumeOctreeNode {
+    LocatedVolumeOctreeNode(VolumeOctreeNode* node, size_t level, tgt::svec3 llf, tgt::svec3 urb);
+
+    LocatedVolumeOctreeNode findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel);
+
+    VolumeOctreeNode& node();
+    const VolumeOctreeNode& node() const;
+    VolumeOctreeNodeLocation& location();
+    const VolumeOctreeNodeLocation& location() const;
+
+    LocatedVolumeOctreeNodeConst asConst() const;
+
+    VolumeOctreeNode* node_; // Never null
+    VolumeOctreeNodeLocation geometry_;
+};
+
+struct LocatedVolumeOctreeNodeConst {
+    LocatedVolumeOctreeNodeConst(const VolumeOctreeNode* node, size_t level, tgt::svec3 llf, tgt::svec3 urb);
+    LocatedVolumeOctreeNodeConst(LocatedVolumeOctreeNode node);
+
+    LocatedVolumeOctreeNodeConst findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel) const;
+
+    const VolumeOctreeNode& node() const;
+    VolumeOctreeNodeLocation& location();
+    const VolumeOctreeNodeLocation& location() const;
+
+private:
+    LocatedVolumeOctreeNode inner_;
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -208,6 +261,7 @@ public:
 
     /// Returns the tree's root node, i.e,. the node that represents the entire volume at the coarsest resolution.
     virtual const VolumeOctreeNode* getRootNode() const = 0;
+    LocatedVolumeOctreeNodeConst getLocatedRootNode() const;
 
     /**
      * Returns the node containing the passed coordinates at the specified level.

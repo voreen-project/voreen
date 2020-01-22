@@ -30,6 +30,8 @@
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "tgt/vector.h"
 
+namespace {
+
 inline size_t volumeCoordsToIndex(int x, int y, int z, const tgt::ivec3& dim) {
     return z*dim.y*dim.x + y*dim.x + x;
 }
@@ -45,15 +47,10 @@ inline tgt::ivec3 indexToVolumeCoords(size_t index, const tgt::ivec3& dim) {
     result.x = index % dim.x;
     return result;
 }
+}
 
 
 namespace voreen {
-
-void RandomWalkerSeeds::initialize(const VolumeRAM* volume) {
-    volume_ = volume;
-    volDim_ = volume->getDimensions();
-    numVoxels_ = volume->getNumVoxels();
-}
 
 size_t RandomWalkerSeeds::getNumSeeds() const {
     return numSeeds_;
@@ -66,12 +63,14 @@ tgt::vec2 RandomWalkerSeeds::getSeedRange() const {
 //---------------------------------------------------------------------------------------
 
 RandomWalkerTwoLabelSeeds::RandomWalkerTwoLabelSeeds(
+        tgt::svec3 volDim,
         const PointSegmentListGeometryVec3& foregroundSeedList,
         const PointSegmentListGeometryVec3& backgroundSeedList,
         const VolumeRAM_UInt8* foregroundSeedVolume,
         const VolumeRAM_UInt8* backgroundSeedVolume,
         const tgt::ivec3& clipLLF,
         const tgt::ivec3& clipURB) :
+    volDim_(volDim),
     foregroundSeedList_(foregroundSeedList),
     backgroundSeedList_(backgroundSeedList),
     foregroundSeedVolume_(foregroundSeedVolume),
@@ -88,7 +87,7 @@ RandomWalkerTwoLabelSeeds::~RandomWalkerTwoLabelSeeds() {
 }
 
 bool RandomWalkerTwoLabelSeeds::isSeedPoint(size_t index) const {
-        return seedBuffer_[index];
+    return seedBuffer_[index];
 }
 
 bool RandomWalkerTwoLabelSeeds::isSeedPoint(const tgt::ivec3& voxel) const {
@@ -121,19 +120,18 @@ size_t RandomWalkerTwoLabelSeeds::getNumBackgroundSeeds() const {
     return numBackgroundSeeds_;
 }
 
-void RandomWalkerTwoLabelSeeds::initialize(const VolumeRAM* volume) {
-    RandomWalkerSeeds::initialize(volume);
-
+void RandomWalkerTwoLabelSeeds::initialize() {
+    size_t numVoxels = tgt::hmul(volDim_);
     // create seed buffer
     try {
-        seedBuffer_ = new char[numVoxels_];
+        seedBuffer_ = new char[numVoxels];
     }
     catch (std::bad_alloc&) {
         throw VoreenException("Bad allocation during creation of seed buffer");
     }
 
     // initialize seed buffer
-    for (size_t i=0; i<numVoxels_; i++) {
+    for (size_t i=0; i<numVoxels; i++) {
         seedBuffer_[i] = 0;
     }
 
@@ -149,7 +147,7 @@ void RandomWalkerTwoLabelSeeds::initialize(const VolumeRAM* volume) {
 
                     if (tgt::hor(tgt::lessThan(voxel, clipLLF_)) || tgt::hor(tgt::greaterThan(voxel, clipURB_))) {
                         size_t index = volumeCoordsToIndex(voxel, volDim_);
-                        tgtAssert(index < numVoxels_, "Invalid index");
+                        tgtAssert(index < numVoxels, "Invalid index");
                         if (!seedBuffer_[index]) {
                             seedBuffer_[index] = 1; //< background seed
                             tNumBackgroundSeeds++;
@@ -172,7 +170,7 @@ void RandomWalkerTwoLabelSeeds::initialize(const VolumeRAM* volume) {
             for (float t=0.f; t<tgt::length(right-left); t += 1.f) {
                 tgt::vec3 point = tgt::clamp(tgt::iround(left + t*dir), tgt::ivec3(0), volDim_-1);
                 size_t index = volumeCoordsToIndex(point, volDim_);
-                tgtAssert(index < numVoxels_, "Invalid index");
+                tgtAssert(index < numVoxels, "Invalid index");
                 if (!seedBuffer_[index]) {
                     seedBuffer_[index] = 2; //< foreground seed
                     tNumForegroundSeeds++;
@@ -217,7 +215,7 @@ void RandomWalkerTwoLabelSeeds::initialize(const VolumeRAM* volume) {
             for (float t=0.f; t<tgt::length(right-left); t += 1.f) {
                 tgt::vec3 point = tgt::clamp(tgt::iround(left + t*dir), tgt::ivec3(0), volDim_-1);
                 size_t index = volumeCoordsToIndex(point, volDim_);
-                tgtAssert(index < numVoxels_, "Invalid index");
+                tgtAssert(index < numVoxels, "Invalid index");
                 if (!seedBuffer_[index]) {
                     seedBuffer_[index] = 1; //< background seed
                     tNumBackgroundSeeds++;

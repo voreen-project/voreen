@@ -115,6 +115,7 @@
 #include "voreen/core/datastructures/octree/volumeoctree.h"
 #include "voreen/core/datastructures/octree/octreebrickpoolmanager.h"
 #include "voreen/core/datastructures/octree/octreebrickpoolmanagerdisk.h"
+#include "voreen/core/datastructures/octree/octreebrickpoolmanagermmap.h"
 
 // transfer functions
 #include "voreen/core/datastructures/transfunc/1d/1dkeys/transfunc1dkeys.h"
@@ -565,6 +566,7 @@ CoreModule::CoreModule(const std::string& modulePath)
     registerSerializableType(new VolumeOctree());
     registerSerializableType(new OctreeBrickPoolManagerRAM());
     registerSerializableType(new OctreeBrickPoolManagerDisk(64<<20, 512<<20, ""));
+    registerSerializableType(new OctreeBrickPoolManagerMmap("", ""));
 
     // transfer functions
     registerSerializableType("TransFuncIntensity", new TransFunc1DKeys());

@@ -39,7 +39,6 @@ const std::string RandomWalkerSolver::loggerCat_("voreen.RandomWalker.RandomWalk
 
 RandomWalkerSolver::RandomWalkerSolver(const VolumeBase* volume,
         RandomWalkerSeeds* seeds, RandomWalkerWeights& edgeWeights) :
-    volume_(volume),
     seeds_(seeds),
     edgeWeights_(edgeWeights),
     mat_(),
@@ -49,7 +48,6 @@ RandomWalkerSolver::RandomWalkerSolver(const VolumeBase* volume,
     numSeeds_(0),
     state_(Initial)
 {
-    tgtAssert(volume_, "no volume");
     tgtAssert(seeds_, "no seed point definer");
 
     volDim_ = volume->getDimensions();
@@ -83,7 +81,7 @@ void RandomWalkerSolver::setupEquationSystem() {
 
     // initialize seeds
     try {
-        seeds_->initialize(volume_->getRepresentation<VolumeRAM>());
+        seeds_->initialize();
     }
     catch (VoreenException& e) {
         throw VoreenException("Failed to initialize seeds: " + std::string(e.what()));
@@ -118,17 +116,6 @@ void RandomWalkerSolver::setupEquationSystem() {
     computeVolIndexToRowMapping(seeds_);
     tgtAssert(volIndexToRow_, "volIndexToRowBuffer empty");
 
-    // initialize edge weight computer
-    try {
-        edgeWeights_.initialize(volume_, seeds_, this);
-    }
-    catch (VoreenException& e) {
-        throw VoreenException("Failed to initialize edge weights: " + std::string(e.what()));
-    }
-
-    // For performance reasons, get VolumeRAM and rwm now and pass it to processVoxel.
-    const VolumeRAM* volram = volume_->getRepresentation<VolumeRAM>();
-    const RealWorldMapping& rwm = volume_->getRealWorldMapping();
     // iterate over volume and compute edge weights for each voxel
     #ifdef VRN_MODULE_OPENMP
     #pragma omp parallel for
@@ -136,7 +123,7 @@ void RandomWalkerSolver::setupEquationSystem() {
     for (int z=0; z<volDim_.z; z++) {
         for (int y=0; y<volDim_.y; y++) {
             for (int x=0; x<volDim_.x; x++) {
-                edgeWeights_.processVoxel(tgt::ivec3(x, y, z), seeds_, mat_, vec_, this, volram, rwm);
+                edgeWeights_.processVoxel(tgt::ivec3(x, y, z), seeds_, mat_, vec_, volIndexToRow_);
             }
         }
     }
@@ -155,17 +142,35 @@ int RandomWalkerSolver::solve(const VoreenBlas* voreenBlas, float* oldSystemSolu
     tgtAssert(volIndexToRow_, "volIndexToRow buffer vector not created");
     tgtAssert(!solution_, "solution buffer already created");
 
+    size_t systemSize = getSystemSize();
+
     // create solution buffer
     try {
-        solution_ = new float[getSystemSize()];
+        solution_ = new float[systemSize];
     }
     catch (std::bad_alloc&) {
         throw VoreenException("Bad allocation during creation of solution buffer");
     }
 
-    int iterations = voreenBlas->sSpConjGradEll(mat_, vec_, solution_, oldSystemSolution,
-        preConditioner, errorThreshold, maxIterations, progress);
+    float* initialization;
+    if(oldSystemSolution) {
+        initialization = oldSystemSolution;
+    } else {
+        try {
+            initialization = new float[systemSize];
+            std::fill_n(initialization, systemSize, 0.5f);
+        } catch (std::bad_alloc&) {
+            throw VoreenException("Bad allocation during creation of initialization buffer");
+        }
+    }
+
+    int iterations = voreenBlas->sSpConjGradEll(mat_, vec_, solution_, initialization,
+        preConditioner, errorThreshold, maxIterations, &progress);
     state_ = Solved;
+    if(!oldSystemSolution) {
+        // Slightly ugly: We only own the initialization if we have no oldSystemSolution
+        delete[] initialization;
+    }
     return iterations;
 }
 

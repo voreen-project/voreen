@@ -50,7 +50,7 @@ public:
     virtual float sSpInnerProductEll(const EllpackMatrix<float>& mat, const float* vecx, const float* vecy) const;
 
     virtual int sSpConjGradEll(const EllpackMatrix<float>& mat, const float* vec, float* result,
-        float* initial, ConjGradPreconditioner precond, float threshold, int maxIterations, ProgressReporter& progress) const;
+        float* initial, ConjGradPreconditioner precond, float threshold, int maxIterations, ProgressReporter* progress=nullptr) const;
 
     virtual int hSpConjGradEll(const EllpackMatrix<int16_t>& mat, const float* vec, float* result,
         float* initial = 0, float threshold = 1e-4f, int maxIterations = 1000) const;

@@ -48,14 +48,41 @@ __kernel void sAXPY(
 }
 
 /**
+ * Single-precision vector sum: z = alpha*(nom/den)*X + Y;
+ */
+__kernel void sAXPYDiv(
+  vrn_size_t n,
+  __global const float* X,
+  __global const float* Y,
+  float alpha,
+  __global const float* nom,
+  __global const float* den,
+  __global float* z
+)
+{
+    // get work item id
+    size_t gid = get_global_id(0);
+    size_t globalSize = get_global_size(0);
+
+    float m = nom[0];
+    float d = den[0];
+    float scalar = alpha * (m == d ? 1.0 : m / d); // Special case for nom==den==0.0
+
+    size_t block = 0;
+    while ((block*globalSize+gid) < n) {
+        z[block*globalSize+gid] = scalar*X[block*globalSize+gid] + Y[block*globalSize+gid];
+        block++;
+    }
+}
+
+/**
  * Single-precision dot product: z = X*Y
  */
 __kernel void sDOT(
   vrn_size_t n,
   __global const float* X,
   __global const float* Y,
-  __global float* z,
-  __global int* mutex,
+  __global int* z,
   __local float* sdata
 )
 {
@@ -87,18 +114,20 @@ __kernel void sDOT(
         barrier(CLK_LOCAL_MEM_FENCE);
     }
 
-    // first global item initializes result buffer and releases mutex
-    if (gid==0) {
-        z[0] = 0.0;
-        atom_cmpxchg(mutex,0,1);
-    }
+    union FloatBits {
+        int i;
+        float f;
+    };
 
     // no sdata[0] of each workgroup contains the sum of the workgroup's component products
     // => first item of each workgroup adds this to the final result
     if (tid == 0) {
-        while (atom_cmpxchg(mutex,1,0)==0);  // acquire mutex
-        z[0] += sdata[0];
-        atom_cmpxchg(mutex,0,1);             // release mutex
+        union FloatBits initial;
+        union FloatBits new;
+        do {
+            initial.i = *z;
+            new.f = initial.f + sdata[0];
+        } while (atom_cmpxchg(z,initial.i,new.i)!=initial.i);
     }
 }
 
@@ -147,7 +176,7 @@ __kernel void sNRM2(
     if (gid==0) {
         y[0] = 0.0;
         semaphor[0] = 0;
-        atom_cmpxchg(mutex,0,1);
+        atom_xchg(mutex,1);
     }
 
     // no sdata[0] of each workgroup contains the sum of the workgroup's component products
@@ -158,7 +187,7 @@ __kernel void sNRM2(
         semaphor[0]++;                       // count number of groups
         if (semaphor[0] == numGroups)        // all groups have passed => compute final result
             y[0] = sqrt(y[0]);
-        atom_cmpxchg(mutex,0,1);             // release mutex
+        atom_xchg(mutex,1);             // release mutex
     }
 }
 
@@ -187,9 +216,9 @@ __kernel void sSpMV_Ell(
         size_t row = block*globalSize+gid;
         float dot = 0.0;
         // iterate over cols of current matrix row
-        for (size_t n = 0; n < num_cols_per_row ; n++){
-            //const size_t index = num_cols_per_row * row + n;  //< row-order
-            size_t index = n*num_rows + row;
+        const size_t start = num_cols_per_row * row;
+        const size_t end = start + num_cols_per_row;
+        for (size_t index = start; index != end; index++) {
             size_t col = indices[index];
             if(col != -1) {
                 dot += M[index] * x[col];
@@ -228,9 +257,9 @@ __kernel void hSpMV_Ell(
         size_t row = block*globalSize+gid;
         float dot = 0.0;
         // iterate over cols of current matrix row
-        for (size_t n = 0; n < num_cols_per_row ; n++){
-            //const size_t index = num_cols_per_row * row + n;  //< row-order
-            size_t index = n*num_rows + row;
+        const size_t start = num_cols_per_row * row;
+        const size_t end = start + num_cols_per_row;
+        for (size_t index = start; index != end; index++) {
             size_t col = indices[index];
             if(col != -1) {
                 dot += (M[index]*valueScale) * x[col];
@@ -271,9 +300,9 @@ __kernel void sInnerProduct_Ell(
         size_t row = block*globalSize+gid;
         float dot = 0.0;
         // iterate over cols of current matrix row
-        for (size_t n = 0; n < num_cols_per_row ; n++){
-            //size_t index = num_cols_per_row * row + n;  //< row-order
-            size_t index = n*num_rows + row;
+        const size_t start = num_cols_per_row * row;
+        const size_t end = start + num_cols_per_row;
+        for (size_t index = start; index != end; index++) {
             size_t col = indices[index];
             if(col != -1) {
                 dot += A[index] * y[col];
@@ -300,7 +329,7 @@ __kernel void sInnerProduct_Ell(
     // first global item initializes result buffer and releases mutex
     if (gid==0) {
         z[0] = 0.0;
-        atom_cmpxchg(mutex,0,1);
+        atom_xchg(mutex,1); //release mutex
     }
 
     // no sdata[0] of each workgroup contains the sum of the workgroup's component products
@@ -308,6 +337,6 @@ __kernel void sInnerProduct_Ell(
     if (tid == 0) {
         while (atom_cmpxchg(mutex,1,0)==0);  // acquire mutex
         z[0] += sdata[0];
-        atom_cmpxchg(mutex,0,1);             // release mutex
+        atom_xchg(mutex,1);             // release mutex
     }
 }

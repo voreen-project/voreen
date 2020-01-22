@@ -211,6 +211,7 @@ static bool handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
     } else if(e->action() == tgt::MouseEvent::RELEASED && button == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
         if(points.empty()) {
             points.push_back(mouse);
+            e->accept();
             return true;
         }
 
@@ -235,8 +236,6 @@ static bool handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
             tgtAssert(insert_index != -1, "Invalid insert index");
             points.insert(points.begin() + insert_index+1, mouse);
         }
-    } else {
-        return false;
     }
     e->accept();
     return true;
@@ -244,9 +243,6 @@ static bool handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
 
 void handleProjectionEvent(tgt::MouseEvent* e, ProjectionLabels& labels) {
     auto button = e->button();
-    if((button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT | tgt::MouseEvent::MOUSE_BUTTON_MIDDLE)) == 0) {
-        return;
-    }
 
     tgt::ivec2 coords = e->coord();
     tgt::ivec2 viewport = e->viewport();
@@ -415,7 +411,8 @@ void InteractiveProjectionLabeling::projectionEvent(tgt::MouseEvent* e) {
         currentUnit().projectionLabels_.foreground_.push_back({mouse});
     } else if(button == tgt::MouseEvent::MOUSE_BUTTON_LEFT && e->modifiers() == tgt::Event::SHIFT && e->action() == tgt::MouseEvent::RELEASED) {
         currentUnit().projectionLabels_.background_.push_back({mouse});
-    } else if(e->modifiers() == tgt::Event::MODIFIER_NONE) {
+    } else if(e->modifiers() == tgt::Event::MODIFIER_NONE &&
+            (button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT | tgt::MouseEvent::MOUSE_BUTTON_MIDDLE)) != 0) {
         handleProjectionEvent(e, currentUnit().projectionLabels_);
     } else {
         return;
@@ -516,6 +513,61 @@ void InteractiveProjectionLabeling::onPortEvent(tgt::Event* e, Port* port) {
                         state_ = FREE;
                         invalidate();
                     }
+                    ke->accept();
+                    break;
+                }
+                case tgt::KeyEvent::K_1: {
+                    initializationMode_.selectByValue(NONE);
+                    ke->accept();
+                    break;
+                }
+                case tgt::KeyEvent::K_2: {
+                    initializationMode_.selectByValue(BRIGHT_LUMEN);
+                    ke->accept();
+                    break;
+                }
+                case tgt::KeyEvent::K_3: {
+                    initializationMode_.selectByValue(BRIGHT_WALL);
+                    ke->accept();
+                    break;
+                }
+                case tgt::KeyEvent::K_Q: {
+                    float new_val = tgt::clamp(
+                            maxLineSimplificationDistance_.get() - 0.01f,
+                            maxLineSimplificationDistance_.getMinValue(),
+                            maxLineSimplificationDistance_.getMaxValue()
+                            );
+                    maxLineSimplificationDistance_.set(new_val);
+                    ke->accept();
+                    break;
+                }
+                case tgt::KeyEvent::K_W: {
+                    float new_val = tgt::clamp(
+                            maxLineSimplificationDistance_.get() + 0.01f,
+                            maxLineSimplificationDistance_.getMinValue(),
+                            maxLineSimplificationDistance_.getMaxValue()
+                            );
+                    maxLineSimplificationDistance_.set(new_val);
+                    ke->accept();
+                    break;
+                }
+                case tgt::KeyEvent::K_A: {
+                    float new_val = tgt::clamp(
+                            backgroundLineDistanceMultiplier_.get() - 0.1f,
+                            backgroundLineDistanceMultiplier_.getMinValue(),
+                            backgroundLineDistanceMultiplier_.getMaxValue()
+                            );
+                    backgroundLineDistanceMultiplier_.set(new_val);
+                    ke->accept();
+                    break;
+                }
+                case tgt::KeyEvent::K_S: {
+                    float new_val = tgt::clamp(
+                            backgroundLineDistanceMultiplier_.get() + 0.1f,
+                            backgroundLineDistanceMultiplier_.getMinValue(),
+                            backgroundLineDistanceMultiplier_.getMaxValue()
+                            );
+                    backgroundLineDistanceMultiplier_.set(new_val);
                     ke->accept();
                     break;
                 }
@@ -628,6 +680,7 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , projectionTransfunc_("transferFunction", "Projection Transfer Function")
     , initializationMode_("initializationMode", "Initialization Mode")
     , maxLineSimplificationDistance_("maxLineSimplificationDistance_", "Maximum Line Simplification Distance", 0.01, 0.0, 1.0)
+    , backgroundLineDistanceMultiplier_("backgroundLineDistanceMultiplier", "Background Label Distance Multiplier", 1.00, 0.01, 10.0)
     , projectionShader_("shader", "Shader", "interactiveprojectionlabeling.frag", "oit_passthrough.vert")
     , projection_(boost::none)
     , projectionLabelsModified_(false)
@@ -638,6 +691,9 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , clippingRegion_("clippingRegion", "Clip Region (Link with OptimizedProxyGeometry)", tgt::ivec3(0), tgt::ivec3(0), tgt::ivec3(INT_MAX))
 {
     addPort(inport_);
+    ON_CHANGE_LAMBDA(inport_, [this] () {
+        seedsChanged_ = true;
+    });
     addPort(foregroundLabelGeometry_);
     addPort(backgroundLabelGeometry_);
     addPort(overlayOutput_);
@@ -653,10 +709,12 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
         initializationMode_.addOption("none", "None", NONE);
         initializationMode_.addOption("brightlumen", "Bright Lumen", BRIGHT_LUMEN);
         initializationMode_.addOption("brightwall", "Bright Wall", BRIGHT_WALL);
-    addProperty(projectionTransfunc_);
         ON_CHANGE(initializationMode_, InteractiveProjectionLabeling, initializeProjectionLabels);
+    addProperty(projectionTransfunc_);
     addProperty(maxLineSimplificationDistance_);
         ON_CHANGE(maxLineSimplificationDistance_, InteractiveProjectionLabeling, initializeProjectionLabels);
+    addProperty(backgroundLineDistanceMultiplier_);
+        ON_CHANGE(backgroundLineDistanceMultiplier_, InteractiveProjectionLabeling, initializeProjectionLabels);
 
     addProperty(currentUnitIndex_);
         ON_CHANGE(currentUnitIndex_, InteractiveProjectionLabeling, synchronizeUnitIndex);
@@ -798,17 +856,19 @@ boost::optional<VolumeAtomic<tgt::vec4>> InteractiveProjectionLabeling::getLhp()
     return VolumeAtomic<tgt::vec4>((tgt::vec4*)lhp_.getColorTexture()->downloadTextureToBuffer(GL_RGBA, GL_FLOAT), tgt::svec3(lhp_.getSize(),1));
 }
 
+const int IPL_MAX_NEIGHBOR_OFFSET = 1;
+const float IPL_BACKGROUND_DIST_MULTIPLIER = 1.5f;
+
 static std::vector<int> maxPath(const VolumeAtomic<float>& img) {
     VolumeAtomic<int> paths(img.getDimensions());
     tgt::ivec3 idim = img.getDimensions();
     std::vector<float> global_cost(idim.x, 0.0);
-    const int MAX_NEIGHBOR_OFFSET = 1;
     for(int y=0; y < idim.y; ++y) {
         std::vector<float> next_global_cost(idim.x, 0.0);
         for(int x=0; x < idim.x; ++x) {
             int best_i = 0;
             float best_val = 0.0;
-            for(int d=std::max(0, x-MAX_NEIGHBOR_OFFSET); d<std::min(idim.x, x+MAX_NEIGHBOR_OFFSET+1); ++d) {
+            for(int d=std::max(0, x-IPL_MAX_NEIGHBOR_OFFSET); d<std::min(idim.x, x+IPL_MAX_NEIGHBOR_OFFSET+1); ++d) {
                 float val = img.voxel(d, y, 0) + global_cost.at(d);
                 if(val > best_val || (val == best_val && std::abs(best_i - x) > std::abs(d - x))) {
                     best_val = val;
@@ -878,68 +938,31 @@ void simplifyPath(std::deque<tgt::vec2>& input, float max_line_dist) {
     input = output;
 }
 
-static void initBrightWall(const LabelProjection& proj, ProjectionLabels& labels, float max_line_dist) {
-    const auto& orig = proj.projection();
-    tgt::ivec3 idim = orig.getDimensions();
-    VolumeAtomic<float> values(tgt::svec3(idim.y, idim.x, idim.z));
+static void addLabelsFromWalls(ProjectionLabels& labels, const std::vector<int> lower_wall, const std::vector<int> upper_wall, float max_line_dist, tgt::ivec2 img_dim, float background_line_distance_multiplier) {
 
-    float sum = 0.0;
-
-    //Transpose for path search
-    for(int y=0; y < idim.y; ++y) {
-        for(int x=0; x < idim.x; ++x) {
-            tgt::vec2 p = orig.voxel(x, y, 0);
-
-            float val;
-            if(p.y > 0.0) {
-                val = p.x;
-            } else {
-                val = 0.0;
-            }
-            sum += val;
-            values.voxel(y, x, 0) = val;
-        }
-    }
-    float mean = sum / (idim.x * idim.y);
-
-    auto first_path = maxPath(values);
-    // Clear values around first path in order to find second maximum path
-    for(int x=0; x < first_path.size(); ++x) {
-        int y = first_path[x];
-        values.voxel(y, x, 0) = mean;
-        for(int wy = y+1; y < idim.y; ++wy) {
-            float& val = values.voxel(wy, x, 0);
-            if(val > mean) {
-                val = mean;
-            } else {
-                break;
-            }
-        }
-        for(int wy = y-1; y >= 0; --wy) {
-            float& val = values.voxel(wy, x, 0);
-            if(val > mean) {
-                val = mean;
-            } else {
-                break;
-            }
-        }
-    }
-    auto second_path = maxPath(values);
+    tgtAssert(lower_wall.size() == upper_wall.size(), "Path size mismatch");
 
     std::deque<tgt::vec2> foreground;
     std::deque<tgt::vec2> upperBackground;
     std::deque<tgt::vec2> lowerBackground;
-    for(int x=0; x < first_path.size(); ++x) {
-        float x_pos = static_cast<float>(x)/(idim.x-1);
-        float y_top = static_cast<float>(first_path.at(x))/(idim.y-1);
-        float y_bottom = static_cast<float>(second_path.at(x))/(idim.y-1);
 
-        float width = y_top - y_bottom;
+    for(int x=0; x < upper_wall.size(); ++x) {
+        float x_pos = static_cast<float>(x)/(img_dim.x-1);
+        float y_top = static_cast<float>(upper_wall.at(x))/(img_dim.y-1);
+        float y_bottom = static_cast<float>(lower_wall.at(x))/(img_dim.y-1);
+
         float center = tgt::clamp((y_top + y_bottom)/2, 0.0f, 1.0f);
+        float top_dist = y_top - center;
+        float bottom_dist = y_bottom - center;
         foreground.emplace_back(x_pos, center);
-        lowerBackground.emplace_back(x_pos, tgt::clamp(center-width, 0.0f, 1.0f));
-        upperBackground.emplace_back(x_pos, tgt::clamp(center+width, 0.0f, 1.0f));
+        lowerBackground.emplace_back(x_pos, tgt::clamp(center+top_dist * background_line_distance_multiplier, 0.0f, 1.0f));
+        upperBackground.emplace_back(x_pos, tgt::clamp(center+bottom_dist * background_line_distance_multiplier, 0.0f, 1.0f));
+
+        // Actual detected borders (useful for debugging)
+        //lowerBackground.emplace_back(x_pos, tgt::clamp(y_bottom, 0.0f, 1.0f));
+        //upperBackground.emplace_back(x_pos, tgt::clamp(y_top, 0.0f, 1.0f));
     }
+
     simplifyPath(foreground, max_line_dist);
     simplifyPath(lowerBackground, max_line_dist);
     simplifyPath(upperBackground, max_line_dist);
@@ -949,53 +972,219 @@ static void initBrightWall(const LabelProjection& proj, ProjectionLabels& labels
     labels.background_.push_back(upperBackground);
 }
 
-static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& labels, float max_line_dist) {
-    const auto& orig = proj.projection();
-    tgt::ivec3 idim = orig.getDimensions();
-    VolumeAtomic<float> top_gradients(tgt::svec3(idim.y, idim.x, idim.z));
-    VolumeAtomic<float> bottom_gradients(tgt::svec3(idim.y, idim.x, idim.z));
+static void initBrightWall(const LabelProjection& proj, ProjectionLabels& labels, float max_line_dist, float background_line_distance_multiplier) {
+    const auto& source = proj.projection();
+    tgt::ivec3 idim = source.getDimensions();
+    VolumeAtomic<float> original(tgt::svec3(idim.y, idim.x, idim.z));
 
+    // Idea:
+    // - find first possible run (possible wall) first
+    // - clear around first run
+    // - find second run
+    //
+    // In order to avoid crossing of runs:
+    // - divide at center of initial lines
+    // - find first wall in upper half
+    // - find second wall in lower half
+    // - find inner as center of both
+
+    float sum = 0.0;
+
+    //Transpose for path search
     for(int y=0; y < idim.y; ++y) {
         for(int x=0; x < idim.x; ++x) {
-            tgt::vec2 left = orig.voxel(x, std::max(0, y-1), 0);
-            tgt::vec2 right = orig.voxel(x, std::min(y+1, idim.y-1), 0);
-            float diff;
-            if(left.y > 0.0 && right.y > 0.0) {
-                diff = left.x - right.x;
+            tgt::vec2 p = source.voxel(x, y, 0);
+
+            float val;
+            if(p.y > 0.0) {
+                val = p.x;
             } else {
-                diff = 0.0;
+                val = 0.0;
             }
-            top_gradients.voxel(y, x, 0) = std::max(0.0f, diff);
-            bottom_gradients.voxel(y, x, 0) = std::max(0.0f, -diff);
+            sum += val;
+            original.voxel(y, x, 0) = val;
+        }
+    }
+    float mean = sum / (idim.x * idim.y);
+
+    auto first_path = maxPath(original);
+
+    // Clear values around first path in order to find second maximum path
+    VolumeAtomic<float> masked(original.copy());
+    for(int x=0; x < first_path.size(); ++x) {
+        int y = first_path[x];
+        masked.voxel(y, x, 0) = mean;
+        for(int wy = y+1; y < idim.y; ++wy) {
+            float& val = masked.voxel(wy, x, 0);
+            if(val > mean) {
+                val = mean;
+            } else {
+                break;
+            }
+        }
+        for(int wy = y-1; y >= 0; --wy) {
+            float& val = masked.voxel(wy, x, 0);
+            if(val > mean) {
+                val = mean;
+            } else {
+                break;
+            }
+        }
+    }
+    auto second_path = maxPath(masked);
+
+    // Create to new images with below/above center path masked
+    VolumeAtomic<float> upper_masked(original.copy());
+    VolumeAtomic<float> lower_masked(original.copy());
+    for(int x=0; x < first_path.size(); ++x) {
+        int center = (first_path[x] + second_path[x])/2;
+
+        int y = 0;
+        for(; y < center; ++y) {
+            upper_masked.voxel(y, x, 0) = mean;
+        }
+        for(; y < idim.y; ++y) {
+            lower_masked.voxel(y, x, 0) = mean;
         }
     }
 
-    auto bottom_path = maxPath(bottom_gradients);
-    auto top_path = maxPath(top_gradients);
+    // Create upper/lower paths from masks
+    auto upper_path = maxPath(lower_masked);
+    auto lower_path = maxPath(upper_masked);
 
-    tgtAssert(bottom_path.size() == top_path.size(), "Path size mismatch");
+    addLabelsFromWalls(labels, upper_path, lower_path, max_line_dist, idim.xy(), background_line_distance_multiplier);
+}
 
-    std::deque<tgt::vec2> foreground;
-    std::deque<tgt::vec2> upperBackground;
-    std::deque<tgt::vec2> lowerBackground;
-    for(int x=0; x < top_path.size(); ++x) {
-        float x_pos = static_cast<float>(x)/(idim.x-1);
-        float y_top = static_cast<float>(top_path.at(x))/(idim.y-1);
-        float y_bottom = static_cast<float>(bottom_path.at(x))/(idim.y-1);
-
-        float width = y_top - y_bottom;
-        float center = tgt::clamp((y_top + y_bottom)/2, 0.0f, 1.0f);
-        foreground.emplace_back(x_pos, center);
-        lowerBackground.emplace_back(x_pos, tgt::clamp(center-width, 0.0f, 1.0f));
-        upperBackground.emplace_back(x_pos, tgt::clamp(center+width, 0.0f, 1.0f));
+static inline std::vector<float> gaussFirstDerivativeKernel(float stddev, int extent) {
+    auto func =  [stddev] (float x) {
+        return -std::exp(-0.5f * x*x / (stddev*stddev))*x/(std::sqrt(2*tgt::PIf)*stddev*stddev*stddev);
+    };
+    auto gauss = [] (float stdev) {
+        return [stdev] (float x) {
+            return std::exp(-0.5f * x*x / (stdev*stdev))/(std::sqrt(2*tgt::PIf)*stdev);
+        };
+    };
+    std::vector<float> kernel(2*extent + 1);
+    float positiveSum = 0;
+    float negativeSum = 0;
+    for(int i = -extent; i <= extent; ++i) {
+        int radius = 5;
+        float sum = 0.0f;
+        for(int d = -radius; d <= radius; ++d) {
+            float df = static_cast<float>(d)/radius;
+            float samplePos = static_cast<float>(i)-0.5f*df;
+            sum += func(samplePos);
+        }
+        float val = sum/(2*radius + 1);
+        if(val > 0) {
+            positiveSum += val;
+        } else {
+            negativeSum += val;
+        }
+        kernel[i + extent] = val;
     }
-    simplifyPath(foreground, max_line_dist);
-    simplifyPath(lowerBackground, max_line_dist);
-    simplifyPath(upperBackground, max_line_dist);
+    float positiveNormalizationFactor = std::abs(gauss(stddev)(0)/positiveSum);
+    float negativeNormalizationFactor = std::abs(gauss(stddev)(0)/negativeSum);
+    // Normalize so that all values sum to 0
+    for(int i = -extent; i <= extent; ++i) {
+        if(kernel[i + extent] > 0) {
+            kernel[i + extent] *= positiveNormalizationFactor;
+        } else {
+            kernel[i + extent] *= negativeNormalizationFactor;
+        }
+    }
+    return kernel;
+}
 
-    labels.foreground_.push_back(foreground);
-    labels.background_.push_back(lowerBackground);
-    labels.background_.push_back(upperBackground);
+static void initBrightLumen(const LabelProjection& proj, ProjectionLabels& labels, float max_line_dist, float background_line_distance_multiplier) {
+    const auto& orig = proj.projection();
+    tgt::ivec3 idim = orig.getDimensions();
+    VolumeAtomic<float> transposed(tgt::svec3(idim.y, idim.x, idim.z));
+    VolumeAtomic<float> top_gradients(tgt::svec3(idim.y, idim.x, idim.z));
+    VolumeAtomic<float> bottom_gradients(tgt::svec3(idim.y, idim.x, idim.z));
+    top_gradients.clear();
+    bottom_gradients.clear();
+
+    // Transpose matrix for better memory locality and fill invalid values with nearest valid ones
+    int valid = 0;
+    for(int x=0; x < idim.x; ++x) {
+        float first = std::nan("");
+        float last = 0.0;
+        for(int y=0; y < idim.y; ++y) {
+            tgt::vec2 val = orig.voxel(x, y, 0);
+            if(val.y > 0.0) {
+                if(std::isnan(first)) {
+                    first = val.x;
+                }
+                last = val.x;
+            }
+        }
+        bool before_first_valid = true;
+        for(int y=0; y < idim.y; ++y) {
+            tgt::vec2 val = orig.voxel(x, y, 0);
+            if(val.y > 0.0) {
+                transposed.voxel(y, x, 0) = val.x;
+                before_first_valid = false;
+            } else {
+                if(before_first_valid) {
+                    transposed.voxel(y, x, 0) = first;
+                } else {
+                    transposed.voxel(y, x, 0) = last;
+                }
+            }
+        }
+    }
+
+    float std_dev_max = idim.y/10;
+    std::vector<std::vector<float>> kernels;
+    for(int stddev = 1; stddev < std_dev_max; stddev = stddev << 1) {
+        int extent = 2*stddev;
+        kernels.push_back(gaussFirstDerivativeKernel(stddev, extent));
+    }
+
+    auto center_path = maxPath(transposed);
+
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel for
+#endif
+    for(int x=0; x < idim.x; ++x) {
+        for(auto& kernel : kernels) {
+            int extent = kernel.size() / 2; //kernel always has size 2extent+1
+            for(int y=0; y < idim.y; ++y) {
+
+                float sum = 0.0f;
+                int extent_begin = std::max(y-extent,0) - y;
+                int extent_end = std::min(y+extent,idim.y) - y;
+
+                float* transposed_row_begin = &transposed.voxel(y+extent_begin, x, 0);
+                int len = extent_end - extent_begin;
+
+#ifdef VRN_MODULE_OPENMP
+#pragma omp simd
+#endif
+                for(int i=0; i<len; ++i) {
+                    float val = transposed_row_begin[i];
+                    sum += val * kernel[i];
+                }
+
+                float& top = top_gradients.voxel(y, x, 0);
+                float& bottom = bottom_gradients.voxel(y, x, 0);
+
+                // mask below/above center line for top/bottom gradients
+                int center = center_path[x];
+                if(y < center) {
+                    top = std::max(top, -sum);
+                } else {
+                    bottom = std::max(bottom, sum);
+                }
+            }
+        }
+    }
+
+    auto lower_path = maxPath(bottom_gradients);
+    auto upper_path = maxPath(top_gradients);
+
+    addLabelsFromWalls(labels, upper_path, lower_path, max_line_dist, idim.xy(), background_line_distance_multiplier);
 }
 
 void InteractiveProjectionLabeling::initializeProjectionLabels() {
@@ -1008,12 +1197,12 @@ void InteractiveProjectionLabeling::initializeProjectionLabels() {
     switch(initializationMode_.getValue()) {
         case BRIGHT_LUMEN:
             {
-                initBrightLumen(*projection_, currentUnit().projectionLabels_, maxLineSimplificationDistance_.get());
+                initBrightLumen(*projection_, currentUnit().projectionLabels_, maxLineSimplificationDistance_.get(), backgroundLineDistanceMultiplier_.get());
                 break;
             }
         case BRIGHT_WALL:
             {
-                initBrightWall(*projection_, currentUnit().projectionLabels_, maxLineSimplificationDistance_.get());
+                initBrightWall(*projection_, currentUnit().projectionLabels_, maxLineSimplificationDistance_.get(), backgroundLineDistanceMultiplier_.get());
                 break;
             }
         default:;
@@ -1067,8 +1256,49 @@ void InteractiveProjectionLabeling::updateProjection() {
         sample = [volram] (tgt::vec3 p) {
             return volram->getVoxelNormalizedLinear(p);
         };
+
+
+
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel for
+#endif
+        for(int x = 0; x < dim.x; ++x) {
+
+            float d = ((float)x)/(dim.x-1);
+            auto p = line.interpolate(d);
+
+            tgt::vec3 normalized_query(p, 0);
+            tgt::vec4 front_pos = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
+            tgt::vec4 back_pos = back.getVoxelLinear(normalized_query * tgt::vec3(back.getDimensions()));
+
+            tgt::vec4 front_world = tex_to_world * front_pos;
+            tgt::vec4 back_world = tex_to_world * back_pos;
+
+            tgt::vec3 view_dir = tgt::normalize(back_world.xyz() - front_world.xyz());
+
+            for(int y = 0; y < dim.y; ++y) {
+                float alpha = ((float)y)/(dim.y-1);
+                float alpha_rw = max_dist * alpha + (1.0 - alpha) * min_dist;
+
+                tgt::vec4 query_pos_rw(view_dir * alpha_rw + camera, 1.0);
+                tgt::vec3 query_pos = (world_to_vox * query_pos_rw).xyz();
+
+                tgt::vec2 val;
+                if(tgt::hor(tgt::greaterThan(query_pos, max_dim)) || tgt::hor(tgt::lessThan(query_pos, tgt::vec3::zero))
+                        || back_world.a == 0.0 || front_pos.a == 0.0) {
+                    val = tgt::vec2(0.0, 0.0);
+                } else {
+                    val = tgt::vec2(sample(query_pos), 1.0);
+                }
+
+                proj.at(tgt::svec2(x, y)) = val;
+            }
+        }
+
     } else {
         const auto octree = vol.getRepresentation<VolumeOctree>();
+
+        LocatedVolumeOctreeNodeConst root = octree->getLocatedRootNode();
 
         float dist_within_volume = max_dist - min_dist;
         if(!std::isfinite(dist_within_volume)) {
@@ -1100,48 +1330,82 @@ void InteractiveProjectionLabeling::updateProjection() {
         y_block_size = tgt::clamp(static_cast<int>(std::round(static_cast<float>(dim.y) / blocks_in_projection_depth)), 1, dim.y);
         tgtAssert(y_block_size >= 0, "invalid block size");
 
+        const tgt::svec3 brickDataSize = octree->getBrickDim();
 
-        sample = [octree, level] (tgt::vec3 p) {
-            uint16_t voxel = octree->getVoxel(tgt::round(p), 0, level);
-            float val = static_cast<float>(voxel) / 0xffff;
-            return val;
+        struct BrickCacheEntry {
+            LocatedVolumeOctreeNodeConst node;
+            tgt::mat4 voxelToBrick;
+            BrickPoolBrickConst brick;
+
+            BrickCacheEntry(LocatedVolumeOctreeNodeConst node, tgt::svec3 brickDataSize, const OctreeBrickPoolManagerBase& brickPoolManager)
+                : node(node)
+                , voxelToBrick(node.location().voxelToBrick())
+                , brick(node.node().getBrickAddress(), brickDataSize, brickPoolManager)
+            {
+            }
         };
 
-    }
+        const size_t BRICK_CACHE_SIZE = 8;
 
-    for(int y_base = 0; y_base < dim.y; y_base+=y_block_size) {
-        int y_max = std::min(dim.y, y_base + y_block_size);
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel for
+#endif
+        for(int y_base = 0; y_base < dim.y; y_base+=y_block_size) {
+            int y_max = std::min(dim.y, y_base + y_block_size);
 
-        for(int x = 0; x < dim.x; ++x) {
+            std::deque<BrickCacheEntry> brickCache;
 
-            float d = ((float)x)/(dim.x-1);
-            auto p = line.interpolate(d);
+            for(int x = 0; x < dim.x; ++x) {
 
-            tgt::vec3 normalized_query(p, 0);
-            tgt::vec4 front_pos = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
-            tgt::vec4 back_pos = back.getVoxelLinear(normalized_query * tgt::vec3(back.getDimensions()));
+                float d = ((float)x)/(dim.x-1);
+                auto p = line.interpolate(d);
 
-            tgt::vec4 front_world = tex_to_world * front_pos;
-            tgt::vec4 back_world = tex_to_world * back_pos;
+                tgt::vec3 normalized_query(p, 0);
+                tgt::vec4 front_pos = front.getVoxelLinear(normalized_query * tgt::vec3(front.getDimensions()));
+                tgt::vec4 back_pos = back.getVoxelLinear(normalized_query * tgt::vec3(back.getDimensions()));
 
-            tgt::vec3 view_dir = tgt::normalize(back_world.xyz() - front_world.xyz());
+                tgt::vec4 front_world = tex_to_world * front_pos;
+                tgt::vec4 back_world = tex_to_world * back_pos;
 
-            for(int y = y_base; y < y_max; ++y) {
-                float alpha = ((float)y)/(dim.y-1);
-                float alpha_rw = max_dist * alpha + (1.0 - alpha) * min_dist;
+                tgt::vec3 view_dir = tgt::normalize(back_world.xyz() - front_world.xyz());
 
-                tgt::vec4 query_pos_rw(view_dir * alpha_rw + camera, 1.0);
-                tgt::vec3 query_pos = (world_to_vox * query_pos_rw).xyz();
+                for(int y = y_base; y < y_max; ++y) {
+                    float alpha = ((float)y)/(dim.y-1);
+                    float alpha_rw = max_dist * alpha + (1.0 - alpha) * min_dist;
 
-                tgt::vec2 val;
-                if(tgt::hor(tgt::greaterThan(query_pos, max_dim)) || tgt::hor(tgt::lessThan(query_pos, tgt::vec3::zero))
-                        || back_world.a == 0.0 || front_pos.a == 0.0) {
-                    val = tgt::vec2(0.0, 0.0);
-                } else {
-                    val = tgt::vec2(sample(query_pos), 1.0);
+                    tgt::vec4 query_pos_rw(view_dir * alpha_rw + camera, 1.0);
+                    tgt::vec3 query_pos = (world_to_vox * query_pos_rw).xyz();
+
+                    tgt::vec2 val;
+                    if(tgt::hor(tgt::greaterThan(query_pos, max_dim)) || tgt::hor(tgt::lessThan(query_pos, tgt::vec3::zero))
+                            || back_world.a == 0.0 || front_pos.a == 0.0) {
+                        val = tgt::vec2(0.0, 0.0);
+                    } else {
+                        tgt::svec3 pVoxel = tgt::round(query_pos);
+                        BrickCacheEntry* cacheEntry = nullptr;
+                        for(auto it = brickCache.begin(); it != brickCache.end(); ++it) {
+                            auto prevLlf = it->node.location().voxelLLF();
+                            auto prevUrb = it->node.location().voxelURB();
+                            if(tgt::hand(tgt::lessThanEqual(prevLlf, pVoxel) & tgt::lessThan(pVoxel, prevUrb))) {
+                                cacheEntry = &*it;
+                                break;
+                            }
+                        }
+                        if(cacheEntry == nullptr) {
+                            brickCache.emplace_back(root.findChildNode(pVoxel, brickDataSize, level), brickDataSize, *octree->getBrickPoolManager());
+                            if(brickCache.size() > BRICK_CACHE_SIZE) {
+                                brickCache.pop_front();
+                            }
+                            cacheEntry = &brickCache.back();
+                        }
+                        tgt::svec3 pos = tgt::round(cacheEntry->voxelToBrick.transform(query_pos));
+                        float voxel = cacheEntry->brick.getVoxelNormalized(pos);
+
+                        val = tgt::vec2(voxel, 1.0);
+                    }
+
+                    proj.at(tgt::svec2(x, y)) = val;
                 }
-
-                proj.at(tgt::svec2(x, y)) = val;
             }
         }
     }

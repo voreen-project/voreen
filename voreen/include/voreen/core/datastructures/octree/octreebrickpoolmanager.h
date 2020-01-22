@@ -28,15 +28,65 @@
 
 #include "voreen/core/utils/exception.h"
 #include "voreen/core/voreenobject.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 
 #include <vector>
 #include <string>
 
 #include <boost/thread/mutex.hpp>
+#include "tgt/vector.h"
 
 namespace voreen {
 
 class ProgressReporter;
+
+class OctreeBrickPoolManagerBase;
+
+// Brick smart pointer that automatically releases its content on destruction. Read/write variant.
+//
+// For obvious reasons, this struct must not outlive the OctreeBrickPoolManager passen on creation.
+struct BrickPoolBrick {
+    BrickPoolBrick() = delete;
+    BrickPoolBrick(const BrickPoolBrick&) = delete;
+    BrickPoolBrick& operator=(const BrickPoolBrick&) = delete;
+
+    BrickPoolBrick(BrickPoolBrick&& other);
+    BrickPoolBrick& operator=(BrickPoolBrick&& other);
+
+    BrickPoolBrick(uint64_t addr, const tgt::svec3& brickDataSize, const OctreeBrickPoolManagerBase& pool);
+    ~BrickPoolBrick();
+    float getVoxelNormalized(const tgt::svec3& pos) const;
+    VolumeAtomic<uint16_t>& data();
+    const VolumeAtomic<uint16_t>& data() const;
+
+private:
+    uint64_t addr_;
+    VolumeAtomic<uint16_t> data_;
+    const OctreeBrickPoolManagerBase& pool_;
+};
+
+// Brick smart pointer that automatically releases its content on destruction. Read-only variant.
+//
+// For obvious reasons, this struct must not outlive the OctreeBrickPoolManager passen on creation.
+struct BrickPoolBrickConst {
+    BrickPoolBrickConst() = delete;
+    BrickPoolBrickConst(const BrickPoolBrickConst&) = delete;
+    BrickPoolBrickConst& operator=(const BrickPoolBrickConst&) = delete;
+
+    BrickPoolBrickConst(BrickPoolBrickConst&& other);
+    BrickPoolBrickConst& operator=(BrickPoolBrickConst&& other);
+
+    BrickPoolBrickConst(uint64_t addr, const tgt::svec3& brickDataSize, const OctreeBrickPoolManagerBase& pool);
+    ~BrickPoolBrickConst();
+
+    float getVoxelNormalized(const tgt::svec3& pos) const;
+    const VolumeAtomic<uint16_t>& data() const;
+
+private:
+    uint64_t addr_;
+    const VolumeAtomic<uint16_t> data_;
+    const OctreeBrickPoolManagerBase& pool_;
+};
 
 /**
  * Base class for brick pool managers that provide a virtual memory space for octree bricks.
@@ -49,6 +99,8 @@ class ProgressReporter;
 class VRN_CORE_API OctreeBrickPoolManagerBase : public VoreenSerializableObject {
 
 public:
+
+    static const uint64_t NO_BRICK_ADDRESS = std::numeric_limits<uint64_t>::max();
 
     enum AccessMode{
         READ,

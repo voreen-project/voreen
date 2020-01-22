@@ -41,6 +41,8 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <mutex>
+#include <thread>
 #include "tgt/vector.h"
 #include "tgt/texture.h"
 #include "voreen/core/datastructures/volume/volumeram.h"
@@ -530,9 +532,7 @@ public:
     cl_build_status getBuildStatus(const Device& device) const;
     std::string getBuildOptions(const Device& device) const;
 
-    const std::map<std::string, Kernel*>& getCurrentKernels() const {
-        return kernels_;
-    }
+    std::map<std::string, Kernel*> getCurrentKernels() const;
 
     template<class T>
     T getInfo(cl_program_info info) const {
@@ -566,7 +566,10 @@ protected:
     std::vector<std::string> source_;
     std::string header_;
     std::vector<std::string> filenames_;
-    std::map<std::string, Kernel*> kernels_;
+
+    mutable std::mutex kernelsMutex_; // Protects kernels_ in concurrent access.
+    std::map<std::pair<std::string, std::thread::id>, std::unique_ptr<Kernel>> kernels_;
+
     static const std::string loggerCat_;
 };
 
@@ -720,31 +723,31 @@ public:
 
     cl_int setArg(cl_uint index, tgt::vec2 data) {
         return LCL_ERROR(clSetKernelArg(id_, index, sizeof(float)*2, data.elem));
-       }
+    }
 
     cl_int setArg(cl_uint index, tgt::vec3 data) {
         return LCL_ERROR(setArg(index, tgt::vec4(data, 0.0f) ));
-       }
+    }
 
     cl_int setArg(cl_uint index, tgt::vec4 data) {
         return LCL_ERROR(clSetKernelArg(id_, index, sizeof(float)*4, data.elem));
-       }
+    }
 
     cl_int setArg(cl_uint index, tgt::ivec2 data) {
         return LCL_ERROR(clSetKernelArg(id_, index, sizeof(int)*2, data.elem));
-       }
+    }
 
     cl_int setArg(cl_uint index, tgt::ivec3 data) {
         return LCL_ERROR(clSetKernelArg(id_, index, sizeof(int)*3, data.elem));
-       }
+    }
 
     cl_int setArg(cl_uint index, tgt::ivec4 data) {
         return LCL_ERROR(clSetKernelArg(id_, index, sizeof(int)*4, data.elem));
-       }
+    }
 
     cl_int setArg(cl_uint index, tgt::mat4 data) {
         return LCL_ERROR(clSetKernelArg(id_, index, sizeof(float)*16, data.elem));
-       }
+    }
 
     cl_int setArg(cl_uint index, const MemoryObject* memObj) {
         cl_mem id = memObj->getId();

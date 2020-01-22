@@ -44,7 +44,7 @@ class RandomWalkerSeeds {
 public:
     virtual ~RandomWalkerSeeds() {}
 
-    virtual void initialize(const VolumeRAM* volume);
+    virtual void initialize() {};
 
     virtual bool isSeedPoint(size_t index) const = 0;
 
@@ -54,15 +54,11 @@ public:
 
     virtual float getSeedValue(const tgt::ivec3& voxel) const = 0;
 
-    size_t getNumSeeds() const;
+    virtual size_t getNumSeeds() const;
 
-    tgt::vec2 getSeedRange() const;
+    virtual tgt::vec2 getSeedRange() const;
 
 protected:
-    const VolumeRAM* volume_;
-    tgt::ivec3 volDim_;
-    size_t numVoxels_;
-
     size_t numSeeds_;
     tgt::vec2 seedRange_;
 };
@@ -80,7 +76,7 @@ protected:
 class RandomWalkerTwoLabelSeeds : public RandomWalkerSeeds {
 
 public:
-    RandomWalkerTwoLabelSeeds(const PointSegmentListGeometryVec3& foregroundSeedList,
+    RandomWalkerTwoLabelSeeds(tgt::svec3 volDim, const PointSegmentListGeometryVec3& foregroundSeedList,
         const PointSegmentListGeometryVec3& backgroundSeedList,
         const VolumeRAM_UInt8* foregroundSeedVolume = 0, const VolumeRAM_UInt8* backgroundSeedVolume = 0,
         const tgt::ivec3& clipLLF = tgt::ivec3(-1), const tgt::ivec3& clipURB = tgt::ivec3(-1));
@@ -89,7 +85,7 @@ public:
 
     void setClippingPlanes(const tgt::ivec3& clipLLF, const tgt::ivec3& clipURB);
 
-    virtual void initialize(const VolumeRAM* volume);
+    virtual void initialize();
 
     virtual bool isSeedPoint(size_t index) const;
 
@@ -115,6 +111,8 @@ protected:
     size_t numBackgroundSeeds_;
 
     char* seedBuffer_;
+
+    tgt::ivec3 volDim_;
 };
 
 } //namespace
