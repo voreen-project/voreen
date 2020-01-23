@@ -128,6 +128,14 @@ Streamline Streamline::resample(size_t samples) const {
 
 }
 
+float Streamline::getLength() const {
+    float length = 0.0f;
+    for(size_t i = 1; i < getNumElements(); i++) {
+        length += tgt::distance(streamlineElements_[i-1].position_, streamlineElements_[i].position_);
+    }
+    return length;
+}
+
 //----------------
 //  Storage
 //----------------

@@ -64,6 +64,7 @@ void VolumeSelectorMultiChannel::adjustPropertiesToInput() {
         return;
     }
 
+    selectedVolume_.setMinValue(0);
     selectedVolume_.setMaxValue(input->size() / numChannels_.get() - 1);
 }
 
@@ -77,7 +78,8 @@ void VolumeSelectorMultiChannel::process() {
         port->clear();
     }
 
-    if(input->size() < numChannels_.get()) {
+    int numVolumes = static_cast<int>(input->size());
+    if(numVolumes < numChannels_.get()) {
         return;
     }
 

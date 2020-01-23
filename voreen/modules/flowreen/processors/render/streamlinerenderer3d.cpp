@@ -31,8 +31,10 @@
 
 namespace voreen {
 
-    // TODO: Could be adjustable via Property ( debug ).
-    static const uint32_t GEOMETRY_TESSELATION = 16;
+// TODO: Could be adjustable via Property ( debug ).
+static const uint32_t GEOMETRY_TESSELATION = 12;
+
+std::string StreamlineRenderer3D::loggerCat_("flowreen.StreamlineRenderer3D");
 
 StreamlineRenderer3D::StreamlineRenderer3D()
     : RenderProcessor()
@@ -50,6 +52,8 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     , rotateAroundX_("rotationaroundx", "x-Axis Rotation (degrees)")
     , rotateAroundY_("rotationaroundy", "y-Axis Rotation (degrees)")
     , rotateAroundZ_("rotationaroundz", "z-Axis Rotation (degrees)")
+    , enableShading_("enableShading", "Enable Shading", true)
+    , enableMaximumIntensityProjection_("maximumIntensityProjection", "Enable Maximum Intensity Projection (MIP)", false)
         //must haves
     , streamlineShaderProp_("streamlineShaderProp", "Shader:","streamlinerenderer3d.frag","streamlinerenderer3d.vert",""/*"streamlinerenderer3d.geom"*/,Processor::INVALID_PROGRAM,Property::LOD_DEBUG)
     ,       requiresRecompileShader_(true)
@@ -98,6 +102,8 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     addProperty(colorRotationMatrix_);
         colorRotationMatrix_.setVisibleFlag(false);
         colorRotationMatrix_.setReadOnlyFlag(true);
+    //addProperty(enableShading_);
+    addProperty(enableMaximumIntensityProjection_);
 
         //must have
     addProperty(streamlineShaderProp_);
@@ -169,12 +175,27 @@ void StreamlineRenderer3D::process() {
             LERROR("Unknown Color Coding");
         }
 
+        // Our transfer function allows transparency, so we enable blending by default.
+        glEnable(GL_BLEND);
+
+        // In case of MIP rendering, we change the blend equation accordingly.
+        if(enableMaximumIntensityProjection_.get()) {
+            //glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
+            glBlendEquation(GL_MAX);
+        }
+        else {
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        }
+
         // Render every Mesh being created before.
         for(size_t i = 0; i < meshes_.size(); i++) {
             meshes_[i]->render();
         }
 
         // Restore state.
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFunc(GL_ONE, GL_ZERO);
+        glDisable(GL_BLEND);
         glLineWidth(1.0f);
         shader->deactivate();
         LGL_ERROR;
@@ -353,7 +374,7 @@ GlMeshGeometryUInt32Color* StreamlineRenderer3D::createTubeGeometry(const Stream
 
         tgt::vec3 color = element.velocity_;
         tgt::vec4 v(0.0f, 0.0f, 0.0f, 1.0f);
-        for (unsigned int i = 0; i < tesselation; i++) {
+        for (uint32_t i = 0; i < tesselation; i++) {
 
             // Calculate Vertex and add it to the mesh.
             float angle = angleStep * i;
@@ -382,15 +403,14 @@ GlMeshGeometryUInt32Color* StreamlineRenderer3D::createTubeGeometry(const Stream
 GlMeshGeometryUInt32Color* StreamlineRenderer3D::createArrowGeometry(const Streamline& streamline) const {
 
     GlMeshGeometryUInt32Color* mesh = new GlMeshGeometryUInt32Color();
-    mesh->setPrimitiveType(GL_TRIANGLES);
+    mesh->setPrimitiveType(GL_LINE_STRIP);
 
     // Define some constants for easier access.
     const uint32_t tesselation = GEOMETRY_TESSELATION;
     const float angleStep = (tgt::PIf * 2.0f) / tesselation;
 
-    // FIXME: radius and length not correct.
-    float radius = streamline.getFirstElement().radius_;
-    float length = streamline.getNumElements() * 0.5f;
+    float radius = streamline.getFirstElement().radius_; // FIXME: radius is only a rough approximation.
+    float length = streamline.getLength();
 
     // Calculate the number of arrows the bundle will be split into.
     const float desiredLengthOfArrow = std::min(radius * 4.0f, length);
@@ -421,7 +441,7 @@ GlMeshGeometryUInt32Color* StreamlineRenderer3D::createArrowGeometry(const Strea
 
         // Cylinder
         mesh->addVertex(VertexColor(centroid.getElementAt(k).position_, tgt::vec4(color, 1.0f)));
-        for (unsigned int i = 0; i < tesselation; i++) {
+        for (uint32_t i = 0; i < tesselation; i++) {
 
             // Calculate Vertex and add it to the mesh.
             float angle = angleStep * i;
@@ -463,7 +483,7 @@ GlMeshGeometryUInt32Color* StreamlineRenderer3D::createArrowGeometry(const Strea
         offset = static_cast<uint32_t>(mesh->getVertices().size());
         v = tgt::vec4(0.0f, 0.0f, lengthOfCylinder, 1.0f);
         mesh->addVertex(VertexColor((transformation * v).xyz(), tgt::vec4(color, 1.0f)));
-        for (unsigned int i = 0; i < tesselation; i++) {
+        for (uint32_t i = 0; i < tesselation; i++) {
 
             // Calculate Vertex and add it to the mesh.
             float angle = angleStep * i;

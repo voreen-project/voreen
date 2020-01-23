@@ -34,6 +34,7 @@ StreamlineBundleCreator::StreamlineBundleCreator()
     , streamlineInport_(Port::INPORT, "streamlineInport", "Streamlines Input")
     , streamlineBundleOutport_(Port::OUTPORT, "streamlineBundleOutport", "Streamline Bundle Output")
     , streamlineNoiseOutport_(Port::OUTPORT, "streamlineNoiseOutport", "Streamline Noise Output")
+    , enabled_("enabled", "Enabled", true)
     , maxAverageDistanceThresholdProp_("maxAverageDistanceThreshold", "Max. Average Distance Threshold (mm)", 1.0f, 0.0f, 100.0f)
     , minNumStreamlinesPerBundleProp_("minNumStreamlinesPerBundle", "Minimal number of Streamlines per Bundle (%)", 1.0f, 0.0f, 100.0f, Processor::INVALID_RESULT, NumericProperty<float>::STATIC, Property::LOD_ADVANCED)
     , resampleSizeProp_("resampleSize", "Streamline Resample Size", 20, 2, 100, Processor::INVALID_RESULT, NumericProperty<int>::STATIC, Property::LOD_ADVANCED)
@@ -41,7 +42,11 @@ StreamlineBundleCreator::StreamlineBundleCreator()
     addPort(streamlineInport_);
     addPort(streamlineBundleOutport_);
     addPort(streamlineNoiseOutport_);
-    
+
+    addProperty(enabled_);
+        enabled_.setGroupID("output");
+    setPropertyGroupGuiName("output", "Output");
+
         //streamline bundles
     addProperty(maxAverageDistanceThresholdProp_);
         maxAverageDistanceThresholdProp_.setTracking(false);
@@ -86,6 +91,12 @@ void StreamlineBundleCreator::adjustPropertiesToInput() {
 }
 
 StreamlineBundleCreatorInput StreamlineBundleCreator::prepareComputeInput() {
+
+    if(!enabled_.get()) {
+        streamlineBundleOutport_.setData(streamlineInport_.getData(), false);
+        streamlineNoiseOutport_.setData(nullptr);
+        throw InvalidInputException("", InvalidInputException::S_IGNORE);
+    }
 
     auto streamlines = streamlineInport_.getThreadSafeData();
     if(!streamlines) {

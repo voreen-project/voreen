@@ -210,14 +210,14 @@ StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
 
 StreamlineCreatorOutput StreamlineCreator::compute(StreamlineCreatorInput input, ProgressReporter& progressReporter) const {
 
-    const VolumeBase* flowVolume = input.flowVolume;
+    PortDataPointer<VolumeBase> flowVolume = std::move(input.flowVolume);
     VolumeRAMRepresentationLock representation(flowVolume);
     //const VolumeBase* seedMask_ = input.seedMask; // Currently not used.
     std::vector<tgt::vec3> seedPoints = std::move(input.seedPoints);
     std::unique_ptr<StreamlineListBase> output = std::move(input.output);
 
     // We use half the steps we had before.
-    tgt::vec3 stepSize = 0.5f * tgt::max(flowVolume->getSpacing()) / flowVolume->getSpacing();
+    tgt::vec3 stepSize = 0.5f * flowVolume->getSpacing() / tgt::max(flowVolume->getSpacing());
 
     IntegrationInput integrationInput {
         *representation,

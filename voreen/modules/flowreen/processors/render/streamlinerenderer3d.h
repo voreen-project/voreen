@@ -128,6 +128,8 @@ private:
     FloatOptionProperty rotateAroundX_;                 ///< rotate around x to get nice color coding
     FloatOptionProperty rotateAroundY_;                 ///< rotate around y to get nice color coding
     FloatOptionProperty rotateAroundZ_;                 ///< rotate around z to get nice color coding
+    BoolProperty enableShading_;                        ///< enables phong shading
+    BoolProperty enableMaximumIntensityProjection_;     ///< enables maximum intensity projection (MIP)
 
         //must haves
     ShaderProperty streamlineShaderProp_;               ///< used for rendering
@@ -138,6 +140,8 @@ private:
         //rendering
     std::vector<std::unique_ptr<GlMeshGeometryUInt32Color>> meshes_;   ///< all other meshes to be rendered
     bool requiresRebuild_;
+
+    static std::string loggerCat_;
 };
 
 }   // namespace

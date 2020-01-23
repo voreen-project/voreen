@@ -90,6 +90,8 @@ private:
     StreamlineListPort streamlineBundleOutport_;
     StreamlineListPort streamlineNoiseOutport_;
 
+    BoolProperty enabled_;
+
     //streamline bundle settings
     FloatProperty maxAverageDistanceThresholdProp_;         ///< distance threshold for the bundle algorithm
     FloatProperty minNumStreamlinesPerBundleProp_;          ///< bundle must contain more than this percentage of streamlines

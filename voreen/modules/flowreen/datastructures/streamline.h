@@ -97,6 +97,8 @@ public:
     //----------------
     /** Resamples this Streamline to a similar one consisting of the specified amount of elements. */
     Streamline resample(size_t samples) const;
+    /** Returns the length in world space. This value is calculated each call. */
+    float getLength() const;
 
     //----------------
     //  Storage

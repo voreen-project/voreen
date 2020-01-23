@@ -78,9 +78,9 @@ protected:
     virtual std::vector<std::reference_wrapper<Port>> getCriticalPorts();
 
     virtual void setDescriptions() {
-        setDescription("This processor is used to create streamlines from a vec3 float volume. The resulting streamlines can be visualized or modified " \
+        setDescription("This processor is used to create streamlines from a vec3 volume. The resulting streamlines can be visualized or modified " \
                         "by other processors of the <i>Flowreen</i> module.");
-        numSeedPoints_.setDescription("Can be used to determine the number of streamlines, which should be created. It can be used as a perfromance parameter.");
+        numSeedPoints_.setDescription("Can be used to determine the number of streamlines, which should be created. It can be used as a performance parameter.");
         seedTime_.setDescription("It is used as debug output to see the current generator. See the next description for more details.");
         streamlineLengthThresholdProp_.setDescription("Streamlines, which are to short will be discarded. Streamlines, which are to long, will be clipped "\
                                                       "to the maximum threshold.");
