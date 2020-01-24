@@ -6,11 +6,6 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="DynamicPythonProcessor" ref="ref5" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="-871.190795898" y="-73.290657043" />
                 </MetaItem>
@@ -28,9 +23,9 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="46" y="122" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="74.907730103" y="-85.847259521" z="64.795661926" />
+                            <position x="68.301498413" y="-41.079658508" z="125.10786438" />
                             <focus x="24.5" y="24.5" z="24.5" />
-                            <upVector x="-0.076258004" y="0.299328566" z="0.951097965" />
+                            <upVector x="-0.223160043" y="0.761807621" z="0.608151913" />
                             <trackball moveCenter="false">
                                 <center x="24.5" y="24.5" z="24.5" />
                             </trackball>
@@ -124,7 +119,7 @@
                                 <MetaItem name="FollowCamera" type="BoolMetaData" value="false" />
                                 <MetaItem name="UseBackHemisphere" type="BoolMetaData" value="false" />
                             </MetaData>
-                            <value x="24.579694748" y="22.096466064" z="26.501667023" w="1" />
+                            <value x="24.274139404" y="23.596021652" z="27.486940384" w="1" />
                             <Center x="24.5" y="24.5" z="24.5" />
                             <LightPos x="-0.990817606" y="1.147262454" z="2.737164497" w="0" />
                         </Property>
@@ -525,9 +520,9 @@
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="721" y="372" />
                             </MetaData>
-                            <position x="74.907730103" y="-85.847259521" z="64.795661926" />
+                            <position x="68.301498413" y="-41.079658508" z="125.10786438" />
                             <focus x="24.5" y="24.5" z="24.5" />
-                            <upVector x="-0.076257996" y="0.299328536" z="0.951097846" />
+                            <upVector x="-0.223160043" y="0.761807621" z="0.608151913" />
                             <trackball moveCenter="false">
                                 <center x="24.5" y="24.5" z="24.5" />
                             </trackball>
@@ -764,13 +759,13 @@ format = "float"
 volume = voreen.Volume(data=genData(), format=format, dimension=(dimX, dimY, dimZ))
 
 # Set data to port.
-voreen.setPortData("VolumePort-out (2)", volume);]]>
+voreen.setPortData("VolumePort-out (1)", volume);]]>
                             </source>
                         </Property>
                     </PriorityProperty>
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-514" y="-286" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="461" y="319" width="1087" height="632" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="437" y="274" width="1087" height="632" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="enabled" name="enabled" value="true" />
@@ -781,14 +776,14 @@ voreen.setPortData("VolumePort-out (2)", volume);]]>
                                 <item value="RenderPort-in" />
                                 <item value="RenderPort-out" />
                             </items>
-                            <instancesExt>
-                                <item itemId="1" instanceId="2" active="true" name="VolumePort-out (2)" />
-                            </instancesExt>
+                            <instances>
+                                <item itemId="1" instanceId="1" active="true" name="VolumePort-out (1)" />
+                            </instances>
                         </Property>
                     </Properties>
                     <Inports />
                     <Outports>
-                        <Port name="VolumePort-out (2)" direction="0" portID="VolumePort-out (2)" guiName="" allowMultipleConnections="true" invalidationLevel="0">
+                        <Port name="VolumePort-out (1)" direction="0" portID="VolumePort-out (1)" guiName="" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -841,19 +836,19 @@ voreen.setPortData("VolumePort-out (2)", volume);]]>
                     </Inport>
                 </Connection>
                 <Connection>
-                    <Outport name="VolumePort-out (2)">
-                        <Processor type="DynamicPythonProcessor" ref="ref5" />
-                    </Outport>
-                    <Inport name="volumehandle.volumehandle">
-                        <Processor type="SingleVolumeRaycaster" ref="ref0" />
-                    </Inport>
-                </Connection>
-                <Connection>
-                    <Outport name="VolumePort-out (2)">
+                    <Outport name="VolumePort-out (1)">
                         <Processor type="DynamicPythonProcessor" ref="ref5" />
                     </Outport>
                     <Inport name="volumehandle.volumehandle">
                         <Processor type="OptimizedProxyGeometry" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="VolumePort-out (1)">
+                        <Processor type="DynamicPythonProcessor" ref="ref5" />
+                    </Outport>
+                    <Inport name="volumehandle.volumehandle">
+                        <Processor type="SingleVolumeRaycaster" ref="ref0" />
                     </Inport>
                 </Connection>
             </Connections>
