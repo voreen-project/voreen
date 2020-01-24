@@ -37,6 +37,8 @@
 #include "voreen/core/properties/optionproperty.h"
 #include "voreen/core/properties/stringproperty.h"
 #include "voreen/core/properties/temppathproperty.h"
+#include "voreen/core/ports/geometryport.h"
+#include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 
 #include "modules/hdf5/io/hdf5filevolume.h"
 
@@ -79,6 +81,8 @@ struct LargeTestDataGeneratorInput {
     }
 };
 struct LargeTestDataGeneratorOutput {
+    std::unique_ptr<PointSegmentListGeometryVec3> foregroundLabels;
+    std::unique_ptr<PointSegmentListGeometryVec3> backgroundLabels;
     std::string outputVolumeFilePath;
 };
 
@@ -103,6 +107,8 @@ public:
 private:
     // Ports
     VolumePort outport_;
+    GeometryPort foregroundLabelsPort_;
+    GeometryPort backgroundLabelsPort_;
 
     // General properties
     TempPathProperty outputVolumeFilePath_;
