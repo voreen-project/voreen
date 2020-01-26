@@ -44,7 +44,7 @@ vec3 Spline::interpolateCurrent(float t, const vec3& previous,
             const vec3& current, const vec3& next, const vec3& afternext) const {
 
     if (t < 0.f || t > 1.f)
-        return vec3();
+        return vec3::zero;
 
 
     float fac1, fac2, fac3, fac4;
@@ -71,7 +71,7 @@ vec3 Spline::firstDeriveCurrent(float t, const vec3& previous,
             const vec3& current, const vec3& next, const vec3& afternext) const
 {
     if (t < 0.f || t > 1.f)
-        return vec3();
+        return vec3::zero;
 
     float fac1, fac2, fac3, fac4;
 
@@ -104,7 +104,7 @@ vec3 Spline::interpolate(float t, float total) const {
     // with less than 4 control-Points, we don't have engough information to form a B-Spline;
     // also, the running variable must not be smaller than zero or greater than the total-run-variable
     if (controlPoints_.size() < 4 || t < 0.f || t > total)
-        return vec3();
+        return vec3::zero;
 
     // This is the part of the whole 0-1-range that represents a single interpolation between two points.
     float piece = total / (controlPoints_.size() - 3);
@@ -127,7 +127,7 @@ vec3 Spline::interpolate(float t, float total) const {
     }
 
     tgtAssert( false, "The code should not run here.");
-    return vec3();
+    return vec3::zero;
 }
 
 /*
@@ -139,7 +139,7 @@ vec3 Spline::firstDerive(float t, float total) const {
     // with less than 4 control-Points, we don't have engough information to form an interpolation;
     // also, the running variable must not be smaller than zero or greater than the total-run-variable
     if (controlPoints_.size() < 4  || t < 0.f || t > total)
-        return vec3();
+        return vec3::zero;
 
     float piece = total / (controlPoints_.size() - 3);
 
@@ -157,7 +157,7 @@ vec3 Spline::firstDerive(float t, float total) const {
     }
 
     tgtAssert( false, "The code should not run here.");
-    return vec3();
+    return vec3::zero;
 }
 
 void Spline::setTau(float t) {

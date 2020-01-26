@@ -100,6 +100,9 @@ public:
 //---------------------------------------------------------------------------------------------
 template<typename U>
 Volume* VolumeOperatorGradient::apply(const VolumeBase* srcVolume, GradientType gt) {
+    // Ensure the volume data does not get deleted during calculation.
+    VolumeRAMRepresentationLock lock(srcVolume);
+
     switch(gt){
     case VOG_CENTRAL_DIFFERENCE:
         //case uint8_t

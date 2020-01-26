@@ -37,19 +37,23 @@
 #include "../volumefiltering/binarizationfilter.h"
 #include "../volumefiltering/binarymedianfilter.h"
 #include "../volumefiltering/gaussianfilter.h"
+#include "../volumefiltering/gradientfilter.h"
 #include "../volumefiltering/medianfilter.h"
 #include "../volumefiltering/morphologyfilter.h"
 #include "../volumefiltering/resamplefilter.h"
 #include "../volumefiltering/thresholdingfilter.h"
+#include "../volumefiltering/vorticityfilter.h"
 
 // Include their properties.
 #include "../volumefilterproperties/binarizationfilterproperties.h"
 #include "../volumefilterproperties/binarymedianfilterproperties.h"
 #include "../volumefilterproperties/gaussianfilterproperties.h"
+#include "../volumefilterproperties/gradientfilterproperties.h"
 #include "../volumefilterproperties/medianfilterproperties.h"
 #include "../volumefilterproperties/morphologyfilterproperties.h"
 #include "../volumefilterproperties/resamplefilterproperties.h"
 #include "../volumefilterproperties/thresholdingfilterproperties.h"
+#include "../volumefilterproperties/vorticityfilterproperties.h"
 
 namespace voreen {
 
@@ -82,10 +86,12 @@ VolumeFilterList::VolumeFilterList()
     addFilter(new BinarizationFilterProperties());
     addFilter(new BinaryMedianFilterProperties());
     addFilter(new GaussianFilterProperties());
+    addFilter(new GradientFilterProperties());
     addFilter(new MedianFilterProperties());
     addFilter(new MorphologyFilterProperties());
     addFilter(new ResampleFilterProperties());
     addFilter(new ThresholdingFilterProperties());
+    addFilter(new VorticityFilterProperties());
 
     // Technical stuff.
     addProperty(enabled_);
