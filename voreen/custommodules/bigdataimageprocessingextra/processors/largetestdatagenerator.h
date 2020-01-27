@@ -37,6 +37,7 @@
 #include "voreen/core/properties/optionproperty.h"
 #include "voreen/core/properties/stringproperty.h"
 #include "voreen/core/properties/temppathproperty.h"
+#include "voreen/core/properties/numeric/intervalproperty.h"
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 
@@ -54,36 +55,45 @@ struct LargeTestDataGeneratorInput {
     typedef std::mt19937 random_engine_type;
 
     Scenario scenario;
-    std::unique_ptr<HDF5FileVolume> outputVolume;
+    std::unique_ptr<HDF5FileVolume> outputVolumeNoisy;
+    std::unique_ptr<HDF5FileVolume> outputVolumeGT;
     random_engine_type randomEngine;
     float noiseRange;
+    tgt::ivec2 structureSizeRange;
 
     LargeTestDataGeneratorInput(
             Scenario scenario
-            , std::unique_ptr<HDF5FileVolume>&& pOutputVolume
+            , std::unique_ptr<HDF5FileVolume>&& outputVolumeNoisy
+            , std::unique_ptr<HDF5FileVolume>&& outputVolumeGT
             , random_engine_type randomEngine
             , float noiseRange
+            , tgt::ivec2 structureSizeRange
             )
         : scenario(scenario)
-        , outputVolume(std::move(pOutputVolume))
+        , outputVolumeNoisy(std::move(outputVolumeNoisy))
+        , outputVolumeGT(std::move(outputVolumeGT))
         , randomEngine(randomEngine)
         , noiseRange(noiseRange)
+        , structureSizeRange(structureSizeRange)
     {
     }
 
     LargeTestDataGeneratorInput(const LargeTestDataGeneratorInput&) = delete;
     LargeTestDataGeneratorInput(LargeTestDataGeneratorInput&& old)
         : scenario(old.scenario)
-        , outputVolume(old.outputVolume.release())
+        , outputVolumeNoisy(std::move(old.outputVolumeNoisy))
+        , outputVolumeGT(std::move(old.outputVolumeGT))
         , randomEngine(old.randomEngine)
         , noiseRange(old.noiseRange)
+        , structureSizeRange(old.structureSizeRange)
     {
     }
 };
 struct LargeTestDataGeneratorOutput {
     std::unique_ptr<PointSegmentListGeometryVec3> foregroundLabels;
     std::unique_ptr<PointSegmentListGeometryVec3> backgroundLabels;
-    std::string outputVolumeFilePath;
+    std::string outputVolumeNoisyFilePath;
+    std::string outputVolumeGTFilePath;
 };
 
 class LargeTestDataGenerator : public AsyncComputeProcessor<LargeTestDataGeneratorInput, LargeTestDataGeneratorOutput> {
@@ -106,13 +116,18 @@ public:
 
 private:
     // Ports
-    VolumePort outport_;
+    VolumePort outportNoisy_;
+    VolumePort outportGT_;
     GeometryPort foregroundLabelsPort_;
     GeometryPort backgroundLabelsPort_;
 
     // General properties
-    TempPathProperty outputVolumeFilePath_;
+    TempPathProperty outputVolumeNoisyFilePath_;
+    TempPathProperty outputVolumeGTFilePath_;
+    FloatProperty noiseLevel_;
+    IntProperty seed_;
     IntVec3Property volumeDimensions_;
+    IntIntervalProperty structureSizeRange_;
     OptionProperty<LargeTestDataGeneratorInput::Scenario> scenario_;
     static const std::string loggerCat_;
 
