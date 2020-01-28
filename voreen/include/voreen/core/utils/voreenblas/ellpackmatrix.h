@@ -129,7 +129,7 @@ void voreen::EllpackMatrix<T>::initializeBuffers() {
 
     tgtAssert(!M_ && !indices_, "Data buffers already initialized");
     tgtAssert(numRows_ > 0 && numCols_ > 0, "Invalid matrix dimensions");
-    tgtAssert(numColsPerRow_ > 0 && numColsPerRow_ <= numCols_, "Invalid column count");
+    tgtAssert(numColsPerRow_ > 0, "Invalid column count");
 
     try {
         M_ = new T[numRows_*numColsPerRow_];
