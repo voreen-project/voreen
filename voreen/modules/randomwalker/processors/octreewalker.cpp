@@ -58,7 +58,7 @@
 
 namespace voreen {
 
-#if defined(VRN_MODULE_OPENMP) && 1
+#if defined(VRN_MODULE_OPENMP) && 0
 #define VRN_OCTREEWALKER_USE_OMP
 #endif
 
@@ -446,14 +446,31 @@ struct BrickNeighborhood {
         //const tgt::ivec3 neighborhoodSize = tgt::ivec3(2);
         const tgt::ivec3 neighborhoodSize = brickBaseSize/8UL;
 
+        // Note: Here in and in other cases: We use `ceil` for the URB-Corner
+        // of brick bounding boxes because we must include "overhanging" bricks
+        // from lower levels. A minimal example with a volume of dimension 3
+        // and a brick size of 2:
+        //
+        // |. .|. _|
+        // | .   X |
+        //
+        // Without `ceil`, the root level voxel marked with X would not be
+        // processed.
+        // Afaik (this may be incorrect in general, but is at least true for
+        // the `VolumeOctreeLevelExtractor`), Voreen would not include X when
+        // rendering the octree, but we most still process it here, in order to
+        // avoid ignoring labels at the (URB) border of the volume.
         const tgt::ivec3 brickLlf(0);
-        const tgt::ivec3 brickUrb = tgt::round(voxelToBrick.transform(current.urb_));
+        const tgt::ivec3 brickUrb = tgt::ceil(voxelToBrick.transform(current.urb_));
+
+        tgtAssert(brickLlf == tgt::ivec3(tgt::round(voxelToBrick.transform(current.llf_))), "brickLLf should always be zero");
+        // .. as the translational part of voxelToBrick is equivalent to llf_ + something < 0.5
 
         const tgt::svec3 voxelLlf = tgt::max(tgt::vec3(0),         tgt::round(brickToVoxel.transform(brickLlf - neighborhoodSize)));
         const tgt::svec3 voxelUrb = tgt::min(tgt::vec3(volumeDim), tgt::round(brickToVoxel.transform(brickUrb + neighborhoodSize)));
 
         const tgt::ivec3 regionLlf = tgt::round(voxelToBrick.transform(voxelLlf));
-        const tgt::ivec3 regionUrb = tgt::round(voxelToBrick.transform(voxelUrb));
+        const tgt::ivec3 regionUrb = tgt::ceil(voxelToBrick.transform(voxelUrb));
 
         const tgt::svec3 regionDim = regionUrb - regionLlf;
 
@@ -559,6 +576,8 @@ public:
                             continue;
                         }
                         float& seedVal = seedBuffer_.voxel(point);
+                        minSeed_ = std::min(label, minSeed_);
+                        maxSeed_ = std::max(label, maxSeed_);
                         if (seedVal == UNLABELED) {
                             seedVal = label;
                             ++numSeeds_;
@@ -599,6 +618,8 @@ public:
                     float val = neighborhood.data_.voxel(seed);
                     seedVal = val;
                     ++numSeeds_;
+                    minSeed_ = std::min(val, minSeed_);
+                    maxSeed_ = std::max(val, maxSeed_);
                 }
             }
         };
@@ -653,10 +674,18 @@ public:
     uint64_t numConflicts() const {
         return numConflicts_;
     }
+    float minSeed() {
+        return minSeed_;
+    }
+    float maxSeed() {
+        return maxSeed_;
+    }
 
 private:
     VolumeAtomic<float> seedBuffer_;
     uint64_t numConflicts_;
+    float minSeed_;
+    float maxSeed_;
 };
 
 const float RandomWalkerSeedsBrick::CONFLICT = -2.0f;
@@ -764,7 +793,10 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
             tgt::svec3 seedBufferDimensions = seedsNeighborhood->data_.getDimensions();
             tgt::mat4 voxelToSeedTransform = seedsNeighborhood->voxelToNeighborhood();
 
-            if(canSkipChildren(seedsNeighborhood->min_, seedsNeighborhood->max_) && !parentHadSeedsConflicts) {
+            RandomWalkerSeedsBrick seeds(seedBufferDimensions, voxelToSeedTransform, foregroundSeeds, backgroundSeeds);
+            seeds.addNeighborhoodBorderSeeds(*seedsNeighborhood, volumeDim);
+
+            if(!parentHadSeedsConflicts && canSkipChildren(std::min(seedsNeighborhood->min_, seeds.minSeed()), std::max(seeds.maxSeed(), seedsNeighborhood->max_))) {
                 //LINFOC(OctreeWalker::loggerCat_, "skip block early");
                 stop = true;
                 avg = normToBrick(seedsNeighborhood->avg_);
@@ -772,12 +804,11 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
                 max = normToBrick(seedsNeighborhood->max_);
             }
 
-            RandomWalkerSeedsBrick seeds(seedBufferDimensions, voxelToSeedTransform, foregroundSeeds, backgroundSeeds);
-            seeds.addNeighborhoodBorderSeeds(*seedsNeighborhood, volumeDim);
             return seeds;
         } else {
-            tgt::svec3 seedBufferDimensions = outputNodeGeometry.voxelDimensions() / outputNodeGeometry.scale();
-            tgt::mat4 voxelToSeedTransform = tgt::mat4::createScale(tgt::vec3(1.0f / outputNodeGeometry.scale()));
+            tgt::mat4 voxelToSeedTransform = outputNodeGeometry.voxelToBrick();
+            // Note: For the reason to use `ceil` here see BrickNeighborhood::fromNode above.
+            tgt::svec3 seedBufferDimensions = tgt::ceil(voxelToSeedTransform.getRotationalPart().transform(outputNodeGeometry.voxelDimensions()));
             RandomWalkerSeedsBrick seeds(seedBufferDimensions, voxelToSeedTransform, foregroundSeeds, backgroundSeeds);
             return seeds;
         }
