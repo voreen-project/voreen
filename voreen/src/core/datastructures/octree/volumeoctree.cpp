@@ -1175,27 +1175,39 @@ void VolumeOctree::extractBrickFromTexture(const std::vector<const void*>& textu
         size_t brickLinearCoord = cubicCoordToLinear(brickVoxel, brickDim)*numChannels;
         tgtAssert(brickLinearCoord+numChannels-1 < brickBufferSize, "invalid brick linear coord");
         const tgt::svec3 textureCoord = brickVoxel+brickOffsetInTexture;
-        if (tgt::hand(tgt::lessThan(textureCoord, textureDim))) { //< brick voxel inside volume
-            size_t textureLinearCoord = cubicCoordToLinear(brickVoxel+brickOffsetInTexture, textureDim);
-            tgtAssert(textureLinearCoord < textureBufferSize, "invalid texture linear coord");
 
-            for (size_t channel=0; channel<numChannels; channel++) {
-                uint16_t value = convertVoxelValueToUInt16<T>(textureArray[channel][textureLinearCoord]);
+        tgt::svec3 clampedCoord = tgt::min(textureCoord, textureDim-tgt::svec3::one);
+        size_t textureLinearCoord = cubicCoordToLinear(clampedCoord, textureDim);
+        tgtAssert(textureLinearCoord < textureBufferSize, "invalid texture linear coord");
 
-                brickBuffer[brickLinearCoord + channel] = value;
+        for (size_t channel=0; channel<numChannels; channel++) {
+            uint16_t value = convertVoxelValueToUInt16<T>(textureArray[channel][textureLinearCoord]);
+
+            // Later, we half sample 8 bricks to create a single parent brick
+            // without paying any attention to whether the brick is (partially)
+            // inside the volume or not. Clamping here means that we implicitly
+            // fix this half-sampling mean even if part of the considered
+            // values are outside of the volume.
+            //
+            // (Previously we filled the brickbuffer with zeros when the brick
+            // was not in the volume, which resulted in reduced intensity at
+            // brick borders.)
+            //
+            // This is why: We copy the (possibly clamped value) from the
+            // texture in any case...
+            brickBuffer[brickLinearCoord + channel] = value;
+
+            // ... but only update avg/min/max values if the brick voxel is
+            // actually inside the volume.
+            if (tgt::hand(tgt::lessThan(textureCoord, textureDim))) { //< brick voxel inside volume
                 avgValues64[channel] += value;
                 minValues[channel] = std::min(minValues[channel], value);
                 maxValues[channel] = std::max(maxValues[channel], value);
 
                 //histogramArray[channel]->increaseBucket(value >> 4); // for 4096 buckets (12 bit)
                 histograms[channel][value]++;
+                numSignificantBrickVoxels++;
             }
-
-            numSignificantBrickVoxels++;
-        }
-        else { //< brick voxel outside volume
-            for (size_t channel=0; channel<numChannels; channel++)
-                brickBuffer[brickLinearCoord + channel] = 0;
         }
     }
 
@@ -1364,6 +1376,9 @@ void VolumeOctree::halfSampleBrick(const uint16_t* brick, const svec3& brickDim,
     const size_t numChannels = getNumChannels();
     const svec3 halfDim = brickDim / svec3(2);
 
+    // Note: Blindly half-sampling here is only okay because we initially
+    // filled bricks with a clamping strategy. See
+    // `VolumeOctree::extractBrickFromTexture`.
     VRN_FOR_EACH_VOXEL(halfPos, svec3::zero, halfDim) {
         svec3 pos = halfPos*svec3(2);
         for (size_t channel=0; channel<numChannels; channel++) {
