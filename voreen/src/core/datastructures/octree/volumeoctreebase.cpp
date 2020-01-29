@@ -175,7 +175,7 @@ tgt::svec3 VolumeOctreeNodeLocation::voxelDimensions() const {
 }
 
 tgt::svec3 VolumeOctreeNodeLocation::brickDimensions() const {
-    return voxelDimensions() / scale();
+    return tgt::ceil(tgt::vec3(voxelDimensions()) / tgt::vec3(scale()));
 }
 
 size_t VolumeOctreeNodeLocation::scale() const {
