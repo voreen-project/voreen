@@ -182,6 +182,12 @@ struct Balls {
         }
         return ret > 0;
     }
+    tgt::ivec3 center(size_t i) {
+        return center_[i];
+    }
+    int radius(size_t i) {
+        return radius_[i];
+    }
 
 private:
     std::vector<tgt::ivec3> center_;
@@ -205,11 +211,11 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
         case LargeTestDataGeneratorInput::CELLS: {
             float a = minRadius;
             float b = maxRadius;
-            //if(a == b) {
-            //    elementVolumeEstimate = a;
-            //} else {
+            if(a == b) {
+                elementVolumeEstimate = a;
+            } else {
                 elementVolumeEstimate = tgt::round(tgt::PIf*(b*b*b*b-a*a*a*a)/(3 * (b - a)));
-            //}
+            }
             break;
         }
         case LargeTestDataGeneratorInput::VESSELS: {
@@ -248,23 +254,30 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
 
     numObjects += balls.size();
 
-    int max_tries = 10000;
+    int max_tries = 10;
     int tries = max_tries;
     int i=0;
+    std::uniform_int_distribution<> indexDistr(0, balls.size());
     for(; i<numObjects && tries > 0;) {
-        tgt::ivec3 p(xDistr(input.randomEngine), yDistr(input.randomEngine), zDistr(input.randomEngine));
+        auto b1 = balls.center(indexDistr(input.randomEngine));
+        auto b2 = balls.center(indexDistr(input.randomEngine));
 
-        if(!balls.inside(p)) {
-            std::vector<tgt::vec3> segment;
-            segment.push_back(p);
-            segment.push_back(tgt::vec3(p)+tgt::vec3(0.001));
-            backgroundLabels->addSegment(segment);
-            ++i;
-
-            tries = max_tries;
-        } else {
-            tries--;
+        tgt::ivec3 p = (b1 + b2)/2;
+        if(balls.inside(p)) {
+            p = tgt::ivec3(xDistr(input.randomEngine), yDistr(input.randomEngine), zDistr(input.randomEngine));
         }
+        if(balls.inside(p)) {
+            tries--;
+            continue;
+        }
+
+        std::vector<tgt::vec3> segment;
+        segment.push_back(p);
+        segment.push_back(tgt::vec3(p)+tgt::vec3(0.001));
+        backgroundLabels->addSegment(segment);
+        ++i;
+
+        tries = max_tries;
     }
 
     if(tries == 0) {
