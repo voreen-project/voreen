@@ -470,7 +470,7 @@ struct BrickNeighborhood {
         const tgt::svec3 regionDim = tgt::ceil(regionUrb - regionLlf);
         const tgt::svec3 brickDim = tgt::ceil(voxelToBrick.getRotationalPart().transform(current.urb_ - current.llf_));
         const tgt::svec3 neighborhoodOffset = tgt::round(voxelToBrick.getRotationalPart().transform(tgt::vec3(current.llf_) - voxelLlf));
-        tgtAssert(tgt::hand(tgt::lessThanEqual(brickDim+neighborhoodOffset, regionDim)), "foo");
+        tgtAssert(tgt::hand(tgt::lessThanEqual(brickDim+neighborhoodOffset, regionDim)), "Center brick region with offset should never be larger than the entire region.");
 
         VolumeAtomic<float> output(regionDim);
 
@@ -524,6 +524,7 @@ struct BrickNeighborhood {
                     tgt::svec3 samplePos = tgt::round(bufferToSampleBrick.transform(point));
                     samplePos = tgt::clamp(samplePos, tgt::svec3(0), node.location().brickDimensions() - tgt::svec3(1));
                     float val = brick.getVoxelNormalized(samplePos);
+
                     output.setVoxelNormalized(val, point);
                     min = std::min(val, min);
                     max = std::max(val, max);
@@ -601,11 +602,9 @@ public:
     }
     RandomWalkerSeedsBrick(RandomWalkerSeedsBrick&& other) = default;
 
-    void addNeighborhoodBorderSeeds(const BrickNeighborhood& neighborhood, tgt::svec3 volumeDimensions) {
+    void addNeighborhoodBorderSeeds(const BrickNeighborhood& neighborhood) {
         tgtAssert(neighborhood.data_.getDimensions() == neighborhood.dimensions_, "Invalid buffer dimensions");
 
-        tgt::ivec3 volumeLlfSeeds = tgt::round(neighborhood.voxelToNeighborhood().transform(tgt::vec3(0.0)));
-        tgt::ivec3 volumeUrbSeeds = tgt::round(neighborhood.voxelToNeighborhood().transform(volumeDimensions));
         auto collectLabelsFromNeighbor = [&] (size_t dim, size_t sliceIndex) {
             tgt::svec3 begin(0);
             tgt::svec3 end(neighborhood.dimensions_);
@@ -613,8 +612,12 @@ public:
             begin[dim] = sliceIndex;
             end[dim] = sliceIndex+1;
 
-            // Do not collect parent level border labels at the border of the volume. There is no additional information in this case.
-            if(begin[dim] == volumeLlfSeeds[dim] || end[dim] == volumeUrbSeeds[dim]) {
+            // Do not collect parent level border labels at the border of the
+            // volume. There is no additional information in this case.
+            //
+            // We are at the border iff their is no neighborhood around the centerbrick,
+            // i.e., if the center brick llf/urb is at 0/neighborhood dimensions
+            if(begin[dim] == neighborhood.centerBrickLlf_[dim] || end[dim] == neighborhood.centerBrickUrb_[dim]) {
                 return;
             }
 
@@ -788,7 +791,6 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
 
     const OctreeBrickPoolManagerBase& inputPoolManager = *input.octree_.getBrickPoolManager();
     const tgt::svec3 brickDataSize = input.octree_.getBrickDim();
-    const tgt::svec3 volumeDim = input.octree_.getDimensions();
 
     boost::optional<BrickNeighborhood> seedsNeighborhood = boost::none;
 
@@ -800,7 +802,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
             tgt::mat4 voxelToSeedTransform = seedsNeighborhood->voxelToNeighborhood();
 
             RandomWalkerSeedsBrick seeds(seedBufferDimensions, voxelToSeedTransform, foregroundSeeds, backgroundSeeds);
-            seeds.addNeighborhoodBorderSeeds(*seedsNeighborhood, volumeDim);
+            seeds.addNeighborhoodBorderSeeds(*seedsNeighborhood);
 
             if(!parentHadSeedsConflicts && canSkipChildren(std::min(seedsNeighborhood->min_, seeds.minSeed()), std::max(seeds.maxSeed(), seedsNeighborhood->max_))) {
                 //LINFOC(OctreeWalker::loggerCat_, "skip block early");
