@@ -429,7 +429,7 @@ struct BrickNeighborhood {
 
     VolumeAtomic<float> data_;
     tgt::svec3 centerBrickLlf_; // In coordinate system ...
-    tgt::svec3 centerBrickUrb_; // ... of seed buffer
+    tgt::svec3 centerBrickUrb_; // ... of neighborhood buffer
     tgt::svec3 dimensions_;
     tgt::mat4 voxelToCenterBrick_;
     float min_;
@@ -444,7 +444,14 @@ struct BrickNeighborhood {
 
         //const tgt::ivec3 neighborhoodSize = brickBaseSize;
         //const tgt::ivec3 neighborhoodSize = tgt::ivec3(2);
-        const tgt::ivec3 neighborhoodSize = brickBaseSize/8UL;
+        const tgt::vec3 neighborhoodSize = brickBaseSize/8UL;
+        const tgt::vec3 neighborhoodSizeGlobal = brickToVoxel.getRotationalPart().transform(neighborhoodSize);
+
+        const tgt::vec3 voxelLlf = tgt::max(tgt::vec3(0.0),         tgt::vec3(current.llf_) - neighborhoodSizeGlobal);
+        const tgt::vec3 voxelUrb = tgt::min(tgt::vec3(volumeDim), tgt::vec3(current.urb_) + neighborhoodSizeGlobal);
+
+        const tgt::vec3 regionLlf = voxelToBrick.transform(voxelLlf);
+        const tgt::vec3 regionUrb = voxelToBrick.transform(voxelUrb);
 
         // Note: Here in and in other cases: We use `ceil` for the URB-Corner
         // of brick bounding boxes because we must include "overhanging" bricks
@@ -460,19 +467,10 @@ struct BrickNeighborhood {
         // the `VolumeOctreeLevelExtractor`), Voreen would not include X when
         // rendering the octree, but we most still process it here, in order to
         // avoid ignoring labels at the (URB) border of the volume.
-        const tgt::ivec3 brickLlf(0);
-        const tgt::ivec3 brickUrb = tgt::ceil(voxelToBrick.transform(current.urb_));
-
-        tgtAssert(brickLlf == tgt::ivec3(tgt::round(voxelToBrick.transform(current.llf_))), "brickLLf should always be zero");
-        // .. as the translational part of voxelToBrick is equivalent to llf_ + something < 0.5
-
-        const tgt::svec3 voxelLlf = tgt::max(tgt::vec3(0),         tgt::round(brickToVoxel.transform(brickLlf - neighborhoodSize)));
-        const tgt::svec3 voxelUrb = tgt::min(tgt::vec3(volumeDim), tgt::round(brickToVoxel.transform(brickUrb + neighborhoodSize)));
-
-        const tgt::ivec3 regionLlf = tgt::round(voxelToBrick.transform(voxelLlf));
-        const tgt::ivec3 regionUrb = tgt::ceil(voxelToBrick.transform(voxelUrb));
-
-        const tgt::svec3 regionDim = regionUrb - regionLlf;
+        const tgt::svec3 regionDim = tgt::ceil(regionUrb - regionLlf);
+        const tgt::svec3 brickDim = tgt::ceil(voxelToBrick.getRotationalPart().transform(current.urb_ - current.llf_));
+        const tgt::svec3 neighborhoodOffset = tgt::round(voxelToBrick.getRotationalPart().transform(tgt::vec3(current.llf_) - voxelLlf));
+        tgtAssert(tgt::hand(tgt::lessThanEqual(brickDim+neighborhoodOffset, regionDim)), "foo");
 
         VolumeAtomic<float> output(regionDim);
 
@@ -480,44 +478,53 @@ struct BrickNeighborhood {
         float max = -std::numeric_limits<float>::infinity();
         float sum = 0.0f;
 
+        // In output buffer space
+        const tgt::svec3 regionBegin(0);
+        const tgt::svec3 regionEnd = regionDim;
+        const tgt::svec3 centerBegin = neighborhoodOffset;
+        const tgt::svec3 centerEnd = neighborhoodOffset+brickDim;
+
         VRN_FOR_EACH_VOXEL(blockIndex, tgt::svec3(0), tgt::svec3(3)) {
-            tgt::ivec3 blockLlf;
-            tgt::ivec3 blockUrb;
+            tgt::svec3 blockBegin;
+            tgt::svec3 blockEnd;
             for(int dim=0; dim<3; ++dim) {
                 switch(blockIndex[dim]) {
                     case 0: {
-                        blockLlf[dim] = regionLlf[dim];
-                        blockUrb[dim] = brickLlf[dim];
+                        blockBegin[dim] = regionBegin[dim];
+                        blockEnd[dim] = centerBegin[dim];
                         break;
                     }
                     case 1: {
-                        blockLlf[dim] = brickLlf[dim];
-                        blockUrb[dim] = brickUrb[dim];
+                        blockBegin[dim] = centerBegin[dim];
+                        blockEnd[dim] = centerEnd[dim];
                         break;
                     }
                     case 2: {
-                        blockLlf[dim] = brickUrb[dim];
-                        blockUrb[dim] = regionUrb[dim];
+                        blockBegin[dim] = centerEnd[dim];
+                        blockEnd[dim] = regionEnd[dim];
                         break;
                     }
                 }
             }
-            tgt::svec3 blockDimensions = blockUrb - blockLlf;
+            tgt::svec3 blockDimensions = blockEnd - blockBegin;
             if(tgt::hor(tgt::equal(blockDimensions, tgt::svec3(0)))) {
                 continue;
             }
-            tgt::svec3 samplePoint = tgt::round(brickToVoxel.transform(blockLlf));
+
+            tgt::mat4 bufferToBrick = tgt::mat4::createTranslation(-tgt::vec3(centerBegin));
+
+            tgt::mat4 bufferToVoxel = brickToVoxel * bufferToBrick;
+            tgt::svec3 samplePoint = tgt::round(bufferToVoxel.transform(blockBegin));
             auto node = root.findChildNode(samplePoint, brickBaseSize, sampleLevel);
             if(node.node().hasBrick()) {
                 BrickPoolBrickConst brick(node.node().getBrickAddress(), brickBaseSize, brickPoolManager);
 
-                tgt::mat4 centerToSampleBrick = node.location().voxelToBrick() * brickToVoxel;
-                VRN_FOR_EACH_VOXEL(point, blockLlf, blockUrb) {
-                    tgt::svec3 samplePos = tgt::round(centerToSampleBrick.transform(tgt::vec3(point)));
+                tgt::mat4 bufferToSampleBrick = node.location().voxelToBrick() * bufferToVoxel;
+                VRN_FOR_EACH_VOXEL(point, blockBegin, blockEnd) {
+                    tgt::svec3 samplePos = tgt::round(bufferToSampleBrick.transform(point));
                     samplePos = tgt::clamp(samplePos, tgt::svec3(0), node.location().brickDimensions() - tgt::svec3(1));
                     float val = brick.getVoxelNormalized(samplePos);
-                    tgt::svec3 neighborhoodBufferPos = point - regionLlf;
-                    output.setVoxelNormalized(val, neighborhoodBufferPos);
+                    output.setVoxelNormalized(val, point);
                     min = std::min(val, min);
                     max = std::max(val, max);
                     sum += val;
@@ -526,18 +533,17 @@ struct BrickNeighborhood {
                 float val = static_cast<float>(node.node().getAvgValue())/0xffff;
                 min = std::min(val, min);
                 max = std::max(val, max);
-                sum += val * tgt::hmul(blockUrb - blockLlf);
-                VRN_FOR_EACH_VOXEL(point, blockLlf, blockUrb) {
-                    tgt::svec3 neighborhoodBufferPos = point - regionLlf;
-                    output.setVoxelNormalized(val, neighborhoodBufferPos);
+                sum += val * tgt::hmul(blockEnd - blockBegin);
+                VRN_FOR_EACH_VOXEL(point, blockBegin, blockEnd) {
+                    output.setVoxelNormalized(val, point);
                 }
             }
         }
         float avg = sum / output.getNumVoxels();
         return BrickNeighborhood {
             std::move(output),
-            -regionLlf,
-            -regionLlf+brickUrb,
+            centerBegin,
+            centerEnd,
             regionDim,
             voxelToBrick,
             min,
