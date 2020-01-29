@@ -447,7 +447,7 @@ VolumeRAM* VolumeOctree::createVolume(size_t level /*= 0*/, clock_t timeLimit /*
     tgt::Stopwatch runtimeWatch;
     runtimeWatch.start();
 
-    svec3 levelVolumeDim = getVolumeDim() / svec3(1 << (level));
+    svec3 levelVolumeDim = tgt::ceil(tgt::vec3(getVolumeDim()) / vec3(1 << (level)));
     VolumeRAM* levelVolumeRam = 0;
     try {
         switch (getNumChannels()) {
