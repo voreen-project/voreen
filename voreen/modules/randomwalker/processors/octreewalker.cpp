@@ -58,7 +58,7 @@
 
 namespace voreen {
 
-#if defined(VRN_MODULE_OPENMP) && 0
+#if defined(VRN_MODULE_OPENMP) && 1
 #define VRN_OCTREEWALKER_USE_OMP
 #endif
 
