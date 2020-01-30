@@ -58,6 +58,7 @@ LargeTestDataGenerator::LargeTestDataGenerator()
     , volumeDimensions_("volumeDimensions", "Volume Dimensions", tgt::ivec3(2), tgt::ivec3(2), tgt::ivec3(10000))
     , structureSizeRange_("structureSizeRange", "Structure Size", 1, 1, 10000)
     , noiseLevel_("noiseLevel", "Noise Level", 0.01, 0.0, 1.0)
+    , density_("density", "Object Density", 0.1, 0.0, 1.0)
     , seed_("seed", "RNG Seed", 0, 0, std::numeric_limits<int>::max())
     , outputVolumeNoisyFilePath_("outputVolumeFilePath", "Volume Noisy Output", "Path", "", "HDF5 (*.h5)", FileDialogProperty::SAVE_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , outputVolumeGTFilePath_("outputVolumeFilePathgt", "GT Volume Output", "Path", "", "HDF5 (*.h5)", FileDialogProperty::SAVE_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT)
@@ -77,6 +78,8 @@ LargeTestDataGenerator::LargeTestDataGenerator()
         structureSizeRange_.setMaxValue(tgt::min(volumeDimensions_.get()));
     addProperty(noiseLevel_);
         noiseLevel_.setTracking(false);
+    addProperty(density_);
+        density_.setTracking(false);
     addProperty(seed_);
         seed_.setTracking(false);
     addProperty(scenario_);
@@ -142,6 +145,7 @@ LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
         std::move(outputVolumeGT),
         randomEngine,
         noiseRange,
+        density_.get(),
         structureSizeRange_.get()
     );
 }
@@ -229,7 +233,7 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
     }
 
     int totalVolume = tgt::hmul(dim);
-    int numElements = std::max(1, totalVolume/elementVolumeEstimate/10);
+    int numElements = std::round(totalVolume/elementVolumeEstimate * input.density);
 
     LINFO("Placing " << numElements << " Elements");
 
