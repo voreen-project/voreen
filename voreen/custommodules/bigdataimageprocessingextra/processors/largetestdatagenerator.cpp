@@ -279,8 +279,26 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
         segment.push_back(p);
         segment.push_back(tgt::vec3(p)+tgt::vec3(0.001));
         backgroundLabels->addSegment(segment);
-        ++i;
 
+        for (int wallDim : std::array<int, 3> {0, 1, 2}) {
+            tgt::ivec3 wall = b1;
+
+            if(b1[wallDim] < dim[wallDim]/2) {
+                wall[wallDim] = 0;
+            } else {
+                wall[wallDim] = dim[wallDim];
+            }
+
+            tgt::ivec3 p2 = (b1 + wall)/2;
+            if(!balls.inside(p2)) {
+                std::vector<tgt::vec3> segment;
+                segment.push_back(p2);
+                segment.push_back(tgt::vec3(p2)+tgt::vec3(0.001));
+                backgroundLabels->addSegment(segment);
+            }
+        }
+
+        ++i;
         tries = max_tries;
     }
 
