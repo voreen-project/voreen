@@ -110,7 +110,6 @@ private:
     GlMeshGeometryUInt32Color* createLineGeometry(const std::vector<Streamline>& streamlines);
     GlMeshGeometryUInt32Color* createTubeGeometry(const Streamline& streamline) const;
     GlMeshGeometryUInt32Color* createArrowGeometry(const Streamline& streamline) const;
-    tgt::mat4 createTransformationMatrix(const tgt::vec3& position, const tgt::vec3& velocity) const;
 
     //------------------
     //  Members
@@ -119,9 +118,9 @@ private:
     StreamlineListPort streamlineInport_;
     RenderPort imgOutport_;
         //style
-    OptionProperty<StreamlineStyle> streamlineStyleProp_;                ///< used to change streamline representations
+    OptionProperty<StreamlineStyle> streamlineStyle_;   ///< used to change streamline representations
         //color
-    OptionProperty<StreamlineColorCoding> colorProp_;   ///< color encoding
+    OptionProperty<StreamlineColorCoding> color_;       ///< color encoding
     TransFunc1DKeysProperty tfProp_;                    ///< tf for velocity color coding
     std::unique_ptr<VolumeBase> tfVolume_;              ///< volume for tf fit to data
     FloatMat4Property colorRotationMatrix_;             ///< rotation matrix for the direction encoding color
@@ -132,9 +131,9 @@ private:
     BoolProperty enableMaximumIntensityProjection_;     ///< enables maximum intensity projection (MIP)
 
         //must haves
-    ShaderProperty streamlineShaderProp_;               ///< used for rendering
+    ShaderProperty streamlineShader_;                   ///< used for rendering
     bool requiresRecompileShader_;
-    CameraProperty cameraProp_;                         ///< the camera
+    CameraProperty camera_;                             ///< the camera
     CameraInteractionHandler* cameraHandler_;           ///< handler to allow navigation
 
         //rendering

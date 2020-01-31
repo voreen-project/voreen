@@ -45,7 +45,6 @@ namespace voreen {
  * A streamline consists of multiple StreamlineElements each storing a position and the velocity at this position.
  */
 class VRN_CORE_API Streamline : public Serializable {
-    friend class StreamlineList;
 public:
     /**
      * A streamline consists of a vector of these elements.

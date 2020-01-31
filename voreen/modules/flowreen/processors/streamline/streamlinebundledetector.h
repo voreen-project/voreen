@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_STREAMLINEBUNDLECREATOR_H
-#define VRN_STREAMLINEBUNDLECREATOR_H
+#ifndef VRN_STREAMLINEBUNDLEDETECTOR_H
+#define VRN_STREAMLINEBUNDLEDETECTOR_H
 
 #include "voreen/core/processors/asynccomputeprocessor.h"
 
@@ -37,30 +37,30 @@
 
 namespace voreen {
 
-struct StreamlineBundleCreatorInput {
+struct StreamlineBundleDetectorInput {
     PortDataPointer<StreamlineListBase> streamlines;
     int resampleSize;
     float distanceThreshold;
     float minNumStreamlinesThreshold;
 };
 
-struct StreamlineBundleCreatorOutput {
+struct StreamlineBundleDetectorOutput {
     std::unique_ptr<StreamlineListBase> streamlineBundles;
     std::unique_ptr<StreamlineListBase> streamlineNoise;
 };
 
 /**
-* This processor is used to create streamline bundles from a list of streamlines.
+* This processor is used to detect streamline bundles from a list of streamlines.
 * It can be used with the StreamlineRenderer3D.
 */
-class VRN_CORE_API StreamlineBundleCreator : public AsyncComputeProcessor<StreamlineBundleCreatorInput, StreamlineBundleCreatorOutput> {
+class VRN_CORE_API StreamlineBundleDetector : public AsyncComputeProcessor<StreamlineBundleDetectorInput, StreamlineBundleDetectorOutput> {
 public:
-    StreamlineBundleCreator();
+    StreamlineBundleDetector();
 
-    virtual Processor* create() const { return new StreamlineBundleCreator(); }
+    virtual Processor* create() const { return new StreamlineBundleDetector(); }
 
     virtual std::string getCategory() const { return "Streamline Processing"; }
-    virtual std::string getClassName() const { return "StreamlineBundleCreator"; }
+    virtual std::string getClassName() const { return "StreamlineBundleDetector"; }
     virtual Processor::CodeState getCodeState() const { return CODE_STATE_STABLE; }
 
     virtual ComputeInput prepareComputeInput();
@@ -96,6 +96,8 @@ private:
     FloatProperty maxAverageDistanceThresholdProp_;         ///< distance threshold for the bundle algorithm
     FloatProperty minNumStreamlinesPerBundleProp_;          ///< bundle must contain more than this percentage of streamlines
     IntProperty resampleSizeProp_;                          ///< streamlines are resampled to this value
+
+    static const std::string loggerCat_;
 };
 
 }   // namespace

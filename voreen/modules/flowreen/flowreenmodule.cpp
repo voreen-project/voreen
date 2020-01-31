@@ -30,7 +30,8 @@
 #include "processors/geometry/streamlinetogeometry.h"
 #include "processors/render/flowdirectionoverlay.h"
 #include "processors/render/streamlinerenderer3d.h"
-#include "processors/streamline/streamlinebundlecreator.h"
+#include "processors/streamline/pathlinecreator.h"
+#include "modules/flowreen/processors/streamline/streamlinebundledetector.h"
 #include "processors/streamline/streamlinecombine.h"
 #include "processors/streamline/streamlinecreator.h"
 #include "processors/streamline/streamlinerotation.h"
@@ -50,7 +51,8 @@ FlowreenModule::FlowreenModule(const std::string& modulePath)
 
     // processors
     registerSerializableType(new FlowDirectionOverlay());
-    registerSerializableType(new StreamlineBundleCreator());
+    registerSerializableType(new PathlineCreator());
+    registerSerializableType(new StreamlineBundleDetector());
     registerSerializableType(new StreamlineCombine());
     registerSerializableType(new StreamlineCreator());
     registerSerializableType(new StreamlineRenderer3D());

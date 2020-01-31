@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2020 University of Muenster, Germany,                        *
+ * Copyright (C) 2005-2019 University of Muenster, Germany,                        *
  * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_STREAMLINECREATOR_H
-#define VRN_STREAMLINECREATOR_H
+#ifndef VRN_PATHLINECREATOR_H
+#define VRN_PATHLINECREATOR_H
 
 #include "voreen/core/processors/asynccomputeprocessor.h"
 
@@ -38,35 +38,38 @@
 
 namespace voreen {
 
-class SpatialSampler;
+class SpatioTemporalSampler;
 
-struct StreamlineCreatorInput {
-    tgt::svec2 streamlineLengthThreshold;
+struct PathlineCreatorInput {
+    tgt::svec2 pathlineLengthThreshold;
     tgt::vec2 absoluteMagnitudeThreshold;
     float stopIntegrationAngleThreshold;
+    float velocityUnitConversion;
+    float temporalResolution;
+    int temporalIntegrationSteps;
     VolumeRAM::Filter filterMode;
-    PortDataPointer<VolumeBase> flowVolume;
+    PortDataPointer<VolumeList> flowVolumes;
     PortDataPointer<VolumeBase> seedMask; // Might be used later on to restrict integration.
-    std::vector<tgt::vec3> seedPoints;
+    std::list<Streamline> pathlines;
     std::unique_ptr<StreamlineListBase> output;
 };
 
-struct StreamlineCreatorOutput {
-    std::unique_ptr<StreamlineListBase> streamlines;
+struct PathlineCreatorOutput {
+    std::unique_ptr<StreamlineListBase> pathlines;
 };
 
 /**
- * This processor is used to create streamlines from a vec3 volume.
+ * This processor is used to create pathlines from a vec3 volume.
  * It can be used with the StreamlineRenderer3D. At the moment only RAM volumes are supported.
  */
-class VRN_CORE_API StreamlineCreator : public AsyncComputeProcessor<StreamlineCreatorInput, StreamlineCreatorOutput> {
+class VRN_CORE_API PathlineCreator : public AsyncComputeProcessor<PathlineCreatorInput, PathlineCreatorOutput> {
 public:
-    StreamlineCreator();
+    PathlineCreator();
 
-    virtual Processor* create() const { return new StreamlineCreator(); }
+    virtual Processor* create() const { return new PathlineCreator(); }
 
-    virtual std::string getCategory() const { return "Streamline Processing"; }
-    virtual std::string getClassName() const { return "StreamlineCreator"; }
+    virtual std::string getCategory() const { return "Pathline Processing"; }
+    virtual std::string getClassName() const { return "PathlineCreator"; }
     virtual Processor::CodeState getCodeState() const { return CODE_STATE_STABLE; }
 
     virtual ComputeInput prepareComputeInput();
@@ -80,48 +83,51 @@ protected:
     virtual std::vector<std::reference_wrapper<Port>> getCriticalPorts();
 
     virtual void setDescriptions() {
-        setDescription("This processor is used to create streamlines from a vec3 volume. The resulting streamlines can be visualized or modified " \
-                        "by other processors of the <i>Flowreen</i> module.");
-        numSeedPoints_.setDescription("Can be used to determine the number of streamlines, which should be created. It can be used as a performance parameter.");
+        setDescription("This processor is used to create pathlines from a sequence of vec3 volume. The resulting pathlines can be visualized or modified " \
+                    "by other processors of the <i>Flowreen</i> module.");
+        numSeedPoints_.setDescription("Can be used to determine the number of pathlines, which should be created. It can be used as a perfromance parameter.");
         seedTime_.setDescription("It is used as debug output to see the current generator. See the next description for more details.");
-        streamlineLengthThresholdProp_.setDescription("Streamlines, which are to short will be discarded. Streamlines, which are to long, will be clipped "\
-                                                      "to the maximum threshold.");
-        absoluteMagnitudeThresholdProp_.setDescription("Flow data points outside the threshold intervall will not be used for streamline construction.");
-        relativeMagnitudeThresholdProp_.setDescription("Can be used to adjust the absolut magnitude correctly.");
+        pathlineLengthThreshold_.setDescription("Pathlines, which are to short will be discarded. Pathlines, which are to long, will be clipped "\
+                                                  "to the maximum threshold.");
+        absoluteMagnitudeThreshold_.setDescription("Flow data points outside the threshold intervall will not be used for pathline construction.");
+        relativeMagnitudeThreshold_.setDescription("Can be used to adjust the absolut magnitude correctly.");
     }
 
 private:
 
     struct IntegrationInput {
-        tgt::vec3 dimensions;
-        tgt::vec3 stepSize;
-        tgt::mat4 voxelToWorldMatrix;
-        tgt::ivec2 streamlineLengthThreshold;
+        float stepSize;
+        tgt::Bounds bounds;
         tgt::vec2 absoluteMagnitudeThreshold;
         float stopIntegrationAngleThreshold;
     };
 
-    /** Adjusts the relative threshold according to the absolute one. */
+    /// Adjusts the relative threshold according to the absolute one.
     void adjustRelativeThreshold();
 
-    Streamline integrateStreamline(const tgt::vec3& start, const SpatialSampler& sampler, const IntegrationInput& input) const;
+    /// Perform a single integration step for the specified pathline.
+    bool integrationStep(Streamline& pathline, const SpatioTemporalSampler& sampler, const IntegrationInput& input) const;
 
-
-    VolumePort volumeInport_;
+    VolumeListPort volumeListInport_;
     VolumePort seedMask_;
-    StreamlineListPort streamlineOutport_;
+    StreamlineListPort pathlineOutport_;
 
     // seeding
     IntProperty numSeedPoints_;                             ///< number of seed points
     IntProperty seedTime_;                                  ///< seed
 
-    // streamline settings
-    IntIntervalProperty streamlineLengthThresholdProp_;     ///< streamline length must be in this interval
-    FloatIntervalProperty absoluteMagnitudeThresholdProp_;  ///< only magnitudes in this interval are used
-    BoolProperty fitAbsoluteMagnitudeProp_;                 ///< fit magnitude on input change?
-    FloatIntervalProperty relativeMagnitudeThresholdProp_;  ///< debug output
-    IntProperty stopIntegrationAngleThresholdProp_;         ///< stop integration when exceeding threshold?
-    OptionProperty<VolumeRAM::Filter> filterModeProp_;      ///< filtering inside the dataset
+    // pathline settings
+    IntIntervalProperty pathlineLengthThreshold_;       ///< pathline length must be in this interval
+    FloatIntervalProperty absoluteMagnitudeThreshold_;  ///< only magnitudes in this interval are used
+    BoolProperty fitAbsoluteMagnitude_;                 ///< fit magnitude on input change?
+    FloatIntervalProperty relativeMagnitudeThreshold_;  ///< debug output
+    IntProperty stopIntegrationAngleThreshold_;         ///< stop integration when exceeding threshold?
+    FloatProperty temporalResolution_;                  ///< (global) temporal resolution between time steps
+    OptionProperty<VolumeRAM::Filter> filterMode_;      ///< filtering inside the dataset
+
+    // debug
+    FloatOptionProperty velocityUnitConversion_;
+    IntProperty temporalIntegrationSteps_;
 
     static const std::string loggerCat_;
 };

@@ -26,23 +26,27 @@
 #ifndef VRN_STREAMLINESELECTOR_H
 #define VRN_STREAMLINESELECTOR_H
 
-#include "voreen/core/processors/processor.h"
-#include "voreen/core/utils/backgroundthread.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
 
 #include "voreen/core/properties/boolproperty.h"
 #include "voreen/core/properties/buttonproperty.h"
 #include "voreen/core/properties/optionproperty.h"
 #include "voreen/core/properties/boundingboxproperty.h"
 #include "voreen/core/properties/color/colorswitchproperty.h"
-#include "voreen/core/properties/progressproperty.h"
 
 #include "../../ports/streamlinelistport.h"
 #include "voreen/core/ports/geometryport.h"
 
 namespace voreen {
 
-        class StreamlineSelectorBackgroundThread;
-        class StreamlineList;
+struct StreamlineSelectorComputeInput {
+    std::unique_ptr<StreamlineListBase> streamlines;
+    std::function<bool(const Streamline&)> filter;
+};
+
+struct StreamlineSelectorComputeOutput {
+    std::unique_ptr<StreamlineListBase> streamlines;
+};
 
 /**
  * Used to select(clip) streamlines according to a region of interest.
@@ -50,17 +54,7 @@ namespace voreen {
  *
  * @Note: It uses a background thread to handle changed parameters during calculation.
  */
-class StreamlineSelector : public Processor, public PortObserver {
-
-    friend class StreamlineSelectorBackgroundThread;
-
-    /** Enum used to define intersection mode. */
-    enum StreamlineSelectionMode {
-        STREAM_BEGIN,
-        STREAM_INTERSECT,
-        STREAM_END
-    };
-
+class StreamlineSelector : public AsyncComputeProcessor<StreamlineSelectorComputeInput, StreamlineSelectorComputeOutput> {
 public:
     StreamlineSelector();
     virtual ~StreamlineSelector();
@@ -70,6 +64,11 @@ public:
     virtual std::string getCategory() const { return "Streamline Processing"; }
     virtual std::string getClassName() const { return "StreamlineSelector"; }
     virtual Processor::CodeState getCodeState() const { return CODE_STATE_EXPERIMENTAL; }
+
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
+
 protected:
     virtual void setDescriptions() {
         setDescription("Used to select(clip) streamlines according to a region of interest.  Box can be defined, " \
@@ -79,118 +78,48 @@ protected:
         streamlineOutport_.setDescription("Filtered streamlines.");
         geometryOutport_.setDescription("LLF and URB of the ROI. Can be used with the BoundingBoxRenderer to visualize the ROI.");
         //properties
-        enableProp_.setDescription("If disabled, the input is not modified.");
-        selectStreamlinesProp_.setDescription("This button triggers a new streamline selection. This process can take a few minutes. " \
-                                              "A progress bar will indicate the current progress. Any input or property change will abort the selection.");
-        autoGenerateProp_.setDescription("If checked, an input or property change will trigger a recalculation. It can be used to calculate streamlines automaticaly " \
-                                         "if the workspace is beeing opened. During parameter adjustment this option should not be checked.");
-        clearSelectionProp_.setDescription("Clears the selection without changing the ROI.");
-        insideProp_.setDescription("Defines, if streamlines must (not) be in the region of interest.");
-        selectionModeProp_.setDescription("Defines, if streamlines must begin/end in the region of interest or must intersect it.");
-        roiProp_.setDescription("The region of interest where streamlines must (not) begin/end or intersect.");
-        showGeometryProp_.setDescription("Enables the geometry outport to visualize the current region of interest.");
-        colorProp_.setDescription("The color of the ROI.");
-        resetToLastUsedGeometryProp_.setDescription("Reset ROI to last used configuration.");
+        enabled_.setDescription("If disabled, the input is not modified.");
+        clearSelection_.setDescription("Clears the selection without changing the ROI.");
+        inside_.setDescription("Defines, if streamlines must (not) be in the region of interest.");
+        selectionMode_.setDescription("Defines, if streamlines must begin/end in the region of interest or must intersect it.");
+        roi_.setDescription("The region of interest where streamlines must (not) begin/end or intersect.");
+        color_.setDescription("The color of the ROI.");
     }
 
-    virtual void process();
-    virtual bool usesExpensiveComputation() const {return true;}
+    virtual void adjustPropertiesToInput();
+    virtual void afterProcess();
 
-    //------------------
-    //  Observer
-    //------------------
-    virtual void afterConnectionAdded(const Port* source, const Port* connectedPort);
-    virtual void beforeConnectionRemoved(const Port* source, const Port*);
+private:
 
-    //------------------
-    //  Thread handling
-    //------------------
-    void stopBackgroundThread();
-
-    //------------------
-    //  Callbacks
-    //------------------
-    /** Adjusts the threshold property values on inport changes. */
-    void inportHasChanged();
-    /** Toggles the calculation button */
-    void enableOnChange();
-    /** Starts a new selection on button press. */
-    void selectStreamlinesOnChange();
-    /** Anything has been changed. */
-    void anythingHasBeenChanged();
     /** Triggered by the button with the same name. */
     void clearSelectionOnChange();
-    /** Triggered by the button with the same name. */
-    void resetToLastUsedOnChange();
 
-    //------------------
-    //  Members
-    //------------------
-private:
+    /** Enum used to define intersection mode. */
+    enum StreamlineSelectionMode {
+        STREAM_BEGIN,
+        STREAM_INTERSECT,
+        STREAM_END
+    };
+
     // ports
     StreamlineListPort streamlineInport_;
     StreamlineListPort streamlineOutport_;
     GeometryPort geometryOutport_;
     // properties
         // enable
-    BoolProperty enableProp_;                                   ///< toggles the processor on and of
+    BoolProperty enabled_;                                  ///< toggles the processor on and off
         // start configuration
-    ButtonProperty selectStreamlinesProp_;                      ///< starts a new selection
-    BoolProperty autoGenerateProp_;                             ///< starts a selection on any change
-    ButtonProperty clearSelectionProp_;                         ///< clears the current selection
-    ProgressProperty progressProp_;                             ///< used to show the progress in application mode
+    ButtonProperty clearSelection_;                         ///< clears the current selection
         // config
-    OptionProperty<bool> insideProp_;                           ///< streamlines must be (not) inside the ROI
-    OptionProperty<StreamlineSelectionMode> selectionModeProp_; ///< streamlines must start/end/intersect ROI
-    FloatBoundingBoxProperty roiProp_;                          ///< ROI for selecting/clipping
+    OptionProperty<bool> inside_;                           ///< streamlines must be (not) inside the ROI
+    OptionProperty<StreamlineSelectionMode> selectionMode_; ///< streamlines must start/end/intersect ROI
+    IntBoundingBoxProperty roi_;                            ///< ROI for selecting/clipping
         //roi representation (advanced)
-    BoolProperty showGeometryProp_;                             ///< enables the geometry outport
-    ColorSwitchProperty colorProp_;                             ///< color for handling de bounding box color
-    ButtonProperty resetToLastUsedGeometryProp_;                    ///< reset to last used geometry
+    ColorSwitchProperty color_;                             ///< color for handling de bounding box color
 
-    //background thread
-    StreamlineSelectorBackgroundThread* backgroundThread_;  ///< thread used to calcualte the streamlines
-    StreamlineList* streamlineListThreadOutput_;            ///< thread stores calcualtion here
-    StreamlineList* lastSelectedList_;                      ///< last selected list
-    tgt::Bounds*    lastUsedGeometry_;                      ///< last used geometry (in voxel space)
-    bool reselectStreamlines_;                              ///< process is only executed, if this is true
-};
+    tgt::IntBounds lastUsedGeometry_;                       ///< last used geometry (in voxel space)
 
-
-/**
- * Background thread used to select the stream lines.
- */
-class VRN_CORE_API StreamlineSelectorBackgroundThread : public ProcessorBackgroundThread<StreamlineSelector> {
-    friend class StreamlineSelector;
-public:
-    /** Constructor */
-    StreamlineSelectorBackgroundThread(StreamlineSelector* processor, StreamlineList* output,
-                                      bool inside, StreamlineSelector::StreamlineSelectionMode selectionMode, tgt::Bounds roi);
-    /** Destructor */
-    virtual ~StreamlineSelectorBackgroundThread();
-protected:
-    /** Main-Function used to calculate the streamlines */
-    virtual void threadMain();
-    /** Used to clean up */
-    virtual void handleInterruption();
-    //-----------------
-    //  Helpers
-    //-----------------
-    /** Used for "begin" selection. */
-    void selectBegin();
-    /** Used for "end" selection. */
-    void selectEnd();
-    /** Used for "intersect" selection. */
-    void selectIntersect();
-private:
-    //-----------
-    //  Members
-    //-----------
-    //derived from properties
-    StreamlineList* output_;     ///< output, which will be used by the processor
-    bool inside_;                ///<  (not) in the roi?
-    StreamlineSelector::StreamlineSelectionMode selectionMode_; ///< current selection modestreamline length must be in this interval
-    tgt::Bounds roi_; ///< the region of selection interest
+    static const std::string loggerCat_;
 };
 
 }   // namespace

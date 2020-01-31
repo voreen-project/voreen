@@ -23,13 +23,15 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "streamlinebundlecreator.h"
+#include "streamlinebundledetector.h"
 
 #include "../../datastructures/streamlinelist.h"
 
 namespace voreen {
 
-StreamlineBundleCreator::StreamlineBundleCreator()
+const std::string StreamlineBundleDetector::loggerCat_("flowreen.StreamlineBundleDetector");
+
+StreamlineBundleDetector::StreamlineBundleDetector()
     : AsyncComputeProcessor()
     , streamlineInport_(Port::INPORT, "streamlineInport", "Streamlines Input")
     , streamlineBundleOutport_(Port::OUTPORT, "streamlineBundleOutport", "Streamline Bundle Output")
@@ -60,7 +62,7 @@ StreamlineBundleCreator::StreamlineBundleCreator()
     setPropertyGroupGuiName("streamlinebundles", "Streamline Bundle Settings");
 }
 
-bool StreamlineBundleCreator::isReady() const {
+bool StreamlineBundleDetector::isReady() const {
     if(!isInitialized()) {
         setNotReadyErrorMessage("Not initialized");
         return false;
@@ -79,7 +81,7 @@ bool StreamlineBundleCreator::isReady() const {
     return true;
 }
 
-void StreamlineBundleCreator::adjustPropertiesToInput() {
+void StreamlineBundleDetector::adjustPropertiesToInput() {
     const StreamlineListBase* streamlines = streamlineInport_.getData();
     if(!streamlines) {
         return;
@@ -90,7 +92,7 @@ void StreamlineBundleCreator::adjustPropertiesToInput() {
     maxAverageDistanceThresholdProp_.adaptDecimalsToRange(3);
 }
 
-StreamlineBundleCreatorInput StreamlineBundleCreator::prepareComputeInput() {
+StreamlineBundleDetectorInput StreamlineBundleDetector::prepareComputeInput() {
 
     if(!enabled_.get()) {
         streamlineBundleOutport_.setData(streamlineInport_.getData(), false);
@@ -98,12 +100,17 @@ StreamlineBundleCreatorInput StreamlineBundleCreator::prepareComputeInput() {
         throw InvalidInputException("", InvalidInputException::S_IGNORE);
     }
 
+//    // Pipe input through as long as calculation is not finished.
+//    if(!streamlineBundleOutport_.hasData()) {
+//        streamlineBundleOutport_.setData(streamlineInport_.getData(), false);
+//    }
+
     auto streamlines = streamlineInport_.getThreadSafeData();
     if(!streamlines) {
         throw InvalidInputException("No streamlines", InvalidInputException::S_ERROR);
     }
 
-    return StreamlineBundleCreatorInput {
+    return StreamlineBundleDetectorInput {
             std::move(streamlines),
             resampleSizeProp_.get(),
             maxAverageDistanceThresholdProp_.get(),
@@ -111,7 +118,7 @@ StreamlineBundleCreatorInput StreamlineBundleCreator::prepareComputeInput() {
     };
 }
 
-StreamlineBundleCreatorOutput StreamlineBundleCreator::compute(StreamlineBundleCreatorInput input, ProgressReporter& progressReporter) const {
+StreamlineBundleDetectorOutput StreamlineBundleDetector::compute(StreamlineBundleDetectorInput input, ProgressReporter& progressReporter) const {
 
     PortDataPointer<StreamlineListBase> streamlines = std::move(input.streamlines);
 
@@ -181,13 +188,13 @@ StreamlineBundleCreatorOutput StreamlineBundleCreator::compute(StreamlineBundleC
         }
     }
 
-    return StreamlineBundleCreatorOutput {
+    return StreamlineBundleDetectorOutput {
             std::move(streamlineBundleOutput),
             std::move(streamlineNoiseOutput)
     };
 }
 
-void StreamlineBundleCreator::processComputeOutput(StreamlineBundleCreatorOutput output) {
+void StreamlineBundleDetector::processComputeOutput(StreamlineBundleDetectorOutput output) {
     streamlineBundleOutport_.setData(output.streamlineBundles.release());
     streamlineNoiseOutport_.setData(output.streamlineNoise.release());
 }

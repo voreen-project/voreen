@@ -29,10 +29,12 @@
 #include "voreen/core/datastructures/volume/volumeminmax.h"
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 
+#include "../../utils/flowutils.h"
+
 namespace voreen {
 
 // TODO: Could be adjustable via Property ( debug ).
-static const uint32_t GEOMETRY_TESSELATION = 12;
+static const uint32_t GEOMETRY_TESSELATION = 8;
 
 std::string StreamlineRenderer3D::loggerCat_("flowreen.StreamlineRenderer3D");
 
@@ -43,9 +45,9 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     , imgOutport_(Port::OUTPORT, "image.streamlines", "Streamline Image Output", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
     //properties
         //style
-    , streamlineStyleProp_("streamlineStyle", "Streamline Style:")
+    , streamlineStyle_("streamlineStyle", "Streamline Style:")
         //color
-    , colorProp_("colorProp","Color:")
+    , color_("colorProp", "Color:")
     , tfProp_("tfProp","Color Map:")
     , colorRotationMatrix_("colorRotationMatrix", "To be linked with FlowDirectionOverlay", tgt::mat4::identity,
                            tgt::mat4(-1.1f), tgt::mat4(1.1f), Processor::INVALID_RESULT, NumericProperty<tgt::mat4>::STATIC, Property::LOD_DEBUG)
@@ -55,10 +57,10 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     , enableShading_("enableShading", "Enable Shading", true)
     , enableMaximumIntensityProjection_("maximumIntensityProjection", "Enable Maximum Intensity Projection (MIP)", false)
         //must haves
-    , streamlineShaderProp_("streamlineShaderProp", "Shader:","streamlinerenderer3d.frag","streamlinerenderer3d.vert",""/*"streamlinerenderer3d.geom"*/,Processor::INVALID_PROGRAM,Property::LOD_DEBUG)
-    ,       requiresRecompileShader_(true)
-    , cameraProp_("camera", "Camera: ", tgt::Camera(),true,true,500.f,Processor::INVALID_RESULT,Property::LOD_DEBUG)
-    ,       cameraHandler_(0)
+    , streamlineShader_("streamlineShaderProp", "Shader:", "streamlinerenderer3d.frag", "streamlinerenderer3d.vert", ""/*"streamlinerenderer3d.geom"*/, Processor::INVALID_PROGRAM, Property::LOD_DEBUG)
+    , requiresRecompileShader_(true)
+    , camera_("camera", "Camera: ", tgt::Camera(), true, true, 500.f, Processor::INVALID_RESULT, Property::LOD_DEBUG)
+    , cameraHandler_(0)
     , requiresRebuild_(false)
 {
     //ports
@@ -67,16 +69,16 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     addPort(imgOutport_);
     //properties
         // style
-    addProperty(streamlineStyleProp_);
-        streamlineStyleProp_.addOption("lines", "Lines", STYLE_LINES);
-        streamlineStyleProp_.addOption("tubes", "Tubes", STYLE_TUBES);
-        streamlineStyleProp_.addOption("arrows", "Arrows", STYLE_ARROWS);
-        streamlineStyleProp_.onChange(MemberFunctionCallback<StreamlineRenderer3D>(this, &StreamlineRenderer3D::onStyleChange));
+    addProperty(streamlineStyle_);
+        streamlineStyle_.addOption("lines", "Lines", STYLE_LINES);
+        streamlineStyle_.addOption("tubes", "Tubes", STYLE_TUBES);
+        streamlineStyle_.addOption("arrows", "Arrows", STYLE_ARROWS);
+        streamlineStyle_.onChange(MemberFunctionCallback<StreamlineRenderer3D>(this, &StreamlineRenderer3D::onStyleChange));
         // color
-    addProperty(colorProp_);
-        colorProp_.addOption("velocity" , "Velocity" , COLOR_VELOCITY);
-        colorProp_.addOption("direction" , "Direction" , COLOR_DIRECTION);
-        colorProp_.onChange(MemberFunctionCallback<StreamlineRenderer3D>(this, &StreamlineRenderer3D::onColorChange));
+    addProperty(color_);
+        color_.addOption("velocity" , "Velocity" , COLOR_VELOCITY);
+        color_.addOption("direction" , "Direction" , COLOR_DIRECTION);
+        color_.onChange(MemberFunctionCallback<StreamlineRenderer3D>(this, &StreamlineRenderer3D::onColorChange));
     addProperty(tfProp_);
     addProperty(rotateAroundX_);
         rotateAroundX_.addOption("0", "0", 0.f);
@@ -106,9 +108,9 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     addProperty(enableMaximumIntensityProjection_);
 
         //must have
-    addProperty(streamlineShaderProp_);
-    addProperty(cameraProp_);
-        cameraHandler_ = new CameraInteractionHandler("cameraHandler", "Camera Handler", &cameraProp_);
+    addProperty(streamlineShader_);
+    addProperty(camera_);
+        cameraHandler_ = new CameraInteractionHandler("cameraHandler", "Camera Handler", &camera_);
     addInteractionHandler(cameraHandler_);
 }
 
@@ -118,19 +120,11 @@ StreamlineRenderer3D::~StreamlineRenderer3D() {
 
 void StreamlineRenderer3D::initialize() {
     RenderProcessor::initialize();
-
-    //init shader
-    if(streamlineStyleProp_.getValue() == STYLE_LINES)
-        requiresRecompileShader_ = true;
-    else
-        LERROR("Unsupported style");
+    requiresRecompileShader_ = true;
 }
 
 void StreamlineRenderer3D::deinitialize() {
-
-    // clear mesh data
     meshes_.clear();
-
     RenderProcessor::deinitialize();
 }
 
@@ -150,21 +144,31 @@ void StreamlineRenderer3D::process() {
     imgOutport_.activateTarget();
     imgOutport_.clearTarget();
 
-    if(tgt::Shader* shader = streamlineShaderProp_.getShader()) {
+    if(tgt::Shader* shader = streamlineShader_.getShader()) {
         shader->activate();
 
         // set transformation uniforms
-        setGlobalShaderParameters(shader,&cameraProp_.get(),imgOutport_.getSize());
+        setGlobalShaderParameters(shader, &camera_.get(), imgOutport_.getSize());
         shader->setUniform("velocityTransformMatrix_",streamlineInport_.getData()->getVelocityTransformMatrix());
 
-        //set color uniforms
-        switch(colorProp_.getValue()) {
+        switch(color_.getValue()) {
         case COLOR_VELOCITY:
         {
             tgt::TextureUnit transFuncUnit;
             transFuncUnit.activate();
             tfProp_.get()->getTexture()->bind();
             tfProp_.get()->setUniform(shader, "transFuncParam_", "transFuncTex_", transFuncUnit.getUnitNumber());
+
+            glEnable(GL_BLEND);
+
+            // In case of MIP rendering, we change the blend equation accordingly.
+            if(enableMaximumIntensityProjection_.get()) {
+                glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
+                glBlendEquation(GL_MAX);
+            }
+            else {
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            }
             break;
         }
         case COLOR_DIRECTION:
@@ -175,19 +179,6 @@ void StreamlineRenderer3D::process() {
             LERROR("Unknown Color Coding");
         }
 
-        // Our transfer function allows transparency, so we enable blending by default.
-        glEnable(GL_BLEND);
-
-        // In case of MIP rendering, we change the blend equation accordingly.
-        if(enableMaximumIntensityProjection_.get()) {
-            //glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
-            glBlendEquation(GL_MAX);
-        }
-        else {
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        }
-
-        // Render every Mesh being created before.
         for(size_t i = 0; i < meshes_.size(); i++) {
             meshes_[i]->render();
         }
@@ -196,7 +187,6 @@ void StreamlineRenderer3D::process() {
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_ONE, GL_ZERO);
         glDisable(GL_BLEND);
-        glLineWidth(1.0f);
         shader->deactivate();
         LGL_ERROR;
     }
@@ -210,7 +200,7 @@ void StreamlineRenderer3D::process() {
 void StreamlineRenderer3D::onStreamlineDataChange() {
 
     //update camera
-    cameraProp_.adaptInteractionToScene(streamlineInport_.getData()->getOriginalWorldBounds());
+    camera_.adaptInteractionToScene(streamlineInport_.getData()->getOriginalWorldBounds());
 
     //update tf
     float* data = new float[2];
@@ -244,13 +234,14 @@ void StreamlineRenderer3D::onStyleChange() {
 
 void StreamlineRenderer3D::onColorChange() {
     //update visibility
-    switch(colorProp_.getValue()) {
+    switch(color_.getValue()) {
     case COLOR_VELOCITY:
         tfProp_.setVisibleFlag(true);
         rotateAroundX_.setVisibleFlag(false);
         rotateAroundY_.setVisibleFlag(false);
         rotateAroundZ_.setVisibleFlag(false);
         colorRotationMatrix_.setVisibleFlag(false);
+        enableMaximumIntensityProjection_.setVisibleFlag(true);
         break;
     case COLOR_DIRECTION:
         tfProp_.setVisibleFlag(false);
@@ -258,6 +249,7 @@ void StreamlineRenderer3D::onColorChange() {
         rotateAroundY_.setVisibleFlag(true);
         rotateAroundZ_.setVisibleFlag(true);
         colorRotationMatrix_.setVisibleFlag(true);
+        enableMaximumIntensityProjection_.setVisibleFlag(false);
         break;
     default:
         LERROR("Unsupported color coding");
@@ -292,7 +284,7 @@ std::string StreamlineRenderer3D::generateHeader(const tgt::GpuCapabilities::GlV
     //generate basic header
     std::string header = RenderProcessor::generateHeader(&tgt::GpuCapabilities::GlVersion::SHADER_VERSION_330);
     //add define for fragment shader
-    switch(colorProp_.getValue()) {
+    switch(color_.getValue()) {
     case COLOR_VELOCITY:
         header += "#define COLOR_VELOCITY\n";
         header += tfProp_.get()->getShaderDefines();
@@ -308,8 +300,8 @@ std::string StreamlineRenderer3D::generateHeader(const tgt::GpuCapabilities::GlV
 }
 
 void StreamlineRenderer3D::compile() {
-    streamlineShaderProp_.setHeader(generateHeader());
-    streamlineShaderProp_.rebuild();
+    streamlineShader_.setHeader(generateHeader());
+    streamlineShader_.rebuild();
     requiresRecompileShader_ = false;
 }
 
@@ -319,7 +311,7 @@ void StreamlineRenderer3D::rebuild() {
     meshes_.clear();
 
     // create new meshes according to selected option
-    switch (streamlineStyleProp_.getValue()) {
+    switch (streamlineStyle_.getValue()) {
     case STYLE_LINES:
         meshes_.push_back(std::unique_ptr<GlMeshGeometryUInt32Color>(createLineGeometry(streamlineInport_.getData()->getStreamlines())));
         break;
@@ -403,7 +395,7 @@ GlMeshGeometryUInt32Color* StreamlineRenderer3D::createTubeGeometry(const Stream
 GlMeshGeometryUInt32Color* StreamlineRenderer3D::createArrowGeometry(const Streamline& streamline) const {
 
     GlMeshGeometryUInt32Color* mesh = new GlMeshGeometryUInt32Color();
-    mesh->setPrimitiveType(GL_LINE_STRIP);
+    mesh->setPrimitiveType(GL_TRIANGLES);
 
     // Define some constants for easier access.
     const uint32_t tesselation = GEOMETRY_TESSELATION;
@@ -476,7 +468,6 @@ GlMeshGeometryUInt32Color* StreamlineRenderer3D::createArrowGeometry(const Strea
                 mesh->addIndex(offset + 2);
                 mesh->addIndex(offset + i * 2 + 2);
             }
-
         }
 
         // Cone
@@ -509,23 +500,6 @@ GlMeshGeometryUInt32Color* StreamlineRenderer3D::createArrowGeometry(const Strea
     }
 
     return mesh;
-}
-
-tgt::mat4 StreamlineRenderer3D::createTransformationMatrix(const tgt::vec3& position, const tgt::vec3& velocity) const {
-
-    tgt::vec3 tangent(tgt::normalize(velocity));
-
-    tgt::vec3 temp(0.0f, 0.0f, 1.0f);
-    if(1.0f - std::abs(tgt::dot(temp, tangent)) <= std::numeric_limits<float>::epsilon())
-        temp = tgt::vec3(0.0f, 1.0f, 0.0f);
-
-    tgt::vec3 binormal(tgt::normalize(tgt::cross(temp, tangent)));
-    tgt::vec3 normal(tgt::normalize(tgt::cross(tangent, binormal)));
-
-    return tgt::mat4(normal.x, binormal.x, tangent.x, position.x,
-                     normal.y, binormal.y, tangent.y, position.y,
-                     normal.z, binormal.z, tangent.z, position.z,
-                     0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 }   // namespace

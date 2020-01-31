@@ -23,47 +23,54 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "modules/mod_transfunc.frag"
-#include "modules/mod_shading.frag"
+#ifndef VRN_FLOWUTILS_H
+#define VRN_FLOWUTILS_H
 
-in vData
-{
-    vec3 position;
-    vec3 velocity;
-    float radius;
-} frag;
+#include "voreen/core/datastructures/volume/volumeram.h"
+#include "boost/optional.hpp"
 
-#ifdef COLOR_VELOCITY
-    uniform TF_SAMPLER_TYPE transFuncTex_;      //< defined in generate header
-    uniform TransFuncParameters transFuncParam_;
-#elif defined (COLOR_DIRECTION)
-    uniform mat4 colorRotationMatrix_;
+namespace voreen {
 
-    //direction is not null
-    vec4 applyDirection(vec3 direction) {
-        return vec4((colorRotationMatrix_ * vec4(normalize(direction),1.0)).xyz/vec3(2.0) + vec3(0.5),1.0);
-    }
+class SpatialSampler {
+public:
+    SpatialSampler(const VolumeRAM* volume,
+                   const RealWorldMapping& rwm,
+                   VolumeRAM::Filter filter,
+                   const tgt::mat4& worldToVoxelMatrix = tgt::mat4::identity);
 
-#else
-    #error No color mode has been set
-#endif
+    /**
+     * Samples the given volume at the given specified position.
+     * @param pos Position in world space.
+     */
+    tgt::vec3 sample(tgt::vec3 pos) const ;
 
+private:
+    const VolumeRAM* volume_;
+    const RealWorldMapping rwm_;
+    const VolumeRAM::Filter filter_;
+    const tgt::mat4 worldToVoxelMatrix_;
+    const bool transformationSet_;
+};
 
-void main()
-{
-    vec4 color = vec4(1.0);
-#ifdef COLOR_VELOCITY
-    color =  applyTF(transFuncParam_, transFuncTex_, vec4(length(frag.velocity)));
-#elif defined (COLOR_DIRECTION)
-    if(length(frag.velocity) == 0.0)
-        discard;
-    color = applyDirection(frag.velocity);
-#else
-    #error No color mode has been set
-#endif
+class SpatioTemporalSampler {
+public:
+    SpatioTemporalSampler(const VolumeRAM* volume0, const VolumeRAM* volume1,
+                          float alpha,
+                          const RealWorldMapping& rwm,
+                          VolumeRAM::Filter filter,
+                          const tgt::mat4& worldToVoxelMatrix = tgt::mat4::identity);
 
-    if(color.a == 0.0)
-        discard;
+    tgt::vec3 sample(const tgt::vec3& pos) const;
 
-    FragData0 = color;
+private:
+    const SpatialSampler filter0_;
+    const SpatialSampler filter1_;
+    const float alpha_;
+};
+
+tgt::mat4 createTransformationMatrix(const tgt::vec3& position, const tgt::vec3& velocity);
+
 }
+
+
+#endif

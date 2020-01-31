@@ -26,13 +26,17 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/render/streamlinerenderer3d.cpp
 
     # streamline
-    ${MOD_DIR}/processors/streamline/streamlinebundlecreator.cpp
+    ${MOD_DIR}/processors/streamline/pathlinecreator.cpp
+    ${MOD_DIR}/processors/streamline/streamlinebundledetector.cpp
     ${MOD_DIR}/processors/streamline/streamlinecombine.cpp
     ${MOD_DIR}/processors/streamline/streamlinecreator.cpp
     ${MOD_DIR}/processors/streamline/streamlinerotation.cpp
     ${MOD_DIR}/processors/streamline/streamlinesave.cpp
     ${MOD_DIR}/processors/streamline/streamlineselector.cpp
     ${MOD_DIR}/processors/streamline/streamlinesource.cpp
+
+    # utils
+    ${MOD_DIR}/utils/flowutils.cpp
 )
     
 SET(MOD_CORE_HEADERS
@@ -59,13 +63,17 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/render/streamlinerenderer3d.h
 
     # streamline
-    ${MOD_DIR}/processors/streamline/streamlinebundlecreator.h
+    ${MOD_DIR}/processors/streamline/pathlinecreator.h
+    ${MOD_DIR}/processors/streamline/streamlinebundledetector.h
     ${MOD_DIR}/processors/streamline/streamlinecombine.h
     ${MOD_DIR}/processors/streamline/streamlinecreator.h
     ${MOD_DIR}/processors/streamline/streamlinerotation.h
     ${MOD_DIR}/processors/streamline/streamlinesave.h
     ${MOD_DIR}/processors/streamline/streamlineselector.h
     ${MOD_DIR}/processors/streamline/streamlinesource.h
+
+    # utils
+    ${MOD_DIR}/utils/flowutils.h
 )
 
 # Deployment
