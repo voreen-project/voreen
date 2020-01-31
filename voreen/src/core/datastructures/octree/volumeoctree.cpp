@@ -503,7 +503,7 @@ VolumeRAM* VolumeOctree::createSlice(SliceAlignment sliceAlignment, size_t slice
         runtimeWatch.start();
 
     // determine dimension of output slice with regard to selected level
-    const svec3 levelVolumeDim = (end + tgt::svec3::one - begin) / svec3(1 << level);
+    const svec3 levelVolumeDim = tgt::ceil(tgt::vec3(end + tgt::svec3::one - begin) / vec3(1 << level));
 
     svec3 sliceVolumeDim = levelVolumeDim;
     sliceVolumeDim[sliceAlignment] = 1;

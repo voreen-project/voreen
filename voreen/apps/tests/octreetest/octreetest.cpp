@@ -326,7 +326,7 @@ std::vector<const Volume*> createMipMap(const Volume* level0, size_t numLevels) 
     levels.push_back(level0);
     for (size_t l=1; l<numLevels; l++) {
         Volume* nextLevel = dynamic_cast<Volume*>(VolumeOperatorHalfsample::APPLY_OP(levels.back()));
-        tgtAssert(nextLevel && nextLevel->getDimensions() == levels.back()->getDimensions() / tgt::svec3::two, "invalid mip map level");
+        tgtAssert(nextLevel && nextLevel->getDimensions() == tgt::svec3(tgt::ceil(tgt::vec3(levels.back()->getDimensions()) / tgt::vec3::two)), "invalid mip map level");
         levels.push_back(nextLevel);
     }
 
@@ -430,7 +430,7 @@ bool checkOctreeAgainstMipMap(const VolumeOctree& octree, const std::vector< std
     bool success = true;
     // iterate over levels and compare level volume returned by octree against respective mip-map volume
     for (size_t level=0; level<std::min(octree.getNumLevels(), mipmap.size()); level++) {
-        svec3 octreeLevelTexDimExpected = volumeDim / tgt::svec3(1<<level);
+        svec3 octreeLevelTexDimExpected = tgt::ceil(tgt::vec3(volumeDim) / tgt::vec3(1<<level));
         VolumeRAM* octreeLevelVolume = octree.createVolume(level);
         BOOST_REQUIRE(octreeLevelVolume);
         BOOST_REQUIRE_EQUAL(octreeLevelVolume->getFormat(), format);
