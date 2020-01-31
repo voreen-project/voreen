@@ -175,13 +175,13 @@ private:
         std::vector< std::vector<uint64_t> >& histograms) const;
 
     VolumeOctreeNode* createParentNode(VolumeOctreeNode* children[8], bool octreeOptimization, uint16_t homogeneityThreshold,
-        uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues);
+        const tgt::svec3& brickUrb, uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues);
 
     void copyBrickToTexture(const uint16_t* brick, const tgt::svec3& brickDim,
         uint16_t* texture, const tgt::svec3& textureDim,
         const tgt::svec3& brickOffsetInTexture) const;
 
-    void halfSampleBrick(const uint16_t* brick, const tgt::svec3& brickDim, uint16_t* halfSampledBrick) const;
+    void halfSampleBrick(const uint16_t* brick, const tgt::svec3& brickDim, const tgt::svec3& brickUrb, uint16_t* halfSampledBrick) const;
 
     void deleteSubTree(VolumeOctreeNode* root) const;
 

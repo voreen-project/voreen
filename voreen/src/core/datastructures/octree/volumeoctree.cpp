@@ -782,13 +782,13 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
     // 2. iteratively create next level nodes from current level
     //
 
+    size_t currentLevel = 1;
     // brickDim == octreeDim => tree has only one level => already finished
     if (level0Grid->getDim() == tgt::svec3::one) {
         rootNode_ = level0Grid->getNode(tgt::svec3(0, 0, 0));
         delete level0Grid;
     }
     else { // iterative construction of upper levels
-        size_t currentLevel = 1;
         NodeGrid3D* currentLevelGrid = level0Grid;
         while (currentLevelGrid->getDim() != tgt::svec3::two) {
             // check current grid
@@ -800,12 +800,15 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
             LDEBUG("-- Before: " << MemoryInfo::getProcessMemoryUsageAsString());
             LDEBUG("-- Before: " << MemoryInfo::getAvailableMemoryAsString());
 
+            const tgt::svec3 parentLevelGridDim = currentLevelGrid->getDim() / tgt::svec3::two;
+            const tgt::svec3 childLevelVolumeDim = tgt::ceil(tgt::vec3(getVolumeDim()) / tgt::vec3(1 << (currentLevel-1)));
+            const svec3 brickDim = getBrickDim();
+
             // create parent level grid
-            NodeGrid3D* parentLevelGrid = new NodeGrid3D(currentLevelGrid->getDim() / tgt::svec3::two);
+            NodeGrid3D* parentLevelGrid = new NodeGrid3D(parentLevelGridDim);
             tgtAssert(isCubicAndPot(parentLevelGrid->getDim()), "next level grid dim is not cubic power-of-two");
 
             // create parent nodes
-            const tgt::svec3 parentLevelGridDim = parentLevelGrid->getDim();
             for (size_t parentNodeZ=0; parentNodeZ<parentLevelGridDim.z; parentNodeZ++) {
 
                 #ifdef VRN_MODULE_OPENMP
@@ -820,9 +823,13 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
                                 tgt::svec3 childNodeID = linearCoordToCubic(i, tgt::svec3::two);
                                 childNodes[i] = currentLevelGrid->getNode(parentNodeID*tgt::svec3::two + childNodeID);
                             }
+                            tgt::svec3 childLevelVolumeLlf = tgt::min(parentNodeID * brickDim * tgt::svec3::two, childLevelVolumeDim);
+                            tgt::svec3 childLevelVolumeUrb = tgt::min(childLevelVolumeLlf + (brickDim * tgt::svec3::two), childLevelVolumeDim);
+                            tgt::svec3 inBrickUrb = childLevelVolumeUrb - childLevelVolumeLlf;
+
                             uint16_t avgValues[MAX_CHANNELS], minValues[MAX_CHANNELS], maxValues[MAX_CHANNELS];
                             VolumeOctreeNode* parentNode = createParentNode(childNodes, octreeOptimization, homogeneityThreshold,
-                                avgValues, minValues, maxValues);
+                                inBrickUrb, avgValues, minValues, maxValues);
                             tgtAssert(minValues[0] <= avgValues[0] && avgValues[0] <= maxValues[0], "invalid avg/min/max values");
                             tgtAssert(parentNode->getAvgValue() == avgValues[0] && parentNode->getMinValue() == minValues[0] && parentNode->getMaxValue() == maxValues[0],
                                 "avg/min/max values of returned node differ from returned avg/min/max values");
@@ -860,8 +867,11 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
 
         LDEBUG("- Creating root node");
         uint16_t avgValues[MAX_CHANNELS], minValues[MAX_CHANNELS], maxValues[MAX_CHANNELS];
+
+        tgt::svec3 inBrickUrb = tgt::ceil(tgt::vec3(getVolumeDim()) / tgt::vec3(1 << (currentLevel - 1)));
+
         rootNode_ = createParentNode(currentLevelGrid->getNodes(), octreeOptimization, homogeneityThreshold,
-            avgValues, minValues, maxValues);
+            inBrickUrb, avgValues, minValues, maxValues);
         tgtAssert(minValues[0] <= avgValues[0] && avgValues[0] <= maxValues[0], "invalid avg/min/max values");
 
         delete currentLevelGrid;
@@ -1189,7 +1199,6 @@ void VolumeOctree::extractBrickFromTexture(const std::vector<const void*>& textu
 
                 //histogramArray[channel]->increaseBucket(value >> 4); // for 4096 buckets (12 bit)
                 histograms[channel][value]++;
-                numSignificantBrickVoxels++;
             }
 
             numSignificantBrickVoxels++;
@@ -1217,7 +1226,7 @@ void VolumeOctree::extractBrickFromTexture(const std::vector<const void*>& textu
 }
 
 VolumeOctreeNode* VolumeOctree::createParentNode(VolumeOctreeNode* children[8], bool octreeOptimization, uint16_t homogeneityThreshold,
-    uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues) {
+    const tgt::svec3& brickUrb, uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues) {
     tgtAssert(brickPoolManager_, "no brick pool manager");
 
     // compute parent avg/min/max values from children and determine whether parent is homogeneous
@@ -1263,7 +1272,7 @@ VolumeOctreeNode* VolumeOctree::createParentNode(VolumeOctreeNode* children[8], 
         }
     }
 
-    if (homogeneous && octreeOptimization) { // node is homogeneous => create leaf node without brick
+    if (homogeneous && octreeOptimization || numNonEmptyChildren == 0) { // node is homogeneous => create leaf node without brick
         VolumeOctreeNode* parent = 0;
         if (numNonEmptyChildren > 0)
             parent = VolumeOctreeBase::createNode(getNumChannels(), avgValues, minValues, maxValues);
@@ -1288,11 +1297,15 @@ VolumeOctreeNode* VolumeOctree::createParentNode(VolumeOctreeNode* children[8], 
         // store all half sampled bricks in one temporary buffer
         uint16_t* halfSampledBrickBuffer = acquireTempBrickBuffer();
 
-        for (size_t childID=0; childID<8; childID++) {
+        VRN_FOR_EACH_VOXEL(childPos, svec3::zero, svec3::two) {
+            const size_t childID = cubicCoordToLinear(childPos, svec3::two);
             VolumeOctreeNode* child = children[childID];
             tgtAssert(child, "null pointer");
             if (child->hasBrick()) { // node brick present => halfsample into buffer
-                halfSampleBrick(brickPoolManager_->getBrick(child->getBrickAddress()), getBrickDim(), &halfSampledBrickBuffer[childID*halfSampleBufferSize]);
+                tgt::svec3 llf = tgt::min(childPos * getBrickDim(), brickUrb);
+                tgt::svec3 urb = tgt::min(llf + getBrickDim(), brickUrb);
+                tgt::svec3 childUrb = urb - llf;
+                halfSampleBrick(brickPoolManager_->getBrick(child->getBrickAddress()), getBrickDim(), childUrb, &halfSampledBrickBuffer[childID*halfSampleBufferSize]);
                 brickPoolManager_->releaseBrick(child->getBrickAddress());
             }
             else { // no brick present => use node's avg values
@@ -1358,25 +1371,32 @@ void VolumeOctree::copyBrickToTexture(const uint16_t* brick, const tgt::svec3& b
     }
 }
 
-void VolumeOctree::halfSampleBrick(const uint16_t* brick, const svec3& brickDim, uint16_t* halfSampledBrick) const {
+void VolumeOctree::halfSampleBrick(const uint16_t* brick, const svec3& brickDim, const svec3& brickUrb, uint16_t* halfSampledBrick) const {
     tgtAssert(brick && halfSampledBrick, "null pointer passed");
     tgtAssert(isCubicAndPot(brickDim), "invalid brick dimensions");
+    tgtAssert(tgt::hmul(brickUrb) > 0, "No valid voxels in brick");
 
     const size_t numChannels = getNumChannels();
     const svec3 halfDim = brickDim / svec3(2);
 
     VRN_FOR_EACH_VOXEL(halfPos, svec3::zero, halfDim) {
         svec3 pos = halfPos*svec3(2);
+
         for (size_t channel=0; channel<numChannels; channel++) {
+            auto getVoxel = [&] (tgt::svec3 offset) -> uint64_t {
+                tgt::svec3 p = tgt::min(pos + offset, brickUrb-tgt::svec3::one);
+                return (uint64_t)brick[cubicCoordToLinear(p, brickDim)*numChannels + channel];
+            };
+
             uint64_t halfValue =
-                (uint64_t)brick[cubicCoordToLinear(svec3(pos.x,   pos.y,   pos.z  ), brickDim)*numChannels + channel] +  // LLF
-                (uint64_t)brick[cubicCoordToLinear(svec3(pos.x,   pos.y,   pos.z+1), brickDim)*numChannels + channel] +  // LLB
-                (uint64_t)brick[cubicCoordToLinear(svec3(pos.x,   pos.y+1, pos.z),   brickDim)*numChannels + channel] +  // ULF
-                (uint64_t)brick[cubicCoordToLinear(svec3(pos.x,   pos.y+1, pos.z+1), brickDim)*numChannels + channel] +  // ULB
-                (uint64_t)brick[cubicCoordToLinear(svec3(pos.x+1, pos.y,   pos.z),   brickDim)*numChannels + channel] +  // LRF
-                (uint64_t)brick[cubicCoordToLinear(svec3(pos.x+1, pos.y,   pos.z+1), brickDim)*numChannels + channel] +  // LRB
-                (uint64_t)brick[cubicCoordToLinear(svec3(pos.x+1, pos.y+1, pos.z),   brickDim)*numChannels + channel] +  // URF
-                (uint64_t)brick[cubicCoordToLinear(svec3(pos.x+1, pos.y+1, pos.z+1), brickDim)*numChannels + channel] ;  // URB
+                (uint64_t)getVoxel(tgt::svec3(0,0,0)) +  // LLF
+                (uint64_t)getVoxel(tgt::svec3(1,0,0)) +  // LLB
+                (uint64_t)getVoxel(tgt::svec3(0,1,0)) +  // ULF
+                (uint64_t)getVoxel(tgt::svec3(1,1,0)) +  // ULB
+                (uint64_t)getVoxel(tgt::svec3(0,0,1)) +  // LRF
+                (uint64_t)getVoxel(tgt::svec3(1,0,1)) +  // LRB
+                (uint64_t)getVoxel(tgt::svec3(0,1,1)) +  // URF
+                (uint64_t)getVoxel(tgt::svec3(1,1,1)) ;  // URB
             halfValue /= 8;
 
             halfSampledBrick[cubicCoordToLinear(halfPos, halfDim)*numChannels + channel] = static_cast<uint16_t>(halfValue);

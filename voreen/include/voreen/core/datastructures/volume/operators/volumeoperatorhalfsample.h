@@ -74,12 +74,12 @@ Volume* VolumeOperatorHalfsampleGeneric<T>::apply(const VolumeBase* vh, Progress
         };
         newVolume->voxel(index) =
             T(( getVoxel(tgt::svec3(0,0,0))
-              + getVoxel(tgt::svec3(0,0,1))
-              + getVoxel(tgt::svec3(0,1,0))
-              + getVoxel(tgt::svec3(0,1,1))
               + getVoxel(tgt::svec3(1,0,0))
-              + getVoxel(tgt::svec3(1,0,1))
+              + getVoxel(tgt::svec3(0,1,0))
               + getVoxel(tgt::svec3(1,1,0))
+              + getVoxel(tgt::svec3(0,0,1))
+              + getVoxel(tgt::svec3(1,0,1))
+              + getVoxel(tgt::svec3(0,1,1))
               + getVoxel(tgt::svec3(1,1,1))) * (1.0 / 8.0));
     }
     if (progressReporter)
