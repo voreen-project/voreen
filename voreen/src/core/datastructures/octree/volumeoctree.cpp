@@ -1170,6 +1170,7 @@ void VolumeOctree::extractBrickFromTexture(const std::vector<const void*>& textu
     size_t textureBufferSize = tgt::hmul(textureDim);
 
     // copy voxels from channel textures to brick
+    uint64_t numSignificantBrickVoxels = 0; //< number of brick voxels lying inside texture (NPOT)
     VRN_FOR_EACH_VOXEL(brickVoxel, svec3(0,0,0), brickDim) {
         size_t brickLinearCoord = cubicCoordToLinear(brickVoxel, brickDim)*numChannels;
         tgtAssert(brickLinearCoord+numChannels-1 < brickBufferSize, "invalid brick linear coord");
@@ -1188,6 +1189,7 @@ void VolumeOctree::extractBrickFromTexture(const std::vector<const void*>& textu
 
                 //histogramArray[channel]->increaseBucket(value >> 4); // for 4096 buckets (12 bit)
                 histograms[channel][value]++;
+                numSignificantBrickVoxels++;
             }
 
             numSignificantBrickVoxels++;
@@ -1197,9 +1199,6 @@ void VolumeOctree::extractBrickFromTexture(const std::vector<const void*>& textu
                 brickBuffer[brickLinearCoord + channel] = 0;
         }
     }
-
-    tgt::svec3 brickInTextureSize = tgt::min(brickDim, textureDim - brickOffsetInTexture);
-    uint64_t numSignificantBrickVoxels = tgt::hmul(brickInTextureSize); //< number of brick voxels lying inside texture (NPOT)
 
     if (numSignificantBrickVoxels > 0) {
         for (size_t channel=0; channel<numChannels; channel++) {
