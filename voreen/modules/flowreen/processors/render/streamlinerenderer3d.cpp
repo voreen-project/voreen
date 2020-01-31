@@ -402,7 +402,7 @@ GlMeshGeometryUInt32Color* StreamlineRenderer3D::createArrowGeometry(const Strea
     const float angleStep = (tgt::PIf * 2.0f) / tesselation;
 
     float radius = streamline.getFirstElement().radius_; // FIXME: radius is only a rough approximation.
-    float length = streamline.getLength();
+    float length = streamline.getPhysicalLength();
 
     // Calculate the number of arrows the bundle will be split into.
     const float desiredLengthOfArrow = std::min(radius * 4.0f, length);

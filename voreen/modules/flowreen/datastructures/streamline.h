@@ -88,16 +88,27 @@ public:
     const StreamlineElement& getFirstElement() const;
     const StreamlineElement& getLastElement() const;
     size_t getNumElements() const;
-    float getMinMagnitude() const;
-    float getMaxMagnitude() const;
 
     //----------------
     //  Utility
     //----------------
     /** Resamples this Streamline to a similar one consisting of the specified amount of elements. */
     Streamline resample(size_t samples) const;
-    /** Returns the length in world space. This value is calculated each call. */
-    float getLength() const;
+
+    /** Returns statistics of the angle (in radians) between to consecutive elements. */
+    const Statistics& getCurvatureStatistics() const;
+
+    /** Returns statistics of the magnitude of all elements. */
+    const Statistics& getMagnitudeStatistics() const;
+
+    /** Returns the minimum magnitude of all elements. */
+    float getMinMagnitude() const;
+
+    /** Returns the maximum magnitude of all elements. */
+    float getMaxMagnitude() const;
+
+    /** Returns the length in physical space. */
+    float getPhysicalLength() const;
 
     //----------------
     //  Storage
@@ -116,6 +127,8 @@ public:
 private:
    std::deque<StreamlineElement> streamlineElements_;   ///< list of all streamline elements from front to back
    Statistics magnitudeStatistics_;                     ///< statistics of the contained magnitudes
+   Statistics curvatureStatistics_;                     ///< statistics of the lines curvature
+   float physicalLength_;                               ///< total physical length (in mm)
 };
 
 }   // namespace

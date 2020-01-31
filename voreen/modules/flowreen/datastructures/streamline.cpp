@@ -33,6 +33,8 @@ namespace voreen {
 
 Streamline::Streamline()
     : magnitudeStatistics_(false)
+    , curvatureStatistics_(false)
+    , physicalLength_(0.0f)
 {
 }
 
@@ -43,12 +45,40 @@ Streamline::~Streamline() {
 //  Construction
 //----------------
 void Streamline::addElementAtEnd(const StreamlineElement& element) {
+    if(!streamlineElements_.empty()) {
+        // Update physical length.
+        physicalLength_ += tgt::distance(streamlineElements_.back().position_, element.position_);
+
+        // Update curvature statistics.
+        float currMagnitude = tgt::length(element.velocity_);
+        float prevMagnitude = tgt::length(streamlineElements_.back().velocity_);
+        if(currMagnitude > 0.0f && prevMagnitude > 0.0f) {
+            float angle = std::acos(std::abs(tgt::dot(streamlineElements_.back().velocity_, element.velocity_)) /
+                                    (prevMagnitude * currMagnitude));
+            curvatureStatistics_.addSample(angle);
+        }
+    }
+
     streamlineElements_.push_back(element);
     float length = tgt::length(element.velocity_);
     magnitudeStatistics_.addSample(length);
 }
 
 void Streamline::addElementAtFront(const StreamlineElement& element) {
+    if(!streamlineElements_.empty()) {
+        // Update physical length.
+        physicalLength_ += tgt::distance(streamlineElements_.front().position_, element.position_);
+
+        // Update curvature statistics.
+        float currMagnitude = tgt::length(element.velocity_);
+        float prevMagnitude = tgt::length(streamlineElements_.front().velocity_);
+        if(currMagnitude > 0.0f && prevMagnitude > 0.0f) {
+            float angle = std::acos(std::abs(tgt::dot(streamlineElements_.front().velocity_, element.velocity_)) /
+                                    (prevMagnitude * currMagnitude));
+            curvatureStatistics_.addSample(angle);
+        }
+    }
+
     streamlineElements_.push_front(element);
     float length = tgt::length(element.velocity_);
     magnitudeStatistics_.addSample(length);
@@ -59,14 +89,6 @@ void Streamline::addElementAtFront(const StreamlineElement& element) {
 //----------------
 size_t Streamline::getNumElements() const {
     return streamlineElements_.size();
-}
-
-float Streamline::getMinMagnitude() const {
-    return magnitudeStatistics_.getMin();
-}
-
-float Streamline::getMaxMagnitude() const {
-    return magnitudeStatistics_.getMax();
 }
 
 const Streamline::StreamlineElement& Streamline::getElementAt(size_t pos) const {
@@ -128,12 +150,24 @@ Streamline Streamline::resample(size_t samples) const {
 
 }
 
-float Streamline::getLength() const {
-    float length = 0.0f;
-    for(size_t i = 1; i < getNumElements(); i++) {
-        length += tgt::distance(streamlineElements_[i-1].position_, streamlineElements_[i].position_);
-    }
-    return length;
+const Statistics& Streamline::getCurvatureStatistics() const {
+    return curvatureStatistics_;
+}
+
+const Statistics& Streamline::getMagnitudeStatistics() const {
+    return magnitudeStatistics_;
+}
+
+float Streamline::getMinMagnitude() const {
+    return magnitudeStatistics_.getMin();
+}
+
+float Streamline::getMaxMagnitude() const {
+    return magnitudeStatistics_.getMax();
+}
+
+float Streamline::getPhysicalLength() const {
+    return physicalLength_;
 }
 
 //----------------

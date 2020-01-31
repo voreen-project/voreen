@@ -75,17 +75,20 @@ StreamlineListBase* StreamlineList::clone() const{
     //  Streamline Handling
     //------------------------
 void StreamlineList::addStreamline(const Streamline& line) {
+
+    //ignore degenerated lines
+    if(line.getNumElements() < 2) {
+        return;
+    }
+
     notifyPendingDataInvalidation();
 
     streamlines_.push_back(line);
 
-    //ignore degenerated lines
-    if(line.getNumElements() < 2) return;
-
-    if(minMagnitude_ < 0.f || minMagnitude_ > line.getMinMagnitude()) {
+    if(minMagnitude_ < 0.0f || minMagnitude_ > line.getMinMagnitude()) {
         minMagnitude_ = line.getMinMagnitude();
     }
-    if(maxMagnitude_ < 0.f || maxMagnitude_ < line.getMaxMagnitude()) {
+    if(maxMagnitude_ < 0.0f || maxMagnitude_ < line.getMaxMagnitude()) {
         maxMagnitude_ = line.getMaxMagnitude();
     }
 }
@@ -124,9 +127,9 @@ const std::vector<Streamline>& StreamlineList::getStreamlines() const {
     return streamlines_;
 }
 
-    //----------------
-    //  Meta
-    //----------------
+//----------------
+//  Meta
+//----------------
 const tgt::svec3& StreamlineList::getOriginalDimensions() const {
     return dimensions_;
 }

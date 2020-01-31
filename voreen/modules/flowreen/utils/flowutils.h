@@ -27,7 +27,6 @@
 #define VRN_FLOWUTILS_H
 
 #include "voreen/core/datastructures/volume/volumeram.h"
-#include "boost/optional.hpp"
 
 namespace voreen {
 

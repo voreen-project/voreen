@@ -12,6 +12,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/datastructures/streamlinelist.cpp
     ${MOD_DIR}/datastructures/streamlinelistbase.cpp
     ${MOD_DIR}/datastructures/streamlinelistdecorator.cpp
+    ${MOD_DIR}/datastructures/streamlinelistobserver.cpp
 
     # ports
     ${MOD_DIR}/ports/streamlinelistport.cpp
@@ -30,6 +31,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/streamline/streamlinebundledetector.cpp
     ${MOD_DIR}/processors/streamline/streamlinecombine.cpp
     ${MOD_DIR}/processors/streamline/streamlinecreator.cpp
+    ${MOD_DIR}/processors/streamline/streamlinefilter.cpp
     ${MOD_DIR}/processors/streamline/streamlinerotation.cpp
     ${MOD_DIR}/processors/streamline/streamlinesave.cpp
     ${MOD_DIR}/processors/streamline/streamlineselector.cpp
@@ -67,6 +69,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/streamline/streamlinebundledetector.h
     ${MOD_DIR}/processors/streamline/streamlinecombine.h
     ${MOD_DIR}/processors/streamline/streamlinecreator.h
+    ${MOD_DIR}/processors/streamline/streamlinefilter.h
     ${MOD_DIR}/processors/streamline/streamlinerotation.h
     ${MOD_DIR}/processors/streamline/streamlinesave.h
     ${MOD_DIR}/processors/streamline/streamlineselector.h
