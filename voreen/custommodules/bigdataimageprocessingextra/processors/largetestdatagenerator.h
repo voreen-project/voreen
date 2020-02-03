@@ -112,12 +112,13 @@ public:
         setDescription("Processor for generating test data potentially larger than RAM capacity.");
     }
     virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
+    virtual bool isReady() const;
 
     virtual LargeTestDataGeneratorInput prepareComputeInput();
     virtual LargeTestDataGeneratorOutput compute(LargeTestDataGeneratorInput input, ProgressReporter& progressReporter) const;
     virtual void processComputeOutput(LargeTestDataGeneratorOutput output);
 
-
+    static const std::string loggerCat_;
 private:
     // Ports
     VolumePort outportNoisy_;
@@ -134,7 +135,6 @@ private:
     IntVec3Property volumeDimensions_;
     IntIntervalProperty structureSizeRange_;
     OptionProperty<LargeTestDataGeneratorInput::Scenario> scenario_;
-    static const std::string loggerCat_;
 
     std::random_device randomDevice;
 };

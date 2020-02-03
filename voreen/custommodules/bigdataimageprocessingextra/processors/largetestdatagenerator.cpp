@@ -37,6 +37,7 @@
 #include "modules/hdf5/io/hdf5volumereader.h"
 
 #include "tgt/filesystem.h"
+#include "tgt/quaternion.h"
 
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
@@ -167,8 +168,7 @@ struct Balls {
     }
 
     bool inside(tgt::ivec3 p) const {
-        tgtAssert(center_.size() == radius_.size(), "ball component sizes mismatch");
-        int size = center_.size();
+        int size = this->size();
         int ret = 0;
 
         auto rad = radius_.begin();
@@ -179,8 +179,7 @@ struct Balls {
         for(int i=0; i < size; ++i) {
             int radius = rad[i];
             tgt::ivec3 center = cen[i];
-            tgt::vec3 diff = p - center;
-            if((diff.x * diff.x + diff.y * diff.y + diff.z * diff.z) < radius * radius) {
+            if(tgt::distanceSq(p, center) < radius * radius) {
                 ret += 1;
             }
         }
@@ -197,54 +196,199 @@ private:
     std::vector<tgt::ivec3> center_;
     std::vector<int> radius_;
 };
-LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGeneratorInput input, ProgressReporter& progress) const {
-    tgtAssert(input.outputVolumeNoisy, "No outputVolume");
-    tgtAssert(input.outputVolumeGT, "No outputVolume");
+
+struct Cylinders {
+    Cylinders()
+        : start_()
+        , end_()
+        , radius_()
+    {
+    }
+
+    void add(tgt::ivec3 start, tgt::ivec3 end, int radius) {
+        start_.push_back(start);
+        end_.push_back(end);
+        radius_.push_back(radius);
+    }
+    size_t size() const {
+        tgtAssert(start_.size() == radius_.size(), "cylinder sizes mismatch");
+        tgtAssert(start_.size() == end_.size(), "cylinder sizes mismatch");
+        return start_.size();
+    }
+
+    bool inside(tgt::ivec3 pint) const {
+        return distant(pint, 1.0);
+    }
+    bool distant(tgt::ivec3 pint, float radiusMult) const {
+        int size = this->size();
+        int ret = 0;
+        tgt::vec3 p = pint;
+
+        auto rad = radius_.begin();
+        auto start = start_.begin();
+        auto end = end_.begin();
+#ifdef VRN_MODULE_OPENMP
+#pragma omp simd
+#endif
+        for(int i=0; i < size; ++i) {
+            int radius = radiusMult * rad[i];
+            tgt::vec3 s = start[i];
+            tgt::vec3 e = end[i];
+
+            tgt::vec3 pnorm = p - s;
+            tgt::vec3 ax = e-s;
+            float len = tgt::length(ax);
+            ax = ax/len;
+
+            float proj = tgt::dot(ax, pnorm);
+
+            tgt::vec3 onDisk = pnorm - ax*proj;
+
+            if(proj >= 0 && proj <= len && tgt::lengthSq(onDisk) < radius*radius) {
+                ret += 1;
+            }
+        }
+        return ret > 0;
+    }
+    tgt::ivec3 start(size_t i) {
+        return start_[i];
+    }
+    tgt::ivec3 end(size_t i) {
+        return end_[i];
+    }
+    int radius(size_t i) {
+        return radius_[i];
+    }
+
+private:
+    std::vector<tgt::vec3> start_;
+    std::vector<tgt::vec3> end_;
+    std::vector<int> radius_;
+};
+static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cylinders& cylinders, PointSegmentListGeometryVec3& foregroundLabels, PointSegmentListGeometryVec3& backgroundLabels) {
     const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
-    tgtAssert(input.outputVolumeGT->getDimensions() == dim, "Dimension mismatch");
-    Balls balls{};
+    int minRadius = std::max(1, input.structureSizeRange.x/2);
+    int maxRadius = std::max(1, input.structureSizeRange.y/2);
 
-    std::unique_ptr<PointSegmentListGeometryVec3> foregroundLabels(new PointSegmentListGeometryVec3());
-    std::unique_ptr<PointSegmentListGeometryVec3> backgroundLabels(new PointSegmentListGeometryVec3());
+    float minRelativeLen = 3.0f;
+    float maxRelativeLen = 10.0f;
 
+    int totalVolume = tgt::hmul(dim);
+    float volumeToFill = totalVolume * input.density;
+
+    std::uniform_real_distribution<> lDistr(minRelativeLen, maxRelativeLen);
+
+    tgt::Bounds volumeBounds(tgt::vec3::zero, tgt::vec3(dim - tgt::svec3::one));
+
+    struct BranchSeed {
+        tgt::vec3 begin;
+        tgt::vec3 dir;
+        float radius;
+    };
+    std::deque<BranchSeed> queue;
+
+    while(volumeToFill > 0) {
+
+        tgt::vec3 start;
+        tgt::vec3 dir;
+        do {
+            std::uniform_int_distribution<> xDistr(0, dim.x-1);
+            std::uniform_int_distribution<> yDistr(0, dim.y-1);
+            std::uniform_int_distribution<> zDistr(0, dim.z-1);
+
+            tgt::vec3 start(xDistr(input.randomEngine), yDistr(input.randomEngine), zDistr(input.randomEngine));
+            dir = tgt::vec3::zero;
+            size_t dimension = std::uniform_int_distribution<>(0, 2)(input.randomEngine);
+            size_t side = std::uniform_int_distribution<>(0, 1)(input.randomEngine);
+            if(side == 0) {
+                start[dimension] = 0.0f;
+                dir[dimension] = 1.0;
+            } else {
+                start[dimension] = dim[dimension];
+                dir[dimension] = -1.0;
+            }
+        } while(cylinders.distant(start, 2.0f));
+        queue.push_back(BranchSeed {
+            start,
+            tgt::vec3(0,0,1),
+            float(maxRadius),
+        });
+
+        float initialDeviationStd = tgt::PIf * 0.1;
+        const int numBranches = 3;
+
+        while(!queue.empty()) {
+            auto seed = queue.front();
+            queue.pop_front();
+
+            float deviationStd = initialDeviationStd;
+            tgt::vec3 end;
+            tgt::vec3 axis;
+            do {
+                float deviationAngle = std::normal_distribution<>(tgt::PIf * 0.1, deviationStd)(input.randomEngine);
+                float rotationAngle = std::uniform_real_distribution<>(0.0, 2 * tgt::PIf)(input.randomEngine);
+                float len = std::max(lDistr(input.randomEngine) * maxRadius, 2.0*seed.radius);
+
+                axis = seed.dir;
+                tgt::vec3 orthBase1(1,0,0);
+                tgt::vec3 orthBase2(0,1,0);
+                tgt::vec3 orthBase = tgt::dot(orthBase1, axis) > tgt::dot(orthBase2, axis) ? orthBase1 : orthBase2;
+                tgt::vec3 orth = tgt::normalize(tgt::cross(orthBase, seed.dir));
+
+                orth = tgt::Quaternion<float>::rotate(orth, rotationAngle, axis);
+                axis = tgt::Quaternion<float>::rotate(axis, deviationAngle, orth);
+                end = seed.begin + axis * len;
+                deviationStd += 0.1;
+            } while(!volumeBounds.containsPoint(end) || cylinders.distant(end, 2.0f));
+
+            balls.add(end, seed.radius);
+            cylinders.add(seed.begin, end, seed.radius);
+            float vol = tgt::distance(seed.begin, end) * seed.radius * seed.radius;
+            volumeToFill -= vol;
+            if(volumeToFill < 0) {
+                break;
+            }
+
+            std::uniform_int_distribution<> rDistr(minRadius, seed.radius);
+            float childRadius = seed.radius / std::sqrt(numBranches);
+            if(childRadius > minRadius) {
+                for(int i=0; i<numBranches; ++i) {
+                    float radius = std::max(1.0, std::normal_distribution<>(childRadius, childRadius*0.01)(input.randomEngine));
+                    queue.push_back(BranchSeed {
+                        end,
+                        axis,
+                        radius,
+                    });
+                }
+            }
+        }
+    }
+    LINFOC(LargeTestDataGenerator::loggerCat_, "Placed " << cylinders.size() << " Cylinders");
+}
+
+static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinders& cylinders, PointSegmentListGeometryVec3& foregroundLabels, PointSegmentListGeometryVec3& backgroundLabels) {
+    const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
     int minRadius = std::max(1, input.structureSizeRange.x/2);
     int maxRadius = std::max(1, input.structureSizeRange.y/2);
 
     int elementVolumeEstimate;
-    switch(input.scenario) {
-        case LargeTestDataGeneratorInput::CELLS: {
-            float a = minRadius;
-            float b = maxRadius;
-            if(a == b) {
-                elementVolumeEstimate = a;
-            } else {
-                elementVolumeEstimate = tgt::round(tgt::PIf*(b*b*b*b-a*a*a*a)/(3 * (b - a)));
-            }
-            break;
-        }
-        case LargeTestDataGeneratorInput::VESSELS: {
-            tgtAssert(false, "Unimplemented radius estimation for vessel scenario");
-            elementVolumeEstimate = 1;
-            break;
-        }
-        default: {
-            tgtAssert(false, "Invalid scenario");
-        }
+
+    float a = minRadius;
+    float b = maxRadius;
+    if(a == b) {
+        elementVolumeEstimate = tgt::round(4.0/3.0 * tgt::PIf * a*a*a);
+    } else {
+        elementVolumeEstimate = tgt::round(tgt::PIf*(b*b*b*b-a*a*a*a)/(3 * (b - a)));
     }
 
     int totalVolume = tgt::hmul(dim);
     int numElements = std::round(totalVolume/elementVolumeEstimate * input.density);
-
-    LINFO("Placing " << numElements << " Elements");
+    LINFOC(LargeTestDataGenerator::loggerCat_, "Placing " << numElements << " Spheres");
 
     std::uniform_int_distribution<> xDistr(0, dim.x-1);
     std::uniform_int_distribution<> yDistr(0, dim.y-1);
     std::uniform_int_distribution<> zDistr(0, dim.z-1);
     std::uniform_int_distribution<> rDistr(minRadius, maxRadius);
-
-    std::normal_distribution<float> noiseDistr(0.0, input.noiseRange);
-
-    size_t numObjects = 0;
 
     for(int i=0; i<numElements; ++i) {
         tgt::ivec3 p(xDistr(input.randomEngine), yDistr(input.randomEngine), zDistr(input.randomEngine));
@@ -253,16 +397,14 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
         std::vector<tgt::vec3> segment;
         segment.push_back(p);
         segment.push_back(tgt::vec3(p)+tgt::vec3(0.001));
-        foregroundLabels->addSegment(segment);
+        foregroundLabels.addSegment(segment);
     }
-
-    numObjects += balls.size();
 
     int max_tries = 10;
     int tries = max_tries;
     int i=0;
     std::uniform_int_distribution<> indexDistr(0, balls.size());
-    for(; i<numObjects && tries > 0;) {
+    for(; i<numElements && tries > 0;) {
         auto b1 = balls.center(indexDistr(input.randomEngine));
         auto b2 = balls.center(indexDistr(input.randomEngine));
 
@@ -278,7 +420,7 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
         std::vector<tgt::vec3> segment;
         segment.push_back(p);
         segment.push_back(tgt::vec3(p)+tgt::vec3(0.001));
-        backgroundLabels->addSegment(segment);
+        backgroundLabels.addSegment(segment);
 
         for (int wallDim : std::array<int, 3> {0, 1, 2}) {
             tgt::ivec3 wall = b1;
@@ -294,7 +436,7 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
                 std::vector<tgt::vec3> segment;
                 segment.push_back(p2);
                 segment.push_back(tgt::vec3(p2)+tgt::vec3(0.001));
-                backgroundLabels->addSegment(segment);
+                backgroundLabels.addSegment(segment);
             }
         }
 
@@ -303,7 +445,35 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
     }
 
     if(tries == 0) {
-        LWARNING("Failed to position " << (numObjects-i) << "background seeds");
+        LWARNINGC(LargeTestDataGenerator::loggerCat_, "Failed to position " << (numElements-i) << "background seeds");
+    }
+}
+
+LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGeneratorInput input, ProgressReporter& progress) const {
+    tgtAssert(input.outputVolumeNoisy, "No outputVolume");
+    tgtAssert(input.outputVolumeGT, "No outputVolume");
+    const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
+    tgtAssert(input.outputVolumeGT->getDimensions() == dim, "Dimension mismatch");
+    Balls balls{};
+    Cylinders cylinders{};
+
+    std::unique_ptr<PointSegmentListGeometryVec3> foregroundLabels(new PointSegmentListGeometryVec3());
+    std::unique_ptr<PointSegmentListGeometryVec3> backgroundLabels(new PointSegmentListGeometryVec3());
+
+    std::normal_distribution<float> noiseDistr(0.0, input.noiseRange);
+
+    switch(input.scenario) {
+        case LargeTestDataGeneratorInput::CELLS: {
+            initCells(input, balls, cylinders, *foregroundLabels, *backgroundLabels);
+            break;
+        }
+        case LargeTestDataGeneratorInput::VESSELS: {
+            initCylinders(input, balls, cylinders, *foregroundLabels, *backgroundLabels);
+            break;
+        }
+        default: {
+            tgtAssert(false, "Invalid scenario");
+        }
     }
 
     const float insideBase = 0.7;
@@ -317,7 +487,7 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
             for(int x=0; x<dim.x; ++x) {
                 tgt::ivec3 p(x,y,z);
 
-                bool inside = balls.inside(p);
+                bool inside = balls.inside(p) || cylinders.inside(p);
                 float val = inside ? insideBase : outsideBase;
 
                 val += noiseDistr(input.randomEngine);
@@ -350,6 +520,14 @@ void LargeTestDataGenerator::processComputeOutput(LargeTestDataGeneratorOutput o
 
     foregroundLabelsPort_.setData(output.foregroundLabels.release());
     backgroundLabelsPort_.setData(output.backgroundLabels.release());
+}
+
+bool LargeTestDataGenerator::isReady() const {
+    if(!isInitialized()) {
+        setNotReadyErrorMessage("Not initialized.");
+        return false;
+    }
+    return true;
 }
 
 LargeTestDataGenerator::~LargeTestDataGenerator() {
