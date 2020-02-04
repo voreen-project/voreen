@@ -202,8 +202,16 @@ private:
 };
 
 
-static inline float simdFriendlyInverseSqrt( float f ) {
-    // Taken from https://en.wikipedia.org/wiki/Fast_inverse_square_root
+static inline tgt::vec3 findOrthogonal(tgt::vec3 v) {
+    tgt::vec3 orthBase1(1,0,0);
+    tgt::vec3 orthBase2(0,1,0);
+    tgt::vec3 orthBase = std::abs(tgt::dot(orthBase1, v)) < std::abs(tgt::dot(orthBase2, v)) ? orthBase1 : orthBase2;
+    return tgt::cross(orthBase, v);
+}
+static inline float simdFriendlyInverseSqrt(float f) {
+    // Taken from https://en.wikipedia.org/wiki/Fast_inverse_square_root, but
+    // adapted to rule out undefined behaviour: Use memcpy instead of pointer/
+    // union/reinterpret casts.
     const float x2 = f * 0.5F;
 	const float threehalfs = 1.5F;
 
@@ -274,10 +282,10 @@ struct Cylinders {
         end_.clear();
         radius_.clear();
     }
-    tgt::ivec3 start(size_t i) {
+    tgt::vec3 start(size_t i) {
         return start_[i];
     }
-    tgt::ivec3 end(size_t i) {
+    tgt::vec3 end(size_t i) {
         return end_[i];
     }
     float radius(size_t i) {
@@ -336,6 +344,10 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
     const float radiusToBaseLenFactor = 5.0f;
     std::uniform_real_distribution<> lDistr(0.5f, 2.0f);
 
+    std::uniform_int_distribution<> xDistr(0, dim.x-1);
+    std::uniform_int_distribution<> yDistr(0, dim.y-1);
+    std::uniform_int_distribution<> zDistr(0, dim.z-1);
+
     int totalVolume = tgt::hmul(dim);
     float volumeToFill = totalVolume * input.density;
 
@@ -361,9 +373,6 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
             if(tr > maxTries) {
                 break;
             }
-            std::uniform_int_distribution<> xDistr(0, dim.x-1);
-            std::uniform_int_distribution<> yDistr(0, dim.y-1);
-            std::uniform_int_distribution<> zDistr(0, dim.z-1);
 
             start = tgt::vec3(xDistr(input.randomEngine), yDistr(input.randomEngine), zDistr(input.randomEngine));
             dir = tgt::vec3::zero;
@@ -408,10 +417,7 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
                 float len = std::max(lDistr(input.randomEngine) * seed.baseLen, 2.0*seed.radius);
 
                 axis = seed.dir;
-                tgt::vec3 orthBase1(1,0,0);
-                tgt::vec3 orthBase2(0,1,0);
-                tgt::vec3 orthBase = std::abs(tgt::dot(orthBase1, axis)) < std::abs(tgt::dot(orthBase2, axis)) ? orthBase1 : orthBase2;
-                tgt::vec3 orth = tgt::normalize(tgt::cross(orthBase, seed.dir));
+                tgt::vec3 orth = tgt::normalize(findOrthogonal(axis));
 
                 orth = tgt::Quaternion<float>::rotate(orth, rotationAngle, axis);
                 axis = tgt::Quaternion<float>::rotate(axis, deviationAngle, orth);
@@ -426,6 +432,9 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
             tgt::vec3 p2 = end;
             float vol;
             if(clipLineToBB(volumeBounds, p1, p2)) {
+                if(tgt::distance(p1, p2) < 2.0f) {
+                    continue;
+                }
                 vol = tgt::distance(p1, p2) * seed.radius * seed.radius * tgt::PIf;
             } else {
                 LWARNINGC(LargeTestDataGenerator::loggerCat_, "centerline completely outside of volume");
@@ -434,6 +443,12 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
             balls.add(end, seed.radius);
             cylinders.add(seed.begin, end, seed.radius);
             volumeToFill -= vol;
+
+            std::vector<tgt::vec3> segment;
+            segment.push_back(p1);
+            segment.push_back(p2);
+            foregroundLabels.addSegment(segment);
+
             if(volumeToFill < 0) {
                 break;
             }
@@ -461,6 +476,64 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
         }
     }
     LINFOC(LargeTestDataGenerator::loggerCat_, "Placed " << cylinders.size() << " Cylinders");
+
+    auto invalid = [&] (const tgt::ivec3& p) {
+        return cylinders.inside(p) || balls.inside(p) || !volumeBounds.containsPoint(p);
+    };
+
+    int max_tries = 10;
+    int tries = max_tries;
+    std::uniform_int_distribution<> indexDistr(0, balls.size());
+    size_t numElements = cylinders.size();
+    for(int i=0; i<numElements && tries > 0;) {
+        auto s = cylinders.start(i);
+        auto e = cylinders.end(i);
+        float radius = cylinders.radius(i);
+
+        int bgSeedsPerCyliinder = std::ceil(tgt::distance(s, e)); //TODO: choose fixed?
+
+        tgt::vec3 axis = e - s;
+        tgt::vec3 orth = tgt::normalize(findOrthogonal(axis));
+        for(int j=0; j<bgSeedsPerCyliinder; ++j) {
+            float alpha = static_cast<float>(j)/(bgSeedsPerCyliinder-1);
+            tgt::vec3 p = alpha * s + (1.0f - alpha) * e;
+
+            float rotationAngle = std::uniform_real_distribution<>(0.0, 2 * tgt::PIf)(input.randomEngine);
+            tgt::vec3 offset = 2.0f * radius * tgt::Quaternion<float>::rotate(orth, rotationAngle, axis);
+
+            p += offset;
+
+            if(invalid(p)) {
+                continue;
+            }
+
+            std::vector<tgt::vec3> segment;
+            segment.push_back(p);
+            segment.push_back(tgt::vec3(p)+tgt::vec3(0.001));
+            backgroundLabels.addSegment(segment);
+        }
+
+        for (int wallDim : std::array<int, 3> {0, 1, 2}) {
+            tgt::vec3 wall = e;
+
+            if(e[wallDim] < dim[wallDim]/2) {
+                wall[wallDim] = 0;
+            } else {
+                wall[wallDim] = dim[wallDim];
+            }
+
+            tgt::ivec3 p2 = (e + wall)*0.5f;
+            if(!invalid(p2)) {
+                std::vector<tgt::vec3> segment;
+                segment.push_back(p2);
+                segment.push_back(tgt::vec3(p2)+tgt::vec3(0.001));
+                backgroundLabels.addSegment(segment);
+            }
+        }
+
+        tries = max_tries;
+        ++i;
+    }
 }
 
 static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinders& cylinders, PointSegmentListGeometryVec3& foregroundLabels, PointSegmentListGeometryVec3& backgroundLabels) {
@@ -499,9 +572,9 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
 
     int max_tries = 10;
     int tries = max_tries;
-    int i=0;
     std::uniform_int_distribution<> indexDistr(0, balls.size());
-    for(; i<numElements && tries > 0;) {
+    int i=0;
+    for(;i<numElements && tries > 0;) {
         auto b1 = balls.center(indexDistr(input.randomEngine));
         auto b2 = balls.center(indexDistr(input.randomEngine));
 
@@ -537,8 +610,8 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
             }
         }
 
-        ++i;
         tries = max_tries;
+        ++i;
     }
 
     if(tries == 0) {
