@@ -191,11 +191,29 @@ struct Balls {
     int radius(size_t i) {
         return radius_[i];
     }
+    void clear() {
+        center_.clear();
+        radius_.clear();
+    }
 
 private:
     std::vector<tgt::ivec3> center_;
     std::vector<int> radius_;
 };
+
+
+static inline float simdFriendlyInverseSqrt( float f ) {
+    // Taken from https://en.wikipedia.org/wiki/Fast_inverse_square_root
+    const float x2 = f * 0.5F;
+	const float threehalfs = 1.5F;
+
+    uint32_t i;
+    std::memcpy(&i, &f, sizeof i);
+	i  = 0x5f3759df - ( i >> 1 );
+    std::memcpy(&f, &i, sizeof i);
+	f  *= ( threehalfs - ( x2 * f * f ) );
+	return f;
+}
 
 struct Cylinders {
     Cylinders()
@@ -205,7 +223,7 @@ struct Cylinders {
     {
     }
 
-    void add(tgt::ivec3 start, tgt::ivec3 end, int radius) {
+    void add(tgt::ivec3 start, tgt::ivec3 end, float radius) {
         start_.push_back(start);
         end_.push_back(end);
         radius_.push_back(radius);
@@ -231,14 +249,15 @@ struct Cylinders {
 #pragma omp simd
 #endif
         for(int i=0; i < size; ++i) {
-            int radius = radiusMult * rad[i];
+            float radius = radiusMult * rad[i];
             tgt::vec3 s = start[i];
             tgt::vec3 e = end[i];
 
             tgt::vec3 pnorm = p - s;
             tgt::vec3 ax = e-s;
-            float len = tgt::length(ax);
-            ax = ax/len;
+            float lenInv = simdFriendlyInverseSqrt(tgt::lengthSq(ax));
+            ax = ax*lenInv;
+            float len = 1.0/lenInv;
 
             float proj = tgt::dot(ax, pnorm);
 
@@ -250,33 +269,76 @@ struct Cylinders {
         }
         return ret > 0;
     }
+    void clear() {
+        start_.clear();
+        end_.clear();
+        radius_.clear();
+    }
     tgt::ivec3 start(size_t i) {
         return start_[i];
     }
     tgt::ivec3 end(size_t i) {
         return end_[i];
     }
-    int radius(size_t i) {
+    float radius(size_t i) {
         return radius_[i];
     }
 
 private:
     std::vector<tgt::vec3> start_;
     std::vector<tgt::vec3> end_;
-    std::vector<int> radius_;
+    std::vector<float> radius_;
 };
+
+static bool clipLineToBB(const tgt::Bounds& bb, tgt::vec3& p0, tgt::vec3& p1) {
+    // Using the Liang–Barsky algorithm:
+    tgt::vec3 delta = p1-p0;
+    tgt::vec3 min = bb.getLLF();
+    tgt::vec3 max = bb.getURB();
+
+    tgt::vec3 p[] = { -delta, delta };
+    tgt::vec3 q[] = { p0 - min, max - p0 };
+
+    float umin = 0.0;
+    float umax = 1.0;
+    for(int j=0; j<2; ++j) {
+        for(int i=0; i<3; ++i) {
+            float& pi = p[j][i];
+            float& qi = q[j][i];
+            if(pi == 0) {
+                if(qi < 0) {
+                    return false;
+                }
+            } else if(pi < 0) {
+                umin = std::max(umin, qi/pi);
+            } else {
+                umax = std::min(umax, qi/pi);
+            }
+        }
+    }
+
+    if(umin > umax) {
+        return false;
+    }
+    p1 = p0 + umax * delta;
+    p0 = p0 + umin * delta;
+    return true;
+}
+
 static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cylinders& cylinders, PointSegmentListGeometryVec3& foregroundLabels, PointSegmentListGeometryVec3& backgroundLabels) {
     const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
     int minRadius = std::max(1, input.structureSizeRange.x/2);
     int maxRadius = std::max(1, input.structureSizeRange.y/2);
 
-    float minRelativeLen = 3.0f;
-    float maxRelativeLen = 10.0f;
+    const float maxRelativeLen = 2.0f;
+    const float deviationAngleStd = tgt::PIf * 0.1;
+    const size_t maxTries = 10;
+    const float radiusToBaseLenFactor = 5.0f;
+    std::uniform_real_distribution<> lDistr(0.5f, 2.0f);
 
     int totalVolume = tgt::hmul(dim);
     float volumeToFill = totalVolume * input.density;
 
-    std::uniform_real_distribution<> lDistr(minRelativeLen, maxRelativeLen);
 
     tgt::Bounds volumeBounds(tgt::vec3::zero, tgt::vec3(dim - tgt::svec3::one));
 
@@ -284,19 +346,26 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
         tgt::vec3 begin;
         tgt::vec3 dir;
         float radius;
+        float baseLen;
     };
     std::deque<BranchSeed> queue;
+
 
     while(volumeToFill > 0) {
 
         tgt::vec3 start;
         tgt::vec3 dir;
+        size_t tr = 0;
         do {
+            ++tr;
+            if(tr > maxTries) {
+                break;
+            }
             std::uniform_int_distribution<> xDistr(0, dim.x-1);
             std::uniform_int_distribution<> yDistr(0, dim.y-1);
             std::uniform_int_distribution<> zDistr(0, dim.z-1);
 
-            tgt::vec3 start(xDistr(input.randomEngine), yDistr(input.randomEngine), zDistr(input.randomEngine));
+            start = tgt::vec3(xDistr(input.randomEngine), yDistr(input.randomEngine), zDistr(input.randomEngine));
             dir = tgt::vec3::zero;
             size_t dimension = std::uniform_int_distribution<>(0, 2)(input.randomEngine);
             size_t side = std::uniform_int_distribution<>(0, 1)(input.randomEngine);
@@ -304,60 +373,88 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
                 start[dimension] = 0.0f;
                 dir[dimension] = 1.0;
             } else {
-                start[dimension] = dim[dimension];
+                start[dimension] = dim[dimension]-1;
                 dir[dimension] = -1.0;
             }
         } while(cylinders.distant(start, 2.0f));
+        if(tr > maxTries) {
+            LWARNINGC(LargeTestDataGenerator::loggerCat_, "Failed to fulfill density request");
+            break;
+        }
+        float rootRadiusLog = std::uniform_real_distribution<>(std::log(minRadius), std::log(maxRadius))(input.randomEngine);
+        float rootRadius = tgt::clamp(std::exp(rootRadiusLog), float(minRadius), float(maxRadius));
+        float rootBaseLen = std::uniform_real_distribution<>(0, rootRadius * radiusToBaseLenFactor)(input.randomEngine);
         queue.push_back(BranchSeed {
             start,
-            tgt::vec3(0,0,1),
-            float(maxRadius),
+            dir,
+            rootRadius,
+            rootBaseLen,
         });
-
-        float initialDeviationStd = tgt::PIf * 0.1;
-        const int numBranches = 3;
 
         while(!queue.empty()) {
             auto seed = queue.front();
             queue.pop_front();
 
-            float deviationStd = initialDeviationStd;
             tgt::vec3 end;
             tgt::vec3 axis;
+            size_t tr = 0;
             do {
-                float deviationAngle = std::normal_distribution<>(tgt::PIf * 0.1, deviationStd)(input.randomEngine);
+                ++tr;
+                if(tr > maxTries) {
+                    break;
+                }
+                float deviationAngle = std::normal_distribution<>(tgt::PIf * 0.1, deviationAngleStd)(input.randomEngine);
                 float rotationAngle = std::uniform_real_distribution<>(0.0, 2 * tgt::PIf)(input.randomEngine);
-                float len = std::max(lDistr(input.randomEngine) * maxRadius, 2.0*seed.radius);
+                float len = std::max(lDistr(input.randomEngine) * seed.baseLen, 2.0*seed.radius);
 
                 axis = seed.dir;
                 tgt::vec3 orthBase1(1,0,0);
                 tgt::vec3 orthBase2(0,1,0);
-                tgt::vec3 orthBase = tgt::dot(orthBase1, axis) > tgt::dot(orthBase2, axis) ? orthBase1 : orthBase2;
+                tgt::vec3 orthBase = std::abs(tgt::dot(orthBase1, axis)) < std::abs(tgt::dot(orthBase2, axis)) ? orthBase1 : orthBase2;
                 tgt::vec3 orth = tgt::normalize(tgt::cross(orthBase, seed.dir));
 
                 orth = tgt::Quaternion<float>::rotate(orth, rotationAngle, axis);
                 axis = tgt::Quaternion<float>::rotate(axis, deviationAngle, orth);
                 end = seed.begin + axis * len;
-                deviationStd += 0.1;
-            } while(!volumeBounds.containsPoint(end) || cylinders.distant(end, 2.0f));
+                tgtAssert(!std::isnan(end.x) && !std::isnan(end.x) && !std::isnan(end.x), "Invalid end calculated");
+            } while(cylinders.distant(end, 2.0f));
+            if(tr > maxTries) {
+                continue;
+            }
 
+            tgt::vec3 p1 = seed.begin;
+            tgt::vec3 p2 = end;
+            float vol;
+            if(clipLineToBB(volumeBounds, p1, p2)) {
+                vol = tgt::distance(p1, p2) * seed.radius * seed.radius * tgt::PIf;
+            } else {
+                LWARNINGC(LargeTestDataGenerator::loggerCat_, "centerline completely outside of volume");
+                continue;
+            }
             balls.add(end, seed.radius);
             cylinders.add(seed.begin, end, seed.radius);
-            float vol = tgt::distance(seed.begin, end) * seed.radius * seed.radius;
             volumeToFill -= vol;
             if(volumeToFill < 0) {
                 break;
             }
 
-            std::uniform_int_distribution<> rDistr(minRadius, seed.radius);
-            float childRadius = seed.radius / std::sqrt(numBranches);
-            if(childRadius > minRadius) {
-                for(int i=0; i<numBranches; ++i) {
-                    float radius = std::max(1.0, std::normal_distribution<>(childRadius, childRadius*0.01)(input.randomEngine));
+            if(!volumeBounds.containsPoint(end)) {
+                continue;
+            }
+
+            float crosssection = seed.radius*seed.radius;
+            std::uniform_real_distribution<> cDistr(crosssection/10.0, crosssection/2.0);
+
+            float c1 = cDistr(input.randomEngine);
+            float c2 = crosssection - c1;
+            float childRadii[] = {std::sqrt(c1), std::sqrt(c2)};
+            for(float childRadius : childRadii) {
+                if(childRadius > minRadius) {
                     queue.push_back(BranchSeed {
                         end,
                         axis,
-                        radius,
+                        childRadius,
+                        float(childRadius * radiusToBaseLenFactor),
                     });
                 }
             }
@@ -483,6 +580,9 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
 
         VolumeAtomic<uint8_t> sliceNoisy(tgt::vec3(dim.x, dim.y, 1));
         VolumeAtomic<uint8_t> sliceGT(tgt::vec3(dim.x, dim.y, 1));
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel for
+#endif
         for(int y=0; y<dim.y; ++y) {
             for(int x=0; x<dim.x; ++x) {
                 tgt::ivec3 p(x,y,z);
