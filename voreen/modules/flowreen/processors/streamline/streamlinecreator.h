@@ -84,10 +84,10 @@ protected:
                         "by other processors of the <i>Flowreen</i> module.");
         numSeedPoints_.setDescription("Can be used to determine the number of streamlines, which should be created. It can be used as a performance parameter.");
         seedTime_.setDescription("It is used as debug output to see the current generator. See the next description for more details.");
-        streamlineLengthThresholdProp_.setDescription("Streamlines, which are to short will be discarded. Streamlines, which are to long, will be clipped "\
+        streamlineLengthThreshold_.setDescription("Streamlines, which are to short will be discarded. Streamlines, which are to long, will be clipped "\
                                                       "to the maximum threshold.");
-        absoluteMagnitudeThresholdProp_.setDescription("Flow data points outside the threshold intervall will not be used for streamline construction.");
-        relativeMagnitudeThresholdProp_.setDescription("Can be used to adjust the absolut magnitude correctly.");
+        absoluteMagnitudeThreshold_.setDescription("Flow data points outside the threshold intervall will not be used for streamline construction.");
+        relativeMagnitudeThreshold_.setDescription("Can be used to adjust the absolut magnitude correctly.");
     }
 
 private:
@@ -116,12 +116,12 @@ private:
     IntProperty seedTime_;                                  ///< seed
 
     // streamline settings
-    IntIntervalProperty streamlineLengthThresholdProp_;     ///< streamline length must be in this interval
-    FloatIntervalProperty absoluteMagnitudeThresholdProp_;  ///< only magnitudes in this interval are used
-    BoolProperty fitAbsoluteMagnitudeProp_;                 ///< fit magnitude on input change?
-    FloatIntervalProperty relativeMagnitudeThresholdProp_;  ///< debug output
-    IntProperty stopIntegrationAngleThresholdProp_;         ///< stop integration when exceeding threshold?
-    OptionProperty<VolumeRAM::Filter> filterModeProp_;      ///< filtering inside the dataset
+    IntIntervalProperty streamlineLengthThreshold_;     ///< streamline length must be in this interval
+    FloatIntervalProperty absoluteMagnitudeThreshold_;  ///< only magnitudes in this interval are used
+    BoolProperty fitAbsoluteMagnitudeThreshold_;        ///< fit magnitude on input change?
+    FloatIntervalProperty relativeMagnitudeThreshold_;  ///< debug output
+    IntProperty stopIntegrationAngleThreshold_;         ///< stop integration when exceeding threshold?
+    OptionProperty<VolumeRAM::Filter> filterMode_;      ///< filtering inside the dataset
 
     static const std::string loggerCat_;
 };

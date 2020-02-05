@@ -44,12 +44,12 @@ StreamlineCreator::StreamlineCreator()
     , streamlineOutport_(Port::OUTPORT, "streamlineOutport", "Streamlines Output")
     , numSeedPoints_("numSeedPoints", "Number of Seed Points", 5000, 1, 200000)
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
-    , streamlineLengthThresholdProp_("streamlineLengthThresholdProp", "Threshold of Streamline Length: ", tgt::ivec2(10, 100), 2, 1000)
-    , absoluteMagnitudeThresholdProp_("absoluteMagnitudeThreshold", "Threshold of Magnitude (absolute)", tgt::vec2(0.0f, 1000.0f), 0.0f, 9999.99f)
-    , fitAbsoluteMagnitudeProp_("fitAbsoluteMagnitude", "Fit absolute Threshold to Input", false)
-    , relativeMagnitudeThresholdProp_("relativeMagnitudeThreshold", "Threshold of Magnitude (relative)", tgt::vec2(0.0f, 100.0f), 0.0f, 100.0f, Processor::VALID)
-    , stopIntegrationAngleThresholdProp_("stopIntegrationAngleThreshold", "Stop Integration on Angle", 180, 0, 180, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_ADVANCED)
-    , filterModeProp_("filterModeProp","Filtering:",Processor::INVALID_RESULT,false,Property::LOD_DEVELOPMENT)
+    , streamlineLengthThreshold_("streamlineLengthThresholdProp", "Threshold of Streamline Length: ", tgt::ivec2(10, 100), 2, 1000)
+    , absoluteMagnitudeThreshold_("absoluteMagnitudeThreshold", "Threshold of Magnitude (absolute)", tgt::vec2(0.0f, 1000.0f), 0.0f, 9999.99f)
+    , fitAbsoluteMagnitudeThreshold_("fitAbsoluteMagnitude", "Fit absolute Threshold to Input", false)
+    , relativeMagnitudeThreshold_("relativeMagnitudeThreshold", "Threshold of Magnitude (relative)", tgt::vec2(0.0f, 100.0f), 0.0f, 100.0f, Processor::VALID)
+    , stopIntegrationAngleThreshold_("stopIntegrationAngleThreshold", "Stop Integration on Angle", 180, 0, 180, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_ADVANCED)
+    , filterMode_("filterModeProp", "Filtering:", Processor::INVALID_RESULT, false, Property::LOD_DEVELOPMENT)
 {
     volumeInport_.addCondition(new PortConditionVolumeChannelCount(3));
     addPort(volumeInport_);
@@ -60,23 +60,24 @@ StreamlineCreator::StreamlineCreator()
         numSeedPoints_.setGroupID("streamline");
     addProperty(seedTime_);
         seedTime_.setGroupID("streamline");
-    addProperty(streamlineLengthThresholdProp_);
-        streamlineLengthThresholdProp_.setGroupID("streamline");
-    addProperty(absoluteMagnitudeThresholdProp_);
-        absoluteMagnitudeThresholdProp_.adaptDecimalsToRange(2);
-        absoluteMagnitudeThresholdProp_.onChange(MemberFunctionCallback<StreamlineCreator>(this,&StreamlineCreator::adjustRelativeThreshold));
-        absoluteMagnitudeThresholdProp_.setGroupID("streamline");
-    addProperty(fitAbsoluteMagnitudeProp_);
-        fitAbsoluteMagnitudeProp_.setGroupID("streamline");
-    addProperty(relativeMagnitudeThresholdProp_);
-        relativeMagnitudeThresholdProp_.setReadOnlyFlag(true);
-        relativeMagnitudeThresholdProp_.setGroupID("streamline");
-    addProperty(stopIntegrationAngleThresholdProp_);
-        stopIntegrationAngleThresholdProp_.setGroupID("streamline");
-    addProperty(filterModeProp_);
-        filterModeProp_.addOption("linear","Linear", VolumeRAM::LINEAR);
-        filterModeProp_.addOption("nearest","Nearest", VolumeRAM::NEAREST);
-        filterModeProp_.setGroupID("streamline");
+    addProperty(streamlineLengthThreshold_);
+        streamlineLengthThreshold_.setGroupID("streamline");
+    addProperty(absoluteMagnitudeThreshold_);
+        absoluteMagnitudeThreshold_.adaptDecimalsToRange(2);
+        absoluteMagnitudeThreshold_.onChange(MemberFunctionCallback<StreamlineCreator>(this, &StreamlineCreator::adjustRelativeThreshold));
+        absoluteMagnitudeThreshold_.setGroupID("streamline");
+    addProperty(fitAbsoluteMagnitudeThreshold_);
+        ON_CHANGE(fitAbsoluteMagnitudeThreshold_, StreamlineCreator, adjustPropertiesToInput);
+        fitAbsoluteMagnitudeThreshold_.setGroupID("streamline");
+    addProperty(relativeMagnitudeThreshold_);
+        relativeMagnitudeThreshold_.setReadOnlyFlag(true);
+        relativeMagnitudeThreshold_.setGroupID("streamline");
+    addProperty(stopIntegrationAngleThreshold_);
+        stopIntegrationAngleThreshold_.setGroupID("streamline");
+    addProperty(filterMode_);
+        filterMode_.addOption("linear", "Linear", VolumeRAM::LINEAR);
+        filterMode_.addOption("nearest", "Nearest", VolumeRAM::NEAREST);
+        filterMode_.setGroupID("streamline");
     setPropertyGroupGuiName("streamline", "Streamline Settings");
 }
 
@@ -106,16 +107,21 @@ std::vector<std::reference_wrapper<Port>> StreamlineCreator::getCriticalPorts() 
 
 void StreamlineCreator::adjustPropertiesToInput() {
 
-    if(!volumeInport_.hasData()) {
+    const VolumeBase* volume = volumeInport_.getData();
+    if(!volume) {
         return;
     }
 
-    VolumeMinMaxMagnitude* data = volumeInport_.getData()->getDerivedData<VolumeMinMaxMagnitude>();
+    if(fitAbsoluteMagnitudeThreshold_.get()) {
+        VolumeMinMaxMagnitude* data = volume->getDerivedData<VolumeMinMaxMagnitude>();
 
-    absoluteMagnitudeThresholdProp_.setMinValue(data->getMinMagnitude());
-    absoluteMagnitudeThresholdProp_.setMaxValue(data->getMaxMagnitude());
-    if(fitAbsoluteMagnitudeProp_.get()) {
-        absoluteMagnitudeThresholdProp_.set(tgt::vec2(data->getMinMagnitude(), data->getMaxMagnitude()));
+        absoluteMagnitudeThreshold_.setMinValue(data->getMinMagnitude());
+        absoluteMagnitudeThreshold_.setMaxValue(data->getMaxMagnitude());
+        absoluteMagnitudeThreshold_.set(tgt::vec2(data->getMinMagnitude(), data->getMaxMagnitude()));
+    }
+    else {
+        absoluteMagnitudeThreshold_.setMinValue(0.0f);
+        absoluteMagnitudeThreshold_.setMaxValue(5000.0f);
     }
 }
 
@@ -200,10 +206,10 @@ StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
     std::unique_ptr<StreamlineListBase> output(new StreamlineList(flowVolume));
 
     return StreamlineCreatorInput {
-            streamlineLengthThresholdProp_.get(),
-            absoluteMagnitudeThresholdProp_.get(),
-        stopIntegrationAngleThresholdProp_.get() * tgt::PIf / 180.0f,
-            filterModeProp_.getValue(),
+            streamlineLengthThreshold_.get(),
+            absoluteMagnitudeThreshold_.get(),
+            stopIntegrationAngleThreshold_.get() * tgt::PIf / 180.0f,
+            filterMode_.getValue(),
             volumeInport_.getThreadSafeData(),
             seedMask_.getThreadSafeData(),
             std::move(seedPoints),
@@ -284,10 +290,10 @@ void StreamlineCreator::processComputeOutput(StreamlineCreatorOutput output) {
 
 void StreamlineCreator::adjustRelativeThreshold() {
     //adjust read only property
-    tgt::vec2 range(absoluteMagnitudeThresholdProp_.getMinValue(), absoluteMagnitudeThresholdProp_.getMaxValue());
-    tgt::vec2 value = absoluteMagnitudeThresholdProp_.get();
+    tgt::vec2 range(absoluteMagnitudeThreshold_.getMinValue(), absoluteMagnitudeThreshold_.getMaxValue());
+    tgt::vec2 value = absoluteMagnitudeThreshold_.get();
 
-    relativeMagnitudeThresholdProp_.set(  (value - tgt::vec2(range.x)) / tgt::vec2(range.y - range.x) * 100.f);
+    relativeMagnitudeThreshold_.set((value - tgt::vec2(range.x)) / tgt::vec2(range.y - range.x) * 100.f);
 }
 
 /*

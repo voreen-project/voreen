@@ -95,7 +95,10 @@ void StreamlineBundleDetector::adjustPropertiesToInput() {
 StreamlineBundleDetectorInput StreamlineBundleDetector::prepareComputeInput() {
 
     if(!enabled_.get()) {
-        streamlineBundleOutport_.setData(streamlineInport_.getData(), false);
+        // HACK: passing through the original data causes crashes.
+        StreamlineListBase* clone = streamlineInport_.hasData() ? streamlineInport_.getData()->clone() : nullptr;
+        streamlineBundleOutport_.setData(clone, true);
+        //streamlineBundleOutport_.setData(streamlineInport_.getData(), false);
         streamlineNoiseOutport_.setData(nullptr);
         throw InvalidInputException("", InvalidInputException::S_IGNORE);
     }

@@ -119,7 +119,7 @@ private:
     // pathline settings
     IntIntervalProperty pathlineLengthThreshold_;       ///< pathline length must be in this interval
     FloatIntervalProperty absoluteMagnitudeThreshold_;  ///< only magnitudes in this interval are used
-    BoolProperty fitAbsoluteMagnitude_;                 ///< fit magnitude on input change?
+    BoolProperty fitAbsoluteMagnitudeThreshold_;        ///< fit magnitude on input change?
     FloatIntervalProperty relativeMagnitudeThreshold_;  ///< debug output
     IntProperty stopIntegrationAngleThreshold_;         ///< stop integration when exceeding threshold?
     FloatProperty temporalResolution_;                  ///< (global) temporal resolution between time steps

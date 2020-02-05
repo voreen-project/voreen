@@ -60,7 +60,10 @@ StreamlineFilter::~StreamlineFilter() {
 
 StreamlineFilterComputeInput StreamlineFilter::prepareComputeInput() {
     if(!enabled_.get()) {
-        streamlineOutport_.setData(streamlineInport_.getData(), false);
+        // HACK: passing through the original data causes crashes.
+        StreamlineListBase* clone = streamlineInport_.hasData() ? streamlineInport_.getData()->clone() : nullptr;
+        streamlineOutport_.setData(clone, true);
+        //streamlineOutport_.setData(streamlineInport_.getData(), false);
         throw InvalidInputException("", InvalidInputException::S_IGNORE);
     }
 
@@ -69,10 +72,11 @@ StreamlineFilterComputeInput StreamlineFilter::prepareComputeInput() {
 //        streamlineOutport_.setData(streamlineInport_.getData(), false);
 //    }
 
-    std::unique_ptr<StreamlineListBase> streamlines(streamlineInport_.getData()->clone());
-    if(!streamlines) {
-        throw InvalidInputException("No streamlines", InvalidInputException::S_ERROR);
+    if(!streamlineInport_.hasData()) {
+        throw InvalidInputException("No input", InvalidInputException::S_WARNING);
     }
+
+    std::unique_ptr<StreamlineListBase> streamlines(streamlineInport_.getData()->clone());
 
     return StreamlineFilterComputeInput {
             std::move(streamlines),
@@ -113,7 +117,7 @@ StreamlineFilterComputeOutput StreamlineFilter::compute(ComputeInput input, Prog
 }
 
 void StreamlineFilter::processComputeOutput(ComputeOutput output) {
-    streamlineOutport_.setData(output.streamlines.release(), true);
+    streamlineOutport_.setData(output.streamlines.release());
 }
 
 void StreamlineFilter::adjustPropertiesToInput() {

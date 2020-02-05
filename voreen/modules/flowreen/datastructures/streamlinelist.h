@@ -36,7 +36,7 @@
 
 namespace voreen {
 
-    class VolumeBase;
+class VolumeBase;
 
 /**
  * Implementation of StreamlineListBase, storing the streamlines.
@@ -44,12 +44,8 @@ namespace voreen {
 class VRN_CORE_API StreamlineList : public StreamlineListBase {
 public:
 
-    //------------------------------
-    //  Constructor and Destructor
-    //------------------------------
-
     /** Constructor, gets the meta informations from the passed volume */
-    StreamlineList(const VolumeBase* vol = nullptr);
+    StreamlineList(const VolumeBase* volume = nullptr);
     /** Destructor */
     virtual ~StreamlineList();
     /** No Copy-Constructor. Use clone instead. */

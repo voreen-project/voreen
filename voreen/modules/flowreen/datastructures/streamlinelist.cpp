@@ -25,26 +25,25 @@
 
 #include "streamlinelist.h"
 
-#include "voreen/core/datastructures/volume/volume.h"
-#include "voreen/core/utils/stringutils.h"
-
-#include "tgt/assert.h"
-
-#include <sstream>
+#include "voreen/core/datastructures/volume/volumebase.h"
 
 namespace voreen {
 
-StreamlineList::StreamlineList(const VolumeBase* vol)
+StreamlineList::StreamlineList(const VolumeBase* volume)
     : StreamlineListBase()
-    , dimensions_(1), spacing_(1.f), minMagnitude_(-1.f), maxMagnitude_(-1.f)
-    , listTransformMatrix_(tgt::mat4::identity), velocityTransformMatrix_(tgt::mat4::identity)
+    , dimensions_(1)
+    , spacing_(1.0f)
+    , minMagnitude_(-1.0f)
+    , maxMagnitude_(-1.0f)
+    , listTransformMatrix_(tgt::mat4::identity)
+    , velocityTransformMatrix_(tgt::mat4::identity)
 {
-    if(vol) {
-        dimensions_ = vol->getDimensions();
-        spacing_ = vol->getSpacing();
-        worldBounds_ = vol->getBoundingBox().getBoundingBox();
-        voxelToWorldMatrix_ = vol->getVoxelToWorldMatrix();
-        worldToVoxelMatrix_ = vol->getWorldToVoxelMatrix();
+    if(volume) {
+        dimensions_             = volume->getDimensions();
+        spacing_                = volume->getSpacing();
+        worldBounds_            = volume->getBoundingBox().getBoundingBox();
+        voxelToWorldMatrix_     = volume->getVoxelToWorldMatrix();
+        worldToVoxelMatrix_     = volume->getWorldToVoxelMatrix();
         voxelBounds_.addPoint(worldToVoxelMatrix_ * worldBounds_.getLLF());
         voxelBounds_.addPoint(worldToVoxelMatrix_ * worldBounds_.getURB());
     }
@@ -54,7 +53,7 @@ StreamlineList::~StreamlineList() {
 }
 
 StreamlineListBase* StreamlineList::clone() const{
-    StreamlineList* result = new StreamlineList();
+    StreamlineList* result           = new StreamlineList();
 
     result->streamlines_             = this->streamlines_;
     result->dimensions_              = this->dimensions_;
@@ -100,10 +99,10 @@ void StreamlineList::addStreamlineList(const StreamlineListBase& list) {
     notifyPendingDataInvalidation();
 
     //adapt min and max value
-    if(minMagnitude_ < 0.f || minMagnitude_ > list.getMinMagnitude()) {
+    if(minMagnitude_ < 0.0f || minMagnitude_ > list.getMinMagnitude()) {
         minMagnitude_ = list.getMinMagnitude();
     }
-    if(maxMagnitude_ < 0.f || maxMagnitude_ < list.getMaxMagnitude()) {
+    if(maxMagnitude_ < 0.0f || maxMagnitude_ < list.getMaxMagnitude()) {
         maxMagnitude_ = list.getMaxMagnitude();
     }
 

@@ -46,7 +46,7 @@ PathlineCreator::PathlineCreator()
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
     , pathlineLengthThreshold_("pathlineLengthThresholdProp", "Threshold of Pathline Length: ", tgt::ivec2(0, 1000), 0, 1000)
     , absoluteMagnitudeThreshold_("absoluteMagnitudeThreshold", "Threshold of Magnitude (absolute)", tgt::vec2(0.0f, 1000.0f), 0.0f, 9999.99f)
-    , fitAbsoluteMagnitude_("fitAbsoluteMagnitude", "Fit absolute Threshold to Input", false)
+    , fitAbsoluteMagnitudeThreshold_("fitAbsoluteMagnitude", "Fit absolute Threshold to Input", false)
     , relativeMagnitudeThreshold_("relativeMagnitudeThreshold", "Threshold of Magnitude (relative)", tgt::vec2(0.0f, 100.0f), 0.0f, 100.0f, Processor::VALID)
     , stopIntegrationAngleThreshold_("stopIntegrationAngleThreshold", "Stop Integration on Angle (degrees)", 180, 0, 180, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_ADVANCED)
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 0.1f, 1000.0f)
@@ -70,8 +70,9 @@ PathlineCreator::PathlineCreator()
     absoluteMagnitudeThreshold_.adaptDecimalsToRange(2);
     absoluteMagnitudeThreshold_.onChange(MemberFunctionCallback<PathlineCreator>(this, &PathlineCreator::adjustRelativeThreshold));
     absoluteMagnitudeThreshold_.setGroupID("pathline");
-    addProperty(fitAbsoluteMagnitude_);
-    fitAbsoluteMagnitude_.setGroupID("pathline");
+    addProperty(fitAbsoluteMagnitudeThreshold_);
+    ON_CHANGE(fitAbsoluteMagnitudeThreshold_, PathlineCreator, adjustPropertiesToInput);
+    fitAbsoluteMagnitudeThreshold_.setGroupID("pathline");
     addProperty(relativeMagnitudeThreshold_);
     relativeMagnitudeThreshold_.setReadOnlyFlag(true);
     relativeMagnitudeThreshold_.setGroupID("pathline");
@@ -125,21 +126,25 @@ void PathlineCreator::adjustPropertiesToInput() {
         return;
     }
 
-    LWARNING("Calculating Min/Max Magnitudes, this might take a while");
+    if(fitAbsoluteMagnitudeThreshold_.get()) {
+        LWARNING("Calculating Min/Max Magnitudes, this might take a while");
 
-    float minMagnitude = std::numeric_limits<float>::max();
-    float maxMagnitude = 0.0f;
+        float minMagnitude = std::numeric_limits<float>::max();
+        float maxMagnitude = 0.0f;
 
-    for(size_t i=0; i<volumeList->size(); i++) {
-        VolumeMinMaxMagnitude* vmmm = volumeList->at(i)->getDerivedData<VolumeMinMaxMagnitude>();
-        minMagnitude = std::min(minMagnitude, vmmm->getMinMagnitude());
-        maxMagnitude = std::max(maxMagnitude, vmmm->getMaxMagnitude());
-    }
+        for (size_t i = 0; i < volumeList->size(); i++) {
+            VolumeMinMaxMagnitude* vmmm = volumeList->at(i)->getDerivedData<VolumeMinMaxMagnitude>();
+            minMagnitude = std::min(minMagnitude, vmmm->getMinMagnitude());
+            maxMagnitude = std::max(maxMagnitude, vmmm->getMaxMagnitude());
+        }
 
-    absoluteMagnitudeThreshold_.setMinValue(minMagnitude);
-    absoluteMagnitudeThreshold_.setMaxValue(maxMagnitude);
-    if(fitAbsoluteMagnitude_.get()) {
+        absoluteMagnitudeThreshold_.setMinValue(minMagnitude);
+        absoluteMagnitudeThreshold_.setMaxValue(maxMagnitude);
         absoluteMagnitudeThreshold_.set(tgt::vec2(minMagnitude, maxMagnitude));
+    }
+    else {
+        absoluteMagnitudeThreshold_.setMinValue(0.0f);
+        absoluteMagnitudeThreshold_.setMaxValue(5000.0f);
     }
 
     pathlineLengthThreshold_.setMinValue(0);

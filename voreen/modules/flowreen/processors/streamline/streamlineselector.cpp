@@ -86,7 +86,10 @@ StreamlineSelector::~StreamlineSelector() {
 
 StreamlineSelectorComputeInput StreamlineSelector::prepareComputeInput() {
     if(!enabled_.get()) {
-        streamlineOutport_.setData(streamlineInport_.getData(), false);
+        // HACK: passing through the original data causes crashes.
+        StreamlineListBase* clone = streamlineInport_.hasData() ? streamlineInport_.getData()->clone() : nullptr;
+        streamlineOutport_.setData(clone, true);
+        //streamlineOutport_.setData(streamlineInport_.getData(), false);
         throw InvalidInputException("", InvalidInputException::S_IGNORE);
     }
 
@@ -95,10 +98,11 @@ StreamlineSelectorComputeInput StreamlineSelector::prepareComputeInput() {
 //        streamlineOutport_.setData(streamlineInport_.getData(), false);
 //    }
 
-    std::unique_ptr<StreamlineListBase> streamlines(streamlineInport_.getData()->clone());
-    if(!streamlines) {
-        throw InvalidInputException("No streamlines", InvalidInputException::S_ERROR);
+    if(!streamlineInport_.hasData()) {
+        throw InvalidInputException("No input", InvalidInputException::S_WARNING);
     }
+
+    std::unique_ptr<StreamlineListBase> streamlines(streamlineInport_.getData()->clone());
 
     // Transform roi from voxel into world space.
     tgt::Bounds roi(streamlines->getVoxelToWorldMatrix() * tgt::vec3(roi_.get().getLLF()),
@@ -163,7 +167,7 @@ StreamlineSelectorComputeOutput StreamlineSelector::compute(ComputeInput input, 
 
 void StreamlineSelector::processComputeOutput(ComputeOutput output) {
     lastUsedGeometry_ = roi_.get();
-    streamlineOutport_.setData(output.streamlines.release(), true);
+    streamlineOutport_.setData(output.streamlines.release());
 }
 
 void StreamlineSelector::afterProcess() {
