@@ -732,7 +732,7 @@ void AsyncComputeProcessor<I,O>::process() {
                     break;
                 case InvalidInputException::S_WARNING:
 
-                    VoreenApplication::app()->showMessageBox(header, msg, true);
+                    VoreenApplication::app()->showMessageBox(header, msg, false);
                     LWARNING(msg);
                     break;
                 case InvalidInputException::S_IGNORE:
