@@ -32,7 +32,7 @@ namespace voreen {
 
 class ResampleFilter : public VolumeFilter {
 public:
-    ResampleFilter(tgt::svec3 targetDimensions, std::string sliceBaseType, size_t numChannels);
+    ResampleFilter(const tgt::svec3& targetDimensions, const std::string& sliceBaseType, size_t numChannels);
 
     virtual ~ResampleFilter();
 

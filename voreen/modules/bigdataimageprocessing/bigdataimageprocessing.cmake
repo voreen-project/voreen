@@ -76,6 +76,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/volumefiltering/gradientfilter.cpp
     ${MOD_DIR}/volumefiltering/medianfilter.cpp
     ${MOD_DIR}/volumefiltering/morphologyfilter.cpp
+    ${MOD_DIR}/volumefiltering/negationfilter.cpp
     ${MOD_DIR}/volumefiltering/resamplefilter.cpp
     ${MOD_DIR}/volumefiltering/thresholdingfilter.cpp
     ${MOD_DIR}/volumefiltering/vorticityfilter.cpp
@@ -88,6 +89,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/volumefilterproperties/gradientfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/medianfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/morphologyfilterproperties.cpp
+    ${MOD_DIR}/volumefilterproperties/negationfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/resamplefilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/thresholdingfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/vorticityfilterproperties.cpp
@@ -117,6 +119,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/volumefiltering/gradientfilter.h
     ${MOD_DIR}/volumefiltering/medianfilter.h
     ${MOD_DIR}/volumefiltering/morphologyfilter.h
+    ${MOD_DIR}/volumefiltering/negationfilter.h
     ${MOD_DIR}/volumefiltering/thresholdingfilter.h
     ${MOD_DIR}/volumefiltering/vorticityfilter.h
 
@@ -128,6 +131,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/volumefilterproperties/gradientfilterproperties.h
     ${MOD_DIR}/volumefilterproperties/medianfilterproperties.h
     ${MOD_DIR}/volumefilterproperties/morphologyfilterproperties.h
+    ${MOD_DIR}/volumefilterproperties/negationfilterproperties.h
     ${MOD_DIR}/volumefilterproperties/thresholdingfilterproperties.h
     ${MOD_DIR}/volumefilterproperties/vorticityfilterproperties.h
 

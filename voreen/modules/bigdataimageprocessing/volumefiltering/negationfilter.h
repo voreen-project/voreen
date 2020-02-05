@@ -23,63 +23,53 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "resamplefilter.h"
-#include "slicereader.h"
+#ifndef VRN_NEGATIONFILTER_H
+#define VRN_NEGATIONFILTER_H
+
+#include "parallelvolumefilter.h"
 
 namespace voreen {
 
-ResampleFilter::ResampleFilter(const tgt::svec3& targetDimensions, const std::string& sliceBaseType, size_t numChannels)
-    : dimensions_(targetDimensions)
-    , sliceBaseType_(sliceBaseType)
-    , numChannels_(numChannels)
+template<typename  T>
+class NegationFilter : public ParallelVolumeFilter<ParallelFilterValue<T>, ParallelFilterValue<T>> {
+public:
+    NegationFilter(const tgt::bvec4& negate, const std::string& sliceBaseType);
+    virtual ~NegationFilter();
+    ParallelFilterValue<T> getValue(const typename NegationFilter<T>::Sample& sample, const tgt::ivec3& pos) const;
+private:
+    const tgt::bvec4 negate_; // TODO: We should derive the number of channels at compile time.
+};
+
+template<typename T>
+NegationFilter<T>::NegationFilter(const tgt::bvec4& negate, const std::string& sliceBaseType)
+    : ParallelVolumeFilter<ParallelFilterValue<T>, ParallelFilterValue<T>>(0, SamplingStrategy<ParallelFilterValue<T>>::ASSERT_FALSE, sliceBaseType)
+    , negate_(negate)
 {
 }
 
-ResampleFilter::~ResampleFilter() {
-}
-const boost::optional<tgt::svec3> ResampleFilter::getOverwrittenDimensions() const {
-    return dimensions_;
+template<typename T>
+NegationFilter<T>::~NegationFilter() {
 }
 
-std::unique_ptr<VolumeRAM> ResampleFilter::getFilteredSlice(const CachingSliceReader* src, int z) const {
-    tgt::ivec3 dim = dimensions_;
-    tgtAssert(z >= 0 && z<dim.z, "Invalid z pos in slice request");
+template<typename T>
+ParallelFilterValue<T> NegationFilter<T>::getValue(const typename NegationFilter<T>::Sample& sample, const tgt::ivec3& pos) const {
 
-    VolumeFactory volumeFactory;
-    std::string format = volumeFactory.getFormat(sliceBaseType_, numChannels_);
-    std::unique_ptr<VolumeRAM> outputSlice(volumeFactory.create(format, tgt::svec3(dim.xy(), 1)));
+    ParallelFilterValue<T> value = sample(pos);
 
-    tgt::vec3 thisToBaseScale(tgt::vec3(src->getDimensions()) / tgt::vec3(dimensions_));
-    tgt::vec3 thisToBaseOffset(thisToBaseScale * tgt::vec3(0.5) - tgt::vec3(0.5));
-
-    for(int y = 0; y < dim.y; ++y) {
-        for(int x = 0; x < dim.x; ++x) {
-            tgt::ivec3 srcPos = tgt::round(thisToBaseScale * tgt::vec3(x, y, z) + thisToBaseOffset);
-            for(size_t channel = 0; channel < numChannels_; channel++) {
-                float val = src->getVoxelNormalized(srcPos, channel);
-                outputSlice->setVoxelNormalized(val, x, y, 0, channel);
-            }
+    for(size_t channel=0; channel<ParallelFilterValue<T>::dim; channel++) {
+        if(negate_[channel]) {
+            value[channel] = -value[channel];
         }
     }
 
-    return outputSlice;
+    return value;
 }
 
-int ResampleFilter::zExtent() const {
-    return 0;
-}
-
-const std::string& ResampleFilter::getSliceBaseType() const {
-    return sliceBaseType_;
-}
-
-size_t ResampleFilter::getNumInputChannels() const {
-    return numChannels_;
-}
-
-size_t ResampleFilter::getNumOutputChannels() const {
-    return numChannels_;
-}
-
+typedef NegationFilter<float>     NegationFilter1D;
+typedef NegationFilter<tgt::vec2> NegationFilter2D;
+typedef NegationFilter<tgt::vec3> NegationFilter3D;
+typedef NegationFilter<tgt::vec4> NegationFilter4D;
 
 } // namespace voreen
+
+#endif // VRN_MEDIANFILTER_H

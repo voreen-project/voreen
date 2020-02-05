@@ -127,7 +127,7 @@ void PathlineCreator::adjustPropertiesToInput() {
     }
 
     if(fitAbsoluteMagnitudeThreshold_.get()) {
-        LWARNING("Calculating Min/Max Magnitudes, this might take a while");
+        LWARNING("Calculating Min/Max Magnitudes. This may take a while...");
 
         float minMagnitude = std::numeric_limits<float>::max();
         float maxMagnitude = 0.0f;
