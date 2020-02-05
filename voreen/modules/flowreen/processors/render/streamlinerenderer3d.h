@@ -121,7 +121,7 @@ private:
     OptionProperty<StreamlineStyle> streamlineStyle_;   ///< used to change streamline representations
         //color
     OptionProperty<StreamlineColorCoding> color_;       ///< color encoding
-    TransFunc1DKeysProperty tfProp_;                    ///< tf for velocity color coding
+    TransFunc1DKeysProperty transferFunction_;          ///< tf for velocity color coding
     std::unique_ptr<VolumeBase> tfVolume_;              ///< volume for tf fit to data
     FloatMat4Property colorRotationMatrix_;             ///< rotation matrix for the direction encoding color
     FloatOptionProperty rotateAroundX_;                 ///< rotate around x to get nice color coding

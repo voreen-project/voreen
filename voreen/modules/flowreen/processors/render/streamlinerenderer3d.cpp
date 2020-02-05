@@ -48,7 +48,7 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     , streamlineStyle_("streamlineStyle", "Streamline Style:")
         //color
     , color_("colorProp", "Color:")
-    , tfProp_("tfProp","Color Map:")
+    , transferFunction_("tfProp", "Color Map:")
     , colorRotationMatrix_("colorRotationMatrix", "To be linked with FlowDirectionOverlay", tgt::mat4::identity,
                            tgt::mat4(-1.1f), tgt::mat4(1.1f), Processor::INVALID_RESULT, NumericProperty<tgt::mat4>::STATIC, Property::LOD_DEBUG)
     , rotateAroundX_("rotationaroundx", "x-Axis Rotation (degrees)")
@@ -79,7 +79,7 @@ StreamlineRenderer3D::StreamlineRenderer3D()
         color_.addOption("velocity" , "Velocity" , COLOR_VELOCITY);
         color_.addOption("direction" , "Direction" , COLOR_DIRECTION);
         color_.onChange(MemberFunctionCallback<StreamlineRenderer3D>(this, &StreamlineRenderer3D::onColorChange));
-    addProperty(tfProp_);
+    addProperty(transferFunction_);
     addProperty(rotateAroundX_);
         rotateAroundX_.addOption("0", "0", 0.f);
         rotateAroundX_.addOption("90", "90", 90.f);
@@ -156,8 +156,8 @@ void StreamlineRenderer3D::process() {
         {
             tgt::TextureUnit transFuncUnit;
             transFuncUnit.activate();
-            tfProp_.get()->getTexture()->bind();
-            tfProp_.get()->setUniform(shader, "transFuncParam_", "transFuncTex_", transFuncUnit.getUnitNumber());
+            transferFunction_.get()->getTexture()->bind();
+            transferFunction_.get()->setUniform(shader, "transFuncParam_", "transFuncTex_", transFuncUnit.getUnitNumber());
 
             glEnable(GL_BLEND);
 
@@ -165,9 +165,13 @@ void StreamlineRenderer3D::process() {
             if(enableMaximumIntensityProjection_.get()) {
                 glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
                 glBlendEquation(GL_MAX);
+                glDisable(GL_DEPTH_TEST);
             }
             else {
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                if(transferFunction_.get()->getAlphaMode() == TransFuncBase::TF_USE_ALPHA) {
+                    glDisable(GL_DEPTH_TEST);
+                }
             }
             break;
         }
@@ -187,6 +191,7 @@ void StreamlineRenderer3D::process() {
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_ONE, GL_ZERO);
         glDisable(GL_BLEND);
+        glEnable(GL_DEPTH_TEST);
         shader->deactivate();
         LGL_ERROR;
     }
@@ -209,7 +214,7 @@ void StreamlineRenderer3D::onStreamlineDataChange() {
     VolumeRAM_Float* rep = new VolumeRAM_Float(data, tgt::svec3(2,1,1));
     tfVolume_.reset(new Volume(rep, tgt::vec3::one, tgt::vec3::zero));
     tfVolume_->addDerivedData(new VolumeMinMax(data[0], data[1], data[0], data[1])); //to save time by not triggering an background thread
-    tfProp_.setVolume(tfVolume_.get(), 0);
+    transferFunction_.setVolume(tfVolume_.get(), 0);
 
     // Force rebuild
     requiresRebuild_ = true;
@@ -236,7 +241,7 @@ void StreamlineRenderer3D::onColorChange() {
     //update visibility
     switch(color_.getValue()) {
     case COLOR_VELOCITY:
-        tfProp_.setVisibleFlag(true);
+        transferFunction_.setVisibleFlag(true);
         rotateAroundX_.setVisibleFlag(false);
         rotateAroundY_.setVisibleFlag(false);
         rotateAroundZ_.setVisibleFlag(false);
@@ -244,7 +249,7 @@ void StreamlineRenderer3D::onColorChange() {
         enableMaximumIntensityProjection_.setVisibleFlag(true);
         break;
     case COLOR_DIRECTION:
-        tfProp_.setVisibleFlag(false);
+        transferFunction_.setVisibleFlag(false);
         rotateAroundX_.setVisibleFlag(true);
         rotateAroundY_.setVisibleFlag(true);
         rotateAroundZ_.setVisibleFlag(true);
@@ -287,7 +292,7 @@ std::string StreamlineRenderer3D::generateHeader(const tgt::GpuCapabilities::GlV
     switch(color_.getValue()) {
     case COLOR_VELOCITY:
         header += "#define COLOR_VELOCITY\n";
-        header += tfProp_.get()->getShaderDefines();
+        header += transferFunction_.get()->getShaderDefines();
         break;
     case COLOR_DIRECTION:
         header += "#define COLOR_DIRECTION\n";
