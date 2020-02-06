@@ -1213,7 +1213,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     float max = static_cast<float>(globalMax)/0xffff;
     output->addDerivedData(new VolumeMinMax(min, max, min, max));
     output->addDerivedData(new VolumeHistogramIntensity(histogram));
-    output->setRealWorldMapping(RealWorldMapping(1.0, 0.0f, "Probability"));
+    output->setRealWorldMapping(RealWorldMapping(1.0, 0.0f, ""));
 
     // It's not really feasible, but also not important to compute an actual hash
     boost::uuids::basic_random_generator<boost::mt19937> uuidGenerator{};
