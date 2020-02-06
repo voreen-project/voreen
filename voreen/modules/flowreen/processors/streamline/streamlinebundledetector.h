@@ -71,6 +71,7 @@ protected:
 
     virtual bool isReady() const;
     virtual void adjustPropertiesToInput();
+    virtual void dataWillChange(const Port* source);
 
     virtual void setDescriptions() {
         setDescription("Bundles streamlines using the QuickBundles algorithm.");

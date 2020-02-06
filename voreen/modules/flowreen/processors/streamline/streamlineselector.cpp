@@ -86,10 +86,7 @@ StreamlineSelector::~StreamlineSelector() {
 
 StreamlineSelectorComputeInput StreamlineSelector::prepareComputeInput() {
     if(!enabled_.get()) {
-        // HACK: passing through the original data causes crashes.
-        StreamlineListBase* clone = streamlineInport_.hasData() ? streamlineInport_.getData()->clone() : nullptr;
-        streamlineOutport_.setData(clone, true);
-        //streamlineOutport_.setData(streamlineInport_.getData(), false);
+        streamlineOutport_.setData(streamlineInport_.getData(), false);
         throw InvalidInputException("", InvalidInputException::S_IGNORE);
     }
 
@@ -203,6 +200,11 @@ void StreamlineSelector::adjustPropertiesToInput() {
         roi_.setMinValue(tgt::ivec3::zero);
         roi_.invalidate();
     }
+}
+
+void StreamlineSelector::dataWillChange(const Port* source) {
+    streamlineOutport_.clear();
+    AsyncComputeProcessor::dataWillChange(source);
 }
 
 void StreamlineSelector::clearSelectionOnChange() {

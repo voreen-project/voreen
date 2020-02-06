@@ -135,8 +135,8 @@ private:
     FloatMat4Property colorRotationMatrix_;
 
     //geometry
-    TriangleMeshGeometryBase* currentGeometry_; ///< stores the current geometry
-    GlMeshGeometryBase* sphereGeometry_;        ///< sphere is handled separately
+    std::unique_ptr<TriangleMeshGeometryBase> currentGeometry_; ///< stores the current geometry
+    std::unique_ptr<GlMeshGeometryBase> sphereGeometry_;        ///< sphere is handled separately
 
     bool geometryMustBeRecreated_;              ///< true at the beginning and if the axis size has been changed
     const float overlayBaseSize_;               ///< the base size of the overlay

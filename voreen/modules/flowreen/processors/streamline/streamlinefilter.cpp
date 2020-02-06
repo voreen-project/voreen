@@ -60,10 +60,7 @@ StreamlineFilter::~StreamlineFilter() {
 
 StreamlineFilterComputeInput StreamlineFilter::prepareComputeInput() {
     if(!enabled_.get()) {
-        // HACK: passing through the original data causes crashes.
-        StreamlineListBase* clone = streamlineInport_.hasData() ? streamlineInport_.getData()->clone() : nullptr;
-        streamlineOutport_.setData(clone, true);
-        //streamlineOutport_.setData(streamlineInport_.getData(), false);
+        streamlineOutport_.setData(streamlineInport_.getData(), false);
         throw InvalidInputException("", InvalidInputException::S_IGNORE);
     }
 
@@ -136,6 +133,11 @@ void StreamlineFilter::adjustPropertiesToInput() {
         //physicalLengthRange_.set(maxPhysicalLength);
         //curvatureRange_.set(tgt::ivec2(0, 180));
     }
+}
+
+void StreamlineFilter::dataWillChange(const Port* source) {
+    streamlineOutport_.clear();
+    AsyncComputeProcessor::dataWillChange(source);
 }
 
 }   // namespace

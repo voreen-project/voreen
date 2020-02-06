@@ -92,13 +92,16 @@ void StreamlineBundleDetector::adjustPropertiesToInput() {
     maxAverageDistanceThresholdProp_.adaptDecimalsToRange(3);
 }
 
+void StreamlineBundleDetector::dataWillChange(const Port* source) {
+    streamlineBundleOutport_.clear();
+    streamlineNoiseOutport_.clear();
+    AsyncComputeProcessor::dataWillChange(source);
+}
+
 StreamlineBundleDetectorInput StreamlineBundleDetector::prepareComputeInput() {
 
     if(!enabled_.get()) {
-        // HACK: passing through the original data causes crashes.
-        StreamlineListBase* clone = streamlineInport_.hasData() ? streamlineInport_.getData()->clone() : nullptr;
-        streamlineBundleOutport_.setData(clone, true);
-        //streamlineBundleOutport_.setData(streamlineInport_.getData(), false);
+        streamlineBundleOutport_.setData(streamlineInport_.getData(), false);
         streamlineNoiseOutport_.setData(nullptr);
         throw InvalidInputException("", InvalidInputException::S_IGNORE);
     }

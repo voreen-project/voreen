@@ -112,9 +112,9 @@ bool PathlineCreator::isReady() const {
 }
 
 std::vector<std::reference_wrapper<Port>> PathlineCreator::getCriticalPorts() {
-    auto criticalPorts = AsyncComputeProcessor<ComputeInput, ComputeOutput>::getCriticalPorts();
+    auto criticalPorts = AsyncComputeProcessor::getCriticalPorts();
     criticalPorts.erase(std::remove_if(criticalPorts.begin(), criticalPorts.end(), [this] (const std::reference_wrapper<Port>& port){
-        return port.get().getID() == seedMask_.getID();
+        return port.get().getID() == volumeListInport_.getID() || port.get().getID() == seedMask_.getID();
     }), criticalPorts.end());
     return criticalPorts;
 }
@@ -153,19 +153,23 @@ void PathlineCreator::adjustPropertiesToInput() {
 
 PathlineCreatorInput PathlineCreator::prepareComputeInput() {
 
-    // Set up random generator.
-    std::function<float()> rnd(std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
-
-    auto flowVolumes = volumeListInport_.getThreadSafeData();
-    if(!flowVolumes) {
-        throw InvalidInputException("No volume", InvalidInputException::S_ERROR);
+    const VolumeList* input = volumeListInport_.getData();
+    if(!input) {
+        throw InvalidInputException("No input", InvalidInputException::S_ERROR);
     }
 
-    if(flowVolumes->size() < 2) {
+    if(input->size() < 2) {
         throw InvalidInputException("Need at least two time steps", InvalidInputException::S_ERROR);
     }
 
-    const VolumeBase* referenceVolume = flowVolumes->first();
+    // We need to copy all volumes into a vector and remove the volume list from the critical port list.
+    // Otherwise, removing a RAM representation from a volume inside the input volume list would cancel the calculation.
+    std::vector<const VolumeBase*> flowVolumes;
+    for(size_t i=0; i<input->size(); i++) {
+        flowVolumes.push_back(input->at(i));
+    }
+
+    const VolumeBase* referenceVolume = flowVolumes.front();
     VolumeRAMRepresentationLock reference(referenceVolume);
 
     tgt::mat4 worldToVoxelMatrix = referenceVolume->getPhysicalToVoxelMatrix();
@@ -173,6 +177,9 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
     RealWorldMapping rwm = referenceVolume->getRealWorldMapping();
     rwm.setScale(rwm.getScale() * velocityUnitConversion_.getValue()); // Now we have mm/s.
     SpatialSampler sampler(*reference, rwm, filterMode_.getValue(), worldToVoxelMatrix);
+
+    // Set up random generator.
+    std::function<float()> rnd(std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
 
     std::list<Streamline> pathlines;
     auto seedMask = seedMask_.getData();
@@ -256,7 +263,7 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
             temporalResolution_.get() / 1000.0f, // Convert to s.
             temporalIntegrationSteps_.get(),
             filterMode_.getValue(),
-            volumeListInport_.getThreadSafeData(),
+            std::move(flowVolumes),
             seedMask_.getThreadSafeData(),
             std::move(pathlines),
             std::move(output)
@@ -266,8 +273,8 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
 PathlineCreatorOutput PathlineCreator::compute(PathlineCreatorInput input, ProgressReporter& progressReporter) const {
 
     // Input.
-    PortDataPointer<VolumeList> flowVolumes = std::move(input.flowVolumes);
-    const VolumeBase* referenceVolume = flowVolumes->first();
+    std::vector<const VolumeBase*> flowVolumes = std::move(input.flowVolumes);
+    const VolumeBase* referenceVolume = flowVolumes.front();
     //const VolumeBase* seedMask_ = input.seedMask; // Currently not used.
 
     // Output.
@@ -280,7 +287,7 @@ PathlineCreatorOutput PathlineCreator::compute(PathlineCreatorInput input, Progr
     tgt::mat4 worldToVoxelMatrix = referenceVolume->getWorldToVoxelMatrix();
     tgt::Bounds roi = referenceVolume->getBoundingBox().getBoundingBox();
 
-    const float totalTime = input.temporalResolution * (flowVolumes->size() - 1);
+    const float totalTime = input.temporalResolution * (flowVolumes.size() - 1);
     const float dt = input.temporalResolution / input.temporalIntegrationSteps;
     const size_t minNumElements = input.pathlineLengthThreshold.x * input.temporalIntegrationSteps;
 
@@ -291,11 +298,11 @@ PathlineCreatorOutput PathlineCreator::compute(PathlineCreatorInput input, Progr
             input.stopIntegrationAngleThreshold
     };
 
-    for(size_t i=0; i<flowVolumes->size() - 1; i++) {
+    for(size_t i=0; i<flowVolumes.size() - 1; i++) {
 
         // We ensure the current and next time frame has as RAM representation.
-        VolumeRAMRepresentationLock volume0(flowVolumes->at(i+0));
-        VolumeRAMRepresentationLock volume1(flowVolumes->at(i+1));
+        VolumeRAMRepresentationLock volume0(flowVolumes[i+0]);
+        VolumeRAMRepresentationLock volume1(flowVolumes[i+1]);
 
         // Temporal integration loop. Here we actually change the field.
         for(int t=0; t<input.temporalIntegrationSteps; t++) {

@@ -64,8 +64,6 @@ FlowDirectionOverlay::FlowDirectionOverlay()
     //helper
     , geometryMustBeRecreated_(true)
     , overlayBaseSize_(0.16f) //magic number
-    , currentGeometry_(0)
-    , sphereGeometry_(0)
 {
 
     removeProperty(ImageProcessor::shaderProp_);
@@ -113,7 +111,6 @@ FlowDirectionOverlay::FlowDirectionOverlay()
 }
 
 FlowDirectionOverlay::~FlowDirectionOverlay() {
-    //TODO: delete geometry ?!
 }
 
 void FlowDirectionOverlay::initialize() {
@@ -122,8 +119,8 @@ void FlowDirectionOverlay::initialize() {
 
 void FlowDirectionOverlay::deinitialize() {
     //delete geom (GL Object)
-    delete currentGeometry_;
-    delete sphereGeometry_;
+    currentGeometry_.reset();
+    sphereGeometry_.reset();
     ImageProcessor::deinitialize();
 }
 
@@ -451,9 +448,6 @@ TriangleMeshGeometryUInt16IndexedColorNormal* FlowDirectionOverlay::createArrowG
 }
 
 void FlowDirectionOverlay::createDiagonalsGeometry() {
-    //clear old geom
-    delete currentGeometry_;
-
     //create new geometry
     TriangleMeshGeometryUInt16IndexedColorNormal* mesh = new TriangleMeshGeometryUInt16IndexedColorNormal();
     for (int sign = -1; sign <= 1; sign += 2) {
@@ -480,13 +474,10 @@ void FlowDirectionOverlay::createDiagonalsGeometry() {
     // transform by the additional rotation matrix
     mesh->transform(tgt::mat4(colorRotationMatrix_.get()));
 
-    currentGeometry_ =  mesh;
+    currentGeometry_.reset(mesh);
 }
 
 void FlowDirectionOverlay::createAxesGeometry() {
-    //clear old geom
-    delete currentGeometry_;
-
     //create new geometry
     TriangleMeshGeometryUInt16IndexedColorNormal* mesh = new TriangleMeshGeometryUInt16IndexedColorNormal();
     for (int sign = -1; sign <= 1; sign += 2) {
@@ -516,13 +507,10 @@ void FlowDirectionOverlay::createAxesGeometry() {
     // transform by the additional rotation matrix
     mesh->transform(colorRotationMatrix_.get());
 
-    currentGeometry_ =  mesh;
+    currentGeometry_.reset(mesh);
 }
 
 void FlowDirectionOverlay::createDiagonalsAxesGeometry() {
-    //clear old geom
-    delete currentGeometry_;
-
     //create new geometry
     TriangleMeshGeometryUInt16IndexedColorNormal* mesh = new TriangleMeshGeometryUInt16IndexedColorNormal();
     for (int sign = -1; sign <= 1; sign += 2) {
@@ -573,14 +561,11 @@ void FlowDirectionOverlay::createDiagonalsAxesGeometry() {
     // transform by the additional rotation matrix
     mesh->transform(colorRotationMatrix_.get());
 
-    currentGeometry_ =  mesh;
+    currentGeometry_.reset(mesh);
 
 }
 
 void FlowDirectionOverlay::createCubeGeometry() {
-    //clear old geom
-    delete currentGeometry_;
-
     // create new geometry
     TriangleMeshGeometry<VertexColorNormal>* geom = new TriangleMeshGeometryColorNormal();
 
@@ -623,13 +608,10 @@ void FlowDirectionOverlay::createCubeGeometry() {
     // transform by the additional rotation matrix
     geom->transform(colorRotationMatrix_.get());
 
-    currentGeometry_ = geom;
+    currentGeometry_.reset(geom);
 }
 
 void FlowDirectionOverlay::createSphereGeometry() {
-    //clear old geom
-    delete sphereGeometry_;
-
     GlMeshGeometryUInt16ColorNormal* mesh = new GlMeshGeometryUInt16ColorNormal();
 
     // set sphere geometry manually because we also have to set the colors
@@ -704,7 +686,7 @@ void FlowDirectionOverlay::createSphereGeometry() {
 
     mesh->setTransformationMatrix(tgt::Matrix::createScale(tgt::vec3(overlayBaseSize_ * overlaySizeProp_.get())));
 
-    sphereGeometry_ = mesh;
+    sphereGeometry_.reset(mesh);
 }
 
 //--------------------------------------------------------------------------------------------

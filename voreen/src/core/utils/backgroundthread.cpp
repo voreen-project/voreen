@@ -38,9 +38,7 @@ namespace voreen {
     void BackgroundThread::run() {
         //make sure that the background thread is not currently running
         if (isRunning()) {
-            internalThread_.interrupt();
-            internalThread_.join();
-            running_ = false;
+            interruptAndJoin();
         }
         finished_ = false;
         running_ = true;
@@ -58,6 +56,7 @@ namespace voreen {
     }
 
     void BackgroundThread::interruptAndJoin() {
+        tgtAssert(boost::this_thread::get_id() != internalThread_.get_id(), "Thread trying to join itself");
         internalThread_.interrupt();
         internalThread_.join();
         running_ = false;

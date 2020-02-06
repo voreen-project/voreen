@@ -88,6 +88,7 @@ protected:
 
     virtual void adjustPropertiesToInput();
     virtual void afterProcess();
+    virtual void dataWillChange(const Port* source);
 
 private:
 

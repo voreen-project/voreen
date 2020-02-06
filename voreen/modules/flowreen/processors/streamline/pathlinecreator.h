@@ -48,7 +48,7 @@ struct PathlineCreatorInput {
     float temporalResolution;
     int temporalIntegrationSteps;
     VolumeRAM::Filter filterMode;
-    PortDataPointer<VolumeList> flowVolumes;
+    std::vector<const VolumeBase*> flowVolumes;
     PortDataPointer<VolumeBase> seedMask; // Might be used later on to restrict integration.
     std::list<Streamline> pathlines;
     std::unique_ptr<StreamlineListBase> output;

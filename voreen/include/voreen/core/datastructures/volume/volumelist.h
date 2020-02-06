@@ -82,8 +82,6 @@ template class VRN_CORE_API Observable<VolumeListObserver>;
  *
  * The volume list does not perform memory management, i.e., added volumes
  * are not deleted on removal or destruction of the list.
- *
- * @see VolumeContainer
  */
 class VRN_CORE_API VolumeList : public Observable<VolumeListObserver>,
                                 public VolumeObserver,

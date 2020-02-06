@@ -33,7 +33,7 @@
 
 namespace voreen {
 
-// TODO: Could be adjustable via Property ( debug ).
+// TODO: Could be adjustable via Property.
 static const uint32_t GEOMETRY_TESSELATION = 8;
 
 std::string StreamlineRenderer3D::loggerCat_("flowreen.StreamlineRenderer3D");
@@ -60,7 +60,7 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     , streamlineShader_("streamlineShaderProp", "Shader:", "streamlinerenderer3d.frag", "streamlinerenderer3d.vert", ""/*"streamlinerenderer3d.geom"*/, Processor::INVALID_PROGRAM, Property::LOD_DEBUG)
     , requiresRecompileShader_(true)
     , camera_("camera", "Camera: ", tgt::Camera(), true, true, 500.f, Processor::INVALID_RESULT, Property::LOD_DEBUG)
-    , cameraHandler_(0)
+    , cameraHandler_(nullptr)
     , requiresRebuild_(false)
 {
     //ports
