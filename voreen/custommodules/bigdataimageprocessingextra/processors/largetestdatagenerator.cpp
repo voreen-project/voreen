@@ -64,6 +64,7 @@ LargeTestDataGenerator::LargeTestDataGenerator()
     , outputVolumeNoisyFilePath_("outputVolumeFilePath", "Volume Noisy Output", "Path", "", "HDF5 (*.h5)", FileDialogProperty::SAVE_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , outputVolumeGTFilePath_("outputVolumeFilePathgt", "GT Volume Output", "Path", "", "HDF5 (*.h5)", FileDialogProperty::SAVE_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , scenario_("scenario", "Test Data Scenario")
+    , retainLabel_("retainLabel", "Retain a background label from the output", false)
 {
     addPort(outportNoisy_);
     addPort(outportGT_);
@@ -89,6 +90,7 @@ LargeTestDataGenerator::LargeTestDataGenerator()
         scenario_.selectByValue(LargeTestDataGeneratorInput::CELLS);
     addProperty(outputVolumeNoisyFilePath_);
     addProperty(outputVolumeGTFilePath_);
+    addProperty(retainLabel_);
 }
 
 LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
@@ -126,7 +128,6 @@ LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
         throw InvalidInputException("Could not create output volume.", InvalidInputException::S_ERROR);
     }
 
-
     outputVolumeNoisy->writeSpacing(spacing);
     outputVolumeNoisy->writeOffset(offset);
     outputVolumeNoisy->writeRealWorldMapping(rwm);
@@ -147,7 +148,8 @@ LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
         randomEngine,
         noiseRange,
         density_.get(),
-        structureSizeRange_.get()
+        structureSizeRange_.get(),
+        retainLabel_.get()
     );
 }
 
@@ -333,7 +335,7 @@ static bool clipLineToBB(const tgt::Bounds& bb, tgt::vec3& p0, tgt::vec3& p1) {
     return true;
 }
 
-static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cylinders& cylinders, PointSegmentListGeometryVec3& foregroundLabels, PointSegmentListGeometryVec3& backgroundLabels) {
+static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cylinders& cylinders, std::vector<std::vector<tgt::vec3>>& foregroundLabels, std::vector<std::vector<tgt::vec3>>& backgroundLabels) {
     const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
     int minRadius = std::max(1, input.structureSizeRange.x/2);
     int maxRadius = std::max(1, input.structureSizeRange.y/2);
@@ -447,7 +449,7 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
             std::vector<tgt::vec3> segment;
             segment.push_back(p1);
             segment.push_back(p2);
-            foregroundLabels.addSegment(segment);
+            foregroundLabels.push_back(segment);
 
             if(volumeToFill < 0) {
                 break;
@@ -510,7 +512,7 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
             std::vector<tgt::vec3> segment;
             segment.push_back(p);
             segment.push_back(tgt::vec3(p)+tgt::vec3(0.001));
-            backgroundLabels.addSegment(segment);
+            backgroundLabels.push_back(segment);
         }
 
         for (int wallDim : std::array<int, 3> {0, 1, 2}) {
@@ -527,7 +529,7 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
                 std::vector<tgt::vec3> segment;
                 segment.push_back(p2);
                 segment.push_back(tgt::vec3(p2)+tgt::vec3(0.001));
-                backgroundLabels.addSegment(segment);
+                backgroundLabels.push_back(segment);
             }
         }
 
@@ -536,7 +538,7 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
     }
 }
 
-static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinders& cylinders, PointSegmentListGeometryVec3& foregroundLabels, PointSegmentListGeometryVec3& backgroundLabels) {
+static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinders& cylinders, std::vector<std::vector<tgt::vec3>>& foregroundLabels, std::vector<std::vector<tgt::vec3>>& backgroundLabels) {
     const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
     int minRadius = std::max(1, input.structureSizeRange.x/2);
     int maxRadius = std::max(1, input.structureSizeRange.y/2);
@@ -567,7 +569,7 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
         std::vector<tgt::vec3> segment;
         segment.push_back(p);
         segment.push_back(tgt::vec3(p)+tgt::vec3(0.001));
-        foregroundLabels.addSegment(segment);
+        foregroundLabels.push_back(segment);
     }
 
     int max_tries = 10;
@@ -590,7 +592,7 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
         std::vector<tgt::vec3> segment;
         segment.push_back(p);
         segment.push_back(tgt::vec3(p)+tgt::vec3(0.001));
-        backgroundLabels.addSegment(segment);
+        backgroundLabels.push_back(segment);
 
         for (int wallDim : std::array<int, 3> {0, 1, 2}) {
             tgt::ivec3 wall = b1;
@@ -606,7 +608,7 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
                 std::vector<tgt::vec3> segment;
                 segment.push_back(p2);
                 segment.push_back(tgt::vec3(p2)+tgt::vec3(0.001));
-                backgroundLabels.addSegment(segment);
+                backgroundLabels.push_back(segment);
             }
         }
 
@@ -627,18 +629,19 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
     Balls balls{};
     Cylinders cylinders{};
 
-    std::unique_ptr<PointSegmentListGeometryVec3> foregroundLabels(new PointSegmentListGeometryVec3());
-    std::unique_ptr<PointSegmentListGeometryVec3> backgroundLabels(new PointSegmentListGeometryVec3());
+
+    std::vector<std::vector<tgt::vec3>> foregroundLabels{};
+    std::vector<std::vector<tgt::vec3>> backgroundLabels{};
 
     std::normal_distribution<float> noiseDistr(0.0, input.noiseRange);
 
     switch(input.scenario) {
         case LargeTestDataGeneratorInput::CELLS: {
-            initCells(input, balls, cylinders, *foregroundLabels, *backgroundLabels);
+            initCells(input, balls, cylinders, foregroundLabels, backgroundLabels);
             break;
         }
         case LargeTestDataGeneratorInput::VESSELS: {
-            initCylinders(input, balls, cylinders, *foregroundLabels, *backgroundLabels);
+            initCylinders(input, balls, cylinders, foregroundLabels, backgroundLabels);
             break;
         }
         default: {
@@ -674,9 +677,27 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
         input.outputVolumeGT->writeSlices(&sliceGT, z);
     }
 
+    if(input.retainLabel) {
+        bool retained = false;
+        for(auto& segment : backgroundLabels) {
+            if(!segment.empty()) {
+                segment.pop_back();
+                retained = true;
+                break;
+            }
+        }
+        if(!retained) {
+            LWARNING("Failed to retain a background label!");
+        }
+    }
+
+    std::unique_ptr<PointSegmentListGeometryVec3> fg(new PointSegmentListGeometryVec3());
+    fg->setData(foregroundLabels);
+    std::unique_ptr<PointSegmentListGeometryVec3> bg(new PointSegmentListGeometryVec3());
+    bg->setData(backgroundLabels);
     return {
-        std::move(foregroundLabels),
-        std::move(backgroundLabels),
+        std::move(fg),
+        std::move(bg),
         input.outputVolumeNoisy->getFileName(),
         input.outputVolumeGT->getFileName(),
     };

@@ -61,6 +61,7 @@ struct LargeTestDataGeneratorInput {
     float noiseRange;
     float density;
     tgt::ivec2 structureSizeRange;
+    bool retainLabel;
 
     LargeTestDataGeneratorInput(
             Scenario scenario
@@ -70,6 +71,7 @@ struct LargeTestDataGeneratorInput {
             , float noiseRange
             , float density
             , tgt::ivec2 structureSizeRange
+            , bool retainLabel
             )
         : scenario(scenario)
         , outputVolumeNoisy(std::move(outputVolumeNoisy))
@@ -78,6 +80,7 @@ struct LargeTestDataGeneratorInput {
         , noiseRange(noiseRange)
         , density(density)
         , structureSizeRange(structureSizeRange)
+        , retainLabel(retainLabel)
     {
     }
 
@@ -90,6 +93,7 @@ struct LargeTestDataGeneratorInput {
         , noiseRange(old.noiseRange)
         , density(old.density)
         , structureSizeRange(old.structureSizeRange)
+        , retainLabel(old.retainLabel)
     {
     }
 };
@@ -135,6 +139,7 @@ private:
     IntVec3Property volumeDimensions_;
     IntIntervalProperty structureSizeRange_;
     OptionProperty<LargeTestDataGeneratorInput::Scenario> scenario_;
+    BoolProperty retainLabel_;
 
     std::random_device randomDevice;
 };
