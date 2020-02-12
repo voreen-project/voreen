@@ -23,35 +23,53 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "bigdataimageprocessingextramodule.h"
+#ifndef VRN_VOLUMEDETECTIONLINKER_H
+#define VRN_VOLUMEDETECTIONLINKER_H
 
-#include "processors/binarymedian.h"
-#include "processors/fatcellquantification.h"
-#include "processors/largetestdatagenerator.h"
-#include "processors/segmentationslicedensity.h"
-#include "processors/segmentationquantification.h"
-#include "processors/volumebricksave.h"
-#include "processors/volumebricksource.h"
-#include "processors/volumecomparison.h"
-#include "processors/volumedetectionlinker.h"
+#include "voreen/core/processors/processor.h"
+
+#include "voreen/core/ports/volumeport.h"
+#include "voreen/core/properties/boolproperty.h"
+#include "voreen/core/properties/intproperty.h"
+#include "voreen/core/properties/buttonproperty.h"
 
 namespace voreen {
 
-BigDataImageProcessingExtraModule::BigDataImageProcessingExtraModule(const std::string& modulePath)
-    : VoreenModule(modulePath)
-{
-    setID("bigdataimageprocessingextra");
-    setGuiName("Big Data Image Processing Extra");
+/**
+ * Allows the quantification of the volume of a single (binary) segmentation or the quantification of two segmentationi volumes (including the density of one within the other).
+ */
+class VRN_CORE_API VolumeDetectionLinker : public Processor {
 
-    registerProcessor(new BinaryMedian());
-    registerProcessor(new FatCellQuantification());
-    registerProcessor(new LargeTestDataGenerator());
-    registerProcessor(new SegmentationSliceDensity());
-    registerProcessor(new SegmentationQuantification());
-    registerProcessor(new VolumeBrickSave());
-    registerProcessor(new VolumeBrickSource());
-    registerProcessor(new VolumeComparison());
-    registerProcessor(new VolumeDetectionLinker());
-}
+public:
+    VolumeDetectionLinker();
+    virtual Processor* create() const;
+
+    virtual std::string getClassName() const { return "VolumeDetectionLinker";     }
+    virtual std::string getCategory() const  { return "Quantification";         }
+    virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL;  }
+
+    virtual bool isEndProcessor() const {return true;   }
+
+protected:
+    virtual void setDescriptions() {
+        setDescription("Processor that simply changes a property state when a number of volumes are connected to the inport");
+    }
+
+    virtual void process();
+
+    BoolProperty volumesDetected_;
+    IntProperty numVolumesRequiredForDetection_;
+    ButtonProperty reset_;
+
+    VolumePort volumePort_;
+
+    static const std::string loggerCat_;
+
+private:
+    void checkCondition();
+
+};
 
 } // namespace
+
+#endif

@@ -20,6 +20,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/volumebricksave.cpp
     ${MOD_DIR}/processors/volumebricksource.cpp
     ${MOD_DIR}/processors/volumecomparison.cpp
+    ${MOD_DIR}/processors/volumedetectionlinker.cpp
 )
 SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/binarymedian.h
@@ -31,4 +32,5 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volumebricksave.h
     ${MOD_DIR}/processors/volumebricksource.h
     ${MOD_DIR}/processors/volumecomparison.h
+    ${MOD_DIR}/processors/volumedetectionlinker.h
 )

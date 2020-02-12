@@ -23,35 +23,47 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "bigdataimageprocessingextramodule.h"
-
-#include "processors/binarymedian.h"
-#include "processors/fatcellquantification.h"
-#include "processors/largetestdatagenerator.h"
-#include "processors/segmentationslicedensity.h"
-#include "processors/segmentationquantification.h"
-#include "processors/volumebricksave.h"
-#include "processors/volumebricksource.h"
-#include "processors/volumecomparison.h"
-#include "processors/volumedetectionlinker.h"
+#include "volumedetectionlinker.h"
 
 namespace voreen {
 
-BigDataImageProcessingExtraModule::BigDataImageProcessingExtraModule(const std::string& modulePath)
-    : VoreenModule(modulePath)
-{
-    setID("bigdataimageprocessingextra");
-    setGuiName("Big Data Image Processing Extra");
+const std::string VolumeDetectionLinker::loggerCat_("voreen.VolumeDetectionLinker");
 
-    registerProcessor(new BinaryMedian());
-    registerProcessor(new FatCellQuantification());
-    registerProcessor(new LargeTestDataGenerator());
-    registerProcessor(new SegmentationSliceDensity());
-    registerProcessor(new SegmentationQuantification());
-    registerProcessor(new VolumeBrickSave());
-    registerProcessor(new VolumeBrickSource());
-    registerProcessor(new VolumeComparison());
-    registerProcessor(new VolumeDetectionLinker());
+VolumeDetectionLinker::VolumeDetectionLinker()
+    : Processor()
+    , volumePort_(Port::INPORT, "firstsegmentation", "First Segmentation Volume", true)
+    , volumesDetected_("volumesDetected_", "Volumes Detected", false)
+    , numVolumesRequiredForDetection_("numVolumesRequiredForDetection", "Number of Volumes required for detection", 1, 0, 1000)
+    , reset_("reset", "Reset")
+{
+    addPort(volumePort_);
+    ON_CHANGE(volumePort_, VolumeDetectionLinker, checkCondition);
+
+    addProperty(numVolumesRequiredForDetection_);
+    ON_CHANGE(numVolumesRequiredForDetection_, VolumeDetectionLinker, checkCondition);
+
+    addProperty(volumesDetected_);
+    volumesDetected_.setReadOnlyFlag(true);
+
+    addProperty(reset_);
+    ON_CHANGE_LAMBDA(reset_, [&] () {
+        volumesDetected_.set(false);
+    });
+}
+
+Processor* VolumeDetectionLinker::create() const {
+    return new VolumeDetectionLinker();
+}
+
+void VolumeDetectionLinker::process() {
+    // Nada
+}
+
+void VolumeDetectionLinker::checkCondition() {
+    bool detection = volumePort_.getAllData().size() >= numVolumesRequiredForDetection_.get();
+    if(detection) {
+        volumesDetected_.set(true);
+    }
 }
 
 } // namespace
