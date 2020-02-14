@@ -106,7 +106,7 @@ LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
 
     float noiseRange = noiseLevel_.get();
 
-    LargeTestDataGeneratorInput::random_engine_type randomEngine(randomDevice());
+    LargeTestDataGeneratorInput::random_engine_type randomEngine {};
     randomEngine.seed(seed_.get());
 
     const std::string baseType = "uint8";
@@ -633,8 +633,6 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
     std::vector<std::vector<tgt::vec3>> foregroundLabels{};
     std::vector<std::vector<tgt::vec3>> backgroundLabels{};
 
-    std::normal_distribution<float> noiseDistr(0.0, input.noiseRange);
-
     switch(input.scenario) {
         case LargeTestDataGeneratorInput::CELLS: {
             initCells(input, balls, cylinders, foregroundLabels, backgroundLabels);
@@ -656,17 +654,23 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
 
         VolumeAtomic<uint8_t> sliceNoisy(tgt::vec3(dim.x, dim.y, 1));
         VolumeAtomic<uint8_t> sliceGT(tgt::vec3(dim.x, dim.y, 1));
+        std::uniform_int_distribution<> sliceBaseSeedDistr(0, 100000);
+        int baseSeed = sliceBaseSeedDistr(input.randomEngine);
 #ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for
 #endif
         for(int y=0; y<dim.y; ++y) {
+            std::normal_distribution<float> noiseDistr(0.0, input.noiseRange);
+            LargeTestDataGeneratorInput::random_engine_type randomEngine;
+            randomEngine.seed(baseSeed + y);
+
             for(int x=0; x<dim.x; ++x) {
                 tgt::ivec3 p(x,y,z);
 
                 bool inside = balls.inside(p) || cylinders.inside(p);
                 float val = inside ? insideBase : outsideBase;
 
-                val += noiseDistr(input.randomEngine);
+                val += noiseDistr(randomEngine);
                 val = tgt::clamp(val, 0.0f, 1.0f);
                 sliceNoisy.setVoxelNormalized(val, x,y,0);
 
