@@ -216,6 +216,7 @@ OctreeWalker::OctreeWalker()
     addProperty(resultPath_);
         ON_CHANGE_LAMBDA(resultPath_, [this] () {
                 if(resultPath_.get() != prevResultPath_) {
+                    interruptComputation();
                     clearPreviousResults();
                 }
                 });
