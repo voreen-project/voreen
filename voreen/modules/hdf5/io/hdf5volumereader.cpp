@@ -27,6 +27,7 @@
 
 #include "../utils/hdf5utils.h"
 #include "volumediskhdf5.h"
+#include "hdf5volumewriter.h"
 
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 
@@ -146,17 +147,30 @@ VolumeList* HDF5VolumeReaderBase::read(const std::string& url) {
 
 VolumeBase* HDF5VolumeReaderBase::read(const VolumeURL& origin) {
     std::string fileName = origin.getPath();
-    tgtAssert(origin.getSearchParameter("path") != "", "Could not find path in VolumeURL");
     std::string inFilePath = origin.getSearchParameter("path");
+    if(inFilePath.empty()) {
+        inFilePath = HDF5VolumeWriter::VOLUME_DATASET_NAME;
+        LWARNING("Could not find path in VolumeURL. Using default:" << inFilePath);
+    }
     int firstChannel = 0;
     int numberOfChannels = 1;
     if(separatedChannels_) {
-        tgtAssert(origin.getSearchParameter("channel") != "", "Could not find channel in VolumeURL");
-        firstChannel = std::stoi(origin.getSearchParameter("channel"));
+        std::string firstChannelStr = origin.getSearchParameter("channel");
+        if(firstChannelStr.empty()) {
+            firstChannel = 0;
+            LWARNING("Could not find first channel in VolumeURL. Using default: " << firstChannel);
+        } else {
+            firstChannel = std::stoi(firstChannelStr);
+        }
     }
     else {
-        tgtAssert(origin.getSearchParameter("channels") != "", "Could not find channels in VolumeURL");
-        numberOfChannels = std::stoi(origin.getSearchParameter("channels"));
+        std::string numberOfChannelsStr = origin.getSearchParameter("channels");
+        if(numberOfChannelsStr.empty()) {
+            numberOfChannels = 1;
+            LWARNING("Could not find number of channels in VolumeURL. Using default: " << numberOfChannels);
+        } else {
+            numberOfChannels = std::stoi(numberOfChannelsStr);
+        }
     }
     LINFO("Loading " << fileName);
 

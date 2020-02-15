@@ -149,6 +149,26 @@ void NetworkConfigurator::setPropertyValue(const std::string& processorName, con
         }
         setPropertyValue(processor, static_cast<FloatVec4Property*>(property), value);
     }
+    else if (dynamic_cast<IntIntervalProperty*>(property)) {
+        tgt::ivec2 value;
+        try {
+            value = genericFromString<tgt::ivec2>(valueStr);
+        }
+        catch (VoreenException& /*e*/) {
+            throw VoreenException("failed to convert '" + valueStr + "' to ivec2 (expected format: [min max])");
+        }
+        setPropertyValue(processor, static_cast<IntIntervalProperty*>(property), value);
+    }
+    else if (dynamic_cast<FloatIntervalProperty*>(property)) {
+        tgt::vec2 value;
+        try {
+            value = genericFromString<tgt::vec2>(valueStr);
+        }
+        catch (VoreenException& /*e*/) {
+            throw VoreenException("failed to convert '" + valueStr + "' to vec2 (expected format: [min max])");
+        }
+        setPropertyValue(processor, static_cast<FloatIntervalProperty*>(property), value);
+    }
     else if (dynamic_cast<VolumeURLProperty*>(property)) {
         setPropertyValue(processor, static_cast<VolumeURLProperty*>(property), valueStr);
     }
@@ -227,6 +247,16 @@ void NetworkConfigurator::setPropertyValue(Processor* /*processor*/, FloatVec3Pr
 }
 
 void NetworkConfigurator::setPropertyValue(Processor* /*processor*/, FloatVec4Property* property, const tgt::vec4& value) {
+    tgtAssert(property, "null pointer passed");
+    property->set(value);
+}
+
+void NetworkConfigurator::setPropertyValue(Processor* /*processor*/, IntIntervalProperty* property, const tgt::ivec2& value) {
+    tgtAssert(property, "null pointer passed");
+    property->set(value);
+}
+
+void NetworkConfigurator::setPropertyValue(Processor* /*processor*/, FloatIntervalProperty* property, const tgt::vec2& value) {
     tgtAssert(property, "null pointer passed");
     property->set(value);
 }

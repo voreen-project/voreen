@@ -1,6 +1,15 @@
 Voreen Changelog
 ----------------
 
+(UNRELEASED): Voreen 5.1.2
+------------------------
+
+    * Framework/API Changes:
+      o VolumeHalfSample: The output dimensions are now always rounded up if the input dimensions are not divisible by 2. This change was made in order unify the behaviour with octree downsampling
+
+    * Bug Fixes/Minor Changes:
+      o Fix bugs in handling of octrees with non-power-of-two dimensions
+
 2020-01-17: Voreen 5.1.1
 ------------------------
 

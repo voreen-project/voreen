@@ -52,6 +52,8 @@ std::string VolumeDiskHDF5::getHash() const {
     configStr += volume_->getVolumeLocation() + "#";
     configStr += std::to_string(firstChannel_) + "#";
     configStr += std::to_string(numberOfChannels_) + "#";
+    configStr += genericToString(tgt::FileSystem::fileTime(volume_->getFileName())) + "#";
+    configStr += genericToString(tgt::FileSystem::fileSize(volume_->getFileName())) + "#";
 
     return VoreenHash::getHash(configStr);
 }

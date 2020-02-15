@@ -175,7 +175,7 @@ tgt::svec3 VolumeOctreeNodeLocation::voxelDimensions() const {
 }
 
 tgt::svec3 VolumeOctreeNodeLocation::brickDimensions() const {
-    return voxelDimensions() / scale();
+    return tgt::ceil(tgt::vec3(voxelDimensions()) / tgt::vec3(scale()));
 }
 
 size_t VolumeOctreeNodeLocation::scale() const {
@@ -210,7 +210,14 @@ tgt::svec3 VolumeOctreeNodeLocation::voxelURB() const {
 // Helper for traversing octree node trees with geometry.
 namespace {
 static VolumeOctreeNode* findLeafNodeFor(VolumeOctreeNode* root, tgt::svec3& llf, tgt::svec3& urb, size_t& level, const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel) {
-    tgtAssert(tgt::hand(tgt::lessThanEqual(llf, point)) && tgt::hand(tgt::lessThan(point, urb)), "Invalid point pos");
+    // Note: We do NOT check for point < urb, because at the even though all
+    // bounding boxes of bricks in _voxel_ space are within these bounds, when
+    // transforming a position in _brick_ space at the upper right border of
+    // the volume, we might end up slightly outside of the volume (at the
+    // lowest (i.e., voxel) level). The brick that is selected in this case is
+    // still the correct one, because the position is within its brick buffer
+    // after transformation into brick space.
+    tgtAssert(tgt::hand(tgt::lessThanEqual(llf, point)), "Invalid point pos");
     tgtAssert(root, "No root");
 
     if(root->isLeaf() || level == targetLevel) {

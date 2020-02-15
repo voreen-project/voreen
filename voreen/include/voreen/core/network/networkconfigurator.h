@@ -33,6 +33,7 @@
 #include "voreen/core/properties/stringproperty.h"
 #include "voreen/core/properties/volumeurlproperty.h"
 #include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/numeric/intervalproperty.h"
 
 #include "tgt/vector.h"
 
@@ -81,6 +82,10 @@ public:
     void setPropertyValue(Processor* processor, FloatVec3Property* property, const tgt::vec3& value);
 
     void setPropertyValue(Processor* processor, FloatVec4Property* property, const tgt::vec4& value);
+
+    void setPropertyValue(Processor* processor, IntIntervalProperty* property, const tgt::ivec2& value);
+
+    void setPropertyValue(Processor* processor, FloatIntervalProperty* property, const tgt::vec2& value);
 
     void setPropertyValue(Processor* processor, StringProperty* property, const std::string& value);
 
