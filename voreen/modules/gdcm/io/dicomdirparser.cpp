@@ -87,10 +87,12 @@ bool DirectoryRecordSequenceIterator::findTagInPresentItem(gdcm::Tag t) const {
 std::string DirectoryRecordSequenceIterator::getElementValue(gdcm::Tag t) const {
     std::stringstream strm;
 
-    sqi_->GetItem(item_).GetDataElement(t).GetValue().Print(strm);
+    const gdcm::DataElement& elem = sqi_->GetItem(item_).GetDataElement(t);
+    if (!elem.IsEmpty()) {
+        elem.GetValue().Print(strm);
+    }
 
-    std::string itemName(strm.str());
-    return itemName;
+    return strm.str();
 }
 
 

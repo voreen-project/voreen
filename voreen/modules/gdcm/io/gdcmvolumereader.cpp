@@ -1752,7 +1752,6 @@ Volume* GdcmVolumeReader::readDicomFiles(const vector<string> &fileNames, const 
                 }
             }
         }
-
         info_.setDz(static_cast<int>(slices.size()));
     }
 
@@ -2076,7 +2075,7 @@ void GdcmVolumeReader::computeCorrectRescaleValues(std::vector<pair<string, doub
     float rwmMax = std::numeric_limits<float>::min();
 
     float dataTypeMin = 0.f;
-    float dataTypeMax = 0.f;;
+    float dataTypeMax = 0.f;
 
     //get max and min real world values
     std::vector<pair<string, double> >::iterator it_slices = slices.begin();
