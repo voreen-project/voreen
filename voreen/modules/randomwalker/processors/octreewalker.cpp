@@ -445,7 +445,7 @@ struct BrickNeighborhood {
 
         //const tgt::ivec3 neighborhoodSize = brickBaseSize;
         //const tgt::ivec3 neighborhoodSize = tgt::ivec3(2);
-        const tgt::vec3 neighborhoodSize = brickBaseSize/8UL;
+        const tgt::vec3 neighborhoodSize = brickBaseSize/size_t(8);
         const tgt::vec3 neighborhoodSizeGlobal = brickToVoxel.getRotationalPart().transform(neighborhoodSize);
 
         const tgt::vec3 voxelLlf = tgt::max(tgt::vec3(0.0),         tgt::vec3(current.llf_) - neighborhoodSizeGlobal);
@@ -1172,7 +1172,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 
             if(childrenToProcess) {
 
-                tgt::svec3 childBrickSize = brickDim * (1UL << (level-1));
+                tgt::svec3 childBrickSize = brickDim * (size_t(1) << (level-1));
                 for(auto child : OCTREEWALKER_CHILD_POSITIONS) {
                     const size_t childId = volumeCoordsToIndex(child, tgt::svec3::two);
                     VolumeOctreeNode* inputChildNode = node.inputNode->children_[childId];

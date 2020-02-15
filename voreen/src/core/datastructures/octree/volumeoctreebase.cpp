@@ -228,7 +228,7 @@ static VolumeOctreeNode* findLeafNodeFor(VolumeOctreeNode* root, tgt::svec3& llf
     tgt::svec3 newLlf = llf;
     tgt::svec3 newUrb = urb;
     size_t newLevel = level - 1;
-    tgt::svec3 brickSize = brickDataSize * (1UL << newLevel);
+    tgt::svec3 brickSize = brickDataSize * (size_t(1) << newLevel);
     size_t index = 0;
     if(point.x >= llf.x+brickSize.x) {
         index += 1;
