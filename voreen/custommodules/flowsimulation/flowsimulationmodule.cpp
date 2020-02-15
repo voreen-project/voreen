@@ -40,6 +40,7 @@
 #include "processors/volume/gaussiannoise.h"
 #include "processors/volume/volumelistadapter.h"
 #include "processors/volume/volumelistcombine.h"
+#include "processors/volume/volumelistmultichanneladapter.h"
 #include "processors/volume/volumeselectormultichannel.h"
 
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
@@ -80,6 +81,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerSerializableType(new GaussianNoise());
     registerSerializableType(new VolumeListAdapter());
     registerSerializableType(new VolumeListCombine());
+    registerSerializableType(new VolumeListMultiChannelAdapter());
     registerSerializableType(new VolumeSelectorMultiChannel());
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
     registerSerializableType(new FlowIndicatorDetection());

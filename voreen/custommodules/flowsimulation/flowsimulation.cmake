@@ -19,7 +19,7 @@ SET(MOD_CORE_SOURCES
 
     # datastructures
     ${MOD_DIR}/datastructures/flowparameters.cpp
-
+    
     # ports
     ${MOD_DIR}/ports/flowparametrizationport.cpp
 
@@ -38,6 +38,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/volume/gaussiannoise.cpp
     ${MOD_DIR}/processors/volume/volumelistadapter.cpp
     ${MOD_DIR}/processors/volume/volumelistcombine.cpp
+    ${MOD_DIR}/processors/volume/volumelistmultichanneladapter.cpp
     ${MOD_DIR}/processors/volume/volumeselectormultichannel.cpp
 
     # utils
@@ -68,6 +69,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volume/gaussiannoise.h
     ${MOD_DIR}/processors/volume/volumelistadapter.h
     ${MOD_DIR}/processors/volume/volumelistcombine.h
+    ${MOD_DIR}/processors/volume/volumelistmultichanneladapter.h
     ${MOD_DIR}/processors/volume/volumeselectormultichannel.h
 
     # utils

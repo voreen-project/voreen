@@ -34,9 +34,9 @@ VolumeSelectorMultiChannel::VolumeSelectorMultiChannel()
     , volumeOutport2_(Port::OUTPORT, "volume.output2", "Volume Output 2", false)
     , volumeOutport3_(Port::OUTPORT, "volume.output3", "Volume Output 3", false)
     , volumeOutport4_(Port::OUTPORT, "volume.output4", "Volume Output 4", false)
-    , numChannels_("numChannels", "Num. Channels", 1, 1, 4)
+    , numChannels_("numChannels", "Num. Channels", 3, 1, 4)
     , selectedVolume_("selectedVolume", "Selected Volume", 0, 0, std::numeric_limits<int>::max())
-    , layout_("layout", "Layout")
+    , layout_("layout", "Layout", Processor::INVALID_RESULT, false, Property::LOD_ADVANCED)
 {
     addPort(inport_);
     addPort(volumeOutport_);
