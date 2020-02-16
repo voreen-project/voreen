@@ -75,28 +75,40 @@ public:
             throw VoreenException("requested brick (at least partially) outside volume dimensions");
 
         // Create the output volume.
-        VolumeRAM* brick = VolumeFactory().create(getFormat(), dimensions);
+        VolumeRAM* output = VolumeFactory().create(getFormat(), dimensions);
 
-        std::vector<VolumeRAMRepresentationLock> locks;
-        for (const VolumeBase* channel : channels_) {
-            locks.push_back(VolumeRAMRepresentationLock(channel));
-        }
-
-        for (size_t z = 0; z < dimensions.z; z++) {
-            for (size_t y = 0; y < dimensions.y; y++) {
-                for (size_t x = 0; x < dimensions.x; x++) {
-                    tgt::svec3 pos = offset + tgt::svec3(x, y, z);
-                    for (size_t channel = 0; channel < channels_.size(); channel++) {
-                        float value = locks[channel]->getVoxelNormalized(pos);
-                        brick->setVoxelNormalized(value, pos, channel);
+        for (size_t channel = 0; channel < channels_.size(); channel++) {
+            // Check if we have a ram representation already.
+            if (channels_[channel]->hasRepresentation<VolumeRAM>()) {
+                VolumeRAMRepresentationLock lock(channels_[channel]);
+                tgt::svec3 pos;
+                for (pos.z = 0; pos.z < dimensions.z; pos.z++) {
+                    for (pos.y = 0; pos.y < dimensions.y; pos.y++) {
+                        for (pos.x = 0; pos.x < dimensions.x; pos.x++) {
+                            float value = lock->getVoxelNormalized(offset + pos);
+                            output->setVoxelNormalized(value, pos, channel);
+                        }
                     }
                 }
             }
+            else if(const VolumeDisk* vd = channels_[channel]->getRepresentation<VolumeDisk>()) {
+                std::unique_ptr<VolumeRAM> brick(vd->loadBrick(offset, dimensions));
+                tgt::svec3 pos;
+                for (pos.z = 0; pos.z < dimensions.z; pos.z++) {
+                    for (pos.y = 0; pos.y < dimensions.y; pos.y++) {
+                        for (pos.x = 0; pos.x < dimensions.x; pos.x++) {
+                            float value = brick->getVoxelNormalized(pos);
+                            output->setVoxelNormalized(value, pos, channel);
+                        }
+                    }
+                }
+            }
+            else {
+                tgtAssert(false, "Could not get representation for channel");
+            }
         }
 
-        // All locks get released after the result was returned.
-
-        return brick;
+        return output;
     }
 
 private:
