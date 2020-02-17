@@ -350,7 +350,7 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
     std::uniform_int_distribution<> yDistr(0, dim.y-1);
     std::uniform_int_distribution<> zDistr(0, dim.z-1);
 
-    int totalVolume = tgt::hmul(dim);
+    size_t totalVolume = tgt::hmul(dim);
     float volumeToFill = totalVolume * input.density;
 
 
@@ -543,7 +543,7 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
     int minRadius = std::max(1, input.structureSizeRange.x/2);
     int maxRadius = std::max(1, input.structureSizeRange.y/2);
 
-    int elementVolumeEstimate;
+    size_t elementVolumeEstimate;
 
     float a = minRadius;
     float b = maxRadius;
@@ -553,8 +553,8 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
         elementVolumeEstimate = tgt::round(tgt::PIf*(b*b*b*b-a*a*a*a)/(3 * (b - a)));
     }
 
-    int totalVolume = tgt::hmul(dim);
-    int numElements = std::round(totalVolume/elementVolumeEstimate * input.density);
+    size_t totalVolume = tgt::hmul(dim);
+    size_t numElements = std::round(totalVolume/elementVolumeEstimate * input.density);
     LINFOC(LargeTestDataGenerator::loggerCat_, "Placing " << numElements << " Spheres");
 
     std::uniform_int_distribution<> xDistr(0, dim.x-1);
