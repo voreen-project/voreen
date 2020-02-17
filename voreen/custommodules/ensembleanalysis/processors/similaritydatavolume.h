@@ -79,7 +79,7 @@ protected:
     float calculateVariance(const std::vector<float>& voxelData) const;
     float calculateMinMaxDiff(const std::vector<float>& voxelData) const;
     const std::vector<float> applyGroupLogic(const std::vector<float>& rawVoxelData) const;
-    bool isReadyToCompute() const;
+    void testReadyToCompute() const;
 
 protected:
 

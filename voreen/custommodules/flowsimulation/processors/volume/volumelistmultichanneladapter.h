@@ -55,10 +55,16 @@ protected:
 
 private:
 
+    void onChannelCountChanged();
+
     std::vector<std::unique_ptr<const VolumeBase>> volumes_;
 
     IntProperty numChannels_;
     StringOptionProperty layout_;
+    BoolProperty invertChannel1_;
+    BoolProperty invertChannel2_;
+    BoolProperty invertChannel3_;
+    BoolProperty invertChannel4_;
 
     VolumeListPort inport_;
     VolumeListPort outport_;

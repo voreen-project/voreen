@@ -30,7 +30,7 @@
 
 namespace voreen {
     
-const std::string SimilartyDataVolume::loggerCat_("voreen.viscontest2018.SimilartyDataVolume");
+const std::string SimilartyDataVolume::loggerCat_("voreen.ensembleanalysis.SimilartyDataVolume");
 
 SimilartyDataVolume::SimilartyDataVolume()
     : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
@@ -129,7 +129,7 @@ SimilarityDataVolumeCreatorInput SimilartyDataVolume::prepareComputeInput() {
 
     // TODO: check if selected time is simulated in each selected run.
 
-    isReadyToCompute();
+    testReadyToCompute();
 
     tgt::ivec3 newDims = outputDimensions_.get();
     std::unique_ptr<VolumeRAM_Float> volumeData(new VolumeRAM_Float(newDims, true));
@@ -410,7 +410,7 @@ const std::vector<float> SimilartyDataVolume::applyGroupLogic(const std::vector<
 }
 
 float SimilartyDataVolume::calculateVariance(const std::vector<float>& voxelData) const {
-    Statistics statistics(true);
+    Statistics statistics(false);
 
     for(float voxelRunValue : voxelData) {
         statistics.addSample(voxelRunValue);
@@ -431,7 +431,7 @@ float SimilartyDataVolume::calculateMinMaxDiff(const std::vector<float>& voxelDa
     return std::abs(min - max);
 }
 
-bool SimilartyDataVolume::isReadyToCompute() const {
+void SimilartyDataVolume::testReadyToCompute() const {
     if(comparisonMethod_.getKey() == "selection") {
         if(group1_.getSelectedRowIndices().size() == 0) {
             throw InvalidInputException("No selection", InvalidInputException::S_WARNING);
@@ -456,8 +456,6 @@ bool SimilartyDataVolume::isReadyToCompute() const {
             throw InvalidInputException("Group 2 is empty", InvalidInputException::S_WARNING);
         }
     }
-
-    return true;
 }
 
 } // namespace voreen

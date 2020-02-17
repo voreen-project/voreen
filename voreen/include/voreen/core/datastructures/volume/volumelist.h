@@ -85,8 +85,7 @@ template class VRN_CORE_API Observable<VolumeListObserver>;
  */
 class VRN_CORE_API VolumeList : public Observable<VolumeListObserver>,
                                 public VolumeObserver,
-                                public DataInvalidationObservable,
-                                public DataInvalidationObserver {
+                                public DataInvalidationObservable {
 
 public:
 
@@ -192,9 +191,6 @@ public:
 
     /// @see VolumeObserver::volumeDelete
     virtual void volumeDelete(const VolumeBase* volume);
-
-    /// @see DataInvalidationObserver::dataAboutToInvalidate
-    virtual void dataAboutToInvalidate(const DataInvalidationObservable* data);
 
 protected:
     /**

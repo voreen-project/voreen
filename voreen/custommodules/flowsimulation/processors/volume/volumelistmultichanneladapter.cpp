@@ -27,18 +27,20 @@
 
 #include "voreen/core/datastructures/volume/volumedisk.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
-#include "voreen/core/datastructures/volume/volumehash.h"
 #include "voreen/core/ports/conditions/portconditionvolumelist.h"
+#include "voreen/core/utils/hashing.h"
 
 namespace voreen {
 
 class VolumeDisk_MultiChannelAdapter : public VolumeDisk {
 public:
 
-    VolumeDisk_MultiChannelAdapter(const std::vector<const VolumeBase*>& channels)
+    VolumeDisk_MultiChannelAdapter(const std::vector<const VolumeBase*>& channels, const std::vector<bool>& invert)
         : VolumeDisk(VolumeFactory().getFormat(channels.front()->getBaseType(), channels.size()), channels.front()->getDimensions())
         , channels_(channels)
+        , invert_(invert)
     {
+        tgtAssert(channels_.size() == invert_.size(), "size mismatch");
         const VolumeBase* ref = channels_.front();
         for (const VolumeBase* channel : channels_) {
             tgtAssert(ref->getFormat() == channel->getFormat(), "Base Type mismatch");
@@ -53,7 +55,7 @@ public:
             hash += channel->getHash();
         }
 
-        return VolumeHash(hash).getHash();
+        return VoreenHash::getHash(hash);
     }
 
     virtual VolumeRAM* loadVolume() const {
@@ -86,6 +88,9 @@ public:
                     for (pos.y = 0; pos.y < dimensions.y; pos.y++) {
                         for (pos.x = 0; pos.x < dimensions.x; pos.x++) {
                             float value = lock->getVoxelNormalized(offset + pos);
+                            if(invert_[channel]) {
+                                value = -value;
+                            }
                             output->setVoxelNormalized(value, pos, channel);
                         }
                     }
@@ -98,6 +103,9 @@ public:
                     for (pos.y = 0; pos.y < dimensions.y; pos.y++) {
                         for (pos.x = 0; pos.x < dimensions.x; pos.x++) {
                             float value = brick->getVoxelNormalized(pos);
+                            if(invert_[channel]) {
+                                value = -value;
+                            }
                             output->setVoxelNormalized(value, pos, channel);
                         }
                     }
@@ -114,6 +122,7 @@ public:
 private:
 
     std::vector<const VolumeBase*> channels_;
+    std::vector<bool> invert_;
 };
 
 
@@ -124,6 +133,10 @@ VolumeListMultiChannelAdapter::VolumeListMultiChannelAdapter()
     , outport_(Port::OUTPORT, "volumelist.output", "Volume List Output ", false)
     , numChannels_("numChannels", "Num. Channels", 3, 1, 4)
     , layout_("layout", "Layout", Processor::INVALID_RESULT, false, Property::LOD_ADVANCED)
+    , invertChannel1_("invertChannel1", "Invert Channel 1", false)
+    , invertChannel2_("invertChannel2", "Invert Channel 2", false)
+    , invertChannel3_("invertChannel3", "Invert Channel 3", false)
+    , invertChannel4_("invertChannel4", "Invert Channel 4", false)
 {
     addPort(inport_);
     inport_.addCondition(new PortConditionVolumeListEnsemble());
@@ -131,15 +144,30 @@ VolumeListMultiChannelAdapter::VolumeListMultiChannelAdapter()
     addPort(outport_);
 
     addProperty(numChannels_);
+    ON_CHANGE(numChannels_, VolumeListMultiChannelAdapter, onChannelCountChanged);
     addProperty(layout_);
     layout_.addOption("xyzxyz", "xyzxyz");
     layout_.addOption("xxyyzz", "xxyyzz");
+    addProperty(invertChannel1_);
+    addProperty(invertChannel2_);
+    addProperty(invertChannel3_);
+    addProperty(invertChannel4_);
+
+    // Update GUI according to initial state.
+    onChannelCountChanged();
 }
 
 VolumeListMultiChannelAdapter::~VolumeListMultiChannelAdapter() {}
 
 Processor* VolumeListMultiChannelAdapter::create() const {
     return new VolumeListMultiChannelAdapter();
+}
+
+void VolumeListMultiChannelAdapter::onChannelCountChanged() {
+    //invertChannel1_.setReadOnlyFlag(numChannels_.get() < 1); // always false.
+    invertChannel2_.setReadOnlyFlag(numChannels_.get() < 2);
+    invertChannel3_.setReadOnlyFlag(numChannels_.get() < 3);
+    invertChannel4_.setReadOnlyFlag(numChannels_.get() < 4);
 }
 
 void VolumeListMultiChannelAdapter::process() {
@@ -153,6 +181,18 @@ void VolumeListMultiChannelAdapter::process() {
 
     size_t numChannels = static_cast<size_t>(numChannels_.get());
     size_t numVolumes = input->size() / numChannels; // floor(x).
+
+    std::vector<bool> invert;
+    invert.push_back(invertChannel1_.get());
+    if(numChannels > 1) {
+        invert.push_back(invertChannel2_.get());
+    }
+    if(numChannels > 2) {
+        invert.push_back(invertChannel3_.get());
+    }
+    if(numChannels > 3) {
+        invert.push_back(invertChannel4_.get());
+    }
 
     VolumeList* output = new VolumeList();
 
@@ -175,7 +215,7 @@ void VolumeListMultiChannelAdapter::process() {
             tgtAssert(false, "unknown layout");
         }
 
-        VolumeDisk* vd = new VolumeDisk_MultiChannelAdapter(channels);
+        VolumeDisk* vd = new VolumeDisk_MultiChannelAdapter(channels, invert);
         VolumeBase* volume = new Volume(vd, input->first());
         output->add(volume);
 
