@@ -335,7 +335,9 @@ static bool clipLineToBB(const tgt::Bounds& bb, tgt::vec3& p0, tgt::vec3& p1) {
     return true;
 }
 
-static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cylinders& cylinders, std::vector<std::vector<tgt::vec3>>& foregroundLabels, std::vector<std::vector<tgt::vec3>>& backgroundLabels) {
+static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cylinders& cylinders, std::vector<std::vector<tgt::vec3>>& foregroundLabels, std::vector<std::vector<tgt::vec3>>& backgroundLabels, ProgressReporter& progress) {
+    SubtaskProgressReporterCollection<2> progressSteps(progress, {0.5, 0.5});
+
     const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
     int minRadius = std::max(1, input.structureSizeRange.x/2);
     int maxRadius = std::max(1, input.structureSizeRange.y/2);
@@ -352,6 +354,7 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
 
     size_t totalVolume = tgt::hmul(dim);
     float volumeToFill = totalVolume * input.density;
+    float remainingVolume = volumeToFill;
 
 
     tgt::Bounds volumeBounds(tgt::vec3::zero, tgt::vec3(dim - tgt::svec3::one));
@@ -365,7 +368,8 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
     std::deque<BranchSeed> queue;
 
 
-    while(volumeToFill > 0) {
+    while(remainingVolume > 0) {
+        progressSteps.get<0>().setProgress(remainingVolume/volumeToFill);
 
         tgt::vec3 start;
         tgt::vec3 dir;
@@ -444,14 +448,14 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
             }
             balls.add(end, seed.radius);
             cylinders.add(seed.begin, end, seed.radius);
-            volumeToFill -= vol;
+            remainingVolume -= vol;
 
             std::vector<tgt::vec3> segment;
             segment.push_back(p1);
             segment.push_back(p2);
             foregroundLabels.push_back(segment);
 
-            if(volumeToFill < 0) {
+            if(remainingVolume < 0) {
                 break;
             }
 
@@ -488,6 +492,7 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
     std::uniform_int_distribution<> indexDistr(0, balls.size());
     size_t numElements = cylinders.size();
     for(int i=0; i<numElements && tries > 0;) {
+        progressSteps.get<1>().setProgress(static_cast<float>(i)/numElements);
         auto s = cylinders.start(i);
         auto e = cylinders.end(i);
         float radius = cylinders.radius(i);
@@ -538,7 +543,9 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
     }
 }
 
-static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinders& cylinders, std::vector<std::vector<tgt::vec3>>& foregroundLabels, std::vector<std::vector<tgt::vec3>>& backgroundLabels) {
+static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinders& cylinders, std::vector<std::vector<tgt::vec3>>& foregroundLabels, std::vector<std::vector<tgt::vec3>>& backgroundLabels, ProgressReporter& progress) {
+    SubtaskProgressReporterCollection<2> progressSteps(progress, {0.5, 0.5});
+
     const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
     int minRadius = std::max(1, input.structureSizeRange.x/2);
     int maxRadius = std::max(1, input.structureSizeRange.y/2);
@@ -563,6 +570,7 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
     std::uniform_int_distribution<> rDistr(minRadius, maxRadius);
 
     for(int i=0; i<numElements; ++i) {
+        progressSteps.get<0>().setProgress(static_cast<float>(i)/numElements);
         tgt::ivec3 p(xDistr(input.randomEngine), yDistr(input.randomEngine), zDistr(input.randomEngine));
         balls.add(p, rDistr(input.randomEngine));
 
@@ -577,6 +585,7 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
     std::uniform_int_distribution<> indexDistr(0, balls.size());
     int i=0;
     for(;i<numElements && tries > 0;) {
+        progressSteps.get<1>().setProgress(static_cast<float>(i)/numElements);
         auto b1 = balls.center(indexDistr(input.randomEngine));
         auto b2 = balls.center(indexDistr(input.randomEngine));
 
@@ -621,7 +630,9 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
     }
 }
 
-LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGeneratorInput input, ProgressReporter& progress) const {
+LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGeneratorInput input, ProgressReporter& progressReporter) const {
+    SubtaskProgressReporterCollection<2> globalProgressSteps(progressReporter, {0.02, 0.98});
+
     tgtAssert(input.outputVolumeNoisy, "No outputVolume");
     tgtAssert(input.outputVolumeGT, "No outputVolume");
     const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
@@ -633,13 +644,14 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
     std::vector<std::vector<tgt::vec3>> foregroundLabels{};
     std::vector<std::vector<tgt::vec3>> backgroundLabels{};
 
+    auto& initProgress = globalProgressSteps.get<0>();
     switch(input.scenario) {
         case LargeTestDataGeneratorInput::CELLS: {
-            initCells(input, balls, cylinders, foregroundLabels, backgroundLabels);
+            initCells(input, balls, cylinders, foregroundLabels, backgroundLabels, initProgress);
             break;
         }
         case LargeTestDataGeneratorInput::VESSELS: {
-            initCylinders(input, balls, cylinders, foregroundLabels, backgroundLabels);
+            initCylinders(input, balls, cylinders, foregroundLabels, backgroundLabels, initProgress);
             break;
         }
         default: {
@@ -649,6 +661,7 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
 
     const float insideBase = 0.7;
     const float outsideBase = 0.3;
+    auto& progress = globalProgressSteps.get<1>();
     for(int z=0; z<dim.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dim.z);
 
