@@ -598,6 +598,12 @@ public:
     void setTempDataPath(const std::string& path);
 
     /**
+     * Sets path to directory in which cache data will be placed. It is stored
+     * in the application settings using a FileDialogProperty.
+     */
+    void setCachePath(const std::string& path);
+
+    /**
      * Returns the test data directory. If not set, an empty string is returned.
      *
      * @see setTestDataPath

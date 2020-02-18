@@ -1311,6 +1311,9 @@ void VoreenApplication::tempDataPathChanged() {
 void VoreenApplication::setTempDataPath(const std::string& path) {
     tempDataPath_.set(path);
 }
+void VoreenApplication::setCachePath(const std::string& path) {
+    cachePath_.set(path);
+}
 
 std::string VoreenApplication::getTestDataPath() const {
     return testDataPath_.get();

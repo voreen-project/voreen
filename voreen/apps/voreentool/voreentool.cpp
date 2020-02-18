@@ -183,6 +183,10 @@ int main(int argc, char* argv[]) {
     cmdParser->addOption("tempdir", tempDataPath, CommandLineParser::MainOption,
         "Path to directory in which temporary data will be placed.");
 
+    std::string cachePath;
+    cmdParser->addOption("cachedir", cachePath, CommandLineParser::MainOption,
+        "Path to directory in which cache data will be placed.");
+
     // init application
     try {
         vrnApp.initialize();
@@ -194,6 +198,11 @@ int main(int argc, char* argv[]) {
     // Change temp data path before doing anything else after initialization
     if(!tempDataPath.empty()) {
         vrnApp.setTempDataPath(tempDataPath);
+    }
+
+    // Change cache data path before doing anything else after initialization
+    if(!cachePath.empty()) {
+        vrnApp.setCachePath(cachePath);
     }
 
     // check parameters
