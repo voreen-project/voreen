@@ -44,11 +44,8 @@ PathlineCreator::PathlineCreator()
     , pathlineOutport_(Port::OUTPORT, "pathlineOutport", "Pathlines Output")
     , numSeedPoints_("numSeedPoints", "Number of Seed Points", 5000, 1, 200000)
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
-    , pathlineLengthThreshold_("pathlineLengthThresholdProp", "Threshold of Pathline Length: ", tgt::ivec2(0, 1000), 0, 1000)
     , absoluteMagnitudeThreshold_("absoluteMagnitudeThreshold", "Threshold of Magnitude (absolute)", tgt::vec2(0.0f, 1000.0f), 0.0f, 9999.99f)
     , fitAbsoluteMagnitudeThreshold_("fitAbsoluteMagnitude", "Fit absolute Threshold to Input", false)
-    , relativeMagnitudeThreshold_("relativeMagnitudeThreshold", "Threshold of Magnitude (relative)", tgt::vec2(0.0f, 100.0f), 0.0f, 100.0f, Processor::VALID)
-    , stopIntegrationAngleThreshold_("stopIntegrationAngleThreshold", "Stop Integration on Angle (degrees)", 180, 0, 180, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_ADVANCED)
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 0.1f, 1000.0f)
     , filterMode_("filterModeProp", "Filtering:", Processor::INVALID_RESULT, false, Property::LOD_DEVELOPMENT)
     , velocityUnitConversion_("velocityUnitConversion", "Input Velocity Unit")
@@ -64,20 +61,12 @@ PathlineCreator::PathlineCreator()
     numSeedPoints_.setGroupID("pathline");
     addProperty(seedTime_);
     seedTime_.setGroupID("pathline");
-    //addProperty(pathlineLengthThreshold_); // Determine if this is useful.
-    pathlineLengthThreshold_.setGroupID("pathline");
     addProperty(absoluteMagnitudeThreshold_);
     absoluteMagnitudeThreshold_.adaptDecimalsToRange(2);
-    absoluteMagnitudeThreshold_.onChange(MemberFunctionCallback<PathlineCreator>(this, &PathlineCreator::adjustRelativeThreshold));
     absoluteMagnitudeThreshold_.setGroupID("pathline");
     addProperty(fitAbsoluteMagnitudeThreshold_);
     ON_CHANGE(fitAbsoluteMagnitudeThreshold_, PathlineCreator, adjustPropertiesToInput);
     fitAbsoluteMagnitudeThreshold_.setGroupID("pathline");
-    addProperty(relativeMagnitudeThreshold_);
-    relativeMagnitudeThreshold_.setReadOnlyFlag(true);
-    relativeMagnitudeThreshold_.setGroupID("pathline");
-    //addProperty(stopIntegrationAngleThreshold_); // Determine if this is useful.
-    stopIntegrationAngleThreshold_.setGroupID("pathline");
     addProperty(temporalResolution_);
     temporalResolution_.setGroupID("pathline");
     addProperty(filterMode_);
@@ -146,9 +135,6 @@ void PathlineCreator::adjustPropertiesToInput() {
         absoluteMagnitudeThreshold_.setMinValue(0.0f);
         absoluteMagnitudeThreshold_.setMaxValue(5000.0f);
     }
-
-    pathlineLengthThreshold_.setMinValue(0);
-    pathlineLengthThreshold_.setMaxValue(volumeList->size());
 }
 
 PathlineCreatorInput PathlineCreator::prepareComputeInput() {
@@ -249,9 +235,7 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
     std::unique_ptr<StreamlineListBase> output(new StreamlineList(referenceVolume));
 
     return PathlineCreatorInput {
-            pathlineLengthThreshold_.get(),
             absoluteMagnitudeThreshold_.get(),
-            stopIntegrationAngleThreshold_.get() * tgt::PIf / 180.0f, // Convert to radians.
             velocityUnitConversion_.getValue(),
             temporalResolution_.get() / 1000.0f, // Convert to s.
             temporalIntegrationSteps_.get(),
@@ -282,13 +266,11 @@ PathlineCreatorOutput PathlineCreator::compute(PathlineCreatorInput input, Progr
 
     const float totalTime = input.temporalResolution * (flowVolumes->size() - 1);
     const float dt = input.temporalResolution / input.temporalIntegrationSteps;
-    const size_t minNumElements = input.pathlineLengthThreshold.x * input.temporalIntegrationSteps;
 
     const IntegrationInput integrationInput {
             dt,
             roi,
             input.absoluteMagnitudeThreshold * input.velocityUnitConversion,
-            input.stopIntegrationAngleThreshold
     };
 
     for(size_t i=0; i<flowVolumes->size() - 1; i++) {
@@ -307,10 +289,7 @@ PathlineCreatorOutput PathlineCreator::compute(PathlineCreatorInput input, Progr
                 Streamline& pathline = *iter;
                 bool continueIntegration = integrationStep(pathline, sampler, integrationInput);
                 if (!continueIntegration) {
-                    if (pathline.getNumElements() >= minNumElements) {
-                        output->addStreamline(pathline);
-                    }
-
+                    output->addStreamline(pathline);
                     iter = pathlines.erase(iter);
                 }
                 else {
@@ -336,14 +315,6 @@ PathlineCreatorOutput PathlineCreator::compute(PathlineCreatorInput input, Progr
 
 void PathlineCreator::processComputeOutput(PathlineCreatorOutput output) {
     pathlineOutport_.setData(output.pathlines.release());
-}
-
-void PathlineCreator::adjustRelativeThreshold() {
-    //adjust read only property
-    tgt::vec2 range(absoluteMagnitudeThreshold_.getMinValue(), absoluteMagnitudeThreshold_.getMaxValue());
-    tgt::vec2 value = absoluteMagnitudeThreshold_.get();
-
-    relativeMagnitudeThreshold_.set((value - tgt::vec2(range.x)) / tgt::vec2(range.y - range.x) * 100.f);
 }
 
 bool PathlineCreator::integrationStep(Streamline& pathline, const SpatioTemporalSampler& sampler, const IntegrationInput& input) const {
@@ -382,16 +353,6 @@ bool PathlineCreator::integrationStep(Streamline& pathline, const SpatioTemporal
         magnitude > input.absoluteMagnitudeThreshold.y + epsilon) {
         return false;
     }
-
-// Determine if useful.
-//    // Angle within range?
-//    const tgt::vec3& prevVelR = pathline.getLastElement().velocity_;
-//    float prevMagnitude = tgt::length(prevVelR);
-//    if(magnitude > 0.0f && prevMagnitude > 0.0f && std::acos(std::abs(tgt::dot(prevVelR, velR)) /
-//      (prevMagnitude * magnitude)) > input.stopIntegrationAngleThreshold) {
-//        return false;
-//    }
-
 
     // Add element to pathline.
     pathline.addElementAtEnd(Streamline::StreamlineElement(r, velR));

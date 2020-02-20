@@ -87,7 +87,6 @@ protected:
         streamlineLengthThreshold_.setDescription("Streamlines, which are to short will be discarded. Streamlines, which are to long, will be clipped "\
                                                       "to the maximum threshold.");
         absoluteMagnitudeThreshold_.setDescription("Flow data points outside the threshold intervall will not be used for streamline construction.");
-        relativeMagnitudeThreshold_.setDescription("Can be used to adjust the absolut magnitude correctly.");
     }
 
 private:
@@ -101,11 +100,7 @@ private:
         float stopIntegrationAngleThreshold;
     };
 
-    /** Adjusts the relative threshold according to the absolute one. */
-    void adjustRelativeThreshold();
-
     Streamline integrateStreamline(const tgt::vec3& start, const SpatialSampler& sampler, const IntegrationInput& input) const;
-
 
     VolumePort volumeInport_;
     VolumePort seedMask_;
@@ -119,7 +114,6 @@ private:
     IntIntervalProperty streamlineLengthThreshold_;     ///< streamline length must be in this interval
     FloatIntervalProperty absoluteMagnitudeThreshold_;  ///< only magnitudes in this interval are used
     BoolProperty fitAbsoluteMagnitudeThreshold_;        ///< fit magnitude on input change?
-    FloatIntervalProperty relativeMagnitudeThreshold_;  ///< debug output
     IntProperty stopIntegrationAngleThreshold_;         ///< stop integration when exceeding threshold?
     OptionProperty<VolumeRAM::Filter> filterMode_;      ///< filtering inside the dataset
 

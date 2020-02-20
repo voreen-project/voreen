@@ -39,7 +39,7 @@ SimilartyDataVolume::SimilartyDataVolume()
     , outputDimensions_("outputDimensions", "Output Dimensions", tgt::ivec3(300), tgt::ivec3(10), tgt::ivec3(1000))
     , time_("time", "Time", 0.0f, 0.0f, 1000000.0f)
     , similarityMethod_("similarityMethod", "Similarity Method")
-    , selectedChannel_("selectedChannel", "Selected Channel")
+    , selectedField_("selectedChannel", "Selected Channel")
     , comparisonMethod_("comparisonMethod", "Comparison Method")
     , groupBehaviour_("groupBehaviour", "Group behaviour")
     , singleRunSelection_("singleRunSelection", "Compare run ...")
@@ -57,7 +57,7 @@ SimilartyDataVolume::SimilartyDataVolume()
     similarityMethod_.addOption("variance", "Variance");
     similarityMethod_.addOption("minmax", "Min/Max Comparison");
     similarityMethod_.select("variance");
-    addProperty(selectedChannel_);
+    addProperty(selectedField_);
 
     addProperty(comparisonMethod_);
     comparisonMethod_.addOption("selection", "Compare selection");
@@ -132,7 +132,7 @@ SimilarityDataVolumeCreatorInput SimilartyDataVolume::prepareComputeInput() {
     testReadyToCompute();
 
     tgt::ivec3 newDims = outputDimensions_.get();
-    std::unique_ptr<VolumeRAM_Float> volumeData(new VolumeRAM_Float(newDims, true));
+    std::unique_ptr<VolumeRAM_Float> volumeData(new VolumeRAM_Float(newDims));
     volumeData->clear();
 
     std::string runGroup1;
@@ -149,7 +149,7 @@ SimilarityDataVolumeCreatorInput SimilartyDataVolume::prepareComputeInput() {
             time_.get(),
             runGroup1,
             runGroup2,
-            selectedChannel_.get()
+            selectedField_.get()
     };
 }
 
@@ -157,9 +157,10 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
 
     progress.setProgress(0.0f);
 
-    const std::string& channel = input.channel;
+    const std::string& field = input.field;
     const tgt::Bounds& roi = input.dataset.getRoi();
 
+    size_t numChannels = 1;//input.dataset.getNumChannels(field); //TODO: use multiple channels
     tgt::ivec3 newDims = input.volumeData->getDimensions();
 
     float progressIncrement = 0.95f / newDims.z;
@@ -170,6 +171,7 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
 
                 tgt::vec3 sample = mapRange(tgt::vec3(pos), tgt::vec3::zero, tgt::vec3(newDims), roi.getLLF(), roi.getURB());
 
+                //std::vector<std::vector<float>> samples(input.dataset.getRuns().size(), std::vector<float>(numChannels));
                 std::vector<float> samples(input.dataset.getRuns().size());
                 for(size_t r = 0; r<input.dataset.getRuns().size(); r++) {
 
@@ -186,22 +188,23 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
 
                         samples.resize(2);
                         size_t t = input.dataset.pickTimeStep(r, input.time);
-                        const VolumeBase* volume = run.timeSteps_[t].fieldNames_.at(channel);
-                        const VolumeRAM_Float* volumeData = dynamic_cast<const VolumeRAM_Float*>(volume->getRepresentation<VolumeRAM>());
 
-                        const VolumeBase* volumeStart = run.timeSteps_[0].fieldNames_.at(channel);
-                        const VolumeRAM_Float* volumeDataStart = dynamic_cast<const VolumeRAM_Float*>(volumeStart->getRepresentation<VolumeRAM>());
+                        VolumeRAMRepresentationLock volumeT0(run.timeSteps_[0].fieldNames_.at(field));
+                        VolumeRAMRepresentationLock volumeTN(run.timeSteps_[t].fieldNames_.at(field));
 
-                        samples[r] = volumeData->getVoxelNormalizedLinear(sample);
-                        samples[r+1] = volumeDataStart->getVoxelNormalizedLinear(sample);
+                        for(size_t channel=0; channel<numChannels; channel++) {
+                            samples[0] = volumeT0->getVoxelNormalized(sample, channel);
+                            samples[1] = volumeTN->getVoxelNormalized(sample, channel);
+                        }
                         break;
                     }
                     else {
                         size_t t = input.dataset.pickTimeStep(r, input.time);
-                        const VolumeBase* volume = run.timeSteps_[t].fieldNames_.at(channel);
-                        const VolumeRAM* volumeData = volume->getRepresentation<VolumeRAM>();
+                        VolumeRAMRepresentationLock lock(run.timeSteps_[t].fieldNames_.at(field));
 
-                        samples[r] = volumeData->getVoxelNormalizedLinear(sample);
+                        for(size_t channel=0; channel<numChannels; channel++) {
+                            samples[r] = lock->getVoxelNormalized(sample, channel);
+                        }
                     }
                 }
 
@@ -226,7 +229,7 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
 
     std::unique_ptr<Volume> volume(new Volume(input.volumeData.release(), roi.diagonal() / tgt::vec3(newDims), roi.getLLF()));
     volume->getMetaDataContainer().addMetaData("time", new FloatMetaData(input.time));
-    volume->getMetaDataContainer().addMetaData("channel", new StringMetaData(channel));
+    volume->getMetaDataContainer().addMetaData("field", new StringMetaData(field));
     std::string group1string = comparisonMethod_.getKey() == "oneToGroup" ? singleRunSelection_.get() : input.runGroup1;
     std::string group2string = comparisonMethod_.getKey() == "selection" ? "" : input.runGroup2;
     volume->getMetaDataContainer().addMetaData("group1", new StringMetaData(group1string));
@@ -267,36 +270,6 @@ void SimilartyDataVolume::updateProperties() {
     time_.setMaxValue(timeSpan.y);
 }
 
-tgt::vec3 SimilartyDataVolume::getSpacing() const {
-
-    tgt::vec3 commonSpacing(std::numeric_limits<float>::max());
-
-    std::vector<int> runIndices;
-    if(comparisonMethod_.getKey() == "selection") {
-        runIndices = group1_.getSelectedRowIndices();
-    }
-    else if(comparisonMethod_.getKey() == "oneToGroup") {
-        runIndices = group2_.getSelectedRowIndices();
-        runIndices.push_back(singleRunSelection_.getSelectedIndex());
-    }
-    else if(comparisonMethod_.getKey() == "groupToGroup") {
-        runIndices = group1_.getSelectedRowIndices();
-        for(int index : group2_.getSelectedRowIndices()) {
-            runIndices.push_back(index);
-        }
-    }
-    for(int index : runIndices) {
-        EnsembleDataset::Run run = inport_.getData()->getRuns().at(index);
-        const VolumeBase* firstVolume = run.timeSteps_.front().fieldNames_.begin()->second;
-        tgt::vec3 spacing = firstVolume->getSpacing();
-        commonSpacing.x = std::min(commonSpacing.x, spacing.x);
-        commonSpacing.y = std::min(commonSpacing.y, spacing.y);
-        commonSpacing.z = std::min(commonSpacing.z, spacing.z);
-    }
-
-    return commonSpacing;
-}
-
 void SimilartyDataVolume::adjustToEnsemble() {
     if(!inport_.hasData()) return;
 
@@ -316,10 +289,10 @@ void SimilartyDataVolume::adjustToEnsemble() {
     group1_.setSelectedRowIndices(selection);
     group2_.setSelectedRowIndices(selection);
 
-    selectedChannel_.reset();
-    selectedChannel_.setOptions(std::deque<Option<std::string>>());
-    for(const std::string& channel : ensemble->getCommonFieldNames()) {
-        selectedChannel_.addOption(channel, channel);
+    selectedField_.reset();
+    selectedField_.setOptions(std::deque<Option<std::string>>());
+    for(const std::string& field : ensemble->getCommonFieldNames()) {
+        selectedField_.addOption(field, field);
     }
 
     time_.setMinValue(ensemble->getStartTime());
@@ -331,7 +304,7 @@ Processor* SimilartyDataVolume::create() const {
     return new SimilartyDataVolume();
 }
 
-const std::vector<float> SimilartyDataVolume::applyGroupLogic(const std::vector<float>& rawVoxelData) const {
+std::vector<float> SimilartyDataVolume::applyGroupLogic(const std::vector<float>& rawVoxelData) const {
     std::vector<float> modifiedVoxelData;
     if(comparisonMethod_.getKey() == "selection") {
         for(int selectedIndex : group1_.getSelectedRowIndices()) {

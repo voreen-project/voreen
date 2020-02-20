@@ -82,9 +82,9 @@ void VolumeRealWorldMapping::process() {
         return;
     }
 
-    RealWorldMapping rvm = getRealWorldMapping();
+    RealWorldMapping rwm = getRealWorldMapping();
 
-    VolumeBase* outputVolume = new VolumeDecoratorReplaceRealWorldMapping(inputVolume, rvm);
+    VolumeBase* outputVolume = new VolumeDecoratorReplaceRealWorldMapping(inputVolume, rwm);
     outport_.setData(outputVolume);
 }
 
@@ -134,23 +134,19 @@ RealWorldMapping VolumeRealWorldMapping::getRealWorldMapping(){
             tgt::vec2 range = realWorldRange_.get();
             return RealWorldMapping(range.y-range.x, range.x, "");
         }
-        break;
     case SCALE_OFFSET:
         {
             float scale = scale_.get();
             float offset = offset_.get();
             return RealWorldMapping(scale, offset, "");
         }
-        break;
     case NORMALIZED:
         return RealWorldMapping(1.0f, 0.0f, "");
-        break;
     case DENORMALIZED:
         {
             const VolumeBase* inputVolume = inport_.getData();
             if (!inputVolume) break;
-            RealWorldMapping rvm = inputVolume->getRealWorldMapping();
-            return rvm.createDenormalizingMapping(inputVolume->getBaseType());
+            return RealWorldMapping::createDenormalizingMapping(inputVolume->getBaseType());
         }
     default:
         break;

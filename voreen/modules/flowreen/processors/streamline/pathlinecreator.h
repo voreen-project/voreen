@@ -41,9 +41,7 @@ namespace voreen {
 class SpatioTemporalSampler;
 
 struct PathlineCreatorInput {
-    tgt::svec2 pathlineLengthThreshold;
     tgt::vec2 absoluteMagnitudeThreshold;
-    float stopIntegrationAngleThreshold;
     float velocityUnitConversion;
     float temporalResolution;
     int temporalIntegrationSteps;
@@ -87,10 +85,7 @@ protected:
                     "by other processors of the <i>Flowreen</i> module.");
         numSeedPoints_.setDescription("Can be used to determine the number of pathlines, which should be created. It can be used as a perfromance parameter.");
         seedTime_.setDescription("It is used as debug output to see the current generator. See the next description for more details.");
-        pathlineLengthThreshold_.setDescription("Pathlines, which are to short will be discarded. Pathlines, which are to long, will be clipped "\
-                                                  "to the maximum threshold.");
         absoluteMagnitudeThreshold_.setDescription("Flow data points outside the threshold intervall will not be used for pathline construction.");
-        relativeMagnitudeThreshold_.setDescription("Can be used to adjust the absolut magnitude correctly.");
     }
 
 private:
@@ -99,11 +94,7 @@ private:
         float stepSize;
         tgt::Bounds bounds;
         tgt::vec2 absoluteMagnitudeThreshold;
-        float stopIntegrationAngleThreshold;
     };
-
-    /// Adjusts the relative threshold according to the absolute one.
-    void adjustRelativeThreshold();
 
     /// Perform a single integration step for the specified pathline.
     bool integrationStep(Streamline& pathline, const SpatioTemporalSampler& sampler, const IntegrationInput& input) const;
@@ -117,11 +108,8 @@ private:
     IntProperty seedTime_;                                  ///< seed
 
     // pathline settings
-    IntIntervalProperty pathlineLengthThreshold_;       ///< pathline length must be in this interval
     FloatIntervalProperty absoluteMagnitudeThreshold_;  ///< only magnitudes in this interval are used
     BoolProperty fitAbsoluteMagnitudeThreshold_;        ///< fit magnitude on input change?
-    FloatIntervalProperty relativeMagnitudeThreshold_;  ///< debug output
-    IntProperty stopIntegrationAngleThreshold_;         ///< stop integration when exceeding threshold?
     FloatProperty temporalResolution_;                  ///< (global) temporal resolution between time steps
     OptionProperty<VolumeRAM::Filter> filterMode_;      ///< filtering inside the dataset
 

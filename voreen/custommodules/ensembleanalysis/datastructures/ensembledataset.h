@@ -83,9 +83,9 @@ public:
     float getMaxTotalDuration() const;
     const tgt::vec2& getCommonTimeInterval() const;
 
-    const tgt::vec2& getValueRange(const std::string& channel) const;
-    const tgt::vec2& getMagnitudeRange(const std::string& channel) const;
-    size_t getNumChannels(const std::string& channel) const;
+    const tgt::vec2& getValueRange(const std::string& field) const;
+    const tgt::vec2& getMagnitudeRange(const std::string& field) const;
+    size_t getNumChannels(const std::string& field) const;
 
     // Bounds are defined in physical coordinates
     const tgt::Bounds& getBounds() const;
