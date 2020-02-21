@@ -54,6 +54,7 @@ void VoreenQualityMode::setQuality(RenderingQuality quality) {
     if(quality_ != quality) {
         quality_ = quality;
         notifyQualiyModeChanged();
+        LDEBUGC("voreen.VoreenQualityMode", "Quality mode changed to: " << quality);
     }
 }
 
