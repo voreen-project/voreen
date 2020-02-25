@@ -53,6 +53,7 @@ EnsembleDataSource::EnsembleDataSource()
     , loadedRuns_("loadedRuns", "Loaded Runs", 5)
     , printEnsemble_("printEnsemble", "Print Ensemble", "Print Ensemble", "", "HTML (*.html)", FileDialogProperty::SAVE_FILE)
     , colorMap_("colorMap", "Color Map")
+    , overrideTimeStep_("overrideTimeStep", "Override Time Step", false, Processor::VALID, Property::LOD_ADVANCED)
     , hash_("hash", "Hash", "", Processor::VALID, Property::LOD_DEBUG)
 {
     addPort(outport_);
@@ -80,6 +81,7 @@ EnsembleDataSource::EnsembleDataSource()
     colors.push_back(tgt::Color(1.0f, 1.0f, 0.0f, 1.0f));
     colorMap_.set(ColorMap::createFromVector(colors));
 
+    addProperty(overrideTimeStep_);
     addProperty(hash_);
     hash_.setEditable(false);
 
@@ -180,15 +182,19 @@ void EnsembleDataSource::buildEnsembleDataset() {
                     break;
 
                 float time;
-                if(volumeHandle->hasMetaData(VolumeBase::META_DATA_NAME_TIMESTEP)) {
-                    time = volumeHandle->getTimestep();
-                }
-                else if(volumeHandle->hasMetaData(SIMULATED_TIME_NAME)) {
-                    time = volumeHandle->getMetaDataValue<FloatMetaData>(SIMULATED_TIME_NAME, 0.0f);
+                if(!overrideTimeStep_.get()) {
+                    if (volumeHandle->hasMetaData(VolumeBase::META_DATA_NAME_TIMESTEP)) {
+                        time = volumeHandle->getTimestep();
+                    } else if (volumeHandle->hasMetaData(SIMULATED_TIME_NAME)) {
+                        time = volumeHandle->getMetaDataValue<FloatMetaData>(SIMULATED_TIME_NAME, 0.0f);
+                    }
+                    else {
+                        time = 1.0f * timeSteps.size();
+                        LWARNING("Actual time information not found for time step " << timeSteps.size() << " of run " << run);
+                    }
                 }
                 else {
                     time = 1.0f * timeSteps.size();
-                    LWARNING("Actual time information not found for time step " << timeSteps.size() << " of run " << run);
                 }
 
                 if (!timeIsSet) {

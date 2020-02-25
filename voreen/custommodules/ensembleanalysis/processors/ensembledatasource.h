@@ -93,6 +93,7 @@ protected:
     StringTableProperty loadedRuns_;
     FileDialogProperty printEnsemble_;
     ColorMapProperty colorMap_;
+    BoolProperty overrideTimeStep_;
     StringProperty hash_;
 
     /// The structure of the ensemble data.
