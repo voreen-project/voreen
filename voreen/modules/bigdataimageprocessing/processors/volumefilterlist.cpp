@@ -437,32 +437,9 @@ void VolumeFilterList::addFilter(FilterProperties* filterProperties) {
 }
 
 void VolumeFilterList::disableTracking(Property* property) {
-    // HACK: This is not the nice way of doing things.
-    //  However, NumericProperty is a template class and has no non-template interface.
-    //  Therefore, we just manually check for related properties here.
-    if(auto prop = dynamic_cast<FloatProperty*>(property)) {
-        prop->setTracking(false);
-    }
-    else if(auto prop = dynamic_cast<IntProperty*>(property)) {
-        prop->setTracking(false);
-    }
-    else if(auto prop = dynamic_cast<FloatVec2Property*>(property)) {
-        prop->setTracking(false);
-    }
-    else if(auto prop = dynamic_cast<FloatVec3Property*>(property)) {
-        prop->setTracking(false);
-    }
-    else if(auto prop = dynamic_cast<FloatVec4Property*>(property)) {
-        prop->setTracking(false);
-    }
-    else if(auto prop = dynamic_cast<IntVec2Property*>(property)) {
-        prop->setTracking(false);
-    }
-    else if(auto prop = dynamic_cast<IntVec3Property*>(property)) {
-        prop->setTracking(false);
-    }
-    else if(auto prop = dynamic_cast<IntVec4Property*>(property)) {
-        prop->setTracking(false);
+    // In case of numeric properties, we disable tracking to not clash with auto update.
+    if (auto numericProperty = dynamic_cast<NumericPropertyBase*>(property)) {
+        numericProperty->setTracking(false);
     }
 }
 

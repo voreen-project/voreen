@@ -56,10 +56,6 @@ IntIntervalPropertyWidget::IntIntervalPropertyWidget(IntIntervalProperty* prop, 
     connect(maxWidget_, SIGNAL(valueChanged(int)), this, SLOT(setPropertyMax(int)));
     connect(maxWidget_, SIGNAL(sliderPressedChanged(bool)), this, SLOT(toggleInteractionMode(bool)));
     connect(maxWidget_, SIGNAL(valueChanged(int)), this, SIGNAL(widgetChanged()));
-
-    instantValueChangeMenu_ = new QMenu(this);
-    instantValueChangeAction_ = instantValueChangeMenu_->addAction("Tracking Mode");
-    instantValueChangeAction_->setCheckable(true);
 }
 
 IntIntervalPropertyWidget::~IntIntervalPropertyWidget() {
@@ -76,6 +72,7 @@ void IntIntervalPropertyWidget::updateFromPropertySlot() {
         minWidget_->setMaxValue(property_->getMaxValue());
         minWidget_->setValue(property_->get().x);
         minWidget_->setSingleStep(property_->getStepping());
+        minWidget_->setSliderTracking(property_->hasTracking());
         minWidget_->blockSignals(false);
 
         maxWidget_->blockSignals(true);
@@ -83,6 +80,7 @@ void IntIntervalPropertyWidget::updateFromPropertySlot() {
         maxWidget_->setMaxValue(property_->getMaxValue());
         maxWidget_->setValue(property_->get().y);
         maxWidget_->setSingleStep(property_->getStepping());
+        maxWidget_->setSliderTracking(property_->hasTracking());
         maxWidget_->blockSignals(false);
     }
 }

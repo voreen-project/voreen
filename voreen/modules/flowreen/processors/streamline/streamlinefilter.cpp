@@ -49,9 +49,11 @@ StreamlineFilter::StreamlineFilter()
     addProperty(enabled_);
     //general
     addProperty(physicalLengthRange_);
-    physicalLengthRange_.setGroupID("filter");
+        physicalLengthRange_.setTracking(false);
+        physicalLengthRange_.setGroupID("filter");
     addProperty(curvatureRange_);
-    curvatureRange_.setGroupID("filter");
+        curvatureRange_.setTracking(false);
+        curvatureRange_.setGroupID("filter");
     setPropertyGroupGuiName("filter", "Filter");
 }
 

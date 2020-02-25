@@ -51,15 +51,10 @@ protected:
     IntIntervalProperty* property_;
     SliderSpinBoxWidget* minWidget_;
     SliderSpinBoxWidget* maxWidget_;
-    QMenu* instantValueChangeMenu_;
-    QAction* instantValueChangeAction_;
     QVBoxLayout* vboxLayout_;
 
 protected slots:
     virtual void updateFromPropertySlot();
-
-private:
-
 
 };
 

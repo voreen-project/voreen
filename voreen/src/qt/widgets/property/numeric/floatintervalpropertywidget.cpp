@@ -56,10 +56,6 @@ FloatIntervalPropertyWidget::FloatIntervalPropertyWidget(FloatIntervalProperty* 
     connect(maxWidget_, SIGNAL(valueChanged(double)), this, SLOT(setPropertyMax(double)));
     connect(maxWidget_, SIGNAL(sliderPressedChanged(bool)), this, SLOT(toggleInteractionMode(bool)));
     connect(maxWidget_, SIGNAL(valueChanged(double)), this, SIGNAL(widgetChanged()));
-
-    instantValueChangeMenu_ = new QMenu(this);
-    instantValueChangeAction_ = instantValueChangeMenu_->addAction("Tracking Mode");
-    instantValueChangeAction_->setCheckable(true);
 }
 
 FloatIntervalPropertyWidget::~FloatIntervalPropertyWidget() {
@@ -77,6 +73,7 @@ void FloatIntervalPropertyWidget::updateFromPropertySlot() {
         minWidget_->setMaxValue(property_->getMaxValue());
         minWidget_->setValue(property_->get().x);
         minWidget_->setSingleStep(property_->getStepping());
+        minWidget_->setSliderTracking(property_->hasTracking());
         minWidget_->blockSignals(false);
 
         maxWidget_->blockSignals(true);
@@ -85,6 +82,7 @@ void FloatIntervalPropertyWidget::updateFromPropertySlot() {
         maxWidget_->setMaxValue(property_->getMaxValue());
         maxWidget_->setValue(property_->get().y);
         maxWidget_->setSingleStep(property_->getStepping());
+        maxWidget_->setSliderTracking(property_->hasTracking());
         maxWidget_->blockSignals(false);
     }
 }

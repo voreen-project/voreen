@@ -73,6 +73,7 @@ StreamlineSelector::StreamlineSelector()
         selectionMode_.addOption("end"      , "Line must end in ROI", STREAM_END);
         selectionMode_.setGroupID("config");
     addProperty(roi_);
+        roi_.setTracking(false);
         roi_.setGroupID("config");
     setPropertyGroupGuiName("config","Selection Configuration");
         //geometry output

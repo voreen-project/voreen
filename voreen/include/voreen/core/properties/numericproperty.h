@@ -30,6 +30,25 @@
 #include "voreen/core/properties/templateproperty.h"
 
 namespace voreen {
+
+class NumericPropertyBase {
+public:
+    /**
+     * Sets the number of decimals that should be
+     * displayed by a GUI representation of the property.
+     */
+    virtual void setNumDecimals(int numDecimals) = 0;
+    virtual int getNumDecimals() const = 0;
+
+    /**
+     * If tracking is disabled, the property is not to be updated
+     * during user interactions, e.g., while the user drags a slider.
+     * Tracking is enabled by default.
+     */
+    virtual void setTracking(bool tracking) = 0;
+    virtual bool hasTracking() const = 0;
+};
+
 /**
  * Template for properties that store numeric values.
  *
@@ -37,7 +56,7 @@ namespace voreen {
  * such as the stepping and number of decimals.
  */
 template<typename T>
-class NumericProperty : public TemplateProperty<T> {
+class NumericProperty : public TemplateProperty<T>, public NumericPropertyBase {
 
 template<typename> friend class NumericPropertyValidation;
 
