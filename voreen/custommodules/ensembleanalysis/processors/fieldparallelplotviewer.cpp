@@ -116,6 +116,7 @@ FieldParallelPlotViewer::FieldParallelPlotViewer()
     setPropertyGroupGuiName("rendering", "Rendering");
 
     addProperty(volumeTransferFunc_);
+        volumeTransferFunc_.setDomainFittingStrategy(TransFunc1DKeysProperty::FIT_DOMAIN_ALWAYS);
         volumeTransferFunc_.setGroupID("linking");
     addProperty(valueRange_);
         //ON_CHANGE(valueRange_, FieldParallelPlotViewer, adjustPropertiesToInput);
@@ -146,7 +147,6 @@ void FieldParallelPlotViewer::initialize() {
 
 void FieldParallelPlotViewer::deinitialize() {
     currentPlot_.reset();
-    plotTexture_.reset();
 
     RenderProcessor::deinitialize();
 }
@@ -234,12 +234,10 @@ void FieldParallelPlotViewer::adjustPropertiesToInput() {
     applyThreshold(slices);
 
     currentPlot_.reset(new Volume(slices, tgt::vec3::one, tgt::vec3::zero));
-    plotTexture_.reset(new tgt::Texture(tgt::ivec3(slices->getDimensions()), GL_RED, GL_R32F, GL_FLOAT, tgt::Texture::NEAREST, tgt::Texture::CLAMP_TO_EDGE, static_cast<GLubyte*>(slices->getData()), false));
-    plotTexture_->uploadTexture();
-    plotTexture_->setCpuTextureData(nullptr, false);
 
     // Fit transfer function to volume.
     transferFunc_.setVolume(currentPlot_.get());
+    volumeTransferFunc_.get()->setDomain(valueRange);
 }
 
 void FieldParallelPlotViewer::switchField() {
@@ -388,7 +386,7 @@ void FieldParallelPlotViewer::renderPlot() {
     // Setup plot texture.
     tgt::TextureUnit plotUnit;
     plotUnit.activate();
-    plotTexture_->bind();
+    currentPlot_->getRepresentation<VolumeGL>()->getTexture()->bind();
     shader->setUniform("plotData_", plotUnit.getUnitNumber());
 
     // Set zoom region.
@@ -539,6 +537,10 @@ tgt::vec2 FieldParallelPlotViewer::applyZoomToRange(const tgt::vec2& range, cons
 
 void FieldParallelPlotViewer::updateSelection() {
 
+    const EnsembleDataset* ensemble = ensembleInport_.getData();
+    if(!ensemble)
+        return;
+
     bool selecting = selectionStart_ != NO_SELECTION && selectionEnd_ != NO_SELECTION;
 
     tgt::vec2 selectionX = tgt::vec2(std::min(selectionStart_.x, selectionEnd_.x), std::max(selectionStart_.x, selectionEnd_.x));
@@ -591,8 +593,8 @@ void FieldParallelPlotViewer::updateSelection() {
     /**
      * update time selection
      */
-    float startTime = ensembleInport_.getData()->getStartTime();
-    float endTime = ensembleInport_.getData()->getEndTime();
+    float startTime = ensemble->getStartTime();
+    float endTime = ensemble->getEndTime();
 
     tgt::vec2 zoomedTimeRange = applyZoomToRange(tgt::vec2(startTime, endTime), zoomX_.get());
     startTime = zoomedTimeRange.x;

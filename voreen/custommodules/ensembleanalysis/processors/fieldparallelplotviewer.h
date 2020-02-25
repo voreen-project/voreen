@@ -125,7 +125,6 @@ protected:
     const VolumeBase* plotData_;
     const VolumeBase* fieldSlices_;
     std::unique_ptr<Volume> currentPlot_;
-    std::unique_ptr<tgt::Texture> plotTexture_;
 
     float timeStepPosition_;
     float viewPortWidth_;
