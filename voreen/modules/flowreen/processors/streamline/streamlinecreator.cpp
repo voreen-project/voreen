@@ -223,13 +223,13 @@ StreamlineCreatorOutput StreamlineCreator::compute(StreamlineCreatorInput input,
     // We use half the steps we had before.
     tgt::vec3 stepSize = 0.5f * flowVolume->getSpacing() / tgt::max(flowVolume->getSpacing());
 
-    const IntegrationInput integrationInput {
+    const IntegrationInput integrationInput{
         tgt::vec3(representation->getDimensions() - tgt::svec3::one),
         stepSize,
         flowVolume->getVoxelToWorldMatrix(),
         input.streamlineLengthThreshold,
         input.absoluteMagnitudeThreshold,
-        input.stopIntegrationAngleThreshold
+        input.stopIntegrationAngleThreshold,
     };
 
     const SpatialSampler sampler(*representation, flowVolume->getRealWorldMapping(), input.filterMode);

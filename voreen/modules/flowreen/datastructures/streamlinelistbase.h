@@ -124,6 +124,8 @@ public:
     virtual float getMinMagnitude() const = 0;
     virtual float getMaxMagnitude() const = 0;
 
+    virtual const tgt::vec2& getTemporalRange() const = 0;
+
 protected:
     /**
      * Only used by the StreamlineRotation processor.

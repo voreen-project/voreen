@@ -54,8 +54,9 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     , rotateAroundX_("rotationaroundx", "x-Axis Rotation (degrees)")
     , rotateAroundY_("rotationaroundy", "y-Axis Rotation (degrees)")
     , rotateAroundZ_("rotationaroundz", "z-Axis Rotation (degrees)")
-    , enableShading_("enableShading", "Enable Shading", true)
     , enableMaximumIntensityProjection_("maximumIntensityProjection", "Enable Maximum Intensity Projection (MIP)", false)
+    , timeWindowStart_("timeWindowStart", "Time Window Start", 0.0f, 0.0f, 1000.0f, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
+    , timeWindowSize_("timeWindowSize", "Time Window Size", 0.0f, 0.0f, 1000.0f, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
         //must haves
     , streamlineShader_("streamlineShaderProp", "Shader:", "streamlinerenderer3d.frag", "streamlinerenderer3d.vert", ""/*"streamlinerenderer3d.geom"*/, Processor::INVALID_PROGRAM, Property::LOD_DEBUG)
     , requiresRecompileShader_(true)
@@ -65,7 +66,7 @@ StreamlineRenderer3D::StreamlineRenderer3D()
 {
     //ports
     addPort(streamlineInport_);
-        streamlineInport_.onNewData(MemberFunctionCallback<StreamlineRenderer3D>(this, &StreamlineRenderer3D::onStreamlineDataChange));
+        ON_CHANGE(streamlineInport_, StreamlineRenderer3D, onStreamlineDataChange);
     addPort(imgOutport_);
     //properties
         // style
@@ -104,8 +105,11 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     addProperty(colorRotationMatrix_);
         colorRotationMatrix_.setVisibleFlag(false);
         colorRotationMatrix_.setReadOnlyFlag(true);
-    //addProperty(enableShading_);
     addProperty(enableMaximumIntensityProjection_);
+    addProperty(timeWindowStart_);
+        timeWindowStart_.setReadOnlyFlag(true);
+    addProperty(timeWindowSize_);
+        timeWindowSize_.setReadOnlyFlag(true);
 
         //must have
     addProperty(streamlineShader_);
@@ -150,6 +154,8 @@ void StreamlineRenderer3D::process() {
         // set transformation uniforms
         setGlobalShaderParameters(shader, &camera_.get(), imgOutport_.getSize());
         shader->setUniform("velocityTransformMatrix_",streamlineInport_.getData()->getVelocityTransformMatrix());
+        shader->setUniform("timeWindowStart_", timeWindowStart_.get());
+        shader->setUniform("timeWindowSize_", timeWindowSize_.get());
 
         switch(color_.getValue()) {
         case COLOR_VELOCITY:
@@ -204,17 +210,34 @@ void StreamlineRenderer3D::process() {
 //--------------------------------------------------------------------------------------
 void StreamlineRenderer3D::onStreamlineDataChange() {
 
-    //update camera
-    camera_.adaptInteractionToScene(streamlineInport_.getData()->getOriginalWorldBounds());
+    const StreamlineListBase* streamlines = streamlineInport_.getData();
+    if (!streamlines)
+        return;
 
-    //update tf
+    // Update camera.
+    camera_.adaptInteractionToScene(streamlines->getOriginalWorldBounds());
+
+    // Update transfer function.
     float* data = new float[2];
-    data[0] = streamlineInport_.getData()->getMinMagnitude();
-    data[1] = streamlineInport_.getData()->getMaxMagnitude();
-    VolumeRAM_Float* rep = new VolumeRAM_Float(data, tgt::svec3(2,1,1));
-    tfVolume_.reset(new Volume(rep, tgt::vec3::one, tgt::vec3::zero));
-    tfVolume_->addDerivedData(new VolumeMinMax(data[0], data[1], data[0], data[1])); //to save time by not triggering an background thread
-    transferFunction_.setVolume(tfVolume_.get(), 0);
+    data[0] = streamlines->getMinMagnitude();
+    data[1] = streamlines->getMaxMagnitude();
+    VolumeRAM_Float* representation = new VolumeRAM_Float(data, tgt::svec3(2,1,1));
+    tfVolume_.reset(new Volume(representation, tgt::vec3::one, tgt::vec3::zero));
+    tfVolume_->addDerivedData(new VolumeMinMax(data[0], data[1], data[0], data[1])); // To save time by not triggering a background thread.
+    transferFunction_.setVolume(tfVolume_.get());
+
+    // Update time window.
+    timeWindowStart_.setReadOnlyFlag(streamlines->getTemporalRange().x == streamlines->getTemporalRange().y);
+    timeWindowStart_.setMinValue(streamlines->getTemporalRange().x);
+    timeWindowStart_.setMaxValue(streamlines->getTemporalRange().y);
+    timeWindowStart_.set(streamlines->getTemporalRange().x); // default: Start at front.
+    timeWindowStart_.adaptDecimalsToRange(4);
+
+    timeWindowSize_.setReadOnlyFlag(streamlines->getTemporalRange().x == streamlines->getTemporalRange().y);
+    timeWindowSize_.setMinValue(streamlines->getTemporalRange().x);
+    timeWindowSize_.setMaxValue(streamlines->getTemporalRange().y);
+    timeWindowSize_.set(streamlines->getTemporalRange().y); // default: End at back.
+    timeWindowSize_.adaptDecimalsToRange(4);
 
     // Force rebuild
     requiresRebuild_ = true;
@@ -318,16 +341,16 @@ void StreamlineRenderer3D::rebuild() {
     // create new meshes according to selected option
     switch (streamlineStyle_.getValue()) {
     case STYLE_LINES:
-        meshes_.push_back(std::unique_ptr<GlMeshGeometryUInt32Color>(createLineGeometry(streamlineInport_.getData()->getStreamlines())));
+        meshes_.push_back(std::unique_ptr<GlMeshGeometryBase>(createLineGeometry(streamlineInport_.getData()->getStreamlines())));
         break;
     case STYLE_TUBES:
         for(const Streamline& streamline : streamlineInport_.getData()->getStreamlines()) {
-            meshes_.push_back(std::unique_ptr<GlMeshGeometryUInt32Color>(createTubeGeometry(streamline)));
+            meshes_.push_back(std::unique_ptr<GlMeshGeometryBase>(createTubeGeometry(streamline)));
         }
         break;
     case STYLE_ARROWS:
         for(const Streamline& streamline : streamlineInport_.getData()->getStreamlines()) {
-            meshes_.push_back(std::unique_ptr<GlMeshGeometryUInt32Color>(createArrowGeometry(streamline)));
+            meshes_.push_back(std::unique_ptr<GlMeshGeometryBase>(createArrowGeometry(streamline)));
         }
         break;
     default:
@@ -337,16 +360,18 @@ void StreamlineRenderer3D::rebuild() {
     requiresRebuild_ = false;
 }
 
-GlMeshGeometryUInt32Color* StreamlineRenderer3D::createLineGeometry(const std::vector<Streamline>& streamlines) {
+GlMeshGeometryBase* StreamlineRenderer3D::createLineGeometry(const std::vector<Streamline>& streamlines) {
 
     GlMeshGeometryUInt32Color* mesh = new GlMeshGeometryUInt32Color();
     mesh->setPrimitiveType(GL_LINE_STRIP);
     mesh->enablePrimitiveRestart();
 
     for (const Streamline& streamline : streamlines) {
-        for (size_t l = 0; l < streamline.getNumElements(); l++) {
+        for (size_t i = 0; i < streamline.getNumElements(); i++) {
+            const Streamline::StreamlineElement& element = streamline.getElementAt(i);
             mesh->addIndex(static_cast<uint32_t>(mesh->getVertices().size()));
-            mesh->addVertex(VertexColor(streamline.getElementAt(l).position_, tgt::vec4(streamline.getElementAt(l).velocity_, 1.f)));
+            mesh->addVertex(VertexColor(element.position_, tgt::vec4(element.velocity_, element.time_)));
+            // TODO: we abuse color.a as time and radius is currently unused.
         }
         mesh->addIndex(mesh->getPrimitiveRestartIndex());
     }
@@ -354,7 +379,7 @@ GlMeshGeometryUInt32Color* StreamlineRenderer3D::createLineGeometry(const std::v
     return mesh;
 }
 
-GlMeshGeometryUInt32Color* StreamlineRenderer3D::createTubeGeometry(const Streamline& streamline) const {
+GlMeshGeometryBase* StreamlineRenderer3D::createTubeGeometry(const Streamline& streamline) const {
 
     GlMeshGeometryUInt32Color* mesh = new GlMeshGeometryUInt32Color();
     mesh->setPrimitiveType(GL_TRIANGLES);
@@ -397,7 +422,7 @@ GlMeshGeometryUInt32Color* StreamlineRenderer3D::createTubeGeometry(const Stream
     return mesh;
 }
 
-GlMeshGeometryUInt32Color* StreamlineRenderer3D::createArrowGeometry(const Streamline& streamline) const {
+GlMeshGeometryBase* StreamlineRenderer3D::createArrowGeometry(const Streamline& streamline) const {
 
     GlMeshGeometryUInt32Color* mesh = new GlMeshGeometryUInt32Color();
     mesh->setPrimitiveType(GL_TRIANGLES);

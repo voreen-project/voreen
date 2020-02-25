@@ -48,6 +48,7 @@ void StreamlineBundle::addStreamline(Streamline&& streamline) {
     }
 
     // Update the centroid (using rolling mean).
+    double numStreamlines = static_cast<double>(streamlines_.size() + 1);
     Streamline updatedCentroid;
     for(size_t i=0; i<centroid_.getNumElements(); i++) {
         const tgt::vec3& centroidPosition = centroid_.getElementAt(i).position_;
@@ -56,8 +57,8 @@ void StreamlineBundle::addStreamline(Streamline&& streamline) {
         tgt::dvec3 deltaPosition = streamline.getElementAt(i).position_ - centroidPosition;
         tgt::dvec3 deltaVelocity = streamline.getElementAt(i).velocity_ - centroidVelocity;
 
-        tgt::vec3 updatedPosition = tgt::dvec3(centroidPosition) + deltaPosition / static_cast<double>(streamlines_.size() + 1);
-        tgt::vec3 updatedVelocity = tgt::dvec3(centroidVelocity) + deltaVelocity / static_cast<double>(streamlines_.size() + 1);
+        tgt::vec3 updatedPosition = tgt::dvec3(centroidPosition) + deltaPosition / numStreamlines;
+        tgt::vec3 updatedVelocity = tgt::dvec3(centroidVelocity) + deltaVelocity / numStreamlines;
 
         float updatedRadius = std::max(centroid_.getElementAt(i).radius_, 0.5f * tgt::distance(updatedPosition, centroidPosition));
 

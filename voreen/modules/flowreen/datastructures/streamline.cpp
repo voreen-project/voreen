@@ -135,9 +135,10 @@ Streamline Streamline::resample(size_t samples) const {
             const float t = tgt::clamp((segmentLength * i - distances[pos]) / (distances[pos + 1] - distances[pos]), 0.0f, 1.0f);
 
             Streamline::StreamlineElement element;
-            element.position_ = streamlineElements_[pos].position_ * (1.0f - t) + streamlineElements_[pos + 1].position_ * t;
-            element.velocity_ = streamlineElements_[pos].velocity_ * (1.0f - t) + streamlineElements_[pos + 1].velocity_ * t;
-            element.radius_   = streamlineElements_[pos].radius_   * (1.0f - t) + streamlineElements_[pos + 1].radius_   * t;
+            element.position_  = streamlineElements_[pos].position_  * (1.0f - t) + streamlineElements_[pos + 1].position_  * t;
+            element.velocity_  = streamlineElements_[pos].velocity_  * (1.0f - t) + streamlineElements_[pos + 1].velocity_  * t;
+            element.radius_    = streamlineElements_[pos].radius_    * (1.0f - t) + streamlineElements_[pos + 1].radius_    * t;
+            element.time_      = streamlineElements_[pos].time_      * (1.0f - t) + streamlineElements_[pos + 1].time_      * t;
 
             resampled.addElementAtEnd(element);
         }
@@ -170,42 +171,44 @@ float Streamline::getPhysicalLength() const {
     return physicalLength_;
 }
 
+tgt::vec2 Streamline::getTemporalRange() const {
+    return tgt::vec2(getFirstElement().time_, getLastElement().time_);
+}
+
 //----------------
 //  Storage
 //----------------
 std::string Streamline::toCSVString(const tgt::mat4& transformationMatrix, const tgt::mat4& velocityTransfomationMatrix) const {
     std::stringstream output;
-    output << getNumElements() << ", " << getMinMagnitude() << ", " << getMaxMagnitude();
-    for(size_t i = 0; i < streamlineElements_.size(); i++) {
-        tgt::vec4 transformedPosition = transformationMatrix * tgt::vec4(streamlineElements_[i].position_,1.f);
-        tgt::vec4 transformedVelocity = velocityTransfomationMatrix * tgt::vec4(streamlineElements_[i].velocity_,1.f);
+    output << getNumElements();
+    for(const StreamlineElement& element: streamlineElements_) {
+        tgt::vec4 transformedPosition = transformationMatrix * tgt::vec4(element.position_,1.f);
+        tgt::vec4 transformedVelocity = velocityTransfomationMatrix * tgt::vec4(element.velocity_,1.f);
         output << ", " << transformedPosition.x <<
                   ", " << transformedPosition.y <<
                   ", " << transformedPosition.z <<
                   ", " << transformedVelocity.x <<
                   ", " << transformedVelocity.y <<
-                  ", " << transformedVelocity.z;
+                  ", " << transformedVelocity.z <<
+                  ", " << element.radius_ <<
+                  ", " << element.time_;
     }
     return output.str();
 }
 
 void Streamline::serialize(Serializer& s) const {
-    s.serialize("minMagnitude_",magnitudeStatistics_.getMin());
-    s.serialize("maxMagnitude_",magnitudeStatistics_.getMax());
     //serialize elements as blob
-    std::vector<StreamlineElement> vec(streamlineElements_.size());
-    std::copy(streamlineElements_.begin(),streamlineElements_.end(),vec.begin());
+    std::vector<StreamlineElement> vec(streamlineElements_.begin(), streamlineElements_.end());
     s.serializeBinaryBlob("StreamlineElements",vec);
 }
 
 void Streamline::deserialize(Deserializer& s) {
-    //s.deserialize("minMagnitude_",minMagnitude_); // Will be calculated below.
-    //s.deserialize("maxMagnitude_",maxMagnitude_); // Will be calculated below.
+    streamlineElements_.clear();
+
     //deserialize streamlines from binary blob
     std::vector<Streamline::StreamlineElement> vec;
     s.deserializeBinaryBlob("StreamlineElements",vec);
     // We add each element manually since we need to update the statistics.
-    streamlineElements_.clear();
     for(const StreamlineElement& element : vec) {
         addElementAtEnd(element);
     }

@@ -135,6 +135,11 @@ float StreamlineListDecoratorIdentity::getMaxMagnitude() const {
     return decorated_->getMaxMagnitude();
 }
 
+const tgt::vec2& StreamlineListDecoratorIdentity::getTemporalRange() const {
+    tgtAssert(decorated_, "missing base pointer");
+    return decorated_->getTemporalRange();
+}
+
 const tgt::mat4& StreamlineListDecoratorIdentity::getListTransformMatrix() const {
     tgtAssert(decorated_, "missing base pointer");
     return decorated_->getListTransformMatrix();

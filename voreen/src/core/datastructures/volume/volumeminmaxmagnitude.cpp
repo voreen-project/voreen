@@ -37,10 +37,10 @@ VolumeMinMaxMagnitude* createFromVolumeRAM(const VolumeRAM* volume, const RealWo
 
     for (size_t i=0; i<volume->getNumVoxels(); i++) {
         float magnitude = 0.0f, normalizedMagnitude = 0.0f;
-        for(size_t c=0; c<volume->getNumChannels(); c++) {
+        for(size_t channel=0; channel <volume->getNumChannels(); channel++) {
 
             // Update normalized magnitude.
-            float value = volume->getVoxelNormalized(i, c);
+            float value = volume->getVoxelNormalized(i, channel);
             normalizedMagnitude += value * value;
 
             // Update real world magnitude.

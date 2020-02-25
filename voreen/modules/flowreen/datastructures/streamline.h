@@ -46,26 +46,29 @@ namespace voreen {
  */
 class VRN_CORE_API Streamline : public Serializable {
 public:
+
     /**
      * A streamline consists of a vector of these elements.
      */
     struct StreamlineElement {
         tgt::vec3 position_;    ///< position in world space
-        tgt::vec3 velocity_;    ///< local velocity
-        float radius_;          ///< local radius in world space
+        tgt::vec3 velocity_;    ///< local velocity in mm/s
+        float radius_;          ///< local radius in world space, primarily used for bundles
+        float time_;            ///< time point in seconds, primarily used for pathlines
 
         StreamlineElement()
             : position_(tgt::vec3::zero)
             , velocity_(tgt::vec3::zero)
             , radius_(0.0f)
+            , time_(0.0f)
         {}
 
-        StreamlineElement(const tgt::vec3& position, const tgt::vec3& velocity, float radius = 0.0f)
+        StreamlineElement(const tgt::vec3& position, const tgt::vec3& velocity, float radius = 0.0f, float time = 0.0f)
             : position_(position)
             , velocity_(velocity)
             , radius_(radius)
-        {
-        }
+            , time_(time)
+        {}
     };
 
     /** Constructor */
@@ -110,6 +113,9 @@ public:
     /** Returns the length in physical space. */
     float getPhysicalLength() const;
 
+    /** Returns the temporal range covered by the streamline. */
+    tgt::vec2 getTemporalRange() const;
+
     //----------------
     //  Storage
     //----------------
@@ -125,10 +131,10 @@ public:
     //  Members
     //----------------
 private:
-   std::deque<StreamlineElement> streamlineElements_;   ///< list of all streamline elements from front to back
-   Statistics magnitudeStatistics_;                     ///< statistics of the contained magnitudes
-   Statistics curvatureStatistics_;                     ///< statistics of the lines curvature
-   float physicalLength_;                               ///< total physical length (in mm)
+    std::deque<StreamlineElement> streamlineElements_;   ///< list of all streamline elements from front to back
+    Statistics magnitudeStatistics_;                     ///< statistics of the contained magnitudes
+    Statistics curvatureStatistics_;                     ///< statistics of the lines curvature
+    float physicalLength_;                               ///< total physical length (in mm)
 };
 
 }   // namespace

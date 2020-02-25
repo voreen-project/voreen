@@ -107,9 +107,9 @@ private:
     virtual std::string generateHeader(const tgt::GpuCapabilities::GlVersion* version = 0);
     void compile();
     void rebuild();
-    GlMeshGeometryUInt32Color* createLineGeometry(const std::vector<Streamline>& streamlines);
-    GlMeshGeometryUInt32Color* createTubeGeometry(const Streamline& streamline) const;
-    GlMeshGeometryUInt32Color* createArrowGeometry(const Streamline& streamline) const;
+    GlMeshGeometryBase* createLineGeometry(const std::vector<Streamline>& streamlines);
+    GlMeshGeometryBase* createTubeGeometry(const Streamline& streamline) const;
+    GlMeshGeometryBase* createArrowGeometry(const Streamline& streamline) const;
 
     //------------------
     //  Members
@@ -127,8 +127,9 @@ private:
     FloatOptionProperty rotateAroundX_;                 ///< rotate around x to get nice color coding
     FloatOptionProperty rotateAroundY_;                 ///< rotate around y to get nice color coding
     FloatOptionProperty rotateAroundZ_;                 ///< rotate around z to get nice color coding
-    BoolProperty enableShading_;                        ///< enables phong shading
     BoolProperty enableMaximumIntensityProjection_;     ///< enables maximum intensity projection (MIP)
+    FloatProperty timeWindowStart_;                     ///< start of time window for pathline rendering
+    FloatProperty timeWindowSize_;                      ///< size of time window
 
         //must haves
     ShaderProperty streamlineShader_;                   ///< used for rendering
@@ -137,7 +138,7 @@ private:
     CameraInteractionHandler* cameraHandler_;           ///< handler to allow navigation
 
         //rendering
-    std::vector<std::unique_ptr<GlMeshGeometryUInt32Color>> meshes_;   ///< all other meshes to be rendered
+    std::vector<std::unique_ptr<GlMeshGeometryBase>> meshes_;
     bool requiresRebuild_;
 
     static std::string loggerCat_;

@@ -355,7 +355,7 @@ bool PathlineCreator::integrationStep(Streamline& pathline, const SpatioTemporal
     }
 
     // Add element to pathline.
-    pathline.addElementAtEnd(Streamline::StreamlineElement(r, velR));
+    pathline.addElementAtEnd(Streamline::StreamlineElement(r, velR, 0.0f, pathline.getNumElements() * input.stepSize));
 
     return true;
 }
