@@ -4,11 +4,19 @@ Voreen Changelog
 (UNRELEASED): Voreen 5.1.2
 ------------------------
 
+    * Features:
+      o Add PathlineCreator which takes a vector field time series as input
+
     * Framework/API Changes:
       o VolumeHalfSample: The output dimensions are now always rounded up if the input dimensions are not divisible by 2. This change was made in order unify the behaviour with octree downsampling
+      o Add interface NumericPropertyBase which is implemented by NumericProperty, IntervalProperty and BoundingBoxProperty. This allows to properly disable property tracking for asynchronous computations.
 
     * Bug Fixes/Minor Changes:
       o Fix bugs in handling of octrees with non-power-of-two dimensions
+      o VolumeList is no longer a DataInvalidationObserver of its volumes. If a representation of any contained volume was deleted, any asynchronous processing of the list would crash.
+      o Fix install target for some Linux distributions by setting RPATH explicitly
+      o Fix simple-glut and simple-qt demo applications
+      o Fix crash in DICOM reader
 
 2020-01-17: Voreen 5.1.1
 ------------------------

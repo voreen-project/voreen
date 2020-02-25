@@ -46,7 +46,7 @@ struct SimilarityDataVolumeCreatorInput {
     float time;
     std::string runGroup1;
     std::string runGroup2;
-    std::string channel;
+    std::string field;
 };
 
 struct SimilarityDataVolumeCreatorOutput {
@@ -74,12 +74,11 @@ protected:
 
     void adjustToEnsemble();
     void updateProperties();
-    tgt::vec3 getSpacing() const;
     void onComparisonMethodChange();
     float calculateVariance(const std::vector<float>& voxelData) const;
     float calculateMinMaxDiff(const std::vector<float>& voxelData) const;
-    const std::vector<float> applyGroupLogic(const std::vector<float>& rawVoxelData) const;
-    bool isReadyToCompute() const;
+    std::vector<float> applyGroupLogic(const std::vector<float>& rawVoxelData) const;
+    void testReadyToCompute() const;
 
 protected:
 
@@ -94,7 +93,7 @@ protected:
     FloatProperty time_;
 
     StringOptionProperty similarityMethod_;
-    StringOptionProperty selectedChannel_;
+    StringOptionProperty selectedField_;
     StringOptionProperty comparisonMethod_;
     StringOptionProperty groupBehaviour_;
 

@@ -91,7 +91,7 @@ Volume* VolumeOperatorMagnitude::apply(const VolumeBase* srcVolume) {
     RealWorldMapping rescaleMapping(maxMagnitude, 0.f, "");
     magnitudeVolume->setRealWorldMapping(rescaleMapping);
 
-    return  magnitudeVolume;
+    return magnitudeVolume;
 }
 
 } // namespace

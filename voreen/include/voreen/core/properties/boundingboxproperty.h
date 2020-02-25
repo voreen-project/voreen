@@ -26,7 +26,7 @@
 #ifndef VRN_BOUNDINGBOXPROPERTY_H
 #define VRN_BOUNDINGBOXPROPERTY_H
 #include "voreen/core/properties/property.h"
-#include "voreen/core/properties/templateproperty.h"
+#include "voreen/core/properties/numericproperty.h"
 #include "tgt/bounds.h"
 #include "tgt/interval.h"
 #include <cfloat>
@@ -36,7 +36,7 @@ namespace voreen {
 
 
 template<typename T>
-class TemplateBoundingBoxProperty :public TemplateProperty<tgt::TemplateBounds<T> >{
+class TemplateBoundingBoxProperty :public TemplateProperty<tgt::TemplateBounds<T> >, public NumericPropertyBase {
 public:
     TemplateBoundingBoxProperty<T>(const std::string& id, const std::string& guiText,  const tgt::TemplateBounds<T>& value=tgt::TemplateBounds<T>(tgt::Vector3<T>(0.0f), tgt::Vector3<T>(0.0f)),
                   const typename tgt::Vector3<T>& minimum = tgt::Vector3<T>(0.0f), const typename tgt::Vector3<T>& maximum = tgt::Vector3<T>(100.0f),
@@ -65,6 +65,12 @@ public:
     void setStepping(tgt::Vector3<T>);
     tgt::Vector3<T> getStepping() const;
 
+    void setNumDecimals(int numDecimals);
+    int getNumDecimals() const;
+
+    void setTracking(bool tracking);
+    bool hasTracking() const;
+
     virtual std::string getTypeDescription() const { return "Bounds"; }
 
     /// @see Property::serialize
@@ -84,6 +90,8 @@ protected:
     tgt::Interval<T> zDefaultInterval_;
 
     tgt::Vector3<T> stepping_;
+    bool tracking_;
+    int numDecimals_;
 };
 
 
@@ -134,6 +142,8 @@ TemplateBoundingBoxProperty<T>::TemplateBoundingBoxProperty(const std::string& i
     , yInterval_(tgt::Vector2<T>(value.getLLF().y, value.getURB().y), minValue.y, maxValue.y, minRange.y, maxRange.y)
     , zInterval_(tgt::Vector2<T>(value.getLLF().z, value.getURB().z), minValue.z, maxValue.z, minRange.z, maxRange.z)
     , stepping_(tgt::Vector3<T>::one)
+    , tracking_(true)
+    , numDecimals_(2)
 {
     TemplateProperty<tgt::TemplateBounds<T> >::set(value);
     xDefaultInterval_ = xInterval_;
@@ -143,7 +153,7 @@ TemplateBoundingBoxProperty<T>::TemplateBoundingBoxProperty(const std::string& i
 
 template<typename T>
 TemplateBoundingBoxProperty<T>::TemplateBoundingBoxProperty()
-    : TemplateProperty<tgt::TemplateBounds<T> > ()
+    : TemplateBoundingBoxProperty<T>("", "")
 {}
 
 
@@ -272,6 +282,29 @@ tgt::Vector3<T> TemplateBoundingBoxProperty<T>::getStepping() const{
 }
 
 template<typename T>
+int TemplateBoundingBoxProperty<T>::getNumDecimals() const {
+    return numDecimals_;
+}
+
+template<typename T>
+void TemplateBoundingBoxProperty<T>::setNumDecimals(int numDecimals) {
+    tgtAssert(numDecimals <= 64 && numDecimals >= 0, "Invalid number of decimals");
+    numDecimals_ = numDecimals;
+    this->updateWidgets();
+}
+
+template<typename T>
+bool TemplateBoundingBoxProperty<T>::hasTracking() const {
+    return tracking_;
+}
+
+template<typename T>
+void TemplateBoundingBoxProperty<T>::setTracking(bool tracking) {
+    tracking_ = tracking;
+    this->updateWidgets();
+}
+
+template<typename T>
 void TemplateBoundingBoxProperty<T>::serialize(Serializer& s) const{
     tgt::TemplateBounds<T> b = this->get();
     s.serialize("bounds", b);
@@ -280,17 +313,20 @@ void TemplateBoundingBoxProperty<T>::serialize(Serializer& s) const{
     s.serialize("minRange", this->getMinRange());
     s.serialize("maxRange", this->getMaxRange());
     s.serialize("stepping", this->getStepping());
+    s.serialize("tracking", this->hasTracking());
 }
 
 template<typename T>
 void TemplateBoundingBoxProperty<T>::deserialize(Deserializer& s){
     typename tgt::Vector3<T> minValue, maxValue, minRange, maxRange, stepping;
+    bool tracking;
     tgt::TemplateBounds<T> bounds;
     s.optionalDeserialize("minValue", minValue,tgt::Vector3<T>::zero);
     s.optionalDeserialize("maxValue", maxValue,tgt::Vector3<T>::one);
     s.optionalDeserialize("minRange", minRange,tgt::Vector3<T>::zero);
     s.optionalDeserialize("maxRange", maxRange,tgt::Vector3<T>(std::numeric_limits<T>::max()));
     s.optionalDeserialize("stepping", stepping,tgt::Vector3<T>::one);
+    s.optionalDeserialize("tracking", tracking, tracking_);
 
     try{
         // try new serialization
@@ -310,6 +346,7 @@ void TemplateBoundingBoxProperty<T>::deserialize(Deserializer& s){
     this->setMinRange(minRange);
     this->setMaxRange(maxRange);
     this->setStepping(stepping);
+    this->setTracking(tracking);
 
     this->set(bounds);
 }

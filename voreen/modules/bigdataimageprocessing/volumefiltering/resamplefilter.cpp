@@ -28,7 +28,7 @@
 
 namespace voreen {
 
-ResampleFilter::ResampleFilter(tgt::svec3 targetDimensions, std::string sliceBaseType, size_t numChannels)
+ResampleFilter::ResampleFilter(const tgt::svec3& targetDimensions, const std::string& sliceBaseType, size_t numChannels)
     : dimensions_(targetDimensions)
     , sliceBaseType_(sliceBaseType)
     , numChannels_(numChannels)

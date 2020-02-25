@@ -24,24 +24,27 @@
  ***********************************************************************************/
 
 layout(location=0) in vec3 position_;
-layout(location=1) in vec3 velocity_;
+layout(location=1) in vec4 color_;
 
 //set from camera in setGloalShaderParameters
 uniform mat4 projectionMatrix_;
 uniform mat4 viewMatrix_;
 //set manuell in process
-uniform mat4 voxelToWorldMatrix_;
 uniform mat4 velocityTransformMatrix_;
 
 out vData
 {
     vec3 position;
     vec3 velocity;
+    float radius;
+    float time;
 } vertex;
 
 void main()
 {
-    gl_Position = projectionMatrix_ * viewMatrix_ * voxelToWorldMatrix_ * vec4(position_,1);
+    gl_Position = projectionMatrix_ * (viewMatrix_ * vec4(position_, 1));
     vertex.position = gl_Position.xyz;
-    vertex.velocity = (velocityTransformMatrix_* vec4(velocity_,1.0)).xyz;
+    vertex.velocity = (velocityTransformMatrix_* vec4(color_.rgb, 1.0)).xyz;
+    vertex.radius = 0.0; // Currently unused.
+    vertex.time = color_.a;
 }

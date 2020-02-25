@@ -1534,9 +1534,7 @@ static bool compareStreamlineListMetaData(StreamlineList* l1, StreamlineList* l2
         l1->getVelocityTransformMatrix() == l2->getListTransformMatrix() &&
         l1->getListTransformMatrix() == l2->getListTransformMatrix() &&
         //streamline-metadata
-        l1->getStreamlines().size() == l2->getStreamlines().size() &&
-        l1->getStreamlineBundles().size() == l2->getStreamlineBundles().size() &&
-        l1->getStreamlineNoise().size() == l2->getStreamlineNoise().size();
+        l1->getStreamlines().size() == l2->getStreamlines().size();
 }
 
 /*
@@ -1551,7 +1549,8 @@ static bool compareStreamlines(const Streamline& s1, const Streamline& s2) {
 
     for(size_t k=0; k < s1.getNumElements(); k++) {
         if(!compareVec(s1.getElementAt(k).position_, s2.getElementAt(k).position_, 0.0f) ||
-           !compareVec(s1.getElementAt(k).velocity_, s2.getElementAt(k).velocity_, 0.0f)) {
+           !compareVec(s1.getElementAt(k).velocity_, s2.getElementAt(k).velocity_, 0.0f) ||
+           !compareFloat(s1.getElementAt(k).radius_, s2.getElementAt(k).radius_, 0.0f)) {
             return false;
         }
     }
@@ -1582,31 +1581,6 @@ static bool compareStreamlineLists(StreamlineList* l1, StreamlineList* l2, std::
     for (size_t i = 0; i < l1->getStreamlines().size(); i++) {
         if (!compareStreamlines(l1->getStreamlines()[i], l2->getStreamlines()[i])) {
             report = "VsdFileComparator: Streamline data not identical.";
-            return false;
-        }
-    }
-
-    //
-    // compare streamline noise data
-    //
-    for (size_t i = 0; i < l1->getStreamlineNoise().size(); i++) {
-        if (l1->getStreamlineNoise()[i] != l2->getStreamlineNoise()[i]) {
-            report = "VsdFileComparator: Streamline Noise data not identical.";
-            return false;
-        }
-    }
-
-    //
-    // compare streamline bundle data
-    //
-    for (size_t i = 0; i < l1->getStreamlineBundles().size(); i++) {
-        const StreamlineBundle& b1 = l1->getStreamlineBundles()[i];
-        const StreamlineBundle& b2 = l2->getStreamlineBundles()[i];
-        if (b1.getStreamlines().size() != b2.getStreamlines().size() ||
-            !compareFloat(b1.getRadius(), b2.getRadius(), 0.0f) ||
-            !compareStreamlines(b1.getCentroid(), b2.getCentroid()))
-        {
-            report = "VsdFileComparator: Streamline Bundle data not identical.";
             return false;
         }
     }

@@ -26,18 +26,14 @@
 #ifndef VRN_INTINTERVALPROPERTY_H
 #define VRN_INTINTERVALPROPERTY_H
 
-#include "voreen/core/properties/templateproperty.h"
+#include "voreen/core/properties/numericproperty.h"
 #include "tgt/vector.h"
 #include "tgt/interval.h"
+
 namespace voreen {
 
-#ifdef DLL_TEMPLATE_INST
-template class VRN_CORE_API NumericProperty<int>;
-template class VRN_CORE_API NumericProperty<float>;
-#endif
-
 template<typename TYPE>
-class IntervalProperty :public TemplateProperty<tgt::Vector2<TYPE> >{
+class IntervalProperty :public TemplateProperty<tgt::Vector2<TYPE> >, public NumericPropertyBase {
 public:
     IntervalProperty(const std::string& id, const std::string& guiText,
         TYPE value = 0, TYPE minValue = 0, TYPE maxValue = 100,
@@ -109,6 +105,14 @@ public:
     int getNumDecimals() const;
 
     /**
+     * If tracking is disabled, the property is not to be updated
+     * during user interactions, e.g., while the user drags a slider.
+     * Tracking is enabled by default.
+     */
+    void setTracking(bool tracking);
+    bool hasTracking() const;
+
+    /**
      * Get the internal tgt::Interval
      */
     tgt::Interval<TYPE> getInterval() const;
@@ -131,7 +135,7 @@ private:
     tgt::Interval<TYPE> defaultValue_;
     TYPE stepping_;
     int numDecimals_;
-
+    bool tracking_;
 };
 
 class IntIntervalProperty :public IntervalProperty<int>{
@@ -390,6 +394,7 @@ void IntervalProperty<TYPE>::serialize(Serializer& s) const{
     s.serialize("minRange", this->getMinRange());
     s.serialize("maxRange", this->getMaxRange());
     s.serialize("stepping", this->getStepping());
+    s.serialize("tracking", this->hasTracking());
 }
 
 template<typename TYPE>
@@ -398,19 +403,21 @@ void IntervalProperty<TYPE>::deserialize(Deserializer& s){
     s.optionalDeserialize("value", t, tgt::Vector2<TYPE>::zero);
 
     TYPE minValue, maxValue, minRange, maxRange, stepping;
+    bool tracking;
 
     s.optionalDeserialize("minValue", minValue, static_cast<TYPE>(0));
     s.optionalDeserialize("maxValue", maxValue, static_cast<TYPE>(1));
     s.optionalDeserialize("minRange", minRange, static_cast<TYPE>(0));
     s.optionalDeserialize("maxRange", maxRange, std::numeric_limits<TYPE>::max());
     s.optionalDeserialize("stepping", stepping, static_cast<TYPE>(1));
-
+    s.optionalDeserialize("tracking", tracking, tracking_);
 
     this->setMinValue(minValue);
     this->setMaxValue(maxValue);
     this->setMinRange(minRange);
     this->setMaxRange(maxRange);
     this->setStepping(stepping);
+    this->setTracking(tracking);
 
     interval_.set(t);
 }
@@ -440,6 +447,18 @@ template<typename TYPE>
 int IntervalProperty<TYPE>::getNumDecimals() const {
     return numDecimals_;
 }
+
+template<typename TYPE>
+bool IntervalProperty<TYPE>::hasTracking() const {
+    return tracking_;
+}
+
+template<typename TYPE>
+void IntervalProperty<TYPE>::setTracking(bool tracking) {
+    tracking_ = tracking;
+    this->updateWidgets();
+}
+
 
 template<typename TYPE>
 IntervalPropertyValidation<TYPE>::IntervalPropertyValidation(IntervalProperty<TYPE>* prop)

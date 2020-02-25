@@ -31,10 +31,6 @@
 #include <cctype>
 #include <typeinfo>
 
-#ifdef VRN_MODULE_FLOWREEN
-#include "../modules/flowreen/datastructures/deprecated/volumeflow3d.h"
-#endif
-
 namespace voreen {
 
 class VRN_CORE_API VolumeGeneratorBase {
@@ -140,34 +136,6 @@ public:
         return sizeof(T);
     }
 };
-
-#ifdef VRN_MODULE_FLOWREEN
-class VRN_CORE_API VolumeGeneratorVolumeFlow3D : public VolumeGeneratorBase {
-public:
-    virtual std::string getFormat() const { return "Vector3(float)"; }
-    virtual std::string getBaseType() const { return "float"; }
-
-    virtual VolumeRAM* create(tgt::svec3 dimensions) const {
-        //TODO: fix
-        return 0;
-    }
-
-    virtual bool isType(const VolumeRAM* v) const {
-        if(typeid(*v) == typeid(VolumeFlow3D))
-            return true;
-        else
-            return false;
-    }
-
-    virtual int getNumChannels() const {
-        return VolumeElement<tgt::vec3>::getNumChannels();
-    }
-
-    virtual int getBytesPerVoxel() const {
-        return sizeof(tgt::vec3);
-    }
-};
-#endif
 
 //--------------------------------------------------------------------------------
 //Scalar types:

@@ -30,12 +30,16 @@ in vData
 {
     vec3 position;
     vec3 velocity;
+    float radius;
+    float time;
 }vertex[];
 
 out fData
 {
     vec3 position;
     vec3 velocity;
+    float radius;
+    float time;
 }frag;
 
 void main()

@@ -47,7 +47,6 @@ void VolumeList::add(VolumeBase* volume) {
         notifyPendingDataInvalidation();
         volumes_.push_back(volume);
         volume->Observable<VolumeObserver>::addObserver(static_cast<const VolumeObserver*>(this));
-        volume->DataInvalidationObservable::addObserver(static_cast<const DataInvalidationObserver*>(this));
         notifyVolumeAdded(volume);
     }
 }
@@ -64,7 +63,6 @@ void VolumeList::remove(const VolumeBase* volume){
     if (handleIter != volumes_.end()) {
         notifyPendingDataInvalidation();
         volumes_.erase(handleIter);
-        volume->DataInvalidationObservable::removeObserver(static_cast<const DataInvalidationObserver*>(this));
         volume->Observable<VolumeObserver>::removeObserver(static_cast<const VolumeObserver*>(this));
         notifyVolumeRemoved(volume);
     }
@@ -187,11 +185,6 @@ void VolumeList::volumeChange(const VolumeBase* handle) {
 void VolumeList::volumeDelete(const VolumeBase* volume) {
     if (contains(volume))
         remove(volume);
-}
-
-// implementation of DataInvalidationObserver interface
-void VolumeList::dataAboutToInvalidate(const DataInvalidationObservable* data) {
-    notifyPendingDataInvalidation();
 }
 
 } // namespace

@@ -73,20 +73,26 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/volumefiltering/binarizationfilter.cpp
     ${MOD_DIR}/volumefiltering/binarymedianfilter.cpp
     ${MOD_DIR}/volumefiltering/gaussianfilter.cpp
+    ${MOD_DIR}/volumefiltering/gradientfilter.cpp
     ${MOD_DIR}/volumefiltering/medianfilter.cpp
     ${MOD_DIR}/volumefiltering/morphologyfilter.cpp
+    ${MOD_DIR}/volumefiltering/negationfilter.cpp
     ${MOD_DIR}/volumefiltering/resamplefilter.cpp
     ${MOD_DIR}/volumefiltering/thresholdingfilter.cpp
+    ${MOD_DIR}/volumefiltering/vorticityfilter.cpp
 
     # Filter Properties
     ${MOD_DIR}/volumefilterproperties/filterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/binarizationfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/binarymedianfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/gaussianfilterproperties.cpp
+    ${MOD_DIR}/volumefilterproperties/gradientfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/medianfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/morphologyfilterproperties.cpp
+    ${MOD_DIR}/volumefilterproperties/negationfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/resamplefilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/thresholdingfilterproperties.cpp
+    ${MOD_DIR}/volumefilterproperties/vorticityfilterproperties.cpp
 
     # cell nuclei cluster splitting
     ${MOD_DIR}/util/clustersplittingthread.cpp
@@ -110,18 +116,24 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/volumefiltering/binarizationfilter.h
     ${MOD_DIR}/volumefiltering/binarymedianfilter.h
     ${MOD_DIR}/volumefiltering/gaussianfilter.h
+    ${MOD_DIR}/volumefiltering/gradientfilter.h
     ${MOD_DIR}/volumefiltering/medianfilter.h
     ${MOD_DIR}/volumefiltering/morphologyfilter.h
+    ${MOD_DIR}/volumefiltering/negationfilter.h
     ${MOD_DIR}/volumefiltering/thresholdingfilter.h
+    ${MOD_DIR}/volumefiltering/vorticityfilter.h
 
     # Filter Properties
     ${MOD_DIR}/volumefilterproperties/filterproperties.h
     ${MOD_DIR}/volumefilterproperties/binarizationfilterproperties.h
     ${MOD_DIR}/volumefilterproperties/binarymedianfilterproperties.h
     ${MOD_DIR}/volumefilterproperties/gaussianfilterproperties.h
+    ${MOD_DIR}/volumefilterproperties/gradientfilterproperties.h
     ${MOD_DIR}/volumefilterproperties/medianfilterproperties.h
     ${MOD_DIR}/volumefilterproperties/morphologyfilterproperties.h
+    ${MOD_DIR}/volumefilterproperties/negationfilterproperties.h
     ${MOD_DIR}/volumefilterproperties/thresholdingfilterproperties.h
+    ${MOD_DIR}/volumefilterproperties/vorticityfilterproperties.h
 
     # cell nuclei cluster splitting
     ${MOD_DIR}/operators/ternaryvolumeoperator.h

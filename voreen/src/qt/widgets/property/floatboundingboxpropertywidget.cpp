@@ -113,17 +113,26 @@ void FloatBoundingBoxPropertyWidget::updateFromPropertySlot() {
     tgt::vec3 maxValue = prop_->getMaxValue();
     tgt::vec3 stepping = prop_->getStepping();
 
+    bool tracking = prop_->hasTracking();
+    int numDecimals = prop_->getNumDecimals();
+
     xProperty_.setMinValue(minValue.x);
     xProperty_.setMaxValue(maxValue.x);
     xProperty_.setStepping(stepping.x);
+    xProperty_.setTracking(tracking);
+    xProperty_.setNumDecimals(numDecimals);
 
     yProperty_.setMinValue(minValue.y);
     yProperty_.setMaxValue(maxValue.y);
     yProperty_.setStepping(stepping.y);
+    yProperty_.setTracking(tracking);
+    yProperty_.setNumDecimals(numDecimals);
 
     zProperty_.setMinValue(minValue.z);
     zProperty_.setMaxValue(maxValue.z);
     zProperty_.setStepping(stepping.z);
+    zProperty_.setTracking(tracking);
+    zProperty_.setNumDecimals(numDecimals);
 
     xProperty_.set(xminmax);
     yProperty_.set(yminmax);

@@ -6,7 +6,11 @@
 MESSAGE(STATUS "Processing post-install script")
 
 # Execute deployment script for linux at the very end, because everything has to be copied properly before.
+
 IF(UNIX AND VRN_DEPLOYMENT)
-    MESSAGE(STATUS "* Install script for unix deployment")
-    INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${VRN_HOME}/tools/snapshot/deployment-linux/linuxdeployment.sh ${CMAKE_INSTALL_PREFIX} ${VRN_HOME}/tools/snapshot/deployment-linux/)")
+    OPTION(VRN_DEPLOYMENT_CREATE_APPIMAGE "Create an AppImage inside the installation directory" OFF)
+    IF(VRN_DEPLOYMENT_CREATE_APPIMAGE)
+        MESSAGE(STATUS "* Creating AppImage")
+        INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${VRN_HOME}/tools/snapshot/deployment-linux/linuxdeployment.sh ${CMAKE_INSTALL_PREFIX} ${VRN_HOME}/tools/snapshot/deployment-linux/)")
+    ENDIF()
 ENDIF()

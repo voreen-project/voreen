@@ -28,351 +28,380 @@
 #include "voreen/core/ports/conditions/portconditionvolumetype.h"
 #include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 
-#include "modules/flowreen/datastructures/streamlinebundle.h"
+#include "../../datastructures/streamlinelist.h"
+#include "../../utils/flowutils.h"
 
-#include "modules/flowreen/utils/streamlinecreatorbackgroundthread.h"
-#include "modules/flowreen/utils/streamlinebundledetectorbackgroundthread.h"
+#include <random>
 
 namespace voreen {
 
+const std::string StreamlineCreator::loggerCat_("flowreen.StreamlineCreator");
+
 StreamlineCreator::StreamlineCreator()
-    : Processor()
-    // ports
-    , volInport_(Port::INPORT, "volInport", "Flow Volume Input (vec3)")
+    : AsyncComputeProcessor()
+    , volumeInport_(Port::INPORT, "volInport", "Flow Volume Input (vec3)")
+    , seedMask_(Port::INPORT, "seedMaskPort", "Seed Mask (optional)")
     , streamlineOutport_(Port::OUTPORT, "streamlineOutport", "Streamlines Output")
-    //general
-    , calculateStreamlinesProp_("calculateStreamlineProp","Create Streamlines")
-    , autoGenerateProp_("autoGenerateProp", "Auto Creation",false)
-    , waitForThreadFinishedProp_("waitForThreadFinishedProp","Wait for Creation",false,Processor::INVALID_RESULT,Property::LOD_DEBUG)
-    , progressProp_("progressProp","Progress:")
-    // streamline config
-    , maxNumStreamlinesProp_("maxNumStreamlinesprop", "Maximal Streamlines: ", 5000, 1, 100000)
-    , streamlineLengthThresholdProp_("streamlineLengthThresholdProp", "Threshold of Streamline Length: ", tgt::ivec2(10, 100), 2, 1000)
-    , absoluteMagnitudeThresholdProp_("absoluteMagnitudeThreshold", "Threshold of Magnitude (absolute)", tgt::vec2(0.0f, 1000.0f), 0.0f, 9999.99f)
-    , fitAbsoluteMagnitudeProp_("fitAbsoluteMagnitude", "Fit absolute Threshold to Input", false)
-    , relativeMagnitudeThresholdProp_("relativeMagnitudeThreshold", "Threshold of Magnitude (relative)", tgt::vec2(0.0f, 100.0f), 0.0f, 100.0f, Processor::VALID)
-    , filterModeProp_("filterModeProp","Filtering:",Processor::INVALID_RESULT,false,Property::LOD_DEVELOPMENT)
-    // streamlinebundle config
-    , detectStreamlineBundlesProp_("generateTubesProp", "Detect Streamline Bundles", false)
-    , bundleDetectionProgressProp_("detectBundlesProgressProp", "Progress:")
-    , maxAverageDistanceThresholdProp_("maxAverageDistanceThreshold", "Max. Average Distance Threshold (mm)", 1.0f, 0.0f, 100.0f)
-    , minNumStreamlinesPerBundleProp_("minNumStreamlinesPerBundle", "Minimal number of Streamlines per Bundle (%)", 1.0f, 0.0f, 100.0f, Processor::INVALID_RESULT, NumericProperty<float>::STATIC, Property::LOD_ADVANCED)
-    , resampleSizeProp_("resampleSize", "Streamline Resample Size", 20, 2, 100, Processor::INVALID_RESULT, NumericProperty<int>::STATIC, Property::LOD_ADVANCED)
-    // seeds config
-    , seedTimeProp_("seedTimeProp", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max(),
-                    Processor::INVALID_RESULT, NumericProperty<int>::STATIC, Property::LOD_ADVANCED)
-    , resetSeedProp_("resetSeedProp", "Reset Seed")
-    //background thread
-    , backgroundThread_(0)
-    , streamlineListThreadOutput_(0)
-    , dirtyFlag_(NONE)
-    , backgroundThreadIsStreamlineCreator_(false)
+    , numSeedPoints_("numSeedPoints", "Number of Seed Points", 5000, 1, 200000)
+    , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
+    , streamlineLengthThreshold_("streamlineLengthThresholdProp", "Threshold of Streamline Length: ", tgt::ivec2(10, 100), 2, 1000)
+    , absoluteMagnitudeThreshold_("absoluteMagnitudeThreshold", "Threshold of Magnitude (absolute)", tgt::vec2(0.0f, 1000.0f), 0.0f, 9999.99f)
+    , fitAbsoluteMagnitudeThreshold_("fitAbsoluteMagnitude", "Fit absolute Threshold to Input", false)
+    , stopIntegrationAngleThreshold_("stopIntegrationAngleThreshold", "Stop Integration on Angle", 180, 0, 180, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_ADVANCED)
+    , filterMode_("filterModeProp", "Filtering:", Processor::INVALID_RESULT, false, Property::LOD_DEVELOPMENT)
 {
-    //add ports
-    volInport_.addCondition(new PortConditionVolumeChannelCount(3));
-    volInport_.onNewData(MemberFunctionCallback<StreamlineCreator>(this,&StreamlineCreator::volumePortHasChanged));
-    static_cast<Observable<PortObserver>*>(&volInport_)->addObserver(static_cast<PortObserver*>(this));
-    addPort(volInport_);
+    volumeInport_.addCondition(new PortConditionVolumeChannelCount(3));
+    addPort(volumeInport_);
+    addPort(seedMask_);
     addPort(streamlineOutport_);
-    //add properties
-        //general
-    addProperty(calculateStreamlinesProp_);
-        calculateStreamlinesProp_.onChange(MemberFunctionCallback<StreamlineCreator>(this,&StreamlineCreator::calculateStreamlinesOnChange));
-    addProperty(autoGenerateProp_);
-    addProperty(waitForThreadFinishedProp_);
-    addProperty(progressProp_);
-        addProgressBar(&progressProp_);
-        //streamlines
-    addProperty(maxNumStreamlinesProp_);
-        maxNumStreamlinesProp_.onChange(MemberFunctionCallback<StreamlineCreator>(this,&StreamlineCreator::streamlineSettingsHaveBeenChanged));
-        maxNumStreamlinesProp_.setGroupID("streamline");
-    addProperty(streamlineLengthThresholdProp_);
-        streamlineLengthThresholdProp_.onChange(MemberFunctionCallback<StreamlineCreator>(this,&StreamlineCreator::streamlineSettingsHaveBeenChanged));
-        streamlineLengthThresholdProp_.setGroupID("streamline");
-    addProperty(absoluteMagnitudeThresholdProp_);
-        absoluteMagnitudeThresholdProp_.onChange(MemberFunctionCallback<StreamlineCreator>(this,&StreamlineCreator::streamlineSettingsHaveBeenChanged));
-        absoluteMagnitudeThresholdProp_.onChange(MemberFunctionCallback<StreamlineCreator>(this,&StreamlineCreator::adjustRelativeThreshold));
-        absoluteMagnitudeThresholdProp_.setGroupID("streamline");
-    addProperty(fitAbsoluteMagnitudeProp_);
-        fitAbsoluteMagnitudeProp_.setGroupID("streamline");
-    addProperty(relativeMagnitudeThresholdProp_);
-        relativeMagnitudeThresholdProp_.setReadOnlyFlag(true);
-        relativeMagnitudeThresholdProp_.setGroupID("streamline");
-    addProperty(filterModeProp_);
-        filterModeProp_.addOption("linear","Linear",LINEAR);
-        filterModeProp_.addOption("nearest","Nearest",NEAREST);
-        filterModeProp_.setGroupID("streamline");
-        filterModeProp_.onChange(MemberFunctionCallback<StreamlineCreator>(this,&StreamlineCreator::streamlineSettingsHaveBeenChanged));
+
+    addProperty(numSeedPoints_);
+        numSeedPoints_.setGroupID("streamline");
+    addProperty(seedTime_);
+        seedTime_.setGroupID("streamline");
+    addProperty(streamlineLengthThreshold_);
+        streamlineLengthThreshold_.setGroupID("streamline");
+    addProperty(absoluteMagnitudeThreshold_);
+        absoluteMagnitudeThreshold_.adaptDecimalsToRange(2);
+        absoluteMagnitudeThreshold_.setGroupID("streamline");
+    addProperty(fitAbsoluteMagnitudeThreshold_);
+        ON_CHANGE(fitAbsoluteMagnitudeThreshold_, StreamlineCreator, adjustPropertiesToInput);
+        fitAbsoluteMagnitudeThreshold_.setGroupID("streamline");
+    addProperty(stopIntegrationAngleThreshold_);
+        stopIntegrationAngleThreshold_.setGroupID("streamline");
+    addProperty(filterMode_);
+        filterMode_.addOption("linear", "Linear", VolumeRAM::LINEAR);
+        filterMode_.addOption("nearest", "Nearest", VolumeRAM::NEAREST);
+        filterMode_.setGroupID("streamline");
     setPropertyGroupGuiName("streamline", "Streamline Settings");
-        //streamline bundles
-    addProperty(detectStreamlineBundlesProp_);
-        detectStreamlineBundlesProp_.onChange(MemberFunctionCallback<StreamlineCreator>(this, &StreamlineCreator::generateBundlesHasBeenChanged));
-        detectStreamlineBundlesProp_.setGroupID("streamlinebundles");
-    addProperty(bundleDetectionProgressProp_);
-        bundleDetectionProgressProp_.setGroupID("streamlinebundles");
-    addProperty(maxAverageDistanceThresholdProp_);
-        maxAverageDistanceThresholdProp_.onChange(MemberFunctionCallback<StreamlineCreator>(this, &StreamlineCreator::streamlineBundleSettingsHaveBeenChanged));
-        maxAverageDistanceThresholdProp_.setGroupID("streamlinebundles");
-    addProperty(minNumStreamlinesPerBundleProp_);
-        minNumStreamlinesPerBundleProp_.onChange(MemberFunctionCallback<StreamlineCreator>(this, &StreamlineCreator::streamlineBundleSettingsHaveBeenChanged));
-        minNumStreamlinesPerBundleProp_.setGroupID("streamlinebundles");
-    addProperty(resampleSizeProp_);
-        resampleSizeProp_.onChange(MemberFunctionCallback<StreamlineCreator>(this, &StreamlineCreator::streamlineBundleSettingsHaveBeenChanged));
-        resampleSizeProp_.setGroupID("streamlinebundles");
-    setPropertyGroupGuiName("streamlinebundles", "Streamline Bundle Settings");
-        //seed
-    addProperty(seedTimeProp_);
-        //seedTimeProp_.setReadOnlyFlag(true);
-        seedTimeProp_.onChange(MemberFunctionCallback<StreamlineCreator>(this,&StreamlineCreator::streamlineSettingsHaveBeenChanged));
-        seedTimeProp_.setGroupID("seed");
-    addProperty(resetSeedProp_);
-        resetSeedProp_.onChange(MemberFunctionCallback<StreamlineCreator>(this,&StreamlineCreator::resetSeedsOnChange));
-        resetSeedProp_.setGroupID("seed");
-    setPropertyGroupGuiName("seed", "Seed Configuration");
-
-    // adjust properties
-    adjustRelativeThreshold();
-    generateBundlesHasBeenChanged();
-
 }
 
-StreamlineCreator::~StreamlineCreator() {
-    stopBackgroundThread();
-    delete streamlineListThreadOutput_;
-    if(volInport_.hasData())
-        volInport_.getData()->Observable<VolumeObserver>::removeObserver(static_cast<VolumeObserver*>(this));
+
+bool StreamlineCreator::isReady() const {
+    if (!isInitialized()) {
+        setNotReadyErrorMessage("Not initialized.");
+        return false;
+    }
+    if (!volumeInport_.isReady()) {
+        setNotReadyErrorMessage("Inport not ready.");
+        return false;
+    }
+
+    // Note: Seed Mask is optional!
+
+    return true;
 }
 
-void StreamlineCreator::process() {
-    //check, if background thread is finished
-    if (backgroundThread_ && backgroundThread_->isFinished()) {
-        // Retrieve error message.
-        std::string message = backgroundThread_->getProgress().message_;
+std::vector<std::reference_wrapper<Port>> StreamlineCreator::getCriticalPorts() {
+    auto criticalPorts = AsyncComputeProcessor<ComputeInput, ComputeOutput>::getCriticalPorts();
+    criticalPorts.erase(std::remove_if(criticalPorts.begin(), criticalPorts.end(), [this] (const std::reference_wrapper<Port>& port){
+        return port.get().getID() == seedMask_.getID();
+    }), criticalPorts.end());
+    return criticalPorts;
+}
 
-        // Delete thread.
-        delete backgroundThread_;
-        backgroundThread_ = 0;
+void StreamlineCreator::adjustPropertiesToInput() {
 
-        // reactivate recalculation
-        calculateStreamlinesProp_.setReadOnlyFlag(false);
+    const VolumeBase* volume = volumeInport_.getData();
+    if(!volume) {
+        return;
+    }
 
-        // Error handling.
-        if (!message.empty()) {
-            setProgress(0.0f);
-            dirtyFlag_ = NONE;
-            LWARNING(message);
-        }
-        else {
-            // set progress to 100
-            setProgress(1.f);
+    if(fitAbsoluteMagnitudeThreshold_.get()) {
+        VolumeMinMaxMagnitude* data = volume->getDerivedData<VolumeMinMaxMagnitude>();
 
-            // set the update flag for the streamline bundle detection
-            if (backgroundThreadIsStreamlineCreator_ && detectStreamlineBundlesProp_.get())
-                dirtyFlag_ = STREAMLINEBUNDLES;
-            else
-                dirtyFlag_ = NONE;
+        absoluteMagnitudeThreshold_.setMinValue(data->getMinMagnitude());
+        absoluteMagnitudeThreshold_.setMaxValue(data->getMaxMagnitude());
+        absoluteMagnitudeThreshold_.set(tgt::vec2(data->getMinMagnitude(), data->getMaxMagnitude()));
+    }
+    else {
+        absoluteMagnitudeThreshold_.setMinValue(0.0f);
+        absoluteMagnitudeThreshold_.setMaxValue(5000.0f);
+    }
+}
 
-            // send the calculated data to the outport (owning the data)
-            streamlineOutport_.setData(streamlineListThreadOutput_);
-            streamlineListThreadOutput_ = 0;
+StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
+
+    // Set up random generator.
+    std::function<float()> rnd(std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
+
+    auto flowVolume = volumeInport_.getThreadSafeData();
+    if(!flowVolume) {
+        throw InvalidInputException("No volume", InvalidInputException::S_ERROR);
+    }
+    tgt::mat4 physicalToVoxelMatrix = flowVolume->getPhysicalToVoxelMatrix();
+    tgt::Bounds roi = flowVolume->getBoundingBox(false).getBoundingBox(false);
+
+    auto seedMask = seedMask_.getThreadSafeData();
+    std::vector<tgt::vec3> seedPoints;
+    seedPoints.reserve(numSeedPoints_.get());
+    if (seedMask) {
+        tgt::Bounds roiBounds = roi;
+        tgt::Bounds seedMaskBounds = seedMask->getBoundingBox(false).getBoundingBox(false);
+
+        roiBounds.intersectVolume(seedMaskBounds);
+        if(!roiBounds.isDefined()) {
+            throw InvalidInputException("Seed Mask does not overlap with ensemble ROI", InvalidInputException::S_ERROR);
         }
 
-        // Reset background thread indicator
-        backgroundThreadIsStreamlineCreator_ = false;
+        VolumeRAMRepresentationLock seedMaskLock(seedMask);
+
+        VolumeMinMax* vmm = seedMask->getDerivedData<VolumeMinMax>();
+        if(vmm->getMinNormalized() == 0.0f && vmm->getMaxNormalized() == 0.0f) {
+            throw InvalidInputException("Seed Mask is empty", InvalidInputException::S_ERROR);
+        }
+
+        tgt::mat4 seedMaskPhysicalToVoxelMatrix = seedMask->getPhysicalToVoxelMatrix();
+
+        tgt::svec3 llf = tgt::round(seedMaskPhysicalToVoxelMatrix * roiBounds.getLLF());
+        tgt::svec3 urb = tgt::round(seedMaskPhysicalToVoxelMatrix * roiBounds.getURB());
+
+        std::vector<tgt::vec3> maskVoxels;
+        for(size_t z=llf.z; z < urb.z; z++) {
+            for(size_t y=llf.y; y < urb.y; y++) {
+                for(size_t x=llf.x; x < urb.x; x++) {
+                    if(seedMaskLock->getVoxelNormalized(x, y, z) != 0.0f) {
+                        maskVoxels.push_back(tgt::vec3(x, y, z));
+                    }
+                }
+            }
+        }
+
+        if (maskVoxels.empty()) {
+            throw InvalidInputException("No seed points found in ROI", InvalidInputException::S_ERROR);
+        }
+
+        // If we have more seed mask voxel than we want to have seed points, reduce the list size.
+        float probability = static_cast<float>(numSeedPoints_.get()) / maskVoxels.size();
+        tgt::mat4 seedMaskVoxelToPhysicalMatrix = seedMask->getVoxelToPhysicalMatrix();
+        for(const tgt::vec3& seedPoint : maskVoxels) {
+            // Determine for each seed point, if we will keep it.
+            if(probability >= 1.0f || rnd() < probability) {
+                seedPoints.push_back(physicalToVoxelMatrix * seedMaskVoxelToPhysicalMatrix * seedPoint);
+            }
+        }
+
+        LINFO("Restricting seed points to volume mask using " << seedPoints.size() << " seeds");
+    }
+    else {
+        // Without a seed mask, we uniformly sample the whole space enclosed by the roi.
+        for (int k = 0; k<numSeedPoints_.get(); k++) {
+            tgt::vec3 seedPoint;
+            seedPoint = tgt::vec3(rnd(), rnd(), rnd());
+            seedPoint = tgt::vec3(roi.getLLF()) + seedPoint * tgt::vec3(roi.diagonal());
+            seedPoints.push_back(physicalToVoxelMatrix * seedPoint);
+        }
     }
 
-    // Return, if no data is available or calculation finished.
-    if (dirtyFlag_ == NONE || !volInport_.hasData())
+    tgtAssert(!seedPoints.empty(), "no seed points found");
+    if (seedPoints.empty()) {
+        throw InvalidInputException("No seed points found", InvalidInputException::S_ERROR);
+    }
+
+    std::unique_ptr<StreamlineListBase> output(new StreamlineList(flowVolume));
+
+    return StreamlineCreatorInput {
+            streamlineLengthThreshold_.get(),
+            absoluteMagnitudeThreshold_.get(),
+            stopIntegrationAngleThreshold_.get() * tgt::PIf / 180.0f,
+            filterMode_.getValue(),
+            volumeInport_.getThreadSafeData(),
+            seedMask_.getThreadSafeData(),
+            std::move(seedPoints),
+            std::move(output)
+    };
+}
+
+StreamlineCreatorOutput StreamlineCreator::compute(StreamlineCreatorInput input, ProgressReporter& progressReporter) const {
+
+    PortDataPointer<VolumeBase> flowVolume = std::move(input.flowVolume);
+    VolumeRAMRepresentationLock representation(flowVolume);
+    //const VolumeBase* seedMask_ = input.seedMask; // Currently not used.
+    std::vector<tgt::vec3> seedPoints = std::move(input.seedPoints);
+    std::unique_ptr<StreamlineListBase> output = std::move(input.output);
+
+    // We use half the steps we had before.
+    tgt::vec3 stepSize = 0.5f * flowVolume->getSpacing() / tgt::max(flowVolume->getSpacing());
+
+    const IntegrationInput integrationInput{
+        tgt::vec3(representation->getDimensions() - tgt::svec3::one),
+        stepSize,
+        flowVolume->getVoxelToWorldMatrix(),
+        input.streamlineLengthThreshold,
+        input.absoluteMagnitudeThreshold,
+        input.stopIntegrationAngleThreshold,
+    };
+
+    const SpatialSampler sampler(*representation, flowVolume->getRealWorldMapping(), input.filterMode);
+
+    ThreadedTaskProgressReporter progress(progressReporter, seedPoints.size());
+    bool aborted = false;
+
+#ifdef VRN_MODULE_OPENMP
+    #pragma omp parallel for
+    for (long i=0; i<static_cast<long>(seedPoints.size()); i++) {
+        if (aborted) {
+            continue;
+        }
+#else
+    for(size_t i=0; i<seedPoints.size(); i++) {
+#endif
+
+        const tgt::vec3& start = seedPoints[i];
+
+        Streamline streamline = integrateStreamline(start, sampler, integrationInput);
+
+        if (streamline.getNumElements() >= input.streamlineLengthThreshold.x &&
+            streamline.getNumElements() <= input.streamlineLengthThreshold.y) {
+#ifdef VRN_MODULE_OPENMP
+            #pragma omp critical
+#endif
+            output->addStreamline(streamline);
+        }
+
+        if (progress.reportStepDone()) {
+#ifdef VRN_MODULE_OPENMP
+            #pragma omp critical
+            aborted = true;
+#else
+            aborted = true;
+            break;
+#endif
+        }
+    }
+
+    if (aborted) {
+        throw boost::thread_interrupted();
+    }
+
+    return StreamlineCreatorOutput {
+        std::move(output)
+    };
+}
+
+void StreamlineCreator::processComputeOutput(StreamlineCreatorOutput output) {
+    streamlineOutport_.setData(output.streamlines.release());
+}
+
+/*
+void StreamlineCreator::reseedPosition(size_t currentPosition) {
+
+    tgt::vec3 randVec = tgt::vec3(rnd(), rnd(), rnd());
+    tgt::vec3 dimAsVec3 = tgt::vec3(flow_->getDimensions() - tgt::svec3::one);
+
+    // Flip a coin to determine whether a completely new random position
+    // will be taken or wether an exisiting one will be used.
+    // When the probability for a new position is low, the seeding positions
+    // seem be prone to cluster at single location.
+    if ((rnd() < 0.5) || (currentPosition <= 1)) {
+        seedingPositions_[currentPosition] = randVec * dimAsVec3;
         return;
-
-    // Stop Thread.
-    unlockMutex();
-    stopBackgroundThread();
-    lockMutex();
-
-    // Clean up.
-    delete streamlineListThreadOutput_; // if the outport has ownership, the pointer is 0
-    streamlineListThreadOutput_ = new StreamlineList(volInport_.getData());
-
-    switch (dirtyFlag_) {
-    case STREAMLINES:
-    {
-        // update state
-        calculateStreamlinesProp_.setReadOnlyFlag(true);
-        backgroundThreadIsStreamlineCreator_ = true;
-
-        // create a new thread
-        backgroundThread_ = new StreamlineCreatorBackgroundThread(
-                    this,
-                    seedTimeProp_.get(),
-                    volInport_.getThreadSafeData(),
-                    streamlineListThreadOutput_,
-                    maxNumStreamlinesProp_.get(),
-                    streamlineLengthThresholdProp_.get(),
-                    absoluteMagnitudeThresholdProp_.get(),
-                    filterModeProp_.getValue()
-                    );
-        break;
-    }
-    case STREAMLINEBUNDLES:
-    {
-        // We don't need to calculate the streamlines again, they didn't change.
-        // Thus, we add all old streamlines to our new streamlinelist.
-        for (const Streamline& streamline : streamlineOutport_.getData()->getStreamlines())
-            streamlineListThreadOutput_->addStreamline(streamline);
-
-        // Calculate the noise threshold.
-        size_t minNumStreamlines = static_cast<size_t>(minNumStreamlinesPerBundleProp_.get() * streamlineListThreadOutput_->getStreamlines().size() / 100.0f);
-
-        // Create a new thread.
-        backgroundThread_ = new StreamlineBundleDetectorBackgroundThread(
-                    this,
-                    streamlineListThreadOutput_,
-                    maxAverageDistanceThresholdProp_.get(),
-                    minNumStreamlines,
-                    resampleSizeProp_.get()
-            );
-        break;
-    }
-    default:
-        tgtAssert(false, "unexpected dirty flag");
-        return;
     }
 
-    // update flag
-    dirtyFlag_ = NONE;
-
-    // Start the background thread
-    backgroundThread_->run();
-
-    // wait for background thread to finish computation
-    if(waitForThreadFinishedProp_.get()) {
-        unlockMutex();
-        backgroundThread_->join();
-        lockMutex();
-    }
+    // if there are already random positions which lead to a vector-field value not being
+    // zero or which falls within the limits defined by thresholds, take this
+    // position to generate another.
+    // Use the position and add some random offset to it.
+    size_t index = tgt::iround(rnd() * (currentPosition - 1));
+    randVec *= rnd() * 9.f + 1.f;
+    seedingPositions_[currentPosition] = tgt::clamp((seedingPositions_[index] + randVec), tgt::vec3::zero, dimAsVec3);
 }
+*/
 
-void StreamlineCreator::afterProcess() {
-    Processor::setValid();
-    if(waitForThreadFinishedProp_.get() && backgroundThread_)
-         invalidate();
-}
+Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const SpatialSampler& sampler, const IntegrationInput& input) const {
 
-//---------------------------------------------------------------------------
-//          Observers
-//---------------------------------------------------------------------------
+    const float epsilon = 0.00001f; // std::numeric_limits<float>::epsilon() is not enough.
+    const size_t maxNumElements = input.streamlineLengthThreshold.y;
 
-void StreamlineCreator::volumeDelete(const VolumeBase* source) {
-    stopBackgroundThread();
-    source->Observable<VolumeObserver>::removeObserver(static_cast<VolumeObserver*>(this));
-}
+    // Position.
+    tgt::vec3 r(start);
+    tgt::vec3 r_(start);
 
-void StreamlineCreator::volumeChange(const VolumeBase* source) {
-    stopBackgroundThread();
-    if(autoGenerateProp_.get()) dirtyFlag_ = STREAMLINES;
+    // Velocity.
+    tgt::vec3 velR = sampler.sample(r);
+    tgt::vec3 velR_ = velR;
 
-    VolumeMinMaxMagnitude* data = volInport_.getData()->getDerivedData<VolumeMinMaxMagnitude>();
-
-    absoluteMagnitudeThresholdProp_.setMinValue(data->getMinMagnitude());
-    absoluteMagnitudeThresholdProp_.setMaxValue(data->getMaxMagnitude());
-    if(fitAbsoluteMagnitudeProp_.get()) {
-        absoluteMagnitudeThresholdProp_.set(tgt::vec2(data->getMinMagnitude(), data->getMaxMagnitude()));
+    // Return an empty line in case the initial velocity was zero already.
+    if(velR == tgt::vec3::zero) {
+        return Streamline();
     }
 
-    tgt::vec3 length = volInport_.getData()->getSpacing() * tgt::vec3(volInport_.getData()->getDimensions());
-    maxAverageDistanceThresholdProp_.setMaxValue(tgt::length(length));
+    // Resulting streamline.
+    Streamline line;
+    line.addElementAtEnd(Streamline::StreamlineElement(input.voxelToWorldMatrix * r, velR));
 
-    // Invalidate processor
-    invalidate();
-}
+    bool lookupPositiveDirection = true;
+    bool lookupNegativeDirection = true;
 
-void StreamlineCreator::afterConnectionAdded(const Port* source, const Port* connectedPort) {
-}
+    // Look up positive and negative direction in alternating fashion.
+    while (lookupPositiveDirection || lookupNegativeDirection) {
 
-void StreamlineCreator::beforeConnectionRemoved(const Port* source, const Port*) {
-    stopBackgroundThread();
-    if(volInport_.hasData())
-        volInport_.getData()->Observable<VolumeObserver>::removeObserver(static_cast<VolumeObserver*>(this));
-}
+        if (lookupPositiveDirection) {
 
-//---------------------------------------------------------------------------
-//          Thread Handling
-//---------------------------------------------------------------------------
+            // Execute 4th order Runge-Kutta step.
+            tgt::vec3 k1 = tgt::normalize(velR) * input.stepSize; //v != zero
+            tgt::vec3 k2 = sampler.sample(r + (k1 / 2.0f));
+            if (k2 != tgt::vec3::zero) k2 = tgt::normalize(k2) * input.stepSize;
+            tgt::vec3 k3 = sampler.sample(r + (k2 / 2.0f));
+            if (k3 != tgt::vec3::zero) k3 = tgt::normalize(k3) * input.stepSize;
+            tgt::vec3 k4 = sampler.sample(r + k3);
+            if (k4 != tgt::vec3::zero) k4 = tgt::normalize(k4) * input.stepSize;
+            r += ((k1 / 6.0f) + (k2 / 3.0f) + (k3 / 3.0f) + (k4 / 6.0f));
 
-void StreamlineCreator::stopBackgroundThread() {
-    //stop and delete thread
-    if (backgroundThread_) {
-        backgroundThread_->interruptAndJoin();
-        delete backgroundThread_;
-        backgroundThread_ = 0;
+            // Check constrains.
+            lookupPositiveDirection &= (r == tgt::clamp(r, tgt::vec3::zero, input.dimensions)); // Ran out of bounds?
+            lookupPositiveDirection &= (r != line.getLastElement().position_); // Progress in current direction?
+
+            velR = sampler.sample(r);
+            float magnitude = tgt::length(velR);
+            lookupPositiveDirection &= velR != tgt::vec3::zero;
+            lookupPositiveDirection &= (magnitude > input.absoluteMagnitudeThreshold.x - epsilon);
+            lookupPositiveDirection &= (magnitude < input.absoluteMagnitudeThreshold.y + epsilon);
+            lookupPositiveDirection &= std::acos(std::abs(tgt::dot(line.getLastElement().velocity_, velR)) /
+                                                 (tgt::length(line.getLastElement().velocity_) * magnitude)) <=
+                                       input.stopIntegrationAngleThreshold;
+
+            if (lookupPositiveDirection) {
+                line.addElementAtEnd(Streamline::StreamlineElement(input.voxelToWorldMatrix * r, velR));
+                if (line.getNumElements() == maxNumElements)
+                    break;
+            }
+        }
+
+        if (lookupNegativeDirection) {
+
+            // Execute 4th order Runge-Kutta step.
+            tgt::vec3 k1 = tgt::normalize(velR_) * input.stepSize; // velR_ != zero
+            tgt::vec3 k2 = sampler.sample(r_ - (k1 / 2.0f));
+            if (k2 != tgt::vec3::zero) k2 = tgt::normalize(k2) * input.stepSize;
+            tgt::vec3 k3 = sampler.sample(r_ - (k2 / 2.0f));
+            if (k3 != tgt::vec3::zero) k3 = tgt::normalize(k3) * input.stepSize;
+            tgt::vec3 k4 = sampler.sample(r_ - k3);
+            if (k4 != tgt::vec3::zero) k4 = tgt::normalize(k4) * input.stepSize;
+            r_ -= ((k1 / 6.0f) + (k2 / 3.0f) + (k3 / 3.0f) + (k4 / 6.0f));
+
+            // Check constrains.
+            lookupNegativeDirection &= (r_ == tgt::clamp(r_, tgt::vec3::zero, input.dimensions)); // Ran out of bounds?
+            lookupNegativeDirection &= (r_ != line.getFirstElement().position_); // Progress in current direction?
+
+            velR_ = sampler.sample(r_);
+            float magnitude = tgt::length(velR_);
+            lookupNegativeDirection &= velR_ != tgt::vec3::zero;
+            lookupNegativeDirection &= (magnitude > input.absoluteMagnitudeThreshold.x - epsilon);
+            lookupNegativeDirection &= (magnitude < input.absoluteMagnitudeThreshold.y + epsilon);
+            lookupNegativeDirection &= std::acos(std::abs(tgt::dot(line.getFirstElement().velocity_, velR_)) /
+                                                 (tgt::length(line.getFirstElement().velocity_) * magnitude)) <=
+                                       input.stopIntegrationAngleThreshold;
+
+            if (lookupNegativeDirection) {
+                line.addElementAtFront(Streamline::StreamlineElement(input.voxelToWorldMatrix * r_, velR_));
+                if (line.getNumElements() == maxNumElements)
+                    break;
+            }
+        }
     }
 
-    if(backgroundThreadIsStreamlineCreator_) {
-        // Reset data.
-        streamlineOutport_.setData(0);
-        // activate the calculate button
-        calculateStreamlinesProp_.setReadOnlyFlag(false);
-        // set progress to zero
-        setProgress(0.f);
-    }
-    bundleDetectionProgressProp_.setProgress(0.f);
-}
-
-//---------------------------------------------------------------------------
-//          Callbacks
-//---------------------------------------------------------------------------
-void StreamlineCreator::volumePortHasChanged() {
-    // Add volume observer
-    volInport_.getData()->Observable<VolumeObserver>::addObserver(static_cast<VolumeObserver*>(this));
-    // handle new input like a change of old input
-    volumeChange(0);
-}
-
-void StreamlineCreator::adjustRelativeThreshold() {
-    //adjust read only property
-    tgt::vec2 range(absoluteMagnitudeThresholdProp_.getMinValue(), absoluteMagnitudeThresholdProp_.getMaxValue());
-    tgt::vec2 value = absoluteMagnitudeThresholdProp_.get();
-
-    relativeMagnitudeThresholdProp_.set(  (value - tgt::vec2(range.x)) / tgt::vec2(range.y - range.x) * 100.f);
-}
-
-void StreamlineCreator::calculateStreamlinesOnChange() {
-    dirtyFlag_ = STREAMLINES;
-}
-
-void StreamlineCreator::resetSeedsOnChange() {
-    seedTimeProp_.set(time(0));
-    if(autoGenerateProp_.get())
-        dirtyFlag_ = STREAMLINES;
-}
-
-void StreamlineCreator::streamlineSettingsHaveBeenChanged() {
-    if(autoGenerateProp_.get())
-        dirtyFlag_ = STREAMLINES;
-}
-
-void StreamlineCreator::streamlineBundleSettingsHaveBeenChanged() {
-
-    // Dont't set flag if initialization is not done.
-    if (!isInitialized() || !streamlineOutport_.hasData())
-        return;
-
-    // Dont't overwrite the streamline dirty flag here
-    if (detectStreamlineBundlesProp_.get() && dirtyFlag_ == NONE && !backgroundThreadIsStreamlineCreator_)
-        dirtyFlag_ = STREAMLINEBUNDLES;
-}
-
-void StreamlineCreator::generateBundlesHasBeenChanged() {
-
-    // Update UI.
-    bundleDetectionProgressProp_.setVisibleFlag(detectStreamlineBundlesProp_.get());
-    maxAverageDistanceThresholdProp_.setVisibleFlag(detectStreamlineBundlesProp_.get());
-    minNumStreamlinesPerBundleProp_.setVisibleFlag(detectStreamlineBundlesProp_.get());
-    resampleSizeProp_.setVisibleFlag(detectStreamlineBundlesProp_.get());
-
-    // Trigger a calculation of bundles, if necessary.
-    streamlineBundleSettingsHaveBeenChanged();
+    return line;
 }
 
 }   // namespace

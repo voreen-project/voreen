@@ -17,6 +17,7 @@ build_options=(
     -DCMAKE_BUILD_TYPE=Release
     -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR
     -DVRN_DEPLOYMENT=ON
+    -DVRN_DEPLOYMENT_CREATE_APPIMAGE=ON
     -DVRN_ADD_INSTALL_TARGET=ON
 
     #set custom module options here

@@ -23,13 +23,19 @@
  *                                                                                 *
  ***********************************************************************************/
 
- #include "modules/mod_transfunc.frag"
+#include "modules/mod_transfunc.frag"
+#include "modules/mod_shading.frag"
 
 in vData
 {
     vec3 position;
     vec3 velocity;
+    float radius;
+    float time;
 } frag;
+
+uniform float timeWindowStart_;
+uniform float timeWindowSize_;
 
 #ifdef COLOR_VELOCITY
     uniform TF_SAMPLER_TYPE transFuncTex_;      //< defined in generate header
@@ -41,14 +47,16 @@ in vData
     vec4 applyDirection(vec3 direction) {
         return vec4((colorRotationMatrix_ * vec4(normalize(direction),1.0)).xyz/vec3(2.0) + vec3(0.5),1.0);
     }
-
 #else
-    ERROR: No color mode has been set
+    #error No color mode has been set
 #endif
 
 
 void main()
 {
+    if(frag.time < timeWindowStart_ || frag.time > timeWindowStart_ + timeWindowSize_)
+        discard;
+
     vec4 color = vec4(1.0);
 #ifdef COLOR_VELOCITY
     color =  applyTF(transFuncParam_, transFuncTex_, vec4(length(frag.velocity)));
@@ -57,7 +65,7 @@ void main()
         discard;
     color = applyDirection(frag.velocity);
 #else
-    ERROR: No color mode has been set
+    #error No color mode has been set
 #endif
 
     if(color.a == 0.0)

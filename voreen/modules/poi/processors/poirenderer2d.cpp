@@ -389,6 +389,8 @@ void POIRenderer2d::buildPointsPerSlice()
     if (!vol)
         return;
     POIStorage* storage = cpPort_.getConnectedProcessor();
+    if (!storage)
+        return;
 
     int comp = 0;
     switch (linkedSliceAlignment_.getValue())

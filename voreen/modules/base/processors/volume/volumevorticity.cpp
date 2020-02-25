@@ -76,8 +76,10 @@ void VolumeVorticity::process() {
                 outputVolume = voOpVr.apply<uint8_t>(inputHandle,VolumeOperatorGradient::VOG_CENTRAL_DIFFERENCE);
             else if (dynamic_cast<const VolumeRAM_3xFloat*>(inputHandle->getRepresentation<VolumeRAM>()))
                 outputVolume = voOpVr.apply<float>(inputHandle,VolumeOperatorGradient::VOG_CENTRAL_DIFFERENCE);
+            else if (dynamic_cast<const VolumeRAM_3xDouble*>(inputHandle->getRepresentation<VolumeRAM>()))
+                outputVolume = voOpVr.apply<double>(inputHandle, VolumeOperatorGradient::VOG_CENTRAL_DIFFERENCE);
             else {
-                LERROR("Input VolumeRAM type not supported (for this gradient type are supported: 3xUInt16, 3xUInt8, 3xFloat).");
+                LERROR("Input VolumeRAM type not supported (for this gradient type are supported: 3xUInt16, 3xUInt8, 3xFloat, 3xDouble).");
                 return;
             }
         } else if (technique_.get() == "sobel") {
@@ -85,8 +87,12 @@ void VolumeVorticity::process() {
                 outputVolume = voOpVr.apply<uint16_t>(inputHandle,VolumeOperatorGradient::VOG_SOBEL);
             else if (dynamic_cast<const VolumeRAM_3xUInt8*>(inputHandle->getRepresentation<VolumeRAM>()))
                 outputVolume = voOpVr.apply<uint8_t>(inputHandle,VolumeOperatorGradient::VOG_SOBEL);
+            else if (dynamic_cast<const VolumeRAM_3xFloat*>(inputHandle->getRepresentation<VolumeRAM>()))
+                outputVolume = voOpVr.apply<float>(inputHandle, VolumeOperatorGradient::VOG_SOBEL);
+            else if (dynamic_cast<const VolumeRAM_3xDouble*>(inputHandle->getRepresentation<VolumeRAM>()))
+                outputVolume = voOpVr.apply<double>(inputHandle, VolumeOperatorGradient::VOG_SOBEL);
             else {
-                LERROR("Input VolumeRAM type not supported (for this gradient type are supported: 3xUInt16, 3xUInt8).");
+                LERROR("Input VolumeRAM type not supported (for this gradient type are supported: 3xUInt16, 3xUInt8, 3xFloat, 3xDouble).");
                 return;
             }
         } else if (technique_.get() == "linear-regression") {
@@ -94,8 +100,12 @@ void VolumeVorticity::process() {
                 outputVolume = voOpVr.apply<uint16_t>(inputHandle,VolumeOperatorGradient::VOG_LINEAR_REGRESSION);
             else if (dynamic_cast<const VolumeRAM_3xUInt8*>(inputHandle->getRepresentation<VolumeRAM>()))
                 outputVolume = voOpVr.apply<uint8_t>(inputHandle,VolumeOperatorGradient::VOG_LINEAR_REGRESSION);
+            else if (dynamic_cast<const VolumeRAM_3xFloat*>(inputHandle->getRepresentation<VolumeRAM>()))
+                outputVolume = voOpVr.apply<float>(inputHandle, VolumeOperatorGradient::VOG_LINEAR_REGRESSION);
+            else if (dynamic_cast<const VolumeRAM_3xDouble*>(inputHandle->getRepresentation<VolumeRAM>()))
+                outputVolume = voOpVr.apply<double>(inputHandle, VolumeOperatorGradient::VOG_LINEAR_REGRESSION);
             else {
-                LERROR("Input VolumeRAM type not supported (for this gradient type are supported: 3xUInt16, 3xUInt8).");
+                LERROR("Input VolumeRAM type not supported (for this gradient type are supported: 3xUInt16, 3xUInt8, 3xFloat, 3xDouble).");
                 return;
             }
         } else {
@@ -103,7 +113,7 @@ void VolumeVorticity::process() {
             return;
         }
     } else {
-        LWARNING("Intensity volume expected, but passed volume consists of " << inputVolume->getNumChannels() << " channels.");
+        LWARNING("Volume with 3 channels expected, but passed volume consists of " << inputVolume->getNumChannels() << " channels.");
         return;
     }
 

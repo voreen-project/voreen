@@ -37,19 +37,25 @@
 #include "../volumefiltering/binarizationfilter.h"
 #include "../volumefiltering/binarymedianfilter.h"
 #include "../volumefiltering/gaussianfilter.h"
+#include "../volumefiltering/gradientfilter.h"
 #include "../volumefiltering/medianfilter.h"
 #include "../volumefiltering/morphologyfilter.h"
+#include "../volumefiltering/negationfilter.h"
 #include "../volumefiltering/resamplefilter.h"
 #include "../volumefiltering/thresholdingfilter.h"
+#include "../volumefiltering/vorticityfilter.h"
 
 // Include their properties.
 #include "../volumefilterproperties/binarizationfilterproperties.h"
 #include "../volumefilterproperties/binarymedianfilterproperties.h"
 #include "../volumefilterproperties/gaussianfilterproperties.h"
+#include "../volumefilterproperties/gradientfilterproperties.h"
 #include "../volumefilterproperties/medianfilterproperties.h"
 #include "../volumefilterproperties/morphologyfilterproperties.h"
+#include "../volumefilterproperties/negationfilterproperties.h"
 #include "../volumefilterproperties/resamplefilterproperties.h"
 #include "../volumefilterproperties/thresholdingfilterproperties.h"
+#include "../volumefilterproperties/vorticityfilterproperties.h"
 
 namespace voreen {
 
@@ -82,10 +88,13 @@ VolumeFilterList::VolumeFilterList()
     addFilter(new BinarizationFilterProperties());
     addFilter(new BinaryMedianFilterProperties());
     addFilter(new GaussianFilterProperties());
+    addFilter(new GradientFilterProperties());
     addFilter(new MedianFilterProperties());
     addFilter(new MorphologyFilterProperties());
+    addFilter(new NegationFilterProperties());
     addFilter(new ResampleFilterProperties());
     addFilter(new ThresholdingFilterProperties());
+    addFilter(new VorticityFilterProperties());
 
     // Technical stuff.
     addProperty(enabled_);
@@ -428,32 +437,9 @@ void VolumeFilterList::addFilter(FilterProperties* filterProperties) {
 }
 
 void VolumeFilterList::disableTracking(Property* property) {
-    // HACK: This is not the nice way of doing things.
-    //  However, NumericProperty is a template class and has no non-template interface.
-    //  Therefore, we just manually check for related properties here.
-    if(auto prop = dynamic_cast<FloatProperty*>(property)) {
-        prop->setTracking(false);
-    }
-    else if(auto prop = dynamic_cast<IntProperty*>(property)) {
-        prop->setTracking(false);
-    }
-    else if(auto prop = dynamic_cast<FloatVec2Property*>(property)) {
-        prop->setTracking(false);
-    }
-    else if(auto prop = dynamic_cast<FloatVec3Property*>(property)) {
-        prop->setTracking(false);
-    }
-    else if(auto prop = dynamic_cast<FloatVec4Property*>(property)) {
-        prop->setTracking(false);
-    }
-    else if(auto prop = dynamic_cast<IntVec2Property*>(property)) {
-        prop->setTracking(false);
-    }
-    else if(auto prop = dynamic_cast<IntVec3Property*>(property)) {
-        prop->setTracking(false);
-    }
-    else if(auto prop = dynamic_cast<IntVec4Property*>(property)) {
-        prop->setTracking(false);
+    // In case of numeric properties, we disable tracking to not clash with auto update.
+    if (auto numericProperty = dynamic_cast<NumericPropertyBase*>(property)) {
+        numericProperty->setTracking(false);
     }
 }
 

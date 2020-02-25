@@ -49,7 +49,7 @@
 
 using namespace voreen;
 
-const std::string defaultWorkspace = "../voreenve/workspaces/raycasting-standard.vws";
+const std::string defaultWorkspace = "../voreenve/workspaces/rendering-raycasting.vws";
 
 const std::string description =
     "This is a small program that demonstrates a little of what the Voreen core library can do: \n"

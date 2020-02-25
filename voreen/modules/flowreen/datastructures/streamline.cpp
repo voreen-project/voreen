@@ -27,70 +27,68 @@
 
 #include "voreen/core/utils/stringutils.h"
 
-#include "tgt/assert.h"
-
 #include <sstream>
 
 namespace voreen {
 
-Streamline::Streamline() :
-        minMagnitude_(-1.f), maxMagnitude_(-1.f), length_(0.0f)
+Streamline::Streamline()
+    : magnitudeStatistics_(false)
+    , curvatureStatistics_(false)
+    , physicalLength_(0.0f)
 {
 }
 
 Streamline::~Streamline() {
 }
 
-    //----------------
-    //  Construction
-    //----------------
+//----------------
+//  Construction
+//----------------
 void Streamline::addElementAtEnd(const StreamlineElement& element) {
+    if(!streamlineElements_.empty()) {
+        // Update physical length.
+        physicalLength_ += tgt::distance(streamlineElements_.back().position_, element.position_);
 
-    if(!streamlineElements_.empty())
-        length_ += tgt::distance(element.position_, getLastElement().position_);
+        // Update curvature statistics.
+        float currMagnitude = tgt::length(element.velocity_);
+        float prevMagnitude = tgt::length(streamlineElements_.back().velocity_);
+        if(currMagnitude > 0.0f && prevMagnitude > 0.0f) {
+            float angle = std::acos(std::abs(tgt::dot(streamlineElements_.back().velocity_, element.velocity_)) /
+                                    (prevMagnitude * currMagnitude));
+            curvatureStatistics_.addSample(angle);
+        }
+    }
 
     streamlineElements_.push_back(element);
     float length = tgt::length(element.velocity_);
-    if(minMagnitude_ < 0.f || minMagnitude_ > length) {
-        minMagnitude_ = length;
-    }
-    if(maxMagnitude_ < 0.f || maxMagnitude_ < length) {
-        maxMagnitude_ = length;
-    }
+    magnitudeStatistics_.addSample(length);
 }
 
 void Streamline::addElementAtFront(const StreamlineElement& element) {
+    if(!streamlineElements_.empty()) {
+        // Update physical length.
+        physicalLength_ += tgt::distance(streamlineElements_.front().position_, element.position_);
 
-    if(!streamlineElements_.empty())
-        length_ += tgt::distance(element.position_, getFirstElement().position_);
+        // Update curvature statistics.
+        float currMagnitude = tgt::length(element.velocity_);
+        float prevMagnitude = tgt::length(streamlineElements_.front().velocity_);
+        if(currMagnitude > 0.0f && prevMagnitude > 0.0f) {
+            float angle = std::acos(std::abs(tgt::dot(streamlineElements_.front().velocity_, element.velocity_)) /
+                                    (prevMagnitude * currMagnitude));
+            curvatureStatistics_.addSample(angle);
+        }
+    }
 
     streamlineElements_.push_front(element);
     float length = tgt::length(element.velocity_);
-    if(minMagnitude_ < 0.f || minMagnitude_ > length) {
-        minMagnitude_ = length;
-    }
-    if(maxMagnitude_ < 0.f || maxMagnitude_ < length) {
-        maxMagnitude_ = length;
-    }
+    magnitudeStatistics_.addSample(length);
 }
 
-    //----------------
-    //  Access
-    //----------------
+//----------------
+//  Access
+//----------------
 size_t Streamline::getNumElements() const {
     return streamlineElements_.size();
-}
-
-float Streamline::getMinMagnitude() const {
-    return std::max(0.f,minMagnitude_);
-}
-
-float Streamline::getMaxMagnitude() const {
-    return std::max(0.f,maxMagnitude_);
-}
-
-float Streamline::getLength() const {
-    return length_;
 }
 
 const Streamline::StreamlineElement& Streamline::getElementAt(size_t pos) const {
@@ -106,9 +104,9 @@ const Streamline::StreamlineElement& Streamline::getLastElement() const {
     return streamlineElements_.back();
 }
 
-    //----------------
-    //  Utilitiy
-    //----------------
+//----------------
+//  Utility
+//----------------
 Streamline Streamline::resample(size_t samples) const {
 
     // This will hold the resampled streamline.
@@ -137,8 +135,10 @@ Streamline Streamline::resample(size_t samples) const {
             const float t = tgt::clamp((segmentLength * i - distances[pos]) / (distances[pos + 1] - distances[pos]), 0.0f, 1.0f);
 
             Streamline::StreamlineElement element;
-            element.position_ = streamlineElements_[pos].position_ * (1.0f - t) + streamlineElements_[pos + 1].position_ * t;
-            element.velocity_ = streamlineElements_[pos].velocity_ * (1.0f - t) + streamlineElements_[pos + 1].velocity_ * t;
+            element.position_  = streamlineElements_[pos].position_  * (1.0f - t) + streamlineElements_[pos + 1].position_  * t;
+            element.velocity_  = streamlineElements_[pos].velocity_  * (1.0f - t) + streamlineElements_[pos + 1].velocity_  * t;
+            element.radius_    = streamlineElements_[pos].radius_    * (1.0f - t) + streamlineElements_[pos + 1].radius_    * t;
+            element.time_      = streamlineElements_[pos].time_      * (1.0f - t) + streamlineElements_[pos + 1].time_      * t;
 
             resampled.addElementAtEnd(element);
         }
@@ -151,43 +151,67 @@ Streamline Streamline::resample(size_t samples) const {
 
 }
 
-    //----------------
-    //  Storage
-    //----------------
+const Statistics& Streamline::getCurvatureStatistics() const {
+    return curvatureStatistics_;
+}
+
+const Statistics& Streamline::getMagnitudeStatistics() const {
+    return magnitudeStatistics_;
+}
+
+float Streamline::getMinMagnitude() const {
+    return magnitudeStatistics_.getMin();
+}
+
+float Streamline::getMaxMagnitude() const {
+    return magnitudeStatistics_.getMax();
+}
+
+float Streamline::getPhysicalLength() const {
+    return physicalLength_;
+}
+
+tgt::vec2 Streamline::getTemporalRange() const {
+    return tgt::vec2(getFirstElement().time_, getLastElement().time_);
+}
+
+//----------------
+//  Storage
+//----------------
 std::string Streamline::toCSVString(const tgt::mat4& transformationMatrix, const tgt::mat4& velocityTransfomationMatrix) const {
     std::stringstream output;
-    output << getNumElements() << ", " << getMinMagnitude() << ", " << getMaxMagnitude() << ", " << getLength();
-    for(size_t i = 0; i < streamlineElements_.size(); i++) {
-        tgt::vec4 transformedPosition = transformationMatrix * tgt::vec4(streamlineElements_[i].position_,1.f);
-        tgt::vec4 transformedVelocity = velocityTransfomationMatrix * tgt::vec4(streamlineElements_[i].velocity_,1.f);
+    output << getNumElements();
+    for(const StreamlineElement& element: streamlineElements_) {
+        tgt::vec4 transformedPosition = transformationMatrix * tgt::vec4(element.position_,1.f);
+        tgt::vec4 transformedVelocity = velocityTransfomationMatrix * tgt::vec4(element.velocity_,1.f);
         output << ", " << transformedPosition.x <<
                   ", " << transformedPosition.y <<
                   ", " << transformedPosition.z <<
                   ", " << transformedVelocity.x <<
                   ", " << transformedVelocity.y <<
-                  ", " << transformedVelocity.z;
+                  ", " << transformedVelocity.z <<
+                  ", " << element.radius_ <<
+                  ", " << element.time_;
     }
     return output.str();
 }
 
 void Streamline::serialize(Serializer& s) const {
-    s.serialize("minMagnitude_",minMagnitude_);
-    s.serialize("maxMagnitude_",maxMagnitude_);
-    s.serialize("length_", length_);
     //serialize elements as blob
-    std::vector<StreamlineElement> vec(streamlineElements_.size());
-    std::copy(streamlineElements_.begin(),streamlineElements_.end(),vec.begin());
+    std::vector<StreamlineElement> vec(streamlineElements_.begin(), streamlineElements_.end());
     s.serializeBinaryBlob("StreamlineElements",vec);
 }
 
 void Streamline::deserialize(Deserializer& s) {
-    s.deserialize("minMagnitude_",minMagnitude_);
-    s.deserialize("maxMagnitude_",maxMagnitude_);
-    s.deserialize("length_", length_);
+    streamlineElements_.clear();
+
     //deserialize streamlines from binary blob
     std::vector<Streamline::StreamlineElement> vec;
     s.deserializeBinaryBlob("StreamlineElements",vec);
-    streamlineElements_ = std::deque<StreamlineElement>(vec.begin(),vec.end());
+    // We add each element manually since we need to update the statistics.
+    for(const StreamlineElement& element : vec) {
+        addElementAtEnd(element);
+    }
 }
 
 }   // namespace

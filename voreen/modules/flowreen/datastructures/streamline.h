@@ -32,37 +32,43 @@
 #include "voreen/core/io/serialization/xmlserializer.h"
 #include "voreen/core/io/serialization/xmldeserializer.h"
 
+#include "voreen/core/utils/statistics.h"
+
 #include "tgt/vector.h"
 
 #include <deque>
 
 namespace voreen {
 
-    /**
-     * Datastructure used to represent streamlines. It is used in the flowreen module.
-     * A streamline consists of multiple StreamlineElements each storing a position and the velocity at this position.
-     */
+/**
+ * Datastructure used to represent streamlines. It is used in the flowreen module.
+ * A streamline consists of multiple StreamlineElements each storing a position and the velocity at this position.
+ */
 class VRN_CORE_API Streamline : public Serializable {
-    friend class StreamlineList;
 public:
+
     /**
-     * A streamline consits of a vector of these elements.
+     * A streamline consists of a vector of these elements.
      */
     struct StreamlineElement {
-        tgt::vec3 position_;    ///< position in voxel space
-        tgt::vec3 velocity_;
+        tgt::vec3 position_;    ///< position in world space
+        tgt::vec3 velocity_;    ///< local velocity in mm/s
+        float radius_;          ///< local radius in world space, primarily used for bundles
+        float time_;            ///< time point in seconds, primarily used for pathlines
 
         StreamlineElement()
             : position_(tgt::vec3::zero)
             , velocity_(tgt::vec3::zero)
+            , radius_(0.0f)
+            , time_(0.0f)
         {}
 
-        StreamlineElement(tgt::vec3 position, tgt::vec3 velocity)
+        StreamlineElement(const tgt::vec3& position, const tgt::vec3& velocity, float radius = 0.0f, float time = 0.0f)
             : position_(position)
             , velocity_(velocity)
-        {
-            //tgtAssert(tgt::length(velocity) > 16.f, "ohoh"); debug
-        }
+            , radius_(radius)
+            , time_(time)
+        {}
     };
 
     /** Constructor */
@@ -85,9 +91,6 @@ public:
     const StreamlineElement& getFirstElement() const;
     const StreamlineElement& getLastElement() const;
     size_t getNumElements() const;
-    float getMinMagnitude() const;
-    float getMaxMagnitude() const;
-    float getLength() const;
 
     //----------------
     //  Utility
@@ -95,10 +98,28 @@ public:
     /** Resamples this Streamline to a similar one consisting of the specified amount of elements. */
     Streamline resample(size_t samples) const;
 
+    /** Returns statistics of the angle (in radians) between to consecutive elements. */
+    const Statistics& getCurvatureStatistics() const;
+
+    /** Returns statistics of the magnitude of all elements. */
+    const Statistics& getMagnitudeStatistics() const;
+
+    /** Returns the minimum magnitude of all elements. */
+    float getMinMagnitude() const;
+
+    /** Returns the maximum magnitude of all elements. */
+    float getMaxMagnitude() const;
+
+    /** Returns the length in physical space. */
+    float getPhysicalLength() const;
+
+    /** Returns the temporal range covered by the streamline. */
+    tgt::vec2 getTemporalRange() const;
+
     //----------------
     //  Storage
     //----------------
-    /** Used to save as CSV file. Transforms the voxel position to world space. */
+    /** Used to save as CSV file. */
     std::string toCSVString(const tgt::mat4& transfomationMatrix = tgt::mat4::identity,
                             const tgt::mat4& velocityTransfomationMatrix = tgt::mat4::identity) const;
     /** @override */
@@ -110,10 +131,10 @@ public:
     //  Members
     //----------------
 private:
-   std::deque<StreamlineElement> streamlineElements_;   ///< list of all streamline elements from front to back
-   float minMagnitude_;                                 ///< min magnitude value for color map configuration
-   float maxMagnitude_;                                 ///< max magnitude value for color map configuration
-   float length_;                                       ///< the actual length of the streamline
+    std::deque<StreamlineElement> streamlineElements_;   ///< list of all streamline elements from front to back
+    Statistics magnitudeStatistics_;                     ///< statistics of the contained magnitudes
+    Statistics curvatureStatistics_;                     ///< statistics of the lines curvature
+    float physicalLength_;                               ///< total physical length (in mm)
 };
 
 }   // namespace

@@ -212,10 +212,10 @@ protected:
     void interruptComputation() throw();
 
     /// Inherited from PortObserver
-    void afterConnectionAdded(const Port* source, const Port* connectedPort);
-    void beforeConnectionRemoved(const Port* source, const Port*);
-    void dataWillChange(const Port* source);
-    void dataHasChanged(const Port* source);
+    virtual void afterConnectionAdded(const Port* source, const Port* connectedPort);
+    virtual void beforeConnectionRemoved(const Port* source, const Port*);
+    virtual void dataWillChange(const Port* source);
+    virtual void dataHasChanged(const Port* source);
 
     /// Inherited from DataInvalidationObserver
     virtual void dataAboutToInvalidate(const DataInvalidationObservable* source);
@@ -732,7 +732,7 @@ void AsyncComputeProcessor<I,O>::process() {
                     break;
                 case InvalidInputException::S_WARNING:
 
-                    VoreenApplication::app()->showMessageBox(header, msg, true);
+                    VoreenApplication::app()->showMessageBox(header, msg, false);
                     LWARNING(msg);
                     break;
                 case InvalidInputException::S_IGNORE:

@@ -202,14 +202,11 @@ void VolumeResampleTransformation::resample(const VolumeBase& inputVol, std::uni
 #ifdef VRN_MODULE_OPENMP
     #pragma omp parallel for
     for (long z = 0; z<static_cast<long>(outputDim.z); ++z) {
-#else
-    for (size_t z = 0; z<outputDim.z; ++z) {
-#endif
-
-#ifdef VRN_MODULE_OPENMP
-        if(aborted) {
+        if (aborted) {
             continue;
         }
+#else
+    for (size_t z = 0; z<outputDim.z; ++z) {
 #endif
 
         std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(baseType, tgt::svec3(outputDim.xy(), 1)));
@@ -228,9 +225,7 @@ void VolumeResampleTransformation::resample(const VolumeBase& inputVol, std::uni
         if(parallelProgress.reportStepDone()) {
 #ifdef VRN_MODULE_OPENMP
             #pragma omp critical
-            {
-                aborted = true;
-            }
+            aborted = true;
 #else
             aborted = true;
             break;

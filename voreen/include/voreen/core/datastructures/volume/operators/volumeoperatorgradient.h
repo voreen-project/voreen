@@ -100,6 +100,9 @@ public:
 //---------------------------------------------------------------------------------------------
 template<typename U>
 Volume* VolumeOperatorGradient::apply(const VolumeBase* srcVolume, GradientType gt) {
+    // Ensure the volume data does not get deleted during calculation.
+    VolumeRAMRepresentationLock lock(srcVolume);
+
     switch(gt){
     case VOG_CENTRAL_DIFFERENCE:
         //case uint8_t
@@ -111,7 +114,10 @@ Volume* VolumeOperatorGradient::apply(const VolumeBase* srcVolume, GradientType 
         } //case float
         else if (dynamic_cast<const VolumeAtomic<float>*>(srcVolume->getRepresentation<VolumeRAM>())){
             return calcGradientsCentralDifferences<float,U>(srcVolume);
-        } //wrong input
+        } //case double
+        else if (dynamic_cast<const VolumeAtomic<double>*>(srcVolume->getRepresentation<VolumeRAM>())) {
+            return calcGradientsCentralDifferences<double, U>(srcVolume);
+        } //unsupported input
         else {
             LERRORC("calcGradientsCentralDifferences", "Unsupported input");
             return 0;
@@ -124,7 +130,14 @@ Volume* VolumeOperatorGradient::apply(const VolumeBase* srcVolume, GradientType 
         }  //case uint16_t
         else if (dynamic_cast<const VolumeAtomic<uint16_t>*>(srcVolume->getRepresentation<VolumeRAM>())){
             return calcGradientsLinearRegression<uint16_t,U>(srcVolume);
-        } else {
+        } //case float
+        else if (dynamic_cast<const VolumeAtomic<float>*>(srcVolume->getRepresentation<VolumeRAM>())) {
+            return calcGradientsLinearRegression<float, U>(srcVolume);
+        } //case double
+        else if (dynamic_cast<const VolumeAtomic<double>*>(srcVolume->getRepresentation<VolumeRAM>())) {
+            return calcGradientsLinearRegression<double, U>(srcVolume);
+        } //unsupported input
+        else {
             LERRORC("calcGradientsLinearRegression", "calcGradientsLinearRegression needs a 8-, 12- or 16-bit dataset as input");
             return 0;
         }
@@ -136,7 +149,14 @@ Volume* VolumeOperatorGradient::apply(const VolumeBase* srcVolume, GradientType 
         }  //case uint16_t
         else if (dynamic_cast<const VolumeAtomic<uint16_t>*>(srcVolume->getRepresentation<VolumeRAM>())){
             return calcGradientsSobel<uint16_t,U>(srcVolume);
-        } else {
+        } //case float
+        else if (dynamic_cast<const VolumeAtomic<float>*>(srcVolume->getRepresentation<VolumeRAM>())) {
+            return calcGradientsSobel<float, U>(srcVolume);
+        } //case double
+        else if (dynamic_cast<const VolumeAtomic<double>*>(srcVolume->getRepresentation<VolumeRAM>())) {
+            return calcGradientsSobel<double, U>(srcVolume);
+        } //unsupported input
+        else {
             LERRORC("calcGradientsSobel", "calcGradientsSobel needs a 8-, 12- or 16-bit dataset as input");
             return 0;
         }

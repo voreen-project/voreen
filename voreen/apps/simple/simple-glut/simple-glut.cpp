@@ -53,7 +53,7 @@ const std::string description =
     "that can be rotated and zoomed using the mouse.\n\n"
     "This is the GLUT-version of this sample, there are others in the simple/-folder, like a Qt-version.";
 
-const std::string defaultWorkspace = "../voreenve/workspaces/raycasting-standard.vws";
+const std::string defaultWorkspace = "../voreenve/workspaces/rendering-raycasting.vws";
 
 using namespace voreen;
 

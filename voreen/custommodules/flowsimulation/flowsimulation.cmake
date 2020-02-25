@@ -19,7 +19,7 @@ SET(MOD_CORE_SOURCES
 
     # datastructures
     ${MOD_DIR}/datastructures/flowparameters.cpp
-
+    
     # ports
     ${MOD_DIR}/ports/flowparametrizationport.cpp
 
@@ -38,6 +38,8 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/volume/gaussiannoise.cpp
     ${MOD_DIR}/processors/volume/volumelistadapter.cpp
     ${MOD_DIR}/processors/volume/volumelistcombine.cpp
+    ${MOD_DIR}/processors/volume/volumelistmultichanneladapter.cpp
+    ${MOD_DIR}/processors/volume/volumeselectormultichannel.cpp
 
     # utils
     ${MOD_DIR}/utils/utils.cpp
@@ -67,6 +69,8 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volume/gaussiannoise.h
     ${MOD_DIR}/processors/volume/volumelistadapter.h
     ${MOD_DIR}/processors/volume/volumelistcombine.h
+    ${MOD_DIR}/processors/volume/volumelistmultichanneladapter.h
+    ${MOD_DIR}/processors/volume/volumeselectormultichannel.h
 
     # utils
     ${MOD_DIR}/utils/utils.h
@@ -161,13 +165,6 @@ SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
 SET(MOD_INSTALL_FILES ${MOD_INSTALL_FILES}
     ${MOD_DIR}/ext/octree/LICENSE
 )
-
-
-# TODO: Add mailio or alternative to parse palma feedback sent per mail.
-#SET(VRN_MAILIO_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/modules/${module_dir}/ext/mailio)
-#ADD_SUBDIRECTORY(${VRN_MAILIO_DIRECTORY})
-#LIST(APPEND MOD_LIBRARIES "mailio")
-
 
 # Deployment
 SET(MOD_INSTALL_DIRECTORIES

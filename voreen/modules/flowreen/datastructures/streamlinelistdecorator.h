@@ -45,7 +45,7 @@ public:
     /** Destructor */
     virtual ~StreamlineListDecoratorIdentity();
     /** No Copy-Constructor. Use clone instead. */
-    virtual StreamlineListBase* clone() const override;
+    virtual StreamlineListBase* clone() const;
 private:
     /** No Copy */
     StreamlineListDecoratorIdentity(const StreamlineListDecoratorIdentity&);
@@ -55,68 +55,57 @@ public:
     //------------------------------
     //  Observer Functions
     //------------------------------
-    virtual void beforeStreamlineListDelete(const StreamlineListBase* source) override;
-    virtual void beforeStreamlineListDecoratorPointerReset(const StreamlineListDecoratorIdentity* source) override {};
+    virtual void beforeStreamlineListDelete(const StreamlineListBase* source);
 
     //------------------------------
     //  Streamline Handling
     //------------------------------
     /** Adds a Streamline and copies it. */
-    virtual void addStreamline(const Streamline& line) override;
+    virtual void addStreamline(const Streamline& line);
     /** Adds and copies all Streamlines. No meta data is copied except min/max magnitude. */
-    virtual void addStreamlineList(const StreamlineListBase& list) override;
+    virtual void addStreamlineList(const StreamlineListBase& list);
     /** Removes a Streamline and returns all remaining ones. */
-    virtual const std::vector<Streamline>& removeStreamline(size_t pos) override;
+    virtual void removeStreamline(size_t pos);
+    /** Removes all streamlines */
+    virtual void clearStreamlines() ;
     /** Returns all Streamlines. */
-    virtual const std::vector<Streamline>& getStreamlines() const override;
-
-    //----------------------------
-    //  Streamline Bundle Handling
-    //----------------------------
-    /** Adds a Streamline Bundle and copies it. */
-    void addStreamlineBundle(const StreamlineBundle& bundle) override;
-    /** Removes a Streamline Bundle and returns all remaining ones. */
-    const std::vector<StreamlineBundle>& removeStreamlineBundle(size_t pos) override;
-    /** Returns all Streamline Bundles. */
-    const std::vector<StreamlineBundle>& getStreamlineBundles() const override;
-    /** Classifies a given streamline in terms of being noise in relation to bundles. */
-    void setStreamlineNoiseFlag(size_t pos) override;
-    /** Returns all Streamlines being classified as noise. */
-    const std::vector<size_t>& getStreamlineNoise() const override;
+    virtual const std::vector<Streamline>& getStreamlines() const;
 
     //------------------------------
     //  Meta
     //------------------------------
-    virtual const tgt::svec3&  getOriginalDimensions() const override;
-    virtual const tgt::vec3&   getOriginalSpacing() const override;
-    virtual const tgt::Bounds& getOriginalWorldBounds() const override;
-    virtual const tgt::Bounds& getOriginalVoxelBounds() const override;
-    virtual const tgt::mat4&   getOriginalVoxelToWorldMatrix() const override;
-    virtual const tgt::mat4&   getOriginalWorldToVoxelMatrix() const override;
+    virtual const tgt::svec3&  getOriginalDimensions() const;
+    virtual const tgt::vec3&   getOriginalSpacing() const;
+    virtual const tgt::Bounds& getOriginalWorldBounds() const;
+    virtual const tgt::Bounds& getOriginalVoxelBounds() const;
+    virtual const tgt::mat4&   getOriginalVoxelToWorldMatrix() const;
+    virtual const tgt::mat4&   getOriginalWorldToVoxelMatrix() const;
 
-    virtual const tgt::mat4&   getListTransformMatrix() const override;
-    virtual const tgt::mat4&   getVelocityTransformMatrix() const override;
-    virtual const tgt::mat4   getVoxelToWorldMatrix() const override;
+    virtual const tgt::mat4&   getListTransformMatrix() const;
+    virtual const tgt::mat4&   getVelocityTransformMatrix() const;
+    virtual const tgt::mat4   getVoxelToWorldMatrix() const;
 
-    virtual float getMinMagnitude() const override;
-    virtual float getMaxMagnitude() const override;
+    virtual float getMinMagnitude() const;
+    virtual float getMaxMagnitude() const;
+
+    virtual const tgt::vec2& getTemporalRange() const;
 
 protected:
-    virtual void setTransformMatrices(const tgt::mat4& listMatrix, const tgt::mat4& velocityMatrix) override;
+    virtual void setTransformMatrices(const tgt::mat4& listMatrix, const tgt::mat4& velocityMatrix);
 
 public:
     //------------------------------
     //  Storage
     //------------------------------
-    virtual std::string metaToCSVString() const override;
-    virtual void serialize(Serializer& s) const override;
-    virtual void deserialize(Deserializer& s) override;
+    virtual std::string metaToCSVString() const;
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
 
     //------------------------------
     //  Members
     //------------------------------
 protected:
-    mutable StreamlineListBase* basePointer_; ///< pointer to the base StreamlineListBase...
+    mutable StreamlineListBase* decorated_; ///< pointer to the base StreamlineListBase...
 };
 
 
@@ -130,18 +119,18 @@ public:
     StreamlineListDecoratorReplaceTransformation(StreamlineListBase* base, const tgt::mat4& listMatrix, const tgt::mat4& velocityMatrix);
     virtual ~StreamlineListDecoratorReplaceTransformation(){}
      /** No Copy-Constructor. Use clone instead. */
-    virtual StreamlineListBase* clone() const override;
+    virtual StreamlineListBase* clone() const;
 private:
     StreamlineListDecoratorReplaceTransformation(const StreamlineListDecoratorReplaceTransformation&);
     StreamlineListDecoratorReplaceTransformation & operator=(const StreamlineListDecoratorReplaceTransformation&);
 public:
-    virtual const tgt::mat4&   getListTransformMatrix() const override;
-    virtual const tgt::mat4&   getVelocityTransformMatrix() const override;
-    virtual const tgt::mat4   getVoxelToWorldMatrix() const override;
+    virtual const tgt::mat4&   getListTransformMatrix() const;
+    virtual const tgt::mat4&   getVelocityTransformMatrix() const;
+    virtual const tgt::mat4   getVoxelToWorldMatrix() const;
 
-    virtual void serialize(Serializer& s) const override;
+    virtual void serialize(Serializer& s) const;
 protected:
-    virtual void setTransformMatrices(const tgt::mat4& listMatrix, const tgt::mat4& velocityMatrix) override;
+    virtual void setTransformMatrices(const tgt::mat4& listMatrix, const tgt::mat4& velocityMatrix);
 
     //------------------------------
     //  Members

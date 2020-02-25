@@ -26,34 +26,19 @@
 #include "modules/flowreen/flowreenmodule.h"
 
 // processors
-#include "processors/flowdirectionoverlay.h"
+#include "processors/geometry/streamlinetoboundingbox.h"
+#include "processors/geometry/streamlinetogeometry.h"
+#include "processors/render/flowdirectionoverlay.h"
+#include "processors/render/streamlinerenderer3d.h"
+#include "processors/streamline/pathlinecreator.h"
+#include "processors/streamline/streamlinebundledetector.h"
 #include "processors/streamline/streamlinecombine.h"
 #include "processors/streamline/streamlinecreator.h"
-#include "processors/streamlinerenderer3d.h"
+#include "processors/streamline/streamlinefilter.h"
 #include "processors/streamline/streamlinerotation.h"
 #include "processors/streamline/streamlinesave.h"
 #include "processors/streamline/streamlineselector.h"
 #include "processors/streamline/streamlinesource.h"
-#include "processors/streamline/streamlinetoboundingbox.h"
-#include "processors/streamline/streamlinetogeometry.h"
-
-
-#ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
-    #include "processors/flowarrowrenderer2d.h"
-    #include "processors/flowarrowrenderer3d.h"
-    #include "processors/flowmagnitudes3d.h"
-    #include "processors/floworthogonalslicerenderer.h"
-    #include "processors/flowreenadapter.h"
-    #include "processors/flowslicerenderer2d.h"
-    #include "processors/flowslicerenderer3d.h"
-    #include "processors/flowstreamlinestexture3d.h"
-    #include "processors/pathlinerenderer3d.h"
-
-    // I/O
-    #include "modules/flowreen/io/flowreader.h"
-    // VolumeOperators
-    #include "modules/flowreen/datastructures/deprecated/volumeoperatorintensitymask.h"
-#endif
 
 namespace voreen {
 
@@ -67,31 +52,18 @@ FlowreenModule::FlowreenModule(const std::string& modulePath)
 
     // processors
     registerSerializableType(new FlowDirectionOverlay());
+    registerSerializableType(new PathlineCreator());
+    registerSerializableType(new StreamlineBundleDetector());
     registerSerializableType(new StreamlineCombine());
-    registerSerializableType(new StreamlineRenderer3D());
     registerSerializableType(new StreamlineCreator());
+    registerSerializableType(new StreamlineFilter());
+    registerSerializableType(new StreamlineRenderer3D());
     registerSerializableType(new StreamlineRotation());
     registerSerializableType(new StreamlineSave());
     registerSerializableType(new StreamlineSelector());
     registerSerializableType(new StreamlineSource());
     registerSerializableType(new StreamlineToBoundingBox());
     registerSerializableType(new StreamlineToGeometry());
-#ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
-    registerSerializableType(new FlowArrowRenderer2D);
-    registerSerializableType(new FlowArrowRenderer3D);
-    registerSerializableType(new FlowMagnitudes3D());
-    registerSerializableType(new FlowOrthogonalSliceRenderer());
-    registerSerializableType(new FlowSliceRenderer2D());
-    registerSerializableType(new FlowSliceRenderer3D());
-    registerSerializableType(new FlowStreamlinesTexture3D());
-    registerSerializableType(new FlowreenAdapter());
-    registerSerializableType(new PathlineRenderer3D());
-    // I/O
-    registerVolumeReader(new FlowReader());
-
-    INST_SCALAR_TYPES(VolumeOperatorIntensityMask, VolumeOperatorIntensityMaskGeneric)
-#endif
-
 }
 
 } // namespace

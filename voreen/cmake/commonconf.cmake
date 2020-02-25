@@ -230,13 +230,6 @@ ELSEIF(UNIX)
     # enable optimization level 1 for debug build as -Wuninitialized is ignored otherwise
     #set(CMAKE_CXX_FLAGS_DEBUG "-O1 ${CMAKE_CXX_FLAGS_DEBUG}")
 
-    # add linker flags to look for libraries in the executable directory to avoid problems with moving Voreen after compiling
-    IF(APPLE)
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,'$ORIGIN' ")
-    ELSE()
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath='$ORIGIN' ")
-    ENDIF()
-
     # Warning switches are compiler dependent:
     IF(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         # disable warnings
@@ -542,6 +535,12 @@ SET(VRN_INCLUDE_DIRECTORIES ${VRN_MODULE_INCLUDE_DIRECTORIES} ${VRN_COMMON_INCLU
 
 # define framework and module install files (note: DLLs are installed by CMakeLists.txt in root dir)
 IF (VRN_ADD_INSTALL_TARGET)
+
+    # In order to find libraries after installing/moving installation directory, we need to set RPATH accordingly.
+    # $ORIGIN does only work here because all binaries and libaries reside in the same folder.
+    IF(UNIX)
+        SET(CMAKE_INSTALL_RPATH "$ORIGIN")
+    ENDIF()
 
     # framework install files
     if(VRN_BUILD_LIB_VOREENCORE)
