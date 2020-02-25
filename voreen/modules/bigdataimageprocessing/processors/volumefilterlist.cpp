@@ -40,7 +40,6 @@
 #include "../volumefiltering/gradientfilter.h"
 #include "../volumefiltering/medianfilter.h"
 #include "../volumefiltering/morphologyfilter.h"
-#include "../volumefiltering/negationfilter.h"
 #include "../volumefiltering/resamplefilter.h"
 #include "../volumefiltering/thresholdingfilter.h"
 #include "../volumefiltering/vorticityfilter.h"
@@ -52,7 +51,6 @@
 #include "../volumefilterproperties/gradientfilterproperties.h"
 #include "../volumefilterproperties/medianfilterproperties.h"
 #include "../volumefilterproperties/morphologyfilterproperties.h"
-#include "../volumefilterproperties/negationfilterproperties.h"
 #include "../volumefilterproperties/resamplefilterproperties.h"
 #include "../volumefilterproperties/thresholdingfilterproperties.h"
 #include "../volumefilterproperties/vorticityfilterproperties.h"
@@ -91,7 +89,6 @@ VolumeFilterList::VolumeFilterList()
     addFilter(new GradientFilterProperties());
     addFilter(new MedianFilterProperties());
     addFilter(new MorphologyFilterProperties());
-    addFilter(new NegationFilterProperties());
     addFilter(new ResampleFilterProperties());
     addFilter(new ThresholdingFilterProperties());
     addFilter(new VorticityFilterProperties());
@@ -154,6 +151,7 @@ void VolumeFilterList::deserialize(Deserializer& s) {
         try {
             filterProperties_[i]->deserialize(s);
         } catch(SerializationException& e) {
+            s.removeLastError();
             LWARNING("Failed to deserialize Filterproperty '" << filterProperties_[i]->getVolumeFilterName() << "': " << e.what());
         }
     }

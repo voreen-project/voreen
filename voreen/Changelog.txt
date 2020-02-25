@@ -6,6 +6,7 @@ Voreen Changelog
 
     * Features:
       o Add PathlineCreator which takes a vector field time series as input
+      o Add Gradient and Vorticity to VolumeFilterList
 
     * Framework/API Changes:
       o VolumeHalfSample: The output dimensions are now always rounded up if the input dimensions are not divisible by 2. This change was made in order unify the behaviour with octree downsampling
