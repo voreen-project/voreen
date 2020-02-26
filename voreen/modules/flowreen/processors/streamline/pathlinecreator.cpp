@@ -62,7 +62,7 @@ PathlineCreator::PathlineCreator()
     addProperty(seedTime_);
     seedTime_.setGroupID("pathline");
     addProperty(absoluteMagnitudeThreshold_);
-    absoluteMagnitudeThreshold_.adaptDecimalsToRange(2);
+    absoluteMagnitudeThreshold_.setNumDecimals(2);
     absoluteMagnitudeThreshold_.setGroupID("pathline");
     addProperty(fitAbsoluteMagnitudeThreshold_);
     ON_CHANGE(fitAbsoluteMagnitudeThreshold_, PathlineCreator, adjustPropertiesToInput);

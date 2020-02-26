@@ -61,7 +61,7 @@ Processor* VolumeUncertaintyMeasure::create() const {
 
 void VolumeUncertaintyMeasure::process() {
     if (!enableProcessing_.get())
-        outport_.setData(const_cast<VolumeBase*>(inport_.getData()), false);
+        outport_.setData(inport_.getData(), false);
     else if (forceUpdate_)
         measureVolumeUncertainty();
 }

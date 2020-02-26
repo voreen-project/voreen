@@ -106,7 +106,6 @@ public:
 
     virtual std::string getClassName() const         { return "ConnectedComponentAnalysis";      }
     virtual std::string getCategory() const       { return "Volume Processing"; }
-    virtual bool isEndProcessor() const       { return true; }
     virtual VoreenSerializableObject* create() const;
     virtual void setDescriptions() {
         setDescription(

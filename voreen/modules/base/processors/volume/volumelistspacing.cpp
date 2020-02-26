@@ -135,8 +135,6 @@ void VolumeListSpacing::process() {
 
         outputList->add(outputVolume);
 
-        // Workaround: Using a VolumeContainer would be more convenient.
-        // However, this is currently not possible due to bug #168.
         decorators_.push_back(std::unique_ptr<VolumeBase>(outputVolume));
     }
     currentVolumeList_ = outputList;
