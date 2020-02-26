@@ -66,12 +66,14 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/io/similaritymatrixsource.cpp
 
     #Processors
+    ${MOD_DIR}/processors/connectedcomponentselector.cpp
     ${MOD_DIR}/processors/ensembledatasource.cpp
     ${MOD_DIR}/processors/ensemblefilter.cpp
     ${MOD_DIR}/processors/ensemblevolumeextractor.cpp
     ${MOD_DIR}/processors/fieldparallelplotcreator.cpp
     ${MOD_DIR}/processors/fieldparallelplothistogram.cpp
     ${MOD_DIR}/processors/fieldparallelplotviewer.cpp
+    ${MOD_DIR}/processors/localsimilarityanalysis.cpp
     ${MOD_DIR}/processors/physicalclippinglinker.cpp
     ${MOD_DIR}/processors/similaritydatavolume.cpp
     ${MOD_DIR}/processors/similaritymatrixcombine.cpp
@@ -111,12 +113,14 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/io/similaritymatrixsource.h
 
     #Processors
+    ${MOD_DIR}/processors/connectedcomponentselector.h
     ${MOD_DIR}/processors/ensembledatasource.h
     ${MOD_DIR}/processors/ensemblefilter.h
     ${MOD_DIR}/processors/ensemblevolumeextractor.h
     ${MOD_DIR}/processors/fieldparallelplotcreator.h
     ${MOD_DIR}/processors/fieldparallelplothistogram.h
     ${MOD_DIR}/processors/fieldparallelplotviewer.h
+    ${MOD_DIR}/processors/localsimilarityanalysis.h
     ${MOD_DIR}/processors/physicalclippinglinker.h
     ${MOD_DIR}/processors/similaritydatavolume.h
     ${MOD_DIR}/processors/similaritymatrixcombine.h

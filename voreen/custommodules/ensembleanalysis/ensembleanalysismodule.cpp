@@ -25,12 +25,14 @@
 
 #include "ensembleanalysismodule.h"
 
+#include "processors/connectedcomponentselector.h"
 #include "processors/ensembledatasource.h"
 #include "processors/ensemblefilter.h"
 #include "processors/ensemblevolumeextractor.h"
 #include "processors/fieldparallelplotcreator.h"
 #include "processors/fieldparallelplotviewer.h"
 #include "processors/fieldparallelplothistogram.h"
+#include "processors/localsimilarityanalysis.h"
 #include "processors/physicalclippinglinker.h"
 #include "processors/similaritydatavolume.h"
 #include "processors/similaritymatrixcombine.h"
@@ -62,14 +64,16 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     addShaderPath(getModulePath("glsl"));
 
     // Processors
+    registerProcessor(new ConnectedComponentSelector());
     registerProcessor(new EnsembleDataSource());
     registerProcessor(new EnsembleFilter);
+    registerProcessor(new PhysicalClippingLinker());
 
     // Plotting
     registerProcessor(new FieldParallelPlotCreator());
     registerProcessor(new FieldParallelPlotViewer());
     registerProcessor(new FieldParallelPlotHistogram());
-    registerProcessor(new PhysicalClippingLinker());
+    registerProcessor(new LocalSimilarityAnalysis());
     registerProcessor(new SimilartyDataVolume());
     registerProcessor(new SimilarityMatrixCombine());
     registerProcessor(new SimilarityMatrixCreator());
