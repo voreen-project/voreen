@@ -754,10 +754,10 @@ void UnalignedSliceViewer::process() {
 
                 switch (QualityMode.getQuality()) {
                     case VoreenQualityMode::RQ_INTERACTIVE:
-                        samplingRate_ = 0.5f;
+                        samplingRate_ = 1.0f / (1 << interactionLevelOfDetail_.get());
                         break;
                     case VoreenQualityMode::RQ_DEFAULT:
-                        samplingRate_ = 1.0f;
+                        samplingRate_ = 1.0f / (1 << sliceLevelOfDetail_.get());
                         break;
                     case VoreenQualityMode::RQ_HIGH:
                         samplingRate_ = 2.0f;
