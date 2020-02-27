@@ -59,6 +59,24 @@ class RandomWalkerSeeds;
 class RandomWalkerWeights;
 class OctreeBrickPoolManagerMmap;
 
+struct OctreeWalkerPreviousResult {
+public:
+    VolumeOctree& octree();
+    VolumeBase& volume();
+
+    OctreeWalkerPreviousResult(OctreeWalkerPreviousResult&& other);
+    OctreeWalkerPreviousResult& operator=(OctreeWalkerPreviousResult&& other);
+    OctreeWalkerPreviousResult(VolumeOctree& octree, std::unique_ptr<VolumeBase>&& volume);
+    ~OctreeWalkerPreviousResult();
+
+    void destroyButRetainNodes(std::unordered_set<const VolumeOctreeNode*>& nodesToSave) &&;
+    bool isPresent() const;
+
+private:
+    VolumeOctree* octree_;                  // NEVER owns its own brickpool manager, ALWAYS a representation of previousVolume
+    std::unique_ptr<VolumeBase> volume_;    // ALWAYS stores reference to representation in previousOctree_, never null
+};
+
 struct OctreeWalkerInput {
     VolumeOctree* previousResult_;
     std::unique_ptr<OctreeBrickPoolManagerMmap>& brickPoolManager_;
@@ -77,18 +95,17 @@ struct OctreeWalkerInput {
 
 struct OctreeWalkerOutput {
     OctreeWalkerOutput(
-        VolumeOctree* octree,
-        std::unique_ptr<VolumeBase>&& volume,
+        OctreeWalkerPreviousResult&& result,
         std::unordered_set<const VolumeOctreeNode*>&& sharedNodes,
         std::chrono::duration<float> duration
     );
     ~OctreeWalkerOutput();
     OctreeWalkerOutput(OctreeWalkerOutput&& other);
 
-    VolumeOctree* octree_;
-    std::unique_ptr<VolumeBase> volume_;
+    OctreeWalkerPreviousResult result_;
     std::unordered_set<const VolumeOctreeNode*> sharedNodes_;
     std::chrono::duration<float> duration_;
+    bool movedOut_;
 };
 
 class OctreeWalker : public AsyncComputeProcessor<OctreeWalkerInput, OctreeWalkerOutput> {
@@ -149,8 +166,7 @@ private:
     TempPathProperty resultPath_;
     std::string prevResultPath_;
 
-    VolumeOctree* previousOctree_;                  // NEVER owns its own brickpool manager, ALWAYS a representation of previousVolume
-    std::unique_ptr<VolumeBase> previousVolume_;     // ALWAYS store reference to representation in previousOctree_
+    boost::optional<OctreeWalkerPreviousResult> previousResult_;
     std::unique_ptr<OctreeBrickPoolManagerMmap> brickPoolManager_;
 
     // Clock and duration used for time keeping

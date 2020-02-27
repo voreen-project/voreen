@@ -114,39 +114,29 @@ static float brickToNorm(uint16_t val) {
 }
 
 OctreeWalkerOutput::OctreeWalkerOutput(
-    VolumeOctree* octree,
-    std::unique_ptr<VolumeBase>&& volume,
+    OctreeWalkerPreviousResult&& result,
     std::unordered_set<const VolumeOctreeNode*>&& sharedNodes,
     std::chrono::duration<float> duration
-)   : octree_(octree)
-    , volume_(std::move(volume))
+)   : result_(std::move(result))
     , sharedNodes_(std::move(sharedNodes))
     , duration_(duration)
 { }
 
 OctreeWalkerOutput::OctreeWalkerOutput(OctreeWalkerOutput&& other)
-    : octree_(other.octree_)
-    , volume_(std::move(other.volume_))
+    : result_(std::move(other.result_))
     , sharedNodes_(std::move(other.sharedNodes_))
     , duration_(other.duration_)
+    , movedOut_(other.movedOut_)
 {
-    other.octree_ = nullptr;
-    other.volume_ = nullptr;
 }
 
 OctreeWalkerOutput::~OctreeWalkerOutput() {
     // If OctreeWalkerOutput is dropped prematurely (e.g., if the computation
     // is interrupted after the final result was created, we need to make sure
-    // NOT to drop the Brickpoolmanager, BUT free all nodes of the (now
+    // NOT to drop the Brickpoolmanager, BUT free all (new) nodes of the (now
     // discarded) tree.
-    if(volume_) {
-        tgtAssert(octree_, "Previous result octree without volume");
-
-        auto res = std::move(*octree_).decompose();
-        // Brickpoolmanager reference is not required here. The important thing is that the previous result does not deconstruct the brickPoolManager
-
-        // Clean up old tree
-        freeTreeComponents(res.second, sharedNodes_, *res.first);
+    if(result_.isPresent()) {
+        std::move(result_).destroyButRetainNodes(sharedNodes_);
     }
 }
 
@@ -168,8 +158,7 @@ OctreeWalker::OctreeWalker()
     , incrementalSimilarityThreshold_("incrementalSimilarityThreshold", "Incremental Similarity Treshold", 0.01, 0.0, 1.0)
     , resultPath_("resultPath", "Result Cache Path", "Result Cache Path", "", "", FileDialogProperty::DIRECTORY)
     , prevResultPath_("")
-    , previousOctree_(nullptr)
-    , previousVolume_(nullptr)
+    , previousResult_(boost::none)
     , brickPoolManager_(nullptr)
 {
     // ports
@@ -267,39 +256,40 @@ void OctreeWalker::deserialize(Deserializer& s) {
 
     std::string previousResultFile = tgt::FileSystem::cleanupPath(prevResultPath_ + "/" + RESULT_OCTREE_FILE_NAME);
 
+    std::unique_ptr<VolumeOctree> previousOctree;
     if(!prevResultPath_.empty() && tgt::FileSystem::fileExists(previousResultFile)) {
         XmlDeserializer d(prevResultPath_);
 
-        previousOctree_ = new VolumeOctree();
+        previousOctree.reset(new VolumeOctree());
         try {
             std::ifstream fs(previousResultFile);
             d.read(fs);
-            d.deserialize("Octree", *previousOctree_);
+            d.deserialize("Octree", *previousOctree);
 
             resultPath_.set(prevResultPath_);
         } catch (std::exception& e) {
             LERROR("Failed to deserialize previous solution: " << e.what());
-            delete previousOctree_;
-            previousOctree_ = nullptr;
+            previousOctree.reset(nullptr);
         } catch (SerializationException& e) {
             d.removeLastError();
             LERROR("Failed to deserialize previous solution: " << e.what());
-            delete previousOctree_;
-            previousOctree_ = nullptr;
+            previousOctree.reset(nullptr);
         }
     }
 
-    if(previousOctree_) {
+    if(previousOctree) {
         tgt::vec3 spacing(1.0f);
         tgt::vec3 offset(1.0f);
 
-        OctreeBrickPoolManagerMmap* obpmm = dynamic_cast<OctreeBrickPoolManagerMmap*>(previousOctree_->getBrickPoolManager());
+        OctreeBrickPoolManagerMmap* obpmm = dynamic_cast<OctreeBrickPoolManagerMmap*>(previousOctree->getBrickPoolManager());
         if(obpmm) {
-            previousVolume_.reset(new Volume(previousOctree_, spacing, offset));
             brickPoolManager_.reset(obpmm);
+            previousResult_ = OctreeWalkerPreviousResult(
+                *previousOctree,
+                std::unique_ptr<VolumeBase>(new Volume(previousOctree.get(), spacing, offset))
+            );
         } else {
-            delete previousOctree_;
-            previousOctree_ = nullptr;
+            previousResult_ = boost::none;
         }
     }
 }
@@ -350,17 +340,17 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
     size_t brickSizeInBytes = brickSize * sizeof(uint16_t);
 
     // Check if the previous result is compatible with the current input
-    if(previousOctree_ && (
-              previousOctree_->getDimensions() != volumeDim
-           || previousOctree_->getBrickDim() != brickDim
-           || previousOctree_->getNumLevels() != octree.getNumLevels()
+    if(previousResult_ && (
+              previousResult_->octree().getDimensions() != volumeDim
+           || previousResult_->octree().getBrickDim() != brickDim
+           || previousResult_->octree().getNumLevels() != octree.getNumLevels()
            || brickPoolManager_->getBrickMemorySizeInByte() != brickSizeInBytes)) {
 
         // If not, clear previous results
         clearPreviousResults();
     }
 
-    if(previousOctree_) {
+    if(previousResult_) {
         LINFO("Reusing previous solution for compatible input volume");
     } else {
         LINFO("Not reusing previous solution for incompatible input volume");
@@ -373,7 +363,7 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
     }
 
     return ComputeInput {
-        previousOctree_,
+        previousResult_ ? &previousResult_->octree() : nullptr,
         brickPoolManager_,
         *vol,
         *octreePtr,
@@ -556,10 +546,12 @@ struct BrickNeighborhood {
 };
 
 class RandomWalkerSeedsBrick : public RandomWalkerSeeds {
-    static const float CONFLICT;
-    static const float UNLABELED;
+    static const float CONFLICT;  // Conflicting labels in this voxel
+    static const float UNLABELED; // No label in this voxel
     static const float FOREGROUND;
     static const float BACKGROUND;
+    static const float FOREGROUND_NEW;
+    static const float BACKGROUND_NEW;
 public:
     RandomWalkerSeedsBrick(tgt::svec3 bufferDimensions, tgt::mat4 voxelToSeeds, const PointSegmentListGeometryVec3& foregroundSeedList, const PointSegmentListGeometryVec3& backgroundSeedList)
         : seedBuffer_(bufferDimensions)
@@ -654,11 +646,11 @@ public:
     }
     virtual float getSeedValue(size_t index) const {
         tgtAssert(isSeedPoint(index), "Getting seed value from non-seed");
-        return seedBuffer_.voxel(index);
+        return tgt::clamp(seedBuffer_.voxel(index), 0.0f, 1.0f);
     }
     virtual float getSeedValue(const tgt::ivec3& voxel) const {
         tgtAssert(isSeedPoint(voxel), "Getting seed value from non-seed");
-        return seedBuffer_.voxel(voxel);
+        return tgt::clamp(seedBuffer_.voxel(voxel), 0.0f, 1.0f);
     }
 
     std::vector<size_t> generateVolumeToRowsTable() {
@@ -698,10 +690,12 @@ private:
     float maxSeed_;
 };
 
-const float RandomWalkerSeedsBrick::CONFLICT = -2.0f;
-const float RandomWalkerSeedsBrick::UNLABELED = -1.0f;
-const float RandomWalkerSeedsBrick::FOREGROUND = 1.0f;
-const float RandomWalkerSeedsBrick::BACKGROUND = 0.0f;
+const float RandomWalkerSeedsBrick::CONFLICT       = -3.0f;
+const float RandomWalkerSeedsBrick::UNLABELED      = -2.0f;
+const float RandomWalkerSeedsBrick::FOREGROUND     =  1.0f;
+const float RandomWalkerSeedsBrick::BACKGROUND     =  0.0f;
+const float RandomWalkerSeedsBrick::FOREGROUND_NEW =  2.0f;
+const float RandomWalkerSeedsBrick::BACKGROUND_NEW = -1.0f;
 
 struct RandomWalkerVoxelAccessorBrick final : public RandomWalkerVoxelAccessor {
     RandomWalkerVoxelAccessorBrick(const VolumeAtomic<float>& brick)
@@ -1225,69 +1219,41 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 
     auto finish = clock::now();
     return ComputeOutput (
-        octree,
-        std::move(output),
+        OctreeWalkerPreviousResult(*octree, std::move(output)),
         std::move(nodesToSave),
         finish - start
     );
 }
 
 void OctreeWalker::processComputeOutput(ComputeOutput output) {
-    if (!output.volume_) {
-        LERROR("Failed to compute Random Walker solution");
-        return;
-    }
     LINFO("Total runtime: " << output.duration_.count() << " sec");
 
     // Set new output
-    outportProbabilities_.setData(output.volume_.get(), false);
+    outportProbabilities_.setData(&output.result_.volume(), false);
 
     // previousOctree_ is now not referenced anymore, so we are free to clean up.
-    if(previousVolume_) {
-        tgtAssert(previousOctree_, "Previous result volume without octree");
-
-        auto res = std::move(*previousOctree_).decompose();
-        // Brickpoolmanager reference is not required here. The important thing is that the previous result does not deconstruct the brickPoolManager
-
-        // Clean up old tree
-        freeTreeComponents(res.second, output.sharedNodes_, *brickPoolManager_);
+    if(previousResult_) {
+        std::move(*previousResult_).destroyButRetainNodes(output.sharedNodes_);
     }
+    previousResult_ = std::move(output.result_);
 
-    previousOctree_ = output.octree_;
-    previousVolume_ = std::move(output.volume_);
+    // Update origin property of newly created volume.
+    std::string previousResultDir = resultPath_.get();
+    std::string previousResultFile = tgt::FileSystem::cleanupPath(previousResultDir + "/" + RESULT_OCTREE_FILE_NAME);
+    previousResult_->volume().setOrigin(previousResultFile);
 
-    output.octree_ = nullptr;
-
-    if(previousOctree_) {
-        std::string previousResultDir = resultPath_.get();
-        std::string previousResultFile = tgt::FileSystem::cleanupPath(previousResultDir + "/" + RESULT_OCTREE_FILE_NAME);
-        previousVolume_->setOrigin(previousResultFile);
-
-        XmlSerializer s(previousResultDir);
-        std::ofstream fs(previousResultFile);
-        s.serialize("Octree", *previousOctree_);
-        s.write(fs);
-
-        tgtAssert(previousVolume_, "Previous result octree without volume");
-        previousVolume_->setOrigin(previousResultFile);
-    }
+    // Write out updated octree (metadata) cache file itself.
+    XmlSerializer s(previousResultDir);
+    std::ofstream fs(previousResultFile);
+    s.serialize("Octree", previousResult_->octree());
+    s.write(fs);
 }
 void OctreeWalker::clearPreviousResults() {
     // First: Reset output
     outportProbabilities_.setData(nullptr, false);
 
     // previousOctree_ is now not referenced anymore, so we are free to clean up.
-    if(previousOctree_) {
-        tgtAssert(previousVolume_, "Previous result octree without volume");
-
-        auto res = std::move(*previousOctree_).decompose();
-        // Brickpoolmanager reference is not required here. The important thing is that the previous result does not deconstruct the brickPoolManager
-
-        // Clean up old tree
-        freeNodes(res.second);
-    }
-    previousOctree_ = nullptr;
-    previousVolume_.reset(nullptr);
+    previousResult_ = boost::none;
 
     if(brickPoolManager_ && brickPoolManager_->isInitialized()) {
         brickPoolManager_->deinitialize();
@@ -1310,6 +1276,62 @@ const VoreenBlas* OctreeWalker::getVoreenBlasFromProperties() const {
 #endif
 
     return &voreenBlasCPU_;
+}
+
+VolumeOctree& OctreeWalkerPreviousResult::octree() {
+    return *octree_;
+}
+VolumeBase& OctreeWalkerPreviousResult::volume() {
+    return *volume_;
+}
+OctreeWalkerPreviousResult::OctreeWalkerPreviousResult(OctreeWalkerPreviousResult&& other)
+{
+    *this = std::move(other);
+}
+OctreeWalkerPreviousResult::OctreeWalkerPreviousResult(VolumeOctree& octree, std::unique_ptr<VolumeBase>&& volume)
+    : octree_(&octree)
+    , volume_(std::move(volume))
+{
+}
+
+OctreeWalkerPreviousResult& OctreeWalkerPreviousResult::operator=(OctreeWalkerPreviousResult&& other) {
+    volume_ = std::move(other.volume_);
+    octree_ = other.octree_;
+    other.octree_ = nullptr;
+    return *this;
+}
+
+OctreeWalkerPreviousResult::~OctreeWalkerPreviousResult() {
+    if(volume_) {
+        tgtAssert(octree_, "Octree should be present if volume is");
+        auto res = std::move(*octree_).decompose();
+        // Brickpoolmanager reference is not required here. The important thing
+        // is that the previous result does not deconstruct the
+        // brickPoolManager (which is owned by the propessor).
+
+        // Clean up (entire) old tree
+        // If this is not desired, destroyButRetainNodes has to be called instead.
+        freeNodes(res.second);
+    }
+}
+void OctreeWalkerPreviousResult::destroyButRetainNodes(std::unordered_set<const VolumeOctreeNode*>& nodesToSave) && {
+    auto tmp = std::move(*this);
+    tgtAssert(tmp.octree_, "No octree");
+    tgtAssert(tmp.volume_, "No volume");
+
+    auto res = std::move(*tmp.octree_).decompose();
+
+    // Clean up old tree
+    freeTreeComponents(res.second, nodesToSave, *res.first);
+
+    tmp.volume_.reset(nullptr); // Free (now empty) octree itself, a representation of the volume
+                                // -- sans nodes and brick pool manager: Nodes are already freed
+                                // and the brick pool manager is owned by the Processor.
+    octree_ = nullptr;          // Unset pointer to invalid now memory
+}
+bool OctreeWalkerPreviousResult::isPresent() const {
+    tgtAssert((octree_ == nullptr) == (volume_ == nullptr), "Octree/Volume present mismatch");
+    return volume_ != nullptr;
 }
 
 }   // namespace
