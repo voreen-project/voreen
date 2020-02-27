@@ -117,6 +117,7 @@ void EnsembleDataset::addRun(const Run& run) {
                 fieldMetaData.valueRange_ = minMax;
                 fieldMetaData.magnitudeRange_ = minMaxMagnitude;
                 fieldMetaData.numChannels_ = volume->getNumChannels();
+                fieldMetaData.baseType_ = volume->getBaseType();
             }
             else {
                 fieldMetaData.valueRange_.x = std::min(fieldMetaData.valueRange_.x, minMax.x);
@@ -124,8 +125,11 @@ void EnsembleDataset::addRun(const Run& run) {
                 fieldMetaData.magnitudeRange_.x = std::min(fieldMetaData.magnitudeRange_.x, minMaxMagnitude.x);
                 fieldMetaData.magnitudeRange_.y = std::max(fieldMetaData.magnitudeRange_.y, minMaxMagnitude.y);
                 if(fieldMetaData.numChannels_ != volume->getNumChannels()) {
-                    LERRORC("voreen.EnsembleDataSet", "Number of channels inside channel differs, taking min.");
+                    LERRORC("voreen.EnsembleDataSet", "Number of channels differs per field, taking min.");
                     fieldMetaData.numChannels_ = std::min(fieldMetaData.numChannels_, volume->getNumChannels());
+                }
+                if(fieldMetaData.baseType_ != volume->getBaseType()) {
+                    LERRORC("voreen.EnsembleDataSet", "Base type differs per field, taking first.");
                 }
             }
 
@@ -279,6 +283,11 @@ const tgt::vec2& EnsembleDataset::getMagnitudeRange(const std::string& field) co
 size_t EnsembleDataset::getNumChannels(const std::string& field) const {
     tgtAssert(fieldMetaData_.find(field) != fieldMetaData_.end(), "Field not available");
     return fieldMetaData_.at(field).numChannels_;
+}
+
+const std::string& EnsembleDataset::getBaseType(const std::string& field) const {
+    tgtAssert(fieldMetaData_.find(field) != fieldMetaData_.end(), "Field not available");
+    return fieldMetaData_.at(field).baseType_;
 }
 
 const std::vector<std::string>& EnsembleDataset::getUniqueFieldNames() const {

@@ -75,6 +75,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/fieldparallelplotviewer.cpp
     ${MOD_DIR}/processors/localsimilarityanalysis.cpp
     ${MOD_DIR}/processors/physicalclippinglinker.cpp
+    ${MOD_DIR}/processors/referencevolumecreator.cpp
     ${MOD_DIR}/processors/similaritydatavolume.cpp
     ${MOD_DIR}/processors/similaritymatrixcombine.cpp
     ${MOD_DIR}/processors/similaritymatrixcreator.cpp
@@ -122,6 +123,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/fieldparallelplotviewer.h
     ${MOD_DIR}/processors/localsimilarityanalysis.h
     ${MOD_DIR}/processors/physicalclippinglinker.h
+    ${MOD_DIR}/processors/referencevolumecreator.h
     ${MOD_DIR}/processors/similaritydatavolume.h
     ${MOD_DIR}/processors/similaritymatrixcombine.h
     ${MOD_DIR}/processors/similaritymatrixcreator.h

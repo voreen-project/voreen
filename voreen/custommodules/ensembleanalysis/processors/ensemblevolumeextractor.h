@@ -49,7 +49,7 @@ public:
     virtual Processor* create() const;
 
     virtual std::string getClassName() const  { return "EnsembleVolumeExtractor"; }
-    virtual std::string getCategory() const   { return "Input";                   }
+    virtual std::string getCategory() const   { return "Utility";                 }
     virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;   }
 
 protected:

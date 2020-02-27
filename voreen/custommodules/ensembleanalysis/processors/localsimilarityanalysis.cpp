@@ -34,56 +34,59 @@ const std::string LocalSimilarityAnalysis::loggerCat_("voreen.ensembleanalysis.L
 
 LocalSimilarityAnalysis::LocalSimilarityAnalysis()
     : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
-    , inport_(Port::INPORT, "ensembleinport", "Ensemble Data Input")
+    , ensembleInport_(Port::INPORT, "ensembleinport", "Ensemble Data Input")
+    , referencePort_(Port::INPORT, "referenceport", "Reference Volume Port")
     , outport_(Port::OUTPORT, "volumehandle.volumehandle", "Volume Output")
     , selectedField_("selectedField", "Selected Field")
-    , referenceRun_("referenceRun", "Reference Run")
     , time_("time", "Time", 0.0f, 0.0f, 1000000.0f)
-    , outputDimensions_("outputDimensions", "Output Dimensions", tgt::ivec3(200), tgt::ivec3(10), tgt::ivec3(1000))
 {
     // Ports
-    addPort(inport_);
+    addPort(ensembleInport_);
+    addPort(referencePort_);
     addPort(outport_);
 
     addProperty(selectedField_);
-    addProperty(referenceRun_);
     addProperty(time_);
-    addProperty(outputDimensions_);
 }
 
 LocalSimilarityAnalysis::~LocalSimilarityAnalysis() {
 }
 
 LocalSimilarityAnalysisInput LocalSimilarityAnalysis::prepareComputeInput() {
-    PortDataPointer<EnsembleDataset> ensemble = inport_.getThreadSafeData();
+    PortDataPointer<EnsembleDataset> ensemble = ensembleInport_.getThreadSafeData();
     if (!ensemble) {
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
     }
 
-    if(ensemble->getRuns().size() < 2) {
-        throw InvalidInputException("Need at least 2 runs", InvalidInputException::S_ERROR);
+    if(ensemble->getRuns().empty()) {
+        throw InvalidInputException("Need at least a single run", InvalidInputException::S_ERROR);
     }
 
-    tgt::ivec3 newDims = outputDimensions_.get();
-    std::unique_ptr<VolumeRAM_Float> volumeData(new VolumeRAM_Float(newDims));
-    volumeData->clear();
-
-    size_t referenceRun = -1;
-    for(size_t i = 0; i < ensemble->getRuns().size(); i++) {
-        if(ensemble->getRuns()[i].name_ == referenceRun_.get()) {
-            referenceRun = i;
-            break;
-        }
+    // TODO: extend to arbitrary number of channels!
+    if(ensemble->getNumChannels(selectedField_.get()) != 3) {
+        throw InvalidInputException("Selected channel does not have 3 dimensions", InvalidInputException::S_ERROR);
     }
 
-    tgtAssert(referenceRun != -1, "Selected run not available");
+    const VolumeBase* reference = referencePort_.getData();
+    if(!reference) {
+        throw InvalidInputException("No reference volume", InvalidInputException::S_ERROR);
+    }
+
+    VolumeRAMRepresentationLock referenceVolume(referencePort_.getData());
+    if(ensemble->getNumChannels(selectedField_.get()) != referenceVolume->getNumChannels()) {
+        throw InvalidInputException("Reference Volume channel count is different from selected field", InvalidInputException::S_ERROR);
+    }
+
+    std::unique_ptr<VolumeRAM_Float> outputVolume(new VolumeRAM_Float(referenceVolume->getDimensions()));
+    outputVolume->clear();
 
     return LocalSimilarityAnalysisInput{
             std::move(ensemble),
-            std::move(volumeData),
-            time_.get(),
-            referenceRun,
-            selectedField_.get()
+            referenceVolume,
+            std::move(outputVolume),
+            reference->getPhysicalToVoxelMatrix(),
+            selectedField_.get(),
+            time_.get()
     };
 }
 
@@ -93,15 +96,16 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
     const std::string& field = input.field;
     const size_t numRuns = ensemble->getRuns().size();
     const size_t numChannels = ensemble->getNumChannels(field);
-    std::unique_ptr<VolumeRAM_Float> output = std::move(input.volumeData);
+    std::unique_ptr<VolumeRAM_Float> output = std::move(input.outputVolume);
     const tgt::ivec3 newDims = output->getDimensions();
-
     const tgt::Bounds& roi = ensemble->getRoi();
-    size_t referenceTimeStep = ensemble->pickTimeStep(input.referenceRun, input.time);
 
-    const VolumeBase* refVol = ensemble->getRuns()[input.referenceRun].timeSteps_[referenceTimeStep].fieldNames_.at(input.field);
-    VolumeRAMRepresentationLock referenceVolume(refVol);
-    tgt::mat4 refPhysicalToVoxel = refVol->getPhysicalToVoxelMatrix();
+    // Init statistics object for each voxel of the output volume.
+    //size_t numVoxels = tgt::hmul(newDims);
+    //std::vector<Statistics> statistics(numVoxels, Statistics(false));
+
+    const VolumeRAMRepresentationLock& referenceVolume = input.referenceVolume;
+    const tgt::mat4& refPhysicalToVoxel = input.physicalToVoxel;
     //RealWorldMapping refRwm = refVol->getRealWorldMapping(); // TODO: apply rwm?
 
     tgt::ivec3 pos = tgt::ivec3::zero;
@@ -119,23 +123,19 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
                     referenceVoxel[channel] = referenceVolume->getVoxelNormalized(sampleInRefVoxelSpace, channel);
                 }
 
-                // Now we calculate the difference
                 Statistics samples(false);
                 for(size_t r = 0; r<numRuns; r++) {
-                    if(r != input.referenceRun) {
+                    size_t t = ensemble->pickTimeStep(r, input.time);
+                    const VolumeBase* vol = ensemble->getRuns()[r].timeSteps_[t].fieldNames_.at(field);
+                    VolumeRAMRepresentationLock lock(vol);
+                    tgt::vec3 sampleInVoxelSpace = vol->getPhysicalToVoxelMatrix() * sample;
 
-                        size_t t = ensemble->pickTimeStep(r, input.time);
-                        const VolumeBase* vol = ensemble->getRuns()[r].timeSteps_[t].fieldNames_.at(field);
-                        VolumeRAMRepresentationLock lock(vol);
-                        tgt::vec3 sampleInVoxelSpace = vol->getPhysicalToVoxelMatrix() * sample;
-
-                        tgt::vec3 voxelDiff = tgt::vec3::zero;
-                        for(size_t channel=0; channel<numChannels; channel++) {
-                            voxelDiff[channel] = lock->getVoxelNormalized(sampleInVoxelSpace, channel) - referenceVoxel[channel];
-                        }
-
-                        samples.addSample(tgt::length(voxelDiff));
+                    tgt::vec3 voxelDiff = tgt::vec3::zero;
+                    for(size_t channel=0; channel<numChannels; channel++) {
+                        voxelDiff[channel] = lock->getVoxelNormalized(sampleInVoxelSpace, channel) - referenceVoxel[channel];
                     }
+
+                    samples.addSample(tgt::length(voxelDiff));
                 }
 
                 output->voxel(pos) = samples.getStdDev();
@@ -164,15 +164,9 @@ void LocalSimilarityAnalysis::processComputeOutput(LocalSimilarityAnalysisOutput
 
 
 void LocalSimilarityAnalysis::adjustPropertiesToInput() {
-    if(!inport_.hasData()) return;
+    if(!ensembleInport_.hasData()) return;
 
-    const EnsembleDataset* ensemble = inport_.getData();
-
-    referenceRun_.reset();
-    referenceRun_.setOptions(std::deque<Option<std::string>>());
-    for(const EnsembleDataset::Run& run : ensemble->getRuns()) {
-        referenceRun_.addOption(run.name_, run.name_);
-    }
+    const EnsembleDataset* ensemble = ensembleInport_.getData();
 
     selectedField_.reset();
     selectedField_.setOptions(std::deque<Option<std::string>>());
@@ -187,16 +181,6 @@ void LocalSimilarityAnalysis::adjustPropertiesToInput() {
 
 Processor* LocalSimilarityAnalysis::create() const {
     return new LocalSimilarityAnalysis();
-}
-
-float LocalSimilarityAnalysis::calculateVariance(const std::vector<float>& voxelData) const {
-    Statistics statistics(false);
-
-    for(float voxelRunValue : voxelData) {
-        statistics.addSample(voxelRunValue);
-    }
-
-    return statistics.getVariance();
 }
 
 } // namespace voreen

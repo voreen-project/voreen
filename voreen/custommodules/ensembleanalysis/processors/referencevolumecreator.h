@@ -23,46 +23,44 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_LOCALSIMILARITYANALYSIS_H
-#define VRN_LOCALSIMILARITYANALYSIS_H
+#ifndef VRN_REFERENCEVOLUMECREATOR_H
+#define VRN_REFERENCEVOLUMECREATOR_H
 
 #include "voreen/core/processors/asynccomputeprocessor.h"
 
 #include "voreen/core/ports/volumeport.h"
-
-#include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/vectorproperty.h"
 
 #include "../ports/ensembledatasetport.h"
 
 namespace voreen {
-
-
-struct LocalSimilarityAnalysisInput {
+    
+struct ReferenceVolumeCreatorInput {
     PortDataPointer<EnsembleDataset> ensemble;
-    VolumeRAMRepresentationLock referenceVolume;
-    std::unique_ptr<VolumeRAM_Float> outputVolume;
-    tgt::mat4 physicalToVoxel;
+    std::unique_ptr<VolumeRAM> outputVolume;
     std::string field;
     float time;
+    std::string referenceMethod;
+    size_t referenceRun;
 };
 
-struct LocalSimilarityAnalysisOutput {
+struct ReferenceVolumeCreatorOutput {
     std::unique_ptr<VolumeBase> volume;
 };
 
 /**
  *
  */
-class VRN_CORE_API LocalSimilarityAnalysis : public AsyncComputeProcessor<LocalSimilarityAnalysisInput, LocalSimilarityAnalysisOutput>  {
+class VRN_CORE_API ReferenceVolumeCreator : public AsyncComputeProcessor<ReferenceVolumeCreatorInput, ReferenceVolumeCreatorOutput>  {
 public:
-    LocalSimilarityAnalysis();
-    virtual ~LocalSimilarityAnalysis();
+    ReferenceVolumeCreator();
+    virtual ~ReferenceVolumeCreator();
     virtual Processor* create() const;
 
-    virtual std::string getClassName() const      { return "LocalSimilarityAnalysis"; }
-    virtual std::string getCategory() const       { return "Plotting";                }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
+    virtual std::string getClassName() const      { return "ReferenceVolumeCreator"; }
+    virtual std::string getCategory() const       { return "Ensemble Processing";    }
+    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;  }
 
 protected:
 
@@ -75,15 +73,20 @@ protected:
 protected:
 
     virtual void setDescriptions() {
-        setDescription("");
+        setDescription("Creates a reference volume from the input ensemble for a selected time step and field.");
+        referenceMethod_.setDescription("Use the reference method to determine how the reference volume is created.");
     }
 
-    EnsembleDatasetPort ensembleInport_;
-    VolumePort referencePort_;
+    EnsembleDatasetPort inport_;
     VolumePort outport_;
 
     StringOptionProperty selectedField_;
     FloatProperty time_;
+
+    StringOptionProperty referenceMethod_;
+    StringOptionProperty referenceRun_;
+
+    IntVec3Property outputDimensions_;
 
     static const std::string loggerCat_;
 };
