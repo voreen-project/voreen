@@ -714,9 +714,8 @@ void SimilarityPlot::onEvent(tgt::Event* e) {
     if (event) {
         mouseEvent(event);
     }
-    else {
-        RenderProcessor::onEvent(e);
-    }
+
+    RenderProcessor::onEvent(e);
     /*/
     // TODO: does not work as expected..
     if (event) {
