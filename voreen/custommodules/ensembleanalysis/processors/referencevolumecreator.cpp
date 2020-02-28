@@ -55,7 +55,7 @@ ReferenceVolumeCreator::ReferenceVolumeCreator()
     referenceMethod_.addOption("mean", "Global Mean");
     referenceMethod_.addOption("median", "Global Median");
     ON_CHANGE_LAMBDA(referenceMethod_, [this] {
-        referenceRun_.setReadOnlyFlag(referenceMethod_.get() == "run");
+        referenceRun_.setReadOnlyFlag(referenceMethod_.get() != "run");
     });
     addProperty(referenceRun_);
     addProperty(outputDimensions_);

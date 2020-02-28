@@ -88,8 +88,9 @@ SimilarityPlot::SimilarityPlot()
     , principleComponent_("principalComponent", "Principle Component", 1, 1, MAX_NUM_DIMENSIONS)
     , scaleToMagnitude_("scaleToMagnitude", "Scale to Magnitude of Principle Component")
     , sphereRadius_("sphereRadius", "Sphere Radius", 0.01, 0.0f, 0.1f)
-    , toggleAxes_("toggleAxes", "Render Axes", true, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , fontSize_("fontSize", "Font Size", 10, 1, 30)
+    , showTooltip_("showTooltip", "Show Tooltip", true)
+    , toggleAxes_("toggleAxes", "Render Axes", true, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , colorCoding_("colorCoding", "Color Coding")
     , renderedField_("renderedChannel", "Field")
     , renderedRuns_("renderedRuns", "Rendered Runs")
@@ -165,6 +166,8 @@ SimilarityPlot::SimilarityPlot()
         sphereRadius_.setGroupID("rendering");
     addProperty(fontSize_);
         fontSize_.setGroupID("rendering");
+    addProperty(showTooltip_);
+        showTooltip_.setGroupID("rendering");
     addProperty(toggleAxes_);
         toggleAxes_.setGroupID("rendering");
     addProperty(colorCoding_);
@@ -368,6 +371,14 @@ void SimilarityPlot::renderAxes() {
     IMode.color(1.0f, 1.0f, 1.0f, 1.0f);
     outport_.deactivateTarget();
     LGL_ERROR;
+}
+
+void SimilarityPlot::drawTooltip(int runIdx, int timeStepIdx, const tgt::vec2& pos) const {
+    glDisable(GL_DEPTH_TEST);
+
+    // TODO:
+
+    glEnable(GL_DEPTH_TEST);
 }
 
 bool SimilarityPlot::isReady() const {
@@ -577,7 +588,7 @@ tgt::vec3 SimilarityPlot::getColor(size_t runIdx, size_t timeStepIdx, bool picki
     }
 }
 
-void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
+void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
 
     const EnsembleDataset* dataset = ensembleInport_.getData();
 
@@ -597,12 +608,16 @@ void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
         subSelection_ = invertedSelection;
     }
     // Otherwise, we look for a hit.
-    else if(e->button() & tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
+    else {
 
-        RenderTarget* target = pickingBuffer_.getRenderTarget();
+        int x = e->x();
+        int y = e->y();
 
-        int x = tgt::clamp(e->x(), MARGINS.x, e->viewport().x - MARGINS.x);
-        int y = tgt::clamp(e->y(), MARGINS.y, e->viewport().y - MARGINS.y);
+        // In 1D, and 2D case, we use margins to show axis and labels.
+        if (numDimensions_.get() < 3) {
+            x = tgt::clamp(x, MARGINS.x, e->viewport().x - MARGINS.x);
+            y = tgt::clamp(y, MARGINS.y, e->viewport().y - MARGINS.y);
+        }
 
         // Not inside margins.
         if (x != e->x() || y != e->y()) {
@@ -611,6 +626,7 @@ void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
         }
 
         // Handle margins.
+        RenderTarget* target = pickingBuffer_.getRenderTarget();
         tgt::ivec2 pixel;
         if (numDimensions_.get() < 3)
             pixel = tgt::ivec2(
@@ -635,43 +651,54 @@ void SimilarityPlot::mouseClickEvent(tgt::MouseEvent* e) {
         size_t numTimeSteps = runs[r].timeSteps_.size();
         int t = tgt::clamp<int>(std::round(texel.g * numTimeSteps), 0, numTimeSteps - 1);
 
-        // Right-click selection changes rendering order.
-        if (e->modifiers() == tgt::MouseEvent::SHIFT) {
-            // Push selected run to the front of the rendering order.
-            renderingOrder_.erase(std::find(renderingOrder_.begin(), renderingOrder_.end(), r));
-            renderingOrder_.push_front(r);
+        // Draw tool tip, if required.
+        if (showTooltip_.get()) {
+
         }
-        else if(e->modifiers() == tgt::MouseEvent::CTRL) {
-            // This selection mode modifies the sub selection for the MDS plot.
-            auto iter = std::find(subSelection_.begin(), subSelection_.end(), r);
-            if (iter != subSelection_.end()) {
-                subSelection_.erase(iter);
-            } else {
-                subSelection_.insert(r);
+
+        // Handle selection.
+        if (e->button() & tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
+
+            // Right-click selection changes rendering order.
+            if (e->modifiers() == tgt::MouseEvent::SHIFT) {
+                // Push selected run to the front of the rendering order.
+                renderingOrder_.erase(std::find(renderingOrder_.begin(), renderingOrder_.end(), r));
+                renderingOrder_.push_front(r);
             }
-        }
-        else {
+            else if (e->modifiers() == tgt::MouseEvent::CTRL) {
+                // This selection mode modifies the sub selection for the MDS plot.
+                auto iter = std::find(subSelection_.begin(), subSelection_.end(), r);
+                if (iter != subSelection_.end()) {
+                    subSelection_.erase(iter);
+                }
+                else {
+                    subSelection_.insert(r);
+                }
+            }
+            else {
 
-            // Define some modifier to enable reference dataset selection.
-            // This is currently done hardcoded but should at least show up in documentation.
-            const int referenceModifier = tgt::MouseEvent::Modifier::SHIFT | tgt::MouseEvent::Modifier::CTRL;
+                // Define some modifier to enable reference dataset selection.
+                // This is currently done hardcoded but should at least show up in documentation.
+                const int referenceModifier = tgt::MouseEvent::Modifier::SHIFT | tgt::MouseEvent::Modifier::CTRL;
 
-            // Reset subselection.
-            //subSelection_.clear();
+                // Reset subselection.
+                //subSelection_.clear();
 
-            std::vector<int> runIndices;
-            runIndices.push_back(r);
-            subSelection_.insert(r);
+                std::vector<int> runIndices;
+                runIndices.push_back(r);
+                subSelection_.insert(r);
 
-            const EnsembleDataset::TimeStep& timeStep = runs[r].timeSteps_[t];
-            float lower = std::floor(timeStep.time_ * 100.0f) / 100.0f;
-            float upper = std::ceil((timeStep.time_ + timeStep.duration_) * 100.0f) / 100.0f;
-            if(e->modifiers() == referenceModifier) {
-                referenceRun_.setSelectedRowIndices(runIndices);
-                referenceTimeStep_.set(tgt::vec2(lower, upper));
-            } else if(e->modifiers() == tgt::MouseEvent::MODIFIER_NONE) {
-                selectedRun_.setSelectedRowIndices(runIndices);
-                selectedTimeStep_.set(tgt::vec2(lower, upper));
+                const EnsembleDataset::TimeStep& timeStep = runs[r].timeSteps_[t];
+                float lower = std::floor(timeStep.time_ * 100.0f) / 100.0f;
+                float upper = std::ceil((timeStep.time_ + timeStep.duration_) * 100.0f) / 100.0f;
+                if (e->modifiers() == referenceModifier) {
+                    referenceRun_.setSelectedRowIndices(runIndices);
+                    referenceTimeStep_.set(tgt::vec2(lower, upper));
+                }
+                else if (e->modifiers() == tgt::MouseEvent::MODIFIER_NONE) {
+                    selectedRun_.setSelectedRowIndices(runIndices);
+                    selectedTimeStep_.set(tgt::vec2(lower, upper));
+                }
             }
         }
     }
@@ -684,10 +711,12 @@ void SimilarityPlot::onEvent(tgt::Event* e) {
     tgt::MouseEvent* event = dynamic_cast<tgt::MouseEvent*>(e);
 
     //*
-    if(event && event->getEventType() == tgt::MouseEvent::PRESSED)
-        mouseClickEvent(event);
-    else
+    if (event) {
+        mouseEvent(event);
+    }
+    else {
         RenderProcessor::onEvent(e);
+    }
     /*/
     // TODO: does not work as expected..
     if (event) {

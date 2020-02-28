@@ -62,11 +62,6 @@ LocalSimilarityAnalysisInput LocalSimilarityAnalysis::prepareComputeInput() {
         throw InvalidInputException("Need at least a single run", InvalidInputException::S_ERROR);
     }
 
-    // TODO: extend to arbitrary number of channels!
-    if(ensemble->getNumChannels(selectedField_.get()) != 3) {
-        throw InvalidInputException("Selected channel does not have 3 dimensions", InvalidInputException::S_ERROR);
-    }
-
     const VolumeBase* reference = referencePort_.getData();
     if(!reference) {
         throw InvalidInputException("No reference volume", InvalidInputException::S_ERROR);
@@ -100,50 +95,50 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
     const tgt::ivec3 newDims = output->getDimensions();
     const tgt::Bounds& roi = ensemble->getRoi();
 
-    // Init statistics object for each voxel of the output volume.
-    //size_t numVoxels = tgt::hmul(newDims);
-    //std::vector<Statistics> statistics(numVoxels, Statistics(false));
-
     const VolumeRAMRepresentationLock& referenceVolume = input.referenceVolume;
     const tgt::mat4& refPhysicalToVoxel = input.physicalToVoxel;
-    //RealWorldMapping refRwm = refVol->getRealWorldMapping(); // TODO: apply rwm?
 
-    tgt::ivec3 pos = tgt::ivec3::zero;
-    for (pos.z = 0; pos.z < newDims.z; ++pos.z) {
-        for (pos.y = 0; pos.y < newDims.y; ++pos.y) {
-            for (pos.x = 0; pos.x < newDims.x; ++pos.x) {
+    for (size_t r = 0; r < numRuns; r++) {
+        size_t t = ensemble->pickTimeStep(r, input.time);
+        const VolumeBase* vol = ensemble->getRuns()[r].timeSteps_[t].fieldNames_.at(field);
+        VolumeRAMRepresentationLock lock(vol);
+        tgt::mat4 physicalToVoxel = vol->getPhysicalToVoxelMatrix();
 
-                // Map sample position to physical space.
-                tgt::vec3 sample = mapRange(tgt::vec3(pos), tgt::vec3::zero, tgt::vec3(newDims), roi.getLLF(), roi.getURB());
+        tgt::ivec3 pos = tgt::ivec3::zero;
+        for (pos.z = 0; pos.z < newDims.z; ++pos.z) {
+            for (pos.y = 0; pos.y < newDims.y; ++pos.y) {
+                for (pos.x = 0; pos.x < newDims.x; ++pos.x) {
 
-                // We first sample our reference volume.
-                tgt::vec3 sampleInRefVoxelSpace = refPhysicalToVoxel * sample;
-                tgt::vec3 referenceVoxel = tgt::vec3::zero;
-                for(size_t channel=0; channel<numChannels; channel++) {
-                    referenceVoxel[channel] = referenceVolume->getVoxelNormalized(sampleInRefVoxelSpace, channel);
-                }
+                    // Map sample position to physical space.
+                    tgt::vec3 sample = mapRange(tgt::vec3(pos), tgt::vec3::zero, tgt::vec3(newDims), roi.getLLF(), roi.getURB());
 
-                Statistics samples(false);
-                for(size_t r = 0; r<numRuns; r++) {
-                    size_t t = ensemble->pickTimeStep(r, input.time);
-                    const VolumeBase* vol = ensemble->getRuns()[r].timeSteps_[t].fieldNames_.at(field);
-                    VolumeRAMRepresentationLock lock(vol);
-                    tgt::vec3 sampleInVoxelSpace = vol->getPhysicalToVoxelMatrix() * sample;
+                    // Map to voxel space.
+                    tgt::ivec3 sampleInVoxelSpace = physicalToVoxel * sample;
 
-                    tgt::vec3 voxelDiff = tgt::vec3::zero;
-                    for(size_t channel=0; channel<numChannels; channel++) {
-                        voxelDiff[channel] = lock->getVoxelNormalized(sampleInVoxelSpace, channel) - referenceVoxel[channel];
+                    // Ignore, if out of bounds.
+                    if (tgt::clamp(sampleInVoxelSpace, tgt::ivec3::zero, newDims - tgt::ivec3::one) != sampleInVoxelSpace) {
+                        continue;
                     }
 
-                    samples.addSample(tgt::length(voxelDiff));
-                }
+                    float length = 0.0f;
+                    for(size_t channel=0; channel<numChannels; channel++) {
+                        float value = lock->getVoxelNormalized(sampleInVoxelSpace, channel) - referenceVolume->getVoxelNormalized(pos, channel);
+                        length += value * value;
+                    }
 
-                output->voxel(pos) = samples.getStdDev();
+                    output->voxel(pos) += length / (numRuns - 1.0f);
+                }
             }
         }
 
         // Update progress.
-        progress.setProgress(1.0f * pos.z / newDims.z);
+        progress.setProgress(1.0f * r / numRuns);
+    }
+
+    // Convert variance to standard deviation.
+    for (size_t i = 0; i < output->getNumVoxels(); i++) {
+        float variance = output->voxel(i);
+        output->voxel(i) = std::sqrt(variance);
     }
 
     tgt::vec3 spacing = roi.diagonal() / tgt::vec3(newDims);

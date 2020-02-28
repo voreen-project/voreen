@@ -87,6 +87,8 @@ protected:
     virtual bool isReady() const;
     virtual void onEvent(tgt::Event* e);
 
+private:
+
     enum ColorCoding {
         COLOR_RUN,
         COLOR_TIMESTEP,
@@ -105,6 +107,7 @@ protected:
     BoolProperty scaleToMagnitude_;
     FloatProperty sphereRadius_;
     IntProperty fontSize_;
+    BoolProperty showTooltip_;
     BoolProperty toggleAxes_; //< used for merging plots
     OptionProperty<ColorCoding> colorCoding_;
     OptionProperty<std::string> renderedField_;
@@ -163,11 +166,12 @@ protected:
 private:
 
     void adjustToEnsemble();
-    void mouseClickEvent(tgt::MouseEvent* e);
+    void mouseEvent(tgt::MouseEvent* e);
 
     void renderingPass(bool picking);
     void renderAxes();
     void drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, const tgt::vec3& position, const tgt::vec3& color) const;
+    void drawTooltip(int runIdx, int timeStepIdx, const tgt::vec2& pos) const;
     tgt::vec3 getColor(size_t runIdx, size_t timeStepIdx, bool picking) const;
 
     MDSData computeFromDM(const SimilarityMatrix& matrix, ProgressReporter& progressReporter, float epsilon = -1.0f) const;
