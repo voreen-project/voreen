@@ -66,12 +66,14 @@ public:
 
     OctreeWalkerPreviousResult(OctreeWalkerPreviousResult&& other);
     OctreeWalkerPreviousResult& operator=(OctreeWalkerPreviousResult&& other);
-    OctreeWalkerPreviousResult(VolumeOctree& octree, std::unique_ptr<VolumeBase>&& volume);
+    OctreeWalkerPreviousResult(VolumeOctree& octree, std::unique_ptr<VolumeBase>&& volume, PointSegmentListGeometryVec3 foregroundSeeds, PointSegmentListGeometryVec3 backgroundSeeds);
     ~OctreeWalkerPreviousResult();
 
     void destroyButRetainNodes(std::unordered_set<const VolumeOctreeNode*>& nodesToSave) &&;
     bool isPresent() const;
 
+    PointSegmentListGeometryVec3 foregroundSeeds_;
+    PointSegmentListGeometryVec3 backgroundSeeds_;
 private:
     VolumeOctree* octree_;                  // NEVER owns its own brickpool manager, ALWAYS a representation of previousVolume
     std::unique_ptr<VolumeBase> volume_;    // ALWAYS stores reference to representation in previousOctree_, never null
@@ -79,6 +81,8 @@ private:
 
 struct OctreeWalkerInput {
     VolumeOctree* previousResult_;
+    PointSegmentListGeometryVec3* previousForegroundSeeds_;
+    PointSegmentListGeometryVec3* previousBackgroundSeeds_;
     std::unique_ptr<OctreeBrickPoolManagerMmap>& brickPoolManager_;
     const VolumeBase& volume_;
     const VolumeOctree& octree_;

@@ -287,7 +287,9 @@ void OctreeWalker::deserialize(Deserializer& s) {
             brickPoolManager_.reset(obpmm);
             previousResult_ = OctreeWalkerPreviousResult(
                 *previousOctree,
-                std::unique_ptr<VolumeBase>(new Volume(previousOctree.release(), spacing, offset))
+                std::unique_ptr<VolumeBase>(new Volume(previousOctree.release(), spacing, offset)),
+                PointSegmentListGeometryVec3(),
+                PointSegmentListGeometryVec3()
             );
         }
     }
@@ -339,14 +341,16 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
     size_t brickSizeInBytes = brickSize * sizeof(uint16_t);
 
     // Check if the previous result is compatible with the current input
-    if(previousResult_ && (
-              previousResult_->octree().getDimensions() != volumeDim
-           || previousResult_->octree().getBrickDim() != brickDim
-           || previousResult_->octree().getNumLevels() != octree.getNumLevels()
-           || brickPoolManager_->getBrickMemorySizeInByte() != brickSizeInBytes)) {
+    if(previousResult_) {
+        auto& octree = previousResult_->octree();
+        if(   octree.getDimensions() != volumeDim
+           || octree.getBrickDim() != brickDim
+           || octree.getNumLevels() != octree.getNumLevels()
+           || brickPoolManager_->getBrickMemorySizeInByte() != brickSizeInBytes) {
 
-        // If not, clear previous results
-        clearPreviousResults();
+            // If not, clear previous results
+            clearPreviousResults();
+       }
     }
 
     if(previousResult_) {
@@ -363,6 +367,8 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
 
     return ComputeInput {
         previousResult_ ? &previousResult_->octree() : nullptr,
+        previousResult_ ? &previousResult_->foregroundSeeds_ : nullptr,
+        previousResult_ ? &previousResult_->backgroundSeeds_ : nullptr,
         brickPoolManager_,
         *vol,
         *octreePtr,
@@ -545,52 +551,127 @@ struct BrickNeighborhood {
 };
 
 class RandomWalkerSeedsBrick : public RandomWalkerSeeds {
-    static const float CONFLICT;  // Conflicting labels in this voxel
-    static const float UNLABELED; // No label in this voxel
+    static const float PREVIOUS_CONFLICT;  // Conflicting labels in this voxel, already present in previous iteration
+    static const float CURRENT_CONFLICT;   // Conflicting labels in this voxel with new labels taking part
+    static const float UNLABELED;          // No label in this voxel
     static const float FOREGROUND;
     static const float BACKGROUND;
     static const float FOREGROUND_NEW;
     static const float BACKGROUND_NEW;
 public:
-    RandomWalkerSeedsBrick(tgt::svec3 bufferDimensions, tgt::mat4 voxelToSeeds, const PointSegmentListGeometryVec3& foregroundSeedList, const PointSegmentListGeometryVec3& backgroundSeedList)
+    RandomWalkerSeedsBrick(tgt::svec3 bufferDimensions, tgt::mat4 voxelToSeeds, const PointSegmentListGeometryVec3& foregroundSeedList, const PointSegmentListGeometryVec3& backgroundSeedList, const PointSegmentListGeometryVec3* fgslOld, const PointSegmentListGeometryVec3* bgslOld)
         : seedBuffer_(bufferDimensions)
-        , numConflicts_(0)
+        , conflicts_(false)
     {
         numSeeds_ = 0;
         seedBuffer_.fill(UNLABELED);
 
-        // foreground geometry seeds
-        auto collectLabelsFromGeometry = [&] (const PointSegmentListGeometryVec3& seedList, float label) {
+        tgt::IntBounds brickBounds(tgt::ivec3::zero, tgt::ivec3(bufferDimensions)-tgt::ivec3::one);
+
+        auto collectLabelsFromGeometry = [&] (const PointSegmentListGeometryVec3& seedList, const PointSegmentListGeometryVec3* oldList, float label) {
             for (int m=0; m<seedList.getNumSegments(); m++) {
-                const std::vector<tgt::vec3>& foregroundPoints = seedList.getData()[m];
-                if (foregroundPoints.empty())
+                const std::vector<tgt::vec3>& points = seedList.getData()[m];
+                const std::vector<tgt::vec3>* old = nullptr;
+                if (oldList && m < oldList->getData().size()) {
+                    old = &oldList->getData()[m];
+                }
+                if (points.empty())
                     continue;
-                for (size_t i=0; i<foregroundPoints.size()-1; i++) {
-                    tgt::vec3 left = voxelToSeeds*foregroundPoints[i];
-                    tgt::vec3 right = voxelToSeeds*foregroundPoints[i+1];
+                for (size_t i=0; i<points.size()-1; i++) {
+                    bool new_seeds = true;
+                    if(old && old->size() > i+1) {
+                        new_seeds = points[i] != (*old)[i] || points[i+1] != (*old)[i+1];
+                    }
+
+                    tgt::vec3 left = voxelToSeeds*points[i];
+                    tgt::vec3 right = voxelToSeeds*points[i+1];
                     tgt::vec3 dir = tgt::normalize(right - left);
+
                     for (float t=0.f; t<tgt::length(right-left); t += 1.f) {
                         tgt::ivec3 point = tgt::iround(left + t*dir);
-                        if(tgt::hor(tgt::lessThan(point, tgt::ivec3::zero)) || tgt::hor(tgt::greaterThanEqual(point, tgt::ivec3(bufferDimensions)))) {
+                        if(!brickBounds.containsPoint(point)) {
                             continue;
                         }
                         float& seedVal = seedBuffer_.voxel(point);
                         minSeed_ = std::min(label, minSeed_);
                         maxSeed_ = std::max(label, maxSeed_);
+
+                        float lbl = label;
+                        if(new_seeds) {
+                            if(lbl == FOREGROUND) {
+                                lbl = FOREGROUND_NEW;
+                            } else {
+                                lbl = BACKGROUND_NEW;
+                            }
+                        }
                         if (seedVal == UNLABELED) {
-                            seedVal = label;
+                            seedVal = lbl;
                             ++numSeeds_;
-                        } else if(seedVal != label && seedVal != CONFLICT) {
-                            seedVal = CONFLICT;
-                            --numSeeds_;
-                            ++numConflicts_;
+                        } else if(seedVal == CURRENT_CONFLICT) {
+                            // ignore
+                        } else if(seedVal == PREVIOUS_CONFLICT) {
+                            if(new_seeds) {
+                                seedVal = CURRENT_CONFLICT;
+                                conflicts_ = true;
+                            } else {
+                                // Ignore, still a previous conflict
+                            }
+                        } else { // Seedval is either foreground or background
+                            float seedClass = tgt::clamp(seedVal, 0.0f, 1.0f);
+                            bool alreadyNew = seedClass != seedVal;
+                            if(label == seedClass) {
+                                // Same label as before, but possibly new
+                                if(new_seeds) {
+                                    seedVal = lbl;
+                                } else {
+                                    // Ignore, seed value is either equal or NEW_* already
+                                }
+                            } else {
+                                // Conflict, either previous or caused by new labels
+                                if(new_seeds || alreadyNew) {
+                                    seedVal = CURRENT_CONFLICT;
+                                    conflicts_ = true;
+                                } else {
+                                    seedVal = PREVIOUS_CONFLICT;
+                                }
+                                // Either way the current voxel will not act as
+                                // a seed for the current brick:
+                                --numSeeds_;
+                            }
+                        }
+                    }
+                }
+                if(old) {
+                    for(size_t i = points.size(); i < old->size(); ++i) {
+                        // If the previous label array is longer than this one
+                        // and one of these old points is in this brick, we
+                        // definitely want to recompute this brick as its label
+                        // situation has changed.
+                        auto& p = (*old)[i];
+                        if(brickBounds.containsPoint(voxelToSeeds*p)) {
+                            conflicts_ = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            // Similarly, if there were previous label point lists in this
+            // brick that are not present anymore, we definitely have to
+            // recompute this brick:
+            if(oldList) {
+                size_t oldListSize = oldList->getData().size();
+                for(size_t i=seedList.getNumSegments(); i<oldListSize; ++i) {
+                    for (auto& p : oldList->getData()[i]) {
+                        if(brickBounds.containsPoint(voxelToSeeds*p)) {
+                            conflicts_ = true;
+                            break;
                         }
                     }
                 }
             }
         };
-        collectLabelsFromGeometry(foregroundSeedList, FOREGROUND);
-        collectLabelsFromGeometry(backgroundSeedList, BACKGROUND);
+        collectLabelsFromGeometry(foregroundSeedList, fgslOld, FOREGROUND);
+        collectLabelsFromGeometry(backgroundSeedList, bgslOld, BACKGROUND);
     }
     RandomWalkerSeedsBrick(RandomWalkerSeedsBrick&& other) = default;
 
@@ -615,7 +696,12 @@ public:
 
             VRN_FOR_EACH_VOXEL(seed, begin, end) {
                 float& seedVal = seedBuffer_.voxel(seed);
-                if (seedVal == UNLABELED) {
+                if (seedVal == UNLABELED || seedVal == CURRENT_CONFLICT || seedVal == PREVIOUS_CONFLICT) {
+                    // Only exising, user-defined labels are not overwritten by 
+                    // a border seed.
+                    // Unlabeled values are fine either way, conflicting voxels 
+                    // have been counted as conflicts before, but can now 
+                    // provide a sensible value from the parent node/brick.
                     float val = neighborhood.data_.voxel(seed);
                     seedVal = val;
                     ++numSeeds_;
@@ -637,11 +723,11 @@ public:
 
     virtual bool isSeedPoint(size_t index) const {
         float val = seedBuffer_.voxel(index);
-        return val != UNLABELED && val != CONFLICT;
+        return val != UNLABELED && val != CURRENT_CONFLICT && val != PREVIOUS_CONFLICT;
     }
     virtual bool isSeedPoint(const tgt::ivec3& voxel) const {
         float val = seedBuffer_.voxel(voxel);
-        return val != UNLABELED && val != CONFLICT;
+        return val != UNLABELED && val != CURRENT_CONFLICT && val != PREVIOUS_CONFLICT;
     }
     virtual float getSeedValue(size_t index) const {
         tgtAssert(isSeedPoint(index), "Getting seed value from non-seed");
@@ -672,8 +758,8 @@ public:
     tgt::svec3 bufferDimensions() const {
         return seedBuffer_.getDimensions();
     }
-    uint64_t numConflicts() const {
-        return numConflicts_;
+    bool hasConflicts() const {
+        return conflicts_;
     }
     float minSeed() {
         return minSeed_;
@@ -684,17 +770,18 @@ public:
 
 private:
     VolumeAtomic<float> seedBuffer_;
-    uint64_t numConflicts_;
+    bool conflicts_;
     float minSeed_;
     float maxSeed_;
 };
 
-const float RandomWalkerSeedsBrick::CONFLICT       = -3.0f;
-const float RandomWalkerSeedsBrick::UNLABELED      = -2.0f;
-const float RandomWalkerSeedsBrick::FOREGROUND     =  1.0f;
-const float RandomWalkerSeedsBrick::BACKGROUND     =  0.0f;
-const float RandomWalkerSeedsBrick::FOREGROUND_NEW =  2.0f;
-const float RandomWalkerSeedsBrick::BACKGROUND_NEW = -1.0f;
+const float RandomWalkerSeedsBrick::FOREGROUND        =  1.0f;
+const float RandomWalkerSeedsBrick::BACKGROUND        =  0.0f;
+const float RandomWalkerSeedsBrick::FOREGROUND_NEW    =  2.0f;
+const float RandomWalkerSeedsBrick::BACKGROUND_NEW    = -1.0f;
+const float RandomWalkerSeedsBrick::PREVIOUS_CONFLICT = -4.0f;
+const float RandomWalkerSeedsBrick::CURRENT_CONFLICT  = -3.0f;
+const float RandomWalkerSeedsBrick::UNLABELED         = -2.0f;
 
 struct RandomWalkerVoxelAccessorBrick final : public RandomWalkerVoxelAccessor {
     RandomWalkerVoxelAccessorBrick(const VolumeAtomic<float>& brick)
@@ -795,7 +882,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
             tgt::svec3 seedBufferDimensions = seedsNeighborhood->data_.getDimensions();
             tgt::mat4 voxelToSeedTransform = seedsNeighborhood->voxelToNeighborhood();
 
-            RandomWalkerSeedsBrick seeds(seedBufferDimensions, voxelToSeedTransform, foregroundSeeds, backgroundSeeds);
+            RandomWalkerSeedsBrick seeds(seedBufferDimensions, voxelToSeedTransform, foregroundSeeds, backgroundSeeds, input.previousForegroundSeeds_, input.previousBackgroundSeeds_);
             seeds.addNeighborhoodBorderSeeds(*seedsNeighborhood);
 
             if(!parentHadSeedsConflicts && canSkipChildren(std::min(seedsNeighborhood->min_, seeds.minSeed()), std::max(seeds.maxSeed(), seedsNeighborhood->max_))) {
@@ -811,11 +898,11 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
             tgt::mat4 voxelToSeedTransform = outputNodeGeometry.voxelToBrick();
             // Note: For the reason to use `ceil` here see BrickNeighborhood::fromNode above.
             tgt::svec3 seedBufferDimensions = tgt::ceil(voxelToSeedTransform.getRotationalPart().transform(outputNodeGeometry.voxelDimensions()));
-            RandomWalkerSeedsBrick seeds(seedBufferDimensions, voxelToSeedTransform, foregroundSeeds, backgroundSeeds);
+            RandomWalkerSeedsBrick seeds(seedBufferDimensions, voxelToSeedTransform, foregroundSeeds, backgroundSeeds, input.previousForegroundSeeds_, input.previousBackgroundSeeds_);
             return seeds;
         }
     }();
-    hasSeedConflicts = seeds.numConflicts() != 0;
+    hasSeedConflicts = seeds.hasConflicts();
     if(stop) {
         return OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS;
     }
@@ -953,7 +1040,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
         avg = sum/tgt::hmul(centerBrickSize);
     }
 
-    if(canSkipChildren(brickToNorm(min), brickToNorm(max)) && !hasSeedConflicts) {
+    if(!hasSeedConflicts && canSkipChildren(brickToNorm(min), brickToNorm(max))) {
         outputPoolManager.deleteBrick(outputBrickAddr);
         return OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS;
     }
@@ -1218,7 +1305,12 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 
     auto finish = clock::now();
     return ComputeOutput (
-        OctreeWalkerPreviousResult(*octree, std::move(output)),
+        OctreeWalkerPreviousResult(
+            *octree,
+            std::move(output),
+            std::move(foregroundSeeds),
+            std::move(backgroundSeeds)
+            ),
         std::move(nodesToSave),
         finish - start
     );
@@ -1287,15 +1379,20 @@ OctreeWalkerPreviousResult::OctreeWalkerPreviousResult(OctreeWalkerPreviousResul
 {
     *this = std::move(other);
 }
-OctreeWalkerPreviousResult::OctreeWalkerPreviousResult(VolumeOctree& octree, std::unique_ptr<VolumeBase>&& volume)
+OctreeWalkerPreviousResult::OctreeWalkerPreviousResult(VolumeOctree& octree, std::unique_ptr<VolumeBase>&& volume, PointSegmentListGeometryVec3 foregroundSeeds, PointSegmentListGeometryVec3 backgroundSeeds)
     : octree_(&octree)
     , volume_(std::move(volume))
+    , foregroundSeeds_(std::move(foregroundSeeds))
+    , backgroundSeeds_(std::move(backgroundSeeds))
 {
 }
 
 OctreeWalkerPreviousResult& OctreeWalkerPreviousResult::operator=(OctreeWalkerPreviousResult&& other) {
     volume_ = std::move(other.volume_);
     octree_ = other.octree_;
+    foregroundSeeds_ = std::move(other.foregroundSeeds_);
+    backgroundSeeds_ = std::move(other.backgroundSeeds_);
+
     other.octree_ = nullptr;
     return *this;
 }
@@ -1326,7 +1423,7 @@ void OctreeWalkerPreviousResult::destroyButRetainNodes(std::unordered_set<const 
     tmp.volume_.reset(nullptr); // Free (now empty) octree itself, a representation of the volume
                                 // -- sans nodes and brick pool manager: Nodes are already freed
                                 // and the brick pool manager is owned by the Processor.
-    octree_ = nullptr;          // Unset pointer to invalid now memory
+    tmp.octree_ = nullptr;          // Unset pointer to invalid now memory
 }
 bool OctreeWalkerPreviousResult::isPresent() const {
     tgtAssert((octree_ == nullptr) == (volume_ == nullptr), "Octree/Volume present mismatch");
