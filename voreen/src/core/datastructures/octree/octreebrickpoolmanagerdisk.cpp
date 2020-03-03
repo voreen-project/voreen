@@ -529,7 +529,7 @@ OctreeBrickPoolManagerDisk::BufferEntry* OctreeBrickPoolManagerDisk::loadBufferF
         }
         std::ifstream infile(bufferFile.c_str(), std::ios::in | std::ios::binary);
         if(infile.fail()) {
-            delete buffer;
+            delete[] buffer;
             tgtAssert(false,"Could not open buffer file!");
             LERROR("Could not open buffer file!");
             throw VoreenException("Could not open buffer file!");

@@ -138,7 +138,7 @@ class VRN_CORE_API OctreeBrickPoolManagerDisk : public OctreeBrickPoolManagerBas
         ~BufferEntry() {
             tgtAssert(inUse_ == 0, "buffer still in use");
             delete[] bricksInUse_;
-            delete data_;
+            delete[] data_;
         }
     };
 
