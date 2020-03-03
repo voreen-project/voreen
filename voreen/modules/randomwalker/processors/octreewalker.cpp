@@ -64,7 +64,10 @@ namespace voreen {
 
 namespace {
 
-const std::string RESULT_OCTREE_FILE_NAME = "prev_result_octree.vvod";
+const std::string PREV_RESULT_FILE_NAME = "prev_result.vvod";
+const std::string PREV_RESULT_OCTREE_KEY = "Octree";
+const std::string PREV_RESULT_FOREGROUND_KEY = "foregroundSeeds";
+const std::string PREV_RESULT_BACKGROUND_KEY = "backgroundSeeds";
 const std::string BRICK_BUFFER_SUBDIR =      "brickBuffer";
 const std::string BRICK_BUFFER_FILE_PREFIX = "buffer_";
 
@@ -254,9 +257,13 @@ void OctreeWalker::deserialize(Deserializer& s) {
         s.removeLastError();
     }
 
-    std::string previousResultFile = tgt::FileSystem::cleanupPath(prevResultPath_ + "/" + RESULT_OCTREE_FILE_NAME);
+    std::string previousResultFile = tgt::FileSystem::cleanupPath(prevResultPath_ + "/" + PREV_RESULT_FILE_NAME);
 
     std::unique_ptr<VolumeOctree> previousOctree;
+
+    PointSegmentListGeometryVec3 foregroundSeeds;
+    PointSegmentListGeometryVec3 backgroundSeeds;
+
     if(!prevResultPath_.empty() && tgt::FileSystem::fileExists(previousResultFile)) {
         XmlDeserializer d(prevResultPath_);
 
@@ -264,9 +271,17 @@ void OctreeWalker::deserialize(Deserializer& s) {
         try {
             std::ifstream fs(previousResultFile);
             d.read(fs);
-            d.deserialize("Octree", *previousOctree);
+            d.deserialize(PREV_RESULT_OCTREE_KEY, *previousOctree);
 
             resultPath_.set(prevResultPath_);
+
+            try {
+                d.deserialize(PREV_RESULT_FOREGROUND_KEY, foregroundSeeds);
+                d.deserialize(PREV_RESULT_BACKGROUND_KEY, backgroundSeeds);
+            } catch (SerializationException& e) {
+                d.removeLastError();
+                LWARNING("No foreground/background seed present from previous result." << e.what());
+            }
         } catch (std::exception& e) {
             LERROR("Failed to deserialize previous solution: " << e.what());
             previousOctree.reset(nullptr);
@@ -276,6 +291,7 @@ void OctreeWalker::deserialize(Deserializer& s) {
             previousOctree.reset(nullptr);
         }
     }
+
 
     previousResult_ = boost::none;
     if(previousOctree) {
@@ -288,8 +304,8 @@ void OctreeWalker::deserialize(Deserializer& s) {
             previousResult_ = OctreeWalkerPreviousResult(
                 *previousOctree,
                 std::unique_ptr<VolumeBase>(new Volume(previousOctree.release(), spacing, offset)),
-                PointSegmentListGeometryVec3(),
-                PointSegmentListGeometryVec3()
+                std::move(foregroundSeeds),
+                std::move(backgroundSeeds)
             );
         }
     }
@@ -579,7 +595,7 @@ public:
                     continue;
                 for (size_t i=0; i<points.size()-1; i++) {
                     bool new_seeds = true;
-                    if(old && old->size() > i+1) {
+                    if(old && i+1 < old->size()) {
                         new_seeds = points[i] != (*old)[i] || points[i+1] != (*old)[i+1];
                     }
 
@@ -697,10 +713,10 @@ public:
             VRN_FOR_EACH_VOXEL(seed, begin, end) {
                 float& seedVal = seedBuffer_.voxel(seed);
                 if (seedVal == UNLABELED || seedVal == CURRENT_CONFLICT || seedVal == PREVIOUS_CONFLICT) {
-                    // Only exising, user-defined labels are not overwritten by 
+                    // Only exising, user-defined labels are not overwritten by
                     // a border seed.
-                    // Unlabeled values are fine either way, conflicting voxels 
-                    // have been counted as conflicts before, but can now 
+                    // Unlabeled values are fine either way, conflicting voxels
+                    // have been counted as conflicts before, but can now
                     // provide a sensible value from the parent node/brick.
                     float val = neighborhood.data_.voxel(seed);
                     seedVal = val;
@@ -1330,13 +1346,15 @@ void OctreeWalker::processComputeOutput(ComputeOutput output) {
 
     // Update origin property of newly created volume.
     std::string previousResultDir = resultPath_.get();
-    std::string previousResultFile = tgt::FileSystem::cleanupPath(previousResultDir + "/" + RESULT_OCTREE_FILE_NAME);
+    std::string previousResultFile = tgt::FileSystem::cleanupPath(previousResultDir + "/" + PREV_RESULT_FILE_NAME);
     previousResult_->volume().setOrigin(previousResultFile);
 
     // Write out updated octree (metadata) cache file itself.
     XmlSerializer s(previousResultDir);
     std::ofstream fs(previousResultFile);
-    s.serialize("Octree", previousResult_->octree());
+    s.serialize(PREV_RESULT_OCTREE_KEY, previousResult_->octree());
+    s.serialize(PREV_RESULT_FOREGROUND_KEY, previousResult_->foregroundSeeds_);
+    s.serialize(PREV_RESULT_BACKGROUND_KEY, previousResult_->backgroundSeeds_);
     s.write(fs);
 }
 void OctreeWalker::clearPreviousResults() {
