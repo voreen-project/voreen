@@ -79,7 +79,7 @@ SET(MOD_CORE_HEADERS
 ################################################################################
 # VRAS library by Jose Alejandro Matute Flores
 ################################################################################
-OPTION(VRN_VESSELNETWORKANALYSISEXTRA_BUILD_VRAS "Build Vessel Reconstruction Library?" ON)
+OPTION(VRN_VESSELNETWORKANALYSISEXTRA_BUILD_VRAS "Build Vessel Reconstruction Library?" OFF)
 IF(${VRN_VESSELNETWORKANALYSISEXTRA_BUILD_VRAS})
     ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/custommodules/${module_dir}/ext/VRAS/ReconstructionLibrary)
     TARGET_LINK_LIBRARIES(${core_app_we} VascResc)
