@@ -25,8 +25,6 @@
 
 #include "filterproperties.h"
 
-#include <boost/algorithm/string.hpp>
-
 namespace voreen {
 
 const int FilterProperties::DEFAULT_SETTINGS = -1;
@@ -52,7 +50,11 @@ void FilterProperties::restoreVisibility() {
 
 std::string FilterProperties::getId(const std::string& id) const {
     std::string name = getVolumeFilterName();
-    boost::algorithm::replace_all(name, " ", "_");
+    for(auto& c : name) {
+        if(c == ' ') {
+            c = '_';
+        }
+    }
     return name + "_" + id;
 }
 
