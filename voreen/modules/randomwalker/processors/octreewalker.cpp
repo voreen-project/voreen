@@ -277,6 +277,7 @@ void OctreeWalker::deserialize(Deserializer& s) {
         }
     }
 
+    previousResult_ = boost::none;
     if(previousOctree) {
         tgt::vec3 spacing(1.0f);
         tgt::vec3 offset(1.0f);
@@ -286,10 +287,8 @@ void OctreeWalker::deserialize(Deserializer& s) {
             brickPoolManager_.reset(obpmm);
             previousResult_ = OctreeWalkerPreviousResult(
                 *previousOctree,
-                std::unique_ptr<VolumeBase>(new Volume(previousOctree.get(), spacing, offset))
+                std::unique_ptr<VolumeBase>(new Volume(previousOctree.release(), spacing, offset))
             );
-        } else {
-            previousResult_ = boost::none;
         }
     }
 }
