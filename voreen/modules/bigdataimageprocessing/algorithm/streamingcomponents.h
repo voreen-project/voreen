@@ -510,16 +510,7 @@ SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t
 
     std::unordered_map<uint64_t, NodeWithId*> hash;
     std::priority_queue<NodeWithId*, std::vector<NodeWithId*>, NodeWithIdMaxHeapComp> prior;
-
-    // An optional id sorting based on meta data is performed.
-    // We map the run id to its final id based on a user defined sorting.
-    std::function<bool(const uint64_t& a, const uint64_t& b)> compare = std::less<uint64_t>();
-    if(componentComparator) {
-        compare = [metadataMap, componentComparator](const uint64_t& a, const uint64_t& b) {
-            return componentComparator(metadataMap.at(a), metadataMap.at(b));
-        };
-    }
-    std::map<uint64_t, uint32_t, decltype(compare)> sortedFinalIds(compare);
+    std::vector<std::pair<uint64_t, uint32_t>> finalIds; // Contains pairs that map runids to their finalids.
 
     uint32_t finalIdCounter = 1;
     for(int64_t next_merger_id = tmp.getNumMergers()-1; next_merger_id >= 0; next_merger_id--) {
@@ -556,7 +547,7 @@ SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t
             if(root == node && finalid != 0) {
                 // Node is a root => a finished component
                 uint64_t runid = root->id.id();
-                sortedFinalIds[runid] = finalid;
+                finalIds.push_back(std::make_pair(runid, finalid));
             }
             data[next_finalized_node_id] = finalid;
             delete node;
@@ -566,25 +557,34 @@ SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t
     maxRootID_ = finalIdCounter - 1;
     tgtAssert(prior.empty(), "Queue not empty");
 
-    // Create remapping table.
+    // An optional id sorting based on meta data is performed.
+    // We map the run id to its final id based on a user defined sorting.
     if(componentComparator) {
+        auto compare = [metadataMap, componentComparator] (const std::pair<uint64_t, uint32_t>& a, const std::pair<uint64_t, uint32_t>& b) {
+            return componentComparator(metadataMap.at(a.first), metadataMap.at(b.first));
+        };
+        std::sort(finalIds.begin(), finalIds.end(), compare);
+
         finalIdRemappingTable_.resize(finalIdCounter);
         finalIdRemappingTable_[0] = 0; // Zero does not get remapped.
     }
+
     uint32_t sortedFinalIdCounter = 1;
-    for(auto iter = sortedFinalIds.begin(); iter != sortedFinalIds.end(); iter++) {
+    for(auto iter = finalIds.begin(); iter != finalIds.end(); iter++) {
+        // For each component, a callback is invoked.
         const uint64_t& runid = iter->first;
-        const uint32_t& finalid = iter->second;
-
-        // If sorting is enabled, we map the old final Id to the sorted final id.
-        if(componentComparator) {
-            finalIdRemappingTable_[finalid] = sortedFinalIdCounter;
-            sortedFinalIdCounter++;
-        }
-
         const auto& entry = metadataMap.find(runid);
         tgtAssert(entry != metadataMap.end(), "No metadata for runid");
         cccallback(sortedFinalIdCounter, entry->second);
+
+        // Optionally, a remapping is performed from based on the previous sorting.
+        // Here, we map the old final Id to the sorted final id.
+        if(componentComparator) {
+            const uint32_t& finalid = iter->second;
+            finalIdRemappingTable_[finalid] = sortedFinalIdCounter;
+        }
+
+        sortedFinalIdCounter++;
     }
 }
 
