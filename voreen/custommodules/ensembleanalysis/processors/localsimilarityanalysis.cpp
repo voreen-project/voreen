@@ -47,6 +47,7 @@ LocalSimilarityAnalysis::LocalSimilarityAnalysis()
 
     addProperty(selectedField_);
     addProperty(time_);
+    time_.setTracking(false);
 }
 
 LocalSimilarityAnalysis::~LocalSimilarityAnalysis() {
@@ -77,7 +78,7 @@ LocalSimilarityAnalysisInput LocalSimilarityAnalysis::prepareComputeInput() {
 
     return LocalSimilarityAnalysisInput{
             std::move(ensemble),
-            referenceVolume,
+            std::move(referenceVolume),
             std::move(outputVolume),
             reference->getPhysicalToVoxelMatrix(),
             selectedField_.get(),
@@ -171,7 +172,7 @@ void LocalSimilarityAnalysis::adjustPropertiesToInput() {
 
     time_.setMinValue(ensemble->getStartTime());
     time_.setMaxValue(ensemble->getEndTime());
-    time_.set(ensemble->getStartTime());
+    //time_.set(ensemble->getEndTime());
 }
 
 Processor* LocalSimilarityAnalysis::create() const {

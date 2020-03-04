@@ -49,11 +49,12 @@ ReferenceVolumeCreator::ReferenceVolumeCreator()
 
     addProperty(selectedField_);
     addProperty(time_);
+    time_.setTracking(false);
     addProperty(referenceMethod_);
     referenceMethod_.addOption("run", "Select Run");
     referenceMethod_.addOption("zero", "Zero volume");
     referenceMethod_.addOption("mean", "Global Mean");
-    referenceMethod_.addOption("median", "Global Median");
+    //referenceMethod_.addOption("median", "Global Median");
     ON_CHANGE_LAMBDA(referenceMethod_, [this] {
         referenceRun_.setReadOnlyFlag(referenceMethod_.get() != "run");
     });
@@ -250,7 +251,7 @@ void ReferenceVolumeCreator::adjustPropertiesToInput() {
 
     time_.setMinValue(ensemble->getStartTime());
     time_.setMaxValue(ensemble->getEndTime());
-    time_.set(ensemble->getStartTime());
+    //time_.set(ensemble->getStartTime());
 }
 
 Processor* ReferenceVolumeCreator::create() const {
