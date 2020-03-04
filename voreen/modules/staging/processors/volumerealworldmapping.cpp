@@ -31,21 +31,24 @@
 
 namespace voreen {
 
-const std::string VolumeRealWorldMapping::loggerCat_("voreen.base.VolumeRVMNormalization");
+const std::string VolumeRealWorldMapping::loggerCat_("voreen.base.VolumeRealWorldMapping");
 
 VolumeRealWorldMapping::VolumeRealWorldMapping()
     : VolumeProcessor()
     , inport_(Port::INPORT, "volumehandle.input", "Volume Input")
     , outport_(Port::OUTPORT, "volumehandle.output", "Volume Output", false)
     , enableProcessing_("enabled", "Enable", false)
+    , replace_("replace", "Replace", true)
     , mode_("mode_", "Mode")
     , realWorldRange_("realWorldRange", "Real world range", tgt::vec2(0.0f, 1.0f), 0, 100000)
-    , scale_("scale", "Scale", 1.0f, 0.0f, 100000.0f)
-    , offset_("offset", "Offset", 0.0f, 0.0f, 100000.0f)
+    , scale_("scale", "Scale", 1.0f, 0.0f, 10000.0f)
+    , offset_("offset", "Offset", 0.0f, -100000.0f, 100000.0f)
 {
     addPort(inport_);
     addPort(outport_);
     addProperty(enableProcessing_);
+
+    addProperty(replace_);
 
     addProperty(mode_);
         mode_.addOption("normalize", "Normalized", Mode::NORMALIZED);
@@ -53,7 +56,9 @@ VolumeRealWorldMapping::VolumeRealWorldMapping()
         mode_.addOption("scaleOffset", "Scale and Offset", Mode::SCALE_OFFSET);
         mode_.addOption("interval", "Interval", Mode::INTERVAL);
     addProperty(scale_);
+    scale_.setNumDecimals(4);
     addProperty(offset_);
+    offset_.setNumDecimals(4);
 
     addProperty(realWorldRange_);
 
@@ -83,6 +88,10 @@ void VolumeRealWorldMapping::process() {
     }
 
     RealWorldMapping rwm = getRealWorldMapping();
+
+    if(!replace_.get()) {
+        rwm = RealWorldMapping::combine(inputVolume->getRealWorldMapping(), rwm);
+    }
 
     VolumeBase* outputVolume = new VolumeDecoratorReplaceRealWorldMapping(inputVolume, rwm);
     outport_.setData(outputVolume);

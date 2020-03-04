@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VOLUMEEALWORLDMAPPING_H
-#define VRN_VOLUMEEALWORLDMAPPING_H
+#ifndef VRN_VOLUMEREALWORLDMAPPING_H
+#define VRN_VOLUMEREALWORLDMAPPING_H
 
 #include <string>
 #include "voreen/core/processors/volumeprocessor.h"
@@ -49,6 +49,8 @@ public:
 protected:
     virtual void setDescriptions() {
         setDescription("Modifies the volume's real world mapping");
+        replace_.setDescription("If enabled, the volume's real world mapping will be replaced. "
+                                "If disabled, the old real world mapping will be applied first, then the new one.");
     }
 
     virtual void initialize();
@@ -66,12 +68,15 @@ private:
     void reset();
     void updatePropertyVisibility();
     void updatePropertyValues();
+
     RealWorldMapping getRealWorldMapping();
+
     VolumePort inport_;
     VolumePort outport_;
 
     BoolProperty enableProcessing_;
 
+    BoolProperty replace_;
     OptionProperty<Mode> mode_;
     FloatIntervalProperty realWorldRange_;
     FloatProperty offset_;
