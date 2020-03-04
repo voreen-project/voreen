@@ -187,12 +187,14 @@ protected:
 // this object is dropped.
 class VolumeRAMRepresentationLock {
 public:
-    VolumeRAMRepresentationLock(const VolumeBase* volume);
+    explicit VolumeRAMRepresentationLock(const VolumeBase* volume);
     VolumeRAMRepresentationLock(const VolumeRAMRepresentationLock& other);
+    VolumeRAMRepresentationLock(VolumeRAMRepresentationLock&& other);
     ~VolumeRAMRepresentationLock();
 
     VolumeRAMRepresentationLock& operator=(const VolumeBase* volume);
     VolumeRAMRepresentationLock& operator=(const VolumeRAMRepresentationLock& other);
+    VolumeRAMRepresentationLock& operator=(VolumeRAMRepresentationLock&& other);
     const VolumeRAM* operator->() const;
     const VolumeRAM* operator*() const;
 private:

@@ -272,6 +272,7 @@ bool VolumeMemoryManager::requestGraphicsMemory(const VolumeBase* v) {
 }
 
 void VolumeMemoryManager::notifyUse(const VolumeBase* v, bool locked) {
+    tgtAssert(v, "volume must not be null");
     boost::lock_guard<boost::recursive_mutex> lock(vmmMutex_);
 
     v = getActualVolume(v);
@@ -294,6 +295,7 @@ void VolumeMemoryManager::notifyUse(const VolumeBase* v, bool locked) {
 }
 
 void VolumeMemoryManager::notifyLockedRelease(const VolumeBase* v) {
+    tgtAssert(v, "volume must not be null");
     boost::lock_guard<boost::recursive_mutex> lock(vmmMutex_);
 
     v = getActualVolume(v);
@@ -301,7 +303,7 @@ void VolumeMemoryManager::notifyLockedRelease(const VolumeBase* v) {
     auto it = findRegisteredVolumeEntity(v);
 
     if (it == registeredVolumes_.end()) {
-        LERROR("Notifying use for unregistered volume!");
+        LERROR("Notifying locked release for unregistered volume!");
         return;
     }
 
@@ -429,8 +431,15 @@ VolumeRAMRepresentationLock::VolumeRAMRepresentationLock(const VolumeRAMRepresen
     : VolumeRAMRepresentationLock(other.volume_)
 {
 }
+VolumeRAMRepresentationLock::VolumeRAMRepresentationLock(VolumeRAMRepresentationLock&& other)
+    : volume_(other.volume_)
+    , representation_(other.representation_)
+{
+    other.volume_ = nullptr;
+    other.representation_ = nullptr;
+}
 VolumeRAMRepresentationLock::~VolumeRAMRepresentationLock() {
-    if (VolumeMemoryManager::isInited())
+    if (VolumeMemoryManager::isInited() && volume_)
         VolumeMemoryManager::getRef().notifyLockedRelease(volume_);
 }
 
@@ -459,6 +468,15 @@ VolumeRAMRepresentationLock& VolumeRAMRepresentationLock::operator=(const Volume
         VolumeMemoryManager::getRef().notifyUse(volume_, true);
 
     representation_ = other.representation_;
+
+    return *this;
+}
+VolumeRAMRepresentationLock& VolumeRAMRepresentationLock::operator=(VolumeRAMRepresentationLock&& other) {
+    volume_ = other.volume_;
+    representation_ = other.representation_;
+
+    other.volume_ = nullptr;
+    other.representation_ = nullptr;
 
     return *this;
 }
