@@ -59,6 +59,7 @@ static const tgt::vec3 MIN_DURATION_COLOR = tgt::vec3(1.0f, 0.0f, 0.0f);
 static const tgt::vec3 MAX_DURATION_COLOR = tgt::vec3(0.0f, 0.0f, 1.0f);
 static const tgt::vec3 FADE_OUT_COLOR = tgt::vec3::one;
 
+const std::string SimilarityPlot::fontName_("Vera.ttf");
 const std::string SimilarityPlot::loggerCat_("voreen.ensembleanalysis.SimilarityPlot");
 
 void SimilarityPlot::MDSData::serialize(Serializer& s) const {
@@ -105,6 +106,7 @@ SimilarityPlot::SimilarityPlot()
     , camera_("camera", "Camera", tgt::Camera(tgt::vec3(0.0f, 0.0f, 3.5f), tgt::vec3(0.0f, 0.0f, 0.0f), tgt::vec3(0.0f, 1.0f, 0.0f)))
     , cameraHandler_(nullptr)
     , plotLib_(new PlotLibraryOpenGl())
+    , lastHit_(boost::none)
     /*
     , grabAnchorPosition_(tgt::ivec2::zero)
     , interaction_(false)
@@ -153,8 +155,9 @@ SimilarityPlot::SimilarityPlot()
             scaleToMagnitude_.setVisibleFlag(numDimensions_.get() == 3);
 
             // Adjust camera correctly when using 3D visualization.
-            if (numDimensions_.get() == 3)
+            if (numDimensions_.get() == 3) {
                 camera_.adaptInteractionToScene(tgt::Bounds(-tgt::vec3::one, tgt::vec3::one), 0.1f, true);
+            }
         });
     addProperty(principleComponent_);
         principleComponent_.setVisibleFlag(numDimensions_.get() == 1);
@@ -258,6 +261,11 @@ void SimilarityPlot::process() {
 
         renderingPass(false);
 
+        // Draw tooltip.
+        if(showTooltip_.get()) {
+            drawTooltip();
+        }
+
         outport_.deactivateTarget();
     }
     else {
@@ -265,6 +273,11 @@ void SimilarityPlot::process() {
         privatePort_.clearTarget(); // TODO: may change clear color to..?
 
         renderingPass(false);
+
+        // Draw tooltip.
+        if(showTooltip_.get()) {
+            drawTooltip();
+        }
 
         privatePort_.deactivateTarget();
 
@@ -297,11 +310,13 @@ void SimilarityPlot::renderAxes() {
         plotLib_->setMinimumScaleStep(32, PlotLibrary::X_AXIS);
         plotLib_->setMinimumScaleStep(32, PlotLibrary::Y_AXIS);
         plotLib_->setMinimumScaleStep(32, PlotLibrary::Z_AXIS);
-        if (numDimensions_.get() == 1)
+        if (numDimensions_.get() == 1) {
             plotLib_->setDomain(Interval<plot_t>(ensembleInport_.getData()->getStartTime(),
                                                  ensembleInport_.getData()->getEndTime()), PlotLibrary::X_AXIS);
-        else
+        }
+        else {
             plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::X_AXIS);
+        }
         plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::Y_AXIS);
         if (numDimensions_.get() == 3) {
             plotLib_->setDimension(PlotLibrary::THREE);
@@ -341,7 +356,6 @@ void SimilarityPlot::renderAxes() {
             }
         }
         plotLib_->resetRenderStatus();
-
     }
 
     // Plot data
@@ -373,10 +387,51 @@ void SimilarityPlot::renderAxes() {
     LGL_ERROR;
 }
 
-void SimilarityPlot::drawTooltip(int runIdx, int timeStepIdx, const tgt::vec2& pos) const {
+void SimilarityPlot::drawTooltip() const {
+
+    const EnsembleDataset* ensemble = ensembleInport_.getData();
+    if(!ensemble || !lastHit_) {
+        return;
+    }
+
     glDisable(GL_DEPTH_TEST);
 
-    // TODO:
+    tgt::Font font(VoreenApplication::app()->getFontPath(fontName_));
+    font.setFontSize(fontSize_.get());
+
+    const int legendOffsetX = 10.f;
+    const int legendOffsetY = 10.f;
+
+    const tgt::ivec2& screensize = outport_.getSize();
+
+    const EnsembleDataset::Run& run = ensemble->getRuns()[lastHit_->runIdx];
+    const EnsembleDataset::TimeStep& timeStep = run.timeSteps_[lastHit_->timeStepIdx];
+
+    std::string tooltip = "Run: ";
+    tooltip += run.name_;
+    tooltip += "\n";
+    tooltip += "Time:";
+    tooltip += std::to_string(timeStep.time_);
+
+    tgt::vec3 pos(legendOffsetX + lastHit_->x, screensize.y - lastHit_->y - 1, 0);
+    tgt::vec2 size = font.getSize(pos, tooltip, screensize);
+    pos.y -= size.y + legendOffsetY;
+
+    tgt::vec2 ll = mapRange(pos.xy(), tgt::vec2::zero, tgt::vec2(screensize), -tgt::vec2::one, tgt::vec2::one);
+    tgt::vec2 ur = mapRange(pos.xy() + size, tgt::vec2::zero,  tgt::vec2(screensize), -tgt::vec2::one, tgt::vec2::one);
+
+    // Draw background.
+    IMode.color(tgt::vec4(0.2f, 0.2f, 0.2f, 0.5f));
+    IMode.begin(tgt::ImmediateMode::QUADS);
+    IMode.vertex(ll.x, ll.y);
+    IMode.vertex(ur.x, ll.y);
+    IMode.vertex(ur.x, ur.y);
+    IMode.vertex(ll.x, ur.y);
+    IMode.end();
+    IMode.color(tgt::vec4::one);
+
+    // Draw font.
+    font.render(pos, tooltip, screensize);
 
     glEnable(GL_DEPTH_TEST);
 }
@@ -590,7 +645,9 @@ tgt::vec3 SimilarityPlot::getColor(size_t runIdx, size_t timeStepIdx, bool picki
 
 void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
 
-    const EnsembleDataset* dataset = ensembleInport_.getData();
+    // We always accept the event and force a redraw.
+    e->accept();
+    invalidate();
 
     // Right click resets subselection.
     if(e->button() & tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
@@ -610,6 +667,9 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
     // Otherwise, we look for a hit.
     else {
 
+        // Reset last hit.
+        lastHit_ = boost::none;
+
         int x = e->x();
         int y = e->y();
 
@@ -621,28 +681,29 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
 
         // Not inside margins.
         if (x != e->x() || y != e->y()) {
-            e->accept();
-            return; // Outside margins, ignore.
+            return;
         }
 
         // Handle margins.
         RenderTarget* target = pickingBuffer_.getRenderTarget();
         tgt::ivec2 pixel;
-        if (numDimensions_.get() < 3)
+        if (numDimensions_.get() < 3) {
             pixel = tgt::ivec2(
                     mapRange(tgt::vec2(x, y), tgt::vec2(MARGINS), tgt::vec2(outport_.getSize() - MARGINS),
                              tgt::vec2::zero, tgt::vec2(target->getSize())));
-        else
+        }
+        else {
             pixel = mapRange(tgt::ivec2(x, y), tgt::ivec2::zero, outport_.getSize(), tgt::ivec2::zero,
                              target->getSize());
+        }
 
         tgt::vec4 texel = target->getColorAtPos(tgt::ivec2(pixel.x, target->getSize().y - pixel.y - 1));
         if (texel.z != 1.0f) {
-            e->accept();
             return; // No hit - preserve last selection.
         }
 
         // Calculate run index.
+        const EnsembleDataset* dataset = ensembleInport_.getData();
         const std::vector<EnsembleDataset::Run>& runs = dataset->getRuns();
         size_t numRuns = runs.size();
         int r = tgt::clamp<int>(std::round(texel.r * numRuns), 0, numRuns - 1);
@@ -651,10 +712,8 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
         size_t numTimeSteps = runs[r].timeSteps_.size();
         int t = tgt::clamp<int>(std::round(texel.g * numTimeSteps), 0, numTimeSteps - 1);
 
-        // Draw tool tip, if required.
-        if (showTooltip_.get()) {
-
-        }
+        // Update last hit.
+        lastHit_ = Hit{x, y, r, t};
 
         // Handle selection.
         if (e->button() & tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
@@ -702,9 +761,6 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
             }
         }
     }
-
-    invalidate();
-    e->accept();
 }
 
 void SimilarityPlot::onEvent(tgt::Event* e) {
@@ -1021,6 +1077,21 @@ void SimilarityPlot::outputEigenValues() {
     eigenValueOutport_.setData(data, true);
 }
 
+void SimilarityPlot::renderedRunsChanged() {
+    renderingOrder_.clear();
+
+    if(mdsData_.empty())
+        return;
+
+    for(int runIdx : renderedRuns_.getSelectedRowIndices()) {
+        // The first field is representative for all fields here.
+        // We just want to check if the mds data was calculated for the run.
+        if(mdsData_.front().nVectors_.count(runIdx)) {
+            renderingOrder_.push_back(runIdx);
+        }
+    }
+}
+
 void SimilarityPlot::save() {
     if (saveFileDialog_.get().empty()) {
         LWARNING("no filename specified");
@@ -1050,21 +1121,6 @@ void SimilarityPlot::save() {
         VoreenApplication::app()->showMessageBox("saving MDS Plot failed", e.what(), true);
         LERROR(e.what());
         saveFileDialog_.set("");
-    }
-}
-
-void SimilarityPlot::renderedRunsChanged() {
-    renderingOrder_.clear();
-
-    if(mdsData_.empty())
-        return;
-
-    for(int runIdx : renderedRuns_.getSelectedRowIndices()) {
-        // The first field is representative for all fields here.
-        // We just want to check if the mds data was calculated for the run.
-        if(mdsData_.front().nVectors_.count(runIdx)) {
-            renderingOrder_.push_back(runIdx);
-        }
     }
 }
 

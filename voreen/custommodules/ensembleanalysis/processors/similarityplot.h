@@ -96,6 +96,23 @@ private:
         COLOR_DURATION,
     };
 
+    void adjustToEnsemble();
+    void mouseEvent(tgt::MouseEvent* e);
+
+    void renderingPass(bool picking);
+    void renderAxes();
+    void drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, const tgt::vec3& position, const tgt::vec3& color) const;
+    void drawTooltip() const;
+    tgt::vec3 getColor(size_t runIdx, size_t timeStepIdx, bool picking) const;
+
+    MDSData computeFromDM(const SimilarityMatrix& matrix, ProgressReporter& progressReporter, float epsilon = -1.0f) const;
+    void calculate();
+
+    void outputEigenValues();
+    void renderedRunsChanged();
+    void save();
+    void load();
+
     ButtonProperty calculateButton_;
     BoolProperty autoCalculate_;
     ProgressProperty progressBar_;
@@ -163,24 +180,16 @@ private:
     /// Selected runs (sorted for faster access).
     std::set<int> subSelection_;
 
-private:
+    /// Last picked run and time step (also when hovering).
+    struct Hit {
+        int x, y;
+        int runIdx;
+        int timeStepIdx;
+    };
+    boost::optional<Hit> lastHit_;
 
-    void adjustToEnsemble();
-    void mouseEvent(tgt::MouseEvent* e);
-
-    void renderingPass(bool picking);
-    void renderAxes();
-    void drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, const tgt::vec3& position, const tgt::vec3& color) const;
-    void drawTooltip(int runIdx, int timeStepIdx, const tgt::vec2& pos) const;
-    tgt::vec3 getColor(size_t runIdx, size_t timeStepIdx, bool picking) const;
-
-    MDSData computeFromDM(const SimilarityMatrix& matrix, ProgressReporter& progressReporter, float epsilon = -1.0f) const;
-    void calculate();
-
-    void outputEigenValues();
-    void renderedRunsChanged();
-    void save();
-    void load();
+    /// The font being used for rendering the tooltip.
+    static const std::string fontName_;
 
     static const std::string loggerCat_;
 };
