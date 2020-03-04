@@ -98,9 +98,10 @@ public:
     typedef std::function<boost::optional<ClassID>(const SliceType& vol, tgt::svec3 pos)> getClassFunc;
     typedef std::function<bool(const MetaData&)> componentConstraintTest;
     typedef std::function<void(uint32_t id, const MetaData&)> ComponentCompletionCallback;
+    typedef std::function<bool(const MetaData&, const MetaData&)> ComponentComparator;
 
     template<typename InputType, typename OutputType>
-    StreamingComponentsStats cca(const InputType& input, OutputType& output, ComponentCompletionCallback componentCompletionCallback, getClassFunc getClass, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress) const;
+    StreamingComponentsStats cca(const InputType& input, OutputType& output, ComponentCompletionCallback componentCompletionCallback, getClassFunc getClass, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress, ComponentComparator componentComparator = nullptr) const;
 private:
     class RowStorage; // Forward declaration
 
@@ -173,14 +174,16 @@ private:
     };
     class RootFile {
     public:
-        RootFile(MergerFile&& mergerFile, const std::string& filename, uint64_t numUsedIds, ComponentCompletionCallback cccallback);
+        RootFile(MergerFile&& mergerFile, const std::string& filename, uint64_t numUsedIds, ComponentCompletionCallback cccallback, ComponentComparator componentComparator);
         ~RootFile();
         uint32_t getRootID(uint64_t) const;
         uint32_t getMaxRootId() const;
+        const std::vector<uint32_t>& getFinalIdRemappingTable() const;
     private:
         boost::iostreams::mapped_file file_;
         std::string filename_;
         uint32_t maxRootID_;
+        std::vector<uint32_t> finalIdRemappingTable_;
     };
 
     class RunComposition;
@@ -292,6 +295,7 @@ SC_TEMPLATE
 template<typename outputBaseType, typename InputType, typename OutputType>
 void SC_NS::writeOutputVolume(const RootFile& rootFile, const InputType& input, OutputType& output, getClassFunc getClass, uint64_t& voxelCounter, ProgressReporter& progress) const
 {
+    const std::vector<uint32_t>& idRemappingTable = rootFile.getFinalIdRemappingTable();
     uint64_t runIdCounter = 1;
     tgt::svec3 dim = output.getDimensions();
     for(size_t z = 0; z<dim.z; ++z) {
@@ -314,6 +318,10 @@ void SC_NS::writeOutputVolume(const RootFile& rootFile, const InputType& input, 
                 tgtAssert(run->upperBound_ > x, "overlapping runs");
                 if(run->lowerBound_ <= x) {
                     id = rootFile.getRootID(run->getId());
+                    // Perform remapping, if available.
+                    if(!idRemappingTable.empty()) {
+                        id = idRemappingTable[id];
+                    }
                     ++voxelCounter;
                 } else {
                     id = 0;
@@ -338,7 +346,7 @@ void SC_NS::writeOutputVolume(const RootFile& rootFile, const InputType& input, 
 }
 SC_TEMPLATE
 template<typename InputType, typename OutputType>
-StreamingComponentsStats SC_NS::cca(const InputType& input, OutputType& output, ComponentCompletionCallback componentCompletionCallback, getClassFunc getClass, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress) const {
+StreamingComponentsStats SC_NS::cca(const InputType& input, OutputType& output, ComponentCompletionCallback componentCompletionCallback, getClassFunc getClass, bool applyLabeling, componentConstraintTest meetsComponentConstraints, ProgressReporter& progress, ComponentComparator componentComparator) const {
     const tgt::svec3 dim = input.getDimensions();
     tgtAssert(input.getDimensions() == output.getDimensions(), "dimensions of input and output differ");
     tgtAssert(tgt::hand(tgt::greaterThan(input.getDimensions(), tgt::svec3::one)), "Degenerated volume dimensions");
@@ -402,7 +410,7 @@ StreamingComponentsStats SC_NS::cca(const InputType& input, OutputType& output, 
         // RowStorage is destructed and all remaining row info is written.
     }
 
-    RootFile rootFile(std::move(mergers), VoreenApplication::app()->getUniqueTmpFilePath(".root"), runIdCounter-1, componentCompletionCallback);
+    RootFile rootFile(std::move(mergers), VoreenApplication::app()->getUniqueTmpFilePath(".root"), runIdCounter-1, componentCompletionCallback, componentComparator);
 
     uint64_t voxelCounter = 0;
     progress.setProgressRange(tgt::vec2(0.5, 1));
@@ -472,7 +480,7 @@ struct NodeWithIdMaxHeapComp {
 };
 
 SC_TEMPLATE
-SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t numUsedIds, ComponentCompletionCallback cccallback)
+SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t numUsedIds, ComponentCompletionCallback cccallback, ComponentComparator componentComparator)
     : file_()
     , filename_(filename)
 {
@@ -502,6 +510,16 @@ SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t
 
     std::unordered_map<uint64_t, NodeWithId*> hash;
     std::priority_queue<NodeWithId*, std::vector<NodeWithId*>, NodeWithIdMaxHeapComp> prior;
+
+    // An optional id sorting based on meta data is performed.
+    // We map the run id to its final id based on a user defined sorting.
+    std::function<bool(const uint64_t& a, const uint64_t& b)> compare = std::less<uint64_t>();
+    if(componentComparator) {
+        compare = [metadataMap, componentComparator](const uint64_t& a, const uint64_t& b) {
+            return componentComparator(metadataMap.at(a), metadataMap.at(b));
+        };
+    }
+    std::map<uint64_t, uint32_t, decltype(compare)> sortedFinalIds(compare);
 
     uint32_t finalIdCounter = 1;
     for(int64_t next_merger_id = tmp.getNumMergers()-1; next_merger_id >= 0; next_merger_id--) {
@@ -535,12 +553,10 @@ SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t
             prior.pop();
             NodeWithId* root = node->getRoot();
             uint32_t finalid = root->getFinalId(finalIdCounter);
-            if(root == node) {
+            if(root == node && finalid != 0) {
                 // Node is a root => a finished component
                 uint64_t runid = root->id.id();
-                const auto& entry = metadataMap.find(runid);
-                tgtAssert(entry != metadataMap.end(), "No metadata for runid");
-                cccallback(finalid, entry->second);
+                sortedFinalIds[runid] = finalid;
             }
             data[next_finalized_node_id] = finalid;
             delete node;
@@ -549,6 +565,27 @@ SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t
     }
     maxRootID_ = finalIdCounter - 1;
     tgtAssert(prior.empty(), "Queue not empty");
+
+    // Create remapping table.
+    if(componentComparator) {
+        finalIdRemappingTable_.resize(finalIdCounter);
+        finalIdRemappingTable_[0] = 0; // Zero does not get remapped.
+    }
+    uint32_t sortedFinalIdCounter = 1;
+    for(auto iter = sortedFinalIds.begin(); iter != sortedFinalIds.end(); iter++) {
+        const uint64_t& runid = iter->first;
+        const uint32_t& finalid = iter->second;
+
+        // If sorting is enabled, we map the old final Id to the sorted final id.
+        if(componentComparator) {
+            finalIdRemappingTable_[finalid] = sortedFinalIdCounter;
+            sortedFinalIdCounter++;
+        }
+
+        const auto& entry = metadataMap.find(runid);
+        tgtAssert(entry != metadataMap.end(), "No metadata for runid");
+        cccallback(sortedFinalIdCounter, entry->second);
+    }
 }
 
 SC_TEMPLATE
@@ -566,6 +603,11 @@ uint32_t SC_NS::RootFile::getRootID(uint64_t id) const {
 SC_TEMPLATE
 uint32_t SC_NS::RootFile::getMaxRootId() const {
     return maxRootID_;
+}
+
+SC_TEMPLATE
+const std::vector<uint32_t>& SC_NS::RootFile::getFinalIdRemappingTable() const {
+    return finalIdRemappingTable_;
 }
 
 SC_TEMPLATE

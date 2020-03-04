@@ -132,6 +132,7 @@ public:
 
 protected:
     std::function<bool(const CCANodeMetaData&)> generateComponentConstraintTest(const VolumeBase& volume) const;
+    std::function<bool(const CCANodeMetaData&, const CCANodeMetaData&)> generateComponentComparator() const;
     virtual void adjustPropertiesToInput();
 
     template<int ADJACENCY>
@@ -149,11 +150,12 @@ private:
     IntProperty outputVolumeDeflateLevel_;
     OptionProperty<CCANeighbourhoodMode> neighbourhoodMode_;
     BoolProperty invertBinarization_;
-    FloatProperty  binarizationThreshold_;
+    FloatProperty binarizationThreshold_;
     FloatProperty minBoundsDiagonal_;
     FloatProperty minBoundsDiagonalRelative_;
     IntProperty minVoxelVolume_;
     BoolProperty applyLabeling_;
+    StringOptionProperty sortingMethod_;
 
     static const std::string loggerCat_;
 };
@@ -165,7 +167,7 @@ StreamingComponentsStats ConnectedComponentAnalysis::runCCA(const VolumeBase& in
     typename SC::getClassFunc getClass;
 
     float binarizationThresholdNormalized;
-    if(input.hasMetaData("RealWorldMapping")) {
+    if(input.hasMetaData(VolumeBase::META_DATA_NAME_REAL_WORLD_MAPPING)) {
         // If the input volume does not have a RealWorldMapping we need to convert the binarizationThreshold to a normalized value.
         binarizationThresholdNormalized = input.getRealWorldMapping().realWorldToNormalized(binarizationThreshold_.get());
     } else {
@@ -183,7 +185,7 @@ StreamingComponentsStats ConnectedComponentAnalysis::runCCA(const VolumeBase& in
             };
     }
 
-    return sc.cca(input, output, writeMetaData, getClass, applyLabeling_.get(), generateComponentConstraintTest(input), progressReporter);
+    return sc.cca(input, output, writeMetaData, getClass, applyLabeling_.get(), generateComponentConstraintTest(input), progressReporter, generateComponentComparator());
 }
 
 } // namespace voreen

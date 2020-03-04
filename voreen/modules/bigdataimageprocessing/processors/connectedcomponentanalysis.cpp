@@ -76,6 +76,7 @@ ConnectedComponentAnalysis::ConnectedComponentAnalysis()
     , minBoundsDiagonalRelative_("minBoundsDiagonalRelative", "Min Bounds Diagonal (relative)", 0.0f, 0.0f, 1.0f, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_DEFAULT)
     , minVoxelVolume_("minVoxelVolume", "Min Voxel Volume", 0, 0, std::numeric_limits<int>::max(), Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEFAULT)
     , applyLabeling_("applyLabeling", "Apply Labeling", true, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
+    , sortingMethod_("sortingMethod", "Sorting Method")
 {
     addPort(inport_);
         inport_.onChange(LambdaFunctionCallback([this] () {
@@ -105,7 +106,17 @@ ConnectedComponentAnalysis::ConnectedComponentAnalysis()
             neighbourhoodMode_.addOption("n26", "26", N_26);
             neighbourhoodMode_.setGroupID("componentfinding");
         addProperty(applyLabeling_);
+            ON_CHANGE_LAMBDA(applyLabeling_, [this] {
+                sortingMethod_.setReadOnlyFlag(!applyLabeling_.get());
+            });
             applyLabeling_.setGroupID("componentfinding");
+        addProperty(sortingMethod_);
+            sortingMethod_.addOption("none", "None");
+            sortingMethod_.addOption("incrVoxelVolume", "Increasing Voxel Volume");
+            sortingMethod_.addOption("decrVoxelVolume", "Decreasing Voxel Volume");
+            sortingMethod_.addOption("incrBoundsDiagonal", "Increasing Bounds Diagonal");
+            sortingMethod_.addOption("decrBoundsDiagonal", "Decreasing Bounds Diagonal");
+            sortingMethod_.setGroupID("componentfinding");
         addProperty(minBoundsDiagonalRelative_);
             minBoundsDiagonalRelative_.setGroupID("componentfinding");
         addProperty(minBoundsDiagonal_);
@@ -261,6 +272,36 @@ std::function<bool(const CCANodeMetaData&)> ConnectedComponentAnalysis::generate
     };
 }
 
+std::function<bool(const CCANodeMetaData&, const CCANodeMetaData&)> ConnectedComponentAnalysis::generateComponentComparator() const {
+
+    if(sortingMethod_.get() == "none") {
+        return nullptr;
+    }
+    else if(sortingMethod_.get() == "incrVoxelVolume") {
+        return [] (const CCANodeMetaData& a, const CCANodeMetaData& b) {
+            return a.volume_ < b.volume_;
+        };
+    }
+    else if(sortingMethod_.get() == "decrVoxelVolume") {
+        return [] (const CCANodeMetaData& a, const CCANodeMetaData& b) {
+            return a.volume_ > b.volume_;
+        };
+    }
+    else if(sortingMethod_.get() == "incrBoundsDiagonal") {
+        return [] (const CCANodeMetaData& a, const CCANodeMetaData& b) {
+            return tgt::lengthSq(a.bounds_.diagonal()) < tgt::lengthSq(b.bounds_.diagonal());
+        };
+    }
+    else if(sortingMethod_.get() == "decrBoundsDiagonal") {
+        return [] (const CCANodeMetaData& a, const CCANodeMetaData& b) {
+            return tgt::lengthSq(a.bounds_.diagonal()) > tgt::lengthSq(b.bounds_.diagonal());
+        };
+    }
+    else {
+        tgtAssert(false, "Unhandled sorting method");
+        return nullptr;
+    }
+}
 
 void ConnectedComponentAnalysis::adjustPropertiesToInput() {
     const VolumeBase* input = inport_.getData();
@@ -293,7 +334,7 @@ void ConnectedComponentAnalysis::adjustPropertiesToInput() {
     }
 
     // Volumes without an a RWM are expected to have normalized max and min values (and normalized values in general).
-    tgtAssert(input->hasMetaData("RealWorldMapping") || mm->getMin() == mm->getMinNormalized() && mm->getMax() == mm->getMaxNormalized(), "Missing RealWorldMapping or invalid VolumeMinMax");
+    tgtAssert(input->hasMetaData(VolumeBase::META_DATA_NAME_REAL_WORLD_MAPPING) || mm->getMin() == mm->getMinNormalized() && mm->getMax() == mm->getMaxNormalized(), "Missing RealWorldMapping or invalid VolumeMinMax");
 }
 
 } // namespace voreen
