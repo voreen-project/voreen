@@ -92,6 +92,7 @@ SimilarityPlot::SimilarityPlot()
     , fontSize_("fontSize", "Font Size", 10, 1, 30)
     , showTooltip_("showTooltip", "Show Tooltip", true)
     , toggleAxes_("toggleAxes", "Render Axes", true, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
+    , renderTimeSelection_("renderTimeSelection", "Render Time Selection", false, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , colorCoding_("colorCoding", "Color Coding")
     , renderedField_("renderedChannel", "Field")
     , renderedRuns_("renderedRuns", "Rendered Runs")
@@ -158,6 +159,9 @@ SimilarityPlot::SimilarityPlot()
             if (numDimensions_.get() == 3) {
                 camera_.adaptInteractionToScene(tgt::Bounds(-tgt::vec3::one, tgt::vec3::one), 0.1f, true);
             }
+
+            // We currently only allow for manual time range selection in 1D mode.
+            selectedTimeStep_.setVisibleFlag(numDimensions_.get() == 1);
         });
     addProperty(principleComponent_);
         principleComponent_.setVisibleFlag(numDimensions_.get() == 1);
@@ -173,6 +177,8 @@ SimilarityPlot::SimilarityPlot()
         showTooltip_.setGroupID("rendering");
     addProperty(toggleAxes_);
         toggleAxes_.setGroupID("rendering");
+    addProperty(renderTimeSelection_);
+        renderTimeSelection_.setGroupID("rendering");
     addProperty(colorCoding_);
         colorCoding_.addOption("run", "Only Run", COLOR_RUN);
         colorCoding_.addOption("timeStep", "Only Time Step", COLOR_TIMESTEP);
@@ -469,6 +475,11 @@ void SimilarityPlot::renderingPass(bool picking) {
     switch(numDimensions_.get()) {
     case 1:
     {
+        tgt::vec2 timeRange = tgt::vec2(dataset->getStartTime(), dataset->getEndTime());
+        if(renderTimeSelection_.get()) {
+            timeRange = selectedTimeStep_.get();
+        }
+
         for(int runIdx : renderingOrder_) {
 
             glLineWidth((subSelection_.count(runIdx) != 0) ? 7.0f : 5.0f);
@@ -489,8 +500,12 @@ void SimilarityPlot::renderingPass(bool picking) {
             }
             else {
                 for (size_t j = 0; j < numTimeSteps; j++) {
+                    float colorSaturation = 1.0f;
+                    if(run.timeSteps_[j].time_ < timeRange.x || run.timeSteps_[j].time_ > timeRange.y) {
+                        colorSaturation = 0.25f;
+                    }
                     float t = mapRange(run.timeSteps_[j].time_, dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
-                    IMode.color(getColor(runIdx, j, picking));
+                    IMode.color(getColor(runIdx, j, picking) * colorSaturation + tgt::vec3(1.0f - colorSaturation));
                     IMode.vertex(tgt::vec2(t, vertices[j][eigenValueIdx]));
                 }
             }
@@ -504,6 +519,20 @@ void SimilarityPlot::renderingPass(bool picking) {
                 drawTimeStepSelection(runIdx, selectedTimeStep, position, color);
             }
         }
+
+        if(!picking && renderTimeSelection_.get()) {
+            tgt::vec2 mappedTimeRange = mapRange(selectedTimeStep_.get(), tgt::vec2(dataset->getStartTime()), tgt::vec2(dataset->getEndTime()), -tgt::vec2::one, tgt::vec2::one);
+
+            glLineWidth(3.0f);
+            IMode.color(tgt::vec3::zero);
+            IMode.begin(tgt::ImmediateMode::LINES);
+            IMode.vertex(tgt::vec2(mappedTimeRange.x, -1.0f));
+            IMode.vertex(tgt::vec2(mappedTimeRange.x,  1.0f));
+            IMode.vertex(tgt::vec2(mappedTimeRange.y, -1.0f));
+            IMode.vertex(tgt::vec2(mappedTimeRange.y,  1.0f));
+            IMode.end();
+        }
+
         break;
     }
     case 2:

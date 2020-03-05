@@ -126,6 +126,7 @@ private:
     IntProperty fontSize_;
     BoolProperty showTooltip_;
     BoolProperty toggleAxes_; //< used for merging plots
+    BoolProperty renderTimeSelection_;
     OptionProperty<ColorCoding> colorCoding_;
     OptionProperty<std::string> renderedField_;
     StringListProperty renderedRuns_;
