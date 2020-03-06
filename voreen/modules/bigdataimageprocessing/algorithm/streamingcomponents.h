@@ -318,10 +318,10 @@ void SC_NS::writeOutputVolume(const RootFile& rootFile, const InputType& input, 
                 tgtAssert(run->upperBound_ > x, "overlapping runs");
                 if(run->lowerBound_ <= x) {
                     id = rootFile.getRootID(run->getId());
-                    // Perform remapping, if available.
-                    if(!idRemappingTable.empty()) {
-                        id = idRemappingTable[id];
-                    }
+
+                    // Perform remapping, e.g., to sort components.
+                    id = idRemappingTable[id];
+
                     ++voxelCounter;
                 } else {
                     id = 0;
@@ -564,25 +564,23 @@ SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t
             return componentComparator(metadataMap.at(a.first), metadataMap.at(b.first));
         };
         std::sort(finalIds.begin(), finalIds.end(), compare);
-
-        finalIdRemappingTable_.resize(finalIdCounter);
-        finalIdRemappingTable_[0] = 0; // Zero does not get remapped.
     }
+
+    finalIdRemappingTable_.resize(finalIdCounter);
+    finalIdRemappingTable_[0] = 0; // Zero does not get remapped.
 
     uint32_t sortedFinalIdCounter = 1;
     for(auto iter = finalIds.begin(); iter != finalIds.end(); iter++) {
-        // For each component, a callback is invoked.
-        const uint64_t& runid = iter->first;
+        uint64_t runid = iter->first;
+        uint32_t finalid = iter->second;
+
         const auto& entry = metadataMap.find(runid);
         tgtAssert(entry != metadataMap.end(), "No metadata for runid");
         cccallback(sortedFinalIdCounter, entry->second);
 
         // Optionally, a remapping is performed from based on the previous sorting.
         // Here, we map the old final Id to the sorted final id.
-        if(componentComparator) {
-            const uint32_t& finalid = iter->second;
-            finalIdRemappingTable_[finalid] = sortedFinalIdCounter;
-        }
+        finalIdRemappingTable_[finalid] = sortedFinalIdCounter;
 
         sortedFinalIdCounter++;
     }

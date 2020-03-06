@@ -6,13 +6,8 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="VolumeSave" ref="ref9" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="255.87109375" y="-113" />
+                    <value x="409.556854248" y="-106.221961975" />
                 </MetaItem>
                 <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.913182139" />
             </MetaData>
@@ -28,8 +23,8 @@
                                 <path noPathSet="false">
                                     <paths>
                                         <item value="input/hdf5/aneurism_binary.h5" />
-                                        <item value="../../voreen-testdata/voreen-testdata/input/hdf5/aneurism_binary.h5" />
-                                        <item value="/git/voreen-testdata/voreen-testdata/input/hdf5/aneurism_binary.h5" />
+                                        <item value="../test-data/voreen-testdata/input/hdf5/aneurism_binary.h5" />
+                                        <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/input/hdf5/aneurism_binary.h5" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -63,8 +58,8 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/cca6_metadata.csv" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/cca6_metadata.csv" />
-                                    <item value="/git/voreen-testdata/voreen-testdata/output/cca6_metadata.csv" />
+                                    <item value="../test-data/voreen-testdata/output/cca6_metadata.csv" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/cca6_metadata.csv" />
                                 </paths>
                             </paths>
                         </Property>
@@ -79,13 +74,14 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen0/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/318cf86b-7a79-4a1c-aea4-6dea0788c7a3.h5" />
-                                    <item value="data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/318cf86b-7a79-4a1c-aea4-6dea0788c7a3.h5" />
-                                    <item value="/git/voreen0/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/318cf86b-7a79-4a1c-aea4-6dea0788c7a3.h5" />
+                                    <item value="../../voreen/data/tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/02165243-61a3-4857-84ba-71a77cb9a387.h5" />
+                                    <item value="data/tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/02165243-61a3-4857-84ba-71a77cb9a387.h5" />
+                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/02165243-61a3-4857-84ba-71a77cb9a387.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="sortingMethod" name="sortingMethod" value="none" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
@@ -121,8 +117,8 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/cca6.vvd" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/cca6.vvd" />
-                                    <item value="/git/voreen-testdata/voreen-testdata/output/cca6.vvd" />
+                                    <item value="../test-data/voreen-testdata/output/cca6.vvd" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/cca6.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -155,8 +151,8 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/cca18_metadata.csv" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/cca18_metadata.csv" />
-                                    <item value="/git/voreen-testdata/voreen-testdata/output/cca18_metadata.csv" />
+                                    <item value="../test-data/voreen-testdata/output/cca18_metadata.csv" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/cca18_metadata.csv" />
                                 </paths>
                             </paths>
                         </Property>
@@ -171,13 +167,14 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen0/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/4c9fdea7-ba0c-45cc-8f66-240980c37d5c.h5" />
-                                    <item value="data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/4c9fdea7-ba0c-45cc-8f66-240980c37d5c.h5" />
-                                    <item value="/git/voreen0/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/4c9fdea7-ba0c-45cc-8f66-240980c37d5c.h5" />
+                                    <item value="../../voreen/data/tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/bbb15673-6d42-42b8-9d51-7515b3ad9ee9.h5" />
+                                    <item value="data/tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/bbb15673-6d42-42b8-9d51-7515b3ad9ee9.h5" />
+                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/bbb15673-6d42-42b8-9d51-7515b3ad9ee9.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="sortingMethod" name="sortingMethod" value="none" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
@@ -213,8 +210,8 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/cca18.vvd" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/cca18.vvd" />
-                                    <item value="/git/voreen-testdata/voreen-testdata/output/cca18.vvd" />
+                                    <item value="../test-data/voreen-testdata/output/cca18.vvd" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/cca18.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -247,8 +244,8 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/cca26_metadata.csv" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/cca26_metadata.csv" />
-                                    <item value="/git/voreen-testdata/voreen-testdata/output/cca26_metadata.csv" />
+                                    <item value="../test-data/voreen-testdata/output/cca26_metadata.csv" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/cca26_metadata.csv" />
                                 </paths>
                             </paths>
                         </Property>
@@ -263,13 +260,14 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen0/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd.h5" />
-                                    <item value="data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd.h5" />
-                                    <item value="/git/voreen0/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd.h5" />
+                                    <item value="../../voreen/data/tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/e83e0227-ac0f-4180-82bd-68d3a7b56476.h5" />
+                                    <item value="data/tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/e83e0227-ac0f-4180-82bd-68d3a7b56476.h5" />
+                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/e83e0227-ac0f-4180-82bd-68d3a7b56476.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="sortingMethod" name="sortingMethod" value="none" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
@@ -305,8 +303,8 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/cca26.vvd" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/cca26.vvd" />
-                                    <item value="/git/voreen-testdata/voreen-testdata/output/cca26.vvd" />
+                                    <item value="../test-data/voreen-testdata/output/cca26.vvd" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/cca26.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -330,7 +328,7 @@
                 </Processor>
                 <Processor type="VolumeSource" name="VolumeSource 2" id="ref7">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="640" y="-283" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="739" y="-284" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
@@ -338,9 +336,9 @@
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../voreen0/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="../../voreen/resource/voreenve/volumes/walnut.vvd" />
                                         <item value="resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="/git/voreen0/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="/home/s_leis06/programming/voreen/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -372,8 +370,8 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/cca_filtered_metadata.csv" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/cca_filtered_metadata.csv" />
-                                    <item value="/git/voreen-testdata/voreen-testdata/output/cca_filtered_metadata.csv" />
+                                    <item value="../test-data/voreen-testdata/output/cca_filtered_metadata.csv" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/cca_filtered_metadata.csv" />
                                 </paths>
                             </paths>
                         </Property>
@@ -388,13 +386,14 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../voreen0/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/3466cda7-8b6d-422c-92e4-d22bbe2d4a4d.h5" />
-                                    <item value="data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/3466cda7-8b6d-422c-92e4-d22bbe2d4a4d.h5" />
-                                    <item value="/git/voreen0/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/3466cda7-8b6d-422c-92e4-d22bbe2d4a4d.h5" />
+                                    <item value="../../voreen/data/tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/bb4f0314-c44c-4dda-b85c-537120eaae9a.h5" />
+                                    <item value="data/tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/bb4f0314-c44c-4dda-b85c-537120eaae9a.h5" />
+                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/bb4f0314-c44c-4dda-b85c-537120eaae9a.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="sortingMethod" name="sortingMethod" value="none" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
@@ -420,7 +419,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeSave" name="VolumeSave 4" id="ref9">
+                <Processor type="VolumeSave" name="VolumeSave 4" id="ref10">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="647" y="7" />
                     </MetaData>
@@ -430,8 +429,101 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/cca_filtered.vvd" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/cca_filtered.vvd" />
-                                    <item value="/git/voreen-testdata/voreen-testdata/output/cca_filtered.vvd" />
+                                    <item value="../test-data/voreen-testdata/output/cca_filtered.vvd" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/cca_filtered.vvd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="saveOnPathChange" name="saveOnPathChange" value="true" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ConnectedComponentAnalysis" name="CCA Sorted" id="ref9">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="863" y="-96" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="applyLabeling" name="applyLabeling" value="true" />
+                        <Property mapKey="binarizationThreshold" name="binarizationThreshold" value="7" />
+                        <Property mapKey="componentStatFilePath" name="componentStatFilePath" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/cca_sorted_metadata.csv" />
+                                    <item value="../test-data/voreen-testdata/output/cca_sorted_metadata.csv" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/cca_sorted_metadata.csv" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
+                        <Property mapKey="invertBinarization" name="invertBinarization" value="true" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="minBoundsDiagonal" name="minBoundsDiagonal" value="0" />
+                        <Property mapKey="minBoundsDiagonalRelative" name="minBoundsDiagonalRelative" value="0" />
+                        <Property mapKey="minVoxelVolume" name="minVoxelVolume" value="0" />
+                        <Property mapKey="neighbourhoodMode" name="neighbourhoodMode" value="n18" />
+                        <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
+                        <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../voreen/data/tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/68b52f01-fa04-4908-bf88-60c62ace1cfa.h5" />
+                                    <item value="data/tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/68b52f01-fa04-4908-bf88-60c62ace1cfa.h5" />
+                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/68b52f01-fa04-4908-bf88-60c62ace1cfa.h5" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="sortingMethod" name="sortingMethod" value="decrVoxelVolume" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                        <Property mapKey="writeComponentStatFile" name="writeComponentStatFile" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="connectedcomponentanalysis.inport" direction="1" portID="connectedcomponentanalysis.inport" guiName="Binary Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="connectedcomponentanalysis.outport" direction="0" portID="connectedcomponentanalysis.outport" guiName="Label Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSave" name="VolumeSave 5" id="ref11">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="859" y="10" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/cca_sorted.vvd" />
+                                    <item value="../test-data/voreen-testdata/output/cca_sorted.vvd" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/cca_sorted.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -512,11 +604,27 @@
                     </Inport>
                 </Connection>
                 <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref7" />
+                    </Outport>
+                    <Inport name="connectedcomponentanalysis.inport">
+                        <Processor type="ConnectedComponentAnalysis" ref="ref9" />
+                    </Inport>
+                </Connection>
+                <Connection>
                     <Outport name="connectedcomponentanalysis.outport">
                         <Processor type="ConnectedComponentAnalysis" ref="ref8" />
                     </Outport>
                     <Inport name="volumehandle.input">
-                        <Processor type="VolumeSave" ref="ref9" />
+                        <Processor type="VolumeSave" ref="ref10" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="connectedcomponentanalysis.outport">
+                        <Processor type="ConnectedComponentAnalysis" ref="ref9" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeSave" ref="ref11" />
                     </Inport>
                 </Connection>
             </Connections>
