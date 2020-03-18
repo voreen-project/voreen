@@ -64,6 +64,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , targetVelocity_("targetVelocity", "Target Velocity (mm/s)", 0.0f, 0.0f, 1000.0f)
     , centerlinePosition_("position", "Position", 0, 0, 0)
     , invertDirection_("invertDirection", "Invert Direction", false)
+    , forceAxisAlignment_("forceAxisAlignment", "Force Axis Alignment", false)
     , cloneFlowIndicator_("cloneFlowIndicator", "Clone Flow Indicator")
     , removeFlowIndicator_("removeFlowIndicator", "Remove Flow Indicator")
     , flowIndicatorTable_("flowIndicatorTable", "Flow Indicators", 2, Processor::VALID)
@@ -116,6 +117,9 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     addProperty(invertDirection_);
         invertDirection_.setGroupID("indicator");
         ON_CHANGE(invertDirection_, FlowIndicatorDetection, onIndicatorSettingsChange);
+    addProperty(forceAxisAlignment_);
+        forceAxisAlignment_.setGroupID("indicator");
+        ON_CHANGE(forceAxisAlignment_, FlowIndicatorDetection, onIndicatorSettingsChange);
     addProperty(cloneFlowIndicator_);
         cloneFlowIndicator_.setGroupID("indicator");
         ON_CHANGE(cloneFlowIndicator_, FlowIndicatorDetection, onCloneFlowIndicator);
@@ -242,6 +246,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
     bool settingsEditable = validSelection && vesselGraphPort_.hasData();
     centerlinePosition_.setReadOnlyFlag(!settingsEditable);
     invertDirection_.setReadOnlyFlag(!settingsEditable);
+    forceAxisAlignment_.setReadOnlyFlag(!settingsEditable);
     cloneFlowIndicator_.setReadOnlyFlag(!settingsEditable);
     removeFlowIndicator_.setReadOnlyFlag(!settingsEditable);
 }
@@ -277,6 +282,7 @@ void FlowIndicatorDetection::onIndicatorSettingsChange() {
         FlowIndicatorSettings& settings = flowIndicatorSettings_[indicatorIdx];
         settings.centerlinePosition_ = centerlinePosition_.get();
         settings.invertDirection_ = invertDirection_.get();
+        settings.forceAxisAlignment_ = forceAxisAlignment_.get();
 
         // Reinitialize indicator, but keep type and id!
         FlowIndicator& indicator = flowIndicators_[indicatorIdx];
@@ -322,6 +328,7 @@ void FlowIndicatorDetection::detectFlowIndicators(bool forced) {
             settings.edgeId_ = node.getEdges().back().get().getID();
             settings.centerlinePosition_ = 0;
             settings.invertDirection_ = false;
+            settings.forceAxisAlignment_ = false;
             flowIndicatorSettings_.push_back(settings);
 
             // Initialize indicator according to those settings.
@@ -422,6 +429,34 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(const FlowIndicatorSet
     indicator.center_ = ref->pos_;
     indicator.normal_ = tgt::normalize(back->pos_ - front->pos_);
     indicator.radius_ = radius;
+
+    if(settings.forceAxisAlignment_) {
+        float angleX = std::acos(std::abs(indicator.normal_.x));
+        float angleY = std::acos(std::abs(indicator.normal_.y));
+        float angleZ = std::acos(std::abs(indicator.normal_.z));
+
+        if(angleX < angleY) {
+            if(angleX < angleZ) {
+                float sign = indicator.normal_.x < 0.0f ? -1.0f : 1.0f;
+                indicator.normal_ = tgt::vec3(sign, 0.0f, 0.0f);
+            }
+            else {
+                float sign = indicator.normal_.z < 0.0f ? -1.0f : 1.0f;
+                indicator.normal_ = tgt::vec3(0.0f, 0.0f, sign);
+            }
+        }
+        else {
+            if(angleY < angleZ) {
+                float sign = indicator.normal_.y < 0.0f ? -1.0f : 1.0f;
+                indicator.normal_ = tgt::vec3(0.0f, sign, 0.0f);
+            }
+            else {
+                float sign = indicator.normal_.z < 0.0f ? -1.0f : 1.0f;
+                indicator.normal_ = tgt::vec3(0.0f, 0.0f, 1.0f);
+            }
+        }
+
+    }
 
     if(settings.invertDirection_) {
         indicator.normal_ *= -1.0f;

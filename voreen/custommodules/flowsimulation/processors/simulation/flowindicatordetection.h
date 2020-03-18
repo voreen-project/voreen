@@ -73,6 +73,7 @@ private:
         VGEdgeID edgeId_{VGEdgeID::INVALID};
         int centerlinePosition_{-1};
         bool invertDirection_{false};
+        bool forceAxisAlignment_{false};
     };
 
     /**
@@ -139,6 +140,7 @@ private:
     FloatProperty targetVelocity_;
     IntProperty centerlinePosition_;
     BoolProperty invertDirection_;
+    BoolProperty forceAxisAlignment_;
     ButtonProperty cloneFlowIndicator_;
     ButtonProperty removeFlowIndicator_;
 
