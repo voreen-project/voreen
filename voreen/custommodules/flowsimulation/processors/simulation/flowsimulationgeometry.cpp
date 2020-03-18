@@ -74,6 +74,7 @@ void FlowSimulationGeometry::process() {
         inlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 0.0f);
         inlet.normal_ = transformation_.get().getRotationalPart() * tgt::vec3(0.0f, 0.0f, 1.0f);
         inlet.radius_ = 1.0f;
+        inlet.targetVelocity_ = 150.0f;
         flowParametrizationList->addFlowIndicator(inlet);
 
         FlowIndicator outlet;

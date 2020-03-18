@@ -133,7 +133,7 @@ void HDF5VolumeWriter::write(const std::string& filename, const VolumeBase* volu
     fileVolume->writePhysicalToWorldTransformation(volumeHandle->getPhysicalToWorldMatrix());
 
     // Write RealWorldMapping information about the volume to the data set, if available.
-    if(volumeHandle->hasMetaData("RealWorldMapping")) {
+    if(volumeHandle->hasMetaData(VolumeBase::META_DATA_NAME_REAL_WORLD_MAPPING)) {
         fileVolume->writeRealWorldMapping(volumeHandle->getRealWorldMapping());
     }
 
