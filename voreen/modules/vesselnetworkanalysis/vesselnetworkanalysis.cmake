@@ -59,7 +59,6 @@ SET(MOD_CORE_SOURCES
 )
 
 SET(MOD_CORE_HEADERS
-    ${MOD_DIR}/algorithm/boundshierarchy.h
     ${MOD_DIR}/algorithm/idvolume.h
     ${MOD_DIR}/algorithm/streaminggraphcreation.h
     ${MOD_DIR}/algorithm/surface.h

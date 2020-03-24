@@ -29,6 +29,8 @@
 #include "tgt/bounds.h"
 #include "tgt/memory.h"
 
+#include <boost/optional.hpp>
+
 
 #define Bounds tgt::TemplateBounds<T>
 namespace voreen {
@@ -98,7 +100,10 @@ public:
 template<typename T, typename V>
 class BoundsHierarchy {
 public:
-    BoundsHierarchy(const std::vector<std::pair<V, Bounds>>&&);
+    static boost::optional<BoundsHierarchy> buildBottomUp(std::vector<std::pair<V, Bounds>>&&);
+    static boost::optional<BoundsHierarchy> buildTopDown(std::vector<std::pair<V, Bounds>>&&);
+
+    BoundsHierarchy(BoundsHierarchyNode<T,V>&&) noexcept;
     BoundsHierarchy(BoundsHierarchy&&) noexcept;
     BoundsHierarchy& operator=(BoundsHierarchy&& other);
 
@@ -215,7 +220,7 @@ std::vector<V> BoundsHierarchy<T,V>::findBounds(const tgt::Vector3<T>& p) const 
 }
 
 template<typename T, typename V>
-static BoundsHierarchyNode<T,V> buildHierarchy(const std::vector<std::pair<V, Bounds>>&& bounds) {
+static BoundsHierarchyNode<T,V> buildHierarchyBottomUp(const std::vector<std::pair<V, Bounds>>&& bounds) {
     tgtAssert(bounds.size() > 0, "No bounds");
 
     std::vector<BoundsHierarchyNode<T,V>> nodes;
@@ -270,8 +275,33 @@ static BoundsHierarchyNode<T,V> buildHierarchy(const std::vector<std::pair<V, Bo
 }
 
 template<typename T, typename V>
-BoundsHierarchy<T,V>::BoundsHierarchy(const std::vector<std::pair<V, Bounds>>&& bounds)
-    : root(buildHierarchy(std::move(bounds)))
+static BoundsHierarchyNode<T,V> buildHierarchyTopDown(std::vector<std::pair<V, Bounds>>&& bounds, int dim) {
+    tgtAssert(bounds.size() > 0, "No bounds");
+
+    if(bounds.size() == 1) {
+        auto p = bounds.front();
+        return BoundsHierarchyNode<T,V>(p.first, p.second);
+    }
+
+    auto begin = bounds.begin();
+    auto end = bounds.end();
+
+    std::sort(bounds.begin(), bounds.end(), [dim] (const std::pair<V, Bounds>& p1, const std::pair<V, Bounds>& p2) {
+        return p1.second.getLLF()[dim] < p2.second.getLLF()[dim];
+    });
+
+    auto mid = bounds.begin() + bounds.size()/2;
+
+    int nextDim = dim == 2 ? 0 : dim+1;
+    auto l = buildHierarchyTopDown(std::vector<std::pair<V, Bounds>>(begin, mid), nextDim);
+    auto r = buildHierarchyTopDown(std::vector<std::pair<V, Bounds>>(mid, end), nextDim);
+
+    return BoundsHierarchyNode<T,V>(std::move(l), std::move(r));
+}
+
+template<typename T, typename V>
+BoundsHierarchy<T,V>::BoundsHierarchy(BoundsHierarchyNode<T,V>&& root) noexcept
+    : root(std::move(root))
 {
 }
 
@@ -285,6 +315,20 @@ BoundsHierarchy<T,V>& BoundsHierarchy<T,V>::operator=(BoundsHierarchy<T,V>&& oth
     this->~BoundsHierarchyNode();
     new(this) BoundsHierarchy(std::move(other));
     return *this;
+}
+template<typename T, typename V>
+boost::optional<BoundsHierarchy<T,V>> BoundsHierarchy<T,V>::buildBottomUp(std::vector<std::pair<V, Bounds>>&& bounds) {
+    if(bounds.empty()) {
+        return boost::none;
+    }
+    return BoundsHierarchy<T,V>(buildHierarchyBottomUp(std::move(bounds)));
+}
+template<typename T, typename V>
+boost::optional<BoundsHierarchy<T,V>> BoundsHierarchy<T,V>::buildTopDown(std::vector<std::pair<V, Bounds>>&& bounds) {
+    if(bounds.empty()) {
+        return boost::none;
+    }
+    return BoundsHierarchy<T,V>(buildHierarchyTopDown(std::move(bounds), 0));
 }
 
 #undef Bounds
