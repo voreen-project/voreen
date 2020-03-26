@@ -54,6 +54,9 @@
 #include "modules/core/processors/output/volumelistsave.h"
 #include "modules/core/processors/output/octreesave.h"
 //#include "modules/core/processors/output/octreetovvdstorage.h"
+#ifdef VRN_MODULE_OPENCL
+#include "modules/opencl/openclmodule.h"
+#endif
 
 #include "tgt/init.h"
 #include "tgt/logmanager.h"
@@ -149,6 +152,12 @@ int main(int argc, char* argv[]) {
     cmdParser->addFlagOption("opengl", glMode, CommandLineParser::MainOption,
         "Run the workspace in OpenGL mode: initialize OpenGL context and create canvases.");
 
+#ifdef VRN_MODULE_OPENCL
+    bool clMode = false;
+    cmdParser->addFlagOption("opencl", clMode, CommandLineParser::MainOption,
+        "Force opencl initialization (only effective when \"--opengl\" is not passed as well)");
+#endif
+
     bool triggerAllActions = false;
     cmdParser->addFlagOption("trigger-all-actions", triggerAllActions, CommandLineParser::MainOption,
         "Trigger all ButtonProperties after the network has been evaluated.");
@@ -220,6 +229,15 @@ int main(int argc, char* argv[]) {
         catch (VoreenException& e) {
             exitFailure("OpenGL initialization failed: " + std::string(e.what()));
         }
+#ifdef VRN_MODULE_OPENCL
+    } else if(clMode) {
+        try {
+            OpenCLModule::getInstance()->initializeGL();
+        }
+        catch (VoreenException& e) {
+            exitFailure("OpenCL initialization failed: " + std::string(e.what()));
+        }
+#endif
     }
 
     // create network evaluator
