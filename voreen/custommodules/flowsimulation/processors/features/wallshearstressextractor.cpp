@@ -27,6 +27,7 @@
 
 #include "voreen/core/datastructures/volume/volume.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 #include "voreen/core/ports/conditions/portconditionvolumetype.h"
 
@@ -51,8 +52,8 @@ const int MAT_COUNT = 3;
 class MeasuredDataMapper : public AnalyticalF3D<T, T> {
 public:
 
-    MeasuredDataMapper(const VolumeBase* volume)
-            : AnalyticalF3D<T, T>(3), volume_(volume) {
+    MeasuredDataMapper(const UnitConverter<T, DESCRIPTOR>& converter, const VolumeBase* volume)
+            : AnalyticalF3D<T, T>(3), converter_(converter), volume_(volume) {
         tgtAssert(volume_, "No volume");
         tgtAssert(volume_->getNumChannels() == 3, "Num channels != 3");
         bounds_ = volume_->getBoundingBox(false).getBoundingBox(false);
@@ -70,13 +71,14 @@ public:
 
         tgt::vec3 voxel = typedRepresentation_->getVoxelLinear(physicalToVoxelMatrix_ * rwPos, 0, false);
         for (size_t i = 0; i < typedRepresentation_->getNumChannels(); i++) {
-            output[i] = voxel[i] * VOREEN_LENGTH_TO_SI;
+            output[i] = converter_.getLatticeVelocity(voxel[i] * VOREEN_LENGTH_TO_SI);
         }
 
         return true;
     }
 private:
 
+    const UnitConverter<T, DESCRIPTOR>& converter_;
     const VolumeBase* volume_;
     tgt::Bounds bounds_;
     tgt::mat4 physicalToVoxelMatrix_;
@@ -153,20 +155,22 @@ WallShearStressExtractorOutput WallShearStressExtractor::compute(WallShearStress
     // Needs to be initialized in each new thread to be used.
     olb::olbInit(nullptr, nullptr);
 
+    VolumeMinMaxMagnitude* vmmm = input.measuredData->getDerivedData<VolumeMinMaxMagnitude>();
     VolumeRAMRepresentationLock representation(input.measuredData);
-    tgt::svec3 dim = input.measuredData->getDimensions();
     tgt::mat4 voxelToPhysicalMatrix = input.measuredData->getVoxelToPhysicalMatrix();
-    float spacing = tgt::min(input.measuredData->getSpacing());
-    float length = tgt::max(input.measuredData->getCubeSize());
+    tgt::svec3 dimensions = input.measuredData->getDimensions();
+    size_t dim = tgt::maxElem(dimensions);
+    float spacing = input.measuredData->getSpacing()[dim];
+    float length = spacing * dimensions[dim];
 
     std::unique_ptr<VolumeRAM_Float> output = std::move(input.output);
     output->clear();
 
-    UnitConverter<T, DESCRIPTOR> converter(
-            spacing,
+    UnitConverterFromResolutionAndRelaxationTime<T, DESCRIPTOR> converter(
+            dimensions[dim],
             1.0,
             length,
-            1.0,
+            vmmm->getMaxMagnitude() * VOREEN_LENGTH_TO_SI,
             input.viscosity * 0.001 / input.density,
             input.density
     );
@@ -195,7 +199,7 @@ WallShearStressExtractorOutput WallShearStressExtractor::compute(WallShearStress
     sLattice.defineDynamics(superGeometry, MAT_FLUID, &bulkDynamics);
     sLattice.defineDynamics(superGeometry, MAT_WALL, &instances::getNoDynamics<T, DESCRIPTOR>());
     sOffBoundaryCondition.addZeroVelocityBoundary(superGeometry, MAT_WALL, stlReader);
-    MeasuredDataMapper mapper(input.measuredData);
+    MeasuredDataMapper mapper(converter, input.measuredData);
     sLattice.defineU(superGeometry, MAT_FLUID, mapper);
     sLattice.initialize();
 
@@ -206,9 +210,9 @@ WallShearStressExtractorOutput WallShearStressExtractor::compute(WallShearStress
 #ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for
 #endif
-    for (size_t z = 0; z < dim.z; z++) {
-        for (size_t y = 0; y < dim.y; y++) {
-            for (size_t x = 0; x < dim.x; x++) {
+    for (size_t z = 0; z < dimensions.z; z++) {
+        for (size_t y = 0; y < dimensions.y; y++) {
+            for (size_t x = 0; x < dimensions.x; x++) {
 
                 tgt::Vector3<T> pos = voxelToPhysicalMatrix * tgt::vec3(x, y, z);
 
