@@ -115,11 +115,26 @@ SimilarityMatrixCombineOutput SimilarityMatrixCombine::compute(SimilarityMatrixC
         const std::string& fieldName = fieldNames[fi];
 
         SimilarityMatrix& outputDistanceMatrix = outputMatrices->getSimilarityMatrix(fieldName);
-        size_t size = outputDistanceMatrix.getSize();
+        long size = static_cast<long>(outputDistanceMatrix.getSize());
+
+        SubtaskProgressReporter flagsProgress(progress,tgt::vec2(fi, fi+1) / tgt::vec2(fieldNames.size()));
+        ThreadedTaskProgressReporter threadedProgress(flagsProgress, size);
+        bool aborted = false;
+
 #ifdef VRN_MODULE_OPENMP
-#pragma omp parallel for shared(outputDistanceMatrix, inputMatrixLists)
+#pragma omp parallel for schedule(dynamic)
 #endif
-        for(long i=0; i<static_cast<long>(size); i++) {
+        for(long i=0; i<size; i++) {
+#ifdef VRN_MODULE_OPENMP
+            if(aborted) {
+                continue;
+            }
+#else
+            if(aborted) {
+                break;
+            }
+#endif
+
             for(long j=0; j<=i; j++) {
 
                 float d = 1.0f;
@@ -149,9 +164,21 @@ SimilarityMatrixCombineOutput SimilarityMatrixCombine::compute(SimilarityMatrixC
                     break;
                 }
             }
+
+            if (threadedProgress.reportStepDone()) {
+#ifdef VRN_MODULE_OPENMP
+#pragma omp critical
+                aborted = true;
+#else
+                aborted = true;
+                break;
+#endif
+            }
         }
 
-        progress.setProgress(1.0f * fi / fieldNames.size());
+        if (aborted) {
+            throw boost::thread_interrupted();
+        }
     }
 
     progress.setProgress(1.0f);
