@@ -66,7 +66,7 @@ private:
     FlowParametrizationPort inport_;
 
     BoolProperty enable_;
-    ColorProperty flowGeneratorColor_;
+    ColorProperty velocityBoundaryColor_;
     ColorProperty pressureBoundaryColor_;
     ColorProperty measureFluxColor_;
 

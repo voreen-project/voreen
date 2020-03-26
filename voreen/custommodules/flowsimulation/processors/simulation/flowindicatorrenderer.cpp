@@ -35,14 +35,14 @@ FlowIndicatorRenderer::FlowIndicatorRenderer()
     : GeometryRendererBase()
     , inport_(Port::INPORT, "parametrization", "Parametrization Input")
     , enable_("enable", "Enable", true)
-    , flowGeneratorColor_("flowGeneratorColor", "Flow Generator Color", tgt::vec4(0.0f, 1.0f, 0.0f, 0.8f))
+    , velocityBoundaryColor_("velocityBoundaryColor", "Velocity Boundary Color", tgt::vec4(0.0f, 1.0f, 0.0f, 0.8f))
     , pressureBoundaryColor_("pressureBoundaryColor", "Pressure Boundary Color", tgt::vec4(1.0f, 0.0f, 0.0f, 0.8f))
     , measureFluxColor_("measureFluxColor", "Flux Measure Color", tgt::vec4(0.0f, 0.0f, 1.0f, 0.8f))
 {
     addPort(inport_);
 
     addProperty(enable_);
-    addProperty(flowGeneratorColor_);
+    addProperty(velocityBoundaryColor_);
     addProperty(pressureBoundaryColor_);
     addProperty(measureFluxColor_);
 }
@@ -100,8 +100,8 @@ void FlowIndicatorRenderer::render() {
         MatStack.multMatrix(utils::createTransformationMatrix(indicator.center_, indicator.normal_));
         MatStack.scale(tgt::vec3(indicator.radius_));
 
-        if(indicator.type_ == FIT_GENERATOR) {
-            IMode.color(flowGeneratorColor_.get());
+        if(indicator.type_ == FIT_VELOCITY) {
+            IMode.color(velocityBoundaryColor_.get());
             coneGeometry_->render();
         }
         else if(indicator.type_ == FIT_PRESSURE) {

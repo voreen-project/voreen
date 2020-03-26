@@ -56,6 +56,10 @@ protected:
 
     virtual void setDescriptions() {
         setDescription("This processor is being used to parameterize a simulation ensemble.");
+        outputResolution_.setDescription("This restricts the output resolution. A simulation might require a high "
+                                         "resolution for accurately modelling a physical system, however the output "
+                                         "of the simulation might not be resolution critical. "
+                                         "A value of 0 indicates no restriction.");
     }
 
 private:

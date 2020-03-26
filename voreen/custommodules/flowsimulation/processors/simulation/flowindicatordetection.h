@@ -51,6 +51,7 @@ public:
 
     virtual bool isReady() const;
     virtual void process();
+
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
 
@@ -66,14 +67,28 @@ private:
 
     /**
      * This helper struct stores the settings of each indicator
-     * with respect to the current vessel graph.
+     * that they don't store directly.
      */
-    struct FlowIndicatorSettings {
+    struct FlowIndicatorSettings : public Serializable {
+        // With respect to current vessel graph.
         VGNodeID nodeId_{VGNodeID::INVALID};
         VGEdgeID edgeId_{VGEdgeID::INVALID};
         int centerlinePosition_{-1};
         bool invertDirection_{false};
         bool forceAxisAlignment_{false};
+
+        // Other settings.
+        std::string velocityCurveType_;
+        float velocityCurveDuration_{0.0f};
+        float targetVelocity_{0.0f};
+        std::string velocityCurveFile_;
+        bool velocityCurvePeriodicity_{false};
+
+        FlowIndicatorSettings();
+        FlowIndicatorSettings(VGNodeID nodeId, VGEdgeID edgeId);
+
+        virtual void serialize(Serializer& s) const;
+        virtual void deserialize(Deserializer& s);
     };
 
     /**
@@ -92,13 +107,8 @@ private:
      * Callback that is triggered as soon as properties of the selected indicator
      * were changed. This will update the indicator accordingly.
      */
-    void onIndicatorConfigChange();
-
-    /**
-     * Callback that is triggered as soon the voxel id has been changed
-     * or the direction was inverted.
-     */
-    void onIndicatorSettingsChange();
+    void onIndicatorConfigChange(bool needReinitialization);
+    inline void onIndicatorConfigChange() { onIndicatorConfigChange(false); }
 
     /**
      * Callback for cloning the currently selected flow indicator (if any).
@@ -119,7 +129,7 @@ private:
      * Initializes a flow indicator according to the specified settings.
      * This includes position and normal and radius.
      */
-    FlowIndicator initializeIndicator(const FlowIndicatorSettings& settings);
+    FlowIndicator initializeIndicator(FlowIndicatorSettings& settings);
 
     /**
      * Creates the overview table from the current flow indicator list.
@@ -132,24 +142,28 @@ private:
     VolumePort volumePort_;
     FlowParametrizationPort parameterOutport_;
 
-    OptionProperty<FlowIndicatorType> indicatorType_;
-    OptionProperty<FlowProfile> flowProfile_;
-    OptionProperty<FlowStartPhase> startPhaseFunction_;
-    FloatProperty startPhaseDuration_;
-    FloatProperty radius_;
-    FloatProperty targetVelocity_;
-    IntProperty centerlinePosition_;
-    BoolProperty invertDirection_;
-    BoolProperty forceAxisAlignment_;
+    StringTableProperty flowIndicatorTable_;
     ButtonProperty cloneFlowIndicator_;
     ButtonProperty removeFlowIndicator_;
-
-    StringTableProperty flowIndicatorTable_;
     ButtonProperty resetFlowIndicators_;
     IntProperty angleThreshold_;
 
+    IntProperty centerlinePosition_;
+    FloatProperty radius_;
+    BoolProperty invertDirection_;
+    BoolProperty forceAxisAlignment_;
+    OptionProperty<FlowIndicatorType> indicatorType_;
+
+    OptionProperty<FlowProfile> flowProfile_;
+    StringOptionProperty velocityCurveType_;
+    FloatProperty velocityCurveDuration_;
+    FloatProperty targetVelocity_;
+    FileDialogProperty velocityCurveFile_;
+    BoolProperty velocityCurvePeriodicity_;
+
     std::vector<FlowIndicator> flowIndicators_;
     std::vector<FlowIndicatorSettings> flowIndicatorSettings_;
+
     bool triggertBySelection_;
 
     std::string vesselGraphHash_;

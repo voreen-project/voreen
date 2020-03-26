@@ -129,15 +129,15 @@ private:
     void setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                             sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
                             UnitConverter<T,DESCRIPTOR> const& converter,
-                            int iT,
+                            int iteration,
                             SuperGeometry3D<T>& superGeometry,
                             const FlowParameterSetEnsemble& parameterSetEnsemble,
                             size_t selectedParametrization) const;
 
     bool getResults(        SuperLattice3D<T, DESCRIPTOR>& sLattice,
                             UnitConverter<T,DESCRIPTOR>& converter,
-                            int ti,
-                            int tmax,
+                            int iteration,
+                            int maxIteration,
                             Dynamics<T, DESCRIPTOR>& bulkDynamics,
                             SuperGeometry3D<T>& superGeometry,
                             STLreader<T>& stlReader,
@@ -147,8 +147,8 @@ private:
 
     void writeResult(       STLreader<T>& stlReader,
                             UnitConverter<T,DESCRIPTOR>& converter,
-                            int ti,
-                            int tmax,
+                            int iteration,
+                            int maxIteration,
                             SuperLatticeF3D<T, DESCRIPTOR>& feature,
                             const FlowParameterSetEnsemble& parameterSetEnsemble,
                             size_t selectedParametrization,
@@ -159,11 +159,15 @@ private:
     VolumeListPort measuredDataPort_;
     FlowParametrizationPort parameterPort_;
 
+    mutable VolumePort insituPort_;
+
     FileDialogProperty simulationResults_;
     BoolProperty deleteOldSimulations_;
 
     BoolProperty simulateAllParametrizations_;
     IntProperty selectedParametrization_;
+
+    OptionProperty<FlowFeatures> insituOutput_;
 
     static const std::string loggerCat_;
 };

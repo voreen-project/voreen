@@ -29,8 +29,161 @@
 #include "voreen/core/io/serialization/deserializer.h"
 
 #include <sstream>
+#include <fstream>
 
 namespace voreen {
+
+VelocityCurve::VelocityCurve()
+    : periodic_(false)
+{
+    peakVelocities_[0.0f] = 0.0f;
+}
+
+float VelocityCurve::operator()(float t) const {
+
+    if(isPeriodic()) {
+        float begin = peakVelocities_.begin()->first;
+        float end = peakVelocities_.rbegin()->first;
+        t = std::fmod(t - begin, end - begin);
+    }
+    else {
+        if(t < peakVelocities_.begin()->first) {
+            return peakVelocities_.begin()->second;
+        }
+
+        if(t > peakVelocities_.rbegin()->first) {
+            return peakVelocities_.rbegin()->second;
+        }
+    }
+
+    struct Comparator {
+        bool operator()(const std::pair<float, float>& p, float value) {
+            return p.first < value;
+        }
+    };
+
+    auto upper = std::lower_bound(peakVelocities_. begin(), peakVelocities_.end(), t, Comparator());
+    auto lower = upper++;
+
+    float a = (t - lower->first) / (upper->first - lower->first);
+
+    return (1.0f - a) * lower->second + a * upper->second;
+}
+
+float& VelocityCurve::operator[](float t) {
+    return peakVelocities_[t];
+}
+
+void VelocityCurve::setPeriodic(bool enabled) {
+    periodic_ = enabled;
+}
+
+bool VelocityCurve::isPeriodic() const {
+    return periodic_;
+}
+
+VelocityCurve VelocityCurve::createConstantCurve(float value) {
+    VelocityCurve curve;
+    curve[0.0f] = value;
+    return curve;
+}
+
+VelocityCurve VelocityCurve::createLinearCurve(float duration, float maxValue) {
+    VelocityCurve curve;
+    curve[duration] = maxValue;
+    return curve;
+}
+
+VelocityCurve VelocityCurve::createSinusoidalCurve(float duration, float maxValue, int steps) {
+    tgtAssert(steps > 0, "invalid steps");
+
+    VelocityCurve curve;
+    for(int i=0; i<=steps; i++) {
+        float ts = i * duration / steps;
+        float value = maxValue * (std::sin(-tgt::PIf * 0.5f + ts*tgt::PIf) + 1.0f) * 0.5f;
+        curve[ts] = value;
+    }
+
+    return curve;
+}
+
+VelocityCurve VelocityCurve::createHumanHeartBeat() {
+    VelocityCurve curve;
+
+    curve[0.040f] =  1200.0f / 20000.0f * 1200.0f;
+    curve[0.075f] =  7000.0f / 20000.0f * 1200.0f;
+    curve[0.100f] = 17000.0f / 20000.0f * 1200.0f;
+    curve[0.125f] = 20000.0f / 20000.0f * 1200.0f;
+    curve[0.150f] = 20000.0f / 20000.0f * 1200.0f;
+    curve[0.250f] = 10000.0f / 20000.0f * 1200.0f;
+    curve[0.280f] =  7500.0f / 20000.0f * 1200.0f;
+    curve[0.320f] =  4200.0f / 20000.0f * 1200.0f;
+    curve[0.350f] =  1000.0f / 20000.0f * 1200.0f;
+    curve[0.380f] =     0.0f / 20000.0f * 1200.0f;
+    curve[0.390f] =     0.0f / 20000.0f * 1200.0f;
+    curve[0.420f] =   800.0f / 20000.0f * 1200.0f;
+    curve[0.455f] =  1200.0f / 20000.0f * 1200.0f;
+    curve[0.495f] =  2500.0f / 20000.0f * 1200.0f;
+    curve[0.525f] =  2000.0f / 20000.0f * 1200.0f;
+    curve[0.560f] =  1200.0f / 20000.0f * 1200.0f;
+    curve[0.595f] =   300.0f / 20000.0f * 1200.0f;
+    curve[0.660f] =   600.0f / 20000.0f * 1200.0f;
+    curve[0.700f] =   300.0f / 20000.0f * 1200.0f;
+
+    return curve;
+}
+
+VelocityCurve VelocityCurve::createFromCSV(const std::string& file) {
+    VelocityCurve curve;
+    curve.peakVelocities_.clear();
+
+    std::ifstream lineStream(file.c_str());
+    if (lineStream.fail()) {
+        throw VoreenException("CSV file could not be opened");
+    }
+
+    std::string line;
+    while(std::getline(lineStream, line)) {
+
+        std::vector<float> cellValues;
+
+        std::stringstream cellStream;
+        std::string cell;
+        while(std::getline(cellStream, cell, ',')) {
+            float value;
+            std::stringstream helper(cell);
+            helper >> value;
+
+            if (!helper.good()) {
+                throw VoreenException("Invalid value: " + cell);
+            }
+
+            cellValues.push_back(value);
+        }
+
+        if(cellValues.size() != 2) {
+            throw VoreenException("Invalid tupel size");
+        }
+
+        curve[cellValues[0]] = cellValues[1];
+    }
+
+    if(curve.peakVelocities_.empty()) {
+        throw VoreenException("Empty curve");
+    }
+
+    return curve;
+}
+
+void VelocityCurve::serialize(Serializer& s) const {
+    s.serialize("peakVelocities", peakVelocities_);
+    s.serialize("periodic", periodic_);
+}
+void VelocityCurve::deserialize(Deserializer& s) {
+    s.deserialize("peakVelocities", peakVelocities_);
+    s.deserialize("periodic", periodic_);
+}
+
 
 FlowIndicator::FlowIndicator()
     : type_(FIT_INVALID)
@@ -39,9 +192,6 @@ FlowIndicator::FlowIndicator()
     , normal_(tgt::vec3::zero)
     , radius_(0.0f)
     , flowProfile_(FP_NONE)
-    , startPhaseFunction_(FSP_NONE)
-    , startPhaseDuration_(0.0f)
-    , targetVelocity_(0.0f)
     , selected_(false)
 {
 }
@@ -53,9 +203,7 @@ void FlowIndicator::serialize(Serializer& s) const {
     s.serialize("normal", normal_);
     s.serialize("radius", radius_);
     s.serialize("flowProfile", flowProfile_);
-    s.serialize("startPhaseFunction", startPhaseFunction_);
-    s.serialize("startPhaseDuration", startPhaseDuration_);
-    s.serialize("targetVelocity", targetVelocity_);
+    s.serialize("velocityCurve", velocityCurve_);
 }
 
 void FlowIndicator::deserialize(Deserializer& s) {
@@ -69,11 +217,7 @@ void FlowIndicator::deserialize(Deserializer& s) {
     int profile = FP_POISEUILLE;
     s.deserialize("flowProfile", profile);
     flowProfile_ = static_cast<FlowProfile>(profile);
-    int function = FSP_NONE;
-    s.deserialize("startPhaseFunction", function);
-    startPhaseFunction_ = static_cast<FlowStartPhase>(function);
-    s.deserialize("startPhaseDuration", startPhaseDuration_);
-    s.deserialize("targetVelocity", targetVelocity_);
+    s.deserialize("velocityCurve", velocityCurve_);
 }
 
 FlowParameterSet::FlowParameterSet()
@@ -84,7 +228,7 @@ FlowParameterSet::FlowParameterSet()
 FlowParameterSet::FlowParameterSet(const std::string& name)
     : name_(name)
     , spatialResolution_(0)
-    , temporalResolution_(0.0f)
+    , relaxationTime_(0.0f)
     , characteristicLength_(0.0f)
     , characteristicVelocity_(0.0f)
     , viscosity_(0.0f)
@@ -106,12 +250,12 @@ void FlowParameterSet::setSpatialResolution(int spatialResolution) {
     spatialResolution_ = spatialResolution;
 }
 
-float FlowParameterSet::getTemporalResolution() const {
-    return temporalResolution_;
+float FlowParameterSet::getRelaxationTime() const {
+    return relaxationTime_;
 }
 
-void FlowParameterSet::setTemporalResolution(float temporalResolution) {
-    temporalResolution_ = temporalResolution;
+void FlowParameterSet::setRelaxationTime(float relaxationTime) {
+    relaxationTime_ = relaxationTime;
 }
 
 float FlowParameterSet::getCharacteristicLength() const {
@@ -165,7 +309,7 @@ void FlowParameterSet::setBouzidi(bool bouzidi) {
 void FlowParameterSet::serialize(Serializer& s) const {
     s.serialize("name", name_);
     s.serialize("spatialResolution", spatialResolution_);
-    s.serialize("temporalResolution", temporalResolution_);
+    s.serialize("relaxationTime", relaxationTime_);
     s.serialize("characteristicLength", characteristicLength_);
     s.serialize("characteristicVelocity", characteristicVelocity_);
     s.serialize("viscosity", viscosity_);
@@ -177,7 +321,7 @@ void FlowParameterSet::serialize(Serializer& s) const {
 void FlowParameterSet::deserialize(Deserializer& s) {
     s.deserialize("name", name_);
     s.deserialize("spatialResolution", spatialResolution_);
-    s.deserialize("temporalResolution", temporalResolution_);
+    s.deserialize("relaxationTime", relaxationTime_);
     s.deserialize("characteristicLength", characteristicLength_);
     s.deserialize("characteristicVelocity", characteristicVelocity_);
     s.deserialize("viscosity", viscosity_);

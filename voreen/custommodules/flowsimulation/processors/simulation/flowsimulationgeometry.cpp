@@ -40,6 +40,7 @@ FlowSimulationGeometry::FlowSimulationGeometry()
     , ratio_("ratio", "Ratio", 1.0f, 0.1f, 10.0f)
     , transformation_("transformation", "Transformation", tgt::mat4::identity)
     , flowProfile_("flowProfile", "Flow Profile")
+    , inflowVelocity_("inflowVelocity", "Inflow Velocity (mm/s)", 1000.0f, 0.0f, 10000.0f)
 {
     addPort(flowParametrizationInport_);
     addPort(flowParametrizationOutport_);
@@ -53,6 +54,7 @@ FlowSimulationGeometry::FlowSimulationGeometry()
     flowProfile_.addOption("poiseuille", "POISEUILLE", FlowProfile::FP_POISEUILLE);
     flowProfile_.addOption("powerlaw", "POWERLAW", FlowProfile::FP_POWERLAW);
     //flowProfile_.addOption("constant", "CONSTANT", FlowProfile::FP_CONSTANT);
+    addProperty(inflowVelocity_);
 }
 
 void FlowSimulationGeometry::process() {
@@ -67,14 +69,12 @@ void FlowSimulationGeometry::process() {
         geometry->setTransformationMatrix(transformation_.get());
 
         FlowIndicator inlet;
-        inlet.type_ = FIT_GENERATOR;
+        inlet.type_ = FIT_VELOCITY;
         inlet.flowProfile_ = flowProfile_.getValue();
-        inlet.startPhaseFunction_ = FSP_SINUS;
-        inlet.startPhaseDuration_ = 0.25f;
+        inlet.velocityCurve_ = VelocityCurve::createSinusoidalCurve(0.25f, inflowVelocity_.get());
         inlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 0.0f);
         inlet.normal_ = transformation_.get().getRotationalPart() * tgt::vec3(0.0f, 0.0f, 1.0f);
         inlet.radius_ = 1.0f;
-        inlet.targetVelocity_ = 150.0f;
         flowParametrizationList->addFlowIndicator(inlet);
 
         FlowIndicator outlet;

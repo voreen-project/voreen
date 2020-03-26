@@ -54,8 +54,7 @@ FlowParametrizationRun::FlowParametrizationRun()
     , outport_(Port::OUTPORT, "outport", "Parameter Inport")
     , parametrizationName_("parametrizationName", "Parametrization Name", "test_parametrization")
     , spatialResolution_("spatialResolution", "Spatial Resolution", 32, 8, 512)
-    , temporalResolution_("temporalResolutionDiscrete", "Temporal Resolution", 20, 10, 1000)
-    //, temporalResolution_("temporalResolution", "Temporal Resolution (s)", 0.1, 0.001, 1.0f)
+    , relaxationTime_("relaxationTime", "Relaxation Time", 1.0f, 0.5f, 4.0f)
     , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 10.0f, 0.1f, 1000.0f)
     , characteristicVelocity_("characteristicVelocity", "Characteristic Velocity (mm/s)", 10.0f, 0.0f, 1000.0f)
     , fluid_("fluid", "Fluid")
@@ -77,14 +76,13 @@ FlowParametrizationRun::FlowParametrizationRun()
         parametrizationName_.setGroupID("parameters");
     addProperty(spatialResolution_);
         spatialResolution_.setGroupID("parameters");
-    addProperty(temporalResolution_);
-        //temporalResolution_.adaptDecimalsToRange(3);
-        temporalResolution_.setGroupID("parameters");
+    addProperty(relaxationTime_);
+        relaxationTime_.setNumDecimals(3);
+        relaxationTime_.setGroupID("parameters");
     addProperty(characteristicLength_);
         characteristicLength_.setGroupID("parameters");
     addProperty(characteristicVelocity_);
         characteristicVelocity_.setGroupID("parameters");
-        characteristicVelocity_.setVisibleFlag(false); // Currently not used by simulation.
     addProperty(fluid_);
         ON_CHANGE(fluid_, FlowParametrizationRun, fluidChanged);
         fluid_.addOption("water", "Water", FLUID_WATER);
@@ -92,10 +90,13 @@ FlowParametrizationRun::FlowParametrizationRun()
         fluid_.setGroupID("parameters");
         fluidChanged(); // Init proper values.
     addProperty(viscosity_);
+        viscosity_.setNumDecimals(4);
         viscosity_.setGroupID("parameters");
     addProperty(density_);
+        density_.setNumDecimals(0);
         density_.setGroupID("parameters");
     addProperty(smagorinskyConstant_);
+        smagorinskyConstant_.setNumDecimals(3);
         smagorinskyConstant_.setGroupID("parameters");
     addProperty(bouzidi_);
         bouzidi_.setGroupID("parameters");
@@ -113,7 +114,7 @@ FlowParametrizationRun::FlowParametrizationRun()
     addProperty(parametrizations_);
     parametrizations_.setColumnLabel(0, "Name");
     parametrizations_.setColumnLabel(1, "Spat. Res.");
-    parametrizations_.setColumnLabel(2, "Temp. Res.");
+    parametrizations_.setColumnLabel(2, "Relax. Time.");
     parametrizations_.setColumnLabel(3, "Char. Len.");
     parametrizations_.setColumnLabel(4, "Char. Vel.");
     parametrizations_.setColumnLabel(5, "Viscosity");
@@ -158,20 +159,18 @@ void FlowParametrizationRun::addParametrizations() {
     }
 
     PARAMETER_DISCRETIZATION_BEGIN(spatialResolution, int)
-    PARAMETER_DISCRETIZATION_BEGIN(temporalResolution, int)
-    PARAMETER_DISCRETIZATION_BEGIN(characteristicLength, float)
-    //PARAMETER_DISCRETIZATION_BEGIN(characteristicVelocity, float)
-    float characteristicVelocity = 1.0f; // Currently not used by simulation.
+    PARAMETER_DISCRETIZATION_BEGIN(relaxationTime, float)
     PARAMETER_DISCRETIZATION_BEGIN(viscosity, float)
     PARAMETER_DISCRETIZATION_BEGIN(density, float)
     PARAMETER_DISCRETIZATION_BEGIN(smagorinskyConstant, float)
+    float characteristicLength = characteristicLength_.get();
+    float characteristicVelocity = characteristicVelocity_.get();
     bool bouzidi = bouzidi_.get();
 //   for (bool bouzidi : {true, false})
     {
         FlowParameterSet parameters(name);
         parameters.setSpatialResolution(spatialResolution);
-        parameters.setTemporalResolution(characteristicLength / (spatialResolution * temporalResolution));
-        //parameters.setTemporalResolution(temporalResolution);
+        parameters.setRelaxationTime(relaxationTime);
         parameters.setCharacteristicLength(characteristicLength);
         parameters.setCharacteristicVelocity(characteristicVelocity);
         parameters.setViscosity(viscosity);
@@ -183,7 +182,7 @@ void FlowParametrizationRun::addParametrizations() {
         std::vector<std::string> row(parametrizations_.getNumColumns());
         row[0] = parameters.getName();
         row[1] = std::to_string(parameters.getSpatialResolution());
-        row[2] = std::to_string(parameters.getTemporalResolution());
+        row[2] = std::to_string(parameters.getRelaxationTime());
         row[3] = std::to_string(parameters.getCharacteristicLength());
         row[4] = std::to_string(parameters.getCharacteristicVelocity());
         row[5] = std::to_string(parameters.getViscosity());
@@ -192,13 +191,12 @@ void FlowParametrizationRun::addParametrizations() {
         row[8] = std::to_string(parameters.getBouzidi());
         parametrizations_.addRow(row);
     }
-    PARAMETER_DISCRETIZATION_END
-    PARAMETER_DISCRETIZATION_END
-    PARAMETER_DISCRETIZATION_END
-    PARAMETER_DISCRETIZATION_END
-    PARAMETER_DISCRETIZATION_END
-    PARAMETER_DISCRETIZATION_END
     //PARAMETER_DISCRETIZATION_END
+    PARAMETER_DISCRETIZATION_END
+    PARAMETER_DISCRETIZATION_END
+    PARAMETER_DISCRETIZATION_END
+    PARAMETER_DISCRETIZATION_END
+    PARAMETER_DISCRETIZATION_END
 }
 
 void FlowParametrizationRun::removeParametrization() {

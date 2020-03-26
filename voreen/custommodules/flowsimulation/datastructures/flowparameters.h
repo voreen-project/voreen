@@ -33,6 +33,8 @@
 
 #include "tgt/vector.h"
 
+#include <map>
+
 namespace voreen {
 
 // List of flow features which can be extracted during simulation.
@@ -48,8 +50,8 @@ enum FlowFeatures {
 enum FlowIndicatorType {
     FIT_INVALID   = -1, ///< Denotes an invalid indicator.
     FIT_CANDIDATE =  0, ///< This indicator is just a candidate and has no function yet.
-    FIT_GENERATOR =  1, ///< This indicator is flow generating.
-    FIT_PRESSURE  =  2, ///< This indicator is a pressure boundary.
+    FIT_VELOCITY  =  1, ///< This indicator is a velocity boundary condition.
+    FIT_PRESSURE  =  2, ///< This indicator is a pressure boundary condition.
     FIT_MEASURE   =  3, ///< This indicator serves as a flux measure.
 };
 
@@ -60,10 +62,30 @@ enum FlowProfile {
     FP_CONSTANT   = 3, ///< constant flow profile
 };
 
-enum FlowStartPhase {
-    FSP_NONE     = 0, ///< No start phase
-    FSP_CONSTANT = 1, ///< constant start phase
-    FSP_SINUS    = 2, ///< sinusoidal start phase
+
+class VelocityCurve : public Serializable {
+public:
+
+    VelocityCurve();
+
+    float operator()(float t) const;
+    float& operator[](float t);
+
+    void setPeriodic(bool enabled);
+    bool isPeriodic() const;
+
+    static VelocityCurve createConstantCurve(float value);
+    static VelocityCurve createLinearCurve(float duration, float maxValue);
+    static VelocityCurve createSinusoidalCurve(float duration, float maxValue, int steps = 30);
+    static VelocityCurve createHumanHeartBeat();
+    static VelocityCurve createFromCSV(const std::string& file);
+
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+
+private:
+    std::map<float, float> peakVelocities_;
+    bool periodic_;
 };
 
 // Indicates flux through an arbitrary, circle-shaped area.
@@ -78,9 +100,7 @@ struct VRN_CORE_API FlowIndicator : public Serializable {
 
     // Used by generating flow indicators:
     FlowProfile         flowProfile_;    ///< Flow profile, @see FlowProfile.
-    FlowStartPhase      startPhaseFunction_; ///< Start phase function, @see FlowStartPhase.
-    float               startPhaseDuration_; ///< Start phase duration in seconds.
-    float               targetVelocity_; ///< Used to indicate the area's peak velocity.
+    VelocityCurve       velocityCurve_;  ///< Velocity curve mapping time points to velocities.
 
     bool                selected_;       ///< Used to indicate the currently selected indicator in UI.
 
@@ -113,10 +133,10 @@ public:
     void setSpatialResolution(int spatialResolution);
 
     /**
-     * Returns the temporal granularity, i.e., the duration of each time step in s.
+     * Returns the relaxation time parameter.
      */
-    float getTemporalResolution() const;
-    void setTemporalResolution(float temporalResolution);
+     float getRelaxationTime() const;
+     void setRelaxationTime(float relaxationTime);
 
     /**
      * Returns the max expected length in mm within the simulation geometry.
@@ -139,7 +159,7 @@ public:
     void setViscosity(float viscosity);
 
     /**
-     * Returns the mass density in kg/m^3
+     * Returns the fluid mass density in kg/m^3
      */
     float getDensity() const;
     void setDensity(float density);
@@ -165,8 +185,8 @@ private:
     std::string name_;
 
     // All other relevant parameters.
-    int spatialResolution_;        ///< spatial resolution in voxels (per dimension and characteristic length)
-    float temporalResolution_;     ///< temporal resolution in seconds
+    int spatialResolution_;         ///< spatial resolution in voxels (per dimension and characteristic length)
+    float relaxationTime_;          ///< temporal resolution in seconds
     float characteristicLength_;    ///< characteristic length in mm
     float characteristicVelocity_;  ///< characteristic velocity in mm/s
     float viscosity_;               ///< viscosity in 10^-3 m^2/s
@@ -190,7 +210,7 @@ public:
     /**
      * Returns the offset used to generate flow indicator ids.
      * Note: the offset depends on the simulation framework.
-     * E.g. OpenLB uses requires an offset of 2.
+     * E.g. OpenLB uses requires an offset of 3.
      */
     static int getFlowIndicatorIdOffset();
 

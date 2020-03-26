@@ -35,7 +35,7 @@ FlowParametrizationEnsemble::FlowParametrizationEnsemble()
     , ensembleName_("ensembleName", "Ensemble Name", "test_ensemble")
     , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.0f, 20.0f)
     , numTimeSteps_("numTimeSteps", "Num. Output Time Steps", 50, 1, 1000)
-    , outputResolution_("outputResolution", "Max. Output Resolution", 128, 32, 1024)
+    , outputResolution_("outputResolution", "Max. Output Resolution", 128, 0, 4096)
     , flowFeatures_("flowFeatures", "Flow Features")
 {
     addPort(outport_);

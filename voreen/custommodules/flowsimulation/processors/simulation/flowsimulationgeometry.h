@@ -69,6 +69,7 @@ private:
     FloatProperty ratio_;
     FloatMat4Property transformation_;
     OptionProperty<FlowProfile> flowProfile_;
+    FloatProperty inflowVelocity_;
 
     static const std::string loggerCat_;
 };
