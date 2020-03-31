@@ -679,11 +679,11 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
     invalidate();
 
     // Right click resets subselection.
-    if(e->button() & tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
+    if(e->button() == tgt::MouseEvent::MOUSE_BUTTON_RIGHT && e->action() == tgt::MouseEvent::PRESSED) {
         subSelection_.clear();
     }
     // Middle click inverts subselection, but only considers rendered runs.
-    else if(e->button() & tgt::MouseEvent::MOUSE_BUTTON_MIDDLE) {
+    else if(e->button() == tgt::MouseEvent::MOUSE_BUTTON_MIDDLE && e->action() == tgt::MouseEvent::PRESSED) {
         std::set<int> invertedSelection;
         for(int i : renderedRuns_.get()) {
             if(subSelection_.count(i) == 0) {
@@ -745,7 +745,7 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
         lastHit_ = Hit{x, y, r, t};
 
         // Handle selection.
-        if (e->button() & tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
+        if (e->button() == tgt::MouseEvent::MOUSE_BUTTON_LEFT && e->action() == tgt::MouseEvent::PRESSED) {
 
             // Right-click selection changes rendering order.
             if (e->modifiers() == tgt::MouseEvent::SHIFT) {
@@ -889,7 +889,9 @@ void SimilarityPlot::adjustToEnsemble() {
     referenceTimeStep_.set(tgt::vec2(dataset->getStartTime(), dataset->getEndTime()));
 
     // Try to load plot data, if already set.
-    loadFileDialog_.invalidate();
+    if(!loadFileDialog_.get().empty()) {
+        load();
+    }
 
     calculateButton_.setReadOnlyFlag(false);
 
