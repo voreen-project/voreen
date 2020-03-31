@@ -195,6 +195,12 @@ struct Balls {
         }
         return ret > 0;
     }
+    inline tgt::IntBounds bounds(size_t i) {
+        tgt::ivec3 r(radius(i));
+        tgt::ivec3 p(center(i));
+        tgt::IntBounds full_bounds(p-r, p+r);
+        return full_bounds;
+    }
     tgt::ivec3 center(size_t i) {
         return center_[i];
     }
@@ -255,6 +261,28 @@ struct Cylinders {
     bool inside(tgt::ivec3 pint) const {
         return distant(pint, 1.0);
     }
+    bool insideSingle(tgt::ivec3 p, size_t i) const {
+        return distantSingle(p, 1.0, i);
+    }
+
+    bool distantSingle(tgt::ivec3 pint, float radiusMult, size_t i) const {
+        float radius = radiusMult * radius_[i];
+        tgt::vec3 s = start_[i];
+        tgt::vec3 e = end_[i];
+        tgt::vec3 p = pint;
+
+        tgt::vec3 pnorm = p - s;
+        tgt::vec3 ax = e-s;
+        float lenInv = simdFriendlyInverseSqrt(tgt::lengthSq(ax));
+        ax = ax*lenInv;
+        float len = 1.0/lenInv;
+
+        float proj = tgt::dot(ax, pnorm);
+
+        tgt::vec3 onDisk = pnorm - ax*proj;
+
+        return proj >= 0 && proj <= len && tgt::lengthSq(onDisk) < radius*radius;
+    }
     bool distant(tgt::ivec3 pint, float radiusMult) const {
         int size = this->size();
         int ret = 0;
@@ -286,6 +314,15 @@ struct Cylinders {
             }
         }
         return ret > 0;
+    }
+    inline tgt::IntBounds bounds(size_t i) {
+        tgt::ivec3 r(radius(i));
+        tgt::ivec3 s(start(i));
+        tgt::ivec3 e(end(i));
+        tgt::IntBounds full_bounds(s-r, s+r);
+        full_bounds.addPoint(e-r);
+        full_bounds.addPoint(e+r);
+        return full_bounds;
     }
     void clear() {
         start_.clear();
@@ -491,8 +528,48 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
     }
     LINFOC(LargeTestDataGenerator::loggerCat_, "Placed " << cylinders.size() << " Cylinders");
 
+    std::vector<std::pair<size_t, tgt::IntBounds>> ballBounds;
+    for(size_t i=0; i < balls.size(); ++i) {
+        ballBounds.emplace_back(i, balls.bounds(i));
+    }
+    auto maybeBallHierarchy = BoundsHierarchy<int, size_t>::buildTopDown(std::move(ballBounds));
+    if(!maybeBallHierarchy) {
+        return;
+    }
+    auto& ballHierarchy = *maybeBallHierarchy;
+
+    std::vector<std::pair<size_t, tgt::IntBounds>> cylinderBounds;
+    for(size_t i=0; i < cylinders.size(); ++i) {
+        cylinderBounds.emplace_back(i, cylinders.bounds(i));
+    }
+    auto maybecylinderHierarchy = BoundsHierarchy<int, size_t>::buildTopDown(std::move(cylinderBounds));
+    if(!maybecylinderHierarchy) {
+        return;
+    }
+    auto& cylinderHierarchy = *maybecylinderHierarchy;
+
     auto invalid = [&] (const tgt::ivec3& p) {
-        return cylinders.inside(p) || balls.inside(p) || !volumeBounds.containsPoint(p);
+        if(!volumeBounds.containsPoint(p)) {
+            return true;
+        }
+        {
+            auto indices = ballHierarchy.findBounds(p);
+            for(auto i : indices) {
+                if(balls.insideSingle(p, i)) {
+                    return true;
+                }
+            }
+        }
+        {
+            auto indices = cylinderHierarchy.findBounds(p);
+            for(auto i : indices) {
+                if(cylinders.insideSingle(p, i)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+        //return cylinders.inside(p) || balls.inside(p) || !volumeBounds.containsPoint(p);
     };
 
     int max_tries = 10;
@@ -590,10 +667,7 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
 
     std::vector<std::pair<size_t, tgt::IntBounds>> bounds;
     for(size_t i=0; i < balls.size(); ++i) {
-        tgt::ivec3 r(balls.radius(i));
-        tgt::ivec3 p(balls.center(i));
-        tgt::IntBounds full_bounds(p-r, p+r);
-        bounds.emplace_back(i, full_bounds);
+        bounds.emplace_back(i, balls.bounds(i));
     }
     auto maybeHierarchy = BoundsHierarchy<int, size_t>::buildTopDown(std::move(bounds));
     if(!maybeHierarchy) {
@@ -691,14 +765,19 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
         }
     }
 
-    std::vector<Interval<size_t, size_t>> intervals;
+    std::vector<Interval<int, size_t>> ballIntervals;
     for(size_t i=0; i < balls.size(); ++i) {
-        tgt::ivec3 r(balls.radius(i));
-        tgt::ivec3 p(balls.center(i));
-        tgt::SBounds full_bounds(p-r, p+r);
-        intervals.emplace_back(full_bounds.getLLF().z, full_bounds.getURB().z, i);
+        auto full_bounds = balls.bounds(i);
+        ballIntervals.emplace_back(full_bounds.getLLF().z, full_bounds.getURB().z, i);
     }
-    IntervalTree<size_t, size_t> ztree(std::move(intervals));
+    IntervalTree<int, size_t> ballTree(std::move(ballIntervals));
+
+    std::vector<Interval<int, size_t>> cylinderIntervals;
+    for(size_t i=0; i < cylinders.size(); ++i) {
+        auto full_bounds = cylinders.bounds(i);
+        cylinderIntervals.emplace_back(full_bounds.getLLF().z, full_bounds.getURB().z, i);
+    }
+    IntervalTree<int, size_t> cylinderTree(std::move(cylinderIntervals));
 
     const float insideBase = 0.7;
     const float outsideBase = 0.3;
@@ -711,16 +790,21 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
         std::uniform_int_distribution<> sliceBaseSeedDistr(0, 100000);
         int baseSeed = sliceBaseSeedDistr(input.randomEngine);
 
-        std::vector<Interval<size_t, size_t>> intervals;
-        for(auto interval: ztree.findOverlapping(z, z)) {
+        std::vector<Interval<int, size_t>> ballIntervals;
+        for(auto interval: ballTree.findOverlapping(z, z)) {
             auto& i = interval.value;
-            tgt::ivec3 r(balls.radius(i));
-            tgt::ivec3 p(balls.center(i));
-            tgt::SBounds full_bounds(p-r, p+r);
-
-            intervals.emplace_back(full_bounds.getLLF().y, full_bounds.getURB().y, i);
+            auto full_bounds = balls.bounds(i);
+            ballIntervals.emplace_back(full_bounds.getLLF().y, full_bounds.getURB().y, i);
         }
-        IntervalTree<size_t, size_t> ytree(std::move(intervals));
+        IntervalTree<int, size_t> ballTree(std::move(ballIntervals));
+
+        std::vector<Interval<int, size_t>> cylinderIntervals;
+        for(auto interval: cylinderTree.findOverlapping(z, z)) {
+            auto& i = interval.value;
+            auto full_bounds = cylinders.bounds(i);
+            cylinderIntervals.emplace_back(full_bounds.getLLF().y, full_bounds.getURB().y, i);
+        }
+        IntervalTree<int, size_t> cylinderTree(std::move(cylinderIntervals));
 
 #ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for
@@ -730,26 +814,34 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
             LargeTestDataGeneratorInput::random_engine_type randomEngine;
             randomEngine.seed(baseSeed + y);
 
-            std::vector<Interval<size_t, size_t>> intervals;
-
-            for(auto& interval: ytree.findOverlapping(y, y)) {
+            std::vector<Interval<int, size_t>> ballIntervals;
+            for(auto interval: ballTree.findOverlapping(y, y)) {
                 auto& i = interval.value;
-                tgt::ivec3 r(balls.radius(i));
-                tgt::ivec3 p(balls.center(i));
-                tgt::SBounds full_bounds(p-r, p+r);
-
-                intervals.emplace_back(full_bounds.getLLF().x, full_bounds.getURB().x, i);
+                auto full_bounds = balls.bounds(i);
+                ballIntervals.emplace_back(full_bounds.getLLF().x, full_bounds.getURB().x, i);
             }
-            IntervalTree<size_t, size_t> xtree(std::move(intervals));
+            IntervalTree<int, size_t> ballTree(std::move(ballIntervals));
+
+            std::vector<Interval<int, size_t>> cylinderIntervals;
+            for(auto interval: cylinderTree.findOverlapping(y, y)) {
+                auto& i = interval.value;
+                auto full_bounds = cylinders.bounds(i);
+                cylinderIntervals.emplace_back(full_bounds.getLLF().x, full_bounds.getURB().x, i);
+            }
+            IntervalTree<int, size_t> cylinderTree(std::move(cylinderIntervals));
+
             for(int x=0; x<dim.x; ++x) {
                 tgt::ivec3 p(x,y,z);
 
                 bool inside = false;
-                for(auto& interval : xtree.findOverlapping(x,x)) {
+                for(auto& interval : ballTree.findOverlapping(x,x)) {
                     auto& i = interval.value;
                     inside |= balls.insideSingle(p, i);
                 }
-                inside |= cylinders.inside(p);
+                for(auto& interval : cylinderTree.findOverlapping(x,x)) {
+                    auto& i = interval.value;
+                    inside |= cylinders.insideSingle(p, i);
+                }
                 //bool inside = (balls.inside(p)) || cylinders.inside(p);
                 float val = inside ? insideBase : outsideBase;
 
