@@ -52,7 +52,7 @@ struct LargeTestDataGeneratorInput {
         CELLS,
         VESSELS,
     };
-    typedef std::mt19937 random_engine_type;
+    typedef std::minstd_rand random_engine_type;
 
     Scenario scenario;
     std::unique_ptr<HDF5FileVolume> outputVolumeNoisy;

@@ -34,6 +34,7 @@
 #include "voreen/core/utils/hashing.h"
 #include "../../modules/vesselnetworkanalysis/ext/intervaltree/IntervalTree.h"
 #include "../algorithm/boundshierarchy.h"
+#include "custommodules/bigdataimageprocessingextra/ext/ziggurat.h"
 
 #include "modules/hdf5/io/hdf5volumewriter.h"
 #include "modules/hdf5/io/hdf5volumereader.h"
@@ -810,7 +811,6 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
 #pragma omp parallel for
 #endif
         for(int y=0; y<dim.y; ++y) {
-            std::normal_distribution<float> noiseDistr(0.0, input.noiseRange);
             LargeTestDataGeneratorInput::random_engine_type randomEngine;
             randomEngine.seed(baseSeed + y);
 
@@ -845,7 +845,7 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
                 //bool inside = (balls.inside(p)) || cylinders.inside(p);
                 float val = inside ? insideBase : outsideBase;
 
-                val += noiseDistr(randomEngine);
+                val += gsl_ran_gaussian_ziggurat(randomEngine, input.noiseRange);
                 val = tgt::clamp(val, 0.0f, 1.0f);
                 sliceNoisy.setVoxelNormalized(val, x,y,0);
 
