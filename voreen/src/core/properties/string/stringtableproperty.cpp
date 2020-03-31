@@ -67,12 +67,20 @@ void StringTableProperty::serialize(Serializer& s) const {
 void StringTableProperty::deserialize(Deserializer& s) {
     Property::deserialize(s);
 
-    s.deserialize("columnCount",  columnCount_);
-    int selectedRow = -1;
-    s.optionalDeserialize("selectedRow", selectedRow,-1);
-    setSelectedRowIndex(selectedRow);
-    s.deserialize("columnLabels", columnLabels_);
-    s.deserialize("values",       values_);
+    int newColumnCount = columnCount_;
+    s.deserialize("columnCount",  newColumnCount);
+    if(newColumnCount == columnCount_) {
+        int selectedRow = -1;
+        s.optionalDeserialize("selectedRow", selectedRow,-1);
+        setSelectedRowIndex(selectedRow);
+        s.deserialize("columnLabels", columnLabels_);
+        s.deserialize("values",       values_);
+    }
+    else {
+        LWARNING("Number of columns changed, discarding labels and content");
+        selectedRow_ = -1;
+    }
+
     neededTableUpdates_ = UPDATE_ALL;
     updateWidgets();
 }
