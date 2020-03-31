@@ -278,7 +278,7 @@ public:
      *
      * Caution: i must be < numVertices()
      */
-    void setVertex(size_t i, const VertexType& vertex) const;
+    void setVertex(size_t i, const VertexType& vertex);
 
     /// Used to pass the vertex set for this geometry. This will not (!) touch the index buffer.
     void setVertices(const std::vector<VertexType>& vertices);
@@ -622,7 +622,7 @@ const V& GlMeshGeometry<I,V>::getVertex(size_t i) const {
 }
 
 template <class I, class V>
-void GlMeshGeometry<I,V>::setVertex(size_t i, const VertexType& vertex) const {
+void GlMeshGeometry<I,V>::setVertex(size_t i, const VertexType& vertex) {
     tgtAssert(i < getNumVertices(), "invalid vertex index");
 
     vertices_.at(i) = vertex;
@@ -1284,20 +1284,19 @@ void GlMeshGeometry<I,V>::setCylinderGeometry(tgt::vec4 color, float lowerRadius
 
     const float du = 1.0f / slices;
     const float dv = 1.0f / tiles;
-    const float dt = 1.0f;
     const float dr = dv * (lowerRadius - upperRadius);
 
-    std::vector<float> cs_th, sn_th;
-    float th = 0.0f;
+    std::vector<float> cs_th(slices+1);
+    std::vector<float> sn_th(slices+1);
+    for (size_t i = 0; i <= slices; ++i) {
+        float th = i*dth;
+        cs_th[i] = std::cos(th);
+        sn_th[i] = std::sin(th);
+    }
+
     float u  = 0.f;
     float v  = 0.f;
     float h  = 0.f;
-
-    for (size_t i = 0; i <= slices; ++i) {
-        cs_th.push_back(std::cos(th));
-        sn_th.push_back(std::sin(th));
-        th += dth;
-    }
 
     if (upperCap) {
         // center
