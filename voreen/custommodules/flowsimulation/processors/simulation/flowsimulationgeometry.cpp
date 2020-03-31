@@ -38,6 +38,7 @@ FlowSimulationGeometry::FlowSimulationGeometry()
     , geometryPort_(Port::OUTPORT, "geometry", "Geometry Port")
     , geometryType_("geometryType", "Geometry Type")
     , ratio_("ratio", "Ratio", 1.0f, 0.1f, 10.0f)
+    , length_("length", "Length (mm)", 1.0f, 0.1f, 10.0f)
     , transformation_("transformation", "Transformation", tgt::mat4::identity)
     , flowProfile_("flowProfile", "Flow Profile")
     , inflowVelocity_("inflowVelocity", "Inflow Velocity (mm/s)", 1000.0f, 0.0f, 10000.0f)
@@ -47,8 +48,14 @@ FlowSimulationGeometry::FlowSimulationGeometry()
     addPort(geometryPort_);
 
     addProperty(geometryType_);
+    geometryType_.addOption("channel", "Channel", FSGT_CHANNEL);
     geometryType_.addOption("cylinder", "Cylinder", FSGT_CYLINDER);
+    geometryType_.addOption("narrowing", "Narrowing", FSGT_NARROWING);
+    ON_CHANGE_LAMBDA(geometryType_, [this] {
+        ratio_.setReadOnlyFlag(geometryType_.getValue() != FSGT_NARROWING);
+    })
     addProperty(ratio_);
+    addProperty(length_);
     addProperty(transformation_);
     addProperty(flowProfile_);
     flowProfile_.addOption("poiseuille", "POISEUILLE", FlowProfile::FP_POISEUILLE);
@@ -60,30 +67,46 @@ FlowSimulationGeometry::FlowSimulationGeometry()
 void FlowSimulationGeometry::process() {
 
     auto* flowParametrizationList = new FlowParameterSetEnsemble(*flowParametrizationInport_.getData());
+
+    FlowIndicator inlet;
+    inlet.type_ = FIT_VELOCITY;
+    inlet.flowProfile_ = flowProfile_.getValue();
+    inlet.velocityCurve_ = VelocityCurve::createSinusoidalCurve(0.25f, inflowVelocity_.get());
+    inlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 0.0f);
+    inlet.normal_ = transformation_.get().getRotationalPart() * tgt::vec3(0.0f, 0.0f, 1.0f);
+    inlet.radius_ = 1.0f;
+    flowParametrizationList->addFlowIndicator(inlet);
+
+    FlowIndicator outlet;
+    outlet.type_ = FIT_PRESSURE;
+    outlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, length_.get());
+    outlet.normal_ = transformation_.get().getRotationalPart() * tgt::vec3(0.0f, 0.0f, 1.0f);
+    outlet.radius_ = 1.0f;
+    flowParametrizationList->addFlowIndicator(outlet);
+
     auto* geometry = new GlMeshGeometryUInt32Normal();
-
+    geometry->setTransformationMatrix(transformation_.get());
     switch(geometryType_.getValue()) {
-    case FSGT_CYLINDER: {
-
-        geometry->setCylinderGeometry(tgt::vec4::one, 1.0f, ratio_.get(), 1.0f, 32, 32, false, false);
-        geometry->setTransformationMatrix(transformation_.get());
-
-        FlowIndicator inlet;
-        inlet.type_ = FIT_VELOCITY;
-        inlet.flowProfile_ = flowProfile_.getValue();
-        inlet.velocityCurve_ = VelocityCurve::createSinusoidalCurve(0.25f, inflowVelocity_.get());
-        inlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 0.0f);
-        inlet.normal_ = transformation_.get().getRotationalPart() * tgt::vec3(0.0f, 0.0f, 1.0f);
-        inlet.radius_ = 1.0f;
-        flowParametrizationList->addFlowIndicator(inlet);
-
-        FlowIndicator outlet;
-        outlet.type_ = FIT_PRESSURE;
-        outlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 1.0f);
-        outlet.normal_ = transformation_.get().getRotationalPart() * tgt::vec3(0.0f, 0.0f, 1.0f);
-        outlet.radius_ = ratio_.get();
-        flowParametrizationList->addFlowIndicator(outlet);
-
+    case FSGT_CHANNEL:
+        geometry->setCylinderGeometry(tgt::vec4::one, 1.0f, 1.0f, length_.get(), 4, 1, true, true);
+        //geometry->setTransformationMatrix(transformation_.get() * tgt::mat4::createRotationZDegree(45.0f));
+        break;
+    case FSGT_CYLINDER:
+        geometry->setCylinderGeometry(tgt::vec4::one, 1.0f, 1.0f, length_.get(), 32, 1, true, true);
+        break;
+    case FSGT_NARROWING: {
+        const size_t slices = 32;
+        const size_t tiles = 5;
+        geometry->setCylinderGeometry(tgt::vec4::one, 1.0f, 1.0f, length_.get(), slices, tiles, true, true);
+        for(size_t i=2; i<=3; i++) {
+            size_t offset = (2 + i) * (slices + 1); // (cap + tiles)
+            for (size_t j = 0; j <= slices; j++) {
+                auto vertex = geometry->getVertex(offset + j);
+                vertex.pos_.x *= ratio_.get();
+                vertex.pos_.y *= ratio_.get();
+                geometry->setVertex(offset + j, vertex);
+            }
+        }
         break;
     }
     default:

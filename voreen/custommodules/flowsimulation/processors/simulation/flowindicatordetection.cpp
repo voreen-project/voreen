@@ -63,7 +63,6 @@ FlowIndicatorDetection::FlowIndicatorSettings::FlowIndicatorSettings(VGNodeID no
     , velocityCurveDuration_(0.25f)
     , targetVelocity_(0.0f)
     , velocityCurveFile_()
-    , velocityCurvePeriodicity_(false)
 {
 }
 
@@ -77,7 +76,6 @@ void FlowIndicatorDetection::FlowIndicatorSettings::serialize(Serializer& s) con
     s.serialize("velocityCurveDuration", velocityCurveDuration_);
     s.serialize("targetVelocity", targetVelocity_);
     s.serialize("velocityCurveFile", velocityCurveFile_);
-    s.serialize("velocityCurvePeriodicity", velocityCurvePeriodicity_);
 }
 
 void FlowIndicatorDetection::FlowIndicatorSettings::deserialize(Deserializer& s) {
@@ -94,7 +92,6 @@ void FlowIndicatorDetection::FlowIndicatorSettings::deserialize(Deserializer& s)
     s.deserialize("velocityCurveDuration", velocityCurveDuration_);
     s.deserialize("targetVelocity", targetVelocity_);
     s.deserialize("velocityCurveFile", velocityCurveFile_);
-    s.deserialize("velocityCurvePeriodicity", velocityCurvePeriodicity_);
 }
 
 
@@ -311,7 +308,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
         velocityCurveDuration_.set(settings.velocityCurveDuration_);
         targetVelocity_.set(settings.targetVelocity_);
         velocityCurveFile_.set(settings.velocityCurveFile_);
-        velocityCurvePeriodicity_.set(settings.velocityCurvePeriodicity_);
+        velocityCurvePeriodicity_.set(indicator.velocityCurve_.isPeriodic());
 
         triggertBySelection_ = false;
     }
@@ -359,7 +356,6 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
         settings.velocityCurveDuration_ = velocityCurveDuration_.get();
         settings.targetVelocity_ = targetVelocity_.get();
         settings.velocityCurveFile_ = velocityCurveFile_.get();
-        settings.velocityCurvePeriodicity_ = velocityCurvePeriodicity_.get();
 
         if(needReinitialization) {
             FlowIndicatorType type = indicator.type_;
@@ -397,6 +393,8 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
                     indicator.velocityCurve_ = VelocityCurve();
                 }
             }
+
+            indicator.velocityCurve_.setPeriodic(velocityCurvePeriodicity_.get());
         }
 
         // Update UI.

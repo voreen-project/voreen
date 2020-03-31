@@ -82,7 +82,6 @@ private:
         float velocityCurveDuration_{0.0f};
         float targetVelocity_{0.0f};
         std::string velocityCurveFile_;
-        bool velocityCurvePeriodicity_{false};
 
         FlowIndicatorSettings();
         FlowIndicatorSettings(VGNodeID nodeId, VGEdgeID edgeId);

@@ -36,7 +36,9 @@
 namespace voreen {
 
 enum FlowSimulationGeometryType {
+    FSGT_CHANNEL,
     FSGT_CYLINDER,
+    FSGT_NARROWING,
 };
 
 /**
@@ -67,6 +69,7 @@ private:
 
     OptionProperty<FlowSimulationGeometryType> geometryType_;
     FloatProperty ratio_;
+    FloatProperty length_;
     FloatMat4Property transformation_;
     OptionProperty<FlowProfile> flowProfile_;
     FloatProperty inflowVelocity_;

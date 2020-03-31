@@ -139,21 +139,20 @@ public:
      void setRelaxationTime(float relaxationTime);
 
     /**
-     * Returns the max expected length in mm within the simulation geometry.
+     * Returns the max expected length in m within the simulation geometry.
      * E.g., the largest diameter of all contained vessels.
      */
     float getCharacteristicLength() const;
     void setCharacteristicLength(float characteristicLength);
 
     /**
-     * Returns the highest expected velocity in mm/s.
+     * Returns the highest expected velocity in m/s.
      */
     float getCharacteristicVelocity() const;
     void setCharacteristicVelocity(float characteristicVelocity);
 
     /**
-     * Returns the kinematic viscosity in 10^-3 m^2/s.
-     * Note: in order to achieve the correct physical value, multiply by 0.001
+     * Returns the kinematic viscosity in 10 m^2/s.
      */
     float getViscosity() const;
     void setViscosity(float viscosity);
@@ -176,6 +175,17 @@ public:
     bool getBouzidi() const;
     void setBouzidi(bool bouzidi);
 
+    /**
+     * Returns Reynolds number.
+     */
+    float getReynoldsNumber() const;
+
+    /**
+     * Determines, if this parameter set operates in the stable limit.
+     */
+    bool isValid() const;
+
+
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
 
@@ -187,9 +197,9 @@ private:
     // All other relevant parameters.
     int spatialResolution_;         ///< spatial resolution in voxels (per dimension and characteristic length)
     float relaxationTime_;          ///< temporal resolution in seconds
-    float characteristicLength_;    ///< characteristic length in mm
-    float characteristicVelocity_;  ///< characteristic velocity in mm/s
-    float viscosity_;               ///< viscosity in 10^-3 m^2/s
+    float characteristicLength_;    ///< characteristic length in m
+    float characteristicVelocity_;  ///< characteristic velocity in m/s
+    float viscosity_;               ///< viscosity in 10 m^2/s
     float density_;                 ///< density in kg/m^3
     float smagorinskyConstant_;     ///< constant for Smagorinsky turbulence model
     bool bouzidi_;                  ///< bouzidi boundary condition

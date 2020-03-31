@@ -297,9 +297,9 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     UnitConverterFromResolutionAndRelaxationTime<T, DESCRIPTOR> converter(
             (T) N, // Resolution that charPhysLength is resolved by.
             (T) parameters.getRelaxationTime(), // Relaxation time
-            (T) parameters.getCharacteristicLength() * VOREEN_LENGTH_TO_SI,         // charPhysLength: reference length of simulation geometry
-            (T) parameters.getCharacteristicVelocity() * VOREEN_LENGTH_TO_SI,       // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
-            (T) parameters.getViscosity() * 0.001 / parameters.getDensity(),        // physViscosity: physical kinematic viscosity in __m^2 / s__
+            (T) parameters.getCharacteristicLength(),         // charPhysLength: reference length of simulation geometry
+            (T) parameters.getCharacteristicVelocity(),       // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
+            (T) parameters.getViscosity() / parameters.getDensity(),        // physViscosity: physical kinematic viscosity in __m^2 / s__
             (T) parameters.getDensity()                                             // physDensity: physical density in __kg / m^3__
     );
     // Prints the converter log as console output
@@ -543,7 +543,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
             switch(indicator.flowProfile_) {
             case FP_POISEUILLE:
             {
-//                    CirclePoiseuille3D<T> profile(superGeometry, indicator.id_, maxVelocity[0]); // This is the alternative way, but how does it work?
+//                CirclePoiseuille3D<T> profile(superGeometry, indicator.id_, targetLatticeVelocity); // This is the alternative way, but how does it work?
                 CirclePoiseuille3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
                                               normal[0], normal[1], normal[2], radius * VOREEN_LENGTH_TO_SI, targetLatticeVelocity);
                 applyFlowProfile(profile);

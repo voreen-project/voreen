@@ -306,6 +306,17 @@ void FlowParameterSet::setBouzidi(bool bouzidi) {
     bouzidi_ = bouzidi;
 }
 
+float FlowParameterSet::getReynoldsNumber() const {
+    return characteristicVelocity_ * characteristicLength_ / (viscosity_ / density_);
+}
+
+bool FlowParameterSet::isValid() const {
+    float dx = (characteristicLength_ / spatialResolution_);
+    float convertVelocity = 3.0f / (relaxationTime_ - 0.5f) * viscosity_ / density_ / dx;
+    float uLatticeMax = characteristicVelocity_ / convertVelocity;
+    return uLatticeMax < 0.4f; // Intrinsic property of LBM.
+}
+
 void FlowParameterSet::serialize(Serializer& s) const {
     s.serialize("name", name_);
     s.serialize("spatialResolution", spatialResolution_);

@@ -55,8 +55,6 @@ public:
 
 protected:
 
-    virtual void adjustPropertiesToInput();
-
     virtual void setDescriptions() {
         setDescription("This processor is being used to parameterize simulation runs.");
     }
