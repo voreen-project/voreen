@@ -780,16 +780,30 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
     }
     IntervalTree<int, size_t> cylinderTree(std::move(cylinderIntervals));
 
+    std::uniform_int_distribution<> sliceBaseSeedDistr(0, 0xffffffff);
+    int baseSeed = sliceBaseSeedDistr(input.randomEngine);
+
     const float insideBase = 0.7;
     const float outsideBase = 0.3;
     auto& progress = globalProgressSteps.get<1>();
+    ThreadedTaskProgressReporter parallelProgress(progress, dim.z);
+
+    bool aborted = false;
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel for
+#endif
     for(int z=0; z<dim.z; ++z) {
-        progress.setProgress(static_cast<float>(z)/dim.z);
+#ifdef VRN_MODULE_OPENMP
+        if (aborted) {
+            continue;
+        }
+#endif
+
+        LargeTestDataGeneratorInput::random_engine_type randomEngine;
+        randomEngine.seed(baseSeed + z);
 
         VolumeAtomic<uint8_t> sliceNoisy(tgt::vec3(dim.x, dim.y, 1));
         VolumeAtomic<uint8_t> sliceGT(tgt::vec3(dim.x, dim.y, 1));
-        std::uniform_int_distribution<> sliceBaseSeedDistr(0, 100000);
-        int baseSeed = sliceBaseSeedDistr(input.randomEngine);
 
         std::vector<Interval<int, size_t>> ballIntervals;
         for(auto interval: ballTree.findOverlapping(z, z)) {
@@ -807,12 +821,7 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
         }
         IntervalTree<int, size_t> cylinderTree(std::move(cylinderIntervals));
 
-#ifdef VRN_MODULE_OPENMP
-#pragma omp parallel for
-#endif
         for(int y=0; y<dim.y; ++y) {
-            LargeTestDataGeneratorInput::random_engine_type randomEngine;
-            randomEngine.seed(baseSeed + y);
 
             std::vector<Interval<int, size_t>> ballIntervals;
             for(auto interval: ballTree.findOverlapping(y, y)) {
@@ -854,6 +863,19 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
         }
         input.outputVolumeNoisy->writeSlices(&sliceNoisy, z);
         input.outputVolumeGT->writeSlices(&sliceGT, z);
+
+        if(parallelProgress.reportStepDone()) {
+#ifdef VRN_MODULE_OPENMP
+            #pragma omp critical
+            aborted = true;
+#else
+            aborted = true;
+            break;
+#endif
+        }
+    }
+    if(aborted) {
+        throw boost::thread_interrupted();
     }
 
     if(input.retainLabel) {
