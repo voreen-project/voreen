@@ -112,7 +112,8 @@ LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
     LargeTestDataGeneratorInput::random_engine_type randomEngine {};
     randomEngine.seed(seed_.get());
 
-    const std::string baseType = "uint8";
+    const std::string baseTypeNoisy = "uint16";
+    const std::string baseTypeGT = "uint8";
     const tgt::vec3 spacing = tgt::vec3::one;
     const tgt::vec3 offset = tgt::vec3::zero;
     const RealWorldMapping rwm = RealWorldMapping(1,0,"");
@@ -126,8 +127,8 @@ LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
     std::unique_ptr<HDF5FileVolume> outputVolumeNoisy = nullptr;
     std::unique_ptr<HDF5FileVolume> outputVolumeGT = nullptr;
     try {
-        outputVolumeNoisy = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(volumeNoisyFilePath, volumeLocation, baseType, dim, 1, true, deflateLevelNoisy, tgt::svec3(dim.x, dim.y, 1), false));
-        outputVolumeGT = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(volumeGTFilePath, volumeLocation, baseType, dim, 1, true, deflateLevelGT, tgt::svec3(dim.x, dim.y, 1), false));
+        outputVolumeNoisy = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(volumeNoisyFilePath, volumeLocation, baseTypeNoisy, dim, 1, true, deflateLevelNoisy, tgt::svec3(dim.x, dim.y, 1), false));
+        outputVolumeGT = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(volumeGTFilePath, volumeLocation, baseTypeGT, dim, 1, true, deflateLevelGT, tgt::svec3(dim.x, dim.y, 1), false));
     } catch(tgt::IOException& e) {
         throw InvalidInputException("Could not create output volume.", InvalidInputException::S_ERROR);
     }
@@ -803,7 +804,7 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
         LargeTestDataGeneratorInput::random_engine_type randomEngine;
         randomEngine.seed(baseSeed + z);
 
-        VolumeAtomic<uint8_t> sliceNoisy(tgt::vec3(dim.x, dim.y, 1));
+        VolumeAtomic<uint16_t> sliceNoisy(tgt::vec3(dim.x, dim.y, 1));
         VolumeAtomic<uint8_t> sliceGT(tgt::vec3(dim.x, dim.y, 1));
 
         std::vector<Interval<int, size_t>> ballIntervals;
@@ -842,6 +843,7 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
 
             for(int x=0; x<dim.x; ++x) {
                 tgt::ivec3 p(x,y,z);
+                size_t slicePos = y*dim.x+x;
 
                 bool inside = false;
                 for(auto& interval : ballTree.findOverlapping(x,x)) {
@@ -857,9 +859,9 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
 
                 val += gsl_ran_gaussian_ziggurat(randomEngine, input.noiseRange);
                 val = tgt::clamp(val, 0.0f, 1.0f);
-                sliceNoisy.setVoxelNormalized(val, x,y,0);
+                sliceNoisy.voxel(slicePos) = val / 0xffff;
 
-                sliceGT.setVoxelNormalized(inside ? 1.0f : 0.0f, x,y,0);
+                sliceGT.voxel(slicePos) = inside ? 255 : 0;
             }
         }
         input.outputVolumeNoisy->writeSlices(&sliceNoisy, z);
