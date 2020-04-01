@@ -116,7 +116,8 @@ LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
     const tgt::vec3 spacing = tgt::vec3::one;
     const tgt::vec3 offset = tgt::vec3::zero;
     const RealWorldMapping rwm = RealWorldMapping(1,0,"");
-    const int deflateLevel = 1;
+    const int deflateLevelNoisy = 0;
+    const int deflateLevelGT = 1;
 
     if(volumeNoisyFilePath.empty() || volumeGTFilePath.empty()) {
         throw InvalidInputException("No volume file path specified!", InvalidInputException::S_ERROR);
@@ -125,8 +126,8 @@ LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
     std::unique_ptr<HDF5FileVolume> outputVolumeNoisy = nullptr;
     std::unique_ptr<HDF5FileVolume> outputVolumeGT = nullptr;
     try {
-        outputVolumeNoisy = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(volumeNoisyFilePath, volumeLocation, baseType, dim, 1, true, deflateLevel, tgt::svec3(dim.x, dim.y, 1), false));
-        outputVolumeGT = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(volumeGTFilePath, volumeLocation, baseType, dim, 1, true, deflateLevel, tgt::svec3(dim.x, dim.y, 1), false));
+        outputVolumeNoisy = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(volumeNoisyFilePath, volumeLocation, baseType, dim, 1, true, deflateLevelNoisy, tgt::svec3(dim.x, dim.y, 1), false));
+        outputVolumeGT = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(volumeGTFilePath, volumeLocation, baseType, dim, 1, true, deflateLevelGT, tgt::svec3(dim.x, dim.y, 1), false));
     } catch(tgt::IOException& e) {
         throw InvalidInputException("Could not create output volume.", InvalidInputException::S_ERROR);
     }
