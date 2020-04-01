@@ -859,7 +859,7 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
 
                 val += gsl_ran_gaussian_ziggurat(randomEngine, input.noiseRange);
                 val = tgt::clamp(val, 0.0f, 1.0f);
-                sliceNoisy.voxel(slicePos) = val / 0xffff;
+                sliceNoisy.voxel(slicePos) = val * 0xffff;
 
                 sliceGT.voxel(slicePos) = inside ? 255 : 0;
             }
