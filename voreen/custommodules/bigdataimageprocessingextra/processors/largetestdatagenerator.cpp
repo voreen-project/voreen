@@ -32,7 +32,7 @@
 #include "voreen/core/voreenapplication.h"
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/utils/hashing.h"
-#include "../../modules/vesselnetworkanalysis/ext/intervaltree/IntervalTree.h"
+#include "../../modules/vesselnetworkanalysis/algorithm/intervalwalker.h"
 #include "../algorithm/boundshierarchy.h"
 #include "custommodules/bigdataimageprocessingextra/ext/ziggurat.h"
 
@@ -768,19 +768,20 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
         }
     }
 
+    std::mutex intervalWalkerMutex;
     std::vector<Interval<int, size_t>> ballIntervals;
     for(size_t i=0; i < balls.size(); ++i) {
         auto full_bounds = balls.bounds(i);
         ballIntervals.emplace_back(full_bounds.getLLF().z, full_bounds.getURB().z, i);
     }
-    IntervalTree<int, size_t> ballTree(std::move(ballIntervals));
+    IntervalWalker<int, size_t> ballWalker(0, std::move(ballIntervals));
 
     std::vector<Interval<int, size_t>> cylinderIntervals;
     for(size_t i=0; i < cylinders.size(); ++i) {
         auto full_bounds = cylinders.bounds(i);
         cylinderIntervals.emplace_back(full_bounds.getLLF().z, full_bounds.getURB().z, i);
     }
-    IntervalTree<int, size_t> cylinderTree(std::move(cylinderIntervals));
+    IntervalWalker<int, size_t> cylinderWalker(0, std::move(cylinderIntervals));
 
     std::uniform_int_distribution<> sliceBaseSeedDistr(0, 0xffffffff);
     int baseSeed = sliceBaseSeedDistr(input.randomEngine);
@@ -790,16 +791,46 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
     auto& progress = globalProgressSteps.get<1>();
     ThreadedTaskProgressReporter parallelProgress(progress, dim.z);
 
+//#undef VRN_MODULE_OPENMP
+
     bool aborted = false;
 #ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for
 #endif
-    for(int z=0; z<dim.z; ++z) {
+    for(int zDimWork=0; zDimWork<dim.z; ++zDimWork) {
 #ifdef VRN_MODULE_OPENMP
         if (aborted) {
             continue;
         }
 #endif
+        std::vector<Interval<int, size_t>> ballIntervals;
+        std::vector<Interval<int, size_t>> cylinderIntervals;
+
+        int z;
+        {
+            std::lock_guard<std::mutex> guard(intervalWalkerMutex);
+
+            auto ballIt = ballWalker.next();
+            for(auto it = ballIt.next(); it != ballIt.end(); it = ballIt.next()) {
+                auto& i = it->value;
+                auto full_bounds = balls.bounds(i);
+                ballIntervals.emplace_back(full_bounds.getLLF().y, full_bounds.getURB().y, i);
+            }
+
+            auto cylinderIt = cylinderWalker.next();
+            for(auto it = cylinderIt.next(); it != cylinderIt.end(); it = cylinderIt.next()) {
+                auto& i = it->value;
+                auto full_bounds = cylinders.bounds(i);
+                cylinderIntervals.emplace_back(full_bounds.getLLF().y, full_bounds.getURB().y, i);
+            }
+            z = ballIt.currentPos();
+            tgtAssert(z == cylinderIt.currentPos(), "IntervalWalker pos mismatch");
+        }
+
+        intervalWalkerMutex.unlock();
+
+        IntervalWalker<int, size_t> ballWalker(0, std::move(ballIntervals));
+        IntervalWalker<int, size_t> cylinderWalker(0, std::move(cylinderIntervals));
 
         LargeTestDataGeneratorInput::random_engine_type randomEngine;
         randomEngine.seed(baseSeed + z);
@@ -807,51 +838,40 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
         VolumeAtomic<uint16_t> sliceNoisy(tgt::vec3(dim.x, dim.y, 1));
         VolumeAtomic<uint8_t> sliceGT(tgt::vec3(dim.x, dim.y, 1));
 
-        std::vector<Interval<int, size_t>> ballIntervals;
-        for(auto interval: ballTree.findOverlapping(z, z)) {
-            auto& i = interval.value;
-            auto full_bounds = balls.bounds(i);
-            ballIntervals.emplace_back(full_bounds.getLLF().y, full_bounds.getURB().y, i);
-        }
-        IntervalTree<int, size_t> ballTree(std::move(ballIntervals));
-
-        std::vector<Interval<int, size_t>> cylinderIntervals;
-        for(auto interval: cylinderTree.findOverlapping(z, z)) {
-            auto& i = interval.value;
-            auto full_bounds = cylinders.bounds(i);
-            cylinderIntervals.emplace_back(full_bounds.getLLF().y, full_bounds.getURB().y, i);
-        }
-        IntervalTree<int, size_t> cylinderTree(std::move(cylinderIntervals));
 
         for(int y=0; y<dim.y; ++y) {
 
+            auto ballIt = ballWalker.next();
             std::vector<Interval<int, size_t>> ballIntervals;
-            for(auto interval: ballTree.findOverlapping(y, y)) {
-                auto& i = interval.value;
+            for(auto it = ballIt.next(); it != ballIt.end(); it = ballIt.next()) {
+                auto& i = it->value;
                 auto full_bounds = balls.bounds(i);
                 ballIntervals.emplace_back(full_bounds.getLLF().x, full_bounds.getURB().x, i);
             }
-            IntervalTree<int, size_t> ballTree(std::move(ballIntervals));
+            IntervalWalker<int, size_t> ballWalker(0, std::move(ballIntervals));
 
+            auto cylinderIt = cylinderWalker.next();
             std::vector<Interval<int, size_t>> cylinderIntervals;
-            for(auto interval: cylinderTree.findOverlapping(y, y)) {
-                auto& i = interval.value;
+            for(auto it = cylinderIt.next(); it != cylinderIt.end(); it = cylinderIt.next()) {
+                auto& i = it->value;
                 auto full_bounds = cylinders.bounds(i);
                 cylinderIntervals.emplace_back(full_bounds.getLLF().x, full_bounds.getURB().x, i);
             }
-            IntervalTree<int, size_t> cylinderTree(std::move(cylinderIntervals));
+            IntervalWalker<int, size_t> cylinderWalker(0, std::move(cylinderIntervals));
 
             for(int x=0; x<dim.x; ++x) {
                 tgt::ivec3 p(x,y,z);
                 size_t slicePos = y*dim.x+x;
 
                 bool inside = false;
-                for(auto& interval : ballTree.findOverlapping(x,x)) {
-                    auto& i = interval.value;
+                auto ballIt = ballWalker.next();
+                for(auto it = ballIt.next(); it != ballIt.end(); it = ballIt.next()) {
+                    auto& i = it->value;
                     inside |= balls.insideSingle(p, i);
                 }
-                for(auto& interval : cylinderTree.findOverlapping(x,x)) {
-                    auto& i = interval.value;
+                auto cylinderIt = cylinderWalker.next();
+                for(auto it = cylinderIt.next(); it != cylinderIt.end(); it = cylinderIt.next()) {
+                    auto& i = it->value;
                     inside |= cylinders.insideSingle(p, i);
                 }
                 //bool inside = (balls.inside(p)) || cylinders.inside(p);

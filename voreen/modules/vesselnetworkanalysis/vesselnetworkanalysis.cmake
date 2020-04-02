@@ -60,6 +60,7 @@ SET(MOD_CORE_SOURCES
 
 SET(MOD_CORE_HEADERS
     ${MOD_DIR}/algorithm/idvolume.h
+    ${MOD_DIR}/algorithm/intervalwalker.h
     ${MOD_DIR}/algorithm/streaminggraphcreation.h
     ${MOD_DIR}/algorithm/surface.h
     ${MOD_DIR}/algorithm/vesselgraphrefinement.h
