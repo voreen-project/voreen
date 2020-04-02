@@ -150,7 +150,7 @@ static const double wtab[128] = {
 typedef uint64_t pcg32_state;
 static uint64_t const multiplier = 6364136223846793005u;
 
-uint32_t pcg32(pcg32_state& state) {
+inline uint32_t pcg32(pcg32_state& state) {
     uint64_t x = state;
     unsigned count = (unsigned)(x >> 61);    // 61 = 64 - 3
 
@@ -159,13 +159,13 @@ uint32_t pcg32(pcg32_state& state) {
     return (uint32_t)(x >> (22 + count));    // 22 = 32 - 3 - 7
 }
 
-pcg32_state pcg32_init(uint64_t seed) {
+inline pcg32_state pcg32_init(uint64_t seed) {
     pcg32_state state = 2*seed + 1;
     pcg32(state);
     return state;
 }
 
-double gsl_ran_gaussian_ziggurat (pcg32_state& state, double sigma) {
+static inline double gsl_ran_gaussian_ziggurat (pcg32_state& state, double sigma) {
     unsigned long  U, sign, i, j;
     double  x, y;
 
