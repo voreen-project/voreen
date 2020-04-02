@@ -148,49 +148,50 @@ static const double wtab[128] = {
 // https://www.pcg-random.org/pdf/hmc-cs-2014-0905.pdf
 
 typedef uint64_t pcg32_state;
+static uint64_t const multiplier = 6364136223846793005u;
 
 uint32_t pcg32(pcg32_state& state) {
-	uint64_t x = state;
-	unsigned count = (unsigned)(x >> 61);	// 61 = 64 - 3
+    uint64_t x = state;
+    unsigned count = (unsigned)(x >> 61);    // 61 = 64 - 3
 
-	state = x * state;
-	x ^= x >> 22;
-	return (uint32_t)(x >> (22 + count));	// 22 = 32 - 3 - 7
+    state = x * multiplier;
+    x ^= x >> 22;
+    return (uint32_t)(x >> (22 + count));    // 22 = 32 - 3 - 7
 }
 
 pcg32_state pcg32_init(uint64_t seed) {
-	pcg32_state state = 2*seed + 1;
-	pcg32(state);
+    pcg32_state state = 2*seed + 1;
+    pcg32(state);
     return state;
 }
 
 double gsl_ran_gaussian_ziggurat (pcg32_state& state, double sigma) {
-  unsigned long  U, sign, i, j;
-  double  x, y;
+    unsigned long  U, sign, i, j;
+    double  x, y;
 
-  auto rand = [&] () {
-    return pcg32(state);
-  };
+    auto rand = [&] () {
+        return pcg32(state);
+    };
 
-  while (1) {
-    U = rand();
-    i = U & 0x0000007F;		/* 7 bit to choose the step */
-    sign = U & 0x00000080;	/* 1 bit for the sign */
-    j = U>>8;			/* 24 bit for the x-value */
+    while (1) {
+        U = rand();
+        i = U & 0x0000007F;       /* 7 bit to choose the step */
+        sign = U & 0x00000080;    /* 1 bit for the sign */
+        j = U>>8;                 /* 24 bit for the x-value */
 
-    x = j*wtab[i];
-    if (j < ktab[i])  break;
+        x = j*wtab[i];
+        if (j < ktab[i])  break;
 
-    if (i<127) {
-      double  y0, y1;
-      y0 = ytab[i];
-      y1 = ytab[i+1];
-      y = y1+(y0-y1)*rand();
-    } else {
-      x = PARAM_R - log(1.0-rand())/PARAM_R;
-      y = exp(-PARAM_R*(x-0.5*PARAM_R))*rand();
+        if (i<127) {
+            double  y0, y1;
+            y0 = ytab[i];
+            y1 = ytab[i+1];
+            y = y1+(y0-y1)*rand();
+        } else {
+            x = PARAM_R - log(1.0-rand())/PARAM_R;
+            y = exp(-PARAM_R*(x-0.5*PARAM_R))*rand();
+        }
+        if (y < exp(-0.5*x*x))  break;
     }
-    if (y < exp(-0.5*x*x))  break;
-  }
-  return  sign ? sigma*x : -sigma*x;
+    return  sign ? sigma*x : -sigma*x;
 }
