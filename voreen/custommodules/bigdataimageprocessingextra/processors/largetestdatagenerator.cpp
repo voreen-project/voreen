@@ -783,8 +783,8 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
     }
     IntervalWalker<int, size_t> cylinderWalker(0, std::move(cylinderIntervals));
 
-    std::uniform_int_distribution<> sliceBaseSeedDistr(0, 0xffffffff);
-    int baseSeed = sliceBaseSeedDistr(input.randomEngine);
+    std::uniform_int_distribution<uint64_t> sliceBaseSeedDistr(0, std::numeric_limits<uint64_t>::max());
+    uint64_t baseSeed = sliceBaseSeedDistr(input.randomEngine);
 
     const float insideBase = 0.7;
     const float outsideBase = 0.3;
@@ -832,8 +832,7 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
         IntervalWalker<int, size_t> ballWalker(0, std::move(ballIntervals));
         IntervalWalker<int, size_t> cylinderWalker(0, std::move(cylinderIntervals));
 
-        LargeTestDataGeneratorInput::random_engine_type randomEngine;
-        randomEngine.seed(baseSeed + z);
+        pcg32_state randomEngine = pcg32_init(baseSeed + z);
 
         VolumeAtomic<uint16_t> sliceNoisy(tgt::vec3(dim.x, dim.y, 1));
         VolumeAtomic<uint8_t> sliceGT(tgt::vec3(dim.x, dim.y, 1));

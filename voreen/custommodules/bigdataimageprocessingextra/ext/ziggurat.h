@@ -1,6 +1,6 @@
 /* gauss.c - gaussian random numbers, using the Ziggurat method
  *
- * Copyright (C) 2005  Jochen Voss.
+ * Copyright (C) 2005  Jochen Voss with some modifications by the Voreen team
  *
  * For details see the following article.
  *
@@ -143,16 +143,33 @@ static const double wtab[128] = {
   1.83813550477e-07, 1.92166040885e-07, 2.05295471952e-07, 2.22600839893e-07
 };
 
-double
-gsl_ran_gaussian_ziggurat (std::minstd_rand& r, double sigma) {
+// Using PCG-XSH-RS, see
+// https://en.wikipedia.org/wiki/Permuted_congruential_generator
+// https://www.pcg-random.org/pdf/hmc-cs-2014-0905.pdf
+
+typedef uint64_t pcg32_state;
+
+uint32_t pcg32(pcg32_state& state) {
+	uint64_t x = state;
+	unsigned count = (unsigned)(x >> 61);	// 61 = 64 - 3
+
+	state = x * state;
+	x ^= x >> 22;
+	return (uint32_t)(x >> (22 + count));	// 22 = 32 - 3 - 7
+}
+
+pcg32_state pcg32_init(uint64_t seed) {
+	pcg32_state state = 2*seed + 1;
+	pcg32(state);
+    return state;
+}
+
+double gsl_ran_gaussian_ziggurat (pcg32_state& state, double sigma) {
   unsigned long  U, sign, i, j;
   double  x, y;
 
-  // Modulus is 1 << 31, but we need 32 bit.
   auto rand = [&] () {
-    uint32_t r1 = r() & 0xffff;
-    uint32_t r2 = r() & 0xffff;
-    return r1 << 16 | r2;
+    return pcg32(state);
   };
 
   while (1) {
