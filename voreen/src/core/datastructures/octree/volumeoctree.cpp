@@ -44,6 +44,8 @@
 #include <sstream>
 #include <queue>
 
+#undef VRN_MODULE_OPENMP
+
 #ifdef VRN_MODULE_OPENMP
 #include "omp.h"
 #endif
@@ -1166,57 +1168,73 @@ void VolumeOctree::extractBrickFromTexture(const std::vector<const void*>& textu
 
     const size_t numChannels = getNumChannels();
 
-    // use pointer to first element of texture/histogram vector in order to avoid repeated vector lookups
+    // Use pointer to first element of texture/histogram vector in order to avoid repeated vector lookups
     const T* const * textureArray = reinterpret_cast<const T* const *>(&textures.front());
-
-    uint64_t avgValues64[MAX_CHANNELS];
-    for (size_t channel=0; channel<numChannels; channel++) {
-        avgValues64[channel] = 0;
-        minValues[channel] = 65535;
-        maxValues[channel] = 0;
-    }
 
     size_t brickBufferSize = tgt::hmul(getBrickDim())*numChannels;
     size_t textureBufferSize = tgt::hmul(textureDim);
 
-    // copy voxels from channel textures to brick
-    uint64_t numSignificantBrickVoxels = 0; //< number of brick voxels lying inside texture (NPOT)
-    VRN_FOR_EACH_VOXEL(brickVoxel, svec3(0,0,0), brickDim) {
-        size_t brickLinearCoord = cubicCoordToLinear(brickVoxel, brickDim)*numChannels;
-        tgtAssert(brickLinearCoord+numChannels-1 < brickBufferSize, "invalid brick linear coord");
-        const tgt::svec3 textureCoord = brickVoxel+brickOffsetInTexture;
-        if (tgt::hand(tgt::lessThan(textureCoord, textureDim))) { //< brick voxel inside volume
-            size_t textureLinearCoord = cubicCoordToLinear(brickVoxel+brickOffsetInTexture, textureDim);
-            tgtAssert(textureLinearCoord < textureBufferSize, "invalid texture linear coord");
+    // Copy voxels from channel textures to brick
+    tgt::svec3 inTextureSize = tgt::min(brickOffsetInTexture + brickDim, textureDim) - brickOffsetInTexture;
+    uint64_t numSignificantBrickVoxels = tgt::hmul(inTextureSize); //< number of brick voxels lying inside texture (NPOT)
 
-            for (size_t channel=0; channel<numChannels; channel++) {
-                uint16_t value = convertVoxelValueToUInt16<T>(textureArray[channel][textureLinearCoord]);
+    for (size_t channel=0; channel<numChannels; channel++) {
 
-                brickBuffer[brickLinearCoord + channel] = value;
-                avgValues64[channel] += value;
-                minValues[channel] = std::min(minValues[channel], value);
-                maxValues[channel] = std::max(maxValues[channel], value);
+        uint64_t sum = 0;
+        size_t minValue = 65535;
+        size_t maxValue = 0;
+        std::vector<uint64_t>& histogram = histograms[channel];
+        const T* texture = textureArray[channel];
 
-                //histogramArray[channel]->increaseBucket(value >> 4); // for 4096 buckets (12 bit)
-                histograms[channel][value]++;
+        size_t brickLinearCoord = channel; //Start with the appropriate offset for the channel values
+        for (size_t z = 0; z < inTextureSize.z; ++z) {
+            for (size_t y = 0; y < inTextureSize.y; ++y) {
+                const tgt::svec3 textureCoord = tgt::svec3(0,y,z)+brickOffsetInTexture;
+                size_t textureLinearCoord = cubicCoordToLinear(textureCoord, textureDim);
+                size_t textureLinearCoordEnd = textureLinearCoord+inTextureSize.x;
+                for (; textureLinearCoord < textureLinearCoordEnd; ++textureLinearCoord) {
+                    tgtAssert(brickLinearCoord < brickBufferSize, "invalid brick linear coord");
+
+                    tgtAssert(textureLinearCoord < textureBufferSize, "invalid texture linear coord");
+
+                    size_t value = convertVoxelValueToUInt16<T>(texture[textureLinearCoord]);
+
+                    brickBuffer[brickLinearCoord] = value;
+                    sum += value;
+                    minValue = std::min(minValue, value);
+                    maxValue = std::max(maxValue, value);
+
+                    //histogramArray[channel]->increaseBucket(value >> 4); // for 4096 buckets (12 bit)
+                    histogram[value]++;
+
+                    brickLinearCoord += numChannels;
+                }
             }
-
-            numSignificantBrickVoxels++;
         }
-        else { //< brick voxel outside volume
-            for (size_t channel=0; channel<numChannels; channel++)
+
+        avgValues[channel] = static_cast<uint16_t>(sum / numSignificantBrickVoxels);
+        maxValues[channel] = maxValue;
+        minValues[channel] = minValue;
+        tgtAssert(minValues[channel] <= maxValues[channel], "min value is larger than max value");
+        tgtAssert(minValues[channel] <= avgValues[channel] && avgValues[channel] <= maxValues[channel], "avg value outside min-max value range");
+    }
+
+    // Fill brick outside of texture with zeros
+    tgt::svec3 end = brickDim;
+    for(int dim=2; dim >= 0; --dim) {
+        tgt::svec3 start(0);
+        start[dim] = inTextureSize.z;
+        VRN_FOR_EACH_VOXEL(brickVoxel, start, end) {
+            for (size_t channel=0; channel<numChannels; channel++) {
+                size_t brickLinearCoord = cubicCoordToLinear(brickVoxel, brickDim)*numChannels;
                 brickBuffer[brickLinearCoord + channel] = 0;
+            }
         }
+        end[dim] = start[dim];
     }
 
-    if (numSignificantBrickVoxels > 0) {
-        for (size_t channel=0; channel<numChannels; channel++) {
-            avgValues[channel] = static_cast<uint16_t>(avgValues64[channel] / numSignificantBrickVoxels);
-            tgtAssert(minValues[channel] <= maxValues[channel], "min value is larger than max value");
-            tgtAssert(minValues[channel] <= avgValues[channel] && avgValues[channel] <= maxValues[channel], "avg value outside min-max value range");
-        }
-    }
-    else {
+    // Initialize metadata if brick if empty
+    if (numSignificantBrickVoxels == 0) {
         for (size_t channel=0; channel<numChannels; channel++) {
             avgValues[channel] = 0;
             minValues[channel] = 0;
