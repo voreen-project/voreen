@@ -52,11 +52,11 @@ public:
         }
         tgtAssert(nextCheck_ >= nextMove_, "Invalid check/move pos");
         int64_t toRemove = std::distance(nextMove_, nextCheck_);
-        size_t size = current_.size();
-        tgtAssert(toRemove <= static_cast<int64_t>(size), "Invalid number of elements to remove");
-        size_t newLen = size - static_cast<size_t>(toRemove);
-        tgtAssert(newLen <= size, "Size was not reduced");
-        if(size != newLen) {
+        if(toRemove > 0) {
+            size_t size = current_.size();
+            tgtAssert(toRemove <= static_cast<int64_t>(size), "Invalid number of elements to remove");
+            size_t newLen = size - static_cast<size_t>(toRemove);
+            tgtAssert(newLen <= size, "Size was not reduced");
             current_.resize(newLen);
         }
         return current_.end();
