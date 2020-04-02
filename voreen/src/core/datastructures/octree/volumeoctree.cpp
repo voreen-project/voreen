@@ -1113,9 +1113,9 @@ VolumeOctreeNode* VolumeOctree::createTreeNodeFromTexture(const tgt::svec3& llf,
     tgtAssert(tgt::hand(tgt::lessThan(llf, urb)), "llf larger than or equal urb");
 
     // highest level (full resolution) has been reached => create brick from volume texture and terminate recursion
-    uint16_t* tempBrickBuffer = acquireTempBrickBuffer();
-    tgtAssert(tempBrickBuffer, "no temp brick buffer");
-    extractBrickFromTexture<T>(textureBuffers, textureDim, tempBrickBuffer, getBrickDim(), llf,
+    const uint64_t virtualBrickAddress = brickPoolManager_->allocateBrick();
+    uint16_t* brickBuffer = brickPoolManager_->getWritableBrick(virtualBrickAddress);
+    extractBrickFromTexture<T>(textureBuffers, textureDim, brickBuffer, getBrickDim(), llf,
         avgValues, minValues, maxValues, histograms);
 
     // determine whether node is homogeneous (in all channels)
@@ -1129,17 +1129,14 @@ VolumeOctreeNode* VolumeOctree::createTreeNodeFromTexture(const tgt::svec3& llf,
 
     // node not homogeneous => create leaf node with brick and shift virtual memory offset
     if (!homogeneous || !octreeOptimization) {
-        const uint64_t virtualBrickAddress = brickPoolManager_->allocateBrick();
-        uint16_t* brickBuffer = brickPoolManager_->getWritableBrick(virtualBrickAddress);
-        memcpy(brickBuffer, tempBrickBuffer, getBrickMemorySize());
         brickPoolManager_->releaseBrick(virtualBrickAddress, OctreeBrickPoolManagerBase::WRITE);
 
         node = VolumeOctreeBase::createNode(getNumChannels(), avgValues, minValues, maxValues, virtualBrickAddress);
     }
     else { // node homogeneous => store only avg value (without brick)
+        brickPoolManager_->deleteBrick(virtualBrickAddress);
         node = VolumeOctreeBase::createNode(getNumChannels(), avgValues, minValues, maxValues);
     }
-    releaseTempBrickBuffer(tempBrickBuffer);
 
     tgtAssert(node, "node not created");
 
