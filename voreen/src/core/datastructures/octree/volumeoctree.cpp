@@ -44,8 +44,6 @@
 #include <sstream>
 #include <queue>
 
-#undef VRN_MODULE_OPENMP
-
 #ifdef VRN_MODULE_OPENMP
 #include "omp.h"
 #endif
@@ -1186,12 +1184,13 @@ void VolumeOctree::extractBrickFromTexture(const std::vector<const void*>& textu
         std::vector<uint64_t>& histogram = histograms[channel];
         const T* texture = textureArray[channel];
 
-        size_t brickLinearCoord = channel; //Start with the appropriate offset for the channel values
         for (size_t z = 0; z < inTextureSize.z; ++z) {
             for (size_t y = 0; y < inTextureSize.y; ++y) {
                 const tgt::svec3 textureCoord = tgt::svec3(0,y,z)+brickOffsetInTexture;
                 size_t textureLinearCoord = cubicCoordToLinear(textureCoord, textureDim);
                 size_t textureLinearCoordEnd = textureLinearCoord+inTextureSize.x;
+                size_t brickLinearCoord = numChannels * brickDim.x * (brickDim.y * z + y) + channel;
+
                 for (; textureLinearCoord < textureLinearCoordEnd; ++textureLinearCoord) {
                     tgtAssert(brickLinearCoord < brickBufferSize, "invalid brick linear coord");
 
