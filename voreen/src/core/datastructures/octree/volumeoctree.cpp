@@ -1300,53 +1300,66 @@ VolumeOctreeNode* VolumeOctree::createParentNode(VolumeOctreeNode* children[8], 
 
     }
     else { // node is not homogeneous => create inner node with brick by merging child nodes
-        // OPTIMIZATION: half-sample directly into target brick buffer
 
-        // half sample child bricks and compute avg value
-        svec3 halfSampleBrickDim = getBrickDim() / svec3(2);
-        size_t halfSampleBufferSize = tgt::hmul(halfSampleBrickDim)*getNumChannels();
-        size_t brickBufferSize = halfSampleBufferSize*8;
-
-        // store all half sampled bricks in one temporary buffer
-        uint16_t* halfSampledBrickBuffer = acquireTempBrickBuffer();
-
-        VRN_FOR_EACH_VOXEL(childPos, svec3::zero, svec3::two) {
-            const size_t childID = cubicCoordToLinear(childPos, svec3::two);
-            VolumeOctreeNode* child = children[childID];
-            tgtAssert(child, "null pointer");
-            if (child->hasBrick()) { // node brick present => halfsample into buffer
-                tgt::svec3 llf = tgt::min(childPos * getBrickDim(), brickUrb);
-                tgt::svec3 urb = tgt::min(llf + getBrickDim(), brickUrb);
-                tgt::svec3 childUrb = urb - llf;
-                halfSampleBrick(brickPoolManager_->getBrick(child->getBrickAddress()), getBrickDim(), childUrb, &halfSampledBrickBuffer[childID*halfSampleBufferSize]);
-                brickPoolManager_->releaseBrick(child->getBrickAddress());
-            }
-            else { // no brick present => use node's avg values
-                size_t childOffset = childID*halfSampleBufferSize;
-                for (size_t channel=0; channel<getNumChannels(); channel++) {
-                    uint16_t childAvgValue = child->getAvgValue(channel);
-                    for (size_t voxel=0; voxel<tgt::hmul(halfSampleBrickDim); voxel++) {
-                        size_t bufferIndex = childOffset + voxel*numChannels + channel;
-                        tgtAssert(bufferIndex < brickBufferSize, "invalid buffer index");
-                        halfSampledBrickBuffer[bufferIndex] = childAvgValue;
-                    }
-                }
-            }
-        }
+        // half sample child bricks
+        svec3 brickDim = getBrickDim();
+        svec3 halfBrickDim = getBrickDim() / svec3(2);
 
         // copy halfsampled bricks to dest buffer (child nodes/halfsampled bricks are expected to be zyx ordered)
         uint64_t brickVirtualMemoryAddress = brickPoolManager_->allocateBrick();
         uint16_t* brickBuffer = brickPoolManager_->getWritableBrick(brickVirtualMemoryAddress);
 
-        VRN_FOR_EACH_VOXEL(child, svec3::zero, svec3::two) {
-            const size_t childOffset = cubicCoordToLinear(child, svec3::two)*halfSampleBufferSize;
-            svec3 halfSampleOffset = child * halfSampleBrickDim;
-            uint16_t* halfSampledBrick = halfSampledBrickBuffer + childOffset;
-            tgtAssert(brickBuffer, "no brick buffer allocated");
-            copyBrickToTexture(halfSampledBrick, halfSampleBrickDim, brickBuffer, getBrickDim(), halfSampleOffset);
-        }
+        VRN_FOR_EACH_VOXEL(childPos, svec3::zero, svec3::two) {
+            for(size_t channel = 0; channel < numChannels; ++channel) {
+                const size_t childID = cubicCoordToLinear(childPos, svec3::two);
+                VolumeOctreeNode* child = children[childID];
+                tgtAssert(child, "null pointer");
 
-        releaseTempBrickBuffer(halfSampledBrickBuffer);
+                uint16_t childAvgValue = child->getAvgValue(channel);
+                tgt::svec3 inParentOffset = childPos * halfBrickDim;
+
+                if (child->hasBrick()) { // node brick present => halfsample into buffer
+                    tgt::svec3 llf = tgt::min(inParentOffset, brickUrb);
+                    tgt::svec3 urb = tgt::min(llf + halfBrickDim, brickUrb);
+                    tgt::svec3 childUrb = urb - llf;
+
+                    const uint16_t* childBrick = brickPoolManager_->getBrick(child->getBrickAddress());
+
+                    VRN_FOR_EACH_VOXEL(halfPos, svec3::zero, halfBrickDim) {
+                        svec3 pos = halfPos*svec3(2);
+                        auto getVoxel = [&] (tgt::svec3 offset) -> uint64_t {
+                            tgt::svec3 p = tgt::min(pos + offset, childUrb-tgt::svec3::one);
+                            size_t linearPos = cubicCoordToLinear(p, brickDim)*numChannels + channel;
+                            return (uint64_t)childBrick[linearPos];
+                        };
+
+                        uint64_t halfValue =
+                            getVoxel(tgt::svec3(0,0,0)) +  // LLF
+                            getVoxel(tgt::svec3(1,0,0)) +  // LLB
+                            getVoxel(tgt::svec3(0,1,0)) +  // ULF
+                            getVoxel(tgt::svec3(1,1,0)) +  // ULB
+                            getVoxel(tgt::svec3(0,0,1)) +  // LRF
+                            getVoxel(tgt::svec3(1,0,1)) +  // LRB
+                            getVoxel(tgt::svec3(0,1,1)) +  // URF
+                            getVoxel(tgt::svec3(1,1,1)) ;  // URB
+                        halfValue /= 8;
+
+                        tgt::svec3 parentPos = inParentOffset + halfPos;
+                        size_t parentBrickLinearPos = cubicCoordToLinear(parentPos, brickDim)*numChannels + channel;
+                        brickBuffer[parentBrickLinearPos] = halfValue;
+                    }
+
+                    brickPoolManager_->releaseBrick(child->getBrickAddress());
+                }
+                else { // no brick present => use node's avg values
+                    VRN_FOR_EACH_VOXEL(halfPos, svec3::zero, halfBrickDim) {
+                        tgt::svec3 parentPos = inParentOffset + halfPos;
+                        size_t parentBrickLinearPos = cubicCoordToLinear(parentPos, brickDim)*numChannels + channel;
+                        brickBuffer[parentBrickLinearPos] = childAvgValue;
+                    }
+                }
+            }
+        }
 
         // create parent node
         VolumeOctreeNode* parent = VolumeOctreeBase::createNode(getNumChannels(), avgValues, minValues, maxValues,
@@ -1380,39 +1393,6 @@ void VolumeOctree::copyBrickToTexture(const uint16_t* brick, const tgt::svec3& b
             size_t textureLinearCoord = cubicCoordToLinear(textureCoord, textureDim)*numChannels;
             tgtAssert(textureLinearCoord+numChannels-1 < textureBufferSize, "invalid texture linear coord");
             std::copy(brick+brickLinearCoord, brick+brickLinearCoord+numChannels, texture+textureLinearCoord);
-        }
-    }
-}
-
-void VolumeOctree::halfSampleBrick(const uint16_t* brick, const svec3& brickDim, const svec3& brickUrb, uint16_t* halfSampledBrick) const {
-    tgtAssert(brick && halfSampledBrick, "null pointer passed");
-    tgtAssert(isCubicAndPot(brickDim), "invalid brick dimensions");
-    tgtAssert(tgt::hmul(brickUrb) > 0, "No valid voxels in brick");
-
-    const size_t numChannels = getNumChannels();
-    const svec3 halfDim = brickDim / svec3(2);
-
-    VRN_FOR_EACH_VOXEL(halfPos, svec3::zero, halfDim) {
-        svec3 pos = halfPos*svec3(2);
-
-        for (size_t channel=0; channel<numChannels; channel++) {
-            auto getVoxel = [&] (tgt::svec3 offset) -> uint64_t {
-                tgt::svec3 p = tgt::min(pos + offset, brickUrb-tgt::svec3::one);
-                return (uint64_t)brick[cubicCoordToLinear(p, brickDim)*numChannels + channel];
-            };
-
-            uint64_t halfValue =
-                (uint64_t)getVoxel(tgt::svec3(0,0,0)) +  // LLF
-                (uint64_t)getVoxel(tgt::svec3(1,0,0)) +  // LLB
-                (uint64_t)getVoxel(tgt::svec3(0,1,0)) +  // ULF
-                (uint64_t)getVoxel(tgt::svec3(1,1,0)) +  // ULB
-                (uint64_t)getVoxel(tgt::svec3(0,0,1)) +  // LRF
-                (uint64_t)getVoxel(tgt::svec3(1,0,1)) +  // LRB
-                (uint64_t)getVoxel(tgt::svec3(0,1,1)) +  // URF
-                (uint64_t)getVoxel(tgt::svec3(1,1,1)) ;  // URB
-            halfValue /= 8;
-
-            halfSampledBrick[cubicCoordToLinear(halfPos, halfDim)*numChannels + channel] = static_cast<uint16_t>(halfValue);
         }
     }
 }

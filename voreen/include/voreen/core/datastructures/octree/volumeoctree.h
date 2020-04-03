@@ -181,8 +181,6 @@ private:
         uint16_t* texture, const tgt::svec3& textureDim,
         const tgt::svec3& brickOffsetInTexture) const;
 
-    void halfSampleBrick(const uint16_t* brick, const tgt::svec3& brickDim, const tgt::svec3& brickUrb, uint16_t* halfSampledBrick) const;
-
     void deleteSubTree(VolumeOctreeNode* root) const;
 
     void serializeNodeBuffer(char*& binaryBuffer, size_t& bufferSize) const;
