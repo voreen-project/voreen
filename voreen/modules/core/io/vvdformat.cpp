@@ -205,13 +205,31 @@ VvdObject::VvdObject(const VolumeBase* vb, std::string absRAWPath, bool useExter
         }
     }
 
+    // Be careful to avoid adding nullptr elements in case any of the derived data computations fail
+    // (e.g., if the required volume representation is not available).
     //derivedData_.insert(vb->getDerivedData<VolumeHash>());
-    derivedData_.insert(vb->getDerivedData<VolumeMinMax>());
-    derivedData_.insert(vb->getDerivedData<VolumeMinMaxMagnitude>());
-    derivedData_.insert(vb->getDerivedData<VolumePreview>());
-    derivedData_.insert(vb->getDerivedData<VolumeHistogramIntensity>());
-    if(vb->hasDerivedData<VolumeHistogramIntensityGradient>())
-        derivedData_.insert(vb->getDerivedData<VolumeHistogramIntensityGradient>());
+    auto vmm = vb->getDerivedData<VolumeMinMax>();
+    if(vmm) {
+        derivedData_.insert(vmm);
+    }
+    auto vmmm = vb->getDerivedData<VolumeMinMaxMagnitude>();
+    if(vmmm) {
+        derivedData_.insert(vmmm);
+    }
+    auto vp = vb->getDerivedData<VolumePreview>();
+    if(vp) {
+        derivedData_.insert(vp);
+    }
+    auto vhi = vb->getDerivedData<VolumeHistogramIntensity>();
+    if(vhi) {
+        derivedData_.insert(vhi);
+    }
+
+    if(vb->hasDerivedData<VolumeHistogramIntensityGradient>()) {
+        auto vhig = vb->getDerivedData<VolumeHistogramIntensityGradient>();
+        tgtAssert(vhig, "No vhig");
+        derivedData_.insert(vhig);
+    }
     //TODO: removed hard-coded classes
 }
 
@@ -272,6 +290,7 @@ void VvdObject::serialize(Serializer& s) const {
 
     //serialize meta and derived data
     metaData_.serialize(s);
+    tgtAssert(derivedData_.count(nullptr) == 0, "derivedData_ containers nullptr");
     s.serialize("DerivedData", derivedData_, "DerivedItem");
 }
 
@@ -316,6 +335,8 @@ void VvdObject::deserialize(Deserializer& s) {
     catch (SerializationNoSuchDataException& /*e*/) {
         s.removeLastError();
     }
+    // Handle invalid vvd files gracefully:
+    derivedData_.erase(nullptr);
 }
 
 } // namespace voreen
