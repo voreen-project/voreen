@@ -44,6 +44,8 @@
 #include <sstream>
 #include <queue>
 
+#undef VRN_MODULE_OPENMP
+
 #ifdef VRN_MODULE_OPENMP
 #include "omp.h"
 #endif
@@ -1117,6 +1119,7 @@ VolumeOctreeNode* VolumeOctree::createTreeNodeFromTexture(const tgt::svec3& llf,
     uint16_t* brickBuffer = brickPoolManager_->getWritableBrick(virtualBrickAddress);
     extractBrickFromTexture<T>(textureBuffers, textureDim, brickBuffer, getBrickDim(), llf,
         avgValues, minValues, maxValues, histograms);
+    brickPoolManager_->releaseBrick(virtualBrickAddress, OctreeBrickPoolManagerBase::WRITE);
 
     // determine whether node is homogeneous (in all channels)
     bool homogeneous = true;
@@ -1129,8 +1132,6 @@ VolumeOctreeNode* VolumeOctree::createTreeNodeFromTexture(const tgt::svec3& llf,
 
     // node not homogeneous => create leaf node with brick and shift virtual memory offset
     if (!homogeneous || !octreeOptimization) {
-        brickPoolManager_->releaseBrick(virtualBrickAddress, OctreeBrickPoolManagerBase::WRITE);
-
         node = VolumeOctreeBase::createNode(getNumChannels(), avgValues, minValues, maxValues, virtualBrickAddress);
     }
     else { // node homogeneous => store only avg value (without brick)
