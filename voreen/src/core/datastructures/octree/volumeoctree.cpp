@@ -1319,34 +1319,63 @@ VolumeOctreeNode* VolumeOctree::createParentNode(VolumeOctreeNode* children[8], 
                 tgt::svec3 inParentOffset = childPos * halfBrickDim;
 
                 if (child->hasBrick()) { // node brick present => halfsample into buffer
-                    tgt::svec3 llf = tgt::min(inParentOffset, brickUrb);
+                    tgt::svec3 llf = tgt::min(childPos * brickDim, brickUrb);
                     tgt::svec3 urb = tgt::min(llf + halfBrickDim, brickUrb);
                     tgt::svec3 childUrb = urb - llf;
 
                     const uint16_t* childBrick = brickPoolManager_->getBrick(child->getBrickAddress());
 
-                    VRN_FOR_EACH_VOXEL(halfPos, svec3::zero, halfBrickDim) {
-                        svec3 pos = halfPos*svec3(2);
-                        auto getVoxel = [&] (tgt::svec3 offset) -> uint64_t {
-                            tgt::svec3 p = tgt::min(pos + offset, childUrb-tgt::svec3::one);
-                            size_t linearPos = cubicCoordToLinear(p, brickDim)*numChannels + channel;
-                            return (uint64_t)childBrick[linearPos];
-                        };
+                    tgt::svec3 maxPos = childUrb-tgt::svec3::one;
+                    for (size_t z = 0; z < brickDim.z; z+=2) {
+                        size_t zl = std::min(z  , maxPos.z);
+                        size_t zh = std::min(z+1, maxPos.z);
 
-                        uint64_t halfValue =
-                            getVoxel(tgt::svec3(0,0,0)) +  // LLF
-                            getVoxel(tgt::svec3(1,0,0)) +  // LLB
-                            getVoxel(tgt::svec3(0,1,0)) +  // ULF
-                            getVoxel(tgt::svec3(1,1,0)) +  // ULB
-                            getVoxel(tgt::svec3(0,0,1)) +  // LRF
-                            getVoxel(tgt::svec3(1,0,1)) +  // LRB
-                            getVoxel(tgt::svec3(0,1,1)) +  // URF
-                            getVoxel(tgt::svec3(1,1,1)) ;  // URB
-                        halfValue /= 8;
+                        size_t zp = inParentOffset.z + z/2;
+                        for (size_t y = 0; y < brickDim.y; y+=2) {
+                            size_t yl = std::min(y  , maxPos.y);
+                            size_t yh = std::min(y+1, maxPos.y);
 
-                        tgt::svec3 parentPos = inParentOffset + halfPos;
-                        size_t parentBrickLinearPos = cubicCoordToLinear(parentPos, brickDim)*numChannels + channel;
-                        brickBuffer[parentBrickLinearPos] = halfValue;
+                            size_t yp = inParentOffset.y + y/2;
+
+                            size_t yzll = brickDim.x * (yl + (brickDim.y * zl)) * numChannels + channel;
+                            size_t yzlh = brickDim.x * (yl + (brickDim.y * zh)) * numChannels + channel;
+                            size_t yzhl = brickDim.x * (yh + (brickDim.y * zl)) * numChannels + channel;
+                            size_t yzhh = brickDim.x * (yh + (brickDim.y * zh)) * numChannels + channel;
+
+                            size_t yzp = brickDim.x * (yp + (brickDim.y * zp)) * numChannels + channel;
+
+                            size_t x = 0;
+
+                            auto halfSampleAt = [&] (size_t xl, size_t xh) {
+                                uint64_t halfValue =
+                                    (uint64_t) childBrick[xl+yzll] +
+                                    (uint64_t) childBrick[xh+yzll] +
+                                    (uint64_t) childBrick[xl+yzhl] +
+                                    (uint64_t) childBrick[xh+yzhl] +
+                                    (uint64_t) childBrick[xl+yzlh] +
+                                    (uint64_t) childBrick[xh+yzlh] +
+                                    (uint64_t) childBrick[xl+yzhh] +
+                                    (uint64_t) childBrick[xh+yzhh] ;
+                                halfValue /= 8;
+
+                                size_t xp = (inParentOffset.x + x/2) * numChannels;
+
+                                size_t parentBrickLinearPos = xp + yzp;
+                                brickBuffer[parentBrickLinearPos] = halfValue;
+                            };
+                            for (; x < maxPos.x; x+=2) {
+                                size_t xl =  x    * numChannels;
+                                size_t xh = (x+1) * numChannels;
+
+                                halfSampleAt(xl, xh);
+                            }
+                            for (; x < brickDim.x; x+=2) {
+                                size_t xl = maxPos.x;
+                                size_t xh = maxPos.x;
+
+                                halfSampleAt(xl, xh);
+                            }
+                        }
                     }
 
                     brickPoolManager_->releaseBrick(child->getBrickAddress());
