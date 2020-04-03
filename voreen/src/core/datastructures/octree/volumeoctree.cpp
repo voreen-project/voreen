@@ -44,8 +44,6 @@
 #include <sstream>
 #include <queue>
 
-#undef VRN_MODULE_OPENMP
-
 #ifdef VRN_MODULE_OPENMP
 #include "omp.h"
 #endif
