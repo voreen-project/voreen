@@ -1219,7 +1219,7 @@ void VolumeOctree::extractBrickFromTexture(const std::vector<const void*>& textu
     tgt::svec3 end = brickDim;
     for(int dim=2; dim >= 0; --dim) {
         tgt::svec3 start(0);
-        start[dim] = inTextureSize.z;
+        start[dim] = inTextureSize[dim];
         VRN_FOR_EACH_VOXEL(brickVoxel, start, end) {
             for (size_t channel=0; channel<numChannels; channel++) {
                 size_t brickLinearCoord = cubicCoordToLinear(brickVoxel, brickDim)*numChannels;
