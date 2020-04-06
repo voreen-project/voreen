@@ -168,13 +168,16 @@ private:
         uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues,
         std::vector< std::vector<uint64_t> >& histograms);
 
-    template<class T>
+    template<class T, size_t numChannels>
     void extractBrickFromTexture(const std::vector<const void*>& textures, const tgt::svec3& textureDim,
         uint16_t* brickBuffer, const tgt::svec3& brickDim, const tgt::svec3& brickOffsetInTexture,
         uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues,
         std::vector< std::vector<uint64_t> >& histograms) const;
 
     VolumeOctreeNode* createParentNode(VolumeOctreeNode* children[8], bool octreeOptimization, uint16_t homogeneityThreshold,
+        const tgt::svec3& brickUrb, uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues);
+    template<size_t numChannels>
+    VolumeOctreeNode* createParentNodeConstChannels(VolumeOctreeNode* children[8], bool octreeOptimization, uint16_t homogeneityThreshold,
         const tgt::svec3& brickUrb, uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues);
 
     void copyBrickToTexture(const uint16_t* brick, const tgt::svec3& brickDim,

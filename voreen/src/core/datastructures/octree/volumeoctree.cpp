@@ -1117,8 +1117,22 @@ VolumeOctreeNode* VolumeOctree::createTreeNodeFromTexture(const tgt::svec3& llf,
     // highest level (full resolution) has been reached => create brick from volume texture and terminate recursion
     const uint64_t virtualBrickAddress = brickPoolManager_->allocateBrick();
     uint16_t* brickBuffer = brickPoolManager_->getWritableBrick(virtualBrickAddress);
-    extractBrickFromTexture<T>(textureBuffers, textureDim, brickBuffer, getBrickDim(), llf,
-        avgValues, minValues, maxValues, histograms);
+    switch(getNumChannels()) {
+        case 1: extractBrickFromTexture<T, 1>(textureBuffers, textureDim, brickBuffer, getBrickDim(), llf,
+                        avgValues, minValues, maxValues, histograms);
+                break;
+        case 2: extractBrickFromTexture<T, 2>(textureBuffers, textureDim, brickBuffer, getBrickDim(), llf,
+                        avgValues, minValues, maxValues, histograms);
+                break;
+        case 3: extractBrickFromTexture<T, 3>(textureBuffers, textureDim, brickBuffer, getBrickDim(), llf,
+                        avgValues, minValues, maxValues, histograms);
+                break;
+        case 4: extractBrickFromTexture<T, 4>(textureBuffers, textureDim, brickBuffer, getBrickDim(), llf,
+                        avgValues, minValues, maxValues, histograms);
+                break;
+        default:
+            tgtAssert(false, "Invalid number of channels");
+    }
     brickPoolManager_->releaseBrick(virtualBrickAddress, OctreeBrickPoolManagerBase::WRITE);
 
     // determine whether node is homogeneous (in all channels)
@@ -1144,7 +1158,7 @@ VolumeOctreeNode* VolumeOctree::createTreeNodeFromTexture(const tgt::svec3& llf,
     return node;
 }
 
-template<class T>
+template<class T, size_t numChannels>
 void VolumeOctree::extractBrickFromTexture(const std::vector<const void*>& textures, const svec3& textureDim,
     uint16_t* brickBuffer, const svec3& brickDim, const svec3& brickOffsetInTexture,
     uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues,
@@ -1155,14 +1169,14 @@ void VolumeOctree::extractBrickFromTexture(const std::vector<const void*>& textu
     tgtAssert(brickBuffer, "null pointer passed");
     tgtAssert(avgValues && minValues && maxValues, "null pointer passed as avg/min/max value array");
     tgtAssert(histograms.size() == getNumChannels(), "invalid number of channel histograms");
-    tgtAssert(histograms.front().size() == 65536, "invalid histogram buffer size");
+    tgtAssert(histograms.front().size() == NUM_HISTOGRAM_BUCKETS, "invalid histogram buffer size");
 
     tgtAssert(tgt::hand(tgt::lessThanEqual(brickDim, getOctreeDim())), "brick dimensions greater than octree dimensions");
     tgtAssert(tgt::hand(tgt::lessThanEqual(brickOffsetInTexture+brickDim, getOctreeDim())), "brick (partially) outside octree dimensions");
 
     tgtAssert(getNumChannels() <= MAX_CHANNELS, "more than max channels");
 
-    const size_t numChannels = getNumChannels();
+    tgtAssert(getNumChannels() == numChannels, "Invalid number of channels");
 
     // Use pointer to first element of texture/histogram vector in order to avoid repeated vector lookups
     const T* const * textureArray = reinterpret_cast<const T* const *>(&textures.front());
@@ -1244,12 +1258,31 @@ void VolumeOctree::extractBrickFromTexture(const std::vector<const void*>& textu
 
 VolumeOctreeNode* VolumeOctree::createParentNode(VolumeOctreeNode* children[8], bool octreeOptimization, uint16_t homogeneityThreshold,
     const tgt::svec3& brickUrb, uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues) {
+    switch(getNumChannels()) {
+    case 1: return createParentNodeConstChannels<1>(children, octreeOptimization, homogeneityThreshold,
+                brickUrb, avgValues, minValues, maxValues);
+    case 2: return createParentNodeConstChannels<2>(children, octreeOptimization, homogeneityThreshold,
+                brickUrb, avgValues, minValues, maxValues);
+    case 3: return createParentNodeConstChannels<3>(children, octreeOptimization, homogeneityThreshold,
+                brickUrb, avgValues, minValues, maxValues);
+    case 4: return createParentNodeConstChannels<4>(children, octreeOptimization, homogeneityThreshold,
+                brickUrb, avgValues, minValues, maxValues);
+    default:
+        tgtAssert(false, "more than 4 channels");
+        return nullptr;
+    }
+}
+
+
+template<size_t numChannels>
+VolumeOctreeNode* VolumeOctree::createParentNodeConstChannels(VolumeOctreeNode* children[8], bool octreeOptimization, uint16_t homogeneityThreshold,
+    const tgt::svec3& brickUrb, uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues) {
     tgtAssert(brickPoolManager_, "no brick pool manager");
 
-    // compute parent avg/min/max values from children and determine whether parent is homogeneous
     tgtAssert(getNumChannels() <= MAX_CHANNELS, "more than max channels");
-    const size_t numChannels = getNumChannels();
+    tgtAssert(getNumChannels() == numChannels, "Invalid number of channels");
 
+    // compute parent avg/min/max values from children and determine whether parent is homogeneous
     uint64_t avgValuesUInt64[MAX_CHANNELS];
     for (size_t ch=0; ch<getNumChannels(); ch++) {
         avgValuesUInt64[ch] = 0;
