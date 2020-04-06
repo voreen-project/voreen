@@ -885,7 +885,7 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
     // create histograms from buffers
     tgtAssert(histogramBuffers.size() == numThreads, "invalid histogram buffer");
     tgtAssert(histogramBuffers.front().size() == getNumChannels(), "invalid histogram buffer");
-    const size_t numBuckets = 1<<std::min<size_t>(NUM_HISTOGRAM_BUCKETS, volumes.front()->getBytesPerVoxel() * 8); //< 4096 for 16 bit and more, 256 for 8 bit
+    const size_t numBuckets = 1<<std::min<size_t>(NUM_HISTOGRAM_BUCKETS_BITS, volumes.front()->getBytesPerVoxel() * 8); //< 4096 for 16 bit and more, 256 for 8 bit
     const size_t bucketSize = NUM_HISTOGRAM_BUCKETS / numBuckets;
     const float realWorldMin = volumes.front()->getRealWorldMapping().normalizedToRealWorld(0.f);
     const float realWorldMax = volumes.front()->getRealWorldMapping().normalizedToRealWorld(1.f);
