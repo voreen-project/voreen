@@ -1344,23 +1344,26 @@ VolumeOctreeNode* VolumeOctree::createParentNodeConstChannels(VolumeOctreeNode* 
 
         // copy halfsampled bricks to dest buffer (child nodes/halfsampled bricks are expected to be zyx ordered)
         uint64_t brickVirtualMemoryAddress = brickPoolManager_->allocateBrick();
-        uint16_t* brickBuffer = brickPoolManager_->getWritableBrick(brickVirtualMemoryAddress);
 
         VRN_FOR_EACH_VOXEL(childPos, svec3::zero, svec3::two) {
+            // Reaquire brick buffer for every child in order to work around deadlock due to bad
+            // LRU-caching behaviour of BrickPoolManagerDisk:
+            uint16_t* brickBuffer = brickPoolManager_->getWritableBrick(brickVirtualMemoryAddress);
+
             for(size_t channel = 0; channel < numChannels; ++channel) {
                 const size_t childID = cubicCoordToLinear(childPos, svec3::two);
                 VolumeOctreeNode* child = children[childID];
                 tgtAssert(child, "null pointer");
 
-                uint16_t childAvgValue = child->getAvgValue(channel);
                 tgt::svec3 inParentOffset = childPos * halfBrickDim;
 
                 if (child->hasBrick()) { // node brick present => halfsample into buffer
                     tgt::svec3 llf = tgt::min(childPos * brickDim, brickUrb);
                     tgt::svec3 urb = tgt::min(llf + brickDim, brickUrb);
                     tgt::svec3 childUrb = urb - llf;
+                    size_t childBrickAddr = child->getBrickAddress();
 
-                    const uint16_t* childBrick = brickPoolManager_->getBrick(child->getBrickAddress());
+                    const uint16_t* childBrick = brickPoolManager_->getBrick(childBrickAddr);
 
                     tgt::svec3 maxPos = childUrb-tgt::svec3::one;
                     for (size_t z = 0; z < brickDim.z; z+=2) {
@@ -1415,9 +1418,10 @@ VolumeOctreeNode* VolumeOctree::createParentNodeConstChannels(VolumeOctreeNode* 
                         }
                     }
 
-                    brickPoolManager_->releaseBrick(child->getBrickAddress());
+                    brickPoolManager_->releaseBrick(childBrickAddr);
                 }
                 else { // no brick present => use node's avg values
+                    uint16_t childAvgValue = child->getAvgValue(channel);
                     VRN_FOR_EACH_VOXEL(halfPos, svec3::zero, halfBrickDim) {
                         tgt::svec3 parentPos = inParentOffset + halfPos;
                         size_t parentBrickLinearPos = cubicCoordToLinear(parentPos, brickDim)*numChannels + channel;
@@ -1425,13 +1429,12 @@ VolumeOctreeNode* VolumeOctree::createParentNodeConstChannels(VolumeOctreeNode* 
                     }
                 }
             }
+            brickPoolManager_->releaseBrick(brickVirtualMemoryAddress, OctreeBrickPoolManagerBase::WRITE);
         }
 
         // create parent node
         VolumeOctreeNode* parent = VolumeOctreeBase::createNode(getNumChannels(), avgValues, minValues, maxValues,
             brickVirtualMemoryAddress, children);
-
-        brickPoolManager_->releaseBrick(brickVirtualMemoryAddress, OctreeBrickPoolManagerBase::WRITE);
 
         return parent;
     }
