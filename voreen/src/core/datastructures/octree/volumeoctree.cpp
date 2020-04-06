@@ -54,6 +54,8 @@ using tgt::vec3;
 namespace {
     const size_t MAX_CHANNELS = 4; //< maximum number of channels that are supported
     const std::string NODE_BUFFER_FILE_NAME = "nodebuffer.raw";
+    const size_t NUM_HISTOGRAM_BUCKETS_BITS = 12;
+    const size_t NUM_HISTOGRAM_BUCKETS = 1 << NUM_HISTOGRAM_BUCKETS_BITS; //< This may buckets will be used during octree construction
 
     /**
      * Helper class representing a 3D grid of nodes. Only used during iterative construction.
@@ -610,7 +612,7 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
     for (size_t threadID=0; threadID<numThreads; threadID++) {
         std::vector< std::vector<uint64_t> > threadBuffers;
         for (size_t ch=0; ch<getNumChannels(); ch++)
-            threadBuffers.push_back(std::vector<uint64_t>(1<<16, 0));
+            threadBuffers.push_back(std::vector<uint64_t>(NUM_HISTOGRAM_BUCKETS, 0));
         histogramBuffers.push_back(threadBuffers);
     }
 
@@ -883,8 +885,8 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
     // create histograms from buffers
     tgtAssert(histogramBuffers.size() == numThreads, "invalid histogram buffer");
     tgtAssert(histogramBuffers.front().size() == getNumChannels(), "invalid histogram buffer");
-    const size_t numBuckets = 1<<std::min<size_t>(12, volumes.front()->getBytesPerVoxel() * 8); //< 4096 for 16 bit and more, 256 for 8 bit
-    const size_t bucketSize = (1<<16) / numBuckets;
+    const size_t numBuckets = 1<<std::min<size_t>(NUM_HISTOGRAM_BUCKETS, volumes.front()->getBytesPerVoxel() * 8); //< 4096 for 16 bit and more, 256 for 8 bit
+    const size_t bucketSize = NUM_HISTOGRAM_BUCKETS / numBuckets;
     const float realWorldMin = volumes.front()->getRealWorldMapping().normalizedToRealWorld(0.f);
     const float realWorldMax = volumes.front()->getRealWorldMapping().normalizedToRealWorld(1.f);
     for (size_t ch=0; ch<getNumChannels(); ch++) {
@@ -892,7 +894,7 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
         for (size_t threadID=0; threadID<numThreads; threadID++) {
             tgtAssert(histogramBuffers.at(threadID).size() > ch, "invalid histogram buffer");
             std::vector<uint64_t>& threadHistBuffer = histogramBuffers.at(threadID).at(ch);
-            tgtAssert(threadHistBuffer.size() == (1<<16), "invalid histogram buffer size");
+            tgtAssert(threadHistBuffer.size() == NUM_HISTOGRAM_BUCKETS, "invalid histogram buffer size");
             for (size_t bucket=0; bucket<numBuckets; bucket++) {
                 uint64_t bucketValue = 0;
                 for (size_t i=bucket*bucketSize; i<(bucket+1)*bucketSize; i++)
@@ -1199,8 +1201,10 @@ void VolumeOctree::extractBrickFromTexture(const std::vector<const void*>& textu
                     minValue = std::min(minValue, value);
                     maxValue = std::max(maxValue, value);
 
-                    //histogramArray[channel]->increaseBucket(value >> 4); // for 4096 buckets (12 bit)
-                    histogram[value]++;
+                    // 16 bit values, but only NUM_HISTOGRAM_BUCKETS_BITS bits for histogram
+                    size_t rightShiftAmt = 16 - NUM_HISTOGRAM_BUCKETS_BITS;
+                    size_t histValue = value >> rightShiftAmt;
+                    histogram[histValue]++;
 
                     brickLinearCoord += numChannels;
                 }
