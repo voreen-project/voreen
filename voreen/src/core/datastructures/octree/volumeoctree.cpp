@@ -1320,29 +1320,29 @@ VolumeOctreeNode* VolumeOctree::createParentNode(VolumeOctreeNode* children[8], 
 
                 if (child->hasBrick()) { // node brick present => halfsample into buffer
                     tgt::svec3 llf = tgt::min(childPos * brickDim, brickUrb);
-                    tgt::svec3 urb = tgt::min(llf + halfBrickDim, brickUrb);
+                    tgt::svec3 urb = tgt::min(llf + brickDim, brickUrb);
                     tgt::svec3 childUrb = urb - llf;
 
                     const uint16_t* childBrick = brickPoolManager_->getBrick(child->getBrickAddress());
 
                     tgt::svec3 maxPos = childUrb-tgt::svec3::one;
                     for (size_t z = 0; z < brickDim.z; z+=2) {
-                        size_t zl = std::min(z  , maxPos.z);
-                        size_t zh = std::min(z+1, maxPos.z);
+                        size_t zl = std::min(z  , maxPos.z) * numChannels;
+                        size_t zh = std::min(z+1, maxPos.z) * numChannels;
 
-                        size_t zp = inParentOffset.z + z/2;
+                        size_t zp = (inParentOffset.z + z/2) * numChannels;
                         for (size_t y = 0; y < brickDim.y; y+=2) {
-                            size_t yl = std::min(y  , maxPos.y);
-                            size_t yh = std::min(y+1, maxPos.y);
+                            size_t yl = std::min(y  , maxPos.y) * numChannels;
+                            size_t yh = std::min(y+1, maxPos.y) * numChannels;
 
-                            size_t yp = inParentOffset.y + y/2;
+                            size_t yp = (inParentOffset.y + y/2) * numChannels;
 
-                            size_t yzll = brickDim.x * (yl + (brickDim.y * zl)) * numChannels + channel;
-                            size_t yzlh = brickDim.x * (yl + (brickDim.y * zh)) * numChannels + channel;
-                            size_t yzhl = brickDim.x * (yh + (brickDim.y * zl)) * numChannels + channel;
-                            size_t yzhh = brickDim.x * (yh + (brickDim.y * zh)) * numChannels + channel;
+                            size_t yzll = brickDim.x * (yl + (brickDim.y * zl)) + channel;
+                            size_t yzlh = brickDim.x * (yl + (brickDim.y * zh)) + channel;
+                            size_t yzhl = brickDim.x * (yh + (brickDim.y * zl)) + channel;
+                            size_t yzhh = brickDim.x * (yh + (brickDim.y * zh)) + channel;
 
-                            size_t yzp = brickDim.x * (yp + (brickDim.y * zp)) * numChannels + channel;
+                            size_t yzp = brickDim.x * (yp + (brickDim.y * zp)) + channel;
 
                             size_t x = 0;
 
@@ -1370,8 +1370,8 @@ VolumeOctreeNode* VolumeOctree::createParentNode(VolumeOctreeNode* children[8], 
                                 halfSampleAt(xl, xh);
                             }
                             for (; x < brickDim.x; x+=2) {
-                                size_t xl = maxPos.x;
-                                size_t xh = maxPos.x;
+                                size_t xl = maxPos.x * numChannels;
+                                size_t xh = maxPos.x * numChannels;
 
                                 halfSampleAt(xl, xh);
                             }
