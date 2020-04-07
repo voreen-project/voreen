@@ -709,7 +709,20 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
         }
 
         // Not inside margins.
-        if (x != e->x() || y != e->y()) {
+        if (x != e->x() || (y != e->y() && numDimensions_.get() > 1)) {
+            return;
+        }
+
+        if(y != e->y() && numDimensions_.get() == 1) {
+            // Select a time interval outside of the axis
+            if(e->action() == tgt::MouseEvent::PRESSED) {
+                float t = mapRange(x, MARGINS.x, e->viewport().x - MARGINS.x, ensembleInport_.getData()->getStartTime(), ensembleInport_.getData()->getEndTime());
+                selectedTimeStep_.set(tgt::vec2(t, selectedTimeStep_.get().y));
+            }
+            else if(e->action() == tgt::MouseEvent::RELEASED) {
+                float t = mapRange(x, MARGINS.x, e->viewport().x - MARGINS.x, ensembleInport_.getData()->getStartTime(), ensembleInport_.getData()->getEndTime());
+                selectedTimeStep_.set(tgt::vec2(selectedTimeStep_.get().x, t));
+            }
             return;
         }
 
