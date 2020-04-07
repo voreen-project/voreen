@@ -78,12 +78,10 @@ FlowSimulation::FlowSimulation()
     , geometryDataPort_(Port::INPORT, "geometryDataPort", "Geometry Input", false)
     , measuredDataPort_(Port::INPORT, "measuredDataPort", "Measured Data Input", false)
     , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
-    , insituPort_(Port::OUTPORT, "insituPort", "In-situ Port", false, Processor::VALID)
     , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", VoreenApplication::app()->getTemporaryPath("simulation"), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , deleteOldSimulations_("deleteOldSimulations", "Delete old Simulations", false)
     , simulateAllParametrizations_("simulateAllParametrizations", "Simulate all Parametrizations", false)
     , selectedParametrization_("selectedSimulation", "Selected Parametrization", 0, 0, 0)
-    , insituOutput_("insituOutput", "Insitu Output")
 {
     addPort(geometryDataPort_);
     addPort(measuredDataPort_);
@@ -104,9 +102,6 @@ FlowSimulation::FlowSimulation()
     });
     addProperty(selectedParametrization_);
     selectedParametrization_.setGroupID("results");
-
-    //addProperty(insituOutput_);
-    insituOutput_.setGroupID("results");
 
     setPropertyGroupGuiName("results", "Results");
 }
@@ -142,9 +137,6 @@ bool FlowSimulation::isReady() const {
 
 void FlowSimulation::adjustPropertiesToInput() {
     const FlowParameterSetEnsemble* flowParameterSetEnsemble = parameterPort_.getData();
-    std::deque<Option<FlowFeatures>> options;
-    options.push_back(Option<FlowFeatures>("none", "None", FF_NONE));
-
     if(!flowParameterSetEnsemble || flowParameterSetEnsemble->empty()) {
         selectedParametrization_.setMinValue(-1);
         selectedParametrization_.setMaxValue(-1);
@@ -153,23 +145,7 @@ void FlowSimulation::adjustPropertiesToInput() {
         selectedParametrization_.setMinValue(0);
         selectedParametrization_.setMaxValue(static_cast<int>(flowParameterSetEnsemble->size()) - 1);
         selectedParametrization_.set(0);
-
-        int features = flowParameterSetEnsemble->getFlowFeatures();
-        if(features & FF_PRESSURE) {
-            options.push_back(Option<FlowFeatures>("pressure", "Pressure Field", FF_PRESSURE));
-        }
-        if(features & FF_MAGNITUDE) {
-            options.push_back(Option<FlowFeatures>("magnitude", "Velocity Magnitude", FF_MAGNITUDE));
-        }
-        if(features & FF_VELOCITY) {
-            options.push_back(Option<FlowFeatures>("velocity", "Velocity Vector Field", FF_VELOCITY));
-        }
-        if(features & FF_WALLSHEARSTRESS) {
-            options.push_back(Option<FlowFeatures>("wallShearStress", "Wall Shear Stress", FF_WALLSHEARSTRESS));
-        }
     }
-
-    insituOutput_.setOptions(options);
 }
 
 FlowSimulationInput FlowSimulation::prepareComputeInput() {
@@ -292,6 +268,8 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         LERROR("Output directory could not be created. It may already exist.");
         return;
     }
+
+    singleton::directories().setOutputDir(simulationResultPath);
 
     const int N = parameters.getSpatialResolution();
     UnitConverterFromResolutionAndRelaxationTime<T, DESCRIPTOR> converter(
@@ -584,45 +562,72 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
     const int outputIter = maxIteration / parameterSetEnsemble.getNumTimeSteps();
 
-    if ( iteration == 0 ) {
-        SuperVTMwriter3D<T> vtmWriter( "debug" );
-        SuperLatticeGeometry3D<T, DESCRIPTOR> geometry( sLattice, superGeometry );
-        SuperLatticeCuboid3D<T, DESCRIPTOR> cuboid( sLattice );
-        SuperLatticeRank3D<T, DESCRIPTOR> rank( sLattice );
-        vtmWriter.write( geometry );
-        vtmWriter.write( cuboid );
-        vtmWriter.write( rank );
-        vtmWriter.createMasterFile();
-    }
-
     if (iteration % outputIter == 0) {
+
+        bool writeVVD = parameterSetEnsemble.getOutputFileFormat() == ".vvd";
+        bool writeVTI = parameterSetEnsemble.getOutputFileFormat() == ".vti";
+
+        SuperVTMwriter3D<T> vtmWriter( "results" );
+
+        // Always write debug data.
+        if(iteration == 0) {
+            SuperLatticeGeometry3D<T, DESCRIPTOR> geometry( sLattice, superGeometry );
+            vtmWriter.write( geometry );
+
+            SuperLatticeCuboid3D<T, DESCRIPTOR> cuboid( sLattice );
+            vtmWriter.write( cuboid );
+
+            SuperLatticeRank3D<T, DESCRIPTOR> rank( sLattice );
+            vtmWriter.write( rank );
+
+            vtmWriter.createMasterFile();
+        }
 
         if(parameterSetEnsemble.getFlowFeatures() & FF_VELOCITY) {
             SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
-            writeResult(stlReader, converter, iteration, maxIteration, velocity, parameterSetEnsemble, selectedParametrization,
-                        simulationOutputPath, "velocity");
+            if(writeVVD) {
+                writeVVDFile(stlReader, converter, iteration, maxIteration, parameterSetEnsemble, selectedParametrization,
+                             simulationOutputPath, "velocity", velocity);
+            }
+            if(writeVTI) {
+                vtmWriter.write(velocity, iteration);
+            }
         }
 
         if(parameterSetEnsemble.getFlowFeatures() & FF_MAGNITUDE) {
             SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(sLattice, converter);
             SuperEuklidNorm3D<T, DESCRIPTOR> magnitude(velocity);
-            writeResult(stlReader, converter, iteration, maxIteration, magnitude, parameterSetEnsemble, selectedParametrization,
-                        simulationOutputPath, "magnitude");
+            if(writeVVD) {
+                writeVVDFile(stlReader, converter, iteration, maxIteration, parameterSetEnsemble, selectedParametrization,
+                             simulationOutputPath, "magnitude", magnitude);
+            }
+            if(writeVTI) {
+                vtmWriter.write(magnitude, iteration);
+            }
         }
 
         if(parameterSetEnsemble.getFlowFeatures() & FF_PRESSURE) {
             SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(sLattice, converter);
-            writeResult(stlReader, converter, iteration, maxIteration, pressure, parameterSetEnsemble, selectedParametrization,
-                        simulationOutputPath, "pressure");
+            if(writeVVD) {
+                writeVVDFile(stlReader, converter, iteration, maxIteration, parameterSetEnsemble, selectedParametrization,
+                             simulationOutputPath, "pressure", pressure);
+            }
+            if(writeVTI) {
+                vtmWriter.write(pressure, iteration);
+            }
         }
 
 #ifndef OLB_PRECOMPILED
         if(parameterSetEnsemble.getFlowFeatures() & FF_WALLSHEARSTRESS) {
             SuperLatticePhysWallShearStress3D<T, DESCRIPTOR> wallShearStress(sLattice, superGeometry, MAT_WALL,
                                                                              converter, stlReader);
-            writeResult(stlReader, converter, iteration, maxIteration, wallShearStress, parameterSetEnsemble,
-                        selectedParametrization,
-                        simulationOutputPath, "wallShearStress");
+            if(writeVVD) {
+                writeVVDFile(stlReader, converter, iteration, maxIteration, parameterSetEnsemble, selectedParametrization,
+                             simulationOutputPath, "wallShearStress", wallShearStress);
+            }
+            if(writeVTI) {
+                vtmWriter.write(wallShearStress, iteration);
+            }
         }
 #endif
 
@@ -646,13 +651,13 @@ bool FlowSimulation::getResults( SuperLattice3D<T, DESCRIPTOR>& sLattice,
     return true;
 }
 
-void FlowSimulation::writeResult(STLreader<T>& stlReader,
-                                 UnitConverter<T,DESCRIPTOR>& converter, int iteration, int maxIteration,
-                                 SuperLatticeF3D<T, DESCRIPTOR>& feature,
-                                 const FlowParameterSetEnsemble& parameterSetEnsemble,
-                                 size_t selectedParametrization,
-                                 const std::string& simulationOutputPath,
-                                 const std::string& name) const {
+void FlowSimulation::writeVVDFile(STLreader<T>& stlReader,
+                                  UnitConverter<T,DESCRIPTOR>& converter, int iteration, int maxIteration,
+                                  const FlowParameterSetEnsemble& parameterSetEnsemble,
+                                  size_t selectedParametrization,
+                                  const std::string& simulationOutputPath,
+                                  const std::string& name,
+                                  SuperLatticeF3D<T, DESCRIPTOR>& feature) const {
 
     const Vector<T, 3>& min = stlReader.getMin();
     const Vector<T, 3>& max = stlReader.getMax();
@@ -819,14 +824,6 @@ void FlowSimulation::writeResult(STLreader<T>& stlReader,
     rawFeatureFile.write(reinterpret_cast<const char*>(rawFeatureData.data()), numBytes);
     if (!rawFeatureFile.good()) {
         LERROR("Could not write " << name << " file");
-    }
-
-    // Update insitu results.
-    if(insituOutput_.get() == name) {
-        VolumeRAM* data = VolumeFactory().create(format, tgt::svec3(resolution));
-        std::memcpy(rawFeatureData.data(), data->getData(), numBytes);
-        Volume* volume = new Volume(data, tgt::dvec3::fromPointer(spacing.data), tgt::dvec3::fromPointer(offset.data));
-        insituPort_.setData(volume);
     }
 }
 

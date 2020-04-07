@@ -62,7 +62,6 @@ enum FlowProfile {
     FP_CONSTANT   = 3, ///< constant flow profile
 };
 
-
 class VelocityCurve : public Serializable {
 public:
 
@@ -253,6 +252,12 @@ public:
     void setOutputResolution(int outputResolution);
 
     /**
+     * Returns the output file format.
+     */
+    const std::string& getOutputFileFormat() const;
+    void setOutputFileFormat(const std::string& format);
+
+    /**
      * Returns the flow features as bitmask.
      * To test for a single feature, binarily test for the available features.
      */
@@ -293,6 +298,7 @@ private:
     float simulationTime_;         ///< simulation time in seconds
     int numTimeSteps_;             ///< number of time steps of output
     int outputResolution_;         ///< spatial resolution of output in voxels (per dimension)
+    std::string outputFileFormat_; ///< output file format
     int flowFeatures_;             ///< bitmask storing flow features
 
     // Flow indication (in-/out flow).

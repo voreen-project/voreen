@@ -72,6 +72,7 @@ private:
     FloatProperty simulationTime_;
     IntProperty numTimeSteps_;
     IntProperty outputResolution_;
+    StringOptionProperty outputFileFormat_;
 
     InteractiveListProperty flowFeatures_;
     std::vector<int> flowFeatureIds_;

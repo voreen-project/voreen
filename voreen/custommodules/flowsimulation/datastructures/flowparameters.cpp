@@ -368,6 +368,7 @@ FlowParameterSetEnsemble::FlowParameterSetEnsemble(const FlowParameterSetEnsembl
     , simulationTime_(origin.simulationTime_)
     , numTimeSteps_(origin.numTimeSteps_)
     , outputResolution_(origin.outputResolution_)
+    , outputFileFormat_(origin.outputFileFormat_)
     , flowFeatures_(origin.flowFeatures_)
     , flowIndicators_(origin.flowIndicators_)
     , flowParameterSets(origin.flowParameterSets)
@@ -403,6 +404,15 @@ int FlowParameterSetEnsemble::getOutputResolution() const {
 void FlowParameterSetEnsemble::setOutputResolution(int outputResolution) {
     notifyPendingDataInvalidation();
     outputResolution_ = outputResolution;
+}
+
+const std::string& FlowParameterSetEnsemble::getOutputFileFormat() const {
+    return outputFileFormat_;
+}
+
+void FlowParameterSetEnsemble::setOutputFileFormat(const std::string& format) {
+    notifyPendingDataInvalidation();
+    outputFileFormat_ = format;
 }
 
 int FlowParameterSetEnsemble::getFlowFeatures() const {
@@ -473,6 +483,7 @@ void FlowParameterSetEnsemble::deserialize(Deserializer& s) {
     s.deserialize("simulationTime", simulationTime_);
     s.deserialize("numTimeSteps", numTimeSteps_);
     s.deserialize("outputResolution", outputResolution_);
+    s.deserialize("outputFileFormat", outputFileFormat_);
     s.deserialize("flowFeatures", flowFeatures_);
     s.deserialize("flowIndicators", flowIndicators_);
     s.deserialize("flowParametrizations", flowParameterSets);
@@ -483,6 +494,7 @@ void FlowParameterSetEnsemble::serializeInternal(Serializer& s, size_t param) co
     s.serialize("simulationTime", simulationTime_);
     s.serialize("numTimeSteps", numTimeSteps_);
     s.serialize("outputResolution", outputResolution_);
+    s.serialize("outputFileFormat", outputFileFormat_);
     s.serialize("flowFeatures", flowFeatures_);
     s.serialize("flowIndicators", flowIndicators_);
     if(param == ALL_PARAMETER_SETS) {

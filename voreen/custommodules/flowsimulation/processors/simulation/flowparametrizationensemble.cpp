@@ -36,6 +36,7 @@ FlowParametrizationEnsemble::FlowParametrizationEnsemble()
     , simulationTime_("simulationTime", "Simulation Time (s)", 2.0f, 0.0f, 20.0f)
     , numTimeSteps_("numTimeSteps", "Num. Output Time Steps", 50, 1, 1000)
     , outputResolution_("outputResolution", "Max. Output Resolution", 128, 0, 4096)
+    , outputFileFormat_("outputFileFormat", "Output File Format")
     , flowFeatures_("flowFeatures", "Flow Features")
 {
     addPort(outport_);
@@ -48,6 +49,10 @@ FlowParametrizationEnsemble::FlowParametrizationEnsemble()
     numTimeSteps_.setGroupID("ensemble");
     addProperty(outputResolution_);
     outputResolution_.setGroupID("ensemble");
+    addProperty(outputFileFormat_);
+    outputFileFormat_.addOption(".vti", ".vti");
+    outputFileFormat_.addOption(".vvd", ".vvd");
+    outputFileFormat_.setGroupID("ensemble");
 
     addProperty(flowFeatures_);
     addFeature("Velocity", FF_VELOCITY);
@@ -65,6 +70,7 @@ void FlowParametrizationEnsemble::process() {
     flowParametrizationList->setSimulationTime(simulationTime_.get());
     flowParametrizationList->setNumTimeSteps(numTimeSteps_.get());
     flowParametrizationList->setOutputResolution(outputResolution_.get());
+    flowParametrizationList->setOutputFileFormat(outputFileFormat_.get());
 
     int flowFeatures = FF_NONE;
     for(const InteractiveListProperty::Instance& instance : flowFeatures_.getInstances()) {

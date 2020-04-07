@@ -145,29 +145,25 @@ private:
                             size_t selectedParametrization,
                             const std::string& simulationResultPath) const;
 
-    void writeResult(       STLreader<T>& stlReader,
+    void writeVVDFile(      STLreader<T>& stlReader,
                             UnitConverter<T,DESCRIPTOR>& converter,
                             int iteration,
                             int maxIteration,
-                            SuperLatticeF3D<T, DESCRIPTOR>& feature,
                             const FlowParameterSetEnsemble& parameterSetEnsemble,
                             size_t selectedParametrization,
                             const std::string& simulationOutputPath,
-                            const std::string& name) const;
+                            const std::string& name,
+                            SuperLatticeF3D<T, DESCRIPTOR>& feature) const;
 
     GeometryPort geometryDataPort_;
     VolumeListPort measuredDataPort_;
     FlowParametrizationPort parameterPort_;
-
-    mutable VolumePort insituPort_;
 
     FileDialogProperty simulationResults_;
     BoolProperty deleteOldSimulations_;
 
     BoolProperty simulateAllParametrizations_;
     IntProperty selectedParametrization_;
-
-    OptionProperty<FlowFeatures> insituOutput_;
 
     static const std::string loggerCat_;
 };
