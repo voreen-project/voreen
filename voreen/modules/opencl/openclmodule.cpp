@@ -42,9 +42,6 @@ const std::string OpenCLModule::loggerCat_ = "voreen.OpenCLModule";
 
 OpenCLModule::OpenCLModule(const std::string& modulePath)
     : VoreenModule(modulePath)
-    , opencl_(nullptr)
-    , context_(nullptr)
-    , queue_(nullptr)
     , glSharing_("sharingProp", "GL Sharing", false)
     , deviceProp_("deviceProp", "Device:", Processor::INVALID_RESULT, true)
     , currentDeviceIdx_(-1)
@@ -82,7 +79,7 @@ void OpenCLModule::initializeGL() {
     setenv("CUDA_CACHE_DISABLE", "1", 1);
 #endif
 
-    opencl_ = new cl::OpenCL();
+    opencl_.reset(new cl::OpenCL());
 
     // Fill plattform.
     std::deque<Option<int>> options;
@@ -100,7 +97,8 @@ void OpenCLModule::initializeGL() {
     // There might be no valid device.
     if (devices_.empty()) {
         deviceProp_.setReadOnlyFlag(true);
-        throw VoreenException("Found no OpenCL device");
+        LERROR("Found no OpenCL device");
+        return;
     }
 
     bool devicesChanged = deviceProp_.getOptions().size() != options.size();
@@ -144,12 +142,9 @@ void OpenCLModule::initializeGL() {
 void OpenCLModule::deinitializeGL() {
     devices_.clear();
 
-    delete queue_;
-    queue_ = 0;
-    delete context_;
-    context_ = 0;
-    delete opencl_;
-    opencl_ = 0;
+    queue_.reset();
+    context_.reset();
+    opencl_.reset();
 
     if (tgt::Singleton<tgt::GpuCapabilities>::isInited()) {
         VoreenModule::deinitializeGL();
@@ -167,11 +162,6 @@ void OpenCLModule::setupDevice() {
                 reinitialized.push_back(processor);
         }
 
-        delete context_;
-        context_ = nullptr;
-        delete queue_;
-        queue_ = nullptr;
-
         if (!reinitialized.empty())
             VoreenApplication::app()->showMessageBox("OpenCL Device changed", "The workspace needs to be reloaded in order to apply the selected device.");
     }
@@ -187,11 +177,11 @@ void OpenCLModule::setupDevice() {
     // Create context.
     if (glSharing_.get()) {
         LINFO("OpenGL sharing: enabled");
-        context_ = new cl::Context(cl::Context::generateGlSharingProperties(), device_);
+        context_.reset(new cl::Context(cl::Context::generateGlSharingProperties(), device_));
     }
     else {
         LINFO("OpenGL sharing: disabled");
-        context_ = new cl::Context(device_);
+        context_.reset(new cl::Context(device_));
     }
 
     // Create command queue.
@@ -200,7 +190,7 @@ void OpenCLModule::setupDevice() {
 #else
     const cl_queue_properties properties[] = { CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0};
 #endif
-    queue_ = new cl::CommandQueue(context_, device_, properties);
+    queue_.reset(new cl::CommandQueue(context_.get(), device_, properties));
 
     // Reinitialize processors.
     for (cl::OpenCLProcessorBase* processor : processors_) {
@@ -212,19 +202,19 @@ void OpenCLModule::setupDevice() {
 cl::OpenCL* OpenCLModule::getOpenCL() const {
     if (!opencl_)
         LERROR("No OpenCL wrapper. Call initCL first!");
-    return opencl_;
+    return opencl_.get();
 }
 
 cl::Context* OpenCLModule::getCLContext() const {
     if (!context_)
         LERROR("No OpenCL context. Call initCL first!");
-     return context_;
+     return context_.get();
 }
 
 cl::CommandQueue* OpenCLModule::getCLCommandQueue() const {
     if (!queue_)
         LERROR("No OpenCL queue. Call initCL first!");
-    return queue_;
+    return queue_.get();
 }
 
 cl::Platform& OpenCLModule::getCLPlatform() {
@@ -256,7 +246,7 @@ cl::Program* OpenCLModule::loadProgram(const std::string& path) {
         throw VoreenException("OpenCLModule: no OpenCL wrapper. Call initCL first!");
 
     LINFO("Loading program " << path);
-    cl::Program* prog = new cl::Program(context_);
+    cl::Program* prog = new cl::Program(context_.get());
     if (!prog->loadSource(path)) {
         delete prog;
         throw VoreenException("Failed to load OpenCL program: " + path);

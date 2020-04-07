@@ -126,9 +126,10 @@ private:
     void setupDevice(); ///< Callen by deviceProp_
 
     // OpenCL resources
-    cl::OpenCL* opencl_;
-    cl::Context* context_;
-    cl::CommandQueue* queue_;
+    std::unique_ptr<cl::OpenCL> opencl_;
+    std::unique_ptr<cl::Context> context_;
+    std::unique_ptr<cl::CommandQueue> queue_;
+
     cl::Platform platform_;
     cl::Device device_;
 

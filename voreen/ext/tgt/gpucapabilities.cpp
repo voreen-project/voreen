@@ -393,9 +393,12 @@ std::string GpuCapabilities::getOSVersionString() {
 }
 
 void GpuCapabilities::detectCapabilities() {
-    glVersionString_ = string(reinterpret_cast<const char*>(glGetString(GL_VERSION)));
-    glVendorString_  = string(reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
-    glRendererString_  = string(reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
+    const char* glVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    glVersionString_ = glVersion ? glVersion : "";
+    const char* glVendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+    glVendorString_ = glVendor ? glVendor : "";
+    const char* glRenderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+    glRendererString_ = glRenderer ? glRenderer : "";
 
     // melt all extentions in one string
     GLint numExtensions;
