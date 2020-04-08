@@ -39,12 +39,11 @@
 #include "../algorithm/volumemask.h"
 #include "../algorithm/idvolume.h"
 #include "../algorithm/vesselgraphrefinement.h"
+#include "../algorithm/intervalwalker.h"
 #include "../datastructures/kdtree.h"
 
 #include "modules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
 #include "modules/bigdataimageprocessing/processors/connectedcomponentanalysis.h"
-
-#include "../ext/intervaltree/IntervalTree.h"
 
 #include "tgt/bounds.h"
 #include "tgt/filesystem.h"
@@ -480,9 +479,12 @@ static void initializeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4Sl
     std::vector<Interval<size_t, IdVolumeInitializer*>> intervals;
     for(auto& initializer: initializers) {
         tgt::SBounds full_bounds = initializer.getBounds();
-        intervals.emplace_back(full_bounds.getLLF().z, full_bounds.getURB().z, &initializer);
+
+        // Here and below: the upper bound of tgt::SBounds is inclusive, but the intervals of
+        // intervalwalker have an exclusive upper bound
+        intervals.emplace_back(full_bounds.getLLF().z, full_bounds.getURB().z + 1, &initializer);
     }
-    IntervalTree<size_t, IdVolumeInitializer*> ztree(std::move(intervals));
+    IntervalWalker<size_t, IdVolumeInitializer*> zwalker(0, std::move(intervals));
 
     for(size_t z=0; z < dim.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dim.z);
@@ -490,36 +492,39 @@ static void initializeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4Sl
 
         std::vector<Interval<size_t, IdVolumeInitializer*>> intervals;
 
-        for(auto interval: ztree.findOverlapping(z, z)) {
-            auto& initializer = interval.value;
+        auto zit = zwalker.next();
+        for(auto it = zit.next(); it != zit.end(); it = zit.next()) {
+            auto& initializer = it->value;
             tgt::SBounds full_bounds = initializer->getBounds();
-            intervals.emplace_back(full_bounds.getLLF().y, full_bounds.getURB().y, initializer);
+            intervals.emplace_back(full_bounds.getLLF().y, full_bounds.getURB().y + 1, initializer);
         }
         if(intervals.empty()) {
             continue;
         }
-        IntervalTree<size_t, IdVolumeInitializer*> ytree(std::move(intervals));
+        IntervalWalker<size_t, IdVolumeInitializer*> ywalker(0, std::move(intervals));
 
         for(size_t y=0; y < dim.y; ++y) {
 
             std::vector<Interval<size_t, IdVolumeInitializer*>> intervals;
 
-            for(auto& interval: ytree.findOverlapping(y, y)) {
-                auto& initializer = interval.value;
+            auto yit = ywalker.next();
+            for(auto it = yit.next(); it != yit.end(); it = yit.next()) {
+                auto& initializer = it->value;
                 tgt::SBounds full_bounds = initializer->getBounds();
-                intervals.emplace_back(full_bounds.getLLF().x, full_bounds.getURB().x, initializer);
+                intervals.emplace_back(full_bounds.getLLF().x, full_bounds.getURB().x + 1, initializer);
             }
             if(intervals.empty()) {
                 continue;
             }
-            IntervalTree<size_t, IdVolumeInitializer*> xtree(std::move(intervals));
+            IntervalWalker<size_t, IdVolumeInitializer*> xwalker(0, std::move(intervals));
 
             for(size_t x=0; x < dim.x; ++x) {
                 tgt::svec3 pos(x,y,z);
 
                 tgt::svec3 slicePos(x,y,0);
-                for(auto& interval : xtree.findOverlapping(x,x)) {
-                    auto& initializer = interval.value;
+                auto xit = xwalker.next();
+                for(auto it = xit.next(); it != xit.end(); it = xit.next()) {
+                    auto& initializer = it->value;
                     uint32_t label;
 
                     if(initializationReader.isObject(pos, initializer->id_)) {
@@ -630,23 +635,26 @@ static void finalizeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4Slic
     std::vector<Interval<size_t, IdVolumeFinalizer*>> intervals;
     for(auto& finalizer: finalizers) {
         tgt::SBounds full_bounds = finalizer.getBounds();
-        intervals.emplace_back(full_bounds.getLLF().z, full_bounds.getURB().z, &finalizer);
+        // Here and below: the upper bound of tgt::SBounds is inclusive, but the intervals of
+        // intervalwalker have an exclusive upper bound
+        intervals.emplace_back(full_bounds.getLLF().z, full_bounds.getURB().z + 1, &finalizer);
     }
-    IntervalTree<size_t, IdVolumeFinalizer*> ztree(std::move(intervals));
+    IntervalWalker<size_t, IdVolumeFinalizer*> zwalker(0, std::move(intervals));
 
     for(size_t z=0; z < dim.z; ++z) {
         progress.setProgress(static_cast<float>(z)/dim.z);
 
         std::vector<Interval<size_t, IdVolumeFinalizer*>> intervals;
-        for(auto interval: ztree.findOverlapping(z, z)) {
-            auto& finalizer = interval.value;
+        auto zit = zwalker.next();
+        for(auto it = zit.next(); it != zit.end(); it = zit.next()) {
+            auto& finalizer = it->value;
             tgt::SBounds full_bounds = finalizer->getBounds();
-            intervals.emplace_back(full_bounds.getLLF().y, full_bounds.getURB().y, finalizer);
+            intervals.emplace_back(full_bounds.getLLF().y, full_bounds.getURB().y + 1, finalizer);
         }
         if(intervals.empty()) {
             continue;
         }
-        IntervalTree<size_t, IdVolumeFinalizer*> ytree(std::move(intervals));
+        IntervalWalker<size_t, IdVolumeFinalizer*> ywalker(0, std::move(intervals));
 
         auto branchSlice = branchIds.getWriteableSlice(z);
         auto holeSlice = holeIds.loadSlice(z);
@@ -654,22 +662,24 @@ static void finalizeIdVolumes(LZ4SliceVolume<uint32_t>& branchIds, const LZ4Slic
         for(size_t y=0; y < dim.y; ++y) {
 
             std::vector<Interval<size_t, IdVolumeFinalizer*>> intervals;
-            for(auto& interval: ytree.findOverlapping(y, y)) {
-                auto& finalizer = interval.value;
+            auto yit = ywalker.next();
+            for(auto it = yit.next(); it != yit.end(); it = yit.next()) {
+                auto& finalizer = it->value;
                 tgt::SBounds full_bounds = finalizer->getBounds();
-                intervals.emplace_back(full_bounds.getLLF().x, full_bounds.getURB().x, finalizer);
+                intervals.emplace_back(full_bounds.getLLF().x, full_bounds.getURB().x + 1, finalizer);
             }
             if(intervals.empty()) {
                 continue;
             }
-            IntervalTree<size_t, IdVolumeFinalizer*> xtree(std::move(intervals));
+            IntervalWalker<size_t, IdVolumeFinalizer*> xwalker(0, std::move(intervals));
 
             for(size_t x=0; x < dim.x; ++x) {
                 tgt::svec3 pos(x,y,z);
                 tgt::svec3 slicePos(x,y,0);
 
-                for(auto& interval : xtree.findOverlapping(x, x)) {
-                    auto& finalizer = interval.value;
+                auto xit = xwalker.next();
+                for(auto it = xit.next(); it != xit.end(); it = xit.next()) {
+                    auto& finalizer = it->value;
                     if(holeSlice.voxel(x,y,0) == finalizer->id_) {
                         uint32_t floodedId = finalizer->getValue(pos);
                         tgtAssert(floodedId != IdVolume::BACKGROUND_VALUE, "flooded label is background");

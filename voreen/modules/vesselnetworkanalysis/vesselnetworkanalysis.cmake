@@ -113,8 +113,6 @@ SET(MOD_INSTALL_DIRECTORIES
     ${MOD_DIR}/workspaces
 )
 SET(MOD_INSTALL_FILES
-    # intervaltree
-    ${MOD_DIR}/ext/intervaltree/LICENSE
     # munkres-cpp
     ${MOD_DIR}/ext/munkres-cpp/COPYING
     ${MOD_DIR}/ext/munkres-cpp/AUTHORS.txt
