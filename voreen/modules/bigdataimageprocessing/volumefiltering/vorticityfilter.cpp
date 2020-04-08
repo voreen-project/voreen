@@ -43,13 +43,13 @@ ParallelFilterValue3D VorticityFilter::getValue(const Sample& sample, const tgt:
     // Calculate gradient for each, x, y and z.
     // TODO: this will sample the same position multiple times which could be improved
     //  by either caching or not relying on the Gradient Filter as it.
-    GradientFilter::Sample sampleX = [this, &sample] (const tgt::ivec3& pos) {
+    GradientFilter::Sample sampleX = [&sample] (const tgt::ivec3& pos) {
         return ParallelFilterValue1D(sample(pos)[0]);
     };
-    GradientFilter::Sample sampleY = [this, &sample] (const tgt::ivec3& pos) {
+    GradientFilter::Sample sampleY = [&sample] (const tgt::ivec3& pos) {
         return ParallelFilterValue1D(sample(pos)[1]);
     };
-    GradientFilter::Sample sampleZ = [this, &sample] (const tgt::ivec3& pos) {
+    GradientFilter::Sample sampleZ = [&sample] (const tgt::ivec3& pos) {
         return ParallelFilterValue1D(sample(pos)[2]);
     };
 
