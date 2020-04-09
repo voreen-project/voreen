@@ -80,7 +80,7 @@ protected:
     void distributeMouseEvent(int window, tgt::MouseEvent *newme);
 
     WindowConfiguration getWindowConfiguration() const;
-    int getWindowForEvent(tgt::MouseEvent me, tgt::MouseEvent *translatedme);
+    int getWindowForEvent(const tgt::MouseEvent& me, tgt::MouseEvent* translatedme);
     void renderSubview(RenderPort* image, tgt::vec2 minPx, tgt::vec2 maxPx, tgt::vec2 textureMin, tgt::vec2 textureMax);
     tgt::ivec2 getWindowViewport(WindowConfiguration windowConfiguration, int Window);
 
@@ -94,6 +94,7 @@ protected:
     IntProperty maximized_;
     BoolProperty maximizeOnDoubleClick_;
     EventProperty<Splitter> maximizeEventProp_;
+    BoolProperty forwardDoubleClickEvent_;
     tgt::Shader* shader_;
 
     /// Inport whose rendering is mapped to the frame buffer.

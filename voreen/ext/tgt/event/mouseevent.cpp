@@ -39,25 +39,18 @@ int MouseEvent::getEventType() {
         case MOTION:
             // motion = move?
             return MOUSEMOVEEVENT;
-            break;
         case PRESSED:
             return MOUSEPRESSEVENT;
-            break;
         case RELEASED:
             return MOUSERELEASEEVENT;
-            break;
         case DOUBLECLICK:
             return MOUSEDOUBLECLICKEVENT;
-            break;
         case WHEEL:
             return WHEELEVENT;
-            break;
         case ENTER:
             return MOUSEENTEREVENT;
-            break;
         case EXIT:
             return MOUSEEXITEVENT;
-            break;
         default:
             return 0;
     }

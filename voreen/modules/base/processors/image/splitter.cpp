@@ -43,6 +43,7 @@ Splitter::Splitter()
     , maximizeOnDoubleClick_("maximizeOnDoubleClick", "Maximize on double click", true)
     , maximizeEventProp_("mouseEvent.maximize", "Maximize Event", this, &Splitter::toggleMaximization,
     tgt::MouseEvent::MOUSE_BUTTON_LEFT, tgt::MouseEvent::DOUBLECLICK, tgt::MouseEvent::MODIFIER_NONE)
+    , forwardDoubleClickEvent_("forwardDoubleClickEvent", "Forward double click events", false, Processor::INVALID_RESULT, Property::LOD_DEBUG)
     , position_("position", "Position", 0.5f, 0.0f, 1.0f)
     , outport_(Port::OUTPORT, "outport", "Image Output", true, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_RECEIVER)
     , inport1_(Port::INPORT, "inport1", "Image1 Input", false, Processor::INVALID_RESULT, RenderPort::RENDERSIZE_ORIGIN)
@@ -71,6 +72,7 @@ Splitter::Splitter()
     maximized_.setVisibleFlag(false);
     addProperty(maximizeOnDoubleClick_);
     addEventProperty(maximizeEventProp_);
+    addProperty(forwardDoubleClickEvent_);
     addPort(outport_);
     addPort(inport1_);
     addPort(inport2_);
@@ -205,13 +207,9 @@ void Splitter::process() {
 void Splitter::initialize() {
     RenderProcessor::initialize();
     updateSizes();
-    //shader_ = ShdrMgr.loadSeparate("passthrough.vert", "copyimage.frag", generateHeader(), false);
 }
 
 void Splitter::deinitialize() {
-
-    //ShdrMgr.dispose(shader_);
-
     RenderProcessor::deinitialize();
 }
 
@@ -247,7 +245,7 @@ void Splitter::updateSizes() {
 
 void Splitter::mouseEvent(tgt::MouseEvent* e) {
 
-    if (maximizeEventProp_.accepts(e)) {
+    if (maximizeEventProp_.accepts(e) && maximizeOnDoubleClick_.get()) {
         RenderProcessor::onEvent(e);
         return;
     }
@@ -351,7 +349,7 @@ Splitter::WindowConfiguration Splitter::getWindowConfiguration() const{
     }
 }
 
-int Splitter::getWindowForEvent(tgt::MouseEvent me, tgt::MouseEvent *translatedme){
+int Splitter::getWindowForEvent(const tgt::MouseEvent& me, tgt::MouseEvent *translatedme){
     tgt::ivec2          viewport  = me.viewport();
     float               position  = position_.get();
     WindowConfiguration config    = getWindowConfiguration();
@@ -445,18 +443,28 @@ void Splitter::renderSubview(RenderPort* image, tgt::vec2 minPx, tgt::vec2 maxPx
 }
 
 void Splitter::toggleMaximization(tgt::MouseEvent* me){
-    if (!maximizeOnDoubleClick_.get())
-        return;
-    if (maximized_.get() != 0){
-        maximized_.set(0);
-        return;
+
+    tgt::MouseEvent newme(0, 0, tgt::MouseEvent::ACTION_NONE,tgt::Event::Modifier::MODIFIER_NONE); // no empty constructor
+    int window = getWindowForEvent(*me, &newme);
+
+    if (maximizeOnDoubleClick_.get()) {
+        if (maximized_.get() != 0) {
+            maximized_.set(0);
+        } else {
+            maximized_.set(window);
+        }
+        updateSizes();
     }
-    int window = getWindowForEvent(*me, nullptr);
-    maximized_.set(window);
+
+    if (forwardDoubleClickEvent_.get()) {
+        distributeMouseEvent(window, &newme);
+    }
+
+    me->accept();
 }
 
-void Splitter::distributeMouseEvent( int window, tgt::MouseEvent *newme ){
-    RenderPort* distributionPort = 0;
+void Splitter::distributeMouseEvent(int window, tgt::MouseEvent* newme){
+    RenderPort* distributionPort = nullptr;
     switch (window)
     {
     case 1:
@@ -467,7 +475,7 @@ void Splitter::distributeMouseEvent( int window, tgt::MouseEvent *newme ){
         break;
     default:
         tgtAssert(false, "Splitter: Should not happen!")
-        break;
+        return;
     }
     newme->ignore();
     distributionPort->distributeEvent(newme);
