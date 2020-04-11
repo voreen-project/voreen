@@ -41,7 +41,6 @@ namespace voreen {
 class SpatialSampler;
 
 struct StreamlineCreatorInput {
-    tgt::svec2 streamlineLengthThreshold;
     tgt::vec2 absoluteMagnitudeThreshold;
     float stopIntegrationAngleThreshold;
     VolumeRAM::Filter filterMode;
@@ -84,8 +83,6 @@ protected:
                         "by other processors of the <i>Flowreen</i> module.");
         numSeedPoints_.setDescription("Can be used to determine the number of streamlines, which should be created. It can be used as a performance parameter.");
         seedTime_.setDescription("It is used as debug output to see the current generator. See the next description for more details.");
-        streamlineLengthThreshold_.setDescription("Streamlines, which are to short will be discarded. Streamlines, which are to long, will be clipped "\
-                                                      "to the maximum threshold.");
         absoluteMagnitudeThreshold_.setDescription("Flow data points outside the threshold intervall will not be used for streamline construction.");
     }
 
@@ -95,7 +92,6 @@ private:
         tgt::vec3 dimensions;
         tgt::vec3 stepSize;
         tgt::mat4 voxelToWorldMatrix;
-        tgt::ivec2 streamlineLengthThreshold;
         tgt::vec2 absoluteMagnitudeThreshold;
         float stopIntegrationAngleThreshold;
     };
@@ -111,7 +107,6 @@ private:
     IntProperty seedTime_;                                  ///< seed
 
     // streamline settings
-    IntIntervalProperty streamlineLengthThreshold_;     ///< streamline length must be in this interval
     FloatIntervalProperty absoluteMagnitudeThreshold_;  ///< only magnitudes in this interval are used
     BoolProperty fitAbsoluteMagnitudeThreshold_;        ///< fit magnitude on input change?
     IntProperty stopIntegrationAngleThreshold_;         ///< stop integration when exceeding threshold?

@@ -37,7 +37,7 @@
 
 namespace voreen {
 
-OpenCLModule* OpenCLModule::instance_ = 0;
+OpenCLModule* OpenCLModule::instance_ = nullptr;
 const std::string OpenCLModule::loggerCat_ = "voreen.OpenCLModule";
 
 OpenCLModule::OpenCLModule(const std::string& modulePath)

@@ -27,7 +27,6 @@
 
 #include "voreen/core/properties/intproperty.h"
 #include "voreen/core/properties/floatproperty.h"
-#include "voreen/core/properties/vectorproperty.h"
 
 #include "modules/hdf5/io/hdf5volumereader.h"
 #include "modules/hdf5/io/hdf5volumewriter.h"

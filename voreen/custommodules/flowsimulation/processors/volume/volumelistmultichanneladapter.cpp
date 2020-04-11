@@ -32,10 +32,10 @@
 
 namespace voreen {
 
-class VolumeDisk_MultiChannelAdapter : public VolumeDisk {
+class VolumeDiskMultiChannelAdapter : public VolumeDisk {
 public:
 
-    VolumeDisk_MultiChannelAdapter(const std::vector<const VolumeBase*>& channels, const std::vector<bool>& invert)
+    VolumeDiskMultiChannelAdapter(const std::vector<const VolumeBase*>& channels, const std::vector<bool>& invert)
         : VolumeDisk(VolumeFactory().getFormat(channels.front()->getBaseType(), channels.size()), channels.front()->getDimensions())
         , channels_(channels)
         , invert_(invert)
@@ -48,7 +48,7 @@ public:
         }
     }
 
-    virtual std::string getHash() const {
+    std::string getHash() const {
         std::string hash;
 
         for (const VolumeBase* channel : channels_) {
@@ -58,18 +58,18 @@ public:
         return VoreenHash::getHash(hash);
     }
 
-    virtual VolumeRAM* loadVolume() const {
+    VolumeRAM* loadVolume() const {
         return loadBrick(tgt::svec3::zero, dimensions_);
     }
 
-    virtual VolumeRAM* loadSlices(const size_t firstZSlice, const size_t lastZSlice) const {
+    VolumeRAM* loadSlices(const size_t firstZSlice, const size_t lastZSlice) const {
         if (firstZSlice > lastZSlice)
             throw VoreenException("last slice must be behind first slice");
 
         return loadBrick(tgt::svec3(0, 0, firstZSlice), tgt::svec3(dimensions_.x, dimensions_.y, lastZSlice - firstZSlice + 1));
     }
 
-    virtual VolumeRAM* loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const {
+    VolumeRAM* loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const {
         // check parameters
         if (tgt::hmul(dimensions) == 0)
             throw VoreenException("requested brick dimensions are zero");
@@ -215,7 +215,7 @@ void VolumeListMultiChannelAdapter::process() {
             tgtAssert(false, "unknown layout");
         }
 
-        VolumeDisk* vd = new VolumeDisk_MultiChannelAdapter(channels, invert);
+        VolumeDisk* vd = new VolumeDiskMultiChannelAdapter(channels, invert);
         VolumeBase* volume = new Volume(vd, input->first());
         output->add(volume);
 

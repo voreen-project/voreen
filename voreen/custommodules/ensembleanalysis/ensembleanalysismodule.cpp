@@ -56,13 +56,21 @@
 
 namespace voreen {
 
+EnsembleAnalysisModule* EnsembleAnalysisModule::instance_ = nullptr;
+
 EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     : VoreenModule(modulePath)
+    , forceDiskRepresentation_("forceDiskRepresentation", "Force Disk Representation", false)
 {
     setID("EnsembleAnalysis");
     setGuiName("EnsembleAnalysis");
+    instance_ = this;
 
     addShaderPath(getModulePath("glsl"));
+    addProperty(forceDiskRepresentation_);
+#ifndef VRN_MODULE_HDF5
+    forceDiskRepresentation_.setVisibleFlag(false);
+#endif
 
     // Processors
     registerProcessor(new ConnectedComponentSelector());
@@ -99,6 +107,22 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     registerProcessor(new EnsembleVolumeExtractor());
     registerProcessor(new VolumeListMerger());
     registerProcessor(new VolumeMerger());
+}
+
+void EnsembleAnalysisModule::setForceDiskRepresentation(bool enabled) {
+    forceDiskRepresentation_.set(enabled);
+}
+
+bool EnsembleAnalysisModule::getForceDiskRepresentation() const {
+#ifndef VRN_MODULE_HDF5
+    return false;
+#else
+    return forceDiskRepresentation_.get();
+#endif
+}
+
+EnsembleAnalysisModule* EnsembleAnalysisModule::getInstance() {
+    return instance_;
 }
 
 } // namespace

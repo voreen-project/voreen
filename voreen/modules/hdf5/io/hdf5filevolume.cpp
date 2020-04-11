@@ -707,9 +707,14 @@ MetaDataContainer HDF5FileVolume::readMetaData() const {
 void HDF5FileVolume::writeMetaData(const VolumeBase* vol) const {
     boost::lock_guard<boost::recursive_mutex> lock(hdf5libMutex);
 
+    // TODO: does not work for volume decorators!!
+    //  This could be solved by implementing a MetaDataContainerDecorator which is member of VolumeDecorator
+    //  and initialized using the decorated volume's MetaDataContainer.
     const Volume* volume = dynamic_cast<const Volume*>(vol);
-    if(!volume)
+    if(!volume) {
+        LWARNING("Could not write meta data: volume is probably a decorator!");
         return;
+    }
 
     std::stringstream stream;
     XmlSerializer serializer;

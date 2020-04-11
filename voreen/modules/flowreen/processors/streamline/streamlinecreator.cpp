@@ -44,7 +44,6 @@ StreamlineCreator::StreamlineCreator()
     , streamlineOutport_(Port::OUTPORT, "streamlineOutport", "Streamlines Output")
     , numSeedPoints_("numSeedPoints", "Number of Seed Points", 5000, 1, 200000)
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
-    , streamlineLengthThreshold_("streamlineLengthThresholdProp", "Threshold of Streamline Length: ", tgt::ivec2(10, 100), 2, 1000)
     , absoluteMagnitudeThreshold_("absoluteMagnitudeThreshold", "Threshold of Magnitude (absolute)", tgt::vec2(0.0f, 1000.0f), 0.0f, 9999.99f)
     , fitAbsoluteMagnitudeThreshold_("fitAbsoluteMagnitude", "Fit absolute Threshold to Input", false)
     , stopIntegrationAngleThreshold_("stopIntegrationAngleThreshold", "Stop Integration on Angle", 180, 0, 180, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_ADVANCED)
@@ -59,8 +58,6 @@ StreamlineCreator::StreamlineCreator()
         numSeedPoints_.setGroupID("streamline");
     addProperty(seedTime_);
         seedTime_.setGroupID("streamline");
-    addProperty(streamlineLengthThreshold_);
-        streamlineLengthThreshold_.setGroupID("streamline");
     addProperty(absoluteMagnitudeThreshold_);
         absoluteMagnitudeThreshold_.adaptDecimalsToRange(2);
         absoluteMagnitudeThreshold_.setGroupID("streamline");
@@ -201,7 +198,6 @@ StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
     std::unique_ptr<StreamlineListBase> output(new StreamlineList(flowVolume));
 
     return StreamlineCreatorInput {
-            streamlineLengthThreshold_.get(),
             absoluteMagnitudeThreshold_.get(),
             stopIntegrationAngleThreshold_.get() * tgt::PIf / 180.0f,
             filterMode_.getValue(),
@@ -227,9 +223,8 @@ StreamlineCreatorOutput StreamlineCreator::compute(StreamlineCreatorInput input,
         tgt::vec3(representation->getDimensions() - tgt::svec3::one),
         stepSize,
         flowVolume->getVoxelToWorldMatrix(),
-        input.streamlineLengthThreshold,
         input.absoluteMagnitudeThreshold,
-        input.stopIntegrationAngleThreshold,
+        input.stopIntegrationAngleThreshold
     };
 
     const SpatialSampler sampler(*representation, flowVolume->getRealWorldMapping(), input.filterMode);
@@ -250,14 +245,11 @@ StreamlineCreatorOutput StreamlineCreator::compute(StreamlineCreatorInput input,
         const tgt::vec3& start = seedPoints[i];
 
         Streamline streamline = integrateStreamline(start, sampler, integrationInput);
-
-        if (streamline.getNumElements() >= input.streamlineLengthThreshold.x &&
-            streamline.getNumElements() <= input.streamlineLengthThreshold.y) {
 #ifdef VRN_MODULE_OPENMP
-            #pragma omp critical
+        #pragma omp critical
 #endif
-            output->addStreamline(streamline);
-        }
+        output->addStreamline(streamline);
+
 
         if (progress.reportStepDone()) {
 #ifdef VRN_MODULE_OPENMP
@@ -310,8 +302,7 @@ void StreamlineCreator::reseedPosition(size_t currentPosition) {
 
 Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const SpatialSampler& sampler, const IntegrationInput& input) const {
 
-    const float epsilon = 0.00001f; // std::numeric_limits<float>::epsilon() is not enough.
-    const size_t maxNumElements = input.streamlineLengthThreshold.y;
+    const float epsilon = 1e-5f; // std::numeric_limits<float>::epsilon() is not enough.
 
     // Position.
     tgt::vec3 r(start);
@@ -363,8 +354,6 @@ Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const 
 
             if (lookupPositiveDirection) {
                 line.addElementAtEnd(Streamline::StreamlineElement(input.voxelToWorldMatrix * r, velR));
-                if (line.getNumElements() == maxNumElements)
-                    break;
             }
         }
 
@@ -395,8 +384,6 @@ Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const 
 
             if (lookupNegativeDirection) {
                 line.addElementAtFront(Streamline::StreamlineElement(input.voxelToWorldMatrix * r_, velR_));
-                if (line.getNumElements() == maxNumElements)
-                    break;
             }
         }
     }

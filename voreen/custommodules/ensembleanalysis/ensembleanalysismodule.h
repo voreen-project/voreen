@@ -27,6 +27,7 @@
 #define VRN_ENSEMBLEANALYSISMODULE_H
 
 #include "voreen/core/voreenmodule.h"
+#include "voreen/core/properties/boolproperty.h"
 
 namespace voreen {
 
@@ -38,6 +39,32 @@ public:
     virtual std::string getDescription() const {
         return "Module for ensemble analysis, initiated for the SciVis Contest 2018";
     }
+
+    /**
+     * Enables or disables forcing a disk representation of loaded volumes, even
+     * if they have no native one. If enabled, a hdf5 disk representation will be used.
+     * Default: enabled
+     */
+    void setForceDiskRepresentation(bool enabled);
+
+    /**
+     * Returns whether disk representations are forced.
+     */
+    bool getForceDiskRepresentation() const;
+
+    /**
+     * Returns the global instance of this class.
+     *
+     * @note Does not create the instance. If the module class has not been
+     *       instantiated yet, the null pointer is returned.
+     */
+    static EnsembleAnalysisModule* getInstance();
+
+private:
+
+    static EnsembleAnalysisModule* instance_;
+
+    BoolProperty forceDiskRepresentation_;
 };
 
 } // namespace

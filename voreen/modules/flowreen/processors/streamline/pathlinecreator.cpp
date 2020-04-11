@@ -74,10 +74,14 @@ PathlineCreator::PathlineCreator()
     filterMode_.addOption("nearest", "Nearest", VolumeRAM::NEAREST);
     filterMode_.setGroupID("pathline");
     addProperty(velocityUnitConversion_);
-    // Chose the values such that multiplying with real world values we get mm(/s).
+    // Chose the values such that multiplying with real world values we get mm(/s)
+    // which (for some reason) is the default voreen length unit.
+    velocityUnitConversion_.addOption("km/s", "km/s", 1000000.0f);
     velocityUnitConversion_.addOption("m/s", "m/s", 1000.0f);
+    //velocityUnitConversion_.addOption("dm/s", "dm/s", 100.0f); // Really unusual.
     velocityUnitConversion_.addOption("cm/s", "cm/s", 10.0f);
     velocityUnitConversion_.addOption("mm/s", "mm/s", 1.0f);
+    velocityUnitConversion_.set("m/s");
     velocityUnitConversion_.setGroupID("pathline");
     addProperty(temporalIntegrationSteps_);
     temporalIntegrationSteps_.setGroupID("pathline");
@@ -319,7 +323,7 @@ void PathlineCreator::processComputeOutput(PathlineCreatorOutput output) {
 
 bool PathlineCreator::integrationStep(Streamline& pathline, const SpatioTemporalSampler& sampler, const IntegrationInput& input) const {
 
-    const float epsilon = 0.00001f; // std::numeric_limits<float>::epsilon() is not enough.
+    const float epsilon = 1e-5f; // std::numeric_limits<float>::epsilon() is not enough.
 
     // Position.
     tgt::vec3 r = pathline.getLastElement().position_;
