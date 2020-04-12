@@ -41,6 +41,7 @@ namespace voreen {
 class SpatialSampler;
 
 struct StreamlineCreatorInput {
+    tgt::ivec2 streamlineLengthThreshold;
     tgt::vec2 absoluteMagnitudeThreshold;
     float stopIntegrationAngleThreshold;
     VolumeRAM::Filter filterMode;
@@ -92,6 +93,7 @@ private:
         tgt::vec3 dimensions;
         tgt::vec3 stepSize;
         tgt::mat4 voxelToWorldMatrix;
+        size_t upperLengthThreshold;
         tgt::vec2 absoluteMagnitudeThreshold;
         float stopIntegrationAngleThreshold;
     };
@@ -107,6 +109,7 @@ private:
     IntProperty seedTime_;                                  ///< seed
 
     // streamline settings
+    IntIntervalProperty streamlineLengthThreshold_;     ///< restrict number of elements
     FloatIntervalProperty absoluteMagnitudeThreshold_;  ///< only magnitudes in this interval are used
     BoolProperty fitAbsoluteMagnitudeThreshold_;        ///< fit magnitude on input change?
     IntProperty stopIntegrationAngleThreshold_;         ///< stop integration when exceeding threshold?

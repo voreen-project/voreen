@@ -44,6 +44,7 @@ StreamlineCreator::StreamlineCreator()
     , streamlineOutport_(Port::OUTPORT, "streamlineOutport", "Streamlines Output")
     , numSeedPoints_("numSeedPoints", "Number of Seed Points", 5000, 1, 200000)
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
+    , streamlineLengthThreshold_("streamlineLengthThreshold", "Restrict streamline length", tgt::ivec2(10, 1000), 2, 10000)
     , absoluteMagnitudeThreshold_("absoluteMagnitudeThreshold", "Threshold of Magnitude (absolute)", tgt::vec2(0.0f, 1000.0f), 0.0f, 9999.99f)
     , fitAbsoluteMagnitudeThreshold_("fitAbsoluteMagnitude", "Fit absolute Threshold to Input", false)
     , stopIntegrationAngleThreshold_("stopIntegrationAngleThreshold", "Stop Integration on Angle", 180, 0, 180, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_ADVANCED)
@@ -55,16 +56,23 @@ StreamlineCreator::StreamlineCreator()
     addPort(streamlineOutport_);
 
     addProperty(numSeedPoints_);
+        numSeedPoints_.setTracking(false);
         numSeedPoints_.setGroupID("streamline");
     addProperty(seedTime_);
+        seedTime_.setTracking(false);
         seedTime_.setGroupID("streamline");
+    addProperty(streamlineLengthThreshold_);
+        streamlineLengthThreshold_.setTracking(false);
+        streamlineLengthThreshold_.setGroupID("streamline");
     addProperty(absoluteMagnitudeThreshold_);
-        absoluteMagnitudeThreshold_.adaptDecimalsToRange(2);
+        absoluteMagnitudeThreshold_.setTracking(false);
+        absoluteMagnitudeThreshold_.setNumDecimals(2);
         absoluteMagnitudeThreshold_.setGroupID("streamline");
     addProperty(fitAbsoluteMagnitudeThreshold_);
         ON_CHANGE(fitAbsoluteMagnitudeThreshold_, StreamlineCreator, adjustPropertiesToInput);
         fitAbsoluteMagnitudeThreshold_.setGroupID("streamline");
     addProperty(stopIntegrationAngleThreshold_);
+        stopIntegrationAngleThreshold_.setTracking(false);
         stopIntegrationAngleThreshold_.setGroupID("streamline");
     addProperty(filterMode_);
         filterMode_.addOption("linear", "Linear", VolumeRAM::LINEAR);
@@ -198,6 +206,7 @@ StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
     std::unique_ptr<StreamlineListBase> output(new StreamlineList(flowVolume));
 
     return StreamlineCreatorInput {
+            streamlineLengthThreshold_.get(),
             absoluteMagnitudeThreshold_.get(),
             stopIntegrationAngleThreshold_.get() * tgt::PIf / 180.0f,
             filterMode_.getValue(),
@@ -219,10 +228,14 @@ StreamlineCreatorOutput StreamlineCreator::compute(StreamlineCreatorInput input,
     // We use half the steps we had before.
     tgt::vec3 stepSize = 0.5f * flowVolume->getSpacing() / tgt::max(flowVolume->getSpacing());
 
+    size_t lowerLengthThreshold = input.streamlineLengthThreshold.x;
+    size_t upperLengthThreshold = input.streamlineLengthThreshold.y;
+
     const IntegrationInput integrationInput{
         tgt::vec3(representation->getDimensions() - tgt::svec3::one),
         stepSize,
         flowVolume->getVoxelToWorldMatrix(),
+        upperLengthThreshold,
         input.absoluteMagnitudeThreshold,
         input.stopIntegrationAngleThreshold
     };
@@ -245,11 +258,12 @@ StreamlineCreatorOutput StreamlineCreator::compute(StreamlineCreatorInput input,
         const tgt::vec3& start = seedPoints[i];
 
         Streamline streamline = integrateStreamline(start, sampler, integrationInput);
+        if (streamline.getNumElements() >= lowerLengthThreshold) {
 #ifdef VRN_MODULE_OPENMP
-        #pragma omp critical
+            #pragma omp critical
 #endif
-        output->addStreamline(streamline);
-
+            output->addStreamline(streamline);
+        }
 
         if (progress.reportStepDone()) {
 #ifdef VRN_MODULE_OPENMP
@@ -354,6 +368,9 @@ Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const 
 
             if (lookupPositiveDirection) {
                 line.addElementAtEnd(Streamline::StreamlineElement(input.voxelToWorldMatrix * r, velR));
+                if (line.getNumElements() >= input.upperLengthThreshold) {
+                    break;
+                }
             }
         }
 
@@ -384,6 +401,9 @@ Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const 
 
             if (lookupNegativeDirection) {
                 line.addElementAtFront(Streamline::StreamlineElement(input.voxelToWorldMatrix * r_, velR_));
+                if (line.getNumElements() >= input.upperLengthThreshold) {
+                    break;
+                }
             }
         }
     }

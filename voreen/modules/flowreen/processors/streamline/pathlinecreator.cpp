@@ -58,33 +58,38 @@ PathlineCreator::PathlineCreator()
     addPort(pathlineOutport_);
 
     addProperty(numSeedPoints_);
-    numSeedPoints_.setGroupID("pathline");
+        numSeedPoints_.setTracking(false);
+        numSeedPoints_.setGroupID("pathline");
     addProperty(seedTime_);
-    seedTime_.setGroupID("pathline");
+        seedTime_.setTracking(false);
+        seedTime_.setGroupID("pathline");
     addProperty(absoluteMagnitudeThreshold_);
-    absoluteMagnitudeThreshold_.setNumDecimals(2);
-    absoluteMagnitudeThreshold_.setGroupID("pathline");
+        absoluteMagnitudeThreshold_.setTracking(false);
+        absoluteMagnitudeThreshold_.setNumDecimals(2);
+        absoluteMagnitudeThreshold_.setGroupID("pathline");
     addProperty(fitAbsoluteMagnitudeThreshold_);
-    ON_CHANGE(fitAbsoluteMagnitudeThreshold_, PathlineCreator, adjustPropertiesToInput);
-    fitAbsoluteMagnitudeThreshold_.setGroupID("pathline");
+        ON_CHANGE(fitAbsoluteMagnitudeThreshold_, PathlineCreator, adjustPropertiesToInput);
+        fitAbsoluteMagnitudeThreshold_.setGroupID("pathline");
     addProperty(temporalResolution_);
-    temporalResolution_.setGroupID("pathline");
+        temporalResolution_.setTracking(false);
+        temporalResolution_.setGroupID("pathline");
     addProperty(filterMode_);
-    filterMode_.addOption("linear", "Linear", VolumeRAM::LINEAR);
-    filterMode_.addOption("nearest", "Nearest", VolumeRAM::NEAREST);
-    filterMode_.setGroupID("pathline");
+        filterMode_.addOption("linear", "Linear", VolumeRAM::LINEAR);
+        filterMode_.addOption("nearest", "Nearest", VolumeRAM::NEAREST);
+        filterMode_.setGroupID("pathline");
     addProperty(velocityUnitConversion_);
-    // Chose the values such that multiplying with real world values we get mm(/s)
-    // which (for some reason) is the default voreen length unit.
-    velocityUnitConversion_.addOption("km/s", "km/s", 1000000.0f);
-    velocityUnitConversion_.addOption("m/s", "m/s", 1000.0f);
-    //velocityUnitConversion_.addOption("dm/s", "dm/s", 100.0f); // Really unusual.
-    velocityUnitConversion_.addOption("cm/s", "cm/s", 10.0f);
-    velocityUnitConversion_.addOption("mm/s", "mm/s", 1.0f);
-    velocityUnitConversion_.set("m/s");
-    velocityUnitConversion_.setGroupID("pathline");
+        // Chose the values such that multiplying with real world values we get mm(/s)
+        // which (for some reason) is the default voreen length unit.
+        velocityUnitConversion_.addOption("km/s", "km/s", 1000000.0f);
+        velocityUnitConversion_.addOption("m/s", "m/s", 1000.0f);
+        //velocityUnitConversion_.addOption("dm/s", "dm/s", 100.0f); // Really unusual.
+        velocityUnitConversion_.addOption("cm/s", "cm/s", 10.0f);
+        velocityUnitConversion_.addOption("mm/s", "mm/s", 1.0f);
+        velocityUnitConversion_.set("m/s");
+        velocityUnitConversion_.setGroupID("pathline");
     addProperty(temporalIntegrationSteps_);
-    temporalIntegrationSteps_.setGroupID("pathline");
+        temporalIntegrationSteps_.setTracking(false);
+        temporalIntegrationSteps_.setGroupID("pathline");
     setPropertyGroupGuiName("pathline", "Pathline Settings");
 }
 
