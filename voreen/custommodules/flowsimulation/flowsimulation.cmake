@@ -26,6 +26,7 @@ SET(MOD_CORE_SOURCES
     # processors
     ${MOD_DIR}/processors/geometry/geometryclose.cpp
     ${MOD_DIR}/processors/geometry/geometryoffsetremove.cpp
+    ${MOD_DIR}/processors/geometry/geometrysmoothnormals.cpp
     ${MOD_DIR}/processors/render/unalignedsliceviewer.cpp
     ${MOD_DIR}/processors/simulation/flowcharacteristics.cpp
     ${MOD_DIR}/processors/simulation/flowensemblecreator.cpp
@@ -57,6 +58,7 @@ SET(MOD_CORE_HEADERS
     # processors
     ${MOD_DIR}/processors/geometry/geometryclose.h
     ${MOD_DIR}/processors/geometry/geometryoffsetremove.h
+    ${MOD_DIR}/processors/geometry/geometrysmoothnormals.h
     ${MOD_DIR}/processors/render/unalignedsliceviewer.h
     ${MOD_DIR}/processors/simulation/flowcharacteristics.h
     ${MOD_DIR}/processors/simulation/flowensemblecreator.h

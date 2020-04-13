@@ -28,6 +28,7 @@
 // processors
 #include "processors/geometry/geometryclose.h"
 #include "processors/geometry/geometryoffsetremove.h"
+#include "processors/geometry/geometrysmoothnormals.h"
 #include "processors/render/unalignedsliceviewer.h"
 #include "processors/simulation/flowcharacteristics.h"
 #include "processors/simulation/flowensemblecreator.h"
@@ -69,6 +70,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     // processors
     registerSerializableType(new GeometryClose());
     registerSerializableType(new GeometryOffsetRemove());
+    registerSerializableType(new GeometrySmoothNormals());
     registerSerializableType(new UnalignedSliceViewer());
     registerSerializableType(new FlowCharacteristics());
     registerSerializableType(new FlowEnsembleCreator());
