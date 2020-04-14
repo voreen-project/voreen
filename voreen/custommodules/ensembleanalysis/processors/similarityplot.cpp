@@ -551,7 +551,7 @@ void SimilarityPlot::renderingPass(bool picking) {
             }
             IMode.end();
 
-            if(!picking || numTimeSteps == 1) {
+            if((!picking && renderTimeSelection_.get()) || numTimeSteps == 1) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeStep_.get().x);
                 tgt::vec3 position(vertices[selectedTimeStep][0], vertices[selectedTimeStep][1], 0.0f);
                 tgt::vec3 color = (numTimeSteps == 1) ? getColor(runIdx, selectedTimeStep, picking) : tgt::vec3::one;
@@ -589,7 +589,7 @@ void SimilarityPlot::renderingPass(bool picking) {
             }
             IMode.end();
 
-            if(!picking || numTimeSteps == 1) {
+            if((!picking && renderTimeSelection_.get()) || numTimeSteps == 1) {
                 size_t selectedTimeStep = dataset->pickTimeStep(runIdx, selectedTimeStep_.get().x);
                 tgt::vec3 position = tgt::vec3::fromPointer(&vertices[selectedTimeStep][0])*scale;
                 tgt::vec3 color = (numTimeSteps == 1) ? getColor(runIdx, selectedTimeStep, picking) : tgt::vec3::one;
