@@ -23,23 +23,21 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "gaussiannoise.h"
+#include "volumenoise.h"
 
-#include "voreen/core/datastructures/volume/histogram.h"
 #include "voreen/core/datastructures/volume/volumeram.h"
-#include "voreen/core/utils/statistics.h"
 
 namespace voreen {
 
-const std::string GaussianNoise::loggerCat_("voreen.flowsimulation.gaussiannoise");
+const std::string VolumeNoise::loggerCat_("voreen.flowsimulation.VolumeNoise");
 
-GaussianNoise::GaussianNoise()
+VolumeNoise::VolumeNoise()
     : VolumeProcessor()
     , inport_(Port::INPORT, "volumenoise.inport", "Volume Input")
     , outport_(Port::OUTPORT, "volumenoise.outport", "Volume Output")
     , enabledProp_("enabledProp", "Enabled", true)
-    , mean_("mean", "Mean", 0.0f, -1.0f, 1.0f)
-    , stdDeviation_("stdDeviation", "Std. Deviation", 0.2f, 0.0f, 1.0f)
+    , noiseClass_("noiseClass", "Noise Class")
+    , noiseAmount_("noiseAmount", "noiseAmount", 0.5f, 0.0f, 1.0f)
     , usePredeterminedSeed_("usePredeterminedSeed", "Use Predetermined Seed", false)
     , predeterminedSeed_("predeterminedSeed", "Seed", 0, std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
     , randomDevice_()
@@ -47,20 +45,23 @@ GaussianNoise::GaussianNoise()
     addPort(inport_);
     addPort(outport_);
     addProperty(enabledProp_);
-    addProperty(mean_);
-    addProperty(stdDeviation_);
+    addProperty(noiseClass_);
+    noiseClass_.addOption("white", "White", WHITE);
+    noiseClass_.addOption("gaussian", "Gaussian", GAUSSIAN);
+    noiseClass_.addOption("saltAndPepper", "Salt and Pepper", SALT_AND_PEPPER);
+    addProperty(noiseAmount_);
     addProperty(usePredeterminedSeed_);
     addProperty(predeterminedSeed_);
 }
 
-GaussianNoise::~GaussianNoise() {
+VolumeNoise::~VolumeNoise() {
 }
 
-Processor* GaussianNoise::create() const {
-    return new GaussianNoise();
+Processor* VolumeNoise::create() const {
+    return new VolumeNoise();
 }
 
-void GaussianNoise::process() {
+void VolumeNoise::process() {
     if(!enabledProp_.get()) {
         outport_.setData(inport_.getData(), false);
         return;
@@ -68,20 +69,34 @@ void GaussianNoise::process() {
 
     const VolumeBase* inputVolume = inport_.getData();
     VolumeRAM* output = inputVolume->getRepresentation<VolumeRAM>()->clone();
-
-    tgt::vec4 means(mean_.get());
-    tgt::vec4 stdDevs(stdDeviation_.get());
+    NoiseClass noiseClass = noiseClass_.getValue();
 
     std::mt19937 randomEngine(randomDevice_());
     if(usePredeterminedSeed_.get()) {
         randomEngine.seed(predeterminedSeed_.get());
     }
 
+    auto applyNoise = [&] (float value) {
+        if(noiseClass == WHITE) {
+            value += std::uniform_real_distribution<float>(0.0f, noiseAmount_.get())(randomEngine);
+        }
+        else if(noiseClass == GAUSSIAN) {
+            value += std::normal_distribution<float>(0.0f, noiseAmount_.get()*10)(randomEngine);
+        }
+        else if(noiseClass == SALT_AND_PEPPER) {
+            if(std::uniform_real_distribution<float>()(randomEngine) <= noiseAmount_.get()) {
+                // Flip a coin to determine salt or pepper.
+                value = std::round(std::uniform_real_distribution<float>()(randomEngine));
+            }
+        }
+        return value;
+    };
+
     for(size_t i=0; i<output->getNumVoxels(); i++) {
         for(size_t channel = 0; channel < output->getNumChannels(); channel++) {
             float value = output->getVoxelNormalized(i, channel);
-            float noise = std::normal_distribution<float>(means[channel], stdDevs[channel])(randomEngine);
-            output->setVoxelNormalized(value + noise, i, channel);
+            value = applyNoise(value);
+            output->setVoxelNormalized(value, i, channel);
         }
     }
 

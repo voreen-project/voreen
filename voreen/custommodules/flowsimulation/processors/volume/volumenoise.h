@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_GAUSSIANNOISE
-#define VRN_GAUSSIANNOISE
+#ifndef VRN_VOLUMENOISE_H
+#define VRN_VOLUMENOISE_H
 
 #include "voreen/core/processors/volumeprocessor.h"
 #include "voreen/core/properties/boolproperty.h"
@@ -36,13 +36,13 @@
 
 namespace voreen {
 
-class GaussianNoise : public VolumeProcessor {
+class VolumeNoise : public VolumeProcessor {
 public:
-    GaussianNoise();
-    virtual ~GaussianNoise();
+    VolumeNoise();
+    virtual ~VolumeNoise();
 
     virtual Processor* create() const;
-    virtual std::string getClassName() const         { return "GaussianNoise";           }
+    virtual std::string getClassName() const         { return "VolumeNoise";             }
     virtual std::string getCategory() const          { return "Volume Processing";       }
     virtual std::string setDescriptions() const      { return "Volume Processing";       }
     virtual CodeState getCodeState() const           { return CODE_STATE_EXPERIMENTAL;   }
@@ -50,12 +50,18 @@ public:
 
 private:
 
+    enum NoiseClass {
+        WHITE,
+        GAUSSIAN,
+        SALT_AND_PEPPER,
+    };
+
     VolumePort inport_;
     VolumePort outport_;
 
     BoolProperty enabledProp_;
-    FloatProperty mean_;
-    FloatProperty stdDeviation_;
+    OptionProperty<NoiseClass> noiseClass_;
+    FloatProperty noiseAmount_;
 
     BoolProperty usePredeterminedSeed_;
     IntProperty predeterminedSeed_;
