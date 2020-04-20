@@ -143,12 +143,7 @@ Histogram2D createHistogram2DFromVolume(const VolumeBase* handle, int bucketCoun
     VolumeMinMax* vmm = 0;
     while(!vmm) {
         vmm = handle->getDerivedData<VolumeMinMax>();
-        try {
-            boost::this_thread::sleep(boost::posix_time::seconds(0));
-        }
-        catch(boost::thread_interrupted&) {
-            throw boost::thread_interrupted();
-        }
+        boost::this_thread::interruption_point();
     }
 
     tgtAssert(vmm, "null pointer in volume min max derived data");
@@ -162,10 +157,8 @@ Histogram2D createHistogram2DFromVolume(const VolumeBase* handle, int bucketCoun
     float minGradLength = 0.0f; // always 0
     float maxGradLength = 0.0f;
 
-    const VolumeRAM* vol = handle->getRepresentation<VolumeRAM>();
-
-    // FIXME: this is just a workaround to avoid crashes
-    if (!vol) {
+    VolumeRAMRepresentationLock vol(handle);
+    if(!*vol) {
         LWARNINGC("voreen.Histogram", "Unable to compute 2D histogram: no RAM representation available");
         Histogram2D h(min, max, bucketCountIntensity, minGradLength, maxGradLength, bucketCountGradient);
         return h;
@@ -174,17 +167,12 @@ Histogram2D createHistogram2DFromVolume(const VolumeBase* handle, int bucketCoun
     //TODO: improve performance
     ivec3 pos;
     for (pos.z = 0; pos.z < dims.z; ++pos.z) {
-        try {
-            boost::this_thread::sleep(boost::posix_time::seconds(0));
-        }
-        catch(boost::thread_interrupted&)
-        {
-            throw boost::thread_interrupted();
-        }
+        boost::this_thread::interruption_point();
+
         for (pos.y = 0; pos.y < dims.y; ++pos.y) {
             for (pos.x = 0; pos.x < dims.x; ++pos.x) {
                 //vec3 grad = VolumeOperatorGradient::calcGradientCentralDifferences(vol, sp, pos);
-                vec3 grad = VolumeOperatorGradient::calcGradientSobel(vol, sp, pos, channel);
+                vec3 grad = VolumeOperatorGradient::calcGradientSobel(*vol, sp, pos, channel);
 
                 float nlength = tgt::length(grad) * rwm.getScale();
 
@@ -196,17 +184,12 @@ Histogram2D createHistogram2DFromVolume(const VolumeBase* handle, int bucketCoun
 
     Histogram2D h(min, max, bucketCountIntensity, minGradLength, maxGradLength, bucketCountGradient);
     for (pos.z = 0; pos.z < dims.z; ++pos.z) {
-        try {
-            boost::this_thread::sleep(boost::posix_time::seconds(0));
-        }
-        catch(boost::thread_interrupted&)
-        {
-            throw boost::thread_interrupted();
-        }
+        boost::this_thread::interruption_point();
+
         for (pos.y = 0; pos.y < dims.y; ++pos.y) {
             for (pos.x = 0; pos.x < dims.x; ++pos.x) {
                 //vec3 grad = VolumeOperatorGradient::calcGradientCentralDifferences(vol, sp, pos);
-                vec3 grad = VolumeOperatorGradient::calcGradientSobel(vol, sp, pos, channel);
+                vec3 grad = VolumeOperatorGradient::calcGradientSobel(*vol, sp, pos, channel);
 
                 float nlength = tgt::length(grad) * rwm.getScale();
 

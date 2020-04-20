@@ -78,12 +78,14 @@ VolumeDerivedData* VolumePreview::createFrom(const VolumeBase* handle) const {
     float maxVal, minVal;
     std::vector<float> prevData = std::vector<float>(internHeight * internHeight);
 
-    const VolumeRAM* volumeRam = 0;
-    const VolumeDisk* volumeDisk = 0;
-    const VolumeOctreeBase* volumeOctree = 0;
+    std::unique_ptr<VolumeRAMRepresentationLock> lock;
+    const VolumeRAM* volumeRam = nullptr;
+    const VolumeDisk* volumeDisk = nullptr;
+    const VolumeOctreeBase* volumeOctree = nullptr;
     bool volumeRamCreated = false;
     if (handle->hasRepresentation<VolumeRAM>()) {
-        volumeRam = handle->getRepresentation<VolumeRAM>();
+        lock.reset(new VolumeRAMRepresentationLock(handle));
+        volumeRam = **lock;
         tgtAssert(volumeRam, "no volume");
     }
     else if (handle->hasRepresentation<VolumeDisk>()) {
@@ -130,7 +132,7 @@ VolumeDerivedData* VolumePreview::createFrom(const VolumeBase* handle) const {
     }
     else {
         LERROR("Neither VolumeRAM nor VolumeDisk nor VolumeOctree available");
-        return 0;
+        return nullptr;
     }
 
     // generate preview in float buffer

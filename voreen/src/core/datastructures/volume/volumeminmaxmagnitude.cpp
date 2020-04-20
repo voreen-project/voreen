@@ -96,9 +96,9 @@ VolumeDerivedData* VolumeMinMaxMagnitude::createFrom(const VolumeBase* handle) c
     RealWorldMapping rwm = handle->getRealWorldMapping();
 
     if (handle->hasRepresentation<VolumeRAM>()) {
-        const VolumeRAM* v = handle->getRepresentation<VolumeRAM>();
-        tgtAssert(v, "no volume");
-        return createFromVolumeRAM(v, rwm);
+        VolumeRAMRepresentationLock v(handle);
+        tgtAssert(*v, "no volume");
+        return createFromVolumeRAM(*v, rwm);
     }
     else if (handle->hasRepresentation<VolumeDisk>()) {
         const VolumeDisk* volumeDisk = handle->getRepresentation<VolumeDisk>();

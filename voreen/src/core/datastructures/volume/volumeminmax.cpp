@@ -81,8 +81,8 @@ VolumeDerivedData* VolumeMinMax::createFrom(const VolumeBase* handle) const {
         float minNorm = 0.f;
         float maxNorm = 0.f;
         if (handle->hasRepresentation<VolumeRAM>()) {
-            const VolumeRAM* v = handle->getRepresentation<VolumeRAM>();
-            tgtAssert(v, "no volume");
+            VolumeRAMRepresentationLock v(handle);
+            tgtAssert(*v, "no volume");
 
             minNorm = v->minNormalizedValue(i);
             maxNorm = v->maxNormalizedValue(i);

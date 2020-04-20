@@ -23,10 +23,10 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "voreen/core/datastructures/volume/volumederiveddata.h"
-
 #ifndef VRN_VOLUMEDERIVEDDATATHREAD_H
 #define VRN_VOLUMEDERIVEDDATATHREAD_H
+
+#include "voreen/core/datastructures/volume/volumederiveddata.h"
 
 namespace voreen {
 

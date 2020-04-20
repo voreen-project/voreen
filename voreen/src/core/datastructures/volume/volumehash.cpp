@@ -56,8 +56,8 @@ VolumeDerivedData* VolumeHash::createFrom(const VolumeBase* handle) const {
         return new VolumeHash(handle->getRepresentation<VolumeDisk>()->getHash());
     }
     else if (handle->hasRepresentation<VolumeRAM>()) { //< do not load volume into ram for hashing
-        const VolumeRAM* v = handle->getRepresentation<VolumeRAM>();
-        tgtAssert(v, "no volume");
+        VolumeRAMRepresentationLock v(handle);
+        tgtAssert(*v, "no volume");
 
         size_t s = v->getNumVoxels() * v->getBytesPerVoxel();
 

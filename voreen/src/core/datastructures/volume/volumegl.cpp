@@ -28,6 +28,7 @@
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
 #include "voreen/core/datastructures/volume/volumeoperator.h"
+#include "tgt/glcontextmanager.h"
 #include "tgt/gpucapabilities.h"
 
 #include <algorithm>
@@ -439,11 +440,17 @@ size_t VolumeGL::getBytesPerVoxel() const {
 //--------------------------------------------------------
 
 bool RepresentationConverterUploadGL::canConvert(const VolumeRepresentation* source) const {
-    //We can only convert from RAM volumes:
-    if (dynamic_cast<const VolumeRAM*>(source))
-        return true;
-    else
+    // We can only convert from RAM volumes.
+    if (!dynamic_cast<const VolumeRAM*>(source) )
         return false;
+
+    // Test if a valid context is active.
+    // TODO: ideally, we want to perform the conversion anyways.
+    //       For that, we'd need it to be executed in the opengl/main thread the moment it's requested.
+    if (tgt::GLContextManager::isInited() && !GLContextMgr.hasActiveContext())
+        return false;
+
+    return true;
 }
 
 VolumeRepresentation* RepresentationConverterUploadGL::convert(const VolumeRepresentation* source) const {
@@ -472,11 +479,17 @@ VolumeRepresentation* RepresentationConverterUploadGL::convert(const VolumeRepre
 //--------------------------------------------------------
 
 bool RepresentationConverterDownloadGL::canConvert(const VolumeRepresentation* source) const {
-    //We can only convert from GL volumes:
-    if(dynamic_cast<const VolumeGL*>(source))
-        return true;
-    else
+    // We can only convert from RAM volumes.
+    if (!dynamic_cast<const VolumeRAM*>(source) )
         return false;
+
+    // Test if a valid context is active.
+    // TODO: ideally, we want to perform the conversion anyways.
+    //       For that, we'd need it to be executed in the opengl/main thread the moment it's requested.
+    if (tgt::GLContextManager::isInited() && !GLContextMgr.hasActiveContext())
+        return false;
+
+    return true;
 }
 
 VolumeRepresentation* RepresentationConverterDownloadGL::convert(const VolumeRepresentation* source) const {
