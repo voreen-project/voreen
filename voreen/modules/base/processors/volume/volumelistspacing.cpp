@@ -45,9 +45,9 @@ VolumeListSpacing::VolumeListSpacing()
     , reset_("reset", "Reset Spacing")
     , currentlySelected_("currentlySelected", "Currently Displayed Volume", 0, 0, std::numeric_limits<int>::max(), Processor::VALID, NumericProperty<int>::DYNAMIC)
     , spacingDisplay_("spacingDisplay", "Resulting Spacing (mm)", tgt::vec3(1.0f), tgt::vec3(0.0f), tgt::vec3(1000.f), Processor::VALID)
-    , currentVolumeList_(0)
 {
     addPort(inport_);
+    inport_.Observable<PortObserver>::addObserver(this);
     addPort(outport_);
 
     enableProcessing_.onChange(MemberFunctionCallback<VolumeListSpacing>(this, &VolumeListSpacing::adjustPropertyVisibility));
@@ -101,15 +101,13 @@ void VolumeListSpacing::initialize() {
 }
 
 void VolumeListSpacing::deinitialize() {
-    outport_.clear();
-    clearVolumeList();
+    clearOutput();
     VolumeProcessor::deinitialize();
 }
 
 void VolumeListSpacing::process() {
     // clear the old data
-    outport_.clear();
-    clearVolumeList();
+    clearOutput();
 
     // get input data
     const VolumeList* inputList = inport_.getData();
@@ -124,11 +122,12 @@ void VolumeListSpacing::process() {
     // process the list
     VolumeList* outputList = new VolumeList();
     tgt::vec3 spacing(spacingX_.get(), spacingY_.get(), spacingZ_.get());
+    bool scale = mode_.isSelected("scale");
 
     for (size_t i = 0; i < inputList->size(); ++i) {
         const VolumeBase* inputVolume = inputList->at(i);
         tgt::vec3 tmpSpacing = spacing;
-        if (mode_.isSelected("scale"))
+        if (scale)
             tmpSpacing *= inputVolume->getSpacing();
         VolumeBase* outputVolume =
             new VolumeDecoratorReplaceSpacing(inputVolume, spacing);
@@ -137,17 +136,15 @@ void VolumeListSpacing::process() {
 
         decorators_.push_back(std::unique_ptr<VolumeBase>(outputVolume));
     }
-    currentVolumeList_ = outputList;
-    outport_.setData(outputList, false);
+    outport_.setData(outputList, true);
 
     // update the spacing display
     updateCurrentlySelected();
 }
 
-void VolumeListSpacing::clearVolumeList() {
-    // delete the list
-    delete currentVolumeList_;
-    currentVolumeList_ = nullptr;
+void VolumeListSpacing::clearOutput() {
+    // Clear old port first.
+    outport_.clear();
     decorators_.clear();
 }
 
@@ -221,6 +218,10 @@ void VolumeListSpacing::adjustPropertyVisibility() {
     spacingY_.setReadOnlyFlag(!enabled);
     spacingZ_.setReadOnlyFlag(!enabled);
     reset_.setReadOnlyFlag(!enabled);
+}
+
+void VolumeListSpacing::dataWillChange(const Port* source) {
+    clearOutput();
 }
 
 }   // namespace

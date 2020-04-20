@@ -38,7 +38,7 @@ namespace voreen {
 
 class Volume;
 
-class VRN_CORE_API VolumeListSpacing : public VolumeProcessor {
+class VRN_CORE_API VolumeListSpacing : public VolumeProcessor, public PortObserver {
 public:
     VolumeListSpacing();
     virtual Processor* create() const;
@@ -63,7 +63,12 @@ protected:
 
     virtual void updateCurrentlySelected();
 
-    virtual void clearVolumeList();
+    virtual void clearOutput();
+
+    virtual void afterConnectionAdded(const Port* source, const Port* connectedPort) {}
+    virtual void beforeConnectionRemoved(const Port* source, const Port*) {}
+    virtual void dataWillChange(const Port* source);
+    //virtual void dataHasChanged(const Port* source) {};
 
 private:
     void spacingChanged(int dim);
@@ -86,7 +91,6 @@ private:
     IntProperty currentlySelected_;
     FloatVec3Property spacingDisplay_;
 
-    VolumeList* currentVolumeList_;
     std::vector<std::unique_ptr<VolumeBase>> decorators_;
 
     static const std::string loggerCat_; ///< category used in logging
