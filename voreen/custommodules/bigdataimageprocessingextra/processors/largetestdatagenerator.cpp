@@ -405,7 +405,7 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
     float remainingVolume = volumeToFill;
 
 
-    tgt::Bounds volumeBounds(tgt::vec3::zero, tgt::vec3(dim - tgt::svec3::one));
+    tgt::Bounds volumeBounds(tgt::vec3(-0.5), tgt::vec3(dim) - tgt::vec3(0.5));
 
     struct BranchSeed {
         tgt::vec3 begin;
@@ -551,10 +551,11 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
     }
     auto& cylinderHierarchy = *maybecylinderHierarchy;
 
-    auto invalid = [&] (const tgt::ivec3& p) {
+    auto invalid = [&] (const tgt::vec3& p) {
         if(!volumeBounds.containsPoint(p)) {
             return true;
         }
+        tgt::ivec3 pi = tgt::round(p);
         {
             auto indices = ballHierarchy.findBounds(p);
             for(auto i : indices) {
