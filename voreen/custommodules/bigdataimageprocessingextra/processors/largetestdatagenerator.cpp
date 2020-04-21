@@ -827,8 +827,6 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
             tgtAssert(z == cylinderIt.currentPos(), "IntervalWalker pos mismatch");
         }
 
-        intervalWalkerMutex.unlock();
-
         IntervalWalker<int, size_t> ballWalker(0, std::move(ballIntervals));
         IntervalWalker<int, size_t> cylinderWalker(0, std::move(cylinderIntervals));
 
