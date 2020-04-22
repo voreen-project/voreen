@@ -67,7 +67,7 @@ LargeTestDataGenerator::LargeTestDataGenerator()
     , outputVolumeNoisyFilePath_("outputVolumeFilePath", "Volume Noisy Output", "Path", "", "HDF5 (*.h5)", FileDialogProperty::SAVE_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , outputVolumeGTFilePath_("outputVolumeFilePathgt", "GT Volume Output", "Path", "", "HDF5 (*.h5)", FileDialogProperty::SAVE_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , scenario_("scenario", "Test Data Scenario")
-    , retainLabel_("retainLabel", "Retain a background label from the output", false)
+    , retainLabel_("retainLabel", "Retain a foreground label from the output", false)
 {
     addPort(outportNoisy_);
     addPort(outportGT_);
@@ -902,9 +902,11 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
     if(input.retainLabel) {
         int tries = 100;
         bool retained = false;
-        std::uniform_int_distribution<uint64_t> indexDistr(0, backgroundLabels.size());
+        auto& labels = foregroundLabels;
+        std::uniform_int_distribution<uint64_t> indexDistr(0, labels.size());
         while(tries > 0) {
-            auto& segment = backgroundLabels.at(indexDistr(input.randomEngine));
+            uint64_t index = indexDistr(input.randomEngine);
+            auto& segment = labels.at(index);
             if(!segment.empty()) {
                 segment.pop_back();
                 break;
