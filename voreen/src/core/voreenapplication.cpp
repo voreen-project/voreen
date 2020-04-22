@@ -234,8 +234,7 @@ VoreenApplication::VoreenApplication(const std::string& binaryName, const std::s
     , deleteCache_("deleteCache", "Delete Cache", Processor::INVALID_RESULT, Property::LOD_APPLICATION)
     , determineCpuRamLimitAutomatically_("automaticRamLimit", "Determine Volume CPU RAM Limit automatically (recommended)", true)
     // set maximum to 128 GB minus some overhead (operating system, other Voreen stuff etc.)
-    , cpuRamLimit_("cpuRamLimit", "Volume CPU RAM Limit (MB)", 4000, std::min(1000, static_cast<int>(MemoryInfo::getTotalPhysicalMemory() / (1024 * 1024))),
-            MemoryInfo::getTotalPhysicalMemory() ? (static_cast<int>(MemoryInfo::getTotalPhysicalMemory() / (1024 * 1024))) : 120000, Processor::INVALID_RESULT, NumericProperty<int>::STATIC, Property::LOD_APPLICATION)
+    , cpuRamLimit_("cpuRamLimit", "Volume CPU RAM Limit (MB)", 1000, 1000, 4000, Processor::INVALID_RESULT, NumericProperty<int>::STATIC, Property::LOD_APPLICATION)
     , determineGpuMemoryLimitAutomatically_("automaticGpuMemoryLimit", "Determine Volume GPU Texture Memory Limit automatically (recommended)", true)
     , gpuMemoryLimit_("gpuMemoryLimit", "Volume GPU Texture Memory Limit (MB)", 1000, 100, 4000,
             Processor::INVALID_RESULT, NumericProperty<int>::DYNAMIC, Property::LOD_APPLICATION)
@@ -311,7 +310,11 @@ VoreenApplication::VoreenApplication(const std::string& binaryName, const std::s
 
     // CPU RAM properties
     uint64_t memSize = MemoryInfo::getTotalPhysicalMemory() / (1024 * 1024);
-    if (!memSize) {
+    if (memSize) {
+        cpuRamLimit_.setMaxValue(memSize);
+        cpuRamLimit_.set(memSize / 2);
+    }
+    else {
         // could not determine RAM size -> cannot be set automatically
         determineCpuRamLimitAutomatically_.set(false);
         determineCpuRamLimitAutomatically_.setReadOnlyFlag(true);
