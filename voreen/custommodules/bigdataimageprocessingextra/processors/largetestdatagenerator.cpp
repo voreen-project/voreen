@@ -900,15 +900,19 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
     }
 
     if(input.retainLabel) {
+        int tries = 100;
         bool retained = false;
-        for(auto& segment : backgroundLabels) {
+        std::uniform_int_distribution<uint64_t> indexDistr(0, backgroundLabels.size());
+        while(tries > 0) {
+            auto& segment = backgroundLabels.at(indexDistr(input.randomEngine));
             if(!segment.empty()) {
                 segment.pop_back();
-                retained = true;
                 break;
+            } else {
+                --tries;
             }
         }
-        if(!retained) {
+        if(tries == 0) {
             LWARNING("Failed to retain a background label!");
         }
     }
