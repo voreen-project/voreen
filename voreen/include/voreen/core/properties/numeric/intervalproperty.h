@@ -171,7 +171,7 @@ class FloatIntervalProperty :public IntervalProperty<float>{
 public:
     FloatIntervalProperty(const std::string& id, const std::string& guiText,
         float value = 0, float minValue = 0, float maxValue = 100,
-        float minRange=0, float maxRange=INT_MAX, int invalidationLevel=Processor::INVALID_RESULT,
+        float minRange=0, float maxRange=FLT_MAX, int invalidationLevel=Processor::INVALID_RESULT,
         Property::LevelOfDetail lod = Property::LOD_DEFAULT)
         :IntervalProperty<float>(id, guiText, value, minValue, maxValue,
                           minRange, maxRange, invalidationLevel, lod){
@@ -179,7 +179,7 @@ public:
     }
     FloatIntervalProperty(const std::string& id, const std::string& guiText,
         tgt::Vector2<float>  value, float minValue = 0, float maxValue = 100,
-        float minRange=0, float maxRange=INT_MAX, int invalidationLevel=Processor::INVALID_RESULT,
+        float minRange=0, float maxRange=FLT_MAX, int invalidationLevel=Processor::INVALID_RESULT,
         Property::LevelOfDetail lod = Property::LOD_DEFAULT)
         :IntervalProperty<float>(id, guiText, value, minValue, maxValue,
                           minRange, maxRange, invalidationLevel, lod){
