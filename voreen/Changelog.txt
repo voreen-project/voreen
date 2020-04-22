@@ -7,6 +7,7 @@ Voreen Changelog
     * Features:
       o Add PathlineCreator which takes a vector field time series as input
       o Add Gradient and Vorticity to VolumeFilterList
+      o Add id sorting of components created by ConnectedComponentAnalysis
 
     * Framework/API Changes:
       o VolumeHalfSample: The output dimensions are now always rounded up if the input dimensions are not divisible by 2. This change was made in order unify the behaviour with octree downsampling
@@ -18,6 +19,9 @@ Voreen Changelog
       o Fix install target for some Linux distributions by setting RPATH explicitly
       o Fix simple-glut and simple-qt demo applications
       o Fix crash in DICOM reader
+      o Fix crash on startup when system has detected less than 4000MB
+      o Fix crash when OpenGL vendor string couldn't be detected (e.g. on some virtual machines)
+      o Fix splitter double-click event forwarding
 
 2020-01-17: Voreen 5.1.1
 ------------------------

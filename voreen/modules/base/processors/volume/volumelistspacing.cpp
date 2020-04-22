@@ -91,6 +91,12 @@ VolumeListSpacing::VolumeListSpacing()
     currentlySelected_.onChange(MemberFunctionCallback<VolumeListSpacing>(this, &VolumeListSpacing::updateCurrentlySelected));
 }
 
+VolumeListSpacing::~VolumeListSpacing() {
+    // We need to remove the observer, since outport is destructed before inport (stack hierarchy)
+    // and the destruction of inport will clear the (already destructed) outport otherwise.
+    inport_.Observable<PortObserver>::removeObserver(this);
+}
+
 Processor* VolumeListSpacing::create() const {
     return new VolumeListSpacing();
 }
@@ -143,7 +149,6 @@ void VolumeListSpacing::process() {
 }
 
 void VolumeListSpacing::clearOutput() {
-    // Clear old port first.
     outport_.clear();
     decorators_.clear();
 }

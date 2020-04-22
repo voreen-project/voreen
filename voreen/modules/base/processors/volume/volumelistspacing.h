@@ -41,6 +41,7 @@ class Volume;
 class VRN_CORE_API VolumeListSpacing : public VolumeProcessor, public PortObserver {
 public:
     VolumeListSpacing();
+    virtual ~VolumeListSpacing();
     virtual Processor* create() const;
 
     virtual std::string getCategory() const   { return "Volume Processing"; }
