@@ -72,7 +72,7 @@ std::unique_ptr<VolumeRAM> MorphologyFilter::getFilteredSlice(const CachingSlice
     default:
         tgtAssert(false, "Unimplemented morphology shape");
     }
-    
+
     return nullptr;
 }
 
@@ -86,7 +86,6 @@ MorphologyOperatorShape MorphologyFilter::getMorphologyOperatorShape() const {
 std::unique_ptr<VolumeRAM> MorphologyFilter::getFilteredSliceCubeMorphology(const CachingSliceReader* src, int z) const {
 
     const tgt::ivec3& dim = src->getSignedDimensions();
-    tgt::ivec3 halfKernelDim = extent_ / 2;
     std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(sliceBaseType_, tgt::svec3(dim.xy(), 1)));
     std::unique_ptr<VolumeRAM> srcSlice(VolumeFactory().create(sliceBaseType_, tgt::svec3(dim.xy(), 1)));
 
@@ -99,7 +98,7 @@ std::unique_ptr<VolumeRAM> MorphologyFilter::getFilteredSliceCubeMorphology(cons
     for (int y = 0; y < dim.y; ++y) {
         for (int x = 0; x < dim.x; ++x) {
             float value = samplingStrategy_.sample(tgt::ivec3(x, y, z), dim, getValueFromReader);
-            for (int dz = -halfKernelDim.z; dz <= halfKernelDim.z; ++dz) {
+            for (int dz = -extent_.z; dz <= extent_.z; ++dz) {
                value = morphFunc_(value, samplingStrategy_.sample(tgt::ivec3(x, y, z + dz), dim, getValueFromReader));
             }
             outputSlice->setVoxelNormalized(value, tgt::svec3(x, y, 0));
@@ -118,7 +117,7 @@ std::unique_ptr<VolumeRAM> MorphologyFilter::getFilteredSliceCubeMorphology(cons
     for (int y = 0; y < dim.y; ++y) {
         for (int x = 0; x < dim.x; ++x) {
             float value = samplingStrategy_.sample(tgt::ivec3(x, y, 0), dim, getValueFromSrcSlice);
-            for (int dy = -halfKernelDim.y; dy <= halfKernelDim.y; ++dy) {
+            for (int dy = -extent_.y; dy <= extent_.y; ++dy) {
                 value = morphFunc_(value, samplingStrategy_.sample(tgt::ivec3(x, y + dy, 0), dim /* wrong in z, but doesn't matter */, getValueFromSrcSlice));
             }
             outputSlice->setVoxelNormalized(value, tgt::svec3(x, y, 0));
@@ -133,7 +132,7 @@ std::unique_ptr<VolumeRAM> MorphologyFilter::getFilteredSliceCubeMorphology(cons
     for (int y = 0; y < dim.y; ++y) {
         for (int x = 0; x < dim.x; ++x) {
             float value = samplingStrategy_.sample(tgt::ivec3(x, y, 0), dim, getValueFromSrcSlice);
-            for (int dx = -halfKernelDim.x; dx <= halfKernelDim.x; ++dx) {
+            for (int dx = -extent_.x; dx <= extent_.x; ++dx) {
                 value = morphFunc_(value, samplingStrategy_.sample(tgt::ivec3(x+dx, y, 0), dim, getValueFromSrcSlice));
             }
             outputSlice->setVoxelNormalized(value, tgt::svec3(x, y, 0));
@@ -143,10 +142,9 @@ std::unique_ptr<VolumeRAM> MorphologyFilter::getFilteredSliceCubeMorphology(cons
 }
 
 std::unique_ptr<VolumeRAM> MorphologyFilter::getFilteredSliceSphereMorphology(const CachingSliceReader* src, int z) const {
-    
+
     const tgt::ivec3& dim = src->getSignedDimensions();
-    tgt::ivec3 halfKernelDim = extent_ / 2;
-    tgt::vec3 kernelRadiusSq = halfKernelDim*halfKernelDim;
+    tgt::vec3 extentSq = extent_*extent_;
     std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(sliceBaseType_, tgt::svec3(dim.xy(), 1)));
 
     SamplingStrategy<float>::Sampler getValueFromReader = [src](const tgt::ivec3& p) {
@@ -157,20 +155,19 @@ std::unique_ptr<VolumeRAM> MorphologyFilter::getFilteredSliceSphereMorphology(co
     for (int y = 0; y < dim.y; ++y) {
         for (int x = 0; x < dim.x; ++x) {
             float value = samplingStrategy_.sample(tgt::ivec3(x, y, z), dim, getValueFromReader);
-            for (int nz = z-halfKernelDim.z; nz <= z+halfKernelDim.z; nz++) {
-                for (int ny = y - halfKernelDim.z; ny <= y + halfKernelDim.y; ny++) {
-                    for (int nx = x - halfKernelDim.x; nx <= x + halfKernelDim.x; nx++) {
+            for (int dz = -extent_.z; dz <= extentSq.z; ++dz) {
+                float dz2rel = extent_.z ? dz*dz/extent_.z : 0.0f;
+                for (int dy = -extent_.y; dy <= extent_.y; ++dy) {
+                    float dy2rel = extent_.y ? dy*dy/extentSq.y : 0.0f;
+                    for (int dx = -extent_.x; dx <= extent_.x; ++dx) {
+                        float dx2rel = extent_.x ? dx*dx/extentSq.x : 0.0f;
 
-                        float dx = nx - x;
-                        float dy = ny - y;
-                        float dz = nz - z;
-
-                        float d = dx*dx / kernelRadiusSq.x + dy*dy / kernelRadiusSq.y + dz*dz / kernelRadiusSq.z;
+                        float d = dx2rel + dy2rel + dz2rel;
                         if(d > 1.0f) {
                             continue;
                         }
 
-                        value = morphFunc_(value, samplingStrategy_.sample(tgt::ivec3(nx, ny, nz), dim, getValueFromReader));
+                        value = morphFunc_(value, samplingStrategy_.sample(tgt::ivec3(x+dx, y+dy, z+dz), dim, getValueFromReader));
                     }
                 }
             }
