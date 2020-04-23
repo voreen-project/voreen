@@ -98,6 +98,10 @@ protected:
                 "Clicking on one of them allows to configure the filter's settings."
                 "<br><br>"
                 "Note that the order of application is from top to bottom!"
+                "<br><br>"
+                "<b>Extent:</b> Some filters have <i>extent</i>-Properties which are used to calculate, but in themselves distinct from kernel sizes. "
+                "The extent describes many voxels a kernel extends from the central voxel in either direction. "
+                "In other words: <i>kernel_size</i> = 2 * <i>extent</i> + 1"
         );
     }
 
