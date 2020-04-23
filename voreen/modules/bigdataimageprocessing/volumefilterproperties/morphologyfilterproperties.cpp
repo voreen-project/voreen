@@ -28,9 +28,9 @@
 namespace voreen {
 
 MorphologyFilterProperties::MorphologyFilterProperties()
-    : extentX_(getId("extentx"), "Extent X", 1, 1, 100)
-    , extentY_(getId("extenty"), "Extent Y", 1, 1, 100)
-    , extentZ_(getId("extentz"), "Extent Z", 1, 1, 100)
+    : extentX_(getId("extentx"), "Extent X", 1, 0, 100)
+    , extentY_(getId("extenty"), "Extent Y", 1, 0, 100)
+    , extentZ_(getId("extentz"), "Extent Z", 1, 0, 100)
     , morphologyOperatorType_(getId("morphologyOperatorType"), "Operator Type", Processor::INVALID_RESULT)
     , morphologyOperatorShape_(getId("morphologyOperatorShape"), "Operator Shape", Processor::INVALID_RESULT)
     , samplingStrategyType_(getId("samplingStrategyType"), "Sampling Strategy", Processor::INVALID_RESULT)

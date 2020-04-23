@@ -35,7 +35,7 @@ tgt::ivec3 GaussianFilter::suitableExtent(const tgt::vec3& standardDeviation) {
 }
 
 float GaussianFilter::suitableStandardDeviation(int extent) {
-    tgtAssert(extent > 0, "invalid extent");
+    tgtAssert(extent >= 0, "invalid extent");
     // Chosen similar to VolumeFiltering
     return (extent+0.5f)/2.5f;
 }
@@ -111,7 +111,7 @@ GaussianFilter::GaussianFilter(const tgt::vec3& standardDeviation, const tgt::iv
     , numChannels_(numChannels)
 {
     tgtAssert(tgt::hand(tgt::greaterThan(standardDeviation, tgt::vec3::zero)), "invalid standardDeviation");
-    tgtAssert(tgt::hand(tgt::greaterThan(extent, tgt::ivec3::zero)), "invalid extent");
+    tgtAssert(tgt::hand(tgt::greaterThanEqual(extent, tgt::ivec3::zero)), "invalid extent");
 }
 
 GaussianFilter::~GaussianFilter()

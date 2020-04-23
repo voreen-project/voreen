@@ -28,9 +28,9 @@
 namespace voreen {
 
 MedianFilterProperties::MedianFilterProperties()
-    : extentX_(getId("extentx"), "Extent X", 1, 1, 100)
-    , extentY_(getId("extenty"), "Extent Y", 1, 1, 100)
-    , extentZ_(getId("extentz"), "Extent Z", 1, 1, 100)
+    : extentX_(getId("extentx"), "Extent X", 1, 0, 100)
+    , extentY_(getId("extenty"), "Extent Y", 1, 0, 100)
+    , extentZ_(getId("extentz"), "Extent Z", 1, 0, 100)
     , samplingStrategyType_(getId("samplingStrategyType"), "Sampling Strategy", Processor::INVALID_RESULT)
     , outsideVolumeValue_(getId("outsideVolumeValue"), "Outside Volume Value", 0, 0, 1, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
 {
