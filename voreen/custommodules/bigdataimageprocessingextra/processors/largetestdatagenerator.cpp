@@ -578,7 +578,6 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
 
     int max_tries = 10;
     int tries = max_tries;
-    std::uniform_int_distribution<> indexDistr(0, balls.size());
     size_t numElements = cylinders.size();
     for(int i=0; i<numElements && tries > 0;) {
         progressSteps.get<1>().setProgress(static_cast<float>(i)/numElements);
@@ -903,7 +902,7 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
         int tries = 100;
         bool retained = false;
         auto& labels = foregroundLabels;
-        std::uniform_int_distribution<uint64_t> indexDistr(0, labels.size());
+        std::uniform_int_distribution<uint64_t> indexDistr(0, labels.size()-1);
         while(tries > 0) {
             uint64_t index = indexDistr(input.randomEngine);
             auto& segment = labels.at(index);
