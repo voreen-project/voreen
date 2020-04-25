@@ -384,18 +384,35 @@ void FlowSimulation::prepareGeometry( UnitConverter<T,DESCRIPTOR> const& convert
     const std::vector<FlowIndicator>& flowIndicators = parametrizationList.getFlowIndicators();
     for (size_t i = 0; i < flowIndicators.size(); i++) {
 
-        const tgt::vec3& center = flowIndicators[i].center_;
-        const tgt::vec3& normal = flowIndicators[i].normal_;
-        T radius = flowIndicators[i].radius_ + converter.getConversionFactorLength(); // Add one voxel to account for rounding errors.
+        tgt::Vector3<T> normal = flowIndicators[i].normal_;
+
+        // Convert to SI units.
+        tgt::Vector3<T> center = flowIndicators[i].center_;
+        center *= VOREEN_LENGTH_TO_SI;
+
+        // Add one voxel to account for rounding errors.
+        T radius = flowIndicators[i].radius_ * VOREEN_LENGTH_TO_SI + converter.getConversionFactorLength();
 
         // Define a local disk volume.
-        IndicatorCircle3D<T> flow(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
-                                  normal[0], normal[1], normal[2], radius*VOREEN_LENGTH_TO_SI);
-        IndicatorCylinder3D<T> layerFlow(flow, 2. * converter.getConversionFactorLength());
+        IndicatorCircle3D<T> flow(center[0], center[1], center[2],
+                                  normal[0], normal[1], normal[2],
+                                  radius);
+        IndicatorCylinder3D<T> layerFlow(flow, 2 * converter.getConversionFactorLength());
 
         // Rename both, wall and fluid, since the indicator might also be inside the fluid domain.
         superGeometry.rename(MAT_WALL, flowIndicators[i].id_, MAT_FLUID, layerFlow);
         superGeometry.rename(MAT_FLUID, flowIndicators[i].id_,  layerFlow);
+
+        // Exclude area behind inlet - it will otherwise cause instable simulations.
+        if(flowIndicators[i].type_ == FIT_VELOCITY) {
+            center -= normal * (converter.getConversionFactorLength() * 2);
+            radius *= 1.2;
+            IndicatorCircle3D<T> capFlow(center[0], center[1], center[2],
+                                         normal[0], normal[1], normal[2],
+                                         radius);
+            IndicatorCylinder3D<T> layerCapFlow(capFlow, 2 * converter.getConversionFactorLength());
+            superGeometry.rename(MAT_FLUID, MAT_WALL, layerCapFlow);
+        }
     }
 
     // Removes all not needed boundary voxels outside the surface
@@ -515,7 +532,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
             // Create shortcuts.
             const tgt::vec3& center = indicator.center_;
             const tgt::vec3& normal = indicator.normal_;
-            T radius = indicator.radius_ + converter.getConversionFactorLength(); // Add one voxel to account for rounding errors.
+            T radius = indicator.radius_ * VOREEN_LENGTH_TO_SI;
 
             // Apply the indicator's profile.
             switch(indicator.flowProfile_) {
@@ -523,7 +540,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
             {
 //                CirclePoiseuille3D<T> profile(superGeometry, indicator.id_, targetLatticeVelocity); // This is the alternative way, but how does it work?
                 CirclePoiseuille3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
-                                              normal[0], normal[1], normal[2], radius * VOREEN_LENGTH_TO_SI, targetLatticeVelocity);
+                                              normal[0], normal[1], normal[2], radius, targetLatticeVelocity);
                 applyFlowProfile(profile);
                 break;
             }
@@ -531,7 +548,7 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
             {
                 T n = 1.03 * std::log(converter.getReynoldsNumber()) - 3.6; // Taken from OLB documentation.
                 CirclePowerLawTurbulent3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
-                                                     normal[0], normal[1], normal[2], radius * VOREEN_LENGTH_TO_SI, targetLatticeVelocity, n);
+                                                     normal[0], normal[1], normal[2], radius, targetLatticeVelocity, n);
                 applyFlowProfile(profile);
                 break;
             }

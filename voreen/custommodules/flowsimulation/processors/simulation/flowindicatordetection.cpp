@@ -63,6 +63,7 @@ FlowIndicatorDetection::FlowIndicatorSettings::FlowIndicatorSettings(VGNodeID no
     , velocityCurveDuration_(0.25f)
     , targetVelocity_(0.0f)
     , velocityCurveFile_()
+    , velocityCurvePeriodic_(false)
 {
 }
 
@@ -76,6 +77,7 @@ void FlowIndicatorDetection::FlowIndicatorSettings::serialize(Serializer& s) con
     s.serialize("velocityCurveDuration", velocityCurveDuration_);
     s.serialize("targetVelocity", targetVelocity_);
     s.serialize("velocityCurveFile", velocityCurveFile_);
+    s.serialize("velocityCurvePeriodic", velocityCurvePeriodic_);
 }
 
 void FlowIndicatorDetection::FlowIndicatorSettings::deserialize(Deserializer& s) {
@@ -92,6 +94,7 @@ void FlowIndicatorDetection::FlowIndicatorSettings::deserialize(Deserializer& s)
     s.deserialize("velocityCurveDuration", velocityCurveDuration_);
     s.deserialize("targetVelocity", targetVelocity_);
     s.deserialize("velocityCurveFile", velocityCurveFile_);
+    s.deserialize("velocityCurvePeriodic", velocityCurvePeriodic_);
 }
 
 
@@ -116,7 +119,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , flowProfile_("flowProfile", "Flow Profile")
     , velocityCurveType_("velocityCurveType", "Velocity Curve Type")
     , velocityCurveDuration_("velocityCurveDuration", "Velocity Curve Duration (s)", 0.0f, 0.0f, 20.0f)
-    , targetVelocity_("targetVelocity", "Target Velocity (mm/s)", 0.0f, 0.0f, 1000.0f)
+    , targetVelocity_("targetVelocity", "Target Velocity (mm/s)", 0.0f, 0.0f, 10000.0f)
     , velocityCurveFile_("velocityCurveFile", "Velocity Curve File", "Velocity Curve File", "", "*.csv", FileDialogProperty::OPEN_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT, FileDialogProperty::ALWAYS_OFF)
     , velocityCurvePeriodicity_("velocityCurvePeriodicity", "Repeat Velocity Curve periodically", false)
     , triggertBySelection_(false)
@@ -308,7 +311,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
         velocityCurveDuration_.set(settings.velocityCurveDuration_);
         targetVelocity_.set(settings.targetVelocity_);
         velocityCurveFile_.set(settings.velocityCurveFile_);
-        velocityCurvePeriodicity_.set(indicator.velocityCurve_.isPeriodic());
+        velocityCurvePeriodicity_.set(settings.velocityCurvePeriodic_);
 
         triggertBySelection_ = false;
     }
@@ -356,6 +359,7 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
         settings.velocityCurveDuration_ = velocityCurveDuration_.get();
         settings.targetVelocity_ = targetVelocity_.get();
         settings.velocityCurveFile_ = velocityCurveFile_.get();
+        settings.velocityCurvePeriodic_ = velocityCurvePeriodicity_.get();
 
         if(needReinitialization) {
             FlowIndicatorType type = indicator.type_;
@@ -365,36 +369,6 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
             // Restore config.
             indicator.type_ = type;
             indicator.id_ = id;
-        }
-        else {
-            if(indicator.type_ == FIT_VELOCITY) {
-                if (settings.velocityCurveType_ == "constant") {
-                    indicator.velocityCurve_ = VelocityCurve::createConstantCurve(settings.targetVelocity_);
-                } else if (settings.velocityCurveType_ == "linear") {
-                    indicator.velocityCurve_ = VelocityCurve::createLinearCurve(settings.velocityCurveDuration_,
-                                                                                settings.targetVelocity_);
-                } else if (settings.velocityCurveType_ == "sinus") {
-                    indicator.velocityCurve_ = VelocityCurve::createSinusoidalCurve(settings.velocityCurveDuration_,
-                                                                                    settings.targetVelocity_);
-                } else if (settings.velocityCurveType_ == "heartBeat") {
-                    indicator.velocityCurve_ = VelocityCurve::createHumanHeartBeat();
-                } else if (settings.velocityCurveType_ == "custom") {
-                    if(!settings.velocityCurveFile_.empty()) {
-                        try {
-                            indicator.velocityCurve_ = VelocityCurve::createFromCSV(settings.velocityCurveFile_);
-                        }
-                        catch (VoreenException &e) {
-                            VoreenApplication::app()->showMessageBox("Failed loading Curve", e.what());
-                            settings.velocityCurveFile_.clear();
-                        }
-                    }
-                } else {
-                    tgtAssert(false, "Unhandled velocity curve");
-                    indicator.velocityCurve_ = VelocityCurve();
-                }
-            }
-
-            indicator.velocityCurve_.setPeriodic(velocityCurvePeriodicity_.get());
         }
 
         // Update UI.
@@ -458,6 +432,39 @@ FlowIndicatorType FlowIndicatorDetection::estimateType(const FlowIndicator& indi
     return FlowIndicatorType::FIT_CANDIDATE;
 }
 
+VelocityCurve FlowIndicatorDetection::createCurveFromSettings(FlowIndicatorSettings& settings) {
+    VelocityCurve velocityCurve;
+
+    if (settings.velocityCurveType_ == "constant") {
+        velocityCurve = VelocityCurve::createConstantCurve(settings.targetVelocity_);
+    } else if (settings.velocityCurveType_ == "linear") {
+        velocityCurve = VelocityCurve::createLinearCurve(settings.velocityCurveDuration_,
+                                                                    settings.targetVelocity_);
+    } else if (settings.velocityCurveType_ == "sinus") {
+        velocityCurve = VelocityCurve::createSinusoidalCurve(settings.velocityCurveDuration_,
+                                                                        settings.targetVelocity_);
+    } else if (settings.velocityCurveType_ == "heartBeat") {
+        velocityCurve = VelocityCurve::createHumanHeartBeat();
+    } else if (settings.velocityCurveType_ == "custom") {
+        if(!settings.velocityCurveFile_.empty()) {
+            try {
+                velocityCurve = VelocityCurve::createFromCSV(settings.velocityCurveFile_);
+            }
+            catch (VoreenException& e) {
+                VoreenApplication::app()->showMessageBox("Failed loading Curve", e.what());
+                settings.velocityCurveFile_.clear();
+            }
+        }
+    } else {
+        tgtAssert(false, "Unhandled velocity curve");
+        return velocityCurve;
+    }
+
+    velocityCurve.setPeriodic(settings.velocityCurvePeriodic_);
+
+    return velocityCurve;
+}
+
 void FlowIndicatorDetection::onCloneFlowIndicator() {
     size_t indicatorIdx = static_cast<size_t>(flowIndicatorTable_.getSelectedRowIndex());
     if(flowIndicatorTable_.getNumRows() > 0 && indicatorIdx < flowIndicators_.size()) {
@@ -513,7 +520,7 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
     // Calculate average radius.
     float radius = 0.0f;
     for (size_t i = frontIdx; i <= backIdx; i++) {
-        radius += edge.getVoxels().at(index(i)).avgDistToSurface_;
+        radius += edge.getVoxels().at(index(i)).maxDistToSurface_; // Take max, not avg - Better safe than sorry.
     }
     radius /= (backIdx - frontIdx + 1);
 
@@ -560,10 +567,13 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
         indicator.normal_ *= -1.0f;
     }
 
-    // Estimate velocity and type.
+    // Estimate velocity(direction) and therefore type.
     tgt::vec3 velocity = utils::sampleDisk(volumePort_.getData(), indicator.center_, indicator.normal_, indicator.radius_);
     indicator.type_ = estimateType(indicator, velocity);
+
+    // Setup velocity curve.
     settings.targetVelocity_ = tgt::length(velocity);
+    indicator.velocityCurve_ = createCurveFromSettings(settings);
 
     return indicator;
 }
@@ -594,9 +604,8 @@ void FlowIndicatorDetection::buildTable() {
         flowIndicatorTable_.addRow(row);
     }
 
-    if(selectedIndex < static_cast<int>(flowIndicatorTable_.getNumRows())) {
-        flowIndicatorTable_.setSelectedRowIndex(selectedIndex);
-    }
+    selectedIndex = std::min(selectedIndex, flowIndicatorTable_.getNumRows()-1);
+    flowIndicatorTable_.setSelectedRowIndex(selectedIndex);
 }
 
 }   // namespace

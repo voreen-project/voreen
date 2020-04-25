@@ -82,6 +82,26 @@ bool VelocityCurve::isPeriodic() const {
     return periodic_;
 }
 
+float VelocityCurve::getMinVelocity() const {
+    float min = peakVelocities_.begin()->second;
+    for(auto iter = ++peakVelocities_.begin(); iter != peakVelocities_.end(); iter++) {
+        if(iter->second < min) {
+            min = iter->second;
+        }
+    }
+    return min;
+}
+
+float VelocityCurve::getMaxVelocity() const {
+    float max = peakVelocities_.begin()->second;
+    for(auto iter = ++peakVelocities_.begin(); iter != peakVelocities_.end(); iter++) {
+        if(iter->second > max) {
+            max = iter->second;
+        }
+    }
+    return max;
+}
+
 VelocityCurve VelocityCurve::createConstantCurve(float value) {
     VelocityCurve curve;
     curve[0.0f] = value;
@@ -100,7 +120,7 @@ VelocityCurve VelocityCurve::createSinusoidalCurve(float duration, float maxValu
     VelocityCurve curve;
     for(int i=0; i<=steps; i++) {
         float ts = i * duration / steps;
-        float value = maxValue * (std::sin(-tgt::PIf * 0.5f + ts*tgt::PIf) + 1.0f) * 0.5f;
+        float value = maxValue * (std::sin(-tgt::PIf * 0.5f + i * tgt::PIf / steps) + 1.0f) * 0.5f;
         curve[ts] = value;
     }
 

@@ -73,6 +73,9 @@ public:
     void setPeriodic(bool enabled);
     bool isPeriodic() const;
 
+    float getMinVelocity() const;
+    float getMaxVelocity() const;
+
     static VelocityCurve createConstantCurve(float value);
     static VelocityCurve createLinearCurve(float duration, float maxValue);
     static VelocityCurve createSinusoidalCurve(float duration, float maxValue, int steps = 30);

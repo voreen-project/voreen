@@ -71,17 +71,18 @@ private:
      */
     struct FlowIndicatorSettings : public Serializable {
         // With respect to current vessel graph.
-        VGNodeID nodeId_{VGNodeID::INVALID};
-        VGEdgeID edgeId_{VGEdgeID::INVALID};
-        int centerlinePosition_{-1};
-        bool invertDirection_{false};
-        bool forceAxisAlignment_{false};
+        VGNodeID nodeId_;
+        VGEdgeID edgeId_;
+        int centerlinePosition_;
+        bool invertDirection_;
+        bool forceAxisAlignment_;
 
         // Other settings.
         std::string velocityCurveType_;
-        float velocityCurveDuration_{0.0f};
-        float targetVelocity_{0.0f};
+        float velocityCurveDuration_;
+        float targetVelocity_;
         std::string velocityCurveFile_;
+        bool velocityCurvePeriodic_;
 
         FlowIndicatorSettings();
         FlowIndicatorSettings(VGNodeID nodeId, VGEdgeID edgeId);
@@ -129,6 +130,11 @@ private:
      * This includes position and normal and radius.
      */
     FlowIndicator initializeIndicator(FlowIndicatorSettings& settings);
+
+    /**
+     * Creates a velocity curve according to the specified settings.
+     */
+    VelocityCurve createCurveFromSettings(FlowIndicatorSettings& settings);
 
     /**
      * Creates the overview table from the current flow indicator list.

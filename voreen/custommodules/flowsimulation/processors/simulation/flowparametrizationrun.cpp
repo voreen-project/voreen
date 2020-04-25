@@ -55,7 +55,7 @@ FlowParametrizationRun::FlowParametrizationRun()
     , parametrizationName_("parametrizationName", "Parametrization Name", "test_parametrization")
     , spatialResolution_("spatialResolution", "Spatial Resolution", 32, 8, 512)
     , relaxationTime_("relaxationTime", "Relaxation Time", 1.0f, 0.5f, 4.0f)
-    , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 10.0f, 0.1f, 1000.0f)
+    , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 10.0f, 0.1f, 10000.0f)
     , characteristicVelocity_("characteristicVelocity", "Characteristic Velocity (mm/s)", 10.0f, 0.0f, 10000.0f)
     , fluid_("fluid", "Fluid")
     , viscosity_("viscosity", "Dynamic Viscosity (kg/(m x s))", 3.5, 3, 4)
@@ -224,12 +224,24 @@ void FlowParametrizationRun::process() {
     FlowParameterSetEnsemble* flowParametrizationList = new FlowParameterSetEnsemble(*inport_.getData());
 
     for (const FlowParameterSet& flowParameters : flowParameters_) {
-        if(flowParameters.isValid()) {
+        //if(flowParameters.isValid()) { // Currently, we add anyways, since they could run through...
             flowParametrizationList->addFlowParameterSet(flowParameters);
-        }
+        //}
     }
 
     outport_.setData(flowParametrizationList);
+}
+
+void FlowParametrizationRun::adjustPropertiesToInput() {
+    if(!inport_.hasData()) {
+        return;
+    }
+
+    float minCharacteristicVelocity = 0.0f;
+    for(const FlowIndicator& indicator : inport_.getData()->getFlowIndicators()) {
+        minCharacteristicVelocity = std::max(minCharacteristicVelocity, indicator.velocityCurve_.getMaxVelocity());
+    }
+    characteristicVelocity_.setMinValue(minCharacteristicVelocity);
 }
 
 void FlowParametrizationRun::serialize(Serializer& s) const {
