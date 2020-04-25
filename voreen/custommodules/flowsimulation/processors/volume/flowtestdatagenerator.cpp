@@ -164,7 +164,10 @@ tgt::vec3 stenoticFlow(size_t diameter, size_t length, const tgt::svec3& pos, fl
 void FlowTestDataGenerator::process() {
 
     const size_t diameter = 50;
-    const size_t length = 100;
+    const size_t length = 50;
+
+    const tgt::vec3 spacing(2.0f / diameter, 2.0f / diameter, 1.0f / length);
+    const tgt::vec3 offset(-spacing.x * diameter * 0.5f, -spacing.y * diameter * 0.5f, 0.0f);
 
     tgt::svec3 dimensions(diameter, diameter, length);
     VolumeRAM_3xFloat* output = new VolumeRAM_3xFloat(dimensions);
@@ -204,7 +207,7 @@ void FlowTestDataGenerator::process() {
         }
     }
 
-    VolumeBase* outputVolume = new Volume(output, tgt::vec3::one, tgt::vec3::zero);
+    VolumeBase* outputVolume = new Volume(output, spacing, offset);
     outport_.setData(outputVolume);
 }
 
