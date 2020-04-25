@@ -127,7 +127,7 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
                         length += value * value;
                     }
 
-                    output->voxel(pos) += length / (numRuns - 1.0f);
+                    output->voxel(pos) += length / numRuns;
                 }
             }
         }
