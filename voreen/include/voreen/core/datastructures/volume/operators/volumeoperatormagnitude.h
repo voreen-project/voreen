@@ -72,12 +72,13 @@ Volume* VolumeOperatorMagnitude::apply(const VolumeBase* srcVolume) {
         for (pos.y = 0; pos.y < dim.y; pos.y++) {
             for (pos.x = 0; pos.x < dim.x; pos.x++) {
 
-                tgt::vec4 vector = tgt::vec4::zero;
+                float vectorMagnitude = 0.0f;
                 for(size_t channel = 0; channel < numChannels; channel++) {
-                    vector[channel] = rwm.normalizedToRealWorld(input->getVoxelNormalized(pos, channel));
+                    float value = rwm.normalizedToRealWorld(input->getVoxelNormalized(pos, channel));
+                    vectorMagnitude += value * value;
                 }
 
-                float vectorMagnitude = tgt::length(vector);
+                vectorMagnitude = std::sqrt(vectorMagnitude);
 
                 // magnitude is always positive, so we can just normalize using the maximum
                 result->setVoxelNormalized(vectorMagnitude / maxMagnitude, pos);
