@@ -109,7 +109,6 @@ SET(VRN_CORE_SOURCES
     datastructures/volume/volumedisk.cpp
     datastructures/volume/volumedecorator.cpp
     datastructures/volume/volumederiveddata.cpp
-    datastructures/volume/volumeelement.cpp
     datastructures/volume/volumefactory.cpp
     datastructures/volume/volumegl.cpp
     datastructures/volume/volumehash.cpp
