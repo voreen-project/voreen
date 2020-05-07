@@ -406,7 +406,6 @@ void FlowSimulation::prepareGeometry( UnitConverter<T,DESCRIPTOR> const& convert
         // Exclude area behind inlet - it will otherwise cause instable simulations.
         if(flowIndicators[i].type_ == FIT_VELOCITY) {
             center -= normal * (converter.getConversionFactorLength() * 2);
-            radius *= 1.2;
             IndicatorCircle3D<T> capFlow(center[0], center[1], center[2],
                                          normal[0], normal[1], normal[2],
                                          radius);
