@@ -307,6 +307,27 @@ IMPL_FORMAT_CONVERSION_FOR_TYPE(double)
         tgtAssert(false, "Invalid format"); \
     } \
 
+
+#define IMPL_DISPATCH_FOR_BASETYPE_OPTION(TYPE, format, FUNC, ...) \
+    if ((format) == getBaseTypeFromType<TYPE ## _t>()) { \
+        FUNC<TYPE ## _t>(__VA_ARGS__); \
+    } else \
+
+#define DISPATCH_FOR_BASETYPE(format, FUNC, ...) \
+    IMPL_DISPATCH_FOR_BASETYPE_OPTION(uint8, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_BASETYPE_OPTION(uint16, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_BASETYPE_OPTION(uint32, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_BASETYPE_OPTION(uint64, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_BASETYPE_OPTION(int8, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_BASETYPE_OPTION(int16, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_BASETYPE_OPTION(int32, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_BASETYPE_OPTION(int64, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_BASETYPE_OPTION(float, format, FUNC, __VA_ARGS__) \
+    IMPL_DISPATCH_FOR_BASETYPE_OPTION(double, format, FUNC, __VA_ARGS__) \
+    { \
+        tgtAssert(false, "Invalid format"); \
+    } \
+
 } // namespace
 
 #endif // VRN_STRINGUTILS_H
