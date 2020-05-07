@@ -77,13 +77,13 @@ ParallelFilterValue3D GradientFilter::calcGradientCentralDifferences(const Sampl
 ParallelFilterValue3D GradientFilter::calcGradientLinearRegression(const Sample& sample, const tgt::ivec3& pos) {
 
     // Euclidean weights for voxels with Manhattan distances of 1/2/3
-    float w_1 = 1.f;
-    float w_2 = 0.5f;
-    float w_3 = 1.f/3.f;
+    const float w_1 = 1.f;
+    const float w_2 = 0.5f;
+    const float w_3 = 1.f/3.f;
 
-    float w_A = 1.f / (8.f + 2.f/3.f);
-    float w_B = w_A;
-    float w_C = w_A;
+    const float w_A = 1.f / (8.f + 2.f/3.f);
+    const float w_B = w_A;
+    const float w_C = w_A;
 
     //left plane
     ParallelFilterValue1D v000 = sample(pos + tgt::ivec3(-1,-1,-1));

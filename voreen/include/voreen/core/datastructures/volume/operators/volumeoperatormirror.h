@@ -56,7 +56,7 @@ Volume* VolumeOperatorMirrorXGeneric<T>::apply(const VolumeBase* vh) const {
     VolumeAtomic<T>* mirror = va->clone();
 
     //VRN_FOR_EACH_VOXEL_WITH_PROGRESS(i, tgt::ivec3(0), mirror->getDimensions(), progressBar_) //FIXME
-    VRN_FOR_EACH_VOXEL(i, tgt::ivec3(0), mirror->getDimensions())
+    VRN_FOR_EACH_VOXEL(i, tgt::svec3::zero, mirror->getDimensions())
         mirror->voxel(i) = va->voxel(mirror->getDimensions().x - i.x - 1, i.y, i.z);
 
     //if (progressBar_) //FIXME
@@ -94,7 +94,7 @@ Volume* VolumeOperatorMirrorYGeneric<T>::apply(const VolumeBase* vh) const {
     VolumeAtomic<T>* mirror = va->clone();
 
     //VRN_FOR_EACH_VOXEL_WITH_PROGRESS(i, tgt::ivec3(0), mirror->getDimensions(), progressBar_) //FIXME
-    VRN_FOR_EACH_VOXEL(i, tgt::ivec3(0), mirror->getDimensions())
+    VRN_FOR_EACH_VOXEL(i, tgt::svec3::zero, mirror->getDimensions())
         mirror->voxel(i) = va->voxel(i.x, va->getDimensions().y - i.y - 1, i.z);
 
     //if (progressBar_) //FIXME
@@ -132,7 +132,7 @@ Volume* VolumeOperatorMirrorZGeneric<T>::apply(const VolumeBase* vh) const {
     VolumeAtomic<T>* mirror = va->clone();
 
     //VRN_FOR_EACH_VOXEL_WITH_PROGRESS(i, tgt::ivec3(0), mirror->getDimensions(), progressBar_)
-    VRN_FOR_EACH_VOXEL(i, tgt::ivec3(0), mirror->getDimensions())
+    VRN_FOR_EACH_VOXEL(i, tgt::svec3::zero, mirror->getDimensions())
         mirror->voxel(i) = va->voxel(i.x, i.y, mirror->getDimensions().z - i.z - 1);
 
     //if (progressBar_) //FIXME

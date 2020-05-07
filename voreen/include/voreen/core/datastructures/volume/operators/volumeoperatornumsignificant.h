@@ -61,7 +61,7 @@ size_t VolumeOperatorNumSignificantGeneric<T>::apply(const VolumeBase* vh) const
         return 0;
 
     size_t result = 0;
-    VRN_FOR_EACH_VOXEL(pos, tgt::ivec3(0), volume->getDimensions()) {
+    VRN_FOR_EACH_VOXEL(pos, tgt::svec3::zero, volume->getDimensions()) {
         if (volume->voxel(pos) > VolumeElement<T>::rangeMin())
             result++;
     }
@@ -96,7 +96,7 @@ size_t VolumeOperatorNumSignificantGeneric<tgt::Vector2<S> >::apply(const Volume
         return 0;
 
     size_t result = 0;
-    VRN_FOR_EACH_VOXEL(pos, tgt::ivec3(0), volume->getDimensions()) {
+    VRN_FOR_EACH_VOXEL(pos, tgt::svec3::zero, volume->getDimensions()) {
         if (tgt::hadd(volume->voxel(pos)) > VolumeElement<S>::rangeMin())
             result++;
     }
@@ -131,7 +131,7 @@ size_t VolumeOperatorNumSignificantGeneric<tgt::Vector3<S> >::apply(const Volume
         return 0;
 
     size_t result = 0;
-    VRN_FOR_EACH_VOXEL(pos, tgt::ivec3(0), volume->getDimensions()) {
+    VRN_FOR_EACH_VOXEL(pos, tgt::svec3::zero, volume->getDimensions()) {
         if (tgt::hadd(volume->voxel(pos)) > VolumeElement<S>::rangeMin())
             result++;
     }
@@ -167,7 +167,7 @@ size_t VolumeOperatorNumSignificantGeneric<tgt::Vector4<S> >::apply(const Volume
         return 0;
 
     size_t result = 0;
-    VRN_FOR_EACH_VOXEL(pos, tgt::ivec3(0), volume->getDimensions()) {
+    VRN_FOR_EACH_VOXEL(pos, tgt::svec3::zero, volume->getDimensions()) {
         if (tgt::hadd(volume->voxel(pos)) > VolumeElement<S>::rangeMin())
             result++;
     }
@@ -203,7 +203,7 @@ size_t VolumeOperatorNumSignificantGeneric<Tensor2<S> >::apply(const VolumeBase*
         return 0;
 
     size_t result = 0;
-    VRN_FOR_EACH_VOXEL(pos, tgt::ivec3(0), volume->getDimensions()) {
+    VRN_FOR_EACH_VOXEL(pos, tgt::svec3::zero, volume->getDimensions()) {
         const Tensor2<S>& t = volume->voxel(pos);
         if ((t.Dxx + t.Dxy + t.Dxz + t.Dyy + t.Dyz + t.Dzz) > VolumeElement<S>::rangeMin())
             result++;

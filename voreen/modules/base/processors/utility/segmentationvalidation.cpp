@@ -238,7 +238,7 @@ size_t SegmentationValidation::getNumCommonVoxels(const VolumeRAM* volumeA, cons
     tgtAssert(volumeA->getDimensions() == volumeB->getDimensions(), "Volume dimensions differ");
 
     size_t result = 0;
-    VRN_FOR_EACH_VOXEL(pos, tgt::ivec3(0), volumeA->getDimensions()) {
+    VRN_FOR_EACH_VOXEL(pos, tgt::svec3::zero, volumeA->getDimensions()) {
         if (volumeA->getVoxelNormalized(pos) > 0.f && volumeB->getVoxelNormalized(pos) > 0.f)
             result++;
     }

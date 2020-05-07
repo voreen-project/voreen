@@ -47,7 +47,9 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Computes gradients of the intensity input volume and stores them in a RGB volume. The A-channel can optionally be filled with the input volume's intensity.");
+        setDescription("Computes gradients of the intensity input volume and stores them in a RGB volume. "
+                       "The A-channel can optionally be filled with the input volume's intensity. "
+                       "Boundary layers will be set to zero.");
     }
 
     virtual void process();

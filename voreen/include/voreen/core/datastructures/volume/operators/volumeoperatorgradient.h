@@ -59,14 +59,22 @@ private:
     float getMaxGradientLength(tgt::vec3 spacing);
     //Store gradient in volume.
     template<typename T>
-    void storeGradient(tgt::vec3 gradient, const tgt::ivec3& pos, VolumeAtomic<tgt::Vector3<T> >* result);
+    void storeGradient(tgt::vec3 gradient, const tgt::svec3& pos, VolumeAtomic<tgt::Vector3<T> >* result);
 
 public:
+    /**
+     * Calculates gradients with neighborhood of 26, using the central differences.
+     * Note: Boundary layers are set to zero.
+     */
     template<typename T>
     static tgt::vec3 calcGradientCentralDifferences(const VolumeAtomic<T>* input, const tgt::vec3& spacing, const tgt::svec3& pos);
 
-    /// Returns gradient (in normalized values) SLOW
-    static tgt::vec3 calcGradientCentralDifferences(const VolumeRAM* input, const tgt::vec3& spacing, const tgt::svec3& pos);
+    /**
+     * Calculates gradients with neighborhood of 26, using the central differences.
+     * Note: Boundary layers are set to zero.
+     * Note: Uses normalized values, hence this implementation is slower than the templated version.
+     */
+    static tgt::vec3 calcGradientCentralDifferences(const VolumeRAM* input, const tgt::vec3& spacing, const tgt::svec3& pos, size_t channel = 0);
 
     /**
      * Calculates gradients using linear regression according to Neumann et al.
@@ -79,20 +87,24 @@ public:
      *
      * The neighboring voxels are weighted by their reciprocal Euclidean distance.
      *
-     * Returns a Volume with a VolumeAtomic<Vector3<U>> Volume.
+     * Note: Boundary layers are set to zero.
      */
     template<typename T>
-    tgt::vec3 calcGradientLinearRegression(const VolumeAtomic<T>* input, const tgt::vec3& spacing, const tgt::ivec3& pos);
+    tgt::vec3 calcGradientLinearRegression(const VolumeAtomic<T>* input, const tgt::vec3& spacing, const tgt::svec3& pos);
 
    /**
     * Calculates gradients with neighborhood of 26, using the Sobel filter.
-    * Returns a Volume with a VolumeAtomic<Vector3<U>> Volume.
+    * Note: Boundary layers are set to zero.
     */
     template<class T>
-    static tgt::vec3 calcGradientSobel(const VolumeAtomic<T>* input, const tgt::vec3& spacing, const tgt::ivec3& pos);
+    static tgt::vec3 calcGradientSobel(const VolumeAtomic<T>* input, const tgt::vec3& spacing, const tgt::svec3& pos);
 
-    /// Returns gradient (in normalized values) SLOW
-    static tgt::vec3 calcGradientSobel(const VolumeRAM* input, const tgt::vec3& spacing, const tgt::ivec3& pos, const size_t channel);
+    /**
+     * Calculates gradients with neighborhood of 26, using the Sobel filter.
+     * Note: Boundary layers are set to zero.
+     * Note: Uses normalized values, hence this implementation is slower than the templated version.
+     */
+    static tgt::vec3 calcGradientSobel(const VolumeRAM* input, const tgt::vec3& spacing, const tgt::svec3& pos, const size_t channel);
 };
 
 //---------------------------------------------------------------------------------------------
@@ -216,8 +228,8 @@ Volume* VolumeOperatorGradient::apply(const VolumeBase* srcVolume, GradientType 
         }
 
         tgt::vec3 gradient;
-        tgt::ivec3 pos;
-        tgt::ivec3 dim = input->getDimensions();
+        tgt::svec3 pos;
+        tgt::svec3 dim = input->getDimensions();
         tgt::vec3 spacing = handle->getSpacing();
 
         for (pos.z = 0; pos.z < dim.z; pos.z++) {
@@ -241,9 +253,6 @@ Volume* VolumeOperatorGradient::apply(const VolumeBase* srcVolume, GradientType 
         const VolumeAtomic<T>* input = dynamic_cast<const VolumeAtomic<T>*>(handle->getRepresentation<VolumeRAM>());
         VolumeAtomic<tgt::Vector3<U> >* result = new VolumeAtomic<tgt::Vector3<U> >(input->getDimensions());
 
-        using tgt::vec3;
-        using tgt::ivec3;
-
         //We normalize gradients for integer datasets:
         bool normalizeGradient = VolumeElement<T>::isInteger();
         float maxGradientLength = 1.0f;
@@ -251,10 +260,10 @@ Volume* VolumeOperatorGradient::apply(const VolumeBase* srcVolume, GradientType 
             maxGradientLength = getMaxGradientLength<T>(handle->getSpacing());
         }
 
-        vec3 gradient;
+        tgt::vec3 gradient;
         tgt::vec3 spacing = handle->getSpacing();
-        ivec3 pos;
-        ivec3 dim = input->getDimensions();
+        tgt::svec3 pos;
+        tgt::svec3 dim = input->getDimensions();
 
         for (pos.z = 0; pos.z < dim.z; pos.z++) {
             for (pos.y = 0; pos.y < dim.y; pos.y++) {
@@ -282,7 +291,7 @@ Volume* VolumeOperatorGradient::apply(const VolumeBase* srcVolume, GradientType 
 
     //Store gradient in volume.
     template<typename T>
-    void VolumeOperatorGradient::storeGradient(tgt::vec3 gradient, const tgt::ivec3& pos, VolumeAtomic<tgt::Vector3<T> >* result) {
+    void VolumeOperatorGradient::storeGradient(tgt::vec3 gradient, const tgt::svec3& pos, VolumeAtomic<tgt::Vector3<T> >* result) {
         if(VolumeElement<tgt::Vector3<T> >::isInteger()) {
             //map to [0,1]:
             gradient += 1.0f;
@@ -302,227 +311,204 @@ Volume* VolumeOperatorGradient::apply(const VolumeBase* srcVolume, GradientType 
 
     template<typename T>
     tgt::vec3 VolumeOperatorGradient::calcGradientCentralDifferences(const VolumeAtomic<T>* input, const tgt::vec3& spacing, const tgt::svec3& pos) {
-        T v0, v1, v2, v3, v4, v5;
-        tgt::vec3 gradient;
+        if (pos != tgt::clamp(pos, tgt::svec3::one, input->getDimensions() - tgt::svec3::two)) {
+            return tgt::vec3::zero;
+        }
 
-        if (pos.x != input->getDimensions().x-1)
-            v0 = input->voxel(pos + tgt::svec3(1, 0, 0));
-        else
-            v0 = 0;
-        if (pos.y != input->getDimensions().y-1)
-            v1 = input->voxel(pos + tgt::svec3(0, 1, 0));
-        else
-            v1 = 0;
-        if (pos.z != input->getDimensions().z-1)
-            v2 = input->voxel(pos + tgt::svec3(0, 0, 1));
-        else
-            v2 = 0;
+        T v0 = input->voxel(pos + tgt::svec3(1, 0, 0));
+        T v1 = input->voxel(pos + tgt::svec3(0, 1, 0));
+        T v2 = input->voxel(pos + tgt::svec3(0, 0, 1));
+        T v3 = input->voxel(pos - tgt::svec3(1, 0, 0));
+        T v4 = input->voxel(pos - tgt::svec3(0, 1, 0));
+        T v5 = input->voxel(pos - tgt::svec3(0, 0, 1));
 
-        if (pos.x != 0)
-            v3 = input->voxel(pos + tgt::svec3(-1, 0, 0));
-        else
-            v3 = 0;
-        if (pos.y != 0)
-            v4 = input->voxel(pos + tgt::svec3(0, -1, 0));
-        else
-            v4 = 0;
-        if (pos.z != 0)
-            v5 = input->voxel(pos + tgt::svec3(0, 0, -1));
-        else
-            v5 = 0;
-
-        gradient = tgt::vec3(static_cast<float>(v3 - v0), static_cast<float>(v4 - v1), static_cast<float>(v5 - v2));
+        tgt::vec3 gradient(static_cast<float>(v3 - v0), static_cast<float>(v4 - v1), static_cast<float>(v5 - v2));
         gradient /= (spacing * 2.0f);
 
         return gradient;
     }
 
     template<typename T>
-    tgt::vec3 VolumeOperatorGradient::calcGradientLinearRegression(const VolumeAtomic<T>* input, const tgt::vec3& spacing, const tgt::ivec3& pos) {
-        tgt::vec3 gradient;
+    tgt::vec3 VolumeOperatorGradient::calcGradientLinearRegression(const VolumeAtomic<T>* input, const tgt::vec3& spacing, const tgt::svec3& pos) {
+        if (pos != tgt::clamp(pos, tgt::svec3::one, input->getDimensions() - tgt::svec3::two)) {
+            return tgt::vec3::zero;
+        }
 
         // Euclidean weights for voxels with Manhattan distances of 1/2/3
-        float w_1 = 1.f;
-        float w_2 = 0.5f;
-        float w_3 = 1.f/3.f;
+        const float w_1 = 1.f;
+        const float w_2 = 0.5f;
+        const float w_3 = 1.f/3.f;
 
-        float w_A = 1.f / (8.f + 2.f/3.f);
-        float w_B = w_A;
-        float w_C = w_A;
+        const float w_A = 1.f / (8.f + 2.f/3.f);
+        const float w_B = w_A;
+        const float w_C = w_A;
 
-        if (pos.x >= 1 && pos.x < tgt::ivec3(input->getDimensions()).x-1 &&
-            pos.y >= 1 && pos.y < tgt::ivec3(input->getDimensions()).y-1 &&
-            pos.z >= 1 && pos.z < tgt::ivec3(input->getDimensions()).z-1)
-        {
-            //left plane
-            T v000 = input->voxel(pos + tgt::ivec3(-1,-1,-1));
-            T v001 = input->voxel(pos + tgt::ivec3(-1, -1, 0));
-            T v002 = input->voxel(pos + tgt::ivec3(-1, -1, 1));
-            T v010 = input->voxel(pos + tgt::ivec3(-1, 0, -1));
-            T v011 = input->voxel(pos + tgt::ivec3(-1, 0, 0));
-            T v012 = input->voxel(pos + tgt::ivec3(-1, 0, 1));
-            T v020 = input->voxel(pos + tgt::ivec3(-1, 1, -1));
-            T v021 = input->voxel(pos + tgt::ivec3(-1, 1, 0));
-            T v022 = input->voxel(pos + tgt::ivec3(-1, 1, 1));
+        //left plane
+        T v000 = input->voxel(pos + tgt::svec3(-1,-1,-1));
+        T v001 = input->voxel(pos + tgt::svec3(-1, -1, 0));
+        T v002 = input->voxel(pos + tgt::svec3(-1, -1, 1));
+        T v010 = input->voxel(pos + tgt::svec3(-1, 0, -1));
+        T v011 = input->voxel(pos + tgt::svec3(-1, 0, 0));
+        T v012 = input->voxel(pos + tgt::svec3(-1, 0, 1));
+        T v020 = input->voxel(pos + tgt::svec3(-1, 1, -1));
+        T v021 = input->voxel(pos + tgt::svec3(-1, 1, 0));
+        T v022 = input->voxel(pos + tgt::svec3(-1, 1, 1));
 
-            //mid plane
-            T v100 = input->voxel(pos + tgt::ivec3(0, -1, -1));
-            T v101 = input->voxel(pos + tgt::ivec3(0, -1, 0));
-            T v102 = input->voxel(pos + tgt::ivec3(0, -1, 1));
-            T v110 = input->voxel(pos + tgt::ivec3(0, 0, -1));
-            //T v111 = input->voxel(pos + ivec3(0, 0, 0));
-            T v112 = input->voxel(pos + tgt::ivec3(0, 0, 1));
-            T v120 = input->voxel(pos + tgt::ivec3(0, 1, -1));
-            T v121 = input->voxel(pos + tgt::ivec3(0, 1, 0));
-            T v122 = input->voxel(pos + tgt::ivec3(0, 1, 1));
+        //mid plane
+        T v100 = input->voxel(pos + tgt::svec3(0, -1, -1));
+        T v101 = input->voxel(pos + tgt::svec3(0, -1, 0));
+        T v102 = input->voxel(pos + tgt::svec3(0, -1, 1));
+        T v110 = input->voxel(pos + tgt::svec3(0, 0, -1));
+        //T v111 = input->voxel(pos + svec3(0, 0, 0));
+        T v112 = input->voxel(pos + tgt::svec3(0, 0, 1));
+        T v120 = input->voxel(pos + tgt::svec3(0, 1, -1));
+        T v121 = input->voxel(pos + tgt::svec3(0, 1, 0));
+        T v122 = input->voxel(pos + tgt::svec3(0, 1, 1));
 
-            //right plane
-            T v200 = input->voxel(pos + tgt::ivec3(1, -1, -1));
-            T v201 = input->voxel(pos + tgt::ivec3(1, -1, 0));
-            T v202 = input->voxel(pos + tgt::ivec3(1, -1, 1));
-            T v210 = input->voxel(pos + tgt::ivec3(1, 0, -1));
-            T v211 = input->voxel(pos + tgt::ivec3(1, 0, 0));
-            T v212 = input->voxel(pos + tgt::ivec3(1, 0, 1));
-            T v220 = input->voxel(pos + tgt::ivec3(1, 1, -1));
-            T v221 = input->voxel(pos + tgt::ivec3(1, 1, 0));
-            T v222 = input->voxel(pos + tgt::ivec3(1, 1, 1));
+        //right plane
+        T v200 = input->voxel(pos + tgt::svec3(1, -1, -1));
+        T v201 = input->voxel(pos + tgt::svec3(1, -1, 0));
+        T v202 = input->voxel(pos + tgt::svec3(1, -1, 1));
+        T v210 = input->voxel(pos + tgt::svec3(1, 0, -1));
+        T v211 = input->voxel(pos + tgt::svec3(1, 0, 0));
+        T v212 = input->voxel(pos + tgt::svec3(1, 0, 1));
+        T v220 = input->voxel(pos + tgt::svec3(1, 1, -1));
+        T v221 = input->voxel(pos + tgt::svec3(1, 1, 0));
+        T v222 = input->voxel(pos + tgt::svec3(1, 1, 1));
 
-            gradient.x = static_cast<float>( w_1 * ( v211 - v011 )               +
-                    w_2 * ( v201 + v210 + v212 + v221
-                        -v001 - v010 - v012 - v021 ) +
-                    w_3 * ( v200 + v202 + v220 + v222
-                        -v000 - v002 - v020 - v022 )   );
+        tgt::vec3 gradient = tgt::vec3::zero;
 
-            gradient.y = static_cast<float>( w_1 * ( v121 - v101 )               +
-                    w_2 * ( v021 + v120 + v122 + v221
-                        -v001 - v100 - v102 - v201 ) +
-                    w_3 * ( v020 + v022 + v220 + v222
-                        -v000 - v002 - v200 - v202 )   );
+        gradient.x = static_cast<float>( w_1 * ( v211 - v011 )               +
+                w_2 * ( v201 + v210 + v212 + v221
+                    -v001 - v010 - v012 - v021 ) +
+                w_3 * ( v200 + v202 + v220 + v222
+                    -v000 - v002 - v020 - v022 )   );
 
-            gradient.z = static_cast<float>( w_1 * ( v112 - v110 )               +
-                    w_2 * ( v012 + v102 + v122 + v212
-                        -v010 - v100 - v120 - v210 ) +
-                    w_3 * ( v002 + v022 + v202 + v222
-                        -v000 - v020 - v200 - v220 )   );
+        gradient.y = static_cast<float>( w_1 * ( v121 - v101 )               +
+                w_2 * ( v021 + v120 + v122 + v221
+                    -v001 - v100 - v102 - v201 ) +
+                w_3 * ( v020 + v022 + v220 + v222
+                    -v000 - v002 - v200 - v202 )   );
 
-            gradient.x *= w_A;
-            gradient.y *= w_B;
-            gradient.z *= w_C;
+        gradient.z = static_cast<float>( w_1 * ( v112 - v110 )               +
+                w_2 * ( v012 + v102 + v122 + v212
+                    -v010 - v100 - v120 - v210 ) +
+                w_3 * ( v002 + v022 + v202 + v222
+                    -v000 - v020 - v200 - v220 )   );
 
-            gradient /= spacing;
-            gradient *= -1.f;
-        }
-        else {
-            gradient = tgt::vec3(0.f);
-        }
+        gradient.x *= w_A;
+        gradient.y *= w_B;
+        gradient.z *= w_C;
+
+        gradient /= spacing;
+        gradient *= -1.f;
 
         return gradient;
     }
 
     template<class T>
-    tgt::vec3 VolumeOperatorGradient::calcGradientSobel(const VolumeAtomic<T>* input, const tgt::vec3& spacing, const tgt::ivec3& pos) {
-        tgt::vec3 gradient = tgt::vec3(0.f);
-
-        if (pos.x >= 1 && pos.x < tgt::ivec3(input->getDimensions()).x-1 &&
-            pos.y >= 1 && pos.y < tgt::ivec3(input->getDimensions()).y-1 &&
-            pos.z >= 1 && pos.z < tgt::ivec3(input->getDimensions()).z-1)
-        {
-            //left plane
-            T v000 = input->voxel(pos + tgt::ivec3(-1, -1, -1));
-            T v001 = input->voxel(pos + tgt::ivec3(-1, -1, 0));
-            T v002 = input->voxel(pos + tgt::ivec3(-1, -1, 1));
-            T v010 = input->voxel(pos + tgt::ivec3(-1, 0, -1));
-            T v011 = input->voxel(pos + tgt::ivec3(-1, 0, 0));
-            T v012 = input->voxel(pos + tgt::ivec3(-1, 0, 1));
-            T v020 = input->voxel(pos + tgt::ivec3(-1, 1, -1));
-            T v021 = input->voxel(pos + tgt::ivec3(-1, 1, 0));
-            T v022 = input->voxel(pos + tgt::ivec3(-1, 1, 1));
-            //mid plane
-            T v100 = input->voxel(pos + tgt::ivec3(0, -1, -1));
-            T v101 = input->voxel(pos + tgt::ivec3(0, -1, 0));
-            T v102 = input->voxel(pos + tgt::ivec3(0, -1, 1));
-            T v110 = input->voxel(pos + tgt::ivec3(0, 0, -1));
-            //T v111 = input->voxel(pos + ivec3(0, 0, 0)); //not needed for calculation
-            T v112 = input->voxel(pos + tgt::ivec3(0, 0, 1));
-            T v120 = input->voxel(pos + tgt::ivec3(0, -1, -1));
-            T v121 = input->voxel(pos + tgt::ivec3(0, -1, 0));
-            T v122 = input->voxel(pos + tgt::ivec3(0, -1, 1));
-            //right plane
-            T v200 = input->voxel(pos + tgt::ivec3(1, -1, -1));
-            T v201 = input->voxel(pos + tgt::ivec3(1, -1, 0));
-            T v202 = input->voxel(pos + tgt::ivec3(1, -1, 1));
-            T v210 = input->voxel(pos + tgt::ivec3(1, 0, -1));
-            T v211 = input->voxel(pos + tgt::ivec3(1, 0, 0));
-            T v212 = input->voxel(pos + tgt::ivec3(1, 0, 1));
-            T v220 = input->voxel(pos + tgt::ivec3(1, 1, -1));
-            T v221 = input->voxel(pos + tgt::ivec3(1, 1, 0));
-            T v222 = input->voxel(pos + tgt::ivec3(1, 1, 1));
-
-            //filter x-direction
-            gradient.x += -1 * v000;
-            gradient.x += -3 * v010;
-            gradient.x += -1 * v020;
-            gradient.x += 1 * v200;
-            gradient.x += 3 * v210;
-            gradient.x += 1 * v220;
-            gradient.x += -3 * v001;
-            gradient.x += -6 * v011;
-            gradient.x += -3 * v021;
-            gradient.x += +3 * v201;
-            gradient.x += +6 * v211;
-            gradient.x += +3 * v221;
-            gradient.x += -1 * v002;
-            gradient.x += -3 * v012;
-            gradient.x += -1 * v022;
-            gradient.x += +1 * v202;
-            gradient.x += +3 * v212;
-            gradient.x += +1 * v222;
-
-            //filter y-direction
-            gradient.y += -1 * v000;
-            gradient.y += -3 * v100;
-            gradient.y += -1 * v200;
-            gradient.y += +1 * v020;
-            gradient.y += +3 * v120;
-            gradient.y += +1 * v220;
-            gradient.y += -3 * v001;
-            gradient.y += -6 * v101;
-            gradient.y += -3 * v201;
-            gradient.y += +3 * v021;
-            gradient.y += +6 * v121;
-            gradient.y += +3 * v221;
-            gradient.y += -1 * v002;
-            gradient.y += -3 * v102;
-            gradient.y += -1 * v202;
-            gradient.y += +1 * v022;
-            gradient.y += +3 * v122;
-            gradient.y += +1 * v222;
-
-            //filter z-direction
-            gradient.z += -1 * v000;
-            gradient.z += -3 * v100;
-            gradient.z += -1 * v200;
-            gradient.z += +1 * v002;
-            gradient.z += +3 * v102;
-            gradient.z += +1 * v202;
-            gradient.z += -3 * v010;
-            gradient.z += -6 * v110;
-            gradient.z += -3 * v210;
-            gradient.z += +3 * v012;
-            gradient.z += +6 * v112;
-            gradient.z += +3 * v212;
-            gradient.z += -1 * v020;
-            gradient.z += -3 * v120;
-            gradient.z += -1 * v220;
-            gradient.z += +1 * v022;
-            gradient.z += +3 * v122;
-            gradient.z += +1 * v222;
-
-            gradient /= 22.f;   // sum of all positive weights
-            gradient /= 2.f;    // this mask has a step length of 2 voxels
-            gradient /= spacing;
-            gradient *= -1.f;
+    tgt::vec3 VolumeOperatorGradient::calcGradientSobel(const VolumeAtomic<T>* input, const tgt::vec3& spacing, const tgt::svec3& pos) {
+        if (pos != tgt::clamp(pos, tgt::svec3::one, input->getDimensions() - tgt::svec3::two)) {
+            return tgt::vec3::zero;
         }
+
+        //left plane
+        T v000 = input->voxel(pos + tgt::svec3(-1, -1, -1));
+        T v001 = input->voxel(pos + tgt::svec3(-1, -1, 0));
+        T v002 = input->voxel(pos + tgt::svec3(-1, -1, 1));
+        T v010 = input->voxel(pos + tgt::svec3(-1, 0, -1));
+        T v011 = input->voxel(pos + tgt::svec3(-1, 0, 0));
+        T v012 = input->voxel(pos + tgt::svec3(-1, 0, 1));
+        T v020 = input->voxel(pos + tgt::svec3(-1, 1, -1));
+        T v021 = input->voxel(pos + tgt::svec3(-1, 1, 0));
+        T v022 = input->voxel(pos + tgt::svec3(-1, 1, 1));
+        //mid plane
+        T v100 = input->voxel(pos + tgt::svec3(0, -1, -1));
+        T v101 = input->voxel(pos + tgt::svec3(0, -1, 0));
+        T v102 = input->voxel(pos + tgt::svec3(0, -1, 1));
+        T v110 = input->voxel(pos + tgt::svec3(0, 0, -1));
+        //T v111 = input->voxel(pos + svec3(0, 0, 0)); //not needed for calculation
+        T v112 = input->voxel(pos + tgt::svec3(0, 0, 1));
+        T v120 = input->voxel(pos + tgt::svec3(0, -1, -1));
+        T v121 = input->voxel(pos + tgt::svec3(0, -1, 0));
+        T v122 = input->voxel(pos + tgt::svec3(0, -1, 1));
+        //right plane
+        T v200 = input->voxel(pos + tgt::svec3(1, -1, -1));
+        T v201 = input->voxel(pos + tgt::svec3(1, -1, 0));
+        T v202 = input->voxel(pos + tgt::svec3(1, -1, 1));
+        T v210 = input->voxel(pos + tgt::svec3(1, 0, -1));
+        T v211 = input->voxel(pos + tgt::svec3(1, 0, 0));
+        T v212 = input->voxel(pos + tgt::svec3(1, 0, 1));
+        T v220 = input->voxel(pos + tgt::svec3(1, 1, -1));
+        T v221 = input->voxel(pos + tgt::svec3(1, 1, 0));
+        T v222 = input->voxel(pos + tgt::svec3(1, 1, 1));
+
+        tgt::vec3 gradient = tgt::vec3::zero;
+
+        //filter x-direction
+        gradient.x += -1 * v000;
+        gradient.x += -3 * v010;
+        gradient.x += -1 * v020;
+        gradient.x += 1 * v200;
+        gradient.x += 3 * v210;
+        gradient.x += 1 * v220;
+        gradient.x += -3 * v001;
+        gradient.x += -6 * v011;
+        gradient.x += -3 * v021;
+        gradient.x += +3 * v201;
+        gradient.x += +6 * v211;
+        gradient.x += +3 * v221;
+        gradient.x += -1 * v002;
+        gradient.x += -3 * v012;
+        gradient.x += -1 * v022;
+        gradient.x += +1 * v202;
+        gradient.x += +3 * v212;
+        gradient.x += +1 * v222;
+
+        //filter y-direction
+        gradient.y += -1 * v000;
+        gradient.y += -3 * v100;
+        gradient.y += -1 * v200;
+        gradient.y += +1 * v020;
+        gradient.y += +3 * v120;
+        gradient.y += +1 * v220;
+        gradient.y += -3 * v001;
+        gradient.y += -6 * v101;
+        gradient.y += -3 * v201;
+        gradient.y += +3 * v021;
+        gradient.y += +6 * v121;
+        gradient.y += +3 * v221;
+        gradient.y += -1 * v002;
+        gradient.y += -3 * v102;
+        gradient.y += -1 * v202;
+        gradient.y += +1 * v022;
+        gradient.y += +3 * v122;
+        gradient.y += +1 * v222;
+
+        //filter z-direction
+        gradient.z += -1 * v000;
+        gradient.z += -3 * v100;
+        gradient.z += -1 * v200;
+        gradient.z += +1 * v002;
+        gradient.z += +3 * v102;
+        gradient.z += +1 * v202;
+        gradient.z += -3 * v010;
+        gradient.z += -6 * v110;
+        gradient.z += -3 * v210;
+        gradient.z += +3 * v012;
+        gradient.z += +6 * v112;
+        gradient.z += +3 * v212;
+        gradient.z += -1 * v020;
+        gradient.z += -3 * v120;
+        gradient.z += -1 * v220;
+        gradient.z += +1 * v022;
+        gradient.z += +3 * v122;
+        gradient.z += +1 * v222;
+
+        gradient /= 22.f;   // sum of all positive weights
+        gradient /= 2.f;    // this mask has a step length of 2 voxels
+        gradient /= spacing;
+        gradient *= -1.f;
 
         return gradient;
     }
