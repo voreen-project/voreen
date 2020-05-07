@@ -71,33 +71,71 @@ void VolumeComparison::initialize() {
     adjustPropertiesToInput();
 }
 
-void quantification(const VolumeRAM* slice1, const VolumeRAM* slice2, VolumeComparison::ScanSummary& summary, tgt::svec3 llf, tgt::svec3 urb, RealWorldMapping rwm, float rwThreadhold) {
+template<typename V1>
+struct QuantificationImpl {
+template<typename V2>
+static void quantificationImpl(const VolumeAtomic<V1>& slice1, const VolumeRAM& dynamicSlice, VolumeComparison::ScanSummary& globalSummary, tgt::svec3 llf, tgt::svec3 urb, RealWorldMapping rwm, float rwThreadhold) {
+    const VolumeAtomic<V2>& slice2 = dynamic_cast<const VolumeAtomic<V2>&>(dynamicSlice);
 
     float threshold = rwm.realWorldToNormalized(rwThreadhold);
 
+#undef VRN_MODULE_OPENMP
 
-    for (size_t y = llf.y; y <= urb.y; ++y) {
-        for (size_t x = llf.x; x <= urb.x; ++x) {
-            float v1 = slice1->getVoxelNormalized(x, y, 0);
-            float v2 = slice2->getVoxelNormalized(x, y, 0);
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel
+#endif
+    {
+        VolumeComparison::ScanSummary summary;
+#ifdef VRN_MODULE_OPENMP
+#pragma omp for
+#endif
+        for (size_t y = llf.y; y <= urb.y; ++y) {
+            size_t offset = y * (urb.x-llf.x);
+            size_t xlo = offset + llf.x;
+            size_t xhi = offset + urb.x+1;
+            for (size_t x = xlo; x < xhi; ++x) {
+                V1 v1g = slice1.voxel()[x];
+                float v1 = getTypeAsFloat(v1g);
 
-            bool foregroundOne = v1 > threshold;
-            bool foregroundTwo = v2 > threshold;
+                V2 v2g = slice2.voxel()[x];
+                float v2 = getTypeAsFloat(v2g);
 
-            if (foregroundOne && foregroundTwo)
-                summary.numForegroundBoth_++;
-            if (!foregroundOne && foregroundTwo)
-                summary.numForegroundOnlyTwo_++;
-            if (foregroundOne && !foregroundTwo)
-                summary.numForegroundOnlyOne_++;
-            if (!foregroundOne && !foregroundTwo)
-                summary.numBackgroundBoth_++;
+                bool foregroundOne = v1 > threshold;
+                bool foregroundTwo = v2 > threshold;
 
-            float diff = std::abs(v1 - v2);
-            summary.sumOfVoxelDiffsSquared_ += diff*diff;
-            summary.sumOfVoxelDiffsAbs_ += diff;
+                if (foregroundOne && foregroundTwo)
+                    summary.numForegroundBoth_++;
+                if (!foregroundOne && foregroundTwo)
+                    summary.numForegroundOnlyTwo_++;
+                if (foregroundOne && !foregroundTwo)
+                    summary.numForegroundOnlyOne_++;
+                if (!foregroundOne && !foregroundTwo)
+                    summary.numBackgroundBoth_++;
+
+                float diff = v1 - v2;
+                summary.sumOfVoxelDiffsSquared_ += diff*diff;
+                summary.sumOfVoxelDiffsAbs_ += std::abs(diff);
+            }
+        }
+
+#ifdef VRN_MODULE_OPENMP
+#pragma omp critical
+#endif
+        {
+            globalSummary.merge(summary);
         }
     }
+}
+};
+
+template<typename V1>
+static void quantificationIntermediate(const VolumeRAM& dynamicSlice, const VolumeRAM& slice2, VolumeComparison::ScanSummary& summary, tgt::svec3 llf, tgt::svec3 urb, RealWorldMapping rwm, float rwThreadhold) {
+    const VolumeAtomic<V1>& slice1 = dynamic_cast<const VolumeAtomic<V1>&>(dynamicSlice);
+    DISPATCH_FOR_BASETYPE(slice2.getBaseType(), QuantificationImpl<V1>::template quantificationImpl, slice1, slice2, summary, llf, urb, rwm, rwThreadhold);
+}
+
+static void quantification(const VolumeRAM& slice1, const VolumeRAM& slice2, VolumeComparison::ScanSummary& summary, tgt::svec3 llf, tgt::svec3 urb, RealWorldMapping rwm, float rwThreadhold) {
+    DISPATCH_FOR_BASETYPE(slice1.getBaseType(), quantificationIntermediate, slice1, slice2, summary, llf, urb, rwm, rwThreadhold);
 }
 
 void VolumeComparison::process() {
@@ -155,6 +193,11 @@ void VolumeComparison::process() {
         urb = tgt::min(urb, tgt::svec3(clipRegion_.get().getURB()));
     }
 
+    typedef std::chrono::steady_clock Clock;
+    typedef std::chrono::time_point<Clock> TimePoint;
+
+    TimePoint start = Clock::now();
+
     // we do not know how large a single slice is, so we only load one slice at a time for each volume
     for (size_t z = llf.z; z <= urb.z; ++z) {
 
@@ -164,12 +207,18 @@ void VolumeComparison::process() {
         tgtAssert(slice2, "No slice 2");
 
         // quantify slice according to the data type
-        quantification(slice1.get(), slice2.get(), summary, llf, urb, rwm, binarizationThreshold_.get());
+        quantification(*slice1.get(), *slice2.get(), summary, llf, urb, rwm, binarizationThreshold_.get());
 
         setProgress(std::min(0.99f, static_cast<float>(z - llf.z) / static_cast<float>(urb.z - llf.z)));
     }
 
     setProgress(1.f);
+    TimePoint end = Clock::now();
+
+    auto time = end - start;
+    auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(time);
+
+    LINFO("Comparison required " << std::to_string(static_cast<float>(millis.count())/1000.0) << " seconds");
 
     std::stringstream header, line;
     size_t numVoxels = summary.totalNumberOfVoxels();
@@ -239,6 +288,14 @@ size_t VolumeComparison::ScanSummary::totalNumberOfVoxels() const {
 }
 float VolumeComparison::ScanSummary::diceScore() const {
     return 2.0f * numForegroundBoth_ / (numForegroundOnlyOne_ + numForegroundOnlyTwo_ + 2*numForegroundBoth_);
+}
+void VolumeComparison::ScanSummary::merge(ScanSummary& other) {
+    numForegroundBoth_ += other.numForegroundBoth_;
+    numForegroundOnlyOne_ += other.numForegroundOnlyOne_;
+    numForegroundOnlyTwo_ += other.numForegroundOnlyTwo_;
+    numBackgroundBoth_ += other.numBackgroundBoth_;
+    sumOfVoxelDiffsSquared_ += other.sumOfVoxelDiffsSquared_;
+    sumOfVoxelDiffsAbs_ += other.sumOfVoxelDiffsAbs_;
 }
 
 } // namespace

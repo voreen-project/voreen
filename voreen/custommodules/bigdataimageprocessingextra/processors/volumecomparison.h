@@ -56,11 +56,12 @@ public:
         size_t numForegroundOnlyTwo_;
         size_t numForegroundBoth_;
         size_t numBackgroundBoth_;
-        float sumOfVoxelDiffsSquared_;
-        float sumOfVoxelDiffsAbs_;
+        double sumOfVoxelDiffsSquared_;
+        double sumOfVoxelDiffsAbs_;
 
         size_t totalNumberOfVoxels() const;
         float diceScore() const;
+        void merge(ScanSummary& other);
     };
 
     VolumeComparison();
