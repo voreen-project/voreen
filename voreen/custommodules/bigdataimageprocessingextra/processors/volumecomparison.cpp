@@ -79,52 +79,36 @@ static void quantificationImpl(const VolumeAtomic<V1>& slice1, const VolumeRAM& 
 
     float threshold = rwm.realWorldToNormalized(rwThreadhold);
 
-#undef VRN_MODULE_OPENMP
+    VolumeComparison::ScanSummary summary;
+    for (size_t y = llf.y; y <= urb.y; ++y) {
+        size_t offset = y * (urb.x-llf.x);
+        size_t xlo = offset + llf.x;
+        size_t xhi = offset + urb.x+1;
+        for (size_t x = xlo; x < xhi; ++x) {
+            V1 v1g = slice1.voxel()[x];
+            float v1 = getTypeAsFloat(v1g);
 
-#ifdef VRN_MODULE_OPENMP
-#pragma omp parallel
-#endif
-    {
-        VolumeComparison::ScanSummary summary;
-#ifdef VRN_MODULE_OPENMP
-#pragma omp for
-#endif
-        for (size_t y = llf.y; y <= urb.y; ++y) {
-            size_t offset = y * (urb.x-llf.x);
-            size_t xlo = offset + llf.x;
-            size_t xhi = offset + urb.x+1;
-            for (size_t x = xlo; x < xhi; ++x) {
-                V1 v1g = slice1.voxel()[x];
-                float v1 = getTypeAsFloat(v1g);
+            V2 v2g = slice2.voxel()[x];
+            float v2 = getTypeAsFloat(v2g);
 
-                V2 v2g = slice2.voxel()[x];
-                float v2 = getTypeAsFloat(v2g);
+            bool foregroundOne = v1 > threshold;
+            bool foregroundTwo = v2 > threshold;
 
-                bool foregroundOne = v1 > threshold;
-                bool foregroundTwo = v2 > threshold;
+            if (foregroundOne && foregroundTwo)
+                summary.numForegroundBoth_++;
+            if (!foregroundOne && foregroundTwo)
+                summary.numForegroundOnlyTwo_++;
+            if (foregroundOne && !foregroundTwo)
+                summary.numForegroundOnlyOne_++;
+            if (!foregroundOne && !foregroundTwo)
+                summary.numBackgroundBoth_++;
 
-                if (foregroundOne && foregroundTwo)
-                    summary.numForegroundBoth_++;
-                if (!foregroundOne && foregroundTwo)
-                    summary.numForegroundOnlyTwo_++;
-                if (foregroundOne && !foregroundTwo)
-                    summary.numForegroundOnlyOne_++;
-                if (!foregroundOne && !foregroundTwo)
-                    summary.numBackgroundBoth_++;
-
-                float diff = v1 - v2;
-                summary.sumOfVoxelDiffsSquared_ += diff*diff;
-                summary.sumOfVoxelDiffsAbs_ += std::abs(diff);
-            }
-        }
-
-#ifdef VRN_MODULE_OPENMP
-#pragma omp critical
-#endif
-        {
-            globalSummary.merge(summary);
+            float diff = v1 - v2;
+            summary.sumOfVoxelDiffsSquared_ += diff*diff;
+            summary.sumOfVoxelDiffsAbs_ += std::abs(diff);
         }
     }
+    globalSummary.merge(summary);
 }
 };
 
@@ -198,18 +182,35 @@ void VolumeComparison::process() {
 
     TimePoint start = Clock::now();
 
-    // we do not know how large a single slice is, so we only load one slice at a time for each volume
-    for (size_t z = llf.z; z <= urb.z; ++z) {
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel
+#endif
+    {
+        VolumeComparison::ScanSummary threadSummary;
 
-        std::unique_ptr<VolumeRAM> slice1(volume1.getSlice(z));
-        std::unique_ptr<VolumeRAM> slice2(volume2.getSlice(z));
-        tgtAssert(slice1, "No slice 1");
-        tgtAssert(slice2, "No slice 2");
+#ifdef VRN_MODULE_OPENMP
+#pragma omp for
+#endif
+        for (size_t z = llf.z; z <= urb.z; ++z) {
 
-        // quantify slice according to the data type
-        quantification(*slice1.get(), *slice2.get(), summary, llf, urb, rwm, binarizationThreshold_.get());
+            // we do not know how large a single slice is, so we only load one slice at a time for each volume
+            std::unique_ptr<VolumeRAM> slice1(volume1.getSlice(z));
+            std::unique_ptr<VolumeRAM> slice2(volume2.getSlice(z));
+            tgtAssert(slice1, "No slice 1");
+            tgtAssert(slice2, "No slice 2");
 
-        setProgress(std::min(0.99f, static_cast<float>(z - llf.z) / static_cast<float>(urb.z - llf.z)));
+            // quantify slice according to the data type
+            quantification(*slice1.get(), *slice2.get(), threadSummary, llf, urb, rwm, binarizationThreshold_.get());
+
+            //setProgress(std::min(0.99f, static_cast<float>(z - llf.z) / static_cast<float>(urb.z - llf.z)));
+        }
+
+#ifdef VRN_MODULE_OPENMP
+#pragma omp critical
+#endif
+        {
+            summary.merge(threadSummary);
+        }
     }
 
     setProgress(1.f);
