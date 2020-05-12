@@ -298,7 +298,10 @@ RandomWalker::ComputeInput RandomWalker::prepareComputeInput() {
         tgt::ivec3 maxDim = tgt::iround(tgt::vec3(volDim) / scaleFactorMax);
         lodMaxResolution_.set(maxDim);
 
-        prevProbabilities_ = std::vector<float>();
+        if(prevProbabilities_.size() != tgt::hmul(inportVolume_.getData()->getDimensions())) {
+            // Previous and new volume are definitely not compatible, so we cannot reuse the previous result.
+            prevProbabilities_ = std::vector<float>();
+        }
     }
 
     auto vol = inportVolume_.getThreadSafeData();
