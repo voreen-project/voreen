@@ -358,10 +358,10 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
 
     // Check if the previous result is compatible with the current input
     if(previousResult_) {
-        auto& octree = previousResult_->octree();
-        if(   octree.getDimensions() != volumeDim
-           || octree.getBrickDim() != brickDim
-           || octree.getNumLevels() != octree.getNumLevels()
+        auto& oldTree = previousResult_->octree();
+        if(   oldTree.getDimensions() != volumeDim
+           || oldTree.getBrickDim() != brickDim
+           || oldTree.getNumLevels() != octree.getNumLevels()
            || brickPoolManager_->getBrickMemorySizeInByte() != brickSizeInBytes) {
 
             // If not, clear previous results
