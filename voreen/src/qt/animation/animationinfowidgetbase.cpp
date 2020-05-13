@@ -585,8 +585,8 @@ void AnimationInfoWidgetBase::updatePropertyFromKey(Property* prop, PropertyWidg
     }
     else if (CameraProperty* p = dynamic_cast<CameraProperty*>(prop)) {
         const PropertyKeyValue<Camera>* k = dynamic_cast<const PropertyKeyValue<Camera>* >(key);
-        //CameraProperty* refProp = dynamic_cast<CameraProperty*>(tl->getProperty());
-        //p->setFrustum(k->getValue().getFrustum());
+        CameraProperty* refProp = dynamic_cast<CameraProperty*>(tl->getProperty());
+        p->setTrackballCenterBehaviour(refProp->getTrackballCenterBehaviour());
         p->set(k->getValue());
         widget->updateFromProperty();
         p->updateWidgets();
