@@ -52,6 +52,7 @@ CameraProperty::CameraProperty()
     , maxValue_(100.f)
     , minValue_(100.f / 50000.f)
     , currentSceneBounds_(tgt::Bounds(tgt::vec3(0.f), tgt::vec3(0.f)))
+    , centerOption_(SCENE)
     , adaptOnChange_(true)
 { }
 
