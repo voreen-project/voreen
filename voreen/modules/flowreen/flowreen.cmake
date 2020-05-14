@@ -37,6 +37,9 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/streamline/streamlineselector.cpp
     ${MOD_DIR}/processors/streamline/streamlinesource.cpp
 
+    # volume
+    ${MOD_DIR}/processors/volume/helicitydensity.cpp
+
     # utils
     ${MOD_DIR}/utils/flowutils.cpp
 )
@@ -74,6 +77,9 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/streamline/streamlinesave.h
     ${MOD_DIR}/processors/streamline/streamlineselector.h
     ${MOD_DIR}/processors/streamline/streamlinesource.h
+
+    # volume
+    ${MOD_DIR}/processors/volume/helicitydensity.h
 
     # utils
     ${MOD_DIR}/utils/flowutils.h

@@ -39,6 +39,7 @@
 #include "processors/streamline/streamlinesave.h"
 #include "processors/streamline/streamlineselector.h"
 #include "processors/streamline/streamlinesource.h"
+#include "processors/volume/helicitydensity.h"
 
 namespace voreen {
 
@@ -52,6 +53,7 @@ FlowreenModule::FlowreenModule(const std::string& modulePath)
 
     // processors
     registerSerializableType(new FlowDirectionOverlay());
+    registerSerializableType(new HelicityDensity());
     registerSerializableType(new PathlineCreator());
     registerSerializableType(new StreamlineBundleDetector());
     registerSerializableType(new StreamlineCombine());

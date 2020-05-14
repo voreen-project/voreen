@@ -221,7 +221,7 @@ void VolumeCombine::combineVolumes(Volume* combinedVolume, const VolumeBase* fir
     const size_t combinedVolChan = combinedVolume->getNumChannels();
     const size_t otherVolumeChan = otherVolume->getNumChannels();
 
-    VRN_FOR_EACH_VOXEL_WITH_PROGRESS(pos, tgt::ivec3(0), combinedVolDim, const_cast<VolumeCombine*>(this)) {
+    VRN_FOR_EACH_VOXEL_WITH_PROGRESS(pos, tgt::svec3::zero, combinedVolDim, const_cast<VolumeCombine*>(this)) {
         for (size_t referenceChannel = 0; referenceChannel < combinedVolChan; ++referenceChannel) {
             size_t otherChannel = (combinedVolChan == otherVolumeChan) ? referenceChannel : 0;
 
@@ -338,7 +338,7 @@ void VolumeCombine::combineVolumesOnCommonGrid(Volume* combinedVolume, const Vol
     const size_t combinedVolChan = combinedVolume->getNumChannels();
     const size_t otherVolumeChan = otherVolume->getNumChannels();
 
-    VRN_FOR_EACH_VOXEL_WITH_PROGRESS(pos, tgt::ivec3(0), combinedVolDim, const_cast<VolumeCombine*>(this)) {
+    VRN_FOR_EACH_VOXEL_WITH_PROGRESS(pos, tgt::svec3::zero, combinedVolDim, const_cast<VolumeCombine*>(this)) {
         for (size_t referenceChannel = 0; referenceChannel < combinedVolChan; ++referenceChannel) {
             size_t otherChannel = (combinedVolChan == otherVolumeChan) ? referenceChannel : 0;
             float valFirst = v1->getVoxelNormalized(pos, referenceChannel);

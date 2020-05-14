@@ -23,67 +23,43 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VOLUMEOPERATORRESIZE_H
-#define VRN_VOLUMEOPERATORRESIZE_H
+#ifndef VRN_HELICITYDENSITY_H
+#define VRN_HELICITYDENSITY_H
 
-#include "voreen/core/datastructures/volume/volumeoperator.h"
+#include "voreen/core/processors/processor.h"
+#include "voreen/core/ports/volumeport.h"
 
 namespace voreen {
 
 /**
- * Returns a resized copy of the passed input volume by keeping its
- * remaining properties.
- *
- * @note The volume data is not copied by this operation.
- *
- * @see VolumeOperatorResample
- *
- * @return the resized volume
+ * This processor calculates the helicity density for a velocity vector field and its vorticity.
  */
-class VRN_CORE_API VolumeOperatorResizeBase : public UnaryVolumeOperatorBase {
+class VRN_CORE_API HelicityDensity : public Processor {
 public:
-    /**
-     * @param newDims The target dimensions
-     * @param allocMem If true, a new data buffer is allocated
-     */
-    virtual Volume* apply(const VolumeBase* volume, tgt::svec3 newDims, bool allocMem = true) const = 0;
-};
+    HelicityDensity();
+    virtual ~HelicityDensity();
+    virtual Processor* create() const;
 
-// Generic implementation:
-template<typename T>
-class VolumeOperatorResizeGeneric : public VolumeOperatorResizeBase {
-public:
-    virtual Volume* apply(const VolumeBase* volume, tgt::svec3 newDims, bool allocMem = true) const;
-    //Implement isCompatible using a handy macro:
-    IS_COMPATIBLE
-};
+    virtual std::string getClassName() const  { return "HelicityDensity";      }
+    virtual std::string getCategory() const   { return "Volume Processing";     }
+    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
 
-template<typename T>
-Volume* VolumeOperatorResizeGeneric<T>::apply(const VolumeBase* vh, tgt::svec3 newDims, bool allocMem) const {
-    const VolumeRAM* vol = vh->getRepresentation<VolumeRAM>();
-    if(!vol)
-        return 0;
-
-    const VolumeAtomic<T>* volume = dynamic_cast<const VolumeAtomic<T>*>(vol);
-    if(!volume)
-        return 0;
-
-    LINFOC("voreen.VolumeOperatorResize", "Resizing from dimensions " << volume->getDimensions() << " to " << newDims);
-
-    // build target volume
-    VolumeAtomic<T>* result;
-    try {
-        result = new VolumeAtomic<T>(newDims, allocMem);
-    }
-    catch (std::bad_alloc&) {
-        throw; // throw it to the caller
+protected:
+    virtual void setDescriptions() {
+        setDescription("Calculates the helicity density for a velocity vector field and its vorticity. "
+                       "Helicity density is defined by the voxel-wise dot-product of velocity and vorticity.");
     }
 
-    return new Volume(result, vh);
-}
+    virtual bool isReady() const;
+    virtual void process();
 
-typedef UniversalUnaryVolumeOperatorGeneric<VolumeOperatorResizeBase> VolumeOperatorResize;
+private:
 
-} // namespace
+    VolumePort velocityInport_;
+    VolumePort vorticityInport_;
+    VolumePort helicityDensityOutport_;
+};
 
-#endif // VRN_VOLUMEOPERATOR_H
+}   //namespace
+
+#endif
