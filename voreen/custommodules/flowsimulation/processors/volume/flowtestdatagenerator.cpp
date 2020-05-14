@@ -44,10 +44,9 @@ FlowTestDataGenerator::FlowTestDataGenerator()
     type_.addOption("poiseuille", "poiseuille");
     type_.addOption("rotating", "rotating");
     type_.addOption("helical", "helical");
-    type_.addOption("coaxial", "coaxial");
-    //type_.addOption("chaotic", "chaotic");
-    //type_.addOption("wavy", "wavy");
     type_.addOption("stenotic", "stenotic");
+    type_.addOption("soteloVelocity", "Velocity by Sotelo et al.");
+    type_.addOption("soteloVorticity", "Vorticity by Sotelo et al.");
 }
 
 FlowTestDataGenerator::~FlowTestDataGenerator() {
@@ -116,34 +115,6 @@ tgt::vec3 helicalFlow(size_t diameter, size_t length, const tgt::svec3& pos, flo
         return tgt::vec3::zero;
 }
 
-tgt::vec3 coaxialFlow(size_t diameter, size_t length, const tgt::svec3& pos, float t) {
-
-    const float split = 0.7f;
-    const float zone = 0.05f;
-
-    float r = diameter * 0.5f;
-    float d = getR(diameter, pos);
-
-    float x = (pos.x - r) / r;
-    float y = (pos.y - r) / r;
-
-    if(d <= 1.0f) {
-        if(d <= split - zone) {
-            return tgt::vec3(0.0f, 0.0f,1.0f);
-        }
-        else if(d >= split + zone) {
-            return tgt::vec3(0.0f, 0.0f, -1.0f);
-        }
-        else {
-            float e = (d - (split-zone) / (2.0f * zone));
-            float n = (std::cos(e * 2.0f * tgt::PIf) + 1.0f) / 2.0f;
-            return tgt::normalize(tgt::vec3(x, y, n));
-        }
-    }
-    else
-        return tgt::vec3::zero;
-}
-
 tgt::vec3 stenoticFlow(size_t diameter, size_t length, const tgt::svec3& pos, float t) {
 
     float r = diameter * 0.5f;
@@ -161,9 +132,60 @@ tgt::vec3 stenoticFlow(size_t diameter, size_t length, const tgt::svec3& pos, fl
         return tgt::vec3::zero;
 }
 
+namespace sotelo {
+
+const float e = 2.72f;
+const float c = std::sqrt(5 / std::pow(e, 6));
+const float k = 0.01f;
+const float gamma = 0.5f * tgt::PIf;
+const float nu = 0.004;
+const float dP = 1.0f; // TODO:
+
+const tgt::vec3 X(1, 0, 0);
+const tgt::vec3 Y(0, 1, 0);
+const tgt::vec3 Z(0, 0, 1);
+
+tgt::vec3 velocity(size_t diameter, size_t L, const tgt::svec3& pos, float t) {
+
+    float r = getR(diameter, pos);
+    float R = diameter * 0.5f;
+    float x = pos.x - R;
+    float y = pos.y - R;
+    size_t z = pos.z;
+
+    tgt::vec3 v = tgt::vec3::zero;
+
+    // Poisueille term.
+    v += dP / (4 * nu * L) * (R * R - r * r) * Z;
+
+    // Lamb-Oseen term.
+    v += gamma / (2 * tgt::PIf * r * r) * (1.0f - std::exp(-r * r / c * c)) * k * std::sin(2 * tgt::PIf / L * z) * (-X * y + Y * x);
+
+    return v;
+}
+
+tgt::vec3 vorticity(size_t diameter, size_t L, const tgt::svec3& pos, float t) {
+
+    float r = getR(diameter, pos);
+    float R = diameter * 0.5f;
+    float x = pos.x - R;
+    float y = pos.y - R;
+    size_t z = pos.z;
+
+    tgt::vec3 w = tgt::vec3::zero;
+
+    w.x = x * k * gamma / (L * r * r) * (1 - std::exp(-r * r / c * c)) * std::cos(2 * tgt::PIf / L * z) + dP / (2 * nu * L) * y;
+    w.y = y * k * gamma / (L * r * r) * (1 - std::exp(-r * r / c * c)) * std::cos(2 * tgt::PIf / L * z) - dP / (2 * nu * L) * x;
+    w.z = -k * gamma / (tgt::PIf*c*c) * std::exp(-r * r / c * c) * std::sin(2 * tgt::PIf / L * z);
+
+    return w;
+}
+
+}
+
 void FlowTestDataGenerator::process() {
 
-    const size_t diameter = 50;
+    const size_t diameter = 51;
     const size_t length = 50;
 
     const tgt::vec3 spacing(2.0f / diameter, 2.0f / diameter, 1.0f / length);
@@ -172,7 +194,7 @@ void FlowTestDataGenerator::process() {
     tgt::svec3 dimensions(diameter, diameter, length);
     VolumeRAM_3xFloat* output = new VolumeRAM_3xFloat(dimensions);
 
-    auto getVelocityProfile = [&] {
+    auto getVectorField = [&] {
         if(type_.get() == "constant") {
             return &constantFlow;
         }
@@ -185,24 +207,27 @@ void FlowTestDataGenerator::process() {
         else if(type_.get() == "helical") {
             return &helicalFlow;
         }
-        else if(type_.get() == "coaxial") {
-            return &coaxialFlow;
-        }
         else if(type_.get() == "stenotic") {
             return &stenoticFlow;
+        }
+        else if(type_.get() == "soteloVelocity") {
+            return &sotelo::velocity;
+        }
+        else if(type_.get() == "soteloVorticity") {
+            return &sotelo::vorticity;
         }
         else /*if(type_.get() == "zero")*/ { // Fallback
             return &zeroFlow;
         }
     };
 
-    auto vel = getVelocityProfile();
+    auto v = getVectorField();
 
     tgt::svec3 pos = tgt::svec3::zero;
     for(pos.z=0; pos.z<dimensions.z; pos.z++) {
         for(pos.y=0; pos.y<dimensions.y; pos.y++) {
             for(pos.x=0; pos.x<dimensions.x; pos.x++) {
-                output->voxel(pos) = vel(diameter, length, pos, 0.0f);
+                output->voxel(pos) = v(diameter, length, pos, 0.0f);
             }
         }
     }
