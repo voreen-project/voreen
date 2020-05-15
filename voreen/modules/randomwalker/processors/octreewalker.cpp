@@ -578,6 +578,8 @@ public:
     RandomWalkerSeedsBrick(tgt::svec3 bufferDimensions, tgt::mat4 voxelToSeeds, const PointSegmentListGeometryVec3& foregroundSeedList, const PointSegmentListGeometryVec3& backgroundSeedList, const PointSegmentListGeometryVec3* fgslOld, const PointSegmentListGeometryVec3* bgslOld)
         : seedBuffer_(bufferDimensions)
         , conflicts_(false)
+        , minSeed_(1.0)
+        , maxSeed_(0.0)
     {
         numSeeds_ = 0;
         seedBuffer_.fill(UNLABELED);
