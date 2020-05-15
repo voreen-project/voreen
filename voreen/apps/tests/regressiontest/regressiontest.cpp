@@ -1113,6 +1113,13 @@ void executeWorkspace(const std::string& binary, RegressionTestCase& testCase, c
 #endif
     }
 
+    // Wait for asynccompute processors to actually process their output before ending network evaluation
+#ifdef WIN32
+    _putenv_s("VRN_ASYNCCOMPUTEPROCESSOR_WAIT_FOR_RESULT", "1");
+#else
+    setenv("VRN_ASYNCCOMPUTEPROCESSOR_WAIT_FOR_RESULT", "1", 1);
+#endif
+
     LDEBUG("Calling: " << testCase.call_);
 
     tgt::Stopwatch stopWatch;
