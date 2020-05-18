@@ -546,6 +546,23 @@ const T* VolumeBase::getRepresentation() const {
         }
     }
 
+    // As a last resort, try to get a RAM representation and convert using that.
+    if (VolumeMemoryManager::isInited()) {
+        // Implicitly (try to) create VolumeRAM representation by recursive call.
+        const VolumeRAM* volumeRam = getRepresentation<VolumeRAM>(); // it is ok to use getRepresentation<T> here, since the VolumeMemoryManager has been notified anyway
+        if(volumeRam) {
+            RepresentationConverter<T>* converter = fac.findConverter<T>(volumeRam);
+            if (converter) {
+                const T* rep = static_cast<const T*>(useConverter(converter)); //we can static cast here because we know the converter returns T*
+                if (rep) {
+                    return rep;
+                }
+            }
+        } else {
+            LERROR("Failed to create intermediate VolumeRAM representation");
+        }
+    }
+
     LERROR("Failed to create representation of the requested type!");
     return 0;
 
