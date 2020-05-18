@@ -1,6 +1,9 @@
 #include "preprocessing.h"
+#include <array>
+#include <cmath>
 
 #include "voreen/core/utils/stringutils.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 
 //#define VRN_RANDOMWALKER_MEAN_NOT_MEDIAN
 
@@ -34,24 +37,27 @@ end_not_full:
         } else {
             if(val < top()) {
                 size_t i = 1;
-                size_t child1, child2, c;
+                size_t child1, child2, c, childSelect;
 
                 // 1->3
                 child1 = 2;
                 child2 = 3;
-                c = data[child2] < data[child1] ? child1 : child2;
+                childSelect = size_t(data[child1] < data[child2]);
+                c = child1 + childSelect;
                 if(val >= data[c]) { goto end_full; } data[i] = data[c]; i = c;
 
                 // 3->7
                 child1 = i<<1;
                 child2 = child1+1;
-                c = data[child2] < data[child1] ? child1 : child2;
+                childSelect = size_t(data[child1] < data[child2]);
+                c = child1 + childSelect;
                 if(val >= data[c]) { goto end_full; } data[i] = data[c]; i = c;
 
                 // 7->15
                 child1 = i<<1;
                 child2 = child1+1;
-                c = data[child2] < data[child1] ? child1 : child2;
+                childSelect = size_t(data[child1] < data[child2]);
+                c = child1 + childSelect;
                 if(val >= data[c]) { goto end_full; } data[i] = data[c]; i = c;
 end_full:
                 data[i] = val;
