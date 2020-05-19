@@ -880,7 +880,31 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
     }
 }
 
-static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLocation& outputNodeGeometry, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, bool& hasSeedConflicts, bool parentHadSeedsConflicts, OctreeBrickPoolManagerBase& outputPoolManager, LocatedVolumeOctreeNode* outputRoot, const LocatedVolumeOctreeNodeConst& inputRoot, boost::optional<LocatedVolumeOctreeNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
+struct ParallelHistogram {
+    ParallelHistogram(size_t size)
+        : values_(size)
+        , rangei_(size-1)
+        , rangef_(static_cast<float>(rangei_))
+    {
+        for(size_t i = 0; i < size; ++i) {
+            std::atomic_init(&values_[i], 0);
+        }
+    }
+
+    void increase(float val, size_t number) {
+        int bucket_num = val * rangef_;
+        bucket_num = tgt::clamp(bucket_num, 0, rangei_);
+        values_[bucket_num].fetch_add(number);
+    }
+    void add(float val) {
+        increase(val, 1);
+    }
+    std::vector<std::atomic<size_t>> values_;
+    int rangei_;
+    float rangef_;
+};
+
+static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLocation& outputNodeGeometry, ParallelHistogram& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, bool& hasSeedConflicts, bool parentHadSeedsConflicts, OctreeBrickPoolManagerBase& outputPoolManager, LocatedVolumeOctreeNode* outputRoot, const LocatedVolumeOctreeNodeConst& inputRoot, boost::optional<LocatedVolumeOctreeNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
     auto canSkipChildren = [&] (float min, float max) {
         float parentValueRange = max-min;
         const float delta = 0.01;
@@ -939,9 +963,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
             avg = 0xffff/2;
             min = avg;
             max = avg;
-            for(int i=0; i<numVoxels; ++i) {
-                histogram.addSample(0.5f);
-            }
+            histogram.increase(0.5f, numVoxels);
             return OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS;
         } else {
             // There are seeds, but they all overlap (=> conflicts). We need to try again in lower levels.
@@ -963,7 +985,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
                     max = std::max(val, max);
                     sum += val;
 
-                    histogram.addSample(brickToNorm(val));
+                    histogram.add(brickToNorm(val));
                 }
                 avg = sum/tgt::hmul(brickEnd);
             } else {
@@ -973,7 +995,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
                 float avgf = brickToNorm(avg);
                 VRN_FOR_EACH_VOXEL(pos, brickStart, brickEnd) {
                     outputBrick.data().voxel(pos) = avg;
-                    histogram.addSample(avgf);
+                    histogram.add(avgf);
                 }
             }
             return outputBrickAddr;
@@ -1053,7 +1075,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
             max = std::max(val, max);
             sum += val;
 
-            histogram.addSample(valf);
+            histogram.add(valf);
         }
         avg = sum/tgt::hmul(centerBrickSize);
     }
@@ -1139,7 +1161,8 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     uint16_t globalMin = 0xffff;
     uint16_t globalMax = 0;
 
-    Histogram1D histogram(0.0, 1.0, 256);
+    const size_t HISTOGRAM_BUCKETS = 1 << 12;
+    ParallelHistogram phistogram(HISTOGRAM_BUCKETS);
 
     auto rwm = input.volume_.getRealWorldMapping();
 
@@ -1210,11 +1233,17 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                 tgtAssert(node.inputNode->hasBrick(), "No Brick");
 
                 VolumeOctreeNodeLocation outputNodeGeometry(level, node.llf, node.urb);
-                newBrickAddr = processOctreeBrick(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                newBrickAddr = processOctreeBrick(input, outputNodeGeometry, phistogram, min, max, avg, hasSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
             }
 
-            globalMin = std::min(globalMin, min);
-            globalMax = std::max(globalMax, max);
+            #pragma omp critical
+            {
+                globalMin = std::min(globalMin, min);
+            }
+            #pragma omp critical
+            {
+                globalMax = std::max(globalMax, max);
+            }
 
             bool childrenToProcess = newBrickAddr != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS && !node.inputNode->isLeaf();
             VolumeOctreeNode* newNode = nullptr;
@@ -1303,6 +1332,12 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     }
 
     nodeCleanup.dismiss();
+
+    Histogram1D histogram(0.0, 1.0, HISTOGRAM_BUCKETS);
+    for(size_t i = 0; i < HISTOGRAM_BUCKETS; ++i) {
+        histogram.increaseBucket(i, phistogram.values_[i]);
+    }
+
     std::vector<Histogram1D*> octreeHistograms;
     octreeHistograms.push_back(new Histogram1D(histogram));
     auto octree = new VolumeOctree(outputRootNode.node_, &brickPoolManager, std::move(octreeHistograms), brickDim, input.octree_.getDimensions(), numChannels);

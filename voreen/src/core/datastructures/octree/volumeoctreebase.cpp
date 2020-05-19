@@ -220,7 +220,7 @@ static VolumeOctreeNode* findLeafNodeFor(VolumeOctreeNode* root, tgt::svec3& llf
     tgtAssert(tgt::hand(tgt::lessThanEqual(llf, point)), "Invalid point pos");
     tgtAssert(root, "No root");
 
-    if(root->isLeaf() || level == targetLevel) {
+    if(level == targetLevel || root->isLeaf()) {
         return root;
     }
 
