@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="SingleVolumeRaycaster" ref="ref40" />
+                        <item type="OctreeWalker" ref="ref10" />
                     </values>
                 </MetaItem>
                 <MetaItem name="Zoom" type="ZoomMetaData">
@@ -25,7 +25,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref42">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-331" y="1112" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="198" y="918" width="750" height="700" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="162" y="850" width="750" height="700" />
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
                             <value x="105" y="226" />
@@ -35,7 +35,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="198" y="918" />
+                            <value x="162" y="850" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="750" y="700" />
@@ -4246,7 +4246,7 @@ void main() {
                         <Property mapKey="raycast.prg" name="raycast.prg">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-2205" y="0" width="700" height="700" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="0" y="0" width="700" height="700" />
                             </MetaData>
                             <components>
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
@@ -4924,7 +4924,7 @@ void main() {
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="progressMessage" name="progressMessage" value="Octree generated." />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 393 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 237 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="treeDepth" name="treeDepth" value="3" />
@@ -4971,12 +4971,12 @@ void main() {
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="OctreeWalker" name="OctreeWalker" prevResultPath="/home/dominik/data/nosnapshot/tmp/voreen_tmp/fced3dbe-eec8-4979-aefd-686432f00d6c/e149e0b1-47fa-4b20-b36e-2d51ee1e85c3" id="ref10">
+                <Processor type="OctreeWalker" name="OctreeWalker" prevResultPath="/home/dominik/data/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" id="ref10">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-139" y="179" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="conjGradImplementation" name="conjGradImplementation" value="blasMP" />
+                        <Property mapKey="conjGradImplementation" name="conjGradImplementation" value="blasCL" />
                         <Property mapKey="conjGradIterations" name="conjGradIterations" value="1000" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="errorThreshold" name="errorThreshold" value="2" />
@@ -4989,13 +4989,13 @@ void main() {
                         <Property mapKey="resultPath" name="resultPath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/fced3dbe-eec8-4979-aefd-686432f00d6c/e149e0b1-47fa-4b20-b36e-2d51ee1e85c3" />
-                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/fced3dbe-eec8-4979-aefd-686432f00d6c/e149e0b1-47fa-4b20-b36e-2d51ee1e85c3" />
-                                    <item value="/data/dominik/nosnapshot/tmp/voreen_tmp/fced3dbe-eec8-4979-aefd-686432f00d6c/e149e0b1-47fa-4b20-b36e-2d51ee1e85c3" />
+                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" />
+                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" />
+                                    <item value="/data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 1.852 sec" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 2.996 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
