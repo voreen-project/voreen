@@ -6,18 +6,13 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="OctreeWalker" ref="ref10" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="Zoom" type="ZoomMetaData">
                     <transform.row0 x="0.39685088396072388" y="0" z="0" />
                     <transform.row1 x="0" y="0.39685088396072388" z="0" />
                     <transform.row2 x="7676.314453125" y="-4512.15673828125" z="1" />
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-404.093231201" y="766.44128418" />
+                    <value x="-692.969787598" y="1093.723388672" />
                 </MetaItem>
                 <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.598871708" />
             </MetaData>
@@ -25,7 +20,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref42">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-331" y="1112" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="162" y="850" width="750" height="700" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="180" y="860" width="750" height="700" />
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
                             <value x="105" y="226" />
@@ -35,7 +30,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="162" y="850" />
+                            <value x="180" y="860" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="750" y="700" />
@@ -263,9 +258,9 @@
                         <Property mapKey="alphaFactorYPlane" name="alphaFactorYPlane" value="0" />
                         <Property mapKey="alphaFactorZPlane" name="alphaFactorZPlane" value="0" />
                         <Property mapKey="enable" name="enable" value="true" />
-                        <Property mapKey="lineXWidth" name="lineXWidth" value="2" />
-                        <Property mapKey="lineYWidth" name="lineYWidth" value="2" />
-                        <Property mapKey="lineZWidth" name="lineZWidth" value="2" />
+                        <Property mapKey="lineXWidth" name="lineXWidth" value="1" />
+                        <Property mapKey="lineYWidth" name="lineYWidth" value="1" />
+                        <Property mapKey="lineZWidth" name="lineZWidth" value="1" />
                         <Property mapKey="planeShaderOpaque" name="planeShaderOpaque">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-2205" y="0" width="700" height="700" />
@@ -4924,7 +4919,7 @@ void main() {
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="progressMessage" name="progressMessage" value="Octree generated." />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 237 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 232 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="treeDepth" name="treeDepth" value="3" />
@@ -4976,7 +4971,7 @@ void main() {
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-139" y="179" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="conjGradImplementation" name="conjGradImplementation" value="blasCL" />
+                        <Property mapKey="conjGradImplementation" name="conjGradImplementation" value="blasCPU" />
                         <Property mapKey="conjGradIterations" name="conjGradIterations" value="1000" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="errorThreshold" name="errorThreshold" value="2" />
@@ -4995,7 +4990,7 @@ void main() {
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 2.996 sec" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 2.200 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
