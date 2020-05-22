@@ -52,13 +52,25 @@ size_t VolumeRepresentation::getNumVoxels() const {
 //---------------------------------------------------------------------------------
 
 ConverterFactory::ConverterFactory() {
+
+    // Considering the memory hierarchy: Disk / Octree -> RAM -> GL
+    // we add the following converters:
+
+    // Disk -> RAM
     addConverter(new RepresentationConverterLoadFromDisk());
+
+    // Octree -> RAM
     addConverter(new RepresentationConverterOctreeToRAM());
 
-    addConverter(new RepresentationConverterLoadFromDiskToGL());
+    // RAM -> GL
     addConverter(new RepresentationConverterUploadGL());
 
-    addConverter(new RepresentationConverterDownloadGL());
+    // We explicitly don't (/no longer) allow a conversion in the other direction, since Disk representations
+    // should never be deleted anyway, since they require virtually no volatile memory and GL representations
+    // require an active GL context which is not guaranteed to be available.
+
+    // The 'direct' conversion Disk / Octree -> GL is performed by the memory manager, which will use the RAM
+    // representation, if available, or will create one from Disk or Octree, otherwise which is then uploaded.
 }
 
 ConverterFactory::~ConverterFactory() {

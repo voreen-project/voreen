@@ -25,6 +25,9 @@ Voreen Changelog
       o Fix handling of kernel extent in MorphologyFilter of VolumeFilterList
       o Improve OctreeCreator performance
       o Allow extent of 0 in VolumeFilterList filter properties
+      o Removal of only remaining volume representation no longer possible
+      o Remove GL -> RAM volume representation converter, which caused crashes in asynchronous processing 
+      o Remove Disk -> GL volume representation converter, which created an intermediate RAM representation. This is now handled by the memory manager and also supports Octree -> GL representation conversion.
 
 2020-01-17: Voreen 5.1.1
 ------------------------

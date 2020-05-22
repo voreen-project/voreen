@@ -260,6 +260,12 @@ public:
     template <class T>
     bool canConvertToRepresentation() const;
 
+    /**
+     * Tries to remove a representation (@see VolumeRepresentation) of type T.
+     * If none is found, the function has no effect.
+     * If one was found but it's the only representation of the volume, a warning is emitted.
+     * Otherwise, the representation of type T is removed.
+     */
     template <class T>
     void removeRepresentation();
 
@@ -583,6 +589,12 @@ void VolumeBase::removeRepresentation() {
     boost::lock_guard<boost::recursive_mutex> lock(representationMutex_);
     for (size_t i = getNumRepresentations(); i > 0; i--) {
         if (dynamic_cast<const T*>(getRepresentation(i-1))) {
+            // If we found a match but it's the only representation, don't delete it.
+            if(getNumRepresentations() == 1) {
+                LWARNING("Can't remove only representation of this volume!" << this);
+                return;
+            }
+
             // no need to notify memory manager, since removeRepresentation() already does
             removeRepresentation(i-1);
         }
