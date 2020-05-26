@@ -35,7 +35,7 @@ public:
     SpatialSampler(const VolumeRAM* volume,
                    const RealWorldMapping& rwm,
                    VolumeRAM::Filter filter,
-                   const tgt::mat4& worldToVoxelMatrix = tgt::mat4::identity);
+                   const tgt::mat4& toVoxelMatrix = tgt::mat4::identity);
 
     /**
      * Samples the given volume at the given specified position.
@@ -47,7 +47,7 @@ private:
     const VolumeRAM* volume_;
     const RealWorldMapping rwm_;
     const VolumeRAM::Filter filter_;
-    const tgt::mat4 worldToVoxelMatrix_;
+    const tgt::mat4 toVoxelMatrix_;
     const bool transformationSet_;
 };
 
@@ -61,13 +61,13 @@ public:
      * @param alpha value in range [0,1]. alpha = 0 will return sample in volume0, alpha = 1 in volume1, respectively
      * @param rwm
      * @param filter spacial sampling strategy
-     * @param worldToVoxelMatrix
+     * @param toVoxelMatrix
      */
     SpatioTemporalSampler(const VolumeRAM* volume0, const VolumeRAM* volume1,
                           float alpha,
                           const RealWorldMapping& rwm,
                           VolumeRAM::Filter filter,
-                          const tgt::mat4& worldToVoxelMatrix = tgt::mat4::identity);
+                          const tgt::mat4& toVoxelMatrix = tgt::mat4::identity);
 
     /**
      * Samples the given volume at the given specified position.

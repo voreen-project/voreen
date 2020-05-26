@@ -157,17 +157,17 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
         throw InvalidInputException("Need at least two time steps", InvalidInputException::S_ERROR);
     }
 
+    // Set up random generator.
+    std::function<float()> rnd(std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
+
     const VolumeBase* referenceVolume = flowVolumes->first();
     VolumeRAMRepresentationLock reference(referenceVolume);
 
-    tgt::mat4 worldToVoxelMatrix = referenceVolume->getPhysicalToVoxelMatrix();
-    tgt::Bounds roi = referenceVolume->getBoundingBox().getBoundingBox();
+    const tgt::mat4 worldToVoxelMatrix = referenceVolume->getPhysicalToVoxelMatrix();
+    const tgt::Bounds roi = referenceVolume->getBoundingBox().getBoundingBox();
     RealWorldMapping rwm = referenceVolume->getRealWorldMapping();
     rwm.setScale(rwm.getScale() * velocityUnitConversion_.getValue()); // Now we have mm/s.
     SpatialSampler sampler(*reference, rwm, filterMode_.getValue(), worldToVoxelMatrix);
-
-    // Set up random generator.
-    std::function<float()> rnd(std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
 
     std::list<Streamline> pathlines;
     auto seedMask = seedMask_.getData();
@@ -187,10 +187,10 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
             throw InvalidInputException("Seed Mask is empty", InvalidInputException::S_ERROR);
         }
 
-        tgt::mat4 seedMaskPhysicalToVoxelMatrix = seedMask->getPhysicalToVoxelMatrix();
+        tgt::mat4 seedMaskWorldToVoxelMatrix = seedMask->getPhysicalToVoxelMatrix();
 
-        tgt::svec3 llf = tgt::round(seedMaskPhysicalToVoxelMatrix * roiBounds.getLLF());
-        tgt::svec3 urb = tgt::round(seedMaskPhysicalToVoxelMatrix * roiBounds.getURB());
+        tgt::svec3 llf = tgt::round(seedMaskWorldToVoxelMatrix * roiBounds.getLLF());
+        tgt::svec3 urb = tgt::round(seedMaskWorldToVoxelMatrix * roiBounds.getURB());
 
         std::vector<tgt::vec3> maskVoxels;
         for(size_t z=llf.z; z < urb.z; z++) {
@@ -213,7 +213,7 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
         for(const tgt::vec3& seedPoint : maskVoxels) {
             // Determine for each seed point, if we will keep it.
             if(probability >= 1.0f || rnd() < probability) {
-                tgt::vec3 position = worldToVoxelMatrix * seedMaskVoxelToWorldMatrix * seedPoint;
+                tgt::vec3 position = seedMaskVoxelToWorldMatrix * seedPoint;
                 tgt::vec3 velocity = sampler.sample(position);
 
                 Streamline pathline;
@@ -268,10 +268,10 @@ PathlineCreatorOutput PathlineCreator::compute(PathlineCreatorInput input, Progr
     std::unique_ptr<StreamlineListBase> output = std::move(input.output);
 
     // Temp. requirements.
+    const tgt::mat4 worldToVoxelMatrix = referenceVolume->getWorldToVoxelMatrix();
+    const tgt::Bounds roi = referenceVolume->getBoundingBox().getBoundingBox();
     RealWorldMapping rwm = referenceVolume->getRealWorldMapping();     // This maps to some unknown unit per second.
     rwm.setScale(rwm.getScale() * input.velocityUnitConversion); // Now we have mm/s.
-    tgt::mat4 worldToVoxelMatrix = referenceVolume->getWorldToVoxelMatrix();
-    tgt::Bounds roi = referenceVolume->getBoundingBox().getBoundingBox();
 
     const float totalTime = input.temporalResolution * (flowVolumes->size() - 1);
     const float dt = input.temporalResolution / input.temporalIntegrationSteps;

@@ -127,17 +127,18 @@ void StreamlineCreator::adjustPropertiesToInput() {
 
 StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
 
-    // Set up random generator.
-    std::function<float()> rnd(std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
-
     auto flowVolume = volumeInport_.getThreadSafeData();
     if(!flowVolume) {
         throw InvalidInputException("No volume", InvalidInputException::S_ERROR);
     }
-    tgt::mat4 physicalToVoxelMatrix = flowVolume->getPhysicalToVoxelMatrix();
-    tgt::Bounds roi = flowVolume->getBoundingBox(false).getBoundingBox(false);
 
-    auto seedMask = seedMask_.getThreadSafeData();
+    // Set up random generator.
+    std::function<float()> rnd(std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
+
+    const tgt::mat4 physicalToVoxelMatrix = flowVolume->getPhysicalToVoxelMatrix();
+    const tgt::Bounds roi = flowVolume->getBoundingBox(false).getBoundingBox(false);
+
+    auto seedMask = seedMask_.getData();
     std::vector<tgt::vec3> seedPoints;
     seedPoints.reserve(numSeedPoints_.get());
     if (seedMask) {
@@ -182,7 +183,7 @@ StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
         for(const tgt::vec3& seedPoint : maskVoxels) {
             // Determine for each seed point, if we will keep it.
             if(probability >= 1.0f || rnd() < probability) {
-                seedPoints.push_back(physicalToVoxelMatrix * seedMaskVoxelToPhysicalMatrix * seedPoint);
+                seedPoints.push_back(physicalToVoxelMatrix * (seedMaskVoxelToPhysicalMatrix * seedPoint));
             }
         }
 
@@ -193,7 +194,7 @@ StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
         for (int k = 0; k<numSeedPoints_.get(); k++) {
             tgt::vec3 seedPoint;
             seedPoint = tgt::vec3(rnd(), rnd(), rnd());
-            seedPoint = tgt::vec3(roi.getLLF()) + seedPoint * tgt::vec3(roi.diagonal());
+            seedPoint = roi.getLLF() + seedPoint * roi.diagonal();
             seedPoints.push_back(physicalToVoxelMatrix * seedPoint);
         }
     }

@@ -30,12 +30,12 @@ namespace voreen {
 SpatialSampler::SpatialSampler(const VolumeRAM* volume,
                                const RealWorldMapping& rwm,
                                VolumeRAM::Filter filter,
-                               const tgt::mat4& worldToVoxelMatrix)
+                               const tgt::mat4& toVoxelMatrix)
     : volume_(volume)
     , rwm_(rwm)
     , filter_(filter)
-    , worldToVoxelMatrix_(worldToVoxelMatrix)
-    , transformationSet_(worldToVoxelMatrix_ != tgt::mat4::identity)
+    , toVoxelMatrix_(toVoxelMatrix)
+    , transformationSet_(toVoxelMatrix_ != tgt::mat4::identity)
 {
 }
 
@@ -43,7 +43,7 @@ tgt::vec3 SpatialSampler::sample(tgt::vec3 pos) const {
 
     // Transform, if needed.
     if(transformationSet_) {
-        pos = worldToVoxelMatrix_ * pos;
+        pos = toVoxelMatrix_ * pos;
     }
 
     // Would we sample out of bounds?
@@ -83,9 +83,9 @@ SpatioTemporalSampler::SpatioTemporalSampler(const VolumeRAM* volume0,
                                              float alpha,
                                              const RealWorldMapping& rwm,
                                              VolumeRAM::Filter filter,
-                                             const tgt::mat4& worldToVoxelMatrix)
-    : filter0_(volume0, rwm, filter, worldToVoxelMatrix)
-    , filter1_(volume1, rwm, filter, worldToVoxelMatrix)
+                                             const tgt::mat4& toVoxelMatrix)
+    : filter0_(volume0, rwm, filter, toVoxelMatrix)
+    , filter1_(volume1, rwm, filter, toVoxelMatrix)
     , alpha_(alpha)
 {
 }
