@@ -41,7 +41,8 @@ ReferenceVolumeCreator::ReferenceVolumeCreator()
     , time_("time", "Time", 0.0f, 0.0f, 1000000.0f)
     , referenceMethod_("referenceMethode", "Reference Method")
     , referenceRun_("referenceRun", "Reference Run")
-    , outputDimensions_("outputDimensions", "Output Dimensions", tgt::ivec3(200), tgt::ivec3(10), tgt::ivec3(1000))
+    , sampleRegion_("sampleRegion", "Sample Region")
+    , outputDimensions_("outputDimensions", "Output Dimensions", tgt::ivec3(200), tgt::ivec3(1), tgt::ivec3(1000))
 {
     // Ports
     addPort(inport_);
@@ -59,6 +60,10 @@ ReferenceVolumeCreator::ReferenceVolumeCreator()
         referenceRun_.setReadOnlyFlag(referenceMethod_.get() != "run");
     });
     addProperty(referenceRun_);
+    addProperty(sampleRegion_);
+    sampleRegion_.addOption("bounds", "Ensemble Bounds");
+    sampleRegion_.addOption("common", "Common Bounds");
+    sampleRegion_.addOption("roi", "Region of Interest");
     addProperty(outputDimensions_);
 }
 
@@ -82,9 +87,24 @@ ReferenceVolumeCreatorInput ReferenceVolumeCreator::prepareComputeInput() {
     std::unique_ptr<VolumeRAM> outputVolume(factory.create(format, newDims));
     outputVolume->clear(); // Sets all to zero.
 
+    tgt::Bounds bounds;
+    if (sampleRegion_.get() == "bounds") {
+        bounds = ensemble->getBounds();
+    }
+    else if (sampleRegion_.get() == "common") {
+        bounds = ensemble->getCommonBounds();
+    }
+    else if (sampleRegion_.get() == "roi") {
+        bounds = ensemble->getRoi();
+    }
+    else {
+        throw InvalidInputException("Unknown sample region", InvalidInputException::S_ERROR);
+    }
+
     return ReferenceVolumeCreatorInput{
             std::move(ensemble),
             std::move(outputVolume),
+            bounds,
             selectedField_.get(),
             time_.get(),
             referenceMethod_.get(),
@@ -95,12 +115,12 @@ ReferenceVolumeCreatorInput ReferenceVolumeCreator::prepareComputeInput() {
 ReferenceVolumeCreatorOutput ReferenceVolumeCreator::compute(ReferenceVolumeCreatorInput input, ProgressReporter& progress) const {
 
     auto ensemble = std::move(input.ensemble);
+    const tgt::Bounds& bounds = input.bounds;
     const std::string& field = input.field;
     const size_t numRuns = ensemble->getRuns().size();
     const size_t numChannels = ensemble->getNumChannels(field);
     std::unique_ptr<VolumeRAM> output = std::move(input.outputVolume);
     const tgt::ivec3 newDims = output->getDimensions();
-    const tgt::Bounds& roi = ensemble->getRoi();
 
     if(input.referenceMethod == "run") {
 
@@ -115,13 +135,13 @@ ReferenceVolumeCreatorOutput ReferenceVolumeCreator::compute(ReferenceVolumeCrea
                 for (pos.x = 0; pos.x < newDims.x; ++pos.x) {
 
                     // Map sample position to physical space.
-                    tgt::vec3 sample = mapRange(tgt::vec3(pos), tgt::vec3::zero, tgt::vec3(newDims), roi.getLLF(), roi.getURB());
+                    tgt::vec3 sample = mapRange(tgt::vec3(pos), tgt::vec3::zero, tgt::vec3(newDims), bounds.getLLF(), bounds.getURB());
 
                     // Map to voxel space.
-                    tgt::ivec3 sampleInRefVoxelSpace = refPhysicalToVoxel * sample;
+                    tgt::svec3 sampleInRefVoxelSpace = refPhysicalToVoxel * sample;
 
                     // Ignore, if out of bounds.
-                    if(tgt::clamp(sampleInRefVoxelSpace, tgt::ivec3::zero, newDims - tgt::ivec3::one) != sampleInRefVoxelSpace) {
+                    if(tgt::clamp(sampleInRefVoxelSpace, tgt::svec3::zero, referenceVolume->getDimensions() - tgt::svec3::one) != sampleInRefVoxelSpace) {
                         continue;
                     }
 
@@ -152,13 +172,13 @@ ReferenceVolumeCreatorOutput ReferenceVolumeCreator::compute(ReferenceVolumeCrea
                     for (pos.x = 0; pos.x < newDims.x; ++pos.x) {
 
                         // Map sample position to physical space.
-                        tgt::vec3 sample = mapRange(tgt::vec3(pos), tgt::vec3::zero, tgt::vec3(newDims), roi.getLLF(), roi.getURB());
+                        tgt::vec3 sample = mapRange(tgt::vec3(pos), tgt::vec3::zero, tgt::vec3(newDims), bounds.getLLF(), bounds.getURB());
 
                         // Map to voxel space.
-                        tgt::ivec3 sampleInVoxelSpace = physicalToVoxel * sample;
+                        tgt::svec3 sampleInVoxelSpace = physicalToVoxel * sample;
 
-                        // Ignore, if out of bounds.
-                        if(tgt::clamp(sampleInVoxelSpace, tgt::ivec3::zero, newDims - tgt::ivec3::one) != sampleInVoxelSpace) {
+                        // Ignore, if out of source bounds.
+                        if(tgt::clamp(sampleInVoxelSpace, tgt::svec3::zero, lock->getDimensions() - tgt::svec3::one) != sampleInVoxelSpace) {
                             continue;
                         }
 
@@ -215,8 +235,8 @@ ReferenceVolumeCreatorOutput ReferenceVolumeCreator::compute(ReferenceVolumeCrea
          */
     }
 
-    tgt::vec3 spacing = roi.diagonal() / tgt::vec3(newDims);
-    std::unique_ptr<Volume> volume(new Volume(output.release(), spacing, roi.getLLF()));
+    tgt::vec3 spacing = bounds.diagonal() / tgt::vec3(newDims);
+    std::unique_ptr<Volume> volume(new Volume(output.release(), spacing, bounds.getLLF()));
     volume->getMetaDataContainer().addMetaData("time", new FloatMetaData(input.time));
     volume->getMetaDataContainer().addMetaData("field", new StringMetaData(field));
 

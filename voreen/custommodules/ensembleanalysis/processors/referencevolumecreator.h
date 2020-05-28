@@ -39,6 +39,7 @@ namespace voreen {
 struct ReferenceVolumeCreatorInput {
     PortDataPointer<EnsembleDataset> ensemble;
     std::unique_ptr<VolumeRAM> outputVolume;
+    tgt::Bounds bounds;
     std::string field;
     float time;
     std::string referenceMethod;
@@ -86,6 +87,7 @@ protected:
     StringOptionProperty referenceMethod_;
     StringOptionProperty referenceRun_;
 
+    StringOptionProperty sampleRegion_;
     IntVec3Property outputDimensions_;
 
     static const std::string loggerCat_;
