@@ -271,6 +271,11 @@ RandomWalker::ComputeInput RandomWalker::prepareComputeInput() {
 
     tgtAssert(inportVolume_.hasData(), "no input volume");
 
+    const VolumeRAM* volram = inportVolume_.getData()->getRepresentation<VolumeRAM>();
+    if (!volram) {
+        throw InvalidInputException("Failed to get VolumeRAM representation (which is required for RandomWalker)", InvalidInputException::S_ERROR);
+    }
+
     // clear previous results and update property ranges, if input volume has changed
     if (inportVolume_.hasChanged()) {
         outportSegmentation_.setData(0);
@@ -281,9 +286,8 @@ RandomWalker::ComputeInput RandomWalker::prepareComputeInput() {
         for (size_t i=0; i<lodVolumes_.size(); i++)
             delete lodVolumes_.at(i);
         lodVolumes_.clear();
-
         // adjust clip plane properties
-        tgt::ivec3 volDim = inportVolume_.getData()->getRepresentation<VolumeRAM>()->getDimensions();
+        tgt::ivec3 volDim = volram->getDimensions();
         clipRegion_.setMaxValue(volDim - tgt::ivec3::one);
 
         lodMinResolution_.setMaxValue(volDim);
