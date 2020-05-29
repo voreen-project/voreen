@@ -552,8 +552,11 @@ const T* VolumeBase::getRepresentation() const {
         }
     }
 
-    // As a last resort, try to get a RAM representation and convert using that.
-    if (VolumeMemoryManager::isInited()) {
+    // As a last resort, try to get a RAM representation and convert using
+    // that.  This of course only has a chance of working if we are not trying
+    // to get a VolumeRAM itself now (for which the conversion failed earlier
+    // already if we got to here).
+    if (VolumeMemoryManager::isInited() && !std::is_same<VolumeRAM, T>()) {
         // Implicitly (try to) create VolumeRAM representation by recursive call.
         const VolumeRAM* volumeRam = getRepresentation<VolumeRAM>(); // it is ok to use getRepresentation<T> here, since the VolumeMemoryManager has been notified anyway
         if(volumeRam) {
