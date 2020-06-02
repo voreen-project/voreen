@@ -40,7 +40,7 @@ namespace voreen {
 
 class SliceReaderMetaData {
 public:
-    static SliceReaderMetaData fromBase(const SliceReaderMetaData& base, bool isAccurate=false);
+    static SliceReaderMetaData fromBase(const SliceReaderMetaData& base);
     static SliceReaderMetaData fromVolume(const VolumeBase& vol);
     static SliceReaderMetaData fromHDF5Volume(const HDF5FileVolume& volume);
 

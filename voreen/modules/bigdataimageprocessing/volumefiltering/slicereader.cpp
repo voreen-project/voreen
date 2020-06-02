@@ -28,10 +28,10 @@
 namespace voreen {
 
 // SliceReaderMetaData ---------------------------------------------------------------
-SliceReaderMetaData SliceReaderMetaData::fromBase(const SliceReaderMetaData& base, bool isAccurate) {
+SliceReaderMetaData SliceReaderMetaData::fromBase(const SliceReaderMetaData& base) {
     SliceReaderMetaData srmm(base.rwm_);
     srmm.minmax_ = base.minmax_;
-    srmm.isAccurate_ = isAccurate;
+    srmm.isAccurate_ = false;
     return srmm;
 }
 
@@ -135,7 +135,14 @@ const SliceReaderMetaData& SliceReader::getMetaData() const {
 // CachingSliceReader --------------------------------------------------------------------------
 
 CachingSliceReader::CachingSliceReader(std::unique_ptr<SliceReader>&& base, int neighborhoodSize)
-    : SliceReader(tgt::ivec3(base->getDimensions()), SliceReaderMetaData::fromBase(base->getMetaData(), true))
+    : SliceReader(tgt::ivec3(base->getDimensions()), [&] () {
+            const auto& basemd = base->getMetaData();
+            auto srmm = SliceReaderMetaData::fromBase(basemd);
+            if(basemd.isAccurate()) {
+                srmm.markAccurate();
+            }
+            return srmm;
+        }())
     , base_(std::move(base))
     , slices_(2*neighborhoodSize+1, nullptr)
     , neighborhoodSize_(neighborhoodSize)
