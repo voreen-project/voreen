@@ -69,6 +69,7 @@ SET(MOD_CORE_SOURCES
 
     # Volumefiltering
     ${MOD_DIR}/volumefiltering/slicereader.cpp
+    ${MOD_DIR}/volumefiltering/volumefilter.cpp
     ${MOD_DIR}/volumefiltering/parallelvolumefilter.cpp
     ${MOD_DIR}/volumefiltering/binarizationfilter.cpp
     ${MOD_DIR}/volumefiltering/binarymedianfilter.cpp

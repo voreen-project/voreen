@@ -27,10 +27,98 @@
 
 namespace voreen {
 
+// SliceReaderMetaData ---------------------------------------------------------------
+SliceReaderMetaData SliceReaderMetaData::fromBase(const SliceReaderMetaData& base, bool isAccurate) {
+    SliceReaderMetaData srmm(base.rwm_);
+    srmm.minmax_ = base.minmax_;
+    srmm.isAccurate_ = isAccurate;
+    return srmm;
+}
+
+SliceReaderMetaData SliceReaderMetaData::fromVolume(const VolumeBase& vol) {
+    SliceReaderMetaData srmm(vol.getRealWorldMapping());
+    const auto vmm = vol.getDerivedData<VolumeMinMax>();
+    for(int c=0; c<vol.getNumChannels(); ++c) {
+        srmm.setMinMax(vmm->getMin(c), vmm->getMax(c));
+    }
+    srmm.isAccurate_ = true;
+    return srmm;
+}
+
+SliceReaderMetaData SliceReaderMetaData::fromHDF5Volume(const HDF5FileVolume& volume) {
+    std::unique_ptr<RealWorldMapping> rwmPtr(volume.tryReadRealWorldMapping());
+
+    RealWorldMapping rwm;
+    if(rwmPtr) {
+        rwm = *rwmPtr;
+    }
+    SliceReaderMetaData srmm(rwm);
+
+    bool accurate = true;
+    for(int c=0; c< volume.getNumberOfChannels(); ++c) {
+        std::unique_ptr<VolumeMinMax> vmm(volume.tryReadVolumeMinMax(c));
+        if (vmm) {
+            srmm.setMinMax(vmm->getMin(0), vmm->getMax(0), c);
+        } else {
+            accurate = false;
+        }
+    }
+    srmm.isAccurate_ = accurate;
+    return srmm;
+}
+
+SliceReaderMetaData::SliceReaderMetaData(RealWorldMapping rwm, size_t numChannels)
+    : minmax_()
+    , rwm_(rwm)
+    , isAccurate_(false)
+{
+    tgtAssert(numChannels > 0, "Need at least one channel");
+    for(int c=0; c<numChannels; ++c) {
+        minmax_.emplace_back(std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity());
+    }
+}
+
+void SliceReaderMetaData::markAccurate() {
+    isAccurate_ = true;
+}
+
+void SliceReaderMetaData::setMinMax(float min, float max, size_t channel) {
+    minmax_.at(channel).x = min;
+    minmax_.at(channel).y = max;
+}
+
+void SliceReaderMetaData::setMinMaxNormalized(float minNorm, float maxNorm, size_t channel) {
+    minmax_.at(channel).x = rwm_.normalizedToRealWorld(minNorm);
+    minmax_.at(channel).y = rwm_.normalizedToRealWorld(maxNorm);
+}
+
+const RealWorldMapping& SliceReaderMetaData::getRealworldMapping() const {
+    return rwm_;
+}
+
+std::unique_ptr<VolumeMinMax> SliceReaderMetaData::getVolumeMinMax() const {
+    std::vector<float> min;
+    std::vector<float> max;
+    std::vector<float> minNorm;
+    std::vector<float> maxNorm;
+    for(auto mm : minmax_) {
+        min.push_back(mm.x);
+        max.push_back(mm.y);
+        minNorm.push_back(rwm_.realWorldToNormalized(mm.x));
+        maxNorm.push_back(rwm_.realWorldToNormalized(mm.y));
+    }
+    return std::unique_ptr<VolumeMinMax>(new VolumeMinMax(min, max, minNorm, maxNorm));
+}
+
+bool SliceReaderMetaData::isAccurate() const {
+    return isAccurate_;
+}
+
 // SliceReader -----------------------------------------------------------------------
 
-SliceReader::SliceReader(const tgt::ivec3& signedDim)
+SliceReader::SliceReader(const tgt::ivec3& signedDim, SliceReaderMetaData&& metadata)
     : dim_(signedDim)
+    , metadata_(std::move(metadata))
 {
 }
 
@@ -40,19 +128,19 @@ const tgt::ivec3& SliceReader::getSignedDimensions() const {
 tgt::svec3 SliceReader::getDimensions() const {
     return dim_;
 }
+const SliceReaderMetaData& SliceReader::getMetaData() const {
+    return metadata_;
+}
 
 // CachingSliceReader --------------------------------------------------------------------------
 
 CachingSliceReader::CachingSliceReader(std::unique_ptr<SliceReader>&& base, int neighborhoodSize)
-    : SliceReader(tgt::ivec3(base->getDimensions()))
+    : SliceReader(tgt::ivec3(base->getDimensions()), SliceReaderMetaData::fromBase(base->getMetaData(), true))
     , base_(std::move(base))
     , slices_(2*neighborhoodSize+1, nullptr)
     , neighborhoodSize_(neighborhoodSize)
 {
     tgtAssert(neighborhoodSize_>=0, "neighborhoodSize must be >= 0");
-    /* for(VolumeRAM*& slice : slices_) {
-        slice = nullptr;
-    } */
 }
 
 CachingSliceReader::~CachingSliceReader() {
@@ -149,7 +237,7 @@ int CachingSliceReader::getZExtent() const {
 // VolumeSliceReader --------------------------------------------------------------------------
 
 VolumeSliceReader::VolumeSliceReader(const VolumeBase& volume)
-    : SliceReader(tgt::ivec3(volume.getDimensions()))
+    : SliceReader(tgt::ivec3(volume.getDimensions()), SliceReaderMetaData::fromVolume(volume))
     , volume_(volume)
     , currentZPos_(std::numeric_limits<int>::max()) // Not initialized, yet
     , currentSlice_(nullptr)
@@ -197,7 +285,7 @@ size_t VolumeSliceReader::getNumChannels() const {
 // HDF5VolumeSliceReader --------------------------------------------------------------------------
 
 HDF5VolumeSliceReader::HDF5VolumeSliceReader(const HDF5FileVolume& volume)
-    : SliceReader(tgt::ivec3(volume.getDimensions()))
+    : SliceReader(tgt::ivec3(volume.getDimensions()), SliceReaderMetaData::fromHDF5Volume(volume))
     , volume_(volume)
     , currentZPos_(std::numeric_limits<int>::max()) // Not initialized, yet
     , currentSlice_(nullptr)
@@ -218,7 +306,7 @@ void HDF5VolumeSliceReader::seek(int z) {
         return;
     }
     currentZPos_ = z;
-    currentSlice_.reset(currentZPos_ >= 0 && currentZPos_ < getSignedDimensions().z ? volume_.loadSlices(currentZPos_, currentZPos_) : nullptr);
+    currentSlice_.reset(currentZPos_ >= 0 && currentZPos_ < getSignedDimensions().z ? volume_.loadSlices(currentZPos_, currentZPos_, numChannels_) : nullptr);
 }
 
 int HDF5VolumeSliceReader::getCurrentZPos() const {
@@ -246,7 +334,9 @@ size_t HDF5VolumeSliceReader::getNumChannels() const {
 // FilteringSliceReader --------------------------------------------------------------------------
 
 FilteringSliceReader::FilteringSliceReader(std::unique_ptr<CachingSliceReader> base, std::unique_ptr<VolumeFilter> filter)
-    : SliceReader(tgt::ivec3(filter->getOverwrittenDimensions() ? *filter->getOverwrittenDimensions() : base->getDimensions()))
+    : SliceReader(
+            tgt::ivec3(filter->getOverwrittenDimensions() ? *filter->getOverwrittenDimensions() : base->getDimensions()),
+            filter->getMetaData(base->getMetaData()))
     , base_(std::move(base))
     , filter_(std::move(filter))
     , z_(std::numeric_limits<int>::max())

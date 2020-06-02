@@ -40,7 +40,7 @@ public:
     std::unique_ptr<VolumeRAM> getFilteredSlice(const CachingSliceReader* src, int z) const;
     int zExtent() const;
     const std::string& getSliceBaseType() const;
-    const boost::optional<tgt::svec3> getOverwrittenDimensions() const;
+    boost::optional<tgt::svec3> getOverwrittenDimensions() const;
 
     size_t getNumInputChannels() const;
     size_t getNumOutputChannels() const;

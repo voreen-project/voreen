@@ -28,6 +28,7 @@
 
 #include "volumefilter.h"
 
+#include "voreen/core/datastructures/volume/volumeminmax.h"
 #include "voreen/core/datastructures/volume/volumebase.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
 #include "modules/hdf5/io/hdf5filevolume.h"
@@ -37,10 +38,36 @@
 
 namespace voreen {
 
+class SliceReaderMetaData {
+public:
+    static SliceReaderMetaData fromBase(const SliceReaderMetaData& base, bool isAccurate=false);
+    static SliceReaderMetaData fromVolume(const VolumeBase& vol);
+    static SliceReaderMetaData fromHDF5Volume(const HDF5FileVolume& volume);
+
+
+    SliceReaderMetaData(RealWorldMapping rwm, size_t numChannels = 1);
+    SliceReaderMetaData() = delete;
+    SliceReaderMetaData(const SliceReaderMetaData&) = delete;
+    SliceReaderMetaData(SliceReaderMetaData&&) = default;
+
+    void markAccurate();
+
+    void setMinMax(float min, float max, size_t channel=0);
+    void setMinMaxNormalized(float minNorm, float maxNorm, size_t channel=0);
+
+    const RealWorldMapping& getRealworldMapping() const;
+    std::unique_ptr<VolumeMinMax> getVolumeMinMax() const;
+    bool isAccurate() const;
+
+private:
+    RealWorldMapping rwm_;
+    std::vector<tgt::vec2> minmax_;
+    bool isAccurate_;
+};
 
 class SliceReader {
 public:
-    SliceReader(const tgt::ivec3& signedDim);
+    SliceReader(const tgt::ivec3& signedDim, SliceReaderMetaData&& metadata);
     virtual ~SliceReader() {}
 
     virtual void advance() = 0;
@@ -52,11 +79,13 @@ public:
 
     const tgt::ivec3& getSignedDimensions() const;
     tgt::svec3 getDimensions() const;
+    const SliceReaderMetaData& getMetaData() const;
 
     virtual float getVoxelNormalized(const tgt::ivec3& xyz, size_t channel = 0) const = 0;
 
 protected:
-    tgt::ivec3 dim_; // cache to avoid vtable lookups
+    tgt::ivec3 dim_;
+    SliceReaderMetaData metadata_;
 };
 
 

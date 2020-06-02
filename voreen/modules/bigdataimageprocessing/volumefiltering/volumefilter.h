@@ -38,6 +38,7 @@ namespace voreen {
 
 // Forward declaration, defined in slicereader.h
 class CachingSliceReader;
+class SliceReaderMetaData;
 
 // The VolumeFilter interface ---------------------------------------------------------------------------
 class VolumeFilter {
@@ -49,9 +50,8 @@ public:
     virtual size_t getNumInputChannels() const = 0;
     virtual size_t getNumOutputChannels() const = 0;
     virtual const std::string& getSliceBaseType() const = 0;
-    virtual const boost::optional<tgt::svec3> getOverwrittenDimensions() const {
-        return boost::none;
-    }
+    virtual boost::optional<tgt::svec3> getOverwrittenDimensions() const;
+    virtual SliceReaderMetaData getMetaData(const SliceReaderMetaData& base) const;
 };
 
 // ------------------------------------------------------------------------------------------------------
